@@ -275,7 +275,7 @@ elif page == "📊 Market Pulse":
     fig.update_yaxes(title_text="Price (USD)", row=1, col=1)
     fig.update_yaxes(title_text="RSI", row=2, col=1)
     fig.update_yaxes(title_text="MACD", row=3, col=1)
-              fig.update_yaxes(title_text="Volume", row=4, col=1)
+                  fig.update_yaxes(title_text="Volume", row=4, col=1)
     
     st.plotly_chart(fig, use_container_width=True)
     
