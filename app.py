@@ -209,7 +209,7 @@ elif page == "📊 Market Pulse":
         rows=4, cols=1,
         shared_xaxes=True,
         vertical_spacing=0.05,
-        row_heights=[0[0.45, 0.2, 0.2, 0.15],
+        row_heights=[0.45, 0.2, 0.2, 0.15],
         subplot_titles=(f"{symbol} Price & Moving Averages", "RSI (14)", "MACD", "Volume")
     )
     
