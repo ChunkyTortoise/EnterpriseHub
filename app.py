@@ -184,7 +184,7 @@ elif page == "📊 Market Pulse":
     days_map = {"7D": 7, "30D": 30, "90D": 90}
     days = days_map[time_range]
     
-    df = generate_market_data_advanced(symbol, days=days)
+    df = get_market_data_with_fallback(symbol, days=days, use_real=use_real_data)
     
     current_price = df['Close'].iloc[-1]
     prev_price = df['Close'].iloc[-2]
