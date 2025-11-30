@@ -95,51 +95,51 @@ def generate_market_data_advanced(symbol, days=30):
 
 
     
-        base_prices = {"BTC": 43000, "ETH": 2300, "AAPL": 185, "TSLA": 245}
-        base_price = base_prices[symbol]
-        volatility = {"BTC": 0.03, "ETH": 0.04, "AAPL": 0.02, "TSLA": 0.035}[symbol]
+    base_prices = {"BTC": 43000, "ETH": 2300, "AAPL": 185, "TSLA": 245}
+    base_price = base_prices[symbol]
+    volatility = {"BTC": 0.03, "ETH": 0.04, "AAPL": 0.02, "TSLA": 0.035}[symbol]
+    
+    data = []
+    current = base_price
+    
+    for i in range(days):
+        open_price = current
+        daily_change = random.uniform(-volatility, volatility)
+        close_price = open_price * (1 + daily_change)
+        high_price = max(open_price, close_price) * random.uniform(1.0, 1.02)
+        low_price = min(open_price, close_price) * random.uniform(0.98, 1.0)
+        volume = random.uniform(1000000, 5000000)
         
-        data = []
-        current = base_price
-        
-        for i in range(days):
-            open_price = current
-            daily_change = random.uniform(-volatility, volatility)
-            close_price = open_price * (1 + daily_change)
-            high_price = max(open_price, close_price) * random.uniform(1.0, 1.02)
-            low_price = min(open_price, close_price) * random.uniform(0.98, 1.0)
-            volume = random.uniform(1000000, 5000000)
-            
-            data.append({
-                'Date': dates[i],
-                'Open': open_price,
-                'High': high_price,
-                'Low': low_price,
-                'Close': close_price,
-                'Volume': volume
-            })
-            current = close_price
-        
-        df = pd.DataFrame(data)
-        
-        delta = df['Close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
-        df['RSI'] = 100 - (100 / (1 + rs))
-        
-        df['MA7'] = df['Close'].rolling(window=7).mean()
-        df['MA30'] = df['Close'].rolling(window=30).mean()
-        
-        exp1 = df['Close'].ewm(span=12, adjust=False).mean()
-        exp2 = df['Close'].ewm(span=26, adjust=False).mean()
-        df['MACD'] = exp1 - exp2
-        df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
-        
-        df['Returns'] = df['Close'].pct_change()
-        df['Volatility'] = df['Returns'].rolling(window=7).std() * np.sqrt(365) * 100
-        
-        return df
+        data.append({
+            'Date': dates[i],
+            'Open': open_price,
+            'High': high_price,
+            'Low': low_price,
+            'Close': close_price,
+            'Volume': volume
+        })
+        current = close_price
+    
+    df = pd.DataFrame(data)
+    
+    delta = df['Close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    rs = gain / loss
+    df['RSI'] = 100 - (100 / (1 + rs))
+    
+    df['MA7'] = df['Close'].rolling(window=7).mean()
+    df['MA30'] = df['Close'].rolling(window=30).mean()
+    
+    exp1 = df['Close'].ewm(span=12, adjust=False).mean()
+    exp2 = df['Close'].ewm(span=26, adjust=False).mean()
+    df['MACD'] = exp1 - exp2
+    df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+    
+    df['Returns'] = df['Close'].pct_change()
+    df['Volatility'] = df['Returns'].rolling(window=7).std() * np.sqrt(365) * 100
+    
+    return df
 
 if page == "🏠 Overview":
     st.title("The Unified Enterprise Hub")
