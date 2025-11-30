@@ -3,3 +3,4 @@ pandas>=2.0.0
 plotly>=5.17.0
 graphviz>=0.20.1
 numpy>=1.24.0
+yfinance>=0.2.28
