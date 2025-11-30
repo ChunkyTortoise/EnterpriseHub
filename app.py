@@ -38,6 +38,24 @@ page = st.sidebar.radio(
      "💰 Margin Hunter", "🤖 Agent Logic", "✍️ Content Engine"]
 )
 
+# DATA SOURCE TOGGLE
+st.sidebar.markdown("---")
+st.sidebar.markdown("### ⚙️ Data Source")
+
+if YFINANCE_AVAILABLE:
+    use_real_data = st.sidebar.checkbox(
+        "🌐 Use Real Market Data",
+        value=False,
+        help="Fetch live data from Yahoo Finance (requires internet)"
+    )
+    if use_real_data:
+        st.sidebar.success("📊 Live data mode active")
+    else:
+        st.sidebar.info("🎲 Demo data mode")
+else:
+    use_real_data = False
+    st.sidebar.warning("⚠️ yfinance not available\nUsing demo data")
+
 # ENHANCED DATA GENERATOR with OHLCV
 def generate_market_data_advanced(symbol, days=30):
     dates = [datetime.now() - timedelta(days=x) for x in range(days)]
