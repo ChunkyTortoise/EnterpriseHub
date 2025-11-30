@@ -6,6 +6,22 @@ from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 import random
 
+# Import utility modules
+try:
+    from utils.config import BASE_PRICES, VOLATILITY, INDICATORS, CHART_CONFIG
+    from utils.data_generator import generate_market_data
+    from utils.indicators import add_all_indicators
+    USE_UTILS = True
+except ImportError:
+    USE_UTILS = False  # Fallback to inline functions
+
+# Optional: yfinance for real market data
+try:
+    import yfinance as yf
+    YFINANCE_AVAILABLE = True
+except ImportError:
+    YFINANCE_AVAILABLE = False
+
 # ENTERPRISE CONFIGURATION
 st.set_page_config(
     page_title="Unified Enterprise Hub | Cayman Roden",
