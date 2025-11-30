@@ -59,7 +59,42 @@ else:
 # ENHANCED DATA GENERATOR with OHLCV
 def generate_market_data_advanced(symbol, days=30):
     dates = [datetime.now() - timedelta(days=x) for x in range(days)]
-    dates.reverse()
+    
+# REAL DATA WRAPPER
+def get_market_data_with_fallback(symbol, days=30, use_real=False):
+    """Fetch real data from yfinance or fallback to generator."""
+    if use_real and YFINANCE_AVAILABLE:
+        try:
+            ticker_map = {"BTC": "BTC-USD", "ETH": "ETH-USD", "AAPL": "AAPL", "TSLA": "TSLA"}
+            ticker = ticker_map.get(symbol, symbol)
+            yf_data = yf.download(ticker, period=f"{days}d", progress=False)
+            if not yf_data.empty:
+                df = yf_data.reset_index()
+                df.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']
+                df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+                df['Returns'] = df['Close'].pct_change()
+                if USE_UTILS:
+                    df = add_all_indicators(df)
+                else:
+                    delta = df['Close'].diff()
+                    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+                    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                    df['RSI'] = 100 - (100 / (1 + (gain / (loss.replace(0, 1e-10)))))
+                    df['MA7'] = df['Close'].rolling(window=7).mean()
+                    df['MA30'] = df['Close'].rolling(window=30).mean()
+                    exp1 = df['Close'].ewm(span=12, adjust=False).mean()
+                    exp2 = df['Close'].ewm(span=26, adjust=False).mean()
+                    df['MACD'] = exp1 - exp2
+                    df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+                    df['Volatility'] = df['Returns'].rolling(window=7).std() * np.sqrt(365) * 100
+                st.toast(f"✅ Real {symbol} data loaded", icon="📈")
+                return df
+        except Exception as e:
+            st.warning(f"⚠️ Real data failed: {str(e)[:30]}... Using demo.")
+    return generate_market_data_advanced(symbol, days)
+
+dates.reverse()
+
     
     base_prices = {"BTC": 43000, "ETH": 2300, "AAPL": 185, "TSLA": 245}
     base_price = base_prices[symbol]
