@@ -206,11 +206,11 @@ elif page == "📊 Market Pulse":
         st.metric("Volatility", f"{vol:.1f}%")
     
     fig = make_subplots(
-        rows=3, cols=1,
+        rows=4, cols=1,
         shared_xaxes=True,
         vertical_spacing=0.05,
-        row_heights=[0.5, 0.25, 0.25],
-        subplot_titles=(f"{symbol} Price & Moving Averages", "RSI (14)", "MACD")
+        row_heights=[0[0.45, 0.2, 0.2, 0.15]
+        subplot_titles=(f"{symbol} Price & Moving Averages", "RSI (14)", "MACD", "Volume")
     )
     
     fig.add_trace(
@@ -256,10 +256,18 @@ elif page == "📊 Market Pulse":
                    line=dict(color='#FFA500', width=1)),
         row=3, col=1
     )
+
+                         # Volume bars
+    colors = ['#00ff88' if df['Close'].iloc[i] >= df['Open'].iloc[i] else '#ff4444' for i in range(len(df))]
+    fig.add_trace(
+        go.Bar(x=df['Date'], y=df['Volume'], name='Volume',
+               marker=dict(color=colors)),
+        row=4, col=1
+    )
     
     fig.update_layout(
         template="plotly_dark",
-        height=900,
+        height=1000,
         showlegend=True,
         xaxis_rangeslider_visible=False
     )
@@ -267,6 +275,7 @@ elif page == "📊 Market Pulse":
     fig.update_yaxes(title_text="Price (USD)", row=1, col=1)
     fig.update_yaxes(title_text="RSI", row=2, col=1)
     fig.update_yaxes(title_text="MACD", row=3, col=1)
+              fig.update_yaxes(title_text="Volume", row=4, col=1)
     
     st.plotly_chart(fig, use_container_width=True)
     
