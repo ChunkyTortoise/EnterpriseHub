@@ -122,7 +122,7 @@ elif page == "📊 Market Pulse":
     change = current_price - prev_price
     change_pct = (change / prev_price) * 100
     
-    col1, col2, col3, col4, col5 = st.columns(5)
+    col1, col2, col3, col4, col5 = st.columns([2, 1.5, 1.5, 1, 1])
     with col1:
         st.metric("Current Price", f"${current_price:,.2f}", f"{change_pct:+.2f}%")
     with col2:
