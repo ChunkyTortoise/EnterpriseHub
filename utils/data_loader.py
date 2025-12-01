@@ -150,3 +150,57 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
             f"Failed to calculate technical indicators: {str(e)}"
         ) from e
 
+
+def get_company_info(ticker: str) -> dict:
+    """
+    Fetch company information and fundamental metrics.
+    
+    Args:
+        ticker: Stock symbol (e.g., "AAPL")
+        
+    Returns:
+        Dictionary with company info
+        
+    Raises:
+        DataFetchError: If data cannot be fetched
+    """
+    if not ticker:
+        return {}
+        
+    try:
+        ticker = ticker.strip().upper()
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        return info
+    except Exception as e:
+        logger.error(f"Error fetching company info for {ticker}: {str(e)}")
+        raise DataFetchError(f"Failed to fetch company info: {str(e)}") from e
+
+
+def get_financials(ticker: str) -> dict:
+    """
+    Fetch financial statements.
+    
+    Args:
+        ticker: Stock symbol
+        
+    Returns:
+        Dictionary containing DataFrames for balance_sheet, financials, cashflow
+    """
+    if not ticker:
+        return {}
+        
+    try:
+        ticker = ticker.strip().upper()
+        stock = yf.Ticker(ticker)
+        
+        return {
+            'balance_sheet': stock.balance_sheet,
+            'income_stmt': stock.financials,
+            'cashflow': stock.cashflow
+        }
+    except Exception as e:
+        logger.error(f"Error fetching financials for {ticker}: {str(e)}")
+        raise DataFetchError(f"Failed to fetch financials: {str(e)}") from e
+
+
