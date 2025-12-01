@@ -95,17 +95,22 @@ class TestCalculateIndicators:
         dates = pd.date_range('2023-01-01', periods=30)
         columns = pd.MultiIndex.from_product([['AAPL'], ['Open', 'High', 'Low', 'Close', 'Volume']])
         data = {
-            ('AAPL', 'Open'): [100] * 30,
-            ('AAPL', 'High'): [105] * 30,
-            ('AAPL', 'Low'): [95] * 30,
-            ('AAPL', 'Close'): [102] * 30,
-            ('AAPL', 'Volume'): [1000000] * 30,
+            ('AAPL', 'Open'): [100.0 + i for i in range(30)],
+            ('AAPL', 'High'): [105.0 + i for i in range(30)],
+            ('AAPL', 'Low'): [95.0 + i for i in range(30)],
+            ('AAPL', 'Close'): [102.0 + i for i in range(30)],
+            ('AAPL', 'Volume'): [1000000 + i*1000 for i in range(30)],
         }
         df = pd.DataFrame(data, index=dates)
+        
+        # Flatten the MultiIndex columns (mimicking what get_stock_data does)
+        df.columns = ['_'.join(col).strip() if isinstance(col, tuple) else col for col in df.columns]
+        df.columns = [col.split('_')[1] if '_' in col else col for col in df.columns]
         
         result = calculate_indicators(df)
         assert isinstance(result.columns, pd.Index)
         assert 'MA20' in result.columns
+
     
     def test_calculate_indicators_raises_on_missing_columns(self):
         """Test that missing required columns raise error."""
