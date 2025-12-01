@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from utils.data_loader import get_company_info, get_financials
 from utils.logger import get_logger
 
@@ -64,32 +65,99 @@ def render() -> None:
                 val = f"{div*100:.2f}%" if div else "N/A"
                 st.metric("Dividend Yield", val)
 
-            # Financial Statements Tabs
+            # --- VISUALIZATION SECTION ---
             st.markdown("---")
-            st.markdown("### 📑 Financial Statements")
+            st.markdown("### 📈 Financial Performance")
+            
+            # Prepare Data for Charts
+            income_stmt = financials['income_stmt'].T if not financials['income_stmt'].empty else pd.DataFrame()
+            balance_sheet = financials['balance_sheet'].T if not financials['balance_sheet'].empty else pd.DataFrame()
+            
+            if not income_stmt.empty:
+                # Ensure index is datetime and sort
+                income_stmt.index = pd.to_datetime(income_stmt.index)
+                income_stmt = income_stmt.sort_index()
+                
+                # Chart 1: Revenue vs Net Income
+                fig_perf = make_subplots(specs=[[{"secondary_y": True}]])
+                
+                # Try to find correct columns (yfinance column names can vary)
+                rev_col = next((col for col in income_stmt.columns if 'Total Revenue' in str(col) or 'Revenue' in str(col)), None)
+                net_inc_col = next((col for col in income_stmt.columns if 'Net Income' in str(col)), None)
+                
+                if rev_col and net_inc_col:
+                    fig_perf.add_trace(
+                        go.Bar(x=income_stmt.index, y=income_stmt[rev_col], name="Revenue", marker_color='#00D9FF'),
+                        secondary_y=False
+                    )
+                    fig_perf.add_trace(
+                        go.Scatter(x=income_stmt.index, y=income_stmt[net_inc_col], name="Net Income", line=dict(color='#FFA500', width=3)),
+                        secondary_y=True
+                    )
+                    
+                    fig_perf.update_layout(
+                        title="Revenue vs Net Income (Annual)",
+                        template="plotly_dark",
+                        height=400,
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                    )
+                    st.plotly_chart(fig_perf, use_container_width=True)
+                    
+                    # Profit Margins
+                    st.markdown("#### 📊 Profitability Ratios")
+                    r1, r2, r3 = st.columns(3)
+                    
+                    latest = income_stmt.iloc[-1]
+                    revenue = latest[rev_col]
+                    net_income = latest[net_inc_col]
+                    
+                    # Gross Profit
+                    gross_col = next((col for col in income_stmt.columns if 'Gross Profit' in str(col)), None)
+                    gross_profit = latest[gross_col] if gross_col else 0
+                    
+                    with r1:
+                        net_margin = (net_income / revenue) * 100 if revenue else 0
+                        st.metric("Net Profit Margin", f"{net_margin:.1f}%")
+                    
+                    with r2:
+                        gross_margin = (gross_profit / revenue) * 100 if revenue else 0
+                        st.metric("Gross Margin", f"{gross_margin:.1f}%")
+                        
+                    with r3:
+                        # YoY Revenue Growth
+                        if len(income_stmt) > 1:
+                            prev_rev = income_stmt.iloc[-2][rev_col]
+                            growth = ((revenue - prev_rev) / prev_rev) * 100
+                            st.metric("YoY Revenue Growth", f"{growth:+.1f}%")
+                        else:
+                            st.metric("YoY Revenue Growth", "N/A")
+
+            # --- DATA TABLES SECTION ---
+            st.markdown("---")
+            st.markdown("### 📑 Detailed Financial Statements")
             
             tab1, tab2, tab3 = st.tabs(["Income Statement", "Balance Sheet", "Cash Flow"])
             
             with tab1:
-                st.subheader("Income Statement (Annual)")
+                st.subheader("Income Statement")
                 if not financials['income_stmt'].empty:
                     st.dataframe(financials['income_stmt'], use_container_width=True)
                 else:
-                    st.warning("No income statement data available.")
+                    st.warning("No data available.")
                     
             with tab2:
-                st.subheader("Balance Sheet (Annual)")
+                st.subheader("Balance Sheet")
                 if not financials['balance_sheet'].empty:
                     st.dataframe(financials['balance_sheet'], use_container_width=True)
                 else:
-                    st.warning("No balance sheet data available.")
+                    st.warning("No data available.")
                     
             with tab3:
-                st.subheader("Cash Flow (Annual)")
+                st.subheader("Cash Flow")
                 if not financials['cashflow'].empty:
                     st.dataframe(financials['cashflow'], use_container_width=True)
                 else:
-                    st.warning("No cash flow data available.")
+                    st.warning("No data available.")
 
     except Exception as e:
         logger.error(f"Error in Financial Analyst module: {e}", exc_info=True)
