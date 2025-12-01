@@ -204,3 +204,27 @@ def get_financials(ticker: str) -> dict:
         raise DataFetchError(f"Failed to fetch financials: {str(e)}") from e
 
 
+def get_news(ticker: str) -> list:
+    """
+    Fetch latest news for a ticker.
+    
+    Args:
+        ticker: Stock symbol
+        
+    Returns:
+        List of news dictionaries
+    """
+    if not ticker:
+        return []
+        
+    try:
+        ticker = ticker.strip().upper()
+        stock = yf.Ticker(ticker)
+        return stock.news
+    except Exception as e:
+        logger.error(f"Error fetching news for {ticker}: {str(e)}")
+        # Return empty list instead of raising to allow partial app loading
+        return []
+
+
+
