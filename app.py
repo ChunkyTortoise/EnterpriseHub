@@ -46,6 +46,8 @@ def main() -> None:
             _render_market_pulse()
         elif page == "💼 Financial Analyst":
             _render_financial_analyst()
+        elif page == "💰 Margin Hunter":
+            _render_margin_hunter()
         else:
             _render_placeholder(page)
             
@@ -63,7 +65,7 @@ def _render_overview() -> None:
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Modules Deployed", "2/5", delta="40%")
+        st.metric("Modules Deployed", "3/5", delta="60%")
     with col2:
         st.metric("Cloud-Native", "✓", delta="Zero Infrastructure")
     with col3:
@@ -76,7 +78,7 @@ def _render_overview() -> None:
     st.markdown("""
     - **Market Pulse** ⚡ *ENHANCED* - Candlesticks, RSI, MACD, Volume Analysis (4-panel layout)
     - **Financial Analyst** ✅ *NEW* - Fundamental analysis, balance sheets, and key metrics
-    - **Margin Hunter** 🔜 Coming in Phase 3
+    - **Margin Hunter** ✅ *NEW* - Break-even analysis and profit optimization
     - **Agent Logic** 🔜 Coming in Phase 3
     - **Content Engine** 🔜 Coming in Phase 3
     """)
@@ -102,6 +104,18 @@ def _render_financial_analyst() -> None:
     except Exception as e:
         logger.error(f"Error loading Financial Analyst module: {e}", exc_info=True)
         st.error("❌ Failed to load Financial Analyst module.")
+        if st.checkbox("Show error details"):
+            st.exception(e)
+
+
+def _render_margin_hunter() -> None:
+    """Render the Margin Hunter module."""
+    try:
+        from modules import margin_hunter
+        margin_hunter.render()
+    except Exception as e:
+        logger.error(f"Error loading Margin Hunter module: {e}", exc_info=True)
+        st.error("❌ Failed to load Margin Hunter module.")
         if st.checkbox("Show error details"):
             st.exception(e)
 
