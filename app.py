@@ -44,6 +44,8 @@ def main() -> None:
             _render_overview()
         elif page == "📊 Market Pulse":
             _render_market_pulse()
+        elif page == "💼 Financial Analyst":
+            _render_financial_analyst()
         else:
             _render_placeholder(page)
             
@@ -61,7 +63,7 @@ def _render_overview() -> None:
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Modules Deployed", "5", delta="100%")
+        st.metric("Modules Deployed", "2/5", delta="40%")
     with col2:
         st.metric("Cloud-Native", "✓", delta="Zero Infrastructure")
     with col3:
@@ -73,7 +75,7 @@ def _render_overview() -> None:
     st.markdown("### 📊 Available Modules")
     st.markdown("""
     - **Market Pulse** ⚡ *ENHANCED* - Candlesticks, RSI, MACD, Volume Analysis (4-panel layout)
-    - **Financial Analyst** 🔜 Coming in Phase 3
+    - **Financial Analyst** ✅ *NEW* - Fundamental analysis, balance sheets, and key metrics
     - **Margin Hunter** 🔜 Coming in Phase 3
     - **Agent Logic** 🔜 Coming in Phase 3
     - **Content Engine** 🔜 Coming in Phase 3
@@ -88,6 +90,18 @@ def _render_market_pulse() -> None:
     except Exception as e:
         logger.error(f"Error loading Market Pulse module: {e}", exc_info=True)
         st.error("❌ Failed to load Market Pulse module.")
+        if st.checkbox("Show error details"):
+            st.exception(e)
+
+
+def _render_financial_analyst() -> None:
+    """Render the Financial Analyst module."""
+    try:
+        from modules import financial_analyst
+        financial_analyst.render()
+    except Exception as e:
+        logger.error(f"Error loading Financial Analyst module: {e}", exc_info=True)
+        st.error("❌ Failed to load Financial Analyst module.")
         if st.checkbox("Show error details"):
             st.exception(e)
 
