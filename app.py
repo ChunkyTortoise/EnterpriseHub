@@ -31,6 +31,7 @@ MODULES = {
     "💼 Financial Analyst": ("financial_analyst", "Financial Analyst"),
     "💰 Margin Hunter": ("margin_hunter", "Margin Hunter"),
     "🤖 Agent Logic": ("agent_logic", "Agent Logic"),
+    "✍️ Content Engine": ("content_engine", "Content Engine"),
 }
 
 
@@ -42,7 +43,7 @@ def main() -> None:
         st.sidebar.markdown("**By Cayman Roden**")
         
         # Combine static pages with module pages for the radio options
-        pages = ["🏠 Overview"] + list(MODULES.keys()) + ["✍️ Content Engine"]
+        pages = ["🏠 Overview"] + list(MODULES.keys())
         page = st.sidebar.radio("Navigate:", pages)
         
         logger.info(f"User navigated to: {page}")
@@ -68,25 +69,25 @@ def _render_overview() -> None:
     """Render the overview/home page."""
     st.title("The Unified Enterprise Hub")
     st.markdown("### 5 Mission-Critical Modules in One Platform")
-    
+
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Modules Deployed", f"{len(MODULES)}/5", delta=f"{len(MODULES)/5*100}%")
+        st.metric("Modules Deployed", f"{len(MODULES)}/5", delta="100%")
     with col2:
         st.metric("Cloud-Native", "✓", delta="Zero Infrastructure")
     with col3:
         st.metric("Time to Value", "< 2 min", delta="-98% vs Legacy")
-    
-    st.success("**✅ Phase 2.6 ACTIVE:** Market Pulse upgraded with 4-panel professional trading indicators!")
-    
+
+    st.success("**✅ ALL MODULES DEPLOYED:** Content Engine now live with AI-powered LinkedIn post generation!")
+
     st.markdown("---")
     st.markdown("### 📊 Available Modules")
     st.markdown("""
-    - **Market Pulse** ⚡ *ENHANCED* - Candlesticks, RSI, MACD, Volume Analysis (4-panel layout)
-    - **Financial Analyst** ✅ *NEW* - Fundamental analysis, balance sheets, and key metrics
-    - **Margin Hunter** ✅ *NEW* - Break-even analysis and profit optimization
-    - **Agent Logic** ✅ *NEW* - AI-powered sentiment analysis and news scouting
-    - **Content Engine** 🔜 Coming in Phase 3
+    - **Market Pulse** ⚡ *ACTIVE* - Candlesticks, RSI, MACD, Volume Analysis (4-panel layout)
+    - **Financial Analyst** ✅ *ACTIVE* - Fundamental analysis, balance sheets, and key metrics
+    - **Margin Hunter** 🏆 *HERO PROJECT* - Break-even analysis and profit optimization with CVP heatmaps
+    - **Agent Logic** ✅ *ACTIVE* - AI-powered sentiment analysis and news scouting
+    - **Content Engine** ✨ *NEW* - AI-powered LinkedIn post generator with Claude API
     """)
 
 

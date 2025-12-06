@@ -20,11 +20,11 @@ Enterprise Hub is a professional-grade web application that consolidates five mi
 
 ### ✨ Features
 
-- **📊 Market Pulse** ⚡ *ENHANCED* - Real-time stock data with a 4-panel layout including Candlesticks, RSI, MACD, and Volume Analysis.
+- **📊 Market Pulse** ⚡ *ACTIVE* - Real-time stock data with a 4-panel layout including Candlesticks, RSI, MACD, and Volume Analysis.
 - **💼 Financial Analyst** ✅ *ACTIVE* - Fundamental analysis, balance sheets, and key financial metrics.
 - **💰 Margin Hunter** 🏆 *HERO PROJECT* - Cost-Volume-Profit (CVP) analysis with interactive sensitivity heatmaps, break-even calculations, and scenario modeling. Perfect for pricing strategy, profitability optimization, and volume planning. [→ Full documentation](modules/README_MARGIN_HUNTER.md) | [→ Industry templates](scenarios/)
 - **🤖 Agent Logic** ✅ *ACTIVE* - AI-powered sentiment analysis and news scouting from the web.
-- **✍️ Content Engine** 🔜 *COMING SOON* - AI-powered content generation.
+- **✍️ Content Engine** ✨ *NEW* - AI-powered LinkedIn post generator with Claude 3.5 Sonnet. 6 templates, 5 tones, instant content generation. [→ Full documentation](modules/README_CONTENT_ENGINE.md)
 
 ### 🎯 Key Highlights
 
@@ -84,9 +84,17 @@ enterprise-hub/
 ├── modules/              # Feature modules
 │   ├── __init__.py
 │   ├── agent_logic.py    # AI sentiment analysis module
+│   ├── content_engine.py # AI content generation module
 │   ├── financial_analyst.py # Fundamental analysis module
 │   ├── margin_hunter.py  # Profit optimization module
-│   └── market_pulse.py   # Market analysis module
+│   ├── market_pulse.py   # Market analysis module
+│   ├── README_MARGIN_HUNTER.md  # Margin Hunter documentation
+│   └── README_CONTENT_ENGINE.md # Content Engine documentation
+├── scenarios/            # Industry scenario templates
+│   ├── README.md         # Scenarios index
+│   ├── saas-pricing-template.md
+│   ├── ecommerce-product-template.md
+│   └── manufacturing-volume-template.md
 ├── utils/                # Shared utilities
 │   ├── data_loader.py    # Data fetching and processing
 │   ├── logger.py         # Centralized logging
@@ -135,6 +143,7 @@ enterprise-hub/
 ## 🛠️ Technology Stack
 
 - **Framework**: [Streamlit](https://streamlit.io) - Fast, beautiful web apps in Python
+- **AI**: [Anthropic Claude](https://www.anthropic.com/) - Advanced language model for content generation
 - **Data Source**: [yfinance](https://github.com/ranaroussi/yfinance) - Yahoo Finance market data
 - **Charts**: [Plotly](https://plotly.com/python/) - Interactive visualizations
 - **Technical Analysis**: [ta](https://github.com/bukosabino/ta) - Technical analysis library
@@ -173,6 +182,30 @@ enterprise-hub/
    - **Panel 2**: Relative Strength Index (RSI) with overbought/oversold levels
    - **Panel 3**: MACD with signal line
    - **Panel 4**: Volume bars (green/red based on price movement)
+
+---
+
+### ✍️ Content Engine Module (NEW)
+
+**Quick Start**:
+1. **Get API Key** - Sign up at [console.anthropic.com](https://console.anthropic.com/) (free $5 credit)
+2. **Enter API Key** - Paste into Content Engine setup form (stored in session only)
+3. **Input content brief** - Topic, tone, target audience, keywords
+4. **Select template** - Choose from 6 LinkedIn post types (Professional Insight, Thought Leadership, etc.)
+5. **Generate** - Click "Generate LinkedIn Post" (takes 3-5 seconds)
+6. **Export** - Download as TXT or copy to clipboard
+
+**Templates Available**:
+- **Professional Insight** - Share industry knowledge with authority
+- **Thought Leadership** - Position yourself as a visionary
+- **Case Study** - Share success stories and results
+- **How-To Guide** - Educational, step-by-step content
+- **Industry Trend** - Analyze trends and predictions
+- **Personal Story** - Authentic, relatable narratives
+
+**Cost**: ~$0.003 per post (300x cheaper than human ghostwriters)
+
+**Full Documentation**: [modules/README_CONTENT_ENGINE.md](modules/README_CONTENT_ENGINE.md)
 
 ---
 
@@ -272,9 +305,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [x] Market Pulse module with technical indicators
 - [x] 4-panel chart layout (Price, RSI, MACD, Volume)
 - [x] Financial Analyst module
-- [x] Margin Hunter module
+- [x] Margin Hunter module (Hero Project)
 - [x] Agent Logic automation
-- [ ] Content Engine
+- [x] Content Engine with Claude AI integration
+- [ ] Multi-platform content (Twitter/X, Instagram)
+- [ ] Brand voice training for Content Engine
 - [ ] User authentication
 - [ ] Portfolio tracking
 - [ ] Real-time alerts
