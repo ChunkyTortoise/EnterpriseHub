@@ -239,3 +239,122 @@ class TestCreateTechnicalChart:
         # Find bar trace (volume)
         bar_traces = [t for t in fig.data if isinstance(t, go.Bar)]
         assert len(bar_traces) > 0
+
+
+class TestPredictiveIndicators:
+    """Test predictive indicator functionality."""
+
+    def test_predict_trend_bullish(self):
+        """Test bullish trend prediction."""
+        from modules.market_pulse import _predict_trend
+
+        # Bullish conditions: low RSI, MACD above signal
+        rsi = 25.0
+        macd = 2.5
+        signal = 1.0
+
+        trend, confidence, reasoning = _predict_trend(rsi, macd, signal)
+
+        assert trend == "Bullish"
+        assert confidence > 50
+        assert isinstance(reasoning, str)
+        assert len(reasoning) > 0
+
+    def test_predict_trend_bearish(self):
+        """Test bearish trend prediction."""
+        from modules.market_pulse import _predict_trend
+
+        # Bearish conditions: high RSI, MACD below signal
+        rsi = 75.0
+        macd = -2.5
+        signal = -1.0
+
+        trend, confidence, reasoning = _predict_trend(rsi, macd, signal)
+
+        assert trend == "Bearish"
+        assert confidence > 50
+        assert isinstance(reasoning, str)
+
+    def test_predict_trend_neutral(self):
+        """Test neutral trend prediction."""
+        from modules.market_pulse import _predict_trend
+
+        # Neutral conditions: mid-range RSI, MACD near signal
+        rsi = 50.0
+        macd = 0.1
+        signal = 0.0
+
+        trend, confidence, reasoning = _predict_trend(rsi, macd, signal)
+
+        assert trend == "Neutral"
+        assert isinstance(reasoning, str)
+
+    def test_calculate_support_resistance(self):
+        """Test support and resistance calculation."""
+        from modules.market_pulse import _calculate_support_resistance
+
+        # Create test data with known high/low
+        df = create_mock_stock_data(days=30)
+        df.loc[df.index[0], 'Low'] = 90.0
+        df.loc[df.index[-1], 'High'] = 120.0
+
+        support, resistance = _calculate_support_resistance(df)
+
+        # Support should be near the lowest low
+        assert support <= df['Low'].min() + 1
+        # Resistance should be near the highest high
+        assert resistance >= df['High'].max() - 1
+        # Support should be less than resistance
+        assert support < resistance
+
+    @patch('modules.market_pulse.st')
+    def test_display_predictive_indicators(self, mock_st):
+        """Test predictive indicators display."""
+        from modules.market_pulse import _display_predictive_indicators
+
+        # Create test data with known values
+        df = create_mock_stock_data()
+        df.iloc[-1, df.columns.get_loc('RSI')] = 65.0
+        df.iloc[-1, df.columns.get_loc('MACD')] = 1.5
+        df.iloc[-1, df.columns.get_loc('Signal')] = 1.0
+
+        # Mock columns
+        mock_cols = [MagicMock() for _ in range(3)]
+        mock_st.columns.return_value = mock_cols
+
+        # Call function
+        _display_predictive_indicators(df, "SPY")
+
+        # Verify markdown and metrics were called
+        assert mock_st.markdown.called
+        # At least one metric should be called (support/resistance)
+        assert any(col.metric.called for col in mock_cols)
+
+    @patch('modules.market_pulse.st')
+    def test_display_predictive_indicators_error_handling(self, mock_st):
+        """Test predictive indicators handles errors gracefully."""
+        from modules.market_pulse import _display_predictive_indicators
+        import pandas as pd
+
+        # Create invalid data
+        df = pd.DataFrame()
+
+        # Call function - should not crash
+        _display_predictive_indicators(df, "SPY")
+
+        # Should show warning
+        mock_st.warning.assert_called_once()
+
+    def test_predict_trend_reasoning_includes_indicators(self):
+        """Test that reasoning includes RSI and MACD information."""
+        from modules.market_pulse import _predict_trend
+
+        rsi = 35.0
+        macd = 1.0
+        signal = 0.5
+
+        trend, confidence, reasoning = _predict_trend(rsi, macd, signal)
+
+        # Reasoning should mention the indicators
+        assert "RSI" in reasoning or "rsi" in reasoning.lower()
+        assert "MACD" in reasoning or "macd" in reasoning.lower()

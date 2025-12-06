@@ -1,15 +1,24 @@
 """Test configuration and fixtures for pytest."""
 
 import pytest
-import pandas as pd
-import numpy as np
+
+# Conditional imports for optional dependencies
+try:
+    import pandas as pd
+    import numpy as np
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
 
 
 @pytest.fixture
 def sample_stock_data():
     """Create sample OHLCV data for testing."""
+    if not PANDAS_AVAILABLE:
+        pytest.skip("pandas and numpy not available")
+
     dates = pd.date_range(start='2023-01-01', periods=30, freq='D')
-    
+
     data = {
         'Open': np.random.uniform(100, 150, 30),
         'High': np.random.uniform(105, 155, 30),
@@ -17,7 +26,7 @@ def sample_stock_data():
         'Close': np.random.uniform(100, 150, 30),
         'Volume': np.random.randint(1000000, 10000000, 30)
     }
-    
+
     df = pd.DataFrame(data, index=dates)
     return df
 

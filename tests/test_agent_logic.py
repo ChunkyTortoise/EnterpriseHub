@@ -3,6 +3,7 @@
 from unittest.mock import patch, MagicMock
 import pytest
 import pandas as pd
+import json
 
 # Mock data for testing
 MOCK_NEWS_ITEMS = [
@@ -131,3 +132,132 @@ def test_render_handles_exception(mock_get_news, mock_st):
     # Ensure no results are displayed
     mock_st.plotly_chart.assert_not_called()
     mock_st.expander.assert_not_called()
+
+
+class TestClaudeSentiment:
+    """Test Claude AI sentiment analysis functionality."""
+
+    @patch('modules.agent_logic._get_api_key')
+    @patch('modules.agent_logic.ANTHROPIC_AVAILABLE', True)
+    @patch('modules.agent_logic.st')
+    def test_get_api_key_toggle_shown(self, mock_st, mock_get_key):
+        """Test that AI sentiment toggle is shown when API key available."""
+        from modules import agent_logic
+
+        mock_get_key.return_value = "sk-test-key"
+        mock_st.text_input.return_value = "AAPL"
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+
+        # Call render (it will return early due to no symbol)
+        agent_logic.render()
+
+        # Verify toggle was created
+        mock_st.toggle.assert_called_once()
+
+    @patch('modules.agent_logic._get_api_key')
+    @patch('modules.agent_logic.st')
+    def test_no_api_key_caption_shown(self, mock_st, mock_get_key):
+        """Test that caption is shown when no API key available."""
+        from modules import agent_logic
+
+        mock_get_key.return_value = None
+        mock_st.text_input.return_value = "AAPL"
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+
+        # Call render
+        agent_logic.render()
+
+        # Verify caption was shown
+        mock_st.caption.assert_called_once()
+
+    def test_get_api_key_from_env(self):
+        """Test getting API key from environment."""
+        from modules.agent_logic import _get_api_key
+        import os
+
+        # Set env variable
+        os.environ['ANTHROPIC_API_KEY'] = 'test-key-env'
+
+        key = _get_api_key()
+
+        assert key == 'test-key-env'
+
+        # Clean up
+        del os.environ['ANTHROPIC_API_KEY']
+
+
+class TestSentimentAnalyzerClaude:
+    """Test Claude sentiment analysis in utils."""
+
+    @patch('utils.sentiment_analyzer.Anthropic')
+    def test_analyze_sentiment_with_claude_success(self, mock_anthropic):
+        """Test successful Claude sentiment analysis."""
+        from utils.sentiment_analyzer import analyze_sentiment_with_claude
+
+        # Mock Claude response
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+
+        mock_response = {
+            "overall_sentiment": "bullish",
+            "confidence": 80,
+            "reasoning": "Strong earnings report",
+            "article_sentiments": [
+                {"title": "Big Gains", "sentiment": "positive", "score": 0.8}
+            ]
+        }
+
+        mock_message = MagicMock()
+        mock_message.content = [MagicMock(text=json.dumps(mock_response))]
+        mock_client.messages.create.return_value = mock_message
+
+        # Call function
+        result = analyze_sentiment_with_claude(MOCK_NEWS_ITEMS, "AAPL", "sk-test-key")
+
+        # Verify result
+        assert result is not None
+        assert 'average_score' in result
+        assert 'verdict' in result
+        assert 'reasoning' in result
+        assert result['reasoning'] == "Strong earnings report"
+        assert result['article_count'] == 1
+
+    @patch('utils.sentiment_analyzer.Anthropic')
+    def test_analyze_sentiment_with_claude_fallback(self, mock_anthropic):
+        """Test fallback to TextBlob when Claude fails."""
+        from utils.sentiment_analyzer import analyze_sentiment_with_claude
+
+        # Mock Claude error
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.side_effect = Exception("API Error")
+
+        # Call function
+        result = analyze_sentiment_with_claude(MOCK_NEWS_ITEMS, "AAPL", "sk-test-key")
+
+        # Should fall back to TextBlob and return result
+        assert result is not None
+        assert 'average_score' in result
+        assert 'verdict' in result
+
+    def test_analyze_sentiment_with_claude_no_news(self):
+        """Test Claude sentiment with no news items."""
+        from utils.sentiment_analyzer import analyze_sentiment_with_claude
+
+        result = analyze_sentiment_with_claude([], "AAPL", "sk-test-key")
+
+        assert result['average_score'] == 0.0
+        assert result['verdict'] == "Neutral"
+        assert result['article_count'] == 0
+        assert 'reasoning' in result
+
+    @patch('utils.sentiment_analyzer.ANTHROPIC_AVAILABLE', False)
+    def test_analyze_sentiment_with_claude_not_available(self):
+        """Test when Anthropic library not available."""
+        from utils.sentiment_analyzer import analyze_sentiment_with_claude
+
+        # Should fall back to TextBlob
+        result = analyze_sentiment_with_claude(MOCK_NEWS_ITEMS, "AAPL", "sk-test-key")
+
+        assert result is not None
+        assert 'average_score' in result

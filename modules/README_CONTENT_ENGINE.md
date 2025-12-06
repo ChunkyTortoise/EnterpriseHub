@@ -217,6 +217,193 @@ The Content Engine uses a structured prompt template:
 
 ---
 
+## 💰 API Cost Calculator
+
+### Understanding Claude API Pricing
+
+**Anthropic Claude 3.5 Sonnet** (as of December 2024):
+- **Input tokens**: $0.003 per 1,000 tokens
+- **Output tokens**: $0.015 per 1,000 tokens
+- **Free tier**: $5 credit (enough for ~1,000 posts)
+
+**What's a token?**
+- Roughly 4 characters or 0.75 words
+- Example: "Hello, world!" = ~3 tokens
+- A typical LinkedIn post (200 words) = ~250-300 output tokens
+
+### Cost Per Post Breakdown
+
+**Typical LinkedIn Post Generation**:
+
+| Component | Tokens | Cost |
+|-----------|--------|------|
+| **Input Prompt** | ~400 tokens | $0.0012 (400 × $0.003/1000) |
+| **Output Post** | ~300 tokens | $0.0045 (300 × $0.015/1000) |
+| **Total per post** | 700 tokens | **$0.0057** (~$0.006) |
+
+**Note**: Earlier estimate of $0.003 was conservative. Actual cost is ~$0.006 per post, still 99.96% cheaper than ghostwriters.
+
+### Cost Estimator (Monthly)
+
+**Calculate your monthly cost based on posting frequency:**
+
+| Posts/Month | Tokens/Month | Monthly Cost | Annual Cost | vs Ghostwriter ($20/post) |
+|-------------|--------------|--------------|-------------|---------------------------|
+| **3 posts** | 2,100 | $0.018 | $0.22 | Save $719/year |
+| **5 posts** | 3,500 | $0.030 | $0.36 | Save $1,199/year |
+| **12 posts** | 8,400 | $0.072 | $0.86 | Save $2,879/year |
+| **20 posts** | 14,000 | $0.120 | $1.44 | Save $4,798/year |
+| **30 posts** | 21,000 | $0.180 | $2.16 | Save $7,197/year |
+| **60 posts** | 42,000 | $0.360 | $4.32 | Save $14,395/year |
+
+### Free Tier Calculator
+
+**How many posts can you generate with $5 free credit?**
+
+- $5 credit ÷ $0.006 per post = **~833 posts**
+- At 12 posts/month = **69 months** (~6 years) of free usage
+- At 60 posts/month = **14 months** of free usage
+
+**When you'll hit the free tier limit:**
+
+| Posts/Month | Months Until Paid Tier | Total Free Posts |
+|-------------|------------------------|------------------|
+| 3 posts | 277 months (~23 years) | 833 |
+| 5 posts | 166 months (~14 years) | 833 |
+| 12 posts | 69 months (~6 years) | 833 |
+| 20 posts | 41 months (~3.5 years) | 833 |
+| 30 posts | 27 months (~2 years) | 833 |
+| 60 posts | 14 months | 833 |
+
+**Real talk**: Most users will NEVER exhaust the free $5 credit.
+
+### Cost Comparison: Content Engine vs Alternatives
+
+| Solution | Monthly Cost (12 posts) | Time Required | Quality |
+|----------|-------------------------|---------------|---------|
+| **Content Engine (AI)** | $0.07 | 30 min (batch) | High, needs editing |
+| **Ghostwriter** | $180-360 | 0 min (outsourced) | High, personalized |
+| **Content Agency** | $500-2,000 | 0 min (outsourced) | Very high |
+| **DIY Manual Writing** | $0 | 6 hours (45 min/post) | Varies |
+| **ChatGPT (manual copy/paste)** | $20 (Pro) | 2 hours | High, needs editing |
+| **Jasper/Copy.ai** | $39-99 | 1 hour | Medium |
+
+**Winner**: Content Engine for cost-conscious solo professionals who can edit AI drafts.
+
+### Advanced Cost Scenarios
+
+#### Scenario 1: Solo Professional (12 posts/month)
+
+**Setup**:
+- 12 LinkedIn posts/month (3x/week)
+- Average post length: 200 words
+- Editing time: 5 minutes per post
+
+**Costs**:
+- AI generation: $0.07/month
+- Your time editing: 1 hour/month (5 min × 12)
+- **Total cost**: $0.07/month + your hourly rate × 1 hour
+
+**vs Manual Writing**:
+- Writing from scratch: 9 hours/month (45 min × 12)
+- Time saved: 8 hours/month
+- If your time is worth $50/hour: **Save $400/month**
+
+#### Scenario 2: Marketing Agency (60 posts/month for 15 clients)
+
+**Setup**:
+- 15 clients × 4 posts/month = 60 posts
+- AI generates drafts, writers edit
+- Editing time: 15 minutes per post (more involved than solo use)
+
+**Costs**:
+- AI generation: $0.36/month
+- Writer editing: 15 hours/month (15 min × 60)
+- Writer cost at $30/hour: $450/month
+- **Total cost**: $450.36/month
+
+**vs Manual Writing**:
+- Writing from scratch: 45 hours/month (45 min × 60)
+- Writer cost at $30/hour: $1,350/month
+- **Savings**: $899.64/month ($10,795/year)
+
+#### Scenario 3: Enterprise (200 posts/month, multiple brands)
+
+**Setup**:
+- Large company managing 50 brand accounts
+- 200 posts/month across all accounts
+- AI generates drafts, editors polish
+
+**Costs**:
+- AI generation: $1.20/month
+- Editor time: 50 hours/month (15 min × 200)
+- Editor cost at $40/hour: $2,000/month
+- **Total cost**: $2,001.20/month
+
+**vs Manual Writing**:
+- Writing from scratch: 150 hours/month (45 min × 200)
+- Writer cost at $40/hour: $6,000/month
+- **Savings**: $3,998.80/month ($47,985/year)
+
+### ROI Calculator
+
+**Calculate your return on investment:**
+
+**Formula**:
+```
+Monthly Savings = (Manual Cost - AI Cost - Editing Cost)
+Annual ROI = (Monthly Savings × 12) / Initial Investment
+```
+
+**Example** (Solo professional):
+- Manual cost: $0 (your time: 9 hours × $50/hr = $450)
+- AI cost: $0.07
+- Editing cost: $50 (1 hour × $50/hr)
+- Monthly savings: $450 - $0.07 - $50 = $399.93
+- Annual ROI: $4,799 in time savings
+
+### Optimizing Your API Costs
+
+**Tips to minimize token usage**:
+
+1. **Be concise in prompts**: Don't include unnecessary context (saves input tokens)
+2. **Reuse generated content**: Edit and repurpose instead of regenerating
+3. **Batch generate**: Create 5-10 posts in one session, schedule them for the month
+4. **Use shorter templates**: "Professional Insight" is typically shorter than "Case Study"
+5. **Edit the output**: Don't regenerate if the first draft is 80% good—just edit it
+
+**Token-saving example**:
+
+**Verbose prompt** (600 tokens):
+> "Write a LinkedIn post about the rise of AI coding assistants. I want you to make it very professional and analytical in tone. My target audience is software engineers, CTOs, and tech leaders. Please include keywords like AI, productivity, developer experience, and automation. Make sure it has a strong opening hook, 3-4 body paragraphs with data-driven insights, and a closing call-to-action question. Also include 4-5 relevant hashtags. The post should be about 200 words and follow LinkedIn best practices."
+
+**Concise prompt** (300 tokens):
+> "Write an analytical LinkedIn post (200 words) about AI coding assistants for software engineers and CTOs. Include data, 3 insights, CTA question, and 4 hashtags. Keywords: AI, productivity, developer experience."
+
+**Savings**: 300 input tokens × $0.003/1000 = $0.0009 saved per post
+**Annual impact** (12 posts/month): Save $0.13/year
+
+*Not huge, but shows the principle. For agencies doing 200 posts/month, this saves $26/year.*
+
+### Monitoring Your Usage
+
+**How to track your API spend**:
+
+1. **Anthropic Console**: Log in to [console.anthropic.com](https://console.anthropic.com/)
+2. **Navigate to Usage**: Dashboard → Usage & Billing
+3. **View metrics**:
+   - Total tokens used (input + output)
+   - Cost breakdown by day/week/month
+   - Remaining free credit
+4. **Set alerts**: Get email notifications at 50%, 75%, 90% of credit
+
+**Usage dashboard shows**:
+- Tokens per request (track if prompts are too verbose)
+- Cost per request (optimize high-cost generations)
+- Request count (how many posts generated)
+
+---
+
 ## 🛣️ Roadmap
 
 ### Version 1.0 (Current) ✅

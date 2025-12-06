@@ -315,3 +315,102 @@ class TestFinancialAnalystEdgeCases:
         pe = 28.5
         formatted = f"{pe:.2f}"
         assert formatted == "28.50"
+
+
+class TestAIInsights:
+    """Test AI insights functionality."""
+
+    @patch('modules.financial_analyst._get_api_key')
+    @patch('modules.financial_analyst.ANTHROPIC_AVAILABLE', True)
+    @patch('modules.financial_analyst._generate_financial_insights')
+    @patch('modules.financial_analyst.st')
+    def test_display_ai_insights_enabled(self, mock_st, mock_generate, mock_get_key):
+        """Test AI insights display when enabled."""
+        from modules.financial_analyst import _display_ai_insights
+
+        # Mock API key and toggle
+        mock_get_key.return_value = "sk-test-key"
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.toggle.return_value = True
+
+        # Mock generated insights
+        mock_generate.return_value = "**Test insights**"
+
+        # Call function
+        _display_ai_insights(MOCK_COMPANY_INFO, MOCK_FINANCIALS, "AAPL", "sk-test-key")
+
+        # Verify generation was called
+        mock_generate.assert_called_once()
+        mock_st.markdown.assert_called()
+
+    @patch('modules.financial_analyst.st')
+    def test_display_ai_insights_disabled(self, mock_st):
+        """Test AI insights display when disabled."""
+        from modules.financial_analyst import _display_ai_insights
+
+        # Mock toggle disabled
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.toggle.return_value = False
+
+        # Call function
+        _display_ai_insights(MOCK_COMPANY_INFO, MOCK_FINANCIALS, "AAPL", "sk-test-key")
+
+        # Verify info message shown
+        mock_st.info.assert_called_once()
+
+    def test_build_financial_summary(self):
+        """Test building financial summary for Claude."""
+        from modules.financial_analyst import _build_financial_summary
+        import pandas as pd
+
+        # Create mock financials with proper structure
+        mock_financials = {
+            'income_stmt': pd.DataFrame({
+                'Total Revenue': [400e9, 380e9],
+                'Net Income': [100e9, 95e9]
+            }, index=['2024-01-01', '2023-01-01'])
+        }
+
+        summary = _build_financial_summary(MOCK_COMPANY_INFO, mock_financials)
+
+        # Verify key elements are in summary
+        assert "Apple Inc." in summary
+        assert "Technology" in summary
+        assert "P/E Ratio" in summary
+        assert isinstance(summary, str)
+        assert len(summary) > 0
+
+    @patch('modules.financial_analyst.Anthropic')
+    def test_generate_financial_insights_success(self, mock_anthropic):
+        """Test successful insights generation."""
+        from modules.financial_analyst import _generate_financial_insights
+
+        # Mock Claude response
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+
+        mock_message = MagicMock()
+        mock_message.content = [MagicMock(text="**Financial Health Assessment:**\n- Strong position")]
+        mock_client.messages.create.return_value = mock_message
+
+        # Call function
+        result = _generate_financial_insights(MOCK_COMPANY_INFO, MOCK_FINANCIALS, "AAPL", "sk-test-key")
+
+        # Verify result
+        assert result is not None
+        assert "Financial Health Assessment" in result
+
+    def test_get_api_key_from_env(self):
+        """Test getting API key from environment."""
+        from modules.financial_analyst import _get_api_key
+        import os
+
+        # Set env variable
+        os.environ['ANTHROPIC_API_KEY'] = 'test-key-env'
+
+        key = _get_api_key()
+
+        assert key == 'test-key-env'
+
+        # Clean up
+        del os.environ['ANTHROPIC_API_KEY']
