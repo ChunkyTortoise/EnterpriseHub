@@ -4,7 +4,7 @@ Enterprise Hub - Main Application Entry Point.
 A unified platform for market analysis and enterprise tooling
 with multiple mission-critical modules.
 """
-
+import importlib
 import streamlit as st
 from utils.logger import get_logger
 
@@ -23,6 +23,16 @@ st.set_page_config(
     }
 )
 
+# --- MODULE REGISTRY ---
+# Maps sidebar navigation titles to module information.
+# Format: "Page Title": ("module_filename", "Display Title")
+MODULES = {
+    "📊 Market Pulse": ("market_pulse", "Market Pulse"),
+    "💼 Financial Analyst": ("financial_analyst", "Financial Analyst"),
+    "💰 Margin Hunter": ("margin_hunter", "Margin Hunter"),
+    "🤖 Agent Logic": ("agent_logic", "Agent Logic"),
+}
+
 
 def main() -> None:
     """Main application function."""
@@ -31,26 +41,20 @@ def main() -> None:
         st.sidebar.title("🚀 Enterprise Hub")
         st.sidebar.markdown("**By Cayman Roden**")
         
-        page = st.sidebar.radio(
-            "Navigate:",
-            ["🏠 Overview", "📊 Market Pulse", "💼 Financial Analyst", 
-             "💰 Margin Hunter", "🤖 Agent Logic", "✍️ Content Engine"]
-        )
+        # Combine static pages with module pages for the radio options
+        pages = ["🏠 Overview"] + list(MODULES.keys()) + ["✍️ Content Engine"]
+        page = st.sidebar.radio("Navigate:", pages)
         
         logger.info(f"User navigated to: {page}")
         
         # MAIN CONTAINER
         if page == "🏠 Overview":
             _render_overview()
-        elif page == "📊 Market Pulse":
-            _render_market_pulse()
-        elif page == "💼 Financial Analyst":
-            _render_financial_analyst()
-        elif page == "💰 Margin Hunter":
-            _render_margin_hunter()
-        elif page == "🤖 Agent Logic":
-            _render_agent_logic()
+        elif page in MODULES:
+            module_name, module_title = MODULES[page]
+            _render_module(module_name, module_title)
         else:
+            # Renders a placeholder for any page not in the main logic (e.g., "Content Engine")
             _render_placeholder(page)
             
     except Exception as e:
@@ -67,7 +71,7 @@ def _render_overview() -> None:
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Modules Deployed", "4/5", delta="80%")
+        st.metric("Modules Deployed", f"{len(MODULES)}/5", delta=f"{len(MODULES)/5*100}%")
     with col2:
         st.metric("Cloud-Native", "✓", delta="Zero Infrastructure")
     with col3:
@@ -86,51 +90,28 @@ def _render_overview() -> None:
     """)
 
 
-def _render_market_pulse() -> None:
-    """Render the Market Pulse module."""
+def _render_module(module_name: str, module_title: str) -> None:
+    """
+    Generic renderer for an enterprise module.
+    
+    Dynamically imports and renders a module specified by its name.
+    
+    Args:
+        module_name: The file name of the module in the `modules` directory.
+        module_title: The display title for the page.
+    """
+    st.title(module_title)
     try:
-        from modules import market_pulse
-        market_pulse.render()
+        module = importlib.import_module(f"modules.{module_name}")
+        module.render()
+    except ModuleNotFoundError:
+        logger.warning(f"Module '{module_name}' not found, rendering placeholder.")
+        _render_placeholder(module_title)
     except Exception as e:
-        logger.error(f"Error loading Market Pulse module: {e}", exc_info=True)
-        st.error("❌ Failed to load Market Pulse module.")
-        if st.checkbox("Show error details"):
-            st.exception(e)
-
-
-def _render_financial_analyst() -> None:
-    """Render the Financial Analyst module."""
-    try:
-        from modules import financial_analyst
-        financial_analyst.render()
-    except Exception as e:
-        logger.error(f"Error loading Financial Analyst module: {e}", exc_info=True)
-        st.error("❌ Failed to load Financial Analyst module.")
-        if st.checkbox("Show error details"):
-            st.exception(e)
-
-
-def _render_margin_hunter() -> None:
-    """Render the Margin Hunter module."""
-    try:
-        from modules import margin_hunter
-        margin_hunter.render()
-    except Exception as e:
-        logger.error(f"Error loading Margin Hunter module: {e}", exc_info=True)
-        st.error("❌ Failed to load Margin Hunter module.")
-        if st.checkbox("Show error details"):
-            st.exception(e)
-
-
-def _render_agent_logic() -> None:
-    """Render the Agent Logic module."""
-    try:
-        from modules import agent_logic
-        agent_logic.render()
-    except Exception as e:
-        logger.error(f"Error loading Agent Logic module: {e}", exc_info=True)
-        st.error("❌ Failed to load Agent Logic module.")
-        if st.checkbox("Show error details"):
+        logger.error(f"Error loading {module_title} module: {e}", exc_info=True)
+        st.error(f"❌ Failed to load {module_title} module.")
+        # Use a unique key for the checkbox to prevent DuplicateWidgetID error
+        if st.checkbox("Show error details", key=f"{module_name}_error"):
             st.exception(e)
 
 

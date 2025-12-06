@@ -85,6 +85,7 @@ def get_stock_data(
         ) from e
 
 
+@st.cache_data(ttl=300)
 def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
     """
     Calculate technical indicators for stock data.
@@ -151,6 +152,7 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
         ) from e
 
 
+@st.cache_data(ttl=300)
 def get_company_info(ticker: str) -> dict:
     """
     Fetch company information and fundamental metrics.
@@ -177,6 +179,7 @@ def get_company_info(ticker: str) -> dict:
         raise DataFetchError(f"Failed to fetch company info: {str(e)}") from e
 
 
+@st.cache_data(ttl=300)
 def get_financials(ticker: str) -> dict:
     """
     Fetch financial statements.
@@ -204,6 +207,7 @@ def get_financials(ticker: str) -> dict:
         raise DataFetchError(f"Failed to fetch financials: {str(e)}") from e
 
 
+@st.cache_data(ttl=300)
 def get_news(ticker: str) -> list:
     """
     Fetch latest news for a ticker.

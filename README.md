@@ -20,11 +20,11 @@ Enterprise Hub is a professional-grade web application that consolidates five mi
 
 ### ✨ Features
 
-- **📊 Market Pulse** - Real-time stock data with technical indicators (RSI, MACD, Moving Averages, Volume)
-- **💼 Financial Analyst** *(Coming Soon)* - Advanced financial modeling and analysis
-- **💰 Margin Hunter** *(Coming Soon)* - Optimization algorithms for margin analysis
-- **🤖 Agent Logic** *(Coming Soon)* - Intelligent automation workflows
-- **✍️ Content Engine** *(Coming Soon)* - AI-powered content generation
+- **📊 Market Pulse** ⚡ *ENHANCED* - Real-time stock data with a 4-panel layout including Candlesticks, RSI, MACD, and Volume Analysis.
+- **💼 Financial Analyst** ✅ *ACTIVE* - Fundamental analysis, balance sheets, and key financial metrics.
+- **💰 Margin Hunter** 🏆 *HERO PROJECT* - Cost-Volume-Profit (CVP) analysis with interactive sensitivity heatmaps, break-even calculations, and scenario modeling. Perfect for pricing strategy, profitability optimization, and volume planning. [→ Full documentation](modules/README_MARGIN_HUNTER.md) | [→ Industry templates](scenarios/)
+- **🤖 Agent Logic** ✅ *ACTIVE* - AI-powered sentiment analysis and news scouting from the web.
+- **✍️ Content Engine** 🔜 *COMING SOON* - AI-powered content generation.
 
 ### 🎯 Key Highlights
 
@@ -83,6 +83,9 @@ enterprise-hub/
 ├── dev-requirements.txt   # Development dependencies
 ├── modules/              # Feature modules
 │   ├── __init__.py
+│   ├── agent_logic.py    # AI sentiment analysis module
+│   ├── financial_analyst.py # Fundamental analysis module
+│   ├── margin_hunter.py  # Profit optimization module
 │   └── market_pulse.py   # Market analysis module
 ├── utils/                # Shared utilities
 │   ├── data_loader.py    # Data fetching and processing
@@ -104,11 +107,28 @@ enterprise-hub/
 
 ## 🎨 Screenshots
 
+### 💰 Margin Hunter - Hero Project
+*Interactive Cost-Volume-Profit (CVP) analysis with sensitivity heatmaps*
+
+![Margin Hunter Dashboard](assets/margin-hunter-dashboard.png)
+
+**Key Capabilities**:
+- ✅ **Break-even analysis** - Calculate exact units/revenue needed to reach profitability
+- ✅ **Sensitivity heatmaps** - Visualize profit impact of price and cost changes
+- ✅ **Scenario modeling** - Compare break-even, current, and target profit scenarios
+- ✅ **Advanced metrics** - Margin of safety, operating leverage, contribution margin
+- ✅ **Industry templates** - Pre-built scenarios for [SaaS](scenarios/saas-pricing-template.md), [E-Commerce](scenarios/ecommerce-product-template.md), and [Manufacturing](scenarios/manufacturing-volume-template.md)
+
+**Perfect for**: Pricing strategy, profitability optimization, contract bidding, volume planning
+
+[📖 Read full Margin Hunter documentation →](modules/README_MARGIN_HUNTER.md)
+
+---
+
 ### Market Pulse - Technical Analysis Dashboard
 *Real-time stock charts with RSI, MACD, and volume indicators*
 
 ![Market Pulse Dashboard](assets/market-pulse-screenshot.png)
-> *Coming soon: Add your screenshot to `/assets` folder*
 
 ---
 
@@ -124,7 +144,26 @@ enterprise-hub/
 
 ## 📖 Usage Guide
 
-### Market Pulse Module
+### 💰 Margin Hunter Module (Hero Project)
+
+**Quick Start**:
+1. **Input product costs** - Enter unit selling price and variable cost per unit
+2. **Enter fixed costs** - Add your monthly/annual overhead (rent, salaries, etc.)
+3. **Set targets** - Input current sales volume and desired profit
+4. **Analyze results** - View break-even point, contribution margin, and scenarios
+5. **Explore sensitivity** - Use interactive heatmap to see profit impact of price/cost changes
+6. **Export data** - Download scenario CSV for presentations
+
+**Industry Templates**:
+- [SaaS Pricing Strategy](scenarios/saas-pricing-template.md) - Subscription pricing, CAC payback, LTV analysis
+- [E-Commerce Product Profitability](scenarios/ecommerce-product-template.md) - Product mix, promotions, marketplace fees
+- [Manufacturing Volume Planning](scenarios/manufacturing-volume-template.md) - Production runs, contract bidding, capacity utilization
+
+**Full Documentation**: [modules/README_MARGIN_HUNTER.md](modules/README_MARGIN_HUNTER.md)
+
+---
+
+### 📊 Market Pulse Module
 
 1. **Select a ticker symbol** (e.g., SPY, AAPL, TSLA)
 2. **Choose time period** (1 month to 5 years)
@@ -134,14 +173,6 @@ enterprise-hub/
    - **Panel 2**: Relative Strength Index (RSI) with overbought/oversold levels
    - **Panel 3**: MACD with signal line
    - **Panel 4**: Volume bars (green/red based on price movement)
-
-### Coming Soon
-
-Additional modules are in active development:
-- Financial Analyst - Deep-dive financial modeling
-- Margin Hunter - Profitability optimization
-- Agent Logic - Workflow automation
-- Content Engine - AI content generation
 
 ---
 
@@ -240,9 +271,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [x] Market Pulse module with technical indicators
 - [x] 4-panel chart layout (Price, RSI, MACD, Volume)
-- [ ] Financial Analyst module
-- [ ] Margin Hunter module
-- [ ] Agent Logic automation
+- [x] Financial Analyst module
+- [x] Margin Hunter module
+- [x] Agent Logic automation
 - [ ] Content Engine
 - [ ] User authentication
 - [ ] Portfolio tracking
