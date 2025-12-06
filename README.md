@@ -4,7 +4,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28.0-FF4B4B.svg)](https://streamlit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-13%2F13%20passing-brightgreen.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
+[![Tests](https://img.shields.io/badge/tests-76%20total-brightgreen.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit_Cloud-FF4B4B.svg)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
 
 > **A unified platform for market analysis and enterprise tooling**  
