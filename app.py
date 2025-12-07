@@ -32,6 +32,8 @@ MODULES = {
     "💰 Margin Hunter": ("margin_hunter", "Margin Hunter"),
     "🤖 Agent Logic": ("agent_logic", "Agent Logic"),
     "✍️ Content Engine": ("content_engine", "Content Engine"),
+    "🔍 Data Detective": ("data_detective", "Data Detective"),
+    "📈 Marketing Analytics": ("marketing_analytics", "Marketing Analytics"),
 }
 
 
@@ -68,17 +70,17 @@ def main() -> None:
 def _render_overview() -> None:
     """Render the overview/home page."""
     st.title("The Unified Enterprise Hub")
-    st.markdown("### 5 Mission-Critical Modules in One Platform")
+    st.markdown("### 7 Mission-Critical Modules in One Platform")
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Modules Deployed", f"{len(MODULES)}/5", delta="100%")
+        st.metric("Modules Deployed", f"{len(MODULES)}/7", delta="100%")
     with col2:
         st.metric("Cloud-Native", "✓", delta="Zero Infrastructure")
     with col3:
         st.metric("Time to Value", "< 2 min", delta="-98% vs Legacy")
 
-    st.success("**✅ ALL MODULES DEPLOYED:** Content Engine now live with AI-powered LinkedIn post generation!")
+    st.success("**✅ NEW MODULE:** Marketing Analytics Hub - Track campaigns, ROI, customer metrics, and A/B tests! 📈")
 
     st.markdown("---")
     st.markdown("### 📊 Available Modules")
@@ -87,7 +89,9 @@ def _render_overview() -> None:
     - **Financial Analyst** ✅ *ACTIVE* - Fundamental analysis, balance sheets, and key metrics
     - **Margin Hunter** 🏆 *HERO PROJECT* - Break-even analysis and profit optimization with CVP heatmaps
     - **Agent Logic** ✅ *ACTIVE* - AI-powered sentiment analysis and news scouting
-    - **Content Engine** ✨ *NEW* - AI-powered LinkedIn post generator with Claude API
+    - **Content Engine** ✅ *ACTIVE* - AI-powered LinkedIn post generator with Claude API
+    - **Data Detective** ✅ *ACTIVE* - AI-powered data analysis, profiling, and insights with Claude
+    - **Marketing Analytics** ✨ *NEW* - Campaign tracking, ROI calculator, CAC/CLV, A/B testing, attribution
     """)
 
 

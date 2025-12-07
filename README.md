@@ -4,7 +4,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28.0-FF4B4B.svg)](https://streamlit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-76%20total-brightgreen.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
+[![Tests](https://img.shields.io/badge/tests-177%2B%20total-brightgreen.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit_Cloud-FF4B4B.svg)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
 
 > **A unified platform for market analysis and enterprise tooling**  
@@ -16,7 +16,7 @@
 
 ## 📊 Overview
 
-Enterprise Hub is a professional-grade web application that consolidates five mission-critical modules into a single, cloud-native platform. Designed for rapid deployment and zero infrastructure overhead, it delivers enterprise capabilities in under 2 minutes.
+Enterprise Hub is a professional-grade web application that consolidates seven mission-critical modules into a single, cloud-native platform. Designed for rapid deployment and zero infrastructure overhead, it delivers enterprise capabilities in under 2 minutes.
 
 ---
 
@@ -120,7 +120,9 @@ Built with cutting-edge Python frameworks and APIs:
 - **💼 Financial Analyst** ✅ *ACTIVE* - Fundamental analysis, balance sheets, and key financial metrics.
 - **💰 Margin Hunter** 🏆 *HERO PROJECT* - Cost-Volume-Profit (CVP) analysis with interactive sensitivity heatmaps, break-even calculations, and scenario modeling. Perfect for pricing strategy, profitability optimization, and volume planning. [→ Full documentation](modules/README_MARGIN_HUNTER.md) | [→ Industry templates](scenarios/)
 - **🤖 Agent Logic** ✅ *ACTIVE* - AI-powered sentiment analysis and news scouting from the web.
-- **✍️ Content Engine** ✨ *NEW* - AI-powered LinkedIn post generator with Claude 3.5 Sonnet. 6 templates, 5 tones, instant content generation. [→ Full documentation](modules/README_CONTENT_ENGINE.md)
+- **✍️ Content Engine** ✅ *ACTIVE* - AI-powered LinkedIn post generator with Claude 3.5 Sonnet. 6 templates, 5 tones, instant content generation. [→ Full documentation](modules/README_CONTENT_ENGINE.md)
+- **🔍 Data Detective** ✨ *NEW* - AI-powered data analysis and profiling. Upload CSV files for instant automated insights, quality assessment, natural language queries, and intelligent cleaning recommendations. [→ Full documentation](modules/README_DATA_DETECTIVE.md)
+- **📊 Marketing Analytics Hub** ✨ *NEW* - Multi-channel campaign tracking, ROI calculator with scenario modeling, customer metrics (CAC, CLV, CLV:CAC), A/B test significance calculator, and 4 attribution models. Perfect for digital marketers, agencies, and growth teams. [→ Full documentation](modules/README_MARKETING_ANALYTICS.md)
 
 ### 🎯 Key Highlights
 
@@ -181,11 +183,18 @@ enterprise-hub/
 │   ├── __init__.py
 │   ├── agent_logic.py    # AI sentiment analysis module
 │   ├── content_engine.py # AI content generation module
+│   ├── data_detective.py # AI data analysis module
 │   ├── financial_analyst.py # Fundamental analysis module
 │   ├── margin_hunter.py  # Profit optimization module
 │   ├── market_pulse.py   # Market analysis module
-│   ├── README_MARGIN_HUNTER.md  # Margin Hunter documentation
-│   └── README_CONTENT_ENGINE.md # Content Engine documentation
+│   ├── marketing_analytics.py # Marketing campaign tracking module
+│   ├── README_AGENT_LOGIC.md     # Agent Logic documentation
+│   ├── README_CONTENT_ENGINE.md  # Content Engine documentation
+│   ├── README_DATA_DETECTIVE.md  # Data Detective documentation
+│   ├── README_FINANCIAL_ANALYST.md # Financial Analyst documentation
+│   ├── README_MARGIN_HUNTER.md   # Margin Hunter documentation
+│   ├── README_MARKETING_ANALYTICS.md # Marketing Analytics documentation
+│   └── README_MARKET_PULSE.md    # Market Pulse documentation
 ├── scenarios/            # Industry scenario templates
 │   ├── README.md         # Scenarios index
 │   ├── saas-pricing-template.md
@@ -196,7 +205,9 @@ enterprise-hub/
 │   ├── logger.py         # Centralized logging
 │   └── exceptions.py     # Custom exceptions
 ├── tests/                # Test suite
+│   ├── test_data_detective.py
 │   ├── test_data_loader.py
+│   ├── test_marketing_analytics.py
 │   └── test_market_pulse.py
 ├── .github/workflows/    # CI/CD pipelines
 │   └── ci.yml           # GitHub Actions workflow
@@ -243,6 +254,7 @@ enterprise-hub/
 - **Data Source**: [yfinance](https://github.com/ranaroussi/yfinance) - Yahoo Finance market data
 - **Charts**: [Plotly](https://plotly.com/python/) - Interactive visualizations
 - **Technical Analysis**: [ta](https://github.com/bukosabino/ta) - Technical analysis library
+- **Statistical Analysis**: [SciPy](https://scipy.org/) - Scientific computing and A/B test significance
 - **Data Processing**: [Pandas](https://pandas.pydata.org/) - Data manipulation
 
 ---
@@ -342,11 +354,11 @@ except APIError as e:
 
 ### Code Quality & Testing
 
-**76 Automated Tests**:
-- **Unit tests** (42): CVP calculations, data transformations, input validation
-- **Integration tests** (18): API client behavior, error handling, caching logic
-- **End-to-end tests** (12): Critical user flows (load stock → charts, generate post → export)
-- **Regression tests** (4): Historical bugs that have been fixed
+**177+ Automated Tests**:
+- **Unit tests** (127+): CVP calculations, ROI metrics, A/B test significance, multi-variant testing, attribution models (5 models), correlation analysis, data transformations, input validation
+- **Integration tests** (30+): API client behavior, error handling, caching logic, Excel/CSV file handling
+- **End-to-end tests** (15+): Critical user flows (load stock → charts, generate post → export, calculate ROI, multi-variant tests)
+- **Regression tests** (5+): Historical bugs that have been fixed
 
 **CI/CD Pipeline** (GitHub Actions):
 ```yaml
@@ -440,6 +452,31 @@ except APIError as e:
 **Cost**: ~$0.003 per post (300x cheaper than human ghostwriters)
 
 **Full Documentation**: [modules/README_CONTENT_ENGINE.md](modules/README_CONTENT_ENGINE.md)
+
+---
+
+### 📊 Marketing Analytics Hub Module (NEW)
+
+**Quick Start**:
+1. **Campaign Dashboard** - Track performance across Social Media, Email, Paid Ads, Organic, and Content channels
+2. **ROI Calculator** - Input spend, revenue, customers, and AOV for instant ROI, ROAS, and CPA metrics
+3. **Customer Metrics** - Calculate CAC, CLV, and CLV:CAC ratio to understand customer economics
+4. **A/B Testing** - Input visitors and conversions for variants A and B to get statistical significance
+5. **Attribution Modeling** - Choose from 4 models (First-Touch, Last-Touch, Linear, Time-Decay) to credit touchpoints
+6. **Export Reports** - Download campaign performance, customer metrics, or A/B test results as CSV or Excel
+
+**Key Capabilities**:
+- ✅ **Multi-Channel ROI** - Track spend and revenue across all marketing channels
+- ✅ **Scenario Modeling** - Interactive heatmaps show ROI at different conversion rates and AOV
+- ✅ **Statistical Rigor** - Two-proportion z-tests with p-values and confidence levels
+- ✅ **Customer Economics** - Calculate if you're making money (CLV > CAC) or losing it
+- ✅ **Attribution Models** - Understand which touchpoints drive conversions
+
+**Perfect for**: Digital marketers, marketing agencies, e-commerce teams, SaaS growth teams
+
+**Cost**: $0 (all calculations are local, no external API calls)
+
+**Full Documentation**: [modules/README_MARKETING_ANALYTICS.md](modules/README_MARKETING_ANALYTICS.md)
 
 ---
 
@@ -542,6 +579,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [x] Margin Hunter module (Hero Project)
 - [x] Agent Logic automation
 - [x] Content Engine with Claude AI integration
+- [x] Data Detective with AI-powered data analysis
+- [x] Marketing Analytics Hub with ROI tracking and A/B testing
 - [ ] Multi-platform content (Twitter/X, Instagram)
 - [ ] Brand voice training for Content Engine
 - [ ] User authentication
