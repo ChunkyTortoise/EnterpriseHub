@@ -1,0 +1,24 @@
+core/utils.py:14: error: Library stubs not installed for "pandas"  [import-untyped]
+core/sentiment_analyzer.py:3: error: Skipping analyzing "textblob": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+core/indicators.py:8: error: Library stubs not installed for "pandas"  [import-untyped]
+core/validators.py:11: error: Library stubs not installed for "pandas"  [import-untyped]
+core/config.py: note: In class "GeminiConfig":
+core/config.py:73: error: Argument 1 to "float" has incompatible type "object"; expected "str | Buffer | SupportsFloat | SupportsIndex"  [arg-type]
+core/config.py:74: error: No overload variant of "int" matches argument type "object"  [call-overload]
+core/config.py:74: note: Possible overload variants:
+core/config.py:74: note:     def __new__(cls, str | Buffer | SupportsInt | SupportsIndex | SupportsTrunc = ..., /) -> int
+core/config.py:74: note:     def __new__(cls, str | bytes | bytearray, /, base: SupportsIndex) -> int
+modules/margin_hunter.py:4: error: Library stubs not installed for "pandas"  [import-untyped]
+core/data_loader.py:12: error: Library stubs not installed for "pandas"  [import-untyped]
+modules/market_pulse.py:10: error: Library stubs not installed for "pandas"  [import-untyped]
+modules/financial_analyst.py:1: error: Library stubs not installed for "pandas"  [import-untyped]
+modules/content_engine.py:30: error: Cannot find implementation or library stub for module named "reportlab.lib"  [import-not-found]
+modules/content_engine.py:31: error: Cannot find implementation or library stub for module named "reportlab.lib.pagesizes"  [import-not-found]
+modules/content_engine.py:32: error: Cannot find implementation or library stub for module named "reportlab.lib.styles"  [import-not-found]
+modules/content_engine.py:33: error: Cannot find implementation or library stub for module named "reportlab.lib.units"  [import-not-found]
+modules/content_engine.py:34: error: Cannot find implementation or library stub for module named "reportlab.platypus"  [import-not-found]
+modules/campaign_commander.py:15: error: Library stubs not installed for "pandas"  [import-untyped]
+modules/campaign_commander.py:15: note: Hint: "python3 -m pip install pandas-stubs"
+modules/campaign_commander.py:15: note: (or run "mypy --install-types" to install all missing stub packages)
+modules/campaign_commander.py:15: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+Found 16 errors in 11 files (checked 20 source files)
