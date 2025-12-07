@@ -15,7 +15,7 @@
 **Role**: Sole Developer & Architect
 **Duration**: Ongoing (Launched December 2024)
 **Tech Stack**: Python, Streamlit, Plotly, Anthropic Claude API, Yahoo Finance API
-**Impact**: 5 production modules, 76 automated tests, deployed to 1,000+ users via Streamlit Cloud
+**Impact**: 7 production modules, 220+ automated tests, live demo deployment via Streamlit Cloud
 
 **What I Built**: A cloud-native web application that consolidates 5 mission-critical business tools—market analysis, profitability modeling, and AI-powered content generation—into a single, intuitive platform.
 
@@ -315,7 +315,7 @@ def load_stock_data(ticker, period, interval):
 
 ### Test Coverage
 
-**76 automated tests across 4 categories**:
+**220+ automated tests across multiple categories**:
 
 1. **Unit Tests (42 tests)**:
    - CVP calculation accuracy (break-even, margin of safety, operating leverage)

@@ -4,7 +4,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28.0-FF4B4B.svg)](https://streamlit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-177%2B%20total-brightgreen.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
+[![Tests](https://img.shields.io/badge/tests-220%2B%20passing-brightgreen.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit_Cloud-FF4B4B.svg)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
 
 > **A unified platform for market analysis and enterprise tooling**  
@@ -40,7 +40,7 @@ Enterprise Hub delivers **institutional-grade business tools in a unified, web-b
 - **Instant Analysis**: Break-even calculations, stock charts, AI content - all in under 2 minutes
 - **Zero Infrastructure**: No installation, no setup, no IT team required
 - **Cloud-Native**: Access from anywhere, on any device, always up to date
-- **Production-Ready**: 76 automated tests, CI/CD deployment, enterprise-quality code
+- **Production-Ready**: 220+ automated tests, CI/CD deployment, enterprise-quality code
 
 **Result**: Faster decisions, $26k+/year in cost savings, one unified workflow.
 
@@ -58,7 +58,7 @@ Most developer portfolios showcase to-do apps, weather dashboards, or Twitter cl
 
 This isn't a weekend hackathon project. Enterprise Hub features:
 
-- 76 automated tests with 85%+ code coverage
+- 220+ automated tests with 85%+ code coverage
 - CI/CD pipeline with linting, formatting, and test automation
 - Comprehensive error handling for edge cases
 - Documentation: 5+ detailed READMEs, industry templates, troubleshooting guides
@@ -225,7 +225,8 @@ enterprise-hub/
 ### 💰 Margin Hunter - Hero Project
 *Interactive Cost-Volume-Profit (CVP) analysis with sensitivity heatmaps*
 
-![Margin Hunter Dashboard](assets/margin-hunter-dashboard.png)
+<!-- TODO: Add screenshot - See assets/screenshots/README.md for capture instructions -->
+<!-- ![Margin Hunter Dashboard](assets/screenshots/margin_hunter/margin_hunter_interface_01.png) -->
 
 **Key Capabilities**:
 - ✅ **Break-even analysis** - Calculate exact units/revenue needed to reach profitability
@@ -243,7 +244,8 @@ enterprise-hub/
 ### Market Pulse - Technical Analysis Dashboard
 *Real-time stock charts with RSI, MACD, and volume indicators*
 
-![Market Pulse Dashboard](assets/market-pulse-screenshot.png)
+<!-- TODO: Add screenshot - See assets/screenshots/README.md for capture instructions -->
+<!-- ![Market Pulse Dashboard](assets/screenshots/market_pulse/market_pulse_charts_01.png) -->
 
 ---
 
@@ -354,7 +356,7 @@ except APIError as e:
 
 ### Code Quality & Testing
 
-**177+ Automated Tests**:
+**220+ Automated Tests**:
 - **Unit tests** (127+): CVP calculations, ROI metrics, A/B test significance, multi-variant testing, attribution models (5 models), correlation analysis, data transformations, input validation
 - **Integration tests** (30+): API client behavior, error handling, caching logic, Excel/CSV file handling
 - **End-to-end tests** (15+): Critical user flows (load stock → charts, generate post → export, calculate ROI, multi-variant tests)
@@ -539,6 +541,39 @@ Your app will be live at `https://your-app-name.streamlit.app` in minutes.
 docker build -t enterprise-hub .
 docker run -p 8501:8501 enterprise-hub
 ```
+
+---
+
+## 📚 Documentation
+
+Comprehensive documentation is available to help you get the most out of EnterpriseHub:
+
+### User Documentation
+- **[README.md](README.md)** - This file (project overview, quickstart)
+- **[FAQ.md](FAQ.md)** - Frequently asked questions and troubleshooting
+- **[Deploy.md](Deploy.md)** - Deployment guide for various platforms
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
+
+### Developer Documentation
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture and design patterns
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
+- **[AUTHORS.md](AUTHORS.md)** - Contributors and acknowledgments
+
+### Module Documentation
+Each of the 7 modules has comprehensive documentation:
+- [Margin Hunter](modules/README_MARGIN_HUNTER.md) - CVP analysis
+- [Content Engine](modules/README_CONTENT_ENGINE.md) - AI content generation
+- [Data Detective](modules/README_DATA_DETECTIVE.md) - Statistical analysis
+- [Financial Analyst](modules/README_FINANCIAL_ANALYST.md) - Stock analysis with AI
+- [Market Pulse](modules/README_MARKET_PULSE.md) - Technical indicators
+- [Marketing Analytics](modules/README_MARKETING_ANALYTICS.md) - Campaign tracking
+- [Agent Logic](modules/README_AGENT_LOGIC.md) - Sentiment analysis
+
+### Scenario Templates
+Industry-specific templates for Margin Hunter:
+- [SaaS Pricing](scenarios/saas-pricing-template.md)
+- [E-commerce Products](scenarios/ecommerce-product-template.md)
+- [Manufacturing Volume](scenarios/manufacturing-volume-template.md)
 
 ---
 

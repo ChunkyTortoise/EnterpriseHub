@@ -254,7 +254,7 @@
 > - Production-grade error handling and user experience design
 > - Deployment to Streamlit Cloud with CI/CD via GitHub Actions
 >
-> The entire platform is deployed live at this URL [show URL], fully tested with 76 passing tests, and documented with comprehensive READMEs for each module.
+> The entire platform is deployed live at this URL [show URL], fully tested with 220+ passing tests, and documented with comprehensive READMEs for each module.
 >
 > I've also built industry-specific scenario templates, contribution guidelines for open-source collaboration, and security policies.
 >
@@ -284,7 +284,7 @@
 >
 > [Show Market Pulse] This is Market Pulse - real-time stock analysis with candlesticks, RSI, MACD, and volume. It's like Bloomberg Terminal, but free.
 >
-> [Show homepage] Five modules. One platform. Built with Python, Streamlit, and Plotly. Deployed live with 76 passing tests.
+> [Show homepage] Seven modules. One platform. Built with Python, Streamlit, and Plotly. Deployed live with 220+ passing tests.
 >
 > Full demo on my GitHub - link in bio."
 
@@ -425,7 +425,7 @@
 
 **Visual**: Show test files in IDE
 
-> "Enterprise Hub has 76 automated tests covering:
+> "Enterprise Hub has 220+ automated tests covering:
 > - Unit tests for calculation logic (CVP formulas, margin calculations)
 > - Integration tests for API clients (mocked API responses)
 > - End-to-end UI tests for critical user flows
@@ -521,7 +521,7 @@
 
 > "Python. Streamlit. Plotly. Claude AI. Yahoo Finance API.
 >
-> 76 passing tests. CI/CD. Deployed live.
+> 220+ passing tests. CI/CD. Deployed live.
 >
 > This is Enterprise Hub.
 >
