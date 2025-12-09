@@ -19,7 +19,7 @@ from PIL import Image
 import io
 
 # Configuration
-DEMO_URL = "https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/"
+DEMO_URL = "http://localhost:8501"
 SCREENSHOTS_DIR = Path(__file__).parent / "screenshots"
 VIEWPORT_SIZE = {"width": 1920, "height": 1080}
 
