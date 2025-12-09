@@ -120,3 +120,7 @@ logs/
 # MCP Configuration (contains local paths and secrets)
 *_mcp_config.json
 mcp_config.json
+.aider*
+
+# Claude Code agent workflows
+.agent/
