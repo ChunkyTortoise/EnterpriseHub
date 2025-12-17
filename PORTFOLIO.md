@@ -625,7 +625,7 @@ def calculate_margin_of_safety(
 ### For Job Applications
 
 **In Cover Letters**:
-> "I built Enterprise Hub—a production-grade web application with 5 integrated modules—to demonstrate my full-stack Python expertise. The hero project, Margin Hunter, is a Cost-Volume-Profit analysis tool used by 300+ business leaders for pricing strategy and profitability modeling. It features real-time reactivity, interactive Plotly visualizations, and industry-specific scenario templates. The project showcases my ability to design user experiences, integrate APIs, and ship production-ready code with 76 automated tests."
+> "I built Enterprise Hub—a production-grade web application with 7 integrated modules—to demonstrate my full-stack Python expertise. The hero project, Margin Hunter, is a Cost-Volume-Profit analysis tool used by 300+ business leaders for pricing strategy and profitability modeling. It features real-time reactivity, interactive Plotly visualizations, and industry-specific scenario templates. The project showcases my ability to design user experiences, integrate APIs, and ship production-ready code with 220+ automated tests."
 
 **In LinkedIn Summary**:
 > "Creator of Enterprise Hub, a cloud-native business intelligence platform with 5 production modules deployed to 1,000+ users. Expertise in Python, Streamlit, API integration (Anthropic Claude, Yahoo Finance), and data visualization (Plotly). Passionate about building tools that solve real business problems."

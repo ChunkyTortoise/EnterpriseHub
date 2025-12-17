@@ -4,16 +4,18 @@ Marketing Analytics Hub - Comprehensive Marketing Performance Tracking.
 Track campaigns across channels, calculate ROI, analyze customer metrics,
 and optimize marketing spend with data-driven insights.
 """
-import streamlit as st
-import pandas as pd
+import io
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
-from typing import Optional, Dict, List, Tuple
-from datetime import datetime, timedelta
 from scipy import stats
-import io
+
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -211,6 +213,293 @@ def _render_campaign_dashboard() -> None:
         efficiency_df = efficiency_df[['channel', 'spend', 'revenue', 'conversions', 'ROI', 'CPA']]
         efficiency_df.columns = ['Channel', 'Spend ($)', 'Revenue ($)', 'Conversions', 'ROI', 'CPA ($)']
         st.dataframe(efficiency_df, use_container_width=True)
+
+
+def _render_social_media_dashboard() -> None:
+    """Render social media performance dashboard across platforms."""
+    st.markdown("### 📱 Social Media Performance Dashboard")
+    st.markdown("""
+    Track performance across all major social platforms with platform-specific metrics.
+    *Powered by insights from Google Digital Marketing & Meta Social Media certifications.*
+    """)
+
+    # Platform selector
+    platforms = ["All Platforms", "Meta (Facebook/Instagram)", "LinkedIn", "Twitter/X", "TikTok"]
+    selected_platform = st.selectbox("Select Platform", platforms, key="social_platform")
+
+    # Date range
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input(
+            "Start Date",
+            value=datetime.now() - timedelta(days=30),
+            key="social_start_date"
+        )
+    with col2:
+        end_date = st.date_input(
+            "End Date",
+            value=datetime.now(),
+            key="social_end_date"
+        )
+
+    st.markdown("---")
+
+    # Generate platform data
+    platform_data = _generate_social_media_data(selected_platform)
+
+    # Key Metrics Row
+    st.markdown("#### 📊 Key Performance Metrics")
+    col1, col2, col3, col4, col5 = st.columns(5)
+
+    with col1:
+        st.metric(
+            "Followers",
+            f"{platform_data['followers']:,}",
+            delta=f"+{platform_data['follower_growth']:,}"
+        )
+    with col2:
+        st.metric(
+            "Impressions",
+            f"{platform_data['impressions']:,}",
+            delta=f"{platform_data['impression_change']:+.1f}%"
+        )
+    with col3:
+        st.metric(
+            "Engagement Rate",
+            f"{platform_data['engagement_rate']:.2f}%",
+            delta=f"{platform_data['engagement_change']:+.1f}%"
+        )
+    with col4:
+        st.metric(
+            "Reach",
+            f"{platform_data['reach']:,}",
+            delta=f"{platform_data['reach_change']:+.1f}%"
+        )
+    with col5:
+        st.metric(
+            "Link Clicks",
+            f"{platform_data['link_clicks']:,}",
+            delta=f"{platform_data['click_change']:+.1f}%"
+        )
+
+    st.markdown("---")
+
+    # Platform-specific breakdown
+    st.markdown("#### 📈 Platform Performance Breakdown")
+
+    if selected_platform == "All Platforms":
+        # Multi-platform comparison
+        platform_comparison = _get_platform_comparison()
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Followers by platform
+            fig_followers = go.Figure(data=[
+                go.Bar(
+                    x=platform_comparison['platform'],
+                    y=platform_comparison['followers'],
+                    text=platform_comparison['followers'],
+                    textposition='auto',
+                    marker_color=['#1877F2', '#0A66C2', '#1DA1F2', '#000000']
+                )
+            ])
+            fig_followers.update_layout(
+                title="Followers by Platform",
+                xaxis_title="Platform",
+                yaxis_title="Followers",
+                showlegend=False
+            )
+            st.plotly_chart(fig_followers, use_container_width=True)
+
+        with col2:
+            # Engagement rate by platform
+            fig_engagement = go.Figure(data=[
+                go.Bar(
+                    x=platform_comparison['platform'],
+                    y=platform_comparison['engagement_rate'],
+                    text=[f"{r:.2f}%" for r in platform_comparison['engagement_rate']],
+                    textposition='auto',
+                    marker_color=['#E1306C', '#0077B5', '#14171A', '#FE2C55']
+                )
+            ])
+            fig_engagement.update_layout(
+                title="Engagement Rate by Platform",
+                xaxis_title="Platform",
+                yaxis_title="Engagement Rate (%)",
+                showlegend=False
+            )
+            st.plotly_chart(fig_engagement, use_container_width=True)
+
+        # Platform efficiency table
+        st.markdown("**Platform Performance Summary**")
+        summary_df = platform_comparison.copy()
+        summary_df.columns = ['Platform', 'Followers', 'Engagement Rate (%)', 'Avg. Reach', 'CTR (%)']
+        st.dataframe(summary_df, use_container_width=True)
+
+    else:
+        # Single platform deep dive
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Engagement trend
+            dates = pd.date_range(start=start_date, end=end_date, freq='D')
+            engagement_trend = _generate_engagement_trend(dates, selected_platform)
+
+            fig_trend = go.Figure()
+            fig_trend.add_trace(go.Scatter(
+                x=engagement_trend['date'],
+                y=engagement_trend['engagement_rate'],
+                name='Engagement Rate',
+                mode='lines+markers',
+                line=dict(color='#1877F2', width=2),
+                fill='tozeroy'
+            ))
+            fig_trend.update_layout(
+                title=f"{selected_platform} Engagement Trend",
+                xaxis_title="Date",
+                yaxis_title="Engagement Rate (%)",
+                hovermode='x unified'
+            )
+            st.plotly_chart(fig_trend, use_container_width=True)
+
+        with col2:
+            # Content performance pie
+            content_data = _get_content_performance(selected_platform)
+
+            fig_content = go.Figure(data=[go.Pie(
+                labels=content_data['type'],
+                values=content_data['engagement'],
+                hole=0.4,
+                marker_colors=['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
+            )])
+            fig_content.update_layout(
+                title="Engagement by Content Type",
+                annotations=[dict(text='Content', x=0.5, y=0.5, font_size=14, showarrow=False)]
+            )
+            st.plotly_chart(fig_content, use_container_width=True)
+
+    st.markdown("---")
+
+    # Best performing posts
+    st.markdown("#### 🏆 Top Performing Posts")
+
+    top_posts = _get_top_posts(selected_platform)
+    for i, post in enumerate(top_posts[:3], 1):
+        with st.expander(f"#{i} - {post['type']} | {post['engagement']:,} engagements"):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Likes", f"{post['likes']:,}")
+            with col2:
+                st.metric("Comments", f"{post['comments']:,}")
+            with col3:
+                st.metric("Shares", f"{post['shares']:,}")
+            st.markdown(f"**Posted**: {post['date']} | **Reach**: {post['reach']:,}")
+
+    st.markdown("---")
+
+    # Posting schedule heatmap
+    st.markdown("#### 📅 Best Times to Post")
+    st.markdown("Engagement heatmap showing optimal posting times")
+
+    posting_data = _generate_posting_heatmap()
+
+    fig_heatmap = go.Figure(data=go.Heatmap(
+        z=posting_data,
+        x=['12am', '3am', '6am', '9am', '12pm', '3pm', '6pm', '9pm'],
+        y=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        colorscale='Greens',
+        text=posting_data.round(1),
+        texttemplate='%{text}',
+        textfont={"size": 10},
+        colorbar=dict(title="Engagement")
+    ))
+
+    fig_heatmap.update_layout(
+        title="Engagement by Day and Time",
+        xaxis_title="Time of Day",
+        yaxis_title="Day of Week",
+        height=350
+    )
+
+    st.plotly_chart(fig_heatmap, use_container_width=True)
+
+
+def _generate_social_media_data(platform: str) -> Dict:
+    """Generate sample social media metrics."""
+    base_followers = 25000 if platform == "All Platforms" else 8000
+    return {
+        'followers': int(base_followers * np.random.uniform(0.9, 1.1)),
+        'follower_growth': int(500 * np.random.uniform(0.5, 1.5)),
+        'impressions': int(150000 * np.random.uniform(0.8, 1.2)),
+        'impression_change': np.random.uniform(-5, 25),
+        'engagement_rate': np.random.uniform(2.5, 5.5),
+        'engagement_change': np.random.uniform(-10, 20),
+        'reach': int(80000 * np.random.uniform(0.8, 1.2)),
+        'reach_change': np.random.uniform(-8, 18),
+        'link_clicks': int(2500 * np.random.uniform(0.7, 1.3)),
+        'click_change': np.random.uniform(-15, 30)
+    }
+
+
+def _get_platform_comparison() -> pd.DataFrame:
+    """Get comparison data across platforms."""
+    return pd.DataFrame({
+        'platform': ['Meta', 'LinkedIn', 'Twitter/X', 'TikTok'],
+        'followers': [12500, 8200, 5600, 3200],
+        'engagement_rate': [3.2, 4.5, 2.1, 6.8],
+        'avg_reach': [45000, 25000, 18000, 52000],
+        'ctr': [1.8, 2.4, 1.2, 0.9]
+    })
+
+
+def _generate_engagement_trend(dates: pd.DatetimeIndex, platform: str) -> pd.DataFrame:
+    """Generate engagement trend data."""
+    n_days = len(dates)
+    base_rate = 3.5
+    trend = np.linspace(base_rate, base_rate + 0.5, n_days)
+    noise = np.random.normal(0, 0.3, n_days)
+    engagement = trend + noise
+
+    return pd.DataFrame({
+        'date': dates,
+        'engagement_rate': np.maximum(engagement, 0.5)
+    })
+
+
+def _get_content_performance(platform: str) -> pd.DataFrame:
+    """Get engagement by content type."""
+    return pd.DataFrame({
+        'type': ['Video', 'Image', 'Carousel', 'Text', 'Story'],
+        'engagement': [4500, 3200, 2800, 1500, 2100]
+    })
+
+
+def _get_top_posts(platform: str) -> List[Dict]:
+    """Get top performing posts."""
+    return [
+        {'type': 'Video', 'engagement': 12500, 'likes': 8500, 'comments': 2500,
+         'shares': 1500, 'reach': 85000, 'date': '2024-12-10'},
+        {'type': 'Carousel', 'engagement': 8700, 'likes': 6200, 'comments': 1800,
+         'shares': 700, 'reach': 62000, 'date': '2024-12-08'},
+        {'type': 'Image', 'engagement': 6400, 'likes': 5100, 'comments': 900,
+         'shares': 400, 'reach': 48000, 'date': '2024-12-05'}
+    ]
+
+
+def _generate_posting_heatmap() -> np.ndarray:
+    """Generate posting time engagement heatmap."""
+    # Higher engagement during work hours and evenings
+    heatmap = np.array([
+        [1.2, 0.8, 0.5, 2.1, 3.5, 4.2, 5.1, 3.8],  # Mon
+        [1.0, 0.7, 0.6, 2.3, 3.8, 4.5, 5.3, 4.0],  # Tue
+        [1.1, 0.6, 0.5, 2.0, 3.6, 4.8, 5.5, 4.2],  # Wed
+        [1.3, 0.8, 0.6, 2.2, 3.7, 4.3, 5.2, 3.9],  # Thu
+        [1.5, 1.0, 0.7, 2.0, 3.2, 4.0, 4.8, 4.5],  # Fri
+        [2.0, 1.5, 1.2, 2.8, 3.5, 4.2, 5.0, 5.2],  # Sat
+        [2.2, 1.8, 1.5, 2.5, 3.0, 3.8, 4.5, 4.8],  # Sun
+    ])
+    return heatmap
 
 
 def _render_roi_calculator() -> None:
