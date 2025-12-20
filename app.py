@@ -35,16 +35,18 @@ MODULES = {
     "✍️ Content Engine": ("content_engine", "Content Engine"),
     "🔍 Data Detective": ("data_detective", "Data Detective"),
     "📈 Marketing Analytics": ("marketing_analytics", "Marketing Analytics"),
+    "🤖 Multi-Agent Workflow": ("multi_agent", "Multi-Agent Workflow"),
 }
 
 
 def main() -> None:
     """Main application function."""
-    # 1. SETUP UI
-    ui.setup_interface()
+    # Initialize theme in session state
+    if "theme" not in st.session_state:
+        st.session_state.theme = "light"
 
     try:
-        # SIDEBARNAVIGATION
+        # SIDEBAR NAVIGATION
         with st.sidebar:
             st.title("🚀 Enterprise Hub")
             st.markdown(
@@ -52,7 +54,20 @@ def main() -> None:
                 unsafe_allow_html=True,
             )
 
+            # Theme Toggle
+            st.markdown("---")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("☀️ Light", use_container_width=True, type="primary" if st.session_state.theme == "light" else "secondary"):
+                    st.session_state.theme = "light"
+                    st.rerun()
+            with col2:
+                if st.button("🌙 Dark", use_container_width=True, type="primary" if st.session_state.theme == "dark" else "secondary"):
+                    st.session_state.theme = "dark"
+                    st.rerun()
+
             # Navigation
+            st.markdown("---")
             pages = ["🏠 Overview"] + list(MODULES.keys())
             page = st.radio("Navigate:", pages, label_visibility="collapsed")
 
@@ -62,6 +77,9 @@ def main() -> None:
             st.markdown(
                 "[View Portfolio](https://github.com/ChunkyTortoise/enterprise-hub) | [LinkedIn](https://linkedin.com/in/caymanroden)"
             )
+
+        # Setup UI with selected theme (must be after sidebar to read session state)
+        ui.setup_interface(st.session_state.theme)
 
         logger.info(f"User navigated to: {page}")
 
@@ -159,15 +177,24 @@ def _render_overview() -> None:
             status="active",
         )
 
-    # Financial Analyst (7th module)
+    # Financial Analyst & Multi-Agent (7th & 8th modules)
     st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
-    c7, c8, c9 = st.columns([1, 1, 1])
-    with c8:  # Center the 7th module
+    c7, c8 = st.columns(2)
+    
+    with c7:
         ui.feature_card(
             icon="💼",
             title="Financial Analyst",
             description="Fundamental stock analysis with financial statements, ratios, and valuation metrics.",
             status="active",
+        )
+        
+    with c8:
+        ui.feature_card(
+            icon="🤖",
+            title="Multi-Agent Workflow",
+            description="Orchestrates 4 specialized agents (Data, Tech, News, Chief) to perform deep-dive asset analysis.",
+            status="new",
         )
 
     # Social Proof Section
