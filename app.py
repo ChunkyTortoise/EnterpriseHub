@@ -73,6 +73,9 @@ def main() -> None:
             _render_module(module_name, module_title)
         else:
             _render_placeholder(page)
+            
+        # Footer
+        ui.footer()
 
     except Exception as e:
         logger.error(f"Application error: {str(e)}", exc_info=True)
@@ -85,16 +88,10 @@ def _render_overview() -> None:
     """Render the overview/home page with the new Design System."""
 
     # Hero Section
-    st.markdown(
-        "<h1 style='font-size: 3rem; margin-bottom: 0.5rem;'>Unified Enterprise Hub</h1>",
-        unsafe_allow_html=True,
+    ui.hero_section(
+        "Unified Enterprise Hub",
+        "A production-grade business intelligence platform consolidating 7 mission-critical tools into a single, cloud-native interface."
     )
-    st.markdown(
-        "<p style='font-size: 1.25rem; color: #64748B; max-width: 800px;'>A production-grade business intelligence platform consolidating 7 mission-critical tools into a single, cloud-native interface.</p>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("---")
 
     # Metrics Row
     col1, col2, col3, col4 = st.columns(4)
@@ -107,6 +104,7 @@ def _render_overview() -> None:
     with col4:
         ui.card_metric("Performance", "Cache-Optimized", "5-min TTL")
 
+    st.markdown("<div style='height: 40px'></div>", unsafe_allow_html=True)
     st.markdown("### 🛠️ Module Suite")
 
     # Feature Grid - Row 1
@@ -173,7 +171,7 @@ def _render_overview() -> None:
         )
 
     # Social Proof Section
-    st.markdown("---")
+    st.markdown("<div style='height: 40px'></div>", unsafe_allow_html=True)
     ui.section_header(
         "Built For Real Business Challenges",
         "See how EnterpriseHub replaces manual workflows and expensive subscriptions",
@@ -181,146 +179,58 @@ def _render_overview() -> None:
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown(
-            """
-        <div class="metric-card">
-            <h3 style="margin-top: 0;">💡 For SaaS Founders</h3>
-            <p style="color: #64748B; line-height: 1.6;">
+        ui.use_case_card(
+            icon="💡",
+            title="For SaaS Founders",
+            description="""
                 <strong>Margin Hunter</strong> replaces Excel spreadsheet chaos for pricing decisions.
                 Run 100 profit scenarios simultaneously with sensitivity heatmaps.
                 Break-even analysis that updates in real-time as you adjust prices.
-            </p>
-        </div>
-        """,
-            unsafe_allow_html=True,
+            """
         )
 
-        st.markdown(
-            """
-        <div class="metric-card" style="margin-top: 1rem;">
-            <h3 style="margin-top: 0;">📊 For Finance Teams</h3>
-            <p style="color: #64748B; line-height: 1.6;">
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+
+        ui.use_case_card(
+            icon="📊",
+            title="For Finance Teams",
+            description="""
                 <strong>Market Pulse</strong> eliminates Bloomberg Terminal dependency for basic technical analysis.
                 4-panel charts (Price/RSI/MACD/Volume) with institutional-grade indicators.
                 Save $24,000/year in subscriptions.
-            </p>
-        </div>
-        """,
-            unsafe_allow_html=True,
+            """
         )
 
     with col2:
-        st.markdown(
-            """
-        <div class="metric-card">
-            <h3 style="margin-top: 0;">🔍 For Data Analysts</h3>
-            <p style="color: #64748B; line-height: 1.6;">
+        ui.use_case_card(
+            icon="🔍",
+            title="For Data Analysts",
+            description="""
                 <strong>Data Detective</strong> reduces exploratory data analysis from 2 hours to 2 minutes.
                 AI-powered insights, correlation heatmaps, and quality scoring.
                 Upload CSV → Get actionable findings instantly.
-            </p>
-        </div>
-        """,
-            unsafe_allow_html=True,
+            """
         )
 
-        st.markdown(
-            """
-        <div class="metric-card" style="margin-top: 1rem;">
-            <h3 style="margin-top: 0;">📈 For Marketing Teams</h3>
-            <p style="color: #64748B; line-height: 1.6;">
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+
+        ui.use_case_card(
+            icon="📈",
+            title="For Marketing Teams",
+            description="""
                 <strong>Marketing Analytics</strong> replaces agency dashboards costing $200-500/month.
                 5 attribution models, A/B test calculators, and campaign ROI tracking.
                 One-time build you own forever.
-            </p>
-        </div>
-        """,
-            unsafe_allow_html=True,
+            """
         )
 
     # Comparison Table
-    st.markdown("---")
+    st.markdown("<div style='height: 40px'></div>", unsafe_allow_html=True)
     ui.section_header("Why EnterpriseHub?", "See how we compare to alternatives")
-
-    st.markdown(
-        """
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #F8FAFC; border-bottom: 2px solid #E2E8F0;">
-                    <th style="padding: 12px; text-align: left; font-weight: 600;">Capability</th>
-                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #2563EB;">EnterpriseHub</th>
-                    <th style="padding: 12px; text-align: center; font-weight: 600;">Excel Spreadsheets</th>
-                    <th style="padding: 12px; text-align: center; font-weight: 600;">Bloomberg Terminal</th>
-                    <th style="padding: 12px; text-align: center; font-weight: 600;">Agency Dashboards</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr style="border-bottom: 1px solid #E2E8F0;">
-                    <td style="padding: 12px;"><strong>Cost</strong></td>
-                    <td style="padding: 12px; text-align: center; color: #10B981; font-weight: 600;">$0 (Open Source)</td>
-                    <td style="padding: 12px; text-align: center;">$0-200/year</td>
-                    <td style="padding: 12px; text-align: center;">$24,000/year</td>
-                    <td style="padding: 12px; text-align: center;">$200-500/month</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #E2E8F0; background-color: #F8FAFC;">
-                    <td style="padding: 12px;"><strong>Setup Time</strong></td>
-                    <td style="padding: 12px; text-align: center; color: #10B981; font-weight: 600;">< 5 minutes</td>
-                    <td style="padding: 12px; text-align: center;">2-4 hours</td>
-                    <td style="padding: 12px; text-align: center;">1-2 weeks</td>
-                    <td style="padding: 12px; text-align: center;">2-6 weeks</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #E2E8F0;">
-                    <td style="padding: 12px;"><strong>Technical Analysis</strong></td>
-                    <td style="padding: 12px; text-align: center; color: #10B981; font-weight: 600;">✓ RSI, MACD, MA</td>
-                    <td style="padding: 12px; text-align: center;">Manual formulas</td>
-                    <td style="padding: 12px; text-align: center;">✓ Advanced</td>
-                    <td style="padding: 12px; text-align: center;">✗</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #E2E8F0; background-color: #F8FAFC;">
-                    <td style="padding: 12px;"><strong>AI-Powered Insights</strong></td>
-                    <td style="padding: 12px; text-align: center; color: #10B981; font-weight: 600;">✓ Claude 3.5 Sonnet</td>
-                    <td style="padding: 12px; text-align: center;">✗</td>
-                    <td style="padding: 12px; text-align: center;">Limited</td>
-                    <td style="padding: 12px; text-align: center;">✗</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #E2E8F0;">
-                    <td style="padding: 12px;"><strong>Scenario Modeling</strong></td>
-                    <td style="padding: 12px; text-align: center; color: #10B981; font-weight: 600;">✓ 100 scenarios/heatmap</td>
-                    <td style="padding: 12px; text-align: center;">Manual copy-paste</td>
-                    <td style="padding: 12px; text-align: center;">✗</td>
-                    <td style="padding: 12px; text-align: center;">✗</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #E2E8F0; background-color: #F8FAFC;">
-                    <td style="padding: 12px;"><strong>Attribution Modeling</strong></td>
-                    <td style="padding: 12px; text-align: center; color: #10B981; font-weight: 600;">✓ 5 models</td>
-                    <td style="padding: 12px; text-align: center;">Manual calculation</td>
-                    <td style="padding: 12px; text-align: center;">✗</td>
-                    <td style="padding: 12px; text-align: center;">Limited</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #E2E8F0;">
-                    <td style="padding: 12px;"><strong>Automated Testing</strong></td>
-                    <td style="padding: 12px; text-align: center; color: #10B981; font-weight: 600;">✓ 220+ tests</td>
-                    <td style="padding: 12px; text-align: center;">✗</td>
-                    <td style="padding: 12px; text-align: center;">Proprietary</td>
-                    <td style="padding: 12px; text-align: center;">✗</td>
-                </tr>
-                <tr style="background-color: #F8FAFC;">
-                    <td style="padding: 12px;"><strong>Ownership</strong></td>
-                    <td style="padding: 12px; text-align: center; color: #10B981; font-weight: 600;">✓ Full source code</td>
-                    <td style="padding: 12px; text-align: center;">You own files</td>
-                    <td style="padding: 12px; text-align: center;">✗ Subscription only</td>
-                    <td style="padding: 12px; text-align: center;">✗ Subscription only</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
+    ui.comparison_table()
 
     # Tech Stack Badge Section
-    st.markdown("---")
+    st.markdown("<div style='height: 40px'></div>", unsafe_allow_html=True)
     ui.section_header(
         "Technical Foundation", "Built with modern, production-grade tools"
     )
