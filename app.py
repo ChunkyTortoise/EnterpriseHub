@@ -36,6 +36,7 @@ MODULES = {
     "🔍 Data Detective": ("data_detective", "Data Detective"),
     "📈 Marketing Analytics": ("marketing_analytics", "Marketing Analytics"),
     "🤖 Multi-Agent Workflow": ("multi_agent", "Multi-Agent Workflow"),
+    "🧠 Smart Forecast": ("smart_forecast", "Smart Forecast Engine"),
 }
 
 
@@ -177,9 +178,9 @@ def _render_overview() -> None:
             status="active",
         )
 
-    # Financial Analyst & Multi-Agent (7th & 8th modules)
+    # Row 3: Financial Analyst, Multi-Agent, Smart Forecast
     st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
-    c7, c8 = st.columns(2)
+    c7, c8, c9 = st.columns(3)
     
     with c7:
         ui.feature_card(
@@ -194,6 +195,14 @@ def _render_overview() -> None:
             icon="🤖",
             title="Multi-Agent Workflow",
             description="Orchestrates 4 specialized agents (Data, Tech, News, Chief) to perform deep-dive asset analysis.",
+            status="new",
+        )
+
+    with c9:
+        ui.feature_card(
+            icon="🧠",
+            title="Smart Forecast",
+            description="AI-powered time series forecasting using Random Forest and Rolling Window analysis.",
             status="new",
         )
 
