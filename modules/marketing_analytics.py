@@ -13,10 +13,12 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+import utils.ui as ui
 from plotly.subplots import make_subplots
 from scipy import stats
 
 from utils.logger import get_logger
+from utils.data_source_faker import generate_campaign_data
 
 logger = get_logger(__name__)
 
@@ -28,15 +30,13 @@ ATTRIBUTION_MODELS = ["First-Touch", "Last-Touch", "Linear", "Time-Decay", "Posi
 
 def render() -> None:
     """Main render function for Marketing Analytics Hub."""
-    st.markdown("### 📊 Marketing Analytics Hub")
+    ui.section_header("Marketing Analytics Hub", "Comprehensive Performance Tracking & Optimization")
     st.markdown("""
     Track campaign performance, calculate ROI, analyze customer metrics, and optimize
     your marketing spend across all channels.
     """)
 
-    # Initialize session state
-    if 'campaign_data' not in st.session_state:
-        st.session_state.campaign_data = _get_sample_campaign_data()
+
 
     # Create tabs for different analytics sections
     tabs = st.tabs([
@@ -69,54 +69,69 @@ def render() -> None:
 
 def _render_campaign_dashboard() -> None:
     """Render multi-channel campaign performance dashboard."""
-    st.markdown("### 📈 Campaign Performance Dashboard")
+    st.subheader("📈 Campaign Performance Dashboard")
+
+    campaign_df = _get_campaign_data_source()
+    if campaign_df.empty:
+        st.warning("Please provide or generate campaign data to continue.")
+        return
 
     # Channel selector
-    channels = ["All Channels", "Social Media", "Email", "Paid Ads", "Organic", "Content"]
-    selected_channel = st.selectbox("Select Channel", channels)
+    channels = ["All Channels"] + list(campaign_df['Platform'].unique())
+    selected_channel = st.selectbox("Select Platform", channels)
 
     # Date range selector
     col1, col2 = st.columns(2)
     with col1:
         start_date = st.date_input(
             "Start Date",
-            value=datetime.now() - timedelta(days=30)
+            value=campaign_df['Date'].min() if not campaign_df.empty else datetime.now() - timedelta(days=30)
         )
     with col2:
         end_date = st.date_input(
             "End Date",
-            value=datetime.now()
+            value=campaign_df['Date'].max() if not campaign_df.empty else datetime.now()
         )
+
+    filtered_df = campaign_df[(campaign_df['Date'] >= pd.to_datetime(start_date)) & 
+                              (campaign_df['Date'] <= pd.to_datetime(end_date))]
+    
+    if selected_channel != "All Channels":
+        filtered_df = filtered_df[filtered_df['Platform'] == selected_channel]
+
+    if filtered_df.empty:
+        st.warning("No data for selected filters. Please adjust date range or platform.")
+        return
 
     st.markdown("---")
 
     # Key Metrics
-    st.markdown("#### 📊 Key Performance Indicators")
+    st.subheader("📊 Key Performance Indicators")
 
-    # Generate sample metrics based on channel
-    metrics = _calculate_channel_metrics(selected_channel)
+    # Calculate metrics based on filtered_df
+    metrics = _calculate_channel_metrics(filtered_df)
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric(
+        ui.card_metric(
             "Total Spend",
             f"${metrics['spend']:,.0f}",
             delta=f"{metrics['spend_change']:+.1f}%"
         )
     with col2:
-        st.metric(
+        ui.card_metric(
             "Revenue",
             f"${metrics['revenue']:,.0f}",
             delta=f"{metrics['revenue_change']:+.1f}%"
         )
     with col3:
-        st.metric(
+        ui.card_metric(
             "ROI",
             f"{metrics['roi']:.2f}x",
             delta=f"{metrics['roi_change']:+.1f}%"
         )
     with col4:
-        st.metric(
+        ui.card_metric(
             "Conversions",
             f"{metrics['conversions']:,}",
             delta=f"{metrics['conversion_change']:+.1f}%"
@@ -125,26 +140,33 @@ def _render_campaign_dashboard() -> None:
     st.markdown("---")
 
     # Performance visualizations
-    st.markdown("#### 📉 Performance Trends")
+    st.subheader("📉 Performance Trends")
 
     # Generate time series data
-    dates = pd.date_range(start=start_date, end=end_date, freq='D')
-    trend_data = _generate_trend_data(dates, selected_channel)
-
+    trend_data = filtered_df.groupby('Date').agg(
+        spend=('Spend', 'sum'),
+        revenue=('Revenue', 'sum'),
+        clicks=('Clicks', 'sum'),
+        impressions=('Impressions', 'sum'),
+        conversions=('Conversions', 'sum')
+    ).reset_index()
+    
+    trend_data['conversion_rate'] = (trend_data['conversions'] / trend_data['clicks'] * 100).fillna(0)
+    
     col1, col2 = st.columns(2)
 
     with col1:
         # Spend vs Revenue chart
         fig_spend_revenue = go.Figure()
         fig_spend_revenue.add_trace(go.Scatter(
-            x=trend_data['date'],
+            x=trend_data['Date'],
             y=trend_data['spend'],
             name='Spend',
             mode='lines',
             line=dict(color='red', width=2)
         ))
         fig_spend_revenue.add_trace(go.Scatter(
-            x=trend_data['date'],
+            x=trend_data['Date'],
             y=trend_data['revenue'],
             name='Revenue',
             mode='lines',
@@ -162,7 +184,7 @@ def _render_campaign_dashboard() -> None:
         # Conversion rate chart
         fig_conversion = go.Figure()
         fig_conversion.add_trace(go.Scatter(
-            x=trend_data['date'],
+            x=trend_data['Date'],
             y=trend_data['conversion_rate'],
             name='Conversion Rate',
             mode='lines+markers',
@@ -178,46 +200,49 @@ def _render_campaign_dashboard() -> None:
         st.plotly_chart(fig_conversion, use_container_width=True)
 
     # Channel breakdown
-    st.markdown("#### 📊 Channel Performance Breakdown")
+    st.subheader("📊 Platform Performance Breakdown")
 
-    if selected_channel == "All Channels":
-        channel_breakdown = _get_channel_breakdown()
+    platform_breakdown = filtered_df.groupby('Platform').agg(
+        spend=('Spend', 'sum'),
+        revenue=('Revenue', 'sum'),
+        conversions=('Conversions', 'sum')
+    ).reset_index()
 
-        fig_channels = go.Figure(data=[
-            go.Bar(
-                name='Spend',
-                x=channel_breakdown['channel'],
-                y=channel_breakdown['spend'],
-                marker_color='lightcoral'
-            ),
-            go.Bar(
-                name='Revenue',
-                x=channel_breakdown['channel'],
-                y=channel_breakdown['revenue'],
-                marker_color='lightgreen'
-            )
-        ])
-        fig_channels.update_layout(
-            title="Spend vs Revenue by Channel",
-            xaxis_title="Channel",
-            yaxis_title="Amount ($)",
-            barmode='group'
+    fig_channels = go.Figure(data=[
+        go.Bar(
+            name='Spend',
+            x=platform_breakdown['Platform'],
+            y=platform_breakdown['spend'],
+            marker_color='lightcoral'
+        ),
+        go.Bar(
+            name='Revenue',
+            x=platform_breakdown['Platform'],
+            y=platform_breakdown['revenue'],
+            marker_color='lightgreen'
         )
-        st.plotly_chart(fig_channels, use_container_width=True)
+    ])
+    fig_channels.update_layout(
+        title="Spend vs Revenue by Platform",
+        xaxis_title="Platform",
+        yaxis_title="Amount ($)",
+        barmode='group'
+    )
+    st.plotly_chart(fig_channels, use_container_width=True)
 
-        # Channel efficiency table
-        st.markdown("**Channel Efficiency Metrics**")
-        efficiency_df = channel_breakdown.copy()
-        efficiency_df['ROI'] = (efficiency_df['revenue'] / efficiency_df['spend']).round(2)
-        efficiency_df['CPA'] = (efficiency_df['spend'] / efficiency_df['conversions']).round(2)
-        efficiency_df = efficiency_df[['channel', 'spend', 'revenue', 'conversions', 'ROI', 'CPA']]
-        efficiency_df.columns = ['Channel', 'Spend ($)', 'Revenue ($)', 'Conversions', 'ROI', 'CPA ($)']
-        st.dataframe(efficiency_df, use_container_width=True)
+    # Platform efficiency table
+    st.markdown("**Platform Efficiency Metrics**")
+    efficiency_df = platform_breakdown.copy()
+    efficiency_df['ROI'] = (efficiency_df['revenue'] / efficiency_df['spend']).round(2).fillna(0)
+    efficiency_df['CPA'] = (efficiency_df['spend'] / efficiency_df['conversions']).round(2).fillna(0)
+    efficiency_df = efficiency_df[['Platform', 'spend', 'revenue', 'conversions', 'ROI', 'CPA']]
+    efficiency_df.columns = ['Platform', 'Spend ($)', 'Revenue ($)', 'Conversions', 'ROI', 'CPA ($)']
+    st.dataframe(efficiency_df, use_container_width=True)
 
 
 def _render_social_media_dashboard() -> None:
     """Render social media performance dashboard across platforms."""
-    st.markdown("### 📱 Social Media Performance Dashboard")
+    st.subheader("📱 Social Media Performance Dashboard")
     st.markdown("""
     Track performance across all major social platforms with platform-specific metrics.
     *Powered by insights from Google Digital Marketing & Meta Social Media certifications.*
@@ -248,35 +273,35 @@ def _render_social_media_dashboard() -> None:
     platform_data = _generate_social_media_data(selected_platform)
 
     # Key Metrics Row
-    st.markdown("#### 📊 Key Performance Metrics")
+    st.subheader("📊 Key Performance Metrics")
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
-        st.metric(
+        ui.card_metric(
             "Followers",
             f"{platform_data['followers']:,}",
             delta=f"+{platform_data['follower_growth']:,}"
         )
     with col2:
-        st.metric(
+        ui.card_metric(
             "Impressions",
             f"{platform_data['impressions']:,}",
             delta=f"{platform_data['impression_change']:+.1f}%"
         )
     with col3:
-        st.metric(
+        ui.card_metric(
             "Engagement Rate",
             f"{platform_data['engagement_rate']:.2f}%",
             delta=f"{platform_data['engagement_change']:+.1f}%"
         )
     with col4:
-        st.metric(
+        ui.card_metric(
             "Reach",
             f"{platform_data['reach']:,}",
             delta=f"{platform_data['reach_change']:+.1f}%"
         )
     with col5:
-        st.metric(
+        ui.card_metric(
             "Link Clicks",
             f"{platform_data['link_clicks']:,}",
             delta=f"{platform_data['click_change']:+.1f}%"
@@ -285,7 +310,7 @@ def _render_social_media_dashboard() -> None:
     st.markdown("---")
 
     # Platform-specific breakdown
-    st.markdown("#### 📈 Platform Performance Breakdown")
+    st.subheader("📈 Platform Performance Breakdown")
 
     if selected_platform == "All Platforms":
         # Multi-platform comparison
@@ -382,24 +407,24 @@ def _render_social_media_dashboard() -> None:
     st.markdown("---")
 
     # Best performing posts
-    st.markdown("#### 🏆 Top Performing Posts")
+    st.subheader("🏆 Top Performing Posts")
 
     top_posts = _get_top_posts(selected_platform)
     for i, post in enumerate(top_posts[:3], 1):
         with st.expander(f"#{i} - {post['type']} | {post['engagement']:,} engagements"):
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Likes", f"{post['likes']:,}")
+                ui.card_metric("Likes", f"{post['likes']:,}")
             with col2:
-                st.metric("Comments", f"{post['comments']:,}")
+                ui.card_metric("Comments", f"{post['comments']:,}")
             with col3:
-                st.metric("Shares", f"{post['shares']:,}")
+                ui.card_metric("Shares", f"{post['shares']:,}")
             st.markdown(f"**Posted**: {post['date']} | **Reach**: {post['reach']:,}")
 
     st.markdown("---")
 
     # Posting schedule heatmap
-    st.markdown("#### 📅 Best Times to Post")
+    st.subheader("📅 Best Times to Post")
     st.markdown("Engagement heatmap showing optimal posting times")
 
     posting_data = _generate_posting_heatmap()
@@ -425,86 +450,9 @@ def _render_social_media_dashboard() -> None:
     st.plotly_chart(fig_heatmap, use_container_width=True)
 
 
-def _generate_social_media_data(platform: str) -> Dict:
-    """Generate sample social media metrics."""
-    base_followers = 25000 if platform == "All Platforms" else 8000
-    return {
-        'followers': int(base_followers * np.random.uniform(0.9, 1.1)),
-        'follower_growth': int(500 * np.random.uniform(0.5, 1.5)),
-        'impressions': int(150000 * np.random.uniform(0.8, 1.2)),
-        'impression_change': np.random.uniform(-5, 25),
-        'engagement_rate': np.random.uniform(2.5, 5.5),
-        'engagement_change': np.random.uniform(-10, 20),
-        'reach': int(80000 * np.random.uniform(0.8, 1.2)),
-        'reach_change': np.random.uniform(-8, 18),
-        'link_clicks': int(2500 * np.random.uniform(0.7, 1.3)),
-        'click_change': np.random.uniform(-15, 30)
-    }
-
-
-def _get_platform_comparison() -> pd.DataFrame:
-    """Get comparison data across platforms."""
-    return pd.DataFrame({
-        'platform': ['Meta', 'LinkedIn', 'Twitter/X', 'TikTok'],
-        'followers': [12500, 8200, 5600, 3200],
-        'engagement_rate': [3.2, 4.5, 2.1, 6.8],
-        'avg_reach': [45000, 25000, 18000, 52000],
-        'ctr': [1.8, 2.4, 1.2, 0.9]
-    })
-
-
-def _generate_engagement_trend(dates: pd.DatetimeIndex, platform: str) -> pd.DataFrame:
-    """Generate engagement trend data."""
-    n_days = len(dates)
-    base_rate = 3.5
-    trend = np.linspace(base_rate, base_rate + 0.5, n_days)
-    noise = np.random.normal(0, 0.3, n_days)
-    engagement = trend + noise
-
-    return pd.DataFrame({
-        'date': dates,
-        'engagement_rate': np.maximum(engagement, 0.5)
-    })
-
-
-def _get_content_performance(platform: str) -> pd.DataFrame:
-    """Get engagement by content type."""
-    return pd.DataFrame({
-        'type': ['Video', 'Image', 'Carousel', 'Text', 'Story'],
-        'engagement': [4500, 3200, 2800, 1500, 2100]
-    })
-
-
-def _get_top_posts(platform: str) -> List[Dict]:
-    """Get top performing posts."""
-    return [
-        {'type': 'Video', 'engagement': 12500, 'likes': 8500, 'comments': 2500,
-         'shares': 1500, 'reach': 85000, 'date': '2024-12-10'},
-        {'type': 'Carousel', 'engagement': 8700, 'likes': 6200, 'comments': 1800,
-         'shares': 700, 'reach': 62000, 'date': '2024-12-08'},
-        {'type': 'Image', 'engagement': 6400, 'likes': 5100, 'comments': 900,
-         'shares': 400, 'reach': 48000, 'date': '2024-12-05'}
-    ]
-
-
-def _generate_posting_heatmap() -> np.ndarray:
-    """Generate posting time engagement heatmap."""
-    # Higher engagement during work hours and evenings
-    heatmap = np.array([
-        [1.2, 0.8, 0.5, 2.1, 3.5, 4.2, 5.1, 3.8],  # Mon
-        [1.0, 0.7, 0.6, 2.3, 3.8, 4.5, 5.3, 4.0],  # Tue
-        [1.1, 0.6, 0.5, 2.0, 3.6, 4.8, 5.5, 4.2],  # Wed
-        [1.3, 0.8, 0.6, 2.2, 3.7, 4.3, 5.2, 3.9],  # Thu
-        [1.5, 1.0, 0.7, 2.0, 3.2, 4.0, 4.8, 4.5],  # Fri
-        [2.0, 1.5, 1.2, 2.8, 3.5, 4.2, 5.0, 5.2],  # Sat
-        [2.2, 1.8, 1.5, 2.5, 3.0, 3.8, 4.5, 4.8],  # Sun
-    ])
-    return heatmap
-
-
 def _render_roi_calculator() -> None:
     """Render campaign ROI calculator."""
-    st.markdown("### 💰 Campaign ROI Calculator")
+    st.subheader("💰 Campaign ROI Calculator")
     st.markdown("Calculate return on investment for your marketing campaigns")
 
     col1, col2 = st.columns(2)
@@ -553,11 +501,14 @@ def _render_roi_calculator() -> None:
         cpa = campaign_spend / customers_acquired if customers_acquired > 0 else 0
         profit = revenue_generated - campaign_spend
 
-        # Display metrics
-        st.metric("ROI", f"{roi:.1f}%", help="Return on Investment")
-        st.metric("ROAS", f"{roas:.2f}x", help="Return on Ad Spend")
-        st.metric("CPA", f"${cpa:.2f}", help="Cost Per Acquisition")
-        st.metric("Profit", f"${profit:,.2f}", delta=f"{roi:.1f}% return")
+        # Display metrics using card_metric for better UI
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            ui.card_metric("ROI", f"{roi:.1f}%", help="Return on Investment")
+            ui.card_metric("CPA", f"${cpa:.2f}", help="Cost Per Acquisition")
+        with col_m2:
+            ui.card_metric("ROAS", f"{roas:.2f}x", help="Return on Ad Spend")
+            ui.card_metric("Profit", f"${profit:,.2f}", delta=f"{roi:.1f}% return")
 
         # Visual ROI indicator
         if roi > 0:
@@ -570,7 +521,7 @@ def _render_roi_calculator() -> None:
     st.markdown("---")
 
     # ROI Scenario Analysis
-    st.markdown("#### 🎯 Scenario Analysis")
+    st.subheader("🎯 Scenario Analysis")
     st.markdown("Explore how changes in conversion rate or AOV affect ROI")
 
     col1, col2 = st.columns(2)
@@ -631,10 +582,10 @@ def _render_roi_calculator() -> None:
 
 def _render_customer_metrics() -> None:
     """Render customer acquisition and lifetime value metrics."""
-    st.markdown("### 👥 Customer Metrics")
+    st.subheader("👥 Customer Metrics")
 
     # CAC Calculator
-    st.markdown("#### 💵 Customer Acquisition Cost (CAC)")
+    st.subheader("💵 Customer Acquisition Cost (CAC)")
 
     col1, col2, col3 = st.columns(3)
 
@@ -664,12 +615,12 @@ def _render_customer_metrics() -> None:
 
     cac = (total_marketing_spend + total_sales_costs) / new_customers
 
-    st.metric("Customer Acquisition Cost (CAC)", f"${cac:.2f}")
+    ui.card_metric("Customer Acquisition Cost (CAC)", f"${cac:.2f}")
 
     st.markdown("---")
 
     # CLV Calculator
-    st.markdown("#### 💎 Customer Lifetime Value (CLV)")
+    st.subheader("💎 Customer Lifetime Value (CLV)")
 
     col1, col2 = st.columns(2)
 
@@ -714,13 +665,16 @@ def _render_customer_metrics() -> None:
         customer_value = avg_purchase_value * purchase_frequency
         clv = customer_value * customer_lifespan * profit_margin
 
-        st.metric("Customer Lifetime Value (CLV)", f"${clv:.2f}")
-        st.metric("Annual Customer Value", f"${customer_value:.2f}")
+        col_clv1, col_clv2 = st.columns(2)
+        with col_clv1:
+            ui.card_metric("Customer Lifetime Value (CLV)", f"${clv:.2f}")
+        with col_clv2:
+            ui.card_metric("Annual Customer Value", f"${customer_value:.2f}")
 
         # CLV to CAC ratio
         clv_cac_ratio = clv / cac if cac > 0 else 0
 
-        st.metric("CLV:CAC Ratio", f"{clv_cac_ratio:.2f}x")
+        ui.card_metric("CLV:CAC Ratio", f"{clv_cac_ratio:.2f}x")
 
         # Interpretation
         if clv_cac_ratio >= 3:
@@ -733,7 +687,7 @@ def _render_customer_metrics() -> None:
     st.markdown("---")
 
     # Cohort Analysis Visualization
-    st.markdown("#### 📊 Customer Cohort Analysis")
+    st.subheader("📊 Customer Cohort Analysis")
 
     cohort_data = _generate_cohort_data()
 
@@ -760,7 +714,7 @@ def _render_customer_metrics() -> None:
 
 def _render_ab_testing() -> None:
     """Render A/B/n test significance calculator."""
-    st.markdown("### 🧪 Statistical Testing Calculator")
+    st.subheader("🧪 Statistical Testing Calculator")
     st.markdown("Determine if your test results are statistically significant")
 
     # Test mode selector
@@ -803,7 +757,7 @@ def _render_ab_test() -> None:
 
         conversion_rate_a = (conversions_a / visitors_a * 100) if visitors_a > 0 else 0
 
-        st.metric("Conversion Rate A", f"{conversion_rate_a:.2f}%")
+        ui.card_metric("Conversion Rate A", f"{conversion_rate_a:.2f}%")
 
     with col2:
         st.markdown("#### 🅱️ Variant B (Test)")
@@ -826,7 +780,7 @@ def _render_ab_test() -> None:
 
         conversion_rate_b = (conversions_b / visitors_b * 100) if visitors_b > 0 else 0
 
-        st.metric("Conversion Rate B", f"{conversion_rate_b:.2f}%")
+        ui.card_metric("Conversion Rate B", f"{conversion_rate_b:.2f}%")
 
     st.markdown("---")
 
@@ -841,21 +795,21 @@ def _render_ab_test() -> None:
 
         with col1:
             lift = result['lift']
-            st.metric(
+            ui.card_metric(
                 "Lift",
                 f"{lift:+.2f}%",
                 delta=f"{'Improvement' if lift > 0 else 'Decline'}"
             )
 
         with col2:
-            st.metric("P-Value", f"{result['p_value']:.4f}")
+            ui.card_metric("P-Value", f"{result['p_value']:.4f}")
 
         with col3:
             confidence = (1 - result['p_value']) * 100
-            st.metric("Confidence", f"{confidence:.1f}%")
+            ui.card_metric("Confidence", f"{confidence:.1f}%")
 
         # Interpretation
-        st.markdown("#### 📊 Test Results")
+        st.subheader("📊 Test Results")
 
         if result['significant']:
             if lift > 0:
@@ -895,7 +849,7 @@ def _render_ab_test() -> None:
         st.plotly_chart(fig_ab, use_container_width=True)
 
         # Sample size recommendation
-        st.markdown("#### 💡 Sample Size Recommendation")
+        st.subheader("💡 Sample Size Recommendation")
 
         recommended_sample = _calculate_required_sample_size(
             conversion_rate_a / 100,
@@ -914,7 +868,7 @@ def _render_ab_test() -> None:
 
 def _render_multivariant_test() -> None:
     """Render multi-variant test (3-10 variants) using Chi-square test."""
-    st.markdown("#### 🔢 Multi-Variant Testing (Chi-Square Test)")
+    st.subheader("🔢 Multi-Variant Testing (Chi-Square Test)")
     st.markdown("Test multiple variants simultaneously to find the best performer")
 
     # Number of variants
@@ -924,7 +878,7 @@ def _render_multivariant_test() -> None:
     variant_data = []
     variant_names = ['A (Control)', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 
-    st.markdown("#### 📊 Enter Data for Each Variant")
+    st.subheader("📊 Enter Data for Each Variant")
 
     cols = st.columns(min(num_variants, 3))  # Max 3 columns for layout
 
@@ -974,17 +928,17 @@ def _render_multivariant_test() -> None:
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.metric("Chi-Square Statistic", f"{result['chi_square']:.2f}")
+            ui.card_metric("Chi-Square Statistic", f"{result['chi_square']:.2f}")
 
         with col2:
-            st.metric("P-Value", f"{result['p_value']:.4f}")
+            ui.card_metric("P-Value", f"{result['p_value']:.4f}")
 
         with col3:
             confidence = (1 - result['p_value']) * 100
-            st.metric("Confidence", f"{confidence:.1f}%")
+            ui.card_metric("Confidence", f"{confidence:.1f}%")
 
         # Interpretation
-        st.markdown("#### 📊 Test Results")
+        st.subheader("📊 Test Results")
 
         if result['significant']:
             st.success(f"✅ **Statistically Significant Difference Detected!** At least one variant performs differently from the others with {confidence:.1f}% confidence.")
@@ -1013,7 +967,7 @@ def _render_multivariant_test() -> None:
             st.warning(f"⚠️ **No Significant Difference** - All variants perform similarly. Current p-value: {result['p_value']:.4f}")
 
         # Visualization
-        st.markdown("#### 📈 Conversion Rate Comparison")
+        st.subheader("📈 Conversion Rate Comparison")
 
         # Create bar chart
         fig_mv = go.Figure(data=[
@@ -1036,7 +990,7 @@ def _render_multivariant_test() -> None:
         st.plotly_chart(fig_mv, use_container_width=True)
 
         # Summary table
-        st.markdown("#### 📋 Summary Table")
+        st.subheader("📋 Summary Table")
         summary_data = pd.DataFrame([{
             'Variant': v['name'],
             'Visitors': f"{v['visitors']:,}",
@@ -1077,7 +1031,7 @@ def _calculate_multivariant_significance(variant_data: List[Dict]) -> Dict:
 
 def _render_attribution_modeling() -> None:
     """Render marketing attribution analysis."""
-    st.markdown("### 🎯 Marketing Attribution Modeling")
+    st.subheader("🎯 Marketing Attribution Modeling")
     st.markdown("Understand which touchpoints drive conversions")
 
     # Attribution model selector
@@ -1090,7 +1044,7 @@ def _render_attribution_modeling() -> None:
     st.markdown("---")
 
     # Sample customer journey data
-    st.markdown("#### 🛤️ Customer Journey Example")
+    st.subheader("🛤️ Customer Journey Example")
 
     journey_data = _get_sample_journey_data()
 
@@ -1099,7 +1053,7 @@ def _render_attribution_modeling() -> None:
     st.markdown("---")
 
     # Attribution calculation
-    st.markdown(f"#### 📊 Attribution Results - {model} Model")
+    st.subheader(f"📊 Attribution Results - {model} Model")
 
     attribution_results = _calculate_attribution(journey_data, model)
 
@@ -1128,7 +1082,7 @@ def _render_attribution_modeling() -> None:
         st.dataframe(results_df, use_container_width=True)
 
     # Model explanation
-    st.markdown("#### 💡 Model Explanation")
+    st.subheader("💡 Model Explanation")
 
     explanations = {
         "First-Touch": "100% credit to the first touchpoint in the customer journey",
@@ -1143,7 +1097,7 @@ def _render_attribution_modeling() -> None:
 
 def _render_reports() -> None:
     """Render marketing reports export section."""
-    st.markdown("### 📥 Marketing Reports")
+    st.subheader("📥 Marketing Reports")
 
     # Report type selector
     report_type = st.selectbox(
@@ -1161,7 +1115,7 @@ def _render_reports() -> None:
     st.markdown("---")
 
     # Generate report preview
-    st.markdown("#### 📊 Report Preview")
+    st.subheader("📊 Report Preview")
 
     report_data = _generate_report_data(report_type, report_start, report_end)
 
@@ -1199,68 +1153,158 @@ def _render_reports() -> None:
         )
 
 
+
+
 # Helper functions
 
-def _get_sample_campaign_data() -> pd.DataFrame:
-    """Generate sample campaign data for demonstration."""
-    return pd.DataFrame({
-        'campaign': ['Summer Sale', 'Holiday Promo', 'New Product', 'Retargeting'],
-        'channel': ['Social Media', 'Email', 'Paid Ads', 'Paid Ads'],
-        'spend': [5000, 3000, 8000, 2000],
-        'impressions': [50000, 25000, 100000, 15000],
-        'clicks': [2500, 1500, 5000, 900],
-        'conversions': [125, 90, 200, 50],
-        'revenue': [15000, 12000, 30000, 7500]
-    })
+def _get_campaign_data_source() -> pd.DataFrame:
+    """Handles selection of data source for campaign data (upload or simulate)."""
+    st.subheader("📊 Campaign Data Source")
+    source_option = st.radio(
+        "Choose your data source:",
+        ("Upload CSV/Excel", "Simulate Marketing Data"),
+        horizontal=True
+    )
+
+    if source_option == "Upload CSV/Excel":
+        uploaded_file = st.file_uploader("Upload your marketing data (CSV or Excel)", type=["csv", "xlsx"])
+        if uploaded_file is not None:
+            if uploaded_file.name.endswith('.csv'):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+            st.success("Data uploaded successfully!")
+            # Convert Date column if it exists and is not already datetime
+            if 'Date' in df.columns:
+                df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                df = df.dropna(subset=['Date']) # Drop rows where Date conversion failed
+            return df
+        else:
+            st.info("Please upload a file or switch to simulated data.")
+            return pd.DataFrame() # Return empty df if no file
+    else: # Simulate Marketing Data
+        st.info("Generating realistic marketing data for demonstration purposes.")
+        col1, col2 = st.columns(2)
+        with col1:
+            platform_choice = st.selectbox("Simulate for Platform", ["Google Ads", "Meta Ads"])
+            start_date_choice = st.date_input("Simulation Start Date", value=datetime.now() - timedelta(days=90))
+        with col2:
+            days_choice = st.slider("Simulation Duration (Days)", 30, 365, 90)
+
+        # Use a consistent key for the button to avoid re-rendering issues
+        if st.button("Generate Simulated Data", key="generate_sim_data_button"):
+            simulated_data = generate_campaign_data(
+                platform=platform_choice,
+                start_date=start_date_choice.strftime("%Y-%m-%d"),
+                days=days_choice
+            )
+            st.success(f"Simulated data generated for {platform_choice}!")
+            st.session_state['simulated_campaign_data'] = simulated_data # Store in session state
+            return simulated_data
+        
+        # If simulated data is already in session state from a previous generation, use it
+        if 'simulated_campaign_data' in st.session_state and not st.session_state['simulated_campaign_data'].empty:
+            st.success("Using previously generated simulated data.")
+            return st.session_state['simulated_campaign_data']
+        else:
+            return pd.DataFrame() # Initial empty df
+
+def _get_campaign_data_source() -> pd.DataFrame:
+    """Handles selection of data source for campaign data (upload or simulate)."""
+    st.subheader("📊 Campaign Data Source")
+    source_option = st.radio(
+        "Choose your data source:",
+        ("Upload CSV/Excel", "Simulate Marketing Data"),
+        horizontal=True
+    )
+
+    if source_option == "Upload CSV/Excel":
+        uploaded_file = st.file_uploader("Upload your marketing data (CSV or Excel)", type=["csv", "xlsx"])
+        if uploaded_file is not None:
+            if uploaded_file.name.endswith('.csv'):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+            st.success("Data uploaded successfully!")
+            # Convert Date column if it exists and is not already datetime
+            if 'Date' in df.columns:
+                df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                df = df.dropna(subset=['Date']) # Drop rows where Date conversion failed
+            return df
+        else:
+            st.info("Please upload a file or switch to simulated data.")
+            return pd.DataFrame() # Return empty df if no file
+    else: # Simulate Marketing Data
+        st.info("Generating realistic marketing data for demonstration purposes.")
+        col1, col2 = st.columns(2)
+        with col1:
+            platform_choice = st.selectbox("Simulate for Platform", ["Google Ads", "Meta Ads"])
+            start_date_choice = st.date_input("Simulation Start Date", value=datetime.now() - timedelta(days=90))
+        with col2:
+            days_choice = st.slider("Simulation Duration (Days)", 30, 365, 90)
+
+        # Use a consistent key for the button to avoid re-rendering issues
+        if st.button("Generate Simulated Data", key="generate_sim_data_button"):
+            simulated_data = generate_campaign_data(
+                platform=platform_choice,
+                start_date=start_date_choice.strftime("%Y-%m-%d"),
+                days=days_choice
+            )
+            st.success(f"Simulated data generated for {platform_choice}!")
+            st.session_state['simulated_campaign_data'] = simulated_data # Store in session state
+            return simulated_data
+        
+        # If simulated data is already in session state from a previous generation, use it
+        if 'simulated_campaign_data' in st.session_state and not st.session_state['simulated_campaign_data'].empty:
+            st.success("Using previously generated simulated data.")
+            return st.session_state['simulated_campaign_data']
+        else:
+            return pd.DataFrame() # Initial empty df
 
 
-def _calculate_channel_metrics(channel: str) -> Dict:
-    """Calculate metrics for selected channel."""
-    # Sample data - in production, this would query real data
-    base_spend = 10000 if channel == "All Channels" else 5000
-    base_revenue = 25000 if channel == "All Channels" else 12000
+
+
+def _calculate_channel_metrics(df: pd.DataFrame) -> Dict:
+    """Calculate metrics for the given DataFrame."""
+    total_spend = df['Spend'].sum()
+    total_revenue = df['Revenue'].sum()
+    total_conversions = df['Conversions'].sum()
+
+    # Calculate current metrics
+    roi = (total_revenue - total_spend) / total_spend if total_spend > 0 else 0
+    roas = total_revenue / total_spend if total_spend > 0 else 0
+
+    # For delta, need previous period. For demo, we'll simulate change.
+    # In a real app, this would involve comparing current period to previous.
+    spend_change = np.random.uniform(-5, 5) # Simulate change for demo
+    revenue_change = np.random.uniform(-5, 5)
+    roi_change = np.random.uniform(-5, 5)
+    conversion_change = np.random.uniform(-5, 5)
 
     return {
-        'spend': base_spend * np.random.uniform(0.9, 1.1),
-        'revenue': base_revenue * np.random.uniform(0.9, 1.1),
-        'roi': (base_revenue / base_spend) * np.random.uniform(0.95, 1.05),
-        'conversions': int(150 * np.random.uniform(0.9, 1.1)),
-        'spend_change': np.random.uniform(-10, 20),
-        'revenue_change': np.random.uniform(-5, 25),
-        'roi_change': np.random.uniform(-8, 15),
-        'conversion_change': np.random.uniform(-12, 18)
+        'spend': total_spend,
+        'revenue': total_revenue,
+        'roi': roi,
+        'roas': roas, # Although roas isn't displayed in UI, good to calculate
+        'conversions': total_conversions,
+        'spend_change': spend_change,
+        'revenue_change': revenue_change,
+        'roi_change': roi_change,
+        'conversion_change': conversion_change
     }
 
 
-def _generate_trend_data(dates: pd.DatetimeIndex, channel: str) -> pd.DataFrame:
-    """Generate sample trend data."""
-    n_days = len(dates)
-
-    # Add some seasonality and trend
-    trend = np.linspace(1000, 1500, n_days)
-    seasonality = 200 * np.sin(np.linspace(0, 4 * np.pi, n_days))
-    noise = np.random.normal(0, 100, n_days)
-
-    spend = trend + seasonality + noise
-    revenue = spend * np.random.uniform(2.0, 3.0, n_days)
-    conversion_rate = np.random.uniform(2, 5, n_days)
-
-    return pd.DataFrame({
-        'date': dates,
-        'spend': np.maximum(spend, 0),
-        'revenue': np.maximum(revenue, 0),
-        'conversion_rate': conversion_rate
-    })
 
 
-def _get_channel_breakdown() -> pd.DataFrame:
-    """Get performance breakdown by channel."""
-    return pd.DataFrame({
-        'channel': ['Social Media', 'Email', 'Paid Ads', 'Organic', 'Content'],
-        'spend': [5000, 2000, 8000, 1000, 3000],
-        'revenue': [12000, 8000, 20000, 5000, 9000],
-        'conversions': [120, 160, 200, 100, 90]
-    })
+
+def _get_channel_breakdown(df: pd.DataFrame) -> pd.DataFrame:
+    """Get performance breakdown by channel from the given DataFrame."""
+    # Assuming 'Platform' column exists in df and represents channels
+    return df.groupby('Platform').agg(
+        spend=('Spend', 'sum'),
+        revenue=('Revenue', 'sum'),
+        conversions=('Conversions', 'sum')
+    ).reset_index().rename(columns={'Platform': 'channel'})
 
 
 def _calculate_ab_test_significance(
