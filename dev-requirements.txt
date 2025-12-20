@@ -11,7 +11,7 @@ pytest-mock==3.12.0
 # Code Quality & Linting
 black==23.11.0
 flake8==6.1.0
-isort==5.12.0
+isort==6.1.0
 pylint==3.0.2
 
 # Type Checking
