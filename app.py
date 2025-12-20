@@ -105,7 +105,7 @@ def _render_overview() -> None:
     with col3:
         ui.card_metric("Architecture", "Serverless", "Python + Streamlit")
     with col4:
-        ui.card_metric("Performance", "< 50ms", "Latency")
+        ui.card_metric("Performance", "Cache-Optimized", "5-min TTL")
 
     st.markdown("### 🛠️ Module Suite")
 
