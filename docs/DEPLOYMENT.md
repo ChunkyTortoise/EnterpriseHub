@@ -1,90 +1,141 @@
-# 🚀 PHASE 1: 12-HOUR DEPLOYMENT PROTOCOL
-## STEP 1: Create Project Structure
+# EnterpriseHub Deployment Guide
 
+**Last Updated:** December 21, 2025
 
-## STEP 2: Create Files
+This guide provides deployment instructions for EnterpriseHub across multiple platforms.
 
-# File: requirements.txt
-cat > requirements.txt << 'EOF'
-streamlit==1.28.0
-pandas>=2.0.0
-plotly>=5.17.0
-graphviz>=0.20.1
-EOF
+---
 
-# File: packages.txt
-cat > packages.txt << 'EOF'
-graphviz
-EOF
+## Quick Start - Streamlit Cloud Deployment
 
-# File: app.py
-cat > app.py << 'EOF'
-import streamlit as st
+### Prerequisites
 
-st.set_page_config(
-    page_title="Unified Enterprise Hub | Cayman Roden",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+- GitHub account
+- Streamlit Cloud account (free tier available)
+- Repository pushed to GitHub
 
-st.sidebar.title("🚀 Enterprise Hub")
-st.sidebar.markdown("**By Cayman Roden**")
-page = st.sidebar.radio(
-    "Navigate:",
-    ["🏠 Overview", "📊 Market Pulse", "💼 Financial Analyst",
-     "💰 Margin Hunter", "🤖 Agent Logic", "✍️ Content Engine"]
-)
+### Step 1 - Prepare Repository
 
-if page == "🏠 Overview":
-    st.title("The Unified Enterprise Hub")
-    st.markdown("### 5 Mission-Critical Modules in One Platform")
+Ensure these files exist in your repository root:
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Modules Deployed", "5", delta="100%")
-    with col2:
-        st.metric("Cloud-Native", "✓", delta="Zero Infrastructure")
-    with col3:
-        st.metric("Time to Value", "< 2 min", delta="-98% vs Legacy")
+- `requirements.txt`
+- `app.py`
+- `.streamlit/config.toml` (optional, for theme customization)
 
-    st.info("**STATUS:** Container deployed. Awaiting Phase 2 logic integration.")
-else:
-    st.title(page)
-    st.warning(f"⏳ **{page}** module pending Phase 2 deployment.")
-EOF
+### Step 2 - Deploy to Streamlit Cloud
 
-## STEP 3: Install & Test Locally
+1. Visit: <https://share.streamlit.io/>
+2. Click "New app"
+3. Connect GitHub account
+4. Select: enterprise-hub repository
+5. Branch: main
+6. Main file path: app.py
+7. Click "Deploy!"
 
-pip3 install -r requirements.txt
+### Step 3 - Configure Secrets (Optional)
+
+For AI features (Content Engine, Agent Logic, Multi-Agent Workflow, Smart Forecast):
+
+1. Go to app settings
+2. Click "Secrets"
+3. Add:
+
+   ```toml
+   ANTHROPIC_API_KEY = "sk-ant-xxx..."
+   ```
+
+---
+
+## Alternative Deployment Methods
+
+### Local Development
+
+```bash
+# Clone repository
+git clone https://github.com/ChunkyTortoise/enterprise-hub.git
+cd enterprise-hub
+
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment template
+cp .env.example .env
+
+# Run the application
 streamlit run app.py
+```
 
-## STEP 4: Push to GitHub
+### Docker Deployment
 
-git init
-git add .
-git commit -m "Phase 1: Container deployed"
+```bash
+# Build image
+docker build -t enterprise-hub .
 
-# With GitHub CLI:
-gh repo create enterprise-hub --public --source=. --remote=origin --push
+# Run container
+docker run -p 8501:8501 enterprise-hub
+```
 
-# OR without GitHub CLI:
-# Replace YOUR_USERNAME with your GitHub handle
-git remote add origin https://github.com/YOUR_USERNAME/enterprise-hub.git
-git branch -M main
-git push -u origin main
+### Heroku Deployment
 
-## STEP 5: Deploy to Streamlit Cloud
+```bash
+# Login to Heroku
+heroku login
 
-# 1. Visit: https://share.streamlit.io/
-# 2. Click "New app"
-# 3. Connect GitHub account
-# 4. Select: enterprise-hub repository
-# 5. Branch: main
-# 6. Main file path: app.py
-# 7. Click "Deploy!"
+# Create app
+heroku create your-app-name
 
-## ✅ SUCCESS CRITERIA
-# - Live URL: https://YOUR_APP.streamlit.app
-# - All 3 metrics visible on Overview page
-# - Sidebar navigation functional
-# - TIME: 6:25 AM → Target: 6:49 AM (24 minutes)
+# Set buildpack
+heroku buildpacks:set heroku/python
+
+# Deploy
+git push heroku main
+
+# Open app
+heroku open
+```
+
+---
+
+## Environment Variables
+
+For production deployments, configure these environment variables:
+
+- `ANTHROPIC_API_KEY`: Required for AI features (Content Engine, Data Detective AI, Agent Logic Claude mode, Multi-Agent Workflow, Smart Forecast)
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue**: App won't start
+
+**Solution**: Check `requirements.txt` is in repository root
+
+**Issue**: API features not working
+
+**Solution**: Verify API key is set in Streamlit Cloud secrets
+
+**Issue**: Import errors
+
+**Solution**: Ensure all dependencies are listed in `requirements.txt`
+
+---
+
+## Success Criteria
+
+- Live URL accessible
+- All 10 modules visible in sidebar
+- No import errors
+- API features work (if configured)
+- Dark mode toggle functional
+
+---
+
+**Live Demo**: <https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/>
+
+**GitHub Repository**: <https://github.com/ChunkyTortoise/enterprise-hub>

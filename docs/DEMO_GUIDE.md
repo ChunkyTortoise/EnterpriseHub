@@ -1,6 +1,8 @@
 # Enterprise Hub - Complete Demo Walkthrough
 
-> **A step-by-step guide to showcase all 5 modules with example inputs, expected outputs, and visual storyboards**
+> **A step-by-step guide to showcase all 10 modules with example inputs, expected outputs, and visual storyboards**
+
+**Last Updated:** December 21, 2025
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Try_Now-FF4B4B.svg)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
 
@@ -14,20 +16,25 @@
 4. [Module 3: Margin Hunter (Hero Project)](#module-3-margin-hunter-hero-project)
 5. [Module 4: Agent Logic](#module-4-agent-logic)
 6. [Module 5: Content Engine](#module-5-content-engine)
-7. [Recording Tips](#recording-tips)
-8. [Screenshot Checklist](#screenshot-checklist)
+7. [Module 6: Data Detective](#module-6-data-detective)
+8. [Module 7: Marketing Analytics](#module-7-marketing-analytics)
+9. [Module 8: Multi-Agent Workflow](#module-8-multi-agent-workflow)
+10. [Module 9: Smart Forecast](#module-9-smart-forecast)
+11. [Module 10: Design System](#module-10-design-system)
+12. [Recording Tips](#recording-tips)
+13. [Screenshot Checklist](#screenshot-checklist)
 
 ---
 
 ## Demo Overview
 
-**Total Demo Time**: 8-10 minutes
+**Total Demo Time**: 12-15 minutes (full walkthrough) or 5-8 minutes (highlights only)
 **Target Audience**: Recruiters, hiring managers, technical evaluators
 **Key Message**: Enterprise-grade business tools delivered in a modern, cloud-native platform
 
 ### Demo Script (30-second elevator pitch)
 
-> "Enterprise Hub is a unified platform that consolidates 5 mission-critical business tools into a single web application. From real-time market analysis to AI-powered content generation, each module solves specific business challenges. Today I'll walk you through all 5 modules, showing how they deliver enterprise capabilities in under 2 minutes."
+> "Enterprise Hub is a unified platform that consolidates 10 mission-critical business tools into a single web application. From real-time market analysis to AI-powered content generation, multi-agent workflows, and smart forecasting, each module solves specific business challenges. The platform features 220+ automated tests, WCAG AAA accessibility compliance, and production-grade dark mode support."
 
 ---
 
@@ -572,6 +579,135 @@ What's your experience with AI coding assistants? Are you seeing similar product
 
 ---
 
+## Module 6: Data Detective
+
+**Duration**: 1.5 minutes
+**Purpose**: AI-powered exploratory data analysis (EDA)
+
+### Step-by-Step Walkthrough
+
+#### Step 1: Navigate to Data Detective
+- Click "Data Detective" in sidebar
+
+#### Step 2: Upload CSV
+**Example Input**: Upload sample sales or customer data CSV
+
+#### Step 3: View Data Profile
+- Automatic analysis of data types, missing values, and basic statistics
+
+#### Step 4: AI Insights Tab
+- Claude AI generates insights about patterns, anomalies, and recommendations
+
+### Key Talking Points
+
+- "Reduces EDA time from hours to minutes"
+- "AI-powered insights identify patterns automatically"
+- "Works with any CSV file"
+
+---
+
+## Module 7: Marketing Analytics
+
+**Duration**: 1.5 minutes
+**Purpose**: Multi-channel campaign tracking and attribution modeling
+
+### Step-by-Step Walkthrough
+
+#### Step 1: Navigate to Marketing Analytics
+
+#### Step 2: Campaign Dashboard
+- View KPI cards for Spend, Revenue, ROI, and Conversions
+
+#### Step 3: ROI Calculator
+- Scenario modeling with interactive heatmaps
+
+#### Step 4: Attribution Modeling
+- Compare 5 attribution models side-by-side
+
+### Key Talking Points
+
+- "6-tab comprehensive platform"
+- "Statistical A/B testing with significance calculators"
+- "Multiple attribution models in one view"
+
+---
+
+## Module 8: Multi-Agent Workflow
+
+**Duration**: 1 minute
+**Purpose**: AI agent orchestration for complex workflows
+
+### Step-by-Step Walkthrough
+
+#### Step 1: Navigate to Multi-Agent Workflow
+
+#### Step 2: Configure Workflow
+- Define tasks and agent roles
+
+#### Step 3: Execute Workflow
+- Watch agents collaborate to complete complex tasks
+
+### Key Talking Points
+
+- "Demonstrates advanced AI orchestration"
+- "Multiple agents working together"
+- "Real-world workflow automation"
+
+---
+
+## Module 9: Smart Forecast
+
+**Duration**: 2 minutes
+**Purpose**: AI-powered price prediction and forecasting
+
+### Step-by-Step Walkthrough
+
+#### Step 1: Navigate to Smart Forecast
+
+#### Step 2: Enter Ticker Symbol
+**Example Input**: `AAPL`
+
+#### Step 3: View AI Predictions
+- 7-day, 30-day, and 90-day price forecasts
+- Confidence intervals and risk assessment
+
+#### Step 4: Interactive Charts
+- Historical data with predicted future prices
+
+### Key Talking Points
+
+- "AI-powered forecasting using Claude"
+- "Multiple time horizons"
+- "Confidence intervals for risk management"
+- "Cutting-edge feature demonstrating AI capabilities"
+
+---
+
+## Module 10: Design System
+
+**Duration**: 30 seconds
+**Purpose**: Showcase UI/UX standards and accessibility compliance
+
+### Step-by-Step Walkthrough
+
+#### Step 1: Navigate to Design System
+
+#### Step 2: View Component Gallery
+- Cards, buttons, metrics, charts
+- WCAG AAA compliant components
+
+#### Step 3: Dark Mode Toggle
+- Demonstrate seamless theme switching
+
+### Key Talking Points
+
+- "WCAG AAA accessibility compliance"
+- "Enterprise-grade dark mode"
+- "Reusable component library"
+- "Production-ready UI standards"
+
+---
+
 ## Recording Tips
 
 ### Equipment Setup
@@ -621,13 +757,20 @@ What's your experience with AI coding assistants? Are you seeing similar product
 
 **Order of Modules** (recommended):
 1. **Margin Hunter** (3 min) - Start with hero project, strongest first impression
-2. **Content Engine** (2 min) - AI showcase, impressive speed
-3. **Market Pulse** (1.5 min) - Visual appeal, professional charts
-4. **Financial Analyst** (1 min) - Quick, straightforward
-5. **Agent Logic** (1 min) - AI capabilities, complete the suite
+2. **Smart Forecast** (2 min) - AI-powered predictions, cutting-edge feature
+3. **Content Engine** (2 min) - AI showcase, impressive speed
+4. **Market Pulse** (1.5 min) - Visual appeal, professional charts
+5. **Data Detective** (1.5 min) - AI insights on uploaded data
+6. **Marketing Analytics** (1.5 min) - Complex dashboards, multi-tab UI
+7. **Financial Analyst** (1 min) - Quick, straightforward
+8. **Multi-Agent Workflow** (1 min) - Agent orchestration demo
+9. **Agent Logic** (1 min) - Sentiment analysis
+10. **Design System** (30 sec) - UI/UX showcase
 
-**Alternative: Quick Overview** (5 min total):
-- 30 seconds per module, focus on key features only
+**Alternative: Quick Overview** (5-8 min total):
+
+- 30-45 seconds per module, focus on hero features only
+- Highlight: Margin Hunter, Smart Forecast, Content Engine, Data Detective, Marketing Analytics
 - Best for LinkedIn posts or Twitter
 
 ---

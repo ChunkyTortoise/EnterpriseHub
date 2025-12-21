@@ -18,6 +18,9 @@ High-quality screenshots are critical for Upwork proposals. Clients ignore propo
 | `marketing-analytics-dashboard.png` | **Marketing Analytics** | Campaign Dashboard showing ROI, Spend, Revenue cards + Trend chart. |
 | `data-detective-ai.png` | **Data Detective** | Upload CSV, show "AI Insights" tab with generated analysis. |
 | `content-engine-output.png` | **Content Engine** | Generated LinkedIn post (topic: "AI in marketing") showing output text. |
+| `multi-agent-workflow.png` | **Multi-Agent Workflow** | Agent orchestration interface showing workflow execution. |
+| `smart-forecast-prediction.png` | **Smart Forecast** | AAPL price prediction with confidence intervals and charts. |
+| `design-system-gallery.png` | **Design System** | Component gallery showing WCAG AAA compliant UI elements. |
 
 ### 🛠️ How to Capture (Best Practices)
 1.  **Resolution**: 1920x1080 (Full HD).
@@ -58,7 +61,7 @@ A 60-second walkthrough is the highest-ROI asset for LinkedIn and Upwork portfol
 *(Visual: Click Generate → Show Output)*
 
 **[0:45-0:55] Production Quality**
-"Seven modules. 220 automated tests. 85% code coverage. Live on Streamlit Cloud."
+"Ten modules. 220 automated tests. 85% code coverage. WCAG AAA accessibility. Live on Streamlit Cloud."
 *(Visual: Quick montage of modules → GitHub Actions passing)*
 
 **[0:55-1:00] Call to Action**

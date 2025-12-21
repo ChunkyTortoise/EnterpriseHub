@@ -3,7 +3,7 @@
 ## General Questions
 
 ### What is EnterpriseHub?
-EnterpriseHub is a unified business intelligence platform with 7 independent modules for financial analysis, content creation, data analytics, and marketing insights. Built with Streamlit and powered by AI (Claude 3.5 Sonnet).
+EnterpriseHub is a unified business intelligence platform with 10 independent modules for financial analysis, content creation, data analytics, marketing insights, and AI-powered forecasting. Built with Streamlit and powered by AI (Claude 3.5 Sonnet).
 
 ### Who is this for?
 - **Business Analysts**: Financial modeling, CVP analysis, data profiling
@@ -71,6 +71,9 @@ Free features work without any API key (TextBlob sentiment, all other modules).
 | Campaign tracking | Marketing Analytics | Multi-channel ROI, attribution |
 | Data profiling | Data Detective | Statistical analysis, correlations |
 | Sentiment analysis | Agent Logic | Dual-mode (TextBlob + Claude) |
+| Multi-step workflows | Multi-Agent Workflow | AI agent orchestration |
+| Price prediction | Smart Forecast | AI-powered forecasting |
+| UI components | Design System | WCAG AAA compliant components |
 
 ### Can I use multiple modules together?
 Yes! All modules are independent. Open multiple browser tabs to use different modules simultaneously.
@@ -86,9 +89,11 @@ Yes! All modules are independent. Open multiple browser tabs to use different mo
 PDF/Excel export for all modules is planned for future releases.
 
 ### Does it work offline?
+
 Partially:
-- **Works offline**: Margin Hunter, Data Detective (with pre-loaded data), Marketing Analytics
-- **Requires internet**: Financial Analyst, Market Pulse (Yahoo Finance API), Content Engine (Claude API), Agent Logic (Claude mode)
+
+- **Works offline**: Margin Hunter, Data Detective (with pre-loaded data), Marketing Analytics, Design System
+- **Requires internet**: Financial Analyst, Market Pulse (Yahoo Finance API), Content Engine (Claude API), Agent Logic (Claude mode), Multi-Agent Workflow (Claude API), Smart Forecast (yfinance API)
 
 ---
 
@@ -108,7 +113,7 @@ Yes:
 - **No tracking**: No analytics, no telemetry, no data collection
 
 ### Can I deploy this to production?
-Yes! See `Deploy.md` for instructions. Recommended platforms:
+Yes! See `docs/DEPLOYMENT.md` for instructions. Recommended platforms:
 - **Streamlit Cloud**: Free tier available, easy deployment
 - **Heroku**: Good for custom domains
 - **AWS/GCP/Azure**: Full control, requires more setup
@@ -369,4 +374,4 @@ Open an issue: https://github.com/ChunkyTortoise/enterprise-hub/issues
 
 ---
 
-Last Updated: December 6, 2025
+Last Updated: December 21, 2025
