@@ -6,9 +6,10 @@ streamlit==1.28.0
 # ==============================================================================
 # Data Processing & Analysis
 # ==============================================================================
-pandas==2.1.3
-numpy==1.26.2
-scipy==1.11.4  # Statistical functions for A/B testing
+pandas>=2.1.3
+numpy>=1.26.2
+scipy>=1.11.4  # Statistical functions for A/B testing
+scikit-learn>=1.3.2  # Machine Learning & Forecasting
 
 # ==============================================================================
 # Data Visualization
@@ -30,6 +31,7 @@ ta==0.11.0
 # AI & NLP
 # ==============================================================================
 anthropic==0.18.1  # Claude API for content generation
+openai  # OpenAI API
 textblob==0.17.1
 
 # ==============================================================================

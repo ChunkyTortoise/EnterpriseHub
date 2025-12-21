@@ -4,16 +4,26 @@ Content Engine - AI-Powered LinkedIn Post Generator.
 Generates professional LinkedIn content using Claude AI with customizable
 templates, tones, and target audiences.
 """
-import streamlit as st
 import os
 import time
-from typing import Optional, Dict, Any, Callable
 from functools import wraps
+from typing import Any, Callable, Dict, Optional
+
+import streamlit as st
+
+import utils.ui as ui
 from utils.logger import get_logger
 
 # Conditional import for Claude API
 try:
-    from anthropic import Anthropic, APIError, RateLimitError, APIConnectionError, APITimeoutError
+    from anthropic import (
+        Anthropic,
+        APIConnectionError,
+        APIError,
+        APITimeoutError,
+        RateLimitError,
+    )
+
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
@@ -38,33 +48,33 @@ TEMPLATES = {
     "Professional Insight": {
         "description": "Share industry insights with professional tone",
         "prompt_prefix": "Write a professional LinkedIn post sharing an industry insight about",
-        "style": "Professional, informative, authoritative"
+        "style": "Professional, informative, authoritative",
     },
     "Thought Leadership": {
         "description": "Position yourself as a thought leader",
         "prompt_prefix": "Write a thought-leadership LinkedIn post discussing",
-        "style": "Visionary, forward-thinking, inspiring"
+        "style": "Visionary, forward-thinking, inspiring",
     },
     "Case Study": {
         "description": "Share a success story or case study",
         "prompt_prefix": "Write a LinkedIn post presenting a case study about",
-        "style": "Story-driven, results-focused, credible"
+        "style": "Story-driven, results-focused, credible",
     },
     "How-To Guide": {
         "description": "Educational content with actionable tips",
         "prompt_prefix": "Write a how-to LinkedIn post teaching professionals about",
-        "style": "Educational, practical, step-by-step"
+        "style": "Educational, practical, step-by-step",
     },
     "Industry Trend": {
         "description": "Analyze current trends and predictions",
         "prompt_prefix": "Write a LinkedIn post analyzing current trends in",
-        "style": "Analytical, data-informed, forward-looking"
+        "style": "Analytical, data-informed, forward-looking",
     },
     "Personal Story": {
         "description": "Share personal experience and lessons learned",
         "prompt_prefix": "Write a personal LinkedIn post sharing a story about",
-        "style": "Authentic, relatable, reflective"
-    }
+        "style": "Authentic, relatable, reflective",
+    },
 }
 
 TONES = {
@@ -72,14 +82,14 @@ TONES = {
     "Casual": "Use a conversational, friendly tone",
     "Inspirational": "Be motivating and uplifting",
     "Analytical": "Be data-driven and logical",
-    "Storytelling": "Use narrative structure and emotional connection"
+    "Storytelling": "Use narrative structure and emotional connection",
 }
 
 
 def retry_with_exponential_backoff(
     max_attempts: int = MAX_RETRY_ATTEMPTS,
     initial_delay: float = INITIAL_RETRY_DELAY,
-    backoff_factor: float = RETRY_BACKOFF_FACTOR
+    backoff_factor: float = RETRY_BACKOFF_FACTOR,
 ) -> Callable:
     """
     Decorator to retry a function with exponential backoff on failure.
@@ -102,6 +112,7 @@ def retry_with_exponential_backoff(
             # API call logic
             pass
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
@@ -121,7 +132,9 @@ def retry_with_exponential_backoff(
                         time.sleep(delay)
                         delay *= backoff_factor
                     else:
-                        logger.error(f"Rate limit exceeded after {max_attempts} attempts")
+                        logger.error(
+                            f"Rate limit exceeded after {max_attempts} attempts"
+                        )
                         raise
                 except (APIConnectionError, APITimeoutError) as e:
                     last_exception = e
@@ -141,7 +154,9 @@ def retry_with_exponential_backoff(
                     raise
                 except Exception as e:
                     # Unexpected errors should not be retried
-                    logger.error(f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True)
+                    logger.error(
+                        f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True
+                    )
                     raise
 
             # Should not reach here, but just in case
@@ -149,13 +164,13 @@ def retry_with_exponential_backoff(
                 raise last_exception
 
         return wrapper
+
     return decorator
 
 
 def render() -> None:
     """Render the Content Engine module."""
-    st.title("✍️ Content Engine")
-    st.markdown("### AI-Powered LinkedIn Post Generator")
+    ui.section_header("Content Engine", "AI-Powered LinkedIn Post Generator")
 
     if not ANTHROPIC_AVAILABLE:
         st.error("⚠️ Anthropic package not installed. Run: `pip install anthropic`")
@@ -173,7 +188,9 @@ def render() -> None:
         _render_four_panel_interface(api_key)
 
     except Exception as e:
-        logger.error(f"An unexpected error occurred in Content Engine: {e}", exc_info=True)
+        logger.error(
+            f"An unexpected error occurred in Content Engine: {e}", exc_info=True
+        )
         st.error("An unexpected error occurred.")
         if st.checkbox("Show error details", key="ce_error_details"):
             st.exception(e)
@@ -199,7 +216,9 @@ def _get_api_key() -> Optional[str]:
     if api_key:
         logger.debug("API key found in environment variable")
         if not api_key.startswith("sk-ant-"):
-            logger.warning("API key format appears invalid (should start with 'sk-ant-')")
+            logger.warning(
+                "API key format appears invalid (should start with 'sk-ant-')"
+            )
         return api_key
 
     # Check session state
@@ -208,7 +227,9 @@ def _get_api_key() -> Optional[str]:
         if api_key:
             logger.debug("API key found in session state")
             if not api_key.startswith("sk-ant-"):
-                logger.warning("API key format appears invalid (should start with 'sk-ant-')")
+                logger.warning(
+                    "API key format appears invalid (should start with 'sk-ant-')"
+                )
             return api_key
 
     logger.warning("No API key found in environment or session state")
@@ -228,26 +249,28 @@ def _render_api_key_setup() -> None:
     """
     logger.info("Rendering API key setup interface")
     st.warning("🔑 **API Key Required**")
-    st.markdown("""
+    st.markdown(
+        """
     To use the Content Engine, you need an Anthropic API key:
 
     1. Get your free API key at [console.anthropic.com](https://console.anthropic.com/)
     2. Free tier includes $5 credit (≈ 1,000 LinkedIn posts)
     3. Enter your API key below (stored in session only, not saved)
-    """)
+    """
+    )
 
     with st.form("api_key_form"):
         api_key_input = st.text_input(
-            "Anthropic API Key",
-            type="password",
-            placeholder="sk-ant-..."
+            "Anthropic API Key", type="password", placeholder="sk-ant-..."
         )
         submitted = st.form_submit_button("Save API Key")
 
         if submitted and api_key_input:
             if not api_key_input.startswith("sk-ant-"):
                 logger.warning(f"User entered API key with unexpected format")
-                st.error("⚠️ Warning: API key should start with 'sk-ant-'. Please verify your key.")
+                st.error(
+                    "⚠️ Warning: API key should start with 'sk-ant-'. Please verify your key."
+                )
             else:
                 logger.info("Valid API key format submitted")
             st.session_state.anthropic_api_key = api_key_input
@@ -290,24 +313,23 @@ def _render_four_panel_interface(api_key: str) -> None:
             "What do you want to write about?",
             placeholder="Example: The impact of AI on software development workflows",
             height=100,
-            key="topic_input"
+            key="topic_input",
         )
 
     with col2:
         tone = st.selectbox(
             "Tone",
             options=list(TONES.keys()),
-            help="Select the overall tone for your post"
+            help="Select the overall tone for your post",
         )
 
         target_audience = st.text_input(
-            "Target Audience (optional)",
-            placeholder="e.g., Software engineers, CTOs"
+            "Target Audience (optional)", placeholder="e.g., Software engineers, CTOs"
         )
 
     keywords = st.text_input(
         "Keywords to include (comma-separated, optional)",
-        placeholder="AI, automation, productivity"
+        placeholder="AI, automation, productivity",
     )
 
     # Panel 2: Template Selection
@@ -323,7 +345,7 @@ def _render_four_panel_interface(api_key: str) -> None:
             if st.button(
                 f"**{template_name}**\n\n{template_info['description']}",
                 key=f"template_{idx}",
-                use_container_width=True
+                use_container_width=True,
             ):
                 selected_template = template_name
 
@@ -344,15 +366,21 @@ def _render_four_panel_interface(api_key: str) -> None:
     col_gen1, col_gen2 = st.columns([3, 1])
 
     with col_gen1:
-        if st.button("✨ Generate LinkedIn Post", type="primary", use_container_width=True):
+        if st.button(
+            "✨ Generate LinkedIn Post", type="primary", use_container_width=True
+        ):
             if not topic or not topic.strip():
                 logger.warning("User attempted to generate post without topic")
                 st.error("❌ Please enter a topic to write about.")
             elif len(topic.strip()) < 10:
                 logger.warning(f"User entered very short topic: {len(topic)} chars")
-                st.error("❌ Please provide a more detailed topic (at least 10 characters).")
+                st.error(
+                    "❌ Please provide a more detailed topic (at least 10 characters)."
+                )
             else:
-                logger.info(f"Generating post for topic: {topic[:50]}... with template: {st.session_state.selected_template}")
+                logger.info(
+                    f"Generating post for topic: {topic[:50]}... with template: {st.session_state.selected_template}"
+                )
                 with st.spinner("🤖 Claude is writing your post..."):
                     try:
                         generated_post = _generate_post(
@@ -361,21 +389,32 @@ def _render_four_panel_interface(api_key: str) -> None:
                             template=st.session_state.selected_template,
                             tone=tone,
                             keywords=keywords.strip() if keywords else "",
-                            target_audience=target_audience.strip() if target_audience else ""
+                            target_audience=target_audience.strip()
+                            if target_audience
+                            else "",
                         )
 
                         if generated_post:
                             st.session_state.generated_post = generated_post
-                            logger.info(f"Post generated successfully: {len(generated_post)} chars")
+                            logger.info(
+                                f"Post generated successfully: {len(generated_post)} chars"
+                            )
                             st.success("✅ Post generated successfully!")
                     except RateLimitError as e:
                         logger.error(f"Rate limit exceeded: {str(e)}")
-                        st.error("❌ Rate limit exceeded. Please wait a moment and try again.")
+                        st.error(
+                            "❌ Rate limit exceeded. Please wait a moment and try again."
+                        )
                     except (APIConnectionError, APITimeoutError) as e:
                         logger.error(f"Connection error: {str(e)}")
-                        st.error("❌ Connection error. Please check your internet connection and try again.")
+                        st.error(
+                            "❌ Connection error. Please check your internet connection and try again."
+                        )
                     except Exception as e:
-                        logger.error(f"Unexpected error during generation: {str(e)}", exc_info=True)
+                        logger.error(
+                            f"Unexpected error during generation: {str(e)}",
+                            exc_info=True,
+                        )
                         st.error(f"❌ An error occurred: {str(e)}")
 
     with col_gen2:
@@ -394,15 +433,19 @@ def _render_four_panel_interface(api_key: str) -> None:
             "Generated Post",
             value=st.session_state.generated_post,
             height=300,
-            key="preview_area"
+            key="preview_area",
         )
 
         # Character count with validation
         char_count = len(st.session_state.generated_post)
         if char_count > LINKEDIN_CHAR_LIMIT:
-            st.warning(f"⚠️ Character count: {char_count:,} exceeds LinkedIn limit: {LINKEDIN_CHAR_LIMIT:,}")
+            st.warning(
+                f"⚠️ Character count: {char_count:,} exceeds LinkedIn limit: {LINKEDIN_CHAR_LIMIT:,}"
+            )
         else:
-            st.caption(f"📊 Character count: {char_count:,} (LinkedIn limit: {LINKEDIN_CHAR_LIMIT:,})")
+            st.caption(
+                f"📊 Character count: {char_count:,} (LinkedIn limit: {LINKEDIN_CHAR_LIMIT:,})"
+            )
 
         # Export options
         col_exp1, col_exp2 = st.columns(2)
@@ -413,14 +456,16 @@ def _render_four_panel_interface(api_key: str) -> None:
                 data=st.session_state.generated_post,
                 file_name="linkedin_post.txt",
                 mime="text/plain",
-                use_container_width=True
+                use_container_width=True,
             )
 
         with col_exp2:
             # Copy to clipboard using JavaScript (via markdown)
             if st.button("📋 Copy to Clipboard", use_container_width=True):
                 st.code(st.session_state.generated_post, language=None)
-                st.success("✅ Content displayed above - use your browser's copy function")
+                st.success(
+                    "✅ Content displayed above - use your browser's copy function"
+                )
 
 
 def _validate_template_and_tone(template: str, tone: str) -> None:
@@ -435,17 +480,15 @@ def _validate_template_and_tone(template: str, tone: str) -> None:
         ValueError: If template or tone is not in valid options
     """
     if template not in TEMPLATES:
-        raise ValueError(f"Invalid template: {template}. Valid options: {list(TEMPLATES.keys())}")
+        raise ValueError(
+            f"Invalid template: {template}. Valid options: {list(TEMPLATES.keys())}"
+        )
     if tone not in TONES:
         raise ValueError(f"Invalid tone: {tone}. Valid options: {list(TONES.keys())}")
 
 
 def _build_prompt(
-    topic: str,
-    template: str,
-    tone: str,
-    keywords: str = "",
-    target_audience: str = ""
+    topic: str, template: str, tone: str, keywords: str = "", target_audience: str = ""
 ) -> str:
     """
     Build the prompt for Claude API based on user inputs.
@@ -516,7 +559,7 @@ def _call_claude_api(client: Anthropic, prompt: str) -> str:
         model=DEFAULT_MODEL,
         max_tokens=DEFAULT_MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
-        timeout=API_TIMEOUT
+        timeout=API_TIMEOUT,
     )
 
     # Validate response structure
@@ -524,8 +567,10 @@ def _call_claude_api(client: Anthropic, prompt: str) -> str:
         logger.error("API returned empty content")
         raise APIError("API returned empty response")
 
-    if not hasattr(message.content[0], 'text'):
-        logger.error(f"API returned unexpected content type: {type(message.content[0])}")
+    if not hasattr(message.content[0], "text"):
+        logger.error(
+            f"API returned unexpected content type: {type(message.content[0])}"
+        )
         raise APIError("API returned malformed response")
 
     generated_text = message.content[0].text
@@ -540,7 +585,7 @@ def _generate_post(
     template: str,
     tone: str,
     keywords: str = "",
-    target_audience: str = ""
+    target_audience: str = "",
 ) -> Optional[str]:
     """
     Generate LinkedIn post using Claude API with retry logic and error handling.
@@ -579,7 +624,9 @@ def _generate_post(
         ...     target_audience="CTOs"
         ... )
     """
-    logger.info(f"Starting post generation - Topic: {topic[:50]}..., Template: {template}, Tone: {tone}")
+    logger.info(
+        f"Starting post generation - Topic: {topic[:50]}..., Template: {template}, Tone: {tone}"
+    )
 
     try:
         # Validate inputs
@@ -608,7 +655,9 @@ def _generate_post(
             logger.error("Generated text is empty")
             return None
 
-        logger.info(f"Successfully generated post: {len(generated_text)} chars, {len(generated_text.split())} words")
+        logger.info(
+            f"Successfully generated post: {len(generated_text)} chars, {len(generated_text.split())} words"
+        )
         return generated_text
 
     except ValueError as e:
@@ -621,9 +670,13 @@ def _generate_post(
 
         # Provide user-friendly error messages
         if "authentication" in error_msg.lower() or "api key" in error_msg.lower():
-            st.error("❌ Authentication Error: Invalid API key. Please check your API key.")
+            st.error(
+                "❌ Authentication Error: Invalid API key. Please check your API key."
+            )
         elif "quota" in error_msg.lower() or "billing" in error_msg.lower():
-            st.error("❌ Quota Error: Your API quota has been exceeded. Please check your Anthropic account.")
+            st.error(
+                "❌ Quota Error: Your API quota has been exceeded. Please check your Anthropic account."
+            )
         else:
             st.error(f"❌ API Error: {error_msg}")
         return None
