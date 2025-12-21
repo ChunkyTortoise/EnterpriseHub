@@ -1,6 +1,9 @@
 # Upwork Proposal Templates
 
+**Last Updated:** December 21, 2025
+
 ## How to Use These Templates
+
 1. Select the template matching the job description.
 2. Replace [CLIENT_NAME], [SPECIFIC_DETAIL], and [TIMEFRAME].
 3. Attach relevant screenshots.
@@ -184,13 +187,15 @@ Cayman
 ```
 Hi [CLIENT_NAME],
 
-7 modules. 220+ tests. Live deployment. I know Streamlit.
+10 modules. 220+ tests. Live deployment. I know Streamlit.
 
 **EnterpriseHub** is my flagship Streamlit project. It features:
 - Multi-page navigation
-- 7 independent modules
+- 10 independent modules
 - Session state management
 - Advanced Plotly visualizations
+- WCAG AAA accessibility
+- Production-grade dark mode
 
 See it live: https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/
 
