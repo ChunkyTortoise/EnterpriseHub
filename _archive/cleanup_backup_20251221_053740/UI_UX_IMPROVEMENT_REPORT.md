@@ -81,14 +81,14 @@ CUSTOM_CSS = f"""
         border-right: 1px solid {THEME['border']};
         box-shadow: 1px 0 0 0 {THEME['border']};
     }}
-    
+
     section[data-testid="stSidebar"] h1 {{
         color: {THEME['primary']};
         font-weight: 700;
         font-size: 1.5rem;
         letter-spacing: -0.025em;
     }}
-    
+
     /* NAVIGATION RADIO BUTTONS */
     .stRadio > label {{
         color: {THEME['text_main']};
@@ -107,7 +107,7 @@ CUSTOM_CSS = f"""
         display: flex;
         flex-direction: column;
     }}
-    
+
     .metric-card:hover {{
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         transform: translateY(-2px);
@@ -120,7 +120,7 @@ CUSTOM_CSS = f"""
         font-weight: 700;
         letter-spacing: -0.025em;
     }}
-    
+
     h1 {{
         font-size: 2.5rem;
         margin-bottom: 1.5rem;
@@ -128,7 +128,7 @@ CUSTOM_CSS = f"""
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }}
-    
+
     h2 {{
         font-size: 1.75rem;
         margin-top: 2.5rem;
@@ -136,7 +136,7 @@ CUSTOM_CSS = f"""
         border-bottom: 2px solid {THEME['border']};
         padding-bottom: 0.5rem;
     }}
-    
+
     h3 {{
         font-size: 1.25rem;
         color: {THEME['text_main']};
@@ -154,13 +154,13 @@ CUSTOM_CSS = f"""
         transition: all 0.2s;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }}
-    
+
     .stButton button:hover {{
         background-color: {THEME['primary_dark']};
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         transform: translateY(-1px);
     }}
-    
+
     .stButton button:active {{
         transform: translateY(0);
     }}
@@ -173,7 +173,7 @@ CUSTOM_CSS = f"""
         font-feature-settings: "tnum";
         font-variant-numeric: tabular-nums;
     }}
-    
+
     div[data-testid="stMetricLabel"] {{
         font-size: 0.875rem;
         color: {THEME['text_light']};
@@ -188,7 +188,7 @@ CUSTOM_CSS = f"""
         border: 1px solid transparent;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }}
-    
+
     /* LINKS */
     a {{
         color: {THEME['primary']};
@@ -218,7 +218,7 @@ CUSTOM_CSS = f"""
         margin-bottom: 3rem;
         border: 1px solid #C7D2FE;
     }}
-    
+
     .hero-title {{
         font-size: 3.5rem;
         font-weight: 800;
@@ -226,7 +226,7 @@ CUSTOM_CSS = f"""
         margin-bottom: 1rem;
         line-height: 1.2;
     }}
-    
+
     .hero-subtitle {{
         font-size: 1.25rem;
         color: {THEME['secondary']};
@@ -271,7 +271,7 @@ def section_header(title: str, subtitle: str = None):
     st.markdown(f"## {title}")
     if subtitle:
         st.markdown(
-            f"<p style='color: {THEME['text_light']}; margin-top: -15px; margin-bottom: 30px; font-size: 1.1em;'>{subtitle}</p>", 
+            f"<p style='color: {THEME['text_light']}; margin-top: -15px; margin-bottom: 30px; font-size: 1.1em;'>{subtitle}</p>",
             unsafe_allow_html=True
         )
 
@@ -287,9 +287,9 @@ def status_badge(status: str):
         "new": ("#DBEAFE", "#1E40AF"),     # Blue-100 to Blue-800
         "hero": ("#FEF3C7", "#92400E")     # Amber-100 to Amber-800
     }
-    
+
     bg, text = colors.get(status.lower(), colors["pending"])
-    
+
     return f"""
     <span style='
         background-color: {bg};
@@ -312,7 +312,7 @@ def feature_card(icon: str, title: str, description: str, status: str = "active"
     Renders a feature card using HTML/CSS for better control.
     """
     badge = status_badge(status)
-    
+
     html = f"""
     <div class="metric-card">
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
@@ -348,7 +348,7 @@ def footer():
         <div class="footer">
             <p>© 2024 Enterprise Hub. Built with Streamlit & Python.</p>
             <p style="font-size: 0.8rem; margin-top: 0.5rem;">
-                <a href="https://github.com/ChunkyTortoise/enterprise-hub" target="_blank">View Source</a> • 
+                <a href="https://github.com/ChunkyTortoise/enterprise-hub" target="_blank">View Source</a> •
                 <a href="https://linkedin.com/in/caymanroden" target="_blank">Contact Developer</a>
             </p>
         </div>
@@ -440,7 +440,7 @@ def main() -> None:
                 _render_module(module_name, module_title)
             else:
                 _render_placeholder(page)
-            
+
             # Footer
             ui.footer()
 
