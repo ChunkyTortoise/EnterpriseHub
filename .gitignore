@@ -123,3 +123,17 @@ mcp_config.json
 .aider*
 
 # Claude Code agent workflows
+.claude/
+.agent/workflows/*jailbreak*.md
+evaluation_prompt.md
+
+# Generated images (recreatable)
+*.png
+!docs/screenshots/.gitkeep
+
+# Cleanup additions
+.aider.tags.cache.v4/
+.resume_timestamp
+customer_clusters.png
+elbow_method.png
+.agent/workflows/.snapshots/
