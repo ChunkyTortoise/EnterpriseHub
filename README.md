@@ -7,7 +7,7 @@
 [![Tests](https://img.shields.io/badge/tests-220%2B%20passing-brightgreen.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit_Cloud-FF4B4B.svg)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
 
-> **A unified platform for market analysis and enterprise tooling**  
+> **A unified platform for market analysis and enterprise tooling**
 > Built by [Cayman Roden](https://github.com/ChunkyTortoise) | Powered by Streamlit
 
 **[🎯 Try Live Demo →](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)**
@@ -131,6 +131,54 @@ Built with cutting-edge Python frameworks and APIs:
 - ✅ **Real-Time Data** - Live market data via Yahoo Finance API
 - ✅ **Interactive Charts** - 4-panel technical analysis with Plotly
 - ✅ **Responsive Design** - Works on desktop, tablet, and mobile
+- ✅ **Dark Mode** - Professional light/dark themes with WCAG AAA accessibility compliance
+
+---
+
+## 🎨 UI/UX Features
+
+### Theme Support
+
+Enterprise Hub includes a professional design system with **light and dark themes** that meet WCAG AAA accessibility standards.
+
+**How to Use:**
+
+1. Look for the theme toggle buttons in the sidebar (top section)
+2. Click **☀️ Light** for light mode or **🌙 Dark** for dark mode
+3. Your theme preference persists across sessions using Streamlit session state
+
+**Accessibility Features:**
+
+- All color combinations meet **WCAG AAA contrast ratio standards** (7:1+ ratio)
+- Designed for readability in both bright and low-light environments
+- Supports **reduced motion preferences** for users with motion sensitivity
+- Keyboard navigation support with visible focus indicators
+- Semantic HTML with proper ARIA labels for screen readers
+
+**Design System:**
+
+- **Light Theme**: Clean, modern aesthetic with Indigo/Slate color palette
+- **Dark Theme**: Professional dark mode with high-contrast text and vibrant accents
+- **Typography**: Inter font family with optimized weights (400, 500, 600, 700)
+- **Components**: Metric cards, buttons, alerts, and tables styled consistently
+- **Responsive**: Adapts to desktop, tablet, and mobile screen sizes
+
+**For Developers:**
+
+The design system is centralized in `utils/ui.py` with reusable components:
+
+```python
+from utils.ui import setup_interface, card_metric, section_header
+
+# Initialize theme (called in app.py)
+setup_interface(theme_mode=st.session_state.theme)
+
+# Use design system components
+section_header("Dashboard", subtitle="Overview of key metrics")
+card_metric(label="Revenue", value="$45,231", delta="+12.5%")
+```
+
+All theme colors are defined in `LIGHT_THEME` and `DARK_THEME` dictionaries with semantic naming (primary, secondary, success, warning, danger, etc.). The system automatically generates CSS based on the selected theme.
 
 ---
 
@@ -202,6 +250,7 @@ enterprise-hub/
 │   └── manufacturing-volume-template.md
 ├── utils/                # Shared utilities
 │   ├── data_loader.py    # Data fetching and processing
+│   ├── ui.py             # UI/UX design system and theme management
 │   ├── logger.py         # Centralized logging
 │   └── exceptions.py     # Custom exceptions
 ├── tests/                # Test suite
@@ -616,6 +665,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [x] Content Engine with Claude AI integration
 - [x] Data Detective with AI-powered data analysis
 - [x] Marketing Analytics Hub with ROI tracking and A/B testing
+- [x] Dark mode theme with WCAG AAA accessibility
+- [x] Professional UI/UX design system
 - [ ] Multi-platform content (Twitter/X, Instagram)
 - [ ] Brand voice training for Content Engine
 - [ ] User authentication

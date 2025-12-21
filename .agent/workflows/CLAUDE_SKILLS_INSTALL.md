@@ -116,3 +116,8 @@ ls ~/.claude/skills/
 - Skills are automatically loaded when Claude Code starts
 - You can install multiple skills - they'll all be available
 
+
+
+
+
+

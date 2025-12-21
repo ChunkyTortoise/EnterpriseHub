@@ -101,3 +101,8 @@ echo "  1. Start Claude Code: claude"
 echo "  2. The skill '$SKILL_NAME' should now be available"
 echo ""
 
+
+
+
+
+

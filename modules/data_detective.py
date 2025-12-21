@@ -4,20 +4,30 @@ Data Detective - AI-Powered Data Analysis and Insights.
 Upload CSV files and get automated data profiling, AI-generated insights,
 data quality assessment, and intelligent cleaning recommendations.
 """
-import streamlit as st
-import pandas as pd
-import numpy as np
 import io
 import os
-from typing import Optional, Dict, Any, List, Tuple
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
+
+import utils.ui as ui
 from utils.logger import get_logger
 
 # Conditional import for Claude API
 try:
-    from anthropic import Anthropic, APIError, RateLimitError, APIConnectionError, APITimeoutError
+    from anthropic import (
+        Anthropic,
+        APIConnectionError,
+        APIError,
+        APITimeoutError,
+        RateLimitError,
+    )
+
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
@@ -34,52 +44,61 @@ MAX_INSIGHTS_ROWS = 10000  # Max rows to analyze for insights
 
 def render() -> None:
     """Main render function for Data Detective module."""
-    st.markdown("### 🔍 AI-Powered Data Analysis")
-    st.markdown("""
+    ui.section_header("Data Detective", "AI-Powered Data Analysis & Insights")
+    st.markdown(
+        """
     Upload any CSV file and get instant AI-powered insights, data quality assessment,
     and intelligent cleaning recommendations. Perfect for exploratory data analysis!
-    """)
+    """
+    )
 
     # Initialize session state
-    if 'uploaded_data' not in st.session_state:
+    if "uploaded_data" not in st.session_state:
         st.session_state.uploaded_data = None
-    if 'cleaned_data' not in st.session_state:
+    if "cleaned_data" not in st.session_state:
         st.session_state.cleaned_data = None
 
     # File upload section
     st.markdown("---")
-    st.markdown("#### 📤 Upload Your Data")
+    st.subheader("📤 Upload Your Data")
 
     uploaded_file = st.file_uploader(
         "Choose a CSV or Excel file",
-        type=['csv', 'xlsx', 'xls'],
-        help="Upload a CSV or Excel file to analyze. Maximum recommended size: 50MB"
+        type=["csv", "xlsx", "xls"],
+        help="Upload a CSV or Excel file to analyze. Maximum recommended size: 50MB",
     )
 
     if uploaded_file is not None:
         try:
             # Read the file based on extension
-            file_extension = uploaded_file.name.split('.')[-1].lower()
+            file_extension = uploaded_file.name.split(".")[-1].lower()
 
-            if file_extension == 'csv':
+            if file_extension == "csv":
                 df = pd.read_csv(uploaded_file)
-            elif file_extension in ['xlsx', 'xls']:
-                df = pd.read_excel(uploaded_file, engine='openpyxl' if file_extension == 'xlsx' else None)
+            elif file_extension in ["xlsx", "xls"]:
+                df = pd.read_excel(
+                    uploaded_file,
+                    engine="openpyxl" if file_extension == "xlsx" else None,
+                )
             else:
                 st.error(f"❌ Unsupported file type: {file_extension}")
                 return
 
             st.session_state.uploaded_data = df
-            st.success(f"✅ Loaded {len(df):,} rows and {len(df.columns)} columns from {file_extension.upper()} file")
+            st.success(
+                f"✅ Loaded {len(df):,} rows and {len(df.columns)} columns from {file_extension.upper()} file"
+            )
 
             # Create tabs for different analysis sections
-            tabs = st.tabs([
-                "📊 Data Profile",
-                "🤖 AI Insights",
-                "🧹 Data Quality",
-                "💬 Ask Questions",
-                "📥 Export"
-            ])
+            tabs = st.tabs(
+                [
+                    "📊 Data Profile",
+                    "🤖 AI Insights",
+                    "🧹 Data Quality",
+                    "💬 Ask Questions",
+                    "📥 Export",
+                ]
+            )
 
             with tabs[0]:
                 _render_data_profile(df)
@@ -107,54 +126,64 @@ def render() -> None:
 
 def _render_data_profile(df: pd.DataFrame) -> None:
     """Render automated data profiling section."""
-    st.markdown("### 📊 Automated Data Profile")
+    st.subheader("📊 Automated Data Profile")
 
     # Basic info
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Total Rows", f"{len(df):,}")
+        ui.card_metric("Total Rows", f"{len(df):,}")
     with col2:
-        st.metric("Total Columns", len(df.columns))
+        ui.card_metric("Total Columns", str(len(df.columns)))
     with col3:
         memory_mb = df.memory_usage(deep=True).sum() / 1024 / 1024
-        st.metric("Memory Usage", f"{memory_mb:.2f} MB")
+        ui.card_metric("Memory Usage", f"{memory_mb:.2f} MB")
     with col4:
         duplicate_count = df.duplicated().sum()
-        st.metric("Duplicate Rows", f"{duplicate_count:,}")
+        ui.card_metric("Duplicate Rows", f"{duplicate_count:,}")
 
     st.markdown("---")
 
     # Data preview
-    st.markdown("#### 📄 Data Preview")
+    st.subheader("📄 Data Preview")
     preview_rows = st.slider("Rows to display", 5, min(50, len(df)), 10)
     st.dataframe(df.head(preview_rows), use_container_width=True)
 
     st.markdown("---")
 
     # Column-by-column analysis
-    st.markdown("#### 📋 Column Analysis")
+    st.subheader("📋 Column Analysis")
 
     # Create comprehensive column info
     column_info = []
     for col in df.columns:
         col_data = df[col]
         info = {
-            'Column': col,
-            'Type': str(col_data.dtype),
-            'Non-Null': f"{col_data.count():,}",
-            'Null': f"{col_data.isna().sum():,}",
-            'Null %': f"{(col_data.isna().sum() / len(df) * 100):.1f}%",
-            'Unique': f"{col_data.nunique():,}",
+            "Column": col,
+            "Type": str(col_data.dtype),
+            "Non-Null": f"{col_data.count():,}",
+            "Null": f"{col_data.isna().sum():,}",
+            "Null %": f"{(col_data.isna().sum() / len(df) * 100):.1f}%",
+            "Unique": f"{col_data.nunique():,}",
         }
 
         # Add type-specific info
         if pd.api.types.is_numeric_dtype(col_data):
-            info['Min'] = f"{col_data.min():.2f}" if not col_data.isna().all() else "N/A"
-            info['Max'] = f"{col_data.max():.2f}" if not col_data.isna().all() else "N/A"
-            info['Mean'] = f"{col_data.mean():.2f}" if not col_data.isna().all() else "N/A"
+            info["Min"] = (
+                f"{col_data.min():.2f}" if not col_data.isna().all() else "N/A"
+            )
+            info["Max"] = (
+                f"{col_data.max():.2f}" if not col_data.isna().all() else "N/A"
+            )
+            info["Mean"] = (
+                f"{col_data.mean():.2f}" if not col_data.isna().all() else "N/A"
+            )
         else:
-            top_value = col_data.value_counts().index[0] if len(col_data.value_counts()) > 0 else "N/A"
-            info['Top Value'] = str(top_value)[:30]  # Truncate long values
+            top_value = (
+                col_data.value_counts().index[0]
+                if len(col_data.value_counts()) > 0
+                else "N/A"
+            )
+            info["Top Value"] = str(top_value)[:30]  # Truncate long values
 
         column_info.append(info)
 
@@ -164,15 +193,17 @@ def _render_data_profile(df: pd.DataFrame) -> None:
     st.markdown("---")
 
     # Visualizations
-    st.markdown("#### 📈 Data Distributions")
+    st.subheader("📈 Data Distributions")
 
     # Select columns for visualization
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+    categorical_cols = df.select_dtypes(include=["object", "category"]).columns.tolist()
 
     if numeric_cols:
         st.markdown("**Numeric Columns**")
-        selected_numeric = st.selectbox("Select numeric column to visualize", numeric_cols)
+        selected_numeric = st.selectbox(
+            "Select numeric column to visualize", numeric_cols
+        )
 
         if selected_numeric:
             col1, col2 = st.columns(2)
@@ -183,22 +214,22 @@ def _render_data_profile(df: pd.DataFrame) -> None:
                     df,
                     x=selected_numeric,
                     title=f"Distribution of {selected_numeric}",
-                    nbins=50
+                    nbins=50,
                 )
                 st.plotly_chart(fig_hist, use_container_width=True)
 
             with col2:
                 # Box plot
                 fig_box = px.box(
-                    df,
-                    y=selected_numeric,
-                    title=f"Box Plot of {selected_numeric}"
+                    df, y=selected_numeric, title=f"Box Plot of {selected_numeric}"
                 )
                 st.plotly_chart(fig_box, use_container_width=True)
 
     if categorical_cols:
         st.markdown("**Categorical Columns**")
-        selected_categorical = st.selectbox("Select categorical column to visualize", categorical_cols)
+        selected_categorical = st.selectbox(
+            "Select categorical column to visualize", categorical_cols
+        )
 
         if selected_categorical:
             # Get top 10 values
@@ -208,15 +239,17 @@ def _render_data_profile(df: pd.DataFrame) -> None:
                 x=value_counts.index,
                 y=value_counts.values,
                 title=f"Top 10 Values in {selected_categorical}",
-                labels={'x': selected_categorical, 'y': 'Count'}
+                labels={"x": selected_categorical, "y": "Count"},
             )
             st.plotly_chart(fig_bar, use_container_width=True)
 
     # Correlation matrix for numeric columns
     if len(numeric_cols) > 1:
         st.markdown("---")
-        st.markdown("#### 🔗 Correlation Matrix")
-        st.markdown("Identify relationships between numeric variables (-1 = perfect negative, +1 = perfect positive)")
+        st.subheader("🔗 Correlation Matrix")
+        st.markdown(
+            "Identify relationships between numeric variables (-1 = perfect negative, +1 = perfect positive)"
+        )
 
         # Calculate correlation matrix
         corr_matrix = df[numeric_cols].corr()
@@ -224,12 +257,12 @@ def _render_data_profile(df: pd.DataFrame) -> None:
         # Create heatmap
         fig_corr = px.imshow(
             corr_matrix,
-            text_auto='.2f',
-            aspect='auto',
-            color_continuous_scale='RdBu_r',
+            text_auto=".2f",
+            aspect="auto",
+            color_continuous_scale="RdBu_r",
             color_continuous_midpoint=0,
             title="Correlation Heatmap",
-            labels=dict(color="Correlation")
+            labels=dict(color="Correlation"),
         )
         fig_corr.update_xaxes(side="bottom")
         fig_corr.update_layout(height=max(400, len(numeric_cols) * 40))
@@ -244,12 +277,16 @@ def _render_data_profile(df: pd.DataFrame) -> None:
                 if abs(corr_value) >= 0.7:
                     col1_name = corr_matrix.columns[i]
                     col2_name = corr_matrix.columns[j]
-                    strong_corrs.append({
-                        'Variable 1': col1_name,
-                        'Variable 2': col2_name,
-                        'Correlation': f"{corr_value:.3f}",
-                        'Strength': 'Strong Positive' if corr_value > 0 else 'Strong Negative'
-                    })
+                    strong_corrs.append(
+                        {
+                            "Variable 1": col1_name,
+                            "Variable 2": col2_name,
+                            "Correlation": f"{corr_value:.3f}",
+                            "Strength": "Strong Positive"
+                            if corr_value > 0
+                            else "Strong Negative",
+                        }
+                    )
 
         if strong_corrs:
             strong_corr_df = pd.DataFrame(strong_corrs)
@@ -260,7 +297,7 @@ def _render_data_profile(df: pd.DataFrame) -> None:
 
 def _render_ai_insights(df: pd.DataFrame) -> None:
     """Render AI-powered insights section."""
-    st.markdown("### 🤖 AI-Powered Insights")
+    st.subheader("🤖 AI-Powered Insights")
 
     if not ANTHROPIC_AVAILABLE:
         st.warning("⚠️ Anthropic package not installed. AI insights unavailable.")
@@ -272,7 +309,7 @@ def _render_ai_insights(df: pd.DataFrame) -> None:
         "Anthropic API Key",
         type="password",
         value=os.getenv("ANTHROPIC_API_KEY", ""),
-        help="Enter your Anthropic API key. Get one at https://console.anthropic.com/"
+        help="Enter your Anthropic API key. Get one at https://console.anthropic.com/",
     )
 
     if not api_key:
@@ -290,45 +327,49 @@ def _render_ai_insights(df: pd.DataFrame) -> None:
                 st.markdown("#### 💡 Key Findings")
                 st.markdown(insights)
             else:
-                st.error("❌ Failed to generate insights. Please check your API key and try again.")
+                st.error(
+                    "❌ Failed to generate insights. Please check your API key and try again."
+                )
 
 
 def _render_data_quality(df: pd.DataFrame) -> None:
     """Render data quality assessment and cleaning recommendations."""
-    st.markdown("### 🧹 Data Quality Assessment")
+    st.subheader("🧹 Data Quality Assessment")
 
     # Calculate quality metrics
     quality_issues = _assess_data_quality(df)
 
     # Overall quality score
     total_checks = len(quality_issues)
-    passed_checks = sum(1 for issue in quality_issues if not issue['has_issue'])
+    passed_checks = sum(1 for issue in quality_issues if not issue["has_issue"])
     quality_score = (passed_checks / total_checks * 100) if total_checks > 0 else 100
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Quality Score", f"{quality_score:.0f}%")
+        ui.card_metric("Quality Score", f"{quality_score:.0f}%")
     with col2:
-        st.metric("Issues Found", total_checks - passed_checks)
+        ui.card_metric("Issues Found", str(total_checks - passed_checks))
     with col3:
-        st.metric("Checks Passed", passed_checks)
+        ui.card_metric("Checks Passed", str(passed_checks))
 
     st.markdown("---")
 
     # Display issues and recommendations
-    st.markdown("#### 🔍 Quality Issues & Recommendations")
+    st.subheader("🔍 Quality Issues & Recommendations")
 
     for issue in quality_issues:
-        if issue['has_issue']:
+        if issue["has_issue"]:
             with st.expander(f"⚠️ {issue['issue']}", expanded=True):
                 st.markdown(f"**Severity:** {issue['severity']}")
                 st.markdown(f"**Description:** {issue['description']}")
                 st.markdown(f"**Recommendation:** {issue['recommendation']}")
 
                 # Show cleaning button if action is available
-                if issue.get('action'):
-                    if st.button(f"Apply Fix: {issue['action_name']}", key=issue['issue']):
-                        st.session_state.cleaned_data = issue['action'](df)
+                if issue.get("action"):
+                    if st.button(
+                        f"Apply Fix: {issue['action_name']}", key=issue["issue"]
+                    ):
+                        st.session_state.cleaned_data = issue["action"](df)
                         st.success(f"✅ Applied: {issue['action_name']}")
                         st.rerun()
         else:
@@ -337,7 +378,7 @@ def _render_data_quality(df: pd.DataFrame) -> None:
     # Show cleaned data preview if available
     if st.session_state.cleaned_data is not None:
         st.markdown("---")
-        st.markdown("#### 🎉 Cleaned Data Preview")
+        st.subheader("🎉 Cleaned Data Preview")
         st.dataframe(st.session_state.cleaned_data.head(10), use_container_width=True)
 
         if st.button("Use Cleaned Data"):
@@ -348,11 +389,13 @@ def _render_data_quality(df: pd.DataFrame) -> None:
 
 def _render_nlq_interface(df: pd.DataFrame) -> None:
     """Render natural language query interface."""
-    st.markdown("### 💬 Ask Questions About Your Data")
+    st.subheader("💬 Ask Questions About Your Data")
     st.markdown("Ask questions in plain English and get AI-powered answers!")
 
     if not ANTHROPIC_AVAILABLE:
-        st.warning("⚠️ Anthropic package not installed. Natural language queries unavailable.")
+        st.warning(
+            "⚠️ Anthropic package not installed. Natural language queries unavailable."
+        )
         return
 
     # Get API key
@@ -361,7 +404,7 @@ def _render_nlq_interface(df: pd.DataFrame) -> None:
         type="password",
         value=os.getenv("ANTHROPIC_API_KEY", ""),
         key="nlq_api_key",
-        help="Enter your Anthropic API key"
+        help="Enter your Anthropic API key",
     )
 
     if not api_key:
@@ -370,18 +413,20 @@ def _render_nlq_interface(df: pd.DataFrame) -> None:
 
     # Example questions
     st.markdown("**Example Questions:**")
-    st.markdown("""
+    st.markdown(
+        """
     - What are the top 5 values in the [column_name] column?
     - What's the correlation between [column1] and [column2]?
     - Are there any outliers in [numeric_column]?
     - What's the average value by [category_column]?
-    """)
+    """
+    )
 
     # Query input
     query = st.text_area(
         "Your Question",
         placeholder="e.g., What are the top 5 customers by revenue?",
-        height=100
+        height=100,
     )
 
     if st.button("🔍 Get Answer", type="primary"):
@@ -400,15 +445,19 @@ def _render_nlq_interface(df: pd.DataFrame) -> None:
 
 def _render_export_section(df: pd.DataFrame) -> None:
     """Render data export options."""
-    st.markdown("### 📥 Export Your Data")
+    st.subheader("📥 Export Your Data")
 
     # Choose which data to export
     data_to_export = st.radio(
-        "Select data to export",
-        ["Original Data", "Cleaned Data (if available)"]
+        "Select data to export", ["Original Data", "Cleaned Data (if available)"]
     )
 
-    export_df = st.session_state.cleaned_data if data_to_export == "Cleaned Data (if available)" and st.session_state.cleaned_data is not None else df
+    export_df = (
+        st.session_state.cleaned_data
+        if data_to_export == "Cleaned Data (if available)"
+        and st.session_state.cleaned_data is not None
+        else df
+    )
 
     # Export format options
     col1, col2 = st.columns(2)
@@ -423,20 +472,20 @@ def _render_export_section(df: pd.DataFrame) -> None:
             label="⬇️ Download CSV",
             data=csv_data,
             file_name=f"data_detective_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv"
+            mime="text/csv",
         )
 
     with col2:
         st.markdown("#### 📊 Export as Excel")
         excel_buffer = io.BytesIO()
-        export_df.to_excel(excel_buffer, index=False, engine='openpyxl')
+        export_df.to_excel(excel_buffer, index=False, engine="openpyxl")
         excel_data = excel_buffer.getvalue()
 
         st.download_button(
             label="⬇️ Download Excel",
             data=excel_data,
             file_name=f"data_detective_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
 
@@ -445,49 +494,56 @@ def _render_demo_section() -> None:
     st.info("👆 Upload a CSV file to get started!")
 
     st.markdown("---")
-    st.markdown("### ✨ What You'll Get")
+    st.subheader("✨ What You'll Get")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("""
-        **📊 Automated Data Profiling**
-        - Row and column statistics
-        - Data type detection
-        - Missing value analysis
-        - Duplicate detection
-        - Distribution visualizations
-
-        **🤖 AI-Powered Insights**
-        - Trend detection
-        - Anomaly identification
-        - Business recommendations
-        - Data quality assessment
-        """)
+        ui.feature_card(
+            icon="📊",
+            title="Automated Data Profiling",
+            description="Row/col stats, missing values, duplicates, and distribution plots.",
+            status="active",
+        )
 
     with col2:
-        st.markdown("""
-        **🧹 Data Quality Checks**
-        - Missing value detection
-        - Outlier identification
-        - Data type inconsistencies
-        - Duplicate removal
-        - One-click cleaning suggestions
+        ui.feature_card(
+            icon="🤖",
+            title="AI-Powered Insights",
+            description="Trend detection, anomaly identification, and business recommendations.",
+            status="active",
+        )
 
-        **💬 Natural Language Queries**
-        - Ask questions in plain English
-        - Get instant AI-powered answers
-        - No SQL or coding required
-        """)
+    st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        ui.feature_card(
+            icon="🧹",
+            title="Data Quality Checks",
+            description="Detect and fix missing values, outliers, and inconsistencies.",
+            status="active",
+        )
+
+    with col4:
+        ui.feature_card(
+            icon="💬",
+            title="Natural Language Queries",
+            description="Ask questions in plain English and get instant AI-powered answers.",
+            status="active",
+        )
 
     st.markdown("---")
-    st.markdown("### 🎯 Perfect For")
-    st.markdown("""
+    st.subheader("🎯 Perfect For")
+    st.markdown(
+        """
     - **Business Analysts**: Quick data exploration and insights
     - **Data Scientists**: Initial data assessment before modeling
     - **Consultants**: Client data quality audits
     - **Anyone**: Understanding datasets without coding
-    """)
+    """
+    )
 
 
 def _generate_ai_insights(df: pd.DataFrame, api_key: str) -> Optional[str]:
@@ -524,7 +580,7 @@ Format your response as a bulleted list with clear, concise insights. Use markdo
         message = client.messages.create(
             model=DEFAULT_MODEL,
             max_tokens=DEFAULT_MAX_TOKENS,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
 
         # Extract response
@@ -537,7 +593,9 @@ Format your response as a bulleted list with clear, concise insights. Use markdo
         return None
 
 
-def _process_natural_language_query(df: pd.DataFrame, query: str, api_key: str) -> Optional[str]:
+def _process_natural_language_query(
+    df: pd.DataFrame, query: str, api_key: str
+) -> Optional[str]:
     """
     Process a natural language query about the dataset.
 
@@ -568,7 +626,7 @@ Provide a clear, concise answer. If the question requires calculations, show the
         message = client.messages.create(
             model=DEFAULT_MODEL,
             max_tokens=DEFAULT_MAX_TOKENS,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
 
         # Extract response
@@ -602,14 +660,18 @@ def _prepare_data_summary(df: pd.DataFrame, include_sample: bool = False) -> str
     for col in df.columns:
         col_data = df[col]
         dtype = str(col_data.dtype)
-        null_pct = (col_data.isna().sum() / len(df) * 100)
+        null_pct = col_data.isna().sum() / len(df) * 100
         unique_count = col_data.nunique()
 
-        summary_parts.append(f"  - {col} ({dtype}): {unique_count} unique values, {null_pct:.1f}% null")
+        summary_parts.append(
+            f"  - {col} ({dtype}): {unique_count} unique values, {null_pct:.1f}% null"
+        )
 
         # Add stats for numeric columns
         if pd.api.types.is_numeric_dtype(col_data) and not col_data.isna().all():
-            summary_parts.append(f"    Range: {col_data.min():.2f} to {col_data.max():.2f}, Mean: {col_data.mean():.2f}")
+            summary_parts.append(
+                f"    Range: {col_data.min():.2f} to {col_data.max():.2f}, Mean: {col_data.mean():.2f}"
+            )
 
     # Sample data if requested
     if include_sample:
@@ -635,48 +697,56 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
     missing_cols = df.columns[df.isna().any()].tolist()
     if missing_cols:
         total_missing = df.isna().sum().sum()
-        pct_missing = (total_missing / (len(df) * len(df.columns)) * 100)
+        pct_missing = total_missing / (len(df) * len(df.columns)) * 100
 
-        issues.append({
-            'issue': 'Missing Values',
-            'has_issue': True,
-            'severity': 'High' if pct_missing > 10 else 'Medium',
-            'description': f"Found {total_missing:,} missing values across {len(missing_cols)} columns ({pct_missing:.2f}% of all data)",
-            'recommendation': 'Consider dropping rows with missing values or filling with appropriate values (mean, median, mode, or forward-fill)',
-            'action': lambda df: df.dropna(),
-            'action_name': 'Drop all rows with missing values'
-        })
+        issues.append(
+            {
+                "issue": "Missing Values",
+                "has_issue": True,
+                "severity": "High" if pct_missing > 10 else "Medium",
+                "description": f"Found {total_missing:,} missing values across {len(missing_cols)} columns ({pct_missing:.2f}% of all data)",
+                "recommendation": "Consider dropping rows with missing values or filling with appropriate values (mean, median, mode, or forward-fill)",
+                "action": lambda df: df.dropna(),
+                "action_name": "Drop all rows with missing values",
+            }
+        )
     else:
-        issues.append({
-            'issue': 'Missing Values',
-            'has_issue': False,
-            'severity': 'None',
-            'description': 'No missing values detected',
-            'recommendation': 'N/A'
-        })
+        issues.append(
+            {
+                "issue": "Missing Values",
+                "has_issue": False,
+                "severity": "None",
+                "description": "No missing values detected",
+                "recommendation": "N/A",
+            }
+        )
 
     # Check for duplicates
     duplicate_count = df.duplicated().sum()
     if duplicate_count > 0:
-        pct_duplicates = (duplicate_count / len(df) * 100)
+        pct_duplicates = duplicate_count / len(df) * 100
 
-        issues.append({
-            'issue': 'Duplicate Rows',
-            'has_issue': True,
-            'severity': 'Medium',
-            'description': f"Found {duplicate_count:,} duplicate rows ({pct_duplicates:.2f}% of data)",
-            'recommendation': 'Remove duplicate rows to ensure data integrity',
-            'action': lambda df: df.drop_duplicates(),
-            'action_name': 'Remove all duplicate rows'
-        })
+        issues.append(
+            {
+                "issue": "Duplicate Rows",
+                "has_issue": True,
+                "severity": "Medium",
+                "description": f"Found {duplicate_count:,} duplicate rows ({pct_duplicates:.2f}% of data)",
+                "recommendation": "Remove duplicate rows to ensure data integrity",
+                "action": lambda df: df.drop_duplicates(),
+                "action_name": "Remove all duplicate rows",
+            }
+        )
     else:
-        issues.append({
-            'issue': 'Duplicate Rows',
-            'has_issue': False,
-            'severity': 'None',
-            'description': 'No duplicate rows detected',
-            'recommendation': 'N/A'
-        })
+        issues.append(
+            {
+                "issue": "Duplicate Rows",
+                "has_issue": False,
+                "severity": "None",
+                "description": "No duplicate rows detected",
+                "recommendation": "N/A",
+            }
+        )
 
     # Check for outliers in numeric columns
     numeric_cols = df.select_dtypes(include=[np.number]).columns
@@ -687,7 +757,9 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
         Q3 = df[col].quantile(0.75)
         IQR = Q3 - Q1
 
-        outlier_count = ((df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR))).sum()
+        outlier_count = (
+            (df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR))
+        ).sum()
 
         if outlier_count > 0:
             outlier_cols.append((col, outlier_count))
@@ -695,22 +767,26 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
     if outlier_cols:
         total_outliers = sum(count for _, count in outlier_cols)
 
-        issues.append({
-            'issue': 'Outliers Detected',
-            'has_issue': True,
-            'severity': 'Low',
-            'description': f"Found {total_outliers:,} outliers across {len(outlier_cols)} numeric columns",
-            'recommendation': 'Review outliers to determine if they are data errors or valid extreme values. Consider winsorization or removal if appropriate.',
-            'action': None,
-            'action_name': None
-        })
+        issues.append(
+            {
+                "issue": "Outliers Detected",
+                "has_issue": True,
+                "severity": "Low",
+                "description": f"Found {total_outliers:,} outliers across {len(outlier_cols)} numeric columns",
+                "recommendation": "Review outliers to determine if they are data errors or valid extreme values. Consider winsorization or removal if appropriate.",
+                "action": None,
+                "action_name": None,
+            }
+        )
     else:
-        issues.append({
-            'issue': 'Outliers',
-            'has_issue': False,
-            'severity': 'None',
-            'description': 'No significant outliers detected',
-            'recommendation': 'N/A'
-        })
+        issues.append(
+            {
+                "issue": "Outliers",
+                "has_issue": False,
+                "severity": "None",
+                "description": "No significant outliers detected",
+                "recommendation": "N/A",
+            }
+        )
 
     return issues

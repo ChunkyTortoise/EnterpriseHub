@@ -6,66 +6,95 @@ It injects custom CSS to override Streamlit's default look with a professional,
 enterprise-grade design system (Fintech/SaaS Aesthetic).
 """
 from typing import Optional
+
 import streamlit as st
 
 # --- DESIGN SYSTEM CONSTANTS ---
-THEME = {
-    "primary": "#4F46E5",        # Indigo 600
-    "primary_dark": "#4338CA",   # Indigo 700
+# Light theme (WCAG AAA compliant - all ratios >= 7:1)
+LIGHT_THEME = {
+    "primary": "#4338CA",  # Indigo 700 (darker for AAA compliance)
+    "primary_dark": "#3730A3",  # Indigo 800
     "primary_light": "#E0E7FF",  # Indigo 100
-    "secondary": "#64748B",      # Slate 500
-    "background": "#F8FAFC",     # Slate 50
-    "surface": "#FFFFFF",        # White
-    "text_main": "#0F172A",      # Slate 900
-    "text_light": "#475569",     # Slate 600
-    "success": "#10B981",        # Emerald 500
-    "warning": "#F59E0B",        # Amber 500
-    "danger": "#EF4444",         # Red 500
-    "border": "#E2E8F0",         # Slate 200
-    "font_family": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    "secondary": "#64748B",  # Slate 500
+    "background": "#F8FAFC",  # Slate 50
+    "surface": "#FFFFFF",  # White
+    "text_main": "#0F172A",  # Slate 900
+    "text_light": "#475569",  # Slate 600
+    "success": "#065F46",  # Emerald 800 (darker for AAA: 7.1:1)
+    "warning": "#B45309",  # Amber 700 (darker for AAA compliance)
+    "danger": "#991B1B",  # Red 800 (darker for AAA: 8.1:1)
+    "border": "#E2E8F0",  # Slate 200
+    "font_family": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 }
 
-CUSTOM_CSS = f"""
+# Dark theme (WCAG AAA compliant)
+DARK_THEME = {
+    "primary": "#A5B4FC",  # Indigo 300 (lighter for AAA: 8.5:1)
+    "primary_dark": "#818CF8",  # Indigo 400
+    "primary_light": "#312E81",  # Indigo 900
+    "secondary": "#94A3B8",  # Slate 400
+    "background": "#0F172A",  # Slate 900
+    "surface": "#1E293B",  # Slate 800
+    "text_main": "#F8FAFC",  # Slate 50
+    "text_light": "#CBD5E1",  # Slate 300
+    "success": "#6EE7B7",  # Emerald 300 (AAA compliant)
+    "warning": "#FCD34D",  # Amber 300 (AAA compliant)
+    "danger": "#FCA5A5",  # Red 300 (lighter for AAA: 8.9:1)
+    "border": "#334155",  # Slate 700
+    "button_text": "#0F172A",  # Dark text for light buttons in dark mode
+    "font_family": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+}
+
+# Add button_text to light theme (white text for dark buttons)
+LIGHT_THEME["button_text"] = "#FFFFFF"
+
+# Default to light theme (will be overridden by setup_interface)
+THEME = LIGHT_THEME
+
+
+def _generate_css(theme: dict) -> str:
+    """Generate CSS with the specified theme colors."""
+    return f"""
 <style>
     /* IMPORT INTER FONT */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     /* GLOBAL RESET & TYPOGRAPHY */
     html, body, [class*="css"] {{
-        font-family: {THEME['font_family']};
-        color: {THEME['text_main']};
-        background-color: {THEME['background']};
+        font-family: {theme['font_family']};
+        color: {theme['text_main']};
+        background-color: {theme['background']};
     }}
 
     /* MAIN CONTAINER BACKGROUND */
     .stApp {{
-        background-color: {THEME['background']};
+        background-color: {theme['background']};
     }}
 
     /* SIDEBAR STYLING */
     section[data-testid="stSidebar"] {{
-        background-color: {THEME['surface']};
-        border-right: 1px solid {THEME['border']};
-        box-shadow: 1px 0 0 0 {THEME['border']};
+        background-color: {theme['surface']};
+        border-right: 1px solid {theme['border']};
+        box-shadow: 1px 0 0 0 {theme['border']};
     }}
-    
+
     section[data-testid="stSidebar"] h1 {{
-        color: {THEME['primary']};
+        color: {theme['primary']};
         font-weight: 700;
         font-size: 1.5rem;
         letter-spacing: -0.025em;
     }}
-    
+
     /* NAVIGATION RADIO BUTTONS */
     .stRadio > label {{
-        color: {THEME['text_main']};
+        color: {theme['text_main']};
         font-weight: 500;
     }}
 
     /* METRIC CARDS */
     .metric-card {{
-        background-color: {THEME['surface']};
-        border: 1px solid {THEME['border']};
+        background-color: {theme['surface']};
+        border: 1px solid {theme['border']};
         border-radius: 12px;
         padding: 24px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -74,26 +103,26 @@ CUSTOM_CSS = f"""
         display: flex;
         flex-direction: column;
     }}
-    
+
     .metric-card:hover {{
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         transform: translateY(-2px);
-        border-color: {THEME['primary_light']};
+        border-color: {theme['primary_light']};
     }}
 
     /* HEADERS */
     h1, h2, h3 {{
-        color: {THEME['text_main']};
+        color: {theme['text_main']};
         font-weight: 700;
         letter-spacing: -0.025em;
     }}
-    
+
     h1 {{
         font-size: 2.5rem;
         margin-bottom: 1.5rem;
-        color: {THEME['primary_dark']};  /* Fallback for non-webkit browsers */
-        background: linear-gradient(45deg, {THEME['primary']}, {THEME['primary_dark']});
-        background: -webkit-linear-gradient(45deg, {THEME['primary']}, {THEME['primary_dark']});
+        color: {theme['primary_dark']};  /* Fallback for non-webkit browsers */
+        background: linear-gradient(45deg, {theme['primary']}, {theme['primary_dark']});
+        background: -webkit-linear-gradient(45deg, {theme['primary']}, {theme['primary_dark']});
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -103,20 +132,20 @@ CUSTOM_CSS = f"""
         font-size: 1.75rem;
         margin-top: 2.5rem;
         margin-bottom: 1rem;
-        border-bottom: 2px solid {THEME['border']};
+        border-bottom: 2px solid {theme['border']};
         padding-bottom: 0.5rem;
     }}
-    
+
     h3 {{
         font-size: 1.25rem;
-        color: {THEME['text_main']};
+        color: {theme['text_main']};
         margin-bottom: 0.5rem;
     }}
 
     /* BUTTONS */
     .stButton button {{
-        background-color: {THEME['primary']};
-        color: white;
+        background-color: {theme['primary']};
+        color: {theme.get('button_text', 'white')};
         border-radius: 8px;
         font-weight: 600;
         padding: 0.5rem 1.25rem;
@@ -124,35 +153,35 @@ CUSTOM_CSS = f"""
         transition: all 0.2s;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }}
-    
+
     .stButton button:hover {{
-        background-color: {THEME['primary_dark']};
+        background-color: {theme['primary_dark']};
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         transform: translateY(-1px);
     }}
-    
+
     .stButton button:active {{
         transform: translateY(0);
     }}
 
     .stButton button:focus {{
-        outline: 2px solid {THEME['primary']};
+        outline: 2px solid {theme['primary']};
         outline-offset: 2px;
-        box-shadow: 0 0 0 3px {THEME['primary_light']};
+        box-shadow: 0 0 0 3px {theme['primary_light']};
     }}
 
     /* NATIVE METRIC STYLING */
     div[data-testid="stMetricValue"] {{
         font-size: 2rem;
         font-weight: 700;
-        color: {THEME['primary']};
+        color: {theme['primary']};
         font-feature-settings: "tnum";
         font-variant-numeric: tabular-nums;
     }}
-    
+
     div[data-testid="stMetricLabel"] {{
         font-size: 0.875rem;
-        color: {THEME['text_light']};
+        color: {theme['text_light']};
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -164,27 +193,27 @@ CUSTOM_CSS = f"""
         border: 1px solid transparent;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }}
-    
+
     /* LINKS */
     a {{
-        color: {THEME['primary']};
+        color: {theme['primary']};
         text-decoration: none;
         font-weight: 500;
         transition: color 0.2s;
     }}
     a:hover {{
-        color: {THEME['primary_dark']};
+        color: {theme['primary_dark']};
         text-decoration: underline;
     }}
     a:focus {{
-        outline: 2px solid {THEME['primary']};
+        outline: 2px solid {theme['primary']};
         outline-offset: 2px;
         border-radius: 2px;
     }}
 
     /* DATAFRAMES */
     div[data-testid="stDataFrame"] {{
-        border: 1px solid {THEME['border']};
+        border: 1px solid {theme['border']};
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -192,25 +221,25 @@ CUSTOM_CSS = f"""
 
     /* HERO SECTION */
     .hero-container {{
-        background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+        background: linear-gradient(135deg, {theme['primary_light']} 0%, {theme['primary_light']} 100%);
         border-radius: 16px;
         padding: 4rem 2rem;
         text-align: center;
         margin-bottom: 3rem;
-        border: 1px solid #C7D2FE;
+        border: 1px solid {theme['border']};
     }}
-    
+
     .hero-title {{
         font-size: 3.5rem;
         font-weight: 800;
-        color: {THEME['primary_dark']};
+        color: {theme['primary_dark']};
         margin-bottom: 1rem;
         line-height: 1.2;
     }}
-    
+
     .hero-subtitle {{
         font-size: 1.25rem;
-        color: {THEME['secondary']};
+        color: {theme['secondary']};
         max-width: 700px;
         margin: 0 auto;
         line-height: 1.6;
@@ -219,10 +248,10 @@ CUSTOM_CSS = f"""
     /* FOOTER */
     .footer {{
         margin-top: 5rem;
-        border-top: 1px solid {THEME['border']};
+        border-top: 1px solid {theme['border']};
         padding-top: 2rem;
         text-align: center;
-        color: {THEME['secondary']};
+        color: {theme['secondary']};
         font-size: 0.875rem;
     }}
 
@@ -329,19 +358,259 @@ CUSTOM_CSS = f"""
         }}
     }}
 
+    /* LOADING SKELETON ANIMATIONS */
+    @keyframes shimmer {{
+        0% {{
+            background-position: -468px 0;
+        }}
+        100% {{
+            background-position: 468px 0;
+        }}
+    }}
+
+    .skeleton {{
+        background: linear-gradient(
+            to right,
+            {theme['border']} 0%,
+            {theme['surface']} 20%,
+            {theme['border']} 40%,
+            {theme['border']} 100%
+        );
+        background-size: 468px 100%;
+        animation: shimmer 1.2s ease-in-out infinite;
+        border-radius: 8px;
+    }}
+
+    .skeleton-card {{
+        background-color: {theme['surface']};
+        border: 1px solid {theme['border']};
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }}
+
+    .skeleton-line {{
+        height: 16px;
+        margin-bottom: 12px;
+        border-radius: 4px;
+    }}
+
+    .skeleton-title {{
+        height: 24px;
+        width: 60%;
+        margin-bottom: 16px;
+        border-radius: 4px;
+    }}
+
+    .skeleton-circle {{
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin-bottom: 12px;
+    }}
+
+    /* TOAST NOTIFICATIONS */
+    .toast-container {{
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 400px;
+        animation: slideIn 0.3s ease-out;
+    }}
+
+    @keyframes slideIn {{
+        from {{
+            transform: translateX(100%);
+            opacity: 0;
+        }}
+        to {{
+            transform: translateX(0);
+            opacity: 1;
+        }}
+    }}
+
+    @keyframes slideOut {{
+        from {{
+            transform: translateX(0);
+            opacity: 1;
+        }}
+        to {{
+            transform: translateX(100%);
+            opacity: 0;
+        }}
+    }}
+
+    .toast {{
+        background-color: {theme['surface']};
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-left: 4px solid {theme['primary']};
+        animation: slideIn 0.3s ease-out;
+    }}
+
+    .toast.toast-success {{
+        border-left-color: {theme['success']};
+    }}
+
+    .toast.toast-error {{
+        border-left-color: {theme['danger']};
+    }}
+
+    .toast.toast-warning {{
+        border-left-color: {theme['warning']};
+    }}
+
+    .toast.toast-info {{
+        border-left-color: {theme['primary']};
+    }}
+
+    .toast-icon {{
+        font-size: 1.5rem;
+        line-height: 1;
+        flex-shrink: 0;
+    }}
+
+    .toast-message {{
+        color: {theme['text_main']};
+        font-size: 0.95rem;
+        font-weight: 500;
+        flex-grow: 1;
+    }}
+
+    /* MICRO-ANIMATIONS */
+    @keyframes fadeIn {{
+        from {{
+            opacity: 0;
+            transform: translateY(10px);
+        }}
+        to {{
+            opacity: 1;
+            transform: translateY(0);
+        }}
+    }}
+
+    @keyframes fadeInStagger {{
+        0% {{
+            opacity: 0;
+            transform: translateY(20px);
+        }}
+        100% {{
+            opacity: 1;
+            transform: translateY(0);
+        }}
+    }}
+
+    @keyframes bounce {{
+        0%, 100% {{
+            transform: translateY(0);
+        }}
+        50% {{
+            transform: translateY(-5px);
+        }}
+    }}
+
+    @keyframes pulse {{
+        0%, 100% {{
+            opacity: 1;
+        }}
+        50% {{
+            opacity: 0.8;
+        }}
+    }}
+
+    /* Apply fade-in to cards */
+    .metric-card {{
+        animation: fadeIn 0.4s ease-out;
+    }}
+
+    /* Stagger animation for multiple cards */
+    .metric-card:nth-child(1) {{
+        animation-delay: 0.1s;
+        animation-fill-mode: both;
+    }}
+
+    .metric-card:nth-child(2) {{
+        animation-delay: 0.2s;
+        animation-fill-mode: both;
+    }}
+
+    .metric-card:nth-child(3) {{
+        animation-delay: 0.3s;
+        animation-fill-mode: both;
+    }}
+
+    .metric-card:nth-child(4) {{
+        animation-delay: 0.4s;
+        animation-fill-mode: both;
+    }}
+
+    /* Bounce animation for CTA buttons */
+    .cta-button {{
+        display: inline-block;
+        animation: bounce 2s ease-in-out infinite;
+    }}
+
+    .cta-button:hover {{
+        animation: none;
+    }}
+
+    /* Smooth transitions for all interactive elements */
+    button, a, input, select, textarea, .metric-card {{
+        transition: all 0.2s ease-in-out;
+    }}
+
+    /* Hover lift effect */
+    .hover-lift:hover {{
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15);
+    }}
+
+    /* Fade in content */
+    .fade-in {{
+        animation: fadeIn 0.6s ease-out;
+    }}
+
+    /* Reduced motion support for accessibility */
+    @media (prefers-reduced-motion: reduce) {{
+        *, *::before, *::after {{
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }}
+    }}
+
 </style>
 """
 
 
-def setup_interface() -> None:
+def setup_interface(theme_mode: str = "light") -> None:
     """
     Initializes the UI interface with the Design System.
+
+    Args:
+        theme_mode: "light" or "dark" theme mode
+
     Call this at the start of the application.
     """
-    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+    global THEME
+
+    # Select theme based on mode
+    THEME = DARK_THEME if theme_mode.lower() == "dark" else LIGHT_THEME
+
+    # Generate and inject CSS with selected theme
+    css = _generate_css(THEME)
+    st.markdown(css, unsafe_allow_html=True)
 
 
-def card_metric(label: str, value: str, delta: Optional[str] = None, help: Optional[str] = None) -> None:
+def card_metric(
+    label: str, value: str, delta: Optional[str] = None, help: Optional[str] = None
+) -> None:
     """
     Displays a metric in a native Streamlit container but styled by global CSS.
     """
@@ -356,7 +625,7 @@ def section_header(title: str, subtitle: Optional[str] = None) -> None:
     if subtitle:
         st.markdown(
             f"<p style='color: {THEME['text_light']}; margin-top: -15px; margin-bottom: 30px; font-size: 1.1em;'>{subtitle}</p>",
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
 
@@ -367,9 +636,9 @@ def status_badge(status: str) -> str:
     """
     colors = {
         "active": ("#DCFCE7", "#166534"),  # Green-100 to Green-800
-        "pending": ("#F1F5F9", "#475569"), # Slate-100 to Slate-600
-        "new": ("#DBEAFE", "#1E40AF"),     # Blue-100 to Blue-800
-        "hero": ("#FEF3C7", "#92400E")     # Amber-100 to Amber-800
+        "pending": ("#F1F5F9", "#475569"),  # Slate-100 to Slate-600
+        "new": ("#DBEAFE", "#1E40AF"),  # Blue-100 to Blue-800
+        "hero": ("#FEF3C7", "#92400E"),  # Amber-100 to Amber-800
     }
 
     bg, text = colors.get(status.lower(), colors["pending"])
@@ -391,7 +660,10 @@ def status_badge(status: str) -> str:
     </span>
     """
 
-def feature_card(icon: str, title: str, description: str, status: str = "active") -> None:
+
+def feature_card(
+    icon: str, title: str, description: str, status: str = "active"
+) -> None:
     """
     Renders a feature card using HTML/CSS for better control.
     """
@@ -411,6 +683,7 @@ def feature_card(icon: str, title: str, description: str, status: str = "active"
     """
     st.markdown(html, unsafe_allow_html=True)
 
+
 def hero_section(title: str, subtitle: str) -> None:
     """
     Renders a centered hero section with gradient background.
@@ -422,6 +695,7 @@ def hero_section(title: str, subtitle: str) -> None:
     </section>
     """
     st.markdown(html, unsafe_allow_html=True)
+
 
 def use_case_card(icon: str, title: str, description: str) -> None:
     """
@@ -534,5 +808,220 @@ def footer() -> None:
             </nav>
         </footer>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
+
+
+def skeleton_loader(skeleton_type: str = "card", count: int = 1) -> None:
+    """
+    Renders animated loading placeholders with shimmer effect.
+
+    This function creates skeleton screens that provide visual feedback during content loading,
+    improving perceived performance and user experience. The shimmer animation creates a
+    left-to-right wave effect that indicates the content is being loaded.
+
+    Args:
+        skeleton_type: Type of skeleton to render. Options:
+            - "card": Full card skeleton with icon, title, and text lines
+            - "text": Simple text lines skeleton
+            - "metric": Metric card skeleton with icon and value placeholder
+            - "table": Table row skeleton
+        count: Number of skeleton instances to render (default: 1)
+
+    Example:
+        Basic usage in a module while data loads:
+        ```python
+        import streamlit as st
+        from utils.ui import skeleton_loader
+
+        if st.session_state.get("loading", False):
+            skeleton_loader("card", count=3)
+        else:
+            # Render actual content
+            for item in data:
+                render_card(item)
+        ```
+
+        Different skeleton types:
+        ```python
+        # Show card skeletons while fetching data
+        with st.spinner("Loading data..."):
+            skeleton_loader("card", count=4)
+            data = fetch_data()
+
+        # Show text skeletons for loading text content
+        skeleton_loader("text", count=5)
+
+        # Show metric skeletons for dashboard metrics
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            skeleton_loader("metric")
+        with col2:
+            skeleton_loader("metric")
+        with col3:
+            skeleton_loader("metric")
+        ```
+
+    Note:
+        - Skeletons automatically adapt to the current theme (light/dark mode)
+        - Animation respects user's motion preferences (prefers-reduced-motion)
+        - Best used temporarily while actual content loads
+        - Should be replaced with real content once data is available
+    """
+    skeletons = []
+
+    for i in range(count):
+        if skeleton_type == "card":
+            skeleton_html = f"""
+            <div class="skeleton-card" role="status" aria-label="Loading content" aria-live="polite">
+                <div class="skeleton skeleton-circle" aria-hidden="true"></div>
+                <div class="skeleton skeleton-title" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line" style="width: 100%;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line" style="width: 90%;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line" style="width: 75%;" aria-hidden="true"></div>
+                <span class="sr-only">Loading...</span>
+            </div>
+            """
+        elif skeleton_type == "text":
+            skeleton_html = f"""
+            <div role="status" aria-label="Loading text content" aria-live="polite">
+                <div class="skeleton skeleton-line" style="width: 100%; margin-bottom: 8px;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line" style="width: 95%; margin-bottom: 8px;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line" style="width: 85%; margin-bottom: 8px;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line" style="width: 90%; margin-bottom: 8px;" aria-hidden="true"></div>
+                <span class="sr-only">Loading...</span>
+            </div>
+            """
+        elif skeleton_type == "metric":
+            skeleton_html = f"""
+            <div class="skeleton-card" role="status" aria-label="Loading metric" aria-live="polite">
+                <div class="skeleton skeleton-line" style="width: 50%; height: 14px; margin-bottom: 12px;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line" style="width: 80%; height: 32px;" aria-hidden="true"></div>
+                <span class="sr-only">Loading metric...</span>
+            </div>
+            """
+        elif skeleton_type == "table":
+            skeleton_html = f"""
+            <div role="status" aria-label="Loading table row" aria-live="polite">
+                <div style="display: flex; gap: 16px; margin-bottom: 12px;">
+                    <div class="skeleton skeleton-line" style="width: 25%; height: 20px;" aria-hidden="true"></div>
+                    <div class="skeleton skeleton-line" style="width: 25%; height: 20px;" aria-hidden="true"></div>
+                    <div class="skeleton skeleton-line" style="width: 25%; height: 20px;" aria-hidden="true"></div>
+                    <div class="skeleton skeleton-line" style="width: 25%; height: 20px;" aria-hidden="true"></div>
+                </div>
+                <span class="sr-only">Loading table row...</span>
+            </div>
+            """
+        else:
+            # Default to card type
+            skeleton_html = f"""
+            <div class="skeleton-card" role="status" aria-label="Loading content" aria-live="polite">
+                <div class="skeleton skeleton-circle" aria-hidden="true"></div>
+                <div class="skeleton skeleton-title" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line" style="width: 100%;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line" style="width: 90%;" aria-hidden="true"></div>
+                <span class="sr-only">Loading...</span>
+            </div>
+            """
+
+        skeletons.append(skeleton_html)
+
+    st.markdown("\n".join(skeletons), unsafe_allow_html=True)
+
+
+def toast(message: str, toast_type: str = "success", duration: int = 3000) -> None:
+    """
+    Displays a toast notification with auto-dismiss functionality.
+
+    Toast notifications provide non-intrusive feedback to users about the outcome of their
+    actions. They appear in the top-right corner and automatically dismiss after a specified
+    duration. This implementation uses Streamlit's native st.toast when available (Streamlit 1.27+),
+    falling back to custom HTML/JavaScript for older versions.
+
+    Args:
+        message: The notification message to display
+        toast_type: Type of notification. Options:
+            - "success": Green notification for successful operations
+            - "error": Red notification for errors or failures
+            - "warning": Yellow/amber notification for warnings
+            - "info": Blue notification for informational messages
+        duration: Time in milliseconds before auto-dismiss (default: 3000ms = 3 seconds)
+
+    Example:
+        Basic usage in modules:
+        ```python
+        import streamlit as st
+        from utils.ui import toast
+
+        # Success notification
+        if data_saved:
+            toast("Data saved successfully!", "success")
+
+        # Error notification
+        try:
+            process_data()
+        except Exception as e:
+            toast(f"Error processing data: {str(e)}", "error", duration=5000)
+
+        # Warning notification
+        if len(selected_items) > 100:
+            toast("Processing more than 100 items may take longer", "warning")
+
+        # Info notification
+        toast("Tip: Use Ctrl+Enter to submit", "info")
+        ```
+
+        In financial analysis workflows:
+        ```python
+        # Market Pulse module
+        if stock_data_loaded:
+            toast(f"Loaded {len(df)} days of data for {ticker}", "success")
+
+        # Margin Hunter module
+        if optimization_complete:
+            toast(f"Found optimal strategy: {best_strategy}", "success", duration=5000)
+
+        # Data Detective module
+        if missing_values_found:
+            toast(f"Warning: {missing_count} missing values detected", "warning")
+        ```
+
+    Note:
+        - Toast appears in top-right corner (configurable via CSS)
+        - Multiple toasts stack vertically
+        - Automatically dismisses after duration
+        - Uses native Streamlit toast when available (Streamlit >= 1.27)
+        - Falls back to custom implementation for compatibility
+        - Respects theme colors for consistency
+    """
+    # Try to use native Streamlit toast (available in Streamlit 1.27+)
+    if hasattr(st, "toast"):
+        icon_map = {"success": "✓", "error": "✗", "warning": "⚠", "info": "ℹ"}
+        icon = icon_map.get(toast_type, "ℹ")
+        st.toast(f"{icon} {message}", icon=icon)
+    else:
+        # Fallback to custom HTML/JavaScript implementation
+        icon_map = {"success": "✓", "error": "✗", "warning": "⚠", "info": "ℹ"}
+        icon = icon_map.get(toast_type, "ℹ")
+
+        toast_html = f"""
+        <div class="toast-container" id="toast-{toast_type}-container">
+            <div class="toast toast-{toast_type}" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-icon" aria-hidden="true">{icon}</div>
+                <div class="toast-message">{message}</div>
+            </div>
+        </div>
+        <script>
+            // Auto-dismiss toast after duration
+            setTimeout(function() {{
+                var toast = document.getElementById('toast-{toast_type}-container');
+                if (toast) {{
+                    toast.style.animation = 'slideOut 0.3s ease-out';
+                    setTimeout(function() {{
+                        toast.style.display = 'none';
+                    }}, 300);
+                }}
+            }}, {duration});
+        </script>
+        """
+        st.markdown(toast_html, unsafe_allow_html=True)

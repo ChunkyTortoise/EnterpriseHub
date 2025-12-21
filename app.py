@@ -6,7 +6,9 @@ with multiple mission-critical modules.
 """
 
 import importlib
+
 import streamlit as st
+
 import utils.ui as ui  # Import the new UI module
 from utils.logger import get_logger
 
@@ -37,6 +39,7 @@ MODULES = {
     "📈 Marketing Analytics": ("marketing_analytics", "Marketing Analytics"),
     "🤖 Multi-Agent Workflow": ("multi_agent", "Multi-Agent Workflow"),
     "🧠 Smart Forecast": ("smart_forecast", "Smart Forecast Engine"),
+    "🎨 Design System": ("design_system", "Design System Gallery"),
 }
 
 
@@ -59,11 +62,21 @@ def main() -> None:
             st.markdown("---")
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("☀️ Light", use_container_width=True, type="primary" if st.session_state.theme == "light" else "secondary"):
+                if st.button(
+                    "☀️ Light",
+                    use_container_width=True,
+                    type="primary"
+                    if st.session_state.theme == "light"
+                    else "secondary",
+                ):
                     st.session_state.theme = "light"
                     st.rerun()
             with col2:
-                if st.button("🌙 Dark", use_container_width=True, type="primary" if st.session_state.theme == "dark" else "secondary"):
+                if st.button(
+                    "🌙 Dark",
+                    use_container_width=True,
+                    type="primary" if st.session_state.theme == "dark" else "secondary",
+                ):
                     st.session_state.theme = "dark"
                     st.rerun()
 
@@ -92,7 +105,7 @@ def main() -> None:
             _render_module(module_name, module_title)
         else:
             _render_placeholder(page)
-            
+
         # Footer
         ui.footer()
 
@@ -109,7 +122,7 @@ def _render_overview() -> None:
     # Hero Section
     ui.hero_section(
         "Unified Enterprise Hub",
-        "A production-grade business intelligence platform consolidating 7 mission-critical tools into a single, cloud-native interface."
+        "A production-grade business intelligence platform consolidating 7 mission-critical tools into a single, cloud-native interface.",
     )
 
     # Metrics Row
@@ -181,7 +194,7 @@ def _render_overview() -> None:
     # Row 3: Financial Analyst, Multi-Agent, Smart Forecast
     st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
     c7, c8, c9 = st.columns(3)
-    
+
     with c7:
         ui.feature_card(
             icon="💼",
@@ -189,7 +202,7 @@ def _render_overview() -> None:
             description="Fundamental stock analysis with financial statements, ratios, and valuation metrics.",
             status="active",
         )
-        
+
     with c8:
         ui.feature_card(
             icon="🤖",
@@ -222,7 +235,7 @@ def _render_overview() -> None:
                 <strong>Margin Hunter</strong> replaces Excel spreadsheet chaos for pricing decisions.
                 Run 100 profit scenarios simultaneously with sensitivity heatmaps.
                 Break-even analysis that updates in real-time as you adjust prices.
-            """
+            """,
         )
 
         st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
@@ -234,7 +247,7 @@ def _render_overview() -> None:
                 <strong>Market Pulse</strong> eliminates Bloomberg Terminal dependency for basic technical analysis.
                 4-panel charts (Price/RSI/MACD/Volume) with institutional-grade indicators.
                 Save $24,000/year in subscriptions.
-            """
+            """,
         )
 
     with col2:
@@ -245,7 +258,7 @@ def _render_overview() -> None:
                 <strong>Data Detective</strong> reduces exploratory data analysis from 2 hours to 2 minutes.
                 AI-powered insights, correlation heatmaps, and quality scoring.
                 Upload CSV → Get actionable findings instantly.
-            """
+            """,
         )
 
         st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
@@ -257,7 +270,7 @@ def _render_overview() -> None:
                 <strong>Marketing Analytics</strong> replaces agency dashboards costing $200-500/month.
                 5 attribution models, A/B test calculators, and campaign ROI tracking.
                 One-time build you own forever.
-            """
+            """,
         )
 
     # Comparison Table
@@ -316,13 +329,15 @@ def _render_placeholder(page: str) -> None:
     st.warning(f"⏳ **{page}** module pending Phase 3 deployment.")
 
     with st.expander("View Roadmap", expanded=True):
-        st.markdown("""
+        st.markdown(
+            """
         This module is scheduled for Phase 3 development. Current roadmap:
         - **Phase 1:** ✅ Container & deployment infrastructure
         - **Phase 2:** ✅ Market Pulse basic visualization
         - **Phase 2.6:** ✅ Professional trading indicators (4-panel layout)
         - **Phase 3:** 🔜 Live APIs + Remaining 4 modules
-        """)
+        """
+        )
 
 
 if __name__ == "__main__":
