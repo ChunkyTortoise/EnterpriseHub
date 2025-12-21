@@ -599,8 +599,8 @@ Comprehensive documentation is available to help you get the most out of Enterpr
 
 ### User Documentation
 - **[README.md](README.md)** - This file (project overview, quickstart)
-- **[FAQ.md](FAQ.md)** - Frequently asked questions and troubleshooting
-- **[Deploy.md](Deploy.md)** - Deployment guide for various platforms
+- **[docs/FAQ.md](docs/FAQ.md)** - Frequently asked questions and troubleshooting
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deployment guide for various platforms
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
 
 ### Developer Documentation
