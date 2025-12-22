@@ -3,6 +3,7 @@ WCAG Contrast Ratio Checker for UI Theme Colors.
 
 Verifies that all text/background color combinations meet WCAG AAA standards.
 """
+
 from typing import Tuple
 
 
@@ -96,7 +97,7 @@ def audit_theme(theme: dict) -> None:
 
         if not result["passes_normal"]:
             failures.append((name, result))
-            print(f"         ⚠️  Consider adjusting colors")
+            print("         ⚠️  Consider adjusting colors")
         print()
 
     if failures:
@@ -106,9 +107,7 @@ def audit_theme(theme: dict) -> None:
             if result["ratio"] < 4.5:
                 print(f"  • {name}: Increase contrast significantly")
             elif result["ratio"] < 7.0:
-                print(
-                    f"  • {name}: Slight adjustment needed (currently {result['ratio']}:1)"
-                )
+                print(f"  • {name}: Slight adjustment needed (currently {result['ratio']}:1)")
     else:
         print("✓ All combinations pass WCAG AAA!")
 

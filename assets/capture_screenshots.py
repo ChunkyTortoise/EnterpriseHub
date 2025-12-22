@@ -19,7 +19,6 @@ Usage:
 import asyncio
 import socket
 import sys
-from datetime import datetime
 from pathlib import Path
 
 from playwright.async_api import TimeoutError as PlaywrightTimeout
@@ -101,7 +100,7 @@ async def toggle_theme(page, target_theme: str):
         # Looking for buttons with text "☀️ Light" or "🌙 Dark"
         sidebar = await page.query_selector('[data-testid="stSidebar"]')
         if not sidebar:
-            print(f"  ⚠️  Sidebar not found")
+            print("  ⚠️  Sidebar not found")
             return False
 
         buttons = await sidebar.query_selector_all("button")
@@ -136,7 +135,7 @@ async def toggle_theme(page, target_theme: str):
 
     except Exception as e:
         print(f"  ⚠️  Could not toggle theme: {e}")
-        print(f"  Note: Manual theme switching may be required")
+        print("  Note: Manual theme switching may be required")
         return False
 
 
@@ -149,7 +148,7 @@ async def navigate_to_module(page, module_name: str):
         # Find all radio button labels in sidebar
         sidebar = await page.query_selector('[data-testid="stSidebar"]')
         if not sidebar:
-            print(f"  ⚠️  Sidebar not found")
+            print("  ⚠️  Sidebar not found")
             return False
 
         # Look for radio buttons with matching text

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Selenium-based screenshot automation for EnterpriseHub (Playwright alternative)."""
 
-import os
 import time
 from pathlib import Path
 
@@ -53,9 +52,7 @@ def setup_driver():
 def wait_for_streamlit(driver, timeout=10):
     """Wait for Streamlit app to be ready."""
     try:
-        WebDriverWait(driver, timeout).until(
-            EC.presence_of_element_located((By.TAG_NAME, "body"))
-        )
+        WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
         time.sleep(2)  # Extra wait for Streamlit rendering
         return True
     except TimeoutException:

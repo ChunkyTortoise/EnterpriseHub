@@ -17,11 +17,11 @@ test_files = [
     ("archive.xls", "xls"),
     ("DATA.CSV", "csv"),
     ("MyFile.XlSx", "xlsx"),
-    ("document.XLSX", "xlsx")
+    ("document.XLSX", "xlsx"),
 ]
 
 for filename, expected in test_files:
-    extension = filename.split('.')[-1].lower()
+    extension = filename.split(".")[-1].lower()
     assert extension == expected, f"Failed: {filename} → {extension} (expected {expected})"
     print(f"  ✓ {filename:20s} → {extension}")
 
@@ -29,6 +29,7 @@ print(f"  All {len(test_files)} test cases passed!\n")
 
 # Test 2: Position-Based Attribution Logic (40-20-40)
 print("✅ Test 2: Position-Based Attribution Logic")
+
 
 def calculate_position_based_credits(num_touchpoints):
     """Calculate Position-Based attribution credits."""
@@ -46,6 +47,7 @@ def calculate_position_based_credits(num_touchpoints):
         credits.append(0.40)  # Last
 
         return credits
+
 
 # Test with various touchpoint counts
 test_cases = [
@@ -75,6 +77,7 @@ print(f"  All {len(test_cases)} test cases passed!\n")
 # Test 3: Chi-Square Test Logic
 print("✅ Test 3: Multi-Variant Testing Logic")
 
+
 def calculate_chi_square_manual(observed, expected):
     """
     Calculate chi-square statistic manually.
@@ -85,6 +88,7 @@ def calculate_chi_square_manual(observed, expected):
         if exp > 0:
             chi_square += ((obs - exp) ** 2) / exp
     return chi_square
+
 
 # Example: 3 variants with different conversion rates
 # Variant A: 50/1000, B: 60/1000, C: 70/1000
@@ -103,7 +107,7 @@ chi_sq_conv = calculate_chi_square_manual(conversions, expected_conversions)
 chi_sq_non = calculate_chi_square_manual(non_conversions, expected_non_conv)
 chi_sq_total = chi_sq_conv + chi_sq_non
 
-print(f"  Test Case: A=50/1000, B=60/1000, C=70/1000")
+print("  Test Case: A=50/1000, B=60/1000, C=70/1000")
 print(f"  Expected conversion rate: {expected_conv_rate:.1%}")
 print(f"  Chi-square statistic: {chi_sq_total:.3f}")
 print(f"  ✓ Chi-square > 0: {chi_sq_total > 0}")
@@ -114,12 +118,12 @@ print("✅ Test 4: Strong Correlation Detection Logic")
 
 # Simulate correlation values
 correlations = [
-    (("Revenue", "Customers"), 0.92, True),   # Strong positive
-    (("Price", "Sales"), -0.85, True),         # Strong negative
-    (("Age", "Income"), 0.45, False),          # Weak
-    (("A", "B"), 0.72, True),                  # Strong positive
-    (("X", "Y"), -0.68, False),                # Just below threshold
-    (("M", "N"), 1.0, True),                   # Perfect
+    (("Revenue", "Customers"), 0.92, True),  # Strong positive
+    (("Price", "Sales"), -0.85, True),  # Strong negative
+    (("Age", "Income"), 0.45, False),  # Weak
+    (("A", "B"), 0.72, True),  # Strong positive
+    (("X", "Y"), -0.68, False),  # Just below threshold
+    (("M", "N"), 1.0, True),  # Perfect
 ]
 
 THRESHOLD = 0.7

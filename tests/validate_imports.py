@@ -24,8 +24,9 @@ try:
         MIN_HASHTAGS,
         MAX_HASHTAGS,
         TEMPLATES,
-        TONES
+        TONES,
     )
+
     print("✓ All constants imported successfully")
     print(f"  - DEFAULT_MODEL: {DEFAULT_MODEL}")
     print(f"  - MAX_RETRY_ATTEMPTS: {MAX_RETRY_ATTEMPTS}")
@@ -39,11 +40,8 @@ except ImportError as e:
 
 try:
     # Test helper functions
-    from modules.content_engine import (
-        _validate_template_and_tone,
-        _build_prompt,
-        _get_api_key
-    )
+    from modules.content_engine import _validate_template_and_tone, _build_prompt
+
     print("\n✓ Helper functions imported successfully")
 
     # Test validation function
@@ -67,7 +65,7 @@ try:
         template="Professional Insight",
         tone="Professional",
         keywords="AI, automation",
-        target_audience="CTOs"
+        target_audience="CTOs",
     )
     print(f"  ✓ Prompt building works ({len(prompt)} chars)")
 
@@ -81,12 +79,13 @@ try:
 except Exception as e:
     print(f"\n✗ Function test error: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
 
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("SUCCESS: All basic functionality tests passed!")
-print("="*60)
+print("=" * 60)
 print("\nCode Quality Improvements Summary:")
 print("1. ✓ Added 11 constants (removed all magic numbers)")
 print("2. ✓ Added comprehensive type hints to all functions")

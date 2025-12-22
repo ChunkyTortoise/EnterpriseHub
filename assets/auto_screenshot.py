@@ -12,11 +12,9 @@ Requirements:
 """
 
 import asyncio
-import os
 from pathlib import Path
 from playwright.async_api import async_playwright, Page
 from PIL import Image
-import io
 
 # Configuration
 DEMO_URL = "http://localhost:8501"
@@ -98,13 +96,13 @@ async def optimize_image(image_path: Path, max_size_kb: int = 500):
         img = Image.open(image_path)
 
         # Convert RGBA to RGB if needed
-        if img.mode == 'RGBA':
-            background = Image.new('RGB', img.size, (255, 255, 255))
+        if img.mode == "RGBA":
+            background = Image.new("RGB", img.size, (255, 255, 255))
             background.paste(img, mask=img.split()[3])
             img = background
 
         # Save with optimization
-        img.save(image_path, 'PNG', optimize=True, quality=85)
+        img.save(image_path, "PNG", optimize=True, quality=85)
 
         # Check file size
         size_kb = image_path.stat().st_size / 1024
@@ -135,7 +133,7 @@ async def capture_margin_hunter(page: Page):
         # Capture full dashboard
         screenshot_path = SCREENSHOTS_DIR / "margin_hunter_main.png"
         await page.screenshot(path=str(screenshot_path), full_page=True)
-        print(f"  ✓ Saved: margin_hunter_main.png")
+        print("  ✓ Saved: margin_hunter_main.png")
         await optimize_image(screenshot_path)
 
     except Exception as e:
@@ -167,7 +165,7 @@ async def capture_market_pulse(page: Page):
         # Capture full page with chart
         screenshot_path = SCREENSHOTS_DIR / "market_pulse_chart.png"
         await page.screenshot(path=str(screenshot_path), full_page=True)
-        print(f"  ✓ Saved: market_pulse_chart.png")
+        print("  ✓ Saved: market_pulse_chart.png")
         await optimize_image(screenshot_path)
 
     except Exception as e:
@@ -189,7 +187,7 @@ async def capture_marketing_analytics(page: Page):
         # Capture main dashboard with KPI cards
         screenshot_path = SCREENSHOTS_DIR / "marketing_analytics_main.png"
         await page.screenshot(path=str(screenshot_path), full_page=True)
-        print(f"  ✓ Saved: marketing_analytics_main.png")
+        print("  ✓ Saved: marketing_analytics_main.png")
         await optimize_image(screenshot_path)
 
     except Exception as e:
@@ -211,7 +209,7 @@ async def capture_content_engine(page: Page):
         # Capture main interface (shows all template options)
         screenshot_path = SCREENSHOTS_DIR / "content_engine_main.png"
         await page.screenshot(path=str(screenshot_path), full_page=True)
-        print(f"  ✓ Saved: content_engine_main.png")
+        print("  ✓ Saved: content_engine_main.png")
         await optimize_image(screenshot_path)
 
     except Exception as e:
@@ -233,7 +231,7 @@ async def capture_data_detective(page: Page):
         # Capture main interface (shows upload prompt and instructions)
         screenshot_path = SCREENSHOTS_DIR / "data_detective_main.png"
         await page.screenshot(path=str(screenshot_path), full_page=True)
-        print(f"  ✓ Saved: data_detective_main.png")
+        print("  ✓ Saved: data_detective_main.png")
         await optimize_image(screenshot_path)
         print("  ℹ Note: For data analysis screenshots, upload a CSV file manually")
 
@@ -261,7 +259,7 @@ async def capture_financial_analyst(page: Page):
         # Capture full analysis
         screenshot_path = SCREENSHOTS_DIR / "financial_analyst_main.png"
         await page.screenshot(path=str(screenshot_path), full_page=True)
-        print(f"  ✓ Saved: financial_analyst_main.png")
+        print("  ✓ Saved: financial_analyst_main.png")
         await optimize_image(screenshot_path)
 
     except Exception as e:
@@ -283,7 +281,7 @@ async def capture_agent_logic(page: Page):
         # Capture main interface
         screenshot_path = SCREENSHOTS_DIR / "agent_logic_main.png"
         await page.screenshot(path=str(screenshot_path), full_page=True)
-        print(f"  ✓ Saved: agent_logic_main.png")
+        print("  ✓ Saved: agent_logic_main.png")
         await optimize_image(screenshot_path)
 
     except Exception as e:
@@ -337,6 +335,7 @@ async def main():
         except Exception as e:
             print(f"\n❌ Fatal error: {e}")
             import traceback
+
             traceback.print_exc()
         finally:
             print("\n🔒 Closing browser...")

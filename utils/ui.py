@@ -5,6 +5,7 @@ This module serves as the centralized styling and component library for the Ente
 It injects custom CSS to override Streamlit's default look with a professional,
 enterprise-grade design system (Fintech/SaaS Aesthetic).
 """
+
 from typing import Optional
 
 import streamlit as st
@@ -661,9 +662,7 @@ def status_badge(status: str) -> str:
     """
 
 
-def feature_card(
-    icon: str, title: str, description: str, status: str = "active"
-) -> None:
+def feature_card(icon: str, title: str, description: str, status: str = "active") -> None:
     """
     Renders a feature card using HTML/CSS for better control.
     """
@@ -799,7 +798,7 @@ def footer() -> None:
     Renders the application footer.
     """
     st.markdown(
-        f"""
+        """
         <footer class="footer" role="contentinfo" aria-label="Site footer">
             <p>© 2025 Enterprise Hub. Built with Streamlit & Python.</p>
             <nav aria-label="Footer navigation" style="font-size: 0.8rem; margin-top: 0.5rem;">
@@ -872,7 +871,7 @@ def skeleton_loader(skeleton_type: str = "card", count: int = 1) -> None:
 
     for i in range(count):
         if skeleton_type == "card":
-            skeleton_html = f"""
+            skeleton_html = """
             <div class="skeleton-card" role="status" aria-label="Loading content" aria-live="polite">
                 <div class="skeleton skeleton-circle" aria-hidden="true"></div>
                 <div class="skeleton skeleton-title" aria-hidden="true"></div>
@@ -883,7 +882,7 @@ def skeleton_loader(skeleton_type: str = "card", count: int = 1) -> None:
             </div>
             """
         elif skeleton_type == "text":
-            skeleton_html = f"""
+            skeleton_html = """
             <div role="status" aria-label="Loading text content" aria-live="polite">
                 <div class="skeleton skeleton-line" style="width: 100%; margin-bottom: 8px;" aria-hidden="true"></div>
                 <div class="skeleton skeleton-line" style="width: 95%; margin-bottom: 8px;" aria-hidden="true"></div>
@@ -893,7 +892,7 @@ def skeleton_loader(skeleton_type: str = "card", count: int = 1) -> None:
             </div>
             """
         elif skeleton_type == "metric":
-            skeleton_html = f"""
+            skeleton_html = """
             <div class="skeleton-card" role="status" aria-label="Loading metric" aria-live="polite">
                 <div class="skeleton skeleton-line" style="width: 50%; height: 14px; margin-bottom: 12px;" aria-hidden="true"></div>
                 <div class="skeleton skeleton-line" style="width: 80%; height: 32px;" aria-hidden="true"></div>
@@ -901,7 +900,7 @@ def skeleton_loader(skeleton_type: str = "card", count: int = 1) -> None:
             </div>
             """
         elif skeleton_type == "table":
-            skeleton_html = f"""
+            skeleton_html = """
             <div role="status" aria-label="Loading table row" aria-live="polite">
                 <div style="display: flex; gap: 16px; margin-bottom: 12px;">
                     <div class="skeleton skeleton-line" style="width: 25%; height: 20px;" aria-hidden="true"></div>
@@ -914,7 +913,7 @@ def skeleton_loader(skeleton_type: str = "card", count: int = 1) -> None:
             """
         else:
             # Default to card type
-            skeleton_html = f"""
+            skeleton_html = """
             <div class="skeleton-card" role="status" aria-label="Loading content" aria-live="polite">
                 <div class="skeleton skeleton-circle" aria-hidden="true"></div>
                 <div class="skeleton skeleton-title" aria-hidden="true"></div>

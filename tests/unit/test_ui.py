@@ -1,8 +1,7 @@
 """Tests for UI/UX module (utils/ui.py)."""
 
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 from utils import ui
 
@@ -44,9 +43,7 @@ class TestCardMetric:
     @patch("utils.ui.st")
     def test_card_metric_with_all_params(self, mock_st):
         """Test card_metric with all parameters."""
-        ui.card_metric(
-            label="Test Label", value="100", delta="10%", help="Test help text"
-        )
+        ui.card_metric(label="Test Label", value="100", delta="10%", help="Test help text")
 
         mock_st.metric.assert_called_once_with(
             label="Test Label", value="100", delta="10%", help="Test help text"
@@ -57,9 +54,7 @@ class TestCardMetric:
         """Test card_metric without optional parameters."""
         ui.card_metric(label="Test", value="50")
 
-        mock_st.metric.assert_called_once_with(
-            label="Test", value="50", delta=None, help=None
-        )
+        mock_st.metric.assert_called_once_with(label="Test", value="50", delta=None, help=None)
 
 
 class TestSectionHeader:

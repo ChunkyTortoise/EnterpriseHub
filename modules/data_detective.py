@@ -4,15 +4,15 @@ Data Detective - AI-Powered Data Analysis and Insights.
 Upload CSV files and get automated data profiling, AI-generated insights,
 data quality assessment, and intelligent cleaning recommendations.
 """
+
 import io
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 import utils.ui as ui
@@ -168,20 +168,12 @@ def _render_data_profile(df: pd.DataFrame) -> None:
 
         # Add type-specific info
         if pd.api.types.is_numeric_dtype(col_data):
-            info["Min"] = (
-                f"{col_data.min():.2f}" if not col_data.isna().all() else "N/A"
-            )
-            info["Max"] = (
-                f"{col_data.max():.2f}" if not col_data.isna().all() else "N/A"
-            )
-            info["Mean"] = (
-                f"{col_data.mean():.2f}" if not col_data.isna().all() else "N/A"
-            )
+            info["Min"] = f"{col_data.min():.2f}" if not col_data.isna().all() else "N/A"
+            info["Max"] = f"{col_data.max():.2f}" if not col_data.isna().all() else "N/A"
+            info["Mean"] = f"{col_data.mean():.2f}" if not col_data.isna().all() else "N/A"
         else:
             top_value = (
-                col_data.value_counts().index[0]
-                if len(col_data.value_counts()) > 0
-                else "N/A"
+                col_data.value_counts().index[0] if len(col_data.value_counts()) > 0 else "N/A"
             )
             info["Top Value"] = str(top_value)[:30]  # Truncate long values
 
@@ -201,9 +193,7 @@ def _render_data_profile(df: pd.DataFrame) -> None:
 
     if numeric_cols:
         st.markdown("**Numeric Columns**")
-        selected_numeric = st.selectbox(
-            "Select numeric column to visualize", numeric_cols
-        )
+        selected_numeric = st.selectbox("Select numeric column to visualize", numeric_cols)
 
         if selected_numeric:
             col1, col2 = st.columns(2)
@@ -220,9 +210,7 @@ def _render_data_profile(df: pd.DataFrame) -> None:
 
             with col2:
                 # Box plot
-                fig_box = px.box(
-                    df, y=selected_numeric, title=f"Box Plot of {selected_numeric}"
-                )
+                fig_box = px.box(df, y=selected_numeric, title=f"Box Plot of {selected_numeric}")
                 st.plotly_chart(fig_box, use_container_width=True)
 
     if categorical_cols:
@@ -282,9 +270,7 @@ def _render_data_profile(df: pd.DataFrame) -> None:
                             "Variable 1": col1_name,
                             "Variable 2": col2_name,
                             "Correlation": f"{corr_value:.3f}",
-                            "Strength": "Strong Positive"
-                            if corr_value > 0
-                            else "Strong Negative",
+                            "Strength": "Strong Positive" if corr_value > 0 else "Strong Negative",
                         }
                     )
 
@@ -327,9 +313,7 @@ def _render_ai_insights(df: pd.DataFrame) -> None:
                 st.markdown("#### 💡 Key Findings")
                 st.markdown(insights)
             else:
-                st.error(
-                    "❌ Failed to generate insights. Please check your API key and try again."
-                )
+                st.error("❌ Failed to generate insights. Please check your API key and try again.")
 
 
 def _render_data_quality(df: pd.DataFrame) -> None:
@@ -366,9 +350,7 @@ def _render_data_quality(df: pd.DataFrame) -> None:
 
                 # Show cleaning button if action is available
                 if issue.get("action"):
-                    if st.button(
-                        f"Apply Fix: {issue['action_name']}", key=issue["issue"]
-                    ):
+                    if st.button(f"Apply Fix: {issue['action_name']}", key=issue["issue"]):
                         st.session_state.cleaned_data = issue["action"](df)
                         st.success(f"✅ Applied: {issue['action_name']}")
                         st.rerun()
@@ -393,9 +375,7 @@ def _render_nlq_interface(df: pd.DataFrame) -> None:
     st.markdown("Ask questions in plain English and get AI-powered answers!")
 
     if not ANTHROPIC_AVAILABLE:
-        st.warning(
-            "⚠️ Anthropic package not installed. Natural language queries unavailable."
-        )
+        st.warning("⚠️ Anthropic package not installed. Natural language queries unavailable.")
         return
 
     # Get API key
@@ -593,9 +573,7 @@ Format your response as a bulleted list with clear, concise insights. Use markdo
         return None
 
 
-def _process_natural_language_query(
-    df: pd.DataFrame, query: str, api_key: str
-) -> Optional[str]:
+def _process_natural_language_query(df: pd.DataFrame, query: str, api_key: str) -> Optional[str]:
     """
     Process a natural language query about the dataset.
 
@@ -757,9 +735,7 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
         Q3 = df[col].quantile(0.75)
         IQR = Q3 - Q1
 
-        outlier_count = (
-            (df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR))
-        ).sum()
+        outlier_count = ((df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR))).sum()
 
         if outlier_count > 0:
             outlier_cols.append((col, outlier_count))

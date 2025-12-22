@@ -2,7 +2,6 @@
 
 import pytest
 from unittest.mock import patch, MagicMock
-import numpy as np
 
 
 class TestMarginHunterCalculations:
@@ -103,18 +102,18 @@ class TestMarginHunterCalculations:
 class TestMarginHunterRenderFunction:
     """Test the main render function with mocked Streamlit."""
 
-    @patch('modules.margin_hunter.st')
+    @patch("modules.margin_hunter.st")
     def test_render_success_with_valid_inputs(self, mock_st):
         """Test successful render with valid inputs."""
         from modules import margin_hunter
 
         # Mock Streamlit inputs
         mock_st.number_input.side_effect = [
-            50.0,   # unit_price
-            20.0,   # unit_cost
-            5000.0, # fixed_costs
-            2000.0, # target_profit
-            250     # current_sales_units
+            50.0,  # unit_price
+            20.0,  # unit_cost
+            5000.0,  # fixed_costs
+            2000.0,  # target_profit
+            250,  # current_sales_units
         ]
 
         # Mock columns
@@ -129,18 +128,18 @@ class TestMarginHunterRenderFunction:
         mock_st.title.assert_called_once_with("💰 Margin Hunter")
         mock_st.error.assert_not_called()  # No errors should be shown
 
-    @patch('modules.margin_hunter.st')
+    @patch("modules.margin_hunter.st")
     def test_render_error_when_price_equals_cost(self, mock_st):
         """Test error message when unit price equals unit cost."""
         from modules import margin_hunter
 
         # Mock Streamlit inputs (price = cost)
         mock_st.number_input.side_effect = [
-            20.0,   # unit_price
-            20.0,   # unit_cost (same as price)
-            5000.0, # fixed_costs
-            2000.0, # target_profit
-            250     # current_sales_units
+            20.0,  # unit_price
+            20.0,  # unit_cost (same as price)
+            5000.0,  # fixed_costs
+            2000.0,  # target_profit
+            250,  # current_sales_units
         ]
 
         # Mock columns
@@ -156,19 +155,19 @@ class TestMarginHunterRenderFunction:
             "⚠️ Selling price must be greater than variable cost to break even."
         )
 
-    @patch('modules.margin_hunter.st')
-    @patch('modules.margin_hunter._render_results')
+    @patch("modules.margin_hunter.st")
+    @patch("modules.margin_hunter._render_results")
     def test_render_calls_results_with_correct_params(self, mock_render_results, mock_st):
         """Test that render calls _render_results with calculated values."""
         from modules import margin_hunter
 
         # Mock Streamlit inputs
         mock_st.number_input.side_effect = [
-            50.0,   # unit_price
-            20.0,   # unit_cost
-            5000.0, # fixed_costs
-            2000.0, # target_profit
-            250     # current_sales_units
+            50.0,  # unit_price
+            20.0,  # unit_cost
+            5000.0,  # fixed_costs
+            2000.0,  # target_profit
+            250,  # current_sales_units
         ]
 
         # Mock columns

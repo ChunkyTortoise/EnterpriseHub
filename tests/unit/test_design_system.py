@@ -7,9 +7,8 @@ Test suite covering:
 - Helper function behavior
 - Color palette completeness
 """
-from unittest.mock import MagicMock, patch
 
-import pytest
+from unittest.mock import MagicMock, patch
 
 
 class TestDesignSystemModule:
@@ -243,9 +242,7 @@ class TestTabRenderFunctions:
     @patch("streamlit.columns")
     @patch("streamlit.tabs")
     @patch("streamlit.expander")
-    def test_render_patterns_tab(
-        self, mock_expander, mock_tabs, mock_columns, mock_markdown
-    ):
+    def test_render_patterns_tab(self, mock_expander, mock_tabs, mock_columns, mock_markdown):
         """Test patterns tab rendering."""
         from modules.design_system import _render_patterns_tab
 
@@ -304,7 +301,6 @@ class TestDesignSystemIntegration:
 
     def test_imports_ui_components(self):
         """Verify design_system imports all necessary UI components."""
-        import modules.design_system as ds
         import utils.ui as ui
 
         # Verify LIGHT_THEME and DARK_THEME are accessible

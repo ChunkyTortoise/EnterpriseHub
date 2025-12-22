@@ -57,9 +57,7 @@ async def click_theme_button(page, theme: str):
 
     try:
         # Get sidebar
-        sidebar = await page.wait_for_selector(
-            '[data-testid="stSidebar"]', timeout=5000
-        )
+        sidebar = await page.wait_for_selector('[data-testid="stSidebar"]', timeout=5000)
 
         # Find all buttons in sidebar
         buttons = await sidebar.query_selector_all("button")
@@ -79,7 +77,7 @@ async def click_theme_button(page, theme: str):
                     await asyncio.sleep(2.5)  # Wait for theme to apply
                     print(f"  ✓ {theme.capitalize()} theme activated")
                     return True
-            except Exception as e:
+            except Exception:
                 continue
 
         print(f"  ⚠️  Could not find {theme} theme button")
@@ -95,9 +93,7 @@ async def navigate_to_module(page, module_name: str):
     print(f"  📍 Navigating to: {module_name}")
 
     try:
-        sidebar = await page.wait_for_selector(
-            '[data-testid="stSidebar"]', timeout=5000
-        )
+        sidebar = await page.wait_for_selector('[data-testid="stSidebar"]', timeout=5000)
 
         # Find radio button labels
         labels = await sidebar.query_selector_all("label")
@@ -205,7 +201,7 @@ async def main():
                 if await click_theme_button(page, theme):
                     current_theme = theme
                 else:
-                    print(f"  ⚠️  Continuing with current theme\n")
+                    print("  ⚠️  Continuing with current theme\n")
 
             # Navigate to module
             if await navigate_to_module(page, module):

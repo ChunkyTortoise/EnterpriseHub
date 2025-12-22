@@ -9,10 +9,13 @@ Comprehensive test suite covering:
 - Sample data generation
 - Report generation
 """
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 import pandas as pd
 import numpy as np
+
+# Set random seed for deterministic test results
+np.random.seed(42)
 
 
 class TestROICalculations:
@@ -164,37 +167,35 @@ class TestABTestSignificance:
         """Test A/B test with significant winner."""
         from modules.marketing_analytics import _calculate_ab_test_significance
 
-        visitors_a = 1000
-        conversions_a = 50
-        visitors_b = 1000
-        conversions_b = 65
+        visitors_a = 5000
+        conversions_a = 250  # 5%
+        visitors_b = 5000
+        conversions_b = 350  # 7%
 
         result = _calculate_ab_test_significance(
-            visitors_a, conversions_a,
-            visitors_b, conversions_b
+            visitors_a, conversions_a, visitors_b, conversions_b
         )
 
-        assert result['lift'] > 0  # B is better than A
-        assert result['p_value'] < 0.05  # Statistically significant
-        assert result['significant'] is True
+        assert result["lift"] > 0  # B is better than A
+        assert result["p_value"] < 0.05  # Statistically significant
+        assert result["significant"] is True
 
     def test_ab_test_significant_loss(self):
         """Test A/B test with significant loser."""
         from modules.marketing_analytics import _calculate_ab_test_significance
 
-        visitors_a = 1000
-        conversions_a = 65
-        visitors_b = 1000
-        conversions_b = 50
+        visitors_a = 5000
+        conversions_a = 350  # 7%
+        visitors_b = 5000
+        conversions_b = 250  # 5%
 
         result = _calculate_ab_test_significance(
-            visitors_a, conversions_a,
-            visitors_b, conversions_b
+            visitors_a, conversions_a, visitors_b, conversions_b
         )
 
-        assert result['lift'] < 0  # B is worse than A
-        assert result['p_value'] < 0.05  # Statistically significant
-        assert result['significant'] is True
+        assert result["lift"] < 0  # B is worse than A
+        assert result["p_value"] < 0.05  # Statistically significant
+        assert result["significant"] is True
 
     def test_ab_test_not_significant(self):
         """Test A/B test with no significant difference."""
@@ -206,12 +207,11 @@ class TestABTestSignificance:
         conversions_b = 52  # Very small difference
 
         result = _calculate_ab_test_significance(
-            visitors_a, conversions_a,
-            visitors_b, conversions_b
+            visitors_a, conversions_a, visitors_b, conversions_b
         )
 
-        assert result['p_value'] > 0.05  # Not significant
-        assert result['significant'] is False
+        assert result["p_value"] > 0.05  # Not significant
+        assert result["significant"] is False
 
     def test_ab_test_small_sample_size(self):
         """Test A/B test with small sample size."""
@@ -224,13 +224,12 @@ class TestABTestSignificance:
 
         # Should still calculate, but likely not significant
         result = _calculate_ab_test_significance(
-            visitors_a, conversions_a,
-            visitors_b, conversions_b
+            visitors_a, conversions_a, visitors_b, conversions_b
         )
 
-        assert 'lift' in result
-        assert 'p_value' in result
-        assert 'significant' in result
+        assert "lift" in result
+        assert "p_value" in result
+        assert "significant" in result
 
     def test_ab_test_zero_conversions(self):
         """Test A/B test with zero conversions (edge case)."""
@@ -242,12 +241,11 @@ class TestABTestSignificance:
         conversions_b = 0
 
         result = _calculate_ab_test_significance(
-            visitors_a, conversions_a,
-            visitors_b, conversions_b
+            visitors_a, conversions_a, visitors_b, conversions_b
         )
 
-        assert result['lift'] == 0
-        assert 'p_value' in result
+        assert result["lift"] == 0
+        assert "p_value" in result
 
     def test_required_sample_size_calculation(self):
         """Test sample size calculation for A/B test."""
@@ -258,9 +256,7 @@ class TestABTestSignificance:
         confidence = 0.95
         power = 0.8
 
-        sample_size = _calculate_required_sample_size(
-            baseline_rate, mde, confidence, power
-        )
+        sample_size = _calculate_required_sample_size(baseline_rate, mde, confidence, power)
 
         assert sample_size > 0
         assert isinstance(sample_size, int)
@@ -273,14 +269,16 @@ class TestAttributionModeling:
     @pytest.fixture
     def sample_journey(self):
         """Create sample customer journey data."""
-        return pd.DataFrame({
-            'Customer': ['Customer 1'] * 5,
-            'Step': [1, 2, 3, 4, 5],
-            'Touchpoint': ['Social Ad', 'Website', 'Email', 'Retarget', 'Direct'],
-            'Channel': ['Social Media', 'Organic', 'Email', 'Paid Ads', 'Direct'],
-            'Days Since First Touch': [0, 2, 5, 7, 10],
-            'Converted': [False, False, False, False, True]
-        })
+        return pd.DataFrame(
+            {
+                "Customer": ["Customer 1"] * 5,
+                "Step": [1, 2, 3, 4, 5],
+                "Touchpoint": ["Social Ad", "Website", "Email", "Retarget", "Direct"],
+                "Channel": ["Social Media", "Organic", "Email", "Paid Ads", "Direct"],
+                "Days Since First Touch": [0, 2, 5, 7, 10],
+                "Converted": [False, False, False, False, True],
+            }
+        )
 
     def test_first_touch_attribution(self, sample_journey):
         """Test First-Touch attribution model."""
@@ -289,13 +287,13 @@ class TestAttributionModeling:
         result = _calculate_attribution(sample_journey, "First-Touch")
 
         # First channel (Social Media) should get 100% credit
-        social_row = result[result['channel'] == 'Social Media']
+        social_row = result[result["channel"] == "Social Media"]
         assert len(social_row) > 0
-        assert social_row.iloc[0]['credit'] == 1.0
+        assert social_row.iloc[0]["credit"] == 1.0
 
         # Other channels should get 0% credit
-        other_channels = result[result['channel'] != 'Social Media']
-        assert all(other_channels['credit'] == 0.0)
+        other_channels = result[result["channel"] != "Social Media"]
+        assert all(other_channels["credit"] == 0.0)
 
     def test_last_touch_attribution(self, sample_journey):
         """Test Last-Touch attribution model."""
@@ -304,13 +302,13 @@ class TestAttributionModeling:
         result = _calculate_attribution(sample_journey, "Last-Touch")
 
         # Last channel (Direct) should get 100% credit
-        direct_row = result[result['channel'] == 'Direct']
+        direct_row = result[result["channel"] == "Direct"]
         assert len(direct_row) > 0
-        assert direct_row.iloc[0]['credit'] == 1.0
+        assert direct_row.iloc[0]["credit"] == 1.0
 
         # Other channels should get 0% credit
-        other_channels = result[result['channel'] != 'Direct']
-        assert all(other_channels['credit'] == 0.0)
+        other_channels = result[result["channel"] != "Direct"]
+        assert all(other_channels["credit"] == 0.0)
 
     def test_linear_attribution(self, sample_journey):
         """Test Linear attribution model."""
@@ -320,7 +318,7 @@ class TestAttributionModeling:
 
         # Each touchpoint should get equal credit
         # 5 touchpoints = 0.2 credit each (assuming unique channels)
-        total_credit = result['credit'].sum()
+        total_credit = result["credit"].sum()
         assert abs(total_credit - 1.0) < 0.01  # Should sum to 1.0
 
     def test_time_decay_attribution(self, sample_journey):
@@ -331,21 +329,25 @@ class TestAttributionModeling:
 
         # More recent touchpoints should get more credit
         # Last touchpoint should have highest credit
-        total_credit = result['credit'].sum()
+        total_credit = result["credit"].sum()
         assert abs(total_credit - 1.0) < 0.01  # Should sum to 1.0
 
         # Verify credit is distributed (no single channel gets 100%)
-        max_credit = result['credit'].max()
+        max_credit = result["credit"].max()
         assert max_credit < 1.0
 
     def test_attribution_all_models_sum_to_one(self, sample_journey):
         """Test that all attribution models sum to 1.0."""
-        from modules.marketing_analytics import _calculate_attribution, ATTRIBUTION_MODELS
+        from modules.marketing_analytics import (
+            _calculate_attribution,
+            ATTRIBUTION_MODELS,
+        )
 
         for model in ATTRIBUTION_MODELS:
             result = _calculate_attribution(sample_journey, model)
-            total_credit = result['credit'].sum()
-            assert abs(total_credit - 1.0) < 0.01, f"{model} credits should sum to 1.0"
+            total_credit = result["credit"].sum()
+            msg = f"{model} credits should sum to 1.0"
+            assert abs(total_credit - 1.0) < 0.01, msg
 
 
 class TestDataGeneration:
@@ -358,11 +360,11 @@ class TestDataGeneration:
         df = _get_sample_campaign_data()
 
         assert len(df) > 0
-        assert 'campaign' in df.columns
-        assert 'channel' in df.columns
-        assert 'spend' in df.columns
-        assert 'revenue' in df.columns
-        assert 'conversions' in df.columns
+        assert "campaign" in df.columns
+        assert "channel" in df.columns
+        assert "spend" in df.columns
+        assert "revenue" in df.columns
+        assert "conversions" in df.columns
 
     def test_generate_channel_breakdown(self):
         """Test channel breakdown data generation."""
@@ -371,29 +373,29 @@ class TestDataGeneration:
         df = _get_channel_breakdown()
 
         assert len(df) > 0
-        assert 'channel' in df.columns
-        assert 'spend' in df.columns
-        assert 'revenue' in df.columns
-        assert 'conversions' in df.columns
+        assert "channel" in df.columns
+        assert "spend" in df.columns
+        assert "revenue" in df.columns
+        assert "conversions" in df.columns
 
     def test_generate_trend_data(self):
         """Test trend data generation."""
         from modules.marketing_analytics import _generate_trend_data
 
-        dates = pd.date_range('2024-01-01', periods=30)
+        dates = pd.date_range("2024-01-01", periods=30)
         channel = "Social Media"
 
         df = _generate_trend_data(dates, channel)
 
         assert len(df) == len(dates)
-        assert 'date' in df.columns
-        assert 'spend' in df.columns
-        assert 'revenue' in df.columns
-        assert 'conversion_rate' in df.columns
+        assert "date" in df.columns
+        assert "spend" in df.columns
+        assert "revenue" in df.columns
+        assert "conversion_rate" in df.columns
 
         # No negative values
-        assert all(df['spend'] >= 0)
-        assert all(df['revenue'] >= 0)
+        assert all(df["spend"] >= 0)
+        assert all(df["revenue"] >= 0)
 
     def test_generate_cohort_data(self):
         """Test cohort retention data generation."""
@@ -422,11 +424,11 @@ class TestDataGeneration:
         df = _get_sample_journey_data()
 
         assert len(df) > 0
-        assert 'Customer' in df.columns
-        assert 'Step' in df.columns
-        assert 'Touchpoint' in df.columns
-        assert 'Channel' in df.columns
-        assert 'Converted' in df.columns
+        assert "Customer" in df.columns
+        assert "Step" in df.columns
+        assert "Touchpoint" in df.columns
+        assert "Channel" in df.columns
+        assert "Converted" in df.columns
 
 
 class TestReportGeneration:
@@ -490,15 +492,14 @@ class TestModuleImports:
 
     def test_module_imports_successfully(self):
         """Test that marketing_analytics module can be imported."""
-        try:
-            import modules.marketing_analytics
-            assert True
-        except ImportError:
-            pytest.fail("Failed to import marketing_analytics module")
+        import modules.marketing_analytics as ma
+
+        assert ma is not None
 
     def test_render_function_exists(self):
         """Test that render function exists."""
         from modules.marketing_analytics import render
+
         assert callable(render)
 
     def test_required_functions_exist(self):
@@ -506,15 +507,15 @@ class TestModuleImports:
         from modules import marketing_analytics
 
         required_functions = [
-            '_calculate_ab_test_significance',
-            '_calculate_attribution',
-            '_calculate_required_sample_size',
-            '_generate_cohort_data',
-            '_get_sample_campaign_data',
-            '_get_channel_breakdown',
-            '_generate_trend_data',
-            '_get_sample_journey_data',
-            '_generate_report_data'
+            "_calculate_ab_test_significance",
+            "_calculate_attribution",
+            "_calculate_required_sample_size",
+            "_generate_cohort_data",
+            "_get_sample_campaign_data",
+            "_get_channel_breakdown",
+            "_generate_trend_data",
+            "_get_sample_journey_data",
+            "_generate_report_data",
         ]
 
         for func_name in required_functions:
@@ -530,7 +531,7 @@ class TestConstants:
         from modules.marketing_analytics import (
             DEFAULT_CONFIDENCE_LEVEL,
             MIN_SAMPLE_SIZE,
-            ATTRIBUTION_MODELS
+            ATTRIBUTION_MODELS,
         )
 
         assert isinstance(DEFAULT_CONFIDENCE_LEVEL, float)
@@ -538,13 +539,13 @@ class TestConstants:
         assert isinstance(MIN_SAMPLE_SIZE, int)
         assert MIN_SAMPLE_SIZE > 0
         assert isinstance(ATTRIBUTION_MODELS, list)
-        assert len(ATTRIBUTION_MODELS) == 4
+        assert len(ATTRIBUTION_MODELS) == 5
 
     def test_attribution_models_list(self):
         """Test attribution models constant."""
         from modules.marketing_analytics import ATTRIBUTION_MODELS
 
-        expected_models = ["First-Touch", "Last-Touch", "Linear", "Time-Decay"]
+        expected_models = ["First-Touch", "Last-Touch", "Linear", "Time-Decay", "Position-Based"]
         assert ATTRIBUTION_MODELS == expected_models
 
 
@@ -557,12 +558,12 @@ class TestEdgeCases:
 
         metrics = _calculate_channel_metrics("All Channels")
 
-        assert 'spend' in metrics
-        assert 'revenue' in metrics
-        assert 'roi' in metrics
-        assert 'conversions' in metrics
-        assert metrics['spend'] > 0
-        assert metrics['revenue'] > 0
+        assert "spend" in metrics
+        assert "revenue" in metrics
+        assert "roi" in metrics
+        assert "conversions" in metrics
+        assert metrics["spend"] > 0
+        assert metrics["revenue"] > 0
 
     def test_calculate_channel_metrics_specific_channel(self):
         """Test channel metrics calculation for specific channel."""
@@ -570,10 +571,10 @@ class TestEdgeCases:
 
         metrics = _calculate_channel_metrics("Social Media")
 
-        assert 'spend' in metrics
-        assert 'revenue' in metrics
-        assert 'roi' in metrics
-        assert 'conversions' in metrics
+        assert "spend" in metrics
+        assert "revenue" in metrics
+        assert "roi" in metrics
+        assert "conversions" in metrics
 
     def test_ab_test_with_100_percent_conversion(self):
         """Test A/B test with 100% conversion rate (edge case)."""
@@ -585,31 +586,32 @@ class TestEdgeCases:
         conversions_b = 100
 
         result = _calculate_ab_test_significance(
-            visitors_a, conversions_a,
-            visitors_b, conversions_b
+            visitors_a, conversions_a, visitors_b, conversions_b
         )
 
-        assert result['lift'] == 0
-        assert 'p_value' in result
+        assert result["lift"] == 0
+        assert "p_value" in result
 
     def test_attribution_single_touchpoint(self):
         """Test attribution with single touchpoint journey."""
         from modules.marketing_analytics import _calculate_attribution
 
-        single_touch = pd.DataFrame({
-            'Customer': ['Customer 1'],
-            'Step': [1],
-            'Touchpoint': ['Direct'],
-            'Channel': ['Direct'],
-            'Days Since First Touch': [0],
-            'Converted': [True]
-        })
+        single_touch = pd.DataFrame(
+            {
+                "Customer": ["Customer 1"],
+                "Step": [1],
+                "Touchpoint": ["Direct"],
+                "Channel": ["Direct"],
+                "Days Since First Touch": [0],
+                "Converted": [True],
+            }
+        )
 
         # All models should give 100% credit to the only touchpoint
         for model in ["First-Touch", "Last-Touch", "Linear", "Time-Decay"]:
             result = _calculate_attribution(single_touch, model)
             assert len(result) == 1
-            assert result.iloc[0]['credit'] == 1.0
+            assert result.iloc[0]["credit"] == 1.0
 
     def test_empty_campaign_data_handling(self):
         """Test handling of empty campaign data."""
@@ -632,12 +634,11 @@ class TestEdgeCases:
         conversions_b = 50  # Exact same as A
 
         result = _calculate_ab_test_significance(
-            visitors_a, conversions_a,
-            visitors_b, conversions_b
+            visitors_a, conversions_a, visitors_b, conversions_b
         )
 
-        assert result['lift'] == 0
-        assert result['significant'] is False
+        assert result["lift"] == 0
+        assert result["significant"] is False
 
 
 class TestMultiVariantTesting:
@@ -648,41 +649,41 @@ class TestMultiVariantTesting:
         from modules.marketing_analytics import _calculate_multivariant_significance
 
         variant_data = [
-            {'name': 'A', 'visitors': 1000, 'conversions': 50, 'conv_rate': 5.0},
-            {'name': 'B', 'visitors': 1000, 'conversions': 60, 'conv_rate': 6.0},
-            {'name': 'C', 'visitors': 1000, 'conversions': 70, 'conv_rate': 7.0}
+            {"name": "A", "visitors": 1000, "conversions": 50, "conv_rate": 5.0},
+            {"name": "B", "visitors": 1000, "conversions": 60, "conv_rate": 6.0},
+            {"name": "C", "visitors": 1000, "conversions": 70, "conv_rate": 7.0},
         ]
 
         result = _calculate_multivariant_significance(variant_data)
 
-        assert 'chi_square' in result
-        assert 'p_value' in result
-        assert 'degrees_of_freedom' in result
-        assert 'significant' in result
-        assert 'best_variant' in result
-        assert result['best_variant']['name'] == 'C'
-        assert result['best_variant']['conv_rate'] == 7.0
+        assert "chi_square" in result
+        assert "p_value" in result
+        assert "degrees_of_freedom" in result
+        assert "significant" in result
+        assert "best_variant" in result
+        assert result["best_variant"]["name"] == "C"
+        assert result["best_variant"]["conv_rate"] == 7.0
 
     def test_multivariant_five_variants(self):
         """Test multi-variant test with 5 variants."""
         from modules.marketing_analytics import _calculate_multivariant_significance
 
         variant_data = [
-            {'name': 'A', 'visitors': 1000, 'conversions': 50, 'conv_rate': 5.0},
-            {'name': 'B', 'visitors': 1000, 'conversions': 55, 'conv_rate': 5.5},
-            {'name': 'C', 'visitors': 1000, 'conversions': 60, 'conv_rate': 6.0},
-            {'name': 'D', 'visitors': 1000, 'conversions': 65, 'conv_rate': 6.5},
-            {'name': 'E', 'visitors': 1000, 'conversions': 70, 'conv_rate': 7.0}
+            {"name": "A", "visitors": 5000, "conversions": 250, "conv_rate": 5.0},
+            {"name": "B", "visitors": 5000, "conversions": 275, "conv_rate": 5.5},
+            {"name": "C", "visitors": 5000, "conversions": 300, "conv_rate": 6.0},
+            {"name": "D", "visitors": 5000, "conversions": 325, "conv_rate": 6.5},
+            {"name": "E", "visitors": 5000, "conversions": 350, "conv_rate": 7.0},
         ]
 
         result = _calculate_multivariant_significance(variant_data)
 
-        assert 'chi_square' in result
-        assert 'p_value' in result
-        assert result['best_variant']['name'] == 'E'
-        assert result['best_variant']['conv_rate'] == 7.0
+        assert "chi_square" in result
+        assert "p_value" in result
+        assert result["best_variant"]["name"] == "E"
+        assert result["best_variant"]["conv_rate"] == 7.0
         # With clear differences across 5 variants, should be significant
-        assert result['significant'] is True
+        assert result["significant"] is True
 
     def test_multivariant_ten_variants(self):
         """Test multi-variant test with 10 variants."""
@@ -690,20 +691,22 @@ class TestMultiVariantTesting:
 
         variant_data = []
         for i in range(10):
-            variant_data.append({
-                'name': chr(65 + i),  # A, B, C, ...
-                'visitors': 1000,
-                'conversions': 50 + i * 2,
-                'conv_rate': (50 + i * 2) / 10
-            })
+            variant_data.append(
+                {
+                    "name": chr(65 + i),  # A, B, C, ...
+                    "visitors": 1000,
+                    "conversions": 50 + i * 2,
+                    "conv_rate": (50 + i * 2) / 10,
+                }
+            )
 
         result = _calculate_multivariant_significance(variant_data)
 
-        assert 'chi_square' in result
-        assert 'p_value' in result
-        assert 'best_variant' in result
+        assert "chi_square" in result
+        assert "p_value" in result
+        assert "best_variant" in result
         # Last variant (J) should have highest conversion rate
-        assert result['best_variant']['name'] == 'J'
+        assert result["best_variant"]["name"] == "J"
 
     def test_multivariant_significant_difference(self):
         """Test detection of significant differences."""
@@ -711,16 +714,16 @@ class TestMultiVariantTesting:
 
         # Large differences should be significant
         variant_data = [
-            {'name': 'A', 'visitors': 1000, 'conversions': 30, 'conv_rate': 3.0},
-            {'name': 'B', 'visitors': 1000, 'conversions': 50, 'conv_rate': 5.0},
-            {'name': 'C', 'visitors': 1000, 'conversions': 80, 'conv_rate': 8.0}
+            {"name": "A", "visitors": 1000, "conversions": 30, "conv_rate": 3.0},
+            {"name": "B", "visitors": 1000, "conversions": 50, "conv_rate": 5.0},
+            {"name": "C", "visitors": 1000, "conversions": 80, "conv_rate": 8.0},
         ]
 
         result = _calculate_multivariant_significance(variant_data)
 
-        assert result['significant'] is True
-        assert result['p_value'] < 0.05
-        assert result['best_variant']['name'] == 'C'
+        assert result["significant"] is True
+        assert result["p_value"] < 0.05
+        assert result["best_variant"]["name"] == "C"
 
     def test_multivariant_no_significant_difference(self):
         """Test when there's no significant difference."""
@@ -728,52 +731,52 @@ class TestMultiVariantTesting:
 
         # Very similar conversion rates
         variant_data = [
-            {'name': 'A', 'visitors': 1000, 'conversions': 50, 'conv_rate': 5.0},
-            {'name': 'B', 'visitors': 1000, 'conversions': 51, 'conv_rate': 5.1},
-            {'name': 'C', 'visitors': 1000, 'conversions': 52, 'conv_rate': 5.2}
+            {"name": "A", "visitors": 1000, "conversions": 50, "conv_rate": 5.0},
+            {"name": "B", "visitors": 1000, "conversions": 51, "conv_rate": 5.1},
+            {"name": "C", "visitors": 1000, "conversions": 52, "conv_rate": 5.2},
         ]
 
         result = _calculate_multivariant_significance(variant_data)
 
         # Small differences should not be significant
-        assert result['p_value'] > 0.05
-        assert result['significant'] is False
+        assert result["p_value"] > 0.05
+        assert result["significant"] is False
 
     def test_multivariant_best_variant_identification(self):
         """Test correct identification of best variant."""
         from modules.marketing_analytics import _calculate_multivariant_significance
 
         variant_data = [
-            {'name': 'A', 'visitors': 1000, 'conversions': 40, 'conv_rate': 4.0},
-            {'name': 'B', 'visitors': 1000, 'conversions': 90, 'conv_rate': 9.0},
-            {'name': 'C', 'visitors': 1000, 'conversions': 50, 'conv_rate': 5.0}
+            {"name": "A", "visitors": 1000, "conversions": 40, "conv_rate": 4.0},
+            {"name": "B", "visitors": 1000, "conversions": 90, "conv_rate": 9.0},
+            {"name": "C", "visitors": 1000, "conversions": 50, "conv_rate": 5.0},
         ]
 
         result = _calculate_multivariant_significance(variant_data)
 
         # B has the highest conversion rate
-        assert result['best_variant']['name'] == 'B'
-        assert result['best_variant']['conv_rate'] == 9.0
-        assert result['best_variant']['conversions'] == 90
+        assert result["best_variant"]["name"] == "B"
+        assert result["best_variant"]["conv_rate"] == 9.0
+        assert result["best_variant"]["conversions"] == 90
 
     def test_multivariant_all_same_conversion_rates(self):
         """Test edge case where all variants have identical conversion rates."""
         from modules.marketing_analytics import _calculate_multivariant_significance
 
         variant_data = [
-            {'name': 'A', 'visitors': 1000, 'conversions': 50, 'conv_rate': 5.0},
-            {'name': 'B', 'visitors': 1000, 'conversions': 50, 'conv_rate': 5.0},
-            {'name': 'C', 'visitors': 1000, 'conversions': 50, 'conv_rate': 5.0},
-            {'name': 'D', 'visitors': 1000, 'conversions': 50, 'conv_rate': 5.0}
+            {"name": "A", "visitors": 1000, "conversions": 50, "conv_rate": 5.0},
+            {"name": "B", "visitors": 1000, "conversions": 50, "conv_rate": 5.0},
+            {"name": "C", "visitors": 1000, "conversions": 50, "conv_rate": 5.0},
+            {"name": "D", "visitors": 1000, "conversions": 50, "conv_rate": 5.0},
         ]
 
         result = _calculate_multivariant_significance(variant_data)
 
         # No difference means not significant
-        assert result['significant'] is False
-        assert result['p_value'] > 0.05
+        assert result["significant"] is False
+        assert result["p_value"] > 0.05
         # All variants have same rate, any could be "best"
-        assert result['best_variant']['conv_rate'] == 5.0
+        assert result["best_variant"]["conv_rate"] == 5.0
 
     def test_multivariant_one_dominant_winner(self):
         """Test edge case with one clear dominant winner."""
@@ -781,35 +784,35 @@ class TestMultiVariantTesting:
 
         # One variant dramatically outperforms all others
         variant_data = [
-            {'name': 'A', 'visitors': 1000, 'conversions': 30, 'conv_rate': 3.0},
-            {'name': 'B', 'visitors': 1000, 'conversions': 32, 'conv_rate': 3.2},
-            {'name': 'C', 'visitors': 1000, 'conversions': 31, 'conv_rate': 3.1},
-            {'name': 'D', 'visitors': 1000, 'conversions': 150, 'conv_rate': 15.0}
+            {"name": "A", "visitors": 1000, "conversions": 30, "conv_rate": 3.0},
+            {"name": "B", "visitors": 1000, "conversions": 32, "conv_rate": 3.2},
+            {"name": "C", "visitors": 1000, "conversions": 31, "conv_rate": 3.1},
+            {"name": "D", "visitors": 1000, "conversions": 150, "conv_rate": 15.0},
         ]
 
         result = _calculate_multivariant_significance(variant_data)
 
-        assert result['significant'] is True
-        assert result['best_variant']['name'] == 'D'
-        assert result['best_variant']['conv_rate'] == 15.0
-        assert result['p_value'] < 0.001  # Should be highly significant
+        assert result["significant"] is True
+        assert result["best_variant"]["name"] == "D"
+        assert result["best_variant"]["conv_rate"] == 15.0
+        assert result["p_value"] < 0.001  # Should be highly significant
 
     def test_multivariant_chi_square_statistic(self):
         """Test that chi-square statistic is calculated correctly."""
         from modules.marketing_analytics import _calculate_multivariant_significance
 
         variant_data = [
-            {'name': 'A', 'visitors': 1000, 'conversions': 50, 'conv_rate': 5.0},
-            {'name': 'B', 'visitors': 1000, 'conversions': 60, 'conv_rate': 6.0},
-            {'name': 'C', 'visitors': 1000, 'conversions': 70, 'conv_rate': 7.0}
+            {"name": "A", "visitors": 1000, "conversions": 50, "conv_rate": 5.0},
+            {"name": "B", "visitors": 1000, "conversions": 60, "conv_rate": 6.0},
+            {"name": "C", "visitors": 1000, "conversions": 70, "conv_rate": 7.0},
         ]
 
         result = _calculate_multivariant_significance(variant_data)
 
         # Chi-square statistic should be positive
-        assert result['chi_square'] > 0
+        assert result["chi_square"] > 0
         # Degrees of freedom for 3 variants should be 2
-        assert result['degrees_of_freedom'] == 2
+        assert result["degrees_of_freedom"] == 2
 
     def test_multivariant_degrees_of_freedom(self):
         """Test degrees of freedom calculation for different variant counts."""
@@ -817,14 +820,19 @@ class TestMultiVariantTesting:
 
         # Test with 5 variants - should have 4 degrees of freedom
         variant_data = [
-            {'name': f'Var{i}', 'visitors': 1000, 'conversions': 50 + i, 'conv_rate': (50 + i) / 10}
+            {
+                "name": f"Var{i}",
+                "visitors": 1000,
+                "conversions": 50 + i,
+                "conv_rate": (50 + i) / 10,
+            }
             for i in range(5)
         ]
 
         result = _calculate_multivariant_significance(variant_data)
 
         # DOF = (number of variants - 1)
-        assert result['degrees_of_freedom'] == 4
+        assert result["degrees_of_freedom"] == 4
 
 
 class TestPositionBasedAttribution:
@@ -834,56 +842,62 @@ class TestPositionBasedAttribution:
         """Test Position-Based attribution with 1 touchpoint (should be 100%)."""
         from modules.marketing_analytics import _calculate_attribution
 
-        journey_data = pd.DataFrame({
-            'Customer': ['Customer 1'],
-            'Step': [1],
-            'Touchpoint': ['Direct'],
-            'Channel': ['Direct'],
-            'Days Since First Touch': [0],
-            'Converted': [True]
-        })
+        journey_data = pd.DataFrame(
+            {
+                "Customer": ["Customer 1"],
+                "Step": [1],
+                "Touchpoint": ["Direct"],
+                "Channel": ["Direct"],
+                "Days Since First Touch": [0],
+                "Converted": [True],
+            }
+        )
 
         result = _calculate_attribution(journey_data, "Position-Based")
 
         assert len(result) == 1
-        assert result.iloc[0]['credit'] == 1.0
+        assert result.iloc[0]["credit"] == 1.0
         # Total credit should sum to 1.0
-        assert abs(result['credit'].sum() - 1.0) < 0.01
+        assert abs(result["credit"].sum() - 1.0) < 0.01
 
     def test_position_based_two_touchpoints(self):
         """Test Position-Based attribution with 2 touchpoints (50% each)."""
         from modules.marketing_analytics import _calculate_attribution
 
-        journey_data = pd.DataFrame({
-            'Customer': ['Customer 1', 'Customer 1'],
-            'Step': [1, 2],
-            'Touchpoint': ['Social Ad', 'Direct'],
-            'Channel': ['Social Media', 'Direct'],
-            'Days Since First Touch': [0, 5],
-            'Converted': [False, True]
-        })
+        journey_data = pd.DataFrame(
+            {
+                "Customer": ["Customer 1", "Customer 1"],
+                "Step": [1, 2],
+                "Touchpoint": ["Social Ad", "Direct"],
+                "Channel": ["Social Media", "Direct"],
+                "Days Since First Touch": [0, 5],
+                "Converted": [False, True],
+            }
+        )
 
         result = _calculate_attribution(journey_data, "Position-Based")
 
         # Should have 2 channels
         assert len(result) == 2
         # Each should get 50% (0.5)
-        assert all(result['credit'] == 0.5)
+        assert all(result["credit"] == 0.5)
         # Total should sum to 1.0
-        assert abs(result['credit'].sum() - 1.0) < 0.01
+        assert abs(result["credit"].sum() - 1.0) < 0.01
 
     def test_position_based_three_touchpoints(self):
         """Test Position-Based attribution with 3 touchpoints (40%-20%-40%)."""
         from modules.marketing_analytics import _calculate_attribution
 
-        journey_data = pd.DataFrame({
-            'Customer': ['Customer 1', 'Customer 1', 'Customer 1'],
-            'Step': [1, 2, 3],
-            'Touchpoint': ['Social Ad', 'Email', 'Direct'],
-            'Channel': ['Social Media', 'Email', 'Direct'],
-            'Days Since First Touch': [0, 3, 7],
-            'Converted': [False, False, True]
-        })
+        journey_data = pd.DataFrame(
+            {
+                "Customer": ["Customer 1", "Customer 1", "Customer 1"],
+                "Step": [1, 2, 3],
+                "Touchpoint": ["Social Ad", "Email", "Direct"],
+                "Channel": ["Social Media", "Email", "Direct"],
+                "Days Since First Touch": [0, 3, 7],
+                "Converted": [False, False, True],
+            }
+        )
 
         result = _calculate_attribution(journey_data, "Position-Based")
 
@@ -891,9 +905,9 @@ class TestPositionBasedAttribution:
         assert len(result) == 3
 
         # Find each channel's credit
-        social_credit = result[result['channel'] == 'Social Media']['credit'].values[0]
-        email_credit = result[result['channel'] == 'Email']['credit'].values[0]
-        direct_credit = result[result['channel'] == 'Direct']['credit'].values[0]
+        social_credit = result[result["channel"] == "Social Media"]["credit"].values[0]
+        email_credit = result[result["channel"] == "Email"]["credit"].values[0]
+        direct_credit = result[result["channel"] == "Direct"]["credit"].values[0]
 
         # First touchpoint gets 40%
         assert abs(social_credit - 0.40) < 0.01
@@ -903,20 +917,22 @@ class TestPositionBasedAttribution:
         assert abs(direct_credit - 0.40) < 0.01
 
         # Total should sum to 1.0
-        assert abs(result['credit'].sum() - 1.0) < 0.01
+        assert abs(result["credit"].sum() - 1.0) < 0.01
 
     def test_position_based_five_touchpoints(self):
         """Test Position-Based attribution with 5 touchpoints."""
         from modules.marketing_analytics import _calculate_attribution
 
-        journey_data = pd.DataFrame({
-            'Customer': ['Customer 1'] * 5,
-            'Step': [1, 2, 3, 4, 5],
-            'Touchpoint': ['Social Ad', 'Website', 'Email', 'Retarget', 'Direct'],
-            'Channel': ['Social Media', 'Organic', 'Email', 'Paid Ads', 'Direct'],
-            'Days Since First Touch': [0, 2, 5, 7, 10],
-            'Converted': [False, False, False, False, True]
-        })
+        journey_data = pd.DataFrame(
+            {
+                "Customer": ["Customer 1"] * 5,
+                "Step": [1, 2, 3, 4, 5],
+                "Touchpoint": ["Social Ad", "Website", "Email", "Retarget", "Direct"],
+                "Channel": ["Social Media", "Organic", "Email", "Paid Ads", "Direct"],
+                "Days Since First Touch": [0, 2, 5, 7, 10],
+                "Converted": [False, False, False, False, True],
+            }
+        )
 
         result = _calculate_attribution(journey_data, "Position-Based")
 
@@ -924,22 +940,22 @@ class TestPositionBasedAttribution:
         assert len(result) == 5
 
         # Get credits for each channel
-        credits = {row['channel']: row['credit'] for _, row in result.iterrows()}
+        credits = {row["channel"]: row["credit"] for _, row in result.iterrows()}
 
         # First touchpoint (Social Media) gets 40%
-        assert abs(credits['Social Media'] - 0.40) < 0.01
+        assert abs(credits["Social Media"] - 0.40) < 0.01
 
         # Last touchpoint (Direct) gets 40%
-        assert abs(credits['Direct'] - 0.40) < 0.01
+        assert abs(credits["Direct"] - 0.40) < 0.01
 
         # Middle 3 touchpoints share 20% equally (6.67% each)
         middle_credit = 0.20 / 3
-        assert abs(credits['Organic'] - middle_credit) < 0.01
-        assert abs(credits['Email'] - middle_credit) < 0.01
-        assert abs(credits['Paid Ads'] - middle_credit) < 0.01
+        assert abs(credits["Organic"] - middle_credit) < 0.01
+        assert abs(credits["Email"] - middle_credit) < 0.01
+        assert abs(credits["Paid Ads"] - middle_credit) < 0.01
 
         # Total should sum to 1.0
-        assert abs(result['credit'].sum() - 1.0) < 0.01
+        assert abs(result["credit"].sum() - 1.0) < 0.01
 
     def test_position_based_credits_sum_to_one(self):
         """Verify Position-Based credits always sum to 1.0."""
@@ -947,62 +963,76 @@ class TestPositionBasedAttribution:
 
         # Test with various touchpoint counts
         for n_touchpoints in range(1, 11):
-            journey_data = pd.DataFrame({
-                'Customer': ['Customer 1'] * n_touchpoints,
-                'Step': list(range(1, n_touchpoints + 1)),
-                'Touchpoint': [f'Touch{i}' for i in range(1, n_touchpoints + 1)],
-                'Channel': [f'Channel{i}' for i in range(1, n_touchpoints + 1)],
-                'Days Since First Touch': list(range(n_touchpoints)),
-                'Converted': [False] * (n_touchpoints - 1) + [True]
-            })
+            journey_data = pd.DataFrame(
+                {
+                    "Customer": ["Customer 1"] * n_touchpoints,
+                    "Step": list(range(1, n_touchpoints + 1)),
+                    "Touchpoint": [f"Touch{i}" for i in range(1, n_touchpoints + 1)],
+                    "Channel": [f"Channel{i}" for i in range(1, n_touchpoints + 1)],
+                    "Days Since First Touch": list(range(n_touchpoints)),
+                    "Converted": [False] * (n_touchpoints - 1) + [True],
+                }
+            )
 
             result = _calculate_attribution(journey_data, "Position-Based")
 
             # Credits should always sum to 1.0
-            total_credit = result['credit'].sum()
-            assert abs(total_credit - 1.0) < 0.01, f"Failed for {n_touchpoints} touchpoints: sum={total_credit}"
+            total_credit = result["credit"].sum()
+            assert (
+                abs(total_credit - 1.0) < 0.01
+            ), f"Failed for {n_touchpoints} touchpoints: sum={total_credit}"
 
     def test_position_based_four_touchpoints(self):
         """Test Position-Based with 4 touchpoints for U-shaped distribution."""
         from modules.marketing_analytics import _calculate_attribution
 
-        journey_data = pd.DataFrame({
-            'Customer': ['Customer 1'] * 4,
-            'Step': [1, 2, 3, 4],
-            'Touchpoint': ['Social', 'Website', 'Email', 'Direct'],
-            'Channel': ['Social Media', 'Organic', 'Email', 'Direct'],
-            'Days Since First Touch': [0, 2, 5, 8],
-            'Converted': [False, False, False, True]
-        })
+        journey_data = pd.DataFrame(
+            {
+                "Customer": ["Customer 1"] * 4,
+                "Step": [1, 2, 3, 4],
+                "Touchpoint": ["Social", "Website", "Email", "Direct"],
+                "Channel": ["Social Media", "Organic", "Email", "Direct"],
+                "Days Since First Touch": [0, 2, 5, 8],
+                "Converted": [False, False, False, True],
+            }
+        )
 
         result = _calculate_attribution(journey_data, "Position-Based")
 
         assert len(result) == 4
 
-        credits = {row['channel']: row['credit'] for _, row in result.iterrows()}
+        credits = {row["channel"]: row["credit"] for _, row in result.iterrows()}
 
         # First gets 40%
-        assert abs(credits['Social Media'] - 0.40) < 0.01
+        assert abs(credits["Social Media"] - 0.40) < 0.01
         # Last gets 40%
-        assert abs(credits['Direct'] - 0.40) < 0.01
+        assert abs(credits["Direct"] - 0.40) < 0.01
         # Middle 2 share 20% (10% each)
-        assert abs(credits['Organic'] - 0.10) < 0.01
-        assert abs(credits['Email'] - 0.10) < 0.01
+        assert abs(credits["Organic"] - 0.10) < 0.01
+        assert abs(credits["Email"] - 0.10) < 0.01
 
-        assert abs(result['credit'].sum() - 1.0) < 0.01
+        assert abs(result["credit"].sum() - 1.0) < 0.01
 
     def test_position_based_duplicate_channels(self):
         """Test Position-Based with duplicate channels in journey."""
         from modules.marketing_analytics import _calculate_attribution
 
-        journey_data = pd.DataFrame({
-            'Customer': ['Customer 1'] * 5,
-            'Step': [1, 2, 3, 4, 5],
-            'Touchpoint': ['Social Ad 1', 'Email 1', 'Social Ad 2', 'Email 2', 'Direct'],
-            'Channel': ['Social Media', 'Email', 'Social Media', 'Email', 'Direct'],
-            'Days Since First Touch': [0, 2, 4, 6, 8],
-            'Converted': [False, False, False, False, True]
-        })
+        journey_data = pd.DataFrame(
+            {
+                "Customer": ["Customer 1"] * 5,
+                "Step": [1, 2, 3, 4, 5],
+                "Touchpoint": [
+                    "Social Ad 1",
+                    "Email 1",
+                    "Social Ad 2",
+                    "Email 2",
+                    "Direct",
+                ],
+                "Channel": ["Social Media", "Email", "Social Media", "Email", "Direct"],
+                "Days Since First Touch": [0, 2, 4, 6, 8],
+                "Converted": [False, False, False, False, True],
+            }
+        )
 
         result = _calculate_attribution(journey_data, "Position-Based")
 
@@ -1010,45 +1040,51 @@ class TestPositionBasedAttribution:
         # Email appears in positions 2 and 4 (middle + middle)
         # Direct appears in position 5 (last)
 
-        credits = {row['channel']: row['credit'] for _, row in result.iterrows()}
+        credits = {row["channel"]: row["credit"] for _, row in result.iterrows()}
 
         # Social Media: 40% (first) + 1/3 * 20% (middle) = 40% + 6.67% = 46.67%
         expected_social = 0.40 + (0.20 / 3)
-        assert abs(credits['Social Media'] - expected_social) < 0.01
+        assert abs(credits["Social Media"] - expected_social) < 0.01
 
         # Email: 1/3 * 20% (middle) + 1/3 * 20% (middle) = 13.33%
         expected_email = 2 * (0.20 / 3)
-        assert abs(credits['Email'] - expected_email) < 0.01
+        assert abs(credits["Email"] - expected_email) < 0.01
 
         # Direct: 40% (last)
-        assert abs(credits['Direct'] - 0.40) < 0.01
+        assert abs(credits["Direct"] - 0.40) < 0.01
 
         # Total should sum to 1.0
-        assert abs(result['credit'].sum() - 1.0) < 0.01
+        assert abs(result["credit"].sum() - 1.0) < 0.01
 
     def test_position_based_vs_other_models(self):
         """Test that Position-Based produces different results than other models."""
         from modules.marketing_analytics import _calculate_attribution
 
-        journey_data = pd.DataFrame({
-            'Customer': ['Customer 1'] * 5,
-            'Step': [1, 2, 3, 4, 5],
-            'Touchpoint': ['Social', 'Web', 'Email', 'Retarget', 'Direct'],
-            'Channel': ['Social Media', 'Organic', 'Email', 'Paid Ads', 'Direct'],
-            'Days Since First Touch': [0, 2, 5, 7, 10],
-            'Converted': [False, False, False, False, True]
-        })
+        journey_data = pd.DataFrame(
+            {
+                "Customer": ["Customer 1"] * 5,
+                "Step": [1, 2, 3, 4, 5],
+                "Touchpoint": ["Social", "Web", "Email", "Retarget", "Direct"],
+                "Channel": ["Social Media", "Organic", "Email", "Paid Ads", "Direct"],
+                "Days Since First Touch": [0, 2, 5, 7, 10],
+                "Converted": [False, False, False, False, True],
+            }
+        )
 
         position_based = _calculate_attribution(journey_data, "Position-Based")
         linear = _calculate_attribution(journey_data, "Linear")
         first_touch = _calculate_attribution(journey_data, "First-Touch")
 
         # Position-Based should differ from Linear (not equal distribution)
-        position_social = position_based[position_based['channel'] == 'Social Media']['credit'].values[0]
-        linear_social = linear[linear['channel'] == 'Social Media']['credit'].values[0]
+        position_social = position_based[position_based["channel"] == "Social Media"][
+            "credit"
+        ].values[0]
+        linear_social = linear[linear["channel"] == "Social Media"]["credit"].values[0]
         assert abs(position_social - linear_social) > 0.01
 
         # Position-Based should differ from First-Touch
         # (first touch gives 40% not 100% when there are multiple touchpoints)
-        first_touch_social = first_touch[first_touch['channel'] == 'Social Media']['credit'].values[0]
+        first_touch_social = first_touch[first_touch["channel"] == "Social Media"]["credit"].values[
+            0
+        ]
         assert abs(position_social - first_touch_social) > 0.01
