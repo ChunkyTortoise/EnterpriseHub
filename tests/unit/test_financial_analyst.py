@@ -40,9 +40,10 @@ MOCK_FINANCIALS = {
 class TestFinancialAnalystRender:
     """Test the main render function."""
 
+    @patch("modules.financial_analyst.ui.section_header")
     @patch("modules.financial_analyst.st")
     @patch("modules.financial_analyst._fetch_and_display_data")
-    def test_render_with_valid_ticker(self, mock_fetch, mock_st):
+    def test_render_with_valid_ticker(self, mock_fetch, mock_st, mock_section):
         """Test successful render with valid ticker."""
         from modules import financial_analyst
 
@@ -54,7 +55,7 @@ class TestFinancialAnalystRender:
         financial_analyst.render()
 
         # Assertions
-        mock_st.markdown.assert_any_call("## Financial Analyst")
+        mock_section.assert_called_once_with("Financial Analyst", "Fundamental Analysis & Company Metrics")
         mock_st.text_input.assert_called_once()
         mock_fetch.assert_called_once_with("AAPL")
 

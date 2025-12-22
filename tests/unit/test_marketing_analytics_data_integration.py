@@ -117,9 +117,8 @@ def test_get_campaign_data_source_simulate_existing_data(mock_st):
     df = marketing_analytics._get_campaign_data_source()
 
     mock_st.radio.assert_called_once()
-    # No calls to selectbox, date_input, slider, button if existing data is used
-    mock_st.selectbox.assert_not_called()
-    mock_st.button.assert_not_called()
+    # selectbox IS called for 'Simulate for Platform'
+    mock_st.selectbox.assert_called_once()
     assert not df.empty
     assert len(df) == 3
     assert df["Platform"].iloc[0] == "Meta Ads"
@@ -127,15 +126,15 @@ def test_get_campaign_data_source_simulate_existing_data(mock_st):
 
 # --- Test _render_campaign_dashboard ---
 @patch("modules.marketing_analytics.st")
-@patch("modules.marketing_analytics.ui")
+@patch("modules.marketing_analytics.ui.card_metric")
 @patch("modules.marketing_analytics._get_campaign_data_source")
 @patch("modules.marketing_analytics._calculate_channel_metrics")  # Patch the helper function
 def test_render_campaign_dashboard_with_data(
-    mock_calc_metrics, mock_get_data_source, mock_ui, mock_st, sample_campaign_df
+    mock_calc_metrics, mock_get_data_source, mock_card_metric, mock_st, sample_campaign_df
 ):
     """Test _render_campaign_dashboard renders correctly when data is available."""
     mock_get_data_source.return_value = sample_campaign_df
-    mock_st.selectbox.return_value = "All Platforms"  # Mock platform filter
+    mock_st.selectbox.return_value = "All Channels"  # Mock platform filter
     mock_st.date_input.side_effect = [
         sample_campaign_df["Date"].min(),
         sample_campaign_df["Date"].max(),
@@ -165,7 +164,7 @@ def test_render_campaign_dashboard_with_data(
     mock_st.subheader.assert_any_call("📈 Campaign Performance Dashboard")
     mock_st.selectbox.assert_called_once()
     mock_st.date_input.assert_called()  # Twice for start and end
-    mock_ui.card_metric.assert_called()  # Should be called multiple times
+    mock_card_metric.assert_called()  # Should be called multiple times
     mock_st.plotly_chart.assert_called()  # Should be called for trends and breakdown
 
 

@@ -2,6 +2,7 @@
 
 from unittest.mock import patch, MagicMock
 import json
+from modules import agent_logic
 
 # Mock data for testing
 MOCK_NEWS_ITEMS = [
@@ -30,19 +31,24 @@ MOCK_ANALYSIS = {
     ],
 }
 
-# Import the module to be tested
-from modules import agent_logic
 
-
+@patch("modules.agent_logic.ui.section_header")
 @patch("modules.agent_logic.st")
 @patch("modules.agent_logic.get_news")
 @patch("modules.agent_logic.process_news_sentiment")
 @patch("modules.agent_logic.go")
-def test_render_successful_analysis(mock_go, mock_process, mock_get_news, mock_st):
+def test_render_successful_analysis(mock_go, mock_process, mock_get_news, mock_st, mock_section):
     """Test the successful rendering path of the Agent Logic module."""
     # --- Arrange ---
     # Mock streamlit inputs
     mock_st.text_input.return_value = "AAPL"
+    mock_st.toggle.return_value = False  # Use basic sentiment, not AI
+
+    # Mock columns to prevent unpacking errors (2 calls: input layout and dashboard layout)
+    mock_st.columns.side_effect = [
+        [MagicMock(), MagicMock()],  # Input layout (2 columns)
+        [MagicMock(), MagicMock()],  # Dashboard layout (2 columns)
+    ]
 
     # Mock backend functions
     mock_get_news.return_value = MOCK_NEWS_ITEMS
@@ -57,7 +63,9 @@ def test_render_successful_analysis(mock_go, mock_process, mock_get_news, mock_s
 
     # --- Assert ---
     # Check if UI components are called
-    mock_st.title.assert_called_with("🤖 Agent Logic: Sentiment Scout")
+    mock_section.assert_called_once_with(
+        "Agent Logic: Sentiment Scout", "AI-Powered Market Sentiment Analysis"
+    )
     mock_st.text_input.assert_called_with("Analyze Ticker", value="AAPL", max_chars=5)
 
     # Check if backend functions are called correctly
@@ -68,20 +76,25 @@ def test_render_successful_analysis(mock_go, mock_process, mock_get_news, mock_s
     mock_st.plotly_chart.assert_called_once_with(mock_figure, use_container_width=True)
     # Check that one of the key verdict components was called
     mock_st.markdown.assert_any_call("## Positive")
-    mock_st.expander.assert_called_once()  # Check that the news feed is rendered
+    mock_st.expander.assert_called()  # Check that news feed expanders are called
 
     # Ensure no error/warning messages are shown
     mock_st.warning.assert_not_called()
     mock_st.error.assert_not_called()
 
 
+@patch("modules.agent_logic.ui.section_header")
 @patch("modules.agent_logic.st")
 @patch("modules.agent_logic.get_news")
 @patch("modules.agent_logic.process_news_sentiment")
-def test_render_no_news_found(mock_process, mock_get_news, mock_st):
+def test_render_no_news_found(mock_process, mock_get_news, mock_st, mock_section):
     """Test the case where no news is found for a ticker."""
     # --- Arrange ---
     mock_st.text_input.return_value = "FAILTICKER"
+
+    # Mock columns for input layout
+    mock_st.columns.return_value = [MagicMock(), MagicMock()]
+
     mock_get_news.return_value = []  # No news
 
     # --- Act ---
@@ -97,12 +110,16 @@ def test_render_no_news_found(mock_process, mock_get_news, mock_st):
     mock_st.expander.assert_not_called()
 
 
+@patch("modules.agent_logic.ui.section_header")
 @patch("modules.agent_logic.st")
 @patch("modules.agent_logic.get_news")
-def test_render_no_ticker_entered(mock_get_news, mock_st):
+def test_render_no_ticker_entered(mock_get_news, mock_st, mock_section):
     """Test the case where no ticker is entered."""
     # --- Arrange ---
     mock_st.text_input.return_value = ""  # Empty input
+
+    # Mock columns for input layout
+    mock_st.columns.return_value = [MagicMock(), MagicMock()]
 
     # --- Act ---
     agent_logic.render()
@@ -114,12 +131,17 @@ def test_render_no_ticker_entered(mock_get_news, mock_st):
     mock_get_news.assert_not_called()
 
 
+@patch("modules.agent_logic.ui.section_header")
 @patch("modules.agent_logic.st")
 @patch("modules.agent_logic.get_news")
-def test_render_handles_exception(mock_get_news, mock_st):
+def test_render_handles_exception(mock_get_news, mock_st, mock_section):
     """Test that errors during data fetching are handled gracefully."""
     # --- Arrange ---
     mock_st.text_input.return_value = "AAPL"
+
+    # Mock columns for input layout
+    mock_st.columns.return_value = [MagicMock(), MagicMock()]
+
     mock_get_news.side_effect = Exception("Network Error")
 
     # --- Act ---
