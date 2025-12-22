@@ -102,8 +102,9 @@ class TestMarginHunterCalculations:
 class TestMarginHunterRenderFunction:
     """Test the main render function with mocked Streamlit."""
 
+    @patch("modules.margin_hunter.ui.section_header")
     @patch("modules.margin_hunter.st")
-    def test_render_success_with_valid_inputs(self, mock_st):
+    def test_render_success_with_valid_inputs(self, mock_st, mock_section):
         """Test successful render with valid inputs."""
         from modules import margin_hunter
 
@@ -125,7 +126,7 @@ class TestMarginHunterRenderFunction:
         margin_hunter.render()
 
         # Assertions
-        mock_st.title.assert_called_once_with("💰 Margin Hunter")
+        mock_section.assert_called_once_with("Margin Hunter", "Break-Even & Profit Analysis")
         mock_st.error.assert_not_called()  # No errors should be shown
 
     @patch("modules.margin_hunter.st")

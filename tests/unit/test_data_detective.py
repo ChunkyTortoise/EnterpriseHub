@@ -555,7 +555,7 @@ class TestNewFeatures:
             (c for c in strong_corrs if c["col1"] == "col1" and c["col2"] == "col3"), None
         )
         assert neg_corr is not None
-        assert abs(pos_corr["correlation"] - (-1.0)) < 0.001
+        assert abs(neg_corr["correlation"] - (-1.0)) < 0.001
 
     def test_no_strong_correlations(self, df_no_correlation):
         """Test with data that has no strong correlations."""

@@ -1,0 +1,1485 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.0, pytest-7.4.3, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.13/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /Users/Cave/Desktop/enterprise-hub/EnterpriseHub
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.12.0, cov-4.1.0, mock-3.12.0
+collecting ... collected 313 items
+
+tests/integration/test_data_loader.py::TestGetStockData::test_get_stock_data_validates_empty_ticker PASSED [  0%]
+tests/integration/test_data_loader.py::TestGetStockData::test_get_stock_data_strips_whitespace PASSED [  0%]
+tests/integration/test_data_loader.py::TestGetStockData::test_get_stock_data_raises_on_empty_dataframe PASSED [  0%]
+tests/integration/test_data_loader.py::TestGetStockData::test_get_stock_data_handles_api_error PASSED [  1%]
+tests/integration/test_data_loader.py::TestGetStockData::test_get_stock_data_success PASSED [  1%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_handles_none PASSED [  1%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_handles_empty_df PASSED [  2%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_adds_ma20 PASSED [  2%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_adds_rsi PASSED [  2%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_adds_macd PASSED [  3%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_handles_multiindex PASSED [  3%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_raises_on_missing_columns PASSED [  3%]
+tests/unit/test_agent_logic.py::test_render_successful_analysis FAILED   [  4%]
+tests/unit/test_agent_logic.py::test_render_no_news_found FAILED         [  4%]
+tests/unit/test_agent_logic.py::test_render_no_ticker_entered FAILED     [  4%]
+tests/unit/test_agent_logic.py::test_render_handles_exception FAILED     [  5%]
+tests/unit/test_agent_logic.py::TestClaudeSentiment::test_get_api_key_toggle_shown PASSED [  5%]
+tests/unit/test_agent_logic.py::TestClaudeSentiment::test_no_api_key_caption_shown PASSED [  5%]
+tests/unit/test_agent_logic.py::TestClaudeSentiment::test_get_api_key_from_env PASSED [  6%]
+tests/unit/test_agent_logic.py::TestSentimentAnalyzerClaude::test_analyze_sentiment_with_claude_success PASSED [  6%]
+tests/unit/test_agent_logic.py::TestSentimentAnalyzerClaude::test_analyze_sentiment_with_claude_fallback PASSED [  6%]
+tests/unit/test_agent_logic.py::TestSentimentAnalyzerClaude::test_analyze_sentiment_with_claude_no_news PASSED [  7%]
+tests/unit/test_agent_logic.py::TestSentimentAnalyzerClaude::test_analyze_sentiment_with_claude_not_available PASSED [  7%]
+tests/unit/test_content_engine.py::TestContentEngineTemplates::test_all_templates_exist PASSED [  7%]
+tests/unit/test_content_engine.py::TestContentEngineTemplates::test_templates_have_required_fields PASSED [  7%]
+tests/unit/test_content_engine.py::TestContentEngineTemplates::test_all_tones_exist PASSED [  8%]
+tests/unit/test_content_engine.py::TestContentEngineTemplates::test_tones_have_instructions PASSED [  8%]
+tests/unit/test_content_engine.py::TestContentEngineAPIKeyHandling::test_get_api_key_from_env PASSED [  8%]
+tests/unit/test_content_engine.py::TestContentEngineAPIKeyHandling::test_get_api_key_from_session_state PASSED [  9%]
+tests/unit/test_content_engine.py::TestContentEngineAPIKeyHandling::test_get_api_key_returns_none_when_missing PASSED [  9%]
+tests/unit/test_content_engine.py::TestContentEngineGeneration::test_generate_post_success PASSED [  9%]
+tests/unit/test_content_engine.py::TestContentEngineGeneration::test_generate_post_api_error PASSED [ 10%]
+tests/unit/test_content_engine.py::TestContentEngineGeneration::test_generate_post_with_optional_params PASSED [ 10%]
+tests/unit/test_content_engine.py::TestContentEnginePromptConstruction::test_prompt_includes_template_prefix PASSED [ 10%]
+tests/unit/test_content_engine.py::TestContentEnginePromptConstruction::test_prompt_includes_tone_instructions PASSED [ 11%]
+tests/unit/test_content_engine.py::TestContentEngineImportSafety::test_anthropic_available_flag PASSED [ 11%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_generate_post_with_empty_keywords PASSED [ 11%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_generate_post_with_whitespace_only_keywords PASSED [ 12%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_generate_post_with_very_long_topic PASSED [ 12%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_generate_post_with_special_characters PASSED [ 12%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_validate_template_and_tone_invalid_template PASSED [ 13%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_validate_template_and_tone_invalid_tone PASSED [ 13%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_validate_template_and_tone_both_invalid PASSED [ 13%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_generate_post_with_empty_api_key PASSED [ 14%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_generate_post_with_whitespace_api_key PASSED [ 14%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_generate_post_with_empty_topic PASSED [ 14%]
+tests/unit/test_content_engine.py::TestContentEngineEdgeCases::test_build_prompt_structure PASSED [ 15%]
+tests/unit/test_content_engine.py::TestContentEngineRateLimiting::test_retry_on_rate_limit_success_after_retry PASSED [ 15%]
+tests/unit/test_content_engine.py::TestContentEngineRateLimiting::test_retry_exhausted_on_rate_limit PASSED [ 15%]
+tests/unit/test_content_engine.py::TestContentEngineRateLimiting::test_exponential_backoff_delays PASSED [ 15%]
+tests/unit/test_content_engine.py::TestContentEngineMalformedResponses::test_api_returns_empty_content_list PASSED [ 16%]
+tests/unit/test_content_engine.py::TestContentEngineMalformedResponses::test_api_returns_none_content PASSED [ 16%]
+tests/unit/test_content_engine.py::TestContentEngineMalformedResponses::test_api_returns_malformed_content_object PASSED [ 16%]
+tests/unit/test_content_engine.py::TestContentEngineMalformedResponses::test_api_returns_empty_text PASSED [ 17%]
+tests/unit/test_content_engine.py::TestContentEngineMalformedResponses::test_api_returns_whitespace_only_text PASSED [ 17%]
+tests/unit/test_content_engine.py::TestContentEngineNetworkFailures::test_connection_error_with_retry PASSED [ 17%]
+tests/unit/test_content_engine.py::TestContentEngineNetworkFailures::test_timeout_error_with_retry PASSED [ 18%]
+tests/unit/test_content_engine.py::TestContentEngineNetworkFailures::test_connection_error_exhausts_retries PASSED [ 18%]
+tests/unit/test_content_engine.py::TestContentEngineNetworkFailures::test_authentication_error_no_retry PASSED [ 18%]
+tests/unit/test_content_engine.py::TestContentEngineAPIKeyValidation::test_get_api_key_with_invalid_format_from_env PASSED [ 19%]
+tests/unit/test_content_engine.py::TestContentEngineAPIKeyValidation::test_get_api_key_with_valid_format PASSED [ 19%]
+tests/unit/test_content_engine.py::TestContentEngineIntegration::test_real_api_call SKIPPED [ 19%]
+tests/unit/test_data_detective.py::TestDataProfiling::test_prepare_data_summary_basic PASSED [ 20%]
+tests/unit/test_data_detective.py::TestDataProfiling::test_prepare_data_summary_with_sample PASSED [ 20%]
+tests/unit/test_data_detective.py::TestDataProfiling::test_prepare_data_summary_handles_nulls PASSED [ 20%]
+tests/unit/test_data_detective.py::TestQualityAssessment::test_assess_clean_data PASSED [ 21%]
+tests/unit/test_data_detective.py::TestQualityAssessment::test_assess_missing_values PASSED [ 21%]
+tests/unit/test_data_detective.py::TestQualityAssessment::test_assess_duplicates PASSED [ 21%]
+tests/unit/test_data_detective.py::TestQualityAssessment::test_assess_outliers PASSED [ 22%]
+tests/unit/test_data_detective.py::TestQualityAssessment::test_quality_actions_available PASSED [ 22%]
+tests/unit/test_data_detective.py::TestQualityAssessment::test_quality_action_execution PASSED [ 22%]
+tests/unit/test_data_detective.py::TestAIInsights::test_generate_insights_with_valid_key PASSED [ 23%]
+tests/unit/test_data_detective.py::TestAIInsights::test_generate_insights_with_invalid_key PASSED [ 23%]
+tests/unit/test_data_detective.py::TestAIInsights::test_generate_insights_handles_empty_response PASSED [ 23%]
+tests/unit/test_data_detective.py::TestNaturalLanguageQueries::test_process_nlq_with_valid_query PASSED [ 23%]
+tests/unit/test_data_detective.py::TestNaturalLanguageQueries::test_process_nlq_with_error PASSED [ 24%]
+tests/unit/test_data_detective.py::TestModuleImports::test_module_imports_successfully PASSED [ 24%]
+tests/unit/test_data_detective.py::TestModuleImports::test_render_function_exists PASSED [ 24%]
+tests/unit/test_data_detective.py::TestModuleImports::test_required_functions_exist PASSED [ 25%]
+tests/unit/test_data_detective.py::TestConstants::test_constants_defined PASSED [ 25%]
+tests/unit/test_data_detective.py::TestConstants::test_anthropic_available_flag PASSED [ 25%]
+tests/unit/test_data_detective.py::TestEdgeCases::test_empty_dataframe PASSED [ 26%]
+tests/unit/test_data_detective.py::TestEdgeCases::test_single_column_dataframe PASSED [ 26%]
+tests/unit/test_data_detective.py::TestEdgeCases::test_all_null_column PASSED [ 26%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_correlation_matrix_calculated_correctly PASSED [ 27%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_correlation_with_multiple_numeric_columns PASSED [ 27%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_correlation_with_one_numeric_column PASSED [ 27%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_strong_correlation_detection FAILED [ 28%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_no_strong_correlations PASSED [ 28%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_correlation_with_all_zeros PASSED [ 28%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_perfect_correlation_detection PASSED [ 29%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_csv_file_reading PASSED [ 29%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_xlsx_file_reading_with_openpyxl PASSED [ 29%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_xls_file_reading FAILED [ 30%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_file_extension_detection_csv PASSED [ 30%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_file_extension_detection_xlsx PASSED [ 30%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_file_extension_detection_xls PASSED [ 30%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_file_extension_detection_uppercase PASSED [ 31%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_file_extension_detection_mixed_case PASSED [ 31%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_csv_vs_excel_data_equivalence PASSED [ 31%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_excel_file_with_multiple_sheets PASSED [ 32%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_excel_file_with_empty_cells PASSED [ 32%]
+tests/unit/test_data_detective.py::TestNewFeatures::test_unsupported_file_extension PASSED [ 32%]
+tests/unit/test_data_source_faker.py::test_generate_campaign_data_structure PASSED [ 33%]
+tests/unit/test_data_source_faker.py::test_generate_campaign_data_platforms PASSED [ 33%]
+tests/unit/test_data_source_faker.py::test_generate_campaign_data_date_range PASSED [ 33%]
+tests/unit/test_data_source_faker.py::test_generate_campaign_data_values_plausibility PASSED [ 34%]
+tests/unit/test_data_source_faker.py::test_generate_campaign_data_output_length PASSED [ 34%]
+tests/unit/test_data_source_faker.py::test_generate_campaign_data_no_negative_values PASSED [ 34%]
+tests/unit/test_design_system.py::TestDesignSystemModule::test_render_function_exists FAILED [ 35%]
+tests/unit/test_design_system.py::TestDesignSystemModule::test_module_imports PASSED [ 35%]
+tests/unit/test_design_system.py::TestDesignSystemModule::test_render_function_signature PASSED [ 35%]
+tests/unit/test_design_system.py::TestColorPaletteRendering::test_render_color_palette_light_theme PASSED [ 36%]
+tests/unit/test_design_system.py::TestColorPaletteRendering::test_render_color_palette_dark_theme PASSED [ 36%]
+tests/unit/test_design_system.py::TestColorPaletteRendering::test_render_color_swatch PASSED [ 36%]
+tests/unit/test_design_system.py::TestTabRenderFunctions::test_render_colors_tab FAILED [ 37%]
+tests/unit/test_design_system.py::TestTabRenderFunctions::test_render_typography_tab PASSED [ 37%]
+tests/unit/test_design_system.py::TestTabRenderFunctions::test_render_components_tab FAILED [ 37%]
+tests/unit/test_design_system.py::TestTabRenderFunctions::test_render_interactive_tab FAILED [ 38%]
+tests/unit/test_design_system.py::TestTabRenderFunctions::test_render_patterns_tab FAILED [ 38%]
+tests/unit/test_design_system.py::TestColorSwatchLogic::test_color_swatch_text_contrast_light_theme PASSED [ 38%]
+tests/unit/test_design_system.py::TestColorSwatchLogic::test_color_swatch_text_contrast_dark_theme PASSED [ 38%]
+tests/unit/test_design_system.py::TestDesignSystemIntegration::test_imports_ui_components PASSED [ 39%]
+tests/unit/test_design_system.py::TestDesignSystemIntegration::test_imports_ui_functions PASSED [ 39%]
+tests/unit/test_design_system.py::TestDesignSystemDictStructure::test_light_theme_has_all_colors PASSED [ 39%]
+tests/unit/test_design_system.py::TestDesignSystemDictStructure::test_dark_theme_has_all_colors PASSED [ 40%]
+tests/unit/test_design_system.py::TestDesignSystemDictStructure::test_color_values_are_hex_codes PASSED [ 40%]
+tests/unit/test_financial_analyst.py::TestFinancialAnalystRender::test_render_with_valid_ticker FAILED [ 40%]
+tests/unit/test_financial_analyst.py::TestFinancialAnalystRender::test_render_with_empty_ticker PASSED [ 41%]
+tests/unit/test_financial_analyst.py::TestFinancialAnalystRender::test_render_handles_data_fetch_error PASSED [ 41%]
+tests/unit/test_financial_analyst.py::TestFinancialAnalystRender::test_render_handles_unexpected_exception PASSED [ 41%]
+tests/unit/test_financial_analyst.py::TestFetchAndDisplayData::test_fetch_and_display_success PASSED [ 42%]
+tests/unit/test_financial_analyst.py::TestFetchAndDisplayData::test_fetch_raises_error_on_no_info PASSED [ 42%]
+tests/unit/test_financial_analyst.py::TestFetchAndDisplayData::test_fetch_raises_error_on_no_financials PASSED [ 42%]
+tests/unit/test_financial_analyst.py::TestDisplayHeader::test_display_header_with_full_info PASSED [ 43%]
+tests/unit/test_financial_analyst.py::TestDisplayHeader::test_display_header_without_summary PASSED [ 43%]
+tests/unit/test_financial_analyst.py::TestDisplayKeyMetrics::test_display_key_metrics_with_valid_data PASSED [ 43%]
+tests/unit/test_financial_analyst.py::TestDisplayKeyMetrics::test_display_key_metrics_with_missing_data PASSED [ 44%]
+tests/unit/test_financial_analyst.py::TestFinancialAnalystEdgeCases::test_lowercase_ticker_converted_to_uppercase PASSED [ 44%]
+tests/unit/test_financial_analyst.py::TestFinancialAnalystEdgeCases::test_market_cap_formatting PASSED [ 44%]
+tests/unit/test_financial_analyst.py::TestFinancialAnalystEdgeCases::test_eps_formatting PASSED [ 45%]
+tests/unit/test_financial_analyst.py::TestFinancialAnalystEdgeCases::test_pe_ratio_formatting PASSED [ 45%]
+tests/unit/test_financial_analyst.py::TestAIInsights::test_display_ai_insights_enabled PASSED [ 45%]
+tests/unit/test_financial_analyst.py::TestAIInsights::test_display_ai_insights_disabled PASSED [ 46%]
+tests/unit/test_financial_analyst.py::TestAIInsights::test_build_financial_summary PASSED [ 46%]
+tests/unit/test_financial_analyst.py::TestAIInsights::test_generate_financial_insights_success PASSED [ 46%]
+tests/unit/test_financial_analyst.py::TestAIInsights::test_get_api_key_from_env PASSED [ 46%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_contribution_margin_calculation PASSED [ 47%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_contribution_margin_ratio_calculation PASSED [ 47%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_break_even_units_calculation PASSED [ 47%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_break_even_revenue_calculation PASSED [ 48%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_target_units_calculation PASSED [ 48%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_margin_of_safety_calculation PASSED [ 48%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_margin_of_safety_percentage PASSED [ 49%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_current_profit_calculation PASSED [ 49%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_operating_leverage_calculation PASSED [ 49%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_zero_contribution_margin_edge_case PASSED [ 50%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_high_fixed_costs_scenario PASSED [ 50%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_low_margin_high_volume_scenario PASSED [ 50%]
+tests/unit/test_margin_hunter.py::TestMarginHunterRenderFunction::test_render_success_with_valid_inputs FAILED [ 51%]
+tests/unit/test_margin_hunter.py::TestMarginHunterRenderFunction::test_render_error_when_price_equals_cost PASSED [ 51%]
+tests/unit/test_margin_hunter.py::TestMarginHunterRenderFunction::test_render_calls_results_with_correct_params PASSED [ 51%]
+tests/unit/test_margin_hunter.py::TestMarginHunterEdgeCases::test_zero_current_sales PASSED [ 52%]
+tests/unit/test_margin_hunter.py::TestMarginHunterEdgeCases::test_negative_profit_scenario PASSED [ 52%]
+tests/unit/test_margin_hunter.py::TestMarginHunterEdgeCases::test_very_small_contribution_margin PASSED [ 52%]
+tests/unit/test_margin_hunter.py::TestMarginHunterEdgeCases::test_zero_fixed_costs PASSED [ 53%]
+tests/unit/test_margin_hunter.py::TestMarginHunterEdgeCases::test_large_numbers PASSED [ 53%]
+tests/unit/test_market_pulse.py::test_import_market_pulse PASSED         [ 53%]
+tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_success_with_valid_ticker FAILED [ 53%]
+tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_warning_on_empty_ticker PASSED [ 54%]
+tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_error_on_no_data PASSED [ 54%]
+tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_handles_invalid_ticker_error PASSED [ 54%]
+tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_handles_data_fetch_error PASSED [ 55%]
+tests/unit/test_market_pulse.py::TestDisplayMetrics::test_display_metrics_calculates_delta FAILED [ 55%]
+tests/unit/test_market_pulse.py::TestCreateTechnicalChart::test_create_chart_returns_figure PASSED [ 55%]
+tests/unit/test_market_pulse.py::TestCreateTechnicalChart::test_chart_has_four_panels PASSED [ 56%]
+tests/unit/test_market_pulse.py::TestCreateTechnicalChart::test_chart_includes_candlestick_trace PASSED [ 56%]
+tests/unit/test_market_pulse.py::TestCreateTechnicalChart::test_chart_includes_volume_bars PASSED [ 56%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_predict_trend_bullish PASSED [ 57%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_predict_trend_bearish PASSED [ 57%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_predict_trend_neutral PASSED [ 57%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_calculate_support_resistance PASSED [ 58%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_display_predictive_indicators FAILED [ 58%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_display_predictive_indicators_error_handling PASSED [ 58%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_predict_trend_reasoning_includes_indicators PASSED [ 59%]
+tests/unit/test_marketing_analytics.py::TestROICalculations::test_roi_profitable_campaign PASSED [ 59%]
+tests/unit/test_marketing_analytics.py::TestROICalculations::test_roi_unprofitable_campaign PASSED [ 59%]
+tests/unit/test_marketing_analytics.py::TestROICalculations::test_roi_breakeven_campaign PASSED [ 60%]
+tests/unit/test_marketing_analytics.py::TestROICalculations::test_roas_calculation PASSED [ 60%]
+tests/unit/test_marketing_analytics.py::TestROICalculations::test_cpa_calculation PASSED [ 60%]
+tests/unit/test_marketing_analytics.py::TestROICalculations::test_zero_spend_edge_case PASSED [ 61%]
+tests/unit/test_marketing_analytics.py::TestROICalculations::test_zero_customers_edge_case PASSED [ 61%]
+tests/unit/test_marketing_analytics.py::TestCustomerMetrics::test_cac_calculation PASSED [ 61%]
+tests/unit/test_marketing_analytics.py::TestCustomerMetrics::test_clv_calculation PASSED [ 61%]
+tests/unit/test_marketing_analytics.py::TestCustomerMetrics::test_clv_cac_ratio_healthy PASSED [ 62%]
+tests/unit/test_marketing_analytics.py::TestCustomerMetrics::test_clv_cac_ratio_acceptable PASSED [ 62%]
+tests/unit/test_marketing_analytics.py::TestCustomerMetrics::test_clv_cac_ratio_poor PASSED [ 62%]
+tests/unit/test_marketing_analytics.py::TestABTestSignificance::test_ab_test_significant_win PASSED [ 63%]
+tests/unit/test_marketing_analytics.py::TestABTestSignificance::test_ab_test_significant_loss PASSED [ 63%]
+tests/unit/test_marketing_analytics.py::TestABTestSignificance::test_ab_test_not_significant PASSED [ 63%]
+tests/unit/test_marketing_analytics.py::TestABTestSignificance::test_ab_test_small_sample_size PASSED [ 64%]
+tests/unit/test_marketing_analytics.py::TestABTestSignificance::test_ab_test_zero_conversions PASSED [ 64%]
+tests/unit/test_marketing_analytics.py::TestABTestSignificance::test_required_sample_size_calculation PASSED [ 64%]
+tests/unit/test_marketing_analytics.py::TestAttributionModeling::test_first_touch_attribution PASSED [ 65%]
+tests/unit/test_marketing_analytics.py::TestAttributionModeling::test_last_touch_attribution PASSED [ 65%]
+tests/unit/test_marketing_analytics.py::TestAttributionModeling::test_linear_attribution PASSED [ 65%]
+tests/unit/test_marketing_analytics.py::TestAttributionModeling::test_time_decay_attribution PASSED [ 66%]
+tests/unit/test_marketing_analytics.py::TestAttributionModeling::test_attribution_all_models_sum_to_one PASSED [ 66%]
+tests/unit/test_marketing_analytics.py::TestDataGeneration::test_generate_campaign_data PASSED [ 66%]
+tests/unit/test_marketing_analytics.py::TestDataGeneration::test_generate_channel_breakdown PASSED [ 67%]
+tests/unit/test_marketing_analytics.py::TestDataGeneration::test_generate_trend_data PASSED [ 67%]
+tests/unit/test_marketing_analytics.py::TestDataGeneration::test_generate_cohort_data PASSED [ 67%]
+tests/unit/test_marketing_analytics.py::TestDataGeneration::test_generate_journey_data PASSED [ 68%]
+tests/unit/test_marketing_analytics.py::TestReportGeneration::test_generate_campaign_performance_report PASSED [ 68%]
+tests/unit/test_marketing_analytics.py::TestReportGeneration::test_generate_customer_metrics_report PASSED [ 68%]
+tests/unit/test_marketing_analytics.py::TestReportGeneration::test_generate_ab_test_report PASSED [ 69%]
+tests/unit/test_marketing_analytics.py::TestReportGeneration::test_generate_attribution_report PASSED [ 69%]
+tests/unit/test_marketing_analytics.py::TestModuleImports::test_module_imports_successfully PASSED [ 69%]
+tests/unit/test_marketing_analytics.py::TestModuleImports::test_render_function_exists PASSED [ 69%]
+tests/unit/test_marketing_analytics.py::TestModuleImports::test_required_functions_exist PASSED [ 70%]
+tests/unit/test_marketing_analytics.py::TestConstants::test_constants_defined PASSED [ 70%]
+tests/unit/test_marketing_analytics.py::TestConstants::test_attribution_models_list PASSED [ 70%]
+tests/unit/test_marketing_analytics.py::TestEdgeCases::test_calculate_channel_metrics_all_channels PASSED [ 71%]
+tests/unit/test_marketing_analytics.py::TestEdgeCases::test_calculate_channel_metrics_specific_channel PASSED [ 71%]
+tests/unit/test_marketing_analytics.py::TestEdgeCases::test_ab_test_with_100_percent_conversion PASSED [ 71%]
+tests/unit/test_marketing_analytics.py::TestEdgeCases::test_attribution_single_touchpoint PASSED [ 72%]
+tests/unit/test_marketing_analytics.py::TestEdgeCases::test_empty_campaign_data_handling PASSED [ 72%]
+tests/unit/test_marketing_analytics.py::TestEdgeCases::test_zero_variance_ab_test PASSED [ 72%]
+tests/unit/test_marketing_analytics.py::TestMultiVariantTesting::test_multivariant_three_variants PASSED [ 73%]
+tests/unit/test_marketing_analytics.py::TestMultiVariantTesting::test_multivariant_five_variants PASSED [ 73%]
+tests/unit/test_marketing_analytics.py::TestMultiVariantTesting::test_multivariant_ten_variants PASSED [ 73%]
+tests/unit/test_marketing_analytics.py::TestMultiVariantTesting::test_multivariant_significant_difference PASSED [ 74%]
+tests/unit/test_marketing_analytics.py::TestMultiVariantTesting::test_multivariant_no_significant_difference PASSED [ 74%]
+tests/unit/test_marketing_analytics.py::TestMultiVariantTesting::test_multivariant_best_variant_identification PASSED [ 74%]
+tests/unit/test_marketing_analytics.py::TestMultiVariantTesting::test_multivariant_all_same_conversion_rates PASSED [ 75%]
+tests/unit/test_marketing_analytics.py::TestMultiVariantTesting::test_multivariant_one_dominant_winner PASSED [ 75%]
+tests/unit/test_marketing_analytics.py::TestMultiVariantTesting::test_multivariant_chi_square_statistic PASSED [ 75%]
+tests/unit/test_marketing_analytics.py::TestMultiVariantTesting::test_multivariant_degrees_of_freedom PASSED [ 76%]
+tests/unit/test_marketing_analytics.py::TestPositionBasedAttribution::test_position_based_single_touchpoint PASSED [ 76%]
+tests/unit/test_marketing_analytics.py::TestPositionBasedAttribution::test_position_based_two_touchpoints PASSED [ 76%]
+tests/unit/test_marketing_analytics.py::TestPositionBasedAttribution::test_position_based_three_touchpoints PASSED [ 76%]
+tests/unit/test_marketing_analytics.py::TestPositionBasedAttribution::test_position_based_five_touchpoints PASSED [ 77%]
+tests/unit/test_marketing_analytics.py::TestPositionBasedAttribution::test_position_based_credits_sum_to_one PASSED [ 77%]
+tests/unit/test_marketing_analytics.py::TestPositionBasedAttribution::test_position_based_four_touchpoints PASSED [ 77%]
+tests/unit/test_marketing_analytics.py::TestPositionBasedAttribution::test_position_based_duplicate_channels PASSED [ 78%]
+tests/unit/test_marketing_analytics.py::TestPositionBasedAttribution::test_position_based_vs_other_models PASSED [ 78%]
+tests/unit/test_marketing_analytics_data_integration.py::test_get_campaign_data_source_upload_csv PASSED [ 78%]
+tests/unit/test_marketing_analytics_data_integration.py::test_get_campaign_data_source_upload_excel PASSED [ 79%]
+tests/unit/test_marketing_analytics_data_integration.py::test_get_campaign_data_source_simulate_new_data PASSED [ 79%]
+tests/unit/test_marketing_analytics_data_integration.py::test_get_campaign_data_source_simulate_existing_data FAILED [ 79%]
+tests/unit/test_marketing_analytics_data_integration.py::test_render_campaign_dashboard_with_data FAILED [ 80%]
+tests/unit/test_marketing_analytics_data_integration.py::test_render_campaign_dashboard_no_data PASSED [ 80%]
+tests/unit/test_marketing_analytics_data_integration.py::test_calculate_channel_metrics FAILED [ 80%]
+tests/unit/test_marketing_analytics_data_integration.py::test_get_channel_breakdown FAILED [ 81%]
+tests/unit/test_smart_forecast.py::test_prepare_features PASSED          [ 81%]
+tests/unit/test_smart_forecast.py::test_train_and_predict PASSED         [ 81%]
+tests/unit/test_smart_forecast.py::test_render_flow PASSED               [ 82%]
+tests/unit/test_ui.py::TestSetupInterface::test_setup_interface_injects_css PASSED [ 82%]
+tests/unit/test_ui.py::TestSetupInterface::test_setup_interface_includes_theme_colors PASSED [ 82%]
+tests/unit/test_ui.py::TestCardMetric::test_card_metric_with_all_params PASSED [ 83%]
+tests/unit/test_ui.py::TestCardMetric::test_card_metric_without_optional_params PASSED [ 83%]
+tests/unit/test_ui.py::TestSectionHeader::test_section_header_with_subtitle PASSED [ 83%]
+tests/unit/test_ui.py::TestSectionHeader::test_section_header_without_subtitle PASSED [ 84%]
+tests/unit/test_ui.py::TestStatusBadge::test_status_badge_active PASSED  [ 84%]
+tests/unit/test_ui.py::TestStatusBadge::test_status_badge_new PASSED     [ 84%]
+tests/unit/test_ui.py::TestStatusBadge::test_status_badge_hero PASSED    [ 84%]
+tests/unit/test_ui.py::TestStatusBadge::test_status_badge_pending PASSED [ 85%]
+tests/unit/test_ui.py::TestStatusBadge::test_status_badge_unknown_defaults_to_pending PASSED [ 85%]
+tests/unit/test_ui.py::TestStatusBadge::test_status_badge_case_insensitive PASSED [ 85%]
+tests/unit/test_ui.py::TestFeatureCard::test_feature_card_with_default_status PASSED [ 86%]
+tests/unit/test_ui.py::TestFeatureCard::test_feature_card_with_custom_status PASSED [ 86%]
+tests/unit/test_ui.py::TestFeatureCard::test_feature_card_has_accessibility_attributes PASSED [ 86%]
+tests/unit/test_ui.py::TestHeroSection::test_hero_section_renders_title_and_subtitle PASSED [ 87%]
+tests/unit/test_ui.py::TestHeroSection::test_hero_section_has_semantic_html PASSED [ 87%]
+tests/unit/test_ui.py::TestUseCaseCard::test_use_case_card_renders_content PASSED [ 87%]
+tests/unit/test_ui.py::TestUseCaseCard::test_use_case_card_has_accessibility PASSED [ 88%]
+tests/unit/test_ui.py::TestComparisonTable::test_comparison_table_renders PASSED [ 88%]
+tests/unit/test_ui.py::TestComparisonTable::test_comparison_table_has_all_columns PASSED [ 88%]
+tests/unit/test_ui.py::TestComparisonTable::test_comparison_table_has_accessibility PASSED [ 89%]
+tests/unit/test_ui.py::TestComparisonTable::test_comparison_table_has_comparison_rows PASSED [ 89%]
+tests/unit/test_ui.py::TestFooter::test_footer_renders_copyright PASSED  [ 89%]
+tests/unit/test_ui.py::TestFooter::test_footer_has_links PASSED          [ 90%]
+tests/unit/test_ui.py::TestFooter::test_footer_has_semantic_html PASSED  [ 90%]
+tests/unit/test_ui.py::TestFooter::test_footer_links_have_security_attributes PASSED [ 90%]
+tests/unit/test_ui.py::TestThemeConstants::test_theme_has_all_colors PASSED [ 91%]
+tests/unit/test_ui.py::TestThemeConstants::test_theme_has_font_family PASSED [ 91%]
+tests/unit/test_ui.py::TestThemeConstants::test_theme_colors_are_valid_hex PASSED [ 91%]
+tests/unit/test_ui.py::TestResponsiveDesign::test_css_has_mobile_breakpoints PASSED [ 92%]
+tests/unit/test_ui.py::TestResponsiveDesign::test_css_has_focus_states PASSED [ 92%]
+tests/unit/test_ui.py::TestSkeletonLoader::test_skeleton_loader_card_type PASSED [ 92%]
+tests/unit/test_ui.py::TestSkeletonLoader::test_skeleton_loader_text_type PASSED [ 92%]
+tests/unit/test_ui.py::TestSkeletonLoader::test_skeleton_loader_metric_type PASSED [ 93%]
+tests/unit/test_ui.py::TestSkeletonLoader::test_skeleton_loader_table_type PASSED [ 93%]
+tests/unit/test_ui.py::TestSkeletonLoader::test_skeleton_loader_multiple_count PASSED [ 93%]
+tests/unit/test_ui.py::TestSkeletonLoader::test_skeleton_loader_default_count PASSED [ 94%]
+tests/unit/test_ui.py::TestSkeletonLoader::test_skeleton_loader_invalid_type_defaults_to_card PASSED [ 94%]
+tests/unit/test_ui.py::TestSkeletonLoader::test_skeleton_loader_has_accessibility_attributes PASSED [ 94%]
+tests/unit/test_ui.py::TestToast::test_toast_uses_native_streamlit_when_available PASSED [ 95%]
+tests/unit/test_ui.py::TestToast::test_toast_fallback_success PASSED     [ 95%]
+tests/unit/test_ui.py::TestToast::test_toast_fallback_error PASSED       [ 95%]
+tests/unit/test_ui.py::TestToast::test_toast_fallback_warning PASSED     [ 96%]
+tests/unit/test_ui.py::TestToast::test_toast_fallback_info PASSED        [ 96%]
+tests/unit/test_ui.py::TestToast::test_toast_custom_duration PASSED      [ 96%]
+tests/unit/test_ui.py::TestToast::test_toast_default_duration PASSED     [ 97%]
+tests/unit/test_ui.py::TestToast::test_toast_has_accessibility_attributes PASSED [ 97%]
+tests/unit/test_ui.py::TestToast::test_toast_includes_auto_dismiss_script PASSED [ 97%]
+tests/unit/test_ui.py::TestAnimations::test_css_has_shimmer_animation PASSED [ 98%]
+tests/unit/test_ui.py::TestAnimations::test_css_has_fade_in_animation PASSED [ 98%]
+tests/unit/test_ui.py::TestAnimations::test_css_has_bounce_animation PASSED [ 98%]
+tests/unit/test_ui.py::TestAnimations::test_css_has_slide_animations PASSED [ 99%]
+tests/unit/test_ui.py::TestAnimations::test_css_has_stagger_effect PASSED [ 99%]
+tests/unit/test_ui.py::TestAnimations::test_css_respects_reduced_motion PASSED [ 99%]
+tests/unit/test_ui.py::TestAnimations::test_css_has_smooth_transitions PASSED [100%]
+
+=================================== FAILURES ===================================
+_______________________ test_render_successful_analysis ________________________
+
+mock_go = <MagicMock name='go' id='4813310336'>
+mock_process = <MagicMock name='process_news_sentiment' id='4813307984'>
+mock_get_news = <MagicMock name='get_news' id='4813312016'>
+mock_st = <MagicMock name='st' id='4813312688'>
+
+    @patch("modules.agent_logic.st")
+    @patch("modules.agent_logic.get_news")
+    @patch("modules.agent_logic.process_news_sentiment")
+    @patch("modules.agent_logic.go")
+    def test_render_successful_analysis(mock_go, mock_process, mock_get_news, mock_st):
+        """Test the successful rendering path of the Agent Logic module."""
+        # --- Arrange ---
+        # Mock streamlit inputs
+        mock_st.text_input.return_value = "AAPL"
+
+        # Mock backend functions
+        mock_get_news.return_value = MOCK_NEWS_ITEMS
+        mock_process.return_value = MOCK_ANALYSIS
+
+        # Mock the Figure object
+        mock_figure = MagicMock()
+        mock_go.Figure.return_value = mock_figure
+
+        # --- Act ---
+>       agent_logic.render()
+
+tests/unit/test_agent_logic.py:56:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def render() -> None:
+        """Render the Agent Logic (Sentiment Scout) module."""
+        ui.section_header(
+            "Agent Logic: Sentiment Scout", "AI-Powered Market Sentiment Analysis"
+        )
+
+        # Input
+>       col1, col2 = st.columns([1, 3])
+E       ValueError: not enough values to unpack (expected 2, got 0)
+
+modules/agent_logic.py:34: ValueError
+__________________________ test_render_no_news_found ___________________________
+
+mock_process = <MagicMock name='process_news_sentiment' id='4813317728'>
+mock_get_news = <MagicMock name='get_news' id='4813318064'>
+mock_st = <MagicMock name='st' id='4813318400'>
+
+    @patch("modules.agent_logic.st")
+    @patch("modules.agent_logic.get_news")
+    @patch("modules.agent_logic.process_news_sentiment")
+    def test_render_no_news_found(mock_process, mock_get_news, mock_st):
+        """Test the case where no news is found for a ticker."""
+        # --- Arrange ---
+        mock_st.text_input.return_value = "FAILTICKER"
+        mock_get_news.return_value = []  # No news
+
+        # --- Act ---
+>       agent_logic.render()
+
+tests/unit/test_agent_logic.py:88:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def render() -> None:
+        """Render the Agent Logic (Sentiment Scout) module."""
+        ui.section_header(
+            "Agent Logic: Sentiment Scout", "AI-Powered Market Sentiment Analysis"
+        )
+
+        # Input
+>       col1, col2 = st.columns([1, 3])
+E       ValueError: not enough values to unpack (expected 2, got 0)
+
+modules/agent_logic.py:34: ValueError
+________________________ test_render_no_ticker_entered _________________________
+
+mock_get_news = <MagicMock name='get_news' id='4813314704'>
+mock_st = <MagicMock name='st' id='4813314368'>
+
+    @patch("modules.agent_logic.st")
+    @patch("modules.agent_logic.get_news")
+    def test_render_no_ticker_entered(mock_get_news, mock_st):
+        """Test the case where no ticker is entered."""
+        # --- Arrange ---
+        mock_st.text_input.return_value = ""  # Empty input
+
+        # --- Act ---
+>       agent_logic.render()
+
+tests/unit/test_agent_logic.py:108:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def render() -> None:
+        """Render the Agent Logic (Sentiment Scout) module."""
+        ui.section_header(
+            "Agent Logic: Sentiment Scout", "AI-Powered Market Sentiment Analysis"
+        )
+
+        # Input
+>       col1, col2 = st.columns([1, 3])
+E       ValueError: not enough values to unpack (expected 2, got 0)
+
+modules/agent_logic.py:34: ValueError
+________________________ test_render_handles_exception _________________________
+
+mock_get_news = <MagicMock name='get_news' id='4813313360'>
+mock_st = <MagicMock name='st' id='4813310336'>
+
+    @patch("modules.agent_logic.st")
+    @patch("modules.agent_logic.get_news")
+    def test_render_handles_exception(mock_get_news, mock_st):
+        """Test that errors during data fetching are handled gracefully."""
+        # --- Arrange ---
+        mock_st.text_input.return_value = "AAPL"
+        mock_get_news.side_effect = Exception("Network Error")
+
+        # --- Act ---
+>       agent_logic.render()
+
+tests/unit/test_agent_logic.py:126:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def render() -> None:
+        """Render the Agent Logic (Sentiment Scout) module."""
+        ui.section_header(
+            "Agent Logic: Sentiment Scout", "AI-Powered Market Sentiment Analysis"
+        )
+
+        # Input
+>       col1, col2 = st.columns([1, 3])
+E       ValueError: not enough values to unpack (expected 2, got 0)
+
+modules/agent_logic.py:34: ValueError
+______________ TestNewFeatures.test_strong_correlation_detection _______________
+
+self = <tests.unit.test_data_detective.TestNewFeatures object at 0x11e583bb0>
+df_strong_correlation =    col1  col2  col3
+0     1     2     5
+1     2     4     4
+2     3     6     3
+3     4     8     2
+4     5    10     1
+
+    def test_strong_correlation_detection(self, df_strong_correlation):
+        """Test detection of strong correlations (|r| >= 0.7)."""
+        numeric_cols = df_strong_correlation.select_dtypes(include=[np.number]).columns.tolist()
+        corr_matrix = df_strong_correlation[numeric_cols].corr()
+
+        # Find strong correlations
+        strong_corrs = []
+        for i in range(len(corr_matrix.columns)):
+            for j in range(i + 1, len(corr_matrix.columns)):
+                corr_value = corr_matrix.iloc[i, j]
+                if abs(corr_value) >= 0.7:
+                    strong_corrs.append(
+                        {
+                            "col1": corr_matrix.columns[i],
+                            "col2": corr_matrix.columns[j],
+                            "correlation": corr_value,
+                        }
+                    )
+
+        # Should find 2 strong correlations
+>       assert len(strong_corrs) == 2
+E       AssertionError: assert 3 == 2
+E        +  where 3 = len([{'col1': 'col1', 'col2': 'col2', 'correlation': 1.0}, {'col1': 'col1', 'col2': 'col3', 'correlation': -1.0}, {'col1': 'col2', 'col2': 'col3', 'correlation': -1.0}])
+
+tests/unit/test_data_detective.py:544: AssertionError
+____________________ TestNewFeatures.test_xls_file_reading _____________________
+
+engine_name = 'xlwt'
+
+    def get_writer(engine_name: str) -> ExcelWriter_t:
+        try:
+>           return _writers[engine_name]
+E           KeyError: 'xlwt'
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/io/excel/_util.py:93: KeyError
+
+The above exception was the direct cause of the following exception:
+
+self = <tests.unit.test_data_detective.TestNewFeatures object at 0x11e5173e0>
+sample_excel_data =    col1 col2  col3
+0     1    A  10.5
+1     2    B  20.3
+2     3    C  30.1
+3     4    D  40.7
+4     5    E  50.9
+tmp_path = PosixPath('/private/var/folders/dk/rtn6hxh950v317cq3xxz76r00000gq/T/pytest-of-Cave/pytest-10/test_xls_file_reading0')
+
+    def test_xls_file_reading(self, sample_excel_data, tmp_path):
+        """Test that .xls files are read correctly."""
+        # Create temporary .xls file (using xlwt if available, otherwise skip)
+        try:
+            xls_path = tmp_path / "test_file.xls"
+>           sample_excel_data.to_excel(xls_path, index=False, engine="xlwt")
+
+tests/unit/test_data_detective.py:667:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/util/_decorators.py:333: in wrapper
+    return func(*args, **kwargs)
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/generic.py:2439: in to_excel
+    formatter.write(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/io/formats/excel.py:943: in write
+    writer = ExcelWriter(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/io/excel/_base.py:1146: in __new__
+    cls = get_writer(engine)  # type: ignore[assignment]
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+engine_name = 'xlwt'
+
+    def get_writer(engine_name: str) -> ExcelWriter_t:
+        try:
+            return _writers[engine_name]
+        except KeyError as err:
+>           raise ValueError(f"No Excel writer '{engine_name}'") from err
+E           ValueError: No Excel writer 'xlwt'
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/io/excel/_util.py:95: ValueError
+______________ TestDesignSystemModule.test_render_function_exists ______________
+
+self = <MagicMock name='tabs' id='4821433184'>
+
+    def assert_called_once(self):
+        """assert that the mock was called only once.
+        """
+        if not self.call_count == 1:
+            msg = ("Expected '%s' to have been called once. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'tabs' to have been called once. Called 2 times.
+E           Calls: [call(['🎨 Colors', '📝 Typography', '🧩 Components', '🎯 Interactive Elements', '📋 Patterns']),
+E            call(['Overview', 'Details', 'Settings'])].
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:956: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.unit.test_design_system.TestDesignSystemModule object at 0x11e636990>
+mock_tabs = <MagicMock name='tabs' id='4821433184'>
+mock_markdown = <MagicMock name='markdown' id='4821431840'>
+mock_title = <MagicMock name='title' id='4821431504'>
+
+    @patch("streamlit.title")
+    @patch("streamlit.markdown")
+    @patch("streamlit.tabs")
+    def test_render_function_exists(self, mock_tabs, mock_markdown, mock_title):
+        """Verify render() function exists and is callable."""
+        from modules.design_system import render
+
+        # Mock tabs to return a list of mock contexts
+        mock_tab_contexts = [MagicMock() for _ in range(5)]
+        mock_tabs.return_value = mock_tab_contexts
+
+        # Mock __enter__ and __exit__ for context managers
+        for ctx in mock_tab_contexts:
+            ctx.__enter__ = MagicMock(return_value=ctx)
+            ctx.__exit__ = MagicMock(return_value=False)
+
+        render()
+
+        # Verify title was called
+        mock_title.assert_called_once_with("Design System Gallery")
+
+        # Verify tabs were created with correct labels
+>       mock_tabs.assert_called_once()
+E       AssertionError: Expected 'tabs' to have been called once. Called 2 times.
+E       Calls: [call(['🎨 Colors', '📝 Typography', '🧩 Components', '🎯 Interactive Elements', '📋 Patterns']),
+E        call(['Overview', 'Details', 'Settings'])].
+E
+E       pytest introspection follows:
+E
+E       Args:
+E       assert (['Overview', 'Details', 'Settings'],) == ()
+E         Left contains one more item: ['Overview', 'Details', 'Settings']
+E         Full diff:
+E         - ()
+E         + (['Overview', 'Details', 'Settings'],)
+
+tests/unit/test_design_system.py:39: AssertionError
+________________ TestTabRenderFunctions.test_render_colors_tab _________________
+
+self = <tests.unit.test_design_system.TestTabRenderFunctions object at 0x11e636fd0>
+mock_code = <MagicMock name='code' id='4813313696'>
+mock_columns = <MagicMock name='columns' id='4813323440'>
+mock_markdown = <MagicMock name='markdown' id='4813320416'>
+
+    @patch("streamlit.markdown")
+    @patch("streamlit.columns")
+    @patch("streamlit.code")
+    def test_render_colors_tab(self, mock_code, mock_columns, mock_markdown):
+        """Test colors tab rendering."""
+        from modules.design_system import _render_colors_tab
+
+        # Mock columns
+        mock_col = MagicMock()
+        mock_col.__enter__ = MagicMock(return_value=mock_col)
+        mock_col.__exit__ = MagicMock(return_value=False)
+        mock_columns.return_value = [mock_col] * 5
+
+>       _render_colors_tab()
+
+tests/unit/test_design_system.py:142:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def _render_colors_tab() -> None:
+        """Render the color palette showcase."""
+        st.markdown("## Color System")
+        st.markdown(
+            "All colors meet WCAG AAA compliance standards (7:1+ contrast ratio) for optimal accessibility."
+        )
+
+        # Light Theme
+        st.markdown("---")
+        st.markdown("### ☀️ Light Theme")
+
+        light_colors = ui.LIGHT_THEME
+        _render_color_palette(light_colors, "light")
+
+        # Dark Theme
+        st.markdown("---")
+        st.markdown("### 🌙 Dark Theme")
+
+        dark_colors = ui.DARK_THEME
+        _render_color_palette(dark_colors, "dark")
+
+        # Color Usage Guide
+        st.markdown("---")
+        st.markdown("### 📖 Color Usage Guide")
+
+>       col1, col2 = st.columns(2)
+E       ValueError: too many values to unpack (expected 2)
+
+modules/design_system.py:78: ValueError
+______________ TestTabRenderFunctions.test_render_components_tab _______________
+
+self = <tests.unit.test_design_system.TestTabRenderFunctions object at 0x11e6bc050>
+mock_comparison = <MagicMock name='comparison_table' id='4823046800'>
+mock_header = <MagicMock name='section_header' id='4823047136'>
+mock_badge = <MagicMock name='status_badge' id='4823047472'>
+mock_use_case = <MagicMock name='use_case_card' id='4823047808'>
+mock_feature = <MagicMock name='feature_card' id='4823048144'>
+mock_hero = <MagicMock name='hero_section' id='4823048480'>
+mock_expander = <MagicMock name='expander' id='4823048816'>
+mock_columns = <MagicMock name='columns' id='4823049152'>
+mock_markdown = <MagicMock name='markdown' id='4823049488'>
+
+    @patch("streamlit.markdown")
+    @patch("streamlit.columns")
+    @patch("streamlit.expander")
+    @patch("utils.ui.hero_section")
+    @patch("utils.ui.feature_card")
+    @patch("utils.ui.use_case_card")
+    @patch("utils.ui.status_badge")
+    @patch("utils.ui.section_header")
+    @patch("utils.ui.comparison_table")
+    def test_render_components_tab(
+        self,
+        mock_comparison,
+        mock_header,
+        mock_badge,
+        mock_use_case,
+        mock_feature,
+        mock_hero,
+        mock_expander,
+        mock_columns,
+        mock_markdown,
+    ):
+        """Test components tab rendering."""
+        from modules.design_system import _render_components_tab
+
+        # Mock columns
+        mock_col = MagicMock()
+        mock_col.__enter__ = MagicMock(return_value=mock_col)
+        mock_col.__exit__ = MagicMock(return_value=False)
+        mock_columns.return_value = [mock_col] * 4
+
+        # Mock expander context
+        mock_exp_ctx = MagicMock()
+        mock_exp_ctx.__enter__ = MagicMock(return_value=mock_exp_ctx)
+        mock_exp_ctx.__exit__ = MagicMock(return_value=False)
+        mock_expander.return_value = mock_exp_ctx
+
+        # Mock status_badge to return HTML
+        mock_badge.return_value = "<span>badge</span>"
+
+>       _render_components_tab()
+
+tests/unit/test_design_system.py:204:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def _render_components_tab() -> None:
+        """Render the components showcase."""
+        st.markdown("## Component Library")
+        st.markdown("Pre-built components with consistent styling and behavior.")
+
+        # Hero Section
+        st.markdown("---")
+        st.markdown("### Hero Section")
+        st.markdown("**Usage:** Landing pages, module introductions")
+
+        ui.hero_section(
+            "Welcome to Enterprise Hub",
+            "A production-grade business intelligence platform with 7 mission-critical tools in one unified interface.",
+        )
+
+        with st.expander("View Code"):
+            st.code(
+                """
+    ui.hero_section(
+        "Welcome to Enterprise Hub",
+        "A production-grade business intelligence platform..."
+    )
+            """,
+                language="python",
+            )
+
+        # Feature Cards
+        st.markdown("---")
+        st.markdown("### Feature Cards")
+        st.markdown("**Usage:** Module showcases, feature highlights")
+
+>       col1, col2, col3 = st.columns(3)
+E       ValueError: too many values to unpack (expected 3)
+
+modules/design_system.py:352: ValueError
+______________ TestTabRenderFunctions.test_render_interactive_tab ______________
+
+self = <tests.unit.test_design_system.TestTabRenderFunctions object at 0x11e6bc180>
+mock_metric = <MagicMock name='card_metric' id='4823041760'>
+mock_expander = <MagicMock name='expander' id='4823040752'>
+mock_button = <MagicMock name='button' id='4823045792'>
+mock_columns = <MagicMock name='columns' id='4823051168'>
+mock_markdown = <MagicMock name='markdown' id='4823051504'>
+
+    @patch("streamlit.markdown")
+    @patch("streamlit.columns")
+    @patch("streamlit.button")
+    @patch("streamlit.expander")
+    @patch("utils.ui.card_metric")
+    def test_render_interactive_tab(
+        self, mock_metric, mock_expander, mock_button, mock_columns, mock_markdown
+    ):
+        """Test interactive elements tab rendering."""
+        from modules.design_system import _render_interactive_tab
+
+        # Mock columns
+        mock_col = MagicMock()
+        mock_col.__enter__ = MagicMock(return_value=mock_col)
+        mock_col.__exit__ = MagicMock(return_value=False)
+        mock_columns.return_value = [mock_col] * 4
+
+        # Mock expander
+        mock_exp_ctx = MagicMock()
+        mock_exp_ctx.__enter__ = MagicMock(return_value=mock_exp_ctx)
+        mock_exp_ctx.__exit__ = MagicMock(return_value=False)
+        mock_expander.return_value = mock_exp_ctx
+
+>       _render_interactive_tab()
+
+tests/unit/test_design_system.py:236:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def _render_interactive_tab() -> None:
+        """Render interactive elements showcase."""
+        st.markdown("## Interactive Elements")
+        st.markdown("Buttons, inputs, and interactive components with consistent styling.")
+
+        # Buttons
+        st.markdown("---")
+        st.markdown("### Buttons")
+
+>       col1, col2, col3 = st.columns(3)
+E       ValueError: too many values to unpack (expected 3)
+
+modules/design_system.py:505: ValueError
+_______________ TestTabRenderFunctions.test_render_patterns_tab ________________
+
+self = <tests.unit.test_design_system.TestTabRenderFunctions object at 0x11e643d10>
+mock_expander = <MagicMock name='expander' id='4823054192'>
+mock_tabs = <MagicMock name='tabs' id='4823054528'>
+mock_columns = <MagicMock name='columns' id='4823054864'>
+mock_markdown = <MagicMock name='markdown' id='4823055200'>
+
+    @patch("streamlit.markdown")
+    @patch("streamlit.columns")
+    @patch("streamlit.tabs")
+    @patch("streamlit.expander")
+    def test_render_patterns_tab(self, mock_expander, mock_tabs, mock_columns, mock_markdown):
+        """Test patterns tab rendering."""
+        from modules.design_system import _render_patterns_tab
+
+        # Mock columns
+        mock_col = MagicMock()
+        mock_col.__enter__ = MagicMock(return_value=mock_col)
+        mock_col.__exit__ = MagicMock(return_value=False)
+        mock_columns.return_value = [mock_col] * 3
+
+        # Mock expander
+        mock_exp_ctx = MagicMock()
+        mock_exp_ctx.__enter__ = MagicMock(return_value=mock_exp_ctx)
+        mock_exp_ctx.__exit__ = MagicMock(return_value=False)
+        mock_expander.return_value = mock_exp_ctx
+
+        # Mock tabs
+        mock_tab_ctx = MagicMock()
+        mock_tab_ctx.__enter__ = MagicMock(return_value=mock_tab_ctx)
+        mock_tab_ctx.__exit__ = MagicMock(return_value=False)
+        mock_tabs.return_value = [mock_tab_ctx] * 3
+
+>       _render_patterns_tab()
+
+tests/unit/test_design_system.py:267:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def _render_patterns_tab() -> None:
+        """Render common UI patterns and layouts."""
+        st.markdown("## Common Patterns")
+        st.markdown("Reusable layout patterns and composition examples.")
+
+        # Column Layouts
+        st.markdown("---")
+        st.markdown("### Column Layouts")
+
+        st.markdown("#### Two Column Layout (50/50)")
+>       col1, col2 = st.columns(2)
+E       ValueError: too many values to unpack (expected 2)
+
+modules/design_system.py:647: ValueError
+___________ TestFinancialAnalystRender.test_render_with_valid_ticker ___________
+
+self = <MagicMock name='st.markdown' id='4823046464'>
+args = ('## Financial Analyst',), kwargs = {}
+expected = call('## Financial Analyst'), cause = None, actual = []
+expected_string = "markdown('## Financial Analyst')"
+
+    def assert_any_call(self, /, *args, **kwargs):
+        """assert the mock has been called with the specified arguments.
+
+        The assert passes if the mock has *ever* been called, unlike
+        `assert_called_with` and `assert_called_once_with` that only pass if
+        the call is the most recent one."""
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        cause = expected if isinstance(expected, Exception) else None
+        actual = [self._call_matcher(c) for c in self.call_args_list]
+        if cause or expected not in _AnyComparer(actual):
+            expected_string = self._format_mock_call_signature(args, kwargs)
+>           raise AssertionError(
+                '%s call not found' % expected_string
+            ) from cause
+E           AssertionError: markdown('## Financial Analyst') call not found
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:1048: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.unit.test_financial_analyst.TestFinancialAnalystRender object at 0x11e637b10>
+mock_fetch = <MagicMock name='_fetch_and_display_data' id='4821433520'>
+mock_st = <MagicMock name='st' id='4823053520'>
+
+    @patch("modules.financial_analyst.st")
+    @patch("modules.financial_analyst._fetch_and_display_data")
+    def test_render_with_valid_ticker(self, mock_fetch, mock_st):
+        """Test successful render with valid ticker."""
+        from modules import financial_analyst
+
+        # Mock input
+        mock_st.text_input.return_value = "AAPL"
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+
+        # Call render
+        financial_analyst.render()
+
+        # Assertions
+>       mock_st.markdown.assert_any_call("## Financial Analyst")
+E       AssertionError: markdown('## Financial Analyst') call not found
+
+tests/unit/test_financial_analyst.py:57: AssertionError
+_____ TestMarginHunterRenderFunction.test_render_success_with_valid_inputs _____
+
+self = <MagicMock name='st.title' id='4827225392'>, args = ('💰 Margin Hunter',)
+kwargs = {}, msg = "Expected 'title' to be called once. Called 0 times."
+
+    def assert_called_once_with(self, /, *args, **kwargs):
+        """assert that the mock was called exactly once and that that call was
+        with the specified arguments."""
+        if not self.call_count == 1:
+            msg = ("Expected '%s' to be called once. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'title' to be called once. Called 0 times.
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:988: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.unit.test_margin_hunter.TestMarginHunterRenderFunction object at 0x11e6d8a50>
+mock_st = <MagicMock name='st' id='4827230432'>
+
+    @patch("modules.margin_hunter.st")
+    def test_render_success_with_valid_inputs(self, mock_st):
+        """Test successful render with valid inputs."""
+        from modules import margin_hunter
+
+        # Mock Streamlit inputs
+        mock_st.number_input.side_effect = [
+            50.0,  # unit_price
+            20.0,  # unit_cost
+            5000.0,  # fixed_costs
+            2000.0,  # target_profit
+            250,  # current_sales_units
+        ]
+
+        # Mock columns
+        mock_col1 = MagicMock()
+        mock_col2 = MagicMock()
+        mock_st.columns.return_value = [mock_col1, mock_col2]
+
+        # Call render
+        margin_hunter.render()
+
+        # Assertions
+>       mock_st.title.assert_called_once_with("💰 Margin Hunter")
+E       AssertionError: Expected 'title' to be called once. Called 0 times.
+
+tests/unit/test_margin_hunter.py:128: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2025-12-22 10:56:36,594 - modules.margin_hunter - ERROR - An unexpected error occurred in Margin Hunter: not enough values to unpack (expected 3, got 2)
+Traceback (most recent call last):
+  File "/Users/Cave/Desktop/enterprise-hub/EnterpriseHub/modules/margin_hunter.py", line 79, in render
+    _render_results(
+    ~~~~~~~~~~~~~~~^
+        contribution_margin,
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<13 lines>...
+        target_profit,
+        ^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/Cave/Desktop/enterprise-hub/EnterpriseHub/modules/margin_hunter.py", line 127, in _render_results
+    m1, m2, m3 = st.columns(3)
+    ^^^^^^^^^^
+ValueError: not enough values to unpack (expected 3, got 2)
+------------------------------ Captured log call -------------------------------
+ERROR    modules.margin_hunter:margin_hunter.py:98 An unexpected error occurred in Margin Hunter: not enough values to unpack (expected 3, got 2)
+Traceback (most recent call last):
+  File "/Users/Cave/Desktop/enterprise-hub/EnterpriseHub/modules/margin_hunter.py", line 79, in render
+    _render_results(
+    ~~~~~~~~~~~~~~~^
+        contribution_margin,
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<13 lines>...
+        target_profit,
+        ^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/Cave/Desktop/enterprise-hub/EnterpriseHub/modules/margin_hunter.py", line 127, in _render_results
+    m1, m2, m3 = st.columns(3)
+    ^^^^^^^^^^
+ValueError: not enough values to unpack (expected 3, got 2)
+_________ TestMarketPulseRender.test_render_success_with_valid_ticker __________
+
+self = <MagicMock name='st.title' id='4827202960'>, args = ('📊 Market Pulse',)
+kwargs = {}, msg = "Expected 'title' to be called once. Called 0 times."
+
+    def assert_called_once_with(self, /, *args, **kwargs):
+        """assert that the mock was called exactly once and that that call was
+        with the specified arguments."""
+        if not self.call_count == 1:
+            msg = ("Expected '%s' to be called once. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'title' to be called once. Called 0 times.
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:988: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.unit.test_market_pulse.TestMarketPulseRender object at 0x11e6d9310>
+mock_display_metrics = <MagicMock name='_display_metrics' id='4823049152'>
+mock_create_chart = <MagicMock name='_create_technical_chart' id='4823048816'>
+mock_calc_indicators = <MagicMock name='calculate_indicators' id='4823049824'>
+mock_get_stock = <MagicMock name='get_stock_data' id='4823050832'>
+mock_st = <MagicMock name='st' id='4823049488'>
+
+    @patch("modules.market_pulse.st")
+    @patch("modules.market_pulse.get_stock_data")
+    @patch("modules.market_pulse.calculate_indicators")
+    @patch("modules.market_pulse._create_technical_chart")
+    @patch("modules.market_pulse._display_metrics")
+    def test_render_success_with_valid_ticker(
+        self, mock_display_metrics, mock_create_chart, mock_calc_indicators, mock_get_stock, mock_st
+    ):
+        """Test successful render with valid ticker."""
+        from modules import market_pulse
+
+        # Mock user inputs
+        mock_st.text_input.return_value = "SPY"
+        mock_st.selectbox.side_effect = ["1y", "1d"]
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+
+        # Mock data
+        mock_df = create_mock_stock_data()
+        mock_get_stock.return_value = mock_df
+        mock_calc_indicators.return_value = mock_df
+        mock_create_chart.return_value = MagicMock()
+
+        # Call render
+        market_pulse.render()
+
+        # Assertions
+>       mock_st.title.assert_called_once_with("📊 Market Pulse")
+E       AssertionError: Expected 'title' to be called once. Called 0 times.
+
+tests/unit/test_market_pulse.py:64: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2025-12-22 10:56:36,755 - modules.market_pulse - INFO - User requested data for SPY
+2025-12-22 10:56:36,757 - modules.market_pulse - ERROR - Error displaying predictive indicators: not enough values to unpack (expected 3, got 2)
+2025-12-22 10:56:36,758 - modules.market_pulse - INFO - Successfully displayed chart for SPY
+------------------------------ Captured log call -------------------------------
+INFO     modules.market_pulse:market_pulse.py:47 User requested data for SPY
+ERROR    modules.market_pulse:market_pulse.py:174 Error displaying predictive indicators: not enough values to unpack (expected 3, got 2)
+INFO     modules.market_pulse:market_pulse.py:69 Successfully displayed chart for SPY
+___________ TestDisplayMetrics.test_display_metrics_calculates_delta ___________
+
+self = <MagicMock name='st.metric' id='4823749296'>
+
+    def assert_called_once(self):
+        """assert that the mock was called only once.
+        """
+        if not self.call_count == 1:
+            msg = ("Expected '%s' to have been called once. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'metric' to have been called once. Called 0 times.
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:956: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.unit.test_market_pulse.TestDisplayMetrics object at 0x11e6d91d0>
+mock_st = <MagicMock name='st' id='4823748624'>
+
+    @patch("modules.market_pulse.st")
+    def test_display_metrics_calculates_delta(self, mock_st):
+        """Test metrics display calculates price delta correctly."""
+        from modules.market_pulse import _display_metrics
+
+        # Create test data
+        df = create_mock_stock_data(days=5)
+        df.iloc[-1, df.columns.get_loc("Close")] = 105.0
+        df.iloc[-2, df.columns.get_loc("Close")] = 100.0
+
+        # Call function
+        _display_metrics(df, "SPY")
+
+        # Verify metric was called
+>       mock_st.metric.assert_called_once()
+E       AssertionError: Expected 'metric' to have been called once. Called 0 times.
+
+tests/unit/test_market_pulse.py:169: AssertionError
+_________ TestPredictiveIndicators.test_display_predictive_indicators __________
+
+self = <tests.unit.test_market_pulse.TestPredictiveIndicators object at 0x11e702b10>
+mock_st = <MagicMock name='st' id='4842104416'>
+
+    @patch("modules.market_pulse.st")
+    def test_display_predictive_indicators(self, mock_st):
+        """Test predictive indicators display."""
+        from modules.market_pulse import _display_predictive_indicators
+
+        # Create test data with known values
+        df = create_mock_stock_data()
+        df.iloc[-1, df.columns.get_loc("RSI")] = 65.0
+        df.iloc[-1, df.columns.get_loc("MACD")] = 1.5
+        df.iloc[-1, df.columns.get_loc("Signal")] = 1.0
+
+        # Mock columns
+        mock_cols = [MagicMock() for _ in range(3)]
+        mock_st.columns.return_value = mock_cols
+
+        # Call function
+        _display_predictive_indicators(df, "SPY")
+
+        # Verify markdown and metrics were called
+        assert mock_st.markdown.called
+        # At least one metric should be called (support/resistance)
+>       assert any(col.metric.called for col in mock_cols)
+E       assert False
+E        +  where False = any(<generator object TestPredictiveIndicators.test_display_predictive_indicators.<locals>.<genexpr> at 0x120a601c0>)
+
+tests/unit/test_market_pulse.py:330: AssertionError
+_____________ test_get_campaign_data_source_simulate_existing_data _____________
+
+mock_st = <MagicMock name='st' id='4843302128'>
+
+    @patch("modules.marketing_analytics.st")
+    def test_get_campaign_data_source_simulate_existing_data(mock_st):
+        """Test _get_campaign_data_source when 'Simulate Marketing Data' is selected and existing data is used."""
+        mock_st.radio.return_value = "Simulate Marketing Data"
+        # Pre-populate session state
+        mock_st.session_state = {
+            "simulated_campaign_data": generate_campaign_data(platform="Meta Ads", days=3)
+        }
+
+        # Configure mock_st.columns for this test
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+
+>       df = marketing_analytics._get_campaign_data_source()
+
+tests/unit/test_marketing_analytics_data_integration.py:116:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+modules/marketing_analytics.py:1236: in _get_campaign_data_source
+    simulated_data = generate_campaign_data(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+platform = <MagicMock name='st.selectbox()' id='4843300112'>
+start_date = <MagicMock name='st.date_input().strftime()' id='4843290704'>
+days = <MagicMock name='st.slider()' id='4843292384'>, base_impressions = 100000
+base_cpc = 0.5, base_ctr = 0.01, base_conversion_rate = 0.02
+conversion_value = 50.0
+
+    def generate_campaign_data(
+        platform: str,
+        start_date: str = "2023-01-01",
+        days: int = 90,
+        base_impressions: int = 100000,
+        base_cpc: float = 0.5, # Cost Per Click
+        base_ctr: float = 0.01, # Click Through Rate
+        base_conversion_rate: float = 0.02,
+        conversion_value: float = 50.0
+    ) -> pd.DataFrame:
+        """
+        Generates simulated marketing campaign data for a given platform.
+
+        Args:
+            platform (str): 'Google Ads' or 'Meta Ads'.
+            start_date (str): Start date of the campaign data (YYYY-MM-DD).
+            days (int): Number of days to generate data for.
+            base_impressions (int): Average daily impressions.
+            base_cpc (float): Average cost per click.
+            base_ctr (float): Average click-through rate.
+            base_conversion_rate (float): Average conversion rate.
+            conversion_value (float): Average value per conversion.
+
+        Returns:
+            pd.DataFrame: Simulated campaign data.
+        """
+>       dates = [datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=i) for i in range(days)]
+E       TypeError: strptime() argument 1 must be str, not MagicMock
+
+utils/data_source_faker.py:38: TypeError
+___________________ test_render_campaign_dashboard_with_data ___________________
+
+self = <MagicMock name='ui.card_metric' id='4844002272'>
+
+    def assert_called(self):
+        """assert that the mock was called at least once
+        """
+        if self.call_count == 0:
+            msg = ("Expected '%s' to have been called." %
+                   (self._mock_name or 'mock'))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'card_metric' to have been called.
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:946: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+mock_calc_metrics = <MagicMock name='_calculate_channel_metrics' id='4843995216'>
+mock_get_data_source = <MagicMock name='_get_campaign_data_source' id='4843995888'>
+mock_ui = <MagicMock name='ui' id='4843996224'>
+mock_st = <MagicMock name='st' id='4843996560'>
+sample_campaign_df =         Date    Platform  Impressions  ...     CTR  Conversion_Rate  ROAS
+0 2023-01-01  Google Ads       101087  ...  ...         0.0208  1.81
+9 2023-01-10  Google Ads        82167  ...  0.0098           0.0210  2.03
+
+[10 rows x 11 columns]
+
+    @patch("modules.marketing_analytics.st")
+    @patch("modules.marketing_analytics.ui")
+    @patch("modules.marketing_analytics._get_campaign_data_source")
+    @patch("modules.marketing_analytics._calculate_channel_metrics")  # Patch the helper function
+    def test_render_campaign_dashboard_with_data(
+        mock_calc_metrics, mock_get_data_source, mock_ui, mock_st, sample_campaign_df
+    ):
+        """Test _render_campaign_dashboard renders correctly when data is available."""
+        mock_get_data_source.return_value = sample_campaign_df
+        mock_st.selectbox.return_value = "All Platforms"  # Mock platform filter
+        mock_st.date_input.side_effect = [
+            sample_campaign_df["Date"].min(),
+            sample_campaign_df["Date"].max(),
+        ]  # Mock date filters
+
+        # Mock _calculate_channel_metrics to return a plausible dict
+        mock_calc_metrics.return_value = {
+            "spend": 10000,
+            "revenue": 30000,
+            "roi": 3.0,
+            "conversions": 500,
+            "spend_change": 10,
+            "revenue_change": 15,
+            "roi_change": 5,
+            "conversion_change": 8,
+        }
+
+        # Mock st.columns
+        mock_st.columns.side_effect = lambda num_cols: [MagicMock() for _ in range(num_cols)]
+
+        # Mock the Plotly figure methods that are called
+        mock_st.plotly_chart.return_value = None
+
+        marketing_analytics._render_campaign_dashboard()
+
+        mock_get_data_source.assert_called_once()
+        mock_st.subheader.assert_any_call("📈 Campaign Performance Dashboard")
+        mock_st.selectbox.assert_called_once()
+        mock_st.date_input.assert_called()  # Twice for start and end
+>       mock_ui.card_metric.assert_called()  # Should be called multiple times
+E       AssertionError: Expected 'card_metric' to have been called.
+
+tests/unit/test_marketing_analytics_data_integration.py:167: AssertionError
+________________________ test_calculate_channel_metrics ________________________
+
+sample_campaign_df =         Date    Platform  Impressions  ...     CTR  Conversion_Rate  ROAS
+0 2023-01-01  Google Ads        98723  ...  ...         0.0190  1.73
+9 2023-01-10  Google Ads       112103  ...  0.0098           0.0174  1.81
+
+[10 rows x 11 columns]
+
+    def test_calculate_channel_metrics(sample_campaign_df):
+        """Test _calculate_channel_metrics calculates correct values."""
+        metrics = marketing_analytics._calculate_channel_metrics(sample_campaign_df)
+
+        assert isinstance(metrics, dict)
+        assert "spend" in metrics
+        assert "revenue" in metrics
+        assert "roi" in metrics
+        assert "conversions" in metrics
+
+        # Verify calculation logic (sum of sample data)
+        assert metrics["spend"] == sample_campaign_df["Spend"].sum()
+        assert metrics["revenue"] == sample_campaign_df["Revenue"].sum()
+        assert metrics["conversions"] == sample_campaign_df["Conversions"].sum()
+
+        expected_roi = (
+            sample_campaign_df["Revenue"].sum() - sample_campaign_df["Spend"].sum()
+        ) / sample_campaign_df["Spend"].sum()
+>       assert metrics["roi"] == pytest.approx(expected_roi)
+E       assert 106.19437282815827 == 1.0619437282815827 ± 1.1e-06
+E         comparison failed
+E         Obtained: 106.19437282815827
+E         Expected: 1.0619437282815827 ± 1.1e-06
+
+tests/unit/test_marketing_analytics_data_integration.py:206: AssertionError
+__________________________ test_get_channel_breakdown __________________________
+
+self = Index(['date', 'platform', 'impressions', 'clicks', 'spend', 'conversions',
+       'revenue', 'cpc', 'ctr', 'conversion_rate', 'roas'],
+      dtype='object')
+key = 'Platform'
+
+    def get_loc(self, key):
+        """
+        Get integer location, slice or boolean mask for requested label.
+
+        Parameters
+        ----------
+        key : label
+
+        Returns
+        -------
+        int if unique index, slice if monotonic index, else mask
+
+        Examples
+        --------
+        >>> unique_index = pd.Index(list('abc'))
+        >>> unique_index.get_loc('b')
+        1
+
+        >>> monotonic_index = pd.Index(list('abbc'))
+        >>> monotonic_index.get_loc('b')
+        slice(1, 3, None)
+
+        >>> non_monotonic_index = pd.Index(list('abcb'))
+        >>> non_monotonic_index.get_loc('b')
+        array([False,  True, False,  True])
+        """
+        casted_key = self._maybe_cast_indexer(key)
+        try:
+>           return self._engine.get_loc(casted_key)
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py:3812:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+pandas/_libs/index.pyx:167: in pandas._libs.index.IndexEngine.get_loc
+    ???
+pandas/_libs/index.pyx:196: in pandas._libs.index.IndexEngine.get_loc
+    ???
+pandas/_libs/hashtable_class_helper.pxi:7088: in pandas._libs.hashtable.PyObjectHashTable.get_item
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+>   ???
+E   KeyError: 'Platform'
+
+pandas/_libs/hashtable_class_helper.pxi:7096: KeyError
+
+The above exception was the direct cause of the following exception:
+
+sample_campaign_df =         date    platform  impressions  ...     ctr  conversion_rate  roas
+0 2023-01-01  Google Ads        86920  ...  ...         0.0204  2.28
+9 2023-01-10  Google Ads       104812  ...  0.0105           0.0209  1.88
+
+[10 rows x 11 columns]
+
+    def test_get_channel_breakdown(sample_campaign_df):
+        """Test _get_channel_breakdown correctly groups data by platform."""
+        breakdown_df = marketing_analytics._get_channel_breakdown(sample_campaign_df)
+
+        assert isinstance(breakdown_df, pd.DataFrame)
+        assert "channel" in breakdown_df.columns
+        assert "spend" in breakdown_df.columns
+        assert "revenue" in breakdown_df.columns
+        assert "conversions" in breakdown_df.columns
+
+        # Verify grouping
+>       assert len(breakdown_df) == sample_campaign_df["Platform"].nunique()
+
+tests/unit/test_marketing_analytics_data_integration.py:221:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/frame.py:4113: in __getitem__
+    indexer = self.columns.get_loc(key)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Index(['date', 'platform', 'impressions', 'clicks', 'spend', 'conversions',
+       'revenue', 'cpc', 'ctr', 'conversion_rate', 'roas'],
+      dtype='object')
+key = 'Platform'
+
+    def get_loc(self, key):
+        """
+        Get integer location, slice or boolean mask for requested label.
+
+        Parameters
+        ----------
+        key : label
+
+        Returns
+        -------
+        int if unique index, slice if monotonic index, else mask
+
+        Examples
+        --------
+        >>> unique_index = pd.Index(list('abc'))
+        >>> unique_index.get_loc('b')
+        1
+
+        >>> monotonic_index = pd.Index(list('abbc'))
+        >>> monotonic_index.get_loc('b')
+        slice(1, 3, None)
+
+        >>> non_monotonic_index = pd.Index(list('abcb'))
+        >>> non_monotonic_index.get_loc('b')
+        array([False,  True, False,  True])
+        """
+        casted_key = self._maybe_cast_indexer(key)
+        try:
+            return self._engine.get_loc(casted_key)
+        except KeyError as err:
+            if isinstance(casted_key, slice) or (
+                isinstance(casted_key, abc.Iterable)
+                and any(isinstance(x, slice) for x in casted_key)
+            ):
+                raise InvalidIndexError(key)
+>           raise KeyError(key) from err
+E           KeyError: 'Platform'
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py:3819: KeyError
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.MessageMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.ScalarMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+
+tests/unit/test_data_detective.py: 12 warnings
+  /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/openpyxl/packaging/core.py:99: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = datetime.datetime.utcnow()
+
+tests/unit/test_data_detective.py::TestNewFeatures::test_xlsx_file_reading_with_openpyxl
+tests/unit/test_data_detective.py::TestNewFeatures::test_csv_vs_excel_data_equivalence
+tests/unit/test_data_detective.py::TestNewFeatures::test_excel_file_with_multiple_sheets
+tests/unit/test_data_detective.py::TestNewFeatures::test_excel_file_with_empty_cells
+  /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/openpyxl/writer/excel.py:292: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    workbook.properties.modified = datetime.datetime.utcnow()
+
+tests/unit/test_smart_forecast.py: 30 warnings
+  /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/sklearn/utils/validation.py:2749: UserWarning:
+
+  X does not have valid feature names, but RandomForestRegressor was fitted with feature names
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform darwin, python 3.13.0-final-0 ----------
+Name                             Stmts   Miss  Cover   Missing
+--------------------------------------------------------------
+app.py                             116    116     0%   8-332
+modules/__init__.py                  0      0   100%
+modules/agent_logic.py              75     40    47%   21-22, 50-51, 63-144, 154
+modules/content_engine.py          247    110    55%   29-30, 160-161, 170-191, 223, 241-267, 288-445, 648
+modules/data_detective.py          311    219    30%   32-33, 47-124, 129-281, 286-316, 321-369, 374-423, 428-464, 474-519, 613
+modules/design_system.py           297      2    99%   510, 521
+modules/financial_analyst.py       208     63    70%   19-20, 79-80, 138-190, 197-218, 223-247, 257, 285, 339-346
+modules/margin_hunter.py            92     45    51%   128-166, 188-251, 258-287, 301-332
+modules/market_pulse.py            156     20    87%   83-91, 113-115, 149-154, 268-272
+modules/marketing_analytics.py     592    382    35%   34-61, 103-252, 257-472, 477-602, 607-725, 730-745, 750-870, 877-1041, 1070-1133, 1138-1186, 1221-1222, 1247-1254, 1278, 1309, 1569-1570, 1586, 1599-1600, 1605, 1615, 1648-1649
+modules/multi_agent.py              97     97     0%   8-196
+modules/smart_forecast.py           86      5    94%   39-40, 52-54
+test_new_features.py               111    111     0%   7-221
+utils/data_loader.py                86     21    76%   122, 169-179, 193-207, 222
+utils/data_source_faker.py          20      0   100%
+utils/exceptions.py                 18      3    83%   42-44
+utils/logger.py                     18      1    94%   38
+utils/sentiment_analyzer.py         90     23    74%   10-11, 29-31, 49, 66, 68, 78, 80, 174-175, 189-192, 217-223, 240-242
+utils/ui.py                         60      0   100%
+validate_logic.py                   87     87     0%   7-171
+--------------------------------------------------------------
+TOTAL                             2767   1345    51%
+Coverage HTML written to dir htmlcov
+
+FAIL Required test coverage of 70% not reached. Total coverage: 51.39%
+=========================== short test summary info ============================
+FAILED tests/unit/test_agent_logic.py::test_render_successful_analysis - Valu...
+FAILED tests/unit/test_agent_logic.py::test_render_no_news_found - ValueError...
+FAILED tests/unit/test_agent_logic.py::test_render_no_ticker_entered - ValueE...
+FAILED tests/unit/test_agent_logic.py::test_render_handles_exception - ValueE...
+FAILED tests/unit/test_data_detective.py::TestNewFeatures::test_strong_correlation_detection
+FAILED tests/unit/test_data_detective.py::TestNewFeatures::test_xls_file_reading
+FAILED tests/unit/test_design_system.py::TestDesignSystemModule::test_render_function_exists
+FAILED tests/unit/test_design_system.py::TestTabRenderFunctions::test_render_colors_tab
+FAILED tests/unit/test_design_system.py::TestTabRenderFunctions::test_render_components_tab
+FAILED tests/unit/test_design_system.py::TestTabRenderFunctions::test_render_interactive_tab
+FAILED tests/unit/test_design_system.py::TestTabRenderFunctions::test_render_patterns_tab
+FAILED tests/unit/test_financial_analyst.py::TestFinancialAnalystRender::test_render_with_valid_ticker
+FAILED tests/unit/test_margin_hunter.py::TestMarginHunterRenderFunction::test_render_success_with_valid_inputs
+FAILED tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_success_with_valid_ticker
+FAILED tests/unit/test_market_pulse.py::TestDisplayMetrics::test_display_metrics_calculates_delta
+FAILED tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_display_predictive_indicators
+FAILED tests/unit/test_marketing_analytics_data_integration.py::test_get_campaign_data_source_simulate_existing_data
+FAILED tests/unit/test_marketing_analytics_data_integration.py::test_render_campaign_dashboard_with_data
+FAILED tests/unit/test_marketing_analytics_data_integration.py::test_calculate_channel_metrics
+FAILED tests/unit/test_marketing_analytics_data_integration.py::test_get_channel_breakdown
+=========== 20 failed, 292 passed, 1 skipped, 48 warnings in 59.37s ============

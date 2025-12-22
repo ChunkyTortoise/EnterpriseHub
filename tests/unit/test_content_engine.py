@@ -84,7 +84,12 @@ class TestContentEngineAPIKeyHandling:
         from modules.content_engine import _get_api_key
 
         # Mock Streamlit session state
-        with patch("streamlit.session_state", {"anthropic_api_key": "sk-ant-session-key"}):
+        mock_state = MagicMock()
+        mock_state.anthropic_api_key = "sk-ant-session-key"
+        # Support 'in' check
+        mock_state.__contains__.side_effect = lambda x: x == "anthropic_api_key"
+
+        with patch("streamlit.session_state", mock_state):
             with patch.dict(os.environ, {}, clear=True):
                 api_key = _get_api_key()
                 assert api_key == "sk-ant-session-key"

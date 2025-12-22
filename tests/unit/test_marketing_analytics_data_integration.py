@@ -105,6 +105,7 @@ def test_get_campaign_data_source_simulate_new_data(mock_st):
 def test_get_campaign_data_source_simulate_existing_data(mock_st):
     """Test _get_campaign_data_source when 'Simulate Marketing Data' is selected and existing data is used."""
     mock_st.radio.return_value = "Simulate Marketing Data"
+    mock_st.button.return_value = False  # DO NOT generate new data
     # Pre-populate session state
     mock_st.session_state = {
         "simulated_campaign_data": generate_campaign_data(platform="Meta Ads", days=3)
@@ -201,8 +202,10 @@ def test_calculate_channel_metrics(sample_campaign_df):
     assert metrics["conversions"] == sample_campaign_df["Conversions"].sum()
 
     expected_roi = (
-        sample_campaign_df["Revenue"].sum() - sample_campaign_df["Spend"].sum()
-    ) / sample_campaign_df["Spend"].sum()
+        (sample_campaign_df["Revenue"].sum() - sample_campaign_df["Spend"].sum())
+        / sample_campaign_df["Spend"].sum()
+        * 100
+    )
     assert metrics["roi"] == pytest.approx(expected_roi)
 
 

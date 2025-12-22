@@ -54,7 +54,7 @@ class TestFinancialAnalystRender:
         financial_analyst.render()
 
         # Assertions
-        mock_st.title.assert_called_once_with("💼 Financial Analyst")
+        mock_st.markdown.assert_any_call("## Financial Analyst")
         mock_st.text_input.assert_called_once()
         mock_fetch.assert_called_once_with("AAPL")
 
@@ -194,21 +194,21 @@ class TestDisplayHeader:
         _display_header(MOCK_COMPANY_INFO, "AAPL")
 
         # Verify header call
-        mock_col1.header.assert_called_once()
-        header_text = mock_col1.header.call_args[0][0]
+        mock_st.header.assert_called_once()
+        header_text = mock_st.header.call_args[0][0]
         assert "Apple Inc." in header_text
         assert "AAPL" in header_text
 
         # Verify caption
-        mock_col1.caption.assert_called_once()
-        caption_text = mock_col1.caption.call_args[0][0]
+        mock_st.caption.assert_called_once()
+        caption_text = mock_st.caption.call_args[0][0]
         assert "Technology" in caption_text
         assert "Consumer Electronics" in caption_text
 
         # Verify website link
-        mock_col2.markdown.assert_called_once()
-        website_link = mock_col2.markdown.call_args[0][0]
-        assert "apple.com" in website_link
+        mock_st.markdown.assert_called()
+        calls = [call[0][0] for call in mock_st.markdown.call_args_list]
+        assert any("apple.com" in str(call) for call in calls)
 
     @patch("modules.financial_analyst.st")
     def test_display_header_without_summary(self, mock_st):
@@ -228,15 +228,16 @@ class TestDisplayHeader:
         _display_header(info_no_summary, "AAPL")
 
         # Verify "No summary available" was shown
-        calls = [call[0][0] for call in mock_col1.markdown.call_args_list]
+        calls = [call[0][0] for call in mock_st.markdown.call_args_list]
         assert any("No summary available" in str(call) for call in calls)
 
 
 class TestDisplayKeyMetrics:
     """Test the _display_key_metrics function."""
 
+    @patch("modules.financial_analyst.ui.card_metric")
     @patch("modules.financial_analyst.st")
-    def test_display_key_metrics_with_valid_data(self, mock_st):
+    def test_display_key_metrics_with_valid_data(self, mock_st, mock_card):
         """Test key metrics display with valid data."""
         from modules.financial_analyst import _display_key_metrics
 
@@ -247,14 +248,12 @@ class TestDisplayKeyMetrics:
         # Call function
         _display_key_metrics(MOCK_COMPANY_INFO)
 
-        # Verify metrics were called
-        mock_cols[0].metric.assert_called_once()  # Market Cap
-        mock_cols[1].metric.assert_called_once()  # P/E Ratio
-        mock_cols[2].metric.assert_called_once()  # EPS
-        mock_cols[3].metric.assert_called_once()  # Dividend or Beta
+        # Verify metrics were called (via ui.card_metric)
+        assert mock_card.call_count >= 4
 
+    @patch("modules.financial_analyst.ui.card_metric")
     @patch("modules.financial_analyst.st")
-    def test_display_key_metrics_with_missing_data(self, mock_st):
+    def test_display_key_metrics_with_missing_data(self, mock_st, mock_card):
         """Test key metrics display handles missing data."""
         from modules.financial_analyst import _display_key_metrics
 
@@ -269,9 +268,7 @@ class TestDisplayKeyMetrics:
         _display_key_metrics(incomplete_info)
 
         # Verify metrics were still called (with "N/A" values)
-        assert mock_cols[0].metric.called
-        assert mock_cols[1].metric.called
-        assert mock_cols[2].metric.called
+        assert mock_card.call_count >= 3
 
 
 class TestFinancialAnalystEdgeCases:
@@ -358,11 +355,11 @@ class TestAIInsights:
         from modules.financial_analyst import _build_financial_summary
         import pandas as pd
 
-        # Create mock financials with proper structure
+        # Create mock financials with proper structure (dates as columns)
         mock_financials = {
             "income_stmt": pd.DataFrame(
-                {"Total Revenue": [400e9, 380e9], "Net Income": [100e9, 95e9]},
-                index=["2024-01-01", "2023-01-01"],
+                {"2024-01-01": [400e9, 100e9], "2023-01-01": [380e9, 95e9]},
+                index=["Total Revenue", "Net Income"],
             )
         }
 

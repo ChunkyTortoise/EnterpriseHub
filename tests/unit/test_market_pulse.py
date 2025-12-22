@@ -35,13 +35,20 @@ def test_import_market_pulse():
 class TestMarketPulseRender:
     """Test the main render function."""
 
+    @patch("modules.market_pulse.ui.section_header")
     @patch("modules.market_pulse.st")
     @patch("modules.market_pulse.get_stock_data")
     @patch("modules.market_pulse.calculate_indicators")
     @patch("modules.market_pulse._create_technical_chart")
     @patch("modules.market_pulse._display_metrics")
     def test_render_success_with_valid_ticker(
-        self, mock_display_metrics, mock_create_chart, mock_calc_indicators, mock_get_stock, mock_st
+        self,
+        mock_display_metrics,
+        mock_create_chart,
+        mock_calc_indicators,
+        mock_get_stock,
+        mock_st,
+        mock_section,
     ):
         """Test successful render with valid ticker."""
         from modules import market_pulse
@@ -61,7 +68,9 @@ class TestMarketPulseRender:
         market_pulse.render()
 
         # Assertions
-        mock_st.title.assert_called_once_with("📊 Market Pulse")
+        mock_section.assert_called_once_with(
+            "Market Pulse", "Real-Time Technical Analysis Dashboard"
+        )
         mock_get_stock.assert_called_once_with("SPY", period="1y", interval="1d")
         mock_calc_indicators.assert_called_once_with(mock_df)
         mock_display_metrics.assert_called_once_with(mock_df, "SPY")
@@ -152,8 +161,9 @@ class TestMarketPulseRender:
 class TestDisplayMetrics:
     """Test the _display_metrics function."""
 
+    @patch("modules.market_pulse.ui.card_metric")
     @patch("modules.market_pulse.st")
-    def test_display_metrics_calculates_delta(self, mock_st):
+    def test_display_metrics_calculates_delta(self, mock_st, mock_card):
         """Test metrics display calculates price delta correctly."""
         from modules.market_pulse import _display_metrics
 
@@ -165,14 +175,14 @@ class TestDisplayMetrics:
         # Call function
         _display_metrics(df, "SPY")
 
-        # Verify metric was called
-        mock_st.metric.assert_called_once()
-        call_args = mock_st.metric.call_args[1]
+        # Verify metric was called (via ui.card_metric)
+        mock_card.assert_called_once()
+        call_args = mock_card.call_args[1]
 
         # Check label and value
         assert "SPY" in call_args["label"]
         assert "$105.00" in call_args["value"]
-        assert "5.00" in call_args["delta"]  # Delta of 5.0
+        assert "5.00" in call_args["delta"]
 
 
 class TestCreateTechnicalChart:
@@ -306,8 +316,9 @@ class TestPredictiveIndicators:
         # Support should be less than resistance
         assert support < resistance
 
+    @patch("modules.market_pulse.ui.card_metric")
     @patch("modules.market_pulse.st")
-    def test_display_predictive_indicators(self, mock_st):
+    def test_display_predictive_indicators(self, mock_st, mock_card):
         """Test predictive indicators display."""
         from modules.market_pulse import _display_predictive_indicators
 
@@ -326,8 +337,8 @@ class TestPredictiveIndicators:
 
         # Verify markdown and metrics were called
         assert mock_st.markdown.called
-        # At least one metric should be called (support/resistance)
-        assert any(col.metric.called for col in mock_cols)
+        # At least one metric should be called via card_metric
+        assert mock_card.called
 
     @patch("modules.market_pulse.st")
     def test_display_predictive_indicators_error_handling(self, mock_st):

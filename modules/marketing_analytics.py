@@ -1351,7 +1351,8 @@ def _get_channel_breakdown(df: pd.DataFrame = None) -> pd.DataFrame:
     if df is None:
         df = _get_sample_campaign_data()
 
-    # Normalize column names to lowercase
+    # Create a copy and normalize column names to lowercase
+    df = df.copy()
     df.columns = [col.lower() for col in df.columns]
 
     # Map 'platform' or 'channel' code to a consistent 'channel' column
