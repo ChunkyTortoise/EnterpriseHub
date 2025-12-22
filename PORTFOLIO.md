@@ -5,7 +5,7 @@
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Try_Now-FF4B4B.svg)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
 [![GitHub](https://img.shields.io/badge/GitHub-Source_Code-181717.svg?logo=github)](https://github.com/ChunkyTortoise/enterprise-hub)
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg?logo=python)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/Tests-76_Passing-success.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
+[![Tests](https://img.shields.io/badge/Tests-274_Passing-success.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
 
 ---
 
@@ -15,7 +15,7 @@
 **Role**: Sole Developer & Architect
 **Duration**: Ongoing (Launched December 2024)
 **Tech Stack**: Python, Streamlit, Plotly, Anthropic Claude API, Yahoo Finance API
-**Impact**: 7 production modules, 220+ automated tests, live demo deployment via Streamlit Cloud
+**Impact**: 7 production modules, 301 automated tests, live demo deployment via Streamlit Cloud
 
 **What I Built**: A cloud-native web application that consolidates 5 mission-critical business tools—market analysis, profitability modeling, and AI-powered content generation—into a single, intuitive platform.
 

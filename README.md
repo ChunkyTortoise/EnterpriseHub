@@ -4,7 +4,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28.0-FF4B4B.svg)](https://streamlit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-220%2B%20passing-brightgreen.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
+[![Tests](https://img.shields.io/badge/tests-270%2B%20passing-brightgreen.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit_Cloud-FF4B4B.svg)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
 
 > **A unified platform for market analysis and enterprise tooling**
@@ -40,7 +40,7 @@ Enterprise Hub delivers **institutional-grade business tools in a unified, web-b
 - **Instant Analysis**: Break-even calculations, stock charts, AI content - all in under 2 minutes
 - **Zero Infrastructure**: No installation, no setup, no IT team required
 - **Cloud-Native**: Access from anywhere, on any device, always up to date
-- **Production-Ready**: 220+ automated tests, CI/CD deployment, enterprise-quality code
+- **Production-Ready**: 300+ automated tests, CI/CD deployment, enterprise-quality code
 
 **Result**: Faster decisions, $26k+/year in cost savings, one unified workflow.
 
@@ -58,7 +58,7 @@ Most developer portfolios showcase to-do apps, weather dashboards, or Twitter cl
 
 This isn't a weekend hackathon project. Enterprise Hub features:
 
-- 220+ automated tests with 85%+ code coverage
+- 300+ automated tests with 85%+ code coverage
 - CI/CD pipeline with linting, formatting, and test automation
 - Comprehensive error handling for edge cases
 - Documentation: 5+ detailed READMEs, industry templates, troubleshooting guides

@@ -7,7 +7,7 @@ Enterprise Hub is a Streamlit-based multi-module platform with 7 specialized bus
 **Key Directories:**
 - `modules/` - 7 independent Streamlit modules (no cross-imports)
 - `utils/` - Shared utilities (data_loader, config, logger, exceptions)
-- `tests/` - 220+ tests with pytest fixtures in `conftest.py`
+- `tests/` - 301 tests with pytest fixtures in `conftest.py`
 - `_archive/` - **READ-ONLY** legacy code
 
 ## Critical Patterns From Codebase
