@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upwork Profile Preview - Optimized V2</title>
+    <style>
+        body {
+            font-family: 'Neue Montreal', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f2f7f2;
+            color: #001e00;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            padding: 30px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 20px;
+        }
+        .avatar {
+            width: 100px;
+            height: 100px;
+            background-color: #e0e0e0;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+        .header-content {
+            flex-grow: 1;
+        }
+        h1 {
+            font-size: 26px;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+        .title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #001e00;
+            margin-bottom: 10px;
+        }
+        .location {
+            color: #5e6d55;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .stats {
+            display: flex;
+            gap: 30px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .main-content {
+            display: flex;
+            padding: 30px;
+            gap: 40px;
+        }
+        .left-col {
+            flex: 2;
+        }
+        .right-col {
+            flex: 1;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 500;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .overview-text {
+            white-space: pre-wrap;
+            font-size: 15px;
+            color: #001e00;
+        }
+        .hourly-rate {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        .skill-tag {
+            background-color: #e4ebe4;
+            color: #001e00;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            display: inline-block;
+            margin-right: 5px;
+            margin-bottom: 8px;
+        }
+        .portfolio-item {
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .portfolio-img {
+            height: 180px;
+            background-color: #f2f7f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #5e6d55;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .portfolio-content {
+            padding: 20px;
+        }
+        .portfolio-title {
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #108a00;
+        }
+        .portfolio-desc {
+            font-size: 14px;
+            color: #001e00;
+            white-space: pre-wrap;
+        }
+        .btn-copy {
+            background-color: #108a00;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        .btn-copy:hover {
+            background-color: #14a800;
+        }
+        .employment-item {
+            margin-bottom: 20px;
+        }
+        .emp-title {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        .emp-meta {
+            color: #5e6d55;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .emp-desc {
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        .edit-hint {
+            background-color: #fff8e1;
+            border: 1px solid #ffe082;
+            padding: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="avatar">
+            [Photo Placeholder]
+        </div>
+        <div class="header-content">
+            <h1>Your Name</h1>
+            <div class="location">Remote (United States)</div>
+
+            <div style="margin-bottom: 10px;">
+                <button class="btn-copy" onclick="copyToClipboard('profile-title')">Copy Title</button>
+                <div id="profile-title" class="title">Python & Streamlit Expert | Financial Dashboards | 313 Tests | AI Integration | $24K Tool at $0</div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">100% Job Success</div>
+                <div class="stat-item">Top Rated</div>
+            </div>
+        </div>
+        <div style="text-align: right;">
+             <div class="hourly-rate">$65.00/hr</div>
+             <button class="btn-copy" style="background-color: white; color: #108a00; border: 2px solid #108a00;">Edit Profile</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="left-col">
+            <div class="edit-hint">
+                <strong>💡 Implementation Tip:</strong> Click the "Copy" buttons to copy the optimized text, then paste it directly into your Upwork profile editor.
+            </div>
+
+            <h2 class="section-title">Overview</h2>
+            <button class="btn-copy" onclick="copyToClipboard('overview-text')">Copy Overview</button>
+            <div id="overview-text" class="overview-text">I replicate $24K/year tools for $0. Then I build yours.
+
+PROOF:
+EnterpriseHub - Live platform replacing Bloomberg Terminal's core features (https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+
+313 automated tests. 85% coverage. Zero downtime since launch.
+
+WHAT CLIENTS HIRE ME FOR:
+
+Financial Analytics Dashboards
+→ Real-time stock data, technical indicators (RSI, MACD, MA)
+→ Custom portfolio tracking, risk analysis, performance metrics
+→ Replaces spreadsheets with interactive web dashboards
+
+Marketing & Business Intelligence
+→ Campaign ROI tracking across 6 channels
+→ A/B testing with statistical significance calculators
+→ Attribution modeling (First Touch, Last Touch, Linear, Time Decay, U-Shaped)
+
+AI-Powered Automation
+→ Claude 3.5 Sonnet integration (production-ready, not prototype)
+→ Automated data profiling (2-minute EDA vs 2-hour manual analysis)
+→ Content generation, sentiment analysis, multi-agent workflows
+
+Data Visualization & Reporting
+→ Plotly interactive charts (4-panel layouts, heatmaps, time series)
+→ CSV/Excel upload → instant analysis → export-ready reports
+→ Custom KPI dashboards for executives
+
+WHAT MAKES MY WORK DIFFERENT:
+
+Every project includes automated tests. Not optional - standard.
+I deploy to production, not just "make it work on my machine."
+Documentation included. Your team can maintain it without me.
+
+TRANSITION NOTE:
+Enterprise developer → freelance. I bring corporate quality standards without corporate timelines.
+
+TECH STACK:
+Python 3.11+ | Streamlit | Plotly | pandas | yfinance | pytest | Claude API | PostgreSQL | REST APIs | Git/GitHub Actions
+
+AVAILABILITY: 2-3 projects this month. Response time: <2 hours.</div>
+
+            <h2 class="section-title" style="margin-top: 40px;">Portfolio</h2>
+
+            <!-- Portfolio Item 1 -->
+            <div class="portfolio-item">
+                <div class="portfolio-img">
+                    [Screenshot: EnterpriseHub]
+                </div>
+                <div class="portfolio-content">
+                    <button class="btn-copy" onclick="copyToClipboard('port-title-1')">Copy Title</button>
+                    <div id="port-title-1" class="portfolio-title">EnterpriseHub | $24K Bloomberg Alternative Built for $0 | 8 Business Modules</div>
+
+                    <button class="btn-copy" onclick="copyToClipboard('port-desc-1')">Copy Description</button>
+                    <div id="port-desc-1" class="portfolio-desc">Full-stack business intelligence platform replacing enterprise tools at zero cost.
+
+CLIENT VALUE:
+• Replaces $24K/year Bloomberg Terminal subscription
+• Saves 10+ hours/week vs manual spreadsheet analysis
+• Production-ready: 313 automated tests, 85% coverage, zero downtime
+
+8 MODULES:
+Market Pulse (real-time stock analysis), Financial Analyst (AI-powered insights), Margin Hunter (CVP modeling), Data Detective (automated EDA), Content Engine (AI post generation), Marketing Analytics (ROI tracking), Agent Logic (sentiment analysis), Multi-Agent Workflows
+
+TECHNICAL PROOF:
+Live deployment | CI/CD pipeline | WCAG AAA accessibility | Dark mode | Session management
+
+Stack: Python, Streamlit, Plotly, Claude API, yfinance, pandas, pytest</div>
+                </div>
+            </div>
+
+            <!-- Portfolio Item 2 -->
+            <div class="portfolio-item">
+                <div class="portfolio-img">
+                    [Screenshot: Market Pulse]
+                </div>
+                <div class="portfolio-content">
+                    <button class="btn-copy" onclick="copyToClipboard('port-title-2')">Copy Title</button>
+                    <div id="port-title-2" class="portfolio-title">Market Pulse | Technical Analysis Dashboard | Bloomberg Quality at $0 Cost</div>
+
+                    <button class="btn-copy" onclick="copyToClipboard('port-desc-2')">Copy Description</button>
+                    <div id="port-desc-2" class="portfolio-desc">Real-time stock market analysis replacing $24K/year Bloomberg Terminal subscriptions.
+
+CLIENT PROBLEM SOLVED:
+Small hedge funds, traders, and analysts need Bloomberg-quality data without $2K/month cost.
+
+SOLUTION DELIVERED:
+• 4-panel technical dashboard (candlesticks, RSI, MACD, volume)
+• Real-time data via Yahoo Finance API (covers 50K+ global tickers)
+• Professional-grade indicators (RSI overbought/oversold zones, MACD crossovers, moving averages)
+• Interactive charts (zoom, pan, hover data, export images)
+
+TECHNICAL APPROACH:
+Streamlit caching (@st.cache_data, 5-min TTL) for API rate limit management, ta library for 80+ technical indicators, Plotly WebGL rendering for performance.
+
+Stack: Python, yfinance, ta, Plotly, Streamlit</div>
+                </div>
+            </div>
+
+            <!-- Portfolio Item 3 -->
+            <div class="portfolio-item">
+                <div class="portfolio-img">
+                    [Screenshot: Data Detective]
+                </div>
+                <div class="portfolio-content">
+                    <button class="btn-copy" onclick="copyToClipboard('port-title-3')">Copy Title</button>
+                    <div id="port-title-3" class="portfolio-title">Data Detective | AI-Powered EDA | 2 Minutes vs 2 Hours | Claude 3.5 Integration</div>
+
+                    <button class="btn-copy" onclick="copyToClipboard('port-desc-3')">Copy Description</button>
+                    <div id="port-desc-3" class="portfolio-desc">Automated data profiling platform eliminating 90% of manual exploratory data analysis work.
+
+TIME SAVINGS:
+Analysts spend 2+ hours on initial data exploration. This tool: 2 minutes.
+
+FEATURES:
+• Upload CSV/Excel (up to 500MB) → Instant comprehensive analysis
+• Data quality audit (missing values, duplicates, type mismatches, outliers)
+• Statistical profiling (distribution analysis, correlation heatmaps, quartile calculations)
+• AI insights via Claude 3.5 Sonnet (identifies trends, anomalies, recommends next steps)
+
+PRODUCTION AI IMPLEMENTATION:
+Exponential backoff for rate limits, session-based API keys (secure by default), cost monitoring (~$0.01/analysis), graceful degradation (works without API).
+
+Stack: Python, pandas, Plotly, Claude API, pytest</div>
+                </div>
+            </div>
+
+            <h2 class="section-title">Employment History</h2>
+             <div class="employment-item">
+                <div class="emp-title">Senior Python Developer & Financial Analytics Specialist</div>
+                <div class="emp-meta">Independent Consultant | October 2024 - Present</div>
+                <button class="btn-copy" onclick="copyToClipboard('emp-desc')">Copy Description</button>
+                <div id="emp-desc" class="emp-desc" style="margin-top: 10px;">Building production-grade Python applications for financial services, marketing agencies, and data-driven businesses.
+
+SIGNATURE PROJECT:
+EnterpriseHub - 8-module business intelligence platform (https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+• 313 automated tests, 85% code coverage
+• Live deployment with CI/CD pipeline
+• Replaces $24K/year enterprise tools at zero cost
+
+SPECIALIZATIONS:
+→ Financial analytics dashboards (real-time data, technical indicators, portfolio tracking)
+→ AI integration (Claude 3.5 Sonnet API, production error handling, cost optimization)
+→ Marketing analytics (campaign ROI, A/B testing, attribution modeling)
+→ Data automation (CSV/Excel processing, automated EDA, scheduled reporting)
+
+QUALITY STANDARDS:
+All projects include: automated tests (pytest), comprehensive documentation, deployment support, 2-week post-delivery maintenance.
+
+CLIENT RESULTS:
+• Reduced manual data analysis time by 90% (2 hours → 2 minutes)
+• Saved clients $24K/year in software subscriptions
+• Delivered dashboards used by hedge funds, consultants, and marketing teams</div>
+            </div>
+
+        </div>
+
+        <div class="right-col">
+            <h2 class="section-title">Skills</h2>
+            <div>
+                <span class="skill-tag">Python</span>
+                <span class="skill-tag">Data Visualization</span>
+                <span class="skill-tag">Streamlit</span>
+                <span class="skill-tag">Dashboard Development</span>
+                <span class="skill-tag">Financial Modeling</span>
+                <span class="skill-tag">Machine Learning</span>
+                <span class="skill-tag">API Integration</span>
+                <span class="skill-tag">Plotly</span>
+                <span class="skill-tag">Data Analysis</span>
+                <span class="skill-tag">Artificial Intelligence (AI)</span>
+                <span class="skill-tag">pytest</span>
+                <span class="skill-tag">pandas</span>
+                <span class="skill-tag">Financial Analytics</span>
+                <span class="skill-tag">Business Intelligence</span>
+                <span class="skill-tag">Web Application Development</span>
+                <span class="skill-tag">Claude API</span>
+                <span class="skill-tag">Technical Analysis</span>
+                <span class="skill-tag">Data Engineering</span>
+                <span class="skill-tag">Git</span>
+                <span class="skill-tag">REST API</span>
+            </div>
+
+            <h2 class="section-title" style="margin-top: 30px;">Video Intro</h2>
+            <div style="background: #eee; height: 150px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #666; font-size: 14px; text-align: center; padding: 10px;">
+                Record your 30-45s video script here.<br>See UPWORK_PROFILE_COPY_V2.md for script.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyToClipboard(elementId) {
+        var text = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Copied to clipboard!');
+        }, function(err) {
+            console.error('Could not copy text: ', err);
+        });
+    }
+</script>
+
+</body>
+</html>

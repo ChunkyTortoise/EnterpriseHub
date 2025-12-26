@@ -316,6 +316,25 @@ def _render_four_panel_interface(api_key: str) -> None:
             "Target Audience (optional)", placeholder="e.g., Software engineers, CTOs"
         )
 
+    # Panel 1.5: Brand Voice
+    with st.expander("🎭 Brand Voice Profiles (Optional)", expanded=False):
+        st.markdown("Define a consistent voice for your brand to ensure all posts sound the same.")
+        brand_name = st.text_input("Brand/User Name", placeholder="e.g., Acme Corp / Jane Doe")
+        brand_mission = st.text_area(
+            "Brand Mission/Value Prop", placeholder="We help SMEs automate their accounting..."
+        )
+        voice_traits = st.multiselect(
+            "Voice Traits", ["Witty", "Direct", "Academic", "Visionary", "Pragmatic", "Edgy"]
+        )
+
+        if brand_name and brand_mission:
+            st.session_state.brand_voice = {
+                "name": brand_name,
+                "mission": brand_mission,
+                "traits": voice_traits,
+            }
+            st.success(f"Applying '{brand_name}' Brand Voice to generations.")
+
     keywords = st.text_input(
         "Keywords to include (comma-separated, optional)",
         placeholder="AI, automation, productivity",
@@ -488,6 +507,10 @@ Tone: {tone_instruction}"""
 
     if target_audience:
         prompt += f"\nTarget Audience: {target_audience}"
+
+    if "brand_voice" in st.session_state and st.session_state.brand_voice:
+        bv = st.session_state.brand_voice
+        prompt += f"\n\nBRAND VOICE CONTEXT:\nBrand: {bv['name']}\nMission: {bv['mission']}\nTraits: {', '.join(bv['traits'])}"
 
     if keywords:
         prompt += f"\nInclude these keywords naturally: {keywords}"

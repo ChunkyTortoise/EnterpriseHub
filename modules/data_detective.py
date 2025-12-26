@@ -242,7 +242,6 @@ def _render_data_profile(df: pd.DataFrame) -> None:
         # Calculate correlation matrix
         corr_matrix = df[numeric_cols].corr()
 
-        # Create heatmap
         fig_corr = px.imshow(
             corr_matrix,
             text_auto=".2f",
@@ -251,6 +250,7 @@ def _render_data_profile(df: pd.DataFrame) -> None:
             color_continuous_midpoint=0,
             title="Correlation Heatmap",
             labels=dict(color="Correlation"),
+            template=ui.get_plotly_template(),
         )
         fig_corr.update_xaxes(side="bottom")
         fig_corr.update_layout(height=max(400, len(numeric_cols) * 40))

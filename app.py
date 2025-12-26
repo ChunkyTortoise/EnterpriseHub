@@ -30,16 +30,36 @@ st.set_page_config(
 # --- MODULE REGISTRY ---
 # Maps sidebar navigation titles to module information.
 MODULES = {
-    "📊 Market Pulse": ("market_pulse", "Market Pulse"),
-    "💼 Financial Analyst": ("financial_analyst", "Financial Analyst"),
-    "💰 Margin Hunter": ("margin_hunter", "Margin Hunter"),
-    "🤖 Agent Logic": ("agent_logic", "Agent Logic"),
-    "✍️ Content Engine": ("content_engine", "Content Engine"),
-    "🔍 Data Detective": ("data_detective", "Data Detective"),
-    "📈 Marketing Analytics": ("marketing_analytics", "Marketing Analytics"),
-    "🤖 Multi-Agent Workflow": ("multi_agent", "Multi-Agent Workflow"),
-    "🧠 Smart Forecast": ("smart_forecast", "Smart Forecast Engine"),
-    "🎨 Design System": ("design_system", "Design System Gallery"),
+    "📊 Market Pulse": ("market_pulse", "Market Pulse", "assets/icons/market_pulse.png"),
+    "💼 Financial Analyst": (
+        "financial_analyst",
+        "Financial Analyst",
+        "assets/icons/financial_analyst.png",
+    ),
+    "💰 Margin Hunter": ("margin_hunter", "Margin Hunter", "assets/icons/margin_hunter.png"),
+    "🤖 Agent Logic": ("agent_logic", "Agent Logic", "assets/icons/agent_logic.svg"),
+    "✍️ Content Engine": ("content_engine", "Content Engine", "assets/icons/content_engine.png"),
+    "🔍 Data Detective": ("data_detective", "Data Detective", "assets/icons/data_detective.png"),
+    "📈 Marketing Analytics": (
+        "marketing_analytics",
+        "Marketing Analytics",
+        "assets/icons/marketing_analytics.svg",
+    ),
+    "🤖 Multi-Agent Workflow": (
+        "multi_agent",
+        "Multi-Agent Workflow",
+        "assets/icons/multi_agent.svg",
+    ),
+    "🧠 Smart Forecast": (
+        "smart_forecast",
+        "Smart Forecast Engine",
+        "assets/icons/smart_forecast.svg",
+    ),
+    "🎨 Design System": (
+        "design_system",
+        "Design System Gallery",
+        "assets/icons/design_system.svg",
+    ),
 }
 
 
@@ -50,26 +70,44 @@ def main() -> None:
         st.session_state.theme = "light"
 
     try:
+        # PRODUCTION GATEWAY
+        if not ui.login_modal():
+            st.stop()
+
         # SIDEBAR NAVIGATION
         with st.sidebar:
-            st.title("🚀 Enterprise Hub")
             st.markdown(
-                "<div style='margin-top: -15px; color: #64748B; font-size: 0.9em; margin-bottom: 20px;'>Enterprise Intelligence Platform</div>",
+                f"""
+                <div style='margin-bottom: 32px;'>
+                    <h1 style='font-family: {ui.THEME["header_font"]}; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.05em; margin: 0;'>
+                        ENTERPRISE<span style='color: {ui.THEME["accent"]};'>HUB</span>
+                    </h1>
+                    <div style='color: {ui.THEME["secondary"]}; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;'>
+                        Platform Console v4.0
+                    </div>
+                </div>
+                """,
                 unsafe_allow_html=True,
             )
 
             # Theme Toggle
             st.markdown("---")
+            st.markdown("**🎨 Theme**")
             col1, col2 = st.columns(2)
             with col1:
                 if st.button(
                     "☀️ Light",
                     use_container_width=True,
-                    type="primary"
-                    if st.session_state.theme == "light"
-                    else "secondary",
+                    type="primary" if st.session_state.theme == "light" else "secondary",
                 ):
                     st.session_state.theme = "light"
+                    st.rerun()
+                if st.button(
+                    "🌊 Ocean",
+                    use_container_width=True,
+                    type="primary" if st.session_state.theme == "ocean" else "secondary",
+                ):
+                    st.session_state.theme = "ocean"
                     st.rerun()
             with col2:
                 if st.button(
@@ -78,6 +116,13 @@ def main() -> None:
                     type="primary" if st.session_state.theme == "dark" else "secondary",
                 ):
                     st.session_state.theme = "dark"
+                    st.rerun()
+                if st.button(
+                    "🌅 Sunset",
+                    use_container_width=True,
+                    type="primary" if st.session_state.theme == "sunset" else "secondary",
+                ):
+                    st.session_state.theme = "sunset"
                     st.rerun()
 
             # Navigation
@@ -119,10 +164,11 @@ def main() -> None:
 def _render_overview() -> None:
     """Render the overview/home page with the new Design System."""
 
-    # Hero Section
+    # Hero Section with Editorial Background
     ui.hero_section(
         "Unified Enterprise Hub",
-        "A production-grade business intelligence platform consolidating 7 mission-critical tools into a single, cloud-native interface.",
+        "A production-grade business intelligence platform consolidating 9 mission-critical tools into a single, cloud-native interface.",
+        background_image="assets/hero/background_editorial.png",
     )
 
     # Metrics Row
@@ -136,91 +182,108 @@ def _render_overview() -> None:
     with col4:
         ui.card_metric("Performance", "Cache-Optimized", "5-min TTL")
 
-    st.markdown("<div style='height: 40px'></div>", unsafe_allow_html=True)
+    ui.spacer(40)
     st.markdown("### 🛠️ Module Suite")
 
     # Feature Grid - Row 1
     c1, c2, c3 = st.columns(3)
 
     with c1:
+        module_info = MODULES.get("💰 Margin Hunter")
         ui.feature_card(
-            icon="💰",
-            title="Margin Hunter",
+            icon=module_info[2] if module_info[2] else "💰",
+            title=module_info[1],
             description="Real-time Cost-Volume-Profit analysis with 10x10 sensitivity heatmaps and break-even modeling.",
             status="hero",
+            icon_path=module_info[2] if module_info[2] else None,
         )
     with c2:
+        module_info = MODULES.get("📊 Market Pulse")
         ui.feature_card(
-            icon="📊",
-            title="Market Pulse",
+            icon=module_info[2] if module_info[2] else "📊",
+            title=module_info[1],
             description="Institutional-grade technical analysis dashboard with RSI, MACD, and multi-panel charting.",
             status="active",
+            icon_path=module_info[2] if module_info[2] else None,
         )
     with c3:
+        module_info = MODULES.get("🔍 Data Detective")
         ui.feature_card(
-            icon="🔍",
-            title="Data Detective",
+            icon=module_info[2] if module_info[2] else "🔍",
+            title=module_info[1],
             description="AI-powered data profiling and statistical analysis. Upload any CSV/Excel for instant insights.",
             status="new",
+            icon_path=module_info[2] if module_info[2] else None,
         )
 
-    st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
+    ui.spacer(20)
 
     # Feature Grid - Row 2
     c4, c5, c6 = st.columns(3)
 
     with c4:
+        module_info = MODULES.get("📈 Marketing Analytics")
         ui.feature_card(
-            icon="📈",
-            title="Marketing Analytics",
+            icon=module_info[2] if module_info[2] else "📈",
+            title=module_info[1],
             description="Comprehensive campaign tracking, ROI calculators, multi-variant testing, and attribution modeling.",
             status="new",
+            icon_path=module_info[2] if module_info[2] else None,
         )
     with c5:
+        module_info = MODULES.get("✍️ Content Engine")
         ui.feature_card(
-            icon="✍️",
-            title="Content Engine",
+            icon=module_info[2] if module_info[2] else "✍️",
+            title=module_info[1],
             description="Generate professional LinkedIn content in seconds using Anthropic's Claude 3.5 Sonnet API.",
             status="active",
+            icon_path=module_info[2] if module_info[2] else None,
         )
     with c6:
+        module_info = MODULES.get("🤖 Agent Logic")
         ui.feature_card(
-            icon="🤖",
-            title="Agent Logic",
+            icon=module_info[2] if module_info[2] else "🤖",
+            title=module_info[1],
             description="Automated market research and news sentiment analysis using NLP and web scraping.",
             status="active",
+            icon_path=module_info[2] if module_info[2] else None,
         )
 
     # Row 3: Financial Analyst, Multi-Agent, Smart Forecast
-    st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
+    ui.spacer(20)
     c7, c8, c9 = st.columns(3)
 
     with c7:
+        module_info = MODULES.get("💼 Financial Analyst")
         ui.feature_card(
-            icon="💼",
-            title="Financial Analyst",
+            icon=module_info[2] if module_info[2] else "💼",
+            title=module_info[1],
             description="Fundamental stock analysis with financial statements, ratios, and valuation metrics.",
             status="active",
+            icon_path=module_info[2] if module_info[2] else None,
         )
 
     with c8:
+        module_info = MODULES.get("🤖 Multi-Agent Workflow")
         ui.feature_card(
-            icon="🤖",
-            title="Multi-Agent Workflow",
+            icon=module_info[2] if module_info[2] else "🤖",
+            title=module_info[1],
             description="Orchestrates 4 specialized agents (Data, Tech, News, Chief) to perform deep-dive asset analysis.",
             status="new",
+            icon_path=module_info[2] if module_info[2] else None,
         )
 
     with c9:
+        module_info = MODULES.get("🧠 Smart Forecast")
         ui.feature_card(
-            icon="🧠",
-            title="Smart Forecast",
+            icon=module_info[2] if module_info[2] else "🧠",
+            title=module_info[1],
             description="AI-powered time series forecasting using Random Forest and Rolling Window analysis.",
             status="new",
+            icon_path=module_info[2] if module_info[2] else None,
         )
 
-    # Social Proof Section
-    st.markdown("<div style='height: 40px'></div>", unsafe_allow_html=True)
+    ui.spacer(40)
     ui.section_header(
         "Built For Real Business Challenges",
         "See how EnterpriseHub replaces manual workflows and expensive subscriptions",
@@ -267,22 +330,19 @@ def _render_overview() -> None:
             icon="📈",
             title="For Marketing Teams",
             description="""
-                <strong>Marketing Analytics</strong> replaces agency dashboards costing $200-500/month.
+                **Marketing Analytics** replaces agency dashboards costing $200-500/month.
                 5 attribution models, A/B test calculators, and campaign ROI tracking.
                 One-time build you own forever.
             """,
         )
 
-    # Comparison Table
-    st.markdown("<div style='height: 40px'></div>", unsafe_allow_html=True)
+    ui.spacer(40)
     ui.section_header("Why EnterpriseHub?", "See how we compare to alternatives")
     ui.comparison_table()
 
     # Tech Stack Badge Section
-    st.markdown("<div style='height: 40px'></div>", unsafe_allow_html=True)
-    ui.section_header(
-        "Technical Foundation", "Built with modern, production-grade tools"
-    )
+    ui.spacer(40)
+    ui.section_header("Technical Foundation", "Built with modern, production-grade tools")
 
     st.markdown(
         """

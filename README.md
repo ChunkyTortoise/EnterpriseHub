@@ -1,16 +1,29 @@
-# 🚀 Enterprise Hub
+<div align="center">
+  <img src="assets/hero/background_editorial.png" width="100%" style="border-radius: 12px; margin-bottom: 24px;" alt="EnterpriseHub Banner">
+  <h1>🚀 EnterpriseHub</h1>
+  <p><strong>Institutional-Grade Business Intelligence & Multi-Agent Orchestration</strong></p>
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.28.0-FF4B4B.svg)](https://streamlit.io)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-270%2B%20passing-brightgreen.svg)](https://github.com/ChunkyTortoise/enterprise-hub)
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit_Cloud-FF4B4B.svg)](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)
+  [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
+  [![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
+  [![Tests](https://img.shields.io/badge/tests-301%2B%20passing-059669.svg?logo=pytest&logoColor=white)](https://github.com/ChunkyTortoise/enterprise-hub)
+  [![Coverage](https://img.shields.io/badge/coverage-85%2B%25-059669.svg?logo=codecov&logoColor=white)](https://github.com/ChunkyTortoise/enterprise-hub)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](https://opensource.org/licenses/MIT)
 
-> **A unified platform for market analysis and enterprise tooling**
-> Built by [Cayman Roden](https://github.com/ChunkyTortoise) | Powered by Streamlit
+  <br>
 
-**[🎯 Try Live Demo →](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)**
+  <strong>[🎯 Try Live Demo →](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)</strong>
+</div>
+
+---
+
+## 🏛️ Technical Moats (DNA)
+
+This project is built to **institutional standards**, specifically targeting high-stakes FinTech and SaaS environments.
+
+- **🛡️ Industrial-Grade Testing**: **301+ automated tests** verifying every financial formula (CVP, ROI, RSI) with 85%+ coverage.
+- **⚡ High-Performance Computing**: NumPy-powered vectorization for real-time sensitivity analysis (100+ scenarios in <50ms).
+- **🤖 Multi-Agent Orchestration**: Specialized "Strike Team Beta" swarm for parallel research, analysis, and content generation.
+- **🎨 Editorial UX**: "Stripe-Class" design system with WCAG AAA accessibility and multi-theme support.
 
 ---
 
@@ -85,7 +98,7 @@ Built with cutting-edge Python frameworks and APIs:
 ### Comparison: Enterprise Hub vs Alternatives
 
 | Feature | Enterprise Hub | Bloomberg Terminal | Excel + Manual Work | Content Agency |
-|---------|----------------|-------------------|---------------------|----------------|
+| :--- | :--- | :--- | :--- | :--- |
 | **Market Analysis** | ✅ Free, real-time | ✅ Professional-grade | ❌ No charts | ❌ N/A |
 | **Cost** | ✅ $0 | ❌ $24,000/year | ✅ $0 (+ your time) | ❌ $500-2,000/month |
 | **Financial Modeling** | ✅ Instant CVP analysis | ❌ No CVP tools | ⚠️ Manual spreadsheets (2+ hours) | ❌ N/A |
@@ -114,15 +127,17 @@ Built with cutting-edge Python frameworks and APIs:
 
 ---
 
-### ✨ Features
+### ✨ Module Suite
 
-- **📊 Market Pulse** ⚡ *ACTIVE* - Real-time stock data with a 4-panel layout including Candlesticks, RSI, MACD, and Volume Analysis.
-- **💼 Financial Analyst** ✅ *ACTIVE* - Fundamental analysis, balance sheets, and key financial metrics.
-- **💰 Margin Hunter** 🏆 *HERO PROJECT* - Cost-Volume-Profit (CVP) analysis with interactive sensitivity heatmaps, break-even calculations, and scenario modeling. Perfect for pricing strategy, profitability optimization, and volume planning. [→ Full documentation](modules/README_MARGIN_HUNTER.md) | [→ Industry templates](scenarios/)
-- **🤖 Agent Logic** ✅ *ACTIVE* - AI-powered sentiment analysis and news scouting from the web.
-- **✍️ Content Engine** ✅ *ACTIVE* - AI-powered LinkedIn post generator with Claude 3.5 Sonnet. 6 templates, 5 tones, instant content generation. [→ Full documentation](modules/README_CONTENT_ENGINE.md)
-- **🔍 Data Detective** ✨ *NEW* - AI-powered data analysis and profiling. Upload CSV files for instant automated insights, quality assessment, natural language queries, and intelligent cleaning recommendations. [→ Full documentation](modules/README_DATA_DETECTIVE.md)
-- **📊 Marketing Analytics Hub** ✨ *NEW* - Multi-channel campaign tracking, ROI calculator with scenario modeling, customer metrics (CAC, CLV, CLV:CAC), A/B test significance calculator, and 4 attribution models. Perfect for digital marketers, agencies, and growth teams. [→ Full documentation](modules/README_MARKETING_ANALYTICS.md)
+- **📊 Market Pulse** ⚡ *Institutional Trading* - 4-panel technical analysis with Price, RSI, MACD, and Volume.
+- **💼 Financial Analyst** 🔍 *Deep-Dive Research* - AI-powered fundamental analysis and financial health scoring.
+- **💰 Margin Hunter** 🏆 *Hero Project* - Interactive CVP sensitivity modeling for SaaS pricing strategy.
+- **🤖 Agent Logic** 🧠 *News Scouting* - Real-time web-scraping and sentiment scoring of market events.
+- **✍️ Content Engine** 📝 *Marketing Automation* - Corporate ghostwriting via Claude 3.5 Sonnet API.
+- **🔍 Data Detective** 🕵️ *Automated EDA* - AI-powered data profiling and statistical outlier detection.
+- **📈 Marketing Analytics Hub** 🎯 *Growth Tuning* - Attribution modeling and A/B test significance at scale.
+- **🤖 Multi-Agent Workflow** 🚀 *Swarm Intelligence* - Orchestrates 4 agents for unified asset research.
+- **🧠 Smart Forecast** 🔮 *Predictive Engine* - Time-series forecasting using Random Forest and Rolling Windows.
 
 ### 🎯 Key Highlights
 
@@ -310,30 +325,55 @@ enterprise-hub/
 
 ---
 
-## 🏗️ Technical Highlights
+### 🏗️ Technical Architecture
 
-### Architecture & Design Patterns
+EnterpriseHub uses a **Modular Monolith** pattern designed for high-availability and zero-dependency extension.
 
-**Modular Monolith Pattern**:
-- Each module is self-contained in `/modules` (5 Python files, ~2,000 lines each)
-- Shared utilities layer in `/utils` (data loading, logging, exceptions)
-- Single entry point (`app.py`) with Streamlit sidebar navigation
-- Zero coupling between modules - add/remove modules without breaking others
+```mermaid
+graph TD
+    User((User)) --> App["app.py (Streamlit)"]
 
-**Separation of Concerns**:
+    subgraph "Core Interface"
+    App --> UI["utils/ui.py (Design System)"]
+    App --> Router["Module Router"]
+    end
+
+    subgraph "Module Suite"
+    Router --> M1["Margin Hunter"]
+    Router --> M2["Market Pulse"]
+    Router --> M3["Agent Logic"]
+    Router --> M4["..."]
+    end
+
+    subgraph "Engine Layer"
+    M1 --> DL["utils/data_loader.py"]
+    M2 --> DL
+    M3 --> AI["Claude 3.5 API"]
+    M4 --> Gemini["Google Gemini API"]
+    end
 ```
-UI Layer (Streamlit) → Business Logic → Data Access Layer → External APIs
+
+### 🤖 Multi-Agent Synergy
+
+The platform is enhanced by **Strike Team Beta**, a specialized multi-agent swarm that automates the "Analysis-to-Content" pipeline.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Conductor
+    participant Painter
+    participant Builder
+    participant Auditor
+
+    User->>Conductor: Request Optimization
+    Conductor->>Painter: Generate Visual DNA
+    Conductor->>Builder: Integrate Assets
+    Builder-->>Auditor: PR for Quality Gate
+    Auditor-->>Conductor: Success (301+ Tests Passed)
+    Conductor->>User: Deliver Production UI
 ```
-- UI rendering: Streamlit components (forms, charts, buttons)
-- Business logic: Pure Python functions (CVP calculations, prompt engineering)
-- Data access: Abstract API clients (Yahoo Finance, Claude, web scraping)
 
-**Benefits**:
-- Easy to test (mock external APIs, test business logic in isolation)
-- Easy to extend (add new modules without touching existing code)
-- Easy to collaborate (modules owned by different developers)
-
-### Key Technical Achievements
+### 🏗️ Design Patterns
 
 #### 1. Real-Time Reactivity (Margin Hunter)
 

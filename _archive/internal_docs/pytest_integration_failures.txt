@@ -1,0 +1,56 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.0, pytest-7.4.3, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.13/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /Users/Cave/Desktop/enterprise-hub/EnterpriseHub
+configfile: pyproject.toml
+plugins: anyio-4.12.0, cov-4.1.0, mock-3.12.0
+collecting ... collected 12 items
+
+tests/integration/test_data_loader.py::TestGetStockData::test_get_stock_data_validates_empty_ticker PASSED [  8%]
+tests/integration/test_data_loader.py::TestGetStockData::test_get_stock_data_strips_whitespace PASSED [ 16%]
+tests/integration/test_data_loader.py::TestGetStockData::test_get_stock_data_raises_on_empty_dataframe PASSED [ 25%]
+tests/integration/test_data_loader.py::TestGetStockData::test_get_stock_data_handles_api_error PASSED [ 33%]
+tests/integration/test_data_loader.py::TestGetStockData::test_get_stock_data_success PASSED [ 41%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_handles_none PASSED [ 50%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_handles_empty_df PASSED [ 58%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_adds_ma20 PASSED [ 66%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_adds_rsi PASSED [ 75%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_adds_macd PASSED [ 83%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_handles_multiindex PASSED [ 91%]
+tests/integration/test_data_loader.py::TestCalculateIndicators::test_calculate_indicators_raises_on_missing_columns PASSED [100%]
+
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.MessageMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.ScalarMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform darwin, python 3.13.0-final-0 ----------
+Name                             Stmts   Miss  Cover   Missing
+--------------------------------------------------------------
+app.py                             116    116     0%   8-332
+modules/__init__.py                  0      0   100%
+modules/agent_logic.py              75     75     0%   1-156
+modules/content_engine.py          247    247     0%   8-657
+modules/data_detective.py          311    311     0%   8-768
+modules/design_system.py           297    297     0%   8-868
+modules/financial_analyst.py       208    208     0%   1-408
+modules/margin_hunter.py            92     92     0%   1-332
+modules/market_pulse.py            156    156     0%   8-383
+modules/marketing_analytics.py     593    593     0%   8-1650
+modules/multi_agent.py              97     97     0%   8-196
+modules/smart_forecast.py           86     86     0%   8-200
+utils/data_loader.py                86     29    66%   122, 169-179, 193-207, 221-231
+utils/exceptions.py                 18      3    83%   42-44
+utils/logger.py                     18      1    94%   38
+validate_logic.py                   87     87     0%   7-171
+validate_new_features.py           111    111     0%   7-221
+--------------------------------------------------------------
+TOTAL                             2598   2509     3%
+Coverage HTML written to dir htmlcov
+
+FAIL Required test coverage of 70% not reached. Total coverage: 3.43%
+======================== 12 passed, 2 warnings in 4.87s ========================

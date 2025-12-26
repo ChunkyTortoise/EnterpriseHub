@@ -15,7 +15,7 @@ from utils.sentiment_analyzer import (
 
 # Conditional import for Claude API
 try:
-    from anthropic import Anthropic, APIError
+    import anthropic  # noqa: F401
 
     ANTHROPIC_AVAILABLE = True
 except ImportError:
@@ -26,9 +26,7 @@ logger = get_logger(__name__)
 
 def render() -> None:
     """Render the Agent Logic (Sentiment Scout) module."""
-    ui.section_header(
-        "Agent Logic: Sentiment Scout", "AI-Powered Market Sentiment Analysis"
-    )
+    ui.section_header("Agent Logic: Sentiment Scout", "AI-Powered Market Sentiment Analysis")
 
     # Input
     col1, col2 = st.columns([1, 3])
@@ -101,20 +99,32 @@ def render() -> None:
                 st.plotly_chart(fig, use_container_width=True)
 
             with d_col2:
-                st.subheader("AI Verdict")
-                st.markdown(f"## {analysis['verdict']}")
-                st.markdown(
-                    f"**Confidence:** {abs(analysis['average_score']) * 100:.1f}%"
+                # Cinematic Verdict Card
+                verdict_color = (
+                    ui.THEME["success"]
+                    if "BULLISH" in analysis["verdict"].upper()
+                    else ui.THEME["danger"]
+                    if "BEARISH" in analysis["verdict"].upper()
+                    else ui.THEME["secondary"]
                 )
-                st.markdown(f"**Articles Analyzed:** {analysis['article_count']}")
+                st.markdown(
+                    f"""
+                <div style="background:{ui.THEME['surface']}; padding:1.5rem; border-radius:8px; border-left:5px solid {verdict_color};">
+                    <p style="text-transform:uppercase; font-size:0.8rem; font-weight:700; color:{ui.THEME['text_light']}; margin:0;">AI Market Verdict</p>
+                    <h2 style="margin:0.5rem 0; color:{verdict_color}; border:none; padding:0;">{analysis['verdict']}</h2>
+                    <p style="font-size:0.9rem; margin:0;">Confidence: <b>{abs(analysis['average_score']) * 100:.1f}%</b> | Articles: <b>{analysis['article_count']}</b></p>
+                </div>
+                """,
+                    unsafe_allow_html=True,
+                )
+
+                st.write("")  # Spacer
 
                 # Show analysis method
                 if use_ai_sentiment:
                     st.info("Analysis powered by Claude AI with contextual reasoning.")
                 else:
-                    st.info(
-                        "Analysis based on NLP processing of latest news headlines."
-                    )
+                    st.info("Analysis based on NLP processing of latest news headlines.")
 
                 # Show AI reasoning if available
                 if "reasoning" in analysis and analysis["reasoning"]:

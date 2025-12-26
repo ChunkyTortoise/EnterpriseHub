@@ -399,10 +399,10 @@ class TestDesignSystemDictStructure:
 
         # Test light theme
         for key, value in ui.LIGHT_THEME.items():
-            if key != "font_family":
+            if key not in ["font_family", "header_font"]:
                 assert hex_pattern.match(value), f"Invalid hex code for {key}: {value}"
 
         # Test dark theme
         for key, value in ui.DARK_THEME.items():
-            if key != "font_family":
+            if key not in ["font_family", "header_font"]:
                 assert hex_pattern.match(value), f"Invalid hex code for {key}: {value}"

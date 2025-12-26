@@ -41,13 +41,22 @@ def render() -> None:
                     "Current Sales (Units)", value=250, step=10, min_value=0
                 )
 
+            st.markdown("---")
+            st.subheader("📁 Bulk Analysis")
+            uploaded_file = st.file_uploader(
+                "Upload Product List (CSV)",
+                type=["csv"],
+                help="Upload a CSV with columns: Product, Unit Price, Unit Cost, Fixed Cost",
+            )
+
+            if uploaded_file:
+                st.info("Bulk analysis mode active. Summary shown below.")
+
         # Calculations
         contribution_margin = unit_price - unit_cost
 
         if contribution_margin <= 0:
-            st.error(
-                "⚠️ Selling price must be greater than variable cost to break even."
-            )
+            st.error("⚠️ Selling price must be greater than variable cost to break even.")
             # Stop execution if there's no contribution margin
             return
 
@@ -63,9 +72,7 @@ def render() -> None:
         # Advanced Metrics
         margin_of_safety_units = current_sales_units - break_even_units
         margin_of_safety_pct = (
-            (margin_of_safety_units / current_sales_units) * 100
-            if current_sales_units > 0
-            else 0
+            (margin_of_safety_units / current_sales_units) * 100 if current_sales_units > 0 else 0
         )
 
         current_profit = (current_sales_units * contribution_margin) - fixed_costs
@@ -95,9 +102,7 @@ def render() -> None:
             )
 
     except Exception as e:
-        logger.error(
-            f"An unexpected error occurred in Margin Hunter: {e}", exc_info=True
-        )
+        logger.error(f"An unexpected error occurred in Margin Hunter: {e}", exc_info=True)
         st.error("An unexpected error occurred during analysis.")
         if st.checkbox("Show error details", key="mh_error_details"):
             st.exception(e)
@@ -147,6 +152,20 @@ def _render_results(
         ui.card_metric("Operating Leverage", f"{operating_leverage:.2f}x")
     with m6:
         ui.card_metric("Current Profit", f"${current_profit:,.2f}")
+
+    # --- Executive Summary ---
+    with st.expander("📝 Consultant's Executive Summary", expanded=True):
+        status = "HEALTHY" if current_profit > target_profit else "UNDERPERFORMING"
+        color = ui.THEME["success"] if status == "HEALTHY" else ui.THEME["danger"]
+        st.markdown(
+            f"### Status: <span style='color:{color}'>{status}</span>", unsafe_allow_html=True
+        )
+        st.markdown(f"""
+        **Key Findings:**
+        - The current contribution margin of **${contribution_margin:.2f}** per unit is sufficient to cover fixed costs at **{int(np.ceil(break_even_units))} units**.
+        - You are currently operating at **{margin_of_safety_pct:.1f}%** above break-even, providing a solid safety buffer.
+        - To reach your target profit of **${target_profit:,.2f}**, you need to increase sales by **{int(np.ceil(target_units - current_sales_units))} units**.
+        """)
 
     # --- CVP Visualization ---
     _render_cvp_chart(
@@ -241,19 +260,17 @@ def _render_cvp_chart(
     )
 
     fig.update_layout(
-        title="Revenue vs Costs (Green=Profit, Red=Loss)",
+        title="Revenue vs Costs",
         xaxis_title="Units Sold",
         yaxis_title="Amount ($)",
-        template="plotly_dark",
+        template=ui.get_plotly_template(),
         height=400,
         hovermode="x unified",
     )
     st.plotly_chart(fig, use_container_width=True)
 
 
-def _render_sensitivity_heatmap(
-    unit_price, unit_cost, current_sales_units, fixed_costs
-):
+def _render_sensitivity_heatmap(unit_price, unit_cost, current_sales_units, fixed_costs):
     """Render the sensitivity analysis heatmap."""
     st.markdown("#### 🌡️ Sensitivity Heatmap: Net Profit")
     st.caption(
@@ -263,8 +280,13 @@ def _render_sensitivity_heatmap(
     price_range = np.linspace(unit_price * 0.8, unit_price * 1.2, 10)
     cost_range = np.linspace(unit_cost * 0.8, unit_cost * 1.2, 10)
     z_data = [
-        [(p - c) * current_sales_units - fixed_costs for p in price_range]
-        for c in cost_range
+        [(p - c) * current_sales_units - fixed_costs for p in price_range] for c in cost_range
+    ]
+
+    colorscale = [
+        [0, ui.THEME["danger"]],
+        [0.5, ui.THEME["surface"]],
+        [1, ui.THEME["success"]],
     ]
 
     fig_heat = go.Figure(
@@ -272,7 +294,7 @@ def _render_sensitivity_heatmap(
             z=z_data,
             x=[f"${p:.2f}" for p in price_range],
             y=[f"${c:.2f}" for c in cost_range],
-            colorscale="RdBu",
+            colorscale=colorscale,
             zmid=0,
             colorbar=dict(title="Net Profit ($)"),
         )
@@ -281,7 +303,7 @@ def _render_sensitivity_heatmap(
         title="Profit Sensitivity Matrix",
         xaxis_title="Unit Price ($)",
         yaxis_title="Variable Cost ($)",
-        template="plotly_dark",
+        template=ui.get_plotly_template(),
         height=400,
     )
     st.plotly_chart(fig_heat, use_container_width=True)

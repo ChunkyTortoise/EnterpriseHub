@@ -55,7 +55,9 @@ class TestFinancialAnalystRender:
         financial_analyst.render()
 
         # Assertions
-        mock_section.assert_called_once_with("Financial Analyst", "Fundamental Analysis & Company Metrics")
+        mock_section.assert_called_once_with(
+            "Financial Analyst", "Fundamental Analysis & Company Metrics"
+        )
         mock_st.text_input.assert_called_once()
         mock_fetch.assert_called_once_with("AAPL")
 

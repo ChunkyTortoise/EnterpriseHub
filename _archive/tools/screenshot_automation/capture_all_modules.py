@@ -3,6 +3,7 @@
 Capture screenshots of all EnterpriseHub modules.
 Simplified version that waits for content to load naturally.
 """
+
 import asyncio
 from playwright.async_api import async_playwright
 from pathlib import Path
@@ -17,6 +18,7 @@ MODULES_TO_CAPTURE = [
     ("📈 Marketing Analytics", "07_marketing_analytics.png"),
     ("🎨 Design System", "08_design_system.png"),
 ]
+
 
 async def capture_module(page, module_name: str, filename: str, output_dir: Path):
     """Capture screenshot of a specific module."""
@@ -40,6 +42,7 @@ async def capture_module(page, module_name: str, filename: str, output_dir: Path
     except Exception as e:
         print(f"   ⚠️  Failed: {e}")
         return False
+
 
 async def main():
     OUTPUT_DIR = Path("docs/screenshots")
@@ -76,6 +79,7 @@ async def main():
         print(f"📁 Location: {OUTPUT_DIR.absolute()}")
         print("=" * 70 + "\n")
 
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())
@@ -84,4 +88,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Error: {e}\n")
         import traceback
+
         traceback.print_exc()

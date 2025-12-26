@@ -1,7 +1,8 @@
 """Tests for the Agent Logic module."""
 
-from unittest.mock import patch, MagicMock
 import json
+from unittest.mock import MagicMock, patch
+
 from modules import agent_logic
 
 # Mock data for testing
@@ -44,11 +45,12 @@ def test_render_successful_analysis(mock_go, mock_process, mock_get_news, mock_s
     mock_st.text_input.return_value = "AAPL"
     mock_st.toggle.return_value = False  # Use basic sentiment, not AI
 
-    # Mock columns to prevent unpacking errors (2 calls: input layout and dashboard layout)
-    mock_st.columns.side_effect = [
-        [MagicMock(), MagicMock()],  # Input layout (2 columns)
-        [MagicMock(), MagicMock()],  # Dashboard layout (2 columns)
-    ]
+    # Mock columns using dynamic generator
+    def get_mock_cols(spec, *args, **kwargs):
+        count = spec if isinstance(spec, int) else len(spec)
+        return [MagicMock()] * count
+
+    mock_st.columns.side_effect = get_mock_cols
 
     # Mock backend functions
     mock_get_news.return_value = MOCK_NEWS_ITEMS
@@ -74,8 +76,15 @@ def test_render_successful_analysis(mock_go, mock_process, mock_get_news, mock_s
 
     # Check if results are displayed
     mock_st.plotly_chart.assert_called_once_with(mock_figure, use_container_width=True)
-    # Check that one of the key verdict components was called
-    mock_st.markdown.assert_any_call("## Positive")
+    # Check that the cinematic verdict card was rendered
+    # The new UI uses st.markdown with an HTML block containing the verdict
+    verdict_found = False
+    for call in mock_st.markdown.call_args_list:
+        args, kwargs = call
+        if "Positive" in args[0] and "AI Market Verdict" in args[0]:
+            verdict_found = True
+            break
+    assert verdict_found, "Verdict card not found in st.markdown calls"
     mock_st.expander.assert_called()  # Check that news feed expanders are called
 
     # Ensure no error/warning messages are shown
@@ -92,8 +101,12 @@ def test_render_no_news_found(mock_process, mock_get_news, mock_st, mock_section
     # --- Arrange ---
     mock_st.text_input.return_value = "FAILTICKER"
 
-    # Mock columns for input layout
-    mock_st.columns.return_value = [MagicMock(), MagicMock()]
+    # Mock columns using dynamic generator
+    def get_mock_cols(spec, *args, **kwargs):
+        count = spec if isinstance(spec, int) else len(spec)
+        return [MagicMock()] * count
+
+    mock_st.columns.side_effect = get_mock_cols
 
     mock_get_news.return_value = []  # No news
 
@@ -118,8 +131,12 @@ def test_render_no_ticker_entered(mock_get_news, mock_st, mock_section):
     # --- Arrange ---
     mock_st.text_input.return_value = ""  # Empty input
 
-    # Mock columns for input layout
-    mock_st.columns.return_value = [MagicMock(), MagicMock()]
+    # Mock columns using dynamic generator
+    def get_mock_cols(spec, *args, **kwargs):
+        count = spec if isinstance(spec, int) else len(spec)
+        return [MagicMock()] * count
+
+    mock_st.columns.side_effect = get_mock_cols
 
     # --- Act ---
     agent_logic.render()
@@ -139,8 +156,12 @@ def test_render_handles_exception(mock_get_news, mock_st, mock_section):
     # --- Arrange ---
     mock_st.text_input.return_value = "AAPL"
 
-    # Mock columns for input layout
-    mock_st.columns.return_value = [MagicMock(), MagicMock()]
+    # Mock columns using dynamic generator
+    def get_mock_cols(spec, *args, **kwargs):
+        count = spec if isinstance(spec, int) else len(spec)
+        return [MagicMock()] * count
+
+    mock_st.columns.side_effect = get_mock_cols
 
     mock_get_news.side_effect = Exception("Network Error")
 
@@ -194,8 +215,9 @@ class TestClaudeSentiment:
 
     def test_get_api_key_from_env(self):
         """Test getting API key from environment."""
-        from modules.agent_logic import _get_api_key
         import os
+
+        from modules.agent_logic import _get_api_key
 
         # Set env variable
         os.environ["ANTHROPIC_API_KEY"] = "test-key-env"

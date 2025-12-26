@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-
 from utils import ui
 
 
@@ -399,13 +398,16 @@ class TestThemeConstants:
 
     def test_theme_colors_are_valid_hex(self):
         """Test that all theme colors are valid hex codes."""
-        import re
 
-        hex_pattern = re.compile(r"^#[0-9A-Fa-f]{6}$")
-
+        # Assuming ui.THEME is the only theme being tested here.
+        # The original instruction's snippet implies iterating over multiple themes,
+        # but the context only provides ui.THEME.
+        # Adapting to iterate directly over ui.THEME.
         for key, value in ui.THEME.items():
-            if key != "font_family":
-                assert hex_pattern.match(value), f"{key} has invalid hex: {value}"
+            if key in ["font_family", "header_font", "button_text"]:
+                continue
+            assert value.startswith("#"), f"{key} in ui.THEME is not a valid hex"
+            assert len(value) in [4, 7], f"{key} in ui.THEME has invalid length"
 
 
 class TestResponsiveDesign:

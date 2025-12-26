@@ -1,0 +1,368 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.0, pytest-7.4.3, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.13/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /Users/Cave/Desktop/enterprise-hub/EnterpriseHub
+configfile: pyproject.toml
+plugins: anyio-4.12.0, cov-4.1.0, mock-3.12.0
+collecting ... collected 46 items
+
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_contribution_margin_calculation PASSED [  2%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_contribution_margin_ratio_calculation PASSED [  4%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_break_even_units_calculation PASSED [  6%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_break_even_revenue_calculation PASSED [  8%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_target_units_calculation PASSED [ 10%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_margin_of_safety_calculation PASSED [ 13%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_margin_of_safety_percentage PASSED [ 15%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_current_profit_calculation PASSED [ 17%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_operating_leverage_calculation PASSED [ 19%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_zero_contribution_margin_edge_case PASSED [ 21%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_high_fixed_costs_scenario PASSED [ 23%]
+tests/unit/test_margin_hunter.py::TestMarginHunterCalculations::test_low_margin_high_volume_scenario PASSED [ 26%]
+tests/unit/test_margin_hunter.py::TestMarginHunterRenderFunction::test_render_success_with_valid_inputs FAILED [ 28%]
+tests/unit/test_margin_hunter.py::TestMarginHunterRenderFunction::test_render_error_when_price_equals_cost PASSED [ 30%]
+tests/unit/test_margin_hunter.py::TestMarginHunterRenderFunction::test_render_calls_results_with_correct_params PASSED [ 32%]
+tests/unit/test_margin_hunter.py::TestMarginHunterEdgeCases::test_zero_current_sales PASSED [ 34%]
+tests/unit/test_margin_hunter.py::TestMarginHunterEdgeCases::test_negative_profit_scenario PASSED [ 36%]
+tests/unit/test_margin_hunter.py::TestMarginHunterEdgeCases::test_very_small_contribution_margin PASSED [ 39%]
+tests/unit/test_margin_hunter.py::TestMarginHunterEdgeCases::test_zero_fixed_costs PASSED [ 41%]
+tests/unit/test_margin_hunter.py::TestMarginHunterEdgeCases::test_large_numbers PASSED [ 43%]
+tests/unit/test_market_pulse.py::test_import_market_pulse PASSED         [ 45%]
+tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_success_with_valid_ticker PASSED [ 47%]
+tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_warning_on_empty_ticker PASSED [ 50%]
+tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_error_on_no_data PASSED [ 52%]
+tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_handles_invalid_ticker_error PASSED [ 54%]
+tests/unit/test_market_pulse.py::TestMarketPulseRender::test_render_handles_data_fetch_error PASSED [ 56%]
+tests/unit/test_market_pulse.py::TestDisplayMetrics::test_display_metrics_calculates_delta PASSED [ 58%]
+tests/unit/test_market_pulse.py::TestCreateTechnicalChart::test_create_chart_returns_figure PASSED [ 60%]
+tests/unit/test_market_pulse.py::TestCreateTechnicalChart::test_chart_has_four_panels PASSED [ 63%]
+tests/unit/test_market_pulse.py::TestCreateTechnicalChart::test_chart_includes_candlestick_trace PASSED [ 65%]
+tests/unit/test_market_pulse.py::TestCreateTechnicalChart::test_chart_includes_volume_bars PASSED [ 67%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_predict_trend_bullish PASSED [ 69%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_predict_trend_bearish PASSED [ 71%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_predict_trend_neutral PASSED [ 73%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_calculate_support_resistance PASSED [ 76%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_display_predictive_indicators PASSED [ 78%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_display_predictive_indicators_error_handling PASSED [ 80%]
+tests/unit/test_market_pulse.py::TestPredictiveIndicators::test_predict_trend_reasoning_includes_indicators PASSED [ 82%]
+tests/unit/test_marketing_analytics_data_integration.py::test_get_campaign_data_source_upload_csv PASSED [ 84%]
+tests/unit/test_marketing_analytics_data_integration.py::test_get_campaign_data_source_upload_excel PASSED [ 86%]
+tests/unit/test_marketing_analytics_data_integration.py::test_get_campaign_data_source_simulate_new_data PASSED [ 89%]
+tests/unit/test_marketing_analytics_data_integration.py::test_get_campaign_data_source_simulate_existing_data FAILED [ 91%]
+tests/unit/test_marketing_analytics_data_integration.py::test_render_campaign_dashboard_with_data FAILED [ 93%]
+tests/unit/test_marketing_analytics_data_integration.py::test_render_campaign_dashboard_no_data PASSED [ 95%]
+tests/unit/test_marketing_analytics_data_integration.py::test_calculate_channel_metrics PASSED [ 97%]
+tests/unit/test_marketing_analytics_data_integration.py::test_get_channel_breakdown PASSED [100%]
+
+=================================== FAILURES ===================================
+_____ TestMarginHunterRenderFunction.test_render_success_with_valid_inputs _____
+
+self = <MagicMock name='section_header' id='4948876928'>
+args = ('Margin Hunter', 'Break-Even & Profit Analysis'), kwargs = {}
+expected = call('Margin Hunter', 'Break-Even & Profit Analysis')
+actual = call('Margin Hunter', 'Profitability & Break-Even Analysis')
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x127111c60>
+cause = None
+
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: section_header('Margin Hunter', 'Break-Even & Profit Analysis')
+E             Actual: section_header('Margin Hunter', 'Profitability & Break-Even Analysis')
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:977: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+self = <MagicMock name='section_header' id='4948876928'>
+args = ('Margin Hunter', 'Break-Even & Profit Analysis'), kwargs = {}
+
+    def assert_called_once_with(self, /, *args, **kwargs):
+        """assert that the mock was called exactly once and that that call was
+        with the specified arguments."""
+        if not self.call_count == 1:
+            msg = ("Expected '%s' to be called once. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+            raise AssertionError(msg)
+>       return self.assert_called_with(*args, **kwargs)
+E       AssertionError: expected call not found.
+E       Expected: section_header('Margin Hunter', 'Break-Even & Profit Analysis')
+E         Actual: section_header('Margin Hunter', 'Profitability & Break-Even Analysis')
+E
+E       pytest introspection follows:
+E
+E       Args:
+E       assert ('Margin Hunter', 'Profitability & Break-Even Analysis') == ('Margin Hunter', 'Break-Even & Profit Analysis')
+E         At index 1 diff: 'Profitability & Break-Even Analysis' != 'Break-Even & Profit Analysis'
+E         Full diff:
+E         - ('Margin Hunter', 'Break-Even & Profit Analysis')
+E         ?                               ---------
+E         + ('Margin Hunter', 'Profitability & Break-Even Analysis')
+E         ?                    ++++++++++++++++
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:989: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.unit.test_margin_hunter.TestMarginHunterRenderFunction object at 0x11a458550>
+mock_st = <MagicMock name='st' id='4948876256'>
+mock_section = <MagicMock name='section_header' id='4948876928'>
+
+    @patch("modules.margin_hunter.ui.section_header")
+    @patch("modules.margin_hunter.st")
+    def test_render_success_with_valid_inputs(self, mock_st, mock_section):
+        """Test successful render with valid inputs."""
+        from modules import margin_hunter
+
+        # Mock Streamlit inputs
+        mock_st.number_input.side_effect = [
+            50.0,  # unit_price
+            20.0,  # unit_cost
+            5000.0,  # fixed_costs
+            2000.0,  # target_profit
+            250,  # current_sales_units
+        ]
+
+        # Mock columns
+        mock_col1 = MagicMock()
+        mock_col2 = MagicMock()
+        mock_st.columns.return_value = [mock_col1, mock_col2]
+
+        # Call render
+        margin_hunter.render()
+
+        # Assertions
+>       mock_section.assert_called_once_with("Margin Hunter", "Break-Even & Profit Analysis")
+E       AssertionError: expected call not found.
+E       Expected: section_header('Margin Hunter', 'Break-Even & Profit Analysis')
+E         Actual: section_header('Margin Hunter', 'Profitability & Break-Even Analysis')
+E
+E       pytest introspection follows:
+E
+E       Args:
+E       assert ('Margin Hunter', 'Profitability & Break-Even Analysis') == ('Margin Hunter', 'Break-Even & Profit Analysis')
+E         At index 1 diff: 'Profitability & Break-Even Analysis' != 'Break-Even & Profit Analysis'
+E         Full diff:
+E         - ('Margin Hunter', 'Break-Even & Profit Analysis')
+E         ?                               ---------
+E         + ('Margin Hunter', 'Profitability & Break-Even Analysis')
+E         ?                    ++++++++++++++++
+
+tests/unit/test_margin_hunter.py:129: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2025-12-22 11:08:41,816 - modules.margin_hunter - ERROR - An unexpected error occurred in Margin Hunter: not enough values to unpack (expected 3, got 2)
+Traceback (most recent call last):
+  File "/Users/Cave/Desktop/enterprise-hub/EnterpriseHub/modules/margin_hunter.py", line 79, in render
+    _render_results(
+    ~~~~~~~~~~~~~~~^
+        contribution_margin,
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<13 lines>...
+        target_profit,
+        ^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/Cave/Desktop/enterprise-hub/EnterpriseHub/modules/margin_hunter.py", line 127, in _render_results
+    m1, m2, m3 = st.columns(3)
+    ^^^^^^^^^^
+ValueError: not enough values to unpack (expected 3, got 2)
+------------------------------ Captured log call -------------------------------
+ERROR    modules.margin_hunter:margin_hunter.py:98 An unexpected error occurred in Margin Hunter: not enough values to unpack (expected 3, got 2)
+Traceback (most recent call last):
+  File "/Users/Cave/Desktop/enterprise-hub/EnterpriseHub/modules/margin_hunter.py", line 79, in render
+    _render_results(
+    ~~~~~~~~~~~~~~~^
+        contribution_margin,
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<13 lines>...
+        target_profit,
+        ^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/Cave/Desktop/enterprise-hub/EnterpriseHub/modules/margin_hunter.py", line 127, in _render_results
+    m1, m2, m3 = st.columns(3)
+    ^^^^^^^^^^
+ValueError: not enough values to unpack (expected 3, got 2)
+_____________ test_get_campaign_data_source_simulate_existing_data _____________
+
+self = <MagicMock name='st.selectbox' id='4981990336'>
+
+    def assert_not_called(self):
+        """assert that the mock was never called.
+        """
+        if self.call_count != 0:
+            msg = ("Expected '%s' to not have been called. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'selectbox' to not have been called. Called 1 times.
+E           Calls: [call('Simulate for Platform', ['Google Ads', 'Meta Ads'])].
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:938: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+mock_st = <MagicMock name='st' id='4983997840'>
+
+    @patch("modules.marketing_analytics.st")
+    def test_get_campaign_data_source_simulate_existing_data(mock_st):
+        """Test _get_campaign_data_source when 'Simulate Marketing Data' is selected and existing data is used."""
+        mock_st.radio.return_value = "Simulate Marketing Data"
+        mock_st.button.return_value = False  # DO NOT generate new data
+        # Pre-populate session state
+        mock_st.session_state = {
+            "simulated_campaign_data": generate_campaign_data(platform="Meta Ads", days=3)
+        }
+
+        # Configure mock_st.columns for this test
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+
+        df = marketing_analytics._get_campaign_data_source()
+
+        mock_st.radio.assert_called_once()
+        # No calls to selectbox, date_input, slider, button if existing data is used
+>       mock_st.selectbox.assert_not_called()
+E       AssertionError: Expected 'selectbox' to not have been called. Called 1 times.
+E       Calls: [call('Simulate for Platform', ['Google Ads', 'Meta Ads'])].
+E
+E       pytest introspection follows:
+E
+E       Args:
+E       assert ('Simulate for Platform', ['Google Ads', 'Meta Ads']) == ()
+E         Left contains 2 more items, first extra item: 'Simulate for Platform'
+E         Full diff:
+E         - ()
+E         + ('Simulate for Platform', ['Google Ads', 'Meta Ads'])
+
+tests/unit/test_marketing_analytics_data_integration.py:121: AssertionError
+___________________ test_render_campaign_dashboard_with_data ___________________
+
+self = <MagicMock name='ui.card_metric' id='4983534128'>
+
+    def assert_called(self):
+        """assert that the mock was called at least once
+        """
+        if self.call_count == 0:
+            msg = ("Expected '%s' to have been called." %
+                   (self._mock_name or 'mock'))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'card_metric' to have been called.
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:946: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+mock_calc_metrics = <MagicMock name='_calculate_channel_metrics' id='4982468160'>
+mock_get_data_source = <MagicMock name='_get_campaign_data_source' id='4982467824'>
+mock_ui = <MagicMock name='ui' id='4982467488'>
+mock_st = <MagicMock name='st' id='4982467152'>
+sample_campaign_df =         Date    Platform  Impressions  ...     CTR  Conversion_Rate  ROAS
+0 2023-01-01  Google Ads       108721  ...  ...         0.0247  2.86
+9 2023-01-10  Google Ads       105129  ...  0.0102           0.0211  2.13
+
+[10 rows x 11 columns]
+
+    @patch("modules.marketing_analytics.st")
+    @patch("modules.marketing_analytics.ui")
+    @patch("modules.marketing_analytics._get_campaign_data_source")
+    @patch("modules.marketing_analytics._calculate_channel_metrics")  # Patch the helper function
+    def test_render_campaign_dashboard_with_data(
+        mock_calc_metrics, mock_get_data_source, mock_ui, mock_st, sample_campaign_df
+    ):
+        """Test _render_campaign_dashboard renders correctly when data is available."""
+        mock_get_data_source.return_value = sample_campaign_df
+        mock_st.selectbox.return_value = "All Platforms"  # Mock platform filter
+        mock_st.date_input.side_effect = [
+            sample_campaign_df["Date"].min(),
+            sample_campaign_df["Date"].max(),
+        ]  # Mock date filters
+
+        # Mock _calculate_channel_metrics to return a plausible dict
+        mock_calc_metrics.return_value = {
+            "spend": 10000,
+            "revenue": 30000,
+            "roi": 3.0,
+            "conversions": 500,
+            "spend_change": 10,
+            "revenue_change": 15,
+            "roi_change": 5,
+            "conversion_change": 8,
+        }
+
+        # Mock st.columns
+        mock_st.columns.side_effect = lambda num_cols: [MagicMock() for _ in range(num_cols)]
+
+        # Mock the Plotly figure methods that are called
+        mock_st.plotly_chart.return_value = None
+
+        marketing_analytics._render_campaign_dashboard()
+
+        mock_get_data_source.assert_called_once()
+        mock_st.subheader.assert_any_call("📈 Campaign Performance Dashboard")
+        mock_st.selectbox.assert_called_once()
+        mock_st.date_input.assert_called()  # Twice for start and end
+>       mock_ui.card_metric.assert_called()  # Should be called multiple times
+E       AssertionError: Expected 'card_metric' to have been called.
+
+tests/unit/test_marketing_analytics_data_integration.py:168: AssertionError
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.MessageMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.ScalarMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform darwin, python 3.13.0-final-0 ----------
+Name                             Stmts   Miss  Cover   Missing
+--------------------------------------------------------------
+app.py                             116    116     0%   8-332
+modules/__init__.py                  0      0   100%
+modules/agent_logic.py              75     75     0%   1-156
+modules/content_engine.py          247    247     0%   8-657
+modules/data_detective.py          311    311     0%   8-768
+modules/design_system.py           297    297     0%   8-868
+modules/financial_analyst.py       208    208     0%   1-408
+modules/margin_hunter.py            92     45    51%   128-166, 188-251, 258-287, 301-332
+modules/market_pulse.py            156     20    87%   83-91, 113-115, 149-154, 268-272
+modules/marketing_analytics.py     593    483    19%   34-61, 103-252, 257-472, 477-602, 607-725, 730-745, 750-870, 877-1041, 1047-1059, 1070-1133, 1138-1186, 1221-1222, 1254, 1259-1268, 1273-1284, 1300-1304, 1309, 1352, 1378-1396, 1407-1424, 1429-1445, 1450, 1464-1531, 1536-1557, 1570-1571, 1587, 1600-1601, 1606, 1616, 1649-1650
+modules/multi_agent.py              97     97     0%   8-196
+modules/smart_forecast.py           86     86     0%   8-200
+utils/data_loader.py                86     68    21%   49-83, 113-150, 169-179, 193-207, 221-231
+utils/data_source_faker.py          20      0   100%
+utils/exceptions.py                 18      3    83%   42-44
+utils/logger.py                     18      1    94%   38
+utils/ui.py                         60     39    35%   58, 605-609, 618, 638-647, 669-683, 690-696, 703-711, 718-793, 800, 870-928, 997-1026
+validate_logic.py                   87     87     0%   7-171
+validate_new_features.py           111    111     0%   7-221
+--------------------------------------------------------------
+TOTAL                             2678   2294    14%
+Coverage HTML written to dir htmlcov
+
+FAIL Required test coverage of 70% not reached. Total coverage: 14.34%
+=========================== short test summary info ============================
+FAILED tests/unit/test_margin_hunter.py::TestMarginHunterRenderFunction::test_render_success_with_valid_inputs
+FAILED tests/unit/test_marketing_analytics_data_integration.py::test_get_campaign_data_source_simulate_existing_data
+FAILED tests/unit/test_marketing_analytics_data_integration.py::test_render_campaign_dashboard_with_data
+================== 3 failed, 43 passed, 2 warnings in 12.22s ===================

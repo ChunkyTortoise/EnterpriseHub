@@ -117,16 +117,18 @@ class TestMarginHunterRenderFunction:
             250,  # current_sales_units
         ]
 
-        # Mock columns
-        mock_col1 = MagicMock()
-        mock_col2 = MagicMock()
-        mock_st.columns.return_value = [mock_col1, mock_col2]
+        # Mock columns to prevent unpacking errors (multiple calls)
+        mock_st.columns.side_effect = [
+            [MagicMock(), MagicMock()],  # Input layout (col1, col2)
+            [MagicMock(), MagicMock(), MagicMock()],  # Results row 1 (m1, m2, m3)
+            [MagicMock(), MagicMock(), MagicMock()],  # Results row 2 (m4, m5, m6)
+        ]
 
         # Call render
         margin_hunter.render()
 
         # Assertions
-        mock_section.assert_called_once_with("Margin Hunter", "Break-Even & Profit Analysis")
+        mock_section.assert_called_once_with("Margin Hunter", "Profitability & Break-Even Analysis")
         mock_st.error.assert_not_called()  # No errors should be shown
 
     @patch("modules.margin_hunter.st")

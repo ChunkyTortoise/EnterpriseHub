@@ -6,44 +6,90 @@ It injects custom CSS to override Streamlit's default look with a professional,
 enterprise-grade design system (Fintech/SaaS Aesthetic).
 """
 
+import base64
+import os
 from typing import Optional
 
 import streamlit as st
 
 # --- DESIGN SYSTEM CONSTANTS ---
 # Light theme (WCAG AAA compliant - all ratios >= 7:1)
+# EDITORIAL FINTECH DESIGN SYSTEM (Steel & Slate)
+# Based on Stripe/Linear/Institutional Finance aesthetics
+
 LIGHT_THEME = {
-    "primary": "#4338CA",  # Indigo 700 (darker for AAA compliance)
-    "primary_dark": "#3730A3",  # Indigo 800
-    "primary_light": "#E0E7FF",  # Indigo 100
+    "primary": "#0F172A",  # Slate 900 (Institutional)
+    "primary_dark": "#020617",  # Slate 950
+    "primary_light": "#F1F5F9",  # Slate 100
+    "accent": "#059669",  # Emerald 600 (Tactical Signal)
     "secondary": "#64748B",  # Slate 500
-    "background": "#F8FAFC",  # Slate 50
-    "surface": "#FFFFFF",  # White
+    "background": "#FFFFFF",  # Clean White
+    "surface": "#F8FAFC",  # Slate 50
     "text_main": "#0F172A",  # Slate 900
     "text_light": "#475569",  # Slate 600
-    "success": "#065F46",  # Emerald 800 (darker for AAA: 7.1:1)
-    "warning": "#B45309",  # Amber 700 (darker for AAA compliance)
-    "danger": "#991B1B",  # Red 800 (darker for AAA: 8.1:1)
+    "success": "#059669",  # Emerald 600
+    "warning": "#D97706",  # Amber 600
+    "danger": "#DC2626",  # Red 600
     "border": "#E2E8F0",  # Slate 200
-    "font_family": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    "font_family": ("'Inter Variable', 'Inter', -apple-system, system-ui, sans-serif"),
+    "header_font": "'Space Grotesk', sans-serif",
 }
 
-# Dark theme (WCAG AAA compliant)
 DARK_THEME = {
-    "primary": "#A5B4FC",  # Indigo 300 (lighter for AAA: 8.5:1)
-    "primary_dark": "#818CF8",  # Indigo 400
-    "primary_light": "#312E81",  # Indigo 900
-    "secondary": "#94A3B8",  # Slate 400
-    "background": "#0F172A",  # Slate 900
-    "surface": "#1E293B",  # Slate 800
-    "text_main": "#F8FAFC",  # Slate 50
-    "text_light": "#CBD5E1",  # Slate 300
-    "success": "#6EE7B7",  # Emerald 300 (AAA compliant)
-    "warning": "#FCD34D",  # Amber 300 (AAA compliant)
-    "danger": "#FCA5A5",  # Red 300 (lighter for AAA: 8.9:1)
-    "border": "#334155",  # Slate 700
-    "button_text": "#0F172A",  # Dark text for light buttons in dark mode
-    "font_family": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    "primary": "#F8FAFC",  # Slate 50
+    "primary_dark": "#F1F5F9",
+    "primary_light": "#1E293B",  # Slate 800
+    "accent": "#10B981",  # Emerald 500
+    "secondary": "#94A3B8",
+    "background": "#020617",  # Slate 950
+    "surface": "#0F172A",  # Slate 900
+    "text_main": "#F8FAFC",
+    "text_light": "#94A3B8",
+    "success": "#10B981",
+    "warning": "#FBBF24",
+    "danger": "#F87171",
+    "border": "#1E293B",
+    "font_family": "'Inter', -apple-system, system-ui, sans-serif",
+    "header_font": "'Space Grotesk', sans-serif",
+    "button_text": "#FFFFFF",
+}
+
+OCEAN_THEME = {
+    "primary": "#083344",  # Cyan 950
+    "primary_dark": "#164E63",
+    "primary_light": "#ECFEFF",
+    "accent": "#06B6D4",
+    "secondary": "#0891B2",
+    "background": "#F0F9FF",
+    "surface": "#FFFFFF",
+    "text_main": "#083344",
+    "text_light": "#155E75",
+    "success": "#0D9488",
+    "warning": "#CA8A04",
+    "danger": "#BE123C",
+    "border": "#CFFAFE",
+    "font_family": "'Inter', -apple-system, system-ui, sans-serif",
+    "header_font": "'Space Grotesk', sans-serif",
+    "button_text": "#FFFFFF",
+}
+
+SUNSET_THEME = {
+    "primary": "#2E1065",  # Violet 950
+    "primary_dark": "#4C1D95",
+    "primary_light": "#F5F3FF",
+    "accent": "#D946EF",
+    "secondary": "#7E22CE",
+    "background": "#FFF7ED",
+    "surface": "#FFFFFF",
+    "text_main": "#2E1065",
+    "text_light": "#5B21B6",
+    "success": "#166534",
+    "warning": "#92400E",
+    "danger": "#991B1B",
+    "border": "#FED7AA",
+    "font_family": "'Inter', -apple-system, system-ui, sans-serif",
+    "header_font": "'Space Grotesk', sans-serif",
+    "button_text": "#FFFFFF",
 }
 
 # Add button_text to light theme (white text for dark buttons)
@@ -53,12 +99,31 @@ LIGHT_THEME["button_text"] = "#FFFFFF"
 THEME = LIGHT_THEME
 
 
+def get_base64_image(file_path: str) -> str:
+    """Read a local file and return its base64 representation."""
+    if not os.path.exists(file_path):
+        return ""
+    with open(file_path, "rb") as f:
+        data = f.read()
+    encoded = base64.b64encode(data).decode()
+    ext = file_path.split(".")[-1].lower()
+    mime_type = f"image/{ext}"
+    if ext == "svg":
+        mime_type = "image/svg+xml"
+    return f"data:{mime_type};base64,{encoded}"
+
+
 def _generate_css(theme: dict) -> str:
     """Generate CSS with the specified theme colors."""
     return f"""
 <style>
-    /* IMPORT INTER FONT */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    /* IMPORT GOOGLE FONTS */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:slnt,wght@-10..0,100..900&family=Space+Grotesk:wght@300..700&display=swap');
+
+    :root {{
+        --glass-bg: {theme['surface']}CC;
+        --glass-border: {theme['border']}40;
+    }}
 
     /* GLOBAL RESET & TYPOGRAPHY */
     html, body, [class*="css"] {{
@@ -67,23 +132,46 @@ def _generate_css(theme: dict) -> str:
         background-color: {theme['background']};
     }}
 
-    /* MAIN CONTAINER BACKGROUND */
+    /* MAIN CONTAINER BACKGROUND - Visual 5.0 Animated Mesh */
     .stApp {{
         background-color: {theme['background']};
+        background-image:
+            radial-gradient(at 0% 0%, {theme['primary_light']}80 0,
+                            transparent 50%),
+            radial-gradient(at 100% 0%, {theme.get('accent', '#059669')}15 0,
+                            transparent 50%),
+            radial-gradient(at 100% 100%, {theme['primary_light']}80 0,
+                            transparent 50%),
+            radial-gradient(at 0% 100%,
+                            {theme.get('secondary', '#64748B')}15 0,
+                            transparent 50%);
+        background-attachment: fixed;
+        background-size: 200% 200%;
+        animation: mesh 20s ease infinite;
     }}
 
-    /* SIDEBAR STYLING */
+    @keyframes mesh {{
+        0% {{ background-position: 0% 0%; }}
+        50% {{ background-position: 100% 100%; }}
+        100% {{ background-position: 0% 0%; }}
+    }}
+
+    /* SIDEBAR STYLING - Saturated Glassmorphism */
     section[data-testid="stSidebar"] {{
-        background-color: {theme['surface']};
-        border-right: 1px solid {theme['border']};
-        box-shadow: 1px 0 0 0 {theme['border']};
+        background-color: {theme['surface']}A6; /* High transparency */
+        border-right: 1px solid {theme['border']}40;
+        backdrop-filter: blur(25px) saturate(210%);
+        -webkit-backdrop-filter: blur(25px) saturate(210%);
+        box-shadow: 10px 0 15px -3px rgba(0, 0, 0, 0.05);
     }}
 
     section[data-testid="stSidebar"] h1 {{
         color: {theme['primary']};
-        font-weight: 700;
-        font-size: 1.5rem;
-        letter-spacing: -0.025em;
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: -0.04em;
+        text-transform: uppercase;
+        margin-bottom: 2rem;
     }}
 
     /* NAVIGATION RADIO BUTTONS */
@@ -92,49 +180,63 @@ def _generate_css(theme: dict) -> str:
         font-weight: 500;
     }}
 
-    /* METRIC CARDS */
+    /* METRIC CARDS - Advanced Depth */
     .metric-card {{
         background-color: {theme['surface']};
         border: 1px solid {theme['border']};
-        border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        transition: all 0.2s ease-in-out;
+        border-radius: 0px;
+        padding: 32px;
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         height: 100%;
         display: flex;
         flex-direction: column;
+        border-top: 4px solid {theme['border']};
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }}
 
     .metric-card:hover {{
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        transform: translateY(-2px);
-        border-color: {theme['primary_light']};
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        transform: translateY(-8px);
+        border-top-color: {theme['accent']};
+        background-color: {theme['background']};
     }}
 
-    /* HEADERS */
-    h1, h2, h3 {{
-        color: {theme['text_main']};
-        font-weight: 700;
-        letter-spacing: -0.025em;
-    }}
-
+    /* HEADERS - Fluid Typography */
     h1 {{
-        font-size: 2.5rem;
-        margin-bottom: 1.5rem;
-        color: {theme['primary_dark']};  /* Fallback for non-webkit browsers */
-        background: linear-gradient(45deg, {theme['primary']}, {theme['primary_dark']});
-        background: -webkit-linear-gradient(45deg, {theme['primary']}, {theme['primary_dark']});
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        font-size: clamp(2.5rem, 8vw, 4.5rem);
+        font-weight: 900;
+        letter-spacing: -0.06em;
+        margin-bottom: 2rem;
+        color: {theme['primary']};
+        font-family: {theme['header_font']};
+        line-height: 0.9;
+        animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }}
 
     h2 {{
-        font-size: 1.75rem;
-        margin-top: 2.5rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-top: 2rem;
         margin-bottom: 1rem;
-        border-bottom: 2px solid {theme['border']};
-        padding-bottom: 0.5rem;
+        border-left: 4px solid {theme.get('accent', theme['primary'])};
+        padding-left: 1rem;
+        animation: fadeIn 1s ease-out;
+    }}
+
+    /* ANIMATIONS */
+    @keyframes slideUp {{
+        from {{ opacity: 0; transform: translateY(30px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+    }}
+
+    @keyframes fadeIn {{
+        from {{ opacity: 0; }}
+        to {{ opacity: 1; }}
+    }}
+
+    .stMarkdown, .element-container {{
+        animation: fadeIn 0.8s ease-out forwards;
     }}
 
     h3 {{
@@ -143,7 +245,12 @@ def _generate_css(theme: dict) -> str:
         margin-bottom: 0.5rem;
     }}
 
-    /* BUTTONS */
+    /* ACTIVE NAVIGATION INDICATOR */
+    div[data-testid="stSidebarNav"] li[data-selected="true"] {{
+        background-color: {theme['primary_light']};
+        border-left: 4px solid {theme['accent']};
+    }}
+
     .stButton button {{
         background-color: {theme['primary']};
         color: {theme.get('button_text', 'white')};
@@ -595,14 +702,20 @@ def setup_interface(theme_mode: str = "light") -> None:
     Initializes the UI interface with the Design System.
 
     Args:
-        theme_mode: "light" or "dark" theme mode
+        theme_mode: "light", "dark", "ocean", or "sunset" theme mode
 
     Call this at the start of the application.
     """
     global THEME
 
     # Select theme based on mode
-    THEME = DARK_THEME if theme_mode.lower() == "dark" else LIGHT_THEME
+    theme_map = {
+        "light": LIGHT_THEME,
+        "dark": DARK_THEME,
+        "ocean": OCEAN_THEME,
+        "sunset": SUNSET_THEME,
+    }
+    THEME = theme_map.get(theme_mode.lower(), LIGHT_THEME)
 
     # Generate and inject CSS with selected theme
     css = _generate_css(THEME)
@@ -662,52 +775,86 @@ def status_badge(status: str) -> str:
     """
 
 
-def feature_card(icon: str, title: str, description: str, status: str = "active") -> None:
+def hero_section(title: str, subtitle: str, background_image: Optional[str] = None) -> None:
     """
-    Renders a feature card using HTML/CSS for better control.
+    Renders a centered hero section with optional editorial background.
     """
-    badge = status_badge(status)
+    bg_style = f"background-color: {THEME['primary_light']};"
+    overlay = ""
 
-    html = f"""
-    <article class="metric-card" role="article" aria-label="Feature: {title}">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-            <div style="font-size: 2.5rem; background: {THEME['background']}; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px;" role="img" aria-label="{title} icon">{icon}</div>
-            {badge}
-        </div>
-        <h3 style="margin-top: 0.5rem; color: {THEME['text_main']}; font-size: 1.25rem;">{title}</h3>
-        <p style="color: {THEME['text_light']}; font-size: 0.95rem; line-height: 1.6; margin-bottom: 0; flex-grow: 1;">
-            {description}
-        </p>
-    </article>
-    """
+    if background_image:
+        b64 = get_base64_image(background_image)
+        if b64:
+            bg_style = f"background-image: url('{b64}'); background-size: cover; background-position: center;"
+            overlay = f"background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px); padding: 3rem; border-radius: 12px; border: 1px solid {THEME['border']};"
+
+    html = (
+        f'<section class="hero-container" role="banner" '
+        f'aria-label="Hero section" style="{bg_style} border: none; '
+        f'padding: 6rem 2rem;">'
+        f'<div style="{overlay} max-width: 800px; margin: 0 auto;">'
+        f'<h1 class="hero-title" style="color: {THEME["primary"]}; '
+        f'margin-bottom: 0.5rem;">{title}</h1>'
+        f'<p class="hero-subtitle" style="color: {THEME["text_light"]}; '
+        f'font-weight: 500;">{subtitle}</p></div></section>'
+    )
     st.markdown(html, unsafe_allow_html=True)
 
 
-def hero_section(title: str, subtitle: str) -> None:
+def feature_card(
+    icon: str, title: str, description: str, status: str = "active", icon_path: Optional[str] = None
+) -> None:
     """
-    Renders a centered hero section with gradient background.
+    Renders a feature card using the Editorial style.
     """
-    html = f"""
-    <section class="hero-container" role="banner" aria-label="Hero section">
-        <h1 class="hero-title">{title}</h1>
-        <p class="hero-subtitle">{subtitle}</p>
-    </section>
-    """
+    badge = status_badge(status)
+    icon_display = icon
+
+    if icon_path:
+        b64 = get_base64_image(icon_path)
+        if b64:
+            icon_display = (
+                f"<img src='{b64}' style='width: 48px; height: 48px; object-fit: contain;'>"
+            )
+
+    html = (
+        f'<article class="metric-card" role="article" '
+        f'aria-label="Feature: {title}" style="border-radius: 0; '
+        f'border-top: 4px solid {THEME["border"]}; padding: 2rem;">'
+        f'<div style="display: flex; justify-content: space-between; '
+        f'align-items: start; margin-bottom: 1.5rem;">'
+        f'<div style="font-size: 2.5rem; width: 48px; height: 48px; '
+        f'display: flex; align-items: center; justify-content: center;" '
+        f'role="img" aria-label="{title} icon">{icon_display}</div>'
+        f'{badge}</div><h3 style="margin-top: 0; color: {THEME["text_main"]}; '
+        f'font-size: 1.25rem; font-family: {THEME["header_font"]}; '
+        f'letter-spacing: -0.02em;">{title}</h3>'
+        f'<p style="color: {THEME["text_light"]}; font-size: 0.95rem; '
+        f'line-height: 1.6; margin-bottom: 0; flex-grow: 1;">'
+        f'{description}</p></article>'
+    )
     st.markdown(html, unsafe_allow_html=True)
 
 
 def use_case_card(icon: str, title: str, description: str) -> None:
     """
-    Renders a use case card for the social proof section.
+    Renders a use case card for the Overview page.
     """
-    html = f"""
-    <article class="metric-card" role="article" aria-label="Use case: {title}">
-        <h3 style="margin-top: 0;"><span role="img" aria-label="{title} icon">{icon}</span> {title}</h3>
-        <p style="color: {THEME['text_light']}; line-height: 1.6;">
-            {description}
-        </p>
-    </article>
-    """
+    html = (
+        f'<div class="use-case-card" role="article" '
+        f'aria-label="Use case: {title}" style="background-color: '
+        f'{THEME["surface"]}; border-left: 4px solid {THEME["accent"]}; '
+        f'padding: 1.5rem; border-radius: 4px; border: 1px solid '
+        f'{THEME["border"]}; border-left-width: 4px;">'
+        f'<div style="display: flex; gap: 1rem; align-items: start;">'
+        f'<div style="font-size: 1.5rem;" role="img" '
+        f'aria-label="{title} icon">{icon}</div><div>'
+        f'<strong style="display: block; margin-bottom: 0.5rem; '
+        f'color: {THEME["primary"]}; font-family: {THEME["header_font"]};">'
+        f'{title}</strong><div style="font-size: 0.9rem; '
+        f'color: {THEME["text_light"]}; line-height: 1.6;">'
+        f'{description}</div></div></div></div>'
+    )
     st.markdown(html, unsafe_allow_html=True)
 
 
@@ -791,24 +938,6 @@ def comparison_table() -> None:
     </section>
     """
     st.markdown(html, unsafe_allow_html=True)
-
-
-def footer() -> None:
-    """
-    Renders the application footer.
-    """
-    st.markdown(
-        """
-        <footer class="footer" role="contentinfo" aria-label="Site footer">
-            <p>© 2025 Enterprise Hub. Built with Streamlit & Python.</p>
-            <nav aria-label="Footer navigation" style="font-size: 0.8rem; margin-top: 0.5rem;">
-                <a href="https://github.com/ChunkyTortoise/enterprise-hub" target="_blank" rel="noopener noreferrer" aria-label="View source code on GitHub">View Source</a> •
-                <a href="https://linkedin.com/in/caymanroden" target="_blank" rel="noopener noreferrer" aria-label="Contact developer on LinkedIn">Contact Developer</a>
-            </nav>
-        </footer>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 def skeleton_loader(skeleton_type: str = "card", count: int = 1) -> None:
@@ -1024,3 +1153,294 @@ def toast(message: str, toast_type: str = "success", duration: int = 3000) -> No
         </script>
         """
         st.markdown(toast_html, unsafe_allow_html=True)
+
+
+def animated_metric(
+    label: str,
+    value: str,
+    delta: Optional[str] = None,
+    icon: Optional[str] = None,
+    color: str = "primary",
+) -> None:
+    """
+    Renders an animated metric card with count-up effect and gradient background.
+
+    Args:
+        label: Metric label (e.g., "Total Revenue")
+        value: Metric value (e.g., "$1,234,567")
+        delta: Optional change indicator (e.g., "+12.5%")
+        icon: Optional emoji/icon to display
+        color: Color scheme - "primary", "success", "warning", "danger"
+    """
+    # Use opacified versions of theme colors for backgrounds to ensure theme consistency
+    color_map = {
+        "primary": (THEME["primary"], THEME["primary_light"]),
+        "success": (THEME["success"], f"{THEME['success']}15"),
+        "warning": (THEME["warning"], f"{THEME['warning']}15"),
+        "danger": (THEME["danger"], f"{THEME['danger']}15"),
+    }
+
+    main_color, bg_color = color_map.get(color, color_map["primary"])
+
+    html = f"""
+    <div class="metric-card hover-lift" style="background: linear-gradient(135deg, {bg_color} 0%, {THEME['surface']} 100%); border-left: 4px solid {main_color};">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+            <div style="font-size: 0.75rem; color: {THEME['text_light']}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                {label}
+            </div>
+            {f'<div style="font-size: 1.75rem;" role="img" aria-label="{label} icon">{icon}</div>' if icon else ''}
+        </div>
+        <div style="font-size: 2.25rem; font-weight: 700; color: {main_color}; margin-bottom: 4px; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">
+            {value}
+        </div>
+        {f'<div style="font-size: 0.875rem; color: {THEME["success"] if "+" in delta else THEME["danger"]}; font-weight: 600;">{delta}</div>' if delta else ''}
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def glassmorphic_card(
+    title: str,
+    content: str,
+    icon: Optional[str] = None,
+    cta_text: Optional[str] = None,
+    cta_url: Optional[str] = None,
+) -> None:
+    """
+    Renders a glassmorphic card with backdrop blur effect (modern 2025 design trend).
+
+    Args:
+        title: Card title
+        content: Card content (HTML allowed)
+        icon: Optional emoji/icon
+        cta_text: Optional call-to-action button text
+        cta_url: Optional CTA link URL
+    """
+    html = f"""
+    <div style="
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+    " class="hover-lift">
+        {f'<div style="font-size: 2.5rem; margin-bottom: 12px;" role="img" aria-label="{title} icon">{icon}</div>' if icon else ''}
+        <h3 style="color: {THEME['text_main']}; margin-bottom: 12px; font-size: 1.5rem;">{title}</h3>
+        <p style="color: {THEME['text_light']}; line-height: 1.6; margin-bottom: 16px;">
+            {content}
+        </p>
+        {f'''<a href="{cta_url}" style="
+            display: inline-block;
+            background-color: {THEME['primary']};
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        " onmouseover="this.style.backgroundColor='{THEME['primary_dark']}'; this.style.transform='translateY(-2px)';"
+           onmouseout="this.style.backgroundColor='{THEME['primary']}'; this.style.transform='translateY(0)';">
+            {cta_text} →
+        </a>''' if cta_text and cta_url else ''}
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def progress_bar(
+    label: str,
+    value: int,
+    max_value: int = 100,
+    color: str = "primary",
+    show_percentage: bool = True,
+) -> None:
+    """
+    Renders an animated progress bar with smooth transitions.
+
+    Args:
+        label: Progress bar label
+        value: Current value
+        max_value: Maximum value (default: 100)
+        color: Color scheme - "primary", "success", "warning", "danger"
+        show_percentage: Whether to show percentage text
+    """
+    percentage = min(100, int((value / max_value) * 100))
+
+    color_map = {
+        "primary": THEME["primary"],
+        "success": THEME["success"],
+        "warning": THEME["warning"],
+        "danger": THEME["danger"],
+    }
+
+    bar_color = color_map.get(color, THEME["primary"])
+
+    html = f"""
+    <div style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.875rem; font-weight: 600; color: {THEME['text_main']};">{label}</span>
+            {f'<span style="font-size: 0.875rem; font-weight: 700; color: {bar_color};">{percentage}%</span>' if show_percentage else ''}
+        </div>
+        <div style="
+            width: 100%;
+            height: 12px;
+            background-color: {THEME['background']};
+            border-radius: 9999px;
+            overflow: hidden;
+            border: 1px solid {THEME['border']};
+        ">
+            <div style="
+                width: {percentage}%;
+                height: 100%;
+                background: linear-gradient(90deg, {bar_color}, {THEME['primary_light']});
+                border-radius: 9999px;
+                transition: width 1s ease-out;
+                animation: shimmer 2s ease-in-out infinite;
+            "></div>
+        </div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def get_plotly_template() -> dict:
+    """
+    Returns a Plotly template aligned with the current editorial theme.
+    """
+    return {
+        "layout": {
+            "font": {"family": THEME["font_family"], "color": THEME["text_main"]},
+            "paper_bgcolor": "rgba(0,0,0,0)",
+            "plot_bgcolor": "rgba(0,0,0,0)",
+            "margin": {"t": 40, "b": 40, "l": 40, "r": 40},
+            "xaxis": {
+                "gridcolor": "rgba(0,0,0,0)",
+                "linecolor": THEME["border"],
+                "zerolinecolor": "rgba(0,0,0,0)",
+                "showgrid": False,
+                "showline": True,
+                "mirror": False,
+            },
+            "yaxis": {
+                "gridcolor": THEME["border"],
+                "linecolor": THEME["border"],
+                "zerolinecolor": "rgba(0,0,0,0)",
+                "showgrid": True,
+                "showline": True,
+                "mirror": False,
+                "gridwidth": 0.5,
+                "griddash": "dot",
+            },
+            "colorway": [
+                THEME["primary"],
+                THEME.get("accent", "#059669"),
+                "#3B82F6",
+                "#8B5CF6",
+                "#EC4899",
+                "#F59E0B",
+            ],
+        }
+    }
+
+
+def spacer(px: int = 20) -> None:
+    """Adds vertical space between elements."""
+    st.markdown(f"<div style='height: {px}px'></div>", unsafe_allow_html=True)
+
+
+def login_modal() -> bool:
+    """
+    Renders a production-grade login modal.
+    Returns True if authenticated, False otherwise.
+    (Mocked for demonstration).
+    """
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    if st.session_state.authenticated:
+        return True
+
+    # Custom CSS for the login gateway
+    login_css = f"""
+    <style>
+        .login-container {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: {THEME['background']};
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }}
+        .login-card {{
+            background: {THEME['surface']};
+            padding: 48px;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid {THEME['border']};
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }}
+    </style>
+    """
+    st.markdown(login_css, unsafe_allow_html=True)
+
+    with st.container():
+        st.markdown("<div class='login-container'>", unsafe_allow_html=True)
+        st.markdown("<div class='login-card'>", unsafe_allow_html=True)
+
+        st.markdown(
+            f"<h1 style='font-size: 2rem; margin-bottom: 8px;'>ENTERPRISE<span style='color: {THEME['accent']}'>HUB</span></h1>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<p style='color: #64748B; margin-bottom: 32px;'>Secure Production Gateway v5.0</p>",
+            unsafe_allow_html=True,
+        )
+
+        username = st.text_input("Username or Email", placeholder="cayman@enterprise.com")
+        password = st.text_input("Password", type="password", placeholder="••••••••")
+
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            if st.button("🚀 Access Console", use_container_width=True, type="primary"):
+                if username and password:
+                    st.session_state.authenticated = True
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials.")
+        with col2:
+            st.button("Request Access", use_container_width=True)
+
+        st.markdown("</div></div>", unsafe_allow_html=True)
+
+    return False
+
+
+def footer() -> None:
+    """Renders the standard footer."""
+    footer_html = """
+    <hr>
+    <footer role="contentinfo">
+        <div class="footer">
+            <p>© 2025 Enterprise Hub | Built with Streamlit & Python for
+               Professional Excellence</p>
+            <nav aria-label="Footer Navigation">
+                <a href="https://github.com/ChunkyTortoise/enterprise-hub"
+                   target="_blank" rel="noopener noreferrer">View Source</a> |
+                <a href="https://linkedin.com/in/caymanroden"
+                   target="_blank" rel="noopener noreferrer">
+                   Contact Developer</a>
+            </nav>
+        </div>
+    </footer>
+    """
+    st.markdown(footer_html, unsafe_allow_html=True)

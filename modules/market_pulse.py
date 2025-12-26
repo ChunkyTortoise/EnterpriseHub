@@ -372,8 +372,9 @@ def _create_technical_chart(df: pd.DataFrame, ticker: str) -> go.Figure:
         col=1,
     )
 
-    # Update layout
+    # Update layout for Editorial Style
     fig.update_layout(
+        template=ui.get_plotly_template(),
         height=900,
         showlegend=False,
         margin=dict(l=20, r=20, t=40, b=20),
