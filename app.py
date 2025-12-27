@@ -146,7 +146,7 @@ def main() -> None:
         if page == "🏠 Overview":
             _render_overview()
         elif page in MODULES:
-            module_name, module_title = MODULES[page]
+            module_name, module_title, _ = MODULES[page]
             _render_module(module_name, module_title)
         else:
             _render_placeholder(page)
