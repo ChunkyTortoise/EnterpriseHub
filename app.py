@@ -70,9 +70,9 @@ def main() -> None:
         st.session_state.theme = "light"
 
     try:
-        # PRODUCTION GATEWAY
-        if not ui.login_modal():
-            st.stop()
+        # PRODUCTION GATEWAY - Disabled for public demo
+        # if not ui.login_modal():
+        #     st.stop()
 
         # SIDEBAR NAVIGATION
         with st.sidebar:
