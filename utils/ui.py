@@ -101,16 +101,20 @@ THEME = LIGHT_THEME
 
 def get_base64_image(file_path: str) -> str:
     """Read a local file and return its base64 representation."""
-    if not os.path.exists(file_path):
+    try:
+        if not os.path.exists(file_path):
+            return ""
+        with open(file_path, "rb") as f:
+            data = f.read()
+        encoded = base64.b64encode(data).decode()
+        ext = file_path.split(".")[-1].lower()
+        mime_type = f"image/{ext}"
+        if ext == "svg":
+            mime_type = "image/svg+xml"
+        return f"data:{mime_type};base64,{encoded}"
+    except Exception:
+        # Silently fail and return empty string - will fallback to emoji
         return ""
-    with open(file_path, "rb") as f:
-        data = f.read()
-    encoded = base64.b64encode(data).decode()
-    ext = file_path.split(".")[-1].lower()
-    mime_type = f"image/{ext}"
-    if ext == "svg":
-        mime_type = "image/svg+xml"
-    return f"data:{mime_type};base64,{encoded}"
 
 
 def _generate_css(theme: dict) -> str:
