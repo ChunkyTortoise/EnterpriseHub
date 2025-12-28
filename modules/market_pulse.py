@@ -34,7 +34,9 @@ def render() -> None:
     col1, col2 = st.columns([1, 3])
     with col1:
         ticker = st.text_input("Ticker Symbol", value="SPY").upper()
-        period = st.selectbox("Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3)
+        period = st.selectbox(
+            "Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3
+        )
         interval = st.selectbox("Interval", ["1d", "1wk", "1mo"], index=0)
 
     if not ticker:
@@ -50,7 +52,10 @@ def render() -> None:
             df = get_stock_data(ticker, period=period, interval=interval)
 
             if df is None or df.empty:
-                st.error(f"❌ No data found for {ticker}. Please verify the ticker symbol.")
+                st.error(
+                    f"❌ No data found for {ticker}. "
+                    "Please verify the ticker symbol."
+                )
                 return
 
             # Calculate indicators
@@ -72,7 +77,8 @@ def render() -> None:
         logger.warning(f"Invalid ticker: {e}")
         st.error(f"❌ {str(e)}")
         st.info(
-            "💡 **Tip:** Make sure you're using the correct ticker symbol (e.g., AAPL for Apple Inc.)"
+            "💡 **Tip:** Make sure you're using the correct ticker symbol "
+            "(e.g., AAPL for Apple Inc.)"
         )
 
     except DataFetchError as e:
@@ -212,14 +218,18 @@ def _predict_trend(rsi: float, macd: float, signal: float) -> tuple[str, float, 
     if macd_diff > 0:
         if macd_diff > 1:
             signals.append(1)  # Strong bullish
-            reasoning_parts.append("MACD strongly above signal line (bullish crossover)")
+            reasoning_parts.append(
+                "MACD strongly above signal line (bullish crossover)"
+            )
         else:
             signals.append(0.5)  # Moderate bullish
             reasoning_parts.append("MACD above signal line (bullish)")
     else:
         if macd_diff < -1:
             signals.append(-1)  # Strong bearish
-            reasoning_parts.append("MACD strongly below signal line (bearish crossover)")
+            reasoning_parts.append(
+                "MACD strongly below signal line (bearish crossover)"
+            )
         else:
             signals.append(-0.5)  # Moderate bearish
             reasoning_parts.append("MACD below signal line (bearish)")
@@ -243,7 +253,9 @@ def _predict_trend(rsi: float, macd: float, signal: float) -> tuple[str, float, 
     return trend, confidence, reasoning
 
 
-def _calculate_support_resistance(df: pd.DataFrame, lookback: int = 20) -> tuple[float, float]:
+def _calculate_support_resistance(
+    df: pd.DataFrame, lookback: int = 20
+) -> tuple[float, float]:
     """
     Calculate support and resistance levels based on recent price action.
 
@@ -317,7 +329,12 @@ def _create_technical_chart(df: pd.DataFrame, ticker: str) -> go.Figure:
     )
 
     fig.add_trace(
-        go.Scatter(x=df.index, y=df["MA20"], line=dict(color="orange", width=1), name="MA 20"),
+        go.Scatter(
+            x=df.index,
+            y=df["MA20"],
+            line=dict(color="orange", width=1),
+            name="MA 20",
+        ),
         row=1,
         col=1,
     )
@@ -359,13 +376,21 @@ def _create_technical_chart(df: pd.DataFrame, ticker: str) -> go.Figure:
         col=1,
     )
     fig.add_trace(
-        go.Scatter(x=df.index, y=df["Signal"], name="Signal", line=dict(color="orange")),
+        go.Scatter(
+            x=df.index,
+            y=df["Signal"],
+            name="Signal",
+            line=dict(color="orange"),
+        ),
         row=3,
         col=1,
     )
 
     # Panel 4: Volume
-    colors = ["green" if row["Open"] - row["Close"] >= 0 else "red" for index, row in df.iterrows()]
+    colors = [
+        "green" if row["Open"] - row["Close"] >= 0 else "red"
+        for index, row in df.iterrows()
+    ]
     fig.add_trace(
         go.Bar(x=df.index, y=df["Volume"], name="Volume", marker_color=colors),
         row=4,

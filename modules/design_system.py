@@ -19,7 +19,9 @@ def render() -> None:
     """Design System Gallery entry point."""
     st.title("Design System Gallery")
     st.markdown(
-        "<p style='font-size: 1.1rem; margin-bottom: 2rem;'>Explore the complete component library and design tokens that power Enterprise Hub's professional interface.</p>",
+        "<p style='font-size: 1.1rem; margin-bottom: 2rem;'>"
+        "Explore the complete component library and design tokens that power "
+        "Enterprise Hub's professional interface.</p>",
         unsafe_allow_html=True,
     )
 
@@ -54,7 +56,8 @@ def _render_colors_tab() -> None:
     """Render the color palette showcase."""
     st.markdown("## Color System")
     st.markdown(
-        "All colors meet WCAG AAA compliance standards (7:1+ contrast ratio) for optimal accessibility."
+        "All colors meet WCAG AAA compliance standards (7:1+ contrast ratio) "
+        "for optimal accessibility."
     )
 
     # Light Theme
@@ -251,7 +254,9 @@ def _render_typography_tab() -> None:
 
     st.markdown(
         """
-    This is regular body text at the default size (1rem / 16px). It uses the primary text color (`text_main`) with a weight of 400 for optimal readability. The line height is set to 1.6 for comfortable reading across multiple lines.
+    This is regular body text at the default size (1rem / 16px). It uses the primary
+    text color (`text_main`) with a weight of 400 for optimal readability. The line
+    height is set to 1.6 for comfortable reading across multiple lines.
 
     **Font Size:** 1rem (16px)
     **Weight:** 400
@@ -299,7 +304,9 @@ def _render_typography_tab() -> None:
         st.markdown(
             """
         **Metric Labels**
-        <span style="font-size: 0.875rem; color: #64748B; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">REVENUE GROWTH</span>
+        <span style="font-size: 0.875rem; color: #64748B; font-weight: 600;
+                     text-transform: uppercase; letter-spacing: 0.05em;">
+            REVENUE GROWTH</span>
 
         `font-size: 0.875rem` | `text-transform: uppercase` | `letter-spacing: 0.05em`
         """,
@@ -310,7 +317,9 @@ def _render_typography_tab() -> None:
         st.markdown(
             f"""
         **Metric Values**
-        <span style="font-size: 2rem; font-weight: 700; color: {ui.THEME['primary']}; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">$124,567</span>
+        <span style="font-size: 2rem; font-weight: 700;
+                     color: {ui.THEME['primary']}; font-feature-settings: 'tnum';
+                     font-variant-numeric: tabular-nums;">$124,567</span>
 
         `font-size: 2rem` | `weight: 700` | `tabular-nums enabled`
         """,
@@ -330,7 +339,8 @@ def _render_components_tab() -> None:
 
     ui.hero_section(
         "Welcome to Enterprise Hub",
-        "A production-grade business intelligence platform with 7 mission-critical tools in one unified interface.",
+        "A production-grade business intelligence platform with 7 mission-critical "
+        "tools in one unified interface.",
     )
 
     with st.expander("View Code"):
@@ -399,14 +409,20 @@ ui.feature_card(
         ui.use_case_card(
             icon="💡",
             title="For SaaS Founders",
-            description="Run 100 profit scenarios simultaneously with sensitivity heatmaps. Break-even analysis that updates in real-time.",
+            description=(
+                "Run 100 profit scenarios simultaneously with sensitivity heatmaps. "
+                "Break-even analysis that updates in real-time."
+            ),
         )
 
     with col2:
         ui.use_case_card(
             icon="📊",
             title="For Finance Teams",
-            description="4-panel charts with institutional-grade indicators. Save $24,000/year in Bloomberg subscriptions.",
+            description=(
+                "4-panel charts with institutional-grade indicators. "
+                "Save $24,000/year in Bloomberg subscriptions."
+            ),
         )
 
     with st.expander("View Code"):

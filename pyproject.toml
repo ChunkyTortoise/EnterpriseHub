@@ -132,3 +132,10 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
 ]
+
+[tool.ruff]
+line-length = 100
+exclude = [".agent", "_archive", ".git", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]

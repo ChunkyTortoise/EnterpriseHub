@@ -86,7 +86,8 @@ def render() -> None:
 
             st.session_state.uploaded_data = df
             st.success(
-                f"✅ Loaded {len(df):,} rows and {len(df.columns)} columns from {file_extension.upper()} file"
+                f"✅ Loaded {len(df):,} rows and {len(df.columns)} columns "
+                f"from {file_extension.upper()} file"
             )
 
             # Create tabs for different analysis sections
@@ -236,7 +237,8 @@ def _render_data_profile(df: pd.DataFrame) -> None:
         st.markdown("---")
         st.subheader("🔗 Correlation Matrix")
         st.markdown(
-            "Identify relationships between numeric variables (-1 = perfect negative, +1 = perfect positive)"
+            "Identify relationships between numeric variables "
+            "(-1 = perfect negative, +1 = perfect positive)"
         )
 
         # Calculate correlation matrix
@@ -542,9 +544,11 @@ def _generate_ai_insights(df: pd.DataFrame, api_key: str) -> Optional[str]:
         summary = _prepare_data_summary(df)
 
         # Create prompt
-        prompt = f"""Analyze this dataset and provide 5-7 key insights in a clear, actionable format:
-
-{summary}
+        prompt = (
+            f"Analyze this dataset and provide 5-7 key insights in a "
+            f"clear, actionable format:\n\n{summary}"
+        )
+        prompt += """
 
 Focus on:
 1. Notable trends or patterns
@@ -590,14 +594,14 @@ def _process_natural_language_query(df: pd.DataFrame, query: str, api_key: str) 
         summary = _prepare_data_summary(df, include_sample=True)
 
         # Create prompt
-        prompt = f"""You are a data analyst assistant. Answer this question about the dataset:
-
-Question: {query}
-
-Dataset Information:
-{summary}
-
-Provide a clear, concise answer. If the question requires calculations, show the results. If it requires visualization suggestions, describe what would be helpful."""
+        prompt = (
+            f"You are a data analyst assistant. Answer this question "
+            f"about the dataset:\n\nQuestion: {query}\n\n"
+            f"Dataset Information:\n{summary}\n\n"
+            f"Provide a clear, concise answer. If the question requires "
+            f"calculations, show the results. If it requires visualization "
+            f"suggestions, describe what would be helpful."
+        )
 
         # Call Claude API
         client = Anthropic(api_key=api_key)
@@ -646,9 +650,13 @@ def _prepare_data_summary(df: pd.DataFrame, include_sample: bool = False) -> str
         )
 
         # Add stats for numeric columns
-        if pd.api.types.is_numeric_dtype(col_data) and not col_data.isna().all():
+        if (
+            pd.api.types.is_numeric_dtype(col_data)
+            and not col_data.isna().all()
+        ):
             summary_parts.append(
-                f"    Range: {col_data.min():.2f} to {col_data.max():.2f}, Mean: {col_data.mean():.2f}"
+                f"    Range: {col_data.min():.2f} to {col_data.max():.2f}, "
+                f"Mean: {col_data.mean():.2f}"
             )
 
     # Sample data if requested
@@ -682,8 +690,14 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
                 "issue": "Missing Values",
                 "has_issue": True,
                 "severity": "High" if pct_missing > 10 else "Medium",
-                "description": f"Found {total_missing:,} missing values across {len(missing_cols)} columns ({pct_missing:.2f}% of all data)",
-                "recommendation": "Consider dropping rows with missing values or filling with appropriate values (mean, median, mode, or forward-fill)",
+                "description": (
+                    f"Found {total_missing:,} missing values across "
+                    f"{len(missing_cols)} columns ({pct_missing:.2f}% of all data)"
+                ),
+                "recommendation": (
+                    "Consider dropping rows with missing values or filling with "
+                    "appropriate values (mean, median, mode, or forward-fill)"
+                ),
                 "action": lambda df: df.dropna(),
                 "action_name": "Drop all rows with missing values",
             }
@@ -709,7 +723,10 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
                 "issue": "Duplicate Rows",
                 "has_issue": True,
                 "severity": "Medium",
-                "description": f"Found {duplicate_count:,} duplicate rows ({pct_duplicates:.2f}% of data)",
+                "description": (
+                    f"Found {duplicate_count:,} duplicate rows "
+                    f"({pct_duplicates:.2f}% of data)"
+                ),
                 "recommendation": "Remove duplicate rows to ensure data integrity",
                 "action": lambda df: df.drop_duplicates(),
                 "action_name": "Remove all duplicate rows",
@@ -735,7 +752,9 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
         Q3 = df[col].quantile(0.75)
         IQR = Q3 - Q1
 
-        outlier_count = ((df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR))).sum()
+        outlier_count = (
+            (df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR))
+        ).sum()
 
         if outlier_count > 0:
             outlier_cols.append((col, outlier_count))
@@ -748,8 +767,15 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
                 "issue": "Outliers Detected",
                 "has_issue": True,
                 "severity": "Low",
-                "description": f"Found {total_outliers:,} outliers across {len(outlier_cols)} numeric columns",
-                "recommendation": "Review outliers to determine if they are data errors or valid extreme values. Consider winsorization or removal if appropriate.",
+                "description": (
+                    f"Found {total_outliers:,} outliers across "
+                    f"{len(outlier_cols)} numeric columns"
+                ),
+                "recommendation": (
+                    "Review outliers to determine if they are data errors or "
+                    "valid extreme values. Consider winsorization or removal "
+                    "if appropriate."
+                ),
                 "action": None,
                 "action_name": None,
             }

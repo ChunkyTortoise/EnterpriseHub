@@ -23,23 +23,46 @@ st.set_page_config(
     menu_items={
         "Get Help": "https://github.com/ChunkyTortoise/enterprise-hub",
         "Report a bug": "https://github.com/ChunkyTortoise/enterprise-hub/issues",
-        "About": "# Enterprise Hub\nA unified platform for market analysis and enterprise tooling.",
+        "About": (
+            "# Enterprise Hub\n"
+            "A unified platform for market analysis and enterprise tooling."
+        ),
     },
 )
 
 # --- MODULE REGISTRY ---
 # Maps sidebar navigation titles to module information.
 MODULES = {
-    "📊 Market Pulse": ("market_pulse", "Market Pulse", "assets/icons/market_pulse.png"),
+    "📊 Market Pulse": (
+        "market_pulse",
+        "Market Pulse",
+        "assets/icons/market_pulse.png",
+    ),
     "💼 Financial Analyst": (
         "financial_analyst",
         "Financial Analyst",
         "assets/icons/financial_analyst.png",
     ),
-    "💰 Margin Hunter": ("margin_hunter", "Margin Hunter", "assets/icons/margin_hunter.png"),
-    "🤖 Agent Logic": ("agent_logic", "Agent Logic", "assets/icons/agent_logic.svg"),
-    "✍️ Content Engine": ("content_engine", "Content Engine", "assets/icons/content_engine.png"),
-    "🔍 Data Detective": ("data_detective", "Data Detective", "assets/icons/data_detective.png"),
+    "💰 Margin Hunter": (
+        "margin_hunter",
+        "Margin Hunter",
+        "assets/icons/margin_hunter.png",
+    ),
+    "🤖 Agent Logic": (
+        "agent_logic",
+        "Agent Logic",
+        "assets/icons/agent_logic.svg",
+    ),
+    "✍️ Content Engine": (
+        "content_engine",
+        "Content Engine",
+        "assets/icons/content_engine.png",
+    ),
+    "🔍 Data Detective": (
+        "data_detective",
+        "Data Detective",
+        "assets/icons/data_detective.png",
+    ),
     "📈 Marketing Analytics": (
         "marketing_analytics",
         "Marketing Analytics",
@@ -79,10 +102,22 @@ def main() -> None:
             st.markdown(
                 f"""
                 <div style='margin-bottom: 32px;'>
-                    <h1 style='font-family: {ui.THEME["header_font"]}; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.05em; margin: 0;'>
+                    <h1 style='
+                        font-family: {ui.THEME["header_font"]};
+                        font-size: 1.5rem;
+                        font-weight: 800;
+                        letter-spacing: -0.05em;
+                        margin: 0;
+                    '>
                         ENTERPRISE<span style='color: {ui.THEME["accent"]};'>HUB</span>
                     </h1>
-                    <div style='color: {ui.THEME["secondary"]}; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;'>
+                    <div style='
+                        color: {ui.THEME["secondary"]};
+                        font-size: 0.7rem;
+                        font-weight: 600;
+                        letter-spacing: 0.1em;
+                        text-transform: uppercase;
+                    '>
                         Platform Console v4.0
                     </div>
                 </div>
@@ -98,14 +133,22 @@ def main() -> None:
                 if st.button(
                     "☀️ Light",
                     use_container_width=True,
-                    type="primary" if st.session_state.theme == "light" else "secondary",
+                    type=(
+                        "primary"
+                        if st.session_state.theme == "light"
+                        else "secondary"
+                    ),
                 ):
                     st.session_state.theme = "light"
                     st.rerun()
                 if st.button(
                     "🌊 Ocean",
                     use_container_width=True,
-                    type="primary" if st.session_state.theme == "ocean" else "secondary",
+                    type=(
+                        "primary"
+                        if st.session_state.theme == "ocean"
+                        else "secondary"
+                    ),
                 ):
                     st.session_state.theme = "ocean"
                     st.rerun()
@@ -113,14 +156,22 @@ def main() -> None:
                 if st.button(
                     "🌙 Dark",
                     use_container_width=True,
-                    type="primary" if st.session_state.theme == "dark" else "secondary",
+                    type=(
+                        "primary"
+                        if st.session_state.theme == "dark"
+                        else "secondary"
+                    ),
                 ):
                     st.session_state.theme = "dark"
                     st.rerun()
                 if st.button(
                     "🌅 Sunset",
                     use_container_width=True,
-                    type="primary" if st.session_state.theme == "sunset" else "secondary",
+                    type=(
+                        "primary"
+                        if st.session_state.theme == "sunset"
+                        else "secondary"
+                    ),
                 ):
                     st.session_state.theme = "sunset"
                     st.rerun()
@@ -134,7 +185,11 @@ def main() -> None:
             st.markdown("### 👤 **Cayman Roden**")
             st.markdown("Full-Stack Python Developer")
             st.markdown(
-                "[View Portfolio](https://github.com/ChunkyTortoise/enterprise-hub) | [LinkedIn](https://linkedin.com/in/caymanroden)"
+                (
+                    "[View Portfolio]"
+                    "(https://github.com/ChunkyTortoise/enterprise-hub) | "
+                    "[LinkedIn](https://linkedin.com/in/caymanroden)"
+                )
             )
 
         # Setup UI with selected theme (must be after sidebar to read session state)
@@ -167,7 +222,10 @@ def _render_overview() -> None:
     # Hero Section with Editorial Background
     ui.hero_section(
         "Unified Enterprise Hub",
-        "A production-grade business intelligence platform consolidating 9 mission-critical tools into a single, cloud-native interface.",
+        (
+            "A production-grade business intelligence platform consolidating "
+            "9 mission-critical tools into a single, cloud-native interface."
+        ),
         background_image="assets/hero/background_editorial.png",
     )
 
@@ -193,7 +251,10 @@ def _render_overview() -> None:
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "💰",
             title=module_info[1],
-            description="Real-time Cost-Volume-Profit analysis with 10x10 sensitivity heatmaps and break-even modeling.",
+            description=(
+                "Real-time Cost-Volume-Profit analysis with 10x10 "
+                "sensitivity heatmaps and break-even modeling."
+            ),
             status="hero",
             icon_path=module_info[2] if module_info[2] else None,
         )
@@ -202,7 +263,10 @@ def _render_overview() -> None:
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "📊",
             title=module_info[1],
-            description="Institutional-grade technical analysis dashboard with RSI, MACD, and multi-panel charting.",
+            description=(
+                "Institutional-grade technical analysis dashboard "
+                "with RSI, MACD, and multi-panel charting."
+            ),
             status="active",
             icon_path=module_info[2] if module_info[2] else None,
         )
@@ -211,7 +275,10 @@ def _render_overview() -> None:
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "🔍",
             title=module_info[1],
-            description="AI-powered data profiling and statistical analysis. Upload any CSV/Excel for instant insights.",
+            description=(
+                "AI-powered data profiling and statistical analysis. "
+                "Upload any CSV/Excel for instant insights."
+            ),
             status="new",
             icon_path=module_info[2] if module_info[2] else None,
         )
@@ -226,7 +293,10 @@ def _render_overview() -> None:
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "📈",
             title=module_info[1],
-            description="Comprehensive campaign tracking, ROI calculators, multi-variant testing, and attribution modeling.",
+            description=(
+                "Comprehensive campaign tracking, ROI calculators, "
+                "multi-variant testing, and attribution modeling."
+            ),
             status="new",
             icon_path=module_info[2] if module_info[2] else None,
         )
@@ -235,7 +305,10 @@ def _render_overview() -> None:
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "✍️",
             title=module_info[1],
-            description="Generate professional LinkedIn content in seconds using Anthropic's Claude 3.5 Sonnet API.",
+            description=(
+                "Generate professional LinkedIn content in seconds "
+                "using Anthropic's Claude 3.5 Sonnet API."
+            ),
             status="active",
             icon_path=module_info[2] if module_info[2] else None,
         )
@@ -244,7 +317,10 @@ def _render_overview() -> None:
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "🤖",
             title=module_info[1],
-            description="Automated market research and news sentiment analysis using NLP and web scraping.",
+            description=(
+                "Automated market research and news sentiment analysis "
+                "using NLP and web scraping."
+            ),
             status="active",
             icon_path=module_info[2] if module_info[2] else None,
         )
@@ -258,7 +334,10 @@ def _render_overview() -> None:
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "💼",
             title=module_info[1],
-            description="Fundamental stock analysis with financial statements, ratios, and valuation metrics.",
+            description=(
+                "Fundamental stock analysis with financial statements, "
+                "ratios, and valuation metrics."
+            ),
             status="active",
             icon_path=module_info[2] if module_info[2] else None,
         )
@@ -268,7 +347,10 @@ def _render_overview() -> None:
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "🤖",
             title=module_info[1],
-            description="Orchestrates 4 specialized agents (Data, Tech, News, Chief) to perform deep-dive asset analysis.",
+            description=(
+                "Orchestrates 4 specialized agents (Data, Tech, News, Chief) "
+                "to perform deep-dive asset analysis."
+            ),
             status="new",
             icon_path=module_info[2] if module_info[2] else None,
         )
@@ -278,7 +360,10 @@ def _render_overview() -> None:
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "🧠",
             title=module_info[1],
-            description="AI-powered time series forecasting using Random Forest and Rolling Window analysis.",
+            description=(
+                "AI-powered time series forecasting using Random Forest "
+                "and Rolling Window analysis."
+            ),
             status="new",
             icon_path=module_info[2] if module_info[2] else None,
         )
@@ -286,7 +371,10 @@ def _render_overview() -> None:
     ui.spacer(40)
     ui.section_header(
         "Built For Real Business Challenges",
-        "See how EnterpriseHub replaces manual workflows and expensive subscriptions",
+        (
+            "See how EnterpriseHub replaces manual workflows "
+            "and expensive subscriptions"
+        ),
     )
 
     col1, col2 = st.columns(2)
@@ -295,9 +383,10 @@ def _render_overview() -> None:
             icon="💡",
             title="For SaaS Founders",
             description="""
-                <strong>Margin Hunter</strong> replaces Excel spreadsheet chaos for pricing decisions.
-                Run 100 profit scenarios simultaneously with sensitivity heatmaps.
-                Break-even analysis that updates in real-time as you adjust prices.
+                <strong>Margin Hunter</strong> replaces Excel spreadsheet
+                chaos for pricing decisions. Run 100 profit scenarios
+                simultaneously with sensitivity heatmaps. Break-even
+                analysis that updates in real-time as you adjust prices.
             """,
         )
 
@@ -307,8 +396,9 @@ def _render_overview() -> None:
             icon="📊",
             title="For Finance Teams",
             description="""
-                <strong>Market Pulse</strong> eliminates Bloomberg Terminal dependency for basic technical analysis.
-                4-panel charts (Price/RSI/MACD/Volume) with institutional-grade indicators.
+                <strong>Market Pulse</strong> eliminates Bloomberg Terminal
+                dependency for basic technical analysis. 4-panel charts
+                (Price/RSI/MACD/Volume) with institutional-grade indicators.
                 Save $24,000/year in subscriptions.
             """,
         )
@@ -318,9 +408,10 @@ def _render_overview() -> None:
             icon="🔍",
             title="For Data Analysts",
             description="""
-                <strong>Data Detective</strong> reduces exploratory data analysis from 2 hours to 2 minutes.
-                AI-powered insights, correlation heatmaps, and quality scoring.
-                Upload CSV → Get actionable findings instantly.
+                <strong>Data Detective</strong> reduces exploratory data
+                analysis from 2 hours to 2 minutes. AI-powered insights,
+                correlation heatmaps, and quality scoring. Upload CSV → Get
+                actionable findings instantly.
             """,
         )
 
@@ -330,9 +421,9 @@ def _render_overview() -> None:
             icon="📈",
             title="For Marketing Teams",
             description="""
-                **Marketing Analytics** replaces agency dashboards costing $200-500/month.
-                5 attribution models, A/B test calculators, and campaign ROI tracking.
-                One-time build you own forever.
+                **Marketing Analytics** replaces agency dashboards costing
+                $200-500/month. 5 attribution models, A/B test calculators,
+                and campaign ROI tracking. One-time build you own forever.
             """,
         )
 
@@ -342,21 +433,83 @@ def _render_overview() -> None:
 
     # Tech Stack Badge Section
     ui.spacer(40)
-    ui.section_header("Technical Foundation", "Built with modern, production-grade tools")
+    ui.section_header(
+        "Technical Foundation", "Built with modern, production-grade tools"
+    )
 
     st.markdown(
         """
     <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1rem;">
-        <span style="background-color: #DBEAFE; color: #1E40AF; padding: 6px 12px; border-radius: 6px; font-weight: 500;">Python 3.11</span>
-        <span style="background-color: #DBEAFE; color: #1E40AF; padding: 6px 12px; border-radius: 6px; font-weight: 500;">Streamlit 1.40+</span>
-        <span style="background-color: #DBEAFE; color: #1E40AF; padding: 6px 12px; border-radius: 6px; font-weight: 500;">Claude 3.5 Sonnet</span>
-        <span style="background-color: #DBEAFE; color: #1E40AF; padding: 6px 12px; border-radius: 6px; font-weight: 500;">Plotly</span>
-        <span style="background-color: #DBEAFE; color: #1E40AF; padding: 6px 12px; border-radius: 6px; font-weight: 500;">pandas</span>
-        <span style="background-color: #DBEAFE; color: #1E40AF; padding: 6px 12px; border-radius: 6px; font-weight: 500;">NumPy</span>
-        <span style="background-color: #DBEAFE; color: #1E40AF; padding: 6px 12px; border-radius: 6px; font-weight: 500;">yfinance</span>
-        <span style="background-color: #DCFCE7; color: #166534; padding: 6px 12px; border-radius: 6px; font-weight: 500;">pytest (220+ tests)</span>
-        <span style="background-color: #DCFCE7; color: #166534; padding: 6px 12px; border-radius: 6px; font-weight: 500;">85% Coverage</span>
-        <span style="background-color: #FEF3C7; color: #92400E; padding: 6px 12px; border-radius: 6px; font-weight: 500;">CI/CD (GitHub Actions)</span>
+        <span style="
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        ">Python 3.11</span>
+        <span style="
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        ">Streamlit 1.40+</span>
+        <span style="
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        ">Claude 3.5 Sonnet</span>
+        <span style="
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        ">Plotly</span>
+        <span style="
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        ">pandas</span>
+        <span style="
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        ">NumPy</span>
+        <span style="
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        ">yfinance</span>
+        <span style="
+            background-color: #DCFCE7;
+            color: #166534;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        ">pytest (220+ tests)</span>
+        <span style="
+            background-color: #DCFCE7;
+            color: #166534;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        ">85% Coverage</span>
+        <span style="
+            background-color: #FEF3C7;
+            color: #92400E;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        ">CI/CD (GitHub Actions)</span>
     </div>
     """,
         unsafe_allow_html=True,

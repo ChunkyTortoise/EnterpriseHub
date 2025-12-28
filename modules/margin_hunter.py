@@ -160,12 +160,17 @@ def _render_results(
         st.markdown(
             f"### Status: <span style='color:{color}'>{status}</span>", unsafe_allow_html=True
         )
-        st.markdown(f"""
+        st.markdown(
+            f"""
         **Key Findings:**
-        - The current contribution margin of **${contribution_margin:.2f}** per unit is sufficient to cover fixed costs at **{int(np.ceil(break_even_units))} units**.
-        - You are currently operating at **{margin_of_safety_pct:.1f}%** above break-even, providing a solid safety buffer.
-        - To reach your target profit of **${target_profit:,.2f}**, you need to increase sales by **{int(np.ceil(target_units - current_sales_units))} units**.
-        """)
+        - The current contribution margin of **${contribution_margin:.2f}** per unit
+          is sufficient to cover fixed costs at **{int(np.ceil(break_even_units))} units**.
+        - You are currently operating at **{margin_of_safety_pct:.1f}%** above
+          break-even, providing a solid safety buffer.
+        - To reach your target profit of **${target_profit:,.2f}**, you need to
+          increase sales by **{int(np.ceil(target_units - current_sales_units))} units**.
+        """
+        )
 
     # --- CVP Visualization ---
     _render_cvp_chart(
