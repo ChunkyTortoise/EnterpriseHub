@@ -5,7 +5,7 @@ This module handles fetching stock data from Yahoo Finance and
 calculating technical indicators for analysis.
 """
 
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import streamlit as st
@@ -138,7 +138,7 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=300)
-def get_company_info(ticker: str) -> dict:
+def get_company_info(ticker: str) -> Dict[Any, Any]:
     """
     Fetch company information and fundamental metrics.
 
@@ -157,7 +157,7 @@ def get_company_info(ticker: str) -> dict:
     try:
         ticker = ticker.strip().upper()
         stock = yf.Ticker(ticker)
-        info: Dict[Any, Any] = stock.info
+        info: Dict[Any, Any] = dict(stock.info)
         return info
     except Exception as e:
         logger.error(f"Error fetching company info for {ticker}: {str(e)}")
@@ -193,7 +193,7 @@ def get_financials(ticker: str) -> dict:
 
 
 @st.cache_data(ttl=300)
-def get_news(ticker: str) -> list:
+def get_news(ticker: str) -> List[Any]:
     """
     Fetch latest news for a ticker.
 
@@ -209,7 +209,7 @@ def get_news(ticker: str) -> list:
     try:
         ticker = ticker.strip().upper()
         stock = yf.Ticker(ticker)
-        return stock.news
+        return list(stock.news)
     except Exception as e:
         logger.error(f"Error fetching news for {ticker}: {str(e)}")
         # Return empty list instead of raising to allow partial app loading
