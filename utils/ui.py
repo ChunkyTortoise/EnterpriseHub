@@ -831,8 +831,7 @@ def feature_card(
         b64 = get_base64_image(icon_path)
         if b64:
             icon_display = (
-                f"<img src='{b64}' "
-                f"style='width: 48px; height: 48px; object-fit: contain;'>"
+                f"<img src='{b64}' " f"style='width: 48px; height: 48px; object-fit: contain;'>"
             )
 
     html = (
@@ -1517,14 +1516,11 @@ def login_modal() -> bool:
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<p style='color: #64748B; margin-bottom: 32px;'>"
-            "Secure Production Gateway v5.0</p>",
+            "<p style='color: #64748B; margin-bottom: 32px;'>" "Secure Production Gateway v5.0</p>",
             unsafe_allow_html=True,
         )
 
-        username = st.text_input(
-            "Username or Email", placeholder="cayman@enterprise.com"
-        )
+        username = st.text_input("Username or Email", placeholder="cayman@enterprise.com")
         password = st.text_input("Password", type="password", placeholder="••••••••")
 
         col1, col2 = st.columns([2, 1])

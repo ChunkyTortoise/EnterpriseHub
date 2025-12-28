@@ -133,9 +133,7 @@ def retry_with_exponential_backoff(
                         time.sleep(delay)
                         delay *= backoff_factor
                     else:
-                        logger.error(
-                            f"Rate limit exceeded after {max_attempts} attempts"
-                        )
+                        logger.error(f"Rate limit exceeded after {max_attempts} attempts")
                         raise
                 except (APIConnectionError, APITimeoutError) as e:
                     last_exception = e
@@ -155,9 +153,7 @@ def retry_with_exponential_backoff(
                     raise
                 except Exception as e:
                     # Unexpected errors should not be retried
-                    logger.error(
-                        f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True
-                    )
+                    logger.error(f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True)
                     raise
 
             # Should not reach here, but just in case
@@ -189,9 +185,7 @@ def render() -> None:
         _render_four_panel_interface(api_key)
 
     except Exception as e:
-        logger.error(
-            f"An unexpected error occurred in Content Engine: {e}", exc_info=True
-        )
+        logger.error(f"An unexpected error occurred in Content Engine: {e}", exc_info=True)
         st.error("An unexpected error occurred.")
         if st.checkbox("Show error details", key="ce_error_details"):
             st.exception(e)
@@ -217,9 +211,7 @@ def _get_api_key() -> Optional[str]:
     if api_key:
         logger.debug("API key found in environment variable")
         if not api_key.startswith("sk-ant-"):
-            logger.warning(
-                "API key format appears invalid (should start with 'sk-ant-')"
-            )
+            logger.warning("API key format appears invalid (should start with 'sk-ant-')")
         return api_key
 
     # Check session state
@@ -228,9 +220,7 @@ def _get_api_key() -> Optional[str]:
         if api_key:
             logger.debug("API key found in session state")
             if not api_key.startswith("sk-ant-"):
-                logger.warning(
-                    "API key format appears invalid (should start with 'sk-ant-')"
-                )
+                logger.warning("API key format appears invalid (should start with 'sk-ant-')")
             return api_key
 
     logger.warning("No API key found in environment or session state")
@@ -269,9 +259,7 @@ def _render_api_key_setup() -> None:
         if submitted and api_key_input:
             if not api_key_input.startswith("sk-ant-"):
                 logger.warning("User entered API key with unexpected format")
-                st.error(
-                    "⚠️ Warning: API key should start with 'sk-ant-'. Please verify your key."
-                )
+                st.error("⚠️ Warning: API key should start with 'sk-ant-'. Please verify your key.")
             else:
                 logger.info("Valid API key format submitted")
             st.session_state.anthropic_api_key = api_key_input
@@ -330,12 +318,8 @@ def _render_four_panel_interface(api_key: str) -> None:
 
     # Panel 1.5: Brand Voice
     with st.expander("🎭 Brand Voice Profiles (Optional)", expanded=False):
-        st.markdown(
-            "Define a consistent voice for your brand to ensure all posts sound the same."
-        )
-        brand_name = st.text_input(
-            "Brand/User Name", placeholder="e.g., Acme Corp / Jane Doe"
-        )
+        st.markdown("Define a consistent voice for your brand to ensure all posts sound the same.")
+        brand_name = st.text_input("Brand/User Name", placeholder="e.g., Acme Corp / Jane Doe")
         brand_mission = st.text_area(
             "Brand Mission/Value Prop",
             placeholder="We help SMEs automate their accounting...",
@@ -392,17 +376,13 @@ def _render_four_panel_interface(api_key: str) -> None:
     col_gen1, col_gen2 = st.columns([3, 1])
 
     with col_gen1:
-        if st.button(
-            "✨ Generate LinkedIn Post", type="primary", use_container_width=True
-        ):
+        if st.button("✨ Generate LinkedIn Post", type="primary", use_container_width=True):
             if not topic or not topic.strip():
                 logger.warning("User attempted to generate post without topic")
                 st.error("❌ Please enter a topic to write about.")
             elif len(topic.strip()) < 10:
                 logger.warning(f"User entered very short topic: {len(topic)} chars")
-                st.error(
-                    "❌ Please provide a more detailed topic (at least 10 characters)."
-                )
+                st.error("❌ Please provide a more detailed topic (at least 10 characters).")
             else:
                 logger.info(
                     f"Generating post for topic: {topic[:50]}... "
@@ -416,22 +396,16 @@ def _render_four_panel_interface(api_key: str) -> None:
                             template=st.session_state.selected_template,
                             tone=tone,
                             keywords=keywords.strip() if keywords else "",
-                            target_audience=target_audience.strip()
-                            if target_audience
-                            else "",
+                            target_audience=target_audience.strip() if target_audience else "",
                         )
 
                         if generated_post:
                             st.session_state.generated_post = generated_post
-                            logger.info(
-                                f"Post generated successfully: {len(generated_post)} chars"
-                            )
+                            logger.info(f"Post generated successfully: {len(generated_post)} chars")
                             st.success("✅ Post generated successfully!")
                     except RateLimitError as e:
                         logger.error(f"Rate limit exceeded: {str(e)}")
-                        st.error(
-                            "❌ Rate limit exceeded. Please wait a moment and try again."
-                        )
+                        st.error("❌ Rate limit exceeded. Please wait a moment and try again.")
                     except (APIConnectionError, APITimeoutError) as e:
                         logger.error(f"Connection error: {str(e)}")
                         st.error(
@@ -491,9 +465,7 @@ def _render_four_panel_interface(api_key: str) -> None:
             # Copy to clipboard using JavaScript (via markdown)
             if st.button("📋 Copy to Clipboard", use_container_width=True):
                 st.code(st.session_state.generated_post, language=None)
-                st.success(
-                    "✅ Content displayed above - use your browser's copy function"
-                )
+                st.success("✅ Content displayed above - use your browser's copy function")
 
 
 def _validate_template_and_tone(template: str, tone: str) -> None:
@@ -508,9 +480,7 @@ def _validate_template_and_tone(template: str, tone: str) -> None:
         ValueError: If template or tone is not in valid options
     """
     if template not in TEMPLATES:
-        raise ValueError(
-            f"Invalid template: {template}. Valid options: {list(TEMPLATES.keys())}"
-        )
+        raise ValueError(f"Invalid template: {template}. Valid options: {list(TEMPLATES.keys())}")
     if tone not in TONES:
         raise ValueError(f"Invalid tone: {tone}. Valid options: {list(TONES.keys())}")
 
@@ -603,9 +573,7 @@ def _call_claude_api(client: Anthropic, prompt: str) -> str:
         raise ValueError("API returned empty response")
 
     if not hasattr(message.content[0], "text"):
-        logger.error(
-            f"API returned unexpected content type: {type(message.content[0])}"
-        )
+        logger.error(f"API returned unexpected content type: {type(message.content[0])}")
         raise ValueError("API returned malformed response")
 
     generated_text = message.content[0].text
@@ -706,9 +674,7 @@ def _generate_post(
 
         # Provide user-friendly error messages
         if "authentication" in error_msg.lower() or "api key" in error_msg.lower():
-            st.error(
-                "❌ Authentication Error: Invalid API key. Please check your API key."
-            )
+            st.error("❌ Authentication Error: Invalid API key. Please check your API key.")
         elif "quota" in error_msg.lower() or "billing" in error_msg.lower():
             st.error(
                 "❌ Quota Error: Your API quota has been exceeded. "

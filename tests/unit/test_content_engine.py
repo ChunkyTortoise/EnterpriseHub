@@ -789,3 +789,208 @@ class TestContentEngineIntegration:
         assert result is not None
         assert len(result) > 0
         assert isinstance(result, str)
+
+
+class TestRenderFunction:
+    """Tests for the main render() function."""
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine.ui")
+    @patch("modules.content_engine.ANTHROPIC_AVAILABLE", True)
+    @patch("modules.content_engine._get_api_key")
+    @patch("modules.content_engine._render_four_panel_interface")
+    def test_render_with_api_key(
+        self, mock_interface, mock_get_key, mock_ui, mock_st
+    ):
+        """Test render() with valid API key."""
+        from modules.content_engine import render
+
+        mock_get_key.return_value = "sk-ant-test-key"
+
+        render()
+
+        mock_ui.section_header.assert_called_once()
+        mock_get_key.assert_called_once()
+        mock_interface.assert_called_once_with("sk-ant-test-key")
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine.ui")
+    @patch("modules.content_engine.ANTHROPIC_AVAILABLE", True)
+    @patch("modules.content_engine._get_api_key")
+    @patch("modules.content_engine._render_api_key_setup")
+    def test_render_without_api_key(
+        self, mock_setup, mock_get_key, mock_ui, mock_st
+    ):
+        """Test render() without API key shows setup."""
+        from modules.content_engine import render
+
+        mock_get_key.return_value = None
+
+        render()
+
+        mock_setup.assert_called_once()
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine.ui")
+    @patch("modules.content_engine.ANTHROPIC_AVAILABLE", False)
+    def test_render_without_anthropic_package(self, mock_ui, mock_st):
+        """Test render() when Anthropic package not installed."""
+        from modules.content_engine import render
+
+        render()
+
+        mock_st.error.assert_called_once()
+        error_msg = str(mock_st.error.call_args[0][0])
+        assert "not installed" in error_msg.lower()
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine.ui")
+    @patch("modules.content_engine.ANTHROPIC_AVAILABLE", True)
+    @patch("modules.content_engine._get_api_key")
+    @patch("modules.content_engine.logger")
+    def test_render_handles_exception(
+        self, mock_logger, mock_get_key, mock_ui, mock_st
+    ):
+        """Test render() handles exceptions gracefully."""
+        from modules.content_engine import render
+
+        mock_get_key.side_effect = Exception("Test error")
+
+        render()
+
+        mock_logger.error.assert_called_once()
+        mock_st.error.assert_called()
+
+
+class TestRenderAPIKeySetup:
+    """Tests for _render_api_key_setup function."""
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine.logger")
+    def test_api_key_setup_shows_warning(self, mock_logger, mock_st):
+        """Test that API key setup shows warning message."""
+        from modules.content_engine import _render_api_key_setup
+
+        mock_form = MagicMock()
+        mock_st.form.return_value.__enter__ = MagicMock(return_value=mock_form)
+        mock_st.form.return_value.__exit__ = MagicMock(return_value=None)
+        mock_form.form_submit_button.return_value = False
+
+        _render_api_key_setup()
+
+        mock_st.warning.assert_called_once()
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine.logger")
+    def test_api_key_setup_shows_instructions(self, mock_logger, mock_st):
+        """Test that API key setup shows instructions."""
+        from modules.content_engine import _render_api_key_setup
+
+        mock_form = MagicMock()
+        mock_st.form.return_value.__enter__ = MagicMock(return_value=mock_form)
+        mock_st.form.return_value.__exit__ = MagicMock(return_value=None)
+        mock_form.form_submit_button.return_value = False
+
+        _render_api_key_setup()
+
+        mock_st.markdown.assert_called()
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine.logger")
+    def test_api_key_setup_validates_format(self, mock_logger, mock_st):
+        """Test that API key setup validates key format."""
+        from modules.content_engine import _render_api_key_setup
+
+        mock_st.session_state = {}
+        mock_form = MagicMock()
+        mock_st.form.return_value.__enter__ = MagicMock(return_value=mock_form)
+        mock_st.form.return_value.__exit__ = MagicMock(return_value=None)
+        mock_form.text_input.return_value = "invalid-key"
+        mock_form.form_submit_button.return_value = True
+
+        _render_api_key_setup()
+
+        mock_st.error.assert_called_once()
+        error_msg = str(mock_st.error.call_args[0][0])
+        assert "sk-ant-" in error_msg
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine.logger")
+    def test_api_key_setup_saves_valid_key(self, mock_logger, mock_st):
+        """Test that valid API key is saved to session state."""
+        from modules.content_engine import _render_api_key_setup
+
+        mock_st.session_state = {}
+        mock_form = MagicMock()
+        mock_st.form.return_value.__enter__ = MagicMock(return_value=mock_form)
+        mock_st.form.return_value.__exit__ = MagicMock(return_value=None)
+        mock_form.text_input.return_value = "sk-ant-valid-key"
+        mock_form.form_submit_button.return_value = True
+
+        try:
+            _render_api_key_setup()
+        except:
+            pass  # rerun will raise exception
+
+        assert mock_st.session_state["anthropic_api_key"] == "sk-ant-valid-key"
+
+
+class TestRenderFourPanelInterface:
+    """Tests for _render_four_panel_interface function."""
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine.logger")
+    def test_four_panel_initializes_session_state(self, mock_logger, mock_st):
+        """Test that four panel interface initializes session state."""
+        from modules.content_engine import _render_four_panel_interface
+
+        mock_st.session_state = {}
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.selectbox.side_effect = ["Professional Insight", "Professional"]
+        mock_st.text_input.return_value = "Test topic"
+        mock_st.text_area.return_value = "Test keywords"
+        mock_st.button.return_value = False
+
+        _render_four_panel_interface("sk-ant-test-key")
+
+        assert "generated_post" in mock_st.session_state
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine._generate_post")
+    def test_four_panel_generates_post_on_button_click(
+        self, mock_generate, mock_st
+    ):
+        """Test that clicking generate button triggers post generation."""
+        from modules.content_engine import _render_four_panel_interface
+
+        mock_st.session_state = {"generated_post": None}
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.selectbox.side_effect = ["Professional Insight", "Professional"]
+        mock_st.text_input.return_value = "Test topic"
+        mock_st.text_area.return_value = "Test keywords"
+        mock_st.button.return_value = True
+        mock_generate.return_value = "Generated content"
+
+        _render_four_panel_interface("sk-ant-test-key")
+
+        mock_generate.assert_called_once()
+
+    @patch("modules.content_engine.st")
+    @patch("modules.content_engine.logger")
+    def test_four_panel_shows_generated_content(self, mock_logger, mock_st):
+        """Test that generated content is displayed."""
+        from modules.content_engine import _render_four_panel_interface
+
+        mock_st.session_state = {"generated_post": "Test generated content"}
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.selectbox.side_effect = ["Professional Insight", "Professional"]
+        mock_st.text_input.return_value = "Test topic"
+        mock_st.text_area.return_value = "Test keywords"
+        mock_st.button.return_value = False
+
+        _render_four_panel_interface("sk-ant-test-key")
+
+        # Should display the generated content
+        mock_st.markdown.assert_called()
+        markdown_calls = [str(call) for call in mock_st.markdown.call_args_list]
+        assert any("Test generated content" in call for call in markdown_calls)

@@ -29,9 +29,7 @@ def render() -> None:
     # Input Section
     col1, col2 = st.columns([1, 3])
     with col1:
-        symbol = st.text_input(
-            "Enter Ticker Symbol", value="AAPL", max_chars=10
-        ).upper()
+        symbol = st.text_input("Enter Ticker Symbol", value="AAPL", max_chars=10).upper()
 
     if not symbol:
         st.info("Please enter a ticker symbol to begin.")
@@ -45,9 +43,7 @@ def render() -> None:
     except DataFetchError as e:
         logger.warning(f"Could not fetch financial data for {symbol}: {e}")
         st.error(f"❌ Failed to fetch data for '{symbol}'.")
-        st.info(
-            "The ticker might be invalid, delisted, or there could be a network issue."
-        )
+        st.info("The ticker might be invalid, delisted, or there could be a network issue.")
 
     except Exception as e:
         logger.error(
@@ -65,9 +61,7 @@ def _fetch_and_display_data(symbol: str):
     financials = get_financials(symbol)
 
     if not info or not financials:
-        raise DataFetchError(
-            f"No data returned for {symbol}. It may be an invalid ticker."
-        )
+        raise DataFetchError(f"No data returned for {symbol}. It may be an invalid ticker.")
 
     # --- RENDER PAGE ---
     _display_header(info, symbol)
@@ -156,9 +150,7 @@ def _display_performance_charts(financials: dict):
         ),
         None,
     )
-    net_inc_col = next(
-        (col for col in income_stmt.columns if "Net Income" in str(col)), None
-    )
+    net_inc_col = next((col for col in income_stmt.columns if "Net Income" in str(col)), None)
 
     if rev_col and net_inc_col:
         fig_perf = make_subplots(specs=[[{"secondary_y": True}]])
@@ -184,9 +176,7 @@ def _display_performance_charts(financials: dict):
             title="Revenue vs Net Income (Annual)",
             template="plotly_dark",
             height=400,
-            legend=dict(
-                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
-            ),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
         st.plotly_chart(fig_perf, use_container_width=True)
 
@@ -194,18 +184,14 @@ def _display_performance_charts(financials: dict):
         _display_profitability_ratios(income_stmt.iloc[-1], rev_col, net_inc_col)
 
 
-def _display_profitability_ratios(
-    latest_data: pd.Series, rev_col: str, net_inc_col: str
-):
+def _display_profitability_ratios(latest_data: pd.Series, rev_col: str, net_inc_col: str):
     """Calculate and display profitability ratios."""
     st.markdown("#### 📊 Profitability Ratios")
     r1, r2, r3 = st.columns(3)
 
     revenue = latest_data.get(rev_col, 0)
     net_income = latest_data.get(net_inc_col, 0)
-    gross_col = next(
-        (col for col in latest_data.index if "Gross Profit" in str(col)), None
-    )
+    gross_col = next((col for col in latest_data.index if "Gross Profit" in str(col)), None)
     gross_profit = latest_data.get(gross_col, 0)
 
     with r1:
@@ -271,9 +257,7 @@ def _display_ai_insights(info: dict, financials: dict, symbol: str, api_key: str
         st.subheader("🤖 AI Insights")
 
     with col_toggle:
-        enable_ai = st.toggle(
-            "Enable AI Insights", value=True, key="ai_insights_toggle"
-        )
+        enable_ai = st.toggle("Enable AI Insights", value=True, key="ai_insights_toggle")
 
     if not enable_ai:
         st.info("AI insights are disabled. Toggle above to enable.")
@@ -394,9 +378,7 @@ def _build_financial_summary(info: dict, financials: dict) -> str:
             ),
             None,
         )
-        net_inc_col = next(
-            (col for col in income_stmt_t.columns if "Net Income" in str(col)), None
-        )
+        net_inc_col = next((col for col in income_stmt_t.columns if "Net Income" in str(col)), None)
 
         if rev_col and len(income_stmt_t) >= 2:
             latest_rev = income_stmt_t[rev_col].iloc[-1]
