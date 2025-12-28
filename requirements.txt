@@ -30,7 +30,7 @@ ta==0.11.0
 # ==============================================================================
 # AI & NLP
 # ==============================================================================
-anthropic==0.18.1  # Claude API for content generation
+anthropic==0.75.0  # Claude API for content generation
 openai  # OpenAI API
 textblob==0.17.1
 
