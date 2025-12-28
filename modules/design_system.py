@@ -61,6 +61,49 @@ def _render_colors_tab() -> None:
         "for optimal accessibility."
     )
 
+    st.markdown("---")
+    st.markdown("### Accessing Theme Colors in Code")
+
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.markdown(
+            """
+        All design tokens are available via the `THEME` dictionary in `utils.ui`:
+
+        ```python
+        from utils.ui import THEME
+
+        # Access colors
+        primary_color = THEME['primary']
+        background_color = THEME['background']
+        text_color = THEME['text_main']
+
+        # Use in custom components
+        st.markdown(
+            f"<div style='color: {THEME['primary']}'>Text</div>",
+            unsafe_allow_html=True
+        )
+        ```
+        """
+        )
+
+    with col2:
+        st.markdown("**Available Themes:**")
+        st.markdown(
+            """
+        - `LIGHT_THEME` (default)
+        - `DARK_THEME`
+        - `OCEAN_THEME`
+        - `SUNSET_THEME`
+
+        Set in `app.py` via:
+        ```python
+        ui.setup_interface("light")
+        ```
+        """
+        )
+
     # Light Theme
     st.markdown("---")
     st.markdown("### ☀️ Light Theme")
@@ -167,7 +210,7 @@ def _render_color_swatch(name: str, hex_code: str, theme_name: str) -> None:
             background-color: {hex_code};
             height: 100px;
             border-radius: 8px;
-            border: 1px solid {ui.THEME['border']};
+            border: 1px solid {ui.THEME["border"]};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -183,14 +226,14 @@ def _render_color_swatch(name: str, hex_code: str, theme_name: str) -> None:
         </div>
         <div style="
             font-weight: 600;
-            color: {ui.THEME['text_main']};
+            color: {ui.THEME["text_main"]};
             font-size: 0.85rem;
             margin-bottom: 0.25rem;
         ">{name}</div>
         <code style="
             font-size: 0.75rem;
-            color: {ui.THEME['text_light']};
-            background: {ui.THEME['background']};
+            color: {ui.THEME["text_light"]};
+            background: {ui.THEME["background"]};
             padding: 2px 6px;
             border-radius: 4px;
         ">{hex_code}</code>
@@ -315,7 +358,7 @@ def _render_typography_tab() -> None:
             f"""
         **Metric Values**
         <span style="font-size: 2rem; font-weight: 700;
-                     color: {ui.THEME['primary']}; font-feature-settings: 'tnum';
+                     color: {ui.THEME["primary"]}; font-feature-settings: 'tnum';
                      font-variant-numeric: tabular-nums;">$124,567</span>
 
         `font-size: 2rem` | `weight: 700` | `tabular-nums enabled`
@@ -328,6 +371,68 @@ def _render_components_tab() -> None:
     """Render the components showcase."""
     st.markdown("## Component Library")
     st.markdown("Pre-built components with consistent styling and behavior.")
+
+    # Component Quick Reference
+    st.markdown("---")
+    st.markdown("### Component Quick Reference")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown(
+            """
+        **Layout Components**
+        - `hero_section()` - Hero sections
+        - `section_header()` - Section headers
+        - `spacer()` - Vertical spacing
+
+        **Card Components**
+        - `feature_card()` - Feature highlights
+        - `use_case_card()` - Use case stories
+        - `glassmorphic_card()` - Modern cards
+        - `card_metric()` - Metric displays
+        - `animated_metric()` - Animated KPIs
+        """
+        )
+
+    with col2:
+        st.markdown(
+            """
+        **Data Components**
+        - `comparison_table()` - Comparison tables
+        - `status_badge()` - Status indicators
+        - `progress_bar()` - Progress tracking
+        - `skeleton_loader()` - Loading states
+
+        **Utility Components**
+        - `toast()` - Notifications
+        - `footer()` - Page footer
+        - `get_plotly_template()` - Chart theme
+        """
+        )
+
+    with col3:
+        st.markdown(
+            """
+        **Import Pattern**
+        ```python
+        import utils.ui as ui
+
+        # Use components
+        ui.hero_section(
+            "Title",
+            "Subtitle"
+        )
+
+        ui.feature_card(
+            icon="💰",
+            title="Feature",
+            description="...",
+            status="active"
+        )
+        ```
+        """
+        )
 
     # Hero Section
     st.markdown("---")
@@ -505,6 +610,149 @@ ui.comparison_table()  # Renders pre-configured comparison table
             language="python",
         )
 
+    # Animated Metrics
+    st.markdown("---")
+    st.markdown("### Animated Metrics")
+    st.markdown("**Usage:** Dashboard KPIs, highlighted metrics with visual impact")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        ui.animated_metric("Total Revenue", "$124,567", "+12.5%", "💰", "success")
+
+    with col2:
+        ui.animated_metric("Active Users", "1,234", "+8.2%", "👥", "primary")
+
+    with col3:
+        ui.animated_metric("Error Rate", "0.5%", "-0.3%", "⚠️", "warning")
+
+    with st.expander("View Code"):
+        st.code(
+            """
+ui.animated_metric(
+    label="Total Revenue",
+    value="$124,567",
+    delta="+12.5%",
+    icon="💰",  # Optional
+    color="success"  # or "primary", "warning", "danger"
+)
+        """,
+            language="python",
+        )
+
+    # Progress Bars
+    st.markdown("---")
+    st.markdown("### Progress Bars")
+    st.markdown("**Usage:** Task completion, loading states, goal tracking")
+
+    ui.progress_bar("Project Completion", 75, 100, "success", show_percentage=True)
+    ui.progress_bar("Storage Used", 84, 100, "warning", show_percentage=True)
+    ui.progress_bar("API Rate Limit", 95, 100, "danger", show_percentage=True)
+
+    with st.expander("View Code"):
+        st.code(
+            """
+ui.progress_bar(
+    label="Project Completion",
+    value=75,
+    max_value=100,
+    color="success",  # or "primary", "warning", "danger"
+    show_percentage=True
+)
+        """,
+            language="python",
+        )
+
+    # Glassmorphic Cards
+    st.markdown("---")
+    st.markdown("### Glassmorphic Cards")
+    st.markdown("**Usage:** Modern hero sections, featured content, premium features")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        ui.glassmorphic_card(
+            title="Premium Feature",
+            content="Experience the next generation of data visualization with our "
+            "glassmorphic design system.",
+            icon="✨",
+            cta_text="Learn More",
+            cta_url="#",
+        )
+
+    with col2:
+        ui.glassmorphic_card(
+            title="AI-Powered Insights",
+            content="Leverage Claude 3.5 Sonnet for deep analysis of your business "
+            "metrics and trends.",
+            icon="🤖",
+        )
+
+    with st.expander("View Code"):
+        st.code(
+            """
+ui.glassmorphic_card(
+    title="Premium Feature",
+    content="Experience the next generation...",
+    icon="✨",  # Optional
+    cta_text="Learn More",  # Optional
+    cta_url="#"  # Optional
+)
+        """,
+            language="python",
+        )
+
+    # Skeleton Loaders
+    st.markdown("---")
+    st.markdown("### Skeleton Loaders")
+    st.markdown("**Usage:** Loading states, data fetching placeholders")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("**Card Skeleton**")
+        ui.skeleton_loader("card", count=1)
+
+    with col2:
+        st.markdown("**Metric Skeleton**")
+        ui.skeleton_loader("metric", count=1)
+
+    with col3:
+        st.markdown("**Text Skeleton**")
+        ui.skeleton_loader("text", count=1)
+
+    with st.expander("View Code"):
+        st.code(
+            """
+# Show skeleton while loading data
+ui.skeleton_loader("card", count=3)  # or "metric", "text", "table"
+
+# Replace with actual content after loading
+if data_loaded:
+    display_actual_content()
+        """,
+            language="python",
+        )
+
+    # Spacer Utility
+    st.markdown("---")
+    st.markdown("### Spacer Utility")
+    st.markdown("**Usage:** Add custom vertical spacing between elements")
+
+    st.markdown("Content above spacer")
+    ui.spacer(40)
+    st.markdown("Content below 40px spacer")
+
+    with st.expander("View Code"):
+        st.code(
+            """
+st.markdown("Content above")
+ui.spacer(40)  # 40px vertical space
+st.markdown("Content below")
+        """,
+            language="python",
+        )
+
 
 def _render_interactive_tab() -> None:
     """Render interactive elements showcase."""
@@ -636,6 +884,75 @@ st.success("Success! Your operation completed successfully.")
 st.info("Info: Here's some helpful information...")
 st.warning("Warning: Please review this important notice.")
 st.error("Error: Something went wrong...")
+        """,
+            language="python",
+        )
+
+    # Toast Notifications
+    st.markdown("---")
+    st.markdown("### Toast Notifications")
+    st.markdown(
+        "Non-intrusive notifications that auto-dismiss (requires Streamlit 1.27+ for native toast)"
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        if st.button("Success Toast", key="toast_success", use_container_width=True):
+            ui.toast("Data saved successfully!", "success")
+
+    with col2:
+        if st.button("Error Toast", key="toast_error", use_container_width=True):
+            ui.toast("Failed to load data", "error")
+
+    with col3:
+        if st.button("Warning Toast", key="toast_warning", use_container_width=True):
+            ui.toast("High usage detected", "warning")
+
+    with col4:
+        if st.button("Info Toast", key="toast_info", use_container_width=True):
+            ui.toast("Tip: Use Ctrl+Enter", "info")
+
+    with st.expander("View Code"):
+        st.code(
+            """
+# Toast notifications (auto-dismiss after 3 seconds by default)
+ui.toast("Data saved successfully!", "success")
+ui.toast("Failed to load data", "error")
+ui.toast("High usage detected", "warning", duration=5000)
+ui.toast("Tip: Use Ctrl+Enter", "info")
+        """,
+            language="python",
+        )
+
+    # Checkboxes and Toggles
+    st.markdown("---")
+    st.markdown("### Checkboxes & Radio Buttons")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.checkbox("Enable notifications", value=True, key="demo_checkbox1")
+        st.checkbox("Auto-save changes", value=False, key="demo_checkbox2")
+        st.checkbox("Dark mode", value=False, key="demo_checkbox3")
+
+    with col2:
+        st.radio(
+            "Select period",
+            ["Daily", "Weekly", "Monthly"],
+            key="demo_radio",
+            horizontal=False,
+        )
+
+    with st.expander("View Code"):
+        st.code(
+            """
+# Checkboxes
+st.checkbox("Enable notifications", value=True)
+st.checkbox("Auto-save changes", value=False)
+
+# Radio buttons
+st.radio("Select period", ["Daily", "Weekly", "Monthly"])
         """,
             language="python",
         )
@@ -846,6 +1163,48 @@ def render() -> None:
             language="python",
         )
 
+    # Plotly Chart Theming
+    st.markdown("---")
+    st.markdown("### Plotly Chart Theming")
+    st.markdown("Apply consistent styling to all Plotly charts using the design system theme.")
+
+    st.markdown(
+        "**Example:** Charts in Market Pulse, Financial Analyst, and Data Detective "
+        "modules use this template for brand consistency."
+    )
+
+    with st.expander("View Plotly Template Code"):
+        st.code(
+            """
+import plotly.graph_objects as go
+from utils.ui import get_plotly_template
+
+# Get the template aligned with current theme
+template = get_plotly_template()
+
+# Create chart with template
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=[1, 2, 3], y=[4, 5, 6], mode='lines'))
+
+# Apply template
+fig.update_layout(**template['layout'])
+
+st.plotly_chart(fig, use_container_width=True)
+        """,
+            language="python",
+        )
+
+    st.markdown(
+        """
+    **Features:**
+    - Transparent background (blends with page)
+    - Theme-matched colors and fonts
+    - Minimal grid lines for clean aesthetics
+    - Consistent margins and spacing
+    - Accessible color palette
+    """
+    )
+
     # Design Principles
     st.markdown("---")
     st.markdown("### Design Principles")
@@ -881,3 +1240,26 @@ def render() -> None:
         - Minimize recomputation on reruns
         """
         )
+
+    # Footer Component
+    st.markdown("---")
+    st.markdown("### Footer Component")
+    st.markdown("**Usage:** Add a consistent footer to pages (handled by app.py)")
+
+    with st.expander("View Footer Code"):
+        st.code(
+            """
+# Footer is automatically added by app.py to all modules
+# To add a custom footer section:
+
+ui.footer()  # Renders standard footer with copyright and links
+        """,
+            language="python",
+        )
+
+    st.markdown(
+        """
+    **Note:** The footer is already included in `app.py` and appears on all pages.
+    You typically don't need to call this manually unless creating a standalone page.
+    """
+    )
