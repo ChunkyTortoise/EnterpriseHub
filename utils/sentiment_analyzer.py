@@ -25,7 +25,7 @@ def analyze_sentiment(text: str) -> float:
     """
     try:
         blob = TextBlob(text)
-        return blob.sentiment.polarity
+        return float(blob.sentiment.polarity)
     except Exception as e:
         logger.error(f"Error analyzing sentiment: {e}")
         return 0.0
