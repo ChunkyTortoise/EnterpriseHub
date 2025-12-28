@@ -96,7 +96,11 @@ def _display_header(info: dict, symbol: str):
     with header_col1:
         st.header(f"{info.get('longName', symbol)} ({symbol})")
         st.caption(
-            f"{info.get('sector', 'N/A')} | {info.get('industry', 'N/A')} | {info.get('country', 'N/A')}"
+            (
+                f"{info.get('sector', 'N/A')} | "
+                f"{info.get('industry', 'N/A')} | "
+                f"{info.get('country', 'N/A')}"
+            )
         )
         summary = info.get("longBusinessSummary")
         if summary:
@@ -306,14 +310,16 @@ def _generate_financial_insights(
         # Build financial summary for Claude
         financial_summary = _build_financial_summary(info, financials)
 
-        prompt = f"""Analyze the following financial data for {symbol} ({info.get('longName', symbol)}):
+        prompt = f"""Analyze the following financial data for {symbol} \
+({info.get('longName', symbol)}):
 
 {financial_summary}
 
 Provide a concise financial analysis in the following format:
 
 **Financial Health Assessment:**
-[3-5 bullet points assessing overall financial health, profitability, liquidity, and growth]
+[3-5 bullet points assessing overall financial health, profitability, \
+liquidity, and growth]
 
 **Key Risks:**
 [2-3 bullet points identifying potential risks or concerns]
@@ -321,7 +327,8 @@ Provide a concise financial analysis in the following format:
 **Key Opportunities:**
 [2-3 bullet points highlighting strengths and opportunities]
 
-Keep each bullet point to 1-2 sentences. Be specific and data-driven. Focus on actionable insights."""
+Keep each bullet point to 1-2 sentences. Be specific and data-driven. \
+Focus on actionable insights."""
 
         # Call Claude API
         message = client.messages.create(

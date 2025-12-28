@@ -25,7 +25,13 @@ logger = get_logger(__name__)
 # Constants
 DEFAULT_CONFIDENCE_LEVEL = 0.95
 MIN_SAMPLE_SIZE = 30
-ATTRIBUTION_MODELS = ["First-Touch", "Last-Touch", "Linear", "Time-Decay", "Position-Based"]
+ATTRIBUTION_MODELS = [
+    "First-Touch",
+    "Last-Touch",
+    "Linear",
+    "Time-Decay",
+    "Position-Based",
+]
 
 
 def render() -> None:
@@ -84,9 +90,10 @@ def _render_campaign_dashboard() -> None:
         )
         start_date = st.date_input("Start Date", value=default_start)
     with col2:
-        end_date = st.date_input(
-            "End Date", value=campaign_df["Date"].max() if not campaign_df.empty else datetime.now()
+        default_end = (
+            campaign_df["Date"].max() if not campaign_df.empty else datetime.now()
         )
+        end_date = st.date_input("End Date", value=default_end)
 
     filtered_df = campaign_df[
         (campaign_df["Date"] >= pd.to_datetime(start_date))
@@ -97,7 +104,9 @@ def _render_campaign_dashboard() -> None:
         filtered_df = filtered_df[filtered_df["Platform"] == selected_channel]
 
     if filtered_df.empty:
-        st.warning("No data for selected filters. Please adjust date range or platform.")
+        st.warning(
+            "No data for selected filters. Please adjust date range or platform."
+        )
         return
 
     st.markdown("---")
@@ -111,14 +120,20 @@ def _render_campaign_dashboard() -> None:
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         ui.card_metric(
-            "Total Spend", f"${metrics['spend']:,.0f}", delta=f"{metrics['spend_change']:+.1f}%"
+            "Total Spend",
+            f"${metrics['spend']:,.0f}",
+            delta=f"{metrics['spend_change']:+.1f}%",
         )
     with col2:
         ui.card_metric(
-            "Revenue", f"${metrics['revenue']:,.0f}", delta=f"{metrics['revenue_change']:+.1f}%"
+            "Revenue",
+            f"${metrics['revenue']:,.0f}",
+            delta=f"{metrics['revenue_change']:+.1f}%",
         )
     with col3:
-        ui.card_metric("ROI", f"{metrics['roi']:.2f}x", delta=f"{metrics['roi_change']:+.1f}%")
+        ui.card_metric(
+            "ROI", f"{metrics['roi']:.2f}x", delta=f"{metrics['roi_change']:+.1f}%"
+        )
     with col4:
         ui.card_metric(
             "Conversions",
@@ -144,9 +159,9 @@ def _render_campaign_dashboard() -> None:
         .reset_index()
     )
 
-    trend_data["conversion_rate"] = (trend_data["conversions"] / trend_data["clicks"] * 100).fillna(
-        0
-    )
+    trend_data["conversion_rate"] = (
+        trend_data["conversions"] / trend_data["clicks"] * 100
+    ).fillna(0)
 
     col1, col2 = st.columns(2)
 
@@ -205,7 +220,11 @@ def _render_campaign_dashboard() -> None:
 
     platform_breakdown = (
         filtered_df.groupby("Platform")
-        .agg(spend=("Spend", "sum"), revenue=("Revenue", "sum"), conversions=("Conversions", "sum"))
+        .agg(
+            spend=("Spend", "sum"),
+            revenue=("Revenue", "sum"),
+            conversions=("Conversions", "sum"),
+        )
         .reset_index()
     )
 
@@ -236,11 +255,15 @@ def _render_campaign_dashboard() -> None:
     # Platform efficiency table
     st.markdown("**Platform Efficiency Metrics**")
     efficiency_df = platform_breakdown.copy()
-    efficiency_df["ROI"] = (efficiency_df["revenue"] / efficiency_df["spend"]).round(2).fillna(0)
+    efficiency_df["ROI"] = (
+        (efficiency_df["revenue"] / efficiency_df["spend"]).round(2).fillna(0)
+    )
     efficiency_df["CPA"] = (
         (efficiency_df["spend"] / efficiency_df["conversions"]).round(2).fillna(0)
     )
-    efficiency_df = efficiency_df[["Platform", "spend", "revenue", "conversions", "ROI", "CPA"]]
+    efficiency_df = efficiency_df[
+        ["Platform", "spend", "revenue", "conversions", "ROI", "CPA"]
+    ]
     efficiency_df.columns = [
         "Platform",
         "Spend ($)",
@@ -255,23 +278,39 @@ def _render_campaign_dashboard() -> None:
 def _render_social_media_dashboard() -> None:
     """Render social media performance dashboard across platforms."""
     st.subheader("📱 Social Media Performance Dashboard")
-    st.markdown("""
-    Track performance across all major social platforms with platform-specific metrics.
-    *Powered by insights from Google Digital Marketing & Meta Social Media certifications.*
-    """)
+    st.markdown(
+        """
+    Track performance across all major social platforms with
+    platform-specific metrics.
+    *Powered by insights from Google Digital Marketing &
+    Meta Social Media certifications.*
+    """
+    )
 
     # Platform selector
-    platforms = ["All Platforms", "Meta (Facebook/Instagram)", "LinkedIn", "Twitter/X", "TikTok"]
-    selected_platform = st.selectbox("Select Platform", platforms, key="social_platform")
+    platforms = [
+        "All Platforms",
+        "Meta (Facebook/Instagram)",
+        "LinkedIn",
+        "Twitter/X",
+        "TikTok",
+    ]
+    selected_platform = st.selectbox(
+        "Select Platform", platforms, key="social_platform"
+    )
 
     # Date range
     col1, col2 = st.columns(2)
     with col1:
         start_date = st.date_input(
-            "Start Date", value=datetime.now() - timedelta(days=30), key="social_start_date"
+            "Start Date",
+            value=datetime.now() - timedelta(days=30),
+            key="social_start_date",
         )
     with col2:
-        end_date = st.date_input("End Date", value=datetime.now(), key="social_end_date")
+        end_date = st.date_input(
+            "End Date", value=datetime.now(), key="social_end_date"
+        )
 
     st.markdown("---")
 
@@ -302,7 +341,9 @@ def _render_social_media_dashboard() -> None:
         )
     with col4:
         ui.card_metric(
-            "Reach", f"{platform_data['reach']:,}", delta=f"{platform_data['reach_change']:+.1f}%"
+            "Reach",
+            f"{platform_data['reach']:,}",
+            delta=f"{platform_data['reach_change']:+.1f}%",
         )
     with col5:
         ui.card_metric(
@@ -350,7 +391,9 @@ def _render_social_media_dashboard() -> None:
                     go.Bar(
                         x=platform_comparison["platform"],
                         y=platform_comparison["engagement_rate"],
-                        text=[f"{r:.2f}%" for r in platform_comparison["engagement_rate"]],
+                        text=[
+                            f"{r:.2f}%" for r in platform_comparison["engagement_rate"]
+                        ],
                         textposition="auto",
                         marker_color=["#E1306C", "#0077B5", "#14171A", "#FE2C55"],
                     )
@@ -414,13 +457,21 @@ def _render_social_media_dashboard() -> None:
                         labels=content_data["type"],
                         values=content_data["engagement"],
                         hole=0.4,
-                        marker_colors=["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7"],
+                        marker_colors=[
+                            "#FF6B6B",
+                            "#4ECDC4",
+                            "#45B7D1",
+                            "#96CEB4",
+                            "#FFEAA7",
+                        ],
                     )
                 ]
             )
             fig_content.update_layout(
                 title="Engagement by Content Type",
-                annotations=[dict(text="Content", x=0.5, y=0.5, font_size=14, showarrow=False)],
+                annotations=[
+                    dict(text="Content", x=0.5, y=0.5, font_size=14, showarrow=False)
+                ],
             )
             st.plotly_chart(fig_content, use_container_width=True)
 
@@ -556,7 +607,11 @@ def _render_roi_calculator() -> None:
 
     with col1:
         conversion_range = st.slider(
-            "Conversion Rate Range (%)", min_value=0.5, max_value=10.0, value=(2.0, 8.0), step=0.5
+            "Conversion Rate Range (%)",
+            min_value=0.5,
+            max_value=10.0,
+            value=(2.0, 8.0),
+            step=0.5,
         )
 
     with col2:
@@ -622,7 +677,9 @@ def _render_customer_metrics() -> None:
         )
 
     with col3:
-        new_customers = st.number_input("New Customers Acquired", min_value=1, value=100, step=5)
+        new_customers = st.number_input(
+            "New Customers Acquired", min_value=1, value=100, step=5
+        )
 
     cac = (total_marketing_spend + total_sales_costs) / new_customers
 
@@ -792,7 +849,9 @@ def _render_ab_test() -> None:
         with col1:
             lift = result["lift"]
             ui.card_metric(
-                "Lift", f"{lift:+.2f}%", delta=f"{'Improvement' if lift > 0 else 'Decline'}"
+                "Lift",
+                f"{lift:+.2f}%",
+                delta=f"{'Improvement' if lift > 0 else 'Decline'}",
             )
 
         with col2:
@@ -808,15 +867,18 @@ def _render_ab_test() -> None:
         if result["significant"]:
             if lift > 0:
                 st.success(
-                    f"✅ **Statistically Significant Winner!** Variant B is {abs(lift):.2f}% better than A with {confidence:.1f}% confidence."
+                    f"✅ **Statistically Significant Winner!** Variant B is "
+                    f"{abs(lift):.2f}% better than A with {confidence:.1f}% confidence."
                 )
             else:
                 st.error(
-                    f"❌ **Statistically Significant Loss!** Variant B is {abs(lift):.2f}% worse than A with {confidence:.1f}% confidence."
+                    f"❌ **Statistically Significant Loss!** Variant B is "
+                    f"{abs(lift):.2f}% worse than A with {confidence:.1f}% confidence."
                 )
         else:
             st.warning(
-                f"⚠️ **Not Statistically Significant** - Need more data. Current difference: {lift:+.2f}%"
+                f"⚠️ **Not Statistically Significant** - Need more data. "
+                f"Current difference: {lift:+.2f}%"
             )
 
         # Visual comparison
@@ -859,16 +921,20 @@ def _render_ab_test() -> None:
 
         if visitors_a < recommended_sample or visitors_b < recommended_sample:
             st.info(
-                f"📊 For {DEFAULT_CONFIDENCE_LEVEL*100:.0f}% confidence with this lift, you need approximately **{recommended_sample:,} visitors per variant**. Current: A={visitors_a:,}, B={visitors_b:,}"
+                f"📊 For {DEFAULT_CONFIDENCE_LEVEL*100:.0f}% confidence with this "
+                f"lift, you need approximately **{recommended_sample:,} visitors "
+                f"per variant**. Current: A={visitors_a:,}, B={visitors_b:,}"
             )
         else:
             st.success(
-                f"✅ Sample size is sufficient for {DEFAULT_CONFIDENCE_LEVEL*100:.0f}% confidence level"
+                f"✅ Sample size is sufficient for "
+                f"{DEFAULT_CONFIDENCE_LEVEL*100:.0f}% confidence level"
             )
 
     else:
         st.warning(
-            f"⚠️ Need at least {MIN_SAMPLE_SIZE} visitors per variant for statistical analysis"
+            f"⚠️ Need at least {MIN_SAMPLE_SIZE} visitors per variant "
+            "for statistical analysis"
         )
 
 
@@ -950,13 +1016,16 @@ def _render_multivariant_test() -> None:
 
         if result["significant"]:
             st.success(
-                f"✅ **Statistically Significant Difference Detected!** At least one variant performs differently from the others with {confidence:.1f}% confidence."
+                f"✅ **Statistically Significant Difference Detected!** "
+                f"At least one variant performs differently from the others "
+                f"with {confidence:.1f}% confidence."
             )
 
             # Show best performer
             best_variant = result["best_variant"]
             st.info(
-                f"🏆 **Best Performer**: Variant **{best_variant['name']}** with **{best_variant['conv_rate']:.2f}%** conversion rate"
+                f"🏆 **Best Performer**: Variant **{best_variant['name']}** with "
+                f"**{best_variant['conv_rate']:.2f}%** conversion rate"
             )
 
             # Pairwise comparisons with best
@@ -987,7 +1056,8 @@ def _render_multivariant_test() -> None:
 
         else:
             st.warning(
-                f"⚠️ **No Significant Difference** - All variants perform similarly. Current p-value: {result['p_value']:.4f}"
+                f"⚠️ **No Significant Difference** - All variants perform "
+                f"similarly. Current p-value: {result['p_value']:.4f}"
             )
 
         # Visualization
@@ -1002,7 +1072,9 @@ def _render_multivariant_test() -> None:
                     text=[f"{v['conv_rate']:.2f}%" for v in variant_data],
                     textposition="auto",
                     marker_color=[
-                        "gold" if v["name"] == result["best_variant"]["name"] else "lightblue"
+                        "gold"
+                        if v["name"] == result["best_variant"]["name"]
+                        else "lightblue"
                         for v in variant_data
                     ],
                 )
@@ -1035,9 +1107,12 @@ def _render_multivariant_test() -> None:
 
     else:
         st.warning(
-            f"⚠️ Need at least {MIN_SAMPLE_SIZE} visitors per variant for statistical analysis"
+            f"⚠️ Need at least {MIN_SAMPLE_SIZE} visitors per variant "
+            "for statistical analysis"
         )
-        insufficient = [v["name"] for v in variant_data if v["visitors"] < MIN_SAMPLE_SIZE]
+        insufficient = [
+            v["name"] for v in variant_data if v["visitors"] < MIN_SAMPLE_SIZE
+        ]
         st.info(f"Insufficient data for: {', '.join(insufficient)}")
 
 
@@ -1113,9 +1188,9 @@ def _render_attribution_modeling() -> None:
         st.markdown("**Attribution Breakdown**")
         results_df = attribution_results.copy()
         results_df["credit"] = results_df["credit"].round(2)
-        results_df["percentage"] = (results_df["credit"] / results_df["credit"].sum() * 100).round(
-            1
-        )
+        results_df["percentage"] = (
+            results_df["credit"] / results_df["credit"].sum() * 100
+        ).round(1)
         results_df.columns = ["Channel", "Credit", "Share (%)"]
         st.dataframe(results_df, use_container_width=True)
 
@@ -1127,7 +1202,10 @@ def _render_attribution_modeling() -> None:
         "Last-Touch": "100% credit to the last touchpoint before conversion",
         "Linear": "Equal credit distributed across all touchpoints",
         "Time-Decay": "More credit to recent touchpoints, less to earlier ones",
-        "Position-Based": "40% to first touch, 40% to last touch, 20% distributed evenly among middle touchpoints (U-shaped)",
+        "Position-Based": (
+            "40% to first touch, 40% to last touch, "
+            "20% distributed evenly among middle touchpoints (U-shaped)"
+        ),
     }
 
     st.info(f"**{model}**: {explanations[model]}")
@@ -1140,13 +1218,20 @@ def _render_reports() -> None:
     # Report type selector
     report_type = st.selectbox(
         "Select Report Type",
-        ["Campaign Performance", "Customer Metrics", "A/B Test Results", "Attribution Analysis"],
+        [
+            "Campaign Performance",
+            "Customer Metrics",
+            "A/B Test Results",
+            "Attribution Analysis",
+        ],
     )
 
     # Date range for report
     col1, col2 = st.columns(2)
     with col1:
-        report_start = st.date_input("Report Start Date", value=datetime.now() - timedelta(days=30))
+        report_start = st.date_input(
+            "Report Start Date", value=datetime.now() - timedelta(days=30)
+        )
     with col2:
         report_end = st.date_input("Report End Date", value=datetime.now())
 
@@ -1169,10 +1254,12 @@ def _render_reports() -> None:
         report_data.to_csv(csv_buffer, index=False)
         csv_data = csv_buffer.getvalue()
 
+        timestamp = datetime.now().strftime("%Y%m%d")
+        filename = f"{report_type.lower().replace(' ', '_')}_{timestamp}.csv"
         st.download_button(
             label="⬇️ Download CSV",
             data=csv_data,
-            file_name=f"{report_type.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.csv",
+            file_name=filename,
             mime="text/csv",
         )
 
@@ -1183,10 +1270,11 @@ def _render_reports() -> None:
         report_data.to_excel(excel_buffer, index=False, engine="openpyxl")
         excel_data = excel_buffer.getvalue()
 
+        xlsx_filename = f"{report_type.lower().replace(' ', '_')}_{timestamp}.xlsx"
         st.download_button(
             label="⬇️ Download Excel",
             data=excel_data,
-            file_name=f"{report_type.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.xlsx",
+            file_name=xlsx_filename,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
@@ -1198,7 +1286,9 @@ def _get_campaign_data_source() -> pd.DataFrame:
     """Handles selection of data source for campaign data (upload or simulate)."""
     st.subheader("📊 Campaign Data Source")
     source_option = st.radio(
-        "Choose your data source:", ("Upload CSV/Excel", "Simulate Marketing Data"), horizontal=True
+        "Choose your data source:",
+        ("Upload CSV/Excel", "Simulate Marketing Data"),
+        horizontal=True,
     )
 
     if source_option == "Upload CSV/Excel":
@@ -1224,7 +1314,9 @@ def _get_campaign_data_source() -> pd.DataFrame:
         st.info("Generating realistic marketing data for demonstration purposes.")
         col1, col2 = st.columns(2)
         with col1:
-            platform_choice = st.selectbox("Simulate for Platform", ["Google Ads", "Meta Ads"])
+            platform_choice = st.selectbox(
+                "Simulate for Platform", ["Google Ads", "Meta Ads"]
+            )
             start_date_choice = st.date_input(
                 "Simulation Start Date", value=datetime.now() - timedelta(days=90)
             )
@@ -1243,7 +1335,8 @@ def _get_campaign_data_source() -> pd.DataFrame:
             st.session_state["simulated_campaign_data"] = simulated_data
             return simulated_data
 
-        # If simulated data is already in session state from a previous generation, use it
+        # If simulated data is already in session state from a previous
+        # generation, use it
         if (
             "simulated_campaign_data" in st.session_state
             and not st.session_state["simulated_campaign_data"].empty
@@ -1277,7 +1370,9 @@ def _generate_trend_data(dates: pd.DatetimeIndex, channel: str) -> pd.DataFrame:
     if channel in ["Organic", "Direct"]:
         spend = np.zeros(n_days)
 
-    revenue = spend * np.random.uniform(2, 4, n_days) + np.random.uniform(500, 1000, n_days)
+    revenue = spend * np.random.uniform(2, 4, n_days) + np.random.uniform(
+        500, 1000, n_days
+    )
     clicks = (spend / 0.5).astype(int) + np.random.randint(100, 500, n_days)
     conversions = (clicks * np.random.uniform(0.02, 0.05, n_days)).astype(int)
 
@@ -1361,7 +1456,11 @@ def _get_channel_breakdown(df: pd.DataFrame = None) -> pd.DataFrame:
 
     return (
         df.groupby("channel")
-        .agg(spend=("spend", "sum"), revenue=("revenue", "sum"), conversions=("conversions", "sum"))
+        .agg(
+            spend=("spend", "sum"),
+            revenue=("revenue", "sum"),
+            conversions=("conversions", "sum"),
+        )
         .reset_index()
     )
 
@@ -1393,7 +1492,12 @@ def _calculate_ab_test_significance(
     # Determine significance
     significant = bool(p_value < (1 - confidence))
 
-    return {"lift": lift, "p_value": p_value, "z_score": z_score, "significant": significant}
+    return {
+        "lift": lift,
+        "p_value": p_value,
+        "z_score": z_score,
+        "significant": significant,
+    }
 
 
 def _calculate_required_sample_size(
@@ -1451,7 +1555,13 @@ def _get_sample_journey_data() -> pd.DataFrame:
         {
             "Customer": ["Customer 1"] * 5,
             "Step": [1, 2, 3, 4, 5],
-            "Touchpoint": ["Social Media Ad", "Website Visit", "Email", "Retargeting Ad", "Direct"],
+            "Touchpoint": [
+                "Social Media Ad",
+                "Website Visit",
+                "Email",
+                "Retargeting Ad",
+                "Direct",
+            ],
             "Channel": ["Social Media", "Organic", "Email", "Paid Ads", "Direct"],
             "Days Since First Touch": [0, 2, 5, 7, 10],
             "Converted": [False, False, False, False, True],
@@ -1538,7 +1648,13 @@ def _generate_report_data(report_type: str, start_date, end_date) -> pd.DataFram
     elif report_type == "Customer Metrics":
         return pd.DataFrame(
             {
-                "Metric": ["CAC", "CLV", "CLV:CAC Ratio", "Avg Order Value", "Purchase Frequency"],
+                "Metric": [
+                    "CAC",
+                    "CLV",
+                    "CLV:CAC Ratio",
+                    "Avg Order Value",
+                    "Purchase Frequency",
+                ],
                 "Value": ["$50.00", "$450.00", "9.0x", "$100.00", "4.5/year"],
             }
         )
@@ -1598,7 +1714,9 @@ def _get_platform_comparison() -> pd.DataFrame:
 def _generate_engagement_trend(dates: pd.DatetimeIndex, platform: str) -> pd.DataFrame:
     """Generate daily engagement rate trend."""
     np.random.seed(42)
-    return pd.DataFrame({"date": dates, "engagement_rate": np.random.uniform(2.0, 5.0, len(dates))})
+    return pd.DataFrame(
+        {"date": dates, "engagement_rate": np.random.uniform(2.0, 5.0, len(dates))}
+    )
 
 
 def _get_content_performance(platform: str) -> pd.DataFrame:

@@ -88,7 +88,9 @@ def _train_and_predict(df: pd.DataFrame, future_days: int):
     y = train_df["Target"]
 
     # Split for validation
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, shuffle=False
+    )
 
     # Model: Random Forest (Ensemble)
     model = RandomForestRegressor(n_estimators=100, random_state=42)
@@ -131,9 +133,9 @@ def _train_and_predict(df: pd.DataFrame, future_days: int):
         future_prices.append(pred_price)
 
         # Update features for next step (Approximation)
-        # In a real rigorous engine, we'd recalculate RSI/MACD based on the new pred_price.
-        # For this portfolio demo, we assume indicators stay relatively stable
-        # but price moves.
+        # In a real rigorous engine, we'd recalculate RSI/MACD
+        # based on the new pred_price. For this portfolio demo,
+        # we assume indicators stay relatively stable but price moves.
         current_features[0][0] = current_features[0][0]  # Keep RSI same (simplified)
         # We mostly rely on the 'Lag' features if we had updated them.
 
@@ -156,7 +158,11 @@ def _render_results(hist_df, pred_df, metrics, ticker):
     with m3:
         final_pred = pred_df.iloc[-1]["Predicted_Close"]
         delta = ((final_pred - metrics["Last_Price"]) / metrics["Last_Price"]) * 100
-        ui.card_metric(f"Forecast ({len(pred_df)} Days)", f"${final_pred:.2f}", f"{delta:+.2f}%")
+        ui.card_metric(
+            f"Forecast ({len(pred_df)} Days)",
+            f"${final_pred:.2f}",
+            f"{delta:+.2f}%",
+        )
 
     # 2. Chart
     fig = go.Figure()
@@ -198,12 +204,16 @@ def _render_results(hist_df, pred_df, metrics, ticker):
     # 3. Explanation
     with st.expander("🧠 How this model works"):
         st.write("""
-        This module uses a **Random Forest Regressor** (an ensemble of decision trees) trained on:
-        - **Technical Indicators:** RSI, MACD, Signal Line, Moving Averages (20, 50).
+        This module uses a **Random Forest Regressor**
+        (an ensemble of decision trees) trained on:
+        - **Technical Indicators:** RSI, MACD, Signal Line,
+          Moving Averages (20, 50).
         - **Lag Features:** Previous day prices to capture autocorrelation.
         - **Volume:** Trading volume trends.
 
-        The model learns the complex non-linear relationships between these indicators and the next day's price.
-        For the forecast, it projects these patterns forward.
-        *Note: Financial forecasting is inherently probabilistic. Do not use for actual trading.*
+        The model learns the complex non-linear relationships between
+        these indicators and the next day's price. For the forecast,
+        it projects these patterns forward.
+        *Note: Financial forecasting is inherently probabilistic.
+        Do not use for actual trading.*
         """)

@@ -333,7 +333,11 @@ def _generate_css(theme: dict) -> str:
 
     /* HERO SECTION */
     .hero-container {{
-        background: linear-gradient(135deg, {theme['primary_light']} 0%, {theme['primary_light']} 100%);
+        background: linear-gradient(
+            135deg,
+            {theme['primary_light']} 0%,
+            {theme['primary_light']} 100%
+        );
         border-radius: 16px;
         padding: 4rem 2rem;
         text-align: center;
@@ -742,7 +746,8 @@ def section_header(title: str, subtitle: Optional[str] = None) -> None:
     st.markdown(f"## {title}")
     if subtitle:
         st.markdown(
-            f"<p style='color: {THEME['text_light']}; margin-top: -15px; margin-bottom: 30px; font-size: 1.1em;'>{subtitle}</p>",
+            f"<p style='color: {THEME['text_light']}; margin-top: -15px; "
+            f"margin-bottom: 30px; font-size: 1.1em;'>{subtitle}</p>",
             unsafe_allow_html=True,
         )
 
@@ -789,8 +794,15 @@ def hero_section(title: str, subtitle: str, background_image: Optional[str] = No
     if background_image:
         b64 = get_base64_image(background_image)
         if b64:
-            bg_style = f"background-image: url('{b64}'); background-size: cover; background-position: center;"
-            overlay = f"background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px); padding: 3rem; border-radius: 12px; border: 1px solid {THEME['border']};"
+            bg_style = (
+                f"background-image: url('{b64}'); background-size: cover; "
+                f"background-position: center;"
+            )
+            overlay = (
+                f"background: rgba(255, 255, 255, 0.85); "
+                f"backdrop-filter: blur(8px); padding: 3rem; "
+                f"border-radius: 12px; border: 1px solid {THEME['border']};"
+            )
 
     html = (
         f'<section class="hero-container" role="banner" '
@@ -799,8 +811,9 @@ def hero_section(title: str, subtitle: str, background_image: Optional[str] = No
         f'<div style="{overlay} max-width: 800px; margin: 0 auto;">'
         f'<h1 class="hero-title" style="color: {THEME["primary"]}; '
         f'margin-bottom: 0.5rem;">{title}</h1>'
-        f'<p class="hero-subtitle" style="color: {THEME["text_light"]}; '
-        f'font-weight: 500;">{subtitle}</p></div></section>'
+        f'<p class="hero-subtitle" '
+        f'style="color: {THEME["text_light"]}; font-weight: 500;">'
+        f'{subtitle}</p></div></section>'
     )
     st.markdown(html, unsafe_allow_html=True)
 
@@ -818,7 +831,8 @@ def feature_card(
         b64 = get_base64_image(icon_path)
         if b64:
             icon_display = (
-                f"<img src='{b64}' style='width: 48px; height: 48px; object-fit: contain;'>"
+                f"<img src='{b64}' "
+                f"style='width: 48px; height: 48px; object-fit: contain;'>"
             )
 
     html = (
@@ -830,7 +844,8 @@ def feature_card(
         f'<div style="font-size: 2.5rem; width: 48px; height: 48px; '
         f'display: flex; align-items: center; justify-content: center;" '
         f'role="img" aria-label="{title} icon">{icon_display}</div>'
-        f'{badge}</div><h3 style="margin-top: 0; color: {THEME["text_main"]}; '
+        f'{badge}</div>'
+        f'<h3 style="margin-top: 0; color: {THEME["text_main"]}; '
         f'font-size: 1.25rem; font-family: {THEME["header_font"]}; '
         f'letter-spacing: -0.02em;">{title}</h3>'
         f'<p style="color: {THEME["text_light"]}; font-size: 0.95rem; '
@@ -854,7 +869,8 @@ def use_case_card(icon: str, title: str, description: str) -> None:
         f'<div style="font-size: 1.5rem;" role="img" '
         f'aria-label="{title} icon">{icon}</div><div>'
         f'<strong style="display: block; margin-bottom: 0.5rem; '
-        f'color: {THEME["primary"]}; font-family: {THEME["header_font"]};">'
+        f'color: {THEME["primary"]}; '
+        f'font-family: {THEME["header_font"]};">'
         f'{title}</strong><div style="font-size: 0.9rem; '
         f'color: {THEME["text_light"]}; line-height: 1.6;">'
         f'{description}</div></div></div></div>'
@@ -868,73 +884,111 @@ def comparison_table() -> None:
     """
     html = f"""
     <section aria-label="Platform comparison table">
-        <div style="overflow-x: auto; border-radius: 8px; border: 1px solid {THEME['border']};">
-            <table role="table" aria-label="Comparison of EnterpriseHub with alternative solutions" style="width: 100%; border-collapse: collapse;">
+        <div style="overflow-x: auto; border-radius: 8px;
+                    border: 1px solid {THEME['border']};">
+            <table role="table"
+                   aria-label="Comparison of EnterpriseHub with alternative solutions"
+                   style="width: 100%; border-collapse: collapse;">
                 <thead>
-                    <tr style="background-color: {THEME['background']}; border-bottom: 2px solid {THEME['border']};">
-                        <th scope="col" style="padding: 16px; text-align: left; font-weight: 600;">Capability</th>
-                        <th scope="col" style="padding: 16px; text-align: center; font-weight: 600; color: {THEME['primary']};">EnterpriseHub</th>
-                        <th scope="col" style="padding: 16px; text-align: center; font-weight: 600;">Excel Spreadsheets</th>
-                        <th scope="col" style="padding: 16px; text-align: center; font-weight: 600;">Bloomberg Terminal</th>
-                        <th scope="col" style="padding: 16px; text-align: center; font-weight: 600;">Agency Dashboards</th>
+                    <tr style="background-color: {THEME['background']};
+                              border-bottom: 2px solid {THEME['border']};">
+                        <th scope="col"
+                            style="padding: 16px; text-align: left; font-weight: 600;">
+                            Capability</th>
+                        <th scope="col"
+                            style="padding: 16px; text-align: center;
+                                   font-weight: 600; color: {THEME['primary']};">
+                            EnterpriseHub</th>
+                        <th scope="col"
+                            style="padding: 16px; text-align: center; font-weight: 600;">
+                            Excel Spreadsheets</th>
+                        <th scope="col"
+                            style="padding: 16px; text-align: center; font-weight: 600;">
+                            Bloomberg Terminal</th>
+                        <th scope="col"
+                            style="padding: 16px; text-align: center; font-weight: 600;">
+                            Agency Dashboards</th>
                     </tr>
                 </thead>
                 <tbody>
                 <tr style="border-bottom: 1px solid {THEME['border']};">
                     <td style="padding: 14px;"><strong>Cost</strong></td>
-                    <td style="padding: 14px; text-align: center; color: {THEME['success']}; font-weight: 600;">$0 (Open Source)</td>
+                    <td style="padding: 14px; text-align: center;
+                              color: {THEME['success']}; font-weight: 600;">
+                        $0 (Open Source)</td>
                     <td style="padding: 14px; text-align: center;">$0-200/year</td>
                     <td style="padding: 14px; text-align: center;">$24,000/year</td>
                     <td style="padding: 14px; text-align: center;">$200-500/month</td>
                 </tr>
-                <tr style="border-bottom: 1px solid {THEME['border']}; background-color: {THEME['background']};">
+                <tr style="border-bottom: 1px solid {THEME['border']};
+                          background-color: {THEME['background']};">
                     <td style="padding: 14px;"><strong>Setup Time</strong></td>
-                    <td style="padding: 14px; text-align: center; color: {THEME['success']}; font-weight: 600;">&lt; 5 minutes</td>
+                    <td style="padding: 14px; text-align: center;
+                              color: {THEME['success']}; font-weight: 600;">
+                        &lt; 5 minutes</td>
                     <td style="padding: 14px; text-align: center;">2-4 hours</td>
                     <td style="padding: 14px; text-align: center;">1-2 weeks</td>
                     <td style="padding: 14px; text-align: center;">2-6 weeks</td>
                 </tr>
                 <tr style="border-bottom: 1px solid {THEME['border']};">
                     <td style="padding: 14px;"><strong>Technical Analysis</strong></td>
-                    <td style="padding: 14px; text-align: center; color: {THEME['success']}; font-weight: 600;">✓ RSI, MACD, MA</td>
+                    <td style="padding: 14px; text-align: center;
+                              color: {THEME['success']}; font-weight: 600;">
+                        ✓ RSI, MACD, MA</td>
                     <td style="padding: 14px; text-align: center;">Manual formulas</td>
                     <td style="padding: 14px; text-align: center;">✓ Advanced</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                 </tr>
-                <tr style="border-bottom: 1px solid {THEME['border']}; background-color: {THEME['background']};">
+                <tr style="border-bottom: 1px solid {THEME['border']};
+                          background-color: {THEME['background']};">
                     <td style="padding: 14px;"><strong>AI-Powered Insights</strong></td>
-                    <td style="padding: 14px; text-align: center; color: {THEME['success']}; font-weight: 600;">✓ Claude 3.5 Sonnet</td>
+                    <td style="padding: 14px; text-align: center;
+                              color: {THEME['success']}; font-weight: 600;">
+                        ✓ Claude 3.5 Sonnet</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                     <td style="padding: 14px; text-align: center;">Limited</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                 </tr>
                 <tr style="border-bottom: 1px solid {THEME['border']};">
                     <td style="padding: 14px;"><strong>Scenario Modeling</strong></td>
-                    <td style="padding: 14px; text-align: center; color: {THEME['success']}; font-weight: 600;">✓ 100 scenarios/heatmap</td>
-                    <td style="padding: 14px; text-align: center;">Manual copy-paste</td>
+                    <td style="padding: 14px; text-align: center;
+                              color: {THEME['success']}; font-weight: 600;">
+                        ✓ 100 scenarios/heatmap</td>
+                    <td style="padding: 14px; text-align: center;">
+                        Manual copy-paste</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                 </tr>
-                <tr style="border-bottom: 1px solid {THEME['border']}; background-color: {THEME['background']};">
+                <tr style="border-bottom: 1px solid {THEME['border']};
+                          background-color: {THEME['background']};">
                     <td style="padding: 14px;"><strong>Attribution Modeling</strong></td>
-                    <td style="padding: 14px; text-align: center; color: {THEME['success']}; font-weight: 600;">✓ 5 models</td>
-                    <td style="padding: 14px; text-align: center;">Manual calculation</td>
+                    <td style="padding: 14px; text-align: center;
+                              color: {THEME['success']}; font-weight: 600;">
+                        ✓ 5 models</td>
+                    <td style="padding: 14px; text-align: center;">
+                        Manual calculation</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                     <td style="padding: 14px; text-align: center;">Limited</td>
                 </tr>
                 <tr style="border-bottom: 1px solid {THEME['border']};">
                     <td style="padding: 14px;"><strong>Automated Testing</strong></td>
-                    <td style="padding: 14px; text-align: center; color: {THEME['success']}; font-weight: 600;">✓ 220+ tests</td>
+                    <td style="padding: 14px; text-align: center;
+                              color: {THEME['success']}; font-weight: 600;">
+                        ✓ 220+ tests</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                     <td style="padding: 14px; text-align: center;">Proprietary</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                 </tr>
                 <tr style="background-color: {THEME['background']};">
                     <td style="padding: 14px;"><strong>Ownership</strong></td>
-                    <td style="padding: 14px; text-align: center; color: {THEME['success']}; font-weight: 600;">✓ Full source code</td>
+                    <td style="padding: 14px; text-align: center;
+                              color: {THEME['success']}; font-weight: 600;">
+                        ✓ Full source code</td>
                     <td style="padding: 14px; text-align: center;">You own files</td>
-                    <td style="padding: 14px; text-align: center;">✗ Subscription only</td>
-                    <td style="padding: 14px; text-align: center;">✗ Subscription only</td>
+                    <td style="padding: 14px; text-align: center;">
+                        ✗ Subscription only</td>
+                    <td style="padding: 14px; text-align: center;">
+                        ✗ Subscription only</td>
                 </tr>
                 </tbody>
             </table>
@@ -1005,41 +1059,68 @@ def skeleton_loader(skeleton_type: str = "card", count: int = 1) -> None:
     for i in range(count):
         if skeleton_type == "card":
             skeleton_html = """
-            <div class="skeleton-card" role="status" aria-label="Loading content" aria-live="polite">
+            <div class="skeleton-card" role="status"
+                 aria-label="Loading content" aria-live="polite">
                 <div class="skeleton skeleton-circle" aria-hidden="true"></div>
                 <div class="skeleton skeleton-title" aria-hidden="true"></div>
-                <div class="skeleton skeleton-line" style="width: 100%;" aria-hidden="true"></div>
-                <div class="skeleton skeleton-line" style="width: 90%;" aria-hidden="true"></div>
-                <div class="skeleton skeleton-line" style="width: 75%;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line"
+                     style="width: 100%;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line"
+                     style="width: 90%;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line"
+                     style="width: 75%;" aria-hidden="true"></div>
                 <span class="sr-only">Loading...</span>
             </div>
             """
         elif skeleton_type == "text":
             skeleton_html = """
-            <div role="status" aria-label="Loading text content" aria-live="polite">
-                <div class="skeleton skeleton-line" style="width: 100%; margin-bottom: 8px;" aria-hidden="true"></div>
-                <div class="skeleton skeleton-line" style="width: 95%; margin-bottom: 8px;" aria-hidden="true"></div>
-                <div class="skeleton skeleton-line" style="width: 85%; margin-bottom: 8px;" aria-hidden="true"></div>
-                <div class="skeleton skeleton-line" style="width: 90%; margin-bottom: 8px;" aria-hidden="true"></div>
+            <div role="status" aria-label="Loading text content"
+                 aria-live="polite">
+                <div class="skeleton skeleton-line"
+                     style="width: 100%; margin-bottom: 8px;"
+                     aria-hidden="true"></div>
+                <div class="skeleton skeleton-line"
+                     style="width: 95%; margin-bottom: 8px;"
+                     aria-hidden="true"></div>
+                <div class="skeleton skeleton-line"
+                     style="width: 85%; margin-bottom: 8px;"
+                     aria-hidden="true"></div>
+                <div class="skeleton skeleton-line"
+                     style="width: 90%; margin-bottom: 8px;"
+                     aria-hidden="true"></div>
                 <span class="sr-only">Loading...</span>
             </div>
             """
         elif skeleton_type == "metric":
             skeleton_html = """
-            <div class="skeleton-card" role="status" aria-label="Loading metric" aria-live="polite">
-                <div class="skeleton skeleton-line" style="width: 50%; height: 14px; margin-bottom: 12px;" aria-hidden="true"></div>
-                <div class="skeleton skeleton-line" style="width: 80%; height: 32px;" aria-hidden="true"></div>
+            <div class="skeleton-card" role="status"
+                 aria-label="Loading metric" aria-live="polite">
+                <div class="skeleton skeleton-line"
+                     style="width: 50%; height: 14px; margin-bottom: 12px;"
+                     aria-hidden="true"></div>
+                <div class="skeleton skeleton-line"
+                     style="width: 80%; height: 32px;"
+                     aria-hidden="true"></div>
                 <span class="sr-only">Loading metric...</span>
             </div>
             """
         elif skeleton_type == "table":
             skeleton_html = """
-            <div role="status" aria-label="Loading table row" aria-live="polite">
+            <div role="status" aria-label="Loading table row"
+                 aria-live="polite">
                 <div style="display: flex; gap: 16px; margin-bottom: 12px;">
-                    <div class="skeleton skeleton-line" style="width: 25%; height: 20px;" aria-hidden="true"></div>
-                    <div class="skeleton skeleton-line" style="width: 25%; height: 20px;" aria-hidden="true"></div>
-                    <div class="skeleton skeleton-line" style="width: 25%; height: 20px;" aria-hidden="true"></div>
-                    <div class="skeleton skeleton-line" style="width: 25%; height: 20px;" aria-hidden="true"></div>
+                    <div class="skeleton skeleton-line"
+                         style="width: 25%; height: 20px;"
+                         aria-hidden="true"></div>
+                    <div class="skeleton skeleton-line"
+                         style="width: 25%; height: 20px;"
+                         aria-hidden="true"></div>
+                    <div class="skeleton skeleton-line"
+                         style="width: 25%; height: 20px;"
+                         aria-hidden="true"></div>
+                    <div class="skeleton skeleton-line"
+                         style="width: 25%; height: 20px;"
+                         aria-hidden="true"></div>
                 </div>
                 <span class="sr-only">Loading table row...</span>
             </div>
@@ -1047,11 +1128,14 @@ def skeleton_loader(skeleton_type: str = "card", count: int = 1) -> None:
         else:
             # Default to card type
             skeleton_html = """
-            <div class="skeleton-card" role="status" aria-label="Loading content" aria-live="polite">
+            <div class="skeleton-card" role="status"
+                 aria-label="Loading content" aria-live="polite">
                 <div class="skeleton skeleton-circle" aria-hidden="true"></div>
                 <div class="skeleton skeleton-title" aria-hidden="true"></div>
-                <div class="skeleton skeleton-line" style="width: 100%;" aria-hidden="true"></div>
-                <div class="skeleton skeleton-line" style="width: 90%;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line"
+                     style="width: 100%;" aria-hidden="true"></div>
+                <div class="skeleton skeleton-line"
+                     style="width: 90%;" aria-hidden="true"></div>
                 <span class="sr-only">Loading...</span>
             </div>
             """
@@ -1138,7 +1222,8 @@ def toast(message: str, toast_type: str = "success", duration: int = 3000) -> No
 
         toast_html = f"""
         <div class="toast-container" id="toast-{toast_type}-container">
-            <div class="toast toast-{toast_type}" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast toast-{toast_type}" role="alert"
+                 aria-live="assertive" aria-atomic="true">
                 <div class="toast-icon" aria-hidden="true">{icon}</div>
                 <div class="toast-message">{message}</div>
             </div>
@@ -1146,7 +1231,9 @@ def toast(message: str, toast_type: str = "success", duration: int = 3000) -> No
         <script>
             // Auto-dismiss toast after duration
             setTimeout(function() {{
-                var toast = document.getElementById('toast-{toast_type}-container');
+                var toast = document.getElementById(
+                    'toast-{toast_type}-container'
+                );
                 if (toast) {{
                     toast.style.animation = 'slideOut 0.3s ease-out';
                     setTimeout(function() {{
@@ -1187,17 +1274,29 @@ def animated_metric(
     main_color, bg_color = color_map.get(color, color_map["primary"])
 
     html = f"""
-    <div class="metric-card hover-lift" style="background: linear-gradient(135deg, {bg_color} 0%, {THEME['surface']} 100%); border-left: 4px solid {main_color};">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-            <div style="font-size: 0.75rem; color: {THEME['text_light']}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+    <div class="metric-card hover-lift"
+         style="background: linear-gradient(135deg, {bg_color} 0%,
+                {THEME['surface']} 100%); border-left: 4px solid {main_color};">
+        <div style="display: flex; justify-content: space-between;
+                    align-items: start; margin-bottom: 8px;">
+            <div style="font-size: 0.75rem;
+                        color: {THEME['text_light']};
+                        font-weight: 600; text-transform: uppercase;
+                        letter-spacing: 0.05em;">
                 {label}
             </div>
-            {f'<div style="font-size: 1.75rem;" role="img" aria-label="{label} icon">{icon}</div>' if icon else ''}
+            {f'<div style="font-size: 1.75rem;" role="img" '
+             f'aria-label="{label} icon">{icon}</div>' if icon else ''}
         </div>
-        <div style="font-size: 2.25rem; font-weight: 700; color: {main_color}; margin-bottom: 4px; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">
+        <div style="font-size: 2.25rem; font-weight: 700;
+                    color: {main_color}; margin-bottom: 4px;
+                    font-feature-settings: 'tnum';
+                    font-variant-numeric: tabular-nums;">
             {value}
         </div>
-        {f'<div style="font-size: 0.875rem; color: {THEME["success"] if "+" in delta else THEME["danger"]}; font-weight: 600;">{delta}</div>' if delta else ''}
+        {f'<div style="font-size: 0.875rem; '
+         f'color: {THEME["success"] if "+" in delta else THEME["danger"]}; '
+         f'font-weight: 600;">{delta}</div>' if delta else ''}
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
@@ -1232,9 +1331,12 @@ def glassmorphic_card(
         transition: all 0.3s ease;
         height: 100%;
     " class="hover-lift">
-        {f'<div style="font-size: 2.5rem; margin-bottom: 12px;" role="img" aria-label="{title} icon">{icon}</div>' if icon else ''}
-        <h3 style="color: {THEME['text_main']}; margin-bottom: 12px; font-size: 1.5rem;">{title}</h3>
-        <p style="color: {THEME['text_light']}; line-height: 1.6; margin-bottom: 16px;">
+        {f'<div style="font-size: 2.5rem; margin-bottom: 12px;" '
+         f'role="img" aria-label="{title} icon">{icon}</div>' if icon else ''}
+        <h3 style="color: {THEME['text_main']}; margin-bottom: 12px;
+                   font-size: 1.5rem;">{title}</h3>
+        <p style="color: {THEME['text_light']}; line-height: 1.6;
+                  margin-bottom: 16px;">
             {content}
         </p>
         {f'''<a href="{cta_url}" style="
@@ -1246,8 +1348,10 @@ def glassmorphic_card(
             text-decoration: none;
             font-weight: 600;
             transition: all 0.2s;
-        " onmouseover="this.style.backgroundColor='{THEME['primary_dark']}'; this.style.transform='translateY(-2px)';"
-           onmouseout="this.style.backgroundColor='{THEME['primary']}'; this.style.transform='translateY(0)';">
+        " onmouseover="this.style.backgroundColor='{THEME['primary_dark']}';
+                       this.style.transform='translateY(-2px)';"
+           onmouseout="this.style.backgroundColor='{THEME['primary']}';
+                      this.style.transform='translateY(0)';">
             {cta_text} →
         </a>''' if cta_text and cta_url else ''}
     </div>
@@ -1285,9 +1389,14 @@ def progress_bar(
 
     html = f"""
     <div style="margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 0.875rem; font-weight: 600; color: {THEME['text_main']};">{label}</span>
-            {f'<span style="font-size: 0.875rem; font-weight: 700; color: {bar_color};">{percentage}%</span>' if show_percentage else ''}
+        <div style="display: flex; justify-content: space-between;
+                    align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.875rem; font-weight: 600;
+                         color: {THEME['text_main']};">
+                {label}
+            </span>
+            {f'<span style="font-size: 0.875rem; font-weight: 700; '
+             f'color: {bar_color};">{percentage}%</span>' if show_percentage else ''}
         </div>
         <div style="
             width: 100%;
@@ -1300,7 +1409,8 @@ def progress_bar(
             <div style="
                 width: {percentage}%;
                 height: 100%;
-                background: linear-gradient(90deg, {bar_color}, {THEME['primary_light']});
+                background: linear-gradient(90deg, {bar_color},
+                            {THEME['primary_light']});
                 border-radius: 9999px;
                 transition: width 1s ease-out;
                 animation: shimmer 2s ease-in-out infinite;
@@ -1402,15 +1512,19 @@ def login_modal() -> bool:
         st.markdown("<div class='login-card'>", unsafe_allow_html=True)
 
         st.markdown(
-            f"<h1 style='font-size: 2rem; margin-bottom: 8px;'>ENTERPRISE<span style='color: {THEME['accent']}'>HUB</span></h1>",
+            f"<h1 style='font-size: 2rem; margin-bottom: 8px;'>"
+            f"ENTERPRISE<span style='color: {THEME['accent']}'>HUB</span></h1>",
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<p style='color: #64748B; margin-bottom: 32px;'>Secure Production Gateway v5.0</p>",
+            "<p style='color: #64748B; margin-bottom: 32px;'>"
+            "Secure Production Gateway v5.0</p>",
             unsafe_allow_html=True,
         )
 
-        username = st.text_input("Username or Email", placeholder="cayman@enterprise.com")
+        username = st.text_input(
+            "Username or Email", placeholder="cayman@enterprise.com"
+        )
         password = st.text_input("Password", type="password", placeholder="••••••••")
 
         col1, col2 = st.columns([2, 1])

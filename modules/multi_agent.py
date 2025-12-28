@@ -80,7 +80,8 @@ def _run_deep_dive_logic(ticker: str):
                 results["price"] = df.iloc[-1]["Close"]
                 results["info"] = info
                 st.success(
-                    f"🕵️ DataBot: Data secured. Price: ${results['price']:.2f} | Sector: {info.get('sector', 'Unknown')}"
+                    f"🕵️ DataBot: Data secured. Price: ${results['price']:.2f} | "
+                    f"Sector: {info.get('sector', 'Unknown')}"
                 )
 
         # --- AGENT 2: TECHBOT ---
@@ -106,7 +107,8 @@ def _run_deep_dive_logic(ticker: str):
                 )
 
                 st.success(
-                    f"📈 TechBot: Analysis complete. RSI: {rsi:.1f} ({rsi_status}) | MACD: {results['macd_signal']}"
+                    f"📈 TechBot: Analysis complete. RSI: {rsi:.1f} ({rsi_status}) | "
+                    f"MACD: {results['macd_signal']}"
                 )
 
         # --- AGENT 3: NEWSBOT ---
@@ -120,7 +122,9 @@ def _run_deep_dive_logic(ticker: str):
                 results["sentiment_verdict"] = sentiment["verdict"]
 
                 st.success(
-                    f"📰 NewsBot: {sentiment['article_count']} intel reports analyzed. Verdict: {sentiment['verdict']} (Score: {sentiment['average_score']:.2f})"
+                    f"📰 NewsBot: {sentiment['article_count']} intel reports analyzed. "
+                    f"Verdict: {sentiment['verdict']} "
+                    f"(Score: {sentiment['average_score']:.2f})"
                 )
 
         # --- AGENT 4: CHIEFBOT (Synthesis) ---
@@ -174,9 +178,12 @@ def _run_deep_dive_logic(ticker: str):
         # Display Final Card
         st.markdown(
             f"""
-        <div style="padding: 20px; border-radius: 10px; border: 2px solid #e0e0e0; background-color: #f9f9f9;">
-            <h2 style="text-align: center; margin-top: 0;">RECOMMENDATION: <span style="color: {ui.THEME.get(color, 'black')}">{verdict}</span></h2>
-            <p style="text-align: center; font-size: 1.2em;">Confidence Score: {score}/3 Factors</p>
+        <div style="padding: 20px; border-radius: 10px;
+                    border: 2px solid #e0e0e0; background-color: #f9f9f9;">
+            <h2 style="text-align: center; margin-top: 0;">RECOMMENDATION:
+                <span style="color: {ui.THEME.get(color, 'black')}">{verdict}</span></h2>
+            <p style="text-align: center; font-size: 1.2em;">
+                Confidence Score: {score}/3 Factors</p>
             <hr>
             <h4>📋 Key Drivers:</h4>
             <ul>

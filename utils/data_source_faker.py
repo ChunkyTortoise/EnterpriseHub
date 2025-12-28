@@ -48,8 +48,10 @@ def generate_campaign_data(
         cost_per_click = max(0.01, cost_per_click) # Ensure CPC is not zero
         
         spend = clicks * cost_per_click
-        
-        conversions = clicks * (base_conversion_rate + np.random.normal(0, base_conversion_rate * 0.1))
+
+        conversions = clicks * (
+            base_conversion_rate + np.random.normal(0, base_conversion_rate * 0.1)
+        )
         conversions = max(0, conversions)
         
         revenue = conversions * conversion_value
