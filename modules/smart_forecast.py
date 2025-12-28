@@ -88,9 +88,7 @@ def _train_and_predict(df: pd.DataFrame, future_days: int):
     y = train_df["Target"]
 
     # Split for validation
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, shuffle=False
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
 
     # Model: Random Forest (Ensemble)
     model = RandomForestRegressor(n_estimators=100, random_state=42)

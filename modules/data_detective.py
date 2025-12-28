@@ -650,10 +650,7 @@ def _prepare_data_summary(df: pd.DataFrame, include_sample: bool = False) -> str
         )
 
         # Add stats for numeric columns
-        if (
-            pd.api.types.is_numeric_dtype(col_data)
-            and not col_data.isna().all()
-        ):
+        if pd.api.types.is_numeric_dtype(col_data) and not col_data.isna().all():
             summary_parts.append(
                 f"    Range: {col_data.min():.2f} to {col_data.max():.2f}, "
                 f"Mean: {col_data.mean():.2f}"
@@ -724,8 +721,7 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
                 "has_issue": True,
                 "severity": "Medium",
                 "description": (
-                    f"Found {duplicate_count:,} duplicate rows "
-                    f"({pct_duplicates:.2f}% of data)"
+                    f"Found {duplicate_count:,} duplicate rows " f"({pct_duplicates:.2f}% of data)"
                 ),
                 "recommendation": "Remove duplicate rows to ensure data integrity",
                 "action": lambda df: df.drop_duplicates(),
@@ -752,9 +748,7 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
         Q3 = df[col].quantile(0.75)
         IQR = Q3 - Q1
 
-        outlier_count = (
-            (df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR))
-        ).sum()
+        outlier_count = ((df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR))).sum()
 
         if outlier_count > 0:
             outlier_cols.append((col, outlier_count))

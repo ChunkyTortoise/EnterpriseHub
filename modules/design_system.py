@@ -5,6 +5,7 @@ This module showcases all UI components from utils.ui, demonstrating the
 complete design system with live examples, color palettes, typography,
 and interactive component demonstrations.
 """
+
 from typing import Dict
 
 import streamlit as st
@@ -113,13 +114,9 @@ def _render_color_palette(colors: Dict[str, str], theme_name: str) -> None:
     """Render a color palette with swatches and hex codes."""
     # Group colors by category
     primary_colors = {k: v for k, v in colors.items() if "primary" in k}
-    semantic_colors = {
-        k: v for k, v in colors.items() if k in ["success", "warning", "danger"]
-    }
+    semantic_colors = {k: v for k, v in colors.items() if k in ["success", "warning", "danger"]}
     neutral_colors = {
-        k: v
-        for k, v in colors.items()
-        if k in ["background", "surface", "border", "secondary"]
+        k: v for k, v in colors.items() if k in ["background", "surface", "border", "secondary"]
     }
     text_colors = {k: v for k, v in colors.items() if "text" in k or k == "button_text"}
 
@@ -539,9 +536,7 @@ def _render_interactive_tab() -> None:
 
     with col3:
         st.markdown("**Disabled Button**")
-        st.button(
-            "Disabled", key="btn_disabled", disabled=True, use_container_width=True
-        )
+        st.button("Disabled", key="btn_disabled", disabled=True, use_container_width=True)
         st.caption("Disabled state for unavailable actions")
 
     with st.expander("View Code"):
@@ -599,15 +594,11 @@ ui.card_metric(
 
     with col1:
         st.text_input("Text Input", placeholder="Enter text here...", key="demo_text")
-        st.selectbox(
-            "Select Dropdown", ["Option 1", "Option 2", "Option 3"], key="demo_select"
-        )
+        st.selectbox("Select Dropdown", ["Option 1", "Option 2", "Option 3"], key="demo_select")
         st.slider("Slider", 0, 100, 50, key="demo_slider")
 
     with col2:
-        st.number_input(
-            "Number Input", min_value=0, max_value=100, value=50, key="demo_number"
-        )
+        st.number_input("Number Input", min_value=0, max_value=100, value=50, key="demo_number")
         st.date_input("Date Picker", key="demo_date")
         st.time_input("Time Picker", key="demo_time")
 
@@ -668,9 +659,7 @@ def _render_patterns_tab() -> None:
             <h4 style='margin-top: 0;'>Left Column</h4>
             <p>Equal width columns for balanced content.</p>
         </div>
-        """.format(
-                ui.THEME["surface"], ui.THEME["border"]
-            ),
+        """.format(ui.THEME["surface"], ui.THEME["border"]),
             unsafe_allow_html=True,
         )
     with col2:
@@ -680,9 +669,7 @@ def _render_patterns_tab() -> None:
             <h4 style='margin-top: 0;'>Right Column</h4>
             <p>Use for side-by-side comparisons.</p>
         </div>
-        """.format(
-                ui.THEME["surface"], ui.THEME["border"]
-            ),
+        """.format(ui.THEME["surface"], ui.THEME["border"]),
             unsafe_allow_html=True,
         )
 

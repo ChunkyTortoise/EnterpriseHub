@@ -24,8 +24,7 @@ st.set_page_config(
         "Get Help": "https://github.com/ChunkyTortoise/enterprise-hub",
         "Report a bug": "https://github.com/ChunkyTortoise/enterprise-hub/issues",
         "About": (
-            "# Enterprise Hub\n"
-            "A unified platform for market analysis and enterprise tooling."
+            "# Enterprise Hub\n" "A unified platform for market analysis and enterprise tooling."
         ),
     },
 )
@@ -133,22 +132,14 @@ def main() -> None:
                 if st.button(
                     "☀️ Light",
                     use_container_width=True,
-                    type=(
-                        "primary"
-                        if st.session_state.theme == "light"
-                        else "secondary"
-                    ),
+                    type=("primary" if st.session_state.theme == "light" else "secondary"),
                 ):
                     st.session_state.theme = "light"
                     st.rerun()
                 if st.button(
                     "🌊 Ocean",
                     use_container_width=True,
-                    type=(
-                        "primary"
-                        if st.session_state.theme == "ocean"
-                        else "secondary"
-                    ),
+                    type=("primary" if st.session_state.theme == "ocean" else "secondary"),
                 ):
                     st.session_state.theme = "ocean"
                     st.rerun()
@@ -156,22 +147,14 @@ def main() -> None:
                 if st.button(
                     "🌙 Dark",
                     use_container_width=True,
-                    type=(
-                        "primary"
-                        if st.session_state.theme == "dark"
-                        else "secondary"
-                    ),
+                    type=("primary" if st.session_state.theme == "dark" else "secondary"),
                 ):
                     st.session_state.theme = "dark"
                     st.rerun()
                 if st.button(
                     "🌅 Sunset",
                     use_container_width=True,
-                    type=(
-                        "primary"
-                        if st.session_state.theme == "sunset"
-                        else "secondary"
-                    ),
+                    type=("primary" if st.session_state.theme == "sunset" else "secondary"),
                 ):
                     st.session_state.theme = "sunset"
                     st.rerun()
@@ -371,10 +354,7 @@ def _render_overview() -> None:
     ui.spacer(40)
     ui.section_header(
         "Built For Real Business Challenges",
-        (
-            "See how EnterpriseHub replaces manual workflows "
-            "and expensive subscriptions"
-        ),
+        ("See how EnterpriseHub replaces manual workflows " "and expensive subscriptions"),
     )
 
     col1, col2 = st.columns(2)
@@ -433,9 +413,7 @@ def _render_overview() -> None:
 
     # Tech Stack Badge Section
     ui.spacer(40)
-    ui.section_header(
-        "Technical Foundation", "Built with modern, production-grade tools"
-    )
+    ui.section_header("Technical Foundation", "Built with modern, production-grade tools")
 
     st.markdown(
         """
