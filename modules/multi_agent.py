@@ -14,9 +14,18 @@ import pandas as pd
 import streamlit as st
 
 import utils.ui as ui
-from utils.data_loader import get_stock_data, calculate_indicators, get_company_info, get_news
+from utils.agent_handlers import AGENT_HANDLERS
+from utils.agent_registry import ALL_AGENTS
+from utils.data_loader import calculate_indicators, get_company_info, get_news, get_stock_data
 from utils.exceptions import DataFetchError, InvalidTickerError
 from utils.logger import get_logger
+from utils.orchestrator import (
+    AgentRegistry,
+    Orchestrator,
+    Workflow,
+    WorkflowStage,
+    WorkflowStatus,
+)
 from utils.sentiment_analyzer import process_news_sentiment
 
 # Conditional import for Claude API
@@ -142,6 +151,9 @@ def render() -> None:
             "💰 Stock Deep Dive (4 Agents)",
             "📊 Market Scanner (4 Agents)",
             "📢 Content Generator (4 Agents)",
+            "🧠 Integrated Intelligence (7 Agents)",
+            "✅ Validation-First Analysis (5 Agents)",
+            "🔀 Adaptive Recommendation (Dynamic)",
         ],
     )
 
@@ -151,6 +163,12 @@ def render() -> None:
         _render_market_scanner()
     elif workflow == "📢 Content Generator (4 Agents)":
         _render_content_generator()
+    elif workflow == "🧠 Integrated Intelligence (7 Agents)":
+        _render_integrated_intelligence()
+    elif workflow == "✅ Validation-First Analysis (5 Agents)":
+        _render_validation_first()
+    elif workflow == "🔀 Adaptive Recommendation (Dynamic)":
+        _render_adaptive_recommendation()
 
 
 def _render_stock_deep_dive() -> None:
@@ -911,3 +929,581 @@ Return ONLY the edited article text.
         st.error(f"❌ Generation Aborted: {str(e)}")
         if st.checkbox("Show error details", key="cg_error_details"):
             st.exception(e)
+
+
+# ============================================================================
+# NEW WORKFLOW: Integrated Intelligence (7 Agents)
+# ============================================================================
+
+
+def _render_integrated_intelligence() -> None:
+    """Render the Integrated Intelligence workflow UI."""
+    st.subheader("🧠 Integrated Intelligence Analysis")
+    st.markdown(
+        """
+        This advanced workflow combines **7 specialized agents** for comprehensive
+        cross-module intelligence:
+
+        1. **DataBot** → Fetch market data with quality scoring
+        2. **TechBot** → Technical indicators and signals
+        3. **ForecastBot** → ML-based 30-day price forecast
+        4. **SentimentBot** → News sentiment analysis
+        5. **AnalystBot** → Cross-module correlation and divergence detection
+        6. **ValidatorBot** → Result validation and contradiction detection
+        7. **SynthesisBot** → Final recommendation with confidence scoring
+        """
+    )
+
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        ticker = st.text_input(
+            "Enter Stock Ticker",
+            value="AAPL",
+            key="ii_ticker",
+            help="Enter a valid stock ticker symbol",
+        ).upper()
+    with col2:
+        period = st.selectbox(
+            "Analysis Period",
+            ["6mo", "1y", "2y"],
+            index=1,
+            key="ii_period",
+        )
+
+    if st.button("🚀 Launch 7-Agent Analysis", key="ii_launch", type="primary"):
+        if not ticker:
+            st.error("Please enter a valid ticker symbol.")
+            return
+        _run_integrated_intelligence_logic(ticker, period)
+
+
+def _run_integrated_intelligence_logic(ticker: str, period: str) -> None:
+    """Execute Integrated Intelligence workflow (7 agents)."""
+    start_time = time.time()
+
+    try:
+        # Initialize orchestrator
+        registry = AgentRegistry()
+        for agent_id, agent in ALL_AGENTS.items():
+            registry.register_agent(agent)
+
+        orchestrator = Orchestrator(registry=registry)
+        for agent_id, handler in AGENT_HANDLERS.items():
+            orchestrator.register_handler(agent_id, handler)
+
+        # Define 7-agent workflow
+        workflow = Workflow(
+            workflow_id="integrated_intelligence",
+            name="Integrated Intelligence Analysis",
+            description="Cross-module intelligence with validation",
+            stages=[
+                WorkflowStage(stage_id="data", agent_id="data_bot", required=True),
+                WorkflowStage(
+                    stage_id="technical",
+                    agent_id="tech_bot",
+                    depends_on=["data"],
+                    required=True,
+                ),
+                WorkflowStage(
+                    stage_id="forecast",
+                    agent_id="forecast_bot",
+                    depends_on=["data"],
+                    required=False,  # May fail with insufficient data
+                ),
+                WorkflowStage(
+                    stage_id="sentiment",
+                    agent_id="sentiment_bot",
+                    depends_on=["data"],
+                    required=True,
+                ),
+                WorkflowStage(
+                    stage_id="analyst",
+                    agent_id="analyst_bot",
+                    depends_on=["technical", "forecast"],
+                    required=False,
+                ),
+                WorkflowStage(
+                    stage_id="validator",
+                    agent_id="validator_bot",
+                    depends_on=["technical", "sentiment"],
+                    required=False,
+                ),
+                WorkflowStage(
+                    stage_id="synthesis",
+                    agent_id="synthesis_bot",
+                    depends_on=["technical", "sentiment"],
+                    required=True,
+                ),
+            ],
+        )
+
+        # Execute with progress updates
+        with st.status("🧠 Running 7-Agent Analysis...", expanded=True) as status:
+            st.write("🕵️ DataBot: Fetching market data...")
+            result = orchestrator.execute_workflow(workflow, {"ticker": ticker, "period": period})
+            status.update(label="✅ Analysis Complete!", state="complete")
+
+        if result.status == WorkflowStatus.FAILED:
+            st.error(f"❌ Workflow failed: {result.error}")
+            return
+
+        # Display results in tabs
+        tabs = st.tabs(
+            [
+                "📊 Synthesis",
+                "📈 Technical",
+                "🔮 Forecast",
+                "📰 Sentiment",
+                "🧠 Cross-Module",
+                "✅ Validation",
+            ]
+        )
+
+        with tabs[0]:  # Synthesis
+            st.subheader("Final Recommendation")
+            rec = result.outputs.get("recommendation", "HOLD")
+            conf = result.outputs.get("confidence", 0.0)
+
+            if rec == "BUY":
+                st.success(f"**{rec}** (Confidence: {conf:.1%})")
+            elif rec == "SELL":
+                st.error(f"**{rec}** (Confidence: {conf:.1%})")
+            else:
+                st.info(f"**{rec}** (Confidence: {conf:.1%})")
+
+            reasoning = result.outputs.get("reasoning", "")
+            if reasoning:
+                st.markdown(reasoning)
+
+            risk_factors = result.outputs.get("risk_factors", [])
+            if risk_factors:
+                st.warning("**Risk Factors:**")
+                for risk in risk_factors:
+                    st.write(f"- {risk}")
+
+        with tabs[1]:  # Technical
+            st.subheader("Technical Analysis")
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Signal", result.outputs.get("signal", "N/A"))
+            col2.metric("RSI", f"{result.outputs.get('rsi_value', 0):.1f}")
+            col3.metric("MACD", result.outputs.get("macd_signal", "N/A"))
+
+        with tabs[2]:  # Forecast
+            st.subheader("30-Day ML Forecast")
+            metrics = result.outputs.get("metrics", {})
+            if metrics:
+                col1, col2, col3, col4 = st.columns(4)
+                col1.metric("Trend", result.outputs.get("trend", "N/A"))
+                col2.metric("R² Score", f"{metrics.get('R2', 0):.3f}")
+                col3.metric("MAE", f"${metrics.get('MAE', 0):.2f}")
+                col4.metric("Dir. Accuracy", f"{metrics.get('directional_accuracy', 0):.1%}")
+            else:
+                st.info("Forecast not available (insufficient data)")
+
+        with tabs[3]:  # Sentiment
+            st.subheader("News Sentiment")
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Verdict", result.outputs.get("verdict", "Neutral"))
+            col2.metric("Confidence", f"{result.outputs.get('confidence', 0):.1%}")
+            col3.metric("Articles", result.outputs.get("article_count", 0))
+
+        with tabs[4]:  # Cross-Module
+            st.subheader("Cross-Module Intelligence")
+            insights = result.outputs.get("integrated_insights", [])
+            if insights:
+                st.write("**Key Insights:**")
+                for insight in insights:
+                    st.write(f"- {insight}")
+
+            divergences = result.outputs.get("divergences", [])
+            if divergences:
+                st.warning("**Divergences Detected:**")
+                for div in divergences:
+                    if isinstance(div, dict):
+                        st.write(f"- {div.get('description', str(div))}")
+                    else:
+                        st.write(f"- {div}")
+
+            guidance = result.outputs.get("portfolio_guidance", "")
+            if guidance:
+                st.info(f"**Portfolio Guidance:** {guidance}")
+
+        with tabs[5]:  # Validation
+            st.subheader("Validation Results")
+            passed = result.outputs.get("passed", True)
+            if passed:
+                st.success("✅ All validation checks passed")
+            else:
+                st.error("❌ Validation issues detected")
+
+            errors = result.outputs.get("errors", [])
+            warnings = result.outputs.get("warnings", [])
+            if errors:
+                for err in errors:
+                    st.error(f"- {err}")
+            if warnings:
+                for warn in warnings:
+                    st.warning(f"- {warn}")
+
+        # Execution time
+        elapsed = time.time() - start_time
+        st.caption(f"⏱️ Total execution time: {elapsed:.2f}s")
+
+    except Exception as e:
+        logger.error(f"Integrated Intelligence workflow failed: {e}", exc_info=True)
+        st.error(f"❌ Analysis Aborted: {str(e)}")
+
+
+# ============================================================================
+# NEW WORKFLOW: Validation-First Analysis (5 Agents)
+# ============================================================================
+
+
+def _render_validation_first() -> None:
+    """Render the Validation-First workflow UI."""
+    st.subheader("✅ Validation-First Analysis")
+    st.markdown(
+        """
+        This workflow demonstrates **strict validation gating** where each stage
+        must pass confidence thresholds before proceeding:
+
+        1. **DataBot** → Fetch data with quality assessment
+        2. **ValidatorBot** → Gate: Data quality ≥ 80%
+        3. **TechBot** → Technical analysis (only if data passes)
+        4. **ValidatorBot** → Gate: Technical confidence ≥ 70%
+        5. **SynthesisBot** → Final recommendation (only if all gates pass)
+
+        If any validation gate fails, the workflow **halts** with a detailed report.
+        """
+    )
+
+    ticker = st.text_input(
+        "Enter Stock Ticker",
+        value="MSFT",
+        key="vf_ticker",
+    ).upper()
+
+    if st.button("🔒 Launch Validation-First Analysis", key="vf_launch", type="primary"):
+        if not ticker:
+            st.error("Please enter a valid ticker symbol.")
+            return
+        _run_validation_first_logic(ticker)
+
+
+def _run_validation_first_logic(ticker: str) -> None:
+    """Execute Validation-First workflow with strict gating."""
+    start_time = time.time()
+
+    try:
+        # Initialize orchestrator
+        registry = AgentRegistry()
+        for agent_id, agent in ALL_AGENTS.items():
+            registry.register_agent(agent)
+
+        orchestrator = Orchestrator(registry=registry)
+        for agent_id, handler in AGENT_HANDLERS.items():
+            orchestrator.register_handler(agent_id, handler)
+
+        st.info("🔒 Running Validation-First workflow with strict gating...")
+
+        # Stage 1: Fetch data
+        with st.status("Stage 1: Data Acquisition", expanded=True) as status:
+            data_workflow = Workflow(
+                workflow_id="vf_data",
+                name="Data Fetch",
+                stages=[WorkflowStage(stage_id="data", agent_id="data_bot")],
+            )
+            data_result = orchestrator.execute_workflow(
+                data_workflow, {"ticker": ticker, "period": "1y"}
+            )
+
+            if data_result.status == WorkflowStatus.FAILED:
+                status.update(label="❌ Data fetch failed", state="error")
+                st.error(f"Data fetch failed: {data_result.error}")
+                return
+
+            quality = data_result.outputs.get("quality_score", 0)
+            status.update(
+                label=f"✅ Data Quality: {quality:.1%}",
+                state="complete" if quality >= 0.8 else "error",
+            )
+
+        # Gate 1: Data quality check
+        if quality < 0.8:
+            st.error(f"❌ **GATE 1 FAILED**: Data quality {quality:.1%} < 80% threshold")
+            st.warning("Workflow halted. Try a different ticker or wait for more data.")
+            return
+
+        st.success(f"✅ **GATE 1 PASSED**: Data quality {quality:.1%} ≥ 80%")
+
+        # Stage 2: Technical analysis
+        with st.status("Stage 2: Technical Analysis", expanded=True) as status:
+            tech_workflow = Workflow(
+                workflow_id="vf_tech",
+                name="Technical Analysis",
+                stages=[WorkflowStage(stage_id="technical", agent_id="tech_bot")],
+            )
+            tech_result = orchestrator.execute_workflow(
+                tech_workflow, {"df": data_result.outputs.get("df")}
+            )
+
+            if tech_result.status == WorkflowStatus.FAILED:
+                status.update(label="❌ Technical analysis failed", state="error")
+                return
+
+            tech_conf = tech_result.outputs.get("confidence", 0)
+            status.update(
+                label=f"✅ Technical Confidence: {tech_conf:.1%}",
+                state="complete" if tech_conf >= 0.7 else "error",
+            )
+
+        # Gate 2: Technical confidence check
+        if tech_conf < 0.7:
+            st.warning(f"⚠️ **GATE 2 WARNING**: Technical confidence {tech_conf:.1%} < 70%")
+            st.info("Proceeding with caution due to mixed signals...")
+
+        st.success(f"✅ **GATE 2 PASSED**: Technical confidence {tech_conf:.1%}")
+
+        # Stage 3: Synthesis
+        with st.status("Stage 3: Synthesis", expanded=True) as status:
+            # Prepare combined results for synthesis
+            combined_results = {
+                "technical": tech_result.outputs,
+                "data_bot": data_result.outputs,
+            }
+
+            synth_workflow = Workflow(
+                workflow_id="vf_synth",
+                name="Synthesis",
+                stages=[WorkflowStage(stage_id="synthesis", agent_id="synthesis_bot")],
+            )
+            synth_result = orchestrator.execute_workflow(
+                synth_workflow, {"results": combined_results}
+            )
+            status.update(label="✅ Synthesis Complete", state="complete")
+
+        # Final results
+        st.markdown("---")
+        st.subheader("🎯 Validation-First Results")
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Data Quality", f"{quality:.1%}", "PASSED" if quality >= 0.8 else "FAILED")
+        col2.metric(
+            "Tech Confidence", f"{tech_conf:.1%}", "PASSED" if tech_conf >= 0.7 else "WARNING"
+        )
+        col3.metric(
+            "Recommendation",
+            synth_result.outputs.get("recommendation", "N/A"),
+        )
+
+        reasoning = synth_result.outputs.get("reasoning", "")
+        if reasoning:
+            with st.expander("📋 Detailed Reasoning"):
+                st.markdown(reasoning)
+
+        elapsed = time.time() - start_time
+        st.caption(f"⏱️ Total execution time: {elapsed:.2f}s | All gates passed ✅")
+
+    except Exception as e:
+        logger.error(f"Validation-First workflow failed: {e}", exc_info=True)
+        st.error(f"❌ Workflow Aborted: {str(e)}")
+
+
+# ============================================================================
+# NEW WORKFLOW: Adaptive Recommendation (Dynamic)
+# ============================================================================
+
+
+def _render_adaptive_recommendation() -> None:
+    """Render the Adaptive Recommendation workflow UI."""
+    st.subheader("🔀 Adaptive Recommendation")
+    st.markdown(
+        """
+        This **dynamic workflow** adapts based on data quality:
+
+        | Data Quality | Workflow Path |
+        |--------------|---------------|
+        | **≥ 90%** (High) | Full analysis: Technical + Forecast + Sentiment → Synthesis |
+        | **≥ 70%** (Medium) | Basic analysis: Technical → Synthesis |
+        | **< 70%** (Low) | Validation only: Recommend waiting |
+
+        The workflow automatically chooses the optimal path for reliable results.
+        """
+    )
+
+    ticker = st.text_input(
+        "Enter Stock Ticker",
+        value="GOOGL",
+        key="ar_ticker",
+    ).upper()
+
+    if st.button("🔀 Launch Adaptive Analysis", key="ar_launch", type="primary"):
+        if not ticker:
+            st.error("Please enter a valid ticker symbol.")
+            return
+        _run_adaptive_recommendation_logic(ticker)
+
+
+def _run_adaptive_recommendation_logic(ticker: str) -> None:
+    """Execute Adaptive Recommendation workflow with dynamic branching."""
+    start_time = time.time()
+
+    try:
+        # Initialize orchestrator
+        registry = AgentRegistry()
+        for agent_id, agent in ALL_AGENTS.items():
+            registry.register_agent(agent)
+
+        orchestrator = Orchestrator(registry=registry)
+        for agent_id, handler in AGENT_HANDLERS.items():
+            orchestrator.register_handler(agent_id, handler)
+
+        # Step 1: Assess data quality
+        st.info("🔀 Step 1: Assessing data quality to determine workflow path...")
+
+        data_workflow = Workflow(
+            workflow_id="ar_data",
+            name="Data Assessment",
+            stages=[WorkflowStage(stage_id="data", agent_id="data_bot")],
+        )
+        data_result = orchestrator.execute_workflow(
+            data_workflow, {"ticker": ticker, "period": "1y"}
+        )
+
+        if data_result.status == WorkflowStatus.FAILED:
+            st.error(f"Failed to fetch data: {data_result.error}")
+            return
+
+        quality = data_result.outputs.get("quality_score", 0)
+        st.metric("Data Quality Score", f"{quality:.1%}")
+
+        # Step 2: Choose workflow path based on quality
+        if quality >= 0.9:
+            st.success("✨ **HIGH QUALITY** → Running full analysis with ML forecast")
+            _run_adaptive_high_quality(orchestrator, data_result.outputs, ticker)
+
+        elif quality >= 0.7:
+            st.info("📊 **MEDIUM QUALITY** → Running basic technical analysis")
+            _run_adaptive_medium_quality(orchestrator, data_result.outputs, ticker)
+
+        else:
+            st.warning("⚠️ **LOW QUALITY** → Validation only, recommend waiting")
+            _run_adaptive_low_quality(orchestrator, data_result.outputs, ticker)
+
+        elapsed = time.time() - start_time
+        st.caption(f"⏱️ Total execution time: {elapsed:.2f}s")
+
+    except Exception as e:
+        logger.error(f"Adaptive Recommendation workflow failed: {e}", exc_info=True)
+        st.error(f"❌ Workflow Aborted: {str(e)}")
+
+
+def _run_adaptive_high_quality(
+    orchestrator: Orchestrator, data_outputs: Dict[str, Any], ticker: str
+) -> None:
+    """Full analysis for high-quality data."""
+    with st.status("Running Full Analysis...", expanded=True) as status:
+        # Technical + Forecast + Sentiment
+        workflow = Workflow(
+            workflow_id="ar_high",
+            name="Full Analysis",
+            stages=[
+                WorkflowStage(stage_id="technical", agent_id="tech_bot"),
+                WorkflowStage(stage_id="forecast", agent_id="forecast_bot"),
+                WorkflowStage(stage_id="sentiment", agent_id="sentiment_bot"),
+                WorkflowStage(
+                    stage_id="synthesis",
+                    agent_id="synthesis_bot",
+                    depends_on=["technical", "forecast", "sentiment"],
+                ),
+            ],
+        )
+
+        result = orchestrator.execute_workflow(
+            workflow, {**data_outputs, "ticker": ticker, "news": data_outputs.get("news", [])}
+        )
+        status.update(label="✅ Full Analysis Complete", state="complete")
+
+    st.subheader("📊 Full Analysis Results")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Recommendation", result.outputs.get("recommendation", "N/A"))
+    col2.metric("Confidence", f"{result.outputs.get('confidence', 0):.1%}")
+    col3.metric("Forecast Trend", result.outputs.get("trend", "N/A"))
+
+    reasoning = result.outputs.get("reasoning", "")
+    if reasoning:
+        with st.expander("📋 Detailed Reasoning"):
+            st.markdown(reasoning)
+
+
+def _run_adaptive_medium_quality(
+    orchestrator: Orchestrator, data_outputs: Dict[str, Any], ticker: str
+) -> None:
+    """Basic analysis for medium-quality data."""
+    with st.status("Running Basic Analysis...", expanded=True) as status:
+        workflow = Workflow(
+            workflow_id="ar_medium",
+            name="Basic Analysis",
+            stages=[
+                WorkflowStage(stage_id="technical", agent_id="tech_bot"),
+                WorkflowStage(
+                    stage_id="synthesis",
+                    agent_id="synthesis_bot",
+                    depends_on=["technical"],
+                ),
+            ],
+        )
+
+        result = orchestrator.execute_workflow(workflow, {**data_outputs, "ticker": ticker})
+        status.update(label="✅ Basic Analysis Complete", state="complete")
+
+    st.subheader("📊 Basic Analysis Results")
+    col1, col2 = st.columns(2)
+    col1.metric("Recommendation", result.outputs.get("recommendation", "N/A"))
+    col2.metric("Confidence", f"{result.outputs.get('confidence', 0):.1%}")
+
+    st.warning("⚠️ Note: ML Forecast skipped due to medium data quality")
+
+    reasoning = result.outputs.get("reasoning", "")
+    if reasoning:
+        with st.expander("📋 Detailed Reasoning"):
+            st.markdown(reasoning)
+
+
+def _run_adaptive_low_quality(
+    orchestrator: Orchestrator, data_outputs: Dict[str, Any], ticker: str
+) -> None:
+    """Validation only for low-quality data."""
+    st.subheader("⚠️ Low Quality Data Report")
+
+    st.error("❌ Data quality too low for reliable analysis")
+
+    # Run validator to get detailed report
+    workflow = Workflow(
+        workflow_id="ar_low",
+        name="Validation Only",
+        stages=[WorkflowStage(stage_id="validator", agent_id="validator_bot")],
+    )
+
+    result = orchestrator.execute_workflow(
+        workflow, {"results": {"data_bot": data_outputs}, "validation_rules": []}
+    )
+
+    errors = result.outputs.get("errors", [])
+    warnings = result.outputs.get("warnings", [])
+
+    if errors:
+        st.write("**Issues Detected:**")
+        for err in errors:
+            st.error(f"- {err}")
+
+    if warnings:
+        st.write("**Warnings:**")
+        for warn in warnings:
+            st.warning(f"- {warn}")
+
+    st.info(
+        f"💡 **Recommendation**: Wait for more data or try a different ticker. "
+        f"Current quality ({data_outputs.get('quality_score', 0):.1%}) is below "
+        f"the 70% threshold for reliable analysis."
+    )

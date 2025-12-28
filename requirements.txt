@@ -35,6 +35,12 @@ openai  # OpenAI API
 textblob==0.17.1
 
 # ==============================================================================
+# Data Validation & Schema
+# ==============================================================================
+pydantic>=2.5.0  # Data validation and schema enforcement
+jsonschema>=4.20.0  # JSON schema validation
+
+# ==============================================================================
 # Utilities
 # ==============================================================================
 python-dotenv==1.0.0  # Environment variable management
