@@ -53,7 +53,7 @@ def render() -> None:
             df = get_stock_data(ticker, period=period, interval=interval)
 
             if df is None or df.empty:
-                st.error(f"❌ No data found for {ticker}. " "Please verify the ticker symbol.")
+                st.error(f"❌ No data found for {ticker}. Please verify the ticker symbol.")
                 return
 
             # Calculate indicators
@@ -415,7 +415,9 @@ def _display_export_options(df: pd.DataFrame, ticker: str) -> None:
     col1, col2 = st.columns(2)
 
     # Prepare export data with formatted columns
-    export_df = df[["Open", "High", "Low", "Close", "Volume", "MA20", "RSI", "MACD", "Signal"]].copy()
+    export_df = df[
+        ["Open", "High", "Low", "Close", "Volume", "MA20", "RSI", "MACD", "Signal"]
+    ].copy()
     export_df.index.name = "Date"
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

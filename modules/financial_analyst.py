@@ -189,7 +189,9 @@ def _display_performance_charts(financials: dict) -> None:
         _display_profitability_ratios(income_stmt, rev_col, net_inc_col)
 
 
-def _display_profitability_ratios(income_stmt: pd.DataFrame, rev_col: str, net_inc_col: str) -> None:
+def _display_profitability_ratios(
+    income_stmt: pd.DataFrame, rev_col: str, net_inc_col: str
+) -> None:
     """
     Calculate and display profitability ratios.
 
