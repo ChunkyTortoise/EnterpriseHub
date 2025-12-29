@@ -1,0 +1,76 @@
+# CODEOWNERS for EnterpriseHub
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# These owners will be requested for review when someone opens a pull request
+# that modifies code they own. The last matching pattern takes precedence.
+
+# =============================================================================
+# DEFAULT OWNER
+# =============================================================================
+# All files not matched by a more specific rule below
+*                           @ChunkyTortoise
+
+# =============================================================================
+# APPLICATION CORE
+# =============================================================================
+# Main application entry point - critical for app functionality
+app.py                      @ChunkyTortoise
+
+# =============================================================================
+# MODULES
+# =============================================================================
+# Independent Streamlit modules - each provides specific business functionality
+# Changes here affect end-user features directly
+modules/                    @ChunkyTortoise
+
+# =============================================================================
+# UTILITIES
+# =============================================================================
+# Shared utilities used across all modules - changes have wide impact
+# Includes: data_loader, config, logger, exceptions, ui, indicators, etc.
+utils/                      @ChunkyTortoise
+
+# =============================================================================
+# TESTS
+# =============================================================================
+# Test suite - pytest tests and fixtures
+# Critical for maintaining code quality and catching regressions
+tests/                      @ChunkyTortoise
+
+# =============================================================================
+# DOCUMENTATION
+# =============================================================================
+# Project documentation - architecture, deployment, guides
+docs/                       @ChunkyTortoise
+*.md                        @ChunkyTortoise
+CLAUDE.md                   @ChunkyTortoise
+
+# =============================================================================
+# CI/CD AND GITHUB CONFIGURATION
+# =============================================================================
+# GitHub Actions workflows, issue templates, and repository configuration
+# Changes here affect the development and deployment pipeline
+.github/                    @ChunkyTortoise
+.github/workflows/          @ChunkyTortoise
+.github/CODEOWNERS          @ChunkyTortoise
+
+# =============================================================================
+# CONFIGURATION FILES
+# =============================================================================
+# Project configuration - dependencies, linting, pre-commit hooks
+requirements.txt            @ChunkyTortoise
+pyproject.toml              @ChunkyTortoise
+.pre-commit-config.yaml     @ChunkyTortoise
+Makefile                    @ChunkyTortoise
+
+# =============================================================================
+# ASSETS
+# =============================================================================
+# Static assets - icons, images, backgrounds
+assets/                     @ChunkyTortoise
+
+# =============================================================================
+# ARCHIVE (READ-ONLY)
+# =============================================================================
+# Legacy code - should not be modified, but changes require review
+_archive/                   @ChunkyTortoise

@@ -1,26 +1,65 @@
+# Dependabot Configuration for EnterpriseHub
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
 version: 2
+
 updates:
-  # Python dependencies
+  # =============================================================================
+  # Python Dependencies (pip)
+  # =============================================================================
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    target-branch: "main"
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     labels:
       - "dependencies"
       - "python"
-    commit-message:
-      prefix: "deps"
+      - "automated"
+    reviewers:
+      - "ChunkyTortoise"
+    groups:
+      # Group minor and patch updates together
+      python-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
+  # =============================================================================
   # GitHub Actions
+  # =============================================================================
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    target-branch: "main"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     labels:
       - "dependencies"
       - "github-actions"
-    commit-message:
-      prefix: "ci"
+      - "automated"
+    reviewers:
+      - "ChunkyTortoise"
+    groups:
+      github-actions-all:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
