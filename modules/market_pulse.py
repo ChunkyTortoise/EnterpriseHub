@@ -5,6 +5,9 @@ Provides interactive stock data visualization with technical indicators
 including price charts, RSI, MACD, and volume analysis.
 """
 
+from datetime import datetime
+from io import BytesIO
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -65,6 +68,9 @@ def render() -> None:
             # Create and display chart
             fig = _create_technical_chart(df, ticker)
             st.plotly_chart(fig, use_container_width=True)
+
+            # Export options
+            _display_export_options(df, ticker)
 
             logger.info(f"Successfully displayed chart for {ticker}")
 
@@ -393,3 +399,49 @@ def _create_technical_chart(df: pd.DataFrame, ticker: str) -> go.Figure:
     )
 
     return fig
+
+
+def _display_export_options(df: pd.DataFrame, ticker: str) -> None:
+    """
+    Display export options for market data.
+
+    Args:
+        df: DataFrame with stock data and indicators
+        ticker: Stock ticker symbol
+    """
+    st.markdown("---")
+    st.subheader("📥 Export Data")
+
+    col1, col2 = st.columns(2)
+
+    # Prepare export data with formatted columns
+    export_df = df[["Open", "High", "Low", "Close", "Volume", "MA20", "RSI", "MACD", "Signal"]].copy()
+    export_df.index.name = "Date"
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    with col1:
+        # CSV Export
+        csv_data = export_df.to_csv().encode("utf-8")
+        st.download_button(
+            label="📄 Download CSV",
+            data=csv_data,
+            file_name=f"market_pulse_{ticker}_{timestamp}.csv",
+            mime="text/csv",
+            help="Download market data with technical indicators as CSV",
+        )
+
+    with col2:
+        # Excel Export
+        buffer = BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            export_df.to_excel(writer, sheet_name=ticker)
+        excel_data = buffer.getvalue()
+
+        st.download_button(
+            label="📊 Download Excel",
+            data=excel_data,
+            file_name=f"market_pulse_{ticker}_{timestamp}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            help="Download market data with technical indicators as Excel",
+        )
