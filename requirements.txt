@@ -1,7 +1,7 @@
 # ==============================================================================
 # Core Framework
 # ==============================================================================
-streamlit==1.28.0
+streamlit==1.50.0
 
 # ==============================================================================
 # Data Processing & Analysis
@@ -15,7 +15,7 @@ scikit-learn>=1.3.2  # Machine Learning & Forecasting
 # Data Visualization
 # ==============================================================================
 plotly==5.17.0
-graphviz==0.20.1
+graphviz==0.21
 
 # ==============================================================================
 # Market Data
@@ -30,9 +30,9 @@ ta==0.11.0
 # ==============================================================================
 # AI & NLP
 # ==============================================================================
-anthropic==0.18.1  # Claude API for content generation
+anthropic==0.75.0  # Claude API for content generation
 openai  # OpenAI API
-textblob==0.17.1
+textblob==0.19.0
 
 # ==============================================================================
 # Data Validation & Schema
@@ -43,5 +43,5 @@ jsonschema>=4.20.0  # JSON schema validation
 # ==============================================================================
 # Utilities
 # ==============================================================================
-python-dotenv==1.0.0  # Environment variable management
-openpyxl==3.1.2  # Excel file support for data export
+python-dotenv==1.2.1  # Environment variable management
+openpyxl==3.1.5  # Excel file support for data export
