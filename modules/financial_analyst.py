@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+from io import BytesIO
 from typing import Optional
 
 import pandas as pd
@@ -55,8 +57,11 @@ def render() -> None:
             st.exception(e)
 
 
-def _fetch_and_display_data(symbol: str):
+def _fetch_and_display_data(symbol: str) -> None:
     """Fetch all required data and render the display components."""
+    # Store ticker in session state for export functions
+    st.session_state.fa_ticker = symbol
+
     info = get_company_info(symbol)
     financials = get_financials(symbol)
 
@@ -83,7 +88,7 @@ def _fetch_and_display_data(symbol: str):
     _display_financial_tabs(financials)
 
 
-def _display_header(info: dict, symbol: str):
+def _display_header(info: dict, symbol: str) -> None:
     """Render the company header section."""
     st.markdown("---")
     header_col1, header_col2 = st.columns([3, 1])
@@ -107,14 +112,14 @@ def _display_header(info: dict, symbol: str):
             st.markdown(f"[🌐 Visit Website]({info['website']})")
 
 
-def _display_key_metrics(info: dict):
+def _display_key_metrics(info: dict) -> None:
     """Render the key financial metrics."""
     st.subheader("🔑 Key Metrics")
     m1, m2, m3, m4 = st.columns(4)
 
     with m1:
         market_cap = info.get("marketCap")
-        val = f"${market_cap/1e9:.2f}B" if market_cap else "N/A"
+        val = f"${market_cap / 1e9:.2f}B" if market_cap else "N/A"
         ui.card_metric("Market Cap", val)
 
     with m2:
@@ -127,11 +132,11 @@ def _display_key_metrics(info: dict):
 
     with m4:
         div = info.get("dividendYield")
-        val = f"{div*100:.2f}%" if div else "N/A"
+        val = f"{div * 100:.2f}%" if div else "N/A"
         ui.card_metric("Dividend Yield", val)
 
 
-def _display_performance_charts(financials: dict):
+def _display_performance_charts(financials: dict) -> None:
     """Render performance charts like Revenue vs Net Income."""
     income_stmt = financials.get("income_stmt")
     if income_stmt is None or income_stmt.empty:
@@ -181,14 +186,23 @@ def _display_performance_charts(financials: dict):
         st.plotly_chart(fig_perf, use_container_width=True)
 
         # Profitability Ratios
-        _display_profitability_ratios(income_stmt.iloc[-1], rev_col, net_inc_col)
+        _display_profitability_ratios(income_stmt, rev_col, net_inc_col)
 
 
-def _display_profitability_ratios(latest_data: pd.Series, rev_col: str, net_inc_col: str):
-    """Calculate and display profitability ratios."""
+def _display_profitability_ratios(income_stmt: pd.DataFrame, rev_col: str, net_inc_col: str) -> None:
+    """
+    Calculate and display profitability ratios.
+
+    Args:
+        income_stmt: Transposed income statement DataFrame (dates as index, sorted)
+        rev_col: Column name for revenue
+        net_inc_col: Column name for net income
+    """
     st.markdown("#### 📊 Profitability Ratios")
     r1, r2, r3 = st.columns(3)
 
+    # Get latest year data
+    latest_data = income_stmt.iloc[-1]
     revenue = latest_data.get(rev_col, 0)
     net_income = latest_data.get(net_inc_col, 0)
     gross_col = next((col for col in latest_data.index if "Gross Profit" in str(col)), None)
@@ -203,12 +217,57 @@ def _display_profitability_ratios(latest_data: pd.Series, rev_col: str, net_inc_
         ui.card_metric("Gross Margin", f"{gross_margin:.1f}%")
 
     with r3:
-        # YoY Revenue Growth requires previous year's data, which is complex here.
-        # This part has been simplified to avoid errors if data is missing.
-        ui.card_metric("YoY Revenue Growth", "N/A")
+        # Calculate YoY Revenue Growth
+        yoy_growth = _calculate_yoy_revenue_growth(income_stmt, rev_col)
+        ui.card_metric("YoY Revenue Growth", yoy_growth)
 
 
-def _display_financial_tabs(financials: dict):
+def _calculate_yoy_revenue_growth(income_stmt: pd.DataFrame, rev_col: str) -> str:
+    """
+    Calculate Year-over-Year revenue growth percentage.
+
+    Args:
+        income_stmt: Transposed income statement DataFrame (dates as index, sorted)
+        rev_col: Column name for revenue
+
+    Returns:
+        Formatted string with YoY growth percentage (e.g., "15.2%") or "N/A"
+    """
+    try:
+        # Check if we have at least 2 years of data
+        if len(income_stmt) < 2:
+            logger.debug("Insufficient data for YoY calculation (need at least 2 years)")
+            return "N/A"
+
+        # Get latest and previous year revenue
+        latest_revenue = income_stmt[rev_col].iloc[-1]
+        previous_revenue = income_stmt[rev_col].iloc[-2]
+
+        # Check for valid data
+        if pd.isna(latest_revenue) or pd.isna(previous_revenue):
+            logger.debug("Revenue data contains NaN values")
+            return "N/A"
+
+        # Avoid division by zero
+        if previous_revenue == 0:
+            logger.debug("Previous year revenue is zero, cannot calculate growth")
+            return "N/A"
+
+        # Calculate YoY growth percentage
+        yoy_growth = ((latest_revenue - previous_revenue) / previous_revenue) * 100
+
+        # Format with appropriate sign
+        if yoy_growth >= 0:
+            return f"+{yoy_growth:.1f}%"
+        else:
+            return f"{yoy_growth:.1f}%"
+
+    except Exception as e:
+        logger.warning(f"Error calculating YoY revenue growth: {e}")
+        return "N/A"
+
+
+def _display_financial_tabs(financials: dict) -> None:
     """Render the tabs with detailed financial dataframes."""
     tab1, tab2, tab3 = st.tabs(["Income Statement", "Balance Sheet", "Cash Flow"])
 
@@ -217,6 +276,7 @@ def _display_financial_tabs(financials: dict):
         df = financials.get("income_stmt")
         if df is not None and not df.empty:
             st.dataframe(df, use_container_width=True)
+            _display_statement_export(df, "income_statement")
         else:
             st.warning("No data available.")
 
@@ -225,6 +285,7 @@ def _display_financial_tabs(financials: dict):
         df = financials.get("balance_sheet")
         if df is not None and not df.empty:
             st.dataframe(df, use_container_width=True)
+            _display_statement_export(df, "balance_sheet")
         else:
             st.warning("No data available.")
 
@@ -233,8 +294,58 @@ def _display_financial_tabs(financials: dict):
         df = financials.get("cashflow")
         if df is not None and not df.empty:
             st.dataframe(df, use_container_width=True)
+            _display_statement_export(df, "cashflow")
         else:
             st.warning("No data available.")
+
+
+def _display_statement_export(df: pd.DataFrame, statement_type: str) -> None:
+    """
+    Display export options for financial statement data.
+
+    Args:
+        df: DataFrame with financial statement data
+        statement_type: Type of statement (income_statement, balance_sheet, cashflow)
+    """
+    st.markdown("---")
+    st.markdown("##### 📥 Export Options")
+
+    col1, col2 = st.columns(2)
+
+    # Get ticker from session state if available, otherwise use generic name
+    ticker = st.session_state.get("fa_ticker", "company")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Prepare export data
+    export_df = df.copy()
+
+    with col1:
+        # CSV Export
+        csv_data = export_df.to_csv().encode("utf-8")
+        st.download_button(
+            label="📄 Download CSV",
+            data=csv_data,
+            file_name=f"financial_analyst_{ticker}_{statement_type}_{timestamp}.csv",
+            mime="text/csv",
+            help=f"Download {statement_type.replace('_', ' ').title()} as CSV",
+            key=f"csv_{statement_type}",
+        )
+
+    with col2:
+        # Excel Export
+        buffer = BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            export_df.to_excel(writer, sheet_name=statement_type.replace("_", " ").title())
+        excel_data = buffer.getvalue()
+
+        st.download_button(
+            label="📊 Download Excel",
+            data=excel_data,
+            file_name=f"financial_analyst_{ticker}_{statement_type}_{timestamp}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            help=f"Download {statement_type.replace('_', ' ').title()} as Excel",
+            key=f"excel_{statement_type}",
+        )
 
 
 def _get_api_key() -> Optional[str]:
@@ -249,7 +360,7 @@ def _get_api_key() -> Optional[str]:
     return api_key
 
 
-def _display_ai_insights(info: dict, financials: dict, symbol: str, api_key: str):
+def _display_ai_insights(info: dict, financials: dict, symbol: str, api_key: str) -> None:
     """Display AI-powered insights section with toggle."""
     col_title, col_toggle = st.columns([3, 1])
 
@@ -295,7 +406,7 @@ def _generate_financial_insights(
         financial_summary = _build_financial_summary(info, financials)
 
         prompt = f"""Analyze the following financial data for {symbol} \
-({info.get('longName', symbol)}):
+({info.get("longName", symbol)}):
 
 {financial_summary}
 
@@ -349,7 +460,7 @@ def _build_financial_summary(info: dict, financials: dict) -> str:
     # Key metrics
     market_cap = info.get("marketCap")
     if market_cap:
-        summary_parts.append(f"Market Cap: ${market_cap/1e9:.2f}B")
+        summary_parts.append(f"Market Cap: ${market_cap / 1e9:.2f}B")
 
     pe = info.get("trailingPE")
     if pe:
@@ -361,7 +472,7 @@ def _build_financial_summary(info: dict, financials: dict) -> str:
 
     div_yield = info.get("dividendYield")
     if div_yield:
-        summary_parts.append(f"Dividend Yield: {div_yield*100:.2f}%")
+        summary_parts.append(f"Dividend Yield: {div_yield * 100:.2f}%")
 
     # Income statement highlights
     income_stmt = financials.get("income_stmt")
@@ -384,14 +495,14 @@ def _build_financial_summary(info: dict, financials: dict) -> str:
             latest_rev = income_stmt_t[rev_col].iloc[-1]
             prev_rev = income_stmt_t[rev_col].iloc[-2]
             rev_growth = ((latest_rev - prev_rev) / prev_rev) * 100
-            summary_parts.append(f"Revenue (Latest): ${latest_rev/1e9:.2f}B")
+            summary_parts.append(f"Revenue (Latest): ${latest_rev / 1e9:.2f}B")
             summary_parts.append(f"YoY Revenue Growth: {rev_growth:.1f}%")
 
         if net_inc_col and rev_col:
             latest_net = income_stmt_t[net_inc_col].iloc[-1]
             latest_rev = income_stmt_t[rev_col].iloc[-1]
             net_margin = (latest_net / latest_rev) * 100
-            summary_parts.append(f"Net Income (Latest): ${latest_net/1e9:.2f}B")
+            summary_parts.append(f"Net Income (Latest): ${latest_net / 1e9:.2f}B")
             summary_parts.append(f"Net Profit Margin: {net_margin:.1f}%")
 
     return "\n".join(summary_parts)

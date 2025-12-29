@@ -5,18 +5,20 @@ Uses Machine Learning (scikit-learn) to predict future asset prices
 based on historical technical indicators.
 """
 
-import streamlit as st
-import pandas as pd
+from datetime import datetime, timedelta
+from io import BytesIO
+from typing import Optional, Tuple
+
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
-from datetime import timedelta
+import streamlit as st
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from typing import Tuple, Optional
+from sklearn.model_selection import train_test_split
 
 import utils.ui as ui
-from utils.data_loader import get_stock_data, calculate_indicators
+from utils.data_loader import calculate_indicators, get_stock_data
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -541,7 +543,12 @@ def _render_results(
 
     st.markdown("---")
 
-    # 5. Model Explanation
+    # 5. Export Options
+    _display_export_options(pred_df, backtest_df if backtest_df is not None else None, ticker)
+
+    st.markdown("---")
+
+    # 6. Model Explanation
     with st.expander("🧠 How this model works"):
         st.write("""
         This module uses a **Random Forest Regressor**
@@ -562,3 +569,59 @@ def _render_results(
         *Note: Financial forecasting is inherently probabilistic.
         Do not use for actual trading.*
         """)
+
+
+def _display_export_options(
+    pred_df: pd.DataFrame, backtest_df: Optional[pd.DataFrame], ticker: str
+) -> None:
+    """
+    Display export options for forecast results.
+
+    Args:
+        pred_df: DataFrame with forecast predictions and confidence intervals
+        backtest_df: DataFrame with backtest results (optional)
+        ticker: Stock ticker symbol
+    """
+    st.subheader("📥 Export Forecast Data")
+
+    col1, col2 = st.columns(2)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    with col1:
+        # Prepare forecast export data
+        forecast_export = pred_df.copy()
+        forecast_export.index.name = "Date"
+
+        # CSV Export for Forecast
+        csv_data = forecast_export.to_csv().encode("utf-8")
+        st.download_button(
+            label="📄 Download Forecast CSV",
+            data=csv_data,
+            file_name=f"smart_forecast_{ticker}_{timestamp}.csv",
+            mime="text/csv",
+            help="Download AI forecast predictions with confidence intervals",
+        )
+
+    with col2:
+        # Excel Export with multiple sheets
+        buffer = BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            # Forecast sheet
+            forecast_export = pred_df.copy()
+            forecast_export.index.name = "Date"
+            forecast_export.to_excel(writer, sheet_name="Forecast")
+
+            # Backtest sheet (if available)
+            if backtest_df is not None and not backtest_df.empty:
+                backtest_df.to_excel(writer, sheet_name="Backtest", index=False)
+
+        excel_data = buffer.getvalue()
+
+        st.download_button(
+            label="📊 Download Excel Report",
+            data=excel_data,
+            file_name=f"smart_forecast_report_{ticker}_{timestamp}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            help="Download comprehensive forecast report with backtest results",
+        )

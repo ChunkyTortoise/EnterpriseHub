@@ -12,7 +12,10 @@ MOCK_COMPANY_INFO = {
     "industry": "Consumer Electronics",
     "country": "United States",
     "website": "https://www.apple.com",
-    "longBusinessSummary": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.",
+    "longBusinessSummary": (
+        "Apple Inc. designs, manufactures, and markets smartphones, personal computers, "
+        "tablets, wearables, and accessories worldwide."
+    ),
     "marketCap": 2800000000000,  # $2.8T
     "trailingPE": 28.5,
     "trailingEps": 6.42,
@@ -296,7 +299,7 @@ class TestFinancialAnalystEdgeCases:
     def test_market_cap_formatting(self):
         """Test market cap is formatted correctly in billions."""
         market_cap = 2800000000000  # $2.8T
-        formatted = f"${market_cap/1e9:.2f}B"
+        formatted = f"${market_cap / 1e9:.2f}B"
         assert formatted == "$2800.00B"
 
     def test_eps_formatting(self):
@@ -413,3 +416,155 @@ class TestAIInsights:
 
         # Clean up
         del os.environ["ANTHROPIC_API_KEY"]
+
+
+class TestYoYRevenueGrowth:
+    """Test YoY Revenue Growth calculation."""
+
+    def test_calculate_yoy_revenue_growth_positive(self):
+        """Test YoY calculation with positive growth."""
+        from modules.financial_analyst import _calculate_yoy_revenue_growth
+        import pandas as pd
+
+        # Create mock income statement with 2 years of data
+        dates = pd.to_datetime(["2022-01-01", "2023-01-01"])
+        income_stmt = pd.DataFrame(
+            {"Total Revenue": [100e9, 115e9], "Net Income": [20e9, 25e9]}, index=dates
+        )
+
+        result = _calculate_yoy_revenue_growth(income_stmt, "Total Revenue")
+
+        # Should show +15% growth
+        assert result == "+15.0%"
+
+    def test_calculate_yoy_revenue_growth_negative(self):
+        """Test YoY calculation with negative growth."""
+        from modules.financial_analyst import _calculate_yoy_revenue_growth
+        import pandas as pd
+
+        # Create mock income statement with declining revenue
+        dates = pd.to_datetime(["2022-01-01", "2023-01-01"])
+        income_stmt = pd.DataFrame(
+            {"Total Revenue": [100e9, 90e9], "Net Income": [20e9, 15e9]}, index=dates
+        )
+
+        result = _calculate_yoy_revenue_growth(income_stmt, "Total Revenue")
+
+        # Should show -10% growth
+        assert result == "-10.0%"
+
+    def test_calculate_yoy_revenue_growth_insufficient_data(self):
+        """Test YoY calculation with only one year of data."""
+        from modules.financial_analyst import _calculate_yoy_revenue_growth
+        import pandas as pd
+
+        # Create mock income statement with only 1 year
+        dates = pd.to_datetime(["2023-01-01"])
+        income_stmt = pd.DataFrame({"Total Revenue": [100e9], "Net Income": [20e9]}, index=dates)
+
+        result = _calculate_yoy_revenue_growth(income_stmt, "Total Revenue")
+
+        # Should return N/A
+        assert result == "N/A"
+
+    def test_calculate_yoy_revenue_growth_with_nan(self):
+        """Test YoY calculation handles NaN values."""
+        from modules.financial_analyst import _calculate_yoy_revenue_growth
+        import pandas as pd
+        import numpy as np
+
+        # Create mock income statement with NaN
+        dates = pd.to_datetime(["2022-01-01", "2023-01-01"])
+        income_stmt = pd.DataFrame(
+            {"Total Revenue": [100e9, np.nan], "Net Income": [20e9, 25e9]}, index=dates
+        )
+
+        result = _calculate_yoy_revenue_growth(income_stmt, "Total Revenue")
+
+        # Should return N/A
+        assert result == "N/A"
+
+    def test_calculate_yoy_revenue_growth_zero_previous(self):
+        """Test YoY calculation when previous year is zero."""
+        from modules.financial_analyst import _calculate_yoy_revenue_growth
+        import pandas as pd
+
+        # Create mock income statement with zero previous revenue
+        dates = pd.to_datetime(["2022-01-01", "2023-01-01"])
+        income_stmt = pd.DataFrame(
+            {"Total Revenue": [0, 100e9], "Net Income": [0, 20e9]}, index=dates
+        )
+
+        result = _calculate_yoy_revenue_growth(income_stmt, "Total Revenue")
+
+        # Should return N/A to avoid division by zero
+        assert result == "N/A"
+
+    def test_calculate_yoy_revenue_growth_small_change(self):
+        """Test YoY calculation with small percentage change."""
+        from modules.financial_analyst import _calculate_yoy_revenue_growth
+        import pandas as pd
+
+        # Create mock income statement with small growth
+        dates = pd.to_datetime(["2022-01-01", "2023-01-01"])
+        income_stmt = pd.DataFrame(
+            {"Total Revenue": [100e9, 102.5e9], "Net Income": [20e9, 21e9]}, index=dates
+        )
+
+        result = _calculate_yoy_revenue_growth(income_stmt, "Total Revenue")
+
+        # Should show +2.5% growth
+        assert result == "+2.5%"
+
+    def test_calculate_yoy_revenue_growth_with_multiple_years(self):
+        """Test YoY calculation uses only latest two years."""
+        from modules.financial_analyst import _calculate_yoy_revenue_growth
+        import pandas as pd
+
+        # Create mock income statement with 4 years of data
+        dates = pd.to_datetime(["2020-01-01", "2021-01-01", "2022-01-01", "2023-01-01"])
+        income_stmt = pd.DataFrame(
+            {
+                "Total Revenue": [80e9, 90e9, 100e9, 110e9],
+                "Net Income": [15e9, 18e9, 20e9, 22e9],
+            },
+            index=dates,
+        )
+
+        result = _calculate_yoy_revenue_growth(income_stmt, "Total Revenue")
+
+        # Should calculate growth between 2022 and 2023: (110-100)/100 = 10%
+        assert result == "+10.0%"
+
+    @patch("modules.financial_analyst.ui.card_metric")
+    @patch("modules.financial_analyst.st")
+    def test_display_profitability_ratios_with_yoy(self, mock_st, mock_card):
+        """Test profitability ratios display includes YoY growth."""
+        from modules.financial_analyst import _display_profitability_ratios
+        import pandas as pd
+
+        # Mock columns
+        mock_cols = [MagicMock() for _ in range(3)]
+        mock_st.columns.return_value = mock_cols
+
+        # Create mock income statement with 2 years
+        dates = pd.to_datetime(["2022-01-01", "2023-01-01"])
+        income_stmt = pd.DataFrame(
+            {
+                "Total Revenue": [100e9, 115e9],
+                "Net Income": [20e9, 25e9],
+                "Gross Profit": [40e9, 46e9],
+            },
+            index=dates,
+        )
+
+        # Call function
+        _display_profitability_ratios(income_stmt, "Total Revenue", "Net Income")
+
+        # Verify card_metric was called 3 times (Net Margin, Gross Margin, YoY Growth)
+        assert mock_card.call_count == 3
+
+        # Verify YoY Growth was called with correct value
+        calls = [call[0] for call in mock_card.call_args_list]
+        yoy_calls = [call for call in calls if len(call) > 0 and "YoY Revenue Growth" in str(call)]
+        assert len(yoy_calls) > 0
