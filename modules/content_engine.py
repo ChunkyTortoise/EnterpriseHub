@@ -493,10 +493,31 @@ def _render_four_panel_interface(api_key: str) -> None:
     st.markdown("---")
     st.subheader("🤖 Panel 3: Generate Content")
 
+    # Generation mode selector
+    generation_mode = st.radio(
+        "Generation Mode",
+        options=["Single Post", "A/B Test (3 Variants)"],
+        index=0,
+        horizontal=True,
+        help="Single: Generate one optimized post | A/B Test: Generate 3 variants for testing",
+    )
+
+    if generation_mode == "A/B Test (3 Variants)":
+        st.info(
+            "💡 **A/B Testing Mode**: Generates 3 content variants with different hooks, CTAs, "
+            "and formatting for split testing. Perfect for optimizing engagement!"
+        )
+
     col_gen1, col_gen2 = st.columns([3, 1])
 
     with col_gen1:
-        if st.button("✨ Generate LinkedIn Post", type="primary", use_container_width=True):
+        button_label = (
+            "✨ Generate LinkedIn Post"
+            if generation_mode == "Single Post"
+            else "✨ Generate A/B Test Variants"
+        )
+
+        if st.button(button_label, type="primary", use_container_width=True):
             if not topic or not topic.strip():
                 logger.warning("User attempted to generate post without topic")
                 st.error("❌ Please enter a topic to write about.")
@@ -504,82 +525,109 @@ def _render_four_panel_interface(api_key: str) -> None:
                 logger.warning(f"User entered very short topic: {len(topic)} chars")
                 st.error("❌ Please provide a more detailed topic (at least 10 characters).")
             else:
-                logger.info(
-                    f"Generating post for topic: {topic[:50]}... "
-                    f"with template: {st.session_state.selected_template}"
-                )
-                with st.spinner("🤖 Claude is writing your post..."):
-                    try:
-                        generated_post = _generate_post(
-                            api_key=api_key,
-                            topic=topic.strip(),
-                            template=st.session_state.selected_template,
-                            tone=tone,
-                            platform=platform,
-                            keywords=keywords.strip() if keywords else "",
-                            target_audience=target_audience.strip() if target_audience else "",
-                        )
+                if generation_mode == "Single Post":
+                    # EXISTING SINGLE POST GENERATION
+                    logger.info(
+                        f"Generating post for topic: {topic[:50]}... "
+                        f"with template: {st.session_state.selected_template}"
+                    )
+                    with st.spinner("🤖 Claude is writing your post..."):
+                        try:
+                            generated_post = _generate_post(
+                                api_key=api_key,
+                                topic=topic.strip(),
+                                template=st.session_state.selected_template,
+                                tone=tone,
+                                platform=platform,
+                                keywords=keywords.strip() if keywords else "",
+                                target_audience=target_audience.strip() if target_audience else "",
+                            )
 
-                        if generated_post:
-                            st.session_state.generated_post = generated_post
+                            if generated_post:
+                                st.session_state.generated_post = generated_post
 
-                            # Track in content history
-                            if st.session_state.analytics_enabled:
-                                engagement_score = _calculate_engagement_score(
-                                    content=generated_post,
-                                    platform=platform,
-                                    template=st.session_state.selected_template,
-                                    tone=tone,
-                                )
+                                # Track in content history
+                                if st.session_state.analytics_enabled:
+                                    engagement_score = _calculate_engagement_score(
+                                        content=generated_post,
+                                        platform=platform,
+                                        template=st.session_state.selected_template,
+                                        tone=tone,
+                                    )
 
-                                posting_time = _suggest_posting_time(platform, target_audience)
+                                    posting_time = _suggest_posting_time(platform, target_audience)
 
-                                history_entry = {
-                                    "timestamp": datetime.now(),
-                                    "platform": platform,
-                                    "template": st.session_state.selected_template,
-                                    "tone": tone,
-                                    "target_audience": target_audience,
-                                    "content": generated_post,
-                                    "char_count": len(generated_post),
-                                    "word_count": len(generated_post.split()),
-                                    "hashtag_count": generated_post.count("#"),
-                                    "predicted_engagement": engagement_score,
-                                    "optimal_posting_time": posting_time["peak_time"],
-                                    "optimal_posting_day": posting_time["days"][0],
-                                }
+                                    history_entry = {
+                                        "timestamp": datetime.now(),
+                                        "platform": platform,
+                                        "template": st.session_state.selected_template,
+                                        "tone": tone,
+                                        "target_audience": target_audience,
+                                        "content": generated_post,
+                                        "char_count": len(generated_post),
+                                        "word_count": len(generated_post.split()),
+                                        "hashtag_count": generated_post.count("#"),
+                                        "predicted_engagement": engagement_score,
+                                        "optimal_posting_time": posting_time["peak_time"],
+                                        "optimal_posting_day": posting_time["days"][0],
+                                    }
 
-                                st.session_state.content_history.append(history_entry)
-                                logger.info(
-                                    f"Tracked content in history: {len(st.session_state.content_history)} total posts"
-                                )
+                                    st.session_state.content_history.append(history_entry)
+                                    logger.info(
+                                        f"Tracked content in history: {len(st.session_state.content_history)} total posts"
+                                    )
 
-                            logger.info(f"Post generated successfully: {len(generated_post)} chars")
-                            st.success("✅ Post generated successfully!")
-                    except RateLimitError as e:
-                        logger.error(f"Rate limit exceeded: {str(e)}")
-                        st.error("❌ Rate limit exceeded. Please wait a moment and try again.")
-                    except (APIConnectionError, APITimeoutError) as e:
-                        logger.error(f"Connection error: {str(e)}")
-                        st.error(
-                            "❌ Connection error. Please check your internet "
-                            "connection and try again."
-                        )
-                    except Exception as e:
-                        logger.error(
-                            f"Unexpected error during generation: {str(e)}",
-                            exc_info=True,
-                        )
-                        st.error(f"❌ An error occurred: {str(e)}")
+                                logger.info(f"Post generated successfully: {len(generated_post)} chars")
+                                st.success("✅ Post generated successfully!")
+                        except RateLimitError as e:
+                            logger.error(f"Rate limit exceeded: {str(e)}")
+                            st.error("❌ Rate limit exceeded. Please wait a moment and try again.")
+                        except (APIConnectionError, APITimeoutError) as e:
+                            logger.error(f"Connection error: {str(e)}")
+                            st.error(
+                                "❌ Connection error. Please check your internet "
+                                "connection and try again."
+                            )
+                        except Exception as e:
+                            logger.error(
+                                f"Unexpected error during generation: {str(e)}",
+                                exc_info=True,
+                            )
+                            st.error(f"❌ An error occurred: {str(e)}")
+
+                else:  # A/B Test Mode
+                    logger.info(f"Generating A/B test variants for topic: {topic[:50]}...")
+                    with st.spinner("🤖 Claude is generating 3 A/B test variants..."):
+                        try:
+                            variants = _generate_ab_test_variants(
+                                api_key=api_key,
+                                topic=topic.strip(),
+                                template=st.session_state.selected_template,
+                                tone=tone,
+                                platform=platform,
+                                keywords=keywords.strip() if keywords else "",
+                                target_audience=target_audience.strip() if target_audience else "",
+                            )
+
+                            if variants:
+                                st.session_state.ab_test_variants = variants
+                                logger.info(f"Successfully generated {len(variants)} A/B test variants")
+                                st.success(f"✅ Generated {len(variants)} variants for A/B testing!")
+
+                        except Exception as e:
+                            logger.error(f"Error generating A/B variants: {str(e)}", exc_info=True)
+                            st.error(f"❌ An error occurred: {str(e)}")
 
     with col_gen2:
         if st.button("🔄 Reset", use_container_width=True):
             st.session_state.generated_post = None
             st.session_state.adapted_variants = None
+            if "ab_test_variants" in st.session_state:
+                st.session_state.ab_test_variants = None
             st.rerun()
 
-    # Panel 4: Export
-    if st.session_state.generated_post:
+    # Panel 4: Export (single post) or A/B Comparison (variants)
+    if st.session_state.generated_post and not st.session_state.ab_test_variants:
         st.markdown("---")
         st.subheader("📤 Panel 4: Preview & Export")
 
@@ -767,6 +815,190 @@ def _render_four_panel_interface(api_key: str) -> None:
                 file_name=f"multi_platform_content_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
                 mime="application/zip",
                 use_container_width=True,
+            )
+
+    elif st.session_state.ab_test_variants:
+        # NEW A/B TEST COMPARISON VIEW
+        st.markdown("---")
+        st.subheader("📤 Panel 4: A/B Test Variant Comparison")
+
+        variants = st.session_state.ab_test_variants
+
+        # Performance Summary
+        st.markdown("#### 🏆 Predicted Performance Ranking")
+        rank_cols = st.columns(len(variants))
+
+        for i, variant in enumerate(variants):
+            with rank_cols[i]:
+                medal = ["🥇", "🥈", "🥉"][i] if i < 3 else ""
+                st.metric(
+                    f"{medal} {variant['variant_id']}",
+                    f"{variant['predicted_engagement']:.1f}/10",
+                    delta=(
+                        f"{variant['predicted_engagement'] - variants[-1]['predicted_engagement']:.1f} vs worst"
+                        if i < len(variants) - 1
+                        else None
+                    ),
+                )
+                st.caption(variant["strategy_description"])
+
+        # Side-by-side variant comparison
+        st.markdown("#### 📋 Variant Content Comparison")
+
+        variant_tabs = st.tabs([v["variant_id"] for v in variants])
+
+        for i, variant in enumerate(variants):
+            with variant_tabs[i]:
+                # Metadata row
+                meta_cols = st.columns(4)
+                with meta_cols[0]:
+                    st.caption(f"**Hook:** {variant['hook_type'].title()}")
+                with meta_cols[1]:
+                    st.caption(f"**CTA:** {variant['cta_type'].title()}")
+                with meta_cols[2]:
+                    st.caption(
+                        f"**Format:** {variant['format_style'].replace('_', ' ').title()}"
+                    )
+                with meta_cols[3]:
+                    st.caption(f"**Emoji:** {variant['emoji_density'].title()}")
+
+                # Content preview
+                st.text_area(
+                    f"{variant['variant_id']} Content",
+                    value=variant["content"],
+                    height=300,
+                    key=f"variant_{variant['variant_id']}_preview",
+                    label_visibility="collapsed",
+                )
+
+                # Stats row
+                stat_cols = st.columns(4)
+                with stat_cols[0]:
+                    st.caption(f"📊 **{variant['char_count']}** chars")
+                with stat_cols[1]:
+                    st.caption(f"📝 **{variant['word_count']}** words")
+                with stat_cols[2]:
+                    st.caption(f"#️⃣ **{variant['hashtag_count']}** hashtags")
+                with stat_cols[3]:
+                    engagement_color = (
+                        "🟢"
+                        if variant["predicted_engagement"] >= 7.5
+                        else "🟡"
+                        if variant["predicted_engagement"] >= 5.5
+                        else "🔴"
+                    )
+                    st.caption(
+                        f"{engagement_color} **{variant['predicted_engagement']:.1f}/10** engagement"
+                    )
+
+        # Difference Highlighter
+        with st.expander("🔍 Key Differences Between Variants"):
+            st.markdown("**Opening Hook Comparison:**")
+            for variant in variants:
+                first_line = variant["content"].split("\n")[0]
+                st.markdown(
+                    f"- **{variant['variant_id']}** ({variant['hook_type']}): _{first_line}_"
+                )
+
+            st.markdown("\n**Closing CTA Comparison:**")
+            for variant in variants:
+                last_lines = variant["content"].strip().split("\n")[-2:]
+                cta = " ".join(last_lines)
+                st.markdown(
+                    f"- **{variant['variant_id']}** ({variant['cta_type']}): _{cta}_"
+                )
+
+        # Recommendation
+        best_variant = variants[0]
+        st.success(
+            f"💡 **Recommendation:** Based on predicted engagement, start with **{best_variant['variant_id']}** "
+            f"({best_variant['predicted_engagement']:.1f}/10). Test all 3 variants to find your winning formula!"
+        )
+
+        # Export Options
+        st.markdown("---")
+        st.markdown("#### 📥 Export A/B Test Package")
+
+        export_cols = st.columns(3)
+
+        with export_cols[0]:
+            # Export as CSV with metadata
+            df_variants = pd.DataFrame(variants)
+            csv_data = df_variants.to_csv(index=False)
+
+            st.download_button(
+                label="📊 Download as CSV (with metadata)",
+                data=csv_data,
+                file_name=f"ab_test_variants_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )
+
+        with export_cols[1]:
+            # Export as TXT files in ZIP
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                for variant in variants:
+                    filename = f"{variant['variant_id'].lower().replace(' ', '_')}_post.txt"
+                    header = f"""A/B TEST {variant['variant_id']}
+Hook: {variant['hook_type']}
+CTA: {variant['cta_type']}
+Format: {variant['format_style']}
+Predicted Engagement: {variant['predicted_engagement']}/10
+---
+
+{variant['content']}"""
+                    zip_file.writestr(filename, header)
+
+            st.download_button(
+                label="📦 Download as ZIP (TXT files)",
+                data=zip_buffer.getvalue(),
+                file_name=f"ab_test_package_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                mime="application/zip",
+                use_container_width=True,
+            )
+
+        with export_cols[2]:
+            # Copy best variant to clipboard
+            if st.button("📋 Copy Best Variant", use_container_width=True):
+                st.code(best_variant["content"], language=None)
+                st.success(f"✅ {best_variant['variant_id']} displayed above - use browser copy")
+
+        # Testing Guide
+        with st.expander("📚 How to Run A/B Tests with These Variants"):
+            st.markdown(
+                """
+**A/B Testing Best Practices:**
+
+1. **Platform Selection:**
+   - LinkedIn: Use LinkedIn's native A/B testing or post at same time on different days
+   - Facebook/Instagram: Use Meta's A/B testing tools
+   - Twitter: Post variants at same time of day across 3 days
+
+2. **Testing Timeline:**
+   - Minimum: 3-7 days per variant
+   - Post at optimal times (see Analytics panel)
+   - Ensure similar audience exposure
+
+3. **Success Metrics:**
+   - **Engagement Rate**: (Likes + Comments + Shares) / Impressions
+   - **Click-Through Rate**: Clicks / Impressions (if link included)
+   - **Comment Quality**: Depth of conversation started
+
+4. **Sample Size:**
+   - Minimum 1,000 impressions per variant
+   - 100+ engagements for statistical significance
+
+5. **Declare Winner:**
+   - Variant with highest engagement rate wins
+   - Use winner's strategy (hook/CTA/format) for future posts
+   - Re-test periodically (audience preferences change)
+
+6. **Tracking:**
+   - Use UTM parameters for link tracking
+   - Tag posts in your social media scheduler
+   - Record results in Analytics panel
+        """
             )
 
     # Panel 5: Analytics Dashboard
@@ -1696,3 +1928,155 @@ def _generate_post(
         logger.error(f"Unexpected error generating post: {str(e)}", exc_info=True)
         st.error(f"❌ Unexpected Error: {str(e)}")
         return None
+
+
+def _generate_ab_test_variants(
+    api_key: str,
+    topic: str,
+    template: str,
+    tone: str,
+    platform: str = "LinkedIn",
+    keywords: str = "",
+    target_audience: str = "",
+) -> list:
+    """
+    Generate 3 A/B test variants with different hooks, CTAs, and formatting.
+
+    Each variant uses a different strategy to test what resonates best
+    with the audience.
+
+    Args:
+        api_key: Anthropic API key
+        topic: Main topic/subject
+        template: Selected template name
+        tone: Desired tone
+        platform: Target platform
+        keywords: Optional keywords
+        target_audience: Optional target audience
+
+    Returns:
+        List of variant dicts with content and metadata
+    """
+    client = Anthropic(api_key=api_key)
+    variants = []
+
+    for variant_name, strategy in AB_TEST_STRATEGIES.items():
+        logger.info(f"Generating {variant_name} with {strategy['hook_type']} hook...")
+
+        # Build variant-specific prompt
+        variant_prompt = _build_ab_test_prompt(
+            topic=topic,
+            template=template,
+            tone=tone,
+            platform=platform,
+            strategy=strategy,
+            keywords=keywords,
+            target_audience=target_audience,
+        )
+
+        try:
+            variant_content = _call_claude_api(client, variant_prompt)
+
+            # Calculate engagement score for this variant
+            engagement_score = _calculate_engagement_score(
+                content=variant_content, platform=platform, template=template, tone=tone
+            )
+
+            variant_data = {
+                "variant_id": variant_name,
+                "content": variant_content,
+                "hook_type": strategy["hook_type"],
+                "cta_type": strategy["cta_type"],
+                "format_style": strategy["format_style"],
+                "emoji_density": strategy["emoji_density"],
+                "char_count": len(variant_content),
+                "word_count": len(variant_content.split()),
+                "hashtag_count": variant_content.count("#"),
+                "predicted_engagement": engagement_score,
+                "strategy_description": f"{strategy['hook_type'].title()} hook + {strategy['cta_type'].title()} CTA",
+            }
+
+            variants.append(variant_data)
+            logger.info(
+                f"{variant_name} generated: {engagement_score:.1f}/10 predicted engagement"
+            )
+
+        except Exception as e:
+            logger.error(f"Error generating {variant_name}: {str(e)}")
+            # Continue generating other variants even if one fails
+            continue
+
+    # Sort variants by predicted engagement (best first)
+    variants.sort(key=lambda x: x["predicted_engagement"], reverse=True)
+
+    return variants
+
+
+def _build_ab_test_prompt(
+    topic: str,
+    template: str,
+    tone: str,
+    platform: str,
+    strategy: dict,
+    keywords: str = "",
+    target_audience: str = "",
+) -> str:
+    """
+    Build a prompt for A/B test variant with specific strategy.
+
+    Args:
+        topic: Main topic
+        template: Template name
+        tone: Tone name
+        platform: Platform name
+        strategy: Strategy dict from AB_TEST_STRATEGIES
+        keywords: Optional keywords
+        target_audience: Optional target audience
+
+    Returns:
+        Formatted prompt string
+    """
+    template_info = TEMPLATES[template]
+    tone_instruction = TONES[tone]
+    platform_specs = PLATFORM_SPECS[platform]
+
+    prompt = f"""{template_info['prompt_prefix']} {topic}.
+
+Platform: {platform}
+Style: {template_info['style']}
+Tone: {tone_instruction}"""
+
+    if target_audience:
+        prompt += f"\nTarget Audience: {target_audience}"
+
+    if "brand_voice" in st.session_state and st.session_state.brand_voice:
+        bv = st.session_state.brand_voice
+        prompt += (
+            f"\n\nBRAND VOICE CONTEXT:\nBrand: {bv['name']}\n"
+            f"Mission: {bv['mission']}\nTraits: {', '.join(bv['traits'])}"
+        )
+
+    if keywords:
+        prompt += f"\nInclude these keywords naturally: {keywords}"
+
+    # Add A/B test strategy requirements
+    prompt += f"""
+
+A/B TEST VARIANT STRATEGY:
+- Hook Type: {strategy['hook_type'].upper()} - Start with {', or '.join(strategy['hook_examples'][:2])}
+- CTA Type: {strategy['cta_type'].upper()} - End with {strategy['cta_examples'][0]}
+- Format Style: {strategy['format_style']}
+- Emoji Density: {strategy['emoji_density']} (low=1-2, medium=3-4, high=5+)
+
+PLATFORM REQUIREMENTS ({platform}):
+- Length: {platform_specs['optimal_length'][0]}-{platform_specs['optimal_length'][1]} words
+- Character limit: {platform_specs['char_limit'] if platform_specs['char_limit'] else 'No limit'}
+- Hashtags: {platform_specs['hashtag_range'][0]}-{platform_specs['hashtag_range'][1]}
+
+CRITICAL: This is variant testing. Make this version DISTINCTLY DIFFERENT from other variants by:
+1. Using the specified hook type ({strategy['hook_type']})
+2. Structuring with the specified format ({strategy['format_style']})
+3. Ending with the specified CTA type ({strategy['cta_type']})
+4. Matching the emoji density ({strategy['emoji_density']})"""
+
+    return prompt
