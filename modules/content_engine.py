@@ -5,11 +5,18 @@ Generates professional LinkedIn content using Claude AI with customizable
 templates, tones, and target audiences.
 """
 
+import io
 import os
 import time
+import zipfile
+from collections import Counter
+from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, Callable, Optional
 
+import numpy as np
+import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 import utils.ui as ui
@@ -43,6 +50,92 @@ OPTIMAL_POST_MIN_WORDS = 150
 OPTIMAL_POST_MAX_WORDS = 250
 MIN_HASHTAGS = 3
 MAX_HASHTAGS = 5
+
+# Platform-specific specifications
+PLATFORM_SPECS = {
+    "LinkedIn": {
+        "char_limit": 3000,
+        "optimal_length": (150, 250),  # words
+        "hashtag_range": (3, 5),
+        "emoji_style": "professional",
+        "formatting": "paragraphs_with_breaks",
+        "link_style": "inline",
+    },
+    "Twitter/X": {
+        "char_limit": 280,
+        "optimal_length": (30, 50),  # words
+        "hashtag_range": (1, 3),
+        "emoji_style": "casual",
+        "formatting": "single_paragraph",
+        "link_style": "shortened",
+        "thread_mode": True,
+        "thread_tweet_limit": 280,
+    },
+    "Instagram": {
+        "char_limit": 2200,
+        "optimal_length": (100, 150),  # words
+        "hashtag_range": (5, 10),
+        "emoji_style": "expressive",
+        "formatting": "caption_with_breaks",
+        "link_style": "bio_link",
+    },
+    "Facebook": {
+        "char_limit": 63206,
+        "optimal_length": (100, 200),  # words
+        "hashtag_range": (0, 3),
+        "emoji_style": "friendly",
+        "formatting": "paragraphs",
+        "link_style": "inline",
+    },
+    "Email Newsletter": {
+        "char_limit": None,
+        "optimal_length": (300, 500),  # words
+        "subject_line_limit": 60,
+        "preheader_limit": 100,
+        "formatting": "html_email",
+        "link_style": "call_to_action_buttons",
+    },
+}
+
+# A/B Testing Variant Strategies
+AB_TEST_STRATEGIES = {
+    "Variant A": {
+        "hook_type": "question",
+        "hook_examples": ["Have you ever wondered...", "What if...", "Did you know..."],
+        "cta_type": "comment",
+        "cta_examples": [
+            "Share your thoughts below!",
+            "What's your experience?",
+            "Let me know in the comments!",
+        ],
+        "format_style": "short_paragraphs",
+        "emoji_density": "low",
+    },
+    "Variant B": {
+        "hook_type": "statistic",
+        "hook_examples": ["X% of professionals...", "Research shows...", "According to data..."],
+        "cta_type": "share",
+        "cta_examples": [
+            "Share this with your network!",
+            "Tag someone who needs this!",
+            "Pass this along!",
+        ],
+        "format_style": "bullet_points",
+        "emoji_density": "medium",
+    },
+    "Variant C": {
+        "hook_type": "story",
+        "hook_examples": ["Last week, I...", "Here's what happened...", "Let me tell you about..."],
+        "cta_type": "link_click",
+        "cta_examples": [
+            "Learn more in the link!",
+            "Check out the full story!",
+            "Read the details here!",
+        ],
+        "format_style": "narrative_flow",
+        "emoji_density": "high",
+    },
+}
 
 # LinkedIn Post Templates
 TEMPLATES = {
@@ -290,6 +383,14 @@ def _render_four_panel_interface(api_key: str) -> None:
     # Initialize session state for generated content
     if "generated_post" not in st.session_state:
         st.session_state.generated_post = None
+    if "adapted_variants" not in st.session_state:
+        st.session_state.adapted_variants = None
+    if "content_history" not in st.session_state:
+        st.session_state.content_history = []
+    if "analytics_enabled" not in st.session_state:
+        st.session_state.analytics_enabled = True
+    if "ab_test_variants" not in st.session_state:
+        st.session_state.ab_test_variants = None
 
     # Panel 1: Input
     st.markdown("---")
@@ -315,6 +416,25 @@ def _render_four_panel_interface(api_key: str) -> None:
         target_audience = st.text_input(
             "Target Audience (optional)", placeholder="e.g., Software engineers, CTOs"
         )
+
+    # Platform Selection
+    platform = st.selectbox(
+        "Target Platform",
+        options=list(PLATFORM_SPECS.keys()),
+        index=0,  # Default to LinkedIn
+        help="Select the social media platform for optimized formatting",
+    )
+
+    # Show platform specs
+    specs = PLATFORM_SPECS[platform]
+    char_limit_text = (
+        f"{specs['char_limit']:,}" if specs["char_limit"] else "No limit"
+    )
+    st.caption(
+        f"📱 {platform} specs: {char_limit_text} char limit | "
+        f"{specs['hashtag_range'][0]}-{specs['hashtag_range'][1]} hashtags | "
+        f"{specs['emoji_style']} emoji style"
+    )
 
     # Panel 1.5: Brand Voice
     with st.expander("🎭 Brand Voice Profiles (Optional)", expanded=False):
@@ -395,12 +515,45 @@ def _render_four_panel_interface(api_key: str) -> None:
                             topic=topic.strip(),
                             template=st.session_state.selected_template,
                             tone=tone,
+                            platform=platform,
                             keywords=keywords.strip() if keywords else "",
                             target_audience=target_audience.strip() if target_audience else "",
                         )
 
                         if generated_post:
                             st.session_state.generated_post = generated_post
+
+                            # Track in content history
+                            if st.session_state.analytics_enabled:
+                                engagement_score = _calculate_engagement_score(
+                                    content=generated_post,
+                                    platform=platform,
+                                    template=st.session_state.selected_template,
+                                    tone=tone,
+                                )
+
+                                posting_time = _suggest_posting_time(platform, target_audience)
+
+                                history_entry = {
+                                    "timestamp": datetime.now(),
+                                    "platform": platform,
+                                    "template": st.session_state.selected_template,
+                                    "tone": tone,
+                                    "target_audience": target_audience,
+                                    "content": generated_post,
+                                    "char_count": len(generated_post),
+                                    "word_count": len(generated_post.split()),
+                                    "hashtag_count": generated_post.count("#"),
+                                    "predicted_engagement": engagement_score,
+                                    "optimal_posting_time": posting_time["peak_time"],
+                                    "optimal_posting_day": posting_time["days"][0],
+                                }
+
+                                st.session_state.content_history.append(history_entry)
+                                logger.info(
+                                    f"Tracked content in history: {len(st.session_state.content_history)} total posts"
+                                )
+
                             logger.info(f"Post generated successfully: {len(generated_post)} chars")
                             st.success("✅ Post generated successfully!")
                     except RateLimitError as e:
@@ -422,6 +575,7 @@ def _render_four_panel_interface(api_key: str) -> None:
     with col_gen2:
         if st.button("🔄 Reset", use_container_width=True):
             st.session_state.generated_post = None
+            st.session_state.adapted_variants = None
             st.rerun()
 
     # Panel 4: Export
@@ -467,6 +621,351 @@ def _render_four_panel_interface(api_key: str) -> None:
                 st.code(st.session_state.generated_post, language=None)
                 st.success("✅ Content displayed above - use your browser's copy function")
 
+        # Multi-platform adaptation
+        st.markdown("---")
+        st.markdown("#### 🌐 Adapt to Other Platforms")
+
+        col_adapt1, col_adapt2 = st.columns([3, 1])
+
+        with col_adapt1:
+            target_platforms = st.multiselect(
+                "Select platforms to adapt content for:",
+                options=[p for p in PLATFORM_SPECS.keys() if p != platform],
+                default=(
+                    ["Twitter/X", "Instagram"]
+                    if platform == "LinkedIn"
+                    else ["LinkedIn"]
+                ),
+            )
+
+        with col_adapt2:
+            if st.button("🔄 Generate Adaptations", use_container_width=True):
+                if target_platforms:
+                    with st.spinner("Adapting content for selected platforms..."):
+                        adapted_variants = {}
+
+                        for target in target_platforms:
+                            adapted = _adapt_content_for_platform(
+                                base_content=st.session_state.generated_post,
+                                original_platform=platform,
+                                target_platform=target,
+                                topic=topic,
+                                api_key=api_key,
+                            )
+                            adapted_variants[target] = adapted
+
+                        st.session_state.adapted_variants = adapted_variants
+                        st.success(f"✅ Adapted to {len(target_platforms)} platforms!")
+                else:
+                    st.warning("Please select at least one platform to adapt to.")
+
+        # Show adapted variants
+        if st.session_state.adapted_variants:
+            st.markdown("#### 📱 Platform Adaptations")
+
+            # Create tabs for each platform
+            all_platforms = [platform] + list(st.session_state.adapted_variants.keys())
+            platform_tabs = st.tabs(all_platforms)
+
+            # Original platform
+            with platform_tabs[0]:
+                st.caption(f"Original ({platform})")
+                st.text_area(
+                    f"{platform} Content",
+                    value=st.session_state.generated_post,
+                    height=250,
+                    key=f"preview_{platform}",
+                )
+                st.caption(f"📊 {len(st.session_state.generated_post)} characters")
+
+            # Adapted platforms
+            for i, (adapt_platform, adapt_data) in enumerate(
+                st.session_state.adapted_variants.items(), 1
+            ):
+                with platform_tabs[i]:
+                    st.caption(f"Adapted for {adapt_platform}")
+
+                    # Check for errors
+                    if "error" in adapt_data:
+                        st.error(f"Error adapting content: {adapt_data['error']}")
+                        st.text_area(
+                            f"{adapt_platform} Content (Original)",
+                            value=adapt_data["content"],
+                            height=250,
+                            key=f"preview_{adapt_platform}",
+                        )
+                        continue
+
+                    # Special display for email
+                    if adapt_platform == "Email Newsletter" and "subject" in adapt_data:
+                        st.markdown("**Subject Line:**")
+                        st.code(adapt_data["subject"])
+                        st.markdown("**Preheader:**")
+                        st.code(adapt_data["preheader"])
+                        st.markdown("**Email Body:**")
+
+                    # Special display for Twitter threads
+                    if adapt_platform == "Twitter/X" and "thread" in adapt_data:
+                        st.markdown(
+                            f"**Thread ({len(adapt_data['thread'])} tweets):**"
+                        )
+                        for idx, tweet in enumerate(adapt_data["thread"], 1):
+                            st.text_area(
+                                f"Tweet {idx}/{len(adapt_data['thread'])}",
+                                value=tweet,
+                                height=100,
+                                key=f"tweet_{idx}",
+                            )
+                    else:
+                        st.text_area(
+                            f"{adapt_platform} Content",
+                            value=adapt_data["content"],
+                            height=250,
+                            key=f"preview_{adapt_platform}",
+                        )
+
+                    st.caption(f"📊 {adapt_data['char_count']} characters")
+
+            # Export all platforms as ZIP
+            st.markdown("---")
+            st.markdown("#### 📦 Download Multi-Platform Package")
+
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                # Add original
+                zip_file.writestr(
+                    f"{platform.lower().replace('/', '_')}_post.txt",
+                    st.session_state.generated_post,
+                )
+
+                # Add adaptations
+                for adapt_platform, adapt_data in st.session_state.adapted_variants.items():
+                    if "error" in adapt_data:
+                        continue
+
+                    filename = f"{adapt_platform.lower().replace('/', '_')}_post.txt"
+
+                    if adapt_platform == "Email Newsletter" and "subject" in adapt_data:
+                        content = f"Subject: {adapt_data['subject']}\n"
+                        content += f"Preheader: {adapt_data['preheader']}\n\n"
+                        content += adapt_data["content"]
+                        zip_file.writestr(filename, content)
+                    elif adapt_platform == "Twitter/X" and "thread" in adapt_data:
+                        thread_content = "\n\n---\n\n".join(
+                            [
+                                f"Tweet {i+1}/{len(adapt_data['thread'])}:\n{tweet}"
+                                for i, tweet in enumerate(adapt_data["thread"])
+                            ]
+                        )
+                        zip_file.writestr(filename, thread_content)
+                    else:
+                        zip_file.writestr(filename, adapt_data["content"])
+
+            st.download_button(
+                label="📦 Download Multi-Platform ZIP",
+                data=zip_buffer.getvalue(),
+                file_name=f"multi_platform_content_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                mime="application/zip",
+                use_container_width=True,
+            )
+
+    # Panel 5: Analytics Dashboard
+    if st.session_state.content_history:
+        st.markdown("---")
+        st.subheader("📊 Panel 5: Content Performance Analytics")
+
+        # Toggle analytics and clear history
+        col_toggle1, col_toggle2 = st.columns([3, 1])
+        with col_toggle2:
+            if st.button("🔄 Clear History", use_container_width=True):
+                st.session_state.content_history = []
+                st.rerun()
+
+        history = st.session_state.content_history
+
+        # Metrics Row 1: Overall Stats
+        st.markdown("#### 📈 Overall Performance Metrics")
+        metric_cols = st.columns(4)
+
+        with metric_cols[0]:
+            st.metric("Total Posts Generated", len(history))
+
+        with metric_cols[1]:
+            avg_engagement = np.mean([h["predicted_engagement"] for h in history])
+            st.metric("Avg Predicted Engagement", f"{avg_engagement:.1f}/10")
+
+        with metric_cols[2]:
+            top_template = Counter([h["template"] for h in history]).most_common(1)[0]
+            st.metric("Top Template", top_template[0])
+            st.caption(f"Used {top_template[1]} times")
+
+        with metric_cols[3]:
+            top_platform = Counter([h["platform"] for h in history]).most_common(1)[0]
+            st.metric("Top Platform", top_platform[0])
+            st.caption(f"Used {top_platform[1]} times")
+
+        # Metrics Row 2: Content Quality
+        st.markdown("#### 📝 Content Quality Metrics")
+        quality_cols = st.columns(4)
+
+        with quality_cols[0]:
+            avg_word_count = np.mean([h["word_count"] for h in history])
+            st.metric("Avg Word Count", f"{avg_word_count:.0f}")
+
+        with quality_cols[1]:
+            avg_char_count = np.mean([h["char_count"] for h in history])
+            st.metric("Avg Character Count", f"{avg_char_count:.0f}")
+
+        with quality_cols[2]:
+            avg_hashtags = np.mean([h["hashtag_count"] for h in history])
+            st.metric("Avg Hashtags", f"{avg_hashtags:.1f}")
+
+        with quality_cols[3]:
+            high_engagement_count = sum(1 for h in history if h["predicted_engagement"] >= 7.5)
+            st.metric("High Engagement Posts", f"{high_engagement_count}")
+            st.caption("(Score ≥ 7.5)")
+
+        # Chart 1: Engagement Trend Over Time
+        st.markdown("#### 📉 Engagement Trends")
+
+        df_history = pd.DataFrame(history)
+        df_history["timestamp_formatted"] = df_history["timestamp"].dt.strftime("%m/%d %H:%M")
+
+        fig_engagement = px.line(
+            df_history,
+            x="timestamp",
+            y="predicted_engagement",
+            color="platform",
+            markers=True,
+            title="Predicted Engagement Score Over Time",
+            labels={"predicted_engagement": "Engagement Score", "timestamp": "Date/Time"},
+            hover_data=["template", "tone"],
+        )
+        fig_engagement.update_layout(height=400)
+        st.plotly_chart(fig_engagement, use_container_width=True)
+
+        # Chart 2: Template & Platform Performance
+        col_chart1, col_chart2 = st.columns(2)
+
+        with col_chart1:
+            st.markdown("##### Template Performance")
+            template_avg = (
+                df_history.groupby("template")["predicted_engagement"].mean().reset_index()
+            )
+            template_avg = template_avg.sort_values("predicted_engagement", ascending=False)
+
+            fig_template = px.bar(
+                template_avg,
+                x="predicted_engagement",
+                y="template",
+                orientation="h",
+                title="Avg Engagement by Template",
+                labels={"predicted_engagement": "Avg Score", "template": ""},
+            )
+            fig_template.update_layout(height=300)
+            st.plotly_chart(fig_template, use_container_width=True)
+
+        with col_chart2:
+            st.markdown("##### Platform Performance")
+            platform_avg = (
+                df_history.groupby("platform")["predicted_engagement"].mean().reset_index()
+            )
+            platform_avg = platform_avg.sort_values("predicted_engagement", ascending=False)
+
+            fig_platform = px.bar(
+                platform_avg,
+                x="predicted_engagement",
+                y="platform",
+                orientation="h",
+                title="Avg Engagement by Platform",
+                labels={"predicted_engagement": "Avg Score", "platform": ""},
+            )
+            fig_platform.update_layout(height=300)
+            st.plotly_chart(fig_platform, use_container_width=True)
+
+        # Chart 3: Posting Time Recommendations
+        st.markdown("#### 🕐 Optimal Posting Times (All Posts)")
+        posting_times = (
+            df_history.groupby(["optimal_posting_day", "platform"]).size().reset_index(name="count")
+        )
+
+        if not posting_times.empty:
+            fig_heatmap = px.bar(
+                posting_times,
+                x="optimal_posting_day",
+                y="count",
+                color="platform",
+                title="Recommended Posting Days by Platform",
+                labels={"count": "Number of Posts", "optimal_posting_day": "Day of Week"},
+            )
+            fig_heatmap.update_layout(height=350)
+            st.plotly_chart(fig_heatmap, use_container_width=True)
+
+        # AI-Powered Improvement Suggestions
+        st.markdown("#### 💡 AI-Powered Improvement Suggestions")
+
+        suggestions = _generate_improvement_suggestions(history)
+
+        for i, suggestion in enumerate(suggestions, 1):
+            suggestion_type = suggestion["type"]
+            icon = {
+                "success": "✅",
+                "warning": "⚠️",
+                "info": "💡",
+                "tip": "🎯",
+            }[suggestion_type]
+
+            if suggestion_type == "success":
+                st.success(f"{icon} {suggestion['message']}")
+            elif suggestion_type == "warning":
+                st.warning(f"{icon} {suggestion['message']}")
+            else:
+                st.info(f"{icon} {suggestion['message']}")
+
+        # Content History Table (expandable)
+        with st.expander("📋 View Full Content History"):
+            # Display table with key metrics
+            display_df = df_history[
+                [
+                    "timestamp",
+                    "platform",
+                    "template",
+                    "tone",
+                    "predicted_engagement",
+                    "word_count",
+                    "hashtag_count",
+                ]
+            ].copy()
+            display_df["timestamp"] = display_df["timestamp"].dt.strftime("%Y-%m-%d %H:%M")
+            display_df = display_df.sort_values("timestamp", ascending=False)
+
+            st.dataframe(
+                display_df,
+                column_config={
+                    "timestamp": "Date/Time",
+                    "platform": "Platform",
+                    "template": "Template",
+                    "tone": "Tone",
+                    "predicted_engagement": st.column_config.NumberColumn(
+                        "Engagement Score", format="%.1f ⭐"
+                    ),
+                    "word_count": "Words",
+                    "hashtag_count": "Hashtags",
+                },
+                hide_index=True,
+                use_container_width=True,
+            )
+
+            # Export history as CSV
+            csv_data = df_history.to_csv(index=False)
+            st.download_button(
+                label="📥 Download History (CSV)",
+                data=csv_data,
+                file_name=f"content_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )
+
 
 def _validate_template_and_tone(template: str, tone: str) -> None:
     """
@@ -485,16 +984,379 @@ def _validate_template_and_tone(template: str, tone: str) -> None:
         raise ValueError(f"Invalid tone: {tone}. Valid options: {list(TONES.keys())}")
 
 
+def _calculate_engagement_score(content: str, platform: str, template: str, tone: str) -> float:
+    """
+    Predict engagement score (1-10) based on content characteristics.
+
+    Uses heuristics based on social media best practices:
+    - Content length optimal for platform
+    - Presence of question/CTA
+    - Emoji usage appropriate for platform
+    - Hashtag optimization
+    - Hook strength (first 50 chars)
+
+    Args:
+        content: Generated post content
+        platform: Target platform name
+        template: Template used
+        tone: Tone used
+
+    Returns:
+        Engagement score from 1.0 to 10.0
+    """
+    score = 5.0  # Base score
+    platform_specs = PLATFORM_SPECS.get(platform, PLATFORM_SPECS["LinkedIn"])
+
+    # Factor 1: Length optimization (±1.5 points)
+    word_count = len(content.split())
+    optimal_min, optimal_max = platform_specs["optimal_length"]
+    if optimal_min <= word_count <= optimal_max:
+        score += 1.5
+    elif word_count < optimal_min * 0.7 or word_count > optimal_max * 1.3:
+        score -= 1.5
+
+    # Factor 2: Question/CTA presence (±1.0 points)
+    if "?" in content:
+        score += 0.7
+    cta_keywords = [
+        "comment",
+        "share",
+        "thoughts",
+        "agree",
+        "think",
+        "experience",
+        "click",
+        "learn more",
+    ]
+    if any(keyword in content.lower() for keyword in cta_keywords):
+        score += 0.5
+
+    # Factor 3: Emoji usage (±1.0 points)
+    emoji_count = sum(1 for char in content if ord(char) > 127462)  # Unicode emoji range
+    if platform_specs["emoji_style"] == "expressive" and emoji_count >= 3:
+        score += 1.0
+    elif platform_specs["emoji_style"] == "professional" and 1 <= emoji_count <= 3:
+        score += 0.8
+    elif platform_specs["emoji_style"] == "casual" and emoji_count >= 2:
+        score += 0.9
+    elif emoji_count == 0 and platform_specs["emoji_style"] != "professional":
+        score -= 0.5
+
+    # Factor 4: Hashtag optimization (±0.8 points)
+    hashtag_count = content.count("#")
+    min_hashtags, max_hashtags = platform_specs["hashtag_range"]
+    if min_hashtags <= hashtag_count <= max_hashtags:
+        score += 0.8
+    elif hashtag_count < min_hashtags or hashtag_count > max_hashtags:
+        score -= 0.5
+
+    # Factor 5: Hook strength - first 50 characters (±1.0 points)
+    first_line = content.split("\n")[0][:50]
+    hook_indicators = [
+        "did you know",
+        "imagine",
+        "what if",
+        "here's",
+        "stop",
+        "don't",
+        "ever wonder",
+    ]
+    if any(indicator in first_line.lower() for indicator in hook_indicators):
+        score += 1.0
+    elif first_line.isupper():  # All caps hook
+        score += 0.7
+
+    # Factor 6: Template bonus (±0.7 points)
+    high_engagement_templates = ["Personal Story", "Thought Leadership", "How-To Guide"]
+    if template in high_engagement_templates:
+        score += 0.7
+
+    # Factor 7: Tone bonus (±0.5 points)
+    high_engagement_tones = ["Storytelling", "Inspirational"]
+    if tone in high_engagement_tones:
+        score += 0.5
+
+    # Factor 8: Line breaks for readability (±0.5 points)
+    line_count = content.count("\n\n")
+    if 2 <= line_count <= 5:
+        score += 0.5
+
+    # Clamp score between 1 and 10
+    score = max(1.0, min(10.0, score))
+
+    logger.debug(f"Calculated engagement score: {score:.1f}/10 for {platform}")
+    return round(score, 1)
+
+
+def _suggest_posting_time(platform: str, target_audience: str = "") -> dict:
+    """
+    Suggest optimal posting time based on platform and audience.
+
+    Based on industry research and platform algorithms:
+    - LinkedIn: Tue-Thu 9am-12pm (B2B audience active)
+    - Twitter/X: Daily 12pm-3pm (lunch hour engagement)
+    - Instagram: Mon/Wed/Fri 11am-2pm (visual content peak)
+    - Facebook: Wed-Fri 1pm-4pm (afternoon browsing)
+    - Email: Tue/Thu 10am (morning inbox clearing)
+
+    Args:
+        platform: Target platform name
+        target_audience: Optional audience description
+
+    Returns:
+        dict with recommended day, time, timezone, and reasoning
+    """
+    posting_times = {
+        "LinkedIn": {
+            "days": ["Tuesday", "Wednesday", "Thursday"],
+            "time_range": "9:00 AM - 12:00 PM",
+            "peak_time": "10:00 AM",
+            "timezone": "EST",
+            "reasoning": "B2B professionals check LinkedIn during work hours, mid-week has highest engagement",
+        },
+        "Twitter/X": {
+            "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "time_range": "12:00 PM - 3:00 PM",
+            "peak_time": "1:00 PM",
+            "timezone": "EST",
+            "reasoning": "Lunch hour browsing, consistent weekday engagement",
+        },
+        "Instagram": {
+            "days": ["Monday", "Wednesday", "Friday"],
+            "time_range": "11:00 AM - 2:00 PM",
+            "peak_time": "12:00 PM",
+            "timezone": "EST",
+            "reasoning": "Visual content performs best during midday breaks",
+        },
+        "Facebook": {
+            "days": ["Wednesday", "Thursday", "Friday"],
+            "time_range": "1:00 PM - 4:00 PM",
+            "peak_time": "2:00 PM",
+            "timezone": "EST",
+            "reasoning": "Afternoon browsing peaks mid-to-late week",
+        },
+        "Email Newsletter": {
+            "days": ["Tuesday", "Thursday"],
+            "time_range": "10:00 AM - 11:00 AM",
+            "peak_time": "10:00 AM",
+            "timezone": "EST",
+            "reasoning": "Morning inbox clearing, avoiding Monday overwhelm and Friday checkout",
+        },
+    }
+
+    recommendation = posting_times.get(platform, posting_times["LinkedIn"])
+
+    # Adjust for specific audiences
+    if target_audience:
+        audience_lower = target_audience.lower()
+        if "europe" in audience_lower or "uk" in audience_lower:
+            recommendation["timezone"] = "GMT"
+            recommendation["reasoning"] += " (adjusted for European audience)"
+        elif "asia" in audience_lower or "australia" in audience_lower:
+            recommendation["timezone"] = "AEST"
+            recommendation["reasoning"] += " (adjusted for Asia-Pacific audience)"
+
+    logger.debug(f"Suggested posting time for {platform}: {recommendation['peak_time']}")
+    return recommendation
+
+
+def _generate_improvement_suggestions(history: list) -> list:
+    """
+    Generate AI-powered content improvement suggestions based on history.
+
+    Analyzes patterns in content history to provide actionable recommendations
+    for improving engagement.
+
+    Args:
+        history: List of content history entries
+
+    Returns:
+        List of suggestion dicts with type and message
+    """
+    suggestions = []
+
+    if not history:
+        return [
+            {
+                "type": "info",
+                "message": "Generate more content to receive personalized suggestions!",
+            }
+        ]
+
+    df = pd.DataFrame(history)
+
+    # Suggestion 1: Template optimization
+    if len(df["template"].unique()) >= 2:
+        template_performance = df.groupby("template")["predicted_engagement"].mean()
+        best_template = template_performance.idxmax()
+        worst_template = template_performance.idxmin()
+
+        if (
+            len(template_performance) >= 3
+            and template_performance[best_template] - template_performance[worst_template] > 1.5
+        ):
+            suggestions.append(
+                {
+                    "type": "tip",
+                    "message": f"Your '{best_template}' template performs "
+                    f"{template_performance[best_template] - template_performance[worst_template]:.1f} points "
+                    f"better than '{worst_template}'. Consider using it more often!",
+                }
+            )
+
+    # Suggestion 2: Platform optimization
+    if len(df["platform"].unique()) > 1:
+        platform_performance = df.groupby("platform")["predicted_engagement"].mean()
+        best_platform = platform_performance.idxmax()
+        suggestions.append(
+            {
+                "type": "success",
+                "message": f"Your content performs best on {best_platform} "
+                f"(avg score: {platform_performance[best_platform]:.1f}). "
+                "This platform aligns well with your style!",
+            }
+        )
+
+    # Suggestion 3: Content length optimization
+    avg_engagement = df["predicted_engagement"].mean()
+    high_performers = df[df["predicted_engagement"] >= avg_engagement + 1.0]
+
+    if not high_performers.empty:
+        avg_words_high = high_performers["word_count"].mean()
+        avg_words_all = df["word_count"].mean()
+
+        if abs(avg_words_high - avg_words_all) > 30:
+            direction = "longer" if avg_words_high > avg_words_all else "shorter"
+            suggestions.append(
+                {
+                    "type": "tip",
+                    "message": f"Your high-engagement posts are {direction} "
+                    f"(avg {avg_words_high:.0f} words vs {avg_words_all:.0f}). "
+                    "Try adjusting content length!",
+                }
+            )
+
+    # Suggestion 4: Hashtag optimization
+    if len(df) >= 3:
+        avg_hashtags = df["hashtag_count"].mean()
+        platform_groups = df.groupby("platform")
+
+        for platform, group_df in platform_groups:
+            if len(group_df) < 2:
+                continue
+
+            avg_ht = group_df["hashtag_count"].mean()
+            platform_spec = PLATFORM_SPECS[platform]
+            min_ht, max_ht = platform_spec["hashtag_range"]
+
+            if avg_ht < min_ht:
+                suggestions.append(
+                    {
+                        "type": "warning",
+                        "message": f"You're using {avg_ht:.1f} hashtags on {platform} "
+                        f"(recommended: {min_ht}-{max_ht}). "
+                        "Add more hashtags for better discoverability!",
+                    }
+                )
+                break  # Only show one hashtag warning
+            elif avg_ht > max_ht:
+                suggestions.append(
+                    {
+                        "type": "warning",
+                        "message": f"You're using {avg_ht:.1f} hashtags on {platform} "
+                        f"(recommended: {min_ht}-{max_ht}). "
+                        "Reduce hashtags to avoid looking spammy!",
+                    }
+                )
+                break  # Only show one hashtag warning
+
+    # Suggestion 5: Consistency
+    if len(history) >= 5:
+        recent_5 = df.tail(5)
+        engagement_std = recent_5["predicted_engagement"].std()
+
+        if engagement_std < 1.0:
+            suggestions.append(
+                {
+                    "type": "success",
+                    "message": f"Great consistency! Your last 5 posts have similar engagement scores "
+                    f"(std dev: {engagement_std:.2f}). You've found your rhythm!",
+                }
+            )
+        elif engagement_std > 2.5:
+            suggestions.append(
+                {
+                    "type": "warning",
+                    "message": f"High variability in recent posts (std dev: {engagement_std:.2f}). "
+                    "Review your top performers to identify winning patterns!",
+                }
+            )
+
+    # Suggestion 6: Tone optimization
+    if len(df["tone"].unique()) >= 3:
+        tone_performance = df.groupby("tone")["predicted_engagement"].mean()
+        best_tone = tone_performance.idxmax()
+        suggestions.append(
+            {
+                "type": "tip",
+                "message": f"'{best_tone}' tone shows strongest engagement "
+                f"(avg: {tone_performance[best_tone]:.1f}). This resonates with your audience!",
+            }
+        )
+
+    # Suggestion 7: Growth trajectory
+    if len(history) >= 10:
+        recent_half = df.tail(len(df) // 2)
+        earlier_half = df.head(len(df) // 2)
+
+        recent_avg = recent_half["predicted_engagement"].mean()
+        earlier_avg = earlier_half["predicted_engagement"].mean()
+
+        if recent_avg > earlier_avg + 0.5:
+            suggestions.append(
+                {
+                    "type": "success",
+                    "message": f"📈 Your content quality is improving! Recent posts score "
+                    f"{recent_avg - earlier_avg:.1f} points higher than earlier ones!",
+                }
+            )
+        elif earlier_avg > recent_avg + 0.5:
+            suggestions.append(
+                {
+                    "type": "info",
+                    "message": f"📉 Recent engagement is lower. Review your earlier high performers "
+                    f"(avg: {earlier_avg:.1f}) for inspiration!",
+                }
+            )
+
+    # Default suggestion if none generated
+    if not suggestions:
+        suggestions.append(
+            {
+                "type": "info",
+                "message": "Keep creating! Generate more content to unlock personalized insights and recommendations.",
+            }
+        )
+
+    return suggestions[:5]  # Limit to top 5 suggestions
+
+
 def _build_prompt(
-    topic: str, template: str, tone: str, keywords: str = "", target_audience: str = ""
+    topic: str,
+    template: str,
+    tone: str,
+    platform: str = "LinkedIn",
+    keywords: str = "",
+    target_audience: str = "",
 ) -> str:
     """
-    Build the prompt for Claude API based on user inputs.
+    Build platform-optimized prompt for Claude API based on user inputs.
 
     Args:
         topic: Main topic/subject of the post
         template: Selected template name
         tone: Desired tone
+        platform: Target platform name (default: LinkedIn)
         keywords: Optional comma-separated keywords
         target_audience: Optional target audience description
 
@@ -503,9 +1365,11 @@ def _build_prompt(
     """
     template_info = TEMPLATES[template]
     tone_instruction = TONES[tone]
+    platform_specs = PLATFORM_SPECS[platform]
 
     prompt = f"""{template_info['prompt_prefix']} {topic}.
 
+Platform: {platform}
 Style: {template_info['style']}
 Tone: {tone_instruction}"""
 
@@ -522,19 +1386,160 @@ Tone: {tone_instruction}"""
     if keywords:
         prompt += f"\nInclude these keywords naturally: {keywords}"
 
+    # Platform-specific requirements
+    char_limit = platform_specs["char_limit"]
+    word_range = platform_specs["optimal_length"]
+    hashtag_range = platform_specs["hashtag_range"]
+
     prompt += f"""
 
-Requirements:
-- Length: {OPTIMAL_POST_MIN_WORDS}-{OPTIMAL_POST_MAX_WORDS} words (LinkedIn optimal)
-- Use line breaks for readability
-- Include {MIN_HASHTAGS}-{MAX_HASHTAGS} relevant hashtags at the end
-- Start with a hook to grab attention
-- End with a call-to-action or question
-- Be authentic and engaging
-- Stay within {LINKEDIN_CHAR_LIMIT} characters total"""
+PLATFORM-SPECIFIC REQUIREMENTS ({platform}):
+- Length: {word_range[0]}-{word_range[1]} words (optimal for {platform})
+- Character limit: {char_limit if char_limit else 'No limit'}
+- Hashtags: {hashtag_range[0]}-{hashtag_range[1]} relevant hashtags
+- Emoji style: {platform_specs['emoji_style']}
+- Formatting: {platform_specs['formatting']}
+"""
 
-    logger.debug(f"Built prompt with {len(prompt)} characters")
+    # Special handling for Twitter threads
+    if platform == "Twitter/X" and platform_specs.get("thread_mode"):
+        prompt += f"""
+- If content exceeds {platform_specs['thread_tweet_limit']} chars, split into thread (2-5 tweets)
+- Each tweet must be standalone but build on previous
+- Number tweets (1/n, 2/n, etc.)
+"""
+
+    # Special handling for email
+    if platform == "Email Newsletter":
+        prompt += f"""
+- Include subject line (max {platform_specs['subject_line_limit']} chars)
+- Include preheader (max {platform_specs['preheader_limit']} chars)
+- Structure: subject line, preheader, then main content
+"""
+
+    prompt += """
+- Start with a hook to grab attention
+- End with a call-to-action appropriate for the platform
+- Be authentic and engaging"""
+
+    logger.debug(f"Built platform-optimized prompt for {platform}: {len(prompt)} characters")
     return prompt
+
+
+def _adapt_content_for_platform(
+    base_content: str,
+    original_platform: str,
+    target_platform: str,
+    topic: str,
+    api_key: str,
+) -> dict:
+    """
+    Adapt existing content from one platform to another.
+
+    Uses Claude AI to intelligently adapt content while preserving core message
+    and adjusting format, length, and style for the target platform.
+
+    Args:
+        base_content: The original generated content
+        original_platform: Source platform name
+        target_platform: Target platform name
+        topic: Original topic for context
+        api_key: Anthropic API key
+
+    Returns:
+        dict with adapted content and metadata:
+        - platform: target platform name
+        - content: adapted content text
+        - char_count: character count
+        - specs: platform specifications
+        - subject: (email only) subject line
+        - preheader: (email only) preheader text
+        - thread: (Twitter only) list of tweets
+        - error: (on error) error message
+    """
+    target_specs = PLATFORM_SPECS[target_platform]
+
+    adaptation_prompt = f"""Adapt the following {original_platform} post for {target_platform}.
+
+ORIGINAL POST ({original_platform}):
+{base_content}
+
+TARGET PLATFORM: {target_platform}
+Requirements:
+- Character limit: {target_specs['char_limit'] if target_specs['char_limit'] else 'No limit'}
+- Optimal length: {target_specs['optimal_length'][0]}-{target_specs['optimal_length'][1]} words
+- Hashtags: {target_specs['hashtag_range'][0]}-{target_specs['hashtag_range'][1]}
+- Emoji style: {target_specs['emoji_style']}
+- Formatting: {target_specs['formatting']}
+
+ADAPTATION GUIDELINES:
+- Preserve the core message and key points
+- Adjust length to fit platform constraints
+- Modify tone/style for platform audience
+- Reformat for platform best practices
+- Keep hashtags and CTAs platform-appropriate
+
+Return ONLY the adapted content, no explanations."""
+
+    if target_platform == "Email Newsletter":
+        adaptation_prompt += """
+Format as:
+SUBJECT: [subject line]
+PREHEADER: [preheader text]
+CONTENT: [email body]
+"""
+
+    if target_platform == "Twitter/X" and target_specs.get("thread_mode"):
+        adaptation_prompt += """
+If content requires multiple tweets, format as:
+TWEET 1/n: [first tweet]
+TWEET 2/n: [second tweet]
+...
+"""
+
+    try:
+        client = Anthropic(api_key=api_key)
+        adapted_text = _call_claude_api(client, adaptation_prompt)
+
+        # Parse response based on platform
+        result = {
+            "platform": target_platform,
+            "content": adapted_text,
+            "char_count": len(adapted_text),
+            "specs": target_specs,
+        }
+
+        # Special parsing for email
+        if target_platform == "Email Newsletter" and "SUBJECT:" in adapted_text:
+            lines = adapted_text.split("\n")
+            for line in lines:
+                if line.startswith("SUBJECT:"):
+                    result["subject"] = line.replace("SUBJECT:", "").strip()
+                elif line.startswith("PREHEADER:"):
+                    result["preheader"] = line.replace("PREHEADER:", "").strip()
+                elif line.startswith("CONTENT:"):
+                    result["content"] = adapted_text.split("CONTENT:")[1].strip()
+
+        # Special parsing for Twitter threads
+        if target_platform == "Twitter/X" and "TWEET" in adapted_text:
+            tweets = []
+            for line in adapted_text.split("\n"):
+                if line.startswith("TWEET"):
+                    tweet_content = line.split(":", 1)[1].strip() if ":" in line else line
+                    tweets.append(tweet_content)
+            if tweets:
+                result["thread"] = tweets
+
+        logger.info(f"Successfully adapted content from {original_platform} to {target_platform}")
+        return result
+
+    except Exception as e:
+        logger.error(f"Error adapting content: {str(e)}")
+        return {
+            "platform": target_platform,
+            "content": base_content,  # Fallback to original
+            "error": str(e),
+        }
 
 
 @retry_with_exponential_backoff(max_attempts=MAX_RETRY_ATTEMPTS)
@@ -587,15 +1592,16 @@ def _generate_post(
     topic: str,
     template: str,
     tone: str,
+    platform: str = "LinkedIn",
     keywords: str = "",
     target_audience: str = "",
 ) -> Optional[str]:
     """
-    Generate LinkedIn post using Claude API with retry logic and error handling.
+    Generate platform-optimized post using Claude API with retry logic and error handling.
 
     This function orchestrates the entire post generation process:
     1. Validates inputs
-    2. Builds the prompt
+    2. Builds the platform-optimized prompt
     3. Calls Claude API (with automatic retries for transient failures)
     4. Validates and returns the response
 
@@ -604,6 +1610,7 @@ def _generate_post(
         topic: Main topic/subject of the post (min 10 characters)
         template: Selected template name (must be in TEMPLATES)
         tone: Desired tone (must be in TONES)
+        platform: Target platform (default: LinkedIn)
         keywords: Optional comma-separated keywords to include naturally
         target_audience: Optional target audience description
 
@@ -623,12 +1630,14 @@ def _generate_post(
         ...     topic="AI trends in 2025",
         ...     template="Professional Insight",
         ...     tone="Professional",
+        ...     platform="LinkedIn",
         ...     keywords="AI, automation",
         ...     target_audience="CTOs"
         ... )
     """
     logger.info(
-        f"Starting post generation - Topic: {topic[:50]}..., Template: {template}, Tone: {tone}"
+        f"Starting post generation - Topic: {topic[:50]}..., Template: {template}, "
+        f"Tone: {tone}, Platform: {platform}"
     )
 
     try:
@@ -647,8 +1656,8 @@ def _generate_post(
         client = Anthropic(api_key=api_key)
         logger.debug("Anthropic client initialized")
 
-        # Build prompt
-        prompt = _build_prompt(topic, template, tone, keywords, target_audience)
+        # Build platform-optimized prompt
+        prompt = _build_prompt(topic, template, tone, platform, keywords, target_audience)
 
         # Call API with retry logic
         generated_text = _call_claude_api(client, prompt)
