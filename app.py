@@ -92,9 +92,9 @@ def main() -> None:
         st.session_state.theme = "light"
 
     try:
-        # PRODUCTION GATEWAY - Disabled for public demo
-        # if not ui.login_modal():
-        #     st.stop()
+        # PRODUCTION GATEWAY
+        if not ui.login_modal():
+            st.stop()
 
         # SIDEBAR NAVIGATION
         with st.sidebar:
@@ -163,6 +163,13 @@ def main() -> None:
             st.markdown("---")
             pages = ["🏠 Overview"] + list(MODULES.keys())
             page = st.radio("Navigate:", pages, label_visibility="collapsed")
+
+            st.markdown("---")
+            st.markdown(f"**👤 User: {st.session_state.username}**")
+            if st.button("🚪 Logout", use_container_width=True):
+                st.session_state.authenticated = False
+                st.session_state.username = None
+                st.rerun()
 
             st.markdown("---")
             st.markdown("### 👤 **Cayman Roden**")

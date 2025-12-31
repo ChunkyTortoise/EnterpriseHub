@@ -1,9 +1,11 @@
+import json
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
 import utils.ui as ui
+from modules.auth import delete_scenario, get_user_scenarios, save_scenario
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,24 +24,51 @@ def render() -> None:
 
             with st.expander("Product Costs", expanded=True):
                 unit_price = st.number_input(
-                    "Unit Selling Price ($)", value=50.0, step=1.0, min_value=0.0
+                    "Unit Selling Price ($)",
+                    value=st.session_state.get("mh_unit_price", 50.0),
+                    step=1.0,
+                    min_value=0.0,
+                    key="mh_unit_price_input",
                 )
                 unit_cost = st.number_input(
-                    "Unit Variable Cost ($)", value=20.0, step=1.0, min_value=0.0
+                    "Unit Variable Cost ($)",
+                    value=st.session_state.get("mh_unit_cost", 20.0),
+                    step=1.0,
+                    min_value=0.0,
+                    key="mh_unit_cost_input",
                 )
 
             with st.expander("Fixed Costs", expanded=True):
                 fixed_costs = st.number_input(
-                    "Total Fixed Costs ($)", value=5000.0, step=100.0, min_value=0.0
+                    "Total Fixed Costs ($)",
+                    value=st.session_state.get("mh_fixed_costs", 5000.0),
+                    step=100.0,
+                    min_value=0.0,
+                    key="mh_fixed_costs_input",
                 )
 
             with st.expander("Targeting", expanded=True):
                 target_profit = st.number_input(
-                    "Target Profit ($)", value=2000.0, step=100.0, min_value=0.0
+                    "Target Profit ($)",
+                    value=st.session_state.get("mh_target_profit", 2000.0),
+                    step=100.0,
+                    min_value=0.0,
+                    key="mh_target_profit_input",
                 )
                 current_sales_units = st.number_input(
-                    "Current Sales (Units)", value=250, step=10, min_value=0
+                    "Current Sales (Units)",
+                    value=st.session_state.get("mh_current_sales_units", 250),
+                    step=10,
+                    min_value=0,
+                    key="mh_current_sales_units_input",
                 )
+
+            # Update session state for next reload
+            st.session_state.mh_unit_price = unit_price
+            st.session_state.mh_unit_cost = unit_cost
+            st.session_state.mh_fixed_costs = fixed_costs
+            st.session_state.mh_target_profit = target_profit
+            st.session_state.mh_current_sales_units = current_sales_units
 
             st.markdown("---")
             st.subheader("📁 Bulk Analysis")
@@ -223,6 +252,11 @@ def _render_results(
     # --- Monte Carlo Simulation ---
     _render_monte_carlo(
         contribution_margin, unit_price, unit_cost, fixed_costs, current_sales_units
+    )
+
+    # --- Persistence ---
+    _render_save_load_section(
+        unit_price, unit_cost, fixed_costs, target_profit, current_sales_units
     )
 
 
@@ -800,3 +834,58 @@ def _render_monte_carlo(
 
             summary_df = pd.DataFrame(summary_data)
             st.dataframe(summary_df, use_container_width=True, hide_index=True)
+
+
+def _render_save_load_section(unit_price, unit_cost, fixed_costs, target_profit, current_sales_units):
+    """Render the section to save and load analysis scenarios."""
+    if not st.session_state.get("authenticated"):
+        st.info("💡 Login to save analysis scenarios.")
+        return
+
+    st.markdown("---")
+    st.subheader("💾 Saved Scenarios")
+
+    # Save current
+    with st.expander("Save Current Scenario"):
+        scenario_name = st.text_input("Scenario Name", placeholder="e.g., Q1 Optimization")
+        if st.button("Save", use_container_width=True):
+            if not scenario_name:
+                st.error("Please enter a name for the scenario.")
+            else:
+                data = {
+                    "unit_price": unit_price,
+                    "unit_cost": unit_cost,
+                    "fixed_costs": fixed_costs,
+                    "target_profit": target_profit,
+                    "current_sales_units": current_sales_units
+                }
+                if save_scenario(st.session_state.username, "margin_hunter", scenario_name, data):
+                    st.success(f"Scenario '{scenario_name}' saved!")
+                    st.rerun()
+                else:
+                    st.error("Failed to save scenario.")
+
+    # Load existing
+    scenarios = get_user_scenarios(st.session_state.username, "margin_hunter")
+    if scenarios:
+        for s in scenarios:
+            cols = st.columns([3, 1, 1])
+            with cols[0]:
+                st.write(f"**{s['name']}**")
+                st.caption(f"Created: {s['created_at'][:10]}")
+            with cols[1]:
+                if st.button("Load", key=f"load_{s['id']}", use_container_width=True):
+                    data = json.loads(s['data'])
+                    st.session_state.mh_unit_price = float(data['unit_price'])
+                    st.session_state.mh_unit_cost = float(data['unit_cost'])
+                    st.session_state.mh_fixed_costs = float(data['fixed_costs'])
+                    st.session_state.mh_target_profit = float(data['target_profit'])
+                    st.session_state.mh_current_sales_units = int(data['current_sales_units'])
+                    st.success(f"Loaded '{s['name']}'")
+                    st.rerun()
+            with cols[2]:
+                if st.button("🗑️", key=f"del_{s['id']}", use_container_width=True):
+                    if delete_scenario(s['id'], st.session_state.username):
+                        st.rerun()
+    else:
+        st.caption("No saved scenarios found.")

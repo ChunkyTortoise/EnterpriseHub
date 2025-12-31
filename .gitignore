@@ -128,7 +128,7 @@ mcp_config.json
 evaluation_prompt.md
 
 # Generated images (recreatable)
-*.png
+# *.png
 !docs/screenshots/.gitkeep
 
 # Cleanup additions
