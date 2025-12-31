@@ -4,8 +4,7 @@ Unit tests for main application entry point (app.py).
 Tests module registry, helper functions, and module loading logic.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import patch, MagicMock
 
 
 class TestModuleRegistry:
@@ -112,9 +111,10 @@ class TestRenderOverview:
         """Test that overview shows hero section."""
         from app import _render_overview
 
-        # Mock st.columns to return mock columns
-        mock_col = MagicMock()
-        mock_st.columns.return_value = [mock_col, mock_col, mock_col, mock_col]
+        # Mock st.columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         _render_overview()
 
@@ -128,8 +128,10 @@ class TestRenderOverview:
         """Test that overview shows metrics."""
         from app import _render_overview
 
-        mock_col = MagicMock()
-        mock_st.columns.return_value = [mock_col, mock_col, mock_col, mock_col]
+        # Mock st.columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         _render_overview()
 
@@ -142,8 +144,10 @@ class TestRenderOverview:
         """Test that overview shows feature cards."""
         from app import _render_overview
 
-        mock_col = MagicMock()
-        mock_st.columns.return_value = [mock_col, mock_col, mock_col]
+        # Mock st.columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         _render_overview()
 
@@ -156,8 +160,10 @@ class TestRenderOverview:
         """Test that overview shows use case cards."""
         from app import _render_overview
 
-        mock_col = MagicMock()
-        mock_st.columns.return_value = [mock_col, mock_col]
+        # Mock st.columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         _render_overview()
 
@@ -170,8 +176,10 @@ class TestRenderOverview:
         """Test that overview shows comparison table."""
         from app import _render_overview
 
-        mock_col = MagicMock()
-        mock_st.columns.return_value = [mock_col, mock_col, mock_col, mock_col]
+        # Mock st.columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         _render_overview()
 
@@ -183,8 +191,10 @@ class TestRenderOverview:
         """Test that overview shows multiple section headers."""
         from app import _render_overview
 
-        mock_col = MagicMock()
-        mock_st.columns.return_value = [mock_col, mock_col, mock_col, mock_col]
+        # Mock st.columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         _render_overview()
 
@@ -197,8 +207,10 @@ class TestRenderOverview:
         """Test that overview uses spacers for layout."""
         from app import _render_overview
 
-        mock_col = MagicMock()
-        mock_st.columns.return_value = [mock_col, mock_col, mock_col, mock_col]
+        # Mock st.columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         _render_overview()
 
@@ -479,9 +491,7 @@ class TestErrorScenarios:
     @patch("app.st")
     @patch("app.ui")
     @patch("app.logger")
-    def test_render_module_with_missing_render_method(
-        self, mock_logger, mock_ui, mock_st
-    ):
+    def test_render_module_with_missing_render_method(self, mock_logger, mock_ui, mock_st):
         """Test handling of module without render method."""
         from app import _render_module
 
@@ -489,16 +499,14 @@ class TestErrorScenarios:
             mock_module = MagicMock(spec=[])  # No render method
             mock_import.return_value = mock_module
 
-            # This should raise an AttributeError
-            with pytest.raises(AttributeError):
-                _render_module("broken_module", "Broken Module")
+            # This should not raise but call st.error
+            _render_module("broken_module", "Broken Module")
+            mock_st.error.assert_called_once()
 
     @patch("app.st")
     @patch("app.ui")
     @patch("app.importlib.import_module")
-    def test_render_module_with_render_exception(
-        self, mock_import, mock_ui, mock_st
-    ):
+    def test_render_module_with_render_exception(self, mock_import, mock_ui, mock_st):
         """Test handling of exception during module render."""
         from app import _render_module
 
@@ -506,6 +514,6 @@ class TestErrorScenarios:
         mock_module.render.side_effect = Exception("Render error")
         mock_import.return_value = mock_module
 
-        # The exception should propagate
-        with pytest.raises(Exception):
-            _render_module("error_module", "Error Module")
+        # This should not raise but call st.error
+        _render_module("error_module", "Error Module")
+        mock_st.error.assert_called_once()

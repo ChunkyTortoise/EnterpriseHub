@@ -134,12 +134,10 @@ class TestTabRenderFunctions:
         """Test colors tab rendering."""
         from modules.design_system import _render_colors_tab
 
-        # Mock columns - use lambda to dynamically generate based on num_cols
-        mock_col = MagicMock()
-        mock_col.__enter__ = MagicMock(return_value=mock_col)
-        mock_col.__exit__ = MagicMock(return_value=False)
-        # Return appropriate number of columns based on what was requested
-        mock_columns.side_effect = lambda num_cols: [mock_col] * num_cols
+        # Mock columns to return correct number of columns
+        mock_columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         _render_colors_tab()
 
@@ -188,14 +186,9 @@ class TestTabRenderFunctions:
         """Test components tab rendering."""
         from modules.design_system import _render_components_tab
 
-        # Mock columns (called with 3 for feature cards, 2 for use case cards, 4 for badges)
-        mock_col = MagicMock()
-        mock_col.__enter__ = MagicMock(return_value=mock_col)
-        mock_col.__exit__ = MagicMock(return_value=False)
-        mock_columns.side_effect = [
-            [mock_col] * 3,  # Hero/Feature cards
-            [mock_col] * 2,  # Use case cards
-            [mock_col] * 4,  # Status badges
+        # Mock columns to return correct number of columns
+        mock_columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
         ]
 
         # Mock expander context
@@ -227,14 +220,9 @@ class TestTabRenderFunctions:
         """Test interactive elements tab rendering."""
         from modules.design_system import _render_interactive_tab
 
-        # Mock columns (called with 3 for buttons, 4 for metrics, 2 for form elements)
-        mock_col = MagicMock()
-        mock_col.__enter__ = MagicMock(return_value=mock_col)
-        mock_col.__exit__ = MagicMock(return_value=False)
-        mock_columns.side_effect = [
-            [mock_col] * 3,  # Buttons
-            [mock_col] * 4,  # Metrics
-            [mock_col] * 2,  # Form elements
+        # Mock columns to return correct number of columns
+        mock_columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
         ]
 
         # Mock expander

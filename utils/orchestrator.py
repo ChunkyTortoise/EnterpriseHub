@@ -480,6 +480,7 @@ class Orchestrator:
         # Execute stages
         for stage in workflow.stages:
             # Check dependencies
+            skip_stage = False
             for dep_stage_id in stage.depends_on:
                 dep_result = agent_results.get(dep_stage_id)
                 if not dep_result or dep_result.status != AgentStatus.SUCCESS:
@@ -495,7 +496,11 @@ class Orchestrator:
                         timestamp=datetime.now(),
                     )
                     failed_stages.append(stage.stage_id)
-                    continue
+                    skip_stage = True
+                    break
+
+            if skip_stage:
+                continue
 
             # Evaluate condition
             if not self._evaluate_stage_condition(stage, context):
@@ -528,12 +533,37 @@ class Orchestrator:
                 continue
 
             # Execute agent
-            result = self.execute_agent(agent, inputs, context)
+            result = self.execute_agent(agent, context, context)
             agent_results[stage.stage_id] = result
 
             # Update context with outputs
             if result.status == AgentStatus.SUCCESS:
                 context.update(result.outputs)
+                
+                # Execute validation rules after each stage to catch issues early
+                for rule in workflow.validation_rules:
+                    try:
+                        if not rule.validator(context):
+                            self._update_status(
+                                f"⚠️ Validation rule '{rule.name}' failed",
+                                "warning" if rule.severity != "ERROR" else "error",
+                            )
+                            if rule.action_on_fail == "HALT":
+                                self._update_status(
+                                    f"❌ Validation gate '{rule.name}' halted workflow",
+                                    "error",
+                                )
+                                return WorkflowResult(
+                                    workflow_id=workflow.workflow_id,
+                                    status=WorkflowStatus.FAILED,
+                                    agent_results=agent_results,
+                                    outputs=context,
+                                    error=f"Validation failed: {rule.name}",
+                                    timestamp=datetime.now(),
+                                    execution_time=(datetime.now() - start_time).total_seconds(),
+                                )
+                    except Exception as e:
+                        logger.error(f"Error executing validation rule '{rule.rule_id}': {e}")
             else:
                 failed_stages.append(stage.stage_id)
                 if stage.required:

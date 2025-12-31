@@ -12,6 +12,7 @@ from datetime import datetime
 try:
     from playwright.async_api import async_playwright, Page, Browser
     from playwright_stealth import stealth_async
+
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
@@ -40,16 +41,16 @@ class BaseAgent:
         self.browser = await playwright.chromium.launch(
             headless=headless,
             args=[
-                '--disable-blink-features=AutomationControlled',
-                '--disable-dev-shm-usage',
-                '--no-sandbox',
-            ]
+                "--disable-blink-features=AutomationControlled",
+                "--disable-dev-shm-usage",
+                "--no-sandbox",
+            ],
         )
 
         # Create context with realistic user agent
         context = await self.browser.new_context(
-            viewport={'width': 1920, 'height': 1080},
-            user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+            viewport={"width": 1920, "height": 1080},
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
         )
 
         self.page = await context.new_page()
@@ -83,7 +84,7 @@ class BaseAgent:
     async def wait_for_captcha(self, timeout: int = 120):
         """Pause and wait for user to solve CAPTCHA."""
         print(f"\n⏸️  [{self.platform_name.upper()}] CAPTCHA DETECTED")
-        print(f"   Please solve the CAPTCHA in the browser window.")
+        print("   Please solve the CAPTCHA in the browser window.")
         print(f"   Waiting up to {timeout} seconds...")
 
         await self.screenshot("captcha_detected")

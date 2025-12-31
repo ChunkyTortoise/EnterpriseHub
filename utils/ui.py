@@ -125,29 +125,29 @@ def _generate_css(theme: dict) -> str:
     @import url('https://fonts.googleapis.com/css2?family=Inter:slnt,wght@-10..0,100..900&family=Space+Grotesk:wght@300..700&display=swap');
 
     :root {{
-        --glass-bg: {theme['surface']}CC;
-        --glass-border: {theme['border']}40;
+        --glass-bg: {theme["surface"]}CC;
+        --glass-border: {theme["border"]}40;
     }}
 
     /* GLOBAL RESET & TYPOGRAPHY */
     html, body, [class*="css"] {{
-        font-family: {theme['font_family']};
-        color: {theme['text_main']};
-        background-color: {theme['background']};
+        font-family: {theme["font_family"]};
+        color: {theme["text_main"]};
+        background-color: {theme["background"]};
     }}
 
     /* MAIN CONTAINER BACKGROUND - Visual 5.0 Animated Mesh */
     .stApp {{
-        background-color: {theme['background']};
+        background-color: {theme["background"]};
         background-image:
-            radial-gradient(at 0% 0%, {theme['primary_light']}80 0,
+            radial-gradient(at 0% 0%, {theme["primary_light"]}80 0,
                             transparent 50%),
-            radial-gradient(at 100% 0%, {theme.get('accent', '#059669')}15 0,
+            radial-gradient(at 100% 0%, {theme.get("accent", "#059669")}15 0,
                             transparent 50%),
-            radial-gradient(at 100% 100%, {theme['primary_light']}80 0,
+            radial-gradient(at 100% 100%, {theme["primary_light"]}80 0,
                             transparent 50%),
             radial-gradient(at 0% 100%,
-                            {theme.get('secondary', '#64748B')}15 0,
+                            {theme.get("secondary", "#64748B")}15 0,
                             transparent 50%);
         background-attachment: fixed;
         background-size: 200% 200%;
@@ -162,15 +162,15 @@ def _generate_css(theme: dict) -> str:
 
     /* SIDEBAR STYLING - Saturated Glassmorphism */
     section[data-testid="stSidebar"] {{
-        background-color: {theme['surface']}A6; /* High transparency */
-        border-right: 1px solid {theme['border']}40;
+        background-color: {theme["surface"]}A6; /* High transparency */
+        border-right: 1px solid {theme["border"]}40;
         backdrop-filter: blur(25px) saturate(210%);
         -webkit-backdrop-filter: blur(25px) saturate(210%);
         box-shadow: 10px 0 15px -3px rgba(0, 0, 0, 0.05);
     }}
 
     section[data-testid="stSidebar"] h1 {{
-        color: {theme['primary']};
+        color: {theme["primary"]};
         font-weight: 800;
         font-size: 1.25rem;
         letter-spacing: -0.04em;
@@ -180,29 +180,29 @@ def _generate_css(theme: dict) -> str:
 
     /* NAVIGATION RADIO BUTTONS */
     .stRadio > label {{
-        color: {theme['text_main']};
+        color: {theme["text_main"]};
         font-weight: 500;
     }}
 
     /* METRIC CARDS - Advanced Depth */
     .metric-card {{
-        background-color: {theme['surface']};
-        border: 1px solid {theme['border']};
+        background-color: {theme["surface"]};
+        border: 1px solid {theme["border"]};
         border-radius: 0px;
         padding: 32px;
         transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         height: 100%;
         display: flex;
         flex-direction: column;
-        border-top: 4px solid {theme['border']};
+        border-top: 4px solid {theme["border"]};
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }}
 
     .metric-card:hover {{
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         transform: translateY(-8px);
-        border-top-color: {theme['accent']};
-        background-color: {theme['background']};
+        border-top-color: {theme["accent"]};
+        background-color: {theme["background"]};
     }}
 
     /* HEADERS - Fluid Typography */
@@ -211,8 +211,8 @@ def _generate_css(theme: dict) -> str:
         font-weight: 900;
         letter-spacing: -0.06em;
         margin-bottom: 2rem;
-        color: {theme['primary']};
-        font-family: {theme['header_font']};
+        color: {theme["primary"]};
+        font-family: {theme["header_font"]};
         line-height: 0.9;
         animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }}
@@ -223,7 +223,7 @@ def _generate_css(theme: dict) -> str:
         letter-spacing: -0.02em;
         margin-top: 2rem;
         margin-bottom: 1rem;
-        border-left: 4px solid {theme.get('accent', theme['primary'])};
+        border-left: 4px solid {theme.get("accent", theme["primary"])};
         padding-left: 1rem;
         animation: fadeIn 1s ease-out;
     }}
@@ -245,19 +245,19 @@ def _generate_css(theme: dict) -> str:
 
     h3 {{
         font-size: 1.25rem;
-        color: {theme['text_main']};
+        color: {theme["text_main"]};
         margin-bottom: 0.5rem;
     }}
 
     /* ACTIVE NAVIGATION INDICATOR */
     div[data-testid="stSidebarNav"] li[data-selected="true"] {{
-        background-color: {theme['primary_light']};
-        border-left: 4px solid {theme['accent']};
+        background-color: {theme["primary_light"]};
+        border-left: 4px solid {theme["accent"]};
     }}
 
     .stButton button {{
-        background-color: {theme['primary']};
-        color: {theme.get('button_text', 'white')};
+        background-color: {theme["primary"]};
+        color: {theme.get("button_text", "white")};
         border-radius: 8px;
         font-weight: 600;
         padding: 0.5rem 1.25rem;
@@ -267,7 +267,7 @@ def _generate_css(theme: dict) -> str:
     }}
 
     .stButton button:hover {{
-        background-color: {theme['primary_dark']};
+        background-color: {theme["primary_dark"]};
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         transform: translateY(-1px);
     }}
@@ -277,23 +277,23 @@ def _generate_css(theme: dict) -> str:
     }}
 
     .stButton button:focus {{
-        outline: 2px solid {theme['primary']};
+        outline: 2px solid {theme["primary"]};
         outline-offset: 2px;
-        box-shadow: 0 0 0 3px {theme['primary_light']};
+        box-shadow: 0 0 0 3px {theme["primary_light"]};
     }}
 
     /* NATIVE METRIC STYLING */
     div[data-testid="stMetricValue"] {{
         font-size: 2rem;
         font-weight: 700;
-        color: {theme['primary']};
+        color: {theme["primary"]};
         font-feature-settings: "tnum";
         font-variant-numeric: tabular-nums;
     }}
 
     div[data-testid="stMetricLabel"] {{
         font-size: 0.875rem;
-        color: {theme['text_light']};
+        color: {theme["text_light"]};
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -308,24 +308,24 @@ def _generate_css(theme: dict) -> str:
 
     /* LINKS */
     a {{
-        color: {theme['primary']};
+        color: {theme["primary"]};
         text-decoration: none;
         font-weight: 500;
         transition: color 0.2s;
     }}
     a:hover {{
-        color: {theme['primary_dark']};
+        color: {theme["primary_dark"]};
         text-decoration: underline;
     }}
     a:focus {{
-        outline: 2px solid {theme['primary']};
+        outline: 2px solid {theme["primary"]};
         outline-offset: 2px;
         border-radius: 2px;
     }}
 
     /* DATAFRAMES */
     div[data-testid="stDataFrame"] {{
-        border: 1px solid {theme['border']};
+        border: 1px solid {theme["border"]};
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -335,27 +335,27 @@ def _generate_css(theme: dict) -> str:
     .hero-container {{
         background: linear-gradient(
             135deg,
-            {theme['primary_light']} 0%,
-            {theme['primary_light']} 100%
+            {theme["primary_light"]} 0%,
+            {theme["primary_light"]} 100%
         );
         border-radius: 16px;
         padding: 4rem 2rem;
         text-align: center;
         margin-bottom: 3rem;
-        border: 1px solid {theme['border']};
+        border: 1px solid {theme["border"]};
     }}
 
     .hero-title {{
         font-size: 3.5rem;
         font-weight: 800;
-        color: {theme['primary_dark']};
+        color: {theme["primary_dark"]};
         margin-bottom: 1rem;
         line-height: 1.2;
     }}
 
     .hero-subtitle {{
         font-size: 1.25rem;
-        color: {theme['secondary']};
+        color: {theme["secondary"]};
         max-width: 700px;
         margin: 0 auto;
         line-height: 1.6;
@@ -364,10 +364,10 @@ def _generate_css(theme: dict) -> str:
     /* FOOTER */
     .footer {{
         margin-top: 5rem;
-        border-top: 1px solid {theme['border']};
+        border-top: 1px solid {theme["border"]};
         padding-top: 2rem;
         text-align: center;
-        color: {theme['secondary']};
+        color: {theme["secondary"]};
         font-size: 0.875rem;
     }}
 
@@ -487,10 +487,10 @@ def _generate_css(theme: dict) -> str:
     .skeleton {{
         background: linear-gradient(
             to right,
-            {theme['border']} 0%,
-            {theme['surface']} 20%,
-            {theme['border']} 40%,
-            {theme['border']} 100%
+            {theme["border"]} 0%,
+            {theme["surface"]} 20%,
+            {theme["border"]} 40%,
+            {theme["border"]} 100%
         );
         background-size: 468px 100%;
         animation: shimmer 1.2s ease-in-out infinite;
@@ -498,8 +498,8 @@ def _generate_css(theme: dict) -> str:
     }}
 
     .skeleton-card {{
-        background-color: {theme['surface']};
-        border: 1px solid {theme['border']};
+        background-color: {theme["surface"]};
+        border: 1px solid {theme["border"]};
         border-radius: 12px;
         padding: 24px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -558,7 +558,7 @@ def _generate_css(theme: dict) -> str:
     }}
 
     .toast {{
-        background-color: {theme['surface']};
+        background-color: {theme["surface"]};
         border-radius: 8px;
         padding: 16px 20px;
         margin-bottom: 12px;
@@ -566,24 +566,24 @@ def _generate_css(theme: dict) -> str:
         display: flex;
         align-items: center;
         gap: 12px;
-        border-left: 4px solid {theme['primary']};
+        border-left: 4px solid {theme["primary"]};
         animation: slideIn 0.3s ease-out;
     }}
 
     .toast.toast-success {{
-        border-left-color: {theme['success']};
+        border-left-color: {theme["success"]};
     }}
 
     .toast.toast-error {{
-        border-left-color: {theme['danger']};
+        border-left-color: {theme["danger"]};
     }}
 
     .toast.toast-warning {{
-        border-left-color: {theme['warning']};
+        border-left-color: {theme["warning"]};
     }}
 
     .toast.toast-info {{
-        border-left-color: {theme['primary']};
+        border-left-color: {theme["primary"]};
     }}
 
     .toast-icon {{
@@ -593,7 +593,7 @@ def _generate_css(theme: dict) -> str:
     }}
 
     .toast-message {{
-        color: {theme['text_main']};
+        color: {theme["text_main"]};
         font-size: 0.95rem;
         font-weight: 500;
         flex-grow: 1;
@@ -813,7 +813,7 @@ def hero_section(title: str, subtitle: str, background_image: Optional[str] = No
         f'margin-bottom: 0.5rem;">{title}</h1>'
         f'<p class="hero-subtitle" '
         f'style="color: {THEME["text_light"]}; font-weight: 500;">'
-        f'{subtitle}</p></div></section>'
+        f"{subtitle}</p></div></section>"
     )
     st.markdown(html, unsafe_allow_html=True)
 
@@ -831,7 +831,7 @@ def feature_card(
         b64 = get_base64_image(icon_path)
         if b64:
             icon_display = (
-                f"<img src='{b64}' " f"style='width: 48px; height: 48px; object-fit: contain;'>"
+                f"<img src='{b64}' style='width: 48px; height: 48px; object-fit: contain;'>"
             )
 
     html = (
@@ -843,13 +843,13 @@ def feature_card(
         f'<div style="font-size: 2.5rem; width: 48px; height: 48px; '
         f'display: flex; align-items: center; justify-content: center;" '
         f'role="img" aria-label="{title} icon">{icon_display}</div>'
-        f'{badge}</div>'
+        f"{badge}</div>"
         f'<h3 style="margin-top: 0; color: {THEME["text_main"]}; '
-        f'font-size: 1.25rem; font-family: {THEME["header_font"]}; '
+        f"font-size: 1.25rem; font-family: {THEME['header_font']}; "
         f'letter-spacing: -0.02em;">{title}</h3>'
         f'<p style="color: {THEME["text_light"]}; font-size: 0.95rem; '
         f'line-height: 1.6; margin-bottom: 0; flex-grow: 1;">'
-        f'{description}</p></article>'
+        f"{description}</p></article>"
     )
     st.markdown(html, unsafe_allow_html=True)
 
@@ -861,18 +861,18 @@ def use_case_card(icon: str, title: str, description: str) -> None:
     html = (
         f'<div class="use-case-card" role="article" '
         f'aria-label="Use case: {title}" style="background-color: '
-        f'{THEME["surface"]}; border-left: 4px solid {THEME["accent"]}; '
-        f'padding: 1.5rem; border-radius: 4px; border: 1px solid '
+        f"{THEME['surface']}; border-left: 4px solid {THEME['accent']}; "
+        f"padding: 1.5rem; border-radius: 4px; border: 1px solid "
         f'{THEME["border"]}; border-left-width: 4px;">'
         f'<div style="display: flex; gap: 1rem; align-items: start;">'
         f'<div style="font-size: 1.5rem;" role="img" '
         f'aria-label="{title} icon">{icon}</div><div>'
         f'<strong style="display: block; margin-bottom: 0.5rem; '
-        f'color: {THEME["primary"]}; '
+        f"color: {THEME['primary']}; "
         f'font-family: {THEME["header_font"]};">'
         f'{title}</strong><div style="font-size: 0.9rem; '
         f'color: {THEME["text_light"]}; line-height: 1.6;">'
-        f'{description}</div></div></div></div>'
+        f"{description}</div></div></div></div>"
     )
     st.markdown(html, unsafe_allow_html=True)
 
@@ -884,19 +884,19 @@ def comparison_table() -> None:
     html = f"""
     <section aria-label="Platform comparison table">
         <div style="overflow-x: auto; border-radius: 8px;
-                    border: 1px solid {THEME['border']};">
+                    border: 1px solid {THEME["border"]};">
             <table role="table"
                    aria-label="Comparison of EnterpriseHub with alternative solutions"
                    style="width: 100%; border-collapse: collapse;">
                 <thead>
-                    <tr style="background-color: {THEME['background']};
-                              border-bottom: 2px solid {THEME['border']};">
+                    <tr style="background-color: {THEME["background"]};
+                              border-bottom: 2px solid {THEME["border"]};">
                         <th scope="col"
                             style="padding: 16px; text-align: left; font-weight: 600;">
                             Capability</th>
                         <th scope="col"
                             style="padding: 16px; text-align: center;
-                                   font-weight: 600; color: {THEME['primary']};">
+                                   font-weight: 600; color: {THEME["primary"]};">
                             EnterpriseHub</th>
                         <th scope="col"
                             style="padding: 16px; text-align: center; font-weight: 600;">
@@ -910,78 +910,78 @@ def comparison_table() -> None:
                     </tr>
                 </thead>
                 <tbody>
-                <tr style="border-bottom: 1px solid {THEME['border']};">
+                <tr style="border-bottom: 1px solid {THEME["border"]};">
                     <td style="padding: 14px;"><strong>Cost</strong></td>
                     <td style="padding: 14px; text-align: center;
-                              color: {THEME['success']}; font-weight: 600;">
+                              color: {THEME["success"]}; font-weight: 600;">
                         $0 (Open Source)</td>
                     <td style="padding: 14px; text-align: center;">$0-200/year</td>
                     <td style="padding: 14px; text-align: center;">$24,000/year</td>
                     <td style="padding: 14px; text-align: center;">$200-500/month</td>
                 </tr>
-                <tr style="border-bottom: 1px solid {THEME['border']};
-                          background-color: {THEME['background']};">
+                <tr style="border-bottom: 1px solid {THEME["border"]};
+                          background-color: {THEME["background"]};">
                     <td style="padding: 14px;"><strong>Setup Time</strong></td>
                     <td style="padding: 14px; text-align: center;
-                              color: {THEME['success']}; font-weight: 600;">
+                              color: {THEME["success"]}; font-weight: 600;">
                         &lt; 5 minutes</td>
                     <td style="padding: 14px; text-align: center;">2-4 hours</td>
                     <td style="padding: 14px; text-align: center;">1-2 weeks</td>
                     <td style="padding: 14px; text-align: center;">2-6 weeks</td>
                 </tr>
-                <tr style="border-bottom: 1px solid {THEME['border']};">
+                <tr style="border-bottom: 1px solid {THEME["border"]};">
                     <td style="padding: 14px;"><strong>Technical Analysis</strong></td>
                     <td style="padding: 14px; text-align: center;
-                              color: {THEME['success']}; font-weight: 600;">
+                              color: {THEME["success"]}; font-weight: 600;">
                         ✓ RSI, MACD, MA</td>
                     <td style="padding: 14px; text-align: center;">Manual formulas</td>
                     <td style="padding: 14px; text-align: center;">✓ Advanced</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                 </tr>
-                <tr style="border-bottom: 1px solid {THEME['border']};
-                          background-color: {THEME['background']};">
+                <tr style="border-bottom: 1px solid {THEME["border"]};
+                          background-color: {THEME["background"]};">
                     <td style="padding: 14px;"><strong>AI-Powered Insights</strong></td>
                     <td style="padding: 14px; text-align: center;
-                              color: {THEME['success']}; font-weight: 600;">
+                              color: {THEME["success"]}; font-weight: 600;">
                         ✓ Claude 3.5 Sonnet</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                     <td style="padding: 14px; text-align: center;">Limited</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                 </tr>
-                <tr style="border-bottom: 1px solid {THEME['border']};">
+                <tr style="border-bottom: 1px solid {THEME["border"]};">
                     <td style="padding: 14px;"><strong>Scenario Modeling</strong></td>
                     <td style="padding: 14px; text-align: center;
-                              color: {THEME['success']}; font-weight: 600;">
+                              color: {THEME["success"]}; font-weight: 600;">
                         ✓ 100 scenarios/heatmap</td>
                     <td style="padding: 14px; text-align: center;">
                         Manual copy-paste</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                 </tr>
-                <tr style="border-bottom: 1px solid {THEME['border']};
-                          background-color: {THEME['background']};">
+                <tr style="border-bottom: 1px solid {THEME["border"]};
+                          background-color: {THEME["background"]};">
                     <td style="padding: 14px;"><strong>Attribution Modeling</strong></td>
                     <td style="padding: 14px; text-align: center;
-                              color: {THEME['success']}; font-weight: 600;">
+                              color: {THEME["success"]}; font-weight: 600;">
                         ✓ 5 models</td>
                     <td style="padding: 14px; text-align: center;">
                         Manual calculation</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                     <td style="padding: 14px; text-align: center;">Limited</td>
                 </tr>
-                <tr style="border-bottom: 1px solid {THEME['border']};">
+                <tr style="border-bottom: 1px solid {THEME["border"]};">
                     <td style="padding: 14px;"><strong>Automated Testing</strong></td>
                     <td style="padding: 14px; text-align: center;
-                              color: {THEME['success']}; font-weight: 600;">
+                              color: {THEME["success"]}; font-weight: 600;">
                         ✓ 220+ tests</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                     <td style="padding: 14px; text-align: center;">Proprietary</td>
                     <td style="padding: 14px; text-align: center;">✗</td>
                 </tr>
-                <tr style="background-color: {THEME['background']};">
+                <tr style="background-color: {THEME["background"]};">
                     <td style="padding: 14px;"><strong>Ownership</strong></td>
                     <td style="padding: 14px; text-align: center;
-                              color: {THEME['success']}; font-weight: 600;">
+                              color: {THEME["success"]}; font-weight: 600;">
                         ✓ Full source code</td>
                     <td style="padding: 14px; text-align: center;">You own files</td>
                     <td style="padding: 14px; text-align: center;">
@@ -1211,13 +1211,13 @@ def toast(message: str, toast_type: str = "success", duration: int = 3000) -> No
     """
     # Try to use native Streamlit toast (available in Streamlit 1.27+)
     if hasattr(st, "toast"):
-        icon_map = {"success": "✓", "error": "✗", "warning": "⚠", "info": "ℹ"}
-        icon = icon_map.get(toast_type, "ℹ")
+        icon_map = {"success": "✅", "error": "❌", "warning": "⚠️", "info": "ℹ️"}
+        icon = icon_map.get(toast_type, "ℹ️")
         st.toast(f"{icon} {message}", icon=icon)
     else:
         # Fallback to custom HTML/JavaScript implementation
-        icon_map = {"success": "✓", "error": "✗", "warning": "⚠", "info": "ℹ"}
-        icon = icon_map.get(toast_type, "ℹ")
+        icon_map = {"success": "✅", "error": "❌", "warning": "⚠️", "info": "ℹ️"}
+        icon = icon_map.get(toast_type, "ℹ️")
 
         toast_html = f"""
         <div class="toast-container" id="toast-{toast_type}-container">
@@ -1275,17 +1275,20 @@ def animated_metric(
     html = f"""
     <div class="metric-card hover-lift"
          style="background: linear-gradient(135deg, {bg_color} 0%,
-                {THEME['surface']} 100%); border-left: 4px solid {main_color};">
+                {THEME["surface"]} 100%); border-left: 4px solid {main_color};">
         <div style="display: flex; justify-content: space-between;
                     align-items: start; margin-bottom: 8px;">
             <div style="font-size: 0.75rem;
-                        color: {THEME['text_light']};
+                        color: {THEME["text_light"]};
                         font-weight: 600; text-transform: uppercase;
                         letter-spacing: 0.05em;">
                 {label}
             </div>
-            {f'<div style="font-size: 1.75rem;" role="img" '
-             f'aria-label="{label} icon">{icon}</div>' if icon else ''}
+            {
+        f'<div style="font-size: 1.75rem;" role="img" aria-label="{label} icon">{icon}</div>'
+        if icon
+        else ""
+    }
         </div>
         <div style="font-size: 2.25rem; font-weight: 700;
                     color: {main_color}; margin-bottom: 4px;
@@ -1293,9 +1296,13 @@ def animated_metric(
                     font-variant-numeric: tabular-nums;">
             {value}
         </div>
-        {f'<div style="font-size: 0.875rem; '
-         f'color: {THEME["success"] if "+" in delta else THEME["danger"]}; '
-         f'font-weight: 600;">{delta}</div>' if delta else ''}
+        {
+        f'<div style="font-size: 0.875rem; '
+        f"color: {THEME['success'] if '+' in delta else THEME['danger']}; "
+        f'font-weight: 600;">{delta}</div>'
+        if delta
+        else ""
+    }
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
@@ -1330,15 +1337,20 @@ def glassmorphic_card(
         transition: all 0.3s ease;
         height: 100%;
     " class="hover-lift">
-        {f'<div style="font-size: 2.5rem; margin-bottom: 12px;" '
-         f'role="img" aria-label="{title} icon">{icon}</div>' if icon else ''}
-        <h3 style="color: {THEME['text_main']}; margin-bottom: 12px;
+        {
+        f'<div style="font-size: 2.5rem; margin-bottom: 12px;" '
+        f'role="img" aria-label="{title} icon">{icon}</div>'
+        if icon
+        else ""
+    }
+        <h3 style="color: {THEME["text_main"]}; margin-bottom: 12px;
                    font-size: 1.5rem;">{title}</h3>
-        <p style="color: {THEME['text_light']}; line-height: 1.6;
+        <p style="color: {THEME["text_light"]}; line-height: 1.6;
                   margin-bottom: 16px;">
             {content}
         </p>
-        {f'''<a href="{cta_url}" style="
+        {
+        f'''<a href="{cta_url}" style="
             display: inline-block;
             background-color: {THEME['primary']};
             color: white;
@@ -1352,7 +1364,10 @@ def glassmorphic_card(
            onmouseout="this.style.backgroundColor='{THEME['primary']}';
                       this.style.transform='translateY(0)';">
             {cta_text} →
-        </a>''' if cta_text and cta_url else ''}
+        </a>'''
+        if cta_text and cta_url
+        else ""
+    }
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
@@ -1391,25 +1406,29 @@ def progress_bar(
         <div style="display: flex; justify-content: space-between;
                     align-items: center; margin-bottom: 8px;">
             <span style="font-size: 0.875rem; font-weight: 600;
-                         color: {THEME['text_main']};">
+                         color: {THEME["text_main"]};">
                 {label}
             </span>
-            {f'<span style="font-size: 0.875rem; font-weight: 700; '
-             f'color: {bar_color};">{percentage}%</span>' if show_percentage else ''}
+            {
+        f'<span style="font-size: 0.875rem; font-weight: 700; '
+        f'color: {bar_color};">{percentage}%</span>'
+        if show_percentage
+        else ""
+    }
         </div>
         <div style="
             width: 100%;
             height: 12px;
-            background-color: {THEME['background']};
+            background-color: {THEME["background"]};
             border-radius: 9999px;
             overflow: hidden;
-            border: 1px solid {THEME['border']};
+            border: 1px solid {THEME["border"]};
         ">
             <div style="
                 width: {percentage}%;
                 height: 100%;
                 background: linear-gradient(90deg, {bar_color},
-                            {THEME['primary_light']});
+                            {THEME["primary_light"]});
                 border-radius: 9999px;
                 transition: width 1s ease-out;
                 animation: shimmer 2s ease-in-out infinite;
@@ -1486,19 +1505,19 @@ def login_modal() -> bool:
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: {THEME['background']};
+            background: {THEME["background"]};
             z-index: 9999;
             display: flex;
             justify-content: center;
             align-items: center;
         }}
         .login-card {{
-            background: {THEME['surface']};
+            background: {THEME["surface"]};
             padding: 48px;
             border-radius: 4px;
             width: 100%;
             max-width: 450px;
-            border: 1px solid {THEME['border']};
+            border: 1px solid {THEME["border"]};
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }}
@@ -1516,7 +1535,7 @@ def login_modal() -> bool:
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<p style='color: #64748B; margin-bottom: 32px;'>" "Secure Production Gateway v5.0</p>",
+            "<p style='color: #64748B; margin-bottom: 32px;'>Secure Production Gateway v5.0</p>",
             unsafe_allow_html=True,
         )
 

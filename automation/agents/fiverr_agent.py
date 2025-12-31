@@ -74,7 +74,7 @@ class FiverrAgent(BaseAgent):
             captcha_selectors = [
                 'iframe[src*="recaptcha"]',
                 'div[class*="captcha"]',
-                '#captcha',
+                "#captcha",
             ]
 
             for selector in captcha_selectors:
@@ -128,6 +128,6 @@ class FiverrAgent(BaseAgent):
         finally:
             # Keep browser open for manual verification if needed
             print(f"⏸️  [{self.platform_name.upper()}] Browser left open for manual steps")
-            print(f"   Close manually when done or press Ctrl+C")
+            print("   Close manually when done or press Ctrl+C")
             await asyncio.sleep(300)  # Wait 5 minutes
             await self.close()

@@ -978,9 +978,9 @@ class TestPositionBasedAttribution:
 
             # Credits should always sum to 1.0
             total_credit = result["credit"].sum()
-            assert (
-                abs(total_credit - 1.0) < 0.01
-            ), f"Failed for {n_touchpoints} touchpoints: sum={total_credit}"
+            assert abs(total_credit - 1.0) < 0.01, (
+                f"Failed for {n_touchpoints} touchpoints: sum={total_credit}"
+            )
 
     def test_position_based_four_touchpoints(self):
         """Test Position-Based with 4 touchpoints for U-shaped distribution."""

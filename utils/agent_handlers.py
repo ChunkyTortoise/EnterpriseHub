@@ -326,8 +326,7 @@ def tech_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dict[st
         confidence = neutral_conf / total_conf
 
     logger.info(
-        f"TechBot: Signal={signal}, Confidence={confidence:.2f}, "
-        f"RSI={rsi:.1f}, MACD={macd_signal}"
+        f"TechBot: Signal={signal}, Confidence={confidence:.2f}, RSI={rsi:.1f}, MACD={macd_signal}"
     )
 
     return {
@@ -672,7 +671,7 @@ def synthesis_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Di
     SynthesisBot execution logic: Synthesize all agent results into final recommendation.
 
     Args:
-        inputs: {"results": dict}
+        inputs: {"results": dict} or flat context
         context: Shared workflow context
 
     Returns:
@@ -684,46 +683,79 @@ def synthesis_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Di
             "supporting_evidence": dict
         }
     """
-    results = inputs["results"]
+    # Look for results in inputs["results"] (nested) or use inputs directly (flat)
+    results = inputs.get("results", inputs)
 
-    # Check minimum agents
-    if len(results) < 3:
-        logger.warning(f"SynthesisBot: Insufficient results ({len(results)} < 3)")
-        return {
-            "recommendation": "INSUFFICIENT_DATA",
-            "confidence": 0.0,
-            "reasoning": "Not enough agent results to synthesize",
-            "risk_factors": ["Incomplete analysis"],
-            "supporting_evidence": {},
-        }
-
-    logger.info(f"SynthesisBot: Synthesizing {len(results)} agent results")
+    # Check minimum agents - if flat, we look for specific bot outputs
+    has_tech = "technical" in results or "tech_bot" in results or "signal" in results
+    has_sent = "sentiment" in results or "sentiment_bot" in results or "verdict" in results
+    
+    # In a flat context, we might have multiple fields instead of one 'results' dict
+    # We'll adapt to both structures
+    
+    logger.info("SynthesisBot: Starting synthesis")
 
     # Extract signals and confidence
     signals = []
     confidence_scores = []
 
     # Technical signal
-    if "technical" in results or "tech_bot" in results:
-        tech = results.get("technical") or results.get("tech_bot", {})
-        tech_signal = tech.get("signal", "NEUTRAL")
-        tech_conf = tech.get("confidence", 0.5)
+    tech_data = results.get("technical") or results.get("tech_bot")
+    if tech_data:
+        tech_signal = tech_data.get("signal", "NEUTRAL")
+        tech_conf = tech_data.get("confidence", 0.5)
         signals.append((tech_signal, tech_conf, "Technical"))
         confidence_scores.append(tech_conf)
+    elif "signal" in results:
+        # Flat context support
+        signals.append((results["signal"], results.get("confidence", 0.5), "Technical"))
+        confidence_scores.append(results.get("confidence", 0.5))
 
     # Sentiment signal
-    if "sentiment" in results or "sentiment_bot" in results:
-        sent = results.get("sentiment") or results.get("sentiment_bot", {})
-        sent_verdict = sent.get("verdict", "Neutral")
-        sent_conf = sent.get("confidence", 0.5)
+    sent_data = results.get("sentiment") or results.get("sentiment_bot")
+    if sent_data:
+        sent_verdict = sent_data.get("verdict", "Neutral")
+        sent_conf = sent_data.get("confidence", 0.5)
+        
+        if "Positive" in sent_verdict: sent_signal = "BULLISH"
+        elif "Negative" in sent_verdict: sent_signal = "BEARISH"
+        else: sent_signal = "NEUTRAL"
+        
+        signals.append((sent_signal, sent_conf, "Sentiment"))
+        confidence_scores.append(sent_conf)
+    elif "verdict" in results:
+        # Flat context support
+        sent_verdict = results["verdict"]
+        sent_conf = results.get("confidence", 0.5)
+        if "Positive" in sent_verdict: sent_signal = "BULLISH"
+        elif "Negative" in sent_verdict: sent_signal = "BEARISH"
+        else: sent_signal = "NEUTRAL"
+        signals.append((sent_signal, sent_conf, "Sentiment"))
+        confidence_scores.append(sent_conf)
 
-        # Map sentiment to signal
-        if "Positive" in sent_verdict:
-            sent_signal = "BULLISH"
-        elif "Negative" in sent_verdict:
-            sent_signal = "BEARISH"
-        else:
-            sent_signal = "NEUTRAL"
+    # Forecast signal
+    forecast_data = results.get("forecast") or results.get("forecast_bot")
+    if forecast_data:
+        forecast_trend = forecast_data.get("trend", "NEUTRAL")
+        forecast_metrics = forecast_data.get("metrics", {})
+        forecast_conf = forecast_metrics.get("R2", 0.5)
+        signals.append((forecast_trend, forecast_conf, "Forecast"))
+        confidence_scores.append(forecast_conf)
+    elif "trend" in results:
+        # Flat context support
+        signals.append((results["trend"], results.get("metrics", {}).get("R2", 0.5), "Forecast"))
+        confidence_scores.append(results.get("metrics", {}).get("R2", 0.5))
+
+    # Check if we have enough signals
+    if len(signals) < 2:  # Relaxed from 3 to 2 for better partial workflow support
+        logger.warning(f"SynthesisBot: Insufficient signals ({len(signals)})")
+        return {
+            "recommendation": "INSUFFICIENT_DATA",
+            "confidence": 0.0,
+            "reasoning": "Not enough reliable signals to synthesize",
+            "risk_factors": ["Incomplete analysis"],
+            "supporting_evidence": {"signals_found": len(signals)},
+        }
 
         signals.append((sent_signal, sent_conf, "Sentiment"))
         confidence_scores.append(sent_conf)
@@ -822,9 +854,10 @@ def analyst_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dict
             "portfolio_guidance": str
         }
     """
-    module_results = inputs["module_results"]
+    # Support both nested and flat inputs
+    module_results = inputs.get("module_results", inputs)
 
-    logger.info(f"AnalystBot: Analyzing {len(module_results)} module results")
+    logger.info(f"AnalystBot: Analyzing module results")
 
     integrated_insights = []
     divergences = []

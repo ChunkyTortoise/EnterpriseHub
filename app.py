@@ -24,7 +24,7 @@ st.set_page_config(
         "Get Help": "https://github.com/ChunkyTortoise/enterprise-hub",
         "Report a bug": "https://github.com/ChunkyTortoise/enterprise-hub/issues",
         "About": (
-            "# Enterprise Hub\n" "A unified platform for market analysis and enterprise tooling."
+            "# Enterprise Hub\nA unified platform for market analysis and enterprise tooling."
         ),
     },
 )
@@ -301,8 +301,7 @@ def _render_overview() -> None:
             icon=module_info[2] if module_info[2] else "🤖",
             title=module_info[1],
             description=(
-                "Automated market research and news sentiment analysis "
-                "using NLP and web scraping."
+                "Automated market research and news sentiment analysis using NLP and web scraping."
             ),
             status="active",
             icon_path=module_info[2] if module_info[2] else None,
@@ -354,7 +353,7 @@ def _render_overview() -> None:
     ui.spacer(40)
     ui.section_header(
         "Built For Real Business Challenges",
-        ("See how EnterpriseHub replaces manual workflows " "and expensive subscriptions"),
+        ("See how EnterpriseHub replaces manual workflows and expensive subscriptions"),
     )
 
     col1, col2 = st.columns(2)

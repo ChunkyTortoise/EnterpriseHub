@@ -133,14 +133,14 @@ Built with cutting-edge Python frameworks and APIs:
 
 ### ✨ Module Suite
 
-- **📊 Market Pulse** ⚡ *Institutional Trading* - 4-panel technical analysis with Price, RSI, MACD, and Volume.
-- **💼 Financial Analyst** 🔍 *Deep-Dive Research* - AI-powered fundamental analysis and financial health scoring.
-- **💰 Margin Hunter** 🏆 *Hero Project* - Interactive CVP sensitivity modeling for SaaS pricing strategy.
+- **📊 Market Pulse** ⚡ *Institutional Trading* - 4-panel technical analysis with Price, RSI, MACD, Bollinger Bands, and ATR. Side-by-side multi-ticker comparison.
+- **💼 Financial Analyst** 🔍 *Deep-Dive Research* - AI-powered fundamental analysis, DCF Valuation model (10-year projection), and professional PDF statement export.
+- **💰 Margin Hunter** 🏆 *Hero Project* - Interactive CVP sensitivity modeling, Goal Seek calculator, and Monte Carlo profit simulations.
 - **🤖 Agent Logic** 🧠 *News Scouting* - Real-time web-scraping and sentiment scoring of market events.
-- **✍️ Content Engine** 📝 *Marketing Automation* - Corporate ghostwriting via Claude 3.5 Sonnet API.
+- **✍️ Content Engine** 📝 *Marketing Automation* - Multi-platform corporate ghostwriting (LinkedIn, X, FB, Instagram) via Claude 3.5 Sonnet API with engagement prediction.
 - **🔍 Data Detective** 🕵️ *Automated EDA* - AI-powered data profiling and statistical outlier detection.
 - **📈 Marketing Analytics Hub** 🎯 *Growth Tuning* - Attribution modeling and A/B test significance at scale.
-- **🤖 Multi-Agent Workflow** 🚀 *Swarm Intelligence* - Orchestrates 4 agents for unified asset research.
+- **🤖 Multi-Agent Workflow** 🚀 *Swarm Intelligence* - Orchestrates specialized agents for unified asset research.
 - **🧠 Smart Forecast** 🔮 *Predictive Engine* - Time-series forecasting using Random Forest and Rolling Windows.
 
 ### 🎯 Key Highlights
@@ -298,6 +298,8 @@ enterprise-hub/
 
 **Key Capabilities**:
 - ✅ **Break-even analysis** - Calculate exact units/revenue needed to reach profitability
+- ✅ **Goal Seek** - Reverse-engineer pricing or volume targets to hit profit goals
+- ✅ **Monte Carlo Simulation** - Model profit uncertainty with stochastic analysis
 - ✅ **Sensitivity heatmaps** - Visualize profit impact of price and cost changes
 - ✅ **Scenario modeling** - Compare break-even, current, and target profit scenarios
 - ✅ **Advanced metrics** - Margin of safety, operating leverage, contribution margin
@@ -310,10 +312,16 @@ enterprise-hub/
 ---
 
 ### Market Pulse - Technical Analysis Dashboard
-*Real-time stock charts with RSI, MACD, and volume indicators*
+*Real-time stock charts with technical indicators and multi-ticker comparison*
 
 <!-- TODO: Add screenshot - See assets/screenshots/README.md for capture instructions -->
 <!-- ![Market Pulse Dashboard](assets/screenshots/market_pulse/market_pulse_charts_01.png) -->
+
+**Key Capabilities**:
+- ✅ **4-Panel Analysis** - Price, RSI, MACD, and Volume indicators
+- ✅ **Advanced Indicators** - Bollinger Bands and Average True Range (ATR)
+- ✅ **Ticker Comparison** - Compare performance between multiple assets side-by-side
+- ✅ **Interactive Charts** - Zoom, pan, and hover for detailed data points
 
 ---
 
@@ -519,10 +527,26 @@ except APIError as e:
 2. **Choose time period** (1 month to 5 years)
 3. **Select interval** (daily, weekly, monthly)
 4. **View interactive charts** with 4 panels:
-   - **Panel 1**: Candlestick price chart with 20-day moving average
+   - **Panel 1**: Candlestick price chart with 20-day moving average and Bollinger Bands
    - **Panel 2**: Relative Strength Index (RSI) with overbought/oversold levels
    - **Panel 3**: MACD with signal line
-   - **Panel 4**: Volume bars (green/red based on price movement)
+   - **Panel 4**: Volume bars and Average True Range (ATR)
+5. **Compare Tickers** - Enter multiple symbols to compare relative performance
+
+---
+
+### 💼 Financial Analyst Module
+
+1. **Enter a ticker symbol** (e.g., AAPL, MSFT, GOOGL)
+2. **View Key Metrics** - Market Cap, P/E Ratio, EPS, Dividend Yield
+3. **AI Insights** - Automated financial health assessment using Claude 3.5 Sonnet
+4. **DCF Valuation** - Interactive 10-year Discounted Cash Flow model:
+   - Adjust growth rates for years 1-5 and 6-10
+   - Set terminal growth rate and discount rate (WACC)
+   - Apply Margin of Safety for conservative valuation
+   - View sensitivity analysis matrix
+5. **Detailed Financials** - Explore Income Statement, Balance Sheet, and Cash Flow
+6. **Professional Export** - Generate and download PDF financial reports
 
 ---
 
@@ -532,9 +556,16 @@ except APIError as e:
 1. **Get API Key** - Sign up at [console.anthropic.com](https://console.anthropic.com/) (free $5 credit)
 2. **Enter API Key** - Paste into Content Engine setup form (stored in session only)
 3. **Input content brief** - Topic, tone, target audience, keywords
-4. **Select template** - Choose from 6 LinkedIn post types (Professional Insight, Thought Leadership, etc.)
-5. **Generate** - Click "Generate LinkedIn Post" (takes 3-5 seconds)
-6. **Export** - Download as TXT or copy to clipboard
+4. **Select platform** - Choose from LinkedIn, Twitter/X, Instagram, Facebook, or Email
+5. **Select template** - Choose from 6 specialized post types
+6. **Generate** - Click "Generate Post" (takes 3-5 seconds)
+7. **Optimize** - Review predicted engagement scores and A/B variants
+
+**Features**:
+- ✅ **Multi-Platform Adapter** - Tailor content specifically for each social network
+- ✅ **A/B Variant Generator** - Create 3 distinct versions of any post for testing
+- ✅ **Engagement Prediction** - ML-powered scoring to identify high-performing content
+- ✅ **Performance History** - Track your best-performing templates and platforms
 
 **Templates Available**:
 - **Professional Insight** - Share industry knowledge with authority

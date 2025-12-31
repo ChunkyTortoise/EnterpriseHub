@@ -156,7 +156,10 @@ def _display_performance_charts(financials: dict) -> None:
         (
             col
             for col in income_stmt.columns
-            if any(key in str(col).replace(" ", "") for key in ["TotalRevenue", "OperatingRevenue", "Revenue"])
+            if any(
+                key in str(col).replace(" ", "")
+                for key in ["TotalRevenue", "OperatingRevenue", "Revenue"]
+            )
         ),
         None,
     )
@@ -361,7 +364,7 @@ def _display_statement_export(df: pd.DataFrame, statement_type: str) -> None:
         # Excel Export
         buffer = BytesIO()
         with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-            export_df.to_excel(writer, sheet_name=statement_type.replace("_", ' ').title())
+            export_df.to_excel(writer, sheet_name=statement_type.replace("_", " ").title())
         excel_data = buffer.getvalue()
 
         st.download_button(
@@ -375,30 +378,38 @@ def _display_statement_export(df: pd.DataFrame, statement_type: str) -> None:
 
     with col3:
         # PDF Export (using matplotlib for professional formatting)
-        if st.button("📑 Generate PDF", key=f"pdf_{statement_type}", use_container_width=True, help="Create a professional PDF report"):
+        if st.button(
+            "📑 Generate PDF",
+            key=f"pdf_{statement_type}",
+            use_container_width=True,
+            help="Create a professional PDF report",
+        ):
             try:
                 import matplotlib.pyplot as plt
                 from matplotlib.backends.backend_pdf import PdfPages
                 import matplotlib
-                matplotlib.use('Agg')  # Non-interactive backend
+
+                matplotlib.use("Agg")  # Non-interactive backend
 
                 # Create PDF
                 pdf_buffer = BytesIO()
                 with PdfPages(pdf_buffer) as pdf:
                     # Create figure for table
                     fig, ax = plt.subplots(figsize=(11, 8.5))  # Letter size
-                    ax.axis('tight')
-                    ax.axis('off')
+                    ax.axis("tight")
+                    ax.axis("off")
 
                     # Prepare data for display (limit to prevent overflow)
                     display_df = export_df.head(20).copy()  # Limit rows
 
                     # Format numbers for readability
                     for col in display_df.columns:
-                        if display_df[col].dtype in ['float64', 'int64']:
+                        if display_df[col].dtype in ["float64", "int64"]:
                             display_df[col] = display_df[col].apply(
-                                lambda x: f"${x/1e9:.2f}B" if abs(x) >= 1e9
-                                else f"${x/1e6:.2f}M" if abs(x) >= 1e6
+                                lambda x: f"${x / 1e9:.2f}B"
+                                if abs(x) >= 1e9
+                                else f"${x / 1e6:.2f}M"
+                                if abs(x) >= 1e6
                                 else f"${x:,.0f}"
                             )
 
@@ -407,9 +418,9 @@ def _display_statement_export(df: pd.DataFrame, statement_type: str) -> None:
                         cellText=display_df.values,
                         colLabels=display_df.columns,
                         rowLabels=display_df.index,
-                        cellLoc='right',
-                        loc='center',
-                        colWidths=[0.15] * len(display_df.columns)
+                        cellLoc="right",
+                        loc="center",
+                        colWidths=[0.15] * len(display_df.columns),
                     )
 
                     # Style table
@@ -419,14 +430,17 @@ def _display_statement_export(df: pd.DataFrame, statement_type: str) -> None:
 
                     # Header styling
                     for i in range(len(display_df.columns)):
-                        table[(0, i)].set_facecolor('#00D9FF')
-                        table[(0, i)].set_text_props(weight='bold', color='white')
+                        table[(0, i)].set_facecolor("#00D9FF")
+                        table[(0, i)].set_text_props(weight="bold", color="white")
 
                     # Add title
-                    title = f"{ticker.upper()} - {statement_type.replace('_', ' ').title()}\n{timestamp}"
-                    plt.title(title, fontsize=14, fontweight='bold', pad=20)
+                    title = (
+                        f"{ticker.upper()} - "
+                        f"{statement_type.replace('_', ' ').title()}\n{timestamp}"
+                    )
+                    plt.title(title, fontsize=14, fontweight="bold", pad=20)
 
-                    pdf.savefig(fig, bbox_inches='tight')
+                    pdf.savefig(fig, bbox_inches="tight")
                     plt.close()
 
                 pdf_buffer.seek(0)
@@ -635,7 +649,9 @@ def _display_dcf_valuation(info: dict, financials: dict, symbol: str) -> None:
         (
             col
             for col in cashflow_t.columns
-            if any(key in str(col).replace(" ", "") for key in ["FreeCashFlow", "OperatingCashFlow"])
+            if any(
+                key in str(col).replace(" ", "") for key in ["FreeCashFlow", "OperatingCashFlow"]
+            )
         ),
         None,
     )
@@ -761,7 +777,11 @@ def _display_dcf_valuation(info: dict, financials: dict, symbol: str) -> None:
 
     with result_col3:
         upside = ((fair_value_per_share - current_price) / current_price) * 100
-        st.metric("Upside/Downside", f"{upside:+.1f}%", delta=f"{'Undervalued' if upside > 0 else 'Overvalued'}")
+        st.metric(
+            "Upside/Downside",
+            f"{upside:+.1f}%",
+            delta=f"{'Undervalued' if upside > 0 else 'Overvalued'}",
+        )
 
     with result_col4:
         st.metric(
@@ -775,7 +795,7 @@ def _display_dcf_valuation(info: dict, financials: dict, symbol: str) -> None:
     elif fair_value_per_share < current_price * 0.8:
         st.error(f"🔴 **OVERVALUED** - Fair value is {abs(upside):.1f}% below current price")
     else:
-        st.info(f"🟡 **FAIRLY VALUED** - Current price within 20% of fair value")
+        st.info("🟡 **FAIRLY VALUED** - Current price within 20% of fair value")
 
     # Detailed breakdown
     with st.expander("📋 Detailed DCF Breakdown", expanded=False):
@@ -798,7 +818,13 @@ def _display_dcf_valuation(info: dict, financials: dict, symbol: str) -> None:
     st.caption("How fair value changes with different growth and discount rate assumptions")
 
     # Create sensitivity table
-    discount_rates = [discount_rate - 2, discount_rate - 1, discount_rate, discount_rate + 1, discount_rate + 2]
+    discount_rates = [
+        discount_rate - 2,
+        discount_rate - 1,
+        discount_rate,
+        discount_rate + 1,
+        discount_rate + 2,
+    ]
     growth_rates = [growth_years_1_5 - 5, growth_years_1_5, growth_years_1_5 + 5]
 
     sensitivity_data = []

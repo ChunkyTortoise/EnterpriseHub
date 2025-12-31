@@ -562,7 +562,7 @@ class TestToast:
         mock_st.toast.assert_called_once()
         args, kwargs = mock_st.toast.call_args
         assert "Test message" in args[0]
-        assert "✓" in args[0]
+        assert "✅" in args[0]
 
     @patch("utils.ui.st")
     def test_toast_fallback_success(self, mock_st):
@@ -579,7 +579,7 @@ class TestToast:
         html = args[0]
         assert "toast-success" in html
         assert "Success message" in html
-        assert "✓" in html
+        assert "✅" in html
         assert 'role="alert"' in html
         assert kwargs.get("unsafe_allow_html") is True
 
@@ -596,7 +596,7 @@ class TestToast:
 
         assert "toast-error" in html
         assert "Error message" in html
-        assert "✗" in html
+        assert "❌" in html
 
     @patch("utils.ui.st")
     def test_toast_fallback_warning(self, mock_st):
@@ -611,7 +611,7 @@ class TestToast:
 
         assert "toast-warning" in html
         assert "Warning message" in html
-        assert "⚠" in html
+        assert "⚠️" in html
 
     @patch("utils.ui.st")
     def test_toast_fallback_info(self, mock_st):
@@ -626,7 +626,7 @@ class TestToast:
 
         assert "toast-info" in html
         assert "Info message" in html
-        assert "ℹ" in html
+        assert "ℹ️" in html
 
     @patch("utils.ui.st")
     def test_toast_custom_duration(self, mock_st):
