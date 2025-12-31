@@ -293,8 +293,7 @@ enterprise-hub/
 ### 💰 Margin Hunter - Hero Project
 *Interactive Cost-Volume-Profit (CVP) analysis with sensitivity heatmaps*
 
-<!-- TODO: Add screenshot - See assets/screenshots/README.md for capture instructions -->
-<!-- ![Margin Hunter Dashboard](assets/screenshots/margin_hunter/margin_hunter_interface_01.png) -->
+![Margin Hunter Dashboard](assets/screenshots/platform-overview.png)
 
 **Key Capabilities**:
 - ✅ **Break-even analysis** - Calculate exact units/revenue needed to reach profitability
@@ -314,8 +313,7 @@ enterprise-hub/
 ### Market Pulse - Technical Analysis Dashboard
 *Real-time stock charts with technical indicators and multi-ticker comparison*
 
-<!-- TODO: Add screenshot - See assets/screenshots/README.md for capture instructions -->
-<!-- ![Market Pulse Dashboard](assets/screenshots/market_pulse/market_pulse_charts_01.png) -->
+![Market Pulse Dashboard](assets/screenshots/market-pulse.png)
 
 **Key Capabilities**:
 - ✅ **4-Panel Analysis** - Price, RSI, MACD, and Volume indicators
@@ -709,6 +707,33 @@ Industry-specific templates for Margin Hunter:
 - [SaaS Pricing](scenarios/saas-pricing-template.md)
 - [E-commerce Products](scenarios/ecommerce-product-template.md)
 - [Manufacturing Volume](scenarios/manufacturing-volume-template.md)
+
+---
+
+## 💼 Go-to-Market Resources
+
+**NEW:** Complete toolkit for winning clients on Upwork and LinkedIn!
+
+### Quick Start
+- **[Session Handoff](SESSION_HANDOFF_2025-12-31.md)** - Complete context and action plan
+- **[Go-to-Market Checklist](GO_TO_MARKET_CHECKLIST.md)** - 30-minute deployment plan
+- **[Streamlit Deployment Guide](STREAMLIT_DEPLOYMENT.md)** - Deploy live demo in 15 minutes
+
+### What's Included
+✅ **5 LinkedIn Post Templates** - Showcase different modules (in session notes)
+✅ **4 Cold Email Templates** - Target financial advisors, agencies, startups
+✅ **4 Upwork Proposal Templates** - Financial dashboards, BI, AI automation
+✅ **Red Flags Checklist** - Skip bad gigs and proposal farmers
+✅ **Demo App** (`demo_app.py`) - Market Pulse module ready for Streamlit Cloud
+✅ **Portfolio Website** (`portfolio/index.html`) - Professional showcase
+
+### Marketing Strategy
+- **Upwork:** 5-7 quality applications per week ($500+ budgets only)
+- **LinkedIn:** 2 posts per week showcasing live demos
+- **Cold Outreach:** 10-15 emails per week to target segments
+- **Goal:** 1-2 clients at $800-1,500 in first 30 days
+
+**See [SESSION_HANDOFF_2025-12-31.md](SESSION_HANDOFF_2025-12-31.md) for complete details**
 
 ---
 
