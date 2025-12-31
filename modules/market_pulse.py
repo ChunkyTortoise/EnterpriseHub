@@ -281,32 +281,33 @@ def _calculate_support_resistance(df: pd.DataFrame, lookback: int = 20) -> tuple
 
 def _create_technical_chart(df: pd.DataFrame, ticker: str) -> go.Figure:
     """
-    Create a 4-panel technical analysis chart.
+    Create a 5-panel technical analysis chart.
 
     Panels:
-    1. Candlestick price chart with 20-day MA, support/resistance
+    1. Candlestick price chart with 20-day MA, Bollinger Bands, support/resistance
     2. RSI (Relative Strength Index)
     3. MACD with signal line
-    4. Volume bars
+    4. ATR (Average True Range) - volatility indicator
+    5. Volume bars
 
     Args:
         df: DataFrame with OHLCV data and indicators
         ticker: Stock ticker symbol
 
     Returns:
-        Plotly Figure object with 4 subplots
+        Plotly Figure object with 5 subplots
     """
     # Calculate support/resistance for visual indicators
     support, resistance = _calculate_support_resistance(df)
 
-    # Create 4-panel chart
+    # Create 5-panel chart
     fig = make_subplots(
-        rows=4,
+        rows=5,
         cols=1,
         shared_xaxes=True,
-        vertical_spacing=0.03,
-        row_heights=[0.5, 0.15, 0.15, 0.2],
-        subplot_titles=(f"{ticker} Price & MA", "RSI", "MACD", "Volume"),
+        vertical_spacing=0.02,
+        row_heights=[0.45, 0.12, 0.12, 0.12, 0.19],
+        subplot_titles=(f"{ticker} Price & MA", "RSI", "MACD", "ATR (Volatility)", "Volume"),
     )
 
     # Panel 1: Price and MA
@@ -408,18 +409,32 @@ def _create_technical_chart(df: pd.DataFrame, ticker: str) -> go.Figure:
         col=1,
     )
 
-    # Panel 4: Volume
+    # Panel 4: ATR (Average True Range) - Volatility Indicator
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df["ATR"],
+            name="ATR",
+            line=dict(color="#00D9FF", width=2),
+            fill="tozeroy",
+            fillcolor="rgba(0, 217, 255, 0.2)",
+        ),
+        row=4,
+        col=1,
+    )
+
+    # Panel 5: Volume
     colors = ["green" if row["Open"] - row["Close"] >= 0 else "red" for index, row in df.iterrows()]
     fig.add_trace(
         go.Bar(x=df.index, y=df["Volume"], name="Volume", marker_color=colors),
-        row=4,
+        row=5,
         col=1,
     )
 
     # Update layout for Editorial Style
     fig.update_layout(
         template=ui.get_plotly_template(),
-        height=900,
+        height=1000,  # Increased for 5-panel layout
         showlegend=False,
         margin=dict(l=20, r=20, t=40, b=20),
         xaxis_rangeslider_visible=False,

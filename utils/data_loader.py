@@ -126,6 +126,13 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
         df["BB_Lower"] = bb_indicator.bollinger_lband()
         logger.debug("Calculated Bollinger Bands")
 
+        # Calculate ATR (Average True Range) - 14-period
+        atr_indicator = ta.volatility.AverageTrueRange(
+            df["High"], df["Low"], df["Close"], window=14
+        )
+        df["ATR"] = atr_indicator.average_true_range()
+        logger.debug("Calculated ATR")
+
         # Calculate RSI (14-period)
         df["RSI"] = ta.momentum.rsi(df["Close"], window=14)
         logger.debug("Calculated RSI")
