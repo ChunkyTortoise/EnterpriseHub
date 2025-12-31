@@ -11,7 +11,11 @@
 
   <br>
 
-  <strong>[🎯 Try Live Demo →](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)</strong>
+  <strong>
+    <a href="https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/">🎯 Try Live Demo</a>
+    &nbsp;&nbsp;•&nbsp;&nbsp;
+    <a href="https://chunkytortoise.github.io/enterprisehub/">✨ View Portfolio Site</a>
+  </strong>
 </div>
 
 ---
@@ -682,6 +686,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Cayman Roden**
 
+- **Portfolio**: [chunkytortoise.github.io/enterprisehub](https://chunkytortoise.github.io/enterprisehub/)
 - GitHub: [@ChunkyTortoise](https://github.com/ChunkyTortoise)
 - Project Link: [https://github.com/ChunkyTortoise/enterprise-hub](https://github.com/ChunkyTortoise/enterprise-hub)
 
