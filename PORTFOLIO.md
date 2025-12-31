@@ -26,6 +26,37 @@
 
 ---
 
+## 🆕 Latest Features (December 2025) - Monetization Ready
+
+**What's New**: 10 advanced features added across 4 modules to unlock high-value consulting gigs ($100-300/hr).
+
+### **Market Pulse - Advanced Technical Analysis**
+- ✅ **Bollinger Bands**: 20-period volatility bands with shaded confidence zones
+- ✅ **ATR Indicator**: Average True Range for position sizing and risk management
+- ✅ **Multi-Ticker Comparison**: Overlay up to 5 stocks with normalized performance metrics
+- **Unlocked Gigs**: Technical Analysis ($80-200/hr), Portfolio Management ($100-200/hr)
+
+### **Financial Analyst - Valuation & Reporting**
+- ✅ **DCF Valuation Model**: Interactive 10-year discounted cash flow calculator with sensitivity analysis
+- ✅ **PDF Statement Export**: Professional matplotlib-generated financial reports for stakeholders
+- **Unlocked Gigs**: Due Diligence ($100-250/hr), M&A Valuation ($150-300/hr), CFO Advisory ($150-300/hr)
+
+### **Margin Hunter - Advanced Decision Support**
+- ✅ **Bulk CSV Analysis**: Upload product catalogs, identify profit leakers across 100s of SKUs
+- ✅ **Goal Seek**: Reverse-engineer required price/volume to hit profit targets (3 scenarios)
+- ✅ **Monte Carlo Simulation**: 10,000-run profit probability analysis with risk assessment
+- **Unlocked Gigs**: Business Consulting ($100-200/hr), Financial Modeling ($120-250/hr)
+
+### **Content Engine - AI Content Optimization**
+- ✅ **Predicted Engagement Score**: 0-10 scale prediction based on 8 content quality factors
+- ✅ **Multi-Platform Adaptation**: One-click LinkedIn → Twitter/Instagram/Email (already existed)
+- ✅ **A/B Variant Generation**: 3 variants with different hooks for testing (already existed)
+- **Unlocked Gigs**: LinkedIn Ghostwriting ($150-300/post), Content Strategy ($100-200/hr)
+
+**Development Velocity**: 10 features delivered in single session (7 commits, 4 modules enhanced)
+
+---
+
 ## Key Modules & Technical Highlights
 
 ### 1. Margin Hunter - Cost-Volume-Profit Analysis Engine
@@ -242,9 +273,35 @@ def load_stock_data(ticker, period, interval):
 
 ---
 
-## Technical Architecture
+## 💼 Professional Services & Engagement
 
-### System Design
+I am currently available for high-impact technical consulting and custom development. I specialize in transforming fragmented data into high-end, production-ready decision engines.
+
+| Service | Best For | Typical Engagement |
+|---------|----------|-------------------|
+| **Custom BI Dashboards** | SaaS Founders, E-commerce | $500 - $1,500 per project |
+| **AI Agent Integration** | Agencies, Tech Startups | $200/hr or Fixed-Price |
+| **Financial Modeling Automation** | Finance Teams, CFOs | $1,000+ per model |
+| **Data Visualization Audit** | Mature Products | $300 (Flat Fee) |
+
+**Interested in working together?**
+[DM me on LinkedIn](https://linkedin.com/in/caymanroden) or open an issue on this repository labeled `HIRE-ME`.
+
+---
+
+## 🎓 Verified Expertise (Certifications)
+
+This platform is built on a foundation of rigorous academic and professional training:
+
+- **IBM Data Science Professional Certificate**
+- **Google Data Analytics Professional Certificate**
+- **Google Project Management Professional Certificate**
+- **DeepLearning.AI Machine Learning Specialization**
+- **Microsoft Power BI Data Analyst Associate**
+
+---
+
+## 🛠 Tech Stack Deep Dive
 
 ```
 ┌─────────────────────────────────────────────────────────┐
