@@ -217,6 +217,12 @@ def _render_results(
         target_profit,
     )
 
+    # --- Goal Seek ---
+    _render_goal_seek(contribution_margin, unit_price, unit_cost, fixed_costs)
+
+    # --- Monte Carlo Simulation ---
+    _render_monte_carlo(contribution_margin, unit_price, unit_cost, fixed_costs, current_sales_units)
+
 
 def _render_cvp_chart(
     target_units,
@@ -461,3 +467,331 @@ def _render_bulk_results(df: pd.DataFrame, global_fixed_costs: float):
         "text/csv",
         use_container_width=True,
     )
+
+
+def _render_goal_seek(contribution_margin: float, unit_price: float, unit_cost: float, fixed_costs: float):
+    """
+    Render Goal Seek calculator - reverse engineer required inputs to hit profit targets.
+
+    Args:
+        contribution_margin: Contribution margin per unit
+        unit_price: Selling price per unit
+        unit_cost: Variable cost per unit
+        fixed_costs: Total fixed costs
+    """
+    st.markdown("---")
+    st.subheader("🎯 Goal Seek: What Do I Need?")
+    st.caption("Want a specific profit? Find out what price, volume, or costs you need.")
+
+    goal_tab1, goal_tab2, goal_tab3 = st.tabs([
+        "💰 Target Profit → Units Needed",
+        "📦 Target Units → Price Needed",
+        "💵 Target Profit → Price Needed"
+    ])
+
+    with goal_tab1:
+        st.markdown("#### If I want to make $X profit, how many units do I need to sell?")
+        desired_profit = st.number_input(
+            "Desired Profit ($)",
+            value=10000.0,
+            step=1000.0,
+            min_value=0.0,
+            key="goal_profit_to_units"
+        )
+
+        if contribution_margin > 0:
+            required_units = (fixed_costs + desired_profit) / contribution_margin
+            required_revenue = required_units * unit_price
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Units Needed", f"{required_units:,.0f}")
+            with col2:
+                st.metric("Revenue Needed", f"${required_revenue:,.2f}")
+
+            st.success(
+                f"✅ Sell **{required_units:,.0f} units** at ${unit_price:.2f} each "
+                f"to achieve ${desired_profit:,.2f} profit"
+            )
+        else:
+            st.error("⚠️ Cannot calculate - contribution margin is zero or negative")
+
+    with goal_tab2:
+        st.markdown("#### If I can sell X units, what price do I need to charge?")
+        achievable_units = st.number_input(
+            "Units You Can Sell",
+            value=500,
+            step=50,
+            min_value=1,
+            key="goal_units_to_price"
+        )
+        target_profit_price = st.number_input(
+            "Target Profit ($)",
+            value=5000.0,
+            step=500.0,
+            min_value=0.0,
+            key="goal_units_target_profit"
+        )
+
+        # Price = (Fixed Costs + Target Profit + (Variable Cost × Units)) / Units
+        required_price = (fixed_costs + target_profit_price + (unit_cost * achievable_units)) / achievable_units
+        new_margin = required_price - unit_cost
+        new_margin_pct = (new_margin / required_price) * 100 if required_price > 0 else 0
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Required Price", f"${required_price:.2f}")
+        with col2:
+            delta_price = required_price - unit_price
+            st.metric("vs Current Price", f"${unit_price:.2f}", delta=f"${delta_price:+.2f}")
+        with col3:
+            st.metric("New Margin %", f"{new_margin_pct:.1f}%")
+
+        if required_price > unit_cost:
+            st.success(
+                f"✅ Charge **${required_price:.2f}** per unit to achieve ${target_profit_price:,.2f} "
+                f"profit on {achievable_units:,.0f} units"
+            )
+        else:
+            st.error("⚠️ Required price is below or at variable cost - not profitable")
+
+    with goal_tab3:
+        st.markdown("#### If I want $X profit with current volumes, what price do I need?")
+        current_units_goal = st.number_input(
+            "Current Sales Volume",
+            value=300,
+            step=50,
+            min_value=1,
+            key="goal_profit_current_vol"
+        )
+        profit_goal_current = st.number_input(
+            "Profit Goal ($)",
+            value=8000.0,
+            step=500.0,
+            min_value=0.0,
+            key="goal_profit_current"
+        )
+
+        # Same formula as tab 2
+        needed_price = (fixed_costs + profit_goal_current + (unit_cost * current_units_goal)) / current_units_goal
+        price_increase = needed_price - unit_price
+        price_increase_pct = (price_increase / unit_price) * 100 if unit_price > 0 else 0
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric(
+                "Needed Price",
+                f"${needed_price:.2f}",
+                delta=f"{price_increase_pct:+.1f}% increase" if price_increase > 0 else "No change needed"
+            )
+        with col2:
+            st.metric("Price Change", f"${price_increase:+.2f}")
+
+        if needed_price > unit_cost:
+            if price_increase > 0:
+                st.warning(
+                    f"⚠️ You need to **increase price by ${price_increase:.2f}** "
+                    f"({price_increase_pct:.1f}%) to hit your profit goal"
+                )
+            else:
+                st.success(f"✅ Current pricing already achieves your profit goal!")
+        else:
+            st.error("⚠️ Required price is at or below variable cost - restructure costs instead")
+
+
+def _render_monte_carlo(
+    contribution_margin: float,
+    unit_price: float,
+    unit_cost: float,
+    fixed_costs: float,
+    current_sales_units: int
+):
+    """
+    Render Monte Carlo simulation for profit uncertainty analysis.
+
+    Args:
+        contribution_margin: Contribution margin per unit
+        unit_price: Selling price per unit
+        unit_cost: Variable cost per unit
+        fixed_costs: Total fixed costs
+        current_sales_units: Current sales volume
+    """
+    st.markdown("---")
+    st.subheader("🎲 Monte Carlo Simulation: Profit Probability")
+    st.caption("Model uncertainty in costs and sales to understand profit risk.")
+
+    with st.expander("⚙️ Simulation Parameters", expanded=True):
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            cost_variance = st.slider(
+                "Cost Variance (%)",
+                min_value=0,
+                max_value=50,
+                value=10,
+                step=5,
+                help="How much can variable costs fluctuate? (e.g., supplier price changes)"
+            )
+
+        with col2:
+            sales_variance = st.slider(
+                "Sales Variance (%)",
+                min_value=0,
+                max_value=50,
+                value=15,
+                step=5,
+                help="How much can sales volume fluctuate? (e.g., demand uncertainty)"
+            )
+
+        with col3:
+            num_simulations = st.select_slider(
+                "Simulations",
+                options=[100, 500, 1000, 5000, 10000],
+                value=1000,
+                help="More simulations = more accurate probability estimates"
+            )
+
+    if st.button("🚀 Run Monte Carlo Simulation", use_container_width=True):
+        with st.spinner(f"Running {num_simulations:,} simulations..."):
+            # Run simulations
+            np.random.seed(42)  # For reproducibility
+
+            # Generate random samples
+            cost_samples = np.random.normal(
+                unit_cost,
+                unit_cost * (cost_variance / 100),
+                num_simulations
+            )
+            sales_samples = np.random.normal(
+                current_sales_units,
+                current_sales_units * (sales_variance / 100),
+                num_simulations
+            )
+
+            # Calculate profit for each simulation
+            profits = (unit_price - cost_samples) * sales_samples - fixed_costs
+
+            # Calculate statistics
+            mean_profit = np.mean(profits)
+            median_profit = np.median(profits)
+            std_profit = np.std(profits)
+            min_profit = np.min(profits)
+            max_profit = np.max(profits)
+
+            # Probability calculations
+            prob_profitable = (profits > 0).sum() / num_simulations * 100
+            prob_target = (profits > 5000).sum() / num_simulations * 100  # Arbitrary target
+            percentile_5 = np.percentile(profits, 5)
+            percentile_95 = np.percentile(profits, 95)
+
+            # Display results
+            st.markdown("#### 📊 Simulation Results")
+
+            metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+
+            with metric_col1:
+                st.metric("Mean Profit", f"${mean_profit:,.0f}")
+
+            with metric_col2:
+                st.metric("Median Profit", f"${median_profit:,.0f}")
+
+            with metric_col3:
+                st.metric("Std Deviation", f"${std_profit:,.0f}")
+
+            with metric_col4:
+                prob_color = "🟢" if prob_profitable >= 90 else "🟡" if prob_profitable >= 70 else "🔴"
+                st.metric(f"{prob_color} Probability of Profit", f"{prob_profitable:.1f}%")
+
+            # Risk analysis
+            st.markdown("#### 🎯 Risk Analysis")
+
+            risk_col1, risk_col2 = st.columns(2)
+
+            with risk_col1:
+                st.metric("Best Case (95th percentile)", f"${percentile_95:,.0f}")
+                st.metric("Worst Case (5th percentile)", f"${percentile_5:,.0f}")
+
+            with risk_col2:
+                st.metric("Best Possible", f"${max_profit:,.0f}")
+                st.metric("Worst Possible", f"${min_profit:,.0f}")
+
+            # Interpretation
+            if prob_profitable >= 90:
+                st.success(
+                    f"✅ **Low Risk:** {prob_profitable:.1f}% chance of profitability. "
+                    "Your business model is robust to cost and sales fluctuations."
+                )
+            elif prob_profitable >= 70:
+                st.warning(
+                    f"⚠️ **Moderate Risk:** {prob_profitable:.1f}% chance of profitability. "
+                    "Consider strategies to reduce cost variance or stabilize sales."
+                )
+            else:
+                st.error(
+                    f"🚨 **High Risk:** Only {prob_profitable:.1f}% chance of profitability. "
+                    "Recommend restructuring costs or increasing prices significantly."
+                )
+
+            # Histogram
+            st.markdown("#### 📈 Profit Distribution")
+
+            fig = go.Figure()
+
+            fig.add_trace(go.Histogram(
+                x=profits,
+                nbinsx=50,
+                name="Profit",
+                marker_color=ui.THEME["primary"]
+            ))
+
+            # Add vertical lines for key metrics
+            fig.add_vline(
+                x=mean_profit,
+                line_dash="dash",
+                line_color="cyan",
+                annotation_text=f"Mean: ${mean_profit:,.0f}",
+                annotation_position="top"
+            )
+
+            fig.add_vline(
+                x=0,
+                line_dash="solid",
+                line_color="red",
+                annotation_text="Break-Even",
+                annotation_position="bottom"
+            )
+
+            fig.update_layout(
+                title=f"Profit Distribution ({num_simulations:,} Simulations)",
+                xaxis_title="Profit ($)",
+                yaxis_title="Frequency",
+                template=ui.get_plotly_template(),
+                height=400,
+                showlegend=False
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+            # Summary table
+            st.markdown("#### 📋 Summary Statistics")
+
+            summary_data = {
+                "Metric": [
+                    "Mean", "Median", "Std Dev", "Min", "Max",
+                    "5th Percentile", "95th Percentile", "Probability > $0", f"Probability > $5,000"
+                ],
+                "Value": [
+                    f"${mean_profit:,.0f}",
+                    f"${median_profit:,.0f}",
+                    f"${std_profit:,.0f}",
+                    f"${min_profit:,.0f}",
+                    f"${max_profit:,.0f}",
+                    f"${percentile_5:,.0f}",
+                    f"${percentile_95:,.0f}",
+                    f"{prob_profitable:.1f}%",
+                    f"{prob_target:.1f}%"
+                ]
+            }
+
+            summary_df = pd.DataFrame(summary_data)
+            st.dataframe(summary_df, use_container_width=True, hide_index=True)
