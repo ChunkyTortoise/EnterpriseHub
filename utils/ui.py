@@ -1484,11 +1484,13 @@ def spacer(px: int = 20) -> None:
     st.markdown(f"<div style='height: {px}px'></div>", unsafe_allow_html=True)
 
 
+from modules.auth import authenticate_user, create_user
+
+
 def login_modal() -> bool:
     """
-    Renders a production-grade login modal.
+    Renders a production-grade login modal with Authentication and Registration.
     Returns True if authenticated, False otherwise.
-    (Mocked for demonstration).
     """
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
@@ -1514,7 +1516,7 @@ def login_modal() -> bool:
         .login-card {{
             background: {THEME["surface"]};
             padding: 48px;
-            border-radius: 4px;
+            border-radius: 8px;
             width: 100%;
             max-width: 450px;
             border: 1px solid {THEME["border"]};
@@ -1539,19 +1541,39 @@ def login_modal() -> bool:
             unsafe_allow_html=True,
         )
 
-        username = st.text_input("Username or Email", placeholder="cayman@enterprise.com")
-        password = st.text_input("Password", type="password", placeholder="••••••••")
+        login_tab, register_tab = st.tabs(["🔐 Login", "📝 Register"])
 
-        col1, col2 = st.columns([2, 1])
-        with col1:
+        with login_tab:
+            username = st.text_input("Username", placeholder="e.g., croden", key="login_user")
+            password = st.text_input(
+                "Password", type="password", placeholder="••••••••", key="login_pass"
+            )
             if st.button("🚀 Access Console", use_container_width=True, type="primary"):
-                if username and password:
+                if authenticate_user(username, password):
                     st.session_state.authenticated = True
+                    st.session_state.username = username
                     st.rerun()
                 else:
-                    st.error("Invalid credentials.")
-        with col2:
-            st.button("Request Access", use_container_width=True)
+                    st.error("Invalid username or password.")
+
+        with register_tab:
+            new_user = st.text_input("New Username", placeholder="e.g., admin", key="reg_user")
+            new_pass = st.text_input(
+                "New Password", type="password", placeholder="••••••••", key="reg_pass"
+            )
+            confirm_pass = st.text_input(
+                "Confirm Password", type="password", placeholder="••••••••", key="reg_confirm"
+            )
+            if st.button("✨ Create Account", use_container_width=True):
+                if not new_user or not new_pass:
+                    st.error("Please fill in all fields.")
+                elif new_pass != confirm_pass:
+                    st.error("Passwords do not match.")
+                else:
+                    if create_user(new_user, new_pass):
+                        st.success("Account created! You can now log in.")
+                    else:
+                        st.error("Username already exists or database error.")
 
         st.markdown("</div></div>", unsafe_allow_html=True)
 
