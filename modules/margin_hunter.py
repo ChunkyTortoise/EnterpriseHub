@@ -300,7 +300,9 @@ def _render_cvp_chart(
     st.plotly_chart(fig, use_container_width=True)
 
 
-def _render_sensitivity_heatmap(unit_price, unit_cost, current_sales_units, fixed_costs):
+def _render_sensitivity_heatmap(
+    unit_price: float, unit_cost: float, current_sales_units: int, fixed_costs: float
+) -> None:
     """Render the sensitivity analysis heatmap."""
     st.markdown("#### 🌡️ Sensitivity Heatmap: Net Profit")
     st.caption(
@@ -340,15 +342,15 @@ def _render_sensitivity_heatmap(unit_price, unit_cost, current_sales_units, fixe
 
 
 def _render_scenario_table(
-    break_even_units,
-    break_even_revenue,
-    current_sales_units,
-    unit_price,
-    current_profit,
-    target_units,
-    target_revenue,
-    target_profit,
-):
+    break_even_units: float,
+    break_even_revenue: float,
+    current_sales_units: int,
+    unit_price: float,
+    current_profit: float,
+    target_units: float,
+    target_revenue: float,
+    target_profit: float,
+) -> None:
     """Render the scenario summary table and download button."""
     st.markdown("#### 🎯 Scenarios")
     scenarios = [
