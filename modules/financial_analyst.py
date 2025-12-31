@@ -147,15 +147,25 @@ def _display_performance_charts(financials: dict) -> None:
     income_stmt.index = pd.to_datetime(income_stmt.index)
     income_stmt = income_stmt.sort_index()
 
+    # Detect Revenue Column
     rev_col = next(
         (
             col
             for col in income_stmt.columns
-            if "Total Revenue" in str(col) or "Revenue" in str(col)
+            if any(key in str(col).replace(" ", "") for key in ["TotalRevenue", "OperatingRevenue", "Revenue"])
         ),
         None,
     )
-    net_inc_col = next((col for col in income_stmt.columns if "Net Income" in str(col)), None)
+
+    # Detect Net Income Column
+    net_inc_col = next(
+        (
+            col
+            for col in income_stmt.columns
+            if any(key in str(col).replace(" ", "") for key in ["NetIncome", "NetProfit"])
+        ),
+        None,
+    )
 
     if rev_col and net_inc_col:
         fig_perf = make_subplots(specs=[[{"secondary_y": True}]])
@@ -207,7 +217,14 @@ def _display_profitability_ratios(
     latest_data = income_stmt.iloc[-1]
     revenue = latest_data.get(rev_col, 0)
     net_income = latest_data.get(net_inc_col, 0)
-    gross_col = next((col for col in latest_data.index if "Gross Profit" in str(col)), None)
+    gross_col = next(
+        (
+            col
+            for col in latest_data.index
+            if any(key in str(col).replace(" ", "") for key in ["GrossProfit", "GrossMargin"])
+        ),
+        None,
+    )
     gross_profit = latest_data.get(gross_col, 0)
 
     with r1:
@@ -233,22 +250,25 @@ def _calculate_yoy_revenue_growth(income_stmt: pd.DataFrame, rev_col: str) -> st
         rev_col: Column name for revenue
 
     Returns:
-        Formatted string with YoY growth percentage (e.g., "15.2%") or "N/A"
+        Formatted string with YoY growth percentage (e.g., "+15.2%") or "N/A"
     """
     try:
-        # Check if we have at least 2 years of data
-        if len(income_stmt) < 2:
-            logger.debug("Insufficient data for YoY calculation (need at least 2 years)")
+        # Check if we have the revenue column
+        if rev_col not in income_stmt.columns:
+            logger.debug(f"Revenue column '{rev_col}' not found in income statement")
             return "N/A"
 
-        # Get latest and previous year revenue
-        latest_revenue = income_stmt[rev_col].iloc[-1]
-        previous_revenue = income_stmt[rev_col].iloc[-2]
+        # Get revenue series and drop NaNs to find actual data points
+        revenue_series = income_stmt[rev_col].dropna()
 
-        # Check for valid data
-        if pd.isna(latest_revenue) or pd.isna(previous_revenue):
-            logger.debug("Revenue data contains NaN values")
+        # Check if we have at least 2 years of valid data
+        if len(revenue_series) < 2:
+            logger.debug("Insufficient valid data for YoY calculation (need at least 2 years)")
             return "N/A"
+
+        # Get latest and previous year revenue from the filtered series
+        latest_revenue = revenue_series.iloc[-1]
+        previous_revenue = revenue_series.iloc[-2]
 
         # Avoid division by zero
         if previous_revenue == 0:
@@ -265,7 +285,7 @@ def _calculate_yoy_revenue_growth(income_stmt: pd.DataFrame, rev_col: str) -> st
             return f"{yoy_growth:.1f}%"
 
     except Exception as e:
-        logger.warning(f"Error calculating YoY revenue growth: {e}")
+        logger.warning(f"Error calculating YoY revenue growth for {rev_col}: {e}")
         return "N/A"
 
 

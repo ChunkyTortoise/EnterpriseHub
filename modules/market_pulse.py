@@ -334,6 +334,33 @@ def _create_technical_chart(df: pd.DataFrame, ticker: str) -> go.Figure:
         col=1,
     )
 
+    # Bollinger Bands
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df["BB_Upper"],
+            line=dict(color="rgba(173, 204, 255, 0.3)", width=1),
+            name="BB Upper",
+            hoverinfo="skip",
+        ),
+        row=1,
+        col=1,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df["BB_Lower"],
+            line=dict(color="rgba(173, 204, 255, 0.3)", width=1),
+            name="BB Lower",
+            fill="tonexty",
+            fillcolor="rgba(173, 204, 255, 0.1)",
+            hoverinfo="skip",
+        ),
+        row=1,
+        col=1,
+    )
+
     # Add support/resistance lines
     fig.add_hline(
         y=support,

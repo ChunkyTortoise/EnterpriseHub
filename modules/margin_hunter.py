@@ -50,7 +50,23 @@ def render() -> None:
             )
 
             if uploaded_file:
-                st.info("Bulk analysis mode active. Summary shown below.")
+                try:
+                    bulk_df = pd.read_csv(uploaded_file)
+                    required = ["Product", "Unit Price", "Unit Cost"]
+                    if all(col in bulk_df.columns for col in required):
+                        st.success(f"✅ Loaded {len(bulk_df)} products.")
+                        # Processing logic moved to results panel
+                    else:
+                        st.error(f"❌ CSV must contain columns: {', '.join(required)}")
+                        bulk_df = None
+                except Exception as e:
+                    st.error(f"❌ Error reading CSV: {e}")
+                    bulk_df = None
+            else:
+                bulk_df = None
+
+        # Calculations (Single Product)
+        # ... (keep existing single product logic)
 
         # Calculations
         contribution_margin = unit_price - unit_cost
@@ -83,23 +99,26 @@ def render() -> None:
         )
 
         with col2:
-            _render_results(
-                contribution_margin,
-                contribution_margin_ratio,
-                break_even_units,
-                break_even_revenue,
-                margin_of_safety_pct,
-                margin_of_safety_units,
-                operating_leverage,
-                current_profit,
-                target_units,
-                current_sales_units,
-                unit_price,
-                unit_cost,
-                fixed_costs,
-                target_revenue,
-                target_profit,
-            )
+            if bulk_df is not None:
+                _render_bulk_results(bulk_df, fixed_costs)
+            else:
+                _render_results(
+                    contribution_margin,
+                    contribution_margin_ratio,
+                    break_even_units,
+                    break_even_revenue,
+                    margin_of_safety_pct,
+                    margin_of_safety_units,
+                    operating_leverage,
+                    current_profit,
+                    target_units,
+                    current_sales_units,
+                    unit_price,
+                    unit_cost,
+                    fixed_costs,
+                    target_revenue,
+                    target_profit,
+                )
 
     except Exception as e:
         logger.error(f"An unexpected error occurred in Margin Hunter: {e}", exc_info=True)
@@ -361,4 +380,84 @@ def _render_scenario_table(
         data=csv,
         file_name="margin_hunter_scenarios.csv",
         mime="text/csv",
+    )
+
+
+def _render_bulk_results(df: pd.DataFrame, global_fixed_costs: float):
+    """Render the results for multiple products from a CSV upload."""
+    st.subheader("📁 Bulk Analysis Results")
+
+    # Calculate metrics for each product
+    df["Contribution Margin"] = df["Unit Price"] - df["Unit Cost"]
+    df["Margin %"] = (df["Contribution Margin"] / df["Unit Price"]) * 100
+
+    # If Fixed Cost is not in CSV, use the global one from the slider
+    if "Fixed Cost" not in df.columns:
+        df["Fixed Cost"] = global_fixed_costs
+
+    df["Break-Even Units"] = df["Fixed Cost"] / df["Contribution Margin"]
+    df["Break-Even Revenue"] = df["Break-Even Units"] * df["Unit Price"]
+
+    # Handle negative margins (use a very large number instead of inf for better DF display)
+    df.loc[df["Contribution Margin"] <= 0, ["Break-Even Units", "Break-Even Revenue"]] = 999999
+
+    # Metrics Summary
+    avg_margin = df["Margin %"].mean()
+    total_products = len(df)
+    unprofitable = len(df[df["Contribution Margin"] <= 0])
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Total Products", total_products)
+    c2.metric("Avg Margin %", f"{avg_margin:.1f}%")
+    c3.metric("Unprofitable Items", unprofitable)
+
+    if unprofitable > 0:
+        st.warning(
+            f"⚠️ {unprofitable} products have a negative or zero contribution margin and will never break even."
+        )
+
+    # Sortable Table
+    st.markdown("#### 📋 Product Mix Analysis")
+    st.dataframe(
+        df.sort_values("Margin %", ascending=False),
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Unit Price": st.column_config.NumberColumn(format="$%.2f"),
+            "Unit Cost": st.column_config.NumberColumn(format="$%.2f"),
+            "Fixed Cost": st.column_config.NumberColumn(format="$%.2f"),
+            "Contribution Margin": st.column_config.NumberColumn(format="$%.2f"),
+            "Margin %": st.column_config.NumberColumn(format="%.1f%%"),
+            "Break-Even Units": st.column_config.NumberColumn(format="%d"),
+            "Break-Even Revenue": st.column_config.NumberColumn(format="$%.2f"),
+        },
+    )
+
+    # Visualization: Margin % by Product
+    st.markdown("#### 📈 Margin Comparison")
+    fig = go.Figure(
+        go.Bar(
+            x=df["Product"],
+            y=df["Margin %"],
+            marker_color=[
+                ui.THEME["success"] if m > 0 else ui.THEME["danger"] for m in df["Margin %"]
+            ],
+        )
+    )
+    fig.update_layout(
+        title="Contribution Margin % by Product",
+        yaxis_title="Margin %",
+        template=ui.get_plotly_template(),
+        height=400,
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Export
+    csv = df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "📥 Download Full Bulk Analysis (CSV)",
+        csv,
+        "bulk_margin_analysis.csv",
+        "text/csv",
+        use_container_width=True,
     )
