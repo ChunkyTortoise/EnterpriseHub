@@ -87,6 +87,10 @@ def _fetch_and_display_data(symbol: str) -> None:
     st.subheader("📑 Detailed Financial Statements")
     _display_financial_tabs(financials)
 
+    st.markdown("---")
+    st.subheader("💰 DCF Valuation Model")
+    _display_dcf_valuation(info, financials, symbol)
+
 
 def _display_header(info: dict, symbol: str) -> None:
     """Render the company header section."""
@@ -528,3 +532,232 @@ def _build_financial_summary(info: dict, financials: dict) -> str:
             summary_parts.append(f"Net Profit Margin: {net_margin:.1f}%")
 
     return "\n".join(summary_parts)
+
+
+def _display_dcf_valuation(info: dict, financials: dict, symbol: str) -> None:
+    """
+    Display DCF (Discounted Cash Flow) valuation model with adjustable parameters.
+
+    Args:
+        info: Company information dictionary
+        financials: Financial statements dictionary
+        symbol: Stock ticker symbol
+    """
+    st.markdown(
+        "Calculate intrinsic value using Discounted Cash Flow analysis. "
+        "Adjust growth assumptions to see how valuation changes."
+    )
+
+    # Get free cash flow data
+    cashflow = financials.get("cashflow")
+    if cashflow is None or cashflow.empty:
+        st.warning("⚠️ Cash flow data not available for DCF valuation.")
+        return
+
+    # Transpose and prepare cash flow data
+    cashflow_t = cashflow.T
+    cashflow_t.index = pd.to_datetime(cashflow_t.index)
+    cashflow_t = cashflow_t.sort_index()
+
+    # Find Free Cash Flow column
+    fcf_col = next(
+        (
+            col
+            for col in cashflow_t.columns
+            if any(key in str(col).replace(" ", "") for key in ["FreeCashFlow", "OperatingCashFlow"])
+        ),
+        None,
+    )
+
+    if not fcf_col or len(cashflow_t) == 0:
+        st.warning("⚠️ Free Cash Flow data not available for DCF valuation.")
+        return
+
+    # Get latest FCF
+    latest_fcf = cashflow_t[fcf_col].iloc[-1]
+
+    if pd.isna(latest_fcf) or latest_fcf <= 0:
+        st.warning("⚠️ Invalid Free Cash Flow data (negative or missing).")
+        return
+
+    # Get current stock price and shares outstanding
+    current_price = info.get("currentPrice", info.get("regularMarketPrice"))
+    shares_outstanding = info.get("sharesOutstanding")
+
+    if not current_price or not shares_outstanding:
+        st.warning("⚠️ Missing current price or shares outstanding data.")
+        return
+
+    # DCF Parameter Inputs
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        growth_years_1_5 = st.slider(
+            "Growth Rate Years 1-5 (%)",
+            min_value=-10.0,
+            max_value=50.0,
+            value=15.0,
+            step=1.0,
+            help="Expected annual FCF growth rate for the next 5 years",
+        )
+
+    with col2:
+        growth_years_6_10 = st.slider(
+            "Growth Rate Years 6-10 (%)",
+            min_value=-5.0,
+            max_value=25.0,
+            value=8.0,
+            step=1.0,
+            help="Expected annual FCF growth rate for years 6-10",
+        )
+
+    with col3:
+        terminal_growth = st.slider(
+            "Terminal Growth Rate (%)",
+            min_value=0.0,
+            max_value=5.0,
+            value=2.5,
+            step=0.5,
+            help="Perpetual growth rate after year 10 (typically GDP growth rate)",
+        )
+
+    col4, col5 = st.columns(2)
+
+    with col4:
+        discount_rate = st.slider(
+            "Discount Rate (WACC) (%)",
+            min_value=5.0,
+            max_value=20.0,
+            value=10.0,
+            step=0.5,
+            help="Weighted Average Cost of Capital - reflects investment risk",
+        )
+
+    with col5:
+        margin_of_safety = st.slider(
+            "Margin of Safety (%)",
+            min_value=0,
+            max_value=50,
+            value=20,
+            step=5,
+            help="Discount from fair value for conservative estimate",
+        )
+
+    # Calculate DCF
+    st.markdown("---")
+    st.markdown("#### 📊 DCF Calculation")
+
+    # Project future cash flows
+    projected_fcf = []
+    current_fcf = latest_fcf
+
+    # Years 1-5
+    for year in range(1, 6):
+        current_fcf = current_fcf * (1 + growth_years_1_5 / 100)
+        pv = current_fcf / ((1 + discount_rate / 100) ** year)
+        projected_fcf.append({"Year": year, "FCF": current_fcf, "PV": pv})
+
+    # Years 6-10
+    for year in range(6, 11):
+        current_fcf = current_fcf * (1 + growth_years_6_10 / 100)
+        pv = current_fcf / ((1 + discount_rate / 100) ** year)
+        projected_fcf.append({"Year": year, "FCF": current_fcf, "PV": pv})
+
+    # Terminal value
+    terminal_fcf = current_fcf * (1 + terminal_growth / 100)
+    terminal_value = terminal_fcf / (discount_rate / 100 - terminal_growth / 100)
+    terminal_pv = terminal_value / ((1 + discount_rate / 100) ** 10)
+
+    # Total enterprise value
+    sum_pv_fcf = sum(row["PV"] for row in projected_fcf)
+    enterprise_value = sum_pv_fcf + terminal_pv
+
+    # Equity value (simplified - not accounting for debt/cash)
+    equity_value = enterprise_value
+    fair_value_per_share = equity_value / shares_outstanding
+
+    # Apply margin of safety
+    conservative_value = fair_value_per_share * (1 - margin_of_safety / 100)
+
+    # Display results
+    result_col1, result_col2, result_col3, result_col4 = st.columns(4)
+
+    with result_col1:
+        st.metric("Current Price", f"${current_price:.2f}")
+
+    with result_col2:
+        st.metric("Fair Value", f"${fair_value_per_share:.2f}")
+
+    with result_col3:
+        upside = ((fair_value_per_share - current_price) / current_price) * 100
+        st.metric("Upside/Downside", f"{upside:+.1f}%", delta=f"{'Undervalued' if upside > 0 else 'Overvalued'}")
+
+    with result_col4:
+        st.metric(
+            f"Conservative Value ({margin_of_safety}% MoS)",
+            f"${conservative_value:.2f}",
+        )
+
+    # Valuation verdict
+    if fair_value_per_share > current_price * 1.2:
+        st.success(f"🟢 **UNDERVALUED** - Fair value is {upside:.1f}% above current price")
+    elif fair_value_per_share < current_price * 0.8:
+        st.error(f"🔴 **OVERVALUED** - Fair value is {abs(upside):.1f}% below current price")
+    else:
+        st.info(f"🟡 **FAIRLY VALUED** - Current price within 20% of fair value")
+
+    # Detailed breakdown
+    with st.expander("📋 Detailed DCF Breakdown", expanded=False):
+        st.markdown(f"**Starting FCF:** ${latest_fcf / 1e9:.2f}B")
+        st.markdown(f"**Sum of PV (Years 1-10):** ${sum_pv_fcf / 1e9:.2f}B")
+        st.markdown(f"**Terminal Value (PV):** ${terminal_pv / 1e9:.2f}B")
+        st.markdown(f"**Enterprise Value:** ${enterprise_value / 1e9:.2f}B")
+        st.markdown(f"**Shares Outstanding:** {shares_outstanding / 1e9:.2f}B")
+
+        # Show projection table
+        st.markdown("##### Projected Free Cash Flows")
+        projection_df = pd.DataFrame(projected_fcf)
+        projection_df["FCF"] = projection_df["FCF"].apply(lambda x: f"${x / 1e9:.2f}B")
+        projection_df["PV"] = projection_df["PV"].apply(lambda x: f"${x / 1e9:.2f}B")
+        st.dataframe(projection_df, use_container_width=True, hide_index=True)
+
+    # Sensitivity analysis
+    st.markdown("---")
+    st.markdown("#### 🔍 Sensitivity Analysis")
+    st.caption("How fair value changes with different growth and discount rate assumptions")
+
+    # Create sensitivity table
+    discount_rates = [discount_rate - 2, discount_rate - 1, discount_rate, discount_rate + 1, discount_rate + 2]
+    growth_rates = [growth_years_1_5 - 5, growth_years_1_5, growth_years_1_5 + 5]
+
+    sensitivity_data = []
+    for gr in growth_rates:
+        row = {"Growth Rate": f"{gr:.0f}%"}
+        for dr in discount_rates:
+            # Recalculate with new parameters
+            temp_fcf = latest_fcf
+            temp_pv_sum = 0
+            for y in range(1, 6):
+                temp_fcf = temp_fcf * (1 + gr / 100)
+                temp_pv_sum += temp_fcf / ((1 + dr / 100) ** y)
+            for y in range(6, 11):
+                temp_fcf = temp_fcf * (1 + growth_years_6_10 / 100)
+                temp_pv_sum += temp_fcf / ((1 + dr / 100) ** y)
+
+            temp_terminal_fcf = temp_fcf * (1 + terminal_growth / 100)
+            temp_terminal_value = temp_terminal_fcf / (dr / 100 - terminal_growth / 100)
+            temp_terminal_pv = temp_terminal_value / ((1 + dr / 100) ** 10)
+
+            temp_ev = temp_pv_sum + temp_terminal_pv
+            temp_fair_value = temp_ev / shares_outstanding
+
+            row[f"WACC {dr:.0f}%"] = f"${temp_fair_value:.2f}"
+        sensitivity_data.append(row)
+
+    sensitivity_df = pd.DataFrame(sensitivity_data)
+    st.dataframe(sensitivity_df, use_container_width=True, hide_index=True)
+
+    st.caption(
+        "💡 **Tip:** If the stock price is below most values in the table, it may be undervalued. "
+        "If it's above most values, it may be overvalued."
+    )
