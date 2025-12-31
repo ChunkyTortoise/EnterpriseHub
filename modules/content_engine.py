@@ -640,15 +640,59 @@ def _render_four_panel_interface(api_key: str) -> None:
             key="preview_area",
         )
 
-        # Character count with validation
+        # Character count and engagement score
         char_count = len(st.session_state.generated_post)
-        if char_count > LINKEDIN_CHAR_LIMIT:
-            st.warning(
-                f"⚠️ Character count: {char_count:,} exceeds LinkedIn limit: {LINKEDIN_CHAR_LIMIT:,}"
+
+        # Display engagement score if available
+        engagement_score = None
+        if st.session_state.content_history:
+            latest_entry = st.session_state.content_history[-1]
+            if latest_entry.get("content") == st.session_state.generated_post:
+                engagement_score = latest_entry.get("predicted_engagement")
+
+        # If not in history, calculate it now
+        if engagement_score is None:
+            engagement_score = _calculate_engagement_score(
+                content=st.session_state.generated_post,
+                platform=platform,
+                template=st.session_state.get("selected_template", "Professional Insight"),
+                tone=tone,
             )
-        else:
-            st.caption(
-                f"📊 Character count: {char_count:,} (LinkedIn limit: {LINKEDIN_CHAR_LIMIT:,})"
+
+        # Display metrics in columns
+        metric_col1, metric_col2, metric_col3 = st.columns(3)
+
+        with metric_col1:
+            if char_count > LINKEDIN_CHAR_LIMIT:
+                st.metric(
+                    "Character Count",
+                    f"{char_count:,}",
+                    delta=f"+{char_count - LINKEDIN_CHAR_LIMIT:,} over limit",
+                    delta_color="inverse",
+                )
+            else:
+                st.metric(
+                    "Character Count",
+                    f"{char_count:,}",
+                    delta=f"{LINKEDIN_CHAR_LIMIT - char_count:,} remaining",
+                )
+
+        with metric_col2:
+            word_count = len(st.session_state.generated_post.split())
+            st.metric("Word Count", word_count)
+
+        with metric_col3:
+            # Engagement score with color coding
+            engagement_color = "🟢" if engagement_score >= 7.5 else "🟡" if engagement_score >= 5.5 else "🔴"
+            engagement_label = (
+                "Excellent" if engagement_score >= 7.5
+                else "Good" if engagement_score >= 5.5
+                else "Needs Work"
+            )
+            st.metric(
+                f"{engagement_color} Predicted Engagement",
+                f"{engagement_score:.1f}/10",
+                delta=engagement_label,
             )
 
         # Export options
