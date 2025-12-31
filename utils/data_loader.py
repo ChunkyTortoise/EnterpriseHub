@@ -120,6 +120,12 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
         df["MA20"] = ta.trend.sma_indicator(df["Close"], window=20)
         logger.debug("Calculated MA20")
 
+        # Calculate Bollinger Bands
+        bb_indicator = ta.volatility.BollingerBands(df["Close"], window=20, window_dev=2)
+        df["BB_Upper"] = bb_indicator.bollinger_hband()
+        df["BB_Lower"] = bb_indicator.bollinger_lband()
+        logger.debug("Calculated Bollinger Bands")
+
         # Calculate RSI (14-period)
         df["RSI"] = ta.momentum.rsi(df["Close"], window=14)
         logger.debug("Calculated RSI")
