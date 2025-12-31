@@ -1,0 +1,67 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-7.4.3, pluggy-1.6.0 -- /Library/Developer/CommandLineTools/usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/cave/Desktop/enterprise-hub/EnterpriseHub
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.12.0, cov-4.1.0, mock-3.12.0
+collecting ... collected 475 items / 3 errors
+
+==================================== ERRORS ====================================
+_______________ ERROR collecting tests/unit/test_agent_logic.py ________________
+ImportError while importing test module '/Users/cave/Desktop/enterprise-hub/EnterpriseHub/tests/unit/test_agent_logic.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/unit/test_agent_logic.py:6: in <module>
+    from modules import agent_logic
+E   ModuleNotFoundError: No module named 'modules'
+___ ERROR collecting tests/unit/test_marketing_analytics_data_integration.py ___
+ImportError while importing test module '/Users/cave/Desktop/enterprise-hub/EnterpriseHub/tests/unit/test_marketing_analytics_data_integration.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/unit/test_marketing_analytics_data_integration.py:7: in <module>
+    from modules import marketing_analytics
+E   ModuleNotFoundError: No module named 'modules'
+______________ ERROR collecting tests/unit/test_smart_forecast.py ______________
+ImportError while importing test module '/Users/cave/Desktop/enterprise-hub/EnterpriseHub/tests/unit/test_smart_forecast.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/unit/test_smart_forecast.py:7: in <module>
+    from modules import smart_forecast
+E   ModuleNotFoundError: No module named 'modules'
+=============================== warnings summary ===============================
+../../../Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35
+  /Users/cave/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform darwin, python 3.9.6-final-0 -----------
+Name                          Stmts   Miss  Cover   Missing
+-----------------------------------------------------------
+utils/agent_handlers.py         366    327    11%   42-48, 84-120, 146-179, 204-230, 255-333, 364-424, 454-515, 554-651, 687-792, 825-889, 926-929
+utils/agent_registry.py          30      5    83%   609-612, 622
+utils/data_loader.py             86     68    21%   45-74, 102-137, 154-164, 178-192, 206-216
+utils/data_source_faker.py       20     16    20%   39-78
+utils/exceptions.py              18      6    67%   23-25, 42-44
+utils/logger.py                  18      1    94%   38
+utils/orchestrator.py           238    128    46%   30-31, 191-192, 196-199, 203, 207-211, 226-243, 270-273, 283-284, 288-290, 294-296, 312-329, 344-354, 370-420, 439-448, 461-569
+utils/sentiment_analyzer.py      90     80    11%   10-11, 26-31, 48-84, 111-246
+utils/ui.py                     135    106    21%   104-117, 122, 720-730, 739, 746-748, 760-769, 791-818, 827-854, 861-877, 884-997, 1056-1144, 1213-1245, 1266-1301, 1321-1358, 1378-1420, 1427, 1465, 1474-1539, 1544-1560
+utils/validators.py             180    141    22%   60, 76-109, 128-134, 147-169, 184-204, 220, 232-264, 277-293, 306-311, 324-339, 353-368, 384-386, 400-411, 424-437, 451, 463-540
+-----------------------------------------------------------
+TOTAL                          1181    878    26%
+Coverage HTML written to dir htmlcov
+
+=========================== short test summary info ============================
+ERROR tests/unit/test_agent_logic.py
+ERROR tests/unit/test_marketing_analytics_data_integration.py
+ERROR tests/unit/test_smart_forecast.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!
+======================== 1 warning, 3 errors in 29.34s =========================

@@ -1,0 +1,16 @@
+/Users/cave/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Found 11 known vulnerabilities in 7 packages
+Name       Version ID                  Fix Versions
+---------- ------- ------------------- ------------
+black      23.11.0 PYSEC-2024-48       24.3.0
+filelock   3.19.1  GHSA-w853-jp5j-5j7f 3.20.1
+future     0.18.2  PYSEC-2022-42991    0.18.3
+pip        21.2.4  PYSEC-2023-228      23.3
+pip        21.2.4  GHSA-4xh5-x5gv-qwph 25.3
+setuptools 58.0.4  PYSEC-2022-43012    65.5.1
+setuptools 58.0.4  PYSEC-2025-49       78.1.1
+setuptools 58.0.4  GHSA-cx63-2mw6-8hw5 70.0.0
+streamlit  1.28.0  PYSEC-2024-153      1.37.0
+streamlit  1.28.0  GHSA-8qw9-gf7w-42x5 1.30.0
+wheel      0.37.0  PYSEC-2022-43017    0.38.1

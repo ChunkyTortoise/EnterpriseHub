@@ -1,0 +1,6 @@
+Baseline captured on Wed Dec 31 08:33:31 PST 2025
+
+Total Python files:       41
+Repo size: 5.0M
+Test errors: 3 files with broken imports
+Coverage: 26% (baseline from test log)
