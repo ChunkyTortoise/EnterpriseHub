@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services & Pricing | EnterpriseHub</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Custom AI frameworks, prompt engineering, and business intelligence solutions. Quick solutions from $300, standard projects $1,500-4,000, enterprise partnerships from $5,000.">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 2px solid #667eea;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .service-card {
+            transition: all 0.3s ease;
+        }
+        .service-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm fixed w-full top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <a href="../index.html" class="text-2xl font-bold text-gray-800">EnterpriseHub</a>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="../index.html#services" class="text-purple-600 font-semibold">Services</a>
+                    <a href="../index.html#frameworks" class="text-gray-600 hover:text-purple-600 transition">Frameworks</a>
+                    <a href="../index.html#process" class="text-gray-600 hover:text-purple-600 transition">Process</a>
+                    <a href="../index.html#contact" class="text-gray-600 hover:text-purple-600 transition">Contact</a>
+                </div>
+                <a href="../index.html#contact" class="btn-primary text-sm px-6 py-3">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="pt-32 pb-12 gradient-bg text-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-5xl font-bold mb-4">Services & Solutions</h1>
+                <p class="text-2xl text-purple-100">From quick fixes to enterprise partnerships - choose what fits your needs</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tier Comparison -->
+    <section class="py-12 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">Package Comparison</h2>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b-2 border-gray-300">
+                                <th class="py-3 px-4 text-gray-700 font-semibold">Feature</th>
+                                <th class="py-3 px-4 text-center">
+                                    <div class="text-blue-600 font-bold">Tier 1</div>
+                                    <div class="text-sm text-gray-600">Quick</div>
+                                </th>
+                                <th class="py-3 px-4 text-center bg-purple-50">
+                                    <div class="text-purple-600 font-bold">Tier 2 ⭐</div>
+                                    <div class="text-sm text-gray-600">Standard</div>
+                                </th>
+                                <th class="py-3 px-4 text-center">
+                                    <div class="text-green-600 font-bold">Tier 3</div>
+                                    <div class="text-sm text-gray-600">Enterprise</div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-semibold">Price Range</td>
+                                <td class="py-3 px-4 text-center">$300-800</td>
+                                <td class="py-3 px-4 text-center bg-purple-50">$1,500-4,000</td>
+                                <td class="py-3 px-4 text-center">$5,000-15,000+</td>
+                            </tr>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-semibold">Timeline</td>
+                                <td class="py-3 px-4 text-center">2-3 days</td>
+                                <td class="py-3 px-4 text-center bg-purple-50">1-2 weeks</td>
+                                <td class="py-3 px-4 text-center">3-6 weeks</td>
+                            </tr>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-semibold">Best For</td>
+                                <td class="py-3 px-4 text-center">POCs, Testing</td>
+                                <td class="py-3 px-4 text-center bg-purple-50">Core workflows</td>
+                                <td class="py-3 px-4 text-center">Enterprise-wide</td>
+                            </tr>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-semibold">Techniques</td>
+                                <td class="py-3 px-4 text-center">5-15</td>
+                                <td class="py-3 px-4 text-center bg-purple-50">30-50</td>
+                                <td class="py-3 px-4 text-center">100+</td>
+                            </tr>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-semibold">Customization</td>
+                                <td class="py-3 px-4 text-center">Templates</td>
+                                <td class="py-3 px-4 text-center bg-purple-50">Moderate</td>
+                                <td class="py-3 px-4 text-center">Extensive</td>
+                            </tr>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-semibold">Training</td>
+                                <td class="py-3 px-4 text-center">Documentation</td>
+                                <td class="py-3 px-4 text-center bg-purple-50">Video + Q&A</td>
+                                <td class="py-3 px-4 text-center">Live sessions</td>
+                            </tr>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-semibold">Support</td>
+                                <td class="py-3 px-4 text-center">7 days</td>
+                                <td class="py-3 px-4 text-center bg-purple-50">14-21 days</td>
+                                <td class="py-3 px-4 text-center">90 days</td>
+                            </tr>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-semibold">Integration</td>
+                                <td class="py-3 px-4 text-center">Standalone</td>
+                                <td class="py-3 px-4 text-center bg-purple-50">API/Tools</td>
+                                <td class="py-3 px-4 text-center">Full integration</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold">Updates</td>
+                                <td class="py-3 px-4 text-center">One-time</td>
+                                <td class="py-3 px-4 text-center bg-purple-50">Minor</td>
+                                <td class="py-3 px-4 text-center">Ongoing</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TIER 1: Quick Solutions -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold mb-4">TIER 1</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-2">Quick Solutions</h2>
+                    <p class="text-xl text-gray-600">2-3 Days | $300-$800</p>
+                    <p class="text-gray-500 mt-2">Perfect for: Testing the waters, specific pain points, POC projects</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Service 1 -->
+                    <div class="service-card card">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Custom Prompt Engineering Package</h3>
+                        <div class="text-3xl font-bold text-blue-600 mb-4">Starting at $400</div>
+
+                        <p class="text-gray-600 mb-4">Optimized prompts for your specific use case</p>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Deliverables:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• 5-10 production-ready prompt templates</li>
+                                <li>• Documentation with examples</li>
+                                <li>• Best practices guide</li>
+                                <li>• Token cost analysis</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Use Cases:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Content generation workflows</li>
+                                <li>• Customer support automation</li>
+                                <li>• Data extraction and analysis</li>
+                                <li>• Report generation</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4 text-sm text-gray-500">
+                            <strong>Technologies:</strong> GPT-4, Claude, Gemini, Few-Shot Learning
+                        </div>
+
+                        <a href="../index.html#contact" class="btn-primary w-full text-center">Request Details</a>
+                    </div>
+
+                    <!-- Service 2 -->
+                    <div class="service-card card">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Prompt Optimization Audit</h3>
+                        <div class="text-3xl font-bold text-blue-600 mb-4">Starting at $500</div>
+
+                        <p class="text-gray-600 mb-4">Analyze and optimize your existing prompts</p>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Deliverables:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Comprehensive audit of current prompts</li>
+                                <li>• Optimization recommendations</li>
+                                <li>• Cost reduction analysis</li>
+                                <li>• Implementation roadmap</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Perfect For:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Companies with inconsistent results</li>
+                                <li>• High API costs without clear ROI</li>
+                                <li>• Scaling AI usage across teams</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4 p-3 bg-green-50 rounded-lg">
+                            <div class="text-sm font-semibold text-green-700">ROI: Clients typically save 40-60% on API costs</div>
+                        </div>
+
+                        <a href="../index.html#contact" class="btn-primary w-full text-center">Start Audit</a>
+                    </div>
+
+                    <!-- Service 3 -->
+                    <div class="service-card card">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Framework Lite Implementation</h3>
+                        <div class="text-3xl font-bold text-blue-600 mb-4">Starting at $600</div>
+
+                        <p class="text-gray-600 mb-4">Deploy lightweight framework for your specific task</p>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Deliverables:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Custom prompts (3-5 variations)</li>
+                                <li>• Technique selection for your domain</li>
+                                <li>• Implementation guide</li>
+                                <li>• 7 days support</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Use Cases:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Research and analysis automation</li>
+                                <li>• Strategic planning assistance</li>
+                                <li>• Content creation workflows</li>
+                                <li>• Multi-step reasoning tasks</li>
+                            </ul>
+                        </div>
+
+                        <a href="../index.html#contact" class="btn-primary w-full text-center">Get Started</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TIER 2: Standard Projects -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-semibold mb-4">TIER 2 ⭐ MOST POPULAR</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-2">Standard Projects</h2>
+                    <p class="text-xl text-gray-600">1-2 Weeks | $1,500-$4,000</p>
+                    <p class="text-gray-500 mt-2">Perfect for: Core business processes, team-wide deployment, custom frameworks</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <!-- Service 4 -->
+                    <div class="service-card card border-t-4 border-purple-500">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Custom Meta-Prompting Framework</h3>
+                        <div class="text-3xl font-bold text-purple-600 mb-4">Starting at $2,500</div>
+
+                        <p class="text-gray-600 mb-4">Build a tailored meta-prompting system for your organization</p>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Process:</div>
+                            <ol class="text-sm text-gray-600 space-y-1">
+                                <li>1. Discovery (2 days) - Understand your workflows</li>
+                                <li>2. Design (3 days) - Create framework architecture</li>
+                                <li>3. Build (4 days) - Implement and test</li>
+                                <li>4. Deploy (1 day) - Training and handoff</li>
+                            </ol>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Includes:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>✓ Framework documentation (50+ pages)</li>
+                                <li>✓ Technique selection matrix</li>
+                                <li>✓ Implementation code/scripts</li>
+                                <li>✓ Training videos (2-3 hours)</li>
+                                <li>✓ Quality assurance checklist</li>
+                                <li>✓ 14 days email/Slack support</li>
+                            </ul>
+                        </div>
+
+                        <div class="text-sm text-gray-500 mb-4">
+                            <strong>Timeline:</strong> 10-12 days | <strong>Tech:</strong> Custom frameworks
+                        </div>
+
+                        <a href="../index.html#contact" class="btn-primary w-full text-center">Schedule Discovery Call</a>
+                    </div>
+
+                    <!-- Service 5 -->
+                    <div class="service-card card border-t-4 border-purple-500">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Financial Modeling Solutions</h3>
+                        <div class="text-3xl font-bold text-purple-600 mb-4">Starting at $3,500</div>
+
+                        <p class="text-gray-600 mb-4">Deploy production-ready financial analysis modules</p>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Features:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• DCF valuation models with sensitivity analysis</li>
+                                <li>• Monte Carlo simulation for risk assessment</li>
+                                <li>• Goal Seek optimization (3 scenarios)</li>
+                                <li>• Bulk CSV analysis for product catalogs</li>
+                                <li>• PDF export for stakeholder reports</li>
+                                <li>• 21 days support</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Perfect For:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Due diligence analysts</li>
+                                <li>• M&A valuation</li>
+                                <li>• CFO advisory</li>
+                                <li>• Business consulting</li>
+                            </ul>
+                        </div>
+
+                        <a href="../index.html#contact" class="btn-primary w-full text-center">View Demo</a>
+                    </div>
+
+                    <!-- Service 6 -->
+                    <div class="service-card card border-t-4 border-purple-500">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Technical Analysis Platform</h3>
+                        <div class="text-3xl font-bold text-purple-600 mb-4">Starting at $3,200</div>
+
+                        <p class="text-gray-600 mb-4">Bloomberg-quality charts and indicators for market analysis</p>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Capabilities:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Multi-panel charts (Price, RSI, MACD, Volume)</li>
+                                <li>• Bollinger Bands + ATR indicators</li>
+                                <li>• Multi-ticker comparison (up to 5 assets)</li>
+                                <li>• Real-time data via Yahoo Finance</li>
+                                <li>• Interactive Plotly visualizations</li>
+                                <li>• 21 days support</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4 p-3 bg-blue-50 rounded-lg">
+                            <div class="text-sm font-semibold text-blue-700">Replaces $24k/year Bloomberg Terminal</div>
+                        </div>
+
+                        <a href="../index.html#contact" class="btn-primary w-full text-center">Technical Specs</a>
+                    </div>
+
+                    <!-- Service 7 -->
+                    <div class="service-card card border-t-4 border-purple-500">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">AI Content Engine</h3>
+                        <div class="text-3xl font-bold text-purple-600 mb-4">Starting at $2,000</div>
+
+                        <p class="text-gray-600 mb-4">Automated LinkedIn content with engagement prediction</p>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Deliverables:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Claude AI integration (6 templates x 5 tones)</li>
+                                <li>• Engagement score prediction (0-10 scale)</li>
+                                <li>• A/B variant generation (3 variations)</li>
+                                <li>• Multi-platform adaptation (Twitter, Instagram)</li>
+                                <li>• Custom training curriculum</li>
+                                <li>• 14 days support</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4 p-3 bg-green-50 rounded-lg">
+                            <div class="text-sm font-semibold text-green-700">Cost: $0.003/post (300x cheaper than ghostwriters)</div>
+                        </div>
+
+                        <a href="../index.html#contact" class="btn-primary w-full text-center">Use Case Examples</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TIER 3: Enterprise -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold mb-4">TIER 3</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-2">Enterprise Solutions</h2>
+                    <p class="text-xl text-gray-600">3-6 Weeks | $5,000-$15,000+</p>
+                    <p class="text-gray-500 mt-2">Perfect for: Mission-critical systems, enterprise-wide deployment, ongoing partnerships</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Service 8 -->
+                    <div class="service-card card border-t-4 border-green-500">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Enterprise AI Framework Architecture</h3>
+                        <div class="text-3xl font-bold text-green-600 mb-4">Starting at $8,000</div>
+
+                        <p class="text-gray-600 mb-4">Design and deploy comprehensive AI framework for your organization</p>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Scope:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Discovery and requirements (1 week)</li>
+                                <li>• Architecture design (1 week)</li>
+                                <li>• Framework development (2-3 weeks)</li>
+                                <li>• Testing and refinement (1 week)</li>
+                                <li>• Deployment and training (1 week)</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Includes:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>✓ Unlimited technique customization</li>
+                                <li>✓ Priority support (4-hour response)</li>
+                                <li>✓ Monthly performance reviews (3 months)</li>
+                                <li>✓ Framework updates and improvements</li>
+                                <li>✓ On-site training (optional, +$2,000)</li>
+                            </ul>
+                        </div>
+
+                        <a href="../index.html#contact" class="btn-primary w-full text-center">Schedule Strategy Call</a>
+                    </div>
+
+                    <!-- Service 9 -->
+                    <div class="service-card card border-t-4 border-green-500">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Ongoing AI Optimization Partnership</h3>
+                        <div class="text-3xl font-bold text-green-600 mb-4">$2,500-8,000/month</div>
+
+                        <p class="text-gray-600 mb-4">Retainer-based partnership for continuous AI improvement</p>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Monthly Activities:</div>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Review metrics and performance</li>
+                                <li>• Implement new techniques</li>
+                                <li>• Optimize existing workflows</li>
+                                <li>• Address team questions</li>
+                                <li>• Train on new capabilities</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="font-semibold text-gray-700 mb-2">Pricing:</div>
+                            <ul class="text-sm text-gray-600 space-y-2">
+                                <li><strong>Basic:</strong> $2,500/month (10 hours)</li>
+                                <li><strong>Standard:</strong> $5,000/month (20 hours) ⭐</li>
+                                <li><strong>Premium:</strong> $8,000/month (40 hours)</li>
+                            </ul>
+                        </div>
+
+                        <a href="../index.html#contact" class="btn-primary w-full text-center">Discuss Partnership</a>
+                    </div>
+                </div>
+
+                <div class="card mt-8 bg-gradient-to-r from-green-50 to-blue-50 text-center">
+                    <h3 class="text-2xl font-bold mb-3 text-gray-800">Custom Solution - Let's Talk</h3>
+                    <p class="text-gray-600 mb-4">Unique challenges require unique solutions</p>
+                    <div class="mb-4">
+                        <div class="font-semibold text-gray-700 mb-2">Examples:</div>
+                        <div class="text-sm text-gray-600">
+                            Multi-modal AI systems • Industry-specific frameworks • API integrations • White-label solutions • Research collaborations
+                        </div>
+                    </div>
+                    <a href="../index.html#contact" class="btn-primary">Tell Me About Your Challenge</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add-Ons -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">Add-Ons & Extras</h2>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">Extended Support</h3>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• 30 days: +$300</li>
+                            <li>• 60 days: +$500</li>
+                            <li>• 90 days: +$800</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">Additional Training</h3>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• Team Workshop (4 hrs): $1,000</li>
+                            <li>• Advanced Training (8 hrs): $1,800</li>
+                            <li>• Ongoing Office Hours: $500/month</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">Integrations</h3>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• Slack/Discord Bot: +$800</li>
+                            <li>• API Development: +$1,200</li>
+                            <li>• Custom Web Interface: +$2,000</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">Priority Service</h3>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• 4-hour response time: +$500/month</li>
+                            <li>• Same-day delivery rush: +50% project fee</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-16 gradient-bg text-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4">Not Sure Which Package?</h2>
+                <p class="text-xl mb-8 text-purple-100">Free 30-Minute Consultation</p>
+
+                <ul class="text-left inline-block mb-8 text-purple-100">
+                    <li class="mb-2">✓ Discuss your specific needs</li>
+                    <li class="mb-2">✓ Get recommendation on best approach</li>
+                    <li class="mb-2">✓ Receive ballpark estimate</li>
+                    <li>✓ No obligation</li>
+                </ul>
+
+                <div class="text-center">
+                    <a href="../index.html#contact" class="btn-primary text-xl px-8 py-4 inline-block mb-4">
+                        📅 Book Your Free Call
+                    </a>
+                    <p class="text-sm text-purple-200">Or email: <a href="https://linkedin.com/in/caymanroden" target="_blank" class="underline">Connect on LinkedIn</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p class="text-sm text-gray-400">© 2025 Cayman Roden. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
