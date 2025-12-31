@@ -49,6 +49,11 @@ Located in `modules/`:
 - **README_MARKETING_ANALYTICS.md** - Campaign tracking
 - **README_AGENT_LOGIC.md** - Sentiment analysis
 
+### Handoffs & Reports
+Located in `docs/handoffs/` and `docs/reports/`:
+- **[HANDOFF_CLEANUP_SESSION.md](handoffs/HANDOFF_CLEANUP_SESSION.md)** - Summary of cleanup and optimization (Dec 31, 2025)
+- **PHASE5_DEPLOYMENT_GUIDE.md** - Go-to-market playbook
+
 ### Scenario Templates
 Located in `scenarios/`:
 - **saas-pricing-template.md** - SaaS industry template
