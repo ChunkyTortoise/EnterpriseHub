@@ -47,7 +47,10 @@ class FreelancerAgent(BaseAgent):
             if "email-verification" in self.page.url:
                 return {"status": "pending_verification", "verification_type": "email"}
             elif "dashboard" in self.page.url:
-                return {"status": "success", "profile_url": f"https://www.freelancer.com/u/{self.profile['username']}"}
+                return {
+                    "status": "success",
+                    "profile_url": f"https://www.freelancer.com/u/{self.profile['username']}",
+                }
             else:
                 return {"status": "unknown", "message": self.page.url}
 

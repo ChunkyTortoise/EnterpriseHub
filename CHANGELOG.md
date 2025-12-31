@@ -10,8 +10,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Reorganized test structure into `tests/unit/` and `tests/integration/`
 - Archived historical reports to `_archive/` directory
-- Removed empty `core/` directory
 - Created professional archive structure with README
+
+## [0.2.0] - 2025-12-31
+
+### Added
+- **Margin Hunter**:
+  - Goal Seek Calculator for reverse-engineering profit targets
+  - Monte Carlo Simulation for stochastic profit risk analysis
+  - Interactive Sensitivity Heatmaps for price vs. cost modeling
+- **Financial Analyst**:
+  - 10-year Discounted Cash Flow (DCF) Valuation Model
+  - Professional PDF Statement Export with matplotlib formatting
+  - Multi-variable Sensitivity Tables for intrinsic value
+- **Market Pulse**:
+  - Multi-Ticker Comparison for relative performance analysis
+  - Advanced Indicators: Bollinger Bands and Average True Range (ATR)
+- **Content Engine**:
+  - Multi-Platform Adapter (LinkedIn, X, FB, Instagram, Email)
+  - A/B Variant Generator (3 versions per post)
+  - ML-powered Engagement Prediction scoring
+- **Testing**:
+  - Added 22 comprehensive unit tests for new financial and modeling features
+  - Fixed Streamlit mocking issues in existing test suite
+
+### Changed
+- Updated design system with improved contrast and accessibility
+- Refactored CVP calculations for high-performance vectorization
+
+### Fixed
+- Line length violations across all core modules
+- Type hint violations in Margin Hunter
+- Nested f-string syntax for Python < 3.12 compatibility
+- Streamlit `st.columns` and `st.tabs` mocking in unit tests
 
 ## [0.1.0] - 2025-12-06
 

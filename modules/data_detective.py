@@ -721,7 +721,7 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
                 "has_issue": True,
                 "severity": "Medium",
                 "description": (
-                    f"Found {duplicate_count:,} duplicate rows " f"({pct_duplicates:.2f}% of data)"
+                    f"Found {duplicate_count:,} duplicate rows ({pct_duplicates:.2f}% of data)"
                 ),
                 "recommendation": "Remove duplicate rows to ensure data integrity",
                 "action": lambda df: df.drop_duplicates(),
@@ -762,8 +762,7 @@ def _assess_data_quality(df: pd.DataFrame) -> List[Dict[str, Any]]:
                 "has_issue": True,
                 "severity": "Low",
                 "description": (
-                    f"Found {total_outliers:,} outliers across "
-                    f"{len(outlier_cols)} numeric columns"
+                    f"Found {total_outliers:,} outliers across {len(outlier_cols)} numeric columns"
                 ),
                 "recommendation": (
                     "Review outliers to determine if they are data errors or "

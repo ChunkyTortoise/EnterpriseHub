@@ -22,6 +22,40 @@ from utils.orchestrator import (
 )
 
 
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+
+from utils.exceptions import InvalidTickerError
+
+@pytest.fixture(autouse=True)
+def mock_data_loader(monkeypatch):
+    """Mock data loader to avoid real API calls in integration tests."""
+    def mock_get_stock_data(ticker, period="1y", interval="1d"):
+        if "INVALID" in ticker.upper():
+            raise InvalidTickerError(ticker, f"No data available for '{ticker}'")
+            
+        # Return enough data for indicators (need at least 20-50 rows)
+        days = 100
+        dates = pd.date_range(end=datetime.now(), periods=days, freq="D")
+        return pd.DataFrame({
+            "Open": np.random.uniform(100, 110, days),
+            "High": np.random.uniform(110, 120, days),
+            "Low": np.random.uniform(90, 100, days),
+            "Close": np.random.uniform(100, 110, days),
+            "Volume": np.random.randint(1000000, 5000000, days)
+        }, index=dates)
+    
+    def mock_get_news(ticker):
+        return [{"title": "Test News", "publisher": "Test Source", "link": "https://example.com"}]
+    
+    def mock_get_company_info(ticker):
+        return {"longName": "Test Company", "sector": "Technology", "marketCap": 1e12}
+
+    monkeypatch.setattr("utils.agent_handlers.get_stock_data", mock_get_stock_data)
+    monkeypatch.setattr("utils.agent_handlers.get_news", mock_get_news)
+    monkeypatch.setattr("utils.agent_handlers.get_company_info", mock_get_company_info)
+
 # ============================================================================
 # Fixtures
 # ============================================================================
@@ -514,10 +548,10 @@ class TestWorkflowStateManagement:
         # Verify WorkflowResult structure
         assert hasattr(result, "workflow_id")
         assert hasattr(result, "status")
-        assert hasattr(result, "stage_results")
+        assert hasattr(result, "agent_results")
         assert hasattr(result, "outputs")
         assert hasattr(result, "error")
-        assert hasattr(result, "total_execution_time")
+        assert hasattr(result, "execution_time")
 
     def test_stage_execution_order(
         self, orchestrator: Orchestrator, complex_workflow: Workflow

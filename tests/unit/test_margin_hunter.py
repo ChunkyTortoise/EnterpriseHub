@@ -115,14 +115,25 @@ class TestMarginHunterRenderFunction:
             5000.0,  # fixed_costs
             2000.0,  # target_profit
             250,  # current_sales_units
+            10000.0,  # goal_profit_to_units (in _render_goal_seek)
+            500,  # goal_units_to_price
+            5000.0,  # goal_units_target_profit
+            300,  # goal_profit_current_vol
+            8000.0,  # goal_profit_current
+        ]
+        mock_st.file_uploader.return_value = None
+
+        # Mock columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
         ]
 
-        # Mock columns to prevent unpacking errors (multiple calls)
-        mock_st.columns.side_effect = [
-            [MagicMock(), MagicMock()],  # Input layout (col1, col2)
-            [MagicMock(), MagicMock(), MagicMock()],  # Results row 1 (m1, m2, m3)
-            [MagicMock(), MagicMock(), MagicMock()],  # Results row 2 (m4, m5, m6)
-        ]
+        # Mock tabs
+        mock_st.tabs.return_value = [MagicMock(), MagicMock(), MagicMock()]
+
+        # Mock other UI elements
+        mock_st.expander.return_value.__enter__.return_value = MagicMock()
+        mock_st.button.return_value = False
 
         # Call render
         margin_hunter.render()
@@ -145,10 +156,14 @@ class TestMarginHunterRenderFunction:
             250,  # current_sales_units
         ]
 
+        # Mock file_uploader to return None
+        mock_st.file_uploader.return_value = None
+
         # Mock columns
-        mock_col1 = MagicMock()
-        mock_col2 = MagicMock()
-        mock_st.columns.return_value = [mock_col1, mock_col2]
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+        mock_st.expander.return_value.__enter__.return_value = MagicMock()
 
         # Call render
         margin_hunter.render()
@@ -171,12 +186,19 @@ class TestMarginHunterRenderFunction:
             5000.0,  # fixed_costs
             2000.0,  # target_profit
             250,  # current_sales_units
+            10000.0,  # goal_profit_to_units (in _render_goal_seek)
+            500,  # goal_units_to_price
+            5000.0,  # goal_units_target_profit
+            300,  # goal_profit_current_vol
+            8000.0,  # goal_profit_current
         ]
+        mock_st.file_uploader.return_value = None
 
         # Mock columns
-        mock_col1 = MagicMock()
-        mock_col2 = MagicMock()
-        mock_st.columns.return_value = [mock_col1, mock_col2]
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+        mock_st.expander.return_value.__enter__.return_value = MagicMock()
 
         # Call render
         margin_hunter.render()
@@ -265,7 +287,9 @@ class TestGoalSeekCalculations:
         unit_cost = 20.0
 
         # Price = (Fixed + Profit + (Cost × Units)) / Units
-        required_price = (fixed_costs + target_profit + (unit_cost * achievable_units)) / achievable_units
+        required_price = (
+            fixed_costs + target_profit + (unit_cost * achievable_units)
+        ) / achievable_units
         new_margin = required_price - unit_cost
         new_margin_pct = (new_margin / required_price) * 100
 
@@ -327,14 +351,10 @@ class TestMonteCarloSimulation:
 
         # Generate samples
         cost_samples = np.random.normal(
-            unit_cost,
-            unit_cost * (cost_variance / 100),
-            num_simulations
+            unit_cost, unit_cost * (cost_variance / 100), num_simulations
         )
         sales_samples = np.random.normal(
-            current_sales_units,
-            current_sales_units * (sales_variance / 100),
-            num_simulations
+            current_sales_units, current_sales_units * (sales_variance / 100), num_simulations
         )
 
         # Calculate profits
@@ -400,15 +420,9 @@ class TestMonteCarloSimulation:
         cost_variance = 50  # 50% variance - very high
         sales_variance = 50  # 50% variance - very high
 
-        cost_samples = np.random.normal(
-            unit_cost,
-            unit_cost * (cost_variance / 100),
-            1000
-        )
+        cost_samples = np.random.normal(unit_cost, unit_cost * (cost_variance / 100), 1000)
         sales_samples = np.random.normal(
-            current_sales_units,
-            current_sales_units * (sales_variance / 100),
-            1000
+            current_sales_units, current_sales_units * (sales_variance / 100), 1000
         )
 
         profits = (unit_price - cost_samples) * sales_samples - fixed_costs
@@ -435,15 +449,14 @@ class TestGoalSeekRenderFunction:
         # Mock number inputs
         mock_st.number_input.return_value = 10000.0
 
-        # Mock columns
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        # Mock columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         # Call function
         _render_goal_seek(
-            contribution_margin=30.0,
-            unit_price=50.0,
-            unit_cost=20.0,
-            fixed_costs=5000.0
+            contribution_margin=30.0, unit_price=50.0, unit_cost=20.0, fixed_costs=5000.0
         )
 
         # Verify basic calls
@@ -481,7 +494,7 @@ class TestMonteCarloRenderFunction:
             unit_price=50.0,
             unit_cost=20.0,
             fixed_costs=5000.0,
-            current_sales_units=250
+            current_sales_units=250,
         )
 
         # Verify basic calls

@@ -23,7 +23,7 @@ import asyncio
 import sys
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict
 
 # Import platform agents
 sys.path.insert(0, str(Path(__file__).parent))

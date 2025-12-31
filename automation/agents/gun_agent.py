@@ -24,7 +24,9 @@ class GunAgent(BaseAgent):
             # Gun.io has a developer application process
             await self.type_human('input[name="email"]', self.profile["email"])
             await self.type_human('input[name="first_name"]', self.profile["full_name"].split()[0])
-            await self.type_human('input[name="last_name"]', ' '.join(self.profile["full_name"].split()[1:]))
+            await self.type_human(
+                'input[name="last_name"]', " ".join(self.profile["full_name"].split()[1:])
+            )
             await self.type_human('input[name="github"]', self.profile["github"])
 
             await self.page.click('button:has-text("Apply")')

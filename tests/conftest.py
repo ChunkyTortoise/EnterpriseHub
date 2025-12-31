@@ -6,6 +6,7 @@ import pytest
 try:
     import pandas as pd
     import numpy as np
+
     PANDAS_AVAILABLE = True
 except ImportError:
     PANDAS_AVAILABLE = False
@@ -17,14 +18,14 @@ def sample_stock_data():
     if not PANDAS_AVAILABLE:
         pytest.skip("pandas and numpy not available")
 
-    dates = pd.date_range(start='2023-01-01', periods=30, freq='D')
+    dates = pd.date_range(start="2023-01-01", periods=30, freq="D")
 
     data = {
-        'Open': np.random.uniform(100, 150, 30),
-        'High': np.random.uniform(105, 155, 30),
-        'Low': np.random.uniform(95, 145, 30),
-        'Close': np.random.uniform(100, 150, 30),
-        'Volume': np.random.randint(1000000, 10000000, 30)
+        "Open": np.random.uniform(100, 150, 30),
+        "High": np.random.uniform(105, 155, 30),
+        "Low": np.random.uniform(95, 145, 30),
+        "Close": np.random.uniform(100, 150, 30),
+        "Volume": np.random.randint(1000000, 10000000, 30),
     }
 
     df = pd.DataFrame(data, index=dates)

@@ -10,7 +10,7 @@ import os
 import time
 import zipfile
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
 from typing import Any, Callable, Optional
 
@@ -427,9 +427,7 @@ def _render_four_panel_interface(api_key: str) -> None:
 
     # Show platform specs
     specs = PLATFORM_SPECS[platform]
-    char_limit_text = (
-        f"{specs['char_limit']:,}" if specs["char_limit"] else "No limit"
-    )
+    char_limit_text = f"{specs['char_limit']:,}" if specs["char_limit"] else "No limit"
     st.caption(
         f"📱 {platform} specs: {char_limit_text} char limit | "
         f"{specs['hashtag_range'][0]}-{specs['hashtag_range'][1]} hashtags | "
@@ -574,10 +572,13 @@ def _render_four_panel_interface(api_key: str) -> None:
 
                                     st.session_state.content_history.append(history_entry)
                                     logger.info(
-                                        f"Tracked content in history: {len(st.session_state.content_history)} total posts"
+                                        f"Tracked content in history: "
+                        f"{len(st.session_state.content_history)} total posts"
                                     )
 
-                                logger.info(f"Post generated successfully: {len(generated_post)} chars")
+                                logger.info(
+                                    f"Post generated successfully: {len(generated_post)} chars"
+                                )
                                 st.success("✅ Post generated successfully!")
                         except RateLimitError as e:
                             logger.error(f"Rate limit exceeded: {str(e)}")
@@ -611,8 +612,12 @@ def _render_four_panel_interface(api_key: str) -> None:
 
                             if variants:
                                 st.session_state.ab_test_variants = variants
-                                logger.info(f"Successfully generated {len(variants)} A/B test variants")
-                                st.success(f"✅ Generated {len(variants)} variants for A/B testing!")
+                                logger.info(
+                                    f"Successfully generated {len(variants)} A/B test variants"
+                                )
+                                st.success(
+                                    f"✅ Generated {len(variants)} variants for A/B testing!"
+                                )
 
                         except Exception as e:
                             logger.error(f"Error generating A/B variants: {str(e)}", exc_info=True)
@@ -683,10 +688,14 @@ def _render_four_panel_interface(api_key: str) -> None:
 
         with metric_col3:
             # Engagement score with color coding
-            engagement_color = "🟢" if engagement_score >= 7.5 else "🟡" if engagement_score >= 5.5 else "🔴"
+            engagement_color = (
+                "🟢" if engagement_score >= 7.5 else "🟡" if engagement_score >= 5.5 else "🔴"
+            )
             engagement_label = (
-                "Excellent" if engagement_score >= 7.5
-                else "Good" if engagement_score >= 5.5
+                "Excellent"
+                if engagement_score >= 7.5
+                else "Good"
+                if engagement_score >= 5.5
                 else "Needs Work"
             )
             st.metric(
@@ -723,11 +732,7 @@ def _render_four_panel_interface(api_key: str) -> None:
             target_platforms = st.multiselect(
                 "Select platforms to adapt content for:",
                 options=[p for p in PLATFORM_SPECS.keys() if p != platform],
-                default=(
-                    ["Twitter/X", "Instagram"]
-                    if platform == "LinkedIn"
-                    else ["LinkedIn"]
-                ),
+                default=(["Twitter/X", "Instagram"] if platform == "LinkedIn" else ["LinkedIn"]),
             )
 
         with col_adapt2:
@@ -798,9 +803,7 @@ def _render_four_panel_interface(api_key: str) -> None:
 
                     # Special display for Twitter threads
                     if adapt_platform == "Twitter/X" and "thread" in adapt_data:
-                        st.markdown(
-                            f"**Thread ({len(adapt_data['thread'])} tweets):**"
-                        )
+                        st.markdown(f"**Thread ({len(adapt_data['thread'])} tweets):**")
                         for idx, tweet in enumerate(adapt_data["thread"], 1):
                             st.text_area(
                                 f"Tweet {idx}/{len(adapt_data['thread'])}",
@@ -845,7 +848,7 @@ def _render_four_panel_interface(api_key: str) -> None:
                     elif adapt_platform == "Twitter/X" and "thread" in adapt_data:
                         thread_content = "\n\n---\n\n".join(
                             [
-                                f"Tweet {i+1}/{len(adapt_data['thread'])}:\n{tweet}"
+                                f"Tweet {i + 1}/{len(adapt_data['thread'])}:\n{tweet}"
                                 for i, tweet in enumerate(adapt_data["thread"])
                             ]
                         )
@@ -875,14 +878,14 @@ def _render_four_panel_interface(api_key: str) -> None:
         for i, variant in enumerate(variants):
             with rank_cols[i]:
                 medal = ["🥇", "🥈", "🥉"][i] if i < 3 else ""
+                # Calculate engagement delta vs worst variant
+                eng_diff = (
+                    variant["predicted_engagement"] - variants[-1]["predicted_engagement"]
+                )
                 st.metric(
-                    f"{medal} {variant['variant_id']}",
-                    f"{variant['predicted_engagement']:.1f}/10",
-                    delta=(
-                        f"{variant['predicted_engagement'] - variants[-1]['predicted_engagement']:.1f} vs worst"
-                        if i < len(variants) - 1
-                        else None
-                    ),
+                    label=f"{medal} Variant {i + 1}",
+                    value=f"{variant['predicted_engagement']:.1f}/10",
+                    delta=f"{eng_diff:.1f} vs worst" if i < len(variants) - 1 else None,
                 )
                 st.caption(variant["strategy_description"])
 
@@ -900,9 +903,7 @@ def _render_four_panel_interface(api_key: str) -> None:
                 with meta_cols[1]:
                     st.caption(f"**CTA:** {variant['cta_type'].title()}")
                 with meta_cols[2]:
-                    st.caption(
-                        f"**Format:** {variant['format_style'].replace('_', ' ').title()}"
-                    )
+                    st.caption(f"**Format:** {variant['format_style'].replace('_', ' ').title()}")
                 with meta_cols[3]:
                     st.caption(f"**Emoji:** {variant['emoji_density'].title()}")
 
@@ -932,7 +933,8 @@ def _render_four_panel_interface(api_key: str) -> None:
                         else "🔴"
                     )
                     st.caption(
-                        f"{engagement_color} **{variant['predicted_engagement']:.1f}/10** engagement"
+                        f"{engagement_color} "
+                        f"**{variant['predicted_engagement']:.1f}/10** engagement"
                     )
 
         # Difference Highlighter
@@ -948,15 +950,15 @@ def _render_four_panel_interface(api_key: str) -> None:
             for variant in variants:
                 last_lines = variant["content"].strip().split("\n")[-2:]
                 cta = " ".join(last_lines)
-                st.markdown(
-                    f"- **{variant['variant_id']}** ({variant['cta_type']}): _{cta}_"
-                )
+                st.markdown(f"- **{variant['variant_id']}** ({variant['cta_type']}): _{cta}_")
 
         # Recommendation
         best_variant = variants[0]
         st.success(
-            f"💡 **Recommendation:** Based on predicted engagement, start with **{best_variant['variant_id']}** "
-            f"({best_variant['predicted_engagement']:.1f}/10). Test all 3 variants to find your winning formula!"
+            f"💡 **Recommendation:** Based on predicted engagement, start with "
+            f"**{best_variant['variant_id']}** "
+            f"({best_variant['predicted_engagement']:.1f}/10). "
+            f"Test all 3 variants to find your winning formula!"
         )
 
         # Export Options
@@ -984,14 +986,14 @@ def _render_four_panel_interface(api_key: str) -> None:
             with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                 for variant in variants:
                     filename = f"{variant['variant_id'].lower().replace(' ', '_')}_post.txt"
-                    header = f"""A/B TEST {variant['variant_id']}
-Hook: {variant['hook_type']}
-CTA: {variant['cta_type']}
-Format: {variant['format_style']}
-Predicted Engagement: {variant['predicted_engagement']}/10
+                    header = f"""A/B TEST {variant["variant_id"]}
+Hook: {variant["hook_type"]}
+CTA: {variant["cta_type"]}
+Format: {variant["format_style"]}
+Predicted Engagement: {variant["predicted_engagement"]}/10
 ---
 
-{variant['content']}"""
+{variant["content"]}"""
                     zip_file.writestr(filename, header)
 
             st.download_button(
@@ -1388,7 +1390,10 @@ def _suggest_posting_time(platform: str, target_audience: str = "") -> dict:
             "time_range": "9:00 AM - 12:00 PM",
             "peak_time": "10:00 AM",
             "timezone": "EST",
-            "reasoning": "B2B professionals check LinkedIn during work hours, mid-week has highest engagement",
+            "reasoning": (
+                "B2B professionals check LinkedIn during work hours, "
+                "mid-week has highest engagement"
+            ),
         },
         "Twitter/X": {
             "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
@@ -1471,16 +1476,22 @@ def _generate_improvement_suggestions(history: list) -> list:
             len(template_performance) >= 3
             and template_performance[best_template] - template_performance[worst_template] > 1.5
         ):
+            # Calculate performance difference
+            p_best = template_performance[best_template]
+            p_worst = template_performance[worst_template]
+            perf_diff = p_best - p_worst
             suggestions.append(
                 {
                     "type": "tip",
-                    "message": f"Your '{best_template}' template performs "
-                    f"{template_performance[best_template] - template_performance[worst_template]:.1f} points "
-                    f"better than '{worst_template}'. Consider using it more often!",
+                    "message": (
+                        f"Your '{best_template}' template performs "
+                        f"{perf_diff:.1f} points better than "
+                        f"'{worst_template}'. Consider using it more often!"
+                    ),
                 }
             )
 
-    # Suggestion 2: Platform optimization
+                # Suggestion 2: Platform optimization
     if len(df["platform"].unique()) > 1:
         platform_performance = df.groupby("platform")["predicted_engagement"].mean()
         best_platform = platform_performance.idxmax()
@@ -1514,7 +1525,6 @@ def _generate_improvement_suggestions(history: list) -> list:
 
     # Suggestion 4: Hashtag optimization
     if len(df) >= 3:
-        avg_hashtags = df["hashtag_count"].mean()
         platform_groups = df.groupby("platform")
 
         for platform, group_df in platform_groups:
@@ -1555,8 +1565,10 @@ def _generate_improvement_suggestions(history: list) -> list:
             suggestions.append(
                 {
                     "type": "success",
-                    "message": f"Great consistency! Your last 5 posts have similar engagement scores "
-                    f"(std dev: {engagement_std:.2f}). You've found your rhythm!",
+                    "message": (
+                        f"Great consistency! Your last 5 posts have similar engagement scores "
+                        f"(std dev: {engagement_std:.2f}). You've found your rhythm!"
+                    ),
                 }
             )
         elif engagement_std > 2.5:
@@ -1600,8 +1612,10 @@ def _generate_improvement_suggestions(history: list) -> list:
             suggestions.append(
                 {
                     "type": "info",
-                    "message": f"📉 Recent engagement is lower. Review your earlier high performers "
-                    f"(avg: {earlier_avg:.1f}) for inspiration!",
+                    "message": (
+                        f"📉 Recent engagement is lower. Review your earlier high performers "
+                        f"(avg: {earlier_avg:.1f}) for inspiration!"
+                    ),
                 }
             )
 
@@ -1610,7 +1624,10 @@ def _generate_improvement_suggestions(history: list) -> list:
         suggestions.append(
             {
                 "type": "info",
-                "message": "Keep creating! Generate more content to unlock personalized insights and recommendations.",
+                "message": (
+                    "Keep creating! Generate more content to unlock personalized "
+                    "insights and recommendations."
+                ),
             }
         )
 
@@ -1643,10 +1660,10 @@ def _build_prompt(
     tone_instruction = TONES[tone]
     platform_specs = PLATFORM_SPECS[platform]
 
-    prompt = f"""{template_info['prompt_prefix']} {topic}.
+    prompt = f"""{template_info["prompt_prefix"]} {topic}.
 
 Platform: {platform}
-Style: {template_info['style']}
+Style: {template_info["style"]}
 Tone: {tone_instruction}"""
 
     if target_audience:
@@ -1671,16 +1688,16 @@ Tone: {tone_instruction}"""
 
 PLATFORM-SPECIFIC REQUIREMENTS ({platform}):
 - Length: {word_range[0]}-{word_range[1]} words (optimal for {platform})
-- Character limit: {char_limit if char_limit else 'No limit'}
+- Character limit: {char_limit if char_limit else "No limit"}
 - Hashtags: {hashtag_range[0]}-{hashtag_range[1]} relevant hashtags
-- Emoji style: {platform_specs['emoji_style']}
-- Formatting: {platform_specs['formatting']}
+- Emoji style: {platform_specs["emoji_style"]}
+- Formatting: {platform_specs["formatting"]}
 """
 
     # Special handling for Twitter threads
     if platform == "Twitter/X" and platform_specs.get("thread_mode"):
         prompt += f"""
-- If content exceeds {platform_specs['thread_tweet_limit']} chars, split into thread (2-5 tweets)
+- If content exceeds {platform_specs["thread_tweet_limit"]} chars, split into thread (2-5 tweets)
 - Each tweet must be standalone but build on previous
 - Number tweets (1/n, 2/n, etc.)
 """
@@ -1688,8 +1705,8 @@ PLATFORM-SPECIFIC REQUIREMENTS ({platform}):
     # Special handling for email
     if platform == "Email Newsletter":
         prompt += f"""
-- Include subject line (max {platform_specs['subject_line_limit']} chars)
-- Include preheader (max {platform_specs['preheader_limit']} chars)
+- Include subject line (max {platform_specs["subject_line_limit"]} chars)
+- Include preheader (max {platform_specs["preheader_limit"]} chars)
 - Structure: subject line, preheader, then main content
 """
 
@@ -1742,11 +1759,11 @@ ORIGINAL POST ({original_platform}):
 
 TARGET PLATFORM: {target_platform}
 Requirements:
-- Character limit: {target_specs['char_limit'] if target_specs['char_limit'] else 'No limit'}
-- Optimal length: {target_specs['optimal_length'][0]}-{target_specs['optimal_length'][1]} words
-- Hashtags: {target_specs['hashtag_range'][0]}-{target_specs['hashtag_range'][1]}
-- Emoji style: {target_specs['emoji_style']}
-- Formatting: {target_specs['formatting']}
+- Character limit: {target_specs["char_limit"] if target_specs["char_limit"] else "No limit"}
+- Optimal length: {target_specs["optimal_length"][0]}-{target_specs["optimal_length"][1]} words
+- Hashtags: {target_specs["hashtag_range"][0]}-{target_specs["hashtag_range"][1]}
+- Emoji style: {target_specs["emoji_style"]}
+- Formatting: {target_specs["formatting"]}
 
 ADAPTATION GUIDELINES:
 - Preserve the core message and key points
@@ -2037,13 +2054,13 @@ def _generate_ab_test_variants(
                 "word_count": len(variant_content.split()),
                 "hashtag_count": variant_content.count("#"),
                 "predicted_engagement": engagement_score,
-                "strategy_description": f"{strategy['hook_type'].title()} hook + {strategy['cta_type'].title()} CTA",
+                "strategy_description": (
+                    f"{strategy['hook_type'].title()} hook + {strategy['cta_type'].title()} CTA"
+                ),
             }
 
             variants.append(variant_data)
-            logger.info(
-                f"{variant_name} generated: {engagement_score:.1f}/10 predicted engagement"
-            )
+            logger.info(f"{variant_name} generated: {engagement_score:.1f}/10 predicted engagement")
 
         except Exception as e:
             logger.error(f"Error generating {variant_name}: {str(e)}")
@@ -2084,10 +2101,10 @@ def _build_ab_test_prompt(
     tone_instruction = TONES[tone]
     platform_specs = PLATFORM_SPECS[platform]
 
-    prompt = f"""{template_info['prompt_prefix']} {topic}.
+    prompt = f"""{template_info["prompt_prefix"]} {topic}.
 
 Platform: {platform}
-Style: {template_info['style']}
+Style: {template_info["style"]}
 Tone: {tone_instruction}"""
 
     if target_audience:
@@ -2107,20 +2124,22 @@ Tone: {tone_instruction}"""
     prompt += f"""
 
 A/B TEST VARIANT STRATEGY:
-- Hook Type: {strategy['hook_type'].upper()} - Start with {', or '.join(strategy['hook_examples'][:2])}
-- CTA Type: {strategy['cta_type'].upper()} - End with {strategy['cta_examples'][0]}
-- Format Style: {strategy['format_style']}
-- Emoji Density: {strategy['emoji_density']} (low=1-2, medium=3-4, high=5+)
+- Hook Type: {strategy["hook_type"].upper()} - Start with
+  {", or ".join(strategy["hook_examples"][:2])}
+- CTA Type: {strategy["cta_type"].upper()} - End with
+  {strategy["cta_examples"][0]}
+- Format Style: {strategy["format_style"]}
+- Emoji Density: {strategy["emoji_density"]} (low=1-2, medium=3-4, high=5+)
 
 PLATFORM REQUIREMENTS ({platform}):
-- Length: {platform_specs['optimal_length'][0]}-{platform_specs['optimal_length'][1]} words
-- Character limit: {platform_specs['char_limit'] if platform_specs['char_limit'] else 'No limit'}
-- Hashtags: {platform_specs['hashtag_range'][0]}-{platform_specs['hashtag_range'][1]}
+- Length: {platform_specs["optimal_length"][0]}-{platform_specs["optimal_length"][1]} words
+- Character limit: {platform_specs["char_limit"] if platform_specs["char_limit"] else "No limit"}
+- Hashtags: {platform_specs["hashtag_range"][0]}-{platform_specs["hashtag_range"][1]}
 
 CRITICAL: This is variant testing. Make this version DISTINCTLY DIFFERENT from other variants by:
-1. Using the specified hook type ({strategy['hook_type']})
-2. Structuring with the specified format ({strategy['format_style']})
-3. Ending with the specified CTA type ({strategy['cta_type']})
-4. Matching the emoji density ({strategy['emoji_density']})"""
+1. Using the specified hook type ({strategy["hook_type"]})
+2. Structuring with the specified format ({strategy["format_style"]})
+3. Ending with the specified CTA type ({strategy["cta_type"]})
+4. Matching the emoji density ({strategy["emoji_density"]})"""
 
     return prompt

@@ -126,7 +126,7 @@ def analyze_sentiment_with_claude(
 
         # Build news summary for Claude
         news_titles = [item.get("title", "") for item in news_items[:10]]  # Limit to 10 most recent
-        news_text = "\n".join([f"{i+1}. {title}" for i, title in enumerate(news_titles)])
+        news_text = "\n".join([f"{i + 1}. {title}" for i, title in enumerate(news_titles)])
 
         prompt = f"""Analyze the sentiment of the following news headlines for {symbol}:
 

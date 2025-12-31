@@ -109,16 +109,16 @@ def render() -> None:
                 )
                 st.markdown(
                     f"""
-                <div style="background:{ui.THEME['surface']}; padding:1.5rem;
+                <div style="background:{ui.THEME["surface"]}; padding:1.5rem;
                      border-radius:8px; border-left:5px solid {verdict_color};">
                     <p style="text-transform:uppercase; font-size:0.8rem;
-                       font-weight:700; color:{ui.THEME['text_light']};
+                       font-weight:700; color:{ui.THEME["text_light"]};
                        margin:0;">AI Market Verdict</p>
                     <h2 style="margin:0.5rem 0; color:{verdict_color};
-                        border:none; padding:0;">{analysis['verdict']}</h2>
+                        border:none; padding:0;">{analysis["verdict"]}</h2>
                     <p style="font-size:0.9rem; margin:0;">
-                        Confidence: <b>{abs(analysis['average_score']) * 100:.1f}%</b>
-                        | Articles: <b>{analysis['article_count']}</b></p>
+                        Confidence: <b>{abs(analysis["average_score"]) * 100:.1f}%</b>
+                        | Articles: <b>{analysis["article_count"]}</b></p>
                 </div>
                 """,
                     unsafe_allow_html=True,

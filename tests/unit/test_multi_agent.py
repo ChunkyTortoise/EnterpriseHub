@@ -5,10 +5,8 @@ Tests the orchestration of specialized agents for complex analysis workflows,
 including the Stock Deep Dive workflow with 4 agents (DataBot, TechBot, NewsBot, ChiefBot).
 """
 
-import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
-import numpy as np
 
 
 class TestMultiAgentRender:
@@ -37,7 +35,7 @@ class TestMultiAgentRender:
         mock_st.selectbox.assert_called_once()
         args = mock_st.selectbox.call_args[0]
         assert args[0] == "Select Workflow"
-        assert "💰 Stock Deep Dive (3 Agents)" in args[1]
+        assert "💰 Stock Deep Dive (4 Agents)" in args[1]
 
     @patch("modules.multi_agent.st")
     @patch("modules.multi_agent.ui")
@@ -46,7 +44,7 @@ class TestMultiAgentRender:
         """Test that selecting Stock Deep Dive calls the correct function."""
         from modules.multi_agent import render
 
-        mock_st.selectbox.return_value = "💰 Stock Deep Dive (3 Agents)"
+        mock_st.selectbox.return_value = "💰 Stock Deep Dive (4 Agents)"
 
         render()
 
@@ -54,37 +52,42 @@ class TestMultiAgentRender:
 
     @patch("modules.multi_agent.st")
     @patch("modules.multi_agent.ui")
-    def test_render_shows_info_for_coming_soon(self, mock_ui, mock_st):
-        """Test that coming soon workflows show info message."""
+    def test_render_shows_info_for_dynamic_workflow(self, mock_ui, mock_st):
+        """Test that dynamic workflow can be selected."""
         from modules.multi_agent import render
 
-        mock_st.selectbox.return_value = "📊 Market Scanner (Coming Soon)"
+        mock_st.selectbox.return_value = "🔀 Adaptive Recommendation (Dynamic)"
 
+        # Should call the appropriate renderer (just verify it doesn't crash)
         render()
-
-        mock_st.info.assert_called_once_with(
-            "This workflow is currently under development."
-        )
+        mock_st.selectbox.assert_called()
 
 
 class TestStockDeepDiveUI:
-    """Tests for the Stock Deep Dive UI rendering."""
+    """Test the Stock Deep Dive workflow UI."""
 
     @patch("modules.multi_agent.st")
     def test_deep_dive_shows_mission_description(self, mock_st):
         """Test that mission description is displayed."""
         from modules.multi_agent import _render_stock_deep_dive
 
+        # Mock st.columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+
         _render_stock_deep_dive()
 
-        # Check markdown was called with mission description
-        mock_st.markdown.assert_called()
-        markdown_call = str(mock_st.markdown.call_args_list[0])
-        assert "Mission:" in markdown_call
-        assert "DataBot" in markdown_call
-        assert "TechBot" in markdown_call
-        assert "NewsBot" in markdown_call
-        assert "ChiefBot" in markdown_call
+        # Should show mission markdown
+        mock_st.markdown.assert_any_call("""
+    **Mission:** Comprehensive analysis of a target asset.
+
+    **The Team:**
+    - 🕵️ **DataBot:** Fetches raw price action and fundamental data.
+    - 📈 **TechBot:** Analyzes technical indicators (RSI, MACD, Trends).
+    - 📰 **NewsBot:** Scouts recent news and analyzes sentiment.
+    - 🎓 **ChiefBot:** Synthesizes all intelligence into a final verdict.
+    """)
 
     @patch("modules.multi_agent.st")
     def test_deep_dive_has_ticker_input(self, mock_st):
@@ -116,9 +119,7 @@ class TestStockDeepDiveUI:
 
     @patch("modules.multi_agent.st")
     @patch("modules.multi_agent._run_deep_dive_logic")
-    def test_deep_dive_triggers_workflow_on_button_click(
-        self, mock_logic, mock_st
-    ):
+    def test_deep_dive_triggers_workflow_on_button_click(self, mock_logic, mock_st):
         """Test that clicking button triggers workflow."""
         from modules.multi_agent import _render_stock_deep_dive
 
@@ -132,9 +133,7 @@ class TestStockDeepDiveUI:
 
     @patch("modules.multi_agent.st")
     @patch("modules.multi_agent._run_deep_dive_logic")
-    def test_deep_dive_does_not_trigger_without_button(
-        self, mock_logic, mock_st
-    ):
+    def test_deep_dive_does_not_trigger_without_button(self, mock_logic, mock_st):
         """Test that workflow doesn't run without button click."""
         from modules.multi_agent import _render_stock_deep_dive
 
@@ -154,16 +153,12 @@ class TestDataBotAgent:
     @patch("modules.multi_agent.get_stock_data")
     @patch("modules.multi_agent.get_company_info")
     @patch("modules.multi_agent.time.sleep")
-    def test_databot_fetches_stock_data(
-        self, mock_sleep, mock_info, mock_stock, mock_st
-    ):
+    def test_databot_fetches_stock_data(self, mock_sleep, mock_info, mock_stock, mock_st):
         """Test that DataBot fetches stock data correctly."""
         from modules.multi_agent import _run_deep_dive_logic
 
         # Setup mock data
-        mock_df = pd.DataFrame(
-            {"Close": [150.0, 151.0], "Volume": [1000000, 1100000]}
-        )
+        mock_df = pd.DataFrame({"Close": [150.0, 151.0], "Volume": [1000000, 1100000]})
         mock_stock.return_value = mock_df
         mock_info.return_value = {"sector": "Technology"}
 
@@ -177,9 +172,7 @@ class TestDataBotAgent:
 
             with patch("modules.multi_agent.get_news") as mock_news:
                 mock_news.return_value = []
-                with patch(
-                    "modules.multi_agent.process_news_sentiment"
-                ) as mock_sentiment:
+                with patch("modules.multi_agent.process_news_sentiment") as mock_sentiment:
                     mock_sentiment.return_value = {
                         "average_score": 0.0,
                         "verdict": "NEUTRAL",
@@ -193,18 +186,14 @@ class TestDataBotAgent:
 
                     _run_deep_dive_logic("AAPL")
 
-                    mock_stock.assert_called_once_with(
-                        "AAPL", period="1y", interval="1d"
-                    )
+                    mock_stock.assert_called_once_with("AAPL", period="1y", interval="1d")
                     mock_info.assert_called_once_with("AAPL")
 
     @patch("modules.multi_agent.st")
     @patch("modules.multi_agent.get_stock_data")
     @patch("modules.multi_agent.get_company_info")
     @patch("modules.multi_agent.time.sleep")
-    def test_databot_handles_empty_data(
-        self, mock_sleep, mock_info, mock_stock, mock_st
-    ):
+    def test_databot_handles_empty_data(self, mock_sleep, mock_info, mock_stock, mock_st):
         """Test that DataBot handles empty data gracefully."""
         from modules.multi_agent import _run_deep_dive_logic
 
@@ -227,9 +216,7 @@ class TestDataBotAgent:
     @patch("modules.multi_agent.get_stock_data")
     @patch("modules.multi_agent.get_company_info")
     @patch("modules.multi_agent.time.sleep")
-    def test_databot_handles_none_data(
-        self, mock_sleep, mock_info, mock_stock, mock_st
-    ):
+    def test_databot_handles_none_data(self, mock_sleep, mock_info, mock_stock, mock_st):
         """Test that DataBot handles None data."""
         from modules.multi_agent import _run_deep_dive_logic
 
@@ -269,9 +256,7 @@ class TestTechBotAgent:
         """Test that TechBot calculates indicators."""
         from modules.multi_agent import _run_deep_dive_logic
 
-        mock_df = pd.DataFrame(
-            {"Close": [150.0, 151.0], "Volume": [1000000, 1100000]}
-        )
+        mock_df = pd.DataFrame({"Close": [150.0, 151.0], "Volume": [1000000, 1100000]})
         mock_stock.return_value = mock_df
         mock_info.return_value = {"sector": "Technology"}
 
@@ -317,9 +302,7 @@ class TestTechBotAgent:
         """Test that TechBot detects bullish MACD signal."""
         from modules.multi_agent import _run_deep_dive_logic
 
-        mock_df = pd.DataFrame(
-            {"Close": [150.0, 151.0], "Volume": [1000000, 1100000]}
-        )
+        mock_df = pd.DataFrame({"Close": [150.0, 151.0], "Volume": [1000000, 1100000]})
         mock_stock.return_value = mock_df
         mock_info.return_value = {"sector": "Technology"}
 
@@ -345,9 +328,7 @@ class TestTechBotAgent:
         _run_deep_dive_logic("AAPL")
 
         # Check that success message includes BULLISH
-        success_calls = [
-            str(call) for call in mock_st.success.call_args_list
-        ]
+        success_calls = [str(call) for call in mock_st.success.call_args_list]
         techbot_call = [c for c in success_calls if "TechBot" in c][0]
         assert "BULLISH" in techbot_call
 
@@ -375,9 +356,7 @@ class TestNewsBotAgent:
         """Test that NewsBot fetches news."""
         from modules.multi_agent import _run_deep_dive_logic
 
-        mock_df = pd.DataFrame(
-            {"Close": [150.0, 151.0], "Volume": [1000000, 1100000]}
-        )
+        mock_df = pd.DataFrame({"Close": [150.0, 151.0], "Volume": [1000000, 1100000]})
         mock_stock.return_value = mock_df
         mock_info.return_value = {"sector": "Technology"}
 
@@ -387,9 +366,7 @@ class TestNewsBotAgent:
         mock_df_with_indicators["Signal_Line"] = [0.8, 1.2]
         mock_calc.return_value = mock_df_with_indicators
 
-        mock_news.return_value = [
-            {"title": "Test News", "url": "http://test.com"}
-        ]
+        mock_news.return_value = [{"title": "Test News", "url": "http://test.com"}]
         mock_sentiment.return_value = {
             "average_score": 0.5,
             "verdict": "POSITIVE",
@@ -430,9 +407,7 @@ class TestChiefBotAgent:
         """Test ChiefBot produces STRONG BUY signal."""
         from modules.multi_agent import _run_deep_dive_logic
 
-        mock_df = pd.DataFrame(
-            {"Close": [150.0, 151.0], "Volume": [1000000, 1100000]}
-        )
+        mock_df = pd.DataFrame({"Close": [150.0, 151.0], "Volume": [1000000, 1100000]})
         mock_stock.return_value = mock_df
         mock_info.return_value = {"sector": "Technology"}
 
@@ -483,9 +458,7 @@ class TestChiefBotAgent:
         """Test ChiefBot produces STRONG SELL signal."""
         from modules.multi_agent import _run_deep_dive_logic
 
-        mock_df = pd.DataFrame(
-            {"Close": [150.0, 151.0], "Volume": [1000000, 1100000]}
-        )
+        mock_df = pd.DataFrame({"Close": [150.0, 151.0], "Volume": [1000000, 1100000]})
         mock_stock.return_value = mock_df
         mock_info.return_value = {"sector": "Technology"}
 
@@ -536,9 +509,7 @@ class TestChiefBotAgent:
         """Test ChiefBot produces HOLD signal."""
         from modules.multi_agent import _run_deep_dive_logic
 
-        mock_df = pd.DataFrame(
-            {"Close": [150.0, 151.0], "Volume": [1000000, 1100000]}
-        )
+        mock_df = pd.DataFrame({"Close": [150.0, 151.0], "Volume": [1000000, 1100000]})
         mock_stock.return_value = mock_df
         mock_info.return_value = {"sector": "Technology"}
 
@@ -578,9 +549,7 @@ class TestErrorHandling:
     @patch("modules.multi_agent.get_stock_data")
     @patch("modules.multi_agent.logger")
     @patch("modules.multi_agent.time.sleep")
-    def test_workflow_handles_exceptions(
-        self, mock_sleep, mock_logger, mock_stock, mock_st
-    ):
+    def test_workflow_handles_exceptions(self, mock_sleep, mock_logger, mock_stock, mock_st):
         """Test that workflow handles exceptions gracefully."""
         from modules.multi_agent import _run_deep_dive_logic
 

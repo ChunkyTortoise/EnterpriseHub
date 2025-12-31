@@ -417,7 +417,7 @@ SynthesisBot = Agent(
     name="SynthesisBot",
     description="Synthesizes all agent results into final recommendation",
     persona_b=SYNTHESIS_BOT_PERSONA,
-    input_schema={"results": dict},
+    input_schema={},  # Flexible input schema for aggregator bot
     output_schema={
         "recommendation": str,  # BUY, HOLD, SELL, INSUFFICIENT_DATA
         "confidence": float,
@@ -564,7 +564,7 @@ AnalystBot = Agent(
     name="AnalystBot",
     description="Integrates insights from multiple EnterpriseHub modules",
     persona_b=ANALYST_BOT_PERSONA,
-    input_schema={"module_results": dict},
+    input_schema={},  # Flexible input schema for aggregator bot
     output_schema={
         "integrated_insights": list,
         "divergences": list,

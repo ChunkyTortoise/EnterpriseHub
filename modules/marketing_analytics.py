@@ -901,19 +901,19 @@ def _render_ab_test() -> None:
 
         if visitors_a < recommended_sample or visitors_b < recommended_sample:
             st.info(
-                f"📊 For {DEFAULT_CONFIDENCE_LEVEL*100:.0f}% confidence with this "
+                f"📊 For {DEFAULT_CONFIDENCE_LEVEL * 100:.0f}% confidence with this "
                 f"lift, you need approximately **{recommended_sample:,} visitors "
                 f"per variant**. Current: A={visitors_a:,}, B={visitors_b:,}"
             )
         else:
             st.success(
                 f"✅ Sample size is sufficient for "
-                f"{DEFAULT_CONFIDENCE_LEVEL*100:.0f}% confidence level"
+                f"{DEFAULT_CONFIDENCE_LEVEL * 100:.0f}% confidence level"
             )
 
     else:
         st.warning(
-            f"⚠️ Need at least {MIN_SAMPLE_SIZE} visitors per variant " "for statistical analysis"
+            f"⚠️ Need at least {MIN_SAMPLE_SIZE} visitors per variant for statistical analysis"
         )
 
 
@@ -1084,7 +1084,7 @@ def _render_multivariant_test() -> None:
 
     else:
         st.warning(
-            f"⚠️ Need at least {MIN_SAMPLE_SIZE} visitors per variant " "for statistical analysis"
+            f"⚠️ Need at least {MIN_SAMPLE_SIZE} visitors per variant for statistical analysis"
         )
         insufficient = [v["name"] for v in variant_data if v["visitors"] < MIN_SAMPLE_SIZE]
         st.info(f"Insufficient data for: {', '.join(insufficient)}")

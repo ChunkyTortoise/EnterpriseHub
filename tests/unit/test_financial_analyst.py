@@ -582,7 +582,7 @@ class TestDCFValuationCalculations:
         year_1_fcf = latest_fcf * (1 + growth_rate / 100)
         year_1_pv = year_1_fcf / ((1 + discount_rate / 100) ** 1)
 
-        assert year_1_fcf == 110e9  # 100B * 1.10 = 110B
+        assert year_1_fcf == pytest.approx(110e9)  # 100B * 1.10 = 110B
         assert year_1_pv == pytest.approx(100e9, rel=0.01)  # 110B / 1.10 = 100B
 
     def test_dcf_multi_year_projection(self):
@@ -616,7 +616,8 @@ class TestDCFValuationCalculations:
         terminal_pv = terminal_value / ((1 + discount_rate / 100) ** 10)
 
         # Terminal value should be very large (perpetual cash flows)
-        assert terminal_value > current_fcf * 20  # Should be many multiples
+        # 205e9 / 0.075 = 2733.33e9. 2733 / 200 = 13.66x
+        assert terminal_value > current_fcf * 10  # Corrected expectation
 
         # PV should be discounted significantly
         assert terminal_pv < terminal_value / 2  # Heavily discounted over 10 years
@@ -725,20 +726,23 @@ class TestDCFValuationRenderFunction:
             "sharesOutstanding": 15e9,
         }
 
-        # Mock cash flow data
+        # Mock cash flow data (yfinance structure: metrics as index, dates as columns)
         dates = pd.to_datetime(["2021-01-01", "2022-01-01", "2023-01-01"])
         mock_financials = {
-            "cash_flow": pd.DataFrame(
+            "cashflow": pd.DataFrame(
                 {
-                    "Free Cash Flow": [80e9, 90e9, 100e9],
-                    "Operating Cash Flow": [100e9, 110e9, 120e9],
+                    dates[0]: [80e9, 100e9],
+                    dates[1]: [90e9, 110e9],
+                    dates[2]: [100e9, 120e9],
                 },
-                index=dates,
+                index=["Free Cash Flow", "Operating Cash Flow"],
             )
         }
 
-        # Mock columns
-        mock_st.columns.return_value = [MagicMock(), MagicMock(), MagicMock()]
+        # Mock columns to return correct number of columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         # Mock sliders
         mock_st.slider.return_value = 10.0
@@ -751,8 +755,8 @@ class TestDCFValuationRenderFunction:
         _display_dcf_valuation(mock_info, mock_financials, "AAPL")
 
         # Verify basic calls
-        mock_st.subheader.assert_called()
-        mock_st.markdown.assert_called()
+        assert mock_st.slider.call_count >= 4
+        assert mock_st.metric.call_count >= 4
 
 
 class TestPDFExportFunction:
@@ -765,13 +769,20 @@ class TestPDFExportFunction:
         import pandas as pd
 
         # Mock DataFrame
-        df = pd.DataFrame({
-            "Revenue": [100e9, 110e9, 120e9],
-            "Net Income": [20e9, 22e9, 25e9],
-        })
+        df = pd.DataFrame(
+            {
+                "Revenue": [100e9, 110e9, 120e9],
+                "Net Income": [20e9, 22e9, 25e9],
+            }
+        )
 
         # Mock button (not clicked)
         mock_st.button.return_value = False
+
+        # Mock columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
         # Call function
         _display_statement_export(df, "income_statement")
@@ -782,25 +793,39 @@ class TestPDFExportFunction:
         assert "PDF" in button_call[0][0]
 
     @patch("modules.financial_analyst.st")
-    @patch("modules.financial_analyst.plt")
-    def test_pdf_export_matplotlib_not_available(self, mock_plt, mock_st):
+    def test_pdf_export_matplotlib_not_available(self, mock_st):
         """Test PDF export handles missing matplotlib gracefully."""
         from modules.financial_analyst import _display_statement_export
         import pandas as pd
+        import sys
+        from unittest.mock import MagicMock
 
         # Mock DataFrame
-        df = pd.DataFrame({
-            "Revenue": [100e9, 110e9, 120e9],
-        })
+        df = pd.DataFrame(
+            {
+                "Revenue": [100e9, 110e9, 120e9],
+            }
+        )
 
         # Mock button clicked
         mock_st.button.return_value = True
 
-        # Mock session state
-        mock_st.session_state.fa_ticker = "AAPL"
+        # Mock columns
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
 
-        # Simulate ImportError by making matplotlib import fail
-        with patch("modules.financial_analyst.PdfPages", side_effect=ImportError):
+        # Mock session state
+        mock_st.session_state = {"fa_ticker": "AAPL"}
+
+        # Simulate ImportError by mocking the import in sys.modules
+        with patch.dict(
+            sys.modules, {"matplotlib.pyplot": None, "matplotlib.backends.backend_pdf": None}
+        ):
+            # We also need to mock where it's imported in the function
+            # Since it's a local import, patching sys.modules should work if it's not already loaded
+            # or if the function tries to import it and gets None (which raises ImportError)
+
             _display_statement_export(df, "income_statement")
 
             # Should show error about matplotlib

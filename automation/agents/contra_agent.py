@@ -36,7 +36,10 @@ class ContraAgent(BaseAgent):
             await self.human_delay(3, 5)
 
             if "onboarding" in self.page.url or "welcome" in self.page.url:
-                return {"status": "success", "profile_url": f"https://contra.com/@{self.profile['username']}"}
+                return {
+                    "status": "success",
+                    "profile_url": f"https://contra.com/@{self.profile['username']}",
+                }
             else:
                 return {"status": "pending_verification", "verification_type": "email"}
 

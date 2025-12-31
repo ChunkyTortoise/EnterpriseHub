@@ -157,7 +157,7 @@ class SchemaValidator:
             if expected_type == pd.DataFrame:
                 if not isinstance(value, pd.DataFrame):
                     errors.append(
-                        f"Field '{field_name}' expected DataFrame, " f"got {type(value).__name__}"
+                        f"Field '{field_name}' expected DataFrame, got {type(value).__name__}"
                     )
             # Standard type checking
             elif not isinstance(value, expected_type):
@@ -405,7 +405,7 @@ class ContradictionDetector:
 
         if contradicts:
             logger.warning(
-                f"Numeric contradiction: {val1:.2f} vs {val2:.2f} " f"(diff={relative_diff:.1%})"
+                f"Numeric contradiction: {val1:.2f} vs {val2:.2f} (diff={relative_diff:.1%})"
             )
 
         return contradicts
