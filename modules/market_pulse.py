@@ -40,6 +40,15 @@ def render() -> None:
         period = st.selectbox("Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3)
         interval = st.selectbox("Interval", ["1d", "1wk", "1mo"], index=0)
 
+        # Multi-ticker comparison
+        st.markdown("---")
+        st.markdown("**📊 Compare Tickers**")
+        comparison_tickers = st.text_input(
+            "Compare with (comma-separated)",
+            placeholder="e.g., AAPL,MSFT,GOOGL",
+            help="Enter ticker symbols separated by commas to overlay performance comparison",
+        )
+
     if not ticker:
         st.warning("⚠️ Please enter a ticker symbol")
         return
@@ -68,6 +77,10 @@ def render() -> None:
             # Create and display chart
             fig = _create_technical_chart(df, ticker)
             st.plotly_chart(fig, use_container_width=True)
+
+            # Multi-ticker comparison
+            if comparison_tickers:
+                _display_comparison_chart(ticker, comparison_tickers, period, interval)
 
             # Export options
             _display_export_options(df, ticker)
@@ -441,6 +454,154 @@ def _create_technical_chart(df: pd.DataFrame, ticker: str) -> go.Figure:
     )
 
     return fig
+
+
+def _display_comparison_chart(
+    base_ticker: str, comparison_tickers: str, period: str, interval: str
+) -> None:
+    """
+    Display a multi-ticker comparison chart with normalized percentage changes.
+
+    Args:
+        base_ticker: Primary ticker symbol
+        comparison_tickers: Comma-separated list of tickers to compare
+        period: Time period for comparison
+        interval: Data interval
+    """
+    st.markdown("---")
+    st.subheader("📊 Multi-Ticker Performance Comparison")
+
+    # Parse comparison tickers
+    compare_list = [t.strip().upper() for t in comparison_tickers.split(",") if t.strip()]
+
+    if not compare_list:
+        st.info("💡 Enter ticker symbols above to compare (e.g., AAPL,MSFT,GOOGL)")
+        return
+
+    # Limit to 5 tickers for performance
+    if len(compare_list) > 5:
+        st.warning("⚠️ Maximum 5 comparison tickers allowed. Using first 5.")
+        compare_list = compare_list[:5]
+
+    # Combine with base ticker
+    all_tickers = [base_ticker] + compare_list
+
+    try:
+        with st.spinner(f"Fetching comparison data for {len(all_tickers)} tickers..."):
+            # Fetch data for all tickers
+            ticker_data = {}
+            failed_tickers = []
+
+            for ticker in all_tickers:
+                try:
+                    df = get_stock_data(ticker, period=period, interval=interval)
+                    if df is not None and not df.empty:
+                        ticker_data[ticker] = df
+                    else:
+                        failed_tickers.append(ticker)
+                except Exception as e:
+                    logger.warning(f"Failed to fetch data for {ticker}: {e}")
+                    failed_tickers.append(ticker)
+
+            if not ticker_data:
+                st.error("❌ Could not fetch data for any tickers")
+                return
+
+            if failed_tickers:
+                st.warning(f"⚠️ Could not fetch data for: {', '.join(failed_tickers)}")
+
+            # Normalize to percentage change from first day
+            normalized_data = {}
+            for ticker, df in ticker_data.items():
+                first_close = df["Close"].iloc[0]
+                normalized_data[ticker] = ((df["Close"] / first_close) - 1) * 100
+
+            # Create comparison chart
+            fig = go.Figure()
+
+            colors = [
+                "#00D9FF",  # Cyan (base ticker)
+                "#FFA500",  # Orange
+                "#32CD32",  # Lime green
+                "#FF69B4",  # Hot pink
+                "#9370DB",  # Medium purple
+                "#FFD700",  # Gold
+            ]
+
+            for idx, (ticker, pct_change) in enumerate(normalized_data.items()):
+                is_base = ticker == base_ticker
+                fig.add_trace(
+                    go.Scatter(
+                        x=pct_change.index,
+                        y=pct_change,
+                        name=ticker,
+                        line=dict(
+                            color=colors[idx % len(colors)],
+                            width=3 if is_base else 2,
+                        ),
+                        mode="lines",
+                    )
+                )
+
+            # Add zero line
+            fig.add_hline(
+                y=0,
+                line_dash="dash",
+                line_color="gray",
+                annotation_text="Baseline",
+                annotation_position="right",
+            )
+
+            fig.update_layout(
+                title=f"Normalized Performance Comparison ({period})",
+                yaxis_title="% Change from Start",
+                xaxis_title="Date",
+                template=ui.get_plotly_template(),
+                height=500,
+                hovermode="x unified",
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+            # Performance summary table
+            st.markdown("#### 📈 Performance Summary")
+            summary_data = []
+            for ticker, pct_change in normalized_data.items():
+                total_return = pct_change.iloc[-1]
+                max_gain = pct_change.max()
+                max_loss = pct_change.min()
+                volatility = pct_change.std()
+
+                summary_data.append(
+                    {
+                        "Ticker": ticker,
+                        "Total Return (%)": f"{total_return:+.2f}%",
+                        "Max Gain (%)": f"{max_gain:+.2f}%",
+                        "Max Loss (%)": f"{max_loss:+.2f}%",
+                        "Volatility (σ)": f"{volatility:.2f}%",
+                    }
+                )
+
+            summary_df = pd.DataFrame(summary_data)
+            st.dataframe(summary_df, use_container_width=True, hide_index=True)
+
+            # Winner callout
+            best_performer = summary_df.loc[
+                summary_df["Total Return (%)"]
+                .str.replace("%", "")
+                .str.replace("+", "")
+                .astype(float)
+                .idxmax()
+            ]
+            st.success(
+                f"🏆 **Best Performer:** {best_performer['Ticker']} "
+                f"with {best_performer['Total Return (%)']} total return"
+            )
+
+    except Exception as e:
+        logger.error(f"Error in multi-ticker comparison: {e}", exc_info=True)
+        st.error(f"❌ Error creating comparison chart: {str(e)}")
 
 
 def _display_export_options(df: pd.DataFrame, ticker: str) -> None:
