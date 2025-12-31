@@ -642,7 +642,7 @@ docker run -p 8501:8501 enterprise-hub
 Comprehensive documentation is available to help you get the most out of EnterpriseHub:
 
 ### User Documentation
-- **[README.md](README.md)** - This file (project overview, quickstart)
+- **[docs/INDEX.md](docs/INDEX.md)** - This file (project overview, quickstart)
 - **[docs/FAQ.md](docs/FAQ.md)** - Frequently asked questions and troubleshooting
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deployment guide for various platforms
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
