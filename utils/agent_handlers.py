@@ -554,7 +554,7 @@ def forecast_bot_handler(inputs: Dict[str, Any], context: Dict[str, Any]) -> Dic
 
     if df is None or df.empty or len(df) < 90:
         raise DataProcessingError(
-            f"ForecastBot: Insufficient data ({len(df) if df else 0} rows, need 90)"
+            f"ForecastBot: Insufficient data ({len(df) if df is not None else 0} rows, need 90)"
         )
 
     logger.info(f"ForecastBot: Generating forecast for {len(df)} rows")
