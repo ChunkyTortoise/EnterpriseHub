@@ -20,14 +20,15 @@ logger = get_logger(__name__)
 
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
-def get_stock_data(ticker: str, period: str = "1y", interval: str = "1d") -> Optional[pd.DataFrame]:
+def get_stock_data(ticker: str, period: str = "1y", interval: str = "1d", use_demo: bool = False) -> Optional[pd.DataFrame]:
     """
-    Fetch stock data from Yahoo Finance with caching.
+    Fetch stock data from Yahoo Finance with caching, or use demo data.
 
     Args:
         ticker: Stock ticker symbol (e.g., 'AAPL', 'SPY')
         period: Time period for data (e.g., '1mo', '6mo', '1y', '5y')
         interval: Data interval (e.g., '1d', '1wk', '1mo')
+        use_demo: If True, load demo data from JSON files
 
     Returns:
         DataFrame containing OHLCV data, or None if fetch fails
@@ -47,6 +48,40 @@ def get_stock_data(ticker: str, period: str = "1y", interval: str = "1d") -> Opt
         raise InvalidTickerError(ticker or "", "Ticker symbol cannot be empty")
 
     ticker = ticker.strip().upper()
+    
+    # Demo data mode - load from JSON files
+    if use_demo:
+        try:
+            import json
+            from pathlib import Path
+            
+            demo_file = Path("data") / f"demo_{ticker.lower()}_data.json"
+            
+            if demo_file.exists():
+                logger.info(f"Loading demo data for {ticker}")
+                with open(demo_file, 'r') as f:
+                    demo_data = json.load(f)
+                
+                # Convert to DataFrame
+                df = pd.DataFrame({
+                    'Open': demo_data['open'],
+                    'High': demo_data['high'],
+                    'Low': demo_data['low'],
+                    'Close': demo_data['close'],
+                    'Volume': demo_data['volume']
+                })
+                df.index = pd.to_datetime(demo_data['dates'])
+                df.index.name = 'Date'
+                
+                logger.info(f"Successfully loaded demo data: {len(df)} rows for {ticker}")
+                return df
+            else:
+                logger.warning(f"Demo data file not found: {demo_file}, falling back to API")
+                # Fall through to API call
+        except Exception as e:
+            logger.error(f"Error loading demo data: {e}, falling back to API")
+            # Fall through to API call
+    
     logger.info(f"Fetching data for {ticker} (period={period}, interval={interval})")
 
     try:

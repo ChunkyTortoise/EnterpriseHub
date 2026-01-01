@@ -24,14 +24,132 @@ except ImportError:
 logger = get_logger(__name__)
 
 
+def _display_demo_data(symbol: str) -> None:
+    """Display demo data from pre-loaded JSON file."""
+    import json
+    
+    # Load demo data
+    demo_file = "data/demo_aapl_fundamentals.json"
+    try:
+        with open(demo_file, 'r') as f:
+            demo_data = json.load(f)
+    except FileNotFoundError:
+        st.error(f"Demo data file not found: {demo_file}")
+        return
+    
+    # Parse demo data into expected format
+    info = demo_data.get("info", {})
+    financials = demo_data.get("financials", {})
+    
+    # Store ticker in session state
+    st.session_state.fa_ticker = symbol
+    
+    # --- RENDER PAGE ---
+    _display_header(info, symbol)
+    _display_key_metrics(info)
+    
+    st.markdown("---")
+    st.subheader("📈 Financial Performance")
+    
+    # Display demo metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Revenue (TTM)", "$394.33B", "+2.1%")
+    with col2:
+        st.metric("Net Income", "$97.00B", "+7.8%")
+    with col3:
+        st.metric("Free Cash Flow", "$99.58B", "+5.2%")
+    
+    # Revenue chart
+    st.markdown("##### Revenue Growth")
+    revenue_data = {
+        "Quarter": ["Q1 2023", "Q2 2023", "Q3 2023", "Q4 2023", "Q1 2024"],
+        "Revenue": [94.8, 81.8, 89.5, 119.6, 108.6]
+    }
+    df = pd.DataFrame(revenue_data)
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=df["Quarter"], y=df["Revenue"], marker_color='#1f77b4'))
+    fig.update_layout(
+        title="Quarterly Revenue (Billions)",
+        yaxis_title="Revenue ($B)",
+        height=300,
+        showlegend=False
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown("---")
+    st.subheader("💰 DCF Valuation Model")
+    
+    # Demo DCF results
+    current_price = info.get("currentPrice", 180.0)
+    fair_value = 195.50
+    upside = ((fair_value - current_price) / current_price) * 100
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Current Price", f"${current_price:.2f}")
+    with col2:
+        st.metric("Fair Value (DCF)", f"${fair_value:.2f}")
+    with col3:
+        st.metric("Upside/Downside", f"{upside:+.1f}%", delta=f"{upside:+.1f}%")
+    
+    # Analyst recommendation
+    if upside > 15:
+        st.success("🟢 **Analyst Rating: BUY** - Stock appears undervalued")
+    elif upside < -15:
+        st.error("🔴 **Analyst Rating: SELL** - Stock appears overvalued")
+    else:
+        st.info("🟡 **Analyst Rating: HOLD** - Stock appears fairly valued")
+    
+    # Key assumptions
+    with st.expander("📋 Valuation Assumptions", expanded=False):
+        st.markdown("""
+        **DCF Model Parameters:**
+        - Growth Rate (Years 1-5): 8.0%
+        - Growth Rate (Years 6-10): 5.0%
+        - Terminal Growth Rate: 2.5%
+        - Discount Rate (WACC): 9.2%
+        - Free Cash Flow (Latest): $99.58B
+        """)
+    
+    # Demo insights
+    st.markdown("---")
+    st.markdown("### 💡 Key Insights (Demo)")
+    st.markdown("""
+    **Strengths:**
+    - Strong revenue growth across all segments
+    - Healthy profit margins (24.6% net margin)
+    - Robust cash flow generation ($99.58B FCF)
+    - Services segment showing 15%+ YoY growth
+    
+    **Considerations:**
+    - iPhone revenue growth slowing in mature markets
+    - Increased competition in wearables segment
+    - Regulatory scrutiny on App Store policies
+    
+    **Recommendation:** Apple remains a solid long-term investment with strong fundamentals and consistent execution.
+    """)
+
+
 def render() -> None:
     """Render the Financial Analyst module."""
     ui.section_header("Financial Analyst", "Fundamental Analysis & Company Metrics")
 
+    # Demo Mode Toggle
+    demo_mode = st.checkbox(
+        "🎯 Demo Mode (Use Sample Data)", 
+        value=True,
+        help="Toggle to use sample Apple (AAPL) data without API calls"
+    )
+
     # Input Section
     col1, col2 = st.columns([1, 3])
     with col1:
-        symbol = st.text_input("Enter Ticker Symbol", value="AAPL", max_chars=10).upper()
+        if demo_mode:
+            symbol = st.selectbox("Select Demo Company", ["AAPL"], index=0)
+            st.caption("💡 Demo mode uses pre-loaded data")
+        else:
+            symbol = st.text_input("Enter Ticker Symbol", value="AAPL", max_chars=10).upper()
 
     if not symbol:
         st.info("Please enter a ticker symbol to begin.")
@@ -40,7 +158,10 @@ def render() -> None:
     try:
         with st.spinner(f"Analyzing {symbol}..."):
             # Fetch Data in a separate step to handle errors granularly
-            _fetch_and_display_data(symbol)
+            if demo_mode:
+                _display_demo_data(symbol)
+            else:
+                _fetch_and_display_data(symbol)
 
     except DataFetchError as e:
         logger.warning(f"Could not fetch financial data for {symbol}: {e}")
