@@ -19,6 +19,16 @@
         content="Production-ready AI frameworks for financial analysis, technical trading, and content generation. Reduce costs 50-70% while improving quality.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://enterprise-demo.streamlit.app/">
+    <meta property="og:image" content="assets/images/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="assets/images/og-image.jpg">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -196,25 +206,30 @@
 
         <div class="container relative mx-auto px-6">
             <div class="max-w-5xl mx-auto text-center">
+                <!-- New Feature Badge -->
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-8 animate-pulse hover:bg-white/20 transition cursor-pointer">
+                    <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                    <span class="text-sm font-medium text-indigo-100">New: Autonomous "Technical Co-Founder" Agents</span>
+                </div>
+
                 <!-- Main Headline -->
                 <h1 class="hero-title text-6xl md:text-7xl font-extrabold mb-8 leading-tight">
-                    Institutional-Grade AI Frameworks for Business
+                    Your AI Technical Co-Founder & Business Intelligence Architect
                 </h1>
 
                 <!-- Subheadline -->
                 <p class="text-2xl mb-12 text-indigo-100 max-w-3xl mx-auto leading-relaxed relative z-10">
-                    Production-ready systems for financial modeling, market intelligence, and high-performance content
-                    orchestration.
+                    Building self-evolving agent swarms (LangGraph + Claude) and production-grade financial systems that manage themselves.
                 </p>
 
                 <!-- CTAs -->
                 <div class="flex flex-col md:flex-row gap-6 justify-center items-center mb-20">
                     <a href="#contact" class="btn-primary text-lg px-10 py-5 w-full md:w-auto">
-                        🚀 Schedule Free Strategy Session
+                        🚀 Schedule Strategy Session
                     </a>
-                    <a href="https://enterprise-demo.streamlit.app/" target="_blank"
+                    <a href="ARETE_AGENT_CASE_STUDY.md" target="_blank"
                         class="btn-secondary text-lg px-10 py-5 w-full md:w-auto flex items-center justify-center gap-2">
-                        <span>📂 Live Platform Demo</span>
+                        <span>🤖 View Agent Swarm Architecture</span>
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -246,6 +261,80 @@
                         class="stat-box bg-white bg-opacity-5 backdrop-blur-md border border-white border-opacity-10 rounded-2xl p-6">
                         <div class="text-4xl font-bold text-indigo-400">10</div>
                         <div class="text-xs uppercase tracking-widest text-indigo-200 mt-2 font-semibold">Live Modules
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Innovation: ARETE Swarm -->
+    <section class="py-20 bg-slate-900 border-b border-slate-800 reveal">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex flex-col md:flex-row items-center gap-12">
+                    <div class="md:w-1/2">
+                        <div class="inline-block px-4 py-1.5 bg-indigo-500/20 text-indigo-300 text-sm font-bold rounded-full mb-6">FEATURED CASE STUDY</div>
+                        <h2 class="text-4xl font-bold text-white mb-6">ARETE: The Self-Evolving "Technical Co-Founder"</h2>
+                        <p class="text-slate-400 text-lg mb-8 leading-relaxed">
+                            A multi-agent swarm architecture (LangGraph + Claude 3.5) designed to build, deploy, and maintain software autonomously.
+                        </p>
+                        
+                        <div class="space-y-4 mb-8">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">👑</div>
+                                <div>
+                                    <div class="text-white font-semibold">Prime Agent</div>
+                                    <div class="text-sm text-slate-500">Orchestrates strategy & task delegation</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">🔨</div>
+                                <div>
+                                    <div class="text-white font-semibold">Engineer Agent</div>
+                                    <div class="text-sm text-slate-500">Writes code, runs tests, & manages git</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">🛡️</div>
+                                <div>
+                                    <div class="text-white font-semibold">Guardian Agent</div>
+                                    <div class="text-sm text-slate-500">Enforces security & architectural standards</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="ARETE_AGENT_CASE_STUDY.md" class="text-indigo-400 font-semibold hover:text-indigo-300 flex items-center gap-2">
+                            Read Full Architecture Spec <span aria-hidden="true">→</span>
+                        </a>
+                    </div>
+                    
+                    <div class="md:w-1/2">
+                        <div class="grid grid-cols-1 gap-6">
+                            <!-- Terminal Section -->
+                            <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-2xl relative overflow-hidden group">
+                                <div class="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                
+                                <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                                    Live Agent Interaction
+                                </h3>
+                                
+                                <div class="space-y-2 font-mono text-xs md:text-sm h-48 overflow-y-auto" id="terminal-container">
+                                    <div class="h-full flex items-center justify-center text-slate-500 italic">Initializing Swarm Protocol...</div>
+                                </div>
+                            </div>
+
+                            <!-- Architecture Diagram Section -->
+                            <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-2xl relative overflow-hidden group">
+                                <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                    Swarm Architecture
+                                </h3>
+                                <img src="assets/images/arete-swarm-arch.svg" alt="ARETE Swarm Architecture" class="w-full h-auto rounded-lg">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -688,10 +777,10 @@
                     <!-- Tier 3 -->
                     <div class="card border border-slate-100 flex flex-col h-full">
                         <div class="mb-8">
-                            <h3 class="text-xl font-bold text-slate-900 mb-2">Custom Swarm</h3>
+                            <h3 class="text-xl font-bold text-slate-900 mb-2">Technical Co-Founder</h3>
                             <div class="text-4xl font-extrabold text-slate-900 mb-2">$8,000<span
-                                    class="text-lg font-normal text-slate-400">/start</span></div>
-                            <p class="text-slate-500 text-sm">For complex, multi-agent orchestration.</p>
+                                    class="text-lg font-normal text-slate-400">/phase</span></div>
+                            <p class="text-slate-500 text-sm">Autonomous agent system architecture.</p>
                         </div>
                         <ul class="space-y-4 text-slate-600 mb-10 flex-grow">
                             <li class="flex items-start gap-3">
@@ -700,7 +789,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>Bespoke Multi-Agent Architecture</span>
+                                <span>Core Agent (Memory + File I/O)</span>
                             </li>
                             <li class="flex items-start gap-3">
                                 <svg class="w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor"
@@ -708,7 +797,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>Proprietary Knowledge Integration</span>
+                                <span>CI/CD Self-Evolution Pipeline</span>
                             </li>
                             <li class="flex items-start gap-3">
                                 <svg class="w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor"
@@ -716,11 +805,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>Full Source Code Ownership</span>
+                                <span>LangGraph + Claude 3.5 Stack</span>
                             </li>
                         </ul>
-                        <a href="https://linkedin.com/in/caymanroden" target="_blank"
-                            class="btn-secondary text-center text-slate-900">Custom Quote</a>
+                        <a href="ARETE_AGENT_CASE_STUDY.md" target="_blank"
+                            class="btn-secondary text-center text-slate-900">View Architecture</a>
                     </div>
                 </div>
 
@@ -853,6 +942,10 @@
                     <h2 class="text-4xl md:text-5xl font-bold mb-6 text-slate-900">How I Work</h2>
                     <p class="text-xl text-slate-600 max-w-2xl mx-auto">A transparent, milestone-driven approach
                         designed for enterprise reliability.</p>
+                </div>
+
+                <div class="mb-20 bg-slate-900 rounded-2xl p-8 shadow-xl overflow-x-auto">
+                    <img src="assets/images/process-diagram.svg" alt="5-Phase Delivery Process" class="min-w-[800px] w-full h-auto">
                 </div>
 
                 <div class="relative">
@@ -1005,6 +1098,94 @@
 
     <!-- JavaScript -->
     <script src="js/main.js"></script>
+    
+    <!-- Terminal Typing Animation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('terminal-container');
+            if (!container) return;
+
+            const conversation = [
+                { role: 'user', text: 'Add a Stripe checkout to the landing page.', delay: 1000 },
+                { role: 'prime', text: '➜ Prime: Delegating to Architect... Analyzing request...', delay: 800 },
+                { role: 'architect', text: 'Creating `docs/specs/stripe_integration.md`...', delay: 1500 },
+                { role: 'prime', text: '➜ Architect: Spec approved. Handoff to Engineer.', delay: 800 },
+                { role: 'engineer', text: 'Writing `modules/stripe.py`... Implementation complete.', delay: 2000 },
+                { role: 'engineer', text: 'Running tests... 4/4 Passed.', delay: 1200 },
+                { role: 'success', text: '✔ PR #42 "feat: Stripe Integration" Created & Deployed to Staging', delay: 1000 }
+            ];
+
+            let stepIndex = 0;
+            container.innerHTML = ''; // Clear initial text
+
+            function typeWriter(text, element, callback) {
+                let i = 0;
+                function type() {
+                    if (i < text.length) {
+                        element.innerHTML += text.charAt(i);
+                        i++;
+                        setTimeout(type, 30); // Typing speed
+                    } else {
+                        if (callback) callback();
+                    }
+                }
+                type();
+            }
+
+            function processStep() {
+                if (stepIndex >= conversation.length) {
+                    setTimeout(() => {
+                        container.innerHTML = '';
+                        stepIndex = 0;
+                        processStep();
+                    }, 5000); // Reset after 5 seconds
+                    return;
+                }
+
+                const step = conversation[stepIndex];
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'mb-2 font-mono text-sm leading-relaxed';
+                
+                // Styling based on role
+                if (step.role === 'user') {
+                    lineDiv.innerHTML = '<span class="text-purple-400">User:</span> ';
+                } else if (step.role === 'prime') {
+                    lineDiv.className += ' text-indigo-400';
+                } else if (step.role === 'architect') {
+                    lineDiv.className += ' text-slate-400 pl-4';
+                } else if (step.role === 'engineer') {
+                    lineDiv.className += ' text-slate-500 pl-4';
+                } else if (step.role === 'success') {
+                    lineDiv.className = 'mt-4 bg-green-900/20 p-3 rounded border border-green-500/30 text-green-300';
+                }
+
+                container.appendChild(lineDiv);
+
+                if (step.role === 'success') {
+                    lineDiv.innerText = step.text;
+                    stepIndex++;
+                    setTimeout(processStep, step.delay);
+                } else {
+                    const textSpan = document.createElement('span');
+                    if (step.role === 'user') {
+                         textSpan.innerText = '"'; 
+                         lineDiv.appendChild(textSpan);
+                         typeWriter(step.text + '"', textSpan, () => {
+                             stepIndex++;
+                             setTimeout(processStep, step.delay);
+                         });
+                    } else {
+                        typeWriter(step.text, lineDiv, () => {
+                            stepIndex++;
+                            setTimeout(processStep, step.delay);
+                        });
+                    }
+                }
+            }
+
+            processStep();
+        });
+    </script>
 </body>
 
 </html>
