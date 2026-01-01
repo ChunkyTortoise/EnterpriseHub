@@ -72,13 +72,13 @@ def _render_chat_demo() -> None:
             with col1:
                 st.markdown("👤 **You**")
             with col2:
-                st.markdown(f"<div style='background:#2e3440; padding:1rem; border-radius:8px; margin-bottom:1rem;'>{content}<br><small style='color:#888;'>{timestamp}</small></div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background:#2e3440; padding:1rem; border-radius:8px; margin-bottom:1rem;'>{content}<br><small style='color:#94A3B8;'>{timestamp}</small></div>", unsafe_allow_html=True)
         else:
             col1, col2 = st.columns([1, 5])
             with col1:
                 st.markdown("🤖 **ARETE**")
             with col2:
-                st.markdown(f"<div style='background:#1e2128; padding:1rem; border-radius:8px; margin-bottom:1rem; border-left:3px solid #00ff88;'>{content}<br><small style='color:#888;'>{timestamp}</small></div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background:#1e2128; padding:1rem; border-radius:8px; margin-bottom:1rem; border-left:3px solid #10B981;'>{content}<br><small style='color:#94A3B8;'>{timestamp}</small></div>", unsafe_allow_html=True)
 
 
 def _render_workflow_diagram() -> None:
@@ -716,12 +716,12 @@ def render() -> None:
         "Self-maintaining autonomous agent with GitHub integration, LangGraph workflows, and continuous evolution capabilities. Built to replace manual development workflows."
     )
     
-    # Check dependencies - Show enhanced demo mode
+    # Check dependencies - Show enhanced demo mode instead of error
     if not LANGGRAPH_AVAILABLE:
-        st.info("📋 ARETE Demo Mode - Interactive Showcase")
+        st.success("💡 **Demo Mode Active**: Showcasing ARETE's capabilities with interactive demonstrations")
         
         # Feature 1: Interactive Chat Interface
-        with st.expander("💬 Interactive Chat Demo", expanded=True):
+        with st.expander("💬 Interactive Chat Demo - See ARETE in Action", expanded=True):
             _render_chat_demo()
         
         # Feature 2: Workflow Visualization
@@ -742,9 +742,10 @@ def render() -> None:
         
         # Installation instructions
         st.markdown("---")
-        with st.expander("🔧 Enable Full Functionality"):
+        with st.expander("🔧 Optional: Enable Full Live Functionality"):
             st.code("pip install langgraph langchain-anthropic anthropic", language="bash")
-            st.info("After installation, restart the app to access the full conversational interface with live GitHub integration.")
+            st.info("💡 To enable live GitHub integration and conversational interface, install dependencies above and restart.")
+            st.caption("Demo mode is fully functional for presentations and screenshots.")
         
         return  # Exit early in demo mode
     

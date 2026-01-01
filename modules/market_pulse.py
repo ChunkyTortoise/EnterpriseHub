@@ -36,11 +36,11 @@ def render() -> None:
     # User input controls
     col1, col2 = st.columns([1, 3])
     with col1:
-        # Demo mode toggle
+        # Demo mode toggle (default True for reliable demos)
         use_demo = st.checkbox(
             "📊 Use Demo Data",
             value=True,
-            help="Use pre-loaded demo data for instant results (recommended for screenshots)"
+            help="Use pre-loaded demo data for instant results (recommended for screenshots and demos)"
         )
         
         ticker = st.text_input("Ticker Symbol", value="SPY").upper()

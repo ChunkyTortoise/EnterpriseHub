@@ -324,7 +324,7 @@ class TestFooter:
         args, kwargs = mock_st.markdown.call_args
 
         html = args[0]
-        assert "© 2025 Enterprise Hub" in html
+        assert "© 2026 Enterprise Hub" in html
         assert "Streamlit & Python" in html
         assert kwargs.get("unsafe_allow_html") is True
 
