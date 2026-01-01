@@ -61,7 +61,7 @@ def main():
         # PRODUCTION GATEWAY (Optional - removed for public demo)
         # if not ui.login_modal(): st.stop()
 
-        # Initialize page variable to default
+        # Initialize page variable
         page = "🏠 Overview"
 
         # SIDEBARNAVIGATION
@@ -92,7 +92,7 @@ def main():
                 unsafe_allow_html=True,
             )
 
-            # Theme Toggle
+            # Theme Toggle - RESTORED ALL 4 THEMES
             st.markdown("---")
             st.markdown("**🎨 Theme**")
             col1, col2 = st.columns(2)
@@ -100,15 +100,20 @@ def main():
                 if st.button("☀️ Light", use_container_width=True):
                     st.session_state.theme = "light"
                     st.rerun()
+                if st.button("🌊 Ocean", use_container_width=True):
+                    st.session_state.theme = "ocean"
+                    st.rerun()
             with col2:
                 if st.button("🌙 Dark", use_container_width=True):
                     st.session_state.theme = "dark"
+                    st.rerun()
+                if st.button("🌅 Sunset", use_container_width=True):
+                    st.session_state.theme = "sunset"
                     st.rerun()
 
             # Navigation
             st.markdown("---")
             pages = ["🏠 Overview"] + list(MODULES.keys())
-            # THIS ASSIGNS THE VARIABLE CORRECTLY NOW
             page = st.radio("Navigate:", pages, label_visibility="collapsed")
 
             st.markdown("---")
@@ -153,7 +158,7 @@ def _load_and_render_module(module_name, module_title):
             st.exception(e)
 
 def _render_overview(ui):
-    """Render the overview/home page."""
+    """Render the overview/home page - RESTORED TO FULL RICH UI."""
     import streamlit as st
     
     # Hero Section
@@ -171,13 +176,187 @@ def _render_overview(ui):
     with col4: ui.card_metric("Performance", "Lazy-Loaded", "Optimized")
 
     ui.spacer(40)
-    st.markdown("### 🛠️ Module Suite (Select from Sidebar)")
-    
-    # Simple Grid for Overview
-    cols = st.columns(3)
-    for i, (name, (mod_id, title, icon)) in enumerate(MODULES.items()):
-        with cols[i % 3]:
-            st.info(f"**{name}**\n\nReady for launch.")
+    st.markdown("### 🛠️ Module Suite")
+
+    # Feature Grid - Row 1
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        module_info = MODULES.get("💰 Margin Hunter")
+        ui.feature_card(
+            icon=module_info[2] if module_info[2] else "💰",
+            title=module_info[1],
+            description=(
+                "Real-time Cost-Volume-Profit analysis with 10x10 "
+                "sensitivity heatmaps and break-even modeling."
+            ),
+            status="hero",
+            icon_path=module_info[2] if module_info[2] else None,
+        )
+    with c2:
+        module_info = MODULES.get("📊 Market Pulse")
+        ui.feature_card(
+            icon=module_info[2] if module_info[2] else "📊",
+            title=module_info[1],
+            description=(
+                "Institutional-grade technical analysis dashboard "
+                "with RSI, MACD, and multi-panel charting."
+            ),
+            status="active",
+            icon_path=module_info[2] if module_info[2] else None,
+        )
+    with c3:
+        module_info = MODULES.get("🔍 Data Detective")
+        ui.feature_card(
+            icon=module_info[2] if module_info[2] else "🔍",
+            title=module_info[1],
+            description=(
+                "AI-powered data profiling and statistical analysis. "
+                "Upload any CSV/Excel for instant insights."
+            ),
+            status="new",
+            icon_path=module_info[2] if module_info[2] else None,
+        )
+
+    ui.spacer(20)
+
+    # Feature Grid - Row 2
+    c4, c5, c6 = st.columns(3)
+
+    with c4:
+        module_info = MODULES.get("📈 Marketing Analytics")
+        ui.feature_card(
+            icon=module_info[2] if module_info[2] else "📈",
+            title=module_info[1],
+            description=(
+                "Comprehensive campaign tracking, ROI calculators, "
+                "multi-variant testing, and attribution modeling."
+            ),
+            status="new",
+            icon_path=module_info[2] if module_info[2] else None,
+        )
+    with c5:
+        module_info = MODULES.get("✍️ Content Engine")
+        ui.feature_card(
+            icon=module_info[2] if module_info[2] else "✍️",
+            title=module_info[1],
+            description=(
+                "Generate professional LinkedIn content in seconds "
+                "using Anthropic's Claude 3.5 Sonnet API."
+            ),
+            status="active",
+            icon_path=module_info[2] if module_info[2] else None,
+        )
+    with c6:
+        module_info = MODULES.get("🤖 Agent Logic")
+        ui.feature_card(
+            icon=module_info[2] if module_info[2] else "🤖",
+            title=module_info[1],
+            description=(
+                "Automated market research and news sentiment analysis using NLP and web scraping."
+            ),
+            status="active",
+            icon_path=module_info[2] if module_info[2] else None,
+        )
+
+    # Row 3: Financial Analyst, Multi-Agent, Smart Forecast
+    ui.spacer(20)
+    c7, c8, c9 = st.columns(3)
+
+    with c7:
+        module_info = MODULES.get("💼 Financial Analyst")
+        ui.feature_card(
+            icon=module_info[2] if module_info[2] else "💼",
+            title=module_info[1],
+            description=(
+                "Fundamental stock analysis with financial statements, "
+                "ratios, and valuation metrics."
+            ),
+            status="active",
+            icon_path=module_info[2] if module_info[2] else None,
+        )
+
+    with c8:
+        module_info = MODULES.get("🤖 Multi-Agent Workflow")
+        ui.feature_card(
+            icon=module_info[2] if module_info[2] else "🤖",
+            title=module_info[1],
+            description=(
+                "Orchestrates 4 specialized agents (Data, Tech, News, Chief) "
+                "to perform deep-dive asset analysis."
+            ),
+            status="new",
+            icon_path=module_info[2] if module_info[2] else None,
+        )
+
+    with c9:
+        module_info = MODULES.get("🧠 Smart Forecast")
+        ui.feature_card(
+            icon=module_info[2] if module_info[2] else "🧠",
+            title=module_info[1],
+            description=(
+                "AI-powered time series forecasting using Random Forest "
+                "and Rolling Window analysis."
+            ),
+            status="new",
+            icon_path=module_info[2] if module_info[2] else None,
+        )
+
+    ui.spacer(40)
+    ui.section_header(
+        "Built For Real Business Challenges",
+        ("See how EnterpriseHub replaces manual workflows and expensive subscriptions"),
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        ui.use_case_card(
+            icon="💡",
+            title="For SaaS Founders",
+            description="""
+                <strong>Margin Hunter</strong> replaces Excel spreadsheet
+                chaos for pricing decisions. Run 100 profit scenarios
+                simultaneously with sensitivity heatmaps. Break-even
+                analysis that updates in real-time as you adjust prices.
+            """,
+        )
+
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+
+        ui.use_case_card(
+            icon="📊",
+            title="For Finance Teams",
+            description="""
+                <strong>Market Pulse</strong> eliminates Bloomberg Terminal
+                dependency for basic technical analysis. 4-panel charts
+                (Price/RSI/MACD/Volume) with institutional-grade indicators.
+                Save $24,000/year in subscriptions.
+            """,
+        )
+
+    with col2:
+        ui.use_case_card(
+            icon="🔍",
+            title="For Data Analysts",
+            description="""
+                <strong>Data Detective</strong> reduces exploratory data
+                analysis from 2 hours to 2 minutes. AI-powered insights,
+                correlation heatmaps, and quality scoring. Upload CSV → Get
+                actionable findings instantly.
+            """,
+        )
+
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+
+        ui.use_case_card(
+            icon="📈",
+            title="For Marketing Teams",
+            description="""
+                **Marketing Analytics** replaces agency dashboards costing
+                $200-500/month. 5 attribution models, A/B test calculators,
+                and campaign ROI tracking. One-time build you own forever.
+            """,
+        )
 
 if __name__ == "__main__":
     main()
