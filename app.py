@@ -1,11 +1,32 @@
 """
-    <div style='text-align: center; color: #666; padding: 20px;'>
-        <p><strong>Developed by Cayman Roden</strong></p>
-        <p>Expert Python Dashboarding | AI Strategy | Workflow Automation</p>
-        <p>
-            <a href='https://github.com/ChunkyTortoise/EnterpriseHub' target='_blank'>Source Code</a> •
-            <a href='https://chunkytortoise.github.io/EnterpriseHub/' target='_blank'>Portfolio Website</a> •
-            <a href='https://linkedin.com/in/caymanroden' target='_blank'>LinkedIn</a>
-        </p>
-    </div>
-    """
+Market Pulse Demo - Public Streamlit App
+"""
+
+import streamlit as st
+
+# FAST BOOT: Do not import heavy libraries (pandas, plotly, yfinance) here.
+# Only import streamlit at the top level.
+
+st.set_page_config(
+    page_title="Market Pulse Demo",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
+def main():
+    st.info("👋 **Welcome to the Market Pulse Demo**")
+    
+    # Lazy load heavy modules ONLY when the app actually runs
+    with st.spinner("Loading financial engine..."):
+        try:
+            # Import strictly what is needed
+            from modules.market_pulse import render
+            render()
+        except ImportError as e:
+            st.error(f"Module Error: {e}")
+        except Exception as e:
+            st.error(f"Runtime Error: {e}")
+
+if __name__ == "__main__":
+    main()
