@@ -1,6 +1,18 @@
 import streamlit as st
+import sys
 
-st.set_page_config(page_title="Debug Mode")
-st.title("✅ Server is Running")
-st.write("If you see this, the deployment pipeline is working.")
-st.write("We will now add back the module one step at a time.")
+# Log to console for debugging
+print(">>> APP.PY STARTING", file=sys.stderr)
+
+st.title("EnterpriseHub Live Demo")
+st.success("App is online.")
+
+# The simplest possible check
+if st.button("Initialize Financial Engine"):
+    try:
+        from modules.market_pulse import render
+        render()
+    except Exception as e:
+        st.error(f"Error: {e}")
+
+print(">>> APP.PY FINISHED LOADING", file=sys.stderr)
