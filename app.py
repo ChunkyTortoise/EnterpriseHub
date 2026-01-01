@@ -61,6 +61,9 @@ def main():
         # PRODUCTION GATEWAY (Optional - removed for public demo)
         # if not ui.login_modal(): st.stop()
 
+        # Initialize page variable to default
+        page = "🏠 Overview"
+
         # SIDEBARNAVIGATION
         with st.sidebar:
             st.markdown(
@@ -103,6 +106,11 @@ def main():
                     st.rerun()
 
             # Navigation
+            st.markdown("---")
+            pages = ["🏠 Overview"] + list(MODULES.keys())
+            # THIS ASSIGNS THE VARIABLE CORRECTLY NOW
+            page = st.radio("Navigate:", pages, label_visibility="collapsed")
+
             st.markdown("---")
             st.markdown("### 👤 **Cayman Roden**")
             st.markdown("Full-Stack Python Developer")
