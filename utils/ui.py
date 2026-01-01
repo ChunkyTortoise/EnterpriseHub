@@ -167,7 +167,7 @@ def _generate_css(theme: dict) -> str:
     }}
 
     /* FORCE SIDEBAR TEXT COLORS */
-    section[data-testid="stSidebar"] .stMarkdown, 
+    section[data-testid="stSidebar"] .stMarkdown,
     section[data-testid="stSidebar"] h1,
     section[data-testid="stSidebar"] h2,
     section[data-testid="stSidebar"] h3,
@@ -1498,7 +1498,7 @@ def spacer(px: int = 20) -> None:
     st.markdown(f"<div style='height: {px}px'></div>", unsafe_allow_html=True)
 
 
-from modules.auth import authenticate_user, create_user
+from modules.auth import authenticate_user, create_user  # noqa: E402
 
 
 def login_modal() -> bool:

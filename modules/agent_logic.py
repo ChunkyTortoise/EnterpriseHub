@@ -27,38 +27,38 @@ logger = get_logger(__name__)
 def _display_demo_sentiment(symbol: str) -> None:
     """Display demo sentiment analysis from pre-loaded JSON file."""
     import json
-    
+
     # Load demo data
     demo_file = "data/demo_sentiment_timeline.json"
     try:
-        with open(demo_file, 'r') as f:
+        with open(demo_file, "r") as f:
             demo_data = json.load(f)
     except FileNotFoundError:
         st.error(f"Demo data file not found: {demo_file}")
         return
-    
+
     # Find company data
     company_data = None
     for company in demo_data.get("companies", []):
         if company["symbol"] == symbol:
             company_data = company
             break
-    
+
     if not company_data:
         st.warning(f"No demo data available for {symbol}")
         return
-    
+
     # Extract data
     current_sentiment = company_data["current_sentiment"]
     trend = company_data["trend"]
     timeline = company_data["timeline"]
-    
+
     # --- Dashboard ---
     st.markdown("---")
-    
+
     # Sentiment score (scale from 0-1 to -100 to 100)
     sentiment_scaled = (current_sentiment - 0.5) * 200  # 0.74 -> 48
-    
+
     # Gauge Chart
     fig = go.Figure(
         go.Indicator(
@@ -71,8 +71,8 @@ def _display_demo_sentiment(symbol: str) -> None:
                 "bar": {"color": "white"},
                 "steps": [
                     {"range": [-100, -10], "color": "#ff4444"},  # Red
-                    {"range": [-10, 10], "color": "#888888"},    # Gray
-                    {"range": [10, 100], "color": "#00ff88"},    # Green
+                    {"range": [-10, 10], "color": "#888888"},  # Gray
+                    {"range": [10, 100], "color": "#00ff88"},  # Green
                 ],
                 "threshold": {
                     "line": {"color": "white", "width": 4},
@@ -83,13 +83,13 @@ def _display_demo_sentiment(symbol: str) -> None:
         )
     )
     fig.update_layout(height=300, margin=dict(l=20, r=20, t=50, b=20))
-    
+
     # Layout: Gauge on Left, Stats on Right
     d_col1, d_col2 = st.columns([1, 1])
-    
+
     with d_col1:
         st.plotly_chart(fig, use_container_width=True)
-    
+
     with d_col2:
         # Verdict based on sentiment
         if trend == "very_bullish":
@@ -104,7 +104,7 @@ def _display_demo_sentiment(symbol: str) -> None:
         else:
             verdict = "➡️ NEUTRAL"
             verdict_color = "#888888"
-        
+
         st.markdown(
             f"""
         <div style="background:{ui.THEME["surface"]}; padding:1.5rem;
@@ -121,41 +121,43 @@ def _display_demo_sentiment(symbol: str) -> None:
         """,
             unsafe_allow_html=True,
         )
-        
+
         st.write("")  # Spacer
         st.info("Analysis based on 6-month sentiment timeline and recent news analysis.")
-    
+
     # --- Sentiment Timeline Chart ---
     st.markdown("---")
     st.subheader("📊 Sentiment Timeline")
-    
+
     # Create timeline chart
     dates = [item["date"] for item in timeline]
     scores = [item["sentiment_score"] for item in timeline]
-    
+
     fig_timeline = go.Figure()
-    fig_timeline.add_trace(go.Scatter(
-        x=dates,
-        y=scores,
-        mode='lines+markers',
-        name='Sentiment Score',
-        line=dict(color='#00ff88', width=3),
-        marker=dict(size=8)
-    ))
+    fig_timeline.add_trace(
+        go.Scatter(
+            x=dates,
+            y=scores,
+            mode="lines+markers",
+            name="Sentiment Score",
+            line=dict(color="#00ff88", width=3),
+            marker=dict(size=8),
+        )
+    )
     fig_timeline.update_layout(
         title=f"{company_data['name']} Sentiment Over Time",
         xaxis_title="Date",
         yaxis_title="Sentiment Score",
         yaxis=dict(range=[0, 1]),
         height=350,
-        showlegend=False
+        showlegend=False,
     )
     st.plotly_chart(fig_timeline, use_container_width=True)
-    
+
     # --- News Feed ---
     st.markdown("---")
     st.subheader("📰 News Feed & Sentiment")
-    
+
     for item in timeline:
         score = item["sentiment_score"]
         if score > 0.7:
@@ -164,11 +166,13 @@ def _display_demo_sentiment(symbol: str) -> None:
             sentiment_label = "🔴 NEGATIVE"
         else:
             sentiment_label = "🟡 NEUTRAL"
-        
+
         with st.expander(f"{sentiment_label} | {item['headline']}"):
             st.markdown(f"**Date:** {item['date']}")
             st.markdown(f"**Sentiment Score:** {score:.2f}")
-            st.markdown(f"**Analysis:** This headline suggests {sentiment_label.split()[1].lower()} market sentiment for {symbol}.")
+            st.markdown(
+                f"**Analysis:** This headline suggests {sentiment_label.split()[1].lower()} market sentiment for {symbol}."
+            )
 
 
 def render() -> None:
@@ -179,18 +183,14 @@ def render() -> None:
     demo_mode = st.checkbox(
         "🎯 Demo Mode (Use Sample Data)",
         value=True,
-        help="Toggle to use sample sentiment analysis data without API calls. Recommended for demos."
+        help="Toggle to use sample sentiment analysis data without API calls. Recommended for demos.",
     )
 
     # Input
     col1, col2 = st.columns([1, 3])
     with col1:
         if demo_mode:
-            symbol = st.selectbox(
-                "Select Demo Company",
-                ["AAPL", "TSLA", "GOOGL", "MSFT"],
-                index=0
-            )
+            symbol = st.selectbox("Select Demo Company", ["AAPL", "TSLA", "GOOGL", "MSFT"], index=0)
             st.caption("💡 Demo mode uses pre-loaded data")
         else:
             symbol = st.text_input("Analyze Ticker", value="AAPL", max_chars=5).upper()
