@@ -36,6 +36,7 @@ MODULES = {
     "📈 Marketing Analytics": ("marketing_analytics", "Marketing Analytics", "assets/icons/marketing_analytics.svg"),
     "🤖 Multi-Agent Workflow": ("multi_agent", "Multi-Agent Workflow", "assets/icons/multi_agent.svg"),
     "🧠 Smart Forecast": ("smart_forecast", "Smart Forecast Engine", "assets/icons/smart_forecast.svg"),
+    "🏗️ DevOps Control": ("devops_control", "DevOps Control", "assets/icons/devops.svg"),
     "🎨 Design System": ("design_system", "Design System Gallery", "assets/icons/design_system.svg"),
 }
 
