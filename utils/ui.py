@@ -161,10 +161,10 @@ def _generate_css(theme: dict) -> str:
     }}
 
     /* SIDEBAR STYLING - Saturated Glassmorphism */
-    section[data-testid="stSidebar"] {
+    section[data-testid="stSidebar"] {{
         background-color: {theme["surface"]}F2; /* Higher opacity for readability */
         border-right: 1px solid {theme["border"]};
-    }
+    }}
 
     /* FORCE SIDEBAR TEXT COLORS */
     section[data-testid="stSidebar"] .stMarkdown, 
@@ -174,29 +174,29 @@ def _generate_css(theme: dict) -> str:
     section[data-testid="stSidebar"] p,
     section[data-testid="stSidebar"] label,
     section[data-testid="stSidebar"] span,
-    section[data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] p {
+    section[data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] p {{
         color: {theme["text_main"]} !important;
-    }
+    }}
 
-    section[data-testid="stSidebar"] a {
+    section[data-testid="stSidebar"] a {{
         color: {theme["accent"]} !important;
-    }
+    }}
 
     /* NAVIGATION RADIO BUTTONS - SPECIFIC TARGETING */
-    .stRadio > div[role="radiogroup"] > label {
+    .stRadio > div[role="radiogroup"] > label {{
         color: {theme["text_main"]} !important;
         background-color: transparent !important;
-    }
+    }}
 
-    .stRadio > div[role="radiogroup"] > label:hover {
+    .stRadio > div[role="radiogroup"] > label:hover {{
         color: {theme["accent"]} !important;
-    }
+    }}
 
     /* ACTIVE RADIO BUTTON */
-    .stRadio > div[role="radiogroup"] > label[data-checked="true"] {
+    .stRadio > div[role="radiogroup"] > label[data-checked="true"] {{
         color: {theme["accent"]} !important;
         font-weight: 700 !important;
-    }
+    }}
 
     /* METRIC CARDS - Advanced Depth */
     .metric-card {{
