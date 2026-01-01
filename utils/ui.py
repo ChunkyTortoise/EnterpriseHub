@@ -162,7 +162,7 @@ def _generate_css(theme: dict) -> str:
 
     /* SIDEBAR STYLING - Saturated Glassmorphism */
     section[data-testid="stSidebar"] {{
-        background-color: {theme["surface"]}F2; /* Higher opacity for readability */
+        background-color: {theme["surface"]}; /* Higher opacity for readability */
         border-right: 1px solid {theme["border"]};
     }}
 
