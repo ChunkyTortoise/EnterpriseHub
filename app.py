@@ -27,6 +27,7 @@ st.set_page_config(
 
 # --- MODULE REGISTRY ---
 MODULES = {
+    "🏗️ ARETE-Architect": ("arete_architect", "ARETE-Architect: AI Technical Co-Founder", "assets/icons/arete_architect.svg"),
     "📊 Market Pulse": ("market_pulse", "Market Pulse", "assets/icons/market_pulse.png"),
     "💼 Financial Analyst": ("financial_analyst", "Financial Analyst", "assets/icons/financial_analyst.png"),
     "💰 Margin Hunter": ("margin_hunter", "Margin Hunter", "assets/icons/margin_hunter.png"),
