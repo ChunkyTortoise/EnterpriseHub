@@ -357,11 +357,11 @@ def render() -> None:
     """Render the Content Engine module."""
     ui.section_header("Content Engine", "AI-Powered LinkedIn Post Generator")
 
-    # Demo Mode Toggle
+    # Demo Mode Toggle (default True for reliable demos)
     demo_mode = st.checkbox(
         "🎯 Demo Mode (View Sample Posts)",
         value=True,
-        help="Toggle to view pre-generated sample LinkedIn posts without API calls"
+        help="Toggle to view pre-generated sample LinkedIn posts without API calls. Recommended for demos."
     )
     
     if demo_mode:

@@ -1600,7 +1600,7 @@ def footer() -> None:
     <hr>
     <footer role="contentinfo">
         <div class="footer">
-            <p>© 2025 Enterprise Hub | Built with Streamlit & Python for
+            <p>© 2026 Enterprise Hub | Built with Streamlit & Python for
                Professional Excellence</p>
             <nav aria-label="Footer Navigation">
                 <a href="https://github.com/ChunkyTortoise/enterprise-hub"

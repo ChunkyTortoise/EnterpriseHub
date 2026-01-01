@@ -131,6 +131,13 @@ evaluation_prompt.md
 # *.png
 !docs/screenshots/.gitkeep
 
+# Temporary RovoDev files
+tmp_rovodev_*
+
+# Root-level screenshots (keep organized in assets/)
+/screenshot_*.png
+/Screenshot*.png
+
 # Cleanup additions
 .aider.tags.cache.v4/
 .resume_timestamp

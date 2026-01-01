@@ -135,11 +135,11 @@ def render() -> None:
     """Render the Financial Analyst module."""
     ui.section_header("Financial Analyst", "Fundamental Analysis & Company Metrics")
 
-    # Demo Mode Toggle
+    # Demo Mode Toggle (default True for screenshots)
     demo_mode = st.checkbox(
         "🎯 Demo Mode (Use Sample Data)", 
         value=True,
-        help="Toggle to use sample Apple (AAPL) data without API calls"
+        help="Toggle to use sample Apple (AAPL) data without API calls. Recommended for reliable demo."
     )
 
     # Input Section

@@ -175,11 +175,11 @@ def render() -> None:
     """Render the Agent Logic (Sentiment Scout) module."""
     ui.section_header("Agent Logic: Sentiment Scout", "AI-Powered Market Sentiment Analysis")
 
-    # Demo Mode Toggle
+    # Demo Mode Toggle (default True for reliable demos)
     demo_mode = st.checkbox(
         "🎯 Demo Mode (Use Sample Data)",
         value=True,
-        help="Toggle to use sample sentiment analysis data without API calls"
+        help="Toggle to use sample sentiment analysis data without API calls. Recommended for demos."
     )
 
     # Input
