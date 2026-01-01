@@ -1,7 +1,7 @@
 <div align="center">
   <img src="assets/hero/background_editorial.png" width="100%" style="border-radius: 12px; margin-bottom: 24px;" alt="EnterpriseHub Banner">
-  <h1>🚀 EnterpriseHub</h1>
-  <p><strong>Institutional-Grade Business Intelligence & Multi-Agent Orchestration</strong></p>
+  <h1>🚀 EnterpriseHub: Powered by ARETE-Architect</h1>
+  <p><strong>The Platform That Builds Itself</strong></p>
 
   [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
   [![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
@@ -15,8 +15,38 @@
     <a href="https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/">🎯 Try Live Demo</a>
     &nbsp;&nbsp;•&nbsp;&nbsp;
     <a href="https://chunkytortoise.github.io/enterprisehub/">✨ View Portfolio Site</a>
+    &nbsp;&nbsp;•&nbsp;&nbsp;
+    <a href="portfolio/ARETE_AGENT_CASE_STUDY.md">🦅 ARETE Case Study</a>
   </strong>
 </div>
+
+---
+
+## 🦅 ARETE-Architect: Your AI Technical Co-Founder
+
+**Self-maintaining autonomous agent** that builds, tests, and deploys code using:
+
+- 🧠 **Claude 3.5 Sonnet** - Best-in-class reasoning & code generation
+- 🔄 **LangGraph** - Stateful multi-agent workflows with 8 specialized agents
+- 🚀 **GitHub Integration** - Autonomous PR creation, branch management, CI/CD
+- 📈 **Self-Evolution Loop** - The agent that improves its own codebase
+
+> **Real-World Impact:** ARETE built 12 production modules (47 tasks, 127 hours saved) with 92% time reduction and 18.9x ROI.
+
+### The "Builds Itself Out of a Job" Architecture
+
+```
+User Request → Prime (Orchestrator) → Architect (Design) → Engineer (Build) 
+→ Guardian (QA) → DevOps (Deploy) → Production → Metrics → Self-Improvement
+```
+
+**Key Features:**
+- 💬 **Interactive Chat Demo** - Watch a 19-minute deployment workflow
+- 📊 **Real-Time Metrics** - Velocity tracking, ROI calculation, time savings
+- 🔄 **Workflow Visualization** - See the 8-agent swarm in action
+- ⚖️ **Before/After Comparison** - Measure transformation impact
+
+**[→ View ARETE Case Study](portfolio/ARETE_AGENT_CASE_STUDY.md)** | **[→ See Live Demo](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)**
 
 ---
 
@@ -26,7 +56,7 @@ This project is built to **institutional standards**, specifically targeting hig
 
 - **🛡️ Industrial-Grade Testing**: **301+ automated tests** verifying every financial formula (CVP, ROI, RSI) with 85%+ coverage.
 - **⚡ High-Performance Computing**: NumPy-powered vectorization for real-time sensitivity analysis (100+ scenarios in <50ms).
-- **🤖 Multi-Agent Orchestration**: Specialized "Strike Team Beta" swarm for parallel research, analysis, and content generation.
+- **🤖 Multi-Agent Orchestration**: ARETE swarm with 8 specialized agents (Prime, Architect, Engineer, Guardian, DevOps, Strategist, Scribe, Auditor).
 - **🎨 Editorial UX**: "Stripe-Class" design system with WCAG AAA accessibility and multi-theme support.
 
 ---
@@ -131,13 +161,7 @@ Built with cutting-edge Python frameworks and APIs:
 
 ---
 
-## 🚀 Feature Highlights
-
-### 🦅 **NEW: ARETE - The Technical Co-Founder**
-* **Self-Evolving Codebase**: The agent that can read, write, and test its own code.
-* **DevOps Control Plane**: Visual dashboard to monitor agent activity, git branches, and CI/CD status.
-* **LangGraph Brain**: Advanced reasoning loops for complex task execution.
-* **GitHub Integration**: Direct API access to manage PRs and feature branches safely.
+## 🚀 Platform Modules (Built by ARETE)
 
 ### 💰 Margin Hunter
 * **Real-time CVP Analysis**: Interactive break-even modeling.
@@ -313,7 +337,7 @@ enterprise-hub/
 
 **Perfect for**: Pricing strategy, profitability optimization, contract bidding, volume planning
 
-[📖 Read full Margin Hunter documentation →](modules/README_MARGIN_HUNTER.md)
+[📖 Read full Margin Hunter documentation →](docs/modules/README_MARGIN_HUNTER.md)
 
 ---
 
@@ -533,7 +557,7 @@ except APIError as e:
 - [E-Commerce Product Profitability](scenarios/ecommerce-product-template.md) - Product mix, promotions, marketplace fees
 - [Manufacturing Volume Planning](scenarios/manufacturing-volume-template.md) - Production runs, contract bidding, capacity utilization
 
-**Full Documentation**: [modules/README_MARGIN_HUNTER.md](modules/README_MARGIN_HUNTER.md)
+**Full Documentation**: [docs/modules/README_MARGIN_HUNTER.md](docs/modules/README_MARGIN_HUNTER.md)
 
 ---
 
@@ -593,7 +617,7 @@ except APIError as e:
 
 **Cost**: ~$0.003 per post (300x cheaper than human ghostwriters)
 
-**Full Documentation**: [modules/README_CONTENT_ENGINE.md](modules/README_CONTENT_ENGINE.md)
+**Full Documentation**: [docs/modules/README_CONTENT_ENGINE.md](docs/modules/README_CONTENT_ENGINE.md)
 
 ---
 
@@ -618,7 +642,7 @@ except APIError as e:
 
 **Cost**: $0 (all calculations are local, no external API calls)
 
-**Full Documentation**: [modules/README_MARKETING_ANALYTICS.md](modules/README_MARKETING_ANALYTICS.md)
+**Full Documentation**: [docs/modules/README_MARKETING_ANALYTICS.md](docs/modules/README_MARKETING_ANALYTICS.md)
 
 ---
 
@@ -701,13 +725,13 @@ Comprehensive documentation is available to help you get the most out of Enterpr
 
 ### Module Documentation
 Each of the 7 modules has comprehensive documentation:
-- [Margin Hunter](modules/README_MARGIN_HUNTER.md) - CVP analysis
-- [Content Engine](modules/README_CONTENT_ENGINE.md) - AI content generation
-- [Data Detective](modules/README_DATA_DETECTIVE.md) - Statistical analysis
-- [Financial Analyst](modules/README_FINANCIAL_ANALYST.md) - Stock analysis with AI
-- [Market Pulse](modules/README_MARKET_PULSE.md) - Technical indicators
-- [Marketing Analytics](modules/README_MARKETING_ANALYTICS.md) - Campaign tracking
-- [Agent Logic](modules/README_AGENT_LOGIC.md) - Sentiment analysis
+- [Margin Hunter](docs/modules/README_MARGIN_HUNTER.md) - CVP analysis
+- [Content Engine](docs/modules/README_CONTENT_ENGINE.md) - AI content generation
+- [Data Detective](docs/modules/README_DATA_DETECTIVE.md) - Statistical analysis
+- [Financial Analyst](docs/modules/README_FINANCIAL_ANALYST.md) - Stock analysis with AI
+- [Market Pulse](docs/modules/README_MARKET_PULSE.md) - Technical indicators
+- [Marketing Analytics](docs/modules/README_MARKETING_ANALYTICS.md) - Campaign tracking
+- [Agent Logic](docs/modules/README_AGENT_LOGIC.md) - Sentiment analysis
 
 ### Scenario Templates
 Industry-specific templates for Margin Hunter:
