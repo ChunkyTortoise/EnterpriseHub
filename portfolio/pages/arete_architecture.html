@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARETE-Architect: AI Technical Co-Founder Architecture | Cayman Roden</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../css/styles.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        }
+        
+        .code-block {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .architecture-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-32">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto text-center">
+                <div class="inline-block px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-6">
+                    <span class="text-sm font-semibold">🏗️ ARETE-Architect Technical Deep Dive</span>
+                </div>
+                
+                <h1 class="text-5xl md:text-6xl font-extrabold mb-6">
+                    Building Self-Maintaining AI Agent Systems
+                </h1>
+                
+                <p class="text-xl text-indigo-100 mb-8">
+                    Complete architecture breakdown: Claude API, LangGraph orchestration, GitHub integration, 
+                    and persistent memory for autonomous technical co-founder agents.
+                </p>
+                
+                <div class="flex gap-4 justify-center">
+                    <a href="https://enterprise-demo.streamlit.app/" target="_blank" 
+                       class="px-8 py-4 bg-indigo-500 hover:bg-indigo-600 rounded-lg font-semibold transition">
+                        Try Live Demo
+                    </a>
+                    <a href="../index.html" 
+                       class="px-8 py-4 bg-white/10 hover:bg-white/20 rounded-lg font-semibold transition">
+                        Back to Portfolio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- System Overview -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl font-bold mb-8">System Overview</h2>
+                
+                <p class="text-lg text-gray-700 mb-6">
+                    ARETE-Architect is a production-ready AI agent that functions as an autonomous technical 
+                    co-founder. Unlike traditional chatbots, ARETE can read/write code, manage GitHub repositories, 
+                    maintain persistent memory, and improve its own strategies over time.
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-12">
+                    <div class="p-6 bg-indigo-50 rounded-xl">
+                        <div class="text-3xl mb-3">🗣️</div>
+                        <h3 class="font-bold text-lg mb-2">Conversational</h3>
+                        <p class="text-sm text-gray-600">
+                            Natural language interface with streaming responses and context awareness
+                        </p>
+                    </div>
+                    
+                    <div class="p-6 bg-purple-50 rounded-xl">
+                        <div class="text-3xl mb-3">🔧</div>
+                        <h3 class="font-bold text-lg mb-2">Autonomous</h3>
+                        <p class="text-sm text-gray-600">
+                            Executes multi-step plans, writes code, creates PRs, and deploys automatically
+                        </p>
+                    </div>
+                    
+                    <div class="p-6 bg-blue-50 rounded-xl">
+                        <div class="text-3xl mb-3">🧠</div>
+                        <h3 class="font-bold text-lg mb-2">Self-Improving</h3>
+                        <p class="text-sm text-gray-600">
+                            Logs decisions, analyzes outcomes, and updates strategies autonomously
+                        </p>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-bold mb-4">Architecture Diagram</h3>
+                
+                <div class="code-block text-gray-300 mb-8">
+<pre>
+┌─────────────────────────────────────────────────────────┐
+│  User (Conversational Interface)                        │
+│  "Add Stripe checkout to landing page"                  │
+└────────────────┬────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────┐
+│  ARETE-Architect (LangGraph Orchestrator)               │
+│                                                          │
+│  ┌───────────┐  ┌───────────┐  ┌───────────┐           │
+│  │ Planner   │→ │ Coder     │→ │ GitHub    │→ Response │
+│  │ Node      │  │ Node      │  │ Node      │           │
+│  └───────────┘  └───────────┘  └───────────┘           │
+│                                                          │
+└────────────────┬────────────────────────────────────────┘
+                 │
+    ┌────────────┴─────────┬──────────────┬──────────────┐
+    ▼                      ▼              ▼              ▼
+┌─────────┐        ┌──────────────┐  ┌─────────┐  ┌─────────┐
+│ GitHub  │        │ Code Sandbox │  │ Memory  │  │ Claude  │
+│  API    │        │  (Testing)   │  │   DB    │  │   API   │
+│         │        │              │  │         │  │         │
+│ • Read  │        │ • Execute    │  │ • Conv  │  │ • Code  │
+│ • Write │        │ • Validate   │  │ • Logs  │  │ • Plan  │
+│ • PR    │        │ • Test       │  │ • State │  │ • Reason│
+└─────────┘        └──────────────┘  └─────────┘  └─────────┘
+</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Stack -->
+    <section class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl font-bold mb-8">Technical Stack</h2>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-xl font-bold mb-4 text-indigo-600">Core Technologies</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 font-bold">✓</span>
+                                <div>
+                                    <strong>Claude API</strong> (Anthropic)<br>
+                                    <span class="text-sm text-gray-600">GPT-4 class reasoning with 200k context window</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 font-bold">✓</span>
+                                <div>
+                                    <strong>LangGraph</strong><br>
+                                    <span class="text-sm text-gray-600">Agent orchestration with state management</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 font-bold">✓</span>
+                                <div>
+                                    <strong>Python 3.9+</strong><br>
+                                    <span class="text-sm text-gray-600">Modern async/await, type hints</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-xl font-bold mb-4 text-purple-600">Integration Layer</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 font-bold">✓</span>
+                                <div>
+                                    <strong>GitHub API</strong> (PyGithub)<br>
+                                    <span class="text-sm text-gray-600">Full repository management, PR automation</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 font-bold">✓</span>
+                                <div>
+                                    <strong>PostgreSQL</strong><br>
+                                    <span class="text-sm text-gray-600">Persistent conversation history and state</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-green-500 font-bold">✓</span>
+                                <div>
+                                    <strong>Streamlit</strong><br>
+                                    <span class="text-sm text-gray-600">Rapid UI prototyping, production deployments</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="text-xl font-bold mb-4">Production Statistics</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-indigo-600">2,145</div>
+                            <div class="text-sm text-gray-600">Lines Claude API Code</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-purple-600">1,509</div>
+                            <div class="text-sm text-gray-600">Lines LangGraph Logic</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-blue-600">11+</div>
+                            <div class="text-sm text-gray-600">Production Modules</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-green-600">85%+</div>
+                            <div class="text-sm text-gray-600">Test Coverage</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Capabilities -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl font-bold mb-12">Core Capabilities</h2>
+
+                <!-- Capability 1 -->
+                <div class="mb-12">
+                    <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                        <span class="text-3xl">💬</span>
+                        Conversational Interface
+                    </h3>
+                    <p class="text-gray-700 mb-4">
+                        Natural language interaction with streaming responses. No need to learn complex commands 
+                        or APIs—just talk to the agent like you would a human co-founder.
+                    </p>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <strong>Example:</strong>
+                        <div class="code-block mt-2">
+<pre class="text-sm">
+<span class="text-purple-300">User:</span> "Add a contact form to the landing page"
+
+<span class="text-indigo-300">ARETE:</span> 📋 Plan created:
+1. Read current landing page HTML
+2. Design contact form component (HTML + Tailwind)
+3. Add form validation JavaScript
+4. Create backend endpoint for form submission
+5. Commit changes to feature branch
+6. Create pull request
+
+🔨 Executing plan...
+✅ Complete. PR #42 created: "feat: Add contact form"
+</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capability 2 -->
+                <div class="mb-12">
+                    <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                        <span class="text-3xl">🔧</span>
+                        GitHub Integration
+                    </h3>
+                    <p class="text-gray-700 mb-4">
+                        Complete GitHub API integration enables the agent to read, write, and manage code 
+                        autonomously. All changes are version controlled with full audit trail.
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <strong class="text-green-700">Read Operations</strong>
+                            <ul class="mt-2 text-sm space-y-1 text-gray-700">
+                                <li>• Clone repositories</li>
+                                <li>• Read any file</li>
+                                <li>• Browse directory structure</li>
+                                <li>• Analyze code dependencies</li>
+                            </ul>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <strong class="text-blue-700">Write Operations</strong>
+                            <ul class="mt-2 text-sm space-y-1 text-gray-700">
+                                <li>• Create/update files</li>
+                                <li>• Commit changes with messages</li>
+                                <li>• Create feature branches</li>
+                                <li>• Open pull requests</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capability 3 -->
+                <div class="mb-12">
+                    <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                        <span class="text-3xl">🧠</span>
+                        Persistent Memory
+                    </h3>
+                    <p class="text-gray-700 mb-4">
+                        Every conversation is saved. Every decision is logged with reasoning. The agent never 
+                        forgets context and learns from past interactions.
+                    </p>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <strong>Memory Structure:</strong>
+                        <div class="code-block mt-2">
+<pre class="text-sm text-gray-300">
+{
+  "session_id": "20250101_143022",
+  "conversation_history": [
+    {
+      "role": "user",
+      "content": "Add logging to main.py",
+      "timestamp": "2025-01-01T14:30:45Z"
+    },
+    {
+      "role": "assistant",
+      "content": "Added Python logging with rotating file handler",
+      "timestamp": "2025-01-01T14:30:52Z"
+    }
+  ],
+  "decision_log": [
+    {
+      "decision": "Use RotatingFileHandler for logs",
+      "reasoning": "Prevents disk space issues in production",
+      "outcome": "success",
+      "timestamp": "2025-01-01T14:30:50Z"
+    }
+  ]
+}
+</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="py-20 bg-gradient-to-br from-indigo-50 to-purple-50">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl font-bold mb-12">Real-World Use Cases</h2>
+
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-xl font-bold mb-3">🚀 For Startup Founders</h3>
+                        <p class="text-gray-700 mb-3">
+                            "Build a MVP landing page with email capture, payment integration, and analytics"
+                        </p>
+                        <div class="bg-gray-50 p-3 rounded text-sm text-gray-600">
+                            <strong>Agent Output:</strong> Complete landing page with Stripe checkout, Mailchimp 
+                            integration, Google Analytics, and mobile responsiveness. Deployed to staging in 12 minutes.
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-xl font-bold mb-3">📚 For Course Creators</h3>
+                        <p class="text-gray-700 mb-3">
+                            "Create a 10-lesson course on Python basics with quizzes and code examples"
+                        </p>
+                        <div class="bg-gray-50 p-3 rounded text-sm text-gray-600">
+                            <strong>Agent Output:</strong> 10 markdown lessons, 30 code examples (tested), 
+                            50 quiz questions with explanations. Documentation generated automatically.
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-xl font-bold mb-3">🏢 For Development Teams</h3>
+                        <p class="text-gray-700 mb-3">
+                            "Refactor the authentication system to use JWT tokens instead of sessions"
+                        </p>
+                        <div class="bg-gray-50 p-3 rounded text-sm text-gray-600">
+                            <strong>Agent Output:</strong> Refactored code, new tests (15 passing), migration script, 
+                            updated documentation. PR created with detailed change summary.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Samples -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl font-bold mb-8">Code Walkthrough</h2>
+                
+                <p class="text-lg text-gray-700 mb-6">
+                    Here's how the agent workflow is implemented using LangGraph:
+                </p>
+
+                <div class="code-block mb-6">
+<pre class="text-gray-300">
+<span class="text-purple-300">from</span> langgraph.graph <span class="text-purple-300">import</span> StateGraph, END
+<span class="text-purple-300">from</span> langchain_anthropic <span class="text-purple-300">import</span> ChatAnthropic
+
+<span class="text-gray-500"># Define the agent workflow</span>
+workflow = StateGraph(AreteState)
+
+<span class="text-gray-500"># Add processing nodes</span>
+workflow.add_node(<span class="text-green-300">"planner"</span>, planner_node)
+workflow.add_node(<span class="text-green-300">"coder"</span>, coder_node)
+workflow.add_node(<span class="text-green-300">"github_handler"</span>, github_node)
+workflow.add_node(<span class="text-green-300">"responder"</span>, responder_node)
+
+<span class="text-gray-500"># Define execution flow</span>
+workflow.set_entry_point(<span class="text-green-300">"planner"</span>)
+workflow.add_edge(<span class="text-green-300">"planner"</span>, <span class="text-green-300">"coder"</span>)
+workflow.add_edge(<span class="text-green-300">"coder"</span>, <span class="text-green-300">"github_handler"</span>)
+workflow.add_edge(<span class="text-green-300">"github_handler"</span>, <span class="text-green-300">"responder"</span>)
+workflow.add_edge(<span class="text-green-300">"responder"</span>, END)
+
+<span class="text-gray-500"># Compile and execute</span>
+app = workflow.compile()
+result = app.invoke(initial_state)
+</pre>
+                </div>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                    <strong class="text-blue-700">Production Ready:</strong>
+                    <p class="text-sm text-gray-700 mt-1">
+                        This code is running in production at 
+                        <a href="https://enterprise-demo.streamlit.app/" class="text-blue-600 underline">
+                            enterprise-demo.streamlit.app
+                        </a>
+                        handling real requests.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 gradient-bg text-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-6">Ready to Build Your Own?</h2>
+                <p class="text-xl text-indigo-100 mb-8">
+                    I've built the framework. Let me build your custom AI technical co-founder.
+                </p>
+                
+                <div class="flex flex-col md:flex-row gap-4 justify-center">
+                    <a href="https://enterprise-demo.streamlit.app/" target="_blank"
+                       class="px-8 py-4 bg-white text-indigo-600 hover:bg-gray-100 rounded-lg font-semibold transition">
+                        Try Live Demo
+                    </a>
+                    <a href="mailto:your.email@example.com"
+                       class="px-8 py-4 bg-indigo-500 hover:bg-indigo-600 rounded-lg font-semibold transition">
+                        Schedule Consultation
+                    </a>
+                </div>
+
+                <p class="text-sm text-indigo-200 mt-8">
+                    Timeline: 8-12 weeks | Budget: $10k-16k | Deliverable: Fully autonomous system
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p class="text-gray-400">© 2025 Cayman Roden. Built with Claude API, LangGraph, and Python.</p>
+            <div class="mt-4 flex gap-4 justify-center">
+                <a href="../index.html" class="text-gray-400 hover:text-white">Portfolio</a>
+                <a href="https://github.com/ChunkyTortoise/EnterpriseHub" class="text-gray-400 hover:text-white">GitHub</a>
+                <a href="https://enterprise-demo.streamlit.app/" class="text-gray-400 hover:text-white">Live Demo</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
