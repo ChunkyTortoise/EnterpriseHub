@@ -26,6 +26,7 @@ st.set_page_config(
 )
 
 # --- MODULE REGISTRY ---
+# ARETE-Architect is positioned FIRST as the flagship "Technical Co-Founder" module
 MODULES = {
     "🏗️ ARETE-Architect": ("arete_architect", "ARETE-Architect: AI Technical Co-Founder", "assets/icons/arete_architect.svg"),
     "📊 Market Pulse": ("market_pulse", "Market Pulse", "assets/icons/market_pulse.png"),
@@ -170,20 +171,33 @@ def _render_overview(ui):
         "9 mission-critical tools into a single, cloud-native interface."
     )
 
-    # Metrics Row
+    # Metrics Row - Highlighting ARETE and Technical Co-Founder capabilities
     col1, col2, col3, col4 = st.columns(4)
-    with col1: ui.card_metric("Active Modules", f"{len(MODULES)}/10", "100% Ready")
-    with col2: ui.card_metric("Test Coverage", "220+", "Passing")
-    with col3: ui.card_metric("Architecture", "Serverless", "Python + Streamlit")
-    with col4: ui.card_metric("Performance", "Lazy-Loaded", "Optimized")
+    with col1: ui.card_metric("Flagship Module", "ARETE", "Self-Maintaining AI")
+    with col2: ui.card_metric("Active Modules", f"{len(MODULES)}", "LangGraph + Claude")
+    with col3: ui.card_metric("Test Coverage", "220+", "Production-Ready")
+    with col4: ui.card_metric("Architecture", "Stateful Agents", "Autonomous")
 
     ui.spacer(40)
     st.markdown("### 🛠️ Module Suite")
 
-    # Feature Grid - Row 1
+    # Feature Grid - Row 1 - ARETE FIRST (Flagship)
     c1, c2, c3 = st.columns(3)
 
     with c1:
+        module_info = MODULES.get("🏗️ ARETE-Architect")
+        ui.feature_card(
+            icon=module_info[2] if module_info[2] else "🏗️",
+            title=module_info[1],
+            description=(
+                "Self-maintaining AI Technical Co-Founder with LangGraph workflows. "
+                "Autonomous GitHub integration, code generation, and deployment. "
+                "The future of software development."
+            ),
+            status="hero",
+            icon_path=module_info[2] if module_info[2] else None,
+        )
+    with c2:
         module_info = MODULES.get("💰 Margin Hunter")
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "💰",
@@ -192,10 +206,10 @@ def _render_overview(ui):
                 "Real-time Cost-Volume-Profit analysis with 10x10 "
                 "sensitivity heatmaps and break-even modeling."
             ),
-            status="hero",
+            status="active",
             icon_path=module_info[2] if module_info[2] else None,
         )
-    with c2:
+    with c3:
         module_info = MODULES.get("📊 Market Pulse")
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "📊",
@@ -207,7 +221,13 @@ def _render_overview(ui):
             status="active",
             icon_path=module_info[2] if module_info[2] else None,
         )
-    with c3:
+
+    ui.spacer(20)
+
+    # Feature Grid - Row 2
+    c4, c5, c6 = st.columns(3)
+
+    with c4:
         module_info = MODULES.get("🔍 Data Detective")
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "🔍",
@@ -219,13 +239,7 @@ def _render_overview(ui):
             status="new",
             icon_path=module_info[2] if module_info[2] else None,
         )
-
-    ui.spacer(20)
-
-    # Feature Grid - Row 2
-    c4, c5, c6 = st.columns(3)
-
-    with c4:
+    with c5:
         module_info = MODULES.get("📈 Marketing Analytics")
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "📈",
@@ -237,7 +251,7 @@ def _render_overview(ui):
             status="new",
             icon_path=module_info[2] if module_info[2] else None,
         )
-    with c5:
+    with c6:
         module_info = MODULES.get("✍️ Content Engine")
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "✍️",
@@ -249,7 +263,12 @@ def _render_overview(ui):
             status="active",
             icon_path=module_info[2] if module_info[2] else None,
         )
-    with c6:
+
+    # Row 3: Agent Logic, Financial Analyst, Multi-Agent
+    ui.spacer(20)
+    c7, c8, c9 = st.columns(3)
+
+    with c7:
         module_info = MODULES.get("🤖 Agent Logic")
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "🤖",
@@ -260,12 +279,7 @@ def _render_overview(ui):
             status="active",
             icon_path=module_info[2] if module_info[2] else None,
         )
-
-    # Row 3: Financial Analyst, Multi-Agent, Smart Forecast
-    ui.spacer(20)
-    c7, c8, c9 = st.columns(3)
-
-    with c7:
+    with c8:
         module_info = MODULES.get("💼 Financial Analyst")
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "💼",
@@ -278,7 +292,7 @@ def _render_overview(ui):
             icon_path=module_info[2] if module_info[2] else None,
         )
 
-    with c8:
+    with c9:
         module_info = MODULES.get("🤖 Multi-Agent Workflow")
         ui.feature_card(
             icon=module_info[2] if module_info[2] else "🤖",

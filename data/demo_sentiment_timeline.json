@@ -1,0 +1,67 @@
+{
+  "companies": [
+    {
+      "symbol": "AAPL",
+      "name": "Apple Inc.",
+      "timeline": [
+        {"date": "2024-01-01", "sentiment_score": 0.72, "headline": "Apple unveils new Vision Pro features"},
+        {"date": "2024-02-01", "sentiment_score": 0.68, "headline": "Strong iPhone sales in Q1"},
+        {"date": "2024-03-01", "sentiment_score": 0.75, "headline": "Apple services revenue hits record high"},
+        {"date": "2024-04-01", "sentiment_score": 0.71, "headline": "New AI integration announced for iOS 18"},
+        {"date": "2024-05-01", "sentiment_score": 0.77, "headline": "Apple stock reaches new all-time high"},
+        {"date": "2024-06-01", "sentiment_score": 0.74, "headline": "WWDC announces groundbreaking features"}
+      ],
+      "current_sentiment": 0.74,
+      "trend": "bullish"
+    },
+    {
+      "symbol": "TSLA",
+      "name": "Tesla Inc.",
+      "timeline": [
+        {"date": "2024-01-01", "sentiment_score": 0.65, "headline": "Tesla deliveries exceed expectations"},
+        {"date": "2024-02-01", "sentiment_score": 0.58, "headline": "Price cuts raise margin concerns"},
+        {"date": "2024-03-01", "sentiment_score": 0.62, "headline": "Cybertruck production ramping up"},
+        {"date": "2024-04-01", "sentiment_score": 0.55, "headline": "Competition intensifies in EV market"},
+        {"date": "2024-05-01", "sentiment_score": 0.68, "headline": "Full Self-Driving gains regulatory approval"},
+        {"date": "2024-06-01", "sentiment_score": 0.70, "headline": "Record deliveries expected for Q2"}
+      ],
+      "current_sentiment": 0.70,
+      "trend": "bullish"
+    },
+    {
+      "symbol": "GOOGL",
+      "name": "Alphabet Inc.",
+      "timeline": [
+        {"date": "2024-01-01", "sentiment_score": 0.69, "headline": "Google AI dominates CES announcements"},
+        {"date": "2024-02-01", "sentiment_score": 0.73, "headline": "Search ad revenue beats estimates"},
+        {"date": "2024-03-01", "sentiment_score": 0.76, "headline": "Gemini AI outperforms GPT-4 in benchmarks"},
+        {"date": "2024-04-01", "sentiment_score": 0.78, "headline": "Cloud division shows strong growth"},
+        {"date": "2024-05-01", "sentiment_score": 0.75, "headline": "YouTube Premium subscriber surge"},
+        {"date": "2024-06-01", "sentiment_score": 0.79, "headline": "AI integration across all products announced"}
+      ],
+      "current_sentiment": 0.79,
+      "trend": "very_bullish"
+    },
+    {
+      "symbol": "MSFT",
+      "name": "Microsoft Corporation",
+      "timeline": [
+        {"date": "2024-01-01", "sentiment_score": 0.71, "headline": "Azure growth continues to impress"},
+        {"date": "2024-02-01", "sentiment_score": 0.74, "headline": "Copilot adoption exceeds forecasts"},
+        {"date": "2024-03-01", "sentiment_score": 0.77, "headline": "Enterprise AI solutions drive revenue"},
+        {"date": "2024-04-01", "sentiment_score": 0.76, "headline": "Microsoft 365 subscriber base expands"},
+        {"date": "2024-05-01", "sentiment_score": 0.80, "headline": "Gaming division posts record quarter"},
+        {"date": "2024-06-01", "sentiment_score": 0.82, "headline": "AI partnership announcements boost stock"}
+      ],
+      "current_sentiment": 0.82,
+      "trend": "very_bullish"
+    }
+  ],
+  "market_overview": {
+    "average_sentiment": 0.76,
+    "bullish_count": 4,
+    "bearish_count": 0,
+    "neutral_count": 0,
+    "last_updated": "2024-06-01"
+  }
+}

@@ -36,9 +36,19 @@ def render() -> None:
     # User input controls
     col1, col2 = st.columns([1, 3])
     with col1:
+        # Demo mode toggle
+        use_demo = st.checkbox(
+            "📊 Use Demo Data",
+            value=True,
+            help="Use pre-loaded demo data for instant results (recommended for screenshots)"
+        )
+        
         ticker = st.text_input("Ticker Symbol", value="SPY").upper()
         period = st.selectbox("Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3)
         interval = st.selectbox("Interval", ["1d", "1wk", "1mo"], index=0)
+        
+        if use_demo:
+            st.success("✨ Demo Mode: Using pre-loaded data")
 
         # Multi-ticker comparison
         st.markdown("---")
@@ -58,8 +68,8 @@ def render() -> None:
         with st.spinner(f"Fetching data for {ticker}..."):
             logger.info(f"User requested data for {ticker}")
 
-            # Get stock data
-            df = get_stock_data(ticker, period=period, interval=interval)
+            # Get stock data (with demo mode option)
+            df = get_stock_data(ticker, period=period, interval=interval, use_demo=use_demo)
 
             if df is None or df.empty:
                 st.error(f"❌ No data found for {ticker}. Please verify the ticker symbol.")
