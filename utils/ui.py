@@ -161,28 +161,42 @@ def _generate_css(theme: dict) -> str:
     }}
 
     /* SIDEBAR STYLING - Saturated Glassmorphism */
-    section[data-testid="stSidebar"] {{
-        background-color: {theme["surface"]}A6; /* High transparency */
-        border-right: 1px solid {theme["border"]}40;
-        backdrop-filter: blur(25px) saturate(210%);
-        -webkit-backdrop-filter: blur(25px) saturate(210%);
-        box-shadow: 10px 0 15px -3px rgba(0, 0, 0, 0.05);
-    }}
+    section[data-testid="stSidebar"] {
+        background-color: {theme["surface"]}F2; /* Higher opacity for readability */
+        border-right: 1px solid {theme["border"]};
+    }
 
-    section[data-testid="stSidebar"] h1 {{
-        color: {theme["primary"]};
-        font-weight: 800;
-        font-size: 1.25rem;
-        letter-spacing: -0.04em;
-        text-transform: uppercase;
-        margin-bottom: 2rem;
-    }}
+    /* FORCE SIDEBAR TEXT COLORS */
+    section[data-testid="stSidebar"] .stMarkdown, 
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] p,
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] span,
+    section[data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] p {
+        color: {theme["text_main"]} !important;
+    }
 
-    /* NAVIGATION RADIO BUTTONS */
-    .stRadio > label {{
-        color: {theme["text_main"]};
-        font-weight: 500;
-    }}
+    section[data-testid="stSidebar"] a {
+        color: {theme["accent"]} !important;
+    }
+
+    /* NAVIGATION RADIO BUTTONS - SPECIFIC TARGETING */
+    .stRadio > div[role="radiogroup"] > label {
+        color: {theme["text_main"]} !important;
+        background-color: transparent !important;
+    }
+
+    .stRadio > div[role="radiogroup"] > label:hover {
+        color: {theme["accent"]} !important;
+    }
+
+    /* ACTIVE RADIO BUTTON */
+    .stRadio > div[role="radiogroup"] > label[data-checked="true"] {
+        color: {theme["accent"]} !important;
+        font-weight: 700 !important;
+    }
 
     /* METRIC CARDS - Advanced Depth */
     .metric-card {{
