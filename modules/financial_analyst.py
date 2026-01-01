@@ -27,7 +27,7 @@ logger = get_logger(__name__)
 def _display_demo_data(symbol: str) -> None:
     """Display demo data from pre-loaded JSON file."""
     import json
-    
+
     # Load demo data
     demo_file = "data/demo_aapl_fundamentals.json"
     try:
@@ -36,21 +36,20 @@ def _display_demo_data(symbol: str) -> None:
     except FileNotFoundError:
         st.error(f"Demo data file not found: {demo_file}")
         return
-    
+
     # Parse demo data into expected format
     info = demo_data.get("info", {})
-    financials = demo_data.get("financials", {})
-    
+
     # Store ticker in session state
     st.session_state.fa_ticker = symbol
-    
+
     # --- RENDER PAGE ---
     _display_header(info, symbol)
     _display_key_metrics(info)
-    
+
     st.markdown("---")
     st.subheader("📈 Financial Performance")
-    
+
     # Display demo metrics
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -59,7 +58,7 @@ def _display_demo_data(symbol: str) -> None:
         st.metric("Net Income", "$97.00B", "+7.8%")
     with col3:
         st.metric("Free Cash Flow", "$99.58B", "+5.2%")
-    
+
     # Revenue chart
     st.markdown("##### Revenue Growth")
     revenue_data = {
@@ -76,15 +75,15 @@ def _display_demo_data(symbol: str) -> None:
         showlegend=False
     )
     st.plotly_chart(fig, use_container_width=True)
-    
+
     st.markdown("---")
     st.subheader("💰 DCF Valuation Model")
-    
+
     # Demo DCF results
     current_price = info.get("currentPrice", 180.0)
     fair_value = 195.50
     upside = ((fair_value - current_price) / current_price) * 100
-    
+
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Current Price", f"${current_price:.2f}")
@@ -92,7 +91,7 @@ def _display_demo_data(symbol: str) -> None:
         st.metric("Fair Value (DCF)", f"${fair_value:.2f}")
     with col3:
         st.metric("Upside/Downside", f"{upside:+.1f}%", delta=f"{upside:+.1f}%")
-    
+
     # Analyst recommendation
     if upside > 15:
         st.success("🟢 **Analyst Rating: BUY** - Stock appears undervalued")
@@ -100,7 +99,7 @@ def _display_demo_data(symbol: str) -> None:
         st.error("🔴 **Analyst Rating: SELL** - Stock appears overvalued")
     else:
         st.info("🟡 **Analyst Rating: HOLD** - Stock appears fairly valued")
-    
+
     # Key assumptions
     with st.expander("📋 Valuation Assumptions", expanded=False):
         st.markdown("""
@@ -111,7 +110,7 @@ def _display_demo_data(symbol: str) -> None:
         - Discount Rate (WACC): 9.2%
         - Free Cash Flow (Latest): $99.58B
         """)
-    
+
     # Demo insights
     st.markdown("---")
     st.markdown("### 💡 Key Insights (Demo)")
@@ -137,7 +136,7 @@ def render() -> None:
 
     # Demo Mode Toggle (default True for screenshots)
     demo_mode = st.checkbox(
-        "🎯 Demo Mode (Use Sample Data)", 
+        "🎯 Demo Mode (Use Sample Data)",
         value=True,
         help="Toggle to use sample Apple (AAPL) data without API calls. Recommended for reliable demo."
     )

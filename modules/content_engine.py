@@ -42,23 +42,23 @@ logger = get_logger(__name__)
 def _display_demo_posts() -> None:
     """Display demo generated posts from pre-loaded JSON file."""
     import json
-    
+
     # Load demo data
     demo_file = "data/demo_content_posts.json"
     try:
-        with open(demo_file, 'r') as f:
+        with open(demo_file, "r") as f:
             demo_data = json.load(f)
     except FileNotFoundError:
         st.error(f"Demo data file not found: {demo_file}")
         return
-    
+
     posts = demo_data.get("generated_posts", [])
     analytics = demo_data.get("analytics_summary", {})
-    
+
     # Display analytics summary
     st.markdown("---")
     st.subheader("📊 Content Performance Analytics")
-    
+
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("Total Posts", analytics.get("total_posts", 0))
@@ -68,66 +68,66 @@ def _display_demo_posts() -> None:
         st.metric("Total Reach", f"{analytics.get('total_estimated_reach', 0):,}")
     with col4:
         st.metric("Total Impressions", f"{analytics.get('total_estimated_impressions', 0):,}")
-    
+
     st.caption(f"🕐 Optimal Posting Schedule: {analytics.get('optimal_posting_schedule', 'N/A')}")
-    
+
     # Display each post
     st.markdown("---")
     st.subheader("📝 Generated LinkedIn Posts")
-    
+
     for post in posts:
-        with st.expander(f"📄 {post['title']}", expanded=(post['id'] == 1)):
+        with st.expander(f"📄 {post['title']}", expanded=(post["id"] == 1)):
             # Post content
             st.markdown("#### Content:")
-            st.markdown(post['content'])
-            
+            st.markdown(post["content"])
+
             st.markdown("---")
-            
+
             # Metrics
             st.markdown("#### Performance Metrics:")
             metric_col1, metric_col2, metric_col3 = st.columns(3)
-            
+
             with metric_col1:
                 st.metric("Engagement Score", f"{post['engagement_score']}/10")
                 st.metric("Estimated Reach", f"{post['estimated_reach']:,}")
-            
+
             with metric_col2:
                 st.metric("Estimated Impressions", f"{post['estimated_impressions']:,}")
-                st.metric("Likes", post['likes'])
-            
+                st.metric("Likes", post["likes"])
+
             with metric_col3:
-                st.metric("Comments", post['comments'])
-                st.metric("Shares", post['shares'])
-            
+                st.metric("Comments", post["comments"])
+                st.metric("Shares", post["shares"])
+
             st.markdown("---")
-            
+
             # Post details
             st.markdown("#### Post Details:")
             st.markdown(f"**Target Audience:** {post['target_audience']}")
             st.markdown(f"**Best Time to Post:** {post['best_time_to_post']}")
             st.markdown(f"**Hashtags:** {', '.join(post['hashtags'])}")
-            
-            if post.get('call_to_action'):
+
+            if post.get("call_to_action"):
                 st.info(f"💬 **Call to Action:** {post['call_to_action']}")
-            
+
             # Copy button
             st.markdown("---")
             if st.button(f"📋 Copy Post {post['id']} to Clipboard", key=f"copy_{post['id']}"):
-                st.code(post['content'], language=None)
+                st.code(post["content"], language=None)
                 st.success("✅ Content displayed above - copy manually")
-    
+
     # Insights
     st.markdown("---")
     st.subheader("💡 Content Strategy Insights")
-    
+
     st.markdown(f"""
     **Key Findings:**
-    - Best performing post: Post #{analytics.get('best_performing_post_id', 1)} with {posts[0]['engagement_score']}/10 engagement
-    - Average engagement across all posts: {analytics.get('average_engagement_score', 0):.1f}/10
-    - Total potential reach: {analytics.get('total_estimated_reach', 0):,} professionals
+    - Best performing post: Post #{analytics.get("best_performing_post_id", 1)} with {posts[0]["engagement_score"]}/10 engagement
+    - Average engagement across all posts: {analytics.get("average_engagement_score", 0):.1f}/10
+    - Total potential reach: {analytics.get("total_estimated_reach", 0):,} professionals
     
     **Recommendations:**
-    - Post during: {analytics.get('optimal_posting_schedule', 'Peak hours')}
+    - Post during: {analytics.get("optimal_posting_schedule", "Peak hours")}
     - Focus on: ROI metrics, technical deep dives, and thought leadership
     - Include: Quantifiable results, before/after comparisons, and clear CTAs
     """)
@@ -361,9 +361,9 @@ def render() -> None:
     demo_mode = st.checkbox(
         "🎯 Demo Mode (View Sample Posts)",
         value=True,
-        help="Toggle to view pre-generated sample LinkedIn posts without API calls. Recommended for demos."
+        help="Toggle to view pre-generated sample LinkedIn posts without API calls. Recommended for demos.",
     )
-    
+
     if demo_mode:
         _display_demo_posts()
         return
@@ -679,7 +679,7 @@ def _render_four_panel_interface(api_key: str) -> None:
                                     st.session_state.content_history.append(history_entry)
                                     logger.info(
                                         f"Tracked content in history: "
-                        f"{len(st.session_state.content_history)} total posts"
+                                        f"{len(st.session_state.content_history)} total posts"
                                     )
 
                                 logger.info(
@@ -985,9 +985,7 @@ def _render_four_panel_interface(api_key: str) -> None:
             with rank_cols[i]:
                 medal = ["🥇", "🥈", "🥉"][i] if i < 3 else ""
                 # Calculate engagement delta vs worst variant
-                eng_diff = (
-                    variant["predicted_engagement"] - variants[-1]["predicted_engagement"]
-                )
+                eng_diff = variant["predicted_engagement"] - variants[-1]["predicted_engagement"]
                 st.metric(
                     label=f"{medal} Variant {i + 1}",
                     value=f"{variant['predicted_engagement']:.1f}/10",
@@ -1597,7 +1595,7 @@ def _generate_improvement_suggestions(history: list) -> list:
                 }
             )
 
-                # Suggestion 2: Platform optimization
+            # Suggestion 2: Platform optimization
     if len(df["platform"].unique()) > 1:
         platform_performance = df.groupby("platform")["predicted_engagement"].mean()
         best_platform = platform_performance.idxmax()

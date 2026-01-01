@@ -42,11 +42,11 @@ def render() -> None:
             value=True,
             help="Use pre-loaded demo data for instant results (recommended for screenshots and demos)"
         )
-        
+
         ticker = st.text_input("Ticker Symbol", value="SPY").upper()
         period = st.selectbox("Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3)
         interval = st.selectbox("Interval", ["1d", "1wk", "1mo"], index=0)
-        
+
         if use_demo:
             st.success("✨ Demo Mode: Using pre-loaded data")
 
