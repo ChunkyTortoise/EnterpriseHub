@@ -1,7 +1,21 @@
 # Upwork Profile Content
 
 ## Profile Title
-AI/ML Engineer | Financial Modeling | Meta-Prompting Frameworks | Python/Streamlit Expert
+AI Technical Co-Founder | Autonomous Agent Architect (LangGraph) | Python/Streamlit Expert
+
+## Specialized Profile: AI Agent Architect & Technical Co-Founder
+
+**"I build AI systems that build themselves."**
+
+I specialize in creating **autonomous multi-agent swarms** that function as a technical co-founder. Instead of just "chatting" with an AI, I build systems where agents like "Architect," "Engineer," and "DevOps" collaborate to write code, manage GitHub repositories, and deploy applications autonomously.
+
+**Core Capabilities:**
+- **Self-Evolving Systems:** Agents that can modify their own source code to add new tools.
+- **LangGraph Orchestration:** Stateful multi-agent workflows (Plan -> Code -> Test -> Deploy).
+- **Full-Stack Autonomy:** Agents with read/write access to File System, GitHub API, and CLIs.
+- **Safety First:** "Guardian" agents that audit code for security before deployment.
+
+---
 
 ## Overview
 
@@ -11,6 +25,7 @@ Production-ready AI frameworks and business intelligence solutions that reduce c
 I specialize in creating **meta-prompting systems** and **financial analysis tools** that transform complex business tasks into simple, reliable workflows. My work combines AI engineering, data analytics, and business intelligence to deliver institutional-grade solutions.
 
 ### Expertise
+- **AI Agent Architecture:** LangGraph, LangChain, AutoGen, Multi-agent swarms
 - **AI/ML Engineering:** Meta-prompting frameworks, Claude/GPT integration, prompt optimization
 - **Financial Modeling:** DCF valuation, Monte Carlo simulation, Goal Seek optimization, CVP analysis
 - **Technical Analysis:** Multi-panel charts, Bollinger Bands, ATR, RSI, MACD indicators
@@ -51,12 +66,13 @@ I specialize in creating **meta-prompting systems** and **financial analysis too
 - AI Content Engine (LinkedIn automation)
 
 **Enterprise Solutions (3-6 Weeks | $5,000-15,000+)**
+- **AI Technical Co-Founder Construction** (Custom Swarm Architecture)
 - Enterprise AI Framework Architecture
 - Ongoing AI Optimization Partnership ($2,500-8,000/month)
-- Custom Solutions
 
 ### Technologies
-**AI/ML:** Claude API, GPT-4, Anthropic SDK, Prompt Engineering, Meta-prompting
+**AI Agents:** LangGraph, LangChain, CrewAI, AutoGen
+**AI/ML:** Claude API (3.5 Sonnet), GPT-4, Anthropic SDK, Prompt Engineering
 **Python:** Streamlit, Pandas, NumPy, Plotly, SciPy
 **Finance:** yfinance, DCF modeling, Technical indicators, Risk analysis
 **DevOps:** GitHub Actions, pytest, CI/CD, Documentation
@@ -66,6 +82,12 @@ I specialize in creating **meta-prompting systems** and **financial analysis too
 📂 [View Source Code on GitHub](https://github.com/ChunkyTortoise/enterprise-hub)
 
 ### Why Hire Me?
+
+**For AI Technical Co-Founder Projects:**
+✓ I've built "ARETE," a self-evolving swarm that writes its own code
+✓ Deep experience with LangGraph state management and tool calling
+✓ Safety-critical architecture (Guardian agents to prevent accidents)
+✓ Full CI/CD automation (Agents deploying to production)
 
 **For Financial Analysis Projects:**
 ✓ DCF valuation models with sensitivity analysis
@@ -86,7 +108,7 @@ I specialize in creating **meta-prompting systems** and **financial analysis too
 ✓ Fast deployment (2-3 days)
 
 ### Availability
-- Hourly Rate: $60-120/hr (flexible based on project complexity)
+- Hourly Rate: $60-150/hr (flexible based on project complexity)
 - Fixed-Price Projects: Preferred for defined scope
 - Typical Response Time: Within 6 hours
 - Timezone: Pacific Time (PT)
@@ -109,7 +131,42 @@ I specialize in creating **meta-prompting systems** and **financial analysis too
 
 ## Portfolio Pieces for Upwork
 
-### Portfolio Piece 1: Financial Analyst Module
+### Portfolio Piece 1: ARETE - The AI Technical Co-Founder
+
+**Title:** Autonomous Multi-Agent Software Engineering Swarm
+
+**Description:**
+A self-evolving multi-agent system (LangGraph + Claude 3.5) that functions as a technical co-founder. It architects, writes, tests, and deploys code autonomously.
+
+**Challenge:**
+Founders need an AI that can actually "build" the product, not just chat about it. Single LLMs struggle with complex, multi-step engineering tasks and context retention.
+
+**Solution:**
+Built "ARETE," a 5-agent swarm architecture:
+- **Prime (Orchestrator):** Manages project scope and memory.
+- **Architect (Strategy):** Writes technical specs and documentation.
+- **Engineer (Code):** Writes Python/Streamlit code and runs tests.
+- **Guardian (QA):** Audits code for security flaws.
+- **DevOps (Deploy):** Manages Git branches and CI/CD pipelines.
+
+**Technologies:**
+LangGraph, Python, Anthropic Claude 3.5 Sonnet, GitHub API, PyGithub, ChromaDB (Vector Memory)
+
+**Results:**
+- ✅ Agents can autonomously fix bugs and deploy to staging
+- ✅ "Self-Evolution" loop allows the system to add its own tools
+- ✅ Maintains 100% context across sessions via persistent memory
+- ✅ Secure execution with "Guardian" oversight
+
+**Links:**
+- [View Architecture Case Study](ARETE_AGENT_CASE_STUDY.md)
+
+**Skills:**
+AI Agents • LangGraph • Large Language Models • DevOps • Python • System Architecture
+
+---
+
+### Portfolio Piece 2: Financial Analyst Module
 
 **Title:** DCF Valuation & Financial Modeling Dashboard
 
@@ -144,7 +201,7 @@ Financial Modeling • DCF Valuation • Monte Carlo Simulation • Python • S
 
 ---
 
-### Portfolio Piece 2: Market Pulse Technical Analysis
+### Portfolio Piece 3: Market Pulse Technical Analysis
 
 **Title:** Bloomberg-Quality Technical Analysis Dashboard
 
@@ -180,7 +237,7 @@ Technical Analysis • Trading • Python • Plotly • Real-Time Data • Fina
 
 ---
 
-### Portfolio Piece 3: Content Engine (AI LinkedIn Posts)
+### Portfolio Piece 4: Content Engine (AI LinkedIn Posts)
 
 **Title:** AI-Powered LinkedIn Content Generation
 
@@ -216,6 +273,37 @@ AI Content Generation • Prompt Engineering • Claude API • Marketing • Li
 ---
 
 ## Sample Upwork Proposals
+
+### For "AI Technical Co-Founder" Projects
+
+**Subject:** I've already built your "Technical Co-Founder" (LangGraph + Claude Swarm)
+
+Hi [Client Name],
+
+I read your job post for an "AI Technical Co-Founder" and it describes **ARETE**, the autonomous swarm system I have already built and deployed.
+
+**You need:** An agent that can converse, manage files, write code, and deploy it.
+**I have built:** A 5-agent swarm (Prime, Architect, Engineer, Guardian, DevOps) that does exactly this.
+
+**My Approach:**
+1. **Architecture:** I use **LangGraph** for state management, not just a simple chain. This allows the "Engineer" agent to loop through "Code -> Test -> Fix" cycles autonomously.
+2. **Safety:** My "Guardian" agent acts as a safety layer, auditing code for security risks before the "DevOps" agent is allowed to commit to GitHub.
+3. **Memory:** I use a dual-memory system (File-based logs + Vector DB) so the agent never forgets a decision.
+
+**Why me?**
+- **Experience:** I have shipped production LangGraph swarms, not just tutorials.
+- **Stack:** Expert in Claude 3.5 Sonnet (best for coding), Python, and GitHub Actions.
+- **Speed:** I can deploy the "Core Agent" (Phase 1) in <2 weeks because I have the reusable architecture ready.
+
+**Case Study:**
+Check out my "ARETE Swarm" architecture here: [Link to Portfolio/Case Study]
+
+I am available to start immediately and can deliver the Phase 1 prototype for your budget of $4,000-6,000.
+
+Best,
+Cayman Roden
+
+---
 
 ### For Financial Modeling Projects
 
