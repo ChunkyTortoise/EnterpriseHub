@@ -14,44 +14,44 @@ import streamlit as st
 
 # --- DESIGN SYSTEM CONSTANTS ---
 # Light theme (WCAG AAA compliant - all ratios >= 7:1)
-# EDITORIAL FINTECH DESIGN SYSTEM (Steel & Slate)
-# Based on Stripe/Linear/Institutional Finance aesthetics
+# EDITORIAL FINTECH DESIGN SYSTEM (Deep Slate & Mint)
+# Optimized for high-ticket portfolio presentation
 
 LIGHT_THEME = {
-    "primary": "#0F172A",  # Slate 900 (Institutional)
-    "primary_dark": "#020617",  # Slate 950
+    "primary": "#020617",  # Slate 950 (Institutional Deep)
+    "primary_dark": "#000000",
     "primary_light": "#F1F5F9",  # Slate 100
-    "accent": "#059669",  # Emerald 600 (Tactical Signal)
-    "secondary": "#64748B",  # Slate 500
+    "accent": "#10B981",  # Emerald 500 (Vibrant Success)
+    "secondary": "#475569",  # Slate 600
     "background": "#FFFFFF",  # Clean White
     "surface": "#F8FAFC",  # Slate 50
     "text_main": "#0F172A",  # Slate 900
-    "text_light": "#475569",  # Slate 600
-    "success": "#059669",  # Emerald 600
-    "warning": "#D97706",  # Amber 600
-    "danger": "#DC2626",  # Red 600
-    "border": "#E2E8F0",  # Slate 200
+    "text_light": "#1E293B",  # Slate 800 (Darkened for better contrast)
+    "success": "#059669",
+    "warning": "#D97706",
+    "danger": "#DC2626",
+    "border": "#E2E8F0",
     "font_family": ("'Inter Variable', 'Inter', -apple-system, system-ui, sans-serif"),
     "header_font": "'Space Grotesk', sans-serif",
 }
 
 DARK_THEME = {
-    "primary": "#F8FAFC",  # Slate 50
-    "primary_dark": "#F1F5F9",
-    "primary_light": "#1E293B",  # Slate 800
-    "accent": "#10B981",  # Emerald 500
+    "primary": "#F8FAFC",  # White text on dark
+    "primary_dark": "#FFFFFF",
+    "primary_light": "#1E293B",
+    "accent": "#10B981",
     "secondary": "#94A3B8",
-    "background": "#020617",  # Slate 950
+    "background": "#020617",  # Deepest Slate
     "surface": "#0F172A",  # Slate 900
-    "text_main": "#F8FAFC",
-    "text_light": "#94A3B8",
+    "text_main": "#F8FAFC",  # Near white
+    "text_light": "#CBD5E1",  # Slate 300
     "success": "#10B981",
     "warning": "#FBBF24",
     "danger": "#F87171",
     "border": "#1E293B",
     "font_family": "'Inter', -apple-system, system-ui, sans-serif",
     "header_font": "'Space Grotesk', sans-serif",
-    "button_text": "#FFFFFF",
+    "button_text": "#020617",
 }
 
 OCEAN_THEME = {
@@ -134,20 +134,22 @@ def _generate_css(theme: dict) -> str:
         font-family: {theme["font_family"]};
         color: {theme["text_main"]};
         background-color: {theme["background"]};
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
     }}
 
     /* MAIN CONTAINER BACKGROUND - Visual 5.0 Animated Mesh */
     .stApp {{
         background-color: {theme["background"]};
         background-image:
-            radial-gradient(at 0% 0%, {theme["primary_light"]}80 0,
+            radial-gradient(at 0% 0%, {theme["primary_light"]}A0 0,
                             transparent 50%),
-            radial-gradient(at 100% 0%, {theme.get("accent", "#059669")}15 0,
+            radial-gradient(at 100% 0%, {theme.get("accent", "#10B981")}20 0,
                             transparent 50%),
-            radial-gradient(at 100% 100%, {theme["primary_light"]}80 0,
+            radial-gradient(at 100% 100%, {theme["primary_light"]}A0 0,
                             transparent 50%),
             radial-gradient(at 0% 100%,
-                            {theme.get("secondary", "#64748B")}15 0,
+                            {theme.get("secondary", "#64748B")}20 0,
                             transparent 50%);
         background-attachment: fixed;
         background-size: 200% 200%;
@@ -162,11 +164,11 @@ def _generate_css(theme: dict) -> str:
 
     /* SIDEBAR STYLING - Saturated Glassmorphism */
     section[data-testid="stSidebar"] {{
-        background-color: {theme["surface"]}; /* Higher opacity for readability */
+        background-color: {theme["surface"]};
         border-right: 1px solid {theme["border"]};
     }}
 
-    /* FORCE SIDEBAR TEXT COLORS */
+    /* FORCE SIDEBAR TEXT COLORS & HIDE RADIO CIRCLES */
     section[data-testid="stSidebar"] .stMarkdown,
     section[data-testid="stSidebar"] h1,
     section[data-testid="stSidebar"] h2,
@@ -178,6 +180,36 @@ def _generate_css(theme: dict) -> str:
         color: {theme["text_main"]} !important;
     }}
 
+    /* HIDE STREAMLIT RADIO CIRCLES FOR CUSTOM SAAS LOOK */
+    div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child {{
+        display: none !important;
+    }}
+
+    div[data-testid="stRadio"] div[role="radiogroup"] {{
+        gap: 8px;
+    }}
+
+    div[data-testid="stRadio"] div[role="radiogroup"] > label {{
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        border: 1px solid {theme["border"]} !important;
+        background-color: {theme["background"]} !important;
+        transition: all 0.2s ease !important;
+        width: 100% !important;
+    }}
+
+    div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {{
+        border-color: {theme["accent"]} !important;
+        background-color: {theme["primary_light"]} !important;
+    }}
+
+    div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"] {{
+        background-color: {theme["primary"]} !important;
+        color: {theme["background"]} !important;
+        border-color: {theme["primary"]} !important;
+        font-weight: 600 !important;
+    }}
+
     section[data-testid="stSidebar"] a {{
         color: {theme["accent"]} !important;
     }}
@@ -185,24 +217,18 @@ def _generate_css(theme: dict) -> str:
     /* NAVIGATION RADIO BUTTONS - SPECIFIC TARGETING */
     .stRadio > div[role="radiogroup"] > label {{
         color: {theme["text_main"]} !important;
-        background-color: transparent !important;
     }}
 
-    .stRadio > div[role="radiogroup"] > label:hover {{
-        color: {theme["accent"]} !important;
-    }}
-
-    /* ACTIVE RADIO BUTTON */
+    /* ACTIVE RADIO BUTTON (Redundant but safe) */
     .stRadio > div[role="radiogroup"] > label[data-checked="true"] {{
-        color: {theme["accent"]} !important;
-        font-weight: 700 !important;
+        color: {theme["background"]} !important;
     }}
 
     /* METRIC CARDS - Advanced Depth */
     .metric-card {{
         background-color: {theme["surface"]};
         border: 1px solid {theme["border"]};
-        border-radius: 0px;
+        border-radius: 12px;
         padding: 32px;
         transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         height: 100%;
@@ -221,46 +247,37 @@ def _generate_css(theme: dict) -> str:
 
     /* HEADERS - Fluid Typography */
     h1 {{
-        font-size: clamp(2.5rem, 8vw, 4.5rem);
-        font-weight: 900;
-        letter-spacing: -0.06em;
-        margin-bottom: 2rem;
-        color: {theme["primary"]};
+        font-size: clamp(2rem, 5vw, 4rem);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        margin-bottom: 1.5rem;
+        color: {theme["primary"]} !important;
         font-family: {theme["header_font"]};
-        line-height: 0.9;
+        line-height: 1.1;
         animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }}
 
     h2 {{
-        font-size: 1.5rem;
+        font-size: 1.75rem;
         font-weight: 700;
         letter-spacing: -0.02em;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-        border-left: 4px solid {theme.get("accent", theme["primary"])};
-        padding-left: 1rem;
+        margin-top: 2.5rem;
+        margin-bottom: 1.25rem;
+        color: {theme["primary"]} !important;
+        border-left: 4px solid {theme.get("accent", "#10B981")};
+        padding-left: 1.25rem;
         animation: fadeIn 1s ease-out;
-    }}
-
-    /* ANIMATIONS */
-    @keyframes slideUp {{
-        from {{ opacity: 0; transform: translateY(30px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
-    }}
-
-    @keyframes fadeIn {{
-        from {{ opacity: 0; }}
-        to {{ opacity: 1; }}
-    }}
-
-    .stMarkdown, .element-container {{
-        animation: fadeIn 0.8s ease-out forwards;
     }}
 
     h3 {{
         font-size: 1.25rem;
-        color: {theme["text_main"]};
-        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: {theme["text_main"]} !important;
+        margin-bottom: 0.75rem;
+    }}
+
+    p, span, label, li {{
+        color: {theme["text_main"]} !important;
     }}
 
     /* ACTIVE NAVIGATION INDICATOR */

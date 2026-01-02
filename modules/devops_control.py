@@ -18,13 +18,13 @@ def render():
     # 2. Enhanced Status & Metrics Row with Real-Time Data
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        ui.card_metric("Agent Status", "🟢 Active", "Processing 3 tasks")
+        ui.animated_metric("Agent Status", "🟢 Active", delta="3 tasks", icon="🤖")
     with col2:
-        ui.card_metric("Build Pipeline", "✅ Passing", "Last: 2m 34s ago")
+        ui.animated_metric("Build Pipeline", "✅ Passing", delta="2m 34s", icon="🏗️", color="success")
     with col3:
-        ui.card_metric("Test Coverage", "87.3%", "↑ 2.3% from last week")
+        ui.animated_metric("Test Coverage", "87.3%", delta="↑ 2.3%", icon="🧪", color="success")
     with col4:
-        ui.card_metric("Deployment", "Production", "v4.2.1 (stable)")
+        ui.animated_metric("Deployment", "Production", delta="v4.2.1", icon="🚀")
 
     ui.spacer(20)
 
@@ -33,14 +33,19 @@ def render():
 
     # Pipeline stages with status
     pipeline_col1, pipeline_col2, pipeline_col3, pipeline_col4, pipeline_col5 = st.columns(5)
+    
+    success_bg = f"{ui.THEME['success']}15"
+    success_border = ui.THEME['success']
+    warning_bg = f"{ui.THEME['warning']}15"
+    warning_border = ui.THEME['warning']
 
     with pipeline_col1:
         st.markdown(
-            """
-        <div style='text-align: center; padding: 20px; background: #DCFCE7; border-radius: 8px; border-left: 4px solid #16A34A;'>
+            f"""
+        <div style='text-align: center; padding: 20px; background: {success_bg}; border-radius: 8px; border-left: 4px solid {success_border};'>
             <div style='font-size: 2rem;'>✅</div>
-            <div style='font-weight: 700; margin-top: 8px;'>Build</div>
-            <div style='font-size: 0.85rem; color: #166534;'>2m 34s</div>
+            <div style='font-weight: 700; margin-top: 8px; color: {ui.THEME['text_main']};'>Build</div>
+            <div style='font-size: 0.85rem; color: {ui.THEME['text_light']};'>2m 34s</div>
         </div>
         """,
             unsafe_allow_html=True,
@@ -48,11 +53,11 @@ def render():
 
     with pipeline_col2:
         st.markdown(
-            """
-        <div style='text-align: center; padding: 20px; background: #DCFCE7; border-radius: 8px; border-left: 4px solid #16A34A;'>
+            f"""
+        <div style='text-align: center; padding: 20px; background: {success_bg}; border-radius: 8px; border-left: 4px solid {success_border};'>
             <div style='font-size: 2rem;'>✅</div>
-            <div style='font-weight: 700; margin-top: 8px;'>Tests</div>
-            <div style='font-size: 0.85rem; color: #166534;'>220 passed</div>
+            <div style='font-weight: 700; margin-top: 8px; color: {ui.THEME['text_main']};'>Tests</div>
+            <div style='font-size: 0.85rem; color: {ui.THEME['text_light']};'>220 passed</div>
         </div>
         """,
             unsafe_allow_html=True,
@@ -60,11 +65,11 @@ def render():
 
     with pipeline_col3:
         st.markdown(
-            """
-        <div style='text-align: center; padding: 20px; background: #DCFCE7; border-radius: 8px; border-left: 4px solid #16A34A;'>
+            f"""
+        <div style='text-align: center; padding: 20px; background: {success_bg}; border-radius: 8px; border-left: 4px solid {success_border};'>
             <div style='font-size: 2rem;'>✅</div>
-            <div style='font-weight: 700; margin-top: 8px;'>Security</div>
-            <div style='font-size: 0.85rem; color: #166534;'>0 vulnerabilities</div>
+            <div style='font-weight: 700; margin-top: 8px; color: {ui.THEME['text_main']};'>Security</div>
+            <div style='font-size: 0.85rem; color: {ui.THEME['text_light']};'>0 vulnerabilities</div>
         </div>
         """,
             unsafe_allow_html=True,
@@ -72,11 +77,11 @@ def render():
 
     with pipeline_col4:
         st.markdown(
-            """
-        <div style='text-align: center; padding: 20px; background: #DCFCE7; border-radius: 8px; border-left: 4px solid #16A34A;'>
+            f"""
+        <div style='text-align: center; padding: 20px; background: {success_bg}; border-radius: 8px; border-left: 4px solid {success_border};'>
             <div style='font-size: 2rem;'>✅</div>
-            <div style='font-weight: 700; margin-top: 8px;'>Deploy</div>
-            <div style='font-size: 0.85rem; color: #166534;'>Staging</div>
+            <div style='font-weight: 700; margin-top: 8px; color: {ui.THEME['text_main']};'>Deploy</div>
+            <div style='font-size: 0.85rem; color: {ui.THEME['text_light']};'>Staging</div>
         </div>
         """,
             unsafe_allow_html=True,
@@ -84,11 +89,11 @@ def render():
 
     with pipeline_col5:
         st.markdown(
-            """
-        <div style='text-align: center; padding: 20px; background: #FEF3C7; border-radius: 8px; border-left: 4px solid #F59E0B;'>
+            f"""
+        <div style='text-align: center; padding: 20px; background: {warning_bg}; border-radius: 8px; border-left: 4px solid {warning_border};'>
             <div style='font-size: 2rem;'>⏳</div>
-            <div style='font-weight: 700; margin-top: 8px;'>Production</div>
-            <div style='font-size: 0.85rem; color: #92400E;'>Awaiting approval</div>
+            <div style='font-weight: 700; margin-top: 8px; color: {ui.THEME['text_main']};'>Production</div>
+            <div style='font-size: 0.85rem; color: {ui.THEME['text_light']};'>Awaiting approval</div>
         </div>
         """,
             unsafe_allow_html=True,
@@ -98,6 +103,7 @@ def render():
 
     # 4. Performance Metrics & Deployment History
     metrics_col, history_col = st.columns(2)
+    plotly_template = ui.get_plotly_template()
 
     with metrics_col:
         st.markdown("### 📊 Build Performance Trends")
@@ -115,21 +121,20 @@ def render():
                 y=build_times,
                 mode="lines+markers",
                 name="Build Time",
-                line=dict(color="#4F46E5", width=3),
+                line=dict(color=ui.THEME["primary"], width=3),
                 marker=dict(size=8),
                 fill="tozeroy",
-                fillcolor="rgba(79, 70, 229, 0.1)",
+                fillcolor=f"{ui.THEME['primary']}10",
             )
         )
 
         fig.update_layout(
+            template=plotly_template,
             height=300,
             margin=dict(l=20, r=20, t=20, b=20),
             xaxis_title="Date",
             yaxis_title="Build Time (seconds)",
             hovermode="x unified",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -204,11 +209,11 @@ def render():
             perf_col1, perf_col2, perf_col3 = st.columns(3)
 
             with perf_col1:
-                st.metric("Tasks Completed", "1,247", "+12 this week")
+                ui.animated_metric("Tasks Completed", "1,247", delta="+12", icon="✅")
             with perf_col2:
-                st.metric("Avg Response Time", "3.2s", "-0.4s improvement")
+                ui.animated_metric("Avg Response Time", "3.2s", delta="-0.4s", icon="⚡")
             with perf_col3:
-                st.metric("Success Rate", "97.8%", "+1.2% vs last month")
+                ui.animated_metric("Success Rate", "97.8%", delta="+1.2%", icon="📈", color="success")
 
             # Task completion over time
             task_dates = [
@@ -219,16 +224,15 @@ def render():
             fig_tasks = go.Figure()
             fig_tasks.add_trace(
                 go.Bar(
-                    x=task_dates, y=tasks_completed, marker_color="#10B981", name="Tasks Completed"
+                    x=task_dates, y=tasks_completed, marker_color=ui.THEME["accent"], name="Tasks Completed"
                 )
             )
 
             fig_tasks.update_layout(
+                template=plotly_template,
                 title="Daily Task Completion",
                 height=250,
                 margin=dict(l=20, r=20, t=40, b=20),
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
             )
 
             st.plotly_chart(fig_tasks, use_container_width=True)
@@ -253,10 +257,14 @@ def render():
                     complexity_data,
                     values="Files",
                     names="Complexity",
-                    color_discrete_sequence=["#10B981", "#F59E0B", "#EF4444", "#7C3AED"],
+                    color_discrete_sequence=[ui.THEME["success"], ui.THEME["warning"], ui.THEME["danger"], ui.THEME["primary"]],
                 )
 
-                fig_complexity.update_layout(height=250, margin=dict(l=20, r=20, t=20, b=20))
+                fig_complexity.update_layout(
+                    template=plotly_template,
+                    height=250, 
+                    margin=dict(l=20, r=20, t=20, b=20)
+                )
 
                 st.plotly_chart(fig_complexity, use_container_width=True)
 
@@ -275,18 +283,17 @@ def render():
                     go.Bar(
                         x=coverage_data["Module"],
                         y=coverage_data["Coverage"],
-                        marker_color=["#10B981", "#10B981", "#F59E0B", "#F59E0B", "#10B981"],
+                        marker_color=[ui.THEME["success"] if x > 85 else ui.THEME["warning"] for x in coverage_data["Coverage"]],
                         text=coverage_data["Coverage"].apply(lambda x: f"{x}%"),
                         textposition="outside",
                     )
                 )
 
                 fig_coverage.update_layout(
+                    template=plotly_template,
                     height=250,
                     margin=dict(l=20, r=20, t=20, b=20),
                     yaxis=dict(range=[0, 100], title="Coverage %"),
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    paper_bgcolor="rgba(0,0,0,0)",
                 )
 
                 st.plotly_chart(fig_coverage, use_container_width=True)
@@ -332,7 +339,12 @@ def render():
                 "Impact": ["Low", "High", "Medium", "Medium", "High", "Low"],
             }
         )
-        st.dataframe(activity_data, use_container_width=True, hide_index=True, height=250)
+        st.dataframe(
+            activity_data.style.set_properties(**{'background-color': f"{ui.THEME['surface']}"}),
+            use_container_width=True, 
+            hide_index=True, 
+            height=250
+        )
 
     with side_col:
         st.markdown("### 🧠 System Memory")
@@ -348,7 +360,7 @@ def render():
             icon="🏢",
         )
 
-        ui.spacer(10)
+        ui.spacer(20)
 
         # Tech Stack Card
         ui.glassmorphic_card(
