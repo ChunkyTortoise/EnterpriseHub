@@ -1,0 +1,15 @@
+{
+  "model": "claude-sonnet-4-20250514",
+  "maxTokens": 4096,
+  "permissions": {
+    "allowedTools": [
+      "Read", "Glob", "Grep", "Edit",
+      "Write(src/**)", "Write(tests/**)",
+      "Bash(npm run:*)", "Bash(pnpm *)", "Bash(git add)", "Bash(git commit:*)"
+    ],
+    "deny": [
+      "Read(.env)", "Read(.env.*)", "Read(secrets/**)",
+      "Bash(rm *)", "Bash(sudo *)"
+    ]
+  }
+}

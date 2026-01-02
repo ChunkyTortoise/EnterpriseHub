@@ -123,7 +123,7 @@ mcp_config.json
 .aider*
 
 # Claude Code agent workflows
-.claude/
+.claude/settings.local.json
 .agent/workflows/*jailbreak*.md
 evaluation_prompt.md
 
