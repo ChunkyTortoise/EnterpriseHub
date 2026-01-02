@@ -29,8 +29,8 @@ ta==0.11.0
 # ==============================================================================
 # AI & NLP
 # ==============================================================================
-anthropic==0.18.1  # Claude API for content generation
-textblob==0.17.1
+anthropic==0.75.0  # Claude API for content generation
+textblob==0.19.0
 langgraph>=0.0.10
 langchain-core>=0.1.0
 langchain-anthropic>=0.1.0
@@ -38,6 +38,6 @@ langchain-anthropic>=0.1.0
 # ==============================================================================
 # Utilities
 # ==============================================================================
-python-dotenv==1.0.0  # Environment variable management
-openpyxl==3.1.2  # Excel file support for data export
+python-dotenv==1.2.1  # Environment variable management
+openpyxl==3.1.5  # Excel file support for data export
 PyGithub>=2.1.1 # GitHub API interactions

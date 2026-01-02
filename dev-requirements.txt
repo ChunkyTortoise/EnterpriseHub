@@ -6,7 +6,7 @@
 # Testing
 pytest==7.4.3
 pytest-cov==4.1.0
-pytest-mock==3.12.0
+pytest-mock==3.15.1
 
 # Code Quality & Linting
 black==23.11.0
@@ -15,19 +15,19 @@ isort==5.12.0
 pylint==3.0.2
 
 # Type Checking
-mypy==1.7.1
-types-requests==2.31.0.10
+mypy==1.19.1
+types-requests==2.32.4.20250913
 
 # Security
-bandit==1.7.5  # Security linting
-pip-audit==2.6.1  # Dependency vulnerability scanning
+bandit==1.8.6  # Security linting
+pip-audit==2.9.0  # Dependency vulnerability scanning
 
 # Pre-commit Hooks
 pre-commit==3.5.0
 
 # Documentation
-mkdocs==1.5.3
-mkdocs-material==9.4.14
+mkdocs==1.6.1
+mkdocs-material==9.7.1
 
 # Utilities
 ipython==8.18.1  # Better REPL
