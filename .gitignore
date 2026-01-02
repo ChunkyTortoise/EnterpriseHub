@@ -144,3 +144,4 @@ tmp_rovodev_*
 customer_clusters.png
 elbow_method.png
 .agent/workflows/.snapshots/
+.arete_memory_*.json

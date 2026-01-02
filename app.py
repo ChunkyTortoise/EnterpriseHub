@@ -26,20 +26,92 @@ st.set_page_config(
 )
 
 # --- MODULE REGISTRY ---
-# ARETE-Architect is positioned FIRST as the flagship "Technical Co-Founder" module
+# Flagship AI Technical Co-Founder module takes precedence
 MODULES = {
-    "🏗️ ARETE-Architect": ("arete_architect", "ARETE-Architect: AI Technical Co-Founder", "assets/icons/arete_architect.svg"),
-    "📊 Market Pulse": ("market_pulse", "Market Pulse", "assets/icons/market_pulse.png"),
-    "💼 Financial Analyst": ("financial_analyst", "Financial Analyst", "assets/icons/financial_analyst.png"),
-    "💰 Margin Hunter": ("margin_hunter", "Margin Hunter", "assets/icons/margin_hunter.png"),
-    "🤖 Agent Logic": ("agent_logic", "Agent Logic", "assets/icons/agent_logic.svg"),
-    "✍️ Content Engine": ("content_engine", "Content Engine", "assets/icons/content_engine.png"),
-    "🔍 Data Detective": ("data_detective", "Data Detective", "assets/icons/data_detective.png"),
-    "📈 Marketing Analytics": ("marketing_analytics", "Marketing Analytics", "assets/icons/marketing_analytics.svg"),
-    "🤖 Multi-Agent Workflow": ("multi_agent", "Multi-Agent Workflow", "assets/icons/multi_agent.svg"),
-    "🧠 Smart Forecast": ("smart_forecast", "Smart Forecast Engine", "assets/icons/smart_forecast.svg"),
-    "🏗️ DevOps Control": ("devops_control", "DevOps Control", "assets/icons/devops.svg"),
-    "🎨 Design System": ("design_system", "Design System Gallery", "assets/icons/design_system.svg"),
+    "🏗️ ARETE-Architect": {
+        "name": "arete_architect",
+        "title": "ARETE-Architect: AI Technical Co-Founder",
+        "icon": "assets/icons/arete_architect.svg",
+        "desc": "Flagship autonomous technical co-founder powered by LangGraph. Features self-healing code generation, deep architectural mapping, and automated CI/CD integration.",
+        "status": "hero"
+    },
+    "💰 Margin Hunter": {
+        "name": "margin_hunter",
+        "title": "Margin Hunter",
+        "icon": "assets/icons/margin_hunter.png",
+        "desc": "Advanced institutional-grade unit economics engine. Delivers high-fidelity sensitivity analysis, real-time break-even modeling, and multi-scenario margin optimization.",
+        "status": "active"
+    },
+    "📊 Market Pulse": {
+        "name": "market_pulse",
+        "title": "Market Pulse",
+        "icon": "assets/icons/market_pulse.png",
+        "desc": "Institutional-grade technical analysis suite. High-performance charting engine featuring RSI, MACD, and volume profile analysis for professional asset evaluation.",
+        "status": "active"
+    },
+    "🔍 Data Detective": {
+        "name": "data_detective",
+        "title": "Data Detective",
+        "icon": "assets/icons/data_detective.png",
+        "desc": "Heuristic data profiling engine. Automates exploratory data analysis (EDA) with advanced correlation mapping, statistical quality scoring, and automated insight generation.",
+        "status": "new"
+    },
+    "📈 Marketing Analytics": {
+        "name": "marketing_analytics",
+        "title": "Marketing Analytics",
+        "icon": "assets/icons/marketing_analytics.svg",
+        "desc": "Enterprise-scale marketing attribution and ROI orchestration engine. Features multi-variant statistical testing, cohort analysis, and sophisticated attribution modeling.",
+        "status": "new"
+    },
+    "✍️ Content Engine": {
+        "name": "content_engine",
+        "title": "Content Engine",
+        "icon": "assets/icons/content_engine.png",
+        "desc": "Strategic content synthesis platform leveraging Anthropic's Claude 3.5 Sonnet to generate high-authority LinkedIn thought leadership and technical documentation.",
+        "status": "active"
+    },
+    "🧠 Smart Forecast": {
+        "name": "smart_forecast",
+        "title": "Smart Forecast Engine",
+        "icon": "assets/icons/smart_forecast.svg",
+        "desc": "Predictive intelligence engine leveraging Random Forest ensembles and rolling-window backtesting to deliver statistically rigorous time-series forecasting.",
+        "status": "new"
+    },
+    "🤖 Multi-Agent Workflow": {
+        "name": "multi_agent",
+        "title": "Multi-Agent Workflow",
+        "icon": "assets/icons/multi_agent.svg",
+        "desc": "State-of-the-art agentic orchestration. Synchronizes specialized sub-agents (Data, Tech, News, Chief) for comprehensive 360° asset intelligence.",
+        "status": "new"
+    },
+    "🏗️ DevOps Control": {
+        "name": "devops_control",
+        "title": "DevOps Control",
+        "icon": "assets/icons/devops.svg",
+        "desc": "Full-spectrum CI/CD orchestration console. Real-time monitoring of build pipelines, test coverage analytics, and autonomous deployment status tracking.",
+        "status": "active"
+    },
+    "🤖 Agent Logic": {
+        "name": "agent_logic",
+        "title": "Agent Logic",
+        "icon": "assets/icons/agent_logic.svg",
+        "desc": "Autonomous market intelligence agent. Orchestrates NLP-driven sentiment analysis and real-time news aggregation for proactive market positioning.",
+        "status": "active"
+    },
+    "💼 Financial Analyst": {
+        "name": "financial_analyst",
+        "title": "Financial Analyst",
+        "icon": "assets/icons/financial_analyst.png",
+        "desc": "Comprehensive fundamental analysis framework. Delivers deep-dive financial statement audits, ratio analysis, and intrinsic valuation modeling.",
+        "status": "active"
+    },
+    "🎨 Design System": {
+        "name": "design_system",
+        "title": "Design System Gallery",
+        "icon": "assets/icons/design_system.svg",
+        "desc": "Centralized UI/UX architecture laboratory showcasing the project's institutional-grade glassmorphic components and WCAG-compliant theme engine.",
+        "status": "active"
+    },
 }
 
 def main():
@@ -73,13 +145,14 @@ def main():
                 f"""
                 <div style='margin-bottom: 32px;'>
                     <h1 style='
-                        font-family: sans-serif;
+                        font-family: "Space Grotesk", sans-serif;
                         font-size: 1.5rem;
                         font-weight: 800;
                         letter-spacing: -0.05em;
                         margin: 0;
+                        color: #0F172A;
                     '>
-                        ENTERPRISE<span style='color: #4f46e5;'>HUB</span>
+                        ENTERPRISE<span style='color: #10B981;'>HUB</span>
                     </h1>
                     <div style='
                         color: #64748b;
@@ -88,7 +161,7 @@ def main():
                         letter-spacing: 0.1em;
                         text-transform: uppercase;
                     '>
-                        Platform Console v4.0
+                        Platform Console v5.0.1
                     </div>
                 </div>
                 """,
@@ -131,8 +204,8 @@ def main():
         if page == "🏠 Overview":
             _render_overview(ui)
         elif page in MODULES:
-            module_name, module_title, _ = MODULES[page]
-            _load_and_render_module(module_name, module_title)
+            module_info = MODULES[page]
+            _load_and_render_module(module_info["name"], module_info["title"])
         
         # Footer
         ui.footer()
@@ -167,8 +240,8 @@ def _render_overview(ui):
     # Hero Section
     ui.hero_section(
         "Unified Enterprise Hub",
-        "A production-grade business intelligence platform consolidating "
-        "9 mission-critical tools into a single, cloud-native interface."
+        f"A production-grade business intelligence platform consolidating "
+        f"{len(MODULES)} mission-critical tools into a single, cloud-native interface."
     )
 
     # Metrics Row - Highlighting ARETE and Technical Co-Founder capabilities
@@ -181,142 +254,23 @@ def _render_overview(ui):
     ui.spacer(40)
     st.markdown("### 🛠️ Module Suite")
 
-    # Feature Grid - Row 1 - ARETE FIRST (Flagship)
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-        module_info = MODULES.get("🏗️ ARETE-Architect")
-        ui.feature_card(
-            icon=module_info[2] if module_info[2] else "🏗️",
-            title=module_info[1],
-            description=(
-                "Self-maintaining AI Technical Co-Founder with LangGraph workflows. "
-                "Autonomous GitHub integration, code generation, and deployment. "
-                "The future of software development."
-            ),
-            status="hero",
-            icon_path=module_info[2] if module_info[2] else None,
-        )
-    with c2:
-        module_info = MODULES.get("💰 Margin Hunter")
-        ui.feature_card(
-            icon=module_info[2] if module_info[2] else "💰",
-            title=module_info[1],
-            description=(
-                "Real-time Cost-Volume-Profit analysis with 10x10 "
-                "sensitivity heatmaps and break-even modeling."
-            ),
-            status="active",
-            icon_path=module_info[2] if module_info[2] else None,
-        )
-    with c3:
-        module_info = MODULES.get("📊 Market Pulse")
-        ui.feature_card(
-            icon=module_info[2] if module_info[2] else "📊",
-            title=module_info[1],
-            description=(
-                "Institutional-grade technical analysis dashboard "
-                "with RSI, MACD, and multi-panel charting."
-            ),
-            status="active",
-            icon_path=module_info[2] if module_info[2] else None,
-        )
-
-    ui.spacer(20)
-
-    # Feature Grid - Row 2
-    c4, c5, c6 = st.columns(3)
-
-    with c4:
-        module_info = MODULES.get("🔍 Data Detective")
-        ui.feature_card(
-            icon=module_info[2] if module_info[2] else "🔍",
-            title=module_info[1],
-            description=(
-                "AI-powered data profiling and statistical analysis. "
-                "Upload any CSV/Excel for instant insights."
-            ),
-            status="new",
-            icon_path=module_info[2] if module_info[2] else None,
-        )
-    with c5:
-        module_info = MODULES.get("📈 Marketing Analytics")
-        ui.feature_card(
-            icon=module_info[2] if module_info[2] else "📈",
-            title=module_info[1],
-            description=(
-                "Comprehensive campaign tracking, ROI calculators, "
-                "multi-variant testing, and attribution modeling."
-            ),
-            status="new",
-            icon_path=module_info[2] if module_info[2] else None,
-        )
-    with c6:
-        module_info = MODULES.get("✍️ Content Engine")
-        ui.feature_card(
-            icon=module_info[2] if module_info[2] else "✍️",
-            title=module_info[1],
-            description=(
-                "Generate professional LinkedIn content in seconds "
-                "using Anthropic's Claude 3.5 Sonnet API."
-            ),
-            status="active",
-            icon_path=module_info[2] if module_info[2] else None,
-        )
-
-    # Row 3: Agent Logic, Financial Analyst, Multi-Agent
-    ui.spacer(20)
-    c7, c8, c9 = st.columns(3)
-
-    with c7:
-        module_info = MODULES.get("🤖 Agent Logic")
-        ui.feature_card(
-            icon=module_info[2] if module_info[2] else "🤖",
-            title=module_info[1],
-            description=(
-                "Automated market research and news sentiment analysis using NLP and web scraping."
-            ),
-            status="active",
-            icon_path=module_info[2] if module_info[2] else None,
-        )
-    with c8:
-        module_info = MODULES.get("💼 Financial Analyst")
-        ui.feature_card(
-            icon=module_info[2] if module_info[2] else "💼",
-            title=module_info[1],
-            description=(
-                "Fundamental stock analysis with financial statements, "
-                "ratios, and valuation metrics."
-            ),
-            status="active",
-            icon_path=module_info[2] if module_info[2] else None,
-        )
-
-    with c9:
-        module_info = MODULES.get("🤖 Multi-Agent Workflow")
-        ui.feature_card(
-            icon=module_info[2] if module_info[2] else "🤖",
-            title=module_info[1],
-            description=(
-                "Orchestrates 4 specialized agents (Data, Tech, News, Chief) "
-                "to perform deep-dive asset analysis."
-            ),
-            status="new",
-            icon_path=module_info[2] if module_info[2] else None,
-        )
-
-    with c9:
-        module_info = MODULES.get("🧠 Smart Forecast")
-        ui.feature_card(
-            icon=module_info[2] if module_info[2] else "🧠",
-            title=module_info[1],
-            description=(
-                "AI-powered time series forecasting using Random Forest "
-                "and Rolling Window analysis."
-            ),
-            status="new",
-            icon_path=module_info[2] if module_info[2] else None,
-        )
+    # Dynamic Feature Grid (Rows of 3)
+    module_keys = list(MODULES.keys())
+    for i in range(0, len(module_keys), 3):
+        cols = st.columns(3)
+        for j in range(3):
+            if i + j < len(module_keys):
+                key = module_keys[i + j]
+                info = MODULES[key]
+                with cols[j]:
+                    ui.feature_card(
+                        icon=info["icon"] if info["icon"] else "🚀",
+                        title=info["title"],
+                        description=info["desc"],
+                        status=info["status"],
+                        icon_path=info["icon"] if info.get("icon") else None,
+                    )
+        ui.spacer(20)
 
     ui.spacer(40)
     ui.section_header(

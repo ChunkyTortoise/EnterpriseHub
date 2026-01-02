@@ -134,11 +134,17 @@ def _display_metrics(df: pd.DataFrame, ticker: str) -> None:
         prev = df.iloc[-2]
         delta = latest["Close"] - prev["Close"]
         delta_percent = (delta / prev["Close"]) * 100
+        
+        # Determine color based on movement
+        color = "success" if delta >= 0 else "danger"
+        icon = "📈" if delta >= 0 else "📉"
 
-        ui.card_metric(
+        ui.animated_metric(
             label=f"{ticker} Price",
             value=f"${latest['Close']:.2f}",
-            delta=f"{delta:.2f} ({delta_percent:.2f}%)",
+            delta=f"{delta:+.2f} ({delta_percent:+.2f}%)",
+            color=color,
+            icon=icon
         )
     except Exception as e:
         logger.error(f"Error displaying metrics: {e}")
@@ -166,39 +172,45 @@ def _display_predictive_indicators(df: pd.DataFrame, ticker: str) -> None:
         support, resistance = _calculate_support_resistance(df)
 
         # Display in a compact format
-        st.markdown("---")
-        st.subheader("🔮 Predictive Indicators")
+        ui.spacer(20)
+        st.markdown("### 🔮 Predictive Analytics")
 
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            # Trend prediction with color coding
-            if trend == "Bullish":
-                st.markdown(f"**Trend:** :green[{trend} 🐂]")
-                st.progress(min(confidence / 100, 1.0))
-            elif trend == "Bearish":
-                st.markdown(f"**Trend:** :red[{trend} 🐻]")
-                st.progress(min(confidence / 100, 1.0))
-            else:
-                st.markdown(f"**Trend:** :gray[{trend} ⚖️]")
-                st.progress(0.5)
-
-            st.caption(f"Confidence: {confidence:.0f}%")
+            # Trend prediction with badge
+            st.markdown(f"**Market Trend**")
+            badge_status = "active" if trend == "Bullish" else "hero" if trend == "Bearish" else "pending"
+            badge_color = "success" if trend == "Bullish" else "danger" if trend == "Bearish" else "warning"
+            
+            st.markdown(f"### {trend.upper()}")
+            st.progress(min(confidence / 100, 1.0))
+            st.caption(f"Algorithm Confidence: {confidence:.0f}%")
 
         with col2:
-            ui.card_metric("Support Level", f"${support:.2f}")
-            st.caption("Potential floor price")
+            ui.animated_metric("Support Level", f"${support:.2f}", icon="🛡️")
+            st.caption("Strong floor based on recent lows")
 
         with col3:
-            ui.card_metric("Resistance Level", f"${resistance:.2f}")
-            st.caption("Potential ceiling price")
+            ui.animated_metric("Resistance Level", f"${resistance:.2f}", icon="🏔️")
+            st.caption("Ceiling based on recent highs")
 
-        # Display reasoning
-        with st.expander("📊 Analysis Details"):
-            st.markdown(f"**RSI:** {rsi:.1f}")
-            st.markdown(f"**MACD:** {macd:.2f}")
-            st.markdown(f"**Signal Line:** {signal:.2f}")
-            st.markdown(f"\n**Reasoning:** {reasoning}")
+        # Display reasoning in a styled box
+        ui.spacer(10)
+        with st.expander("📊 Technical Deep Dive", expanded=False):
+            st.markdown(
+                f"""
+                <div style='background-color: {ui.THEME["surface"]}; padding: 1.5rem; border-radius: 8px; border: 1px solid {ui.THEME["border"]};'>
+                    <div style='display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;'>
+                        <div><strong>RSI:</strong> <span style='font-family: monospace;'>{rsi:.1f}</span></div>
+                        <div><strong>MACD:</strong> <span style='font-family: monospace;'>{macd:.2f}</span></div>
+                        <div><strong>Signal:</strong> <span style='font-family: monospace;'>{signal:.2f}</span></div>
+                    </div>
+                    <p style='margin: 0; color: {ui.THEME["text_light"]};'><strong>Analysis:</strong> {reasoning}</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     except Exception as e:
         logger.error(f"Error displaying predictive indicators: {e}")

@@ -127,32 +127,36 @@ def render() -> None:
 
 def _render_data_profile(df: pd.DataFrame) -> None:
     """Render automated data profiling section."""
-    st.subheader("📊 Automated Data Profile")
+    ui.spacer(10)
+    st.markdown("### 📊 Dataset Overview")
 
     # Basic info
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        ui.card_metric("Total Rows", f"{len(df):,}")
+        ui.animated_metric("Total Rows", f"{len(df):,}", icon="📝", color="primary")
     with col2:
-        ui.card_metric("Total Columns", str(len(df.columns)))
+        ui.animated_metric("Total Columns", str(len(df.columns)), icon="🔢", color="primary")
     with col3:
         memory_mb = df.memory_usage(deep=True).sum() / 1024 / 1024
-        ui.card_metric("Memory Usage", f"{memory_mb:.2f} MB")
+        ui.animated_metric("Memory Usage", f"{memory_mb:.2f} MB", icon="💾", color="warning")
     with col4:
         duplicate_count = df.duplicated().sum()
-        ui.card_metric("Duplicate Rows", f"{duplicate_count:,}")
+        color = "success" if duplicate_count == 0 else "danger"
+        ui.animated_metric("Duplicate Rows", f"{duplicate_count:,}", icon="👯", color=color)
 
-    st.markdown("---")
+    ui.spacer(20)
 
-    # Data preview
-    st.subheader("📄 Data Preview")
-    preview_rows = st.slider("Rows to display", 5, min(50, len(df)), 10)
-    st.dataframe(df.head(preview_rows), use_container_width=True)
+    # Data preview with styling
+    st.markdown("### 📄 Data Snapshot")
+    
+    with st.expander("View Raw Data Preview", expanded=True):
+        preview_rows = st.slider("Rows to display", 5, min(50, len(df)), 10)
+        st.dataframe(df.head(preview_rows), use_container_width=True)
 
-    st.markdown("---")
+    ui.spacer(20)
 
     # Column-by-column analysis
-    st.subheader("📋 Column Analysis")
+    st.markdown("### 📋 Column Intelligence")
 
     # Create comprehensive column info
     column_info = []
@@ -206,12 +210,20 @@ def _render_data_profile(df: pd.DataFrame) -> None:
                     x=selected_numeric,
                     title=f"Distribution of {selected_numeric}",
                     nbins=50,
+                    template=ui.get_plotly_template()
                 )
+                fig_hist.update_traces(marker_color=ui.THEME["accent"])
                 st.plotly_chart(fig_hist, use_container_width=True)
 
             with col2:
                 # Box plot
-                fig_box = px.box(df, y=selected_numeric, title=f"Box Plot of {selected_numeric}")
+                fig_box = px.box(
+                    df, 
+                    y=selected_numeric, 
+                    title=f"Box Plot of {selected_numeric}",
+                    template=ui.get_plotly_template()
+                )
+                fig_box.update_traces(marker_color=ui.THEME["primary"])
                 st.plotly_chart(fig_box, use_container_width=True)
 
     if categorical_cols:
@@ -229,13 +241,15 @@ def _render_data_profile(df: pd.DataFrame) -> None:
                 y=value_counts.values,
                 title=f"Top 10 Values in {selected_categorical}",
                 labels={"x": selected_categorical, "y": "Count"},
+                template=ui.get_plotly_template()
             )
+            fig_bar.update_traces(marker_color=ui.THEME["accent"])
             st.plotly_chart(fig_bar, use_container_width=True)
 
     # Correlation matrix for numeric columns
     if len(numeric_cols) > 1:
         st.markdown("---")
-        st.subheader("🔗 Correlation Matrix")
+        st.subheader("🔗 Correlation Intelligence")
         st.markdown(
             "Identify relationships between numeric variables "
             "(-1 = perfect negative, +1 = perfect positive)"
@@ -332,16 +346,17 @@ def _render_data_quality(df: pd.DataFrame) -> None:
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        ui.card_metric("Quality Score", f"{quality_score:.0f}%")
+        color = "success" if quality_score >= 80 else "warning" if quality_score >= 50 else "danger"
+        ui.animated_metric("Quality Score", f"{quality_score:.0f}%", icon="🛡️", color=color)
     with col2:
-        ui.card_metric("Issues Found", str(total_checks - passed_checks))
+        ui.animated_metric("Issues Found", str(total_checks - passed_checks), icon="⚠️", color="warning")
     with col3:
-        ui.card_metric("Checks Passed", str(passed_checks))
+        ui.animated_metric("Checks Passed", str(passed_checks), icon="✅", color="success")
 
-    st.markdown("---")
+    ui.spacer(20)
 
     # Display issues and recommendations
-    st.subheader("🔍 Quality Issues & Recommendations")
+    st.markdown("### 🔍 Issues & Recommendations")
 
     for issue in quality_issues:
         if issue["has_issue"]:
@@ -361,11 +376,11 @@ def _render_data_quality(df: pd.DataFrame) -> None:
 
     # Show cleaned data preview if available
     if st.session_state.cleaned_data is not None:
-        st.markdown("---")
-        st.subheader("🎉 Cleaned Data Preview")
+        ui.spacer(20)
+        st.markdown("### 🎉 Cleaned Data Preview")
         st.dataframe(st.session_state.cleaned_data.head(10), use_container_width=True)
 
-        if st.button("Use Cleaned Data"):
+        if st.button("Use Cleaned Data", type="primary"):
             st.session_state.uploaded_data = st.session_state.cleaned_data
             st.success("✅ Now using cleaned data for analysis")
             st.rerun()
@@ -484,7 +499,7 @@ def _render_demo_section() -> None:
         ui.feature_card(
             icon="📊",
             title="Automated Data Profiling",
-            description="Row/col stats, missing values, duplicates, and distribution plots.",
+            description="Instantaneous multi-dimensional analysis of data structures. Comprehensive reporting on cardinality, missing value distributions, and high-fidelity statistical dispersion.",
             status="active",
         )
 
@@ -492,7 +507,7 @@ def _render_demo_section() -> None:
         ui.feature_card(
             icon="🤖",
             title="AI-Powered Insights",
-            description="Trend detection, anomaly identification, and business recommendations.",
+            description="Advanced heuristic analysis identifying latent trends and structural anomalies. Delivers actionable business intelligence and strategic recommendations.",
             status="active",
         )
 
@@ -504,7 +519,7 @@ def _render_demo_section() -> None:
         ui.feature_card(
             icon="🧹",
             title="Data Quality Checks",
-            description="Detect and fix missing values, outliers, and inconsistencies.",
+            description="Rigorous data integrity auditing. Automated detection and remediation of outliers, null values, and structural inconsistencies across massive datasets.",
             status="active",
         )
 
@@ -512,7 +527,7 @@ def _render_demo_section() -> None:
         ui.feature_card(
             icon="💬",
             title="Natural Language Queries",
-            description="Ask questions in plain English and get instant AI-powered answers.",
+            description="State-of-the-art semantic search. Interrogate your datasets using plain English to extract complex cross-functional insights without SQL/Python.",
             status="active",
         )
 

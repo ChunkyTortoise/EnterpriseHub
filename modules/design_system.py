@@ -1039,7 +1039,7 @@ def render() -> None:
             ui.feature_card(
                 icon="💰",
                 title="Feature Cards",
-                description="Highlight key features with status badges",
+                description="High-authority informational containers designed to highlight platform capabilities. Supports dynamic status badges and vectorized iconography.",
                 status="hero",
             )
 
@@ -1047,7 +1047,7 @@ def render() -> None:
             ui.feature_card(
                 icon="✅",
                 title="Use Case Cards",
-                description="Showcase customer success stories",
+                description="Strategic outcome-focused modules engineered to communicate client ROI and successful business process transformation.",
                 status="active",
             )
 
@@ -1055,7 +1055,7 @@ def render() -> None:
             ui.feature_card(
                 icon="✨",
                 title="Glassmorphic Cards",
-                description="Modern frosted glass effect cards",
+                description="Sophisticated frosted-glass UI components leveraging high-fidelity blur backdrops and institutional-grade contrast ratios for modern SaaS aesthetics.",
                 status="new",
             )
 

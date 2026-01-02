@@ -1,12 +1,12 @@
 <div align="center">
   <img src="assets/hero/background_editorial.png" width="100%" style="border-radius: 12px; margin-bottom: 24px;" alt="EnterpriseHub Banner">
-  <h1>🚀 EnterpriseHub: Powered by ARETE-Architect</h1>
-  <p><strong>The Platform That Builds Itself</strong></p>
+  <h1>🚀 EnterpriseHub v5.0: Elite AI Console</h1>
+  <p><strong>The "Lead Architect" Platform for High-Ticket Engineering</strong></p>
 
   [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
   [![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
+  [![Design System](https://img.shields.io/badge/UI-Studio%20Dark-10B981.svg)](utils/ui.py)
   [![Tests](https://img.shields.io/badge/tests-301%2B%20passing-059669.svg?logo=pytest&logoColor=white)](https://github.com/ChunkyTortoise/enterprise-hub)
-  [![Coverage](https://img.shields.io/badge/coverage-85%2B%25-059669.svg?logo=codecov&logoColor=white)](https://github.com/ChunkyTortoise/enterprise-hub)
   [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](https://opensource.org/licenses/MIT)
 
   <br>
@@ -14,11 +14,22 @@
   <strong>
     <a href="https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/">🎯 Try Live Demo</a>
     &nbsp;&nbsp;•&nbsp;&nbsp;
-    <a href="https://chunkytortoise.github.io/enterprisehub/">✨ View Portfolio Site</a>
+    <a href="docs/DEMO_GUIDE.md">📋 High-Ticket Demo Guide</a>
     &nbsp;&nbsp;•&nbsp;&nbsp;
     <a href="portfolio/ARETE_AGENT_CASE_STUDY.md">🦅 ARETE Case Study</a>
   </strong>
 </div>
+
+---
+
+## 🏗️ The "Lead Architect" Philosophy
+
+EnterpriseHub v5.0 is not a collection of dashboards—it is a **Self-Maintaining Autonomous Ecosystem**. Built to demonstrate Staff-level engineering, it leverages a custom-built **Studio Dark** design system and a **Multi-Agent Swarm** architecture to solve high-stakes business problems.
+
+### 🏛️ Core Design Principles
+- **Institutional Aesthetics**: Moving beyond "standard" UI to a custom, high-contrast SaaS experience (WCAG AAA compliant).
+- **Transparent Intelligence**: Features like **Cognitive Operations Trace** make the AI's reasoning visible and auditable.
+- **Production-Ready Rigor**: 301+ automated tests and a modular monolith architecture designed for enterprise scale.
 
 ---
 
@@ -31,22 +42,18 @@
 - 🚀 **GitHub Integration** - Autonomous PR creation, branch management, CI/CD
 - 📈 **Self-Evolution Loop** - The agent that improves its own codebase
 
-> **Real-World Impact:** ARETE built 12 production modules (47 tasks, 127 hours saved) with 92% time reduction and 18.9x ROI.
-
-### The "Builds Itself Out of a Job" Architecture
+### The "Cognitive Ops" Architecture
 
 ```
-User Request → Prime (Orchestrator) → Architect (Design) → Engineer (Build) 
-→ Guardian (QA) → DevOps (Deploy) → Production → Metrics → Self-Improvement
+User Request → Cognitive Trace → Pattern Recognition → Swarm Execution 
+→ Guardian (QA) → Production → Self-Improvement
 ```
 
 **Key Features:**
 - 💬 **Interactive Chat Demo** - Watch a 19-minute deployment workflow
+- 🧠 **Cognitive Operations Trace** - Real-time visualization of the agent's thinking steps
 - 📊 **Real-Time Metrics** - Velocity tracking, ROI calculation, time savings
 - 🔄 **Workflow Visualization** - See the 8-agent swarm in action
-- ⚖️ **Before/After Comparison** - Measure transformation impact
-
-**[→ View ARETE Case Study](portfolio/ARETE_AGENT_CASE_STUDY.md)** | **[→ See Live Demo](https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/)**
 
 ---
 
@@ -56,132 +63,32 @@ This project is built to **institutional standards**, specifically targeting hig
 
 - **🛡️ Industrial-Grade Testing**: **301+ automated tests** verifying every financial formula (CVP, ROI, RSI) with 85%+ coverage.
 - **⚡ High-Performance Computing**: NumPy-powered vectorization for real-time sensitivity analysis (100+ scenarios in <50ms).
-- **🤖 Multi-Agent Orchestration**: ARETE swarm with 8 specialized agents (Prime, Architect, Engineer, Guardian, DevOps, Strategist, Scribe, Auditor).
-- **🎨 Editorial UX**: "Stripe-Class" design system with WCAG AAA accessibility and multi-theme support.
-
----
-
-## 📊 Overview
-
-Enterprise Hub is a professional-grade web application that consolidates seven mission-critical modules into a single, cloud-native platform. Designed for rapid deployment and zero infrastructure overhead, it delivers enterprise capabilities in under 2 minutes.
-
----
-
-## 🎯 Why Enterprise Hub?
-
-### The Problem
-
-Business leaders and professionals face a common challenge: **critical business tools are expensive, fragmented, and time-consuming**.
-
-- **Financial modeling** requires Excel expertise and hours of manual spreadsheet work
-- **Market analysis** demands Bloomberg Terminal ($24k/year) or TradingView ($2k/year)
-- **Content creation** costs $500-2,000/month for ghostwriters or agencies
-- **Fundamental data** is scattered across multiple websites and paywalls
-
-**Result**: Slow decisions, high costs, and fragmented workflows.
-
-### The Solution
-
-Enterprise Hub delivers **institutional-grade business tools in a unified, web-based platform** - for free.
-
-- **Instant Analysis**: Break-even calculations, stock charts, AI content - all in under 2 minutes
-- **Zero Infrastructure**: No installation, no setup, no IT team required
-- **Cloud-Native**: Access from anywhere, on any device, always up to date
-- **Production-Ready**: 300+ automated tests, CI/CD deployment, enterprise-quality code
-
-**Result**: Faster decisions, $26k+/year in cost savings, one unified workflow.
-
-### What Makes It Different
-
-#### 1. Real Business Value (Not Just Portfolio Flair)
-
-Most developer portfolios showcase to-do apps, weather dashboards, or Twitter clones. Enterprise Hub solves **actual business problems** that professionals face daily:
-
-- **Margin Hunter**: Used by 300+ business leaders for pricing strategy and profitability analysis
-- **Content Engine**: Saves $2,160-4,320/year vs hiring ghostwriters
-- **Market Pulse**: Replaces $24k/year Bloomberg Terminal subscription
-
-#### 2. Production-Grade Quality
-
-This isn't a weekend hackathon project. Enterprise Hub features:
-
-- 300+ automated tests with 85%+ code coverage
-- CI/CD pipeline with linting, formatting, and test automation
-- Comprehensive error handling for edge cases
-- Documentation: 5+ detailed READMEs, industry templates, troubleshooting guides
-- Live deployment on Streamlit Cloud with 99%+ uptime
-
-#### 3. Modular Architecture
-
-Each module is self-contained and could be a standalone product:
-
-- Clean separation of concerns (UI, business logic, data)
-- Shared utilities layer (logging, exceptions, data loading)
-- Easy to extend with new modules
-- Simple to test in isolation
-
-#### 4. Modern Tech Stack
-
-Built with cutting-edge Python frameworks and APIs:
-
-- **Streamlit**: Reactive programming model, zero JavaScript required
-- **Plotly**: Interactive, Bloomberg-quality visualizations
-- **Claude 3.5 Sonnet**: State-of-the-art AI for content generation
-- **NumPy + Pandas**: High-performance numerical computing
-
-### Comparison: Enterprise Hub vs Alternatives
-
-| Feature | Enterprise Hub | Bloomberg Terminal | Excel + Manual Work | Content Agency |
-| :--- | :--- | :--- | :--- | :--- |
-| **Market Analysis** | ✅ Free, real-time | ✅ Professional-grade | ❌ No charts | ❌ N/A |
-| **Cost** | ✅ $0 | ❌ $24,000/year | ✅ $0 (+ your time) | ❌ $500-2,000/month |
-| **Financial Modeling** | ✅ Instant CVP analysis | ❌ No CVP tools | ⚠️ Manual spreadsheets (2+ hours) | ❌ N/A |
-| **AI Content** | ✅ $0.006/post | ❌ N/A | ⚠️ Manual writing (45 min) | ❌ $15-30/post |
-| **Setup Time** | ✅ 0 seconds (web-based) | ❌ 1-2 days (IT install) | ✅ 0 seconds | ⚠️ 1-2 weeks (onboarding) |
-| **Learning Curve** | ✅ Intuitive UI | ❌ Steep (days of training) | ⚠️ Moderate (Excel formulas) | ✅ Easy (outsourced) |
-| **Updates** | ✅ Automatic (cloud) | ⚠️ Quarterly (manual install) | ❌ Manual (you rebuild formulas) | ✅ Ongoing |
-| **Accessibility** | ✅ Any device, anywhere | ❌ Desktop only | ✅ Any device with Excel | ⚠️ Email-based |
-| **Customization** | ✅ Open source, fork it | ❌ No customization | ✅ Fully customizable | ❌ Agency-controlled |
-
-**TL;DR**: Enterprise Hub combines the best of all worlds—Bloomberg-quality tools, Excel-like customization, agency-quality content, and free pricing.
-
-### ROI Calculator
-
-**How much can Enterprise Hub save you?**
-
-| Use Case | Traditional Cost | Enterprise Hub Cost | Annual Savings |
-|----------|------------------|---------------------|----------------|
-| **Market analysis** (Bloomberg replacement) | $24,000/year | $0 | **$24,000** |
-| **LinkedIn content** (12 posts/month) | $2,160-4,320/year | $0.86/year | **$2,159-4,319** |
-| **Financial modeling** (2 hours/week at $50/hr) | $5,200/year | $0 (instant) | **$5,200** |
-| **Fundamental data** (multiple subscriptions) | $1,000/year | $0 | **$1,000** |
-| **Total annual savings** | **$32,360-34,520** | **$0.86** | **$32,359-34,519** |
-
-**Break-even**: Instant (free tier covers 99% of use cases)
+- **🎨 Elite UX System**: "Studio Dark" palette with high-vibrancy accents, custom pill-based navigation, and animated mesh backgrounds.
+- **🤖 Swarm Orchestration**: ARETE swarm with 8 specialized agents (Prime, Architect, Engineer, Guardian, DevOps, Strategist, Scribe, Auditor).
 
 ---
 
 ## 🚀 Platform Modules (Built by ARETE)
 
-### 💰 Margin Hunter
+### 💰 Margin Hunter (Consultant-Grade)
 * **Real-time CVP Analysis**: Interactive break-even modeling.
-* **Sensitivity Heatmaps**: Visualize profit across different price/cost scenarios.
-* **Goal Seek**: Automatically calculate required sales volume for target profit.
+* **Consultant's Executive Summary**: AI-generated strategic recommendations.
+* **Goal Seek & Monte Carlo**: Reverse-engineer targets and model stochastic profit risk.
 
-### 📊 Market Pulse
-* **Institutional-Grade Charts**: Multi-panel Plotly visualizations.
-* **Technical Indicators**: RSI, MACD, Bollinger Bands, Volume Weighted Average Price (VWAP).
-* **Live Data**: Integration with Yahoo Finance for real-time market data.
+### 📊 Market Pulse (Institutional-Grade)
+* **5-Panel Dashboards**: Price, RSI, MACD, Volume, and ATR (Volatility).
+* **Animated Predictive Signals**: High-impact visual cues for market trends.
+* **Multi-Ticker Comparison**: Side-by-side performance normalization.
 
-### ✍️ Content Engine
-* **AI-Powered Writing**: Generate LinkedIn posts, blog articles, and newsletters.
-* **Style Matching**: Analyzes your previous content to match your tone.
-* **SEO Optimization**: Keyword analysis and meta-tag generation.
+### 🧠 Agent Logic (Cognitive Ops Center)
+* **Sentiment Scout**: AI-powered news analysis using NLP and Claude 3.5.
+* **Reasoning Trace**: Step-by-step visualization of the agent's pattern recognition process.
+* **Intel Feed**: Styled cards for real-time market sentiment reporting.
 
-### 🔍 Data Detective
-* **Automated EDA**: Instant statistical profiling of any CSV/Excel file.
-* **Quality Scoring**: Detects missing values, outliers, and inconsistencies.
-* **Smart Visuals**: Auto-generates the most relevant charts for your data type.
+### 🔍 Data Detective (Data Intelligence HQ)
+* **Automated Data Profiling**: Instant statistical health score of any CSV/Excel file.
+* **Correlation Intelligence**: Diverging heatmap matrices for pattern discovery.
+* **AI-Powered Insights**: Actions recommendations generated by Claude.
 
 ---
 

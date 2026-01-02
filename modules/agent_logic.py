@@ -53,81 +53,150 @@ def _display_demo_sentiment(symbol: str) -> None:
     trend = company_data["trend"]
     timeline = company_data["timeline"]
 
-    # --- Dashboard ---
-    st.markdown("---")
+def _display_demo_sentiment(symbol: str) -> None:
+    """Display demo sentiment analysis from pre-loaded JSON file."""
+    import json
+    import time
 
+    # Load demo data
+    demo_file = "data/demo_sentiment_timeline.json"
+    try:
+        with open(demo_file, "r") as f:
+            demo_data = json.load(f)
+    except FileNotFoundError:
+        st.error(f"Demo data file not found: {demo_file}")
+        return
+
+    # Find company data
+    company_data = None
+    for company in demo_data.get("companies", []):
+        if company["symbol"] == symbol:
+            company_data = company
+            break
+
+    if not company_data:
+        st.warning(f"No demo data available for {symbol}")
+        return
+
+    # Extract data
+    current_sentiment = company_data["current_sentiment"]
+    trend = company_data["trend"]
+    timeline = company_data["timeline"]
+
+    # --- AGENT THOUGHT TRACE ---
+    st.markdown("### 🧠 Cognitive Operations Trace")
+    
+    # Simulate thinking process visualization
+    steps = [
+        ("📡 Ingesting Data", "Scanning 14 global news sources..."),
+        ("🔍 Pattern Recognition", "Identifying sentiment clusters in 48 articles..."),
+        ("⚖️ Weighing Evidence", "Calibrating source credibility and recency..."),
+        ("✅ Verdict Formulation", "Synthesizing final market position.")
+    ]
+    
+    trace_cols = st.columns(4)
+    for i, (step, detail) in enumerate(steps):
+        with trace_cols[i]:
+            st.markdown(
+                f"""
+                <div style='background-color: {ui.THEME["surface"]}; padding: 10px; border-radius: 6px; border: 1px solid {ui.THEME["border"]}; height: 100px;'>
+                    <div style='color: {ui.THEME["accent"]}; font-weight: 600; font-size: 0.9em; margin-bottom: 5px;'>{step}</div>
+                    <div style='color: {ui.THEME["text_light"]}; font-size: 0.75em;'>{detail}</div>
+                    <div style='margin-top: 8px; height: 4px; background: {ui.THEME["border"]}; border-radius: 2px;'>
+                        <div style='width: 100%; height: 100%; background: {ui.THEME["accent"]}; border-radius: 2px; opacity: 0.8;'></div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+    ui.spacer(20)
+
+    # --- Dashboard ---
     # Sentiment score (scale from 0-1 to -100 to 100)
     sentiment_scaled = (current_sentiment - 0.5) * 200  # 0.74 -> 48
-
-    # Gauge Chart
-    fig = go.Figure(
-        go.Indicator(
-            mode="gauge+number",
-            value=sentiment_scaled,
-            domain={"x": [0, 1], "y": [0, 1]},
-            title={"text": "AI Sentiment Score"},
-            gauge={
-                "axis": {"range": [-100, 100]},
-                "bar": {"color": "white"},
-                "steps": [
-                    {"range": [-100, -10], "color": "#ff4444"},  # Red
-                    {"range": [-10, 10], "color": "#888888"},  # Gray
-                    {"range": [10, 100], "color": "#00ff88"},  # Green
-                ],
-                "threshold": {
-                    "line": {"color": "white", "width": 4},
-                    "thickness": 0.75,
-                    "value": sentiment_scaled,
-                },
-            },
-        )
-    )
-    fig.update_layout(height=300, margin=dict(l=20, r=20, t=50, b=20))
 
     # Layout: Gauge on Left, Stats on Right
     d_col1, d_col2 = st.columns([1, 1])
 
     with d_col1:
+         # Gauge Chart
+        fig = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=sentiment_scaled,
+                domain={"x": [0, 1], "y": [0, 1]},
+                title={"text": "AI Sentiment Score", "font": {"color": ui.THEME["text_main"]}},
+                gauge={
+                    "axis": {"range": [-100, 100], "tickcolor": ui.THEME["text_light"]},
+                    "bar": {"color": ui.THEME["primary"]},  # Theme primary
+                    "bgcolor": ui.THEME["background"],
+                    "steps": [
+                        {"range": [-100, -20], "color": "#EF4444"},  # Red
+                        {"range": [-20, 20], "color": "#94A3B8"},  # Gray
+                        {"range": [20, 100], "color": "#10B981"},  # Emerald
+                    ],
+                    "threshold": {
+                        "line": {"color": ui.THEME["text_main"], "width": 4},
+                        "thickness": 0.75,
+                        "value": sentiment_scaled,
+                    },
+                },
+            )
+        )
+        fig.update_layout(
+            height=300, 
+            margin=dict(l=20, r=20, t=50, b=20),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font={'color': ui.THEME["text_main"]}
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     with d_col2:
         # Verdict based on sentiment
         if trend == "very_bullish":
-            verdict = "🚀 STRONGLY BULLISH"
-            verdict_color = "#00ff88"
+            verdict = "STRONGLY BULLISH"
+            verdict_icon = "🚀"
+            verdict_color = "#10B981" # Emerald
         elif trend == "bullish":
-            verdict = "📈 BULLISH"
-            verdict_color = "#00cc66"
+            verdict = "BULLISH"
+            verdict_icon = "📈"
+            verdict_color = "#34D399" # Teal
         elif trend == "bearish":
-            verdict = "📉 BEARISH"
-            verdict_color = "#ff4444"
+            verdict = "BEARISH"
+            verdict_icon = "📉"
+            verdict_color = "#EF4444" # Red
         else:
-            verdict = "➡️ NEUTRAL"
-            verdict_color = "#888888"
+            verdict = "NEUTRAL"
+            verdict_icon = "➡️"
+            verdict_color = "#94A3B8" # Slate
 
-        st.markdown(
-            f"""
-        <div style="background:{ui.THEME["surface"]}; padding:1.5rem;
-             border-radius:8px; border-left:5px solid {verdict_color};">
-            <p style="text-transform:uppercase; font-size:0.8rem;
-               font-weight:700; color:{ui.THEME["text_light"]};
-               margin:0;">AI Market Verdict</p>
-            <h2 style="margin:0.5rem 0; color:{verdict_color};
-                border:none; padding:0;">{verdict}</h2>
-            <p style="font-size:0.9rem; margin:0;">
-                Confidence: <b>{current_sentiment * 100:.1f}%</b>
-                | Articles: <b>{len(timeline)}</b></p>
-        </div>
-        """,
-            unsafe_allow_html=True,
+        ui.glassmorphic_card(
+            title="AI Market Verdict",
+            content=f"""
+                <div style='display: flex; align-items: center; gap: 10px; margin-bottom: 10px;'>
+                    <span style='font-size: 2em;'>{verdict_icon}</span>
+                    <h2 style='margin: 0; color: {verdict_color};'>{verdict}</h2>
+                </div>
+                <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 10px;'>
+                    <div>
+                        <div style='font-size: 0.8em; color: {ui.THEME["text_light"]};'>Confidence</div>
+                        <div style='font-weight: 600; font-size: 1.1em;'>{current_sentiment * 100:.1f}%</div>
+                    </div>
+                    <div>
+                        <div style='font-size: 0.8em; color: {ui.THEME["text_light"]};'>Source Volume</div>
+                        <div style='font-weight: 600; font-size: 1.1em;'>{len(timeline)} Articles</div>
+                    </div>
+                </div>
+            """,
+            cta_text="View Full Analysis",
+            cta_url="#"
         )
 
-        st.write("")  # Spacer
-        st.info("Analysis based on 6-month sentiment timeline and recent news analysis.")
-
     # --- Sentiment Timeline Chart ---
-    st.markdown("---")
-    st.subheader("📊 Sentiment Timeline")
+    ui.spacer(20)
+    st.markdown("### 📊 Sentiment Trajectory")
 
     # Create timeline chart
     dates = [item["date"] for item in timeline]
@@ -140,39 +209,54 @@ def _display_demo_sentiment(symbol: str) -> None:
             y=scores,
             mode="lines+markers",
             name="Sentiment Score",
-            line=dict(color="#00ff88", width=3),
-            marker=dict(size=8),
+            line=dict(color=ui.THEME["accent"], width=3),
+            marker=dict(size=8, color=ui.THEME["primary"]),
+            fill='tozeroy',
+            fillcolor=f"{ui.THEME['accent']}20" # 20% opacity
         )
     )
     fig_timeline.update_layout(
-        title=f"{company_data['name']} Sentiment Over Time",
         xaxis_title="Date",
         yaxis_title="Sentiment Score",
         yaxis=dict(range=[0, 1]),
         height=350,
         showlegend=False,
+        template=ui.get_plotly_template()
     )
     st.plotly_chart(fig_timeline, use_container_width=True)
 
     # --- News Feed ---
-    st.markdown("---")
-    st.subheader("📰 News Feed & Sentiment")
+    ui.spacer(20)
+    st.markdown("### 📰 Intel Feed")
 
     for item in timeline:
         score = item["sentiment_score"]
         if score > 0.7:
-            sentiment_label = "🟢 POSITIVE"
+            badge = ui.status_badge("active") # Positive
+            border_color = "#10B981"
         elif score < 0.4:
-            sentiment_label = "🔴 NEGATIVE"
+            badge = ui.status_badge("hero") # Negative
+            border_color = "#EF4444"
         else:
-            sentiment_label = "🟡 NEUTRAL"
+            badge = ui.status_badge("pending") # Neutral
+            border_color = "#94A3B8"
 
-        with st.expander(f"{sentiment_label} | {item['headline']}"):
-            st.markdown(f"**Date:** {item['date']}")
-            st.markdown(f"**Sentiment Score:** {score:.2f}")
-            st.markdown(
-                f"**Analysis:** This headline suggests {sentiment_label.split()[1].lower()} market sentiment for {symbol}."
-            )
+        st.markdown(
+            f"""
+            <div style='background-color: {ui.THEME["surface"]}; border-left: 4px solid {border_color}; 
+                        padding: 1.25rem; border-radius: 6px; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);'>
+                <div style='display: flex; justify-content: space-between; align-items: start;'>
+                    <div style='font-weight: 600; font-size: 1.05rem; margin-bottom: 0.5rem;'>{item['headline']}</div>
+                    <div>{badge}</div>
+                </div>
+                <div style='display: flex; gap: 15px; font-size: 0.85rem; color: {ui.THEME["text_light"]};'>
+                    <span>📅 {item['date']}</span>
+                    <span>🤖 Score: {score:.2f}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 
 def render() -> None:

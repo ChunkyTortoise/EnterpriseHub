@@ -1201,13 +1201,25 @@ def _render_attribution_modeling() -> None:
     st.subheader("💡 Model Explanation")
 
     explanations = {
-        "First-Touch": "100% credit to the first touchpoint in the customer journey",
-        "Last-Touch": "100% credit to the last touchpoint before conversion",
-        "Linear": "Equal credit distributed across all touchpoints",
-        "Time-Decay": "More credit to recent touchpoints, less to earlier ones",
+        "First-Touch": (
+            "Allocates 100% of conversion credit to the initial customer touchpoint. "
+            "Ideal for identifying top-of-funnel awareness drivers and high-impact acquisition channels."
+        ),
+        "Last-Touch": (
+            "Assigns 100% credit to the final interaction prior to conversion. "
+            "Critical for analyzing bottom-of-funnel efficacy and direct conversion triggers."
+        ),
+        "Linear": (
+            "Distributes conversion credit equally across all identified touchpoints in the journey. "
+            "Provides a balanced overview of multi-channel engagement patterns."
+        ),
+        "Time-Decay": (
+            "Heuristically weighs credit towards touchpoints occurring closer to the conversion event. "
+            "Reflects the increasing influence of interactions as the customer nears the transaction."
+        ),
         "Position-Based": (
-            "40% to first touch, 40% to last touch, "
-            "20% distributed evenly among middle touchpoints (U-shaped)"
+            "U-Shaped attribution model: Allocates 40% credit each to the first and last touchpoints, "
+            "with 20% distributed across intermediate interactions. Balances acquisition and conversion significance."
         ),
     }
 
