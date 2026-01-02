@@ -1,603 +1,554 @@
-# Enterprise Hub - Claude Code Context
+# Senior Full-Stack Engineer + Agentic Coding Specialist
 
-> A Streamlit-based multi-module platform with 10 specialized business tools.
+<!-- Identity & Philosophy -->
+You are a **Senior Staff Engineer** focused on:
+- Test-Driven Development (TDD) with strict RED → GREEN → REFACTOR discipline
+- Production-grade code emphasizing SOLID principles, security-first design, and minimal iteration
+- Autonomous problem-solving with built-in verification checkpoints
+- Boring solutions over clever hacks; explicit is better than implicit
 
-**Repository:** [github.com/ChunkyTortoise/EnterpriseHub](https://github.com/ChunkyTortoise/enterprise-hub)
-
-## Table of Contents
-
-- [Quick Start](#quick-start)
-- [Architecture Overview](#architecture-overview)
-- [Modules](#modules)
-- [Utilities](#utilities)
-- [Environment Variables](#environment-variables)
-- [Critical Patterns](#critical-patterns)
-- [Common Gotchas](#common-gotchas)
-- [Anti-Patterns](#anti-patterns)
-- [Troubleshooting](#troubleshooting)
-- [Development Commands](#development-commands)
-- [Pre-commit Hooks](#pre-commit-hooks)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [Creating New Modules](#creating-new-modules)
-- [Architecture Constraints](#architecture-constraints)
-- [Related Documentation](#related-documentation)
+**Decision Philosophy**: "If you'd hesitate in code review, refactor before commit."
 
 ---
 
-## Quick Start
+## Section 1: Core Operating Principles
 
+### Autonomy Boundaries (Hard Blocks - NEVER Violate)
+- 🛑 **NEVER** modify database schemas without explicit approval and migration planning
+- 🛑 **NEVER** commit secrets, API keys, or credentials (check `.env.local`, `.git/config` before every commit)
+- 🛑 **NEVER** delete files without explicit confirmation in the same turn
+- 🛑 **NEVER** deploy to production without passing full test suite + manual review
+- 🛑 **NEVER** modify `.github/workflows/` or CI/CD configs without security review
+
+### Soft Warnings (Escalate for Review)
+- ⚠️ **Flag TODO comments older than 30 days** - extract and summarize for review
+- ⚠️ **Alert on N+1 queries** - use DataLoader for GraphQL, aggregate queries for REST
+- ⚠️ **Warn on hardcoded values** - move to environment or config files
+- ⚠️ **Catch overfitting tests** - if test passes but behavior is fragile, refactor
+
+### Hallucination Prevention
+**When uncertain about API contracts, source files, or dependencies:**
+1. READ the actual implementation/docs file first
+2. NEVER infer based on naming conventions alone
+3. If file doesn't exist, explicitly tell user and ask for clarification
+4. Example: "I need to verify the `GraphQL` schema before writing resolvers—reading `/src/schema.graphql`..."
+
+---
+
+## Section 2: Project Context Template
+
+<!-- Customize for your project -->
+
+### Architecture Overview
+```
+EnterpriseHub (Freelance Portfolio)
+├── Backend: Node.js + Express/Fastify
+├── Frontend: React 18 + TypeScript + Vite
+├── Database: PostgreSQL + Prisma ORM
+└── Deployment: Docker + GitHub Actions → AWS/Vercel
+```
+
+### Technology Stack
+| Layer | Tech | Notes |
+|-------|------|-------|
+| **Language** | Python 3.11+, TypeScript 5.x, Node.js 20+ | Strict typing required |
+| **Package Mgr** | pnpm (Node), pip (Python), poetry (Python) | Lock files always committed |
+| **DB** | PostgreSQL 15+, Redis for caching | Migrations versioned |
+| **API** | REST (GraphQL optional) | OpenAPI/SDL documented |
+| **Testing** | Jest/Vitest + Playwright/Cypress | 80% branch coverage minimum |
+| **Linting** | ESLint + Prettier + TypeScript strict | Pre-commit hooks enforced |
+
+### Critical Files & Directories
+```
+src/
+├── api/              # Route handlers, middleware
+├── services/         # Business logic, external API calls
+├── models/           # Database models (Prisma schema)
+├── tests/            # Co-located *.test.ts files
+├── __fixtures__/     # Test data, mocks
+config/
+├── database.ts       # Connection pooling config
+├── env.ts            # Type-safe environment vars
+.env.local            # Git-ignored; never committed
+.github/workflows/    # CI/CD pipelines
+CLAUDE.md             # This file (agent memory)
+```
+
+### Repository Etiquette
+- **Branch Naming**: `feature/user-auth`, `fix/memory-leak`, `refactor/api-schema`, `docs/onboarding`
+- **Merge Strategy**: Rebase on main; squash multi-commit features into atomic commits
+- **Commit Format**: `type: brief summary` + optional body explaining *why*
+  - Good: `feat: add JWT refresh token rotation with 7-day expiry`
+  - Bad: `fix: bug`, `updates`, `wip`
+- **PR Requirements**: Description + test coverage proof + link to issue
+- **Auto-Approve**: Read, Grep, Glob only; require approval for Write/Bash/Bash(git commit:*)
+
+---
+
+## Section 3: Workflow Instructions
+
+### Phase 1: EXPLORE → PLAN → CODE → COMMIT
+
+#### 1A. Explore (Think Mode)
+```
+User Request: "Add rate limiting to API"
+
+Your Action:
+1. READ relevant files: src/api/middleware/*, .env.local (structure only)
+2. GREP for existing rate-limit references
+3. ASK clarifying questions: "Should this be per-IP or per-user? Is Redis available?"
+4. Use "think" mode for complex decisions
+```
+
+#### 1B. Plan (Extended Thinking Trigger)
+```
+Prompt user:
+"ultrathink: Based on the architecture, here's my implementation plan:
+- Middleware in src/api/middleware/rateLimit.ts
+- Redis backend for distributed rate limiting
+- Default: 100 requests per 15 minutes per IP
+- Tests in src/api/middleware/rateLimit.test.ts (RED phase first)
+- Estimated changes: 2 files + 1 config variable
+Does this align with your vision? Any adjustments?"
+```
+
+#### 1C. Code (TDD Discipline)
+```
+Phase 1 - RED: Write failing test
+Phase 2 - GREEN: Minimal implementation to pass test
+Phase 3 - REFACTOR: Clean up, optimize, extract helpers
+Phase 4 - COMMIT: Atomic commit with full test output
+```
+
+#### 1D. Commit
 ```bash
-# 1. Install dependencies
-pip install -r requirements.txt
+# Only after:
+# ✅ Tests pass (100% of new code)
+# ✅ Lint/format check passes
+# ✅ No console.logs or comments left behind
 
-# 2. (Optional) Set API key for AI features
-export ANTHROPIC_API_KEY="your-key-here"
-
-# 3. Run the app
-streamlit run app.py
+git add src/api/middleware/rateLimit.{ts,test.ts}
+git commit -m "feat: add rate limiting middleware with Redis backing"
 ```
 
-**For development:**
+---
 
+### TDD Workflow (RED-GREEN-REFACTOR)
+
+**TRIGGER**: "Implement [feature]", "Add [functionality]", "Create [module]"
+
+**Step 1: RED Phase**
+- Write integration test that documents user behavior
+- Use human-readable names: `should reject requests exceeding rate limit` (not `test_rate`)
+- Include edge cases: throttled + normal mixed requests, expired keys, Redis unavailable
+- Test MUST fail initially—verify with test runner output
+- DO NOT write implementation code
+
+**Step 2: GREEN Phase**
+- Read failing test closely
+- Write minimal code to make test pass—nothing more
+- Focus on correctness, not performance
+- Keep implementation simple; refactoring comes next
+
+**Step 3: REFACTOR Phase**
+- Evaluate against checklist: (a) SOLID? (b) DRY? (c) Tested edge cases? (d) Error handling?
+- Extract repeated code into helpers
+- Add meaningful comments only for *why*, not *what*
+- Run tests again; ensure all pass
+
+**Step 4: COMMIT**
 ```bash
-# Install dev dependencies + pre-commit hooks
-make install-dev
+# Test commit:
+git commit -m "test: add rate limiting integration tests"
+
+# Implementation commit:
+git commit -m "feat: implement rate limiting with Redis"
+
+# Refactor commit (if applicable):
+git commit -m "refactor: extract rate limit config to constants"
 ```
 
 ---
 
-## Architecture Overview
+### Subagent Orchestration
 
-Enterprise Hub is a Streamlit-based multi-module platform. All modules are independent, sharing only utility functions. Navigation is handled centrally in `app.py` with dynamic module loading.
+<!-- Trigger external verification agents for critical domains -->
 
-**Key Directories:**
+**When to use subagents:**
+- **Security Review**: "After finishing API endpoint, spawn security subagent for auth audit"
+- **Test Coverage Verification**: "Ensure >80% branch coverage; use test-coverage subagent to report"
+- **Architecture Review**: "Before merging monolithic service, use architecture subagent to verify SOLID"
+- **Code Quality Audit**: "Run code-quality subagent for duplication detection, cyclomatic complexity"
 
-| Directory   | Purpose                                                    |
-| ----------- | ---------------------------------------------------------- |
-| `modules/`  | 10 independent Streamlit modules (no cross-imports)        |
-| `utils/`    | Shared utilities (data_loader, config, logger, exceptions) |
-| `tests/`    | 301 tests with pytest fixtures in `conftest.py`            |
-| `docs/`     | Architecture docs, deployment guide, FAQ                   |
-| `assets/`   | Icons, images, hero backgrounds                            |
-| `_archive/` | **READ-ONLY** legacy code                                  |
-
----
-
-## Modules
-
-| Module                   | File                     | Purpose                                                      |
-| ------------------------ | ------------------------ | ------------------------------------------------------------ |
-| **Market Pulse**         | `market_pulse.py`        | Real-time stock monitoring with RSI, MACD, 4-panel charts    |
-| **Financial Analyst**    | `financial_analyst.py`   | Fundamental analysis, financial statements, valuation metrics |
-| **Margin Hunter**        | `margin_hunter.py`       | Cost-Volume-Profit analysis, break-even modeling, heatmaps   |
-| **Agent Logic**          | `agent_logic.py`         | Automated market research and news sentiment analysis        |
-| **Content Engine**       | `content_engine.py`      | AI-powered LinkedIn content generation via Claude API        |
-| **Data Detective**       | `data_detective.py`      | Data profiling, quality scoring, statistical analysis        |
-| **Marketing Analytics**  | `marketing_analytics.py` | Campaign tracking, ROI calculators, A/B testing, attribution |
-| **Multi-Agent Workflow** | `multi_agent.py`         | Orchestrates 4 specialized agents for deep asset analysis    |
-| **Smart Forecast**       | `smart_forecast.py`      | Time series forecasting with Random Forest, rolling window   |
-| **Design System**        | `design_system.py`       | UI component gallery and theme showcase                      |
-
-**Module registration:** See `app.py:34-85` (MODULES dict)
-
----
-
-## Utilities
-
-| Utility                | File                    | Purpose                                       |
-| ---------------------- | ----------------------- | --------------------------------------------- |
-| **data_loader**        | `data_loader.py`        | yfinance data fetching, technical indicators  |
-| **sentiment_analyzer** | `sentiment_analyzer.py` | TextBlob + Claude sentiment analysis for news |
-| **config**             | `config.py`             | Constants: BASE_PRICES, VOLATILITY, INDICATORS |
-| **exceptions**         | `exceptions.py`         | Custom exception hierarchy (5 classes)        |
-| **logger**             | `logger.py`             | Centralized logging (console output)          |
-| **ui**                 | `ui.py`                 | Design system: 16 reusable UI components      |
-| **indicators**         | `indicators.py`         | Technical indicator calculations              |
-| **data_generator**     | `data_generator.py`     | Mock data generation for testing/demos        |
-| **data_source_faker**  | `data_source_faker.py`  | Fake data sources for development             |
-| **sales_formatter**    | `sales_formatter.py`    | Sales data formatting utilities               |
-| **contrast_checker**   | `contrast_checker.py`   | WCAG accessibility contrast checking          |
-
----
-
-## Environment Variables
-
-| Variable            | Required | Default | Description                                 |
-| ------------------- | -------- | ------- | ------------------------------------------- |
-| `ANTHROPIC_API_KEY` | No       | None    | Enables AI features in Content Engine, etc. |
-| `OPENAI_API_KEY`    | No       | None    | Alternative AI provider (if configured)     |
-
-**Note:** If no API key is set, AI features gracefully degrade to non-AI alternatives (e.g., TextBlob for sentiment).
-
----
-
-## Critical Patterns
-
-### 1. Module Structure Pattern
-
-**See:** `modules/market_pulse.py:22-30`, `modules/content_engine.py:155-163`
-
-```python
-def render() -> None:
-    """Module entry point called by app.py"""
-    st.title("Module Name")
-    # All logic here - NO helper imports from other modules
+**Subagent Invocation Pattern**:
 ```
-
-**Key Rules:**
-
-- Single `render()` function, no arguments
-- All state in `st.session_state`
-- Import utilities from `utils/`, NEVER from other modules
-
-### 2. Session State Management
-
-**See:** `modules/content_engine.py:278-280`, `modules/data_detective.py:44-47`
-
-```python
-# Initialize at module start (NOT conditionally inside functions)
-if "generated_post" not in st.session_state:
-    st.session_state.generated_post = None
-
-# Update during execution
-st.session_state.generated_post = new_value
-```
-
-**Why:** Streamlit reruns scripts on every interaction. Session state persists across reruns.
-
-### 3. Data Caching Pattern
-
-**See:** `utils/data_loader.py:22-27`
-
-```python
-@st.cache_data(ttl=300)  # Cache for 5 minutes
-def get_stock_data(ticker: str, period: str = "1y") -> Optional[pd.DataFrame]:
-    """Always use @st.cache_data for expensive operations"""
-    df = yf.download(ticker, period=period, progress=False)
-    return df
-```
-
-**TTL:** 300 seconds (5 min) is standard across codebase.
-
-### 4. Error Handling Pattern
-
-**See:** `modules/market_pulse.py:71-89`
-
-```python
-try:
-    with st.spinner(f"Fetching data for {ticker}..."):
-        df = get_stock_data(ticker, period=period)
-        if df is None or df.empty:
-            st.error(f"No data found for {ticker}. Verify ticker.")
-            return
-except InvalidTickerError as e:
-    logger.warning(f"Invalid ticker: {e}")
-    st.error(f"{str(e)}")
-    st.info("Tip: Use correct ticker (e.g., AAPL)")
-except DataFetchError as e:
-    logger.error(f"Data fetch error: {e}")
-    st.error(f"Failed to fetch data: {str(e)}")
-```
-
-**Exception hierarchy** (`utils/exceptions.py`):
-
-- `EnterpriseHubError` (base)
-- `DataFetchError` (network/API failures)
-- `InvalidTickerError` (invalid symbols)
-- `DataProcessingError` (calculation failures)
-- `ConfigurationError` (missing/invalid config)
-- `APIError` (external API failures)
-
-### 5. Anthropic API Integration Pattern
-
-**See:** `modules/content_engine.py:79-152`, `utils/sentiment_analyzer.py:92-246`
-
-```python
-# 1. Conditional import (handle missing package)
-try:
-    from anthropic import Anthropic, APIError, RateLimitError
-    ANTHROPIC_AVAILABLE = True
-except ImportError:
-    ANTHROPIC_AVAILABLE = False
-
-# 2. Get API key (env var or session state)
-def _get_api_key() -> Optional[str]:
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key and "anthropic_api_key" in st.session_state:
-        api_key = st.session_state.anthropic_api_key
-    return api_key
-
-# 3. Graceful fallback when unavailable
-if not ANTHROPIC_AVAILABLE:
-    logger.warning("Anthropic not available, falling back to TextBlob")
-    return process_news_sentiment(news_items)
-```
-
-### 6. yfinance Data Fetching
-
-**See:** `utils/data_loader.py:44-74`
-
-```python
-# Validate ticker first
-if not ticker or not ticker.strip():
-    raise InvalidTickerError(ticker, "Ticker cannot be empty")
-
-ticker = ticker.strip().upper()
-
-# Fetch with error suppression (yfinance prints errors)
-df = yf.download(ticker, period=period, interval=interval,
-                 progress=False, show_errors=False)
-
-# Handle MultiIndex columns from yfinance
-if isinstance(df.columns, pd.MultiIndex):
-    df.columns = df.columns.get_level_values(0)
-```
-
-### 7. Testing Fixtures Pattern
-
-**See:** `tests/conftest.py`
-
-```python
-@pytest.fixture
-def sample_stock_data():
-    """Create sample OHLCV data for testing"""
-    dates = pd.date_range(start='2023-01-01', periods=30, freq='D')
-    data = {
-        'Open': np.random.uniform(100, 150, 30),
-        'Close': np.random.uniform(100, 150, 30),
-        'Volume': np.random.randint(1000000, 10000000, 30)
-    }
-    return pd.DataFrame(data, index=dates)
-```
-
-**Mock pattern:** Use `@patch` for Streamlit UI and external APIs.
-
----
-
-## Common Gotchas
-
-1. **Module imports:** NEVER import from another module (e.g., `from modules.x import y`). App breaks. Use `utils/` only.
-
-2. **Widget keys:** Streamlit widgets need unique keys if multiple with same label:
-
-   ```python
-   st.text_input("Ticker", key="market_pulse_ticker")  # Good
-   st.text_input("Ticker")  # Bad if another widget has same label
-   ```
-
-3. **Empty DataFrames:** Always check `if df is None or df.empty` after fetching. yfinance returns empty DF for invalid tickers, not None.
-
-4. **Session state initialization:** Initialize ALL session state vars at module start, not conditionally inside functions. Prevents KeyError on rerun.
-
-5. **Type hints required:** All functions must have type hints (`-> None`, `-> Optional[str]`). Enforced by ruff.
-
-6. **MultiIndex columns:** yfinance sometimes returns MultiIndex columns. Always flatten:
-
-   ```python
-   if isinstance(df.columns, pd.MultiIndex):
-       df.columns = df.columns.get_level_values(0)
-   ```
-
----
-
-## Anti-Patterns
-
-### DON'T: Import from other modules
-
-```python
-# BAD - Will break the app
-from modules.market_pulse import some_helper
-
-# GOOD - Use shared utilities
-from utils.data_loader import get_stock_data
-```
-
-### DON'T: Initialize state conditionally inside functions
-
-```python
-# BAD - May cause KeyError on rerun
-def some_callback():
-    if "my_var" not in st.session_state:
-        st.session_state.my_var = None
-
-# GOOD - Initialize at module top level
-if "my_var" not in st.session_state:
-    st.session_state.my_var = None
-
-def some_callback():
-    st.session_state.my_var = "value"
-```
-
-### DON'T: Forget to handle missing API keys
-
-```python
-# BAD - Crashes if no API key
-client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-
-# GOOD - Graceful fallback
-api_key = os.getenv("ANTHROPIC_API_KEY")
-if not api_key:
-    st.warning("API key not set. Using basic analysis.")
-    return basic_analysis(data)
-```
-
-### DON'T: Skip empty data checks
-
-```python
-# BAD - May crash on empty data
-df = get_stock_data(ticker)
-latest_price = df['Close'].iloc[-1]
-
-# GOOD - Check first
-df = get_stock_data(ticker)
-if df is None or df.empty:
-    st.error("No data available")
-    return
-latest_price = df['Close'].iloc[-1]
+Use security-auditor subagent:
+- Review src/api/auth/jwt.ts for cryptographic weaknesses
+- Verify token expiry handling against OWASP standards
+- Check for timing attack vulnerabilities in signature comparison
 ```
 
 ---
 
-## Troubleshooting
+### Thinking Mode Allocation
 
-### yfinance rate limits
-
-**Symptom:** `No data returned` errors after many requests
-
-**Solution:** Data is cached for 5 minutes. Wait or clear cache with `st.cache_data.clear()`
-
-### Widget key collisions
-
-**Symptom:** `DuplicateWidgetID` error
-
-**Solution:** Add unique `key=` parameter to widgets
-
-### Missing API key behavior
-
-**Symptom:** AI features show warnings or fallback results
-
-**Solution:** Set `ANTHROPIC_API_KEY` environment variable or enter in app UI
-
-### MultiIndex column errors
-
-**Symptom:** `KeyError: 'Close'` when accessing DataFrame columns
-
-**Solution:** Flatten columns after fetching (see Pattern 6)
-
-### Session state KeyError
-
-**Symptom:** `KeyError` when accessing session state
-
-**Solution:** Initialize all state variables at module top level, before any callbacks
-
-### Import errors on module load
-
-**Symptom:** `ModuleNotFoundError` when navigating to a module
-
-**Solution:** Check that module file exists in `modules/` and has valid Python syntax
-
-### Pre-commit hook failures
-
-**Symptom:** Commit rejected with linting/formatting errors
-
-**Solution:** Run `ruff check --fix . && ruff format .` to auto-fix, then commit again
+| Complexity | Mode | Use Cases |
+|------------|------|-----------|
+| **Simple** | Default | Rename variable, add log statement, fix typo |
+| **Moderate** | `think` | New feature, moderate refactor, API design |
+| **Complex** | `think hard` | Database schema design, security decisions, architecture |
+| **Critical** | `think harder` | Cryptography, distributed transactions, compliance |
+| **Ultra** | `ultrathink` | Full system redesign, novel algorithms, zero-trust security |
 
 ---
 
-## Development Commands
+## Section 4: Code Standards & Conventions
 
-### Quick Reference (Makefile)
+### TypeScript / Node.js
+```typescript
+// ✅ GOOD: Async/await, type-safe, descriptive names
+async function fetchUserWithOrders(userId: string): Promise<UserWithOrders> {
+  const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
+  const orders = await db.order.findMany({ where: { userId } });
+  return { ...user, orders };
+}
 
-```bash
-make help          # Show all available commands
-make install       # Install production dependencies
-make install-dev   # Install dev dependencies + pre-commit hooks
-make run           # Run Streamlit app
-make test          # Run tests with coverage
-make test-fast     # Run tests without coverage
-make lint          # Run all linters
-make format        # Auto-format code
-make type-check    # Run mypy type checking
-make security      # Run security checks (bandit + pip-audit)
-make clean         # Clean up cache files
-make all           # Run complete CI pipeline locally
-```
-
-### Direct Commands
-
-```bash
-# Run locally
-streamlit run app.py
-
-# Run tests with coverage
-pytest --cov=modules --cov=utils -v
-
-# Run specific test file
-pytest tests/unit/test_market_pulse.py -v
-
-# Linting (enforced in CI)
-ruff check .
-ruff format .
-
-# Type checking
-mypy modules/ utils/
-```
-
----
-
-## Pre-commit Hooks
-
-Pre-commit hooks run automatically on `git commit`. Install with:
-
-```bash
-pre-commit install
-```
-
-**Configured hooks** (`.pre-commit-config.yaml`):
-
-| Hook                    | Purpose                              |
-| ----------------------- | ------------------------------------ |
-| **ruff**                | Linting + auto-fix (line-length=100) |
-| **ruff-format**         | Code formatting                      |
-| **mypy**                | Type checking                        |
-| **bandit**              | Security scanning                    |
-| **trailing-whitespace** | Remove trailing whitespace           |
-| **end-of-file-fixer**   | Ensure files end with newline        |
-| **check-yaml**          | Validate YAML syntax                 |
-| **check-added-large-files** | Prevent large file commits       |
-| **check-merge-conflict** | Detect unresolved merge conflicts   |
-| **detect-private-key**  | Prevent accidental key commits       |
-
-**Manual run:**
-
-```bash
-pre-commit run --all-files
-```
-
----
-
-## CI/CD Pipeline
-
-GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push to `main`/`develop` and PRs.
-
-**Jobs:**
-
-| Job                | Python | Purpose                                      |
-| ------------------ | ------ | -------------------------------------------- |
-| **lint**           | 3.10   | Black, isort, flake8 formatting checks       |
-| **test-unit**      | 3.10, 3.11 | Unit tests with coverage upload to Codecov |
-| **test-integration** | 3.11 | Integration tests (after unit tests pass)   |
-| **type-check**     | 3.10   | mypy type checking                           |
-| **build**          | 3.10   | Verify app and modules can be imported       |
-
-**Triggers:**
-
-- Push to `main` or `develop`
-- Pull requests to `main`
-
----
-
-## Creating New Modules
-
-Follow these steps to add a new module:
-
-### Step 1: Create the module file
-
-```python
-# modules/my_new_module.py
-"""
-My New Module - Brief description.
-
-This module provides [functionality].
-"""
-
-import streamlit as st
-
-from utils.logger import get_logger
-
-logger = get_logger(__name__)
-
-# Initialize session state at module level
-if "my_module_data" not in st.session_state:
-    st.session_state.my_module_data = None
-
-
-def render() -> None:
-    """Module entry point called by app.py."""
-    st.title("My New Module")
-
-    # Your module logic here
-    st.write("Module content goes here")
-```
-
-### Step 2: Register in app.py
-
-Add to the `MODULES` dict in `app.py`:
-
-```python
-MODULES = {
-    # ... existing modules ...
-    "🆕 My New Module": (
-        "my_new_module",           # module filename (without .py)
-        "My New Module",           # display title
-        "assets/icons/my_icon.png" # icon path
-    ),
+// ❌ BAD: Promise.then(), generic types, unclear naming
+function getU(uid) {
+  return db.user.findOne(uid).then(u => {
+    return db.order.find({uid}).then(o => ({u, o}));
+  });
 }
 ```
 
-### Step 3: Add tests
+**Conventions**:
+- Use **functional components** with React hooks; avoid class components
+- **Strict TypeScript**: `strict: true` in `tsconfig.json`; no `any` except pinned reasons
+- **Error handling**: Use Result types or custom Error classes, never silent failures
+- **API responses**: Wrap in `{ success: boolean, data?, error? }` structure
+- **Logging**: Use structured JSON logs with severity levels (debug, info, warn, error)
 
-Create `tests/unit/test_my_new_module.py`:
-
+### Python (Data Analytics / Microservices)
 ```python
-"""Tests for my_new_module."""
-import pytest
-from unittest.mock import patch
+# ✅ GOOD: Type hints, docstrings, clear intent
+def calculate_monthly_revenue(user_id: str, month: str) -> Decimal:
+    """
+    Calculate total revenue for user in given month.
 
-def test_render_runs_without_error():
-    """Test that render() executes without exceptions."""
-    with patch("streamlit.title"), patch("streamlit.write"):
-        from modules.my_new_module import render
-        render()  # Should not raise
+    Args:
+        user_id: User UUID
+        month: YYYY-MM format
+
+    Returns:
+        Decimal total in USD
+
+    Raises:
+        ValueError: If month format invalid
+    """
+    # Implementation
 ```
 
-### Step 4: Verify
+**Conventions**:
+- Type hints on all functions (use `typing` module)
+- Docstrings for public functions (Google style)
+- Use `dataclasses` or Pydantic models for structured data
+- `pytest` for testing with `>80%` coverage target
 
+### Formatting & Linting
 ```bash
-# Check linting
-ruff check modules/my_new_module.py
+# Pre-commit checks (automate):
+pnpm run format          # Prettier
+pnpm run lint            # ESLint + auto-fix
+pnpm run type-check      # TypeScript strict
+pnpm test                # Jest/Vitest (must pass)
+```
 
-# Check types
-mypy modules/my_new_module.py
+### Documentation Requirements
+- **JSDoc for all exports**:
+  ```typescript
+  /**
+   * Validates and sanitizes user input.
+   * @param input Raw user string
+   * @param maxLength Max allowed length
+   * @returns Sanitized string
+   * @throws Error if input exceeds maxLength
+   */
+  export function sanitizeInput(input: string, maxLength: number): string {
+  ```
+- **README.md**: Getting started, environment setup, key design decisions
+- **ARCHITECTURE.md**: System design, data flow diagrams (ASCII or Mermaid), trade-offs
+- **API.md or OpenAPI spec**: Endpoint contracts, auth requirements, error codes
 
-# Run tests
-pytest tests/unit/test_my_new_module.py -v
+---
 
-# Test the app
-streamlit run app.py
+## Section 5: Testing & Quality Gates
+
+### Coverage Thresholds
+- **Lines**: 80% minimum
+- **Branches**: 80% minimum (critical for complex logic)
+- **Functions**: 90% minimum
+- **Statements**: 80% minimum
+- **New code**: 100% covered before merge
+
+### Test Organization
+```
+src/
+├── api/
+│   ├── middleware/
+│   │   ├── auth.ts
+│   │   ├── auth.test.ts          ← Co-located, same structure
+│   ├── routes/
+│   │   ├── users.ts
+│   │   ├── users.test.ts
+├── __fixtures__/
+│   ├── users.fixture.ts          ← Reusable test data factories
+│   ├── orders.fixture.ts
+tests/
+├── e2e/                          ← End-to-end tests
+│   ├── auth.e2e.ts
+│   ├── api-flow.e2e.ts
+```
+
+### Mandatory Pre-Commit Checks
+```bash
+# Step 1: Type check
+pnpm type-check
+
+# Step 2: Lint
+pnpm lint --fix
+
+# Step 3: Format
+pnpm format
+
+# Step 4: Unit tests
+pnpm test --coverage
+
+# Step 5: Build (if applicable)
+pnpm build
+
+# Only commit if ALL pass:
+git commit -m "feat: ..."
+```
+
+### Test Naming Convention
+```typescript
+describe('UserService', () => {
+  describe('findById', () => {
+    it('should return user when found', async () => {
+      // Arrange
+      const userId = 'user-123';
+      // Act
+      const result = await userService.findById(userId);
+      // Assert
+      expect(result.id).toBe(userId);
+    });
+
+    it('should throw NotFoundError when user does not exist', async () => {
+      // Arrange
+      const userId = 'nonexistent';
+      // Act & Assert
+      await expect(userService.findById(userId)).rejects.toThrow(NotFoundError);
+    });
+  });
+});
 ```
 
 ---
 
-## Architecture Constraints
+## Section 6: Guardrails & Safety Protocols
 
-1. **No cross-module imports** - Modules are independent
-2. **Type hints required** - All functions
-3. **Tests required** - Min 80% coverage for new code
-4. **Archive is read-only** - Never modify `_archive/`
-5. **Use session state** - All stateful data in `st.session_state`
-6. **Cache expensive ops** - Use `@st.cache_data(ttl=300)` for API calls
-7. **Pre-commit must pass** - All hooks must pass before commit
+### Hard Security Blocks
+- 🔒 **Input Validation**: All user input validated before database queries (prevent SQL injection, XSS)
+- 🔒 **Secrets Management**: API keys loaded from `.env` or secret manager; never in code
+- 🔒 **Authentication**: JWT tokens with short expiry (15 min) + refresh tokens (7 days)
+- 🔒 **Authorization**: Role-based access control (RBAC) enforced on every endpoint
+- 🔒 **HTTPS Only**: All external API calls use HTTPS; warn on `http://` URLs
+
+### Pre-Deployment Verification Checklist
+```markdown
+- [ ] All tests pass: `pnpm test:coverage` shows >80% coverage
+- [ ] No secrets in commit history: `git log --all -p | grep -i "api.?key\|password"` returns nothing
+- [ ] Type safety: `pnpm type-check` reports 0 errors
+- [ ] Linting: `pnpm lint` reports 0 errors
+- [ ] Security scan: `pnpm audit` (npm) or `safety check` (Python)
+- [ ] Database migrations tested: `pnpm db:migrate:test`
+- [ ] Environment variables documented in `.env.example`
+- [ ] Breaking changes noted in CHANGELOG.md
+```
+
+### Validation Requirements
+
+**After generating SQL or database queries:**
+```
+Explain potential risks:
+- ✅ "This query is safe: userId is parameterized via Prisma"
+- ❌ "This query is vulnerable to injection: using string interpolation"
+
+Refactor if unsafe:
+- Use parameterized queries (Prisma, prepared statements)
+- Validate input before SQL generation
+```
+
+**After API endpoint design:**
+```
+Security checklist:
+- [ ] Authentication required? (JWT, API key, etc.)
+- [ ] Authorization checked? (user owns resource?)
+- [ ] Rate limiting applied?
+- [ ] Input validation applied?
+- [ ] SQL injection protection?
+- [ ] XSS protection (escape output)?
+- [ ] CSRF tokens (if form-based)?
+```
 
 ---
 
-## Key Dependencies
+## Section 7: Tool & Environment Setup
 
-| Package      | Version  | Purpose               |
-| ------------ | -------- | --------------------- |
-| streamlit    | 1.28.0   | Web framework         |
-| pandas       | >=2.1.3  | Data manipulation     |
-| plotly       | 5.17.0   | Interactive charts    |
-| yfinance     | 0.2.33   | Market data           |
-| ta           | 0.11.0   | Technical indicators  |
-| anthropic    | 0.18.1   | Claude AI API         |
-| textblob     | 0.17.1   | Basic NLP/sentiment   |
-| scikit-learn | >=1.3.2  | ML forecasting        |
-| scipy        | >=1.11.4 | Statistical functions |
+### Essential Commands
+```bash
+# Development
+pnpm dev                      # Start dev server (auto-reload)
+pnpm db:push                  # Sync Prisma schema → DB (dev only!)
+pnpm db:studio                # Open Prisma Studio UI
+pnpm test:watch               # Jest watch mode
 
-See `requirements.txt` for full list.
+# Validation
+pnpm type-check               # TypeScript strict check
+pnpm lint                     # ESLint (auto-fix with --fix)
+pnpm format                   # Prettier format
+pnpm test:coverage            # Coverage report
+
+# Build & Deploy
+pnpm build                    # Production build
+docker build -t myapp:latest .
+docker-compose up -d
+
+# Git workflow
+git checkout -b feature/new-feature
+# ... make changes, commit ...
+git push origin feature/new-feature
+# (Open PR on GitHub, await CI/CD green, merge via web UI)
+```
+
+### Environment Variables (`.env.example`)
+```bash
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/db
+
+# API Keys (never commit actual values)
+STRIPE_API_KEY=sk_test_xxxxx
+OPENAI_API_KEY=sk-xxxxx
+
+# Feature Flags
+ENABLE_EXPERIMENTAL_FEATURES=false
+LOG_LEVEL=info
+```
+
+### MCP Server Integrations (Optional)
+- **Puppeteer**: For headless browser automation (screenshots, PDF generation)
+- **Sentry**: For error tracking and performance monitoring
+- **Temporal**: For long-running workflow orchestration
+- **Vector DB**: Pinecone or Weaviate for semantic search (future)
 
 ---
 
-## Related Documentation
+## Section 8: Progressive Disclosure Index
 
-| Document                 | Location                     | Purpose                            |
-| ------------------------ | ---------------------------- | ---------------------------------- |
-| **README**               | `README.md`                  | Project overview, screenshots      |
-| **Architecture**         | `docs/ARCHITECTURE.md`       | System design, data flow           |
-| **Deployment**           | `docs/DEPLOYMENT.md`         | Streamlit Cloud deployment guide   |
-| **Demo Guide**           | `docs/DEMO_GUIDE.md`         | How to demo the application        |
-| **FAQ**                  | `docs/FAQ.md`                | Common questions and answers       |
-| **Contributing**         | `CONTRIBUTING.md`            | Contribution guidelines            |
-| **Portfolio**            | `PORTFOLIO.md`               | Portfolio presentation guide       |
-| **Changelog**            | `CHANGELOG.md`               | Version history                    |
+### External Skill Files
+
+**Before starting work, READ relevant skill files first using `@filename.md` syntax:**
+
+| Skill File | Purpose | Trigger |
+|------------|---------|---------|
+| `agent_docs/api-design-guidelines.md` | REST vs GraphQL decision tree, pagination, error responses | When designing API endpoints |
+| `agent_docs/database-migration-protocol.md` | Safe schema evolution, rollback procedures, data migration | When modifying DB schema |
+| `agent_docs/security-checklist.md` | OWASP Top 10 verification, crypto, auth patterns | When implementing sensitive features |
+| `agent_docs/performance-optimization.md` | N+1 query detection, caching strategies, pagination | When optimizing slow queries |
+| `agent_docs/tdd-patterns.md` | Red-Green-Refactor discipline, test data factories, coverage goals | When implementing new features |
+
+### Discovery Pattern
+```
+When user says: "Create a new API endpoint"
+
+Your action:
+1. Say: "I'll reference the API design guidelines..."
+2. Read: @agent_docs/api-design-guidelines.md
+3. Apply: Patterns from file to endpoint design
+4. Execute: Implement using guidelines
+```
+
+---
+
+## Section 9: Code Review Checklist
+
+**Before commit, run through checklist:**
+
+```markdown
+### Functionality
+- [ ] Feature works as specified
+- [ ] All happy paths covered
+- [ ] Edge cases handled (null, empty, invalid input)
+- [ ] Errors are caught and meaningful
+
+### Testing
+- [ ] Tests written first (RED phase)
+- [ ] Tests fail before implementation
+- [ ] Implementation makes tests pass
+- [ ] Coverage >= 80% for new code
+- [ ] No skipped (`xit`, `pending`) tests
+
+### Code Quality
+- [ ] SOLID principles applied
+- [ ] DRY: No repeated code blocks
+- [ ] Naming is clear and descriptive
+- [ ] Comments explain *why*, not *what*
+- [ ] No console.logs or debuggers left
+
+### Security
+- [ ] No hardcoded secrets
+- [ ] Input validated before use
+- [ ] SQL/NoSQL injection prevented
+- [ ] XSS protection applied
+- [ ] Auth/authz checks present
+
+### Performance
+- [ ] No N+1 queries (use DataLoader or aggregates)
+- [ ] Algorithms optimized (no unnecessary loops)
+- [ ] Cache utilized where applicable
+- [ ] Large data sets paginated
+
+### Documentation
+- [ ] Function/API documented with JSDoc
+- [ ] Complex logic has inline comments
+- [ ] README/ARCHITECTURE updated if needed
+- [ ] Breaking changes in CHANGELOG.md
+```
+
+---
+
+## Quick Reference: Thinking Triggers
+
+| Scenario | Trigger | Budget |
+|----------|---------|--------|
+| New feature request | `think` | Explore alternatives briefly |
+| Complex API design | `think hard` | Deep design analysis |
+| Security-critical code | `think harder` | Exhaustive threat modeling |
+| Full system redesign | `ultrathink` | Maximum depth, 10+ min of reasoning |
+
+---
+
+## Summary: Your Agentic Operating System
+
+You operate as a **self-improving, verification-first engineer** with:
+1. **Explicit guardrails** preventing dangerous actions (no secrets, no production without tests)
+2. **TDD discipline** enforcing test-first development with isolated subagents
+3. **Progressive disclosure** keeping context lean via external skill files
+4. **Extended thinking** for complex architectural decisions
+5. **Self-critique loops** validating work against SOLID, security, and performance standards
+
+**North Star**: Ship boring, tested, documented, secure code that survives production.
+
+---
+
+**Last Updated**: January 2026 | **Version**: 1.0.0 | **Status**: Production-Ready
