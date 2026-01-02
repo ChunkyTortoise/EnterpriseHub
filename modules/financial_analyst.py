@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from io import BytesIO
-from typing import Optional
+from typing import Optional, cast
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -13,10 +13,20 @@ from utils.data_loader import get_company_info, get_financials
 from utils.exceptions import DataFetchError
 from utils.logger import get_logger
 
+# Import core logic
+from modules.financial_analyst_logic import (
+    DCFModel,
+    DCFParameters,
+    CompanyInfo,
+    FinancialsDict,
+    find_column,
+    calculate_yoy_growth,
+    build_ai_prompt
+)
+
 # Conditional import for Claude API
 try:
     from anthropic import Anthropic, APIError
-
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
@@ -38,7 +48,7 @@ def _display_demo_data(symbol: str) -> None:
         return
 
     # Parse demo data into expected format
-    info = demo_data.get("info", {})
+    info = cast(CompanyInfo, demo_data.get("info", {}))
 
     # Store ticker in session state
     st.session_state.fa_ticker = symbol
@@ -47,20 +57,21 @@ def _display_demo_data(symbol: str) -> None:
     _display_header(info, symbol)
     _display_key_metrics(info)
 
-    st.markdown("---")
-    st.subheader("📈 Financial Performance")
+    ui.spacer(20)
+    st.markdown(f"### 📈 Financial Performance: {symbol}")
 
-    # Display demo metrics
+    # Display demo metrics with animated cards
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Revenue (TTM)", "$394.33B", "+2.1%")
+        ui.animated_metric("Revenue (TTM)", "$394.33B", "+2.1%", icon="💰", color="primary")
     with col2:
-        st.metric("Net Income", "$97.00B", "+7.8%")
+        ui.animated_metric("Net Income", "$97.00B", "+7.8%", icon="📈", color="success")
     with col3:
-        st.metric("Free Cash Flow", "$99.58B", "+5.2%")
+        ui.animated_metric("Free Cash Flow", "$99.58B", "+5.2%", icon="💸", color="primary")
 
+    ui.spacer(20)
     # Revenue chart
-    st.markdown("##### Revenue Growth")
+    st.markdown("#### 📊 Revenue Growth Analysis")
     revenue_data = {
         "Quarter": ["Q1 2023", "Q2 2023", "Q3 2023", "Q4 2023", "Q1 2024"],
         "Revenue": [94.8, 81.8, 89.5, 119.6, 108.6]
@@ -81,6 +92,9 @@ def _display_demo_data(symbol: str) -> None:
 
     # Demo DCF results
     current_price = info.get("currentPrice", 180.0)
+    if current_price is None:
+        current_price = 180.0
+        
     fair_value = 195.50
     upside = ((fair_value - current_price) / current_price) * 100
 
@@ -182,8 +196,9 @@ def _fetch_and_display_data(symbol: str) -> None:
     # Store ticker in session state for export functions
     st.session_state.fa_ticker = symbol
 
-    info = get_company_info(symbol)
-    financials = get_financials(symbol)
+    # Cast to our typed definitions
+    info = cast(CompanyInfo, get_company_info(symbol))
+    financials = cast(FinancialsDict, get_financials(symbol))
 
     if not info or not financials:
         raise DataFetchError(f"No data returned for {symbol}. It may be an invalid ticker.")
@@ -212,55 +227,71 @@ def _fetch_and_display_data(symbol: str) -> None:
     _display_dcf_valuation(info, financials, symbol)
 
 
-def _display_header(info: dict, symbol: str) -> None:
+def _display_header(info: CompanyInfo, symbol: str) -> None:
     """Render the company header section."""
-    st.markdown("---")
+    ui.spacer(20)
     header_col1, header_col2 = st.columns([3, 1])
     with header_col1:
-        st.header(f"{info.get('longName', symbol)} ({symbol})")
-        st.caption(
-            (
-                f"{info.get('sector', 'N/A')} | "
-                f"{info.get('industry', 'N/A')} | "
-                f"{info.get('country', 'N/A')}"
-            )
+        st.markdown(
+            f"<h2 style='margin-bottom: 0; color: #020617; border-left: none; padding-left: 0;'>"
+            f"{info.get('longName', symbol)} <span style='color: #64748B;'>({symbol})</span></h2>",
+            unsafe_allow_html=True
         )
+        
+        sector = info.get('sector', 'Unknown Sector')
+        industry = info.get('industry', 'Unknown Industry')
+        country = info.get('country', 'Unknown Region')
+        
+        st.markdown(
+            f"<div style='margin-bottom: 15px; font-weight: 500; color: #10B981;'>"
+            f"{sector} • {industry} • {country}</div>",
+            unsafe_allow_html=True
+        )
+        
         summary = info.get("longBusinessSummary")
         if summary:
-            st.markdown(f"**Summary:** {summary[:300]}...")
+            st.markdown(f"<p style='color: #334155; line-height: 1.6;'>{summary[:350]}...</p>", unsafe_allow_html=True)
         else:
-            st.markdown("No summary available.")
+            st.markdown("<p style='color: #94A3B8; font-style: italic;'>Corporate summary currently unavailable for this ticker.</p>", unsafe_allow_html=True)
 
     with header_col2:
         if "website" in info:
-            st.markdown(f"[🌐 Visit Website]({info['website']})")
+            st.markdown(f"<div style='margin-top: 10px;'>{ui.status_badge('ACTIVE')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<a href='{info['website']}' target='_blank' style='text-decoration: none; font-weight: 600; color: #020617;'>🌐 Visit Website →</a>", unsafe_allow_html=True)
 
 
-def _display_key_metrics(info: dict) -> None:
+def _display_key_metrics(info: CompanyInfo) -> None:
     """Render the key financial metrics."""
-    st.subheader("🔑 Key Metrics")
+    st.markdown("### 🔑 Key Performance Indicators")
     m1, m2, m3, m4 = st.columns(4)
+
+    def _format_na(val):
+        if val is None or val == "N/A":
+            return "N/A"
+        return val
 
     with m1:
         market_cap = info.get("marketCap")
-        val = f"${market_cap / 1e9:.2f}B" if market_cap else "N/A"
-        ui.card_metric("Market Cap", val)
+        val = f"${market_cap / 1e9:.2f}B" if market_cap else None
+        ui.animated_metric("Market Cap", _format_na(val), icon="🏢")
 
     with m2:
         pe = info.get("trailingPE")
-        ui.card_metric("P/E Ratio", f"{pe:.2f}" if pe else "N/A")
+        val = f"{pe:.2f}" if pe else None
+        ui.animated_metric("P/E Ratio", _format_na(val), icon="📊")
 
     with m3:
         eps = info.get("trailingEps")
-        ui.card_metric("EPS (TTM)", f"${eps:.2f}" if eps else "N/A")
+        val = f"${eps:.2f}" if eps else None
+        ui.animated_metric("EPS (TTM)", _format_na(val), icon="📈")
 
     with m4:
         div = info.get("dividendYield")
-        val = f"{div * 100:.2f}%" if div else "N/A"
-        ui.card_metric("Dividend Yield", val)
+        val = f"{div * 100:.2f}%" if div else None
+        ui.animated_metric("Dividend Yield", _format_na(val), icon="💰")
 
 
-def _display_performance_charts(financials: dict) -> None:
+def _display_performance_charts(financials: FinancialsDict) -> None:
     """Render performance charts like Revenue vs Net Income."""
     income_stmt = financials.get("income_stmt")
     if income_stmt is None or income_stmt.empty:
@@ -271,28 +302,11 @@ def _display_performance_charts(financials: dict) -> None:
     income_stmt.index = pd.to_datetime(income_stmt.index)
     income_stmt = income_stmt.sort_index()
 
-    # Detect Revenue Column
-    rev_col = next(
-        (
-            col
-            for col in income_stmt.columns
-            if any(
-                key in str(col).replace(" ", "")
-                for key in ["TotalRevenue", "OperatingRevenue", "Revenue"]
-            )
-        ),
-        None,
-    )
-
-    # Detect Net Income Column
-    net_inc_col = next(
-        (
-            col
-            for col in income_stmt.columns
-            if any(key in str(col).replace(" ", "") for key in ["NetIncome", "NetProfit"])
-        ),
-        None,
-    )
+    # Detect Revenue Column using utility
+    rev_col = find_column(income_stmt, ["TotalRevenue", "OperatingRevenue", "Revenue"])
+    
+    # Detect Net Income Column using utility
+    net_inc_col = find_column(income_stmt, ["NetIncome", "NetProfit"])
 
     if rev_col and net_inc_col:
         fig_perf = make_subplots(specs=[[{"secondary_y": True}]])
@@ -327,7 +341,9 @@ def _display_performance_charts(financials: dict) -> None:
 
 
 def _display_profitability_ratios(
-    income_stmt: pd.DataFrame, rev_col: str, net_inc_col: str
+    income_stmt: pd.DataFrame,
+    rev_col: str,
+    net_inc_col: str,
 ) -> None:
     """
     Calculate and display profitability ratios.
@@ -344,15 +360,9 @@ def _display_profitability_ratios(
     latest_data = income_stmt.iloc[-1]
     revenue = latest_data.get(rev_col, 0)
     net_income = latest_data.get(net_inc_col, 0)
-    gross_col = next(
-        (
-            col
-            for col in latest_data.index
-            if any(key in str(col).replace(" ", "") for key in ["GrossProfit", "GrossMargin"])
-        ),
-        None,
-    )
-    gross_profit = latest_data.get(gross_col, 0)
+    
+    gross_col = find_column(income_stmt, ["GrossProfit", "GrossMargin"])
+    gross_profit = latest_data.get(gross_col, 0) if gross_col else 0
 
     with r1:
         net_margin = (net_income / revenue) * 100 if revenue else 0
@@ -363,60 +373,16 @@ def _display_profitability_ratios(
         ui.card_metric("Gross Margin", f"{gross_margin:.1f}%")
 
     with r3:
-        # Calculate YoY Revenue Growth
-        yoy_growth = _calculate_yoy_revenue_growth(income_stmt, rev_col)
-        ui.card_metric("YoY Revenue Growth", yoy_growth)
-
-
-def _calculate_yoy_revenue_growth(income_stmt: pd.DataFrame, rev_col: str) -> str:
-    """
-    Calculate Year-over-Year revenue growth percentage.
-
-    Args:
-        income_stmt: Transposed income statement DataFrame (dates as index, sorted)
-        rev_col: Column name for revenue
-
-    Returns:
-        Formatted string with YoY growth percentage (e.g., "+15.2%") or "N/A"
-    """
-    try:
-        # Check if we have the revenue column
-        if rev_col not in income_stmt.columns:
-            logger.debug(f"Revenue column '{rev_col}' not found in income statement")
-            return "N/A"
-
-        # Get revenue series and drop NaNs to find actual data points
-        revenue_series = income_stmt[rev_col].dropna()
-
-        # Check if we have at least 2 years of valid data
-        if len(revenue_series) < 2:
-            logger.debug("Insufficient valid data for YoY calculation (need at least 2 years)")
-            return "N/A"
-
-        # Get latest and previous year revenue from the filtered series
-        latest_revenue = revenue_series.iloc[-1]
-        previous_revenue = revenue_series.iloc[-2]
-
-        # Avoid division by zero
-        if previous_revenue == 0:
-            logger.debug("Previous year revenue is zero, cannot calculate growth")
-            return "N/A"
-
-        # Calculate YoY growth percentage
-        yoy_growth = ((latest_revenue - previous_revenue) / previous_revenue) * 100
-
-        # Format with appropriate sign
-        if yoy_growth >= 0:
-            return f"+{yoy_growth:.1f}%"
+        # Calculate YoY Revenue Growth using new logic
+        yoy_growth = calculate_yoy_growth(income_stmt[rev_col])
+        if yoy_growth is not None:
+             growth_str = f"{yoy_growth:+.1f}%"
         else:
-            return f"{yoy_growth:.1f}%"
-
-    except Exception as e:
-        logger.warning(f"Error calculating YoY revenue growth for {rev_col}: {e}")
-        return "N/A"
+             growth_str = "N/A"
+        ui.card_metric("YoY Revenue Growth", growth_str)
 
 
-def _display_financial_tabs(financials: dict) -> None:
+def _display_financial_tabs(financials: FinancialsDict) -> None:
     """Render the tabs with detailed financial dataframes."""
     tab1, tab2, tab3 = st.tabs(["Income Statement", "Balance Sheet", "Cash Flow"])
 
@@ -591,7 +557,7 @@ def _get_api_key() -> Optional[str]:
     return api_key
 
 
-def _display_ai_insights(info: dict, financials: dict, symbol: str, api_key: str) -> None:
+def _display_ai_insights(info: CompanyInfo, financials: FinancialsDict, symbol: str, api_key: str) -> None:
     """Display AI-powered insights section with toggle."""
     col_title, col_toggle = st.columns([3, 1])
 
@@ -616,45 +582,19 @@ def _display_ai_insights(info: dict, financials: dict, symbol: str, api_key: str
 
 
 def _generate_financial_insights(
-    info: dict, financials: dict, symbol: str, api_key: str
+    info: CompanyInfo,
+    financials: FinancialsDict,
+    symbol: str,
+    api_key: str,
 ) -> Optional[str]:
     """
     Generate AI insights using Claude API.
-
-    Args:
-        info: Company information dictionary
-        financials: Financial statements dictionary
-        symbol: Stock ticker symbol
-        api_key: Anthropic API key
-
-    Returns:
-        Formatted markdown string with insights, or None if generation fails
     """
     try:
         client = Anthropic(api_key=api_key)
 
-        # Build financial summary for Claude
-        financial_summary = _build_financial_summary(info, financials)
-
-        prompt = f"""Analyze the following financial data for {symbol} \
-({info.get("longName", symbol)}):
-
-{financial_summary}
-
-Provide a concise financial analysis in the following format:
-
-**Financial Health Assessment:**
-[3-5 bullet points assessing overall financial health, profitability, \
-liquidity, and growth]
-
-**Key Risks:**
-[2-3 bullet points identifying potential risks or concerns]
-
-**Key Opportunities:**
-[2-3 bullet points highlighting strengths and opportunities]
-
-Keep each bullet point to 1-2 sentences. Be specific and data-driven. \
-Focus on actionable insights."""
+        # Build financial summary for Claude using shared logic
+        prompt = build_ai_prompt(info, financials)
 
         # Call Claude API
         message = client.messages.create(
@@ -679,74 +619,9 @@ Focus on actionable insights."""
         return None
 
 
-def _build_financial_summary(info: dict, financials: dict) -> str:
-    """Build a text summary of financial data for Claude."""
-    summary_parts = []
-
-    # Company basics
-    summary_parts.append(f"Company: {info.get('longName', 'N/A')}")
-    summary_parts.append(f"Sector: {info.get('sector', 'N/A')}")
-    summary_parts.append(f"Industry: {info.get('industry', 'N/A')}")
-
-    # Key metrics
-    market_cap = info.get("marketCap")
-    if market_cap:
-        summary_parts.append(f"Market Cap: ${market_cap / 1e9:.2f}B")
-
-    pe = info.get("trailingPE")
-    if pe:
-        summary_parts.append(f"P/E Ratio: {pe:.2f}")
-
-    eps = info.get("trailingEps")
-    if eps:
-        summary_parts.append(f"EPS (TTM): ${eps:.2f}")
-
-    div_yield = info.get("dividendYield")
-    if div_yield:
-        summary_parts.append(f"Dividend Yield: {div_yield * 100:.2f}%")
-
-    # Income statement highlights
-    income_stmt = financials.get("income_stmt")
-    if income_stmt is not None and not income_stmt.empty:
-        income_stmt_t = income_stmt.T
-        income_stmt_t.index = pd.to_datetime(income_stmt_t.index)
-        income_stmt_t = income_stmt_t.sort_index()
-
-        rev_col = next(
-            (
-                col
-                for col in income_stmt_t.columns
-                if "Total Revenue" in str(col) or "Revenue" in str(col)
-            ),
-            None,
-        )
-        net_inc_col = next((col for col in income_stmt_t.columns if "Net Income" in str(col)), None)
-
-        if rev_col and len(income_stmt_t) >= 2:
-            latest_rev = income_stmt_t[rev_col].iloc[-1]
-            prev_rev = income_stmt_t[rev_col].iloc[-2]
-            rev_growth = ((latest_rev - prev_rev) / prev_rev) * 100
-            summary_parts.append(f"Revenue (Latest): ${latest_rev / 1e9:.2f}B")
-            summary_parts.append(f"YoY Revenue Growth: {rev_growth:.1f}%")
-
-        if net_inc_col and rev_col:
-            latest_net = income_stmt_t[net_inc_col].iloc[-1]
-            latest_rev = income_stmt_t[rev_col].iloc[-1]
-            net_margin = (latest_net / latest_rev) * 100
-            summary_parts.append(f"Net Income (Latest): ${latest_net / 1e9:.2f}B")
-            summary_parts.append(f"Net Profit Margin: {net_margin:.1f}%")
-
-    return "\n".join(summary_parts)
-
-
-def _display_dcf_valuation(info: dict, financials: dict, symbol: str) -> None:
+def _display_dcf_valuation(info: CompanyInfo, financials: FinancialsDict, symbol: str) -> None:
     """
     Display DCF (Discounted Cash Flow) valuation model with adjustable parameters.
-
-    Args:
-        info: Company information dictionary
-        financials: Financial statements dictionary
-        symbol: Stock ticker symbol
     """
     st.markdown(
         "Calculate intrinsic value using Discounted Cash Flow analysis. "
@@ -764,17 +639,8 @@ def _display_dcf_valuation(info: dict, financials: dict, symbol: str) -> None:
     cashflow_t.index = pd.to_datetime(cashflow_t.index)
     cashflow_t = cashflow_t.sort_index()
 
-    # Find Free Cash Flow column
-    fcf_col = next(
-        (
-            col
-            for col in cashflow_t.columns
-            if any(
-                key in str(col).replace(" ", "") for key in ["FreeCashFlow", "OperatingCashFlow"]
-            )
-        ),
-        None,
-    )
+    # Find Free Cash Flow column using utility
+    fcf_col = find_column(cashflow_t, ["FreeCashFlow", "OperatingCashFlow"])
 
     if not fcf_col or len(cashflow_t) == 0:
         st.warning("⚠️ Free Cash Flow data not available for DCF valuation.")
@@ -788,7 +654,7 @@ def _display_dcf_valuation(info: dict, financials: dict, symbol: str) -> None:
         return
 
     # Get current stock price and shares outstanding
-    current_price = info.get("currentPrice", info.get("regularMarketPrice"))
+    current_price = info.get("currentPrice") or info.get("regularMarketPrice")
     shares_outstanding = info.get("sharesOutstanding")
 
     if not current_price or not shares_outstanding:
@@ -850,84 +716,69 @@ def _display_dcf_valuation(info: dict, financials: dict, symbol: str) -> None:
             help="Discount from fair value for conservative estimate",
         )
 
-    # Calculate DCF
+    # Calculate DCF using core logic
     st.markdown("---")
     st.markdown("#### 📊 DCF Calculation")
-
-    # Project future cash flows
-    projected_fcf = []
-    current_fcf = latest_fcf
-
-    # Years 1-5
-    for year in range(1, 6):
-        current_fcf = current_fcf * (1 + growth_years_1_5 / 100)
-        pv = current_fcf / ((1 + discount_rate / 100) ** year)
-        projected_fcf.append({"Year": year, "FCF": current_fcf, "PV": pv})
-
-    # Years 6-10
-    for year in range(6, 11):
-        current_fcf = current_fcf * (1 + growth_years_6_10 / 100)
-        pv = current_fcf / ((1 + discount_rate / 100) ** year)
-        projected_fcf.append({"Year": year, "FCF": current_fcf, "PV": pv})
-
-    # Terminal value
-    terminal_fcf = current_fcf * (1 + terminal_growth / 100)
-    terminal_value = terminal_fcf / (discount_rate / 100 - terminal_growth / 100)
-    terminal_pv = terminal_value / ((1 + discount_rate / 100) ** 10)
-
-    # Total enterprise value
-    sum_pv_fcf = sum(row["PV"] for row in projected_fcf)
-    enterprise_value = sum_pv_fcf + terminal_pv
-
-    # Equity value (simplified - not accounting for debt/cash)
-    equity_value = enterprise_value
-    fair_value_per_share = equity_value / shares_outstanding
-
-    # Apply margin of safety
-    conservative_value = fair_value_per_share * (1 - margin_of_safety / 100)
+    
+    params = DCFParameters(
+        growth_years_1_5=growth_years_1_5,
+        growth_years_6_10=growth_years_6_10,
+        terminal_growth=terminal_growth,
+        discount_rate=discount_rate,
+        margin_of_safety=margin_of_safety
+    )
+    
+    # Use the separated logic class
+    result = DCFModel.calculate(
+        latest_fcf=latest_fcf,
+        shares_outstanding=shares_outstanding,
+        current_price=current_price,
+        params=params
+    )
 
     # Display results
     result_col1, result_col2, result_col3, result_col4 = st.columns(4)
 
     with result_col1:
-        st.metric("Current Price", f"${current_price:.2f}")
+        ui.animated_metric("Current Price", f"${current_price:.2f}", icon="💵")
 
     with result_col2:
-        st.metric("Fair Value", f"${fair_value_per_share:.2f}")
+        ui.animated_metric("Fair Value", f"${result.fair_value:.2f}", icon="⚖️")
 
     with result_col3:
-        upside = ((fair_value_per_share - current_price) / current_price) * 100
-        st.metric(
+        ui.animated_metric(
             "Upside/Downside",
-            f"{upside:+.1f}%",
-            delta=f"{'Undervalued' if upside > 0 else 'Overvalued'}",
+            f"{result.upside_percent:+.1f}%",
+            delta=f"{result.verdict.title()}",
+            icon="📈" if result.upside_percent > 0 else "📉",
+            color="success" if result.upside_percent > 0 else "danger"
         )
 
     with result_col4:
-        st.metric(
-            f"Conservative Value ({margin_of_safety}% MoS)",
-            f"${conservative_value:.2f}",
+        ui.animated_metric(
+            f"Cons. Value ({margin_of_safety}% MoS)",
+            f"${result.conservative_value:.2f}",
+            icon="🛡️"
         )
 
     # Valuation verdict
-    if fair_value_per_share > current_price * 1.2:
-        st.success(f"🟢 **UNDERVALUED** - Fair value is {upside:.1f}% above current price")
-    elif fair_value_per_share < current_price * 0.8:
-        st.error(f"🔴 **OVERVALUED** - Fair value is {abs(upside):.1f}% below current price")
+    if result.is_undervalued:
+        st.success(f"🟢 **UNDERVALUED** - Fair value is {result.upside_percent:.1f}% above current price")
+    elif result.upside_percent < -20:
+         st.error(f"🔴 **OVERVALUED** - Fair value is {abs(result.upside_percent):.1f}% below current price")
     else:
         st.info("🟡 **FAIRLY VALUED** - Current price within 20% of fair value")
 
     # Detailed breakdown
     with st.expander("📋 Detailed DCF Breakdown", expanded=False):
         st.markdown(f"**Starting FCF:** ${latest_fcf / 1e9:.2f}B")
-        st.markdown(f"**Sum of PV (Years 1-10):** ${sum_pv_fcf / 1e9:.2f}B")
-        st.markdown(f"**Terminal Value (PV):** ${terminal_pv / 1e9:.2f}B")
-        st.markdown(f"**Enterprise Value:** ${enterprise_value / 1e9:.2f}B")
+        st.markdown(f"**Terminal Value (PV):** ${(result.enterprise_value - sum(p['PV'] for p in result.projections)) / 1e9:.2f}B") # Reverse eng term PV for display if needed or add to result
+        st.markdown(f"**Enterprise Value:** ${result.enterprise_value / 1e9:.2f}B")
         st.markdown(f"**Shares Outstanding:** {shares_outstanding / 1e9:.2f}B")
 
         # Show projection table
         st.markdown("##### Projected Free Cash Flows")
-        projection_df = pd.DataFrame(projected_fcf)
+        projection_df = pd.DataFrame(result.projections)
         projection_df["FCF"] = projection_df["FCF"].apply(lambda x: f"${x / 1e9:.2f}B")
         projection_df["PV"] = projection_df["PV"].apply(lambda x: f"${x / 1e9:.2f}B")
         st.dataframe(projection_df, use_container_width=True, hide_index=True)
@@ -952,23 +803,21 @@ def _display_dcf_valuation(info: dict, financials: dict, symbol: str) -> None:
         row = {"Growth Rate": f"{gr:.0f}%"}
         for dr in discount_rates:
             # Recalculate with new parameters
-            temp_fcf = latest_fcf
-            temp_pv_sum = 0
-            for y in range(1, 6):
-                temp_fcf = temp_fcf * (1 + gr / 100)
-                temp_pv_sum += temp_fcf / ((1 + dr / 100) ** y)
-            for y in range(6, 11):
-                temp_fcf = temp_fcf * (1 + growth_years_6_10 / 100)
-                temp_pv_sum += temp_fcf / ((1 + dr / 100) ** y)
+            temp_params = DCFParameters(
+                growth_years_1_5=gr,
+                growth_years_6_10=growth_years_6_10,
+                terminal_growth=terminal_growth,
+                discount_rate=dr,
+                margin_of_safety=margin_of_safety
+            )
+            temp_result = DCFModel.calculate(
+                latest_fcf=latest_fcf,
+                shares_outstanding=shares_outstanding,
+                current_price=current_price,
+                params=temp_params
+            )
 
-            temp_terminal_fcf = temp_fcf * (1 + terminal_growth / 100)
-            temp_terminal_value = temp_terminal_fcf / (dr / 100 - terminal_growth / 100)
-            temp_terminal_pv = temp_terminal_value / ((1 + dr / 100) ** 10)
-
-            temp_ev = temp_pv_sum + temp_terminal_pv
-            temp_fair_value = temp_ev / shares_outstanding
-
-            row[f"WACC {dr:.0f}%"] = f"${temp_fair_value:.2f}"
+            row[f"WACC {dr:.0f}%"] = f"${temp_result.fair_value:.2f}"
         sensitivity_data.append(row)
 
     sensitivity_df = pd.DataFrame(sensitivity_data)

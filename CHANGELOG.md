@@ -13,10 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Marketing Analytics**: Upgraded to 'Studio Dark' with `animated_metric` components and themed Plotly charts.
 - **Smart Forecast**: Added confidence interval visualization (±1σ/±2σ) and glassmorphic strategy cards.
 - **DevOps Control**: Implemented real-time pipeline status visualization and scannable activity logs.
+- **Unit Tests**: Added comprehensive test suites for `ARETE-Architect` and `DevOps Control` modules (test coverage expansion).
 
 ### Changed
 - **Visual System**: Hardened contrast ratios by adding `!important` overrides to global CSS headers.
 - **Accessibility**: Darkened `text_light` in light theme to ensure WCAG AAA compliance.
+- **Module Registry**: Refactored `app.py` module handling to use dictionary-based metadata for dynamic grid rendering.
+- **Content Strategy**: Audited and elevated descriptions in `glassmorphic_card` and `feature_card` to professional "Lead Architect" tone across all modules.
+- **UI Consistency**: Replaced static `st.metric` with `ui.animated_metric` in `arete_architect.py`, `financial_analyst.py`, `margin_hunter.py`, and `market_pulse.py` for unified visual language.
 
 ## [5.0.0] - 2026-01-01
 

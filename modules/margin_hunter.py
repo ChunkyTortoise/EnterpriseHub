@@ -174,51 +174,50 @@ def _render_results(
     target_profit,
 ):
     """Render the results and visualizations panel."""
-    st.subheader("📊 Analysis Results")
+    st.markdown("### 📈 Analysis Results")
 
     # --- Key Metrics ---
-    m1, m2, m3 = st.columns(3)
+    m1, m2, m3, m4, m5, m6 = st.columns(6)
     with m1:
-        ui.card_metric(
-            "Contribution Margin",
-            f"${contribution_margin:.2f}",
-            f"{contribution_margin_ratio:.1f}%",
-        )
+        ui.animated_metric("Break-even Units", f"{break_even_units:,.0f}", icon="🎯")
     with m2:
-        ui.card_metric("Break-Even Units", f"{int(np.ceil(break_even_units)):,} units")
+        ui.animated_metric("Break-even Revenue", f"${break_even_revenue:,.2f}", icon="💰")
     with m3:
-        ui.card_metric("Break-Even Revenue", f"${break_even_revenue:,.2f}")
-
-    m4, m5, m6 = st.columns(3)
+        ui.animated_metric("Contr. Margin", f"${contribution_margin:.2f}", icon="📈")
     with m4:
-        ui.card_metric(
-            "Margin of Safety",
-            f"{margin_of_safety_pct:.1f}%",
-            f"{int(margin_of_safety_units):,} units",
-        )
+        ui.animated_metric("Margin Safety %", f"{margin_of_safety_pct:.1f}%", icon="🛡️")
     with m5:
-        ui.card_metric("Operating Leverage", f"{operating_leverage:.2f}x")
+        ui.animated_metric("Op. Leverage", f"{operating_leverage:.2f}x", icon="⚡")
     with m6:
-        ui.card_metric("Current Profit", f"${current_profit:,.2f}")
+        ui.animated_metric("Current Profit", f"${current_profit:,.2f}", icon="💵")
 
+    ui.spacer(30)
     # --- Executive Summary ---
-    with st.expander("📝 Consultant's Executive Summary", expanded=True):
-        status = "HEALTHY" if current_profit > target_profit else "UNDERPERFORMING"
-        color = ui.THEME["success"] if status == "HEALTHY" else ui.THEME["danger"]
-        st.markdown(
-            f"### Status: <span style='color:{color}'>{status}</span>", unsafe_allow_html=True
-        )
-        st.markdown(
-            f"""
-        **Key Findings:**
-        - The current contribution margin of **${contribution_margin:.2f}** per unit
-          is sufficient to cover fixed costs at **{int(np.ceil(break_even_units))} units**.
-        - You are currently operating at **{margin_of_safety_pct:.1f}%** above
-          break-even, providing a solid safety buffer.
-        - To reach your target profit of **${target_profit:,.2f}**, you need to
-          increase sales by **{int(np.ceil(target_units - current_sales_units))} units**.
-        """
-        )
+    st.markdown(
+        f"""
+        <div style='background-color: {ui.THEME["surface"]}; border-left: 5px solid {ui.THEME["accent"]}; 
+                    padding: 2rem; border-radius: 8px; border: 1px solid {ui.THEME["border"]}; border-left-width: 5px;'>
+            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;'>
+                <h3 style='margin: 0; color: {ui.THEME["primary"]};'>📝 Consultant's Executive Summary</h3>
+                {ui.status_badge("HEALTHY" if current_profit > target_profit else "ACTION REQUIRED")}
+            </div>
+            <p style='color: #334155; line-height: 1.6; font-size: 1.05rem;'>
+                Based on current cost structures and sales volume, the business is operating 
+                <strong>{margin_of_safety_pct:.1f}%</strong> above its break-even point. 
+                The contribution margin of <strong>${contribution_margin:.2f}</strong> provides 
+                sufficient coverage for fixed costs.
+            </p>
+            <hr style='border: 0; border-top: 1px solid {ui.THEME["border"]}; margin: 1.5rem 0;'>
+            <p style='color: #475569; font-size: 0.95rem;'>
+                <strong>Strategic Recommendation:</strong> To achieve your target profit of 
+                <strong>${target_profit:,.2f}</strong>, an additional sales volume of 
+                <strong>{int(np.ceil(target_units - current_sales_units)):,} units</strong> is required.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    ui.spacer(30)
 
     # --- CVP Visualization ---
     _render_cvp_chart(

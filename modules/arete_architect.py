@@ -170,25 +170,25 @@ def _render_metrics_dashboard() -> None:
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Tasks Completed", "47", "+12 this month")
+        ui.animated_metric("Tasks Completed", "47", delta="+12 this month", icon="✅")
     with col2:
-        st.metric("Time Saved", "127 hours", "+34 hours")
+        ui.animated_metric("Time Saved", "127 hours", delta="+34 hours", icon="⏳")
     with col3:
-        st.metric("Lines Generated", "6,230", "+1,890 lines")
+        ui.animated_metric("Lines Generated", "6,230", delta="+1,890 lines", icon="✍️")
     with col4:
-        st.metric("Tests Created", "220", "+67 tests")
+        ui.animated_metric("Tests Created", "220", delta="+67 tests", icon="🧪")
 
     st.markdown("---")
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Pull Requests", "12", "+4 this week")
-        st.metric("Bugs Prevented", "89%", "↑ 12%")
+        ui.animated_metric("Pull Requests", "12", delta="+4 this week", icon="🔗")
+        ui.animated_metric("Bugs Prevented", "89%", delta="↑ 12%", icon="🛡️")
     with col2:
-        st.metric("Code Review Time", "15 min avg", "↓ 75%")
-        st.metric("Deployment Speed", "8 min avg", "↓ 82%")
+        ui.animated_metric("Code Review Time", "15 min avg", delta="↓ 75%", icon="🔍")
+        ui.animated_metric("Deployment Speed", "8 min avg", delta="↓ 82%", icon="⚡")
     with col3:
-        st.metric("Test Coverage", "94%", "↑ 18%")
-        st.metric("Documentation", "100%", "auto-generated")
+        ui.animated_metric("Test Coverage", "94%", delta="↑ 18%", icon="📊")
+        ui.animated_metric("Documentation", "100%", delta="auto-generated", icon="📚")
 
     st.markdown("---")
     st.markdown("#### Task Completion Velocity")
@@ -232,11 +232,11 @@ def _render_before_after_comparison() -> None:
     st.markdown("### 💰 Return on Investment")
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Time Savings", "92%", "4 hrs 11 min saved")
+        ui.animated_metric("Time Savings", "92%", delta="4 hrs 11 min saved", icon="⏳")
     with col2:
-        st.metric("Cost Reduction", "94.7%", "$682 saved")
+        ui.animated_metric("Cost Reduction", "94.7%", delta="$682 saved", icon="💰")
     with col3:
-        st.metric("ROI Multiple", "18.9x", "on this task alone")
+        ui.animated_metric("ROI Multiple", "18.9x", delta="on this task alone", icon="📈")
     st.success("✅ **ARETE paid for itself in the first task** - Everything after is pure profit")
 
 
