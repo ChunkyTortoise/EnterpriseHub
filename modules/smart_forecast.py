@@ -273,18 +273,20 @@ def _render_results(
     # 1. Enhanced Metrics Dashboard (4 columns)
     st.markdown("### Model Performance Metrics")
     m1, m2, m3, m4 = st.columns(4)
+    plotly_template = ui.get_plotly_template()
 
     with m1:
-        ui.card_metric("R² Score", f"{metrics['R2']:.1%}", "Model Accuracy")
+        ui.animated_metric("R² Score", f"{metrics['R2']:.1%}", icon="🎯", color="success")
     with m2:
-        ui.card_metric("MAE", f"${metrics['MAE']:.2f}", "Mean Absolute Error")
+        ui.animated_metric("MAE", f"${metrics['MAE']:.2f}", icon="📉", color="primary")
     with m3:
-        ui.card_metric("RMSE", f"${metrics['RMSE']:.2f}", "Root Mean Squared Error")
+        ui.animated_metric("RMSE", f"${metrics['RMSE']:.2f}", icon="📊", color="primary")
     with m4:
-        ui.card_metric(
+        ui.animated_metric(
             "Directional Accuracy",
             f"{metrics['Directional_Accuracy']:.1f}%",
-            "Up/Down Predictions",
+            icon="↕️",
+            color="success" if metrics['Directional_Accuracy'] > 50 else "warning"
         )
 
     st.markdown("---")
@@ -293,24 +295,25 @@ def _render_results(
     st.markdown("### Forecast Summary")
     f1, f2, f3 = st.columns(3)
     with f1:
-        ui.card_metric("Current Price", f"${metrics['Last_Price']:.2f}", ticker)
+        ui.animated_metric("Current Price", f"${metrics['Last_Price']:.2f}", icon="💵")
     with f2:
         final_pred = pred_df.iloc[-1]["Predicted_Close"]
         delta = ((final_pred - metrics["Last_Price"]) / metrics["Last_Price"]) * 100
-        ui.card_metric(
+        ui.animated_metric(
             f"Forecast ({len(pred_df)} Days)",
             f"${final_pred:.2f}",
-            f"{delta:+.2f}%",
+            delta=f"{delta:+.2f}%",
+            icon="🔮"
         )
     with f3:
         # Show confidence range width
         final_upper = pred_df.iloc[-1]["Upper_1Sigma"]
         final_lower = pred_df.iloc[-1]["Lower_1Sigma"]
         confidence_range = final_upper - final_lower
-        ui.card_metric(
+        ui.animated_metric(
             "Confidence Range (±1σ)",
             f"${confidence_range:.2f}",
-            "68% Probability Band",
+            icon="🛡️"
         )
 
     st.markdown("---")
@@ -328,7 +331,7 @@ def _render_results(
             y=display_hist["Close"],
             mode="lines",
             name="Historical Price",
-            line=dict(color="#64748B", width=2),
+            line=dict(color=ui.THEME["secondary"], width=2),
             hovertemplate="<b>Historical</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>",
         )
     )
@@ -352,7 +355,7 @@ def _render_results(
             mode="lines",
             name="95% Confidence",
             fill="tonexty",
-            fillcolor="rgba(79, 70, 229, 0.15)",
+            fillcolor=f"{ui.THEME['primary']}20",
             line=dict(width=0),
             hovertemplate="<b>95% Confidence</b><br>Upper: $%{y:.2f}<extra></extra>",
         )
@@ -377,7 +380,7 @@ def _render_results(
             mode="lines",
             name="68% Confidence",
             fill="tonexty",
-            fillcolor="rgba(79, 70, 229, 0.3)",
+            fillcolor=f"{ui.THEME['primary']}40",
             line=dict(width=0),
             hovertemplate="<b>68% Confidence</b><br>Lower: $%{y:.2f}<extra></extra>",
         )
@@ -390,17 +393,17 @@ def _render_results(
             y=pred_df["Predicted_Close"],
             mode="lines+markers",
             name="AI Forecast",
-            line=dict(color="#4F46E5", width=3, dash="dash"),
-            marker=dict(size=6, color="#4F46E5"),
+            line=dict(color=ui.THEME["accent"], width=3, dash="dash"),
+            marker=dict(size=6, color=ui.THEME["accent"]),
             hovertemplate="<b>Forecast</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>",
         )
     )
 
     fig.update_layout(
+        template=plotly_template,
         title=f"AI Price Prediction with Confidence Intervals: {ticker}",
         xaxis_title="Date",
         yaxis_title="Price ($)",
-        template="plotly_white",
         hovermode="x unified",
         height=550,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
@@ -409,22 +412,18 @@ def _render_results(
     st.plotly_chart(fig, use_container_width=True)
 
     # Add explanation
-    with st.expander("📊 Understanding Confidence Intervals"):
-        st.markdown(
-            """
+    ui.glassmorphic_card(
+        title="📊 Understanding Confidence Intervals",
+        content="""
         **Confidence intervals** represent the uncertainty in our predictions:
 
-        - **±1σ band (dark blue)**: 68% probability the actual price falls within this range
-        - **±2σ band (light blue)**: 95% probability the actual price falls within this range
+        - **±1σ band (darker)**: 68% probability the actual price falls within this range
+        - **±2σ band (lighter)**: 95% probability the actual price falls within this range
 
         The bands are calculated using the standard deviation of predictions from all 100
         decision trees in the Random Forest model. Wider bands indicate higher uncertainty.
-
-        **Interpretation:**
-        - Narrow bands = High model confidence
-        - Wide bands = High uncertainty (volatile asset or challenging forecast period)
         """
-        )
+    )
 
     st.markdown("---")
 
@@ -451,16 +450,16 @@ def _render_results(
         # Display backtest metrics
         bt1, bt2, bt3, bt4 = st.columns(4)
         with bt1:
-            ui.card_metric("Backtest MAE", f"${bt_mae:.2f}", "Historical Average Error")
+            ui.animated_metric("Backtest MAE", f"${bt_mae:.2f}", icon="📊")
         with bt2:
-            ui.card_metric("Backtest RMSE", f"${bt_rmse:.2f}", "Historical RMSE")
+            ui.animated_metric("Backtest RMSE", f"${bt_rmse:.2f}", icon="📈")
         with bt3:
-            ui.card_metric("Backtest R²", f"{bt_r2:.1%}", "Historical Accuracy")
+            ui.animated_metric("Backtest R²", f"{bt_r2:.1%}", icon="🎯")
         with bt4:
-            ui.card_metric(
+            ui.animated_metric(
                 "Backtest Directional",
                 f"{bt_directional:.1f}%",
-                "Historical Up/Down Accuracy",
+                icon="↕️"
             )
 
         # Backtest visualization: Actual vs Predicted
@@ -472,7 +471,7 @@ def _render_results(
                 y=backtest_df["actual_price"],
                 mode="lines",
                 name="Actual Price",
-                line=dict(color="#10B981", width=2),
+                line=dict(color=ui.THEME["success"], width=2),
                 hovertemplate="<b>Actual</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>",
             )
         )
@@ -483,16 +482,16 @@ def _render_results(
                 y=backtest_df["predicted_price"],
                 mode="lines",
                 name="Predicted Price",
-                line=dict(color="#4F46E5", width=2, dash="dot"),
+                line=dict(color=ui.THEME["accent"], width=2, dash="dot"),
                 hovertemplate="<b>Predicted</b><br>Date: %{x}<br>Price: $%{y:.2f}<extra></extra>",
             )
         )
 
         fig_backtest.update_layout(
+            template=plotly_template,
             title=f"Backtest Results: Actual vs Predicted Prices ({ticker})",
             xaxis_title="Date",
             yaxis_title="Price ($)",
-            template="plotly_white",
             hovermode="x unified",
             height=450,
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
@@ -509,16 +508,16 @@ def _render_results(
                     x=backtest_df["error"],
                     nbinsx=30,
                     name="Prediction Errors",
-                    marker=dict(color="#4F46E5", opacity=0.7),
+                    marker=dict(color=ui.THEME["accent"], opacity=0.7),
                     hovertemplate="<b>Error Range</b><br>%{x:.2f}<br>Count: %{y}<extra></extra>",
                 )
             )
 
             fig_error.update_layout(
+                template=plotly_template,
                 title="Distribution of Prediction Errors (Backtest)",
                 xaxis_title="Error ($)",
                 yaxis_title="Frequency",
-                template="plotly_white",
                 height=350,
                 showlegend=False,
             )
@@ -549,8 +548,9 @@ def _render_results(
     st.markdown("---")
 
     # 6. Model Explanation
-    with st.expander("🧠 How this model works"):
-        st.write("""
+    ui.glassmorphic_card(
+        title="🧠 How this model works",
+        content="""
         This module uses a **Random Forest Regressor**
         (an ensemble of decision trees) trained on:
         - **Technical Indicators:** RSI, MACD, Signal Line,
@@ -565,10 +565,8 @@ def _render_results(
         **Confidence Intervals:** Calculated using the standard deviation of
         predictions from all 100 trees in the ensemble. This provides a
         statistically rigorous measure of prediction uncertainty.
-
-        *Note: Financial forecasting is inherently probabilistic.
-        Do not use for actual trading.*
-        """)
+        """
+    )
 
 
 def _display_export_options(

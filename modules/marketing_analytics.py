@@ -115,24 +115,32 @@ def _render_campaign_dashboard() -> None:
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        ui.card_metric(
+        ui.animated_metric(
             "Total Spend",
             f"${metrics['spend']:,.0f}",
             delta=f"{metrics['spend_change']:+.1f}%",
+            icon="💰",
         )
     with col2:
-        ui.card_metric(
+        ui.animated_metric(
             "Revenue",
             f"${metrics['revenue']:,.0f}",
             delta=f"{metrics['revenue_change']:+.1f}%",
+            icon="📈",
         )
     with col3:
-        ui.card_metric("ROI", f"{metrics['roi']:.2f}x", delta=f"{metrics['roi_change']:+.1f}%")
+        ui.animated_metric(
+            "ROI",
+            f"{metrics['roi']:.2f}x",
+            delta=f"{metrics['roi_change']:+.1f}%",
+            icon="🎯",
+        )
     with col4:
-        ui.card_metric(
+        ui.animated_metric(
             "Conversions",
             f"{metrics['conversions']:,}",
             delta=f"{metrics['conversion_change']:+.1f}%",
+            icon="👥",
         )
 
     st.markdown("---")
@@ -158,6 +166,7 @@ def _render_campaign_dashboard() -> None:
     )
 
     col1, col2 = st.columns(2)
+    plotly_template = ui.get_plotly_template()
 
     with col1:
         # Spend vs Revenue chart
@@ -168,7 +177,7 @@ def _render_campaign_dashboard() -> None:
                 y=trend_data["spend"],
                 name="Spend",
                 mode="lines",
-                line=dict(color="red", width=2),
+                line=dict(color=ui.THEME["danger"], width=2),
             )
         )
         fig_spend_revenue.add_trace(
@@ -177,10 +186,11 @@ def _render_campaign_dashboard() -> None:
                 y=trend_data["revenue"],
                 name="Revenue",
                 mode="lines",
-                line=dict(color="green", width=2),
+                line=dict(color=ui.THEME["success"], width=2),
             )
         )
         fig_spend_revenue.update_layout(
+            template=plotly_template,
             title="Spend vs Revenue Over Time",
             xaxis_title="Date",
             yaxis_title="Amount ($)",
@@ -197,11 +207,12 @@ def _render_campaign_dashboard() -> None:
                 y=trend_data["conversion_rate"],
                 name="Conversion Rate",
                 mode="lines+markers",
-                line=dict(color="blue", width=2),
+                line=dict(color=ui.THEME["accent"], width=2),
                 fill="tozeroy",
             )
         )
         fig_conversion.update_layout(
+            template=plotly_template,
             title="Conversion Rate Trend",
             xaxis_title="Date",
             yaxis_title="Conversion Rate (%)",
@@ -228,17 +239,18 @@ def _render_campaign_dashboard() -> None:
                 name="Spend",
                 x=platform_breakdown["Platform"],
                 y=platform_breakdown["spend"],
-                marker_color="lightcoral",
+                marker_color=ui.THEME["danger"],
             ),
             go.Bar(
                 name="Revenue",
                 x=platform_breakdown["Platform"],
                 y=platform_breakdown["revenue"],
-                marker_color="lightgreen",
+                marker_color=ui.THEME["success"],
             ),
         ]
     )
     fig_channels.update_layout(
+        template=plotly_template,
         title="Spend vs Revenue by Platform",
         xaxis_title="Platform",
         yaxis_title="Amount ($)",
@@ -306,36 +318,42 @@ def _render_social_media_dashboard() -> None:
     # Key Metrics Row
     st.subheader("📊 Key Performance Metrics")
     col1, col2, col3, col4, col5 = st.columns(5)
+    plotly_template = ui.get_plotly_template()
 
     with col1:
-        ui.card_metric(
+        ui.animated_metric(
             "Followers",
             f"{platform_data['followers']:,}",
             delta=f"+{platform_data['follower_growth']:,}",
+            icon="👥",
         )
     with col2:
-        ui.card_metric(
+        ui.animated_metric(
             "Impressions",
             f"{platform_data['impressions']:,}",
             delta=f"{platform_data['impression_change']:+.1f}%",
+            icon="👁️",
         )
     with col3:
-        ui.card_metric(
+        ui.animated_metric(
             "Engagement Rate",
             f"{platform_data['engagement_rate']:.2f}%",
             delta=f"{platform_data['engagement_change']:+.1f}%",
+            icon="🤝",
         )
     with col4:
-        ui.card_metric(
+        ui.animated_metric(
             "Reach",
             f"{platform_data['reach']:,}",
             delta=f"{platform_data['reach_change']:+.1f}%",
+            icon="🌐",
         )
     with col5:
-        ui.card_metric(
+        ui.animated_metric(
             "Link Clicks",
             f"{platform_data['link_clicks']:,}",
             delta=f"{platform_data['click_change']:+.1f}%",
+            icon="🖱️",
         )
 
     st.markdown("---")
@@ -358,11 +376,12 @@ def _render_social_media_dashboard() -> None:
                         y=platform_comparison["followers"],
                         text=platform_comparison["followers"],
                         textposition="auto",
-                        marker_color=["#1877F2", "#0A66C2", "#1DA1F2", "#000000"],
+                        marker_color=[ui.THEME["primary"], ui.THEME["accent"], ui.THEME["secondary"], "#000000"],
                     )
                 ]
             )
             fig_followers.update_layout(
+                template=plotly_template,
                 title="Followers by Platform",
                 xaxis_title="Platform",
                 yaxis_title="Followers",
@@ -379,11 +398,12 @@ def _render_social_media_dashboard() -> None:
                         y=platform_comparison["engagement_rate"],
                         text=[f"{r:.2f}%" for r in platform_comparison["engagement_rate"]],
                         textposition="auto",
-                        marker_color=["#E1306C", "#0077B5", "#14171A", "#FE2C55"],
+                        marker_color=[ui.THEME["accent"], ui.THEME["primary"], ui.THEME["secondary"], "#FE2C55"],
                     )
                 ]
             )
             fig_engagement.update_layout(
+                template=plotly_template,
                 title="Engagement Rate by Platform",
                 xaxis_title="Platform",
                 yaxis_title="Engagement Rate (%)",
@@ -419,11 +439,12 @@ def _render_social_media_dashboard() -> None:
                     y=engagement_trend["engagement_rate"],
                     name="Engagement Rate",
                     mode="lines+markers",
-                    line=dict(color="#1877F2", width=2),
+                    line=dict(color=ui.THEME["accent"], width=2),
                     fill="tozeroy",
                 )
             )
             fig_trend.update_layout(
+                template=plotly_template,
                 title=f"{selected_platform} Engagement Trend",
                 xaxis_title="Date",
                 yaxis_title="Engagement Rate (%)",
@@ -442,16 +463,17 @@ def _render_social_media_dashboard() -> None:
                         values=content_data["engagement"],
                         hole=0.4,
                         marker_colors=[
-                            "#FF6B6B",
-                            "#4ECDC4",
-                            "#45B7D1",
-                            "#96CEB4",
+                            ui.THEME["primary"],
+                            ui.THEME["accent"],
+                            ui.THEME["secondary"],
+                            ui.THEME["primary_light"],
                             "#FFEAA7",
                         ],
                     )
                 ]
             )
             fig_content.update_layout(
+                template=plotly_template,
                 title="Engagement by Content Type",
                 annotations=[dict(text="Content", x=0.5, y=0.5, font_size=14, showarrow=False)],
             )
@@ -467,11 +489,11 @@ def _render_social_media_dashboard() -> None:
         with st.expander(f"#{i} - {post['type']} | {post['engagement']:,} engagements"):
             col1, col2, col3 = st.columns(3)
             with col1:
-                ui.card_metric("Likes", f"{post['likes']:,}")
+                ui.animated_metric("Likes", f"{post['likes']:,}", icon="❤️")
             with col2:
-                ui.card_metric("Comments", f"{post['comments']:,}")
+                ui.animated_metric("Comments", f"{post['comments']:,}", icon="💬")
             with col3:
-                ui.card_metric("Shares", f"{post['shares']:,}")
+                ui.animated_metric("Shares", f"{post['shares']:,}", icon="🔗")
             st.markdown(f"**Posted**: {post['date']} | **Reach**: {post['reach']:,}")
 
     st.markdown("---")
@@ -487,7 +509,7 @@ def _render_social_media_dashboard() -> None:
             z=posting_data,
             x=["12am", "3am", "6am", "9am", "12pm", "3pm", "6pm", "9pm"],
             y=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-            colorscale="Greens",
+            colorscale=[[0, ui.THEME["background"]], [1, ui.THEME["accent"]]],
             text=posting_data.round(1),
             texttemplate="%{text}",
             textfont={"size": 10},
@@ -496,6 +518,7 @@ def _render_social_media_dashboard() -> None:
     )
 
     fig_heatmap.update_layout(
+        template=plotly_template,
         title="Engagement by Day and Time",
         xaxis_title="Time of Day",
         yaxis_title="Day of Week",
@@ -562,14 +585,14 @@ def _render_roi_calculator() -> None:
         cpa = campaign_spend / customers_acquired if customers_acquired > 0 else 0
         profit = revenue_generated - campaign_spend
 
-        # Display metrics using card_metric for better UI
+        # Display metrics using animated_metric for better UI
         col_m1, col_m2 = st.columns(2)
         with col_m1:
-            ui.card_metric("ROI", f"{roi:.1f}%", help="Return on Investment")
-            ui.card_metric("CPA", f"${cpa:.2f}", help="Cost Per Acquisition")
+            ui.animated_metric("ROI", f"{roi:.1f}%", icon="💰")
+            ui.animated_metric("CPA", f"${cpa:.2f}", icon="🎯")
         with col_m2:
-            ui.card_metric("ROAS", f"{roas:.2f}x", help="Return on Ad Spend")
-            ui.card_metric("Profit", f"${profit:,.2f}", delta=f"{roi:.1f}% return")
+            ui.animated_metric("ROAS", f"{roas:.2f}x", icon="📈")
+            ui.animated_metric("Profit", f"${profit:,.2f}", delta=f"{roi:.1f}%", icon="💵")
 
         # Visual ROI indicator
         if roi > 0:
@@ -630,6 +653,7 @@ def _render_roi_calculator() -> None:
     )
 
     fig_heatmap.update_layout(
+        template=ui.get_plotly_template(),
         title="ROI Scenario Matrix: Conversion Rate × Average Order Value",
         xaxis_title="Average Order Value",
         yaxis_title="Conversion Rate",
@@ -663,7 +687,7 @@ def _render_customer_metrics() -> None:
 
     cac = (total_marketing_spend + total_sales_costs) / new_customers
 
-    ui.card_metric("Customer Acquisition Cost (CAC)", f"${cac:.2f}")
+    ui.animated_metric("Customer Acquisition Cost (CAC)", f"${cac:.2f}", icon="💸")
 
     st.markdown("---")
 
@@ -715,14 +739,14 @@ def _render_customer_metrics() -> None:
 
         col_clv1, col_clv2 = st.columns(2)
         with col_clv1:
-            ui.card_metric("Customer Lifetime Value (CLV)", f"${clv:.2f}")
+            ui.animated_metric("Customer Lifetime Value (CLV)", f"${clv:.2f}", icon="💎")
         with col_clv2:
-            ui.card_metric("Annual Customer Value", f"${customer_value:.2f}")
+            ui.animated_metric("Annual Customer Value", f"${customer_value:.2f}", icon="📅")
 
         # CLV to CAC ratio
         clv_cac_ratio = clv / cac if cac > 0 else 0
 
-        ui.card_metric("CLV:CAC Ratio", f"{clv_cac_ratio:.2f}x")
+        ui.animated_metric("CLV:CAC Ratio", f"{clv_cac_ratio:.2f}x", icon="⚖️")
 
         # Interpretation
         if clv_cac_ratio >= 3:
@@ -744,7 +768,7 @@ def _render_customer_metrics() -> None:
             z=cohort_data.values,
             x=cohort_data.columns,
             y=cohort_data.index,
-            colorscale="Blues",
+            colorscale=[[0, ui.THEME["background"]], [1, ui.THEME["primary"]]],
             text=cohort_data.values,
             texttemplate="%{text}%",
             textfont={"size": 10},
@@ -753,6 +777,7 @@ def _render_customer_metrics() -> None:
     )
 
     fig_cohort.update_layout(
+        template=ui.get_plotly_template(),
         title="Customer Retention by Cohort",
         xaxis_title="Months Since First Purchase",
         yaxis_title="Cohort Month",
@@ -799,7 +824,7 @@ def _render_ab_test() -> None:
 
         conversion_rate_a = (conversions_a / visitors_a * 100) if visitors_a > 0 else 0
 
-        ui.card_metric("Conversion Rate A", f"{conversion_rate_a:.2f}%")
+        ui.animated_metric("Conversion Rate A", f"{conversion_rate_a:.2f}%")
 
     with col2:
         st.markdown("#### 🅱️ Variant B (Test)")
@@ -814,7 +839,7 @@ def _render_ab_test() -> None:
 
         conversion_rate_b = (conversions_b / visitors_b * 100) if visitors_b > 0 else 0
 
-        ui.card_metric("Conversion Rate B", f"{conversion_rate_b:.2f}%")
+        ui.animated_metric("Conversion Rate B", f"{conversion_rate_b:.2f}%")
 
     st.markdown("---")
 
@@ -828,18 +853,19 @@ def _render_ab_test() -> None:
 
         with col1:
             lift = result["lift"]
-            ui.card_metric(
+            ui.animated_metric(
                 "Lift",
                 f"{lift:+.2f}%",
                 delta=f"{'Improvement' if lift > 0 else 'Decline'}",
+                icon="🚀" if lift > 0 else "📉",
             )
 
         with col2:
-            ui.card_metric("P-Value", f"{result['p_value']:.4f}")
+            ui.animated_metric("P-Value", f"{result['p_value']:.4f}", icon="🔬")
 
         with col3:
             confidence = (1 - result["p_value"]) * 100
-            ui.card_metric("Confidence", f"{confidence:.1f}%")
+            ui.animated_metric("Confidence", f"{confidence:.1f}%", icon="🛡️")
 
         # Interpretation
         st.subheader("📊 Test Results")
@@ -868,7 +894,7 @@ def _render_ab_test() -> None:
                     name="Variant A",
                     x=["Conversion Rate"],
                     y=[conversion_rate_a],
-                    marker_color="lightblue",
+                    marker_color=ui.THEME["secondary"],
                     text=[f"{conversion_rate_a:.2f}%"],
                     textposition="auto",
                 ),
@@ -876,7 +902,7 @@ def _render_ab_test() -> None:
                     name="Variant B",
                     x=["Conversion Rate"],
                     y=[conversion_rate_b],
-                    marker_color="lightgreen" if lift > 0 else "lightcoral",
+                    marker_color=ui.THEME["success"] if lift > 0 else ui.THEME["danger"],
                     text=[f"{conversion_rate_b:.2f}%"],
                     textposition="auto",
                 ),
@@ -884,6 +910,7 @@ def _render_ab_test() -> None:
         )
 
         fig_ab.update_layout(
+            template=ui.get_plotly_template(),
             title="A/B Test Comparison",
             yaxis_title="Conversion Rate (%)",
             barmode="group",
@@ -981,14 +1008,14 @@ def _render_multivariant_test() -> None:
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            ui.card_metric("Chi-Square Statistic", f"{result['chi_square']:.2f}")
+            ui.animated_metric("Chi-Square Statistic", f"{result['chi_square']:.2f}", icon="📊")
 
         with col2:
-            ui.card_metric("P-Value", f"{result['p_value']:.4f}")
+            ui.animated_metric("P-Value", f"{result['p_value']:.4f}", icon="🔬")
 
         with col3:
             confidence = (1 - result["p_value"]) * 100
-            ui.card_metric("Confidence", f"{confidence:.1f}%")
+            ui.animated_metric("Confidence", f"{confidence:.1f}%", icon="🛡️")
 
         # Interpretation
         st.subheader("📊 Test Results")
@@ -1051,7 +1078,7 @@ def _render_multivariant_test() -> None:
                     text=[f"{v['conv_rate']:.2f}%" for v in variant_data],
                     textposition="auto",
                     marker_color=[
-                        "gold" if v["name"] == result["best_variant"]["name"] else "lightblue"
+                        ui.THEME["accent"] if v["name"] == result["best_variant"]["name"] else ui.THEME["secondary"]
                         for v in variant_data
                     ],
                 )
@@ -1059,6 +1086,7 @@ def _render_multivariant_test() -> None:
         )
 
         fig_mv.update_layout(
+            template=ui.get_plotly_template(),
             title="Conversion Rates Across All Variants",
             xaxis_title="Variant",
             yaxis_title="Conversion Rate (%)",
@@ -1155,6 +1183,7 @@ def _render_attribution_modeling() -> None:
             color="credit",
             color_continuous_scale="Viridis",
         )
+        fig_attribution.update_layout(template=ui.get_plotly_template())
         st.plotly_chart(fig_attribution, use_container_width=True)
 
     with col2:
@@ -1182,7 +1211,11 @@ def _render_attribution_modeling() -> None:
         ),
     }
 
-    st.info(f"**{model}**: {explanations[model]}")
+    ui.glassmorphic_card(
+        title=model,
+        content=explanations[model],
+        icon="💡"
+    )
 
 
 def _render_reports() -> None:
