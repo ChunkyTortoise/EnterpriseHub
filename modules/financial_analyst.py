@@ -21,7 +21,11 @@ from modules.financial_analyst_logic import (
     FinancialsDict,
     find_column,
     calculate_yoy_growth,
-    build_ai_prompt
+    build_ai_prompt,
+    calculate_piotroski_score,
+    PiotroskiScore,
+    calculate_historical_ratios,
+    HistoricalRatios
 )
 
 # Conditional import for Claude API
@@ -37,9 +41,12 @@ logger = get_logger(__name__)
 def _display_demo_data(symbol: str) -> None:
     """Display demo data from pre-loaded JSON file."""
     import json
+    from pathlib import Path
 
-    # Load demo data
-    demo_file = "data/demo_aapl_fundamentals.json"
+    # Load demo data with robust path finding
+    base_dir = Path(__file__).parent.parent
+    demo_file = base_dir / "data/demo_aapl_fundamentals.json"
+    
     try:
         with open(demo_file, 'r') as f:
             demo_data = json.load(f)
@@ -78,7 +85,7 @@ def _display_demo_data(symbol: str) -> None:
     }
     df = pd.DataFrame(revenue_data)
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=df["Quarter"], y=df["Revenue"], marker_color='#1f77b4'))
+    fig.add_trace(go.Bar(x=df["Quarter"], y=df["Revenue"], marker_color=ui.THEME['primary']))
     fig.update_layout(
         title="Quarterly Revenue (Billions)",
         yaxis_title="Revenue ($B)",
@@ -207,6 +214,18 @@ def _fetch_and_display_data(symbol: str) -> None:
     _display_header(info, symbol)
     _display_key_metrics(info)
 
+    # Piotroski F-Score Section
+    st.markdown("---")
+    _display_piotroski_score(financials)
+
+    # Historical Ratio Trends
+    st.markdown("---")
+    _display_historical_trends(financials)
+
+    # Quarterly Trends (if available)
+    st.markdown("---")
+    _display_quarterly_trends(symbol)
+
     # AI Insights Section
     api_key = _get_api_key()
     if api_key and ANTHROPIC_AVAILABLE:
@@ -315,7 +334,7 @@ def _display_performance_charts(financials: FinancialsDict) -> None:
                 x=income_stmt.index,
                 y=income_stmt[rev_col],
                 name="Revenue",
-                marker_color="#00D9FF",
+                marker_color=ui.THEME["primary"],
             ),
             secondary_y=False,
         )
@@ -324,7 +343,7 @@ def _display_performance_charts(financials: FinancialsDict) -> None:
                 x=income_stmt.index,
                 y=income_stmt[net_inc_col],
                 name="Net Income",
-                line=dict(color="#FFA500", width=3),
+                line=dict(color=ui.THEME["warning"], width=3),
             ),
             secondary_y=True,
         )
@@ -516,7 +535,7 @@ def _display_statement_export(df: pd.DataFrame, statement_type: str) -> None:
 
                     # Header styling
                     for i in range(len(display_df.columns)):
-                        table[(0, i)].set_facecolor("#00D9FF")
+                        table[(0, i)].set_facecolor(ui.THEME["primary"])
                         table[(0, i)].set_text_props(weight="bold", color="white")
 
                     # Add title
@@ -543,6 +562,341 @@ def _display_statement_export(df: pd.DataFrame, statement_type: str) -> None:
                 st.error("⚠️ PDF export requires matplotlib. Install with: pip install matplotlib")
             except Exception as e:
                 st.error(f"⚠️ Error generating PDF: {str(e)}")
+
+
+def _display_piotroski_score(financials: FinancialsDict) -> None:
+    """
+    Display Piotroski F-Score with breakdown of 9 criteria.
+
+    Args:
+        financials: Financial statements dictionary
+    """
+    st.subheader("🏆 Piotroski F-Score (Financial Health)")
+
+    piotroski = calculate_piotroski_score(financials)
+
+    if piotroski is None:
+        st.warning("⚠️ Insufficient historical data to calculate Piotroski F-Score (requires 2+ years)")
+        return
+
+    # Main score display
+    score_col1, score_col2, score_col3 = st.columns([1, 1, 1])
+
+    with score_col1:
+        # Determine color based on score
+        if piotroski.total_score >= 7:
+            color = "success"
+            icon = "🟢"
+        elif piotroski.total_score >= 4:
+            color = "primary"
+            icon = "🟡"
+        else:
+            color = "danger"
+            icon = "🔴"
+
+        ui.animated_metric(
+            "Total Score",
+            f"{piotroski.total_score}/9",
+            delta=piotroski.interpretation,
+            icon=icon,
+            color=color
+        )
+
+    with score_col2:
+        ui.animated_metric(
+            "Profitability",
+            f"{piotroski.profitability_score}/4",
+            icon="💰"
+        )
+
+    with score_col3:
+        ui.animated_metric(
+            "Leverage & Efficiency",
+            f"{piotroski.leverage_score + piotroski.efficiency_score}/5",
+            icon="⚖️"
+        )
+
+    # Detailed breakdown
+    with st.expander("📋 Detailed Criteria Breakdown", expanded=False):
+        st.markdown("##### Profitability Signals (4 points)")
+
+        criteria_names = {
+            "positive_roa": "✅ Positive Return on Assets" if piotroski.criteria.get("positive_roa") else "❌ Positive Return on Assets",
+            "positive_ocf": "✅ Positive Operating Cash Flow" if piotroski.criteria.get("positive_ocf") else "❌ Positive Operating Cash Flow",
+            "roa_improving": "✅ ROA Improving YoY" if piotroski.criteria.get("roa_improving") else "❌ ROA Improving YoY",
+            "quality_earnings": "✅ Quality Earnings (OCF > NI)" if piotroski.criteria.get("quality_earnings") else "❌ Quality Earnings (OCF > NI)",
+        }
+
+        for key, label in criteria_names.items():
+            st.markdown(f"- {label}")
+
+        st.markdown("##### Leverage & Liquidity Signals (3 points)")
+
+        lev_criteria = {
+            "leverage_decreasing": "✅ Leverage Decreasing" if piotroski.criteria.get("leverage_decreasing") else "❌ Leverage Decreasing",
+            "liquidity_improving": "✅ Liquidity Improving" if piotroski.criteria.get("liquidity_improving") else "❌ Liquidity Improving",
+            "no_dilution": "✅ No Share Dilution" if piotroski.criteria.get("no_dilution") else "❌ No Share Dilution",
+        }
+
+        for key, label in lev_criteria.items():
+            st.markdown(f"- {label}")
+
+        st.markdown("##### Operating Efficiency Signals (2 points)")
+
+        eff_criteria = {
+            "margin_improving": "✅ Gross Margin Improving" if piotroski.criteria.get("margin_improving") else "❌ Gross Margin Improving",
+            "turnover_improving": "✅ Asset Turnover Improving" if piotroski.criteria.get("turnover_improving") else "❌ Asset Turnover Improving",
+        }
+
+        for key, label in eff_criteria.items():
+            st.markdown(f"- {label}")
+
+    # Interpretation guidance
+    if piotroski.total_score >= 7:
+        st.success(
+            "🟢 **Strong Financial Health** - This company exhibits strong fundamentals across profitability, leverage, and efficiency. "
+            "Scores of 7-9 historically correlate with outperformance."
+        )
+    elif piotroski.total_score >= 4:
+        st.info(
+            "🟡 **Moderate Financial Health** - Mixed signals. Review the detailed breakdown to understand strengths and weaknesses. "
+            "Consider combining with other analysis frameworks."
+        )
+    else:
+        st.warning(
+            "🔴 **Weak Financial Health** - Multiple red flags detected. This company shows concerning trends in profitability, leverage, or efficiency. "
+            "Proceed with caution and conduct thorough due diligence."
+        )
+
+
+def _display_historical_trends(financials: FinancialsDict) -> None:
+    """
+    Display 5-year historical trend charts for key financial ratios.
+
+    Args:
+        financials: Financial statements dictionary
+    """
+    st.subheader("📈 5-Year Financial Health Trends")
+
+    historical = calculate_historical_ratios(financials)
+
+    if historical is None:
+        st.info("💡 Multi-year historical data not available for trend analysis.")
+        return
+
+    # Create 2x2 grid of trend charts
+    col1, col2 = st.columns(2)
+
+    with col1:
+        # Current Ratio Trend
+        if not historical.current_ratio.empty:
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=historical.years,
+                y=historical.current_ratio.values,
+                mode='lines+markers',
+                name='Current Ratio',
+                line=dict(color='#10B981', width=3),
+                marker=dict(size=8)
+            ))
+            fig.update_layout(
+                title="Current Ratio (Liquidity)",
+                yaxis_title="Ratio",
+                height=300,
+                template="plotly_dark",
+                showlegend=False
+            )
+            fig.add_hline(y=2.0, line_dash="dash", line_color="gray", annotation_text="Healthy: 2.0+")
+            st.plotly_chart(fig, use_container_width=True)
+
+        # ROE Trend
+        if not historical.roe.empty:
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=historical.years,
+                y=historical.roe.values,
+                mode='lines+markers',
+                name='ROE',
+                line=dict(color='#3B82F6', width=3),
+                marker=dict(size=8)
+            ))
+            fig.update_layout(
+                title="Return on Equity (ROE)",
+                yaxis_title="ROE (%)",
+                height=300,
+                template="plotly_dark",
+                showlegend=False
+            )
+            fig.add_hline(y=15.0, line_dash="dash", line_color="gray", annotation_text="Strong: 15%+")
+            st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        # Debt-to-Equity Trend
+        if not historical.debt_to_equity.empty:
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=historical.years,
+                y=historical.debt_to_equity.values,
+                mode='lines+markers',
+                name='D/E Ratio',
+                line=dict(color='#F59E0B', width=3),
+                marker=dict(size=8)
+            ))
+            fig.update_layout(
+                title="Debt-to-Equity (Leverage)",
+                yaxis_title="D/E Ratio",
+                height=300,
+                template="plotly_dark",
+                showlegend=False
+            )
+            fig.add_hline(y=1.0, line_dash="dash", line_color="gray", annotation_text="Moderate: <1.0")
+            st.plotly_chart(fig, use_container_width=True)
+
+        # Margin Trends
+        if not historical.net_margin.empty or not historical.gross_margin.empty:
+            fig = go.Figure()
+            if not historical.gross_margin.empty:
+                fig.add_trace(go.Scatter(
+                    x=historical.years,
+                    y=historical.gross_margin.values,
+                    mode='lines+markers',
+                    name='Gross Margin',
+                    line=dict(color='#8B5CF6', width=2)
+                ))
+            if not historical.net_margin.empty:
+                fig.add_trace(go.Scatter(
+                    x=historical.years,
+                    y=historical.net_margin.values,
+                    mode='lines+markers',
+                    name='Net Margin',
+                    line=dict(color='#EC4899', width=2)
+                ))
+            fig.update_layout(
+                title="Profit Margins",
+                yaxis_title="Margin (%)",
+                height=300,
+                template="plotly_dark",
+                legend=dict(orientation="h", y=1.1)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+    # Trend interpretation
+    st.caption(
+        "📊 **Trend Interpretation:** Look for improving trends (lines going up for Current Ratio, ROE, Margins; "
+        "lines going down for D/E Ratio). Consistent trends are more reliable than volatile ones."
+    )
+
+
+def _display_quarterly_trends(symbol: str) -> None:
+    """
+    Display quarterly revenue and earnings trends with growth rates.
+
+    Args:
+        symbol: Stock ticker symbol
+    """
+    st.subheader("📊 Quarterly Performance Trends")
+
+    try:
+        import yfinance as yf
+
+        ticker = yf.Ticker(symbol)
+        quarterly_income = ticker.quarterly_financials
+
+        if quarterly_income is None or quarterly_income.empty:
+            st.info("💡 Quarterly financial data not available for this ticker.")
+            return
+
+        # Transpose and sort by date
+        q_inc = quarterly_income.T
+        q_inc.index = pd.to_datetime(q_inc.index)
+        q_inc = q_inc.sort_index()
+
+        # Get last 8 quarters
+        q_inc = q_inc.tail(8)
+
+        if len(q_inc) < 2:
+            st.info("💡 Insufficient quarterly data (need at least 2 quarters).")
+            return
+
+        # Find columns
+        rev_col = find_column(q_inc, ["TotalRevenue", "Revenue"])
+        net_inc_col = find_column(q_inc, ["NetIncome", "Net Income"])
+
+        if not rev_col and not net_inc_col:
+            st.info("💡 Revenue and earnings data not found in quarterly financials.")
+            return
+
+        # Create display dataframe
+        quarters = [f"Q{dt.quarter} {dt.year}" for dt in q_inc.index]
+
+        display_data = []
+        for i, (idx, row) in enumerate(q_inc.iterrows()):
+            quarter_info = {"Quarter": quarters[i]}
+
+            # Revenue
+            if rev_col:
+                revenue = row[rev_col]
+                quarter_info["Revenue ($B)"] = f"${revenue / 1e9:.2f}B" if pd.notna(revenue) else "N/A"
+
+                # YoY growth (compare to 4 quarters ago)
+                if i >= 4:
+                    prev_revenue = q_inc[rev_col].iloc[i - 4]
+                    if pd.notna(revenue) and pd.notna(prev_revenue) and prev_revenue > 0:
+                        yoy_growth = ((revenue - prev_revenue) / prev_revenue) * 100
+                        quarter_info["Rev YoY %"] = f"{yoy_growth:+.1f}%"
+                    else:
+                        quarter_info["Rev YoY %"] = "N/A"
+                else:
+                    quarter_info["Rev YoY %"] = "N/A"
+
+            # Earnings
+            if net_inc_col:
+                earnings = row[net_inc_col]
+                quarter_info["Earnings ($B)"] = f"${earnings / 1e9:.2f}B" if pd.notna(earnings) else "N/A"
+
+                # YoY growth
+                if i >= 4:
+                    prev_earnings = q_inc[net_inc_col].iloc[i - 4]
+                    if pd.notna(earnings) and pd.notna(prev_earnings) and abs(prev_earnings) > 0:
+                        yoy_growth = ((earnings - prev_earnings) / abs(prev_earnings)) * 100
+                        quarter_info["Earn YoY %"] = f"{yoy_growth:+.1f}%"
+                    else:
+                        quarter_info["Earn YoY %"] = "N/A"
+                else:
+                    quarter_info["Earn YoY %"] = "N/A"
+
+            display_data.append(quarter_info)
+
+        # Display table
+        df_display = pd.DataFrame(display_data)
+        st.dataframe(df_display, use_container_width=True, hide_index=True)
+
+        # Quick chart
+        if rev_col:
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=quarters,
+                y=q_inc[rev_col].values / 1e9,
+                name='Revenue',
+                marker_color='#3B82F6'
+            ))
+            fig.update_layout(
+                title="Quarterly Revenue Trend",
+                yaxis_title="Revenue ($B)",
+                height=300,
+                template="plotly_dark",
+                showlegend=False
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        st.caption(
+            "💡 **YoY Growth** compares each quarter to the same quarter last year, "
+            "accounting for seasonal patterns. Look for consistent positive growth."
+        )
+
+    except Exception as e:
+        logger.warning(f"Error fetching quarterly data for {symbol}: {e}")
+        st.info(f"💡 Could not load quarterly data: {str(e)}")
 
 
 def _get_api_key() -> Optional[str]:
@@ -617,6 +971,80 @@ def _generate_financial_insights(
         logger.error(f"Error generating insights: {e}", exc_info=True)
         st.error(f"Generation failed: {str(e)}")
         return None
+
+
+def _display_dcf_waterfall(latest_fcf: float, result, shares_outstanding: float) -> None:
+    """
+    Display a waterfall chart showing the DCF calculation breakdown.
+
+    Args:
+        latest_fcf: Starting free cash flow value
+        result: DCFResult object with projections and enterprise value
+        shares_outstanding: Number of shares outstanding
+    """
+    # Calculate terminal value PV (reverse engineer from enterprise value)
+    sum_proj_pv = sum(p["PV"] for p in result.projections)
+    terminal_pv = result.enterprise_value - sum_proj_pv
+
+    # Group projections into 5-year buckets
+    years_1_5_pv = sum(p["PV"] for p in result.projections[0:5])
+    years_6_10_pv = sum(p["PV"] for p in result.projections[5:10])
+
+    # Prepare waterfall data
+    labels = [
+        "Starting FCF",
+        "Years 1-5 PV",
+        "Years 6-10 PV",
+        "Terminal Value PV",
+        "Enterprise Value",
+        "Per Share Value"
+    ]
+
+    # Values for waterfall: relative changes except for totals
+    measures = ["absolute", "relative", "relative", "relative", "total", "total"]
+
+    values = [
+        latest_fcf / 1e9,  # Convert to billions
+        years_1_5_pv / 1e9,
+        years_6_10_pv / 1e9,
+        terminal_pv / 1e9,
+        result.enterprise_value / 1e9,
+        result.fair_value
+    ]
+
+    # Create waterfall chart
+    fig = go.Figure(go.Waterfall(
+        name="DCF Breakdown",
+        orientation="v",
+        measure=measures,
+        x=labels,
+        y=values,
+        text=[f"${v:.2f}B" if i < 5 else f"${v:.2f}" for i, v in enumerate(values)],
+        textposition="outside",
+        connector={"line": {"color": "#64748B", "width": 1}},
+        decreasing={"marker": {"color": "#EF4444"}},  # Red for decreases (unlikely in DCF)
+        increasing={"marker": {"color": "#10B981"}},  # Green for increases
+        totals={"marker": {"color": "#3B82F6"}}  # Blue for totals
+    ))
+
+    fig.update_layout(
+        title="DCF Valuation Build-Up",
+        showlegend=False,
+        height=450,
+        template="plotly_dark",
+        yaxis_title="Value (Billions $)",
+        xaxis_title="",
+        font=dict(size=12)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Add interpretation
+    st.caption(
+        f"📊 The waterfall shows how we build from **${latest_fcf / 1e9:.2f}B** in current FCF "
+        f"to a fair value of **${result.fair_value:.2f}** per share. "
+        f"Terminal value represents **{(terminal_pv / result.enterprise_value) * 100:.1f}%** of the total enterprise value."
+    )
 
 
 def _display_dcf_valuation(info: CompanyInfo, financials: FinancialsDict, symbol: str) -> None:
@@ -782,6 +1210,13 @@ def _display_dcf_valuation(info: CompanyInfo, financials: FinancialsDict, symbol
         projection_df["FCF"] = projection_df["FCF"].apply(lambda x: f"${x / 1e9:.2f}B")
         projection_df["PV"] = projection_df["PV"].apply(lambda x: f"${x / 1e9:.2f}B")
         st.dataframe(projection_df, use_container_width=True, hide_index=True)
+
+    # Waterfall Chart - Visual DCF Breakdown
+    st.markdown("---")
+    st.markdown("#### 💧 DCF Valuation Waterfall")
+    st.caption("Visual breakdown of how we calculated the fair value")
+
+    _display_dcf_waterfall(latest_fcf, result, shares_outstanding)
 
     # Sensitivity analysis
     st.markdown("---")

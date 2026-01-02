@@ -8,6 +8,50 @@
 
 ---
 
+## 🆕 What's New
+
+### **v2.2.0 - January 2026** (Current Release)
+
+#### Piotroski F-Score Analysis
+- **9-Point Financial Health Score**: Industry-standard framework evaluating profitability, leverage, and efficiency
+- **Score Interpretation**: Automatic classification as Strong (7-9), Moderate (4-6), or Weak (0-3)
+- **Detailed Breakdown**: Expandable view showing all 9 criteria with pass/fail status
+- **Historical Proven**: Framework used by value investors with proven track record
+
+#### Historical Trend Charts (5-Year)
+- **Current Ratio Trends**: Track liquidity improvement/deterioration over time
+- **Debt-to-Equity Trends**: Monitor leverage changes
+- **ROE Trends**: See profitability trajectory
+- **Margin Trends**: Gross and Net margin evolution
+- **Reference Lines**: Industry benchmarks for quick assessment
+
+#### Quarterly Performance Analysis
+- **Last 8 Quarters**: Recent revenue and earnings trends
+- **YoY Growth Rates**: Compare each quarter to same quarter last year (accounts for seasonality)
+- **Visual Charts**: Bar charts showing quarterly revenue progression
+- **Growth Acceleration**: Easily spot if growth is accelerating or decelerating
+
+---
+
+### **v2.1.0 - January 2026**
+
+#### Enhanced AI Insights
+- **Advanced Financial Ratios**: AI analysis now includes Current Ratio, Debt-to-Equity, ROE, and Operating Cash Flow Margin
+- **Comprehensive Data**: Leverages Income Statement, Balance Sheet, AND Cash Flow data for deeper insights
+- **Contextual Analysis**: Claude references specific ratios when identifying risks and opportunities
+
+#### DCF Valuation Waterfall Chart
+- **Visual Breakdown**: New waterfall chart shows exactly how we build from current FCF to fair value per share
+- **Component Analysis**: See contribution of Years 1-5, Years 6-10, and Terminal Value
+- **Terminal Value Insights**: Percentage breakdown showing how much of the valuation comes from terminal value
+
+#### Architecture Improvements
+- **92% Test Coverage**: Comprehensive unit tests for all financial logic
+- **Type Safety**: Full TypedDict and dataclass usage for financial data
+- **Separation of Concerns**: Pure logic in `financial_analyst_logic.py`, UI in `financial_analyst.py`
+
+---
+
 ## 🎯 Business Value
 
 The Financial Analyst module provides comprehensive fundamental analysis for any publicly traded company, enabling investors and analysts to make informed decisions based on key financial metrics, trends, and AI-powered insights.
@@ -35,21 +79,28 @@ Instant view of critical metrics:
 - **EPS (Earnings Per Share)** - Profitability indicator
 - **Dividend Yield** - Income potential for investors
 
-### 3. **🤖 AI Insights (NEW)**
-Claude-powered financial analysis providing:
+### 3. **🤖 AI Insights (ENHANCED)**
+Claude-powered financial analysis with **comprehensive ratio analysis**:
 - **Financial Health Assessment** (3-5 bullet points)
   - Overall financial health evaluation
-  - Profitability analysis
-  - Liquidity assessment
-  - Growth trajectory
+  - Profitability analysis with ROE, margins
+  - Liquidity assessment with Current Ratio
+  - Growth trajectory and revenue trends
 - **Key Risks** (2-3 bullet points)
-  - Potential concerns and red flags
+  - Potential concerns based on debt-to-equity ratio
   - Industry-specific risks
-  - Financial vulnerabilities
+  - Financial vulnerabilities and leverage concerns
 - **Key Opportunities** (2-3 bullet points)
   - Growth opportunities
   - Competitive advantages
   - Market positioning strengths
+
+**NEW - Enhanced with Advanced Ratios:**
+- Current Ratio (Liquidity)
+- Debt-to-Equity (Leverage)
+- Return on Equity (ROE)
+- Operating Cash Flow Margin
+- All metrics integrated into AI analysis for deeper insights
 
 **Toggle Feature**: Enable/disable AI insights with one click
 **Graceful Fallback**: Works without API key (shows toggle option when available)
@@ -62,12 +113,20 @@ Interactive visualizations:
   - Gross Margin
   - YoY Revenue Growth
 
-### 5. **💰 DCF Valuation Model (NEW)**
+### 5. **💰 DCF Valuation Model (ENHANCED)**
 Calculate intrinsic value using a configurable Discounted Cash Flow model:
-- **Projected Cash Flows**: 10-year projections with variable growth rates.
-- **Terminal Value**: Calculated using the Gordon Growth Model.
-- **WACC & Margin of Safety**: Adjustable sliders to see valuation sensitivity.
-- **Valuation Verdict**: Automatic "UNDERVALUED", "OVERVALUED", or "FAIRLY VALUED" assessment.
+- **Projected Cash Flows**: 10-year projections with variable growth rates
+- **Terminal Value**: Calculated using the Gordon Growth Model
+- **WACC & Margin of Safety**: Adjustable sliders to see valuation sensitivity
+- **Valuation Verdict**: Automatic "UNDERVALUED", "OVERVALUED", or "FAIRLY VALUED" assessment
+- **💧 NEW: Waterfall Chart** - Visual breakdown showing:
+  - Starting FCF
+  - Years 1-5 projected cash flows (present value)
+  - Years 6-10 projected cash flows (present value)
+  - Terminal value contribution
+  - Final enterprise value → fair value per share
+  - Percentage contribution of terminal value
+- **Sensitivity Analysis**: Matrix showing fair value under different WACC and growth rate scenarios
 
 ### 6. **Detailed Financial Statements**
 Tabbed view of complete financial data:
@@ -164,4 +223,4 @@ MIT License - See [LICENSE](../LICENSE) for details
 
 ---
 
-**Last Updated:** December 2024 | **Version:** 2.0.0 (AI-Enhanced)
+**Last Updated:** January 2, 2026 | **Version:** 2.2.0 (Piotroski + Historical Trends + Quarterly Analysis)

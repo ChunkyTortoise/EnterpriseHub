@@ -246,7 +246,7 @@ def _generate_css(theme: dict) -> str:
     }}
 
     /* HEADERS - Fluid Typography */
-    h1 {{
+    h1, h1 span {{
         font-size: clamp(2rem, 5vw, 4rem);
         font-weight: 800;
         letter-spacing: -0.04em;
@@ -257,7 +257,7 @@ def _generate_css(theme: dict) -> str:
         animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }}
 
-    h2 {{
+    h2, h2 span {{
         font-size: 1.75rem;
         font-weight: 700;
         letter-spacing: -0.02em;
@@ -269,11 +269,17 @@ def _generate_css(theme: dict) -> str:
         animation: fadeIn 1s ease-out;
     }}
 
-    h3 {{
+    h3, h3 span {{
         font-size: 1.25rem;
         font-weight: 600;
         color: {theme["text_main"]} !important;
         margin-bottom: 0.75rem;
+    }}
+
+    /* MARKDOWN CONTAINER TEXT */
+    div[data-testid="stMarkdownContainer"],
+    div[data-testid="stMarkdownContainer"] p {{
+        color: {theme["text_main"]} !important;
     }}
 
     p, span, label, li {{
@@ -284,6 +290,28 @@ def _generate_css(theme: dict) -> str:
     div[data-testid="stSidebarNav"] li[data-selected="true"] {{
         background-color: {theme["primary_light"]};
         border-left: 4px solid {theme["accent"]};
+    }}
+
+    /* WIDGET LABELS & CHECKBOXES */
+    div[data-testid="stWidgetLabel"],
+    div[data-testid="stWidgetLabel"] p,
+    div[data-testid="stWidgetLabel"] label,
+    label[data-testid="stLabel"],
+    div[data-testid="stCheckbox"] label,
+    div[data-testid="stCheckbox"] p {{
+        color: {theme["text_main"]} !important;
+    }}
+
+    /* TABS */
+    button[data-testid="stTab"] {{
+        color: {theme["text_light"]} !important;
+    }}
+    button[data-testid="stTab"][aria-selected="true"] {{
+        color: {theme["accent"]} !important;
+        border-bottom-color: {theme["accent"]} !important;
+    }}
+    button[data-testid="stTab"] p {{
+        color: inherit !important;
     }}
 
     .stButton button {{
@@ -317,14 +345,14 @@ def _generate_css(theme: dict) -> str:
     div[data-testid="stMetricValue"] {{
         font-size: 2rem;
         font-weight: 700;
-        color: {theme["primary"]};
+        color: {theme["primary"]} !important;
         font-feature-settings: "tnum";
         font-variant-numeric: tabular-nums;
     }}
 
     div[data-testid="stMetricLabel"] {{
         font-size: 0.875rem;
-        color: {theme["text_light"]};
+        color: {theme["text_light"]} !important;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -335,6 +363,12 @@ def _generate_css(theme: dict) -> str:
         border-radius: 8px;
         border: 1px solid transparent;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }}
+
+    div[data-testid="stAlert"] p,
+    div[data-testid="stAlert"] span,
+    div[data-testid="stAlert"] div {{
+        color: {theme["text_main"]} !important;
     }}
 
     /* LINKS */

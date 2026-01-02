@@ -55,7 +55,9 @@ def get_stock_data(ticker: str, period: str = "1y", interval: str = "1d", use_de
             import json
             from pathlib import Path
             
-            demo_file = Path("data") / f"demo_{ticker.lower()}_data.json"
+            # Use absolute path relative to this file to ensure data is found
+            base_dir = Path(__file__).parent.parent
+            demo_file = base_dir / "data" / f"demo_{ticker.lower()}_data.json"
             
             if demo_file.exists():
                 logger.info(f"Loading demo data for {ticker}")
