@@ -198,17 +198,17 @@ def _render_results(
         <div style='background-color: {ui.THEME["surface"]}; border-left: 5px solid {ui.THEME["accent"]}; 
                     padding: 2rem; border-radius: 8px; border: 1px solid {ui.THEME["border"]}; border-left-width: 5px;'>
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; color: {ui.THEME["primary"]};'>📝 Consultant's Executive Summary</h3>
+                <h3 style='margin: 0; color: {ui.THEME["primary"]} !important;'>📝 Consultant's Executive Summary</h3>
                 {ui.status_badge("HEALTHY" if current_profit > target_profit else "ACTION REQUIRED")}
             </div>
-            <p style='color: #334155; line-height: 1.6; font-size: 1.05rem;'>
+            <p style='color: {ui.THEME["text_main"]} !important; line-height: 1.6; font-size: 1.05rem;'>
                 Based on current cost structures and sales volume, the business is operating 
                 <strong>{margin_of_safety_pct:.1f}%</strong> above its break-even point. 
                 The contribution margin of <strong>${contribution_margin:.2f}</strong> provides 
                 sufficient coverage for fixed costs.
             </p>
             <hr style='border: 0; border-top: 1px solid {ui.THEME["border"]}; margin: 1.5rem 0;'>
-            <p style='color: #475569; font-size: 0.95rem;'>
+            <p style='color: {ui.THEME["text_light"]} !important; font-size: 0.95rem;'>
                 <strong>Strategic Recommendation:</strong> To achieve your target profit of 
                 <strong>${target_profit:,.2f}</strong>, an additional sales volume of 
                 <strong>{int(np.ceil(target_units - current_sales_units)):,} units</strong> is required.

@@ -154,23 +154,22 @@ def _display_demo_sentiment(symbol: str) -> None:
         st.plotly_chart(fig, use_container_width=True)
 
     with d_col2:
-        # Verdict based on sentiment
         if trend == "very_bullish":
-            verdict = "STRONGLY BULLISH"
+            verdict = "STRONG BUY"
             verdict_icon = "🚀"
-            verdict_color = "#10B981" # Emerald
+            verdict_color = ui.THEME["success"]
         elif trend == "bullish":
             verdict = "BULLISH"
             verdict_icon = "📈"
-            verdict_color = "#34D399" # Teal
+            verdict_color = ui.THEME["success"]
         elif trend == "bearish":
             verdict = "BEARISH"
             verdict_icon = "📉"
-            verdict_color = "#EF4444" # Red
+            verdict_color = ui.THEME["danger"]
         else:
             verdict = "NEUTRAL"
             verdict_icon = "➡️"
-            verdict_color = "#94A3B8" # Slate
+            verdict_color = ui.THEME["text_light"]
 
         ui.glassmorphic_card(
             title="AI Market Verdict",
