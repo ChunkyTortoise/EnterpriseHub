@@ -482,18 +482,11 @@ except APIError as e:
 
 ---
 
-### 💼 Financial Analyst Module
-
-1. **Enter a ticker symbol** (e.g., AAPL, MSFT, GOOGL)
-2. **View Key Metrics** - Market Cap, P/E Ratio, EPS, Dividend Yield
-3. **AI Insights** - Automated financial health assessment using Claude 3.5 Sonnet
-4. **DCF Valuation** - Interactive 10-year Discounted Cash Flow model:
-   - Adjust growth rates for years 1-5 and 6-10
-   - Set terminal growth rate and discount rate (WACC)
-   - Apply Margin of Safety for conservative valuation
-   - View sensitivity analysis matrix
-5. **Detailed Financials** - Explore Income Statement, Balance Sheet, and Cash Flow
-6. **Professional Export** - Generate and download PDF financial reports
+### 💼 Financial Analyst (Staff-Grade)
+* **AI-Powered Insights**: Claude 3.5 analysis of financial health, risks, and opportunities.
+* **Interactive DCF Model**: 10-year intrinsic value projections with WACC sensitivity analysis.
+* **Professional Export**: One-click PDF report generation for financial statements.
+* **Decoupled Engine**: High-performance core logic separated from UI for maximum testability.
 
 ---
 

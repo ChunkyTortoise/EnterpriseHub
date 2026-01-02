@@ -162,18 +162,14 @@ else:
 - API clients passed to functions
 - Easy to mock in tests
 
-### 4. **Retry Pattern**
-- Exponential backoff for API failures
-- Configurable retry attempts (default: 3)
-- Specific error handling (RateLimitError, APIConnectionError, APITimeoutError)
+### 5. **Decoupled Logic Pattern (v5.1+)**
+- Business logic and financial calculations are separated into standalone `*_logic.py` files.
+- UI modules focus exclusively on orchestration and rendering.
+- Enables pure unit testing of core math with zero Streamlit/UI overhead.
 
-**Implementation**:
-```python
-@retry_with_exponential_backoff(max_attempts=3, initial_delay=1.0)
-def api_call():
-    # API logic
-    pass
-```
+**Example (Financial Analyst)**:
+- `modules/financial_analyst_logic.py`: Contains `DCFModel` and math functions.
+- `modules/financial_analyst.py`: Streamlit dashboard that imports the logic engine.
 
 ---
 

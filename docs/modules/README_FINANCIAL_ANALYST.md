@@ -62,11 +62,22 @@ Interactive visualizations:
   - Gross Margin
   - YoY Revenue Growth
 
-### 5. **Detailed Financial Statements**
+### 5. **💰 DCF Valuation Model (NEW)**
+Calculate intrinsic value using a configurable Discounted Cash Flow model:
+- **Projected Cash Flows**: 10-year projections with variable growth rates.
+- **Terminal Value**: Calculated using the Gordon Growth Model.
+- **WACC & Margin of Safety**: Adjustable sliders to see valuation sensitivity.
+- **Valuation Verdict**: Automatic "UNDERVALUED", "OVERVALUED", or "FAIRLY VALUED" assessment.
+
+### 6. **Detailed Financial Statements**
 Tabbed view of complete financial data:
 - **Income Statement** - Revenue, expenses, net income
 - **Balance Sheet** - Assets, liabilities, equity
 - **Cash Flow** - Operating, investing, financing activities
+
+### 7. **📥 Professional Exports**
+- **CSV/Excel**: Export complete statements for offline analysis.
+- **PDF Reports**: Generate professionally formatted financial reports.
 
 ---
 
@@ -76,148 +87,45 @@ Tabbed view of complete financial data:
 1. Enter a ticker symbol (e.g., AAPL, MSFT, GOOGL)
 2. View company overview and key metrics
 3. Analyze financial performance charts
-4. Explore detailed financial statements
+4. **Interactive DCF**: Adjust sliders in the DCF section to calculate your own fair value.
+5. Explore detailed financial statements and export reports.
 
 ### AI-Enhanced Analysis (Requires API Key)
-1. Set up your Anthropic API key:
-   ```bash
-   export ANTHROPIC_API_KEY="sk-ant-..."
-   ```
-   Or add it in the Content Engine module first (stored in session state)
-
-2. Enter ticker symbol
-3. **Toggle "Enable AI Insights"** to activate Claude analysis
-4. Review AI-generated insights:
-   - Financial health assessment
-   - Key risks to watch
-   - Key opportunities to leverage
-
-### Example Use Cases
-
-**Use Case 1: Pre-Investment Research**
-```
-Ticker: NVDA
-Action: Enable AI Insights
-Result: Understand NVIDIA's financial position, growth trajectory,
-        and risk factors before investing
-```
-
-**Use Case 2: Portfolio Review**
-```
-Ticker: Portfolio holdings (one at a time)
-Action: Compare key metrics and AI insights
-Result: Identify strongest/weakest positions
-```
-
-**Use Case 3: Competitive Analysis**
-```
-Tickers: AAPL, MSFT, GOOGL (analyze separately)
-Action: Compare metrics and AI assessments
-Result: Benchmark companies against each other
-```
-
+...
 ---
 
 ## 🛠️ Technical Details
+
+### Architecture
+The module follows a decoupled architecture for maintainability and testability:
+- **`modules/financial_analyst_logic.py`**: Pure Python logic for financial math (DCFModel, growth rates). Zero UI dependencies.
+- **`modules/financial_analyst.py`**: Streamlit-based UI layer that orchestrates data fetching and rendering.
 
 ### Data Sources
 - **yfinance API** - Real-time company info and financials
 - **Claude 3.5 Sonnet** - AI-powered financial analysis
 
-### Key Metrics Calculated
+### Core Calculations
+The `DCFModel` class handles the heavy lifting:
 ```python
-# Net Profit Margin
-net_margin = (net_income / revenue) * 100
-
-# Gross Margin
-gross_margin = (gross_profit / revenue) * 100
-
-# YoY Revenue Growth
-revenue_growth = ((current_revenue - prior_revenue) / prior_revenue) * 100
+# Terminal Value (Gordon Growth)
+terminal_fcf = current_fcf * (1 + terminal_growth / 100)
+terminal_val = terminal_fcf / (discount_rate / 100 - terminal_growth / 100)
 ```
 
 ### AI Insights Generation
-The module builds a comprehensive financial summary including:
-- Company basics (name, sector, industry)
-- Key valuation metrics (market cap, P/E, EPS)
-- Revenue and profitability trends
-- Year-over-year growth rates
-
-Claude then analyzes this data to provide:
-- Context-aware financial assessment
-- Risk identification based on metrics
-- Opportunity spotting from growth trends
-
-### Error Handling
-- Invalid ticker symbols show user-friendly error
-- Missing financial data handled gracefully
-- API errors fall back to basic analysis
-- Graceful degradation when API key unavailable
-
----
-
-## 📊 Example Output
-
-### Company: Apple Inc. (AAPL)
-
-**Key Metrics:**
-- Market Cap: $2,800.00B
-- P/E Ratio: 28.50
-- EPS: $6.42
-- Dividend Yield: 0.45%
-
-**AI Insights (Sample):**
-
-**Financial Health Assessment:**
-- Strong balance sheet with $2.8T market capitalization and consistent profitability
-- Net profit margin of 25.1% indicates exceptional operational efficiency
-- Revenue growth of 5.3% YoY demonstrates continued market expansion
-- High P/E ratio of 28.5 reflects market confidence in future growth
-
-**Key Risks:**
-- Premium P/E valuation leaves limited margin for execution misses
-- Revenue growth has decelerated from prior years, suggesting market maturation
-- High dependence on iPhone sales creates product concentration risk
-
-**Key Opportunities:**
-- Services segment growth outpacing hardware, improving margin profile
-- Strong brand loyalty and ecosystem lock-in support pricing power
-- Massive cash position enables strategic M&A and shareholder returns
-
----
-
-## 🔑 API Key Setup
-
-### Option 1: Environment Variable
-```bash
-export ANTHROPIC_API_KEY="sk-ant-api03-xxx"
-```
-
-### Option 2: Via Content Engine Module
-1. Go to Content Engine module
-2. Enter API key in the setup form
-3. Key is stored in session state for all modules
-
-### Getting an API Key
-1. Visit [console.anthropic.com](https://console.anthropic.com/)
-2. Sign up for free ($5 credit included)
-3. Create an API key
-4. Estimated cost: ~$0.01 per company analysis
-
+...
 ---
 
 ## 🧪 Testing
 
 The module includes comprehensive tests:
-- Company info display
-- Key metrics calculation
-- AI insights generation
-- Error handling
-- API key management
+- **Core Logic**: `tests/unit/test_financial_analyst_logic.py` (Pure math tests)
+- **UI & Integration**: `tests/unit/test_financial_analyst.py` (Mocked Streamlit tests)
 
-Run tests:
+Run all module tests:
 ```bash
-pytest tests/test_financial_analyst.py -v
+python3 -m pytest tests/unit/test_financial_analyst*
 ```
 
 ---
