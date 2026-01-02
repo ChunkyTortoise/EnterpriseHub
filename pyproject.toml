@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "enterprise-hub"
-version = "0.1.0"
+version = "5.0.1"
 description = "A unified platform for market analysis and enterprise tooling"
 readme = "README.md"
 license = {text = "MIT"}

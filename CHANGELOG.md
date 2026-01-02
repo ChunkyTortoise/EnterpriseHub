@@ -7,10 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.1] - 2026-01-01
+
+### Added
+- **Marketing Analytics**: Upgraded to 'Studio Dark' with `animated_metric` components and themed Plotly charts.
+- **Smart Forecast**: Added confidence interval visualization (±1σ/±2σ) and glassmorphic strategy cards.
+- **DevOps Control**: Implemented real-time pipeline status visualization and scannable activity logs.
+
 ### Changed
-- Reorganized test structure into `tests/unit/` and `tests/integration/`
-- Archived historical reports to `_archive/` directory
-- Created professional archive structure with README
+- **Visual System**: Hardened contrast ratios by adding `!important` overrides to global CSS headers.
+- **Accessibility**: Darkened `text_light` in light theme to ensure WCAG AAA compliance.
+
+## [5.0.0] - 2026-01-01
+
+### Added
+- **Studio Dark Design System**: Complete UI overhaul with 'Deep Midnight' palette and 'Emerald' accents.
+- **Elite Components**: Introduced `animated_metric`, `glassmorphic_card`, and custom status badges.
+- **ARETE-Architect**: Added 'Cognitive Operations Trace' visualization and interactive chat demo.
+- **SaaS Navigation**: Implemented custom pill-based menu, hiding default Streamlit radio buttons.
+
+### Changed
+- Rebranded platform as "Elite AI Console" for Lead Architect portfolio positioning.
+- Standardized typography to `Space Grotesk` (headers) and `Inter` (body).
 
 ## [0.2.0] - 2025-12-31
 
