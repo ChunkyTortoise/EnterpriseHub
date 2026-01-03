@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Generator, Optional, Union, AsyncGenerator, TYPE_CHECKING
 
-from utils.config import settings
-from utils.logger import get_logger
+from ghl_utils.config import settings
+from ghl_utils.logger import get_logger
 
 # Import LangChain models only for type checking
 if TYPE_CHECKING:

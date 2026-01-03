@@ -5,7 +5,7 @@ from typing import Optional
 from contextvars import ContextVar
 import uuid
 
-from utils.config import settings
+from ghl_utils.config import settings
 
 # Context variable to store correlation ID for the current task/request
 correlation_id: ContextVar[str] = ContextVar("correlation_id", default="system")

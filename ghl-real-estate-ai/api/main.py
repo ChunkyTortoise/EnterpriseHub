@@ -6,8 +6,8 @@ and returns AI-generated responses.
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from utils.config import settings
-from utils.logger import get_logger
+from ghl_utils.config import settings
+from ghl_utils.logger import get_logger
 from api.routes import webhook
 
 logger = get_logger(__name__)
