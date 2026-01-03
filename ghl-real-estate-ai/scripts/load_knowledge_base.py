@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 # Add parent directory to path for imports
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.rag_engine import RAGEngine
 from utils.config import settings
@@ -40,7 +40,8 @@ def load_property_listings():
     logger.info("Loading property listings...")
 
     # Load property data
-    properties = load_json_file('data/knowledge_base/property_listings.json')
+    data = load_json_file('data/knowledge_base/property_listings.json')
+    properties = data.get('listings', [])
 
     # Initialize RAG engine
     rag_engine = RAGEngine(
@@ -54,25 +55,31 @@ def load_property_listings():
     ids = []
 
     for i, prop in enumerate(properties):
+        # Extract address details
+        address_dict = prop.get('address', {})
+        street = address_dict.get('street', 'Unknown')
+        neighborhood = address_dict.get('neighborhood', 'Unknown')
+        full_address = f"{street}, {address_dict.get('city', 'Austin')}, {address_dict.get('state', 'TX')} {address_dict.get('zip', '')}"
+
         # Create rich document text
-        doc_text = f"""Property: {prop['address']}
+        doc_text = f"""Property: {full_address}
 Price: ${prop['price']:,}
 Bedrooms: {prop['bedrooms']} | Bathrooms: {prop['bathrooms']} | Square Feet: {prop['sqft']}
-Neighborhood: {prop['neighborhood']}
+Neighborhood: {neighborhood}
 Description: {prop['description']}
 Features: {', '.join(prop.get('features', []))}
-Schools: {', '.join(prop.get('schools', []))}
+Schools: {', '.join([s['name'] for s in prop.get('schools', [])])}
 """
 
         documents.append(doc_text)
         metadatas.append({
             "type": "property_listing",
             "category": "listing",
-            "address": prop['address'],
+            "address": full_address,
             "price": prop['price'],
             "bedrooms": prop['bedrooms'],
             "bathrooms": prop['bathrooms'],
-            "neighborhood": prop['neighborhood']
+            "neighborhood": neighborhood
         })
         ids.append(f"property_{i}")
 
@@ -91,7 +98,8 @@ def load_faq():
     logger.info("Loading FAQ data...")
 
     # Load FAQ data
-    faqs = load_json_file('data/knowledge_base/real_estate_faq.json')
+    data = load_json_file('data/knowledge_base/real_estate_faq.json')
+    faqs = data.get('faq', [])
 
     # Initialize RAG engine
     rag_engine = RAGEngine(

@@ -2,6 +2,7 @@
 Chat interface component - SMS-style conversation display.
 """
 import streamlit as st
+from streamlit_chat import message
 
 
 def render_chat_interface():
@@ -13,23 +14,9 @@ def render_chat_interface():
 
     for i, msg in enumerate(messages):
         if msg['role'] == 'user':
-            # User message (right-aligned, blue background)
-            st.markdown(f"""
-            <div style='text-align: right; margin: 10px 0;'>
-                <div style='display: inline-block; background-color: #007bff; color: white; padding: 10px 15px; border-radius: 18px; max-width: 70%;'>
-                    {msg['content']}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            message(msg['content'], is_user=True, key=f"user_{i}")
         else:
-            # AI message (left-aligned, gray background)
-            st.markdown(f"""
-            <div style='text-align: left; margin: 10px 0;'>
-                <div style='display: inline-block; background-color: #f1f3f5; color: #212529; padding: 10px 15px; border-radius: 18px; max-width: 70%;'>
-                    {msg['content']}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            message(msg['content'], is_user=False, key=f"ai_{i}")
 
     # Spacer
     st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
