@@ -16,7 +16,7 @@ import chromadb
 from chromadb.config import Settings
 
 from core.embeddings import EmbeddingModel
-from utils.logger import get_logger
+from ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 

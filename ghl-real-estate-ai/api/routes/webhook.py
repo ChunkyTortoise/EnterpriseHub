@@ -24,8 +24,8 @@ from api.schemas.ghl import (
 from core.conversation_manager import ConversationManager
 from services.ghl_client import GHLClient
 from services.lead_scorer import LeadScorer
-from utils.config import settings
-from utils.logger import get_logger
+from ghl_utils.config import settings
+from ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/ghl", tags=["ghl"])

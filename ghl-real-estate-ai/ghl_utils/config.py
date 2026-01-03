@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     # Security
     ghl_webhook_secret: Optional[str] = None  # For signature verification
 
+    # Testing
+    test_mode: bool = False
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

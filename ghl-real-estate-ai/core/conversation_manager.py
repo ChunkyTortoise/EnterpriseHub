@@ -17,9 +17,8 @@ import json
 from core.llm_client import LLMClient
 from core.rag_engine import RAGEngine
 from services.lead_scorer import LeadScorer
-from prompts.system_prompts import BASE_SYSTEM_PROMPT
-from utils.config import settings
-from utils.logger import get_logger
+from ghl_utils.config import settings
+from ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -218,7 +217,7 @@ Example output:
         except (json.JSONDecodeError, Exception) as e:
             logger.error(
                 f"Failed to extract data: {str(e)}",
-                extra={"error": str(e), "message": user_message}
+                extra={"error": str(e), "user_message": user_message}
             )
             return {}
 

@@ -15,8 +15,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.rag_engine import RAGEngine
-from utils.config import settings
-from utils.logger import get_logger
+from ghl_utils.config import settings
+from ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 

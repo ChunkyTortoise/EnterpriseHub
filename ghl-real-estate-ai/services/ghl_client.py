@@ -11,9 +11,8 @@ API Documentation: https://highlevel.stoplight.io/
 """
 import httpx
 from typing import List, Dict, Any, Optional
-from api.schemas.ghl import GHLAction, ActionType, MessageType
-from utils.config import settings
-from utils.logger import get_logger
+from ghl_utils.config import settings
+from ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -62,6 +61,13 @@ class GHLClient:
         Raises:
             httpx.HTTPError: If API request fails
         """
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] Would send {channel.value} message to {contact_id}: {message}",
+                extra={"contact_id": contact_id, "test_mode": True}
+            )
+            return {"status": "mocked", "messageId": "mock_msg_123"}
+
         endpoint = f"{self.base_url}/conversations/messages"
 
         payload = {
@@ -101,15 +107,16 @@ class GHLClient:
         tags: List[str]
     ) -> Dict[str, Any]:
         """
-        Add tags to a contact.
-
-        Args:
-            contact_id: GHL contact ID
-            tags: List of tag names to add
-
         Returns:
             API response dict
         """
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] Would add tags to {contact_id}: {tags}",
+                extra={"contact_id": contact_id, "test_mode": True}
+            )
+            return {"status": "mocked", "tags": tags}
+
         endpoint = f"{self.base_url}/contacts/{contact_id}"
 
         payload = {
@@ -187,6 +194,13 @@ class GHLClient:
         Returns:
             API response dict
         """
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] Would update custom field {field_id} for {contact_id} to {value}",
+                extra={"contact_id": contact_id, "test_mode": True}
+            )
+            return {"status": "mocked", "field_id": field_id, "value": value}
+
         endpoint = f"{self.base_url}/contacts/{contact_id}"
 
         payload = {
@@ -237,6 +251,13 @@ class GHLClient:
         Returns:
             API response dict
         """
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] Would trigger workflow {workflow_id} for {contact_id}",
+                extra={"contact_id": contact_id, "test_mode": True}
+            )
+            return {"status": "mocked", "workflow_id": workflow_id}
+
         endpoint = f"{self.base_url}/workflows/{workflow_id}/trigger"
 
         payload = {
