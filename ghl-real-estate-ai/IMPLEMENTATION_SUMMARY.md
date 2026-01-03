@@ -210,7 +210,7 @@ ghl-real-estate-ai/
 | **Chroma (embedded)** | Free, sufficient for MVP; can migrate to Pinecone if scaling needed |
 | **FastAPI** | Async support, automatic docs, Pydantic integration |
 | **Railway** | Zero DevOps, free tier, auto PostgreSQL/Redis |
-| **In-memory context** | MVP simplicity; migrate to Redis for production |
+| **Persistent context** | File-based storage; migrate to Redis for production |
 | **Temperature 0.7** | Balances creativity (human-like) with consistency |
 | **Max 500 tokens** | Keeps responses concise (SMS/text format) |
 

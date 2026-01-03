@@ -52,6 +52,13 @@ class Settings(BaseSettings):
     warm_lead_threshold: int = 40
     cold_lead_threshold: int = 0
 
+    # Activation & Trigger Settings
+    activation_tags: list[str] = ["Hit List", "Need to Qualify"]
+    deactivation_tags: list[str] = ["AI-Off", "Qualified", "Stop-Bot"]
+    required_contact_type: Optional[str] = "Seller"
+    disposition_field_name: str = "disposition"
+    bot_active_disposition: str = "Hit List"
+
     # Performance Settings
     webhook_timeout_seconds: int = 3
     max_conversation_history_length: int = 20
