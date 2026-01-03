@@ -1,0 +1,105 @@
+"""
+GoHighLevel webhook schemas.
+
+Defines Pydantic models for incoming GHL webhooks and outgoing responses.
+Based on GHL API documentation: https://highlevel.stoplight.io/
+"""
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+from enum import Enum
+
+
+class MessageType(str, Enum):
+    """Supported message types from GHL."""
+    SMS = "SMS"
+    EMAIL = "Email"
+    LIVE_CHAT = "Live_Chat"
+
+
+class MessageDirection(str, Enum):
+    """Message direction (inbound vs outbound)."""
+    INBOUND = "inbound"
+    OUTBOUND = "outbound"
+
+
+class GHLMessage(BaseModel):
+    """Message payload from GHL webhook."""
+    type: MessageType
+    body: str
+    direction: MessageDirection
+    timestamp: Optional[datetime] = None
+
+
+class GHLContact(BaseModel):
+    """Contact information from GHL."""
+    id: Optional[str] = Field(None, alias="contactId")
+    first_name: Optional[str] = Field(None, alias="firstName")
+    last_name: Optional[str] = Field(None, alias="lastName")
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    custom_fields: Dict[str, Any] = Field(default_factory=dict, alias="customFields")
+
+
+class GHLWebhookEvent(BaseModel):
+    """
+    Incoming webhook event from GoHighLevel.
+
+    This is the top-level schema for all inbound messages.
+    """
+    type: str  # "InboundMessage", "OutboundMessage", etc.
+    contact_id: str = Field(..., alias="contactId")
+    location_id: str = Field(..., alias="locationId")
+    message: GHLMessage
+    contact: GHLContact
+
+    class Config:
+        populate_by_name = True  # Allow both snake_case and camelCase
+
+
+class ActionType(str, Enum):
+    """Actions that can be triggered in GHL."""
+    SEND_MESSAGE = "send_message"
+    ADD_TAG = "add_tag"
+    REMOVE_TAG = "remove_tag"
+    UPDATE_CUSTOM_FIELD = "update_custom_field"
+    TRIGGER_WORKFLOW = "trigger_workflow"
+    CREATE_TASK = "create_task"
+
+
+class GHLAction(BaseModel):
+    """Action to be executed in GHL."""
+    type: ActionType
+    tag: Optional[str] = None  # For add_tag/remove_tag
+    field: Optional[str] = None  # For update_custom_field
+    value: Optional[Any] = None  # For update_custom_field
+    workflow_id: Optional[str] = None  # For trigger_workflow
+    message: Optional[str] = None  # For send_message
+    channel: Optional[MessageType] = None  # For send_message
+
+
+class GHLWebhookResponse(BaseModel):
+    """
+    Response sent back to GHL after processing webhook.
+
+    This schema defines what we return to GHL, including the AI response
+    and any actions to trigger (tags, custom fields, workflows).
+    """
+    success: bool
+    message: str  # AI-generated response
+    actions: List[GHLAction] = Field(default_factory=list)
+    error: Optional[str] = None
+
+
+class ConversationContext(BaseModel):
+    """Internal conversation context (stored in database)."""
+    contact_id: str
+    location_id: str
+    conversation_history: List[Dict[str, str]] = Field(default_factory=list)
+    extracted_preferences: Dict[str, Any] = Field(default_factory=dict)
+    lead_score: int = 0
+    last_interaction: Optional[datetime] = None
+    qualified: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
