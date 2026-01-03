@@ -21,7 +21,8 @@ Lead Classifications:
 from typing import Dict, Any, List
 from datetime import datetime
 import re
-from core.config import settings
+from typing import Dict, Any, List
+from ghl_utils.config import settings
 
 
 class LeadScorer:
