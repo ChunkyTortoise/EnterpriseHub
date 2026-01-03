@@ -98,6 +98,15 @@ class VectorStore:
             logger.error(f"Error adding texts to vector store: {e}")
             raise
 
+    def add_documents(
+        self,
+        documents: List[str],
+        metadatas: Optional[List[Dict[str, Any]]] = None,
+        ids: Optional[List[str]] = None
+    ) -> List[str]:
+        """Alias for add_texts."""
+        return self.add_texts(documents, metadatas, ids)
+
     def search(
         self,
         query: str,
@@ -169,3 +178,6 @@ class VectorStore:
             logger.info("Vector store cleared")
         except Exception as e:
             logger.error(f"Error clearing vector store: {e}")
+
+# Alias for backward compatibility and internal consistency
+RAGEngine = VectorStore

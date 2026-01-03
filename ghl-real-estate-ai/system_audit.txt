@@ -1,0 +1,26 @@
+# SYSTEM AUDIT DATA
+# Paste the information gathered from your manual exploration here.
+
+---
+PART 1: AUTOMATION FLOW SUMMARY
+# Paste details about "3. ai assistant on and off tag removal" here.
+
+---
+PART 2: LEAD LIFECYCLE
+# Paste pipeline stages and triggers here.
+
+---
+PART 3: QUALIFYING QUESTIONS
+# Paste the questions asked by the system here.
+
+---
+PART 4: CUSTOM FIELDS
+# Paste relevant custom fields (Budget, Location, etc.) here.
+
+---
+PART 5: CONVERSATION TONE
+# Paste or describe the tone and templates here.
+
+---
+PART 6: TECHNICAL REQUIREMENTS
+# Paste any webhook URLs or specific integration details here.

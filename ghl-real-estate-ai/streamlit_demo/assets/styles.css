@@ -1,0 +1,29 @@
+/* Custom styles for GHL Real Estate AI Demo */
+
+.main {
+    background-color: #f8f9fa;
+}
+
+.stChatMessage {
+    border-radius: 15px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.stIndicator {
+    background-color: white;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+h1, h2, h3, h4 {
+    color: #1f2d3d;
+}
+
+code {
+    background-color: #e9ecef;
+    color: #d63384;
+    padding: 2px 4px;
+    border-radius: 4px;
+}

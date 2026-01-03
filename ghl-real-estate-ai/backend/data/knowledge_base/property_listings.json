@@ -1,0 +1,584 @@
+{
+  "listings": [
+    {
+      "id": "prop_001",
+      "status": "active",
+      "address": {
+        "street": "4512 Duval St",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78751",
+        "neighborhood": "Hyde Park"
+      },
+      "price": 675000,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "sqft": 1850,
+      "lot_size_sqft": 6500,
+      "year_built": 1948,
+      "property_type": "Single Family",
+      "features": [
+        "Updated kitchen with quartz countertops",
+        "Original hardwood floors refinished",
+        "Large backyard with mature trees",
+        "Walkable to restaurants and UT campus",
+        "Detached garage converted to studio",
+        "New HVAC (2023)",
+        "Original craftsman charm"
+      ],
+      "schools": [
+        {
+          "name": "Mathews Elementary",
+          "rating": 9,
+          "type": "Elementary"
+        },
+        {
+          "name": "Lamar Middle School",
+          "rating": 8,
+          "type": "Middle"
+        },
+        {
+          "name": "McCallum High School",
+          "rating": 8,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 0,
+      "property_tax_annual": 14175,
+      "days_on_market": 12,
+      "description": "Charming 1948 craftsman in the heart of Hyde Park. This beautifully updated home blends original character with modern amenities. The chef's kitchen features quartz countertops and stainless appliances. Original hardwood floors run throughout. Oversized backyard with mature oaks perfect for entertaining. Walk to local coffee shops, restaurants, and parks. Rare detached studio ideal for home office or guest suite. Top-rated schools. Move-in ready!",
+      "highlights": [
+        "Walkable neighborhood (Walk Score: 85)",
+        "Top-rated schools",
+        "Updated systems (HVAC, plumbing)",
+        "Bonus studio space",
+        "Mature landscaping"
+      ],
+      "listing_url": "https://example.com/listing/4512-duval-st"
+    },
+    {
+      "id": "prop_002",
+      "status": "active",
+      "address": {
+        "street": "15823 Fontana Lake Dr",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78717",
+        "neighborhood": "Avery Ranch"
+      },
+      "price": 585000,
+      "bedrooms": 4,
+      "bathrooms": 3,
+      "sqft": 2650,
+      "lot_size_sqft": 8200,
+      "year_built": 2018,
+      "property_type": "Single Family",
+      "features": [
+        "Open-concept floor plan",
+        "Gourmet kitchen with island",
+        "Primary suite downstairs",
+        "Game room upstairs",
+        "Covered patio",
+        "Smart home wiring",
+        "Community pool and amenities"
+      ],
+      "schools": [
+        {
+          "name": "Avery Ranch Elementary",
+          "rating": 9,
+          "type": "Elementary"
+        },
+        {
+          "name": "Canyon Ridge Middle School",
+          "rating": 9,
+          "type": "Middle"
+        },
+        {
+          "name": "Cedar Ridge High School",
+          "rating": 9,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 95,
+      "property_tax_annual": 12285,
+      "days_on_market": 8,
+      "description": "Stunning modern home in desirable Avery Ranch. Built in 2018, this 4-bedroom gem features soaring ceilings and abundant natural light. The gourmet kitchen boasts granite counters, island seating, and stainless appliances. Primary suite on main floor with spa-like bath. Upstairs game room perfect for family fun. Covered patio overlooks private backyard. Community offers pools, trails, and parks. Top-rated Round Rock ISD schools. Minutes to shopping and dining.",
+      "highlights": [
+        "Nearly new construction (2018)",
+        "Highly-rated Round Rock ISD",
+        "Resort-style community amenities",
+        "Primary bedroom downstairs",
+        "Low maintenance yard"
+      ],
+      "listing_url": "https://example.com/listing/15823-fontana-lake"
+    },
+    {
+      "id": "prop_003",
+      "status": "active",
+      "address": {
+        "street": "1204 E 6th St #302",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78702",
+        "neighborhood": "East Austin"
+      },
+      "price": 425000,
+      "bedrooms": 2,
+      "bathrooms": 2,
+      "sqft": 1100,
+      "lot_size_sqft": 0,
+      "year_built": 2020,
+      "property_type": "Condo",
+      "features": [
+        "Floor-to-ceiling windows",
+        "Modern open floor plan",
+        "Balcony with downtown views",
+        "Stainless steel appliances",
+        "In-unit washer/dryer",
+        "Rooftop deck access",
+        "Secure parking (2 spaces)"
+      ],
+      "schools": [
+        {
+          "name": "Metz Elementary",
+          "rating": 6,
+          "type": "Elementary"
+        },
+        {
+          "name": "Bedichek Middle School",
+          "rating": 7,
+          "type": "Middle"
+        },
+        {
+          "name": "Travis High School",
+          "rating": 7,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 325,
+      "property_tax_annual": 8925,
+      "days_on_market": 21,
+      "description": "Modern urban living at its finest! This sleek 2-bedroom condo in the heart of East Austin offers the ultimate city lifestyle. Floor-to-ceiling windows flood the space with light. Open kitchen with island perfect for entertaining. Private balcony with skyline views. Rooftop deck features grills, lounge areas, and panoramic views. Walk to top restaurants, coffee shops, and nightlife. Secure parking includes 2 spaces. Low-maintenance lock-and-leave lifestyle.",
+      "highlights": [
+        "Trendy East Austin location",
+        "Walk Score: 92 (Walker's Paradise)",
+        "Rooftop amenities",
+        "2 parking spaces included",
+        "Perfect for young professionals"
+      ],
+      "listing_url": "https://example.com/listing/1204-e-6th-302"
+    },
+    {
+      "id": "prop_004",
+      "status": "active",
+      "address": {
+        "street": "3308 Cavendish Ct",
+        "city": "Pflugerville",
+        "state": "TX",
+        "zip": "78660",
+        "neighborhood": "Blackhawk"
+      },
+      "price": 375000,
+      "bedrooms": 4,
+      "bathrooms": 2.5,
+      "sqft": 2280,
+      "lot_size_sqft": 7800,
+      "year_built": 2015,
+      "property_type": "Single Family",
+      "features": [
+        "Open floor plan",
+        "Large kitchen island",
+        "Primary suite with walk-in closet",
+        "Covered patio",
+        "Fenced backyard",
+        "Community pool and playground",
+        "Energy-efficient construction"
+      ],
+      "schools": [
+        {
+          "name": "Blackhawk Elementary",
+          "rating": 8,
+          "type": "Elementary"
+        },
+        {
+          "name": "Kelly Lane Middle School",
+          "rating": 8,
+          "type": "Middle"
+        },
+        {
+          "name": "Hendrickson High School",
+          "rating": 8,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 75,
+      "property_tax_annual": 7875,
+      "days_on_market": 15,
+      "description": "Fantastic family home in Pflugerville's sought-after Blackhawk community. This spacious 4-bedroom offers modern living with an open floor plan and high ceilings. The kitchen features granite counters, stainless appliances, and island seating. Primary suite includes walk-in closet and dual vanities. Covered patio overlooks large fenced yard perfect for kids and pets. Community amenities include pool, playgrounds, and trails. Top-rated Pflugerville ISD. Quick access to I-35 and toll roads.",
+      "highlights": [
+        "Excellent value under $400k",
+        "Great schools (all 8/10)",
+        "Family-friendly community",
+        "Move-in ready",
+        "Low property taxes"
+      ],
+      "listing_url": "https://example.com/listing/3308-cavendish"
+    },
+    {
+      "id": "prop_005",
+      "status": "active",
+      "address": {
+        "street": "12805 Marabou Cv",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78732",
+        "neighborhood": "Steiner Ranch"
+      },
+      "price": 725000,
+      "bedrooms": 4,
+      "bathrooms": 3,
+      "sqft": 3100,
+      "lot_size_sqft": 9500,
+      "year_built": 2019,
+      "property_type": "Single Family",
+      "features": [
+        "Hill country views",
+        "Upgraded chef's kitchen",
+        "Primary and guest suite downstairs",
+        "Media room upstairs",
+        "Outdoor kitchen with covered patio",
+        "Three-car garage",
+        "Resort-style community"
+      ],
+      "schools": [
+        {
+          "name": "River Ridge Elementary",
+          "rating": 9,
+          "type": "Elementary"
+        },
+        {
+          "name": "Canyon Ridge Middle School",
+          "rating": 9,
+          "type": "Middle"
+        },
+        {
+          "name": "Vandegrift High School",
+          "rating": 10,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 165,
+      "property_tax_annual": 15225,
+      "days_on_market": 10,
+      "description": "Luxury living in prestigious Steiner Ranch. This stunning 2019 home sits on an oversized lot with breathtaking hill country views. Gourmet kitchen features commercial-grade appliances, butler's pantry, and huge island. Two primary suites (main + guest) on first floor. Upstairs media room perfect for movie nights. Outdoor living space includes covered patio, outdoor kitchen, and pool-sized yard. Community offers 4 pools, lazy river, fitness center, and miles of trails. Top 10-rated Lake Travis schools.",
+      "highlights": [
+        "Nearly new (2019) with upgrades",
+        "Best school district (Vandegrift HS)",
+        "Resort-style HOA amenities",
+        "Hill country views",
+        "Outdoor entertainer's dream"
+      ],
+      "listing_url": "https://example.com/listing/12805-marabou"
+    },
+    {
+      "id": "prop_006",
+      "status": "active",
+      "address": {
+        "street": "2105 Bluffstone Dr",
+        "city": "Round Rock",
+        "state": "TX",
+        "zip": "78665",
+        "neighborhood": "Teravista"
+      },
+      "price": 465000,
+      "bedrooms": 3,
+      "bathrooms": 2.5,
+      "sqft": 2150,
+      "lot_size_sqft": 7200,
+      "year_built": 2021,
+      "property_type": "Single Family",
+      "features": [
+        "New construction (2021)",
+        "Open-concept layout",
+        "Upgraded flooring throughout",
+        "Smart home technology",
+        "Covered patio",
+        "Energy-efficient appliances",
+        "Community amenities"
+      ],
+      "schools": [
+        {
+          "name": "Teravista Elementary",
+          "rating": 8,
+          "type": "Elementary"
+        },
+        {
+          "name": "Hernandez Middle School",
+          "rating": 8,
+          "type": "Middle"
+        },
+        {
+          "name": "Stony Point High School",
+          "rating": 8,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 110,
+      "property_tax_annual": 9765,
+      "days_on_market": 18,
+      "description": "Like-new home in Round Rock's premier Teravista community. Built in 2021, this 3-bedroom beauty features modern upgrades throughout. Open floor plan with luxury vinyl plank flooring. Kitchen boasts quartz counters and smart appliances. Primary suite includes dual sinks and walk-in shower. Smart home features include programmable thermostat and Ring doorbell. Covered patio perfect for Texas summers. Community offers pools, splash pad, fitness center, and golf course. Round Rock ISD schools. Easy access to major employers.",
+      "highlights": [
+        "Move-in ready (built 2021)",
+        "Energy-efficient (low utilities)",
+        "Top-rated Round Rock ISD",
+        "Golf course community",
+        "Builder warranty still valid"
+      ],
+      "listing_url": "https://example.com/listing/2105-bluffstone"
+    },
+    {
+      "id": "prop_007",
+      "status": "active",
+      "address": {
+        "street": "8801 Circle C Ranch Dr",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78749",
+        "neighborhood": "Circle C Ranch"
+      },
+      "price": 520000,
+      "bedrooms": 4,
+      "bathrooms": 2.5,
+      "sqft": 2450,
+      "lot_size_sqft": 8100,
+      "year_built": 2016,
+      "property_type": "Single Family",
+      "features": [
+        "Cul-de-sac location",
+        "Updated kitchen with granite",
+        "Large backyard with playset",
+        "Study/office downstairs",
+        "Game room upstairs",
+        "Tankless water heater",
+        "Community pool and parks"
+      ],
+      "schools": [
+        {
+          "name": "Clayton Elementary",
+          "rating": 9,
+          "type": "Elementary"
+        },
+        {
+          "name": "Bailey Middle School",
+          "rating": 8,
+          "type": "Middle"
+        },
+        {
+          "name": "Bowie High School",
+          "rating": 8,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 85,
+      "property_tax_annual": 10920,
+      "days_on_market": 14,
+      "description": "Perfect family home in Circle C Ranch. This well-maintained 4-bedroom sits on a quiet cul-de-sac. Open floor plan with study downstairs ideal for work-from-home. Updated kitchen with granite and breakfast bar. Upstairs game room provides extra living space. Large backyard with playset stays. Recent upgrades include tankless water heater and new carpet. Community features pools, splash pads, parks, and trails. Top-rated Austin ISD schools. Minutes to shopping and Y at Oak Hill.",
+      "highlights": [
+        "Family-friendly neighborhood",
+        "Excellent schools (9/10 elementary)",
+        "Quiet cul-de-sac",
+        "Pool-sized backyard",
+        "Home office space"
+      ],
+      "listing_url": "https://example.com/listing/8801-circle-c"
+    },
+    {
+      "id": "prop_008",
+      "status": "active",
+      "address": {
+        "street": "710 W 23rd St",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78705",
+        "neighborhood": "West Campus"
+      },
+      "price": 895000,
+      "bedrooms": 3,
+      "bathrooms": 3,
+      "sqft": 1650,
+      "lot_size_sqft": 4200,
+      "year_built": 2022,
+      "property_type": "Townhome",
+      "features": [
+        "Brand new construction",
+        "Rooftop deck with city views",
+        "High-end finishes throughout",
+        "European appliances",
+        "Private elevator",
+        "Two-car garage",
+        "Walk to UT campus"
+      ],
+      "schools": [
+        {
+          "name": "Mathews Elementary",
+          "rating": 9,
+          "type": "Elementary"
+        },
+        {
+          "name": "Lamar Middle School",
+          "rating": 8,
+          "type": "Middle"
+        },
+        {
+          "name": "McCallum High School",
+          "rating": 8,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 200,
+      "property_tax_annual": 18795,
+      "days_on_market": 25,
+      "description": "Ultra-modern townhome in prime West Campus location. This 2022 build showcases luxury finishes and thoughtful design. Gourmet kitchen features Bosch appliances and waterfall quartz island. Each bedroom includes en-suite bath. Private elevator serves all three floors. Rooftop deck offers stunning city and UT tower views. Two-car garage with EV charging. Walk to campus, coffee shops, and restaurants. Perfect for professionals or investors (strong rental demand). Low-maintenance urban lifestyle.",
+      "highlights": [
+        "Brand new (2022)",
+        "Prime walkable location",
+        "Rooftop deck with views",
+        "Private elevator",
+        "Investment potential"
+      ],
+      "listing_url": "https://example.com/listing/710-w-23rd"
+    },
+    {
+      "id": "prop_009",
+      "status": "active",
+      "address": {
+        "street": "1512 Woodland Ave",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78741",
+        "neighborhood": "Travis Heights"
+      },
+      "price": 785000,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "sqft": 1580,
+      "lot_size_sqft": 7500,
+      "year_built": 1955,
+      "property_type": "Single Family",
+      "features": [
+        "Mid-century modern remodel",
+        "Original terrazzo floors",
+        "Floor-to-ceiling windows",
+        "Chef's kitchen with Bertazzoni range",
+        "Primary suite addition",
+        "Outdoor shower",
+        "Walkable to downtown"
+      ],
+      "schools": [
+        {
+          "name": "Travis Heights Elementary",
+          "rating": 7,
+          "type": "Elementary"
+        },
+        {
+          "name": "Fulmore Middle School",
+          "rating": 7,
+          "type": "Middle"
+        },
+        {
+          "name": "Travis High School",
+          "rating": 7,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 0,
+      "property_tax_annual": 16485,
+      "days_on_market": 9,
+      "description": "Stunning mid-century modern gem in historic Travis Heights. This meticulously renovated 1955 home honors original character while adding modern luxury. Original terrazzo floors gleam throughout. Walls of windows frame mature oak trees. Gourmet kitchen features Bertazzoni range and custom cabinetry. Primary suite addition offers spa-like retreat. Outdoor shower and covered patio create resort vibe. Walk to South Congress, coffee shops, and parks. Bike to downtown in 10 minutes. Rare find in coveted neighborhood.",
+      "highlights": [
+        "Architectural significance",
+        "High-end renovation",
+        "Walkable to SoCo",
+        "Original mid-century details",
+        "Mature landscaping"
+      ],
+      "listing_url": "https://example.com/listing/1512-woodland"
+    },
+    {
+      "id": "prop_010",
+      "status": "active",
+      "address": {
+        "street": "19121 Weiss Ln",
+        "city": "Pflugerville",
+        "state": "TX",
+        "zip": "78660",
+        "neighborhood": "Falcon Pointe"
+      },
+      "price": 325000,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "sqft": 1680,
+      "lot_size_sqft": 6200,
+      "year_built": 2017,
+      "property_type": "Single Family",
+      "features": [
+        "Open floor plan",
+        "Island kitchen",
+        "Primary suite with garden tub",
+        "Covered patio",
+        "Low-maintenance yard",
+        "Community pool",
+        "Energy-efficient"
+      ],
+      "schools": [
+        {
+          "name": "Rowe Lane Elementary",
+          "rating": 7,
+          "type": "Elementary"
+        },
+        {
+          "name": "Dessau Middle School",
+          "rating": 7,
+          "type": "Middle"
+        },
+        {
+          "name": "Weiss High School",
+          "rating": 7,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 65,
+      "property_tax_annual": 6825,
+      "days_on_market": 22,
+      "description": "Affordable starter home in Pflugerville's Falcon Pointe. This well-maintained 3-bedroom offers great value under $350k. Open layout perfect for modern living. Kitchen includes island, pantry, and stainless appliances. Primary bedroom features walk-in closet and garden tub. Covered patio overlooks low-maintenance yard. Community pool and playground. Pflugerville ISD schools. Minutes to shopping, dining, and major employers (Tesla, Samsung, Apple). Great opportunity for first-time buyers or investors.",
+      "highlights": [
+        "Best value (under $350k)",
+        "Low property taxes",
+        "Low HOA ($65/month)",
+        "Nearly new (2017)",
+        "First-time buyer friendly"
+      ],
+      "listing_url": "https://example.com/listing/19121-weiss"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "market": "Greater Austin, TX",
+    "price_range": "$325,000 - $895,000",
+    "total_listings": 10,
+    "last_updated": "2025-01-02",
+    "average_price": 577500,
+    "neighborhoods_covered": [
+      "Hyde Park",
+      "Avery Ranch",
+      "East Austin",
+      "Pflugerville",
+      "Steiner Ranch",
+      "Round Rock",
+      "Circle C Ranch",
+      "West Campus",
+      "Travis Heights",
+      "Falcon Pointe"
+    ]
+  }
+}

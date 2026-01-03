@@ -1,0 +1,9 @@
+{
+  "name": "Warm Lead Example",
+  "messages": [
+    {"role": "user", "content": "Your prices are too high"}
+  ],
+  "extracted_data": {
+    "location": "Austin"
+  }
+}

@@ -4,17 +4,18 @@ Main Streamlit Application
 """
 import streamlit as st
 import sys
-import os
+from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(__file__))
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Add project root to sys.path to import components and services
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
 
-from components.chat_interface import render_chat_interface
-from components.lead_dashboard import render_lead_dashboard
-from components.property_cards import render_property_matches
-from mock_services.mock_claude import MockClaudeService
-from mock_services.conversation_state import (
+from streamlit_demo.components.chat_interface import render_chat_interface
+from streamlit_demo.components.lead_dashboard import render_lead_dashboard
+from streamlit_demo.components.property_cards import render_property_matches
+from streamlit_demo.mock_services.mock_claude import MockClaudeService
+from streamlit_demo.mock_services.conversation_state import (
     init_conversation_state,
     add_message,
     update_extracted_data,
@@ -28,6 +29,12 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Load custom CSS
+css_path = Path(__file__).parent / "assets" / "styles.css"
+if css_path.exists():
+    with open(css_path) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # Initialize services
 if 'claude_service' not in st.session_state:
@@ -45,10 +52,32 @@ st.markdown("---")
 with st.sidebar:
     st.markdown("### 🎯 Demo Controls")
 
-    scenario = st.selectbox(
-        "Load Scenario:",
-        ["Fresh Conversation", "Cold Lead Example", "Warm Lead Example", "Hot Lead Example"]
-    )
+    scenario_options = ["Fresh Conversation", "Cold Lead Example", "Warm Lead Example", "Hot Lead Example"]
+    selected_scenario = st.selectbox("Load Scenario:", scenario_options)
+
+    if st.button("Apply Scenario"):
+        st.session_state.messages = []
+        st.session_state.extracted_data = {}
+        
+        if selected_scenario == "Cold Lead Example":
+            add_message('user', "Looking for a house in Austin")
+            response, data = st.session_state.claude_service.generate_response("Looking for a house in Austin", [], {})
+            add_message('assistant', response)
+            update_extracted_data(data)
+        elif selected_scenario == "Warm Lead Example":
+            add_message('user', "Your prices are too high")
+            response, data = st.session_state.claude_service.generate_response("Your prices are too high", [], {})
+            add_message('assistant', response)
+            update_extracted_data(data)
+        elif selected_scenario == "Hot Lead Example":
+            msg = "I'm pre-approved for $400k, need to move ASAP, love Hyde Park"
+            add_message('user', msg)
+            response, data = st.session_state.claude_service.generate_response(msg, [], {})
+            add_message('assistant', response)
+            update_extracted_data(data)
+            
+        calculate_lead_score()
+        st.rerun()
 
     if st.button("Reset Conversation"):
         st.session_state.messages = []

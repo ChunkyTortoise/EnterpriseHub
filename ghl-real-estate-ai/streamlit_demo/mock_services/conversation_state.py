@@ -1,13 +1,15 @@
 """
 Conversation State Management for Streamlit.
 """
-import os
-import sys
 from typing import List, Dict
 import streamlit as st
+import sys
+from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+# Add project root to sys.path to import services
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
 
 
 def init_conversation_state():

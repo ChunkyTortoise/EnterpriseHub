@@ -2,23 +2,21 @@
 Mock RAG Service - Property matching simulation.
 """
 import json
-import os
 from typing import List, Dict
 
 
 class MockRAGService:
     """Simulates property retrieval and matching."""
 
-    def __init__(self, knowledge_base_path: str = None):
+    def __init__(self, knowledge_base_path: str = "data/knowledge_base/property_listings.json"):
         # Load actual property data
-        if knowledge_base_path is None:
-            # Default path relative to project root
-            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            knowledge_base_path = os.path.join(base_dir, "data", "knowledge_base", "property_listings.json")
-
         with open(knowledge_base_path, 'r') as f:
             data = json.load(f)
-            self.properties = data.get('listings', [])
+            # Handle both list and dict formats
+            if isinstance(data, list):
+                self.properties = data
+            else:
+                self.properties = data.get('listings', [])
 
     def search_properties(
         self,
@@ -66,7 +64,18 @@ class MockRAGService:
 
         # Location match
         location = preferences.get('location', '').lower()
-        prop_neighborhood = property.get('address', {}).get('neighborhood', '').lower()
+        
+        # Extract neighborhood from nested address if necessary
+        prop_neighborhood = property.get('neighborhood', '')
+        if not prop_neighborhood:
+            address = property.get('address', {})
+            if isinstance(address, dict):
+                prop_neighborhood = address.get('neighborhood', '')
+            elif isinstance(address, str):
+                prop_neighborhood = address
+        
+        prop_neighborhood = str(prop_neighborhood).lower()
+            
         if location and location in prop_neighborhood:
             score += 15
 
