@@ -162,6 +162,7 @@ class LLMClient:
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
+        history: Optional[list[dict[str, str]]] = None,
         max_tokens: int = 2048,
         temperature: float = 0.7,
         **kwargs
@@ -171,14 +172,15 @@ class LLMClient:
             raise RuntimeError(f"{self.provider.value} client not initialized")
 
         if self.provider == LLMProvider.GEMINI:
-            return self._generate_gemini(prompt, system_prompt, max_tokens, temperature)
+            return self._generate_gemini(prompt, system_prompt, history, max_tokens, temperature)
         else:
-            return self._generate_claude(prompt, system_prompt, max_tokens, temperature)
+            return self._generate_claude(prompt, system_prompt, history, max_tokens, temperature)
 
     async def agenerate(
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
+        history: Optional[list[dict[str, str]]] = None,
         max_tokens: int = 2048,
         temperature: float = 0.7,
         **kwargs
@@ -189,8 +191,15 @@ class LLMClient:
             raise RuntimeError(f"{self.provider.value} async client not initialized")
 
         if self.provider == LLMProvider.GEMINI:
+            # Gemini history handling
+            full_prompt = f"{system_prompt}\n\n" if system_prompt else ""
+            if history:
+                for msg in history:
+                    full_prompt += f"{msg['role']}: {msg['content']}\n"
+            full_prompt += f"user: {prompt}"
+            
             response = await self._async_client.generate_content_async(
-                f"{system_prompt}\n\n{prompt}" if system_prompt else prompt,
+                full_prompt,
                 generation_config={"max_output_tokens": max_tokens, "temperature": temperature}
             )
             return LLMResponse(
@@ -200,12 +209,15 @@ class LLMClient:
                 finish_reason=response.candidates[0].finish_reason.name if response.candidates else None
             )
         else:
+            messages = history.copy() if history else []
+            messages.append({"role": "user", "content": prompt})
+            
             response = await self._async_client.messages.create(
                 model=self.model,
                 max_tokens=max_tokens,
                 temperature=temperature,
                 system=system_prompt or "You are a helpful AI assistant.",
-                messages=[{"role": "user", "content": prompt}]
+                messages=messages
             )
             return LLMResponse(
                 content=response.content[0].text,
@@ -248,11 +260,16 @@ class LLMClient:
         self,
         prompt: str,
         system_prompt: Optional[str],
+        history: Optional[list[dict[str, str]]],
         max_tokens: int,
         temperature: float
     ) -> LLMResponse:
         """Generate response using Gemini."""
-        full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+        full_prompt = f"{system_prompt}\n\n" if system_prompt else ""
+        if history:
+            for msg in history:
+                full_prompt += f"{msg['role']}: {msg['content']}\n"
+        full_prompt += f"user: {prompt}"
 
         response = self._client.generate_content(
             full_prompt,
@@ -273,11 +290,13 @@ class LLMClient:
         self,
         prompt: str,
         system_prompt: Optional[str],
+        history: Optional[list[dict[str, str]]],
         max_tokens: int,
         temperature: float
     ) -> LLMResponse:
         """Generate response using Claude."""
-        messages = [{"role": "user", "content": prompt}]
+        messages = history.copy() if history else []
+        messages.append({"role": "user", "content": prompt})
 
         response = self._client.messages.create(
             model=self.model,

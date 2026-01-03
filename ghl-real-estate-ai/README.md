@@ -156,7 +156,7 @@ ghl-real-estate-ai/
 │   ├── test_conversation.py
 │   └── test_lead_scoring.py
 │
-├── utils/
+├── ghl_utils/                  # Renamed from utils/ to avoid root conflicts
 │   ├── logger.py
 │   └── config.py
 │

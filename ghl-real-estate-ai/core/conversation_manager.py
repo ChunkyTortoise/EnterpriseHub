@@ -17,6 +17,8 @@ import json
 from core.llm_client import LLMClient
 from core.rag_engine import RAGEngine
 from services.lead_scorer import LeadScorer
+from services.memory_service import MemoryService
+from prompts.system_prompts import BASE_SYSTEM_PROMPT
 from ghl_utils.config import settings
 from ghl_utils.logger import get_logger
 
@@ -60,8 +62,8 @@ class ConversationManager:
         # Initialize lead scorer
         self.lead_scorer = LeadScorer()
 
-        # In-memory context store (replace with Redis/PostgreSQL for production)
-        self.context_store: Dict[str, Dict[str, Any]] = {}
+        # Persistent memory service
+        self.memory_service = MemoryService(storage_type="file")
 
         logger.info("Conversation manager initialized")
 
@@ -75,19 +77,7 @@ class ConversationManager:
         Returns:
             Conversation context dict with history and extracted data
         """
-        if contact_id in self.context_store:
-            return self.context_store[contact_id]
-
-        # Return default context for new conversations
-        return {
-            "contact_id": contact_id,
-            "conversation_history": [],
-            "extracted_preferences": {},
-            "lead_score": 0,
-            "conversation_stage": "initial_contact",
-            "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat()
-        }
+        return await self.memory_service.get_context(contact_id)
 
     async def update_context(
         self,
@@ -128,11 +118,8 @@ class ConversationManager:
         if len(context["conversation_history"]) > max_length:
             context["conversation_history"] = context["conversation_history"][-max_length:]
 
-        # Update timestamp
-        context["updated_at"] = datetime.utcnow().isoformat()
-
         # Store context
-        self.context_store[contact_id] = context
+        await self.memory_service.save_context(contact_id, context)
 
         logger.info(
             f"Updated context for contact {contact_id}",
@@ -225,7 +212,8 @@ Example output:
         self,
         user_message: str,
         contact_info: Dict[str, Any],
-        context: Dict[str, Any]
+        context: Dict[str, Any],
+        is_buyer: bool = True
     ) -> AIResponse:
         """
         Generate AI response using Claude + RAG.
@@ -234,6 +222,7 @@ Example output:
             user_message: User's latest message
             contact_info: Contact information from GHL
             context: Conversation context
+            is_buyer: Whether the contact is a buyer (True) or seller (False)
 
         Returns:
             AIResponse with message, extracted data, reasoning, and score
@@ -250,13 +239,13 @@ Example output:
         merged_preferences = {**context.get("extracted_preferences", {}), **extracted_data}
 
         # 2. Retrieve relevant knowledge from RAG
-        relevant_docs = await self.rag_engine.search(
+        relevant_docs = self.rag_engine.search(
             query=user_message,
-            top_k=settings.rag_top_k_results
+            n_results=settings.rag_top_k_results
         )
 
         relevant_knowledge = "\n\n".join([
-            f"[{doc.get('metadata', {}).get('category', 'info')}]: {doc.get('document', '')}"
+            f"[{doc.metadata.get('category', 'info')}]: {doc.text}"
             for doc in relevant_docs
         ]) if relevant_docs else "No specific knowledge base matches."
 
@@ -268,19 +257,29 @@ Example output:
         })
 
         # 4. Build system prompt with context
-        system_prompt = BASE_SYSTEM_PROMPT.format(
+        from prompts.system_prompts import build_system_prompt
+        
+        system_prompt = build_system_prompt(
             contact_name=contact_name,
-            conversation_stage=context.get("conversation_stage", "initial_contact"),
+            conversation_stage=context.get("conversation_stage", "qualifying"),
             lead_score=lead_score,
-            extracted_preferences=json.dumps(merged_preferences, indent=2) if merged_preferences else "None yet",
-            relevant_knowledge=relevant_knowledge
+            extracted_preferences=merged_preferences,
+            relevant_knowledge=relevant_knowledge,
+            is_buyer=is_buyer
         )
 
-        # 5. Generate response using Claude
+        # 5. Generate response using Claude with history
         try:
+            # Format history for Claude (only role and content)
+            history = [
+                {"role": msg["role"], "content": msg["content"]}
+                for msg in context.get("conversation_history", [])
+            ]
+
             ai_response = await self.llm_client.agenerate(
                 prompt=user_message,
                 system_prompt=system_prompt,
+                history=history,
                 temperature=settings.temperature,
                 max_tokens=settings.max_tokens
             )

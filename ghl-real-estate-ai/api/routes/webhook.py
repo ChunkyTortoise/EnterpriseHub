@@ -70,6 +70,43 @@ async def handle_ghl_webhook(
     )
 
     try:
+        # Step 0: Check if bot should be active for this contact
+        contact_tags = event.contact.tags
+        is_active = any(tag in contact_tags for tag in settings.activation_tags)
+        is_explicitly_disabled = any(tag in contact_tags for tag in settings.deactivation_tags)
+
+        # Determine contact type (default to Seller if 'Hit List' is present)
+        is_buyer = True
+        contact_type = event.contact.custom_fields.get("primary_contact_type") or \
+                      event.contact.custom_fields.get("Primary Contact Type")
+        
+        if contact_type == "Seller" or "Hit List" in contact_tags:
+            is_buyer = False
+
+        # Check contact type if required
+        if settings.required_contact_type:
+            if contact_type != settings.required_contact_type and "Hit List" not in contact_tags:
+                logger.info(
+                    f"Bot ignored contact {contact_id}: wrong type {contact_type}",
+                    extra={"contact_id": contact_id, "type": contact_type}
+                )
+                return GHLWebhookResponse(
+                    success=False,
+                    message=f"Bot only handles {settings.required_contact_type} contacts.",
+                    actions=[]
+                )
+
+        if not is_active or is_explicitly_disabled:
+            logger.info(
+                f"Bot inactive for contact {contact_id}",
+                extra={"contact_id": contact_id, "tags": contact_tags}
+            )
+            return GHLWebhookResponse(
+                success=False,
+                message="Bot is currently inactive for this contact.",
+                actions=[]
+            )
+
         # Step 1: Get conversation context
         context = await conversation_manager.get_context(contact_id)
 
@@ -82,7 +119,8 @@ async def handle_ghl_webhook(
                 "phone": event.contact.phone,
                 "email": event.contact.email
             },
-            context=context
+            context=context,
+            is_buyer=is_buyer
         )
 
         # Step 3: Update conversation context
