@@ -12,7 +12,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel, Field
 
-from services.lead_lifecycle import LeadLifecycleTracker
+from services.lead_lifecycle import LeadLeadLifecycleTracker, LeadLifecycleTracker
 from ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -70,26 +70,14 @@ async def transition_lead_stage(
     Updates lead stage and triggers appropriate automations.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
+        lifecycle_manager = LeadLifecycleTracker(location_id)
         
-        # Get or start journey for this contact
-        journey = lifecycle_tracker.get_journey(transition.contact_id)
-        if not journey:
-            journey_id = lifecycle_tracker.start_journey(
-                contact_id=transition.contact_id,
-                contact_name=transition.contact_id,
-                source="api"
-            )
-        else:
-            journey_id = journey.get("id", transition.contact_id)
-        
-        # Transition to new stage
-        lifecycle_tracker.transition_stage(journey_id, transition.new_stage)
-        
-        result = {
-            "old_stage": journey.get("current_stage") if journey else "unknown",
-            "journey_id": journey_id
-        }
+        result = await lifecycle_manager.transition_stage(
+            contact_id=transition.contact_id,
+            new_stage=transition.new_stage,
+            reason=transition.reason,
+            notes=transition.notes
+        )
         
         logger.info(f"Transitioned contact {transition.contact_id} to stage {transition.new_stage}")
         
@@ -112,22 +100,8 @@ async def get_stage_history(location_id: str, contact_id: str):
     Get complete stage transition history for a lead.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
-        journey = lifecycle_tracker.get_journey(contact_id)
-        
-        if not journey:
-            history = []
-        else:
-            # Extract stage transitions from journey events
-            history = [
-                {
-                    "stage": event.get("new_stage", event.get("stage", "unknown")),
-                    "timestamp": event.get("timestamp"),
-                    "event": event.get("event_type")
-                }
-                for event in journey.get("events", [])
-                if event.get("event_type") in ["stage_transition", "journey_start"]
-            ]
+        lifecycle_manager = LeadLifecycleTracker(location_id)
+        history = await lifecycle_manager.get_stage_history(contact_id)
         
         return {
             "contact_id": contact_id,
@@ -147,24 +121,11 @@ async def get_lead_health(location_id: str, contact_id: str):
     Get health score and engagement metrics for a specific lead.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
-        journey = lifecycle_tracker.get_journey(contact_id)
+        lifecycle_manager = LeadLifecycleTracker(location_id)
+        health = await lifecycle_manager.calculate_lead_health(contact_id)
         
-        if not journey:
+        if not health:
             raise HTTPException(status_code=404, detail="Lead not found")
-        
-        # Calculate basic health from journey
-        summary = lifecycle_tracker.get_journey_summary(contact_id)
-        
-        health = {
-            "contact_id": contact_id,
-            "health_score": summary.get("progression_rate", 0.0),
-            "last_interaction": summary.get("last_event_time", datetime.now().isoformat()),
-            "days_since_contact": summary.get("duration_days", 0),
-            "engagement_level": "high" if summary.get("progression_rate", 0) > 0.7 else "medium" if summary.get("progression_rate", 0) > 0.4 else "low",
-            "risk_level": "low" if summary.get("progression_rate", 0) > 0.7 else "medium" if summary.get("progression_rate", 0) > 0.4 else "high",
-            "recommended_action": "Continue nurturing" if summary.get("progression_rate", 0) > 0.5 else "Re-engage immediately"
-        }
         
         return LeadHealth(**health)
         
@@ -186,12 +147,8 @@ async def get_at_risk_leads(
     Returns leads with health scores below the threshold.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
-        
-        # Get all journeys and filter by low progression rate (at-risk)
-        # For now, return empty list as we'd need to iterate all journeys
-        # This would be implemented by the service layer in production
-        at_risk_leads = []
+        lifecycle_manager = LeadLifecycleTracker(location_id)
+        at_risk_leads = await lifecycle_manager.identify_at_risk_leads(threshold)
         
         return {
             "location_id": location_id,
@@ -218,15 +175,14 @@ async def create_reengagement_campaign(
     Automatically selects leads based on filters or uses provided contact list.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
+        reengagement_engine = LeadLifecycleTracker(location_id)
         
-        # Generate campaign ID
-        import time
-        campaign_id = f"reeng_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000000) % 1000000}"
-        
-        # In production, this would trigger actual re-engagement
-        # For now, just log the campaign creation
-        logger.info(f"Re-engagement campaign {campaign_id} created for {len(request.contact_ids or [])} contacts")
+        campaign_id = await reengagement_engine.create_campaign(
+            contact_ids=request.contact_ids,
+            filters=request.filters,
+            template=request.template,
+            schedule_at=request.schedule_at
+        )
         
         logger.info(f"Created re-engagement campaign {campaign_id} for location {location_id}")
         
@@ -252,11 +208,8 @@ async def get_eligible_for_reengagement(
     Returns leads that haven't been contacted in specified days.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
-        
-        # Get eligible leads based on inactivity
-        # In production, this would query all journeys and filter by last activity
-        eligible_leads = []
+        reengagement_engine = LeadLifecycleTracker(location_id)
+        eligible_leads = await reengagement_engine.find_eligible_leads(days_inactive)
         
         return {
             "location_id": location_id,
@@ -280,20 +233,8 @@ async def get_lifecycle_metrics(
     Get comprehensive lifecycle metrics for a location.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
-        
-        # Get stage analytics
-        stage_data = lifecycle_tracker.get_stage_analytics()
-        funnel = lifecycle_tracker.get_conversion_funnel()
-        
-        metrics = {
-            "total_leads": sum(stage_data.get("stage_distribution", {}).values()),
-            "by_stage": stage_data.get("stage_distribution", {}),
-            "avg_time_to_qualified": stage_data.get("avg_time_in_stage", {}).get("qualified", 0.0),
-            "conversion_rate": funnel.get("overall_conversion_rate", 0.0),
-            "churn_rate": 0.0,  # Not tracked yet
-            "active_nurture_sequences": 0  # Not tracked yet
-        }
+        lifecycle_manager = LeadLifecycleTracker(location_id)
+        metrics = await lifecycle_manager.get_lifecycle_metrics(days)
         
         return LifecycleMetrics(**metrics)
         
@@ -314,14 +255,12 @@ async def start_nurture_sequence(
     Start an automated nurture sequence for a lead.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
+        lifecycle_manager = LeadLifecycleTracker(location_id)
         
-        # Generate sequence ID
-        import time
-        sequence_id = f"seq_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000000) % 1000000}"
-        
-        # Log sequence start
-        logger.info(f"Started nurture sequence {sequence_id} for contact {contact_id}")
+        sequence_id = await lifecycle_manager.start_nurture_sequence(
+            contact_id=contact_id,
+            sequence_type=sequence_type
+        )
         
         logger.info(f"Started nurture sequence {sequence_id} for contact {contact_id}")
         
@@ -343,11 +282,9 @@ async def stop_nurture_sequence(location_id: str, sequence_id: str):
     Stop an active nurture sequence.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
+        lifecycle_manager = LeadLifecycleTracker(location_id)
         
-        # Log sequence stop
-        logger.info(f"Stopped nurture sequence {sequence_id}")
-        result = {"stopped": True}
+        result = await lifecycle_manager.stop_nurture_sequence(sequence_id)
         
         return {
             "sequence_id": sequence_id,
