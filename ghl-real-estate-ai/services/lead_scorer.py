@@ -1,22 +1,22 @@
 """
 Lead scoring service for real estate AI.
 
-Calculates lead quality scores (0-100) based on conversation context
-and extracted preferences. Higher scores indicate more qualified leads.
+Calculates lead quality scores based on NUMBER OF QUALIFYING QUESTIONS ANSWERED.
+This is Jorge's requirement: count questions, not points.
 
-Scoring Methodology:
-- Budget confirmed: +30 points
-- Pre-approved financing: +15 bonus
-- Timeline confirmed: +25 points
-- Urgent timeline: +10 bonus
-- Location specified: +15 points
-- Specific requirements: +10 points
-- High engagement: +10 points
+Scoring Methodology (Question Count):
+- Budget confirmed: +1 question
+- Location specified: +1 question
+- Timeline confirmed: +1 question
+- Property requirements (beds/baths/must-haves): +1 question
+- Financing status: +1 question
+- Motivation (why buying/selling now): +1 question
+- Home condition (sellers only): +1 question
 
-Lead Classifications:
-- Hot Lead: 70+ (immediate action required)
-- Warm Lead: 40-69 (follow up within 24 hours)
-- Cold Lead: 0-39 (nurture campaign)
+Lead Classifications (Jorge's Criteria):
+- Hot Lead: 3+ questions answered (immediate action required)
+- Warm Lead: 2 questions answered (follow up within 24 hours)
+- Cold Lead: 0-1 questions answered (nurture campaign)
 """
 from typing import Dict, Any, List
 from datetime import datetime
@@ -35,7 +35,18 @@ class LeadScorer:
 
     def calculate(self, context: Dict[str, Any]) -> int:
         """
-        Calculate lead score from conversation context.
+        Calculate lead score based on NUMBER OF QUESTIONS ANSWERED.
+        
+        Jorge's Requirement: Count questions answered, not points.
+        
+        Qualifying Questions:
+        1. Budget: Did they provide a budget/price range?
+        2. Location: Did they specify a location/area?
+        3. Timeline: Did they share when they want to buy/sell?
+        4. Property Requirements: Beds/baths/must-haves?
+        5. Financing: Pre-approval status?
+        6. Motivation: Why buying/selling now?
+        7. Home Condition: (Sellers only) Condition of their home?
 
         Args:
             context: Conversation context containing:
@@ -44,40 +55,40 @@ class LeadScorer:
                 - created_at: Conversation start time
 
         Returns:
-            Lead score (0-100)
+            Number of questions answered (0-7)
         """
-        score = 0
+        questions_answered = 0
         prefs = context.get("extracted_preferences", {})
-        history = context.get("conversation_history", [])
 
-        # Budget confirmed (+30 points)
+        # Question 1: Budget/Price Range
         if prefs.get("budget"):
-            score += 30
-            # Pre-approved financing (+15 bonus)
-            if prefs.get("financing") in ["pre-approved", "pre-qualified", "cash"]:
-                score += 15
+            questions_answered += 1
 
-        # Timeline confirmed (+25 points)
-        timeline = prefs.get("timeline", "")
-        if timeline:
-            score += 25
-            # Urgent timeline (< 3 months) (+10 bonus)
-            if self._is_urgent_timeline(timeline):
-                score += 10
-
-        # Location specified (+15 points)
+        # Question 2: Location Preference
         if prefs.get("location"):
-            score += 15
+            questions_answered += 1
 
-        # Specific requirements (+10 points)
+        # Question 3: Timeline
+        if prefs.get("timeline"):
+            questions_answered += 1
+
+        # Question 4: Property Requirements (beds/baths/must-haves)
         if prefs.get("bedrooms") or prefs.get("bathrooms") or prefs.get("must_haves"):
-            score += 10
+            questions_answered += 1
 
-        # Engagement level (+10 points if > 3 back-and-forth exchanges)
-        if len(history) > 6:  # 3 user messages + 3 AI responses
-            score += 10
+        # Question 5: Financing Status
+        if prefs.get("financing"):
+            questions_answered += 1
 
-        return min(score, 100)
+        # Question 6: Motivation (why buying/selling now)
+        if prefs.get("motivation"):
+            questions_answered += 1
+
+        # Question 7: Home Condition (sellers only)
+        if prefs.get("home_condition"):
+            questions_answered += 1
+
+        return questions_answered
 
     def _is_urgent_timeline(self, timeline: str) -> bool:
         """
@@ -111,19 +122,24 @@ class LeadScorer:
 
     def classify(self, score: int) -> str:
         """
-        Classify lead based on score.
+        Classify lead based on number of questions answered.
+        
+        Jorge's Rules:
+        - Hot: 3+ questions answered
+        - Warm: 2 questions answered
+        - Cold: 0-1 questions answered
 
         Args:
-            score: Lead score (0-100)
+            score: Number of questions answered (0-7)
 
         Returns:
             Lead classification: "hot", "warm", or "cold"
         """
-        if score >= self.hot_threshold:
+        if score >= self.hot_threshold:  # 3+
             return "hot"
-        elif score >= self.warm_threshold:
+        elif score >= self.warm_threshold:  # 2
             return "warm"
-        else:
+        else:  # 0-1
             return "cold"
 
     def get_recommended_actions(self, score: int) -> List[str]:
@@ -164,6 +180,8 @@ class LeadScorer:
     def calculate_with_reasoning(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """
         Calculate score with detailed reasoning breakdown.
+        
+        Returns question count (0-7) instead of points (0-100).
 
         Args:
             context: Conversation context
@@ -175,23 +193,37 @@ class LeadScorer:
         classification = self.classify(score)
         actions = self.get_recommended_actions(score)
 
-        # Build reasoning breakdown
+        # Build reasoning breakdown - show which questions were answered
         prefs = context.get("extracted_preferences", {})
-        reasoning_parts = []
+        questions_answered = []
 
         if prefs.get("budget"):
-            reasoning_parts.append(f"Budget confirmed: ${prefs.get('budget'):,}")
-        if prefs.get("financing"):
-            reasoning_parts.append(f"Financing status: {prefs.get('financing')}")
-        if prefs.get("timeline"):
-            reasoning_parts.append(f"Timeline: {prefs.get('timeline')}")
+            questions_answered.append(f"Budget: ${prefs.get('budget'):,}" if isinstance(prefs.get('budget'), (int, float)) else f"Budget: {prefs.get('budget')}")
         if prefs.get("location"):
-            reasoning_parts.append(f"Location: {prefs.get('location')}")
+            questions_answered.append(f"Location: {prefs.get('location')}")
+        if prefs.get("timeline"):
+            questions_answered.append(f"Timeline: {prefs.get('timeline')}")
+        if prefs.get("bedrooms") or prefs.get("bathrooms") or prefs.get("must_haves"):
+            prop_details = []
+            if prefs.get("bedrooms"):
+                prop_details.append(f"{prefs.get('bedrooms')} bed")
+            if prefs.get("bathrooms"):
+                prop_details.append(f"{prefs.get('bathrooms')} bath")
+            if prefs.get("must_haves"):
+                prop_details.append(prefs.get("must_haves"))
+            questions_answered.append(f"Property: {', '.join(prop_details)}")
+        if prefs.get("financing"):
+            questions_answered.append(f"Financing: {prefs.get('financing')}")
+        if prefs.get("motivation"):
+            questions_answered.append(f"Motivation: {prefs.get('motivation')}")
+        if prefs.get("home_condition"):
+            questions_answered.append(f"Home Condition: {prefs.get('home_condition')}")
 
-        reasoning = " | ".join(reasoning_parts) if reasoning_parts else "Limited information provided"
+        reasoning = " | ".join(questions_answered) if questions_answered else "No qualifying questions answered yet"
 
         return {
             "score": score,
+            "questions_answered": score,  # Make it explicit this is question count
             "classification": classification,
             "reasoning": reasoning,
             "recommended_actions": actions
