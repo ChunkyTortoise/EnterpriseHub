@@ -111,7 +111,10 @@ class TestABTestManager:
     
     def test_list_active_experiments(self):
         """Test listing active experiments."""
-        manager = ABTestManager("test_location_unique")
+        # Use unique location to avoid interference from other tests
+        import time
+        unique_loc = f"test_location_list_{int(time.time() * 1000)}"
+        manager = ABTestManager(unique_loc)
         
         # Create multiple experiments
         exp1 = manager.create_experiment("Exp 1", {}, {})
@@ -119,8 +122,8 @@ class TestABTestManager:
         
         active = manager.list_active_experiments()
         
-        # Should only return experiments for this location
-        assert len(active) >= 2
+        # Should return exactly 2 experiments for this location
+        assert len(active) == 2
         assert any(e["name"] == "Exp 1" for e in active)
         assert any(e["name"] == "Exp 2" for e in active)
     

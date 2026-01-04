@@ -70,7 +70,9 @@ class CampaignTracker:
         Returns:
             campaign_id: Unique identifier for the campaign
         """
-        campaign_id = f"camp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        import time
+        # Use microseconds to ensure unique IDs
+        campaign_id = f"camp_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000000) % 1000000}"
         
         campaign = {
             "id": campaign_id,
@@ -302,7 +304,7 @@ class CampaignTracker:
                 campaigns_data.append(perf_data)
         
         if not campaigns_data:
-            return {"error": "No valid campaigns found"}
+            return {"error": "No valid campaigns found", "rankings": {"by_roi": []}}
         
         # Rank by different metrics
         rankings = {

@@ -384,7 +384,7 @@ class TestBottleneckAnalysis:
             source="website"
         )
         
-        tracker.transition_stage(journey_id, "contacted")
+        lifecycle_tracker.transition_stage(journey_id, "contacted")
         time.sleep(0.1)  # Long time in contacted
         lifecycle_tracker.transition_stage(journey_id, "qualified")
         

@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from ghl_utils.config import settings
 from ghl_utils.logger import get_logger
-from api.routes import webhook
+from api.routes import webhook, analytics, bulk_operations, lead_lifecycle
 
 logger = get_logger(__name__)
 
@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,
-    description="AI-powered real estate assistant for GoHighLevel",
+    description="AI-powered real estate assistant for GoHighLevel - Phase 2 Enhanced",
     docs_url="/docs" if settings.environment == "development" else None,
     redoc_url="/redoc" if settings.environment == "development" else None
 )
@@ -32,6 +32,9 @@ app.add_middleware(
 
 # Include routers
 app.include_router(webhook.router, prefix="/api")
+app.include_router(analytics.router, prefix="/api")
+app.include_router(bulk_operations.router, prefix="/api")
+app.include_router(lead_lifecycle.router, prefix="/api")
 
 # Root endpoint
 @app.get("/")
