@@ -241,29 +241,38 @@ Example output:
         - "as-is", "fast sale", "cash offer", "quick", "need to sell fast"
         
         Listing indicators:  
-        - "best price", "top dollar", "what's it worth", "how much"
+        - "best price", "top dollar", "what's it worth", 
+        - "how much can i get", "market value", "list it"
         
         Returns:
             "wholesale", "listing", or "unknown"
         """
         message_lower = message.lower()
         
-        wholesale_keywords = [
+        # More robust matching for common phrases
+        wholesale_patterns = [
             "as-is", "as is", "fast sale", "cash offer", "quick", 
             "need to sell fast", "sell quickly", "don't want to fix"
         ]
         
-        listing_keywords = [
-            "best price", "top dollar", "what's it worth", 
-            "how much can i get", "market value", "list it"
+        listing_patterns = [
+            "best price", "top dollar", "what's it worth", "worth",
+            "how much can i get", "market value", "list it", "mls"
         ]
         
-        if any(kw in message_lower for kw in wholesale_keywords):
+        if any(pattern in message_lower for pattern in wholesale_patterns):
             return "wholesale"
-        elif any(kw in message_lower for kw in listing_keywords):
+        # Special check for "worth" to avoid too many false positives, but catch "what is my house worth"
+        if any(pattern in message_lower for pattern in listing_patterns):
+            # If it's just "worth", check if it's related to the house
+            if "worth" in message_lower and not any(p in message_lower for p in ["best price", "top dollar", "market value"]):
+                if any(k in message_lower for k in ["house", "home", "property", "place", "it"]):
+                    return "listing"
+                else:
+                    return "unknown"
             return "listing"
-        else:
-            return "unknown"
+            
+        return "unknown"
 
     async def generate_response(
         self,
@@ -271,7 +280,8 @@ Example output:
         contact_info: Dict[str, Any],
         context: Dict[str, Any],
         is_buyer: bool = True,
-        tenant_config: Optional[Dict[str, Any]] = None
+        tenant_config: Optional[Dict[str, Any]] = None,
+        ghl_client: Optional[Any] = None
     ) -> AIResponse:
         """
         Generate AI response using Claude + RAG.
@@ -282,6 +292,7 @@ Example output:
             context: Conversation context
             is_buyer: Whether the contact is a buyer (True) or seller (False)
             tenant_config: Optional tenant-specific API keys
+            ghl_client: Optional GHL client to fetch calendar slots
 
         Returns:
             AIResponse with message, extracted data, reasoning, and score
@@ -318,7 +329,33 @@ Example output:
             "created_at": context.get("created_at")
         })
 
-        # 4. Build system prompt with context
+        # 4. Fetch available calendar slots if lead is HOT (Jorge's requirement)
+        available_slots_text = ""
+        if lead_score >= 3 and ghl_client and settings.ghl_calendar_id:
+            try:
+                from datetime import datetime, timedelta
+                now = datetime.now()
+                start_date = now.strftime("%Y-%m-%d")
+                end_date = (now + timedelta(days=7)).strftime("%Y-%m-%d")
+                
+                slots = await ghl_client.get_available_slots(
+                    calendar_id=settings.ghl_calendar_id,
+                    start_date=start_date,
+                    end_date=end_date
+                )
+                
+                if slots:
+                    available_slots_text = "I have these times available for a call this week:\n"
+                    # Format first 3 slots
+                    for slot in slots[:3]:
+                        # Simple formatting: 2026-01-05T10:00:00Z -> Jan 5 at 10:00 AM
+                        dt = datetime.fromisoformat(slot["start_time"].replace("Z", "+00:00"))
+                        available_slots_text += f"- {dt.strftime('%b %d at %I:%M %p')}\n"
+                    available_slots_text += "\nDo any of those work for you?"
+            except Exception as e:
+                logger.error(f"Failed to fetch calendar slots: {str(e)}")
+
+        # 5. Build system prompt with context
         from prompts.system_prompts import build_system_prompt
         
         system_prompt = build_system_prompt(
@@ -327,10 +364,11 @@ Example output:
             lead_score=lead_score,
             extracted_preferences=merged_preferences,
             relevant_knowledge=relevant_knowledge,
-            is_buyer=is_buyer
+            is_buyer=is_buyer,
+            available_slots=available_slots_text
         )
 
-        # 5. Generate response using Claude with history
+        # 6. Generate response using Claude with history
         try:
             # Use tenant-specific LLM client if config provided
             llm_client = self.llm_client

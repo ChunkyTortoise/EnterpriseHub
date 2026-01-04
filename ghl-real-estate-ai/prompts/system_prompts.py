@@ -508,11 +508,12 @@ What works best for you? I'll send a calendar invite right after."
 
 def build_system_prompt(
     contact_name: str = "there",
-    conversation_stage: str = "initial_contact",
+    conversation_stage: str = "qualifying",
     lead_score: int = 0,
     extracted_preferences: dict = None,
     relevant_knowledge: str = "",
-    is_buyer: bool = True
+    is_buyer: bool = True,
+    available_slots: str = ""
 ) -> str:
     """
     Build complete system prompt with current context.
@@ -520,10 +521,11 @@ def build_system_prompt(
     Args:
         contact_name: Lead's first name
         conversation_stage: "initial_contact", "qualifying", "objection", "closing"
-        lead_score: 0-100 score
+        lead_score: 0-7 score (Jorge's count)
         extracted_preferences: Dict of budget, location, timeline, etc.
         relevant_knowledge: RAG-retrieved context
         is_buyer: True for buyers, False for sellers
+        available_slots: Formatted string of available time slots
 
     Returns:
         Complete system prompt string
@@ -538,6 +540,11 @@ def build_system_prompt(
         ])
     else:
         prefs_text = "None gathered yet (this is your first interaction)"
+
+    # Add available slots if provided
+    calendar_context = ""
+    if available_slots:
+        calendar_context = f"\n\n## AVAILABLE TIME SLOTS\nYou have access to the following real-time availability. Offer these to the lead:\n{available_slots}"
 
     # Add qualification prompt if in qualifying stage
     qualification_section = ""
@@ -555,7 +562,7 @@ def build_system_prompt(
         relevant_knowledge=relevant_knowledge or "No specific knowledge retrieved yet."
     )
 
-    return system_prompt + qualification_section
+    return system_prompt + calendar_context + qualification_section
 
 
 def get_objection_response(objection_type: str, context: dict = None) -> str:
