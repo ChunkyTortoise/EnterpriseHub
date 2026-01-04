@@ -7,6 +7,7 @@ Ensures each team is charged on their own account.
 import json
 from typing import Dict, Any, Optional
 from pathlib import Path
+from datetime import datetime
 
 from ghl_utils.config import settings
 from ghl_utils.logger import get_logger
@@ -31,15 +32,11 @@ class TenantService:
     async def get_tenant_config(self, location_id: str) -> Dict[str, Any]:
         """
         Retrieve configuration for a tenant.
-
-        Args:
-            location_id: GHL location ID
-
-        Returns:
-            Tenant configuration dict (keys: anthropic_api_key, ghl_api_key)
+        Fallbacks: Specific File -> Default Settings -> Agency Master Key.
         """
         file_path = self._get_file_path(location_id)
         
+        # 1. Check for specific tenant file
         if file_path.exists():
             try:
                 with open(file_path, "r") as f:
@@ -47,7 +44,7 @@ class TenantService:
             except Exception as e:
                 logger.error(f"Failed to read tenant file for {location_id}: {e}")
         
-        # Fallback to default credentials from settings if this is the primary account
+        # 2. Fallback to default credentials from settings if this is the primary account
         if location_id == settings.ghl_location_id:
             return {
                 "location_id": settings.ghl_location_id,
@@ -55,38 +52,55 @@ class TenantService:
                 "ghl_api_key": settings.ghl_api_key
             }
             
+        # 3. Fallback to Agency Master Key (Jorge's Requirement)
+        if settings.ghl_agency_api_key:
+            logger.info(f"Using Agency Master Key for location {location_id}")
+            return {
+                "location_id": location_id,
+                "anthropic_api_key": settings.anthropic_api_key,
+                "ghl_api_key": settings.ghl_agency_api_key,
+                "is_agency_scoped": True
+            }
+            
         return {}
 
     async def save_tenant_config(
-        self, 
-        location_id: str, 
-        anthropic_api_key: str, 
-        ghl_api_key: str
+        self,
+        location_id: str,
+        anthropic_api_key: str,
+        ghl_api_key: str,
+        ghl_calendar_id: Optional[str] = None
     ) -> None:
-        """
-        Save/Update configuration for a tenant.
-
-        Args:
-            location_id: GHL location ID
-            anthropic_api_key: Their Anthropic API key
-            ghl_api_key: Their GHL API key
-        """
+        """Save/Update configuration for a specific tenant (sub-account)."""
         config = {
             "location_id": location_id,
             "anthropic_api_key": anthropic_api_key,
-            "ghl_api_key": ghl_api_key
+            "ghl_api_key": ghl_api_key,
+            "ghl_calendar_id": ghl_calendar_id,
+            "updated_at": datetime.utcnow().isoformat()
         }
-        
+
         file_path = self._get_file_path(location_id)
-        try:
-            with open(file_path, "w") as f:
-                json.dump(config, f, indent=2)
-            logger.info(f"Saved tenant config for {location_id}")
-        except Exception as e:
-            logger.error(f"Failed to save tenant file for {location_id}: {e}")
+        with open(file_path, "w") as f:
+            json.dump(config, f, indent=2)
+        logger.info(f"Saved tenant config for {location_id}")
+
+    async def save_agency_config(self, agency_id: str, api_key: str) -> None:
+        """Save master agency credentials."""
+        config = {
+            "agency_id": agency_id,
+            "agency_api_key": api_key,
+            "updated_at": datetime.utcnow().isoformat()
+        }
+        file_path = self.tenants_dir / "agency_master.json"
+        with open(file_path, "w") as f:
+            json.dump(config, f, indent=2)
+        logger.info(f"Saved Agency Master config for {agency_id}")
 
     async def is_tenant_active(self, location_id: str) -> bool:
-        """Check if a tenant has active configuration."""
+        """Check if a tenant has active configuration (including agency fallback)."""
         if location_id == settings.ghl_location_id:
             return True
-        return self._get_file_path(location_id).exists()
+        if self._get_file_path(location_id).exists():
+            return True
+        return settings.ghl_agency_api_key is not None

@@ -17,13 +17,15 @@ class Settings(BaseSettings):
 
     # API Keys (Required)
     anthropic_api_key: str
-    ghl_api_key: str
+    ghl_api_key: str  # Default Location API Key
     ghl_location_id: str
+    ghl_agency_api_key: Optional[str] = None  # Master Agency Key
+    ghl_agency_id: Optional[str] = None
 
     # LLM Configuration
     claude_model: str = "claude-sonnet-4-20250514"
     temperature: float = 0.7
-    max_tokens: int = 500
+    max_tokens: int = 150
     default_llm_provider: str = "claude"
     gemini_model: Optional[str] = None
     google_api_key: Optional[str] = None
@@ -54,7 +56,7 @@ class Settings(BaseSettings):
     cold_lead_threshold: int = 1  # 0-1 questions answered
 
     # Activation & Trigger Settings
-    activation_tags: list[str] = ["Hit List", "Need to Qualify"]
+    activation_tags: list[str] = ["Hit List", "Need to Qualify", "Needs Qualifying"]
     deactivation_tags: list[str] = ["AI-Off", "Qualified", "Stop-Bot"]
     required_contact_type: Optional[str] = "Seller"
     disposition_field_name: str = "disposition"

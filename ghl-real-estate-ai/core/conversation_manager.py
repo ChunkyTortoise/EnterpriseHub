@@ -299,20 +299,43 @@ Example output:
         """
         contact_name = contact_info.get("first_name", "there")
 
-        # 1. Extract structured data from user message
-        extracted_data = await self.extract_data(
-            user_message,
-            context.get("extracted_preferences", {}),
-            tenant_config=tenant_config
-        )
+        # 0. Pre-extract data from first message to avoid redundancy
+        # If this is the first interaction (no conversation history yet),
+        # extract data BEFORE generating response to prevent asking about info already provided
+        if not context.get("conversation_history"):
+            pre_extracted = await self.extract_data(
+                user_message,
+                {},
+                tenant_config=tenant_config
+            )
+            merged_preferences = {**context.get("extracted_preferences", {}), **pre_extracted}
+            extracted_data = pre_extracted
+        else:
+            # 1. Extract structured data from user message
+            extracted_data = await self.extract_data(
+                user_message,
+                context.get("extracted_preferences", {}),
+                tenant_config=tenant_config
+            )
 
-        # Merge with existing preferences
-        merged_preferences = {**context.get("extracted_preferences", {}), **extracted_data}
+            # Merge with existing preferences
+            merged_preferences = {**context.get("extracted_preferences", {}), **extracted_data}
 
-        # 2. Retrieve relevant knowledge from RAG
+        # 2. Retrieve relevant knowledge from RAG (pathway-aware)
         location_id = tenant_config.get("location_id") if tenant_config else None
+
+        # Enhance query based on detected pathway
+        enhanced_query = user_message
+        pathway = merged_preferences.get("pathway")
+        home_condition = merged_preferences.get("home_condition", "").lower()
+
+        if pathway == "wholesale" or "poor" in home_condition or "fixer" in home_condition:
+            enhanced_query = f"{user_message} wholesale cash offer as-is quick sale"
+        elif pathway == "listing":
+            enhanced_query = f"{user_message} MLS listing top dollar market value"
+
         relevant_docs = self.rag_engine.search(
-            query=user_message,
+            query=enhanced_query,
             n_results=settings.rag_top_k_results,
             location_id=location_id
         )
@@ -331,29 +354,36 @@ Example output:
 
         # 4. Fetch available calendar slots if lead is HOT (Jorge's requirement)
         available_slots_text = ""
-        if lead_score >= 3 and ghl_client and settings.ghl_calendar_id:
+        # Get calendar ID from tenant config or global settings
+        calendar_id = (tenant_config.get("ghl_calendar_id") if tenant_config else None) or settings.ghl_calendar_id
+        
+        if lead_score >= 3 and ghl_client and calendar_id:
             try:
                 from datetime import datetime, timedelta
                 now = datetime.now()
+                # Fetch slots for next 3 days for better urgency/directness
                 start_date = now.strftime("%Y-%m-%d")
-                end_date = (now + timedelta(days=7)).strftime("%Y-%m-%d")
-                
+                end_date = (now + timedelta(days=3)).strftime("%Y-%m-%d")
+
                 slots = await ghl_client.get_available_slots(
-                    calendar_id=settings.ghl_calendar_id,
+                    calendar_id=calendar_id,
                     start_date=start_date,
                     end_date=end_date
                 )
-                
+
                 if slots:
-                    available_slots_text = "I have these times available for a call this week:\n"
-                    # Format first 3 slots
-                    for slot in slots[:3]:
-                        # Simple formatting: 2026-01-05T10:00:00Z -> Jan 5 at 10:00 AM
+                    # Professional, direct, and curious tone for appointment setting
+                    available_slots_text = "I can get you on the phone with Jorge's team. Would one of these work?\n"
+                    # Format first 2 slots for brevity on SMS
+                    for slot in slots[:2]:
                         dt = datetime.fromisoformat(slot["start_time"].replace("Z", "+00:00"))
-                        available_slots_text += f"- {dt.strftime('%b %d at %I:%M %p')}\n"
-                    available_slots_text += "\nDo any of those work for you?"
+                        available_slots_text += f"- {dt.strftime('%a @ %I:%M %p')}\n"
+                    available_slots_text += "Or should I just have them call you when they're free?"
             except Exception as e:
                 logger.error(f"Failed to fetch calendar slots: {str(e)}")
+        elif lead_score >= 3:
+            # Fallback for hot leads when calendar not configured or slots unavailable
+            available_slots_text = "I'll have Jorge call you directly. What time works best for you?"
 
         # 5. Build system prompt with context
         from prompts.system_prompts import build_system_prompt
@@ -392,6 +422,10 @@ Example output:
                 temperature=settings.temperature,
                 max_tokens=settings.max_tokens
             )
+
+            # SMS 160-character hard limit enforcement
+            if len(ai_response.content) > 160:
+                ai_response.content = ai_response.content[:157] + "..."
 
             logger.info(
                 "Generated AI response",
