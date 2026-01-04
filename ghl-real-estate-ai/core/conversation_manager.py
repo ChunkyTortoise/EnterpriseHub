@@ -149,6 +149,8 @@ class ConversationManager:
         - Timeline
         - Must-have features
         - Financing status
+        - Home condition (for sellers)
+        - Pathway (wholesale vs listing)
 
         Args:
             user_message: User's latest message
@@ -174,6 +176,8 @@ Extract the following if mentioned (keep previous values if not updated):
 - nice_to_haves: list of strings (preferred but optional features)
 - financing: string ("pre-approved", "pre-qualified", "cash", "not started", etc.)
 - current_situation: string ("renting", "selling current home", "first-time buyer", etc.)
+- home_condition: string ("excellent/move-in ready", "fair/needs work", "poor/fixer-upper")
+- pathway: string ("wholesale" or "listing")
 
 Return ONLY valid JSON with extracted fields. If a field is not mentioned, omit it from the response.
 
@@ -184,7 +188,9 @@ Example output:
   "bedrooms": 3,
   "timeline": "June 2025",
   "must_haves": ["good schools", "pool"],
-  "financing": "pre-approved"
+  "financing": "pre-approved",
+  "home_condition": "excellent",
+  "pathway": "listing"
 }}
 """
 
@@ -208,6 +214,11 @@ Example output:
 
             extracted = json.loads(response.content)
 
+            # Manual override for pathway detection using keywords (Jorge's rules)
+            pathway = self.detect_intent_pathway(user_message)
+            if pathway != "unknown":
+                extracted["pathway"] = pathway
+
             logger.info(
                 "Extracted data from message",
                 extra={"extracted": extracted}
@@ -221,6 +232,38 @@ Example output:
                 extra={"error": str(e), "user_message": user_message}
             )
             return {}
+
+    def detect_intent_pathway(self, message: str) -> str:
+        """
+        Detect if lead is interested in wholesale or listing based on keywords.
+        
+        Wholesale indicators:
+        - "as-is", "fast sale", "cash offer", "quick", "need to sell fast"
+        
+        Listing indicators:  
+        - "best price", "top dollar", "what's it worth", "how much"
+        
+        Returns:
+            "wholesale", "listing", or "unknown"
+        """
+        message_lower = message.lower()
+        
+        wholesale_keywords = [
+            "as-is", "as is", "fast sale", "cash offer", "quick", 
+            "need to sell fast", "sell quickly", "don't want to fix"
+        ]
+        
+        listing_keywords = [
+            "best price", "top dollar", "what's it worth", 
+            "how much can i get", "market value", "list it"
+        ]
+        
+        if any(kw in message_lower for kw in wholesale_keywords):
+            return "wholesale"
+        elif any(kw in message_lower for kw in listing_keywords):
+            return "listing"
+        else:
+            return "unknown"
 
     async def generate_response(
         self,

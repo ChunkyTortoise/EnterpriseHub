@@ -47,10 +47,11 @@ class Settings(BaseSettings):
     default_agent_phone: str = "+15125551234"
     default_agent_email: str = "agent@example.com"
 
-    # Lead Scoring Thresholds (0-100 scale)
-    hot_lead_threshold: int = 70
-    warm_lead_threshold: int = 40
-    cold_lead_threshold: int = 0
+    # Lead Scoring Thresholds - QUESTION COUNT (Jorge's requirement)
+    # Hot: 3+ questions answered, Warm: 2 questions, Cold: 0-1 questions
+    hot_lead_threshold: int = 3  # 3+ questions answered
+    warm_lead_threshold: int = 2  # 2 questions answered
+    cold_lead_threshold: int = 1  # 0-1 questions answered
 
     # Activation & Trigger Settings
     activation_tags: list[str] = ["Hit List", "Need to Qualify"]
