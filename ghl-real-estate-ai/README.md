@@ -173,12 +173,28 @@ ghl-real-estate-ai/
 │   ├── logger.py
 │   └── config.py
 │
+├── docs/                       # Project Documentation
+│   ├── API.md
+│   ├── DEPLOYMENT.md
+│   └── ...
+│
 ├── requirements.txt
 ├── .env.example
 ├── Dockerfile
 ├── railway.json                # Railway config
 └── README.md
 ```
+
+## Documentation
+
+For detailed guides, please refer to the `docs/` directory:
+
+- [Deployment Guide](docs/DEPLOYMENT.md)
+- [API Reference](docs/API.md)
+- [System Architecture](docs/SYSTEM_ARCHITECTURE.md)
+- [Security & Hardening](docs/SECURITY.md)
+- [Analytics Dashboard](docs/ANALYTICS.md)
+- [Platform Specifics: Railway](docs/PLATFORM_RAILWAY.md) | [Render](docs/PLATFORM_RENDER.md)
 
 ---
 

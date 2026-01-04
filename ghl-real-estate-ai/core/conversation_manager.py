@@ -18,6 +18,7 @@ from core.llm_client import LLMClient
 from core.rag_engine import RAGEngine
 from services.lead_scorer import LeadScorer
 from services.memory_service import MemoryService
+from services.analytics_engine import AnalyticsEngine
 from prompts.system_prompts import BASE_SYSTEM_PROMPT
 from ghl_utils.config import settings
 from ghl_utils.logger import get_logger
@@ -64,6 +65,9 @@ class ConversationManager:
 
         # Persistent memory service
         self.memory_service = MemoryService(storage_type="file")
+
+        # Analytics engine for metrics collection
+        self.analytics_engine = AnalyticsEngine()
 
         logger.info("Conversation manager initialized")
 
@@ -133,10 +137,14 @@ class ConversationManager:
         if extracted_data:
             context["extracted_preferences"].update(extracted_data)
 
+        # Update last lead score for analytics tracking
+        current_score = self.lead_scorer.calculate(context)
+        context["last_lead_score"] = current_score
+
         # Trim conversation history to max length and summarize if needed
         max_length = settings.max_conversation_history_length
         if len(context["conversation_history"]) > max_length:
-            # Before trimming, we could theoretically summarize, 
+            # Before trimming, we could theoretically summarize,
             # but for now we'll just keep the preferences updated.
             context["conversation_history"] = context["conversation_history"][-max_length:]
 
@@ -420,6 +428,9 @@ Example output:
         )
 
         # 6. Generate response using Claude with history
+        import time
+        response_start_time = time.time()
+
         try:
             # Use tenant-specific LLM client if config provided
             llm_client = self.llm_client
@@ -448,12 +459,42 @@ Example output:
             if len(ai_response.content) > 160:
                 ai_response.content = ai_response.content[:157] + "..."
 
+            # Calculate response time
+            response_time_ms = (time.time() - response_start_time) * 1000
+
+            # 7. Track metrics in analytics engine
+            location_id = tenant_config.get("location_id") if tenant_config else "default"
+            contact_id = contact_info.get("id", "unknown")
+
+            # Detect appointment scheduling
+            appointment_scheduled = any(
+                keyword in ai_response.content.lower()
+                for keyword in ["schedule", "appointment", "calendar", "book"]
+            )
+
+            try:
+                await self.analytics_engine.record_event(
+                    contact_id=contact_id,
+                    location_id=location_id,
+                    lead_score=lead_score,
+                    previous_score=context.get("last_lead_score", 0),
+                    message=user_message,
+                    response=ai_response.content,
+                    response_time_ms=response_time_ms,
+                    context=context,
+                    appointment_scheduled=appointment_scheduled
+                )
+            except Exception as analytics_error:
+                # Don't fail the conversation if analytics fails
+                logger.warning(f"Analytics tracking failed: {analytics_error}")
+
             logger.info(
                 "Generated AI response",
                 extra={
                     "contact_name": contact_name,
                     "lead_score": lead_score,
-                    "message_length": len(ai_response.content)
+                    "message_length": len(ai_response.content),
+                    "response_time_ms": response_time_ms
                 }
             )
 
