@@ -109,7 +109,9 @@ class MemoryService:
             "lead_score": 0,
             "conversation_stage": "initial_contact",
             "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat()
+            "updated_at": datetime.utcnow().isoformat(),
+            "last_interaction_at": datetime.utcnow().isoformat(),
+            "previous_sessions_summary": ""
         }
 
     async def clear_context(self, contact_id: str) -> None:

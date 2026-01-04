@@ -73,6 +73,7 @@ class Settings(BaseSettings):
     # Performance Settings
     webhook_timeout_seconds: int = 3
     max_conversation_history_length: int = 20
+    previous_context_window_hours: int = 24
     rag_top_k_results: int = 3
 
     # Security

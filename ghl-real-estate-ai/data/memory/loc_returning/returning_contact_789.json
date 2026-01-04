@@ -1,0 +1,11 @@
+{
+  "contact_id": "returning_contact_789",
+  "location_id": "loc_returning",
+  "conversation_history": [],
+  "extracted_preferences": {
+    "budget": 500000
+  },
+  "last_interaction_at": "2026-01-02T20:36:02.696145",
+  "updated_at": "2026-01-04T20:36:02.696150",
+  "previous_sessions_summary": ""
+}

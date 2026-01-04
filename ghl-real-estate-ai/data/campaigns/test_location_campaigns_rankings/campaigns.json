@@ -1,0 +1,68 @@
+{
+  "active": {
+    "camp_20260104_125032": {
+      "id": "camp_20260104_125032",
+      "name": "Low ROI Campaign",
+      "channel": "email",
+      "location_id": "test_location_campaigns_rankings",
+      "budget": 2000.0,
+      "start_date": "2026-01-01",
+      "end_date": null,
+      "status": "active",
+      "created_at": "2026-01-04T12:50:32.853598",
+      "target_metrics": {
+        "target_leads": 100,
+        "target_conversions": 10,
+        "target_roi": 3.0
+      },
+      "metadata": {},
+      "performance": {
+        "impressions": 0,
+        "clicks": 0,
+        "leads_generated": 50,
+        "qualified_leads": 0,
+        "hot_leads": 0,
+        "appointments_booked": 0,
+        "conversions": 5,
+        "revenue_generated": 3000.0,
+        "cost_per_lead": 40.0,
+        "cost_per_conversion": 400.0,
+        "roi": 0.5,
+        "conversion_rate": 0.1
+      },
+      "daily_metrics": [
+        {
+          "date": "2026-01-04",
+          "metrics": {
+            "leads_generated": 50,
+            "conversions": 5,
+            "revenue_generated": 3000.0
+          },
+          "cumulative": {
+            "impressions": 0,
+            "clicks": 0,
+            "leads_generated": 50,
+            "qualified_leads": 0,
+            "hot_leads": 0,
+            "appointments_booked": 0,
+            "conversions": 5,
+            "revenue_generated": 3000.0,
+            "cost_per_lead": 40.0,
+            "cost_per_conversion": 400.0,
+            "roi": 0.5,
+            "conversion_rate": 0.1
+          }
+        }
+      ],
+      "funnel_data": {
+        "awareness": 0,
+        "interest": 0,
+        "consideration": 0,
+        "intent": 0,
+        "conversion": 0
+      }
+    }
+  },
+  "completed": {},
+  "archived": {}
+}

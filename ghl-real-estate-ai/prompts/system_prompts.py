@@ -513,7 +513,9 @@ def build_system_prompt(
     extracted_preferences: dict = None,
     relevant_knowledge: str = "",
     is_buyer: bool = True,
-    available_slots: str = ""
+    available_slots: str = "",
+    is_returning_lead: bool = False,
+    hours_since: float = 0
 ) -> str:
     """
     Build complete system prompt with current context.
@@ -526,6 +528,8 @@ def build_system_prompt(
         relevant_knowledge: RAG-retrieved context
         is_buyer: True for buyers, False for sellers
         available_slots: Formatted string of available time slots
+        is_returning_lead: Whether this is a returning lead after a gap
+        hours_since: Hours since last interaction
 
     Returns:
         Complete system prompt string
@@ -540,6 +544,14 @@ def build_system_prompt(
         ])
     else:
         prefs_text = "None gathered yet (this is your first interaction)"
+
+    # Add returning lead context
+    returning_context = ""
+    if is_returning_lead:
+        time_str = f"{int(hours_since)} hours" if hours_since < 48 else f"{int(hours_since/24)} days"
+        returning_context = f"\n\n## RETURNING LEAD CONTEXT\nThis lead is returning after {time_str}. "
+        returning_context += "Acknowledge the gap if it feels natural, e.g., 'Hey [Name], glad you're back!' or 'Hey, just following up on our last chat.' "
+        returning_context += "Use the 'Extracted Preferences' below to show you remember them."
 
     # Add available slots if provided
     calendar_context = ""
