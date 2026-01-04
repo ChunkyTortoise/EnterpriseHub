@@ -78,7 +78,21 @@ class ConversationManager:
         Returns:
             Conversation context dict with history and extracted data
         """
-        return await self.memory_service.get_context(contact_id, location_id=location_id)
+        context = await self.memory_service.get_context(contact_id, location_id=location_id)
+        
+        # Check for session gap (Smart Resume)
+        last_interaction = context.get("last_interaction_at")
+        if last_interaction:
+            last_dt = datetime.fromisoformat(last_interaction)
+            hours_since = (datetime.utcnow() - last_dt).total_seconds() / 3600
+            
+            if hours_since > settings.previous_context_window_hours:
+                # Long gap detected - this is a returning lead session
+                context["is_returning_lead"] = True
+                context["hours_since_last_interaction"] = hours_since
+                logger.info(f"Returning lead detected for {contact_id} ({hours_since:.1f} hours since last interaction)")
+        
+        return context
 
     async def update_context(
         self,
@@ -112,13 +126,18 @@ class ConversationManager:
             "timestamp": datetime.utcnow().isoformat()
         })
 
+        # Update last interaction time
+        context["last_interaction_at"] = datetime.utcnow().isoformat()
+
         # Merge extracted data (new data overrides old)
         if extracted_data:
             context["extracted_preferences"].update(extracted_data)
 
-        # Trim conversation history to max length
+        # Trim conversation history to max length and summarize if needed
         max_length = settings.max_conversation_history_length
         if len(context["conversation_history"]) > max_length:
+            # Before trimming, we could theoretically summarize, 
+            # but for now we'll just keep the preferences updated.
             context["conversation_history"] = context["conversation_history"][-max_length:]
 
         # Store context
@@ -395,7 +414,9 @@ Example output:
             extracted_preferences=merged_preferences,
             relevant_knowledge=relevant_knowledge,
             is_buyer=is_buyer,
-            available_slots=available_slots_text
+            available_slots=available_slots_text,
+            is_returning_lead=context.get("is_returning_lead", False),
+            hours_since=context.get("hours_since_last_interaction", 0)
         )
 
         # 6. Generate response using Claude with history

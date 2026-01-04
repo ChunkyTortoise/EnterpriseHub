@@ -1,0 +1,52 @@
+{
+  "operations": [
+    {
+      "operation_id": "bulk_20260104_125444",
+      "location_id": "demo_location",
+      "operation_type": "score",
+      "created_at": "2026-01-04T12:54:44.409653",
+      "created_by": "admin",
+      "status": "failed",
+      "target_count": 5,
+      "target_leads": [
+        "contact_1",
+        "contact_2",
+        "contact_3",
+        "contact_4",
+        "contact_5"
+      ],
+      "parameters": {
+        "context": {
+          "budget": 500000,
+          "timeline": "urgent"
+        }
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": [
+          {
+            "error": "No module named 'services'",
+            "timestamp": "2026-01-04T12:54:44.410635"
+          }
+        ]
+      },
+      "started_at": "2026-01-04T12:54:44.410190",
+      "completed_at": "2026-01-04T12:54:44.410639",
+      "duration_seconds": 0.000449
+    }
+  ],
+  "templates": {
+    "tmpl_20260104_125444": {
+      "template_id": "tmpl_20260104_125444",
+      "name": "Welcome Message",
+      "text": "Hi {first_name}, thanks for your interest in properties around {location}!",
+      "description": "Initial welcome message for new leads",
+      "category": "welcome",
+      "created_at": "2026-01-04T12:54:44.410961",
+      "usage_count": 0
+    }
+  }
+}

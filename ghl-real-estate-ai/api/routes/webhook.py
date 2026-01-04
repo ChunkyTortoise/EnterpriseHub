@@ -25,6 +25,7 @@ from core.conversation_manager import ConversationManager
 from services.ghl_client import GHLClient
 from services.lead_scorer import LeadScorer
 from services.tenant_service import TenantService
+from services.analytics_service import AnalyticsService
 from ghl_utils.config import settings
 from ghl_utils.logger import get_logger
 
@@ -36,6 +37,7 @@ conversation_manager = ConversationManager()
 ghl_client_default = GHLClient()
 lead_scorer = LeadScorer()
 tenant_service = TenantService()
+analytics_service = AnalyticsService()
 
 
 @router.post("/webhook", response_model=GHLWebhookResponse)
@@ -75,6 +77,18 @@ async def handle_ghl_webhook(
         }
     )
 
+    # Track incoming message
+    background_tasks.add_task(
+        analytics_service.track_event,
+        event_type="message_received",
+        location_id=location_id,
+        contact_id=contact_id,
+        data={
+            "message_type": event.message.type,
+            "message_length": len(user_message)
+        }
+    )
+
     # Step -1: Check AI Activation/Deactivation Tags (Jorge's Requirement)
     # AI only runs if activation tag is present AND no deactivation tag is present
     activation_tags = settings.activation_tags  # e.g., ["Needs Qualifying", "Hit List"]
@@ -85,6 +99,13 @@ async def handle_ghl_webhook(
     
     if not should_activate:
         logger.info(f"AI not triggered for contact {contact_id} - activation tag not present")
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="ai_not_triggered",
+            location_id=location_id,
+            contact_id=contact_id,
+            data={"reason": "activation_tag_missing"}
+        )
         return GHLWebhookResponse(
             success=True,
             message="AI not triggered (activation tag missing)",
@@ -93,6 +114,13 @@ async def handle_ghl_webhook(
         
     if should_deactivate:
         logger.info(f"AI deactivated for contact {contact_id} - deactivation tag present")
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="ai_not_triggered",
+            location_id=location_id,
+            contact_id=contact_id,
+            data={"reason": "deactivation_tag_present"}
+        )
         return GHLWebhookResponse(
             success=True,
             message="AI deactivated (deactivation tag present)",
@@ -126,6 +154,30 @@ async def handle_ghl_webhook(
             context=context,
             tenant_config=tenant_config,
             ghl_client=current_ghl_client
+        )
+
+        # Track AI response generation
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="message_sent",
+            location_id=location_id,
+            contact_id=contact_id,
+            data={
+                "message_length": len(ai_response.message),
+                "lead_score": ai_response.lead_score
+            }
+        )
+
+        # Track lead scoring
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="lead_scored",
+            location_id=location_id,
+            contact_id=contact_id,
+            data={
+                "score": ai_response.lead_score,
+                "classification": lead_scorer.classify(ai_response.lead_score)
+            }
         )
 
         # Step 3: Update conversation context

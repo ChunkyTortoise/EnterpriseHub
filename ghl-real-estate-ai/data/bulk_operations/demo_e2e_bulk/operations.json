@@ -1,0 +1,125 @@
+{
+  "operations": [
+    {
+      "operation_id": "bulk_20260104_125600",
+      "location_id": "demo_e2e_bulk",
+      "operation_type": "score",
+      "created_at": "2026-01-04T12:56:00.554123",
+      "created_by": "test_user",
+      "status": "completed",
+      "target_count": 3,
+      "target_leads": [
+        "lead_1",
+        "lead_2",
+        "lead_3"
+      ],
+      "parameters": {
+        "context": {
+          "budget": 500000,
+          "timeline": "urgent"
+        }
+      },
+      "results": {
+        "processed": 3,
+        "successful": 3,
+        "failed": 0,
+        "skipped": 0,
+        "errors": [],
+        "scores": {
+          "lead_1": {
+            "score": 0,
+            "classification": "cold"
+          },
+          "lead_2": {
+            "score": 0,
+            "classification": "cold"
+          },
+          "lead_3": {
+            "score": 0,
+            "classification": "cold"
+          }
+        }
+      },
+      "started_at": "2026-01-04T12:56:00.554276",
+      "completed_at": "2026-01-04T12:56:00.677103",
+      "duration_seconds": 0.122827
+    },
+    {
+      "operation_id": "bulk_20260104_125600",
+      "location_id": "demo_e2e_bulk",
+      "operation_type": "message",
+      "created_at": "2026-01-04T12:56:00.677403",
+      "created_by": "system",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead_1",
+        "lead_2"
+      ],
+      "parameters": {
+        "template": "Hi {first_name}, checking in!",
+        "message_type": "sms",
+        "contact_data": {
+          "lead_1": {
+            "first_name": "John"
+          },
+          "lead_2": {
+            "first_name": "Jane"
+          }
+        }
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260104_125600",
+      "location_id": "demo_e2e_bulk",
+      "operation_type": "tag",
+      "created_at": "2026-01-04T12:56:00.677525",
+      "created_by": "system",
+      "status": "pending",
+      "target_count": 3,
+      "target_leads": [
+        "lead_1",
+        "lead_2",
+        "lead_3"
+      ],
+      "parameters": {
+        "action": "add",
+        "tags": [
+          "hot-lead",
+          "austin"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    }
+  ],
+  "templates": {
+    "tmpl_20260104_125600": {
+      "template_id": "tmpl_20260104_125600",
+      "name": "Welcome Message",
+      "text": "Hi {first_name}, welcome to our real estate service!",
+      "description": "Initial welcome message",
+      "category": "welcome",
+      "created_at": "2026-01-04T12:56:00.677291",
+      "usage_count": 0
+    }
+  }
+}

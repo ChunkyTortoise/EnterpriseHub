@@ -1,0 +1,58 @@
+{
+  "timestamp": "2026-01-04T12:18:28.925339",
+  "checks_run": 10,
+  "checks_passed": 7,
+  "security_score": 81.0,
+  "findings": {
+    "critical": [],
+    "high": [
+      {
+        "title": "Insecure File Permissions: .env",
+        "description": "File has world-readable permissions: 644",
+        "file": ".env",
+        "remediation": "Run: chmod 600 .env",
+        "timestamp": "2026-01-04T12:18:28.924773"
+      },
+      {
+        "title": "Insecure File Permissions: data/memory",
+        "description": "File has world-readable permissions: 755",
+        "file": "data/memory",
+        "remediation": "Run: chmod 600 data/memory",
+        "timestamp": "2026-01-04T12:18:28.924790"
+      },
+      {
+        "title": "Insecure File Permissions: data/embeddings",
+        "description": "File has world-readable permissions: 755",
+        "file": "data/embeddings",
+        "remediation": "Run: chmod 600 data/embeddings",
+        "timestamp": "2026-01-04T12:18:28.924799"
+      }
+    ],
+    "medium": [
+      {
+        "title": "Missing API Security Features",
+        "description": "Missing: Rate Limiting, Authentication",
+        "file": "api/main.py",
+        "remediation": "Implement rate limiting, authentication, and CORS properly",
+        "timestamp": "2026-01-04T12:18:28.924895"
+      },
+      {
+        "title": "Data Not Encrypted at Rest",
+        "description": "Sensitive conversation data stored without encryption",
+        "file": "services/memory_service.py",
+        "remediation": "Consider encrypting sensitive data at rest using Fernet or similar",
+        "timestamp": "2026-01-04T12:18:28.924970"
+      }
+    ],
+    "low": [],
+    "info": [
+      {
+        "title": "Dependency Scan Recommended",
+        "description": "Run 'pip-audit' to check for known vulnerabilities",
+        "file": "requirements.txt",
+        "remediation": "Install and run: pip install pip-audit && pip-audit",
+        "timestamp": "2026-01-04T12:18:28.924809"
+      }
+    ]
+  }
+}
