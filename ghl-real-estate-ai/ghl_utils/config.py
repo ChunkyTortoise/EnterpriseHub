@@ -62,6 +62,7 @@ class Settings(BaseSettings):
 
     # GHL Workflow & Custom Field Mapping
     notify_agent_workflow_id: Optional[str] = None
+    ghl_calendar_id: Optional[str] = None
     custom_field_lead_score: Optional[str] = None
     custom_field_budget: Optional[str] = None
     custom_field_location: Optional[str] = None

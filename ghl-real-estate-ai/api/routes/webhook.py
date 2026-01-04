@@ -62,6 +62,7 @@ async def handle_ghl_webhook(
     contact_id = event.contact_id
     location_id = event.location_id
     user_message = event.message.body
+    tags = event.contact.tags or []
 
     logger.info(
         f"Received webhook for contact {contact_id} in location {location_id}",
@@ -69,20 +70,46 @@ async def handle_ghl_webhook(
             "contact_id": contact_id,
             "location_id": location_id,
             "message_type": event.message.type,
-            "message_preview": user_message[:100]
+            "message_preview": user_message[:100],
+            "tags": tags
         }
     )
+
+    # Step -1: Check AI Activation/Deactivation Tags (Jorge's Requirement)
+    # AI only runs if activation tag is present AND no deactivation tag is present
+    activation_tags = settings.activation_tags  # e.g., ["Needs Qualifying", "Hit List"]
+    deactivation_tags = settings.deactivation_tags  # e.g., ["AI-Off", "Qualified", "Stop-Bot"]
+    
+    should_activate = any(tag in tags for tag in activation_tags)
+    should_deactivate = any(tag in tags for tag in deactivation_tags)
+    
+    if not should_activate:
+        logger.info(f"AI not triggered for contact {contact_id} - activation tag not present")
+        return GHLWebhookResponse(
+            success=True,
+            message="AI not triggered (activation tag missing)",
+            actions=[]
+        )
+        
+    if should_deactivate:
+        logger.info(f"AI deactivated for contact {contact_id} - deactivation tag present")
+        return GHLWebhookResponse(
+            success=True,
+            message="AI deactivated (deactivation tag present)",
+            actions=[]
+        )
 
     try:
         # Step 0: Get tenant configuration
         tenant_config = await tenant_service.get_tenant_config(location_id)
         
-        # If no config found and it's not the default location, we might want to reject
-        # or fall back to default if that's allowed.
-        if not tenant_config:
-            logger.warning(f"No tenant configuration found for location {location_id}")
-            # For now, we continue with default keys if they exist in settings, 
-            # but in production you'd likely reject here.
+        # Step 0.1: Initialize GHL client (tenant-specific or default)
+        current_ghl_client = ghl_client_default
+        if tenant_config and tenant_config.get("ghl_api_key"):
+            current_ghl_client = GHLClient(
+                api_key=tenant_config["ghl_api_key"],
+                location_id=location_id
+            )
 
         # Step 1: Get conversation context
         context = await conversation_manager.get_context(contact_id, location_id=location_id)
@@ -97,7 +124,8 @@ async def handle_ghl_webhook(
                 "email": event.contact.email
             },
             context=context,
-            tenant_config=tenant_config
+            tenant_config=tenant_config,
+            ghl_client=current_ghl_client
         )
 
         # Step 3: Update conversation context
@@ -117,14 +145,6 @@ async def handle_ghl_webhook(
         )
 
         # Step 5: Send response and apply actions in background
-        # Use tenant-specific GHL client if available
-        current_ghl_client = ghl_client_default
-        if tenant_config and tenant_config.get("ghl_api_key"):
-            current_ghl_client = GHLClient(
-                api_key=tenant_config["ghl_api_key"],
-                location_id=location_id
-            )
-
         background_tasks.add_task(
             current_ghl_client.send_message,
             contact_id=contact_id,

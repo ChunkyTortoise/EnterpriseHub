@@ -289,6 +289,67 @@ class GHLClient:
             )
             raise
 
+    async def get_available_slots(
+        self,
+        calendar_id: str,
+        start_date: str,
+        end_date: str,
+        timezone: str = "America/New_York"
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetch available time slots from GHL calendar.
+        
+        Args:
+            calendar_id: GHL calendar ID
+            start_date: ISO format date or timestamp
+            end_date: ISO format date or timestamp
+            timezone: Timezone for slots
+            
+        Returns:
+            List of available slots
+        """
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] Fetching slots for calendar {calendar_id} from {start_date} to {end_date}",
+                extra={"calendar_id": calendar_id, "test_mode": True}
+            )
+            return [
+                {"start_time": f"{start_date}T10:00:00Z"},
+                {"start_time": f"{start_date}T14:00:00Z"},
+                {"start_time": f"{start_date}T16:00:00Z"}
+            ]
+
+        endpoint = f"{self.base_url}/calendars/{calendar_id}/free-slots"
+        
+        params = {
+            "startDate": start_date,
+            "endDate": end_date,
+            "timezone": timezone
+        }
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    endpoint,
+                    params=params,
+                    headers=self.headers,
+                    timeout=settings.webhook_timeout_seconds
+                )
+                response.raise_for_status()
+                
+                data = response.json()
+                # GHL usually returns slots in a dict under 'slots' or directly
+                slots = data.get("slots", []) if isinstance(data, dict) else []
+                
+                return slots
+
+        except httpx.HTTPError as e:
+            logger.error(
+                f"Failed to fetch calendar slots: {str(e)}",
+                extra={"calendar_id": calendar_id, "error": str(e)}
+            )
+            return []
+
     async def apply_actions(
         self,
         contact_id: str,
