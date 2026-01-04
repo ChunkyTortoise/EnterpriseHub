@@ -53,7 +53,9 @@ class ABTestManager:
         Returns:
             experiment_id: Unique identifier for the experiment
         """
-        experiment_id = f"exp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        import time
+        # Use microseconds to ensure unique IDs
+        experiment_id = f"exp_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000000) % 1000000}"
         
         experiment = {
             "id": experiment_id,
