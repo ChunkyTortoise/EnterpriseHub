@@ -1,40 +1,36 @@
-# Session Handoff: GHL Real Estate AI Resume (2026-01-03)
+# Session Handoff: GHL Real Estate AI - Resuming with Client Clarifications (2026-01-03)
 
-## 📌 Summary of Work Done
-- **Restored Project State:** Recovered the `ghl-real-estate-ai` directory and related files (`agentforge`, `ghl-real-estate-ai-starter`) from a deleted state using `git restore`.
-- **Environment Setup:**
-    - Re-installed dependencies from `requirements.txt`.
-    - Created `.env` with required configuration (`ANTHROPIC_API_KEY`, dummy GHL keys).
-    - Successfully populated the ChromaDB knowledge base with 10 property listings and 20 FAQs.
-- **Code Enhancements for Testing:**
-    - Modified `utils/config.py` to include a `test_mode` flag.
-    - Updated `services/ghl_client.py` to support `test_mode`, allowing the backend to bypass real GHL API calls (SMS/Tags/Workflows) during local development and testing.
-- **Verification:**
-    - Ran `pytest tests/test_lead_scorer.py` - **20/20 tests passed**. Lead scoring logic is robust.
-    - Verified `load_knowledge_base.py` functionality.
+## 📌 Summary of Current State
+- **Phase 1 Path B Confirmed:** Jose Salas (client) wants the GHL Webhook Integration (Backend API).
+- **Core Logic Implemented:**
+    - Lead scoring algorithm verified.
+    - Conversation manager with data extraction (budget, location, etc.).
+    - RAG engine for knowledge base (properties/FAQs).
+    - GHL Client for sending messages and updating tags/custom fields.
+- **New Infrastructure:**
+    - Automated GHL Custom Field updates (Lead Score, Budget, Location, Timeline).
+    - Agent notification workflow trigger for "Hot Leads".
+    - `scripts/verify_setup.py` for environment and API health checks.
+    - `scripts/kb_manager.py` for auditing/managing the knowledge base.
+- **Discovery Game Changer:** Jose mentioned using **n8n**. This may allow building the logic directly in n8n nodes instead of a separate FastAPI backend.
 
-## 📊 Current State
-- **Backend API:** Substantially complete and ready for integration testing.
-- **Knowledge Base:** Initialized and verified (RAG logic is functional).
-- **Test Mode:** Enabled and implemented across all GHL client methods.
-- **Issue:** Encountered a connection failure when attempting to test the webhook endpoint via `uvicorn` and `curl`. This is likely a Python path or relative import issue when starting the server from the root vs. the subdirectory.
+## 🚀 Next Session Focus: Working through Client Clarifications
+The user has indicated that we will be working through the answered client clarification questions in the next turn.
 
-## 🚀 What Needs To Be Done (Next Session)
-1. **Debug Server Startup:** Fix the `uvicorn` execution context to ensure `api.main:app` loads correctly without import errors.
-2. **Local Integration Test:** Successfully run the `curl` command to verify the `/api/ghl/webhook` flow:
-    - Receive message -> Extract data -> Query RAG -> Generate Claude response -> Calculate Score -> Mock GHL actions.
-3. **Phase 2 - Railway Deployment:**
-    - Initialize Railway project.
-    - Set up Environment Variables in the dashboard.
-    - Deploy using `railway up`.
-4. **Phase 3 - Client GHL Integration:**
-    - Configure the Webhook URL in Jose's GHL account.
-    - Perform live end-to-end tests via SMS.
+### 📋 Action Plan
+1. **Analyze Clarification Answers:** Review Jose's responses to the 11 questions in `CLIENT_CLARIFICATION.md` (assuming they are provided at the start of the next session).
+2. **Architecture Decision:**
+    - **Option A (n8n):** If Jose provides n8n credentials and the integration is robust, implement the AI logic within n8n.
+    - **Option B (Hybrid):** Use n8n as the webhook listener and FastAPI for complex processing.
+    - **Option C (FastAPI):** Continue with the standalone FastAPI backend if n8n is not suitable.
+3. **Trigger & Handoff Refinement:** Adjust the AI's activation/deactivation logic based on the specific GHL tags and pipeline stages Jose identifies.
+4. **Tone Tuning:** Refine the system prompt in `prompts/system_prompts.py` to match the "100% human" professional tone requested.
+5. **Knowledge Base Audit:** Use `scripts/kb_manager.py` to ensure the property data matches the source Jose provides.
 
 ## 🔑 Key Files
-- `ghl-real-estate-ai/api/main.py`: FastAPI entry point.
-- `ghl-real-estate-ai/services/ghl_client.py`: GHL integration logic (with Test Mode).
-- `ghl-real-estate-ai/core/conversation_manager.py`: The "brain" orchestrating LLM and RAG.
-- `ghl-real-estate-ai/scripts/load_knowledge_base.py`: Knowledge base loader.
+- `ghl-real-estate-ai/CONTINUE_HERE_SESSION_4.md`: Full context for resuming.
+- `ghl-real-estate-ai/CLIENT_CLARIFICATION.md`: The questionnaire sent to the client.
+- `ghl-real-estate-ai/api/routes/webhook.py`: The core webhook integration logic.
+- `ghl-real-estate-ai/ghl_utils/config.py`: Environment settings (including new GHL custom fields).
 
-**Status:** Phase 1 (Backend Local) is 90% verified. Ready for deployment once server startup is smoothed out.
+**Status:** Ready to pivot and refine based on client answers.

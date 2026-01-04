@@ -44,7 +44,8 @@ class LLMClient:
     def __init__(
         self,
         provider: Optional[str] = None,
-        model: Optional[str] = None
+        model: Optional[str] = None,
+        api_key: Optional[str] = None
     ):
         """
         Initialize the LLM client.
@@ -52,9 +53,11 @@ class LLMClient:
         Args:
             provider: LLM provider ("gemini" or "claude"). Defaults to settings.
             model: Specific model name. Defaults to settings.
+            api_key: Optional API key for multi-tenancy.
         """
         provider_val = provider or settings.default_llm_provider
         self.provider = LLMProvider(provider_val)
+        self.api_key = api_key
 
         # Set default models
         if model:
@@ -85,7 +88,8 @@ class LLMClient:
             
         if self.provider == LLMProvider.CLAUDE:
             from anthropic import AsyncAnthropic
-            self._async_client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+            api_key = self.api_key or settings.anthropic_api_key
+            self._async_client = AsyncAnthropic(api_key=api_key)
         elif self.provider == LLMProvider.GEMINI:
             # Gemini's main client handles async via generate_content_async
             self._init_gemini()
@@ -93,7 +97,7 @@ class LLMClient:
 
     def _init_gemini(self) -> None:
         """Initialize Google Gemini client."""
-        api_key = settings.google_api_key
+        api_key = self.api_key or settings.google_api_key
         if not api_key:
             logger.warning("GOOGLE_API_KEY not set")
             return
@@ -110,7 +114,7 @@ class LLMClient:
 
     def _init_claude(self) -> None:
         """Initialize Anthropic Claude client."""
-        api_key = settings.anthropic_api_key
+        api_key = self.api_key or settings.anthropic_api_key
         if not api_key:
             logger.warning("ANTHROPIC_API_KEY not set")
             return

@@ -24,6 +24,7 @@ from api.schemas.ghl import (
 from core.conversation_manager import ConversationManager
 from services.ghl_client import GHLClient
 from services.lead_scorer import LeadScorer
+from services.tenant_service import TenantService
 from ghl_utils.config import settings
 from ghl_utils.logger import get_logger
 
@@ -32,8 +33,9 @@ router = APIRouter(prefix="/ghl", tags=["ghl"])
 
 # Initialize dependencies (singletons)
 conversation_manager = ConversationManager()
-ghl_client = GHLClient()
+ghl_client_default = GHLClient()
 lead_scorer = LeadScorer()
+tenant_service = TenantService()
 
 
 @router.post("/webhook", response_model=GHLWebhookResponse)
@@ -58,57 +60,32 @@ async def handle_ghl_webhook(
         HTTPException: If webhook processing fails
     """
     contact_id = event.contact_id
+    location_id = event.location_id
     user_message = event.message.body
 
     logger.info(
-        f"Received webhook for contact {contact_id}",
+        f"Received webhook for contact {contact_id} in location {location_id}",
         extra={
             "contact_id": contact_id,
+            "location_id": location_id,
             "message_type": event.message.type,
             "message_preview": user_message[:100]
         }
     )
 
     try:
-        # Step 0: Check if bot should be active for this contact
-        contact_tags = event.contact.tags
-        is_active = any(tag in contact_tags for tag in settings.activation_tags)
-        is_explicitly_disabled = any(tag in contact_tags for tag in settings.deactivation_tags)
-
-        # Determine contact type (default to Seller if 'Hit List' is present)
-        is_buyer = True
-        contact_type = event.contact.custom_fields.get("primary_contact_type") or \
-                      event.contact.custom_fields.get("Primary Contact Type")
+        # Step 0: Get tenant configuration
+        tenant_config = await tenant_service.get_tenant_config(location_id)
         
-        if contact_type == "Seller" or "Hit List" in contact_tags:
-            is_buyer = False
-
-        # Check contact type if required
-        if settings.required_contact_type:
-            if contact_type != settings.required_contact_type and "Hit List" not in contact_tags:
-                logger.info(
-                    f"Bot ignored contact {contact_id}: wrong type {contact_type}",
-                    extra={"contact_id": contact_id, "type": contact_type}
-                )
-                return GHLWebhookResponse(
-                    success=False,
-                    message=f"Bot only handles {settings.required_contact_type} contacts.",
-                    actions=[]
-                )
-
-        if not is_active or is_explicitly_disabled:
-            logger.info(
-                f"Bot inactive for contact {contact_id}",
-                extra={"contact_id": contact_id, "tags": contact_tags}
-            )
-            return GHLWebhookResponse(
-                success=False,
-                message="Bot is currently inactive for this contact.",
-                actions=[]
-            )
+        # If no config found and it's not the default location, we might want to reject
+        # or fall back to default if that's allowed.
+        if not tenant_config:
+            logger.warning(f"No tenant configuration found for location {location_id}")
+            # For now, we continue with default keys if they exist in settings, 
+            # but in production you'd likely reject here.
 
         # Step 1: Get conversation context
-        context = await conversation_manager.get_context(contact_id)
+        context = await conversation_manager.get_context(contact_id, location_id=location_id)
 
         # Step 2: Generate AI response
         ai_response = await conversation_manager.generate_response(
@@ -120,7 +97,7 @@ async def handle_ghl_webhook(
                 "email": event.contact.email
             },
             context=context,
-            is_buyer=is_buyer
+            tenant_config=tenant_config
         )
 
         # Step 3: Update conversation context
@@ -128,7 +105,8 @@ async def handle_ghl_webhook(
             contact_id=contact_id,
             user_message=user_message,
             ai_response=ai_response.message,
-            extracted_data=ai_response.extracted_data
+            extracted_data=ai_response.extracted_data,
+            location_id=location_id
         )
 
         # Step 4: Prepare GHL actions based on extracted data and lead score
@@ -139,16 +117,23 @@ async def handle_ghl_webhook(
         )
 
         # Step 5: Send response and apply actions in background
-        # (Don't block webhook response waiting for GHL API calls)
+        # Use tenant-specific GHL client if available
+        current_ghl_client = ghl_client_default
+        if tenant_config and tenant_config.get("ghl_api_key"):
+            current_ghl_client = GHLClient(
+                api_key=tenant_config["ghl_api_key"],
+                location_id=location_id
+            )
+
         background_tasks.add_task(
-            ghl_client.send_message,
+            current_ghl_client.send_message,
             contact_id=contact_id,
             message=ai_response.message,
             channel=event.message.type
         )
 
         background_tasks.add_task(
-            ghl_client.apply_actions,
+            current_ghl_client.apply_actions,
             contact_id=contact_id,
             actions=actions
         )
@@ -212,11 +197,13 @@ async def prepare_ghl_actions(
     if classification == "hot":
         actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Hot-Lead"))
         actions.append(GHLAction(type=ActionType.ADD_TAG, tag="AI-Qualified"))
-        # TODO: Trigger workflow to notify agent via SMS
-        # actions.append(GHLAction(
-        #     type=ActionType.TRIGGER_WORKFLOW,
-        #     workflow_id="notify_agent_hot_lead"
-        # ))
+        
+        # Trigger workflow to notify agent via SMS if configured
+        if settings.notify_agent_workflow_id:
+            actions.append(GHLAction(
+                type=ActionType.TRIGGER_WORKFLOW,
+                workflow_id=settings.notify_agent_workflow_id
+            ))
 
     elif classification == "warm":
         actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Warm-Lead"))
@@ -224,6 +211,14 @@ async def prepare_ghl_actions(
 
     else:
         actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Cold-Lead"))
+
+    # Update Lead Score Custom Field if configured
+    if settings.custom_field_lead_score:
+        actions.append(GHLAction(
+            type=ActionType.UPDATE_CUSTOM_FIELD,
+            field=settings.custom_field_lead_score,
+            value=lead_score
+        ))
 
     # Tag based on budget
     budget = extracted_data.get("budget")
@@ -235,27 +230,47 @@ async def prepare_ghl_actions(
         else:
             actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Budget-Over-500k"))
 
+        # Update Budget Custom Field if configured
+        if settings.custom_field_budget:
+            actions.append(GHLAction(
+                type=ActionType.UPDATE_CUSTOM_FIELD,
+                field=settings.custom_field_budget,
+                value=budget
+            ))
+
     # Tag based on location
     location = extracted_data.get("location")
     if location:
+        location_str = ""
         if isinstance(location, list):
+            location_str = ", ".join(location)
             for loc in location:
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag=f"Location-{loc}"))
         else:
+            location_str = str(location)
             actions.append(GHLAction(type=ActionType.ADD_TAG, tag=f"Location-{location}"))
+
+        # Update Location Custom Field if configured
+        if settings.custom_field_location:
+            actions.append(GHLAction(
+                type=ActionType.UPDATE_CUSTOM_FIELD,
+                field=settings.custom_field_location,
+                value=location_str
+            ))
 
     # Tag based on timeline urgency
     timeline = extracted_data.get("timeline", "")
-    if timeline and lead_scorer._is_urgent_timeline(timeline):
-        actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Timeline-Urgent"))
-
-    # Update custom field with lead score
-    # Note: Replace "lead_score_field_id" with actual GHL custom field ID
-    # actions.append(GHLAction(
-    #     type=ActionType.UPDATE_CUSTOM_FIELD,
-    #     field="lead_score_field_id",
-    #     value=lead_score
-    # ))
+    if timeline:
+        if lead_scorer._is_urgent_timeline(timeline):
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Timeline-Urgent"))
+        
+        # Update Timeline Custom Field if configured
+        if settings.custom_field_timeline:
+            actions.append(GHLAction(
+                type=ActionType.UPDATE_CUSTOM_FIELD,
+                field=settings.custom_field_timeline,
+                value=timeline
+            ))
 
     logger.info(
         f"Prepared {len(actions)} actions for contact {event.contact_id}",

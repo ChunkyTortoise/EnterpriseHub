@@ -67,24 +67,26 @@ class ConversationManager:
 
         logger.info("Conversation manager initialized")
 
-    async def get_context(self, contact_id: str) -> Dict[str, Any]:
+    async def get_context(self, contact_id: str, location_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Retrieve conversation context for a contact.
 
         Args:
             contact_id: GHL contact ID
+            location_id: Optional location ID for isolation
 
         Returns:
             Conversation context dict with history and extracted data
         """
-        return await self.memory_service.get_context(contact_id)
+        return await self.memory_service.get_context(contact_id, location_id=location_id)
 
     async def update_context(
         self,
         contact_id: str,
         user_message: str,
         ai_response: str,
-        extracted_data: Optional[Dict[str, Any]] = None
+        extracted_data: Optional[Dict[str, Any]] = None,
+        location_id: Optional[str] = None
     ) -> None:
         """
         Update conversation context with new messages and data.
@@ -94,8 +96,9 @@ class ConversationManager:
             user_message: User's message
             ai_response: AI's response
             extracted_data: Newly extracted data from conversation
+            location_id: Optional location ID for isolation
         """
-        context = await self.get_context(contact_id)
+        context = await self.get_context(contact_id, location_id=location_id)
 
         # Add messages to history
         context["conversation_history"].append({
@@ -119,7 +122,7 @@ class ConversationManager:
             context["conversation_history"] = context["conversation_history"][-max_length:]
 
         # Store context
-        await self.memory_service.save_context(contact_id, context)
+        await self.memory_service.save_context(contact_id, context, location_id=location_id)
 
         logger.info(
             f"Updated context for contact {contact_id}",
@@ -133,7 +136,8 @@ class ConversationManager:
     async def extract_data(
         self,
         user_message: str,
-        current_preferences: Dict[str, Any]
+        current_preferences: Dict[str, Any],
+        tenant_config: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Extract structured data from user message.
@@ -149,6 +153,7 @@ class ConversationManager:
         Args:
             user_message: User's latest message
             current_preferences: Previously extracted preferences
+            tenant_config: Optional tenant-specific API keys
 
         Returns:
             Dict of extracted preferences
@@ -184,8 +189,17 @@ Example output:
 """
 
         try:
+            # Use tenant-specific LLM client if config provided
+            llm_client = self.llm_client
+            if tenant_config and tenant_config.get("anthropic_api_key"):
+                llm_client = LLMClient(
+                    provider="claude",
+                    model=settings.claude_model,
+                    api_key=tenant_config["anthropic_api_key"]
+                )
+
             # Use Claude to extract data with low temperature for consistency
-            response = await self.llm_client.agenerate(
+            response = await llm_client.agenerate(
                 prompt=extraction_prompt,
                 system_prompt="You are a data extraction specialist. Return only valid JSON.",
                 temperature=0,
@@ -213,7 +227,8 @@ Example output:
         user_message: str,
         contact_info: Dict[str, Any],
         context: Dict[str, Any],
-        is_buyer: bool = True
+        is_buyer: bool = True,
+        tenant_config: Optional[Dict[str, Any]] = None
     ) -> AIResponse:
         """
         Generate AI response using Claude + RAG.
@@ -223,6 +238,7 @@ Example output:
             contact_info: Contact information from GHL
             context: Conversation context
             is_buyer: Whether the contact is a buyer (True) or seller (False)
+            tenant_config: Optional tenant-specific API keys
 
         Returns:
             AIResponse with message, extracted data, reasoning, and score
@@ -232,16 +248,19 @@ Example output:
         # 1. Extract structured data from user message
         extracted_data = await self.extract_data(
             user_message,
-            context.get("extracted_preferences", {})
+            context.get("extracted_preferences", {}),
+            tenant_config=tenant_config
         )
 
         # Merge with existing preferences
         merged_preferences = {**context.get("extracted_preferences", {}), **extracted_data}
 
         # 2. Retrieve relevant knowledge from RAG
+        location_id = tenant_config.get("location_id") if tenant_config else None
         relevant_docs = self.rag_engine.search(
             query=user_message,
-            n_results=settings.rag_top_k_results
+            n_results=settings.rag_top_k_results,
+            location_id=location_id
         )
 
         relevant_knowledge = "\n\n".join([
@@ -270,13 +289,22 @@ Example output:
 
         # 5. Generate response using Claude with history
         try:
+            # Use tenant-specific LLM client if config provided
+            llm_client = self.llm_client
+            if tenant_config and tenant_config.get("anthropic_api_key"):
+                llm_client = LLMClient(
+                    provider="claude",
+                    model=settings.claude_model,
+                    api_key=tenant_config["anthropic_api_key"]
+                )
+
             # Format history for Claude (only role and content)
             history = [
                 {"role": msg["role"], "content": msg["content"]}
                 for msg in context.get("conversation_history", [])
             ]
 
-            ai_response = await self.llm_client.agenerate(
+            ai_response = await llm_client.agenerate(
                 prompt=user_message,
                 system_prompt=system_prompt,
                 history=history,
@@ -313,15 +341,16 @@ Example output:
                 lead_score=0
             )
 
-    async def calculate_lead_score(self, contact_id: str) -> int:
+    async def calculate_lead_score(self, contact_id: str, location_id: Optional[str] = None) -> int:
         """
         Calculate lead score for a contact.
 
         Args:
             contact_id: GHL contact ID
+            location_id: Optional location ID for isolation
 
         Returns:
             Lead score (0-100)
         """
-        context = await self.get_context(contact_id)
+        context = await self.get_context(contact_id, location_id=location_id)
         return self.lead_scorer.calculate(context)

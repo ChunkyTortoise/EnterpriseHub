@@ -41,24 +41,30 @@ class MemoryService:
             self._memory_cache: Dict[str, Dict[str, Any]] = {}
             logger.info("Memory service initialized with in-memory storage")
 
-    def _get_file_path(self, contact_id: str) -> Path:
-        """Get file path for a contact's memory."""
+    def _get_file_path(self, contact_id: str, location_id: Optional[str] = None) -> Path:
+        """Get file path for a contact's memory, scoped by location."""
+        if location_id:
+            tenant_dir = self.memory_dir / location_id
+            tenant_dir.mkdir(parents=True, exist_ok=True)
+            return tenant_dir / f"{contact_id}.json"
         return self.memory_dir / f"{contact_id}.json"
 
-    async def get_context(self, contact_id: str) -> Dict[str, Any]:
+    async def get_context(self, contact_id: str, location_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Retrieve conversation context for a contact.
 
         Args:
             contact_id: GHL contact ID
+            location_id: Optional GHL location ID for tenant isolation
 
         Returns:
             Conversation context dict
         """
         if self.storage_type == "memory":
-            return self._memory_cache.get(contact_id, self._get_default_context(contact_id))
+            cache_key = f"{location_id}:{contact_id}" if location_id else contact_id
+            return self._memory_cache.get(cache_key, self._get_default_context(contact_id, location_id))
 
-        file_path = self._get_file_path(contact_id)
+        file_path = self._get_file_path(contact_id, location_id)
         if file_path.exists():
             try:
                 with open(file_path, "r") as f:
@@ -66,33 +72,38 @@ class MemoryService:
             except Exception as e:
                 logger.error(f"Failed to read memory file for {contact_id}: {e}")
         
-        return self._get_default_context(contact_id)
+        return self._get_default_context(contact_id, location_id)
 
-    async def save_context(self, contact_id: str, context: Dict[str, Any]) -> None:
+    async def save_context(self, contact_id: str, context: Dict[str, Any], location_id: Optional[str] = None) -> None:
         """
         Save conversation context for a contact.
 
         Args:
             contact_id: GHL contact ID
             context: Conversation context to save
+            location_id: Optional GHL location ID for tenant isolation
         """
         context["updated_at"] = datetime.utcnow().isoformat()
+        if location_id:
+            context["location_id"] = location_id
 
         if self.storage_type == "memory":
-            self._memory_cache[contact_id] = context
+            cache_key = f"{location_id}:{contact_id}" if location_id else contact_id
+            self._memory_cache[cache_key] = context
             return
 
-        file_path = self._get_file_path(contact_id)
+        file_path = self._get_file_path(contact_id, location_id)
         try:
             with open(file_path, "w") as f:
                 json.dump(context, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to save memory file for {contact_id}: {e}")
 
-    def _get_default_context(self, contact_id: str) -> Dict[str, Any]:
+    def _get_default_context(self, contact_id: str, location_id: Optional[str] = None) -> Dict[str, Any]:
         """Return default context for new conversations."""
         return {
             "contact_id": contact_id,
+            "location_id": location_id,
             "conversation_history": [],
             "extracted_preferences": {},
             "lead_score": 0,
