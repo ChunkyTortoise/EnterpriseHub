@@ -1,0 +1,68 @@
+
+# Add to api/routes/analytics.py
+
+@router.post("/predict-conversion")
+async def predict_lead_conversion(
+    contact_data: Dict[str, Any] = Body(..., description="Contact data with conversation history")
+):
+    """
+    Predict lead conversion probability with AI reasoning
+    
+    Returns conversion probability, confidence, reasoning, and recommendations
+    """
+    from services.predictive_scoring import PredictiveLeadScorer
+    
+    scorer = PredictiveLeadScorer()
+    prediction = scorer.predict_conversion(contact_data)
+    
+    return {
+        "success": True,
+        "data": prediction
+    }
+
+
+@router.post("/batch-predict")
+async def batch_predict_conversions(
+    contacts: List[Dict[str, Any]] = Body(..., description="List of contacts to score")
+):
+    """
+    Predict conversion probability for multiple leads
+    
+    Returns prioritized list sorted by probability
+    """
+    from services.predictive_scoring import BatchPredictor
+    
+    predictor = BatchPredictor()
+    predictions = predictor.predict_batch(contacts)
+    
+    return {
+        "success": True,
+        "data": predictions,
+        "total": len(predictions)
+    }
+
+
+@router.get("/priority-leads")
+async def get_priority_leads(
+    location_id: str = Query(..., description="Location ID"),
+    min_probability: float = Query(50.0, ge=0, le=100, description="Minimum probability threshold")
+):
+    """
+    Get prioritized list of high-probability leads
+    
+    Perfect for daily action list
+    """
+    from services.predictive_scoring import BatchPredictor
+    # Load contacts from data
+    # In production, would query from database
+    
+    predictor = BatchPredictor()
+    contacts = []  # Load from data source
+    
+    priority_leads = predictor.get_priority_list(contacts, min_probability)
+    
+    return {
+        "success": True,
+        "data": priority_leads,
+        "count": len(priority_leads)
+    }

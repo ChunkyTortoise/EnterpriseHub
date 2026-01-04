@@ -1,0 +1,49 @@
+
+# Add to api/routes/analytics.py
+
+@router.get("/executive-summary")
+async def get_executive_summary(
+    location_id: str = Query(..., description="Location ID"),
+    days: int = Query(7, ge=1, le=90, description="Number of days to analyze")
+):
+    """
+    Get executive summary with KPIs and insights
+    
+    Perfect for C-level dashboard view
+    """
+    from services.executive_dashboard import ExecutiveDashboardService
+    
+    dashboard = ExecutiveDashboardService()
+    summary = dashboard.get_executive_summary(location_id, days)
+    
+    return {
+        "success": True,
+        "data": summary
+    }
+
+
+@router.get("/roi-calculation")
+async def calculate_roi_endpoint(
+    system_cost: float = Query(170.0, description="Monthly system cost"),
+    conversations: int = Query(300, description="Monthly conversations"),
+    conversion_rate: float = Query(0.196, description="Conversion rate (0-1)"),
+    avg_commission: float = Query(12500.0, description="Average commission")
+):
+    """
+    Calculate ROI for executive reporting
+    
+    Shows business value and justification
+    """
+    from services.executive_dashboard import calculate_roi
+    
+    roi_data = calculate_roi(
+        system_cost_monthly=system_cost,
+        conversations_per_month=conversations,
+        conversion_rate=conversion_rate,
+        avg_commission=avg_commission
+    )
+    
+    return {
+        "success": True,
+        "data": roi_data
+    }

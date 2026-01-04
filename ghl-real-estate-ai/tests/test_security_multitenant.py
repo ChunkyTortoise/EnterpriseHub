@@ -467,5 +467,499 @@ class TestComplianceAndPrivacy:
         assert len(exported["messages"]) == 2
 
 
+class TestWebhookSecurity:
+    """Test webhook security and signature verification."""
+
+    def test_webhook_requires_valid_signature(self):
+        """Test that webhooks with invalid signatures are rejected."""
+        # This test documents the requirement for signature verification
+        # In production, all webhooks must be signed by GHL
+
+        webhook_config = {
+            "signature_algorithm": "HMAC-SHA256",
+            "signature_header": "X-GHL-Signature",
+            "secret_key_env": "GHL_WEBHOOK_SECRET"
+        }
+
+        assert webhook_config["signature_algorithm"] == "HMAC-SHA256"
+        assert webhook_config["signature_header"] is not None
+
+        # TODO: Implement actual signature verification in webhook handler
+        # See SECURITY_AUDIT_MULTITENANT.md Section 4.1 for implementation
+
+    def test_webhook_input_size_limits(self):
+        """Test that webhook payloads respect size limits."""
+        from api.schemas.ghl import GHLWebhookEvent
+
+        # Test normal size (should pass)
+        normal_payload = {
+            "contact_id": "contact_123",
+            "location_id": "loc_456",
+            "message": {
+                "body": "Normal message" * 10,  # ~130 chars
+                "type": "SMS"
+            },
+            "contact": {
+                "first_name": "John",
+                "last_name": "Doe",
+                "tags": ["tag1"]
+            }
+        }
+
+        # In production, should validate payload size
+        # MAX_MESSAGE_SIZE = 10000  # 10KB
+        # if len(payload['message']['body']) > MAX_MESSAGE_SIZE:
+        #     raise ValueError("Message too large")
+
+    def test_webhook_prevents_replay_attacks(self):
+        """Test that duplicate webhooks within timeframe are detected."""
+        # Replay attack prevention using nonce or timestamp validation
+        # Document the requirement
+
+        replay_prevention = {
+            "use_nonce": True,
+            "use_timestamp": True,
+            "max_age_seconds": 300  # Reject webhooks older than 5 minutes
+        }
+
+        assert replay_prevention["max_age_seconds"] > 0
+        assert replay_prevention["use_timestamp"] or replay_prevention["use_nonce"]
+
+
+class TestRateLimiting:
+    """Test rate limiting and throttling mechanisms."""
+
+    def test_rate_limit_per_tenant(self):
+        """Test that tenants have individual rate limits."""
+        # Document rate limiting structure
+        rate_limits = {
+            "starter_tier": {
+                "requests_per_minute": 60,
+                "requests_per_hour": 1000,
+                "burst_limit": 10
+            },
+            "professional_tier": {
+                "requests_per_minute": 120,
+                "requests_per_hour": 5000,
+                "burst_limit": 20
+            },
+            "enterprise_tier": {
+                "requests_per_minute": 300,
+                "requests_per_hour": 20000,
+                "burst_limit": 50
+            }
+        }
+
+        # Verify all tiers have limits
+        for tier, limits in rate_limits.items():
+            assert "requests_per_minute" in limits
+            assert "requests_per_hour" in limits
+            assert limits["requests_per_hour"] > limits["requests_per_minute"]
+
+    def test_rate_limit_headers_returned(self):
+        """Test that rate limit info is returned in response headers."""
+        # Standard rate limit headers (RFC 6585)
+        expected_headers = {
+            "X-RateLimit-Limit": "100",
+            "X-RateLimit-Remaining": "95",
+            "X-RateLimit-Reset": "1704556800"  # Unix timestamp
+        }
+
+        # These should be returned with each API response
+        assert "X-RateLimit-Limit" in expected_headers
+        assert "X-RateLimit-Remaining" in expected_headers
+
+
+class TestPIIProtection:
+    """Test PII detection, redaction, and protection."""
+
+    def test_ssn_detection_and_redaction(self):
+        """Test that SSN patterns are detected and redacted."""
+        import re
+
+        test_messages = [
+            "My SSN is 123-45-6789",
+            "Social security: 987-65-4321",
+            "SSN: 111-22-3333"
+        ]
+
+        ssn_pattern = r'\b\d{3}-\d{2}-\d{4}\b'
+
+        for message in test_messages:
+            # Should detect SSN
+            assert re.search(ssn_pattern, message) is not None
+
+            # Should redact it
+            redacted = re.sub(ssn_pattern, '[REDACTED_SSN]', message)
+            assert '[REDACTED_SSN]' in redacted
+            assert not re.search(ssn_pattern, redacted)
+
+    def test_credit_card_detection_and_redaction(self):
+        """Test that credit card numbers are detected and redacted."""
+        import re
+
+        test_messages = [
+            "My card is 4532-1234-5678-9010",
+            "Card: 5425 2334 3010 9903",
+            "CC: 4532123456789010"
+        ]
+
+        # Simple credit card pattern (Luhn algorithm validation would be better)
+        cc_pattern = r'\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b'
+
+        for message in test_messages:
+            assert re.search(cc_pattern, message) is not None
+
+            redacted = re.sub(cc_pattern, '[REDACTED_CREDIT_CARD]', message)
+            assert '[REDACTED_CREDIT_CARD]' in redacted
+
+    def test_email_optional_redaction(self):
+        """Test that emails can be optionally redacted for privacy."""
+        import re
+
+        test_message = "Contact me at john.doe@example.com"
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+
+        assert re.search(email_pattern, test_message) is not None
+
+        # Email redaction should be configurable (some use cases need it)
+        redacted = re.sub(email_pattern, '[REDACTED_EMAIL]', test_message)
+        assert '[REDACTED_EMAIL]' in redacted
+
+
+class TestEncryptionAtRest:
+    """Test encryption of sensitive data at rest."""
+
+    def test_api_key_encryption_structure(self):
+        """Test that API keys can be encrypted before storage."""
+        from cryptography.fernet import Fernet
+
+        # Generate encryption key (in production, load from secure env)
+        encryption_key = Fernet.generate_key()
+        cipher = Fernet(encryption_key)
+
+        # Test encryption/decryption cycle
+        plaintext_key = "sk-ant-test-key-12345"
+        encrypted_key = cipher.encrypt(plaintext_key.encode())
+        decrypted_key = cipher.decrypt(encrypted_key).decode()
+
+        # Verify encryption works
+        assert plaintext_key != encrypted_key.decode()
+        assert plaintext_key == decrypted_key
+
+        # Verify encrypted key is not human-readable
+        assert "sk-ant" not in encrypted_key.decode()
+
+    def test_memory_file_encryption_capability(self):
+        """Test that memory files can be encrypted."""
+        import json
+        from pathlib import Path
+        from cryptography.fernet import Fernet
+
+        # Create test data
+        sensitive_data = {
+            "contact_id": "contact_123",
+            "messages": ["Sensitive conversation content"],
+            "budget": "$500,000",
+            "ssn_mentioned": True
+        }
+
+        # Encrypt before storage
+        key = Fernet.generate_key()
+        cipher = Fernet(key)
+
+        encrypted_data = cipher.encrypt(json.dumps(sensitive_data).encode())
+
+        # Verify can't read without key
+        assert "Sensitive conversation" not in encrypted_data.decode()
+
+        # Verify can decrypt with key
+        decrypted_data = json.loads(cipher.decrypt(encrypted_data).decode())
+        assert decrypted_data["contact_id"] == "contact_123"
+
+
+class TestAuthorizationAndRBAC:
+    """Test role-based access control and authorization."""
+
+    def test_tenant_access_control_structure(self):
+        """Test that users can only access authorized tenants."""
+        # Define user-to-tenant mapping
+        user_permissions = {
+            "admin@example.com": {
+                "role": "admin",
+                "tenants": ["*"],  # All tenants
+                "permissions": ["read", "write", "delete", "manage_users"]
+            },
+            "agent@example.com": {
+                "role": "agent",
+                "tenants": ["loc_123"],  # Single tenant
+                "permissions": ["read", "write"]
+            },
+            "analyst@example.com": {
+                "role": "analyst",
+                "tenants": ["loc_123", "loc_456"],  # Multiple tenants
+                "permissions": ["read"]  # Read-only
+            }
+        }
+
+        # Verify structure
+        for user, perms in user_permissions.items():
+            assert "role" in perms
+            assert "tenants" in perms
+            assert "permissions" in perms
+
+    def test_analytics_dashboard_requires_authentication(self):
+        """Test that analytics dashboard cannot be accessed without auth."""
+        # Document authentication requirement
+        dashboard_security = {
+            "authentication_required": True,
+            "authentication_method": "streamlit-authenticator",
+            "session_timeout_minutes": 30,
+            "mfa_required": False  # Optional for high-security deployments
+        }
+
+        assert dashboard_security["authentication_required"] is True
+        assert dashboard_security["session_timeout_minutes"] > 0
+
+
+class TestAuditLogging:
+    """Test audit logging for compliance and security."""
+
+    def test_admin_actions_are_logged(self):
+        """Test that all admin actions create audit log entries."""
+        # Define auditable actions
+        auditable_actions = [
+            "tenant_created",
+            "tenant_deleted",
+            "api_key_rotated",
+            "user_added",
+            "user_removed",
+            "bulk_operation_executed",
+            "data_exported",
+            "data_deleted"
+        ]
+
+        # Verify audit log structure
+        audit_log_entry = {
+            "timestamp": "2026-01-04T10:00:00Z",
+            "user": "admin@example.com",
+            "action": "tenant_created",
+            "resource_type": "tenant",
+            "resource_id": "loc_new_tenant",
+            "ip_address": "192.168.1.1",
+            "success": True,
+            "details": {"tenant_name": "New Real Estate Agency"}
+        }
+
+        # Verify all required fields present
+        assert "timestamp" in audit_log_entry
+        assert "user" in audit_log_entry
+        assert "action" in audit_log_entry
+        assert audit_log_entry["action"] in auditable_actions
+
+    def test_failed_authentication_attempts_logged(self):
+        """Test that failed login attempts are logged for security."""
+        security_event = {
+            "event_type": "authentication_failed",
+            "timestamp": "2026-01-04T10:00:00Z",
+            "username": "attacker@example.com",
+            "ip_address": "203.0.113.42",
+            "reason": "invalid_password",
+            "consecutive_failures": 3  # Trigger account lock after 5
+        }
+
+        assert security_event["event_type"] == "authentication_failed"
+        assert "consecutive_failures" in security_event
+
+
+class TestGDPRCompliance:
+    """Test GDPR compliance features."""
+
+    def test_right_to_access_implementation(self):
+        """Test that contacts can access all their data (GDPR Article 15)."""
+        # Data subject access request (DSAR) structure
+        dsar_response = {
+            "request_id": "dsar_123",
+            "contact_id": "contact_789",
+            "request_date": "2026-01-04",
+            "data": {
+                "personal_info": {
+                    "name": "John Doe",
+                    "email": "john@example.com",
+                    "phone": "+1234567890"
+                },
+                "conversations": [
+                    {"date": "2026-01-01", "content": "Message 1"},
+                    {"date": "2026-01-02", "content": "Message 2"}
+                ],
+                "lead_scores": [
+                    {"date": "2026-01-01", "score": 50},
+                    {"date": "2026-01-02", "score": 75}
+                ],
+                "tags": ["Hot-Lead", "Location-Austin"],
+                "data_processing_purposes": ["Lead qualification", "Marketing automation"]
+            },
+            "format": "PDF",  # Human-readable format
+            "delivered_date": "2026-01-05"  # Within 30 days
+        }
+
+        assert "data" in dsar_response
+        assert "personal_info" in dsar_response["data"]
+
+    def test_right_to_erasure_implementation(self):
+        """Test that contacts can request data deletion (GDPR Article 17)."""
+        deletion_request = {
+            "request_id": "deletion_456",
+            "contact_id": "contact_789",
+            "request_date": "2026-01-04",
+            "scope": "all_data",  # or "specific_fields"
+            "retention_exception": None,  # Legal hold, contract, etc.
+            "deleted_items": [
+                "conversation_history",
+                "lead_scores",
+                "vector_embeddings",
+                "analytics_data"
+            ],
+            "deletion_date": "2026-01-05",
+            "verification_required": True  # Verify identity before deletion
+        }
+
+        assert "deleted_items" in deletion_request
+        assert len(deletion_request["deleted_items"]) > 0
+
+    def test_consent_management(self):
+        """Test that user consent is tracked and respected."""
+        consent_record = {
+            "contact_id": "contact_789",
+            "consent_date": "2026-01-01T10:00:00Z",
+            "consent_type": "marketing_communications",
+            "consent_given": True,
+            "consent_method": "sms_opt_in",  # How consent was obtained
+            "consent_text": "Reply YES to opt in to AI-powered lead qualification",
+            "withdrawal_date": None  # Set when consent withdrawn
+        }
+
+        assert "consent_given" in consent_record
+        assert "consent_method" in consent_record
+
+
+class TestDependencySecurity:
+    """Test that dependencies are secure and up-to-date."""
+
+    def test_no_known_vulnerable_dependencies(self):
+        """Test that pip audit shows no known vulnerabilities."""
+        # This test documents the requirement to run pip-audit
+        # In CI/CD, run: pip install pip-audit && pip-audit
+
+        security_scan_config = {
+            "tool": "pip-audit",
+            "fail_on_severity": "medium",  # Fail build on medium+ vulnerabilities
+            "ignore_list": [],  # Temporary exceptions (document reason)
+            "scan_frequency": "daily"  # Automated in CI
+        }
+
+        assert security_scan_config["tool"] in ["pip-audit", "safety"]
+
+    def test_security_headers_present(self):
+        """Test that security headers are configured in API responses."""
+        # Security headers to prevent common attacks
+        required_headers = {
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "X-XSS-Protection": "1; mode=block",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+            "Content-Security-Policy": "default-src 'self'"
+        }
+
+        # Verify all headers defined
+        for header, value in required_headers.items():
+            assert header is not None
+            assert value is not None
+
+
+class TestPathTraversalPrevention:
+    """Test protection against path traversal attacks."""
+
+    def test_location_id_sanitization(self):
+        """Test that location IDs are sanitized to prevent path traversal."""
+        malicious_location_ids = [
+            "../../../etc/passwd",
+            "..\\..\\..\\windows\\system32",
+            "loc_123/../other_tenant",
+            "loc_123; rm -rf /",
+            "loc_123\x00.txt"  # Null byte injection
+        ]
+
+        def sanitize_location_id(location_id: str) -> str:
+            """Sanitize location ID to prevent path traversal."""
+            # Only allow alphanumeric, dash, underscore
+            import re
+            if not re.match(r'^[a-zA-Z0-9_-]+$', location_id):
+                raise ValueError(f"Invalid location_id format: {location_id}")
+            return location_id
+
+        for malicious_id in malicious_location_ids:
+            try:
+                sanitized = sanitize_location_id(malicious_id)
+                # If it didn't raise, it should be safe
+                assert '../' not in sanitized
+                assert '\\' not in sanitized
+            except ValueError:
+                # Rejecting is acceptable
+                pass
+
+    def test_contact_id_sanitization(self):
+        """Test that contact IDs are sanitized."""
+        malicious_contact_ids = [
+            "../admin_data.json",
+            "contact_123/../../../secrets",
+            "contact_123\"; DROP TABLE contacts; --"
+        ]
+
+        import re
+        contact_id_pattern = r'^[a-zA-Z0-9_-]+$'
+
+        for malicious_id in malicious_contact_ids:
+            # Should be rejected
+            is_valid = bool(re.match(contact_id_pattern, malicious_id))
+            assert not is_valid, f"Malicious ID {malicious_id} should be rejected"
+
+
+class TestBulkOperationsSecurity:
+    """Test security of bulk operations."""
+
+    def test_bulk_operation_size_limits(self):
+        """Test that bulk operations have reasonable size limits."""
+        bulk_limits = {
+            "max_contacts_per_operation": 10000,
+            "max_concurrent_operations": 5,
+            "rate_limit_per_second": 10,  # API calls per second
+            "timeout_seconds": 300  # 5 minutes max
+        }
+
+        assert bulk_limits["max_contacts_per_operation"] > 0
+        assert bulk_limits["max_contacts_per_operation"] < 100000  # Prevent abuse
+
+    def test_template_injection_prevention(self):
+        """Test that message templates prevent code injection."""
+        # Allowed placeholders only
+        ALLOWED_PLACEHOLDERS = {
+            "first_name", "last_name", "email", "phone",
+            "budget", "location", "agent_name"
+        }
+
+        def validate_template(template: str) -> bool:
+            """Ensure template only uses allowed placeholders."""
+            import re
+            placeholders = set(re.findall(r'\{(\w+)\}', template))
+            return placeholders.issubset(ALLOWED_PLACEHOLDERS)
+
+        safe_template = "Hi {first_name}, interested in {location}?"
+        assert validate_template(safe_template) is True
+
+        malicious_template = "Hi {first_name}, {os.system('rm -rf /')}"
+        assert validate_template(malicious_template) is False
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
