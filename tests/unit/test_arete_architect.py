@@ -5,13 +5,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 import sys
 
-# Mock imports before importing the module
-sys.modules["langgraph.graph"] = MagicMock()
-sys.modules["langchain_core.messages"] = MagicMock()
-sys.modules["langchain_anthropic"] = MagicMock()
-sys.modules["github"] = MagicMock()
-sys.modules["anthropic"] = MagicMock()
-
 from modules import arete_architect
 
 class TestAreteArchitect:

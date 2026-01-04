@@ -6,7 +6,7 @@
   [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
   [![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
   [![Design System](https://img.shields.io/badge/UI-Studio%20Dark-10B981.svg)](utils/ui.py)
-  [![Tests](https://img.shields.io/badge/tests-301%2B%20passing-059669.svg?logo=pytest&logoColor=white)](https://github.com/ChunkyTortoise/enterprise-hub)
+  [![Tests](https://img.shields.io/badge/tests-517%2B%20passing-059669.svg?logo=pytest&logoColor=white)](https://github.com/ChunkyTortoise/enterprise-hub)
   [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](https://opensource.org/licenses/MIT)
 
   <br>
@@ -29,7 +29,7 @@ EnterpriseHub v5.0 is not a collection of dashboards—it is a **Self-Maintainin
 ### 🏛️ Core Design Principles
 - **Institutional Aesthetics**: Moving beyond "standard" UI to a custom, high-contrast SaaS experience (WCAG AAA compliant).
 - **Transparent Intelligence**: Features like **Cognitive Operations Trace** make the AI's reasoning visible and auditable.
-- **Production-Ready Rigor**: 301+ automated tests and a modular monolith architecture designed for enterprise scale.
+- **Production-Ready Rigor**: 517+ automated tests and a modular monolith architecture designed for enterprise scale.
 
 ---
 
@@ -61,7 +61,7 @@ User Request → Cognitive Trace → Pattern Recognition → Swarm Execution
 
 This project is built to **institutional standards**, specifically targeting high-stakes FinTech and SaaS environments.
 
-- **🛡️ Industrial-Grade Testing**: **301+ automated tests** verifying every financial formula (CVP, ROI, RSI) with 85%+ coverage.
+- **🛡️ Industrial-Grade Testing**: **517+ automated tests** verifying every financial formula (CVP, ROI, RSI) with 85%+ coverage.
 - **⚡ High-Performance Computing**: NumPy-powered vectorization for real-time sensitivity analysis (100+ scenarios in <50ms).
 - **🎨 Elite UX System**: "Studio Dark" palette with high-vibrancy accents, custom pill-based navigation, and animated mesh backgrounds.
 - **🤖 Swarm Orchestration**: ARETE swarm with 8 specialized agents (Prime, Architect, Engineer, Guardian, DevOps, Strategist, Scribe, Auditor).

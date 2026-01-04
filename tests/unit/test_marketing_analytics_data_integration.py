@@ -126,11 +126,11 @@ def test_get_campaign_data_source_simulate_existing_data(mock_st):
 
 # --- Test _render_campaign_dashboard ---
 @patch("modules.marketing_analytics.st")
-@patch("modules.marketing_analytics.ui.card_metric")
+@patch("modules.marketing_analytics.ui.animated_metric")
 @patch("modules.marketing_analytics._get_campaign_data_source")
 @patch("modules.marketing_analytics._calculate_channel_metrics")  # Patch the helper function
 def test_render_campaign_dashboard_with_data(
-    mock_calc_metrics, mock_get_data_source, mock_card_metric, mock_st, sample_campaign_df
+    mock_calc_metrics, mock_get_data_source, mock_animated_metric, mock_st, sample_campaign_df
 ):
     """Test _render_campaign_dashboard renders correctly when data is available."""
     mock_get_data_source.return_value = sample_campaign_df
@@ -164,7 +164,7 @@ def test_render_campaign_dashboard_with_data(
     mock_st.subheader.assert_any_call("📈 Campaign Performance Dashboard")
     mock_st.selectbox.assert_called_once()
     mock_st.date_input.assert_called()  # Twice for start and end
-    mock_card_metric.assert_called()  # Should be called multiple times
+    mock_animated_metric.assert_called()  # Should be called multiple times
     mock_st.plotly_chart.assert_called()  # Should be called for trends and breakdown
 
 

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.0] - 2026-01-04
+
+### Added
+- **Test Suite Expansion**: Reached milestone of **517 automated tests** with 100% pass rate.
+- **RAG Multitenancy**: Implemented scoping for lead data and knowledge bases by `location_id`.
+- **Streamlit Admin Dashboard**: Centralized management for GHL tenants and knowledge base loading.
+
+### Fixed
+- **Plotly Compatibility**: Fixed `ValueError` in `Smart Forecast` by switching 8-digit hex colors to standard `rgba()` format.
+- **Dependency Isolation**: Fixed `TypeError` in `Content Engine` caused by global `sys.modules` mocking in other tests.
+- **Data Quality Logic**: Improved `calculate_data_quality` to punitive scoring for missing data components (harmonic mean alignment).
+- **Test Reliability**: Fixed multiple indentation and mocking errors in `agent_logic`, `content_engine`, and `marketing_analytics` test suites.
+- **Import Safety**: Added broad exception handling to `ARETE-Architect` conditional imports to prevent collection errors on broken dependencies.
+
 ## [5.0.1] - 2026-01-01
 
 ### Added

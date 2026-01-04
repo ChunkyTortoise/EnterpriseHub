@@ -42,6 +42,7 @@ def test_render_successful_analysis(mock_go, mock_process, mock_get_news, mock_s
     """Test the successful rendering path of the Agent Logic module."""
     # --- Arrange ---
     # Mock streamlit inputs
+    mock_st.checkbox.return_value = False  # Disable demo mode
     mock_st.text_input.return_value = "AAPL"
     mock_st.toggle.return_value = False  # Use basic sentiment, not AI
 
@@ -99,6 +100,7 @@ def test_render_successful_analysis(mock_go, mock_process, mock_get_news, mock_s
 def test_render_no_news_found(mock_process, mock_get_news, mock_st, mock_section):
     """Test the case where no news is found for a ticker."""
     # --- Arrange ---
+    mock_st.checkbox.return_value = False  # Disable demo mode
     mock_st.text_input.return_value = "FAILTICKER"
 
     # Mock columns using dynamic generator
@@ -129,6 +131,7 @@ def test_render_no_news_found(mock_process, mock_get_news, mock_st, mock_section
 def test_render_no_ticker_entered(mock_get_news, mock_st, mock_section):
     """Test the case where no ticker is entered."""
     # --- Arrange ---
+    mock_st.checkbox.return_value = False  # Disable demo mode
     mock_st.text_input.return_value = ""  # Empty input
 
     # Mock columns using dynamic generator
@@ -154,6 +157,7 @@ def test_render_no_ticker_entered(mock_get_news, mock_st, mock_section):
 def test_render_handles_exception(mock_get_news, mock_st, mock_section):
     """Test that errors during data fetching are handled gracefully."""
     # --- Arrange ---
+    mock_st.checkbox.return_value = False  # Disable demo mode
     mock_st.text_input.return_value = "AAPL"
 
     # Mock columns using dynamic generator
@@ -186,11 +190,11 @@ class TestClaudeSentiment:
     def test_get_api_key_toggle_shown(self, mock_st, mock_get_key):
         """Test that AI sentiment toggle is shown when API key available."""
         from modules import agent_logic
-
+    
         mock_get_key.return_value = "sk-test-key"
+        mock_st.checkbox.return_value = False  # Disable demo mode
         mock_st.text_input.return_value = "AAPL"
         mock_st.columns.return_value = [MagicMock(), MagicMock()]
-
         # Call render (it will return early due to no symbol)
         agent_logic.render()
 

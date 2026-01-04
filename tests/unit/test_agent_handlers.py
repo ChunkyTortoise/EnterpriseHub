@@ -44,7 +44,7 @@ class TestHelperFunctions:
     def test_calculate_data_quality_empty(self):
         """Test quality calculation with empty data."""
         quality = calculate_data_quality(None, {}, [])
-        assert quality == 0.0
+        assert quality == pytest.approx(0.01, abs=0.001)
 
     def test_calculate_data_quality_partial_info(self):
         """Test quality calculation with partial company info."""
