@@ -41,8 +41,25 @@ page = st.sidebar.selectbox("Navigation", ["Tenant Management", "Knowledge Base"
 if page == "Tenant Management":
     st.header("🏢 Tenant Management")
     
-    # 1. Register New Tenant
-    with st.expander("Register New Tenant", expanded=True):
+    # 0. Agency Master Key (Jorge's Requirement)
+    with st.expander("🔑 Agency-Wide Master Key", expanded=True):
+        st.info("Setting an Agency Master Key allows the AI to automatically work across ALL sub-accounts without adding them one-by-one.")
+        col_a1, col_a2 = st.columns(2)
+        with col_a1:
+            agency_id = st.text_input("Agency ID", value=settings.ghl_agency_id or "")
+        with col_a2:
+            agency_key = st.text_input("Agency API Key", type="password", value=settings.ghl_agency_api_key or "")
+        
+        if st.button("Save Agency Master Key"):
+            if agency_id and agency_key:
+                run_async(tenant_service.save_agency_config(agency_id, agency_key))
+                st.success("Agency Master Key saved! All sub-accounts are now empowered.")
+            else:
+                st.error("Please provide both Agency ID and Key.")
+
+    # 1. Register New Tenant (Override)
+    with st.expander("📍 Individual Sub-Account Override", expanded=False):
+        st.write("Use this ONLY if a specific sub-account needs a different API key or Anthropic key than the master settings.")
         with st.form("register_tenant_form"):
             col1, col2 = st.columns(2)
             with col1:
