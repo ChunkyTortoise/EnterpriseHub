@@ -1,0 +1,34 @@
+{
+  "journey_test_contact_123": {
+    "journey_id": "journey_test_contact_123",
+    "contact_id": "test_contact_123",
+    "contact_name": "test_contact_123",
+    "location_id": "demo_test",
+    "source": "api",
+    "started_at": "2026-01-04T13:21:40.857238",
+    "updated_at": "2026-01-04T13:21:40.857238",
+    "current_stage": "new",
+    "status": "active",
+    "stages": [
+      {
+        "stage": "new",
+        "entered_at": "2026-01-04T13:21:40.857238",
+        "exited_at": null,
+        "duration_minutes": null,
+        "events": [],
+        "lead_score": 0
+      }
+    ],
+    "transitions": [],
+    "events": [],
+    "metrics": {
+      "total_duration_hours": 0,
+      "total_interactions": 0,
+      "total_messages": 0,
+      "score_changes": 0,
+      "progression_count": 0,
+      "regression_count": 0
+    },
+    "metadata": {}
+  }
+}

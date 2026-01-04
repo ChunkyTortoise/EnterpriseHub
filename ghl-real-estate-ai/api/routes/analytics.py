@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
 from services.advanced_analytics import ABTestManager, PerformanceAnalyzer, ConversationOptimizer
-from services.campaign_analytics import CampaignAnalytics
+from services.campaign_analytics import CampaignTracker
 from services.analytics_service import AnalyticsService
 from ghl_utils.logger import get_logger
 
@@ -85,12 +85,20 @@ async def get_dashboard_metrics(
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
         
-        # Get metrics
-        metrics = await analytics.get_dashboard_metrics(
-            location_id=location_id,
-            start_date=start_date,
-            end_date=end_date
-        )
+        # Get metrics from daily summary
+        metrics = await analytics.get_daily_summary(location_id=location_id)
+        
+        # If no data, return defaults
+        if not metrics:
+            metrics = {
+                "total_conversations": 0,
+                "avg_lead_score": 0.0,
+                "conversion_rate": 0.0,
+                "response_time_avg": 0.0,
+                "hot_leads": 0,
+                "warm_leads": 0,
+                "cold_leads": 0
+            }
         
         return DashboardMetrics(
             total_conversations=metrics.get("total_conversations", 0),
@@ -277,25 +285,20 @@ async def get_campaign_performance(
     Get performance metrics for all campaigns in a location.
     """
     try:
-        campaign_analytics = CampaignAnalytics(location_id)
+        campaign_tracker = CampaignTracker(location_id)
         
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days)
-        
-        campaigns = await campaign_analytics.get_all_campaigns_performance(
-            start_date=start_date,
-            end_date=end_date
-        )
+        # Get all active campaigns
+        campaigns = campaign_tracker.list_active_campaigns()
         
         return [
             CampaignPerformance(
-                campaign_id=c["campaign_id"],
+                campaign_id=c["id"],
                 name=c["name"],
-                total_contacts=c["total_contacts"],
-                response_rate=c["response_rate"],
-                avg_lead_score=c["avg_lead_score"],
-                hot_leads=c["hot_leads"],
-                roi_estimate=c.get("roi_estimate")
+                total_contacts=c.get("leads_generated", 0),
+                response_rate=0.0,  # Not tracked in basic list
+                avg_lead_score=0.0,  # Not tracked in basic list
+                hot_leads=0,  # Not tracked in basic list
+                roi_estimate=c.get("roi", 0.0)
             )
             for c in campaigns
         ]
@@ -311,8 +314,8 @@ async def get_campaign_details(location_id: str, campaign_id: str):
     Get detailed analytics for a specific campaign.
     """
     try:
-        campaign_analytics = CampaignAnalytics(location_id)
-        details = await campaign_analytics.get_campaign_details(campaign_id)
+        campaign_tracker = CampaignTracker(location_id)
+        details = campaign_tracker.get_campaign_performance(campaign_id)
         
         if not details:
             raise HTTPException(status_code=404, detail="Campaign not found")
