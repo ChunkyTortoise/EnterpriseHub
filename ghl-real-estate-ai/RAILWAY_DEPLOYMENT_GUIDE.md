@@ -280,18 +280,45 @@ railway run alembic upgrade head
 ## Step 12: Load Knowledge Base to Production
 
 ```bash
-# Load FAQ and property listings
-railway run python scripts/load_knowledge_base.py
+# Load FAQ and property listings for global context
+railway run python scripts/load_knowledge_base.py --location_id global
+
+# (Optional) Load private listings for a specific tenant
+railway run python scripts/load_knowledge_base.py --location_id YOUR_LOC_ID
 ```
 
 This populates the Chroma vector database with:
-- 20 real estate FAQs
-- 10 sample property listings
-- Agent objection handling scripts
+- Real estate FAQs
+- Property listings
+- Scoped access by `location_id`
 
 ---
 
-## Step 13: Configure GHL Webhook
+## Step 13: Multi-Tenancy Management (Admin Dashboard)
+
+We've included a Streamlit-based Admin Dashboard to manage multiple real estate teams without using the CLI.
+
+### Running the Admin Dashboard locally:
+```bash
+streamlit run streamlit_demo/admin.py
+```
+
+### Deploying the Admin Dashboard to Railway:
+You can deploy a second service for the admin UI or use a single service with a different start command. 
+
+**Option A: Dedicated Admin Service (Recommended)**
+1. Create a new service in your Railway project.
+2. Set the start command to: `streamlit run streamlit_demo/admin.py --server.port $PORT --server.address 0.0.0.0`
+3. Link the same PostgreSQL and Redis databases.
+
+**Using the Dashboard:**
+1. **Register Tenants**: Add their GHL Location ID, Anthropic Key, and GHL API Key.
+2. **Knowledge Base**: Load standard data into specific tenant contexts or clear the vector store.
+3. **Test Retrieval**: Verify RAG scoping by searching within specific location contexts.
+
+---
+
+## Step 14: Configure GHL Webhook
 
 1. Login to GoHighLevel
 2. Go to **Settings** > **Integrations** > **Webhooks**

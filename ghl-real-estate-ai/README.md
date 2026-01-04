@@ -5,7 +5,10 @@ Conversational AI for real estate lead qualification on GoHighLevel (GHL). Built
 ## Features
 
 - **Intelligent Lead Qualification**: Budget, location, timeline, must-haves extraction
-- **Context-Aware Memory**: RAG-powered conversation history across weeks
+- **Context-Aware Memory**: Persistent conversation history scoped by GHL Location
+- **GHL CRM Synchronization**: Updates actual GHL Custom Fields (Lead Score, Budget, etc.)
+- **Agent Notifications**: Automatically triggers GHL workflows for "Hot Leads"
+- **Multi-Tenancy Support**: Charge each real estate team on their own account using dynamic API keys
 - **Objection Handling**: Trained on top agent scripts
 - **Seamless Handoff**: Auto-tags hot leads and notifies agents
 - **Multi-Source Knowledge**: Property listings, FAQ, market data, agent scripts
@@ -15,44 +18,43 @@ Conversational AI for real estate lead qualification on GoHighLevel (GHL). Built
 ### Prerequisites
 
 - Python 3.11+
-- PostgreSQL 15+
-- Redis 7+
 - Anthropic API key
-- GHL trial account
+- GHL trial account (API key and Location ID)
 
 ### 1. Clone & Setup
 
 ```bash
-# Create project directory
-mkdir ghl-real-estate-ai
-cd ghl-real-estate-ai
-
-# Copy files from this starter kit
-
 # Create virtual environment
-python3.11 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3 -m venv venv
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Configure Environment
+### 2. Multi-Tenancy Onboarding
+
+To add a new real estate team (tenant):
 
 ```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your actual values
-nano .env  # or use your favorite editor
+python scripts/register_tenant.py \
+  --location_id LOC123 \
+  --anthropic_key sk-ant-... \
+  --ghl_key ghl-...
 ```
 
-**Required variables:**
-- `ANTHROPIC_API_KEY`: Get from https://console.anthropic.com/
-- `GHL_API_KEY`: GHL Settings > API
-- `GHL_LOCATION_ID`: From GHL URL
-- `DATABASE_URL`: PostgreSQL connection string
-- `REDIS_URL`: Redis connection string
+This ensures that team's conversations use their own API credits and their data is isolated.
+
+### 3. Configure Environment
+
+```bash
+cp .env.example .env
+```
+
+**Required variables (Default Account):**
+- `ANTHROPIC_API_KEY`: Primary fallback key
+- `GHL_API_KEY`: Primary fallback key
+- `GHL_LOCATION_ID`: Primary location ID
 
 ### 3. Initialize Database
 
@@ -68,14 +70,25 @@ createdb real_estate_ai
 alembic upgrade head
 ```
 
-### 4. Load Knowledge Base
+### 4. Load & Manage Knowledge Base
 
 ```bash
 # Load FAQ and property listings into vector database
 python scripts/load_knowledge_base.py
+
+# Audit or manage your knowledge base (Audit listings, FAQ, etc.)
+python scripts/kb_manager.py list
 ```
 
-### 5. Run Development Server
+### 5. Verify Setup Before Deployment
+
+Run this command to ensure all API keys and databases are working correctly:
+
+```bash
+python scripts/verify_setup.py
+```
+
+### 6. Run Development Server
 
 ```bash
 # Start FastAPI server

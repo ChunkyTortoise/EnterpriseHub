@@ -77,6 +77,8 @@ ghl-real-estate-ai/
 - ✅ Extracts message and contact information
 - ✅ Processes requests asynchronously (< 3 second response time)
 - ✅ Returns AI response + actions (tags, custom fields)
+- ✅ **New**: Automatically updates GHL Custom Fields (Lead Score, Budget, Location, Timeline)
+- ✅ **New**: Automatically triggers "Notify Agent" workflow for Hot Leads
 - ✅ Handles errors gracefully with fallback responses
 
 ### 2. **Conversation Manager** (`core/conversation_manager.py`)
@@ -122,18 +124,19 @@ ghl-real-estate-ai/
 - ✅ Objection handling templates (6 scenarios)
 - ✅ Context-aware prompt building
 
+### 7. **New Management Scripts** (`scripts/`)
+- ✅ `kb_manager.py`: Audit and manage knowledge base (add/list/import docs)
+- ✅ `verify_setup.py`: One-command production readiness check (API, DB, Env)
+- ✅ `load_knowledge_base.py`: Bulk load properties and FAQ
+
 ---
 
 ## 🧪 Testing
 
-### Unit Tests (`tests/test_lead_scorer.py`)
-- ✅ 25 comprehensive test cases
-- ✅ Tests all scoring scenarios (hot, warm, cold leads)
-- ✅ Edge case handling (empty data, missing fields)
-- ✅ Classification accuracy verification
-- ✅ Recommended actions validation
-
-**Test Coverage:** Focus on lead scoring logic (core business logic)
+### Memory & Multi-Tenancy Tests
+- ✅ **Memory Persistence**: Verified context saves/loads correctly from disk
+- ✅ **Tenant Isolation**: Verified `location_id` scoping prevents data leakage
+- ✅ **Dynamic Keys**: Verified system uses tenant-specific API keys when available
 
 ---
 

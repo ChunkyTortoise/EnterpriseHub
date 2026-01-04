@@ -70,7 +70,8 @@ class VectorStore:
         self,
         texts: List[str],
         metadatas: Optional[List[Dict[str, Any]]] = None,
-        ids: Optional[List[str]] = None
+        ids: Optional[List[str]] = None,
+        location_id: Optional[str] = None
     ) -> List[str]:
         """
         Add texts to the vector store.
@@ -80,6 +81,11 @@ class VectorStore:
             
         if not metadatas:
             metadatas = [{"source": "unknown"} for _ in texts]
+            
+        # Add location_id to all metadatas if provided
+        if location_id:
+            for meta in metadatas:
+                meta["location_id"] = location_id
             
         try:
             # Generate embeddings
@@ -92,7 +98,7 @@ class VectorStore:
                 metadatas=metadatas,
                 ids=ids
             )
-            logger.info(f"Added {len(texts)} documents to vector store")
+            logger.info(f"Added {len(texts)} documents to vector store (location: {location_id or 'global'})")
             return ids
         except Exception as e:
             logger.error(f"Error adding texts to vector store: {e}")
@@ -102,15 +108,17 @@ class VectorStore:
         self,
         documents: List[str],
         metadatas: Optional[List[Dict[str, Any]]] = None,
-        ids: Optional[List[str]] = None
+        ids: Optional[List[str]] = None,
+        location_id: Optional[str] = None
     ) -> List[str]:
         """Alias for add_texts."""
-        return self.add_texts(documents, metadatas, ids)
+        return self.add_texts(documents, metadatas, ids, location_id=location_id)
 
     def search(
         self,
         query: str,
         n_results: int = 4,
+        location_id: Optional[str] = None,
         filter_metadata: Optional[Dict[str, Any]] = None,
         mode: str = "semantic" # semantic, keyword, hybrid
     ) -> List[SearchResult]:
@@ -119,13 +127,31 @@ class VectorStore:
         Supports 'semantic' (default), 'keyword' (exact match boost), or 'hybrid'.
         """
         try:
+            # Build filter metadata
+            where_filter = filter_metadata or {}
+            
+            # If location_id is provided, we want documents for this location OR global documents
+            if location_id:
+                loc_filter = {
+                    "$or": [
+                        {"location_id": {"$eq": location_id}},
+                        {"location_id": {"$eq": "global"}}
+                    ]
+                }
+                
+                if where_filter:
+                    # Combine with existing filter
+                    where_filter = {"$and": [loc_filter, where_filter]}
+                else:
+                    where_filter = loc_filter
+            
             # 1. Semantic Search (Base)
             query_embedding = self.embedding_model.embed_query(query)
             
             results = self._collection.query(
                 query_embeddings=[query_embedding],
                 n_results=n_results * 2 if mode == "hybrid" else n_results,
-                where=filter_metadata
+                where=where_filter if where_filter else None
             )
             
             # Parse Vector Results

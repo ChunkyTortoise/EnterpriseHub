@@ -1,0 +1,59 @@
+{
+  "faq": [
+    {
+      "id": "seller_001",
+      "category": "offer",
+      "question": "How do you calculate your offer price?",
+      "answer": "We look at the recent sales of similar homes in your neighborhood (comps), the current condition of your property, and the cost of any needed repairs. Our goal is to provide a fair, data-driven offer that reflects the market value while accounting for the convenience of a fast, as-is sale.",
+      "keywords": ["offer price", "calculate", "valuation", "market value", "comps"]
+    },
+    {
+      "id": "seller_002",
+      "category": "process",
+      "question": "How fast can you close?",
+      "answer": "We can typically close in as little as 7 to 14 days, depending on your needs. Since we use private funds and don't rely on traditional bank financing, we can move much faster than a standard buyer. If you need more time, we can also schedule the closing for a date that works best for you.",
+      "keywords": ["close fast", "timeline", "closing date", "how long"]
+    },
+    {
+      "id": "seller_003",
+      "category": "condition",
+      "question": "Do I need to make any repairs or clean the house?",
+      "answer": "Not at all. We buy houses in 'as-is' condition. You don't need to paint, repair the roof, or even clean out the closets. You can take what you want and leave the rest behind—we'll handle everything from there.",
+      "keywords": ["repairs", "cleaning", "as-is", "condition", "maintenance"]
+    },
+    {
+      "id": "seller_004",
+      "category": "costs",
+      "question": "Are there any commissions or hidden fees?",
+      "answer": "No. When you sell to us, there are no real estate agent commissions (which typically save you 6%) and we usually cover all standard closing costs. The offer we give you is the amount you'll walk away with at the closing table.",
+      "keywords": ["fees", "commissions", "closing costs", "hidden costs"]
+    },
+    {
+      "id": "seller_005",
+      "category": "credibility",
+      "question": "Are you wholesalers or direct buyers?",
+      "answer": "We are a local real estate investment firm. In some cases we buy and hold the property ourselves, and in others, we work with a network of partners to ensure you get the best possible solution for your situation. Our priority is making the process seamless for you.",
+      "keywords": ["wholesaler", "direct buyer", "investor", "who are you"]
+    },
+    {
+      "id": "seller_006",
+      "category": "process",
+      "question": "How does the process work?",
+      "answer": "It's simple: (1) We have a quick chat to learn about the property, (2) We do a brief walkthrough or review photos, (3) We present you with a fair written offer, and (4) We close at a local title company on your timeline. No pressure, no gimmicks.",
+      "keywords": ["how it works", "process", "steps", "next steps"]
+    },
+    {
+      "id": "seller_007",
+      "category": "offer",
+      "question": "Is your offer guaranteed?",
+      "answer": "Once we've done our due diligence and signed a contract, we are committed to closing. We use reputable local title companies to ensure everything is handled professionally and securely.",
+      "keywords": ["guarantee", "contract", "closing", "reliable"]
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "target": "Sellers",
+    "market": "Austin & Surrounding Areas",
+    "last_updated": "2026-01-03"
+  }
+}

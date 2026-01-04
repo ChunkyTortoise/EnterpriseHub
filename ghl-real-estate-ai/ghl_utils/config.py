@@ -59,6 +59,13 @@ class Settings(BaseSettings):
     disposition_field_name: str = "disposition"
     bot_active_disposition: str = "Hit List"
 
+    # GHL Workflow & Custom Field Mapping
+    notify_agent_workflow_id: Optional[str] = None
+    custom_field_lead_score: Optional[str] = None
+    custom_field_budget: Optional[str] = None
+    custom_field_location: Optional[str] = None
+    custom_field_timeline: Optional[str] = None
+
     # Performance Settings
     webhook_timeout_seconds: int = 3
     max_conversation_history_length: int = 20
