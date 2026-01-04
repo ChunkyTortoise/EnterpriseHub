@@ -25,21 +25,21 @@ try:
     from langchain_anthropic import ChatAnthropic
 
     LANGGRAPH_AVAILABLE = True
-except ImportError:
+except Exception:
     LANGGRAPH_AVAILABLE = False
 
 try:
     from github import Github, GithubException
 
     GITHUB_AVAILABLE = True
-except ImportError:
+except Exception:
     GITHUB_AVAILABLE = False
 
 try:
     import anthropic
 
     ANTHROPIC_AVAILABLE = True
-except ImportError:
+except Exception:
     ANTHROPIC_AVAILABLE = False
 
 import operator

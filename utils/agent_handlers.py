@@ -151,7 +151,7 @@ def calculate_data_quality(
         df_quality = scorer.score_data_quality(df)
         scores.append(df_quality)
     else:
-        scores.append(0.0)
+        scores.append(0.01)
 
     # 2. Company info completeness
     if info:
@@ -159,9 +159,9 @@ def calculate_data_quality(
         key_fields = ["marketCap", "sector", "industry", "currentPrice"]
         present = sum(1 for field in key_fields if field in info and info[field])
         info_score = present / len(key_fields)
-        scores.append(info_score)
+        scores.append(max(0.01, info_score))
     else:
-        scores.append(0.0)
+        scores.append(0.01)
 
     # 3. News availability
     if news and len(news) >= 3:
@@ -170,7 +170,7 @@ def calculate_data_quality(
     elif news:
         scores.append(0.5)  # Some news but <3 articles
     else:
-        scores.append(0.0)
+        scores.append(0.01)
 
     # Aggregate using harmonic mean
     quality = scorer.aggregate_confidence(scores)

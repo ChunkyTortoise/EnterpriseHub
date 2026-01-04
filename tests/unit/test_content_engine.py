@@ -803,6 +803,9 @@ class TestRenderFunction:
         """Test render() with valid API key."""
         from modules.content_engine import render
 
+        # Fix columns unpacking
+        mock_st.columns.side_effect = lambda n: [MagicMock() for _ in range(n if isinstance(n, int) else len(n))]
+        mock_st.checkbox.return_value = False # Disable demo mode
         mock_get_key.return_value = "sk-ant-test-key"
 
         render()
@@ -820,6 +823,9 @@ class TestRenderFunction:
         """Test render() without API key shows setup."""
         from modules.content_engine import render
 
+        # Fix columns unpacking
+        mock_st.columns.side_effect = lambda n: [MagicMock() for _ in range(n if isinstance(n, int) else len(n))]
+        mock_st.checkbox.return_value = False  # Disable demo mode
         mock_get_key.return_value = None
 
         render()
@@ -832,6 +838,10 @@ class TestRenderFunction:
     def test_render_without_anthropic_package(self, mock_ui, mock_st):
         """Test render() when Anthropic package not installed."""
         from modules.content_engine import render
+
+        # Fix columns unpacking
+        mock_st.columns.side_effect = lambda n: [MagicMock() for _ in range(n if isinstance(n, int) else len(n))]
+        mock_st.checkbox.return_value = False  # Disable demo mode
 
         render()
 
@@ -848,6 +858,9 @@ class TestRenderFunction:
         """Test render() handles exceptions gracefully."""
         from modules.content_engine import render
 
+        # Fix columns unpacking
+        mock_st.columns.side_effect = lambda n: [MagicMock() for _ in range(n if isinstance(n, int) else len(n))]
+        mock_st.checkbox.return_value = False  # Disable demo mode
         mock_get_key.side_effect = Exception("Test error")
 
         render()

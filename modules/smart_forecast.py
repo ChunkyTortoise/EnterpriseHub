@@ -355,7 +355,7 @@ def _render_results(
             mode="lines",
             name="95% Confidence",
             fill="tonexty",
-            fillcolor=f"{ui.THEME['primary']}20",
+            fillcolor="rgba(2, 6, 23, 0.12)",
             line=dict(width=0),
             hovertemplate="<b>95% Confidence</b><br>Upper: $%{y:.2f}<extra></extra>",
         )
@@ -380,7 +380,7 @@ def _render_results(
             mode="lines",
             name="68% Confidence",
             fill="tonexty",
-            fillcolor=f"{ui.THEME['primary']}40",
+            fillcolor="rgba(2, 6, 23, 0.25)",
             line=dict(width=0),
             hovertemplate="<b>68% Confidence</b><br>Lower: $%{y:.2f}<extra></extra>",
         )
