@@ -1,0 +1,826 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-7.4.4, pluggy-1.6.0 -- /Library/Developer/CommandLineTools/usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/cave/enterprisehub
+configfile: pyproject.toml
+plugins: asyncio-0.23.3, anyio-4.12.0, cov-4.1.0, mock-3.12.0
+asyncio: mode=strict
+collecting ... 2026-01-04 15:07:47 | INFO     | [system] | core.embeddings | Loading embedding model: all-MiniLM-L6-v2
+2026-01-04 15:07:49 | INFO     | [system] | core.embeddings | Embedding model loaded successfully
+2026-01-04 15:07:49 | INFO     | [system] | core.rag_engine | VectorStore initialized at ./data/embeddings/chroma_db, Collection: real_estate_kb
+2026-01-04 15:07:49 | INFO     | [system] | services.memory_service | Memory service initialized with file storage at data/memory
+2026-01-04 15:07:49 | INFO     | [system] | core.conversation_manager | Conversation manager initialized
+2026-01-04 15:07:49 | INFO     | [system] | services.tenant_service | Tenant service initialized with storage at data/tenants
+2026-01-04 15:07:49 | INFO     | [system] | services.analytics_service | Analytics service initialized at data/analytics
+collected 284 items
+
+_archive_v1_20260104/test_analytics_quick.py::test_basic_collection SKIPPED [  0%]
+_archive_v1_20260104/test_analytics_quick.py::test_performance_overhead SKIPPED [  0%]
+tests/test_advanced_analytics.py::TestABTestManager::test_create_experiment PASSED [  1%]
+tests/test_advanced_analytics.py::TestABTestManager::test_assign_variant PASSED [  1%]
+tests/test_advanced_analytics.py::TestABTestManager::test_record_result PASSED [  1%]
+tests/test_advanced_analytics.py::TestABTestManager::test_analyze_experiment PASSED [  2%]
+tests/test_advanced_analytics.py::TestABTestManager::test_list_active_experiments PASSED [  2%]
+tests/test_advanced_analytics.py::TestABTestManager::test_complete_experiment PASSED [  2%]
+tests/test_advanced_analytics.py::TestPerformanceAnalyzer::test_analyzer_initialization PASSED [  3%]
+tests/test_advanced_analytics.py::TestPerformanceAnalyzer::test_analyze_conversation_patterns_empty PASSED [  3%]
+tests/test_advanced_analytics.py::TestPerformanceAnalyzer::test_categorize_question PASSED [  3%]
+tests/test_advanced_analytics.py::TestPerformanceAnalyzer::test_generate_performance_report PASSED [  4%]
+tests/test_advanced_analytics.py::TestConversationOptimizer::test_suggest_next_question_cold_lead PASSED [  4%]
+tests/test_advanced_analytics.py::TestConversationOptimizer::test_suggest_next_question_warm_lead PASSED [  4%]
+tests/test_advanced_analytics.py::TestConversationOptimizer::test_suggest_next_question_hot_lead PASSED [  5%]
+tests/test_advanced_analytics.py::TestConversationOptimizer::test_suggestion_has_alternatives PASSED [  5%]
+tests/test_advanced_analytics.py::TestABTestStatistics::test_variant_stats_calculation PASSED [  5%]
+tests/test_advanced_analytics.py::TestABTestStatistics::test_conversion_rate_calculation PASSED [  6%]
+tests/test_advanced_analytics.py::TestABTestStatistics::test_winner_determination PASSED [  6%]
+tests/test_advanced_analytics.py::TestPerformanceOptimization::test_identify_opportunities_structure PASSED [  7%]
+tests/test_advanced_analytics.py::TestPerformanceOptimization::test_flow_analysis_structure PASSED [  7%]
+tests/test_advanced_analytics.py::TestDataPersistence::test_experiments_saved_to_file PASSED [  7%]
+tests/test_advanced_analytics.py::TestDataPersistence::test_results_persist_across_sessions PASSED [  8%]
+tests/test_analytics_dashboard.py::TestDataLoading::test_load_mock_data_exists PASSED [  8%]
+tests/test_analytics_dashboard.py::TestDataLoading::test_load_mock_data_performance PASSED [  8%]
+tests/test_analytics_dashboard.py::TestDataLoading::test_tenant_structure PASSED [  9%]
+tests/test_analytics_dashboard.py::TestDataLoading::test_conversation_structure PASSED [  9%]
+tests/test_analytics_dashboard.py::TestDataLoading::test_system_health_structure PASSED [  9%]
+tests/test_analytics_dashboard.py::TestDataFiltering::test_filter_conversations_by_date PASSED [ 10%]
+tests/test_analytics_dashboard.py::TestDataFiltering::test_filter_by_tenant PASSED [ 10%]
+tests/test_analytics_dashboard.py::TestDataFiltering::test_filter_by_classification PASSED [ 10%]
+tests/test_analytics_dashboard.py::TestMetricsCalculation::test_calculate_aggregate_metrics PASSED [ 11%]
+tests/test_analytics_dashboard.py::TestMetricsCalculation::test_metrics_empty_conversations PASSED [ 11%]
+tests/test_analytics_dashboard.py::TestMetricsCalculation::test_metrics_accuracy PASSED [ 11%]
+tests/test_analytics_dashboard.py::TestChartGeneration::test_lead_score_distribution_chart PASSED [ 12%]
+tests/test_analytics_dashboard.py::TestChartGeneration::test_classification_pie_chart PASSED [ 12%]
+tests/test_analytics_dashboard.py::TestChartGeneration::test_conversation_timeline_chart PASSED [ 13%]
+tests/test_analytics_dashboard.py::TestChartGeneration::test_response_time_chart PASSED [ 13%]
+tests/test_analytics_dashboard.py::TestChartGeneration::test_intent_breakdown_chart PASSED [ 13%]
+tests/test_analytics_dashboard.py::TestChartGeneration::test_chart_generation_performance PASSED [ 14%]
+tests/test_analytics_dashboard.py::TestDashboardPerformance::test_full_dashboard_load_time PASSED [ 14%]
+tests/test_analytics_dashboard.py::TestDashboardPerformance::test_data_consistency PASSED [ 14%]
+tests/test_analytics_dashboard.py::TestEdgeCases::test_empty_date_range PASSED [ 15%]
+tests/test_analytics_dashboard.py::TestEdgeCases::test_single_tenant_filtering PASSED [ 15%]
+tests/test_analytics_dashboard.py::TestEdgeCases::test_all_classifications_present PASSED [ 15%]
+tests/test_analytics_engine.py::TestMetricsCollector::test_record_conversation_event PASSED [ 16%]
+tests/test_analytics_engine.py::TestMetricsCollector::test_keyword_extraction FAILED [ 16%]
+tests/test_analytics_engine.py::TestMetricsCollector::test_topic_classification PASSED [ 16%]
+tests/test_analytics_engine.py::TestMetricsCollector::test_sms_compliance_check PASSED [ 17%]
+tests/test_analytics_engine.py::TestMetricsCollector::test_tone_analysis PASSED [ 17%]
+tests/test_analytics_engine.py::TestMetricsCollector::test_metrics_persistence PASSED [ 17%]
+tests/test_analytics_engine.py::TestMetricsCollector::test_get_metrics PASSED [ 18%]
+tests/test_analytics_engine.py::TestConversionTracker::test_calculate_funnel PASSED [ 18%]
+tests/test_analytics_engine.py::TestConversionTracker::test_empty_funnel PASSED [ 19%]
+tests/test_analytics_engine.py::TestResponseTimeAnalyzer::test_analyze_response_times PASSED [ 19%]
+tests/test_analytics_engine.py::TestResponseTimeAnalyzer::test_response_times_by_classification PASSED [ 19%]
+tests/test_analytics_engine.py::TestComplianceMonitor::test_check_compliance PASSED [ 20%]
+tests/test_analytics_engine.py::TestComplianceMonitor::test_compliance_violations PASSED [ 20%]
+tests/test_analytics_engine.py::TestTopicDistributionAnalyzer::test_analyze_topics FAILED [ 20%]
+tests/test_analytics_engine.py::TestTopicDistributionAnalyzer::test_pathway_distribution PASSED [ 21%]
+tests/test_analytics_engine.py::TestAnalyticsEngine::test_record_event PASSED [ 21%]
+tests/test_analytics_engine.py::TestAnalyticsEngine::test_get_comprehensive_report PASSED [ 21%]
+tests/test_analytics_engine.py::TestAnalyticsEngine::test_ab_test_tracking PASSED [ 22%]
+tests/test_analytics_engine.py::TestPerformance::test_collection_performance PASSED [ 22%]
+tests/test_analytics_engine.py::TestPerformance::test_bulk_collection_performance PASSED [ 22%]
+tests/test_analytics_engine.py::TestEdgeCases::test_empty_message PASSED [ 23%]
+tests/test_analytics_engine.py::TestEdgeCases::test_missing_context_fields PASSED [ 23%]
+tests/test_analytics_engine.py::TestEdgeCases::test_date_range_retrieval PASSED [ 23%]
+tests/test_campaign_analytics.py::TestCampaignCreation::test_create_basic_campaign PASSED [ 24%]
+tests/test_campaign_analytics.py::TestCampaignCreation::test_create_campaign_with_targets PASSED [ 24%]
+tests/test_campaign_analytics.py::TestCampaignCreation::test_campaign_has_default_performance_metrics PASSED [ 25%]
+tests/test_campaign_analytics.py::TestMetricsUpdates::test_update_basic_metrics PASSED [ 25%]
+tests/test_campaign_analytics.py::TestMetricsUpdates::test_cost_per_lead_calculation PASSED [ 25%]
+tests/test_campaign_analytics.py::TestMetricsUpdates::test_roi_calculation PASSED [ 26%]
+tests/test_campaign_analytics.py::TestMetricsUpdates::test_conversion_rate_calculation PASSED [ 26%]
+tests/test_campaign_analytics.py::TestMetricsUpdates::test_cumulative_metrics_updates PASSED [ 26%]
+tests/test_campaign_analytics.py::TestFunnelAnalysis::test_update_funnel_stages PASSED [ 27%]
+tests/test_campaign_analytics.py::TestFunnelAnalysis::test_funnel_conversion_rates PASSED [ 27%]
+tests/test_campaign_analytics.py::TestFunnelAnalysis::test_overall_funnel_efficiency PASSED [ 27%]
+tests/test_campaign_analytics.py::TestCampaignPerformance::test_get_campaign_performance PASSED [ 28%]
+tests/test_campaign_analytics.py::TestCampaignPerformance::test_roi_analysis_details PASSED [ 28%]
+tests/test_campaign_analytics.py::TestCampaignPerformance::test_target_comparison PASSED [ 28%]
+tests/test_campaign_analytics.py::TestCampaignComparison::test_compare_two_campaigns PASSED [ 29%]
+tests/test_campaign_analytics.py::TestCampaignComparison::test_campaign_rankings PASSED [ 29%]
+tests/test_campaign_analytics.py::TestChannelAnalytics::test_get_channel_analytics PASSED [ 29%]
+tests/test_campaign_analytics.py::TestCampaignLifecycle::test_complete_campaign PASSED [ 30%]
+tests/test_campaign_analytics.py::TestCampaignLifecycle::test_list_active_campaigns PASSED [ 30%]
+tests/test_campaign_analytics.py::TestDataPersistence::test_campaign_data_persists PASSED [ 30%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_cold_lead_zero_questions PASSED [ 31%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_cold_lead_one_question PASSED [ 31%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_warm_lead_two_questions PASSED [ 32%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_hot_lead_three_questions PASSED [ 32%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_hot_lead_four_questions PASSED [ 32%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_all_seven_questions PASSED [ 33%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_property_requirements_bedrooms_only PASSED [ 33%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_property_requirements_bathrooms_only PASSED [ 33%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_property_requirements_must_haves_only PASSED [ 34%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_property_requirements_combined_counts_once PASSED [ 34%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_calculate_with_reasoning_includes_question_count PASSED [ 34%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_no_questions_answered_reasoning PASSED [ 35%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_recommended_actions_hot_lead PASSED [ 35%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_recommended_actions_warm_lead PASSED [ 35%]
+tests/test_jorge_requirements.py::TestJorgeLeadScoring::test_recommended_actions_cold_lead PASSED [ 36%]
+tests/test_jorge_requirements.py::TestJorgePhase3::test_wholesale_detection PASSED [ 36%]
+tests/test_jorge_requirements.py::TestJorgePhase3::test_listing_detection PASSED [ 36%]
+tests/test_jorge_requirements.py::TestJorgePhase3::test_unknown_detection PASSED [ 37%]
+tests/test_jorge_requirements.py::TestJorgeScenarios::test_seller_with_home_condition PASSED [ 37%]
+tests/test_jorge_requirements.py::TestJorgeScenarios::test_buyer_without_home_condition PASSED [ 38%]
+tests/test_jorge_requirements.py::TestJorgeScenarios::test_engaged_lead_with_motivation PASSED [ 38%]
+tests/test_lead_lifecycle.py::TestJourneyCreation::test_start_journey PASSED [ 38%]
+tests/test_lead_lifecycle.py::TestJourneyCreation::test_start_journey_with_initial_data PASSED [ 39%]
+tests/test_lead_lifecycle.py::TestJourneyCreation::test_journey_initial_stage PASSED [ 39%]
+tests/test_lead_lifecycle.py::TestEventRecording::test_record_simple_event PASSED [ 39%]
+tests/test_lead_lifecycle.py::TestEventRecording::test_record_multiple_events PASSED [ 40%]
+tests/test_lead_lifecycle.py::TestEventRecording::test_events_added_to_current_stage PASSED [ 40%]
+tests/test_lead_lifecycle.py::TestStageTransitions::test_transition_to_next_stage PASSED [ 40%]
+tests/test_lead_lifecycle.py::TestStageTransitions::test_multiple_stage_transitions PASSED [ 41%]
+tests/test_lead_lifecycle.py::TestStageTransitions::test_transition_direction_progression PASSED [ 41%]
+tests/test_lead_lifecycle.py::TestStageTransitions::test_transition_direction_regression PASSED [ 41%]
+tests/test_lead_lifecycle.py::TestStageTransitions::test_conversion_to_won PASSED [ 42%]
+tests/test_lead_lifecycle.py::TestStageTransitions::test_marking_as_lost PASSED [ 42%]
+tests/test_lead_lifecycle.py::TestJourneySummary::test_get_journey_summary PASSED [ 42%]
+tests/test_lead_lifecycle.py::TestJourneySummary::test_key_moments_identification PASSED [ 43%]
+tests/test_lead_lifecycle.py::TestJourneySummary::test_conversion_metrics_calculation PASSED [ 43%]
+tests/test_lead_lifecycle.py::TestBottleneckAnalysis::test_analyze_bottlenecks_with_data PASSED [ 44%]
+tests/test_lead_lifecycle.py::TestBottleneckAnalysis::test_recommendations_generated PASSED [ 44%]
+tests/test_lead_lifecycle.py::TestConversionFunnel::test_get_conversion_funnel PASSED [ 44%]
+tests/test_lead_lifecycle.py::TestConversionFunnel::test_conversion_rates_calculated PASSED [ 45%]
+tests/test_lead_lifecycle.py::TestStageAnalytics::test_get_stage_analytics PASSED [ 45%]
+tests/test_lead_lifecycle.py::TestStageAnalytics::test_progression_rate_calculated PASSED [ 45%]
+tests/test_lead_lifecycle.py::TestDataPersistence::test_journey_data_persists PASSED [ 46%]
+tests/test_lead_scorer.py::TestLeadScorer::test_calculate_hot_lead_score PASSED [ 46%]
+tests/test_lead_scorer.py::TestLeadScorer::test_calculate_warm_lead_score PASSED [ 46%]
+tests/test_lead_scorer.py::TestLeadScorer::test_calculate_cold_lead_score PASSED [ 47%]
+tests/test_lead_scorer.py::TestLeadScorer::test_property_requirements_scoring PASSED [ 47%]
+tests/test_lead_scorer.py::TestLeadScorer::test_full_qualification_score PASSED [ 47%]
+tests/test_lead_scorer.py::TestLeadScorer::test_classify_thresholds PASSED [ 48%]
+tests/test_lead_scorer.py::TestLeadScorer::test_get_recommended_actions PASSED [ 48%]
+tests/test_lead_scorer.py::TestLeadScorer::test_calculate_with_reasoning PASSED [ 48%]
+tests/test_memory_system.py::test_memory_persistence SKIPPED (async def
+function and no async plugin installed (see warnings))                   [ 49%]
+tests/test_monitoring.py::TestPerformanceMonitor::test_monitor_initialization PASSED [ 49%]
+tests/test_monitoring.py::TestPerformanceMonitor::test_record_metric PASSED [ 50%]
+tests/test_monitoring.py::TestPerformanceMonitor::test_record_counter PASSED [ 50%]
+tests/test_monitoring.py::TestPerformanceMonitor::test_threshold_alert PASSED [ 50%]
+tests/test_monitoring.py::TestPerformanceMonitor::test_get_metric_stats PASSED [ 51%]
+tests/test_monitoring.py::TestPerformanceMonitor::test_get_health_status PASSED [ 51%]
+tests/test_monitoring.py::TestErrorTracker::test_tracker_initialization PASSED [ 51%]
+tests/test_monitoring.py::TestErrorTracker::test_log_error PASSED        [ 52%]
+tests/test_monitoring.py::TestErrorTracker::test_error_summary FAILED    [ 52%]
+tests/test_monitoring.py::TestSystemHealthDashboard::test_dashboard_initialization PASSED [ 52%]
+tests/test_monitoring.py::TestSystemHealthDashboard::test_get_dashboard_data PASSED [ 53%]
+tests/test_monitoring.py::TestSystemHealthDashboard::test_generate_health_report PASSED [ 53%]
+tests/test_monitoring.py::TestMetricAggregation::test_percentile_calculation PASSED [ 53%]
+tests/test_monitoring.py::TestMetricAggregation::test_time_window_filtering PASSED [ 54%]
+tests/test_monitoring.py::TestAlertSystem::test_alert_levels PASSED      [ 54%]
+tests/test_monitoring.py::TestAlertSystem::test_alert_persistence PASSED [ 54%]
+tests/test_monitoring.py::TestConversationMonitoring::test_conversation_monitor_init PASSED [ 55%]
+tests/test_monitoring.py::TestConversationMonitoring::test_track_conversation_metrics PASSED [ 55%]
+tests/test_monitoring.py::TestConversationMonitoring::test_identify_anomalies PASSED [ 55%]
+tests/test_monitoring.py::TestMetricTypes::test_gauge_metric PASSED      [ 56%]
+tests/test_monitoring.py::TestMetricTypes::test_counter_metric PASSED    [ 56%]
+tests/test_monitoring.py::TestMetricTypes::test_timer_metric PASSED      [ 57%]
+tests/test_monitoring.py::TestHealthStatusCalculation::test_healthy_status PASSED [ 57%]
+tests/test_monitoring.py::TestHealthStatusCalculation::test_degraded_status PASSED [ 57%]
+tests/test_monitoring.py::TestHealthStatusCalculation::test_unhealthy_status PASSED [ 58%]
+tests/test_onboarding.py::TestInputValidation::test_validate_partner_name_success PASSED [ 58%]
+tests/test_onboarding.py::TestInputValidation::test_validate_partner_name_failure PASSED [ 58%]
+tests/test_onboarding.py::TestInputValidation::test_validate_location_id_success PASSED [ 59%]
+tests/test_onboarding.py::TestInputValidation::test_validate_location_id_failure PASSED [ 59%]
+tests/test_onboarding.py::TestInputValidation::test_validate_anthropic_api_key_success FAILED [ 59%]
+tests/test_onboarding.py::TestInputValidation::test_validate_anthropic_api_key_failure PASSED [ 60%]
+tests/test_onboarding.py::TestInputValidation::test_validate_ghl_api_key_success PASSED [ 60%]
+tests/test_onboarding.py::TestInputValidation::test_validate_ghl_api_key_failure PASSED [ 60%]
+tests/test_onboarding.py::TestDuplicateDetection::test_check_duplicate_tenant_no_file PASSED [ 61%]
+tests/test_onboarding.py::TestDuplicateDetection::test_check_duplicate_tenant_file_exists PASSED [ 61%]
+tests/test_onboarding.py::TestInteractiveOnboarding::test_successful_registration FAILED [ 61%]
+tests/test_onboarding.py::TestInteractiveOnboarding::test_registration_with_duplicate_location_id PASSED [ 62%]
+tests/test_onboarding.py::TestInteractiveOnboarding::test_registration_without_calendar_id FAILED [ 62%]
+tests/test_onboarding.py::TestInteractiveOnboarding::test_input_validation_retry_flow FAILED [ 63%]
+tests/test_onboarding.py::TestFileSystemOperations::test_tenant_file_creation PASSED [ 63%]
+tests/test_onboarding.py::TestFileSystemOperations::test_tenant_directory_auto_creation PASSED [ 63%]
+tests/test_onboarding.py::TestEdgeCases::test_validate_api_key_with_spaces FAILED [ 64%]
+tests/test_onboarding.py::TestEdgeCases::test_validate_location_id_special_characters PASSED [ 64%]
+tests/test_onboarding.py::TestEdgeCases::test_onboarding_with_tenant_service_failure PASSED [ 64%]
+tests/test_phase1_fixes.py::TestSMSConstraintEnforcement::test_max_tokens_reduced_to_150 PASSED [ 65%]
+tests/test_phase1_fixes.py::TestSMSConstraintEnforcement::test_sms_truncation_logic_exists PASSED [ 65%]
+tests/test_phase1_fixes.py::TestCalendarFallback::test_fallback_message_exists PASSED [ 65%]
+tests/test_phase1_fixes.py::TestRedundancyPrevention::test_pre_extraction_logic_exists PASSED [ 66%]
+tests/test_phase1_fixes.py::TestRAGPathwayFiltering::test_pathway_enhancement_logic_exists PASSED [ 66%]
+tests/test_phase1_fixes.py::TestToneEnhancement::test_direct_budget_question PASSED [ 66%]
+tests/test_phase1_fixes.py::TestToneEnhancement::test_direct_timeline_question PASSED [ 67%]
+tests/test_phase1_fixes.py::TestDocumentationSimplification::test_howtorun_has_3step_structure PASSED [ 67%]
+tests/test_phase1_fixes.py::TestDocumentationSimplification::test_howtorun_is_nontechnical PASSED [ 67%]
+tests/test_phase1_fixes.py::TestAdminDashboardFix::test_save_tenant_config_method_exists PASSED [ 68%]
+tests/test_phase2_analytics.py::test_analytics_tracking PASSED           [ 68%]
+tests/test_phase2_analytics.py::test_analytics_summary PASSED            [ 69%]
+tests/test_phase2_analytics.py::test_enhanced_memory_returning_lead PASSED [ 69%]
+tests/test_rag_multitenancy.py::test_multitenancy_scoping PASSED         [ 69%]
+tests/test_rag_multitenancy.py::test_multitenancy_no_global PASSED       [ 70%]
+tests/test_reengagement.py::test_trigger_detection_24h SKIPPED (async
+def function and no async plugin installed (see warnings))               [ 70%]
+tests/test_reengagement.py::test_trigger_detection_48h SKIPPED (async
+def function and no async plugin installed (see warnings))               [ 70%]
+tests/test_reengagement.py::test_trigger_detection_72h SKIPPED (async
+def function and no async plugin installed (see warnings))               [ 71%]
+tests/test_reengagement.py::test_no_trigger_for_recent_interactions SKIPPED [ 71%]
+tests/test_reengagement.py::test_message_template_selection SKIPPED      [ 71%]
+tests/test_reengagement.py::test_sms_character_limit_compliance SKIPPED  [ 72%]
+tests/test_reengagement.py::test_integration_with_ghl_client SKIPPED     [ 72%]
+tests/test_reengagement.py::test_silent_lead_detection_from_memory SKIPPED [ 72%]
+tests/test_reengagement.py::test_prevents_duplicate_reengagement SKIPPED [ 73%]
+tests/test_security_multitenant.py::TestTenantIsolation::test_tenant_memory_isolation FAILED [ 73%]
+tests/test_security_multitenant.py::TestTenantIsolation::test_rag_knowledge_base_isolation FAILED [ 73%]
+tests/test_security_multitenant.py::TestTenantIsolation::test_tenant_config_isolation PASSED [ 74%]
+tests/test_security_multitenant.py::TestTenantIsolation::test_api_key_not_shared_between_tenants PASSED [ 74%]
+tests/test_security_multitenant.py::TestDataSecurity::test_api_keys_not_logged PASSED [ 75%]
+tests/test_security_multitenant.py::TestDataSecurity::test_sensitive_data_not_in_memory_dumps PASSED [ 75%]
+tests/test_security_multitenant.py::TestDataSecurity::test_input_sanitization PASSED [ 75%]
+tests/test_security_multitenant.py::TestDataSecurity::test_file_path_traversal_prevention PASSED [ 76%]
+tests/test_security_multitenant.py::TestMultiTenantScalability::test_concurrent_tenant_access FAILED [ 76%]
+tests/test_security_multitenant.py::TestMultiTenantScalability::test_tenant_data_volume FAILED [ 76%]
+tests/test_security_multitenant.py::TestMultiTenantScalability::test_tenant_cleanup PASSED [ 77%]
+tests/test_security_multitenant.py::TestAccessControl::test_tenant_cannot_access_system_files FAILED [ 77%]
+tests/test_security_multitenant.py::TestAccessControl::test_rate_limiting_structure PASSED [ 77%]
+tests/test_security_multitenant.py::TestAccessControl::test_tenant_feature_flags PASSED [ 78%]
+tests/test_security_multitenant.py::TestSecurityAudit::test_no_hardcoded_secrets PASSED [ 78%]
+tests/test_security_multitenant.py::TestSecurityAudit::test_environment_variables_required PASSED [ 78%]
+tests/test_security_multitenant.py::TestSecurityAudit::test_error_messages_dont_leak_sensitive_info PASSED [ 79%]
+tests/test_security_multitenant.py::TestComplianceAndPrivacy::test_data_retention_policy_structure PASSED [ 79%]
+tests/test_security_multitenant.py::TestComplianceAndPrivacy::test_right_to_deletion PASSED [ 79%]
+tests/test_security_multitenant.py::TestComplianceAndPrivacy::test_data_export_capability FAILED [ 80%]
+tests/test_security_multitenant.py::TestWebhookSecurity::test_webhook_requires_valid_signature PASSED [ 80%]
+tests/test_security_multitenant.py::TestWebhookSecurity::test_webhook_input_size_limits PASSED [ 80%]
+tests/test_security_multitenant.py::TestWebhookSecurity::test_webhook_prevents_replay_attacks PASSED [ 81%]
+tests/test_security_multitenant.py::TestRateLimiting::test_rate_limit_per_tenant PASSED [ 81%]
+tests/test_security_multitenant.py::TestRateLimiting::test_rate_limit_headers_returned PASSED [ 82%]
+tests/test_security_multitenant.py::TestPIIProtection::test_ssn_detection_and_redaction PASSED [ 82%]
+tests/test_security_multitenant.py::TestPIIProtection::test_credit_card_detection_and_redaction PASSED [ 82%]
+tests/test_security_multitenant.py::TestPIIProtection::test_email_optional_redaction PASSED [ 83%]
+tests/test_security_multitenant.py::TestEncryptionAtRest::test_api_key_encryption_structure PASSED [ 83%]
+tests/test_security_multitenant.py::TestEncryptionAtRest::test_memory_file_encryption_capability PASSED [ 83%]
+tests/test_security_multitenant.py::TestAuthorizationAndRBAC::test_tenant_access_control_structure PASSED [ 84%]
+tests/test_security_multitenant.py::TestAuthorizationAndRBAC::test_analytics_dashboard_requires_authentication PASSED [ 84%]
+tests/test_security_multitenant.py::TestAuditLogging::test_admin_actions_are_logged PASSED [ 84%]
+tests/test_security_multitenant.py::TestAuditLogging::test_failed_authentication_attempts_logged PASSED [ 85%]
+tests/test_security_multitenant.py::TestGDPRCompliance::test_right_to_access_implementation PASSED [ 85%]
+tests/test_security_multitenant.py::TestGDPRCompliance::test_right_to_erasure_implementation PASSED [ 85%]
+tests/test_security_multitenant.py::TestGDPRCompliance::test_consent_management PASSED [ 86%]
+tests/test_security_multitenant.py::TestDependencySecurity::test_no_known_vulnerable_dependencies PASSED [ 86%]
+tests/test_security_multitenant.py::TestDependencySecurity::test_security_headers_present PASSED [ 86%]
+tests/test_security_multitenant.py::TestPathTraversalPrevention::test_location_id_sanitization PASSED [ 87%]
+tests/test_security_multitenant.py::TestPathTraversalPrevention::test_contact_id_sanitization PASSED [ 87%]
+tests/test_security_multitenant.py::TestBulkOperationsSecurity::test_bulk_operation_size_limits PASSED [ 88%]
+tests/test_security_multitenant.py::TestBulkOperationsSecurity::test_template_injection_prevention FAILED [ 88%]
+tests/test_transcript_analyzer.py::TestImportJSON::test_import_single_transcript PASSED [ 88%]
+tests/test_transcript_analyzer.py::TestImportJSON::test_import_transcript_array PASSED [ 89%]
+tests/test_transcript_analyzer.py::TestImportJSON::test_import_wrapped_transcripts PASSED [ 89%]
+tests/test_transcript_analyzer.py::TestImportJSON::test_import_invalid_json PASSED [ 89%]
+tests/test_transcript_analyzer.py::TestImportJSON::test_import_missing_file PASSED [ 90%]
+tests/test_transcript_analyzer.py::TestImportJSON::test_import_invalid_transcript_structure PASSED [ 90%]
+tests/test_transcript_analyzer.py::TestImportCSV::test_import_csv_basic PASSED [ 90%]
+tests/test_transcript_analyzer.py::TestImportCSV::test_import_csv_multiple_transcripts PASSED [ 91%]
+tests/test_transcript_analyzer.py::TestImportCSV::test_import_csv_missing_file PASSED [ 91%]
+tests/test_transcript_analyzer.py::TestMetricsCalculation::test_calculate_single_metrics PASSED [ 91%]
+tests/test_transcript_analyzer.py::TestMetricsCalculation::test_calculate_duration PASSED [ 92%]
+tests/test_transcript_analyzer.py::TestMetricsCalculation::test_calculate_response_time PASSED [ 92%]
+tests/test_transcript_analyzer.py::TestMetricsCalculation::test_pathway_detection_wholesale PASSED [ 92%]
+tests/test_transcript_analyzer.py::TestMetricsCalculation::test_pathway_detection_listing PASSED [ 93%]
+tests/test_transcript_analyzer.py::TestPatternAnalysis::test_analyze_patterns_basic PASSED [ 93%]
+tests/test_transcript_analyzer.py::TestPatternAnalysis::test_winning_questions_extraction PASSED [ 94%]
+tests/test_transcript_analyzer.py::TestPatternAnalysis::test_closing_phrases_extraction PASSED [ 94%]
+tests/test_transcript_analyzer.py::TestPatternAnalysis::test_optimal_question_order PASSED [ 94%]
+tests/test_transcript_analyzer.py::TestPatternAnalysis::test_keyword_patterns PASSED [ 95%]
+tests/test_transcript_analyzer.py::TestPatternAnalysis::test_close_rate_calculation PASSED [ 95%]
+tests/test_transcript_analyzer.py::TestPatternAnalysis::test_pathway_signals_extraction PASSED [ 95%]
+tests/test_transcript_analyzer.py::TestInsightsGeneration::test_generate_report_structure PASSED [ 96%]
+tests/test_transcript_analyzer.py::TestInsightsGeneration::test_report_summary_metrics PASSED [ 96%]
+tests/test_transcript_analyzer.py::TestInsightsGeneration::test_recommendations_generation PASSED [ 96%]
+tests/test_transcript_analyzer.py::TestInsightsGeneration::test_save_report_to_file PASSED [ 97%]
+tests/test_transcript_analyzer.py::TestExport::test_export_metrics_csv PASSED [ 97%]
+tests/test_transcript_analyzer.py::TestExport::test_export_empty_metrics PASSED [ 97%]
+tests/test_transcript_analyzer.py::TestEdgeCases::test_empty_transcript_list PASSED [ 98%]
+tests/test_transcript_analyzer.py::TestEdgeCases::test_transcript_with_no_messages PASSED [ 98%]
+tests/test_transcript_analyzer.py::TestEdgeCases::test_transcript_with_malformed_timestamps PASSED [ 98%]
+tests/test_transcript_analyzer.py::TestEdgeCases::test_multiple_import_calls PASSED [ 99%]
+tests/test_transcript_analyzer.py::TestIntegration::test_full_workflow_with_sample_data FAILED [ 99%]
+tests/test_transcript_analyzer.py::TestIntegration::test_cli_interface PASSED [100%]/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/ast.py:50: RuntimeWarning:
+
+coroutine 'MemoryService.get_context' was never awaited
+
+
+
+=================================== FAILURES ===================================
+_________________ TestMetricsCollector.test_keyword_extraction _________________
+tests/test_analytics_engine.py:124: in test_keyword_extraction
+    assert "location" in metrics.keywords_detected
+E   AssertionError: assert 'location' in []
+E    +  where [] = ConversationMetrics(contact_id='c2', location_id='loc1', timestamp='2026-01-04T23:07:52.623768', lead_score=50, previous_score=40, score_delta=10, classification='warm', appointment_scheduled=False, response_time_ms=100, message_count=1, conversation_duration_seconds=6.4e-05, message_length=32, question_count=0, keywords_detected=[], topics=[], sms_length=11, sms_compliant=True, tone_score=1.0, is_returning_lead=False, pathway=None, experiment_id=None, variant=None).keywords_detected
+---------------------------- Captured stdout setup -----------------------------
+2026-01-04 15:07:52 | INFO     | [system] | services.analytics_engine | Metrics collector initialized at /private/var/folders/f9/3ty0kr710y336j500l6jhnbh0000gn/T/pytest-of-cave/pytest-18/test_keyword_extraction0/metrics
+______________ TestTopicDistributionAnalyzer.test_analyze_topics _______________
+tests/test_analytics_engine.py:603: in test_analyze_topics
+    assert "location" in analysis["keywords"]
+E   AssertionError: assert 'location' in {'budget': {'count': 5, 'percentage': 62.5}}
+---------------------------- Captured stdout setup -----------------------------
+2026-01-04 15:07:52 | INFO     | [system] | services.analytics_engine | Metrics collector initialized at /private/var/folders/f9/3ty0kr710y336j500l6jhnbh0000gn/T/pytest-of-cave/pytest-18/test_analyze_topics0/metrics
+_____________________ TestErrorTracker.test_error_summary ______________________
+tests/test_monitoring.py:133: in test_error_summary
+    assert summary["errors_by_type"]["TypeError"] == 2
+E   assert 18 == 2
+_________ TestInputValidation.test_validate_anthropic_api_key_success __________
+tests/test_onboarding.py:73: in test_validate_anthropic_api_key_success
+    assert validate_api_key(key, "anthropic") is True
+E   AssertionError: assert False is True
+E    +  where False = validate_api_key('sk-ant-api03-abc123', 'anthropic')
+____________ TestInteractiveOnboarding.test_successful_registration ____________
+tests/test_onboarding.py:151: in <lambda>
+    monkeypatch.setattr('builtins.input', lambda _: next(input_generator))
+E   StopIteration
+
+The above exception was the direct cause of the following exception:
+tests/test_onboarding.py:162: in test_successful_registration
+    result = await interactive_onboard()
+E   RuntimeError: coroutine raised StopIteration
+----------------------------- Captured stdout call -----------------------------
+
+[1m[95m======================================================================[0m
+[1m[95m  GHL Real Estate AI - Partner Onboarding System[0m
+[1m[95m======================================================================[0m
+
+[96mThis tool will register a new real estate partner/tenant.[0m
+[96mEach partner gets their own API credentials and isolated system.[0m
+
+[1mStep 1: Partner Information[0m
+
+[92m[1m✓ Partner Name: Acme Real Estate[0m
+
+[1mStep 2: GHL Configuration[0m
+
+[92m[1m✓ Location ID: loc_acme_001[0m
+
+[1mStep 3: Anthropic API Configuration[0m
+[96mThis key will be charged for this tenant's AI usage.[0m
+
+[92m[1m✓ Anthropic API Key validated[0m
+
+[1mStep 4: GHL API Key[0m
+[96mThis key provides access to this tenant's GHL location.[0m
+
+[92m[1m✓ GHL API Key validated[0m
+
+[1mStep 5: Calendar Integration (Optional)[0m
+[96mLeave empty to skip calendar integration.[0m
+
+[92m[1m✓ Calendar ID: cal_acme_primary[0m
+
+
+[1m[95mSummary:[0m
+  Partner Name:     Acme Real Estate
+  Location ID:      loc_acme_001
+  Anthropic Key:    **********6789
+  GHL Key:          **********test
+  Calendar ID:      cal_acme_primary
+_______ TestInteractiveOnboarding.test_registration_without_calendar_id ________
+tests/test_onboarding.py:210: in <lambda>
+    monkeypatch.setattr('builtins.input', lambda _: next(input_generator))
+E   StopIteration
+
+The above exception was the direct cause of the following exception:
+tests/test_onboarding.py:216: in test_registration_without_calendar_id
+    result = await interactive_onboard()
+E   RuntimeError: coroutine raised StopIteration
+----------------------------- Captured stdout call -----------------------------
+
+[1m[95m======================================================================[0m
+[1m[95m  GHL Real Estate AI - Partner Onboarding System[0m
+[1m[95m======================================================================[0m
+
+[96mThis tool will register a new real estate partner/tenant.[0m
+[96mEach partner gets their own API credentials and isolated system.[0m
+
+[1mStep 1: Partner Information[0m
+
+[92m[1m✓ Partner Name: Basic Real Estate[0m
+
+[1mStep 2: GHL Configuration[0m
+
+[92m[1m✓ Location ID: loc_basic_001[0m
+
+[1mStep 3: Anthropic API Configuration[0m
+[96mThis key will be charged for this tenant's AI usage.[0m
+
+[92m[1m✓ Anthropic API Key validated[0m
+
+[1mStep 4: GHL API Key[0m
+[96mThis key provides access to this tenant's GHL location.[0m
+
+[92m[1m✓ GHL API Key validated[0m
+
+[1mStep 5: Calendar Integration (Optional)[0m
+[96mLeave empty to skip calendar integration.[0m
+[93m⚠ Skipping calendar integration[0m
+
+[1m[95mSummary:[0m
+  Partner Name:     Basic Real Estate
+  Location ID:      loc_basic_001
+  Anthropic Key:    **********6789
+  GHL Key:          **********test
+  Calendar ID:      Not configured
+__________ TestInteractiveOnboarding.test_input_validation_retry_flow __________
+tests/test_onboarding.py:236: in <lambda>
+    monkeypatch.setattr('builtins.input', lambda _: next(input_generator))
+E   StopIteration
+
+The above exception was the direct cause of the following exception:
+tests/test_onboarding.py:242: in test_input_validation_retry_flow
+    result = await interactive_onboard()
+E   RuntimeError: coroutine raised StopIteration
+----------------------------- Captured stdout call -----------------------------
+
+[1m[95m======================================================================[0m
+[1m[95m  GHL Real Estate AI - Partner Onboarding System[0m
+[1m[95m======================================================================[0m
+
+[96mThis tool will register a new real estate partner/tenant.[0m
+[96mEach partner gets their own API credentials and isolated system.[0m
+
+[1mStep 1: Partner Information[0m
+
+[91m[1m✗ Partner name must be at least 3 characters long.[0m
+
+
+[92m[1m✓ Partner Name: Valid Realty Co.[0m
+
+[1mStep 2: GHL Configuration[0m
+
+[92m[1m✓ Location ID: loc_valid_001[0m
+
+[1mStep 3: Anthropic API Configuration[0m
+[96mThis key will be charged for this tenant's AI usage.[0m
+
+[92m[1m✓ Anthropic API Key validated[0m
+
+[1mStep 4: GHL API Key[0m
+[96mThis key provides access to this tenant's GHL location.[0m
+
+[92m[1m✓ GHL API Key validated[0m
+
+[1mStep 5: Calendar Integration (Optional)[0m
+[96mLeave empty to skip calendar integration.[0m
+[93m⚠ Skipping calendar integration[0m
+
+[1m[95mSummary:[0m
+  Partner Name:     Valid Realty Co.
+  Location ID:      loc_valid_001
+  Anthropic Key:    **********6789
+  GHL Key:          **********test
+  Calendar ID:      Not configured
+_______________ TestEdgeCases.test_validate_api_key_with_spaces ________________
+tests/test_onboarding.py:301: in test_validate_api_key_with_spaces
+    assert validate_api_key("  sk-ant-api03-test123  ", "anthropic") is False
+E   AssertionError: assert True is False
+E    +  where True = validate_api_key('  sk-ant-api03-test123  ', 'anthropic')
+_______________ TestTenantIsolation.test_tenant_memory_isolation _______________
+tests/test_security_multitenant.py:62: in test_tenant_memory_isolation
+    assert "Tenant 1" in str(tenant1_own)
+E   AssertionError: assert 'Tenant 1' in '<coroutine object MemoryService.get_context at 0x1673fcbc0>'
+E    +  where '<coroutine object MemoryService.get_context at 0x1673fcbc0>' = str(<coroutine object MemoryService.get_context at 0x1673fcbc0>)
+----------------------------- Captured stdout call -----------------------------
+2026-01-04 15:08:04 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+2026-01-04 15:08:04 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+____________ TestTenantIsolation.test_rag_knowledge_base_isolation _____________
+tests/test_security_multitenant.py:79: in test_rag_knowledge_base_isolation
+    assert rag1.location_id == tenant1_id
+E   AttributeError: 'VectorStore' object has no attribute 'location_id'
+----------------------------- Captured stdout call -----------------------------
+2026-01-04 15:08:04 | INFO     | [system] | core.embeddings | Loading embedding model: all-MiniLM-L6-v2
+2026-01-04 15:08:06 | INFO     | [system] | core.embeddings | Embedding model loaded successfully
+2026-01-04 15:08:06 | INFO     | [system] | core.rag_engine | VectorStore initialized at ./.chroma_db, Collection: loc_rag_tenant1
+2026-01-04 15:08:06 | INFO     | [system] | core.embeddings | Loading embedding model: all-MiniLM-L6-v2
+2026-01-04 15:08:08 | INFO     | [system] | core.embeddings | Embedding model loaded successfully
+2026-01-04 15:08:08 | INFO     | [system] | core.rag_engine | VectorStore initialized at ./.chroma_db, Collection: loc_rag_tenant2
+------------------------------ Captured log call -------------------------------
+ERROR    chromadb.telemetry.product.posthog:posthog.py:59 Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+ERROR    chromadb.telemetry.product.posthog:posthog.py:59 Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+ERROR    chromadb.telemetry.product.posthog:posthog.py:59 Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+ERROR    chromadb.telemetry.product.posthog:posthog.py:59 Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+___________ TestMultiTenantScalability.test_concurrent_tenant_access ___________
+tests/test_security_multitenant.py:233: in test_concurrent_tenant_access
+    assert context.get("tenant_index") == i
+E   AttributeError: 'coroutine' object has no attribute 'get'
+----------------------------- Captured stdout call -----------------------------
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+______________ TestMultiTenantScalability.test_tenant_data_volume ______________
+tests/test_security_multitenant.py:256: in test_tenant_data_volume
+    assert len(context["messages"]) == 10
+E   TypeError: 'coroutine' object is not subscriptable
+----------------------------- Captured stdout call -----------------------------
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+___________ TestAccessControl.test_tenant_cannot_access_system_files ___________
+tests/test_security_multitenant.py:299: in test_tenant_cannot_access_system_files
+    assert str(memory_path).startswith(str(project_root))
+E   AssertionError: assert False
+E    +  where False = <built-in method startswith of str object at 0x168cbb830>('/Users/cave/enterprisehub/ghl-real-estate-ai')
+E    +    where <built-in method startswith of str object at 0x168cbb830> = 'data/memory'.startswith
+E    +      where 'data/memory' = str(PosixPath('data/memory'))
+E    +    and   '/Users/cave/enterprisehub/ghl-real-estate-ai' = str(PosixPath('/Users/cave/enterprisehub/ghl-real-estate-ai'))
+----------------------------- Captured stdout call -----------------------------
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+_____________ TestComplianceAndPrivacy.test_data_export_capability _____________
+tests/test_security_multitenant.py:466: in test_data_export_capability
+    assert "messages" in exported
+E   TypeError: argument of type 'coroutine' is not iterable
+----------------------------- Captured stdout call -----------------------------
+2026-01-04 15:08:08 | INFO     | [system] | services.memory_service | Memory service initialized with in-memory storage
+________ TestBulkOperationsSecurity.test_template_injection_prevention _________
+tests/test_security_multitenant.py:961: in test_template_injection_prevention
+    assert validate_template(malicious_template) is False
+E   assert True is False
+E    +  where True = <function TestBulkOperationsSecurity.test_template_injection_prevention.<locals>.validate_template at 0x168c3e160>("Hi {first_name}, {os.system('rm -rf /')}")
+_____________ TestIntegration.test_full_workflow_with_sample_data ______________
+services/transcript_analyzer.py:104: in import_json
+    data = json.load(f)
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/__init__.py:293: in load
+    return loads(fp.read(),
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/decoder.py:353: in raw_decode
+    obj, end = self.scan_once(s, idx)
+E   json.decoder.JSONDecodeError: Expecting ',' delimiter: line 219 column 9 (char 8033)
+
+During handling of the above exception, another exception occurred:
+tests/test_transcript_analyzer.py:629: in test_full_workflow_with_sample_data
+    count = analyzer.import_json("data/sample_transcripts.json")
+services/transcript_analyzer.py:133: in import_json
+    raise ValueError(f"Invalid JSON in file {filepath}: {e}")
+E   ValueError: Invalid JSON in file data/sample_transcripts.json: Expecting ',' delimiter: line 219 column 9 (char 8033)
+----------------------------- Captured stdout call -----------------------------
+2026-01-04 15:08:08 | INFO     | [system] | services.transcript_analyzer | Transcript analyzer initialized with data_dir: data
+=============================== warnings summary ===============================
+../../Library/Python/3.9/lib/python/site-packages/pydantic/_internal/_config.py:271
+  /Users/cave/Library/Python/3.9/lib/python/site-packages/pydantic/_internal/_config.py:271: PydanticDeprecatedSince20:
+  
+  Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+
+../../Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35
+  /Users/cave/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning:
+  
+  urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+
+ghl-real-estate-ai/_archive_v1_20260104/test_analytics_quick.py: 2 warnings
+ghl-real-estate-ai/tests/test_memory_system.py: 1 warning
+ghl-real-estate-ai/tests/test_reengagement.py: 9 warnings
+  /Users/cave/Library/Python/3.9/lib/python/site-packages/_pytest/python.py:183: PytestUnhandledCoroutineWarning:
+  
+  async def functions are not natively supported and have been skipped.
+  You need to install a suitable plugin for your async framework, for example:
+    - anyio
+    - pytest-asyncio
+    - pytest-tornasync
+    - pytest-trio
+    - pytest-twisted
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestTenantIsolation::test_tenant_memory_isolation
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:37: RuntimeWarning:
+  
+  coroutine 'MemoryService.save_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestTenantIsolation::test_tenant_memory_isolation
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:45: RuntimeWarning:
+  
+  coroutine 'MemoryService.save_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestTenantIsolation::test_rag_knowledge_base_isolation
+  /Users/cave/Library/Python/3.9/lib/python/site-packages/torch/nn/modules/module.py:2150: RuntimeWarning:
+  
+  coroutine 'MemoryService.get_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestDataSecurity::test_sensitive_data_not_in_memory_dumps
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:144: RuntimeWarning:
+  
+  coroutine 'MemoryService.save_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestDataSecurity::test_sensitive_data_not_in_memory_dumps
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestDataSecurity::test_input_sanitization
+  /Users/cave/Library/Python/3.9/lib/python/site-packages/_pytest/python.py:194: RuntimeWarning:
+  
+  coroutine 'MemoryService.get_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestDataSecurity::test_input_sanitization
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:176: RuntimeWarning:
+  
+  coroutine 'MemoryService.save_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestDataSecurity::test_input_sanitization
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:177: RuntimeWarning:
+  
+  coroutine 'MemoryService.get_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestDataSecurity::test_file_path_traversal_prevention
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:203: RuntimeWarning:
+  
+  coroutine 'MemoryService.save_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestMultiTenantScalability::test_concurrent_tenant_access
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:223: RuntimeWarning:
+  
+  coroutine 'MemoryService.save_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestMultiTenantScalability::test_tenant_data_volume
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:249: RuntimeWarning:
+  
+  coroutine 'MemoryService.save_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestMultiTenantScalability::test_tenant_cleanup
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:265: RuntimeWarning:
+  
+  coroutine 'MemoryService.save_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestMultiTenantScalability::test_tenant_cleanup
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:268: RuntimeWarning:
+  
+  coroutine 'MemoryService.get_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestSecurityAudit::test_error_messages_dont_leak_sensitive_info
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:397: RuntimeWarning:
+  
+  coroutine 'MemoryService.get_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestComplianceAndPrivacy::test_right_to_deletion
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:436: RuntimeWarning:
+  
+  coroutine 'MemoryService.save_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestComplianceAndPrivacy::test_right_to_deletion
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:442: RuntimeWarning:
+  
+  coroutine 'MemoryService.get_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+ghl-real-estate-ai/tests/test_security_multitenant.py::TestComplianceAndPrivacy::test_data_export_capability
+  /Users/cave/enterprisehub/ghl-real-estate-ai/tests/test_security_multitenant.py:459: RuntimeWarning:
+  
+  coroutine 'MemoryService.save_context' was never awaited
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform darwin, python 3.9.6-final-0 -----------
+Name                                                 Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------------------
+_archive_v1_20260104/test_analytics_quick.py            96     85    11%   21-147, 152-197, 202-205
+api/__init__.py                                          0      0   100%
+api/main.py                                             27     27     0%   7-82
+api/middleware/__init__.py                               0      0   100%
+api/routes/__init__.py                                   2      0   100%
+api/routes/analytics.py                                147     86    41%   81-117, 127-141, 155-177, 185-197, 207-220, 235-256, 264-275, 287-308, 316-329, 344-357, 364
+api/routes/bulk_operations.py                          144     90    38%   78-98, 113-146, 160-181, 194-225, 241-270, 285-313, 324-337, 349-361, 368
+api/routes/lead_lifecycle.py                           141     88    38%   72-106, 114-140, 149-175, 188-205, 220-241, 254-270, 282-302, 316-337, 345-360, 367
+api/routes/webhook.py                                   99     78    21%   64-240, 264-355, 366
+api/schemas/__init__.py                                  0      0   100%
+api/schemas/ghl.py                                      62      0   100%
+core/__init__.py                                         0      0   100%
+core/conversation_manager.py                           147     93    37%   119-154, 190-261, 299, 327-514, 532-533
+core/embeddings.py                                      17      0   100%
+core/llm_client.py                                     156    116    26%   65-68, 76-82, 86-96, 100-113, 117-129, 133-134, 140-163, 175-181, 193-226, 243-261, 272-286, 302-313, 328-334, 342-347, 355-362, 367-370
+core/rag_engine.py                                      79     20    75%   80, 103-105, 144, 174-184, 192-194, 198-206
+ghl_utils/__init__.py                                    0      0   100%
+ghl_utils/config.py                                     47      0   100%
+ghl_utils/logger.py                                     28      3    89%   51-53
+prompts/__init__.py                                      0      0   100%
+prompts/reengagement_templates.py                       57     52     9%   69-94, 105-117, 154-200
+prompts/system_prompts.py                               47     38    19%   539-577, 591-604, 613-648
+scripts/onboard_partner.py                             150     40    73%   146, 189-192, 244, 289-320, 325-337, 341
+scripts/test_onboarding_demo.py                         66     53    20%   51-103, 108-120, 125-139, 143
+services/__init__.py                                     0      0   100%
+services/advanced_analytics.py                         232     96    59%   28, 97, 127, 166-167, 178, 199, 213-216, 279-292, 307-316, 320-354, 370-373, 387-396, 399-400, 406, 424, 433, 443, 459-493, 566, 576-601
+services/analytics_engine.py                           281     12    96%   203, 221-222, 235, 239, 251, 274, 349-350, 488, 552, 615
+services/analytics_service.py                           70      4    94%   70-71, 104-105
+services/bulk_operations.py                            242    215    11%   27-31, 35-38, 42-43, 64-91, 103-155, 159-162, 170-207, 215-256, 269-289, 297-328, 336-361, 369-395, 403-456, 468-472, 498-515, 547-562, 566, 578-583, 592-624, 638-684
+services/campaign_analytics.py                         167     28    83%   137, 148, 188, 217, 307, 341, 346, 363, 466-513
+services/competitive_benchmarking.py                   128    128     0%   7-334
+services/demo_mode.py                                  102    102     0%   7-305
+services/executive_dashboard.py                         86     86     0%   7-292
+services/ghl_client.py                                 115     96    17%   65-103, 114-149, 168-179, 198-238, 255-290, 311-351, 368-411
+services/lead_lifecycle.py                             238     46    81%   153, 197, 200, 206, 263, 285, 301, 315, 350, 389, 404, 429, 438-439, 444-445, 466, 478, 488, 571, 611-653
+services/lead_scorer.py                                 75     16    79%   103-121, 207-214, 216, 218, 220
+services/memory_service.py                              62     18    71%   64-65, 72-75, 91-93, 99-100, 104, 120-122, 126-129
+services/monitoring.py                                 196     25    87%   221, 326-327, 453-455, 459-462, 469-470, 482-503
+services/predictive_scoring.py                         133    133     0%   7-380
+services/quality_assurance.py                          115    115     0%   7-302
+services/reengagement_engine.py                        175    147    16%   66-67, 86-129, 152, 170-188, 208-261, 276-315, 320-337, 341-350, 365-419, 428-457, 461
+services/report_generator.py                           150    150     0%   7-454
+services/revenue_attribution.py                         69     69     0%   7-312
+services/smart_recommendations.py                      109    109     0%   7-439
+services/tenant_service.py                              46     23    50%   37-65, 90-98, 102-106
+services/transcript_analyzer.py                        300     30    90%   118, 134-136, 179-180, 216-218, 601, 785-814
+streamlit_demo/__init__.py                               0      0   100%
+streamlit_demo/admin.py                                156    156     0%   5-241
+streamlit_demo/analytics.py                            730    436    40%   18, 24-25, 31-32, 38-39, 80, 201, 309-321, 335-337, 458, 465, 564, 571, 659, 661, 679-951, 961-1230, 1240-1561
+streamlit_demo/app.py                                   73     73     0%   5-141
+streamlit_demo/components/__init__.py                    0      0   100%
+streamlit_demo/components/chat_interface.py             10     10     0%   4-22
+streamlit_demo/components/lead_dashboard.py             30     30     0%   4-69
+streamlit_demo/components/property_cards.py             25     25     0%   4-45
+streamlit_demo/demo_scenarios/__init__.py                0      0   100%
+streamlit_demo/mock_services/__init__.py                 0      0   100%
+streamlit_demo/mock_services/conversation_state.py      50     50     0%   4-98
+streamlit_demo/mock_services/mock_claude.py             45     45     0%   4-134
+streamlit_demo/mock_services/mock_rag.py                42     42     0%   4-82
+streamlit_demo/verify_setup.py                         126    126     0%   4-211
+tests/__init__.py                                        0      0   100%
+tests/conftest.py                                       12      0   100%
+tests/test_advanced_analytics.py                       165      5    97%   316-319, 364
+tests/test_analytics_dashboard.py                      203      1    99%   363
+tests/test_analytics_engine.py                         275      4    99%   127-138, 604, 881
+tests/test_campaign_analytics.py                       231      4    98%   422, 485, 569, 632
+tests/test_jorge_requirements.py                       122      1    99%   297
+tests/test_lead_lifecycle.py                           264      5    98%   394-397, 535
+tests/test_lead_scorer.py                               54      0   100%
+tests/test_memory_system.py                             55     41    25%   19-114, 117
+tests/test_monitoring.py                               172      1    99%   348
+tests/test_onboarding.py                               155      9    94%   165-171, 219-220, 245
+tests/test_phase1_fixes.py                              65      1    98%   128
+tests/test_phase2_analytics.py                          53      1    98%   15
+tests/test_rag_multitenancy.py                          39      1    97%   13
+tests/test_reengagement.py                             142    118    17%   33-59, 64-90, 95-121, 126-150, 155-189, 194-216, 221-260, 265-320, 325-350, 354-379
+tests/test_security_multitenant.py                     332     19    94%   64-66, 80-81, 181-184, 207-209, 398-408, 467, 899, 905-906, 965
+tests/test_transcript_analyzer.py                      272     10    96%   595-597, 630-642, 645
+----------------------------------------------------------------------------------
+TOTAL                                                 8501   3731    56%
+Coverage HTML written to dir htmlcov
+
+FAIL Required test coverage of 70% not reached. Total coverage: 56.11%
+=========================== short test summary info ============================
+FAILED tests/test_analytics_engine.py::TestMetricsCollector::test_keyword_extraction
+FAILED tests/test_analytics_engine.py::TestTopicDistributionAnalyzer::test_analyze_topics
+FAILED tests/test_monitoring.py::TestErrorTracker::test_error_summary - asser...
+FAILED tests/test_onboarding.py::TestInputValidation::test_validate_anthropic_api_key_success
+FAILED tests/test_onboarding.py::TestInteractiveOnboarding::test_successful_registration
+FAILED tests/test_onboarding.py::TestInteractiveOnboarding::test_registration_without_calendar_id
+FAILED tests/test_onboarding.py::TestInteractiveOnboarding::test_input_validation_retry_flow
+FAILED tests/test_onboarding.py::TestEdgeCases::test_validate_api_key_with_spaces
+FAILED tests/test_security_multitenant.py::TestTenantIsolation::test_tenant_memory_isolation
+FAILED tests/test_security_multitenant.py::TestTenantIsolation::test_rag_knowledge_base_isolation
+FAILED tests/test_security_multitenant.py::TestMultiTenantScalability::test_concurrent_tenant_access
+FAILED tests/test_security_multitenant.py::TestMultiTenantScalability::test_tenant_data_volume
+FAILED tests/test_security_multitenant.py::TestAccessControl::test_tenant_cannot_access_system_files
+FAILED tests/test_security_multitenant.py::TestComplianceAndPrivacy::test_data_export_capability
+FAILED tests/test_security_multitenant.py::TestBulkOperationsSecurity::test_template_injection_prevention
+FAILED tests/test_transcript_analyzer.py::TestIntegration::test_full_workflow_with_sample_data
+=========== 16 failed, 256 passed, 12 skipped, 31 warnings in 28.90s ===========

@@ -1,0 +1,10 @@
+{
+  "salesforce": {
+    "enabled": true,
+    "api_key": "sf_key_123"
+  },
+  "hubspot": {
+    "enabled": true,
+    "api_key": "hs_key_456"
+  }
+}

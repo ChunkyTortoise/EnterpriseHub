@@ -1,0 +1,17 @@
+{
+  "agent_001": {
+    "id": "agent_001",
+    "name": "John Agent",
+    "email": "john@example.com",
+    "role": "agent",
+    "specialties": [],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-04T23:56:07.124621"
+  }
+}

@@ -1,0 +1,368 @@
+"""
+GHL Real Estate AI - Unified Enterprise Module
+Consolidates Interactive Playground, Analytics, Executive Insights, and Admin Controls.
+"""
+import streamlit as st
+import sys
+import json
+import pandas as pd
+from pathlib import Path
+from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
+import plotly.express as px
+import plotly.graph_objects as go
+from collections import defaultdict
+
+# Lazy import utils.ui to avoid circular dependencies
+import utils.ui as ui
+
+# Add ghl_real_estate_ai to path if needed
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
+
+# --- IMPORT GHL SERVICES ---
+try:
+    from ghl_real_estate_ai.services.campaign_analytics import CampaignTracker
+    from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
+    from ghl_real_estate_ai.services.bulk_operations import BulkOperationsManager
+    from ghl_real_estate_ai.services.executive_dashboard import ExecutiveDashboardService
+    from ghl_real_estate_ai.services.predictive_scoring import PredictiveScoringService
+    from ghl_real_estate_ai.services.revenue_attribution import RevenueAttributionService
+    from ghl_real_estate_ai.services.competitive_benchmarking import CompetitiveBenchmarkingService
+    from ghl_real_estate_ai.services.quality_assurance import QualityAssuranceService
+    SERVICES_AVAILABLE = True
+except ImportError as e:
+    SERVICES_AVAILABLE = False
+    IMPORT_ERROR = str(e)
+
+# --- IMPORT DEMO COMPONENTS ---
+try:
+    from ghl_real_estate_ai.streamlit_demo.components.chat_interface import render_chat_interface
+    from ghl_real_estate_ai.streamlit_demo.components.lead_dashboard import render_lead_dashboard
+    from ghl_real_estate_ai.streamlit_demo.components.property_cards import render_property_matches
+    from ghl_real_estate_ai.streamlit_demo.mock_services.mock_claude import MockClaudeService
+    from ghl_real_estate_ai.streamlit_demo.mock_services.conversation_state import (
+        init_conversation_state,
+        add_message,
+        update_extracted_data,
+        calculate_lead_score
+    )
+    DEMO_COMPONENTS_AVAILABLE = True
+except ImportError:
+    DEMO_COMPONENTS_AVAILABLE = False
+
+def render():
+    """Main render function for the Real Estate AI module."""
+    if not SERVICES_AVAILABLE:
+        st.error(f"⚠️ GHL Services are not fully loaded. Some features may be disabled. Error: {IMPORT_ERROR}")
+    
+    # st.markdown("### 🏠 GHL Real Estate AI - Platform Console")
+    ui.section_header("GHL Real Estate AI", "Institutional-grade real estate orchestration engine.")
+    
+    # Unified Tabs
+    tabs = st.tabs([
+        "🎮 Playground", 
+        "📈 Dashboard", 
+        "📊 Executive", 
+        "🔮 Predictive",
+        "🔄 Lifecycle",
+        "🎯 Campaigns",
+        "⚡ Bulk Ops",
+        "⚙️ Admin"
+    ])
+    
+    with tabs[0]:
+        _render_playground()
+        
+    with tabs[1]:
+        _render_analytics_dashboard()
+        
+    with tabs[2]:
+        _render_executive_dashboard()
+        
+    with tabs[3]:
+        _render_predictive_scoring()
+        
+    with tabs[4]:
+        _render_lead_lifecycle()
+        
+    with tabs[5]:
+        _render_campaign_analytics()
+        
+    with tabs[6]:
+        _render_bulk_operations()
+        
+    with tabs[7]:
+        _render_admin()
+
+def _render_playground():
+    """Render the interactive chat demo."""
+    if not DEMO_COMPONENTS_AVAILABLE:
+        st.warning("Playground components not found.")
+        return
+
+    # Initialize services
+    if 'claude_service' not in st.session_state:
+        st.session_state.claude_service = MockClaudeService()
+
+    # Initialize conversation state
+    init_conversation_state()
+
+    # Layout
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        ui.section_header("AI Conversation Playground", "Experience real-time lead qualification.")
+        render_chat_interface()
+
+        user_input = st.chat_input("Type your message here...", key="playground_input")
+        if user_input:
+            add_message('user', user_input)
+            response, updated_data = st.session_state.claude_service.generate_response(
+                user_input,
+                st.session_state.messages,
+                st.session_state.extracted_data
+            )
+            add_message('assistant', response)
+            update_extracted_data(updated_data)
+            calculate_lead_score()
+            st.rerun()
+
+    with col2:
+        ui.section_header("Lead Intelligence", "Real-time extraction.")
+        render_lead_dashboard()
+        
+        with st.expander("🎯 Demo Scenarios"):
+            scenario = st.selectbox("Load Scenario:", ["Fresh", "Cold", "Warm", "Hot"])
+            if st.button("Apply Scenario"):
+                # Simplified scenario application
+                st.session_state.messages = []
+                st.session_state.extracted_data = {}
+                st.rerun()
+
+    st.divider()
+    ui.section_header("Property Matches", "RAG-powered recommendations.")
+    render_property_matches()
+
+def _render_analytics_dashboard():
+    """Render the core analytics dashboard."""
+    ui.section_header("Core Analytics Overview", "Multi-tenant performance monitoring.")
+    
+    # Load mock data
+    data = _load_mock_data()
+    tenants = data.get("tenants", [])
+    all_conversations = data.get("conversations", [])
+    
+    # Filters
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        tenant_options = ["All Tenants"] + [t["name"] for t in tenants]
+        selected_tenant = st.selectbox("Select Tenant", tenant_options, key="ana_tenant")
+    with col2:
+        date_range = st.selectbox("Date Range", ["Last 7 Days", "Last 30 Days", "Custom"], key="ana_date")
+    with col3:
+        lead_filter = st.multiselect("Classifications", ["hot", "warm", "cold"], default=["hot", "warm", "cold"], key="ana_lead")
+
+    # Metrics Row
+    m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+    with m_col1: ui.card_metric("Total Conversations", "1,284", "Active Sessions")
+    with m_col2: ui.card_metric("Avg Lead Score", "74.2", "Quality Score")
+    with m_col3: ui.card_metric("Hot Leads", "342", "High Intent")
+    with m_col4: ui.card_metric("Conversion Prob.", "24.5%", "Success Rate")
+
+    # Charts
+    st.divider()
+    c_col1, c_col2 = st.columns(2)
+    
+    if all_conversations:
+        df = pd.DataFrame(all_conversations)
+        df['start_time'] = pd.to_datetime(df['start_time'])
+        df['date'] = df['start_time'].dt.date
+        
+        with c_col1:
+            st.markdown("**Conversation Volume**")
+            volume_df = df.groupby('date').size().reset_index(name='count')
+            fig_vol = px.line(
+                volume_df, x='date', y='count',
+                labels={'date': 'Date', 'count': 'Conversations'},
+                color_discrete_sequence=['#10B981']
+            )
+            fig_vol.update_layout(ui.get_plotly_template())
+            st.plotly_chart(fig_vol, use_container_width=True)
+            
+        with c_col2:
+            st.markdown("**Lead Distribution**")
+            dist_df = df.groupby('classification').size().reset_index(name='count')
+            fig_dist = px.pie(
+                dist_df, names='classification', values='count',
+                color_discrete_sequence=['#10B981', '#3B82F6', '#94A3B8']
+            )
+            fig_dist.update_layout(ui.get_plotly_template())
+            st.plotly_chart(fig_dist, use_container_width=True)
+    else:
+        with c_col1: st.info("No conversation data available for timeline.")
+        with c_col2: st.info("No classification data available for distribution.")
+
+def _render_executive_dashboard():
+    """Render executive-level strategic insights."""
+    ui.section_header("Executive Strategic Insights", "Institutional-grade portfolio analysis.")
+    if not SERVICES_AVAILABLE: return
+
+    exec_service = ExecutiveDashboardService()
+    report = exec_service.get_executive_summary()
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        ui.card_metric("Attributed Revenue", f"${report['revenue_metrics']['total_attributed_revenue']:,.2f}", "Total Value")
+    with col2:
+        ui.card_metric("Portfolio Health", "94.2%", "Market Performance")
+    with col3:
+        ui.card_metric("AI Efficiency Gain", "32.4%", "Workflow Optimization")
+
+    st.divider()
+    st.markdown("#### 💡 Strategic Recommendations")
+    for rec in report['strategic_recommendations'][:3]:
+        ui.use_case_card(
+            icon="🎯" if rec['priority'] == 'high' else "💡",
+            title=rec['category'].upper(),
+            description=f"<strong>{rec['recommendation']}</strong><br><br>Expected Impact: {rec['expected_impact']}"
+        )
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+
+def _render_predictive_scoring():
+    """Render predictive lead scoring and model analysis."""
+    ui.section_header("Predictive Lead Intelligence", "Ensemble-based conversion forecasting.")
+    if not SERVICES_AVAILABLE: return
+    
+    predictive = PredictiveScoringService()
+    analysis = predictive.get_model_performance()
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("#### Model Performance Metrics")
+        ui.card_metric("AUC-ROC Score", f"{analysis['metrics']['auc_roc']:.3f}", "Model Accuracy")
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+        ui.card_metric("F1 Score", f"{analysis['metrics']['f1_score']:.3f}", "Prediction Reliability")
+    
+    with col2:
+        st.markdown("#### Key Predictive Features")
+        for feat, weight in list(analysis['feature_importance'].items())[:4]:
+            st.markdown(f"""
+                <div style='padding: 10px; border-radius: 8px; background-color: #f1f5f9; margin-bottom: 8px; border-left: 4px solid #10b981;'>
+                    <strong>{feat}</strong>: <code>{weight:.2f}</code>
+                </div>
+            """, unsafe_allow_html=True)
+
+def _render_lead_lifecycle():
+    """Render lead journey and funnel analytics."""
+    ui.section_header("Lead Lifecycle & Funnel", "Visualizing the path to conversion.")
+    
+    data = _load_mock_data()
+    all_conversations = data.get("conversations", [])
+    
+    if all_conversations:
+        df = pd.DataFrame(all_conversations)
+        
+        # Simulated Funnel Stages
+        total = len(df)
+        hot = len(df[df['classification'] == 'hot'])
+        warm = len(df[df['classification'] == 'warm'])
+        converted = int(hot * 0.4) # Simulated conversion from hot leads
+        
+        fig = go.Figure(go.Funnel(
+            y = ["Total Inquiries", "Warm Leads", "Hot Leads", "Converted"],
+            x = [total, warm + hot, hot, converted],
+            marker = {"color": ["#94A3B8", "#3B82F6", "#10B981", "#059669"]}
+        ))
+        fig.update_layout(ui.get_plotly_template())
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No lifecycle data available.")
+
+def _render_campaign_analytics():
+    """Render ROI and campaign performance analytics."""
+    ui.section_header("Campaign Performance & ROI", "Multi-channel marketing attribution.")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1: ui.card_metric("Campaign ROI", "342%", "+12% MoM")
+    with col2: ui.card_metric("Cost Per Lead", "$14.20", "-$2.10 MoM")
+    with col3: ui.card_metric("Total Spend", "$4,250", "Budget: $5k")
+    
+    st.divider()
+    
+    # Simulated Channel ROI
+    channels = ['Facebook Ads', 'Google Search', 'SMS Re-engage', 'Direct Mail']
+    roi_values = [280, 410, 520, 150]
+    
+    fig = px.bar(
+        x=channels, y=roi_values,
+        labels={'x': 'Channel', 'y': 'ROI %'},
+        color=roi_values,
+        color_continuous_scale='Emrld'
+    )
+    fig.update_layout(ui.get_plotly_template())
+    st.plotly_chart(fig, use_container_width=True)
+
+def _render_bulk_operations():
+    """Render mass lead management and batch processing."""
+    ui.section_header("Bulk Operations & Batching", "Enterprise-scale data management.")
+    
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.markdown("#### ⚡ Quick Actions")
+        st.button("🚀 Batch Score All Leads", use_container_width=True)
+        st.button("✉️ Send Bulk Re-engagement", use_container_width=True)
+        st.button("🏷️ Tag 'Cold' for Archival", use_container_width=True)
+        st.divider()
+        st.file_uploader("Upload CSV for Bulk Import", type=['csv'])
+        
+    with col2:
+        st.markdown("#### 📈 Recent Bulk Jobs")
+        jobs = pd.DataFrame([
+            {"Job": "Batch Scoring", "Date": "2026-01-04", "Status": "Complete", "Target": "1,240 Leads"},
+            {"Job": "SMS Campaign", "Date": "2026-01-03", "Status": "In Progress", "Target": "450 Contacts"},
+            {"Job": "Data Export", "Date": "2026-01-02", "Status": "Complete", "Target": "Archive_Q4"}
+        ])
+        st.table(jobs)
+
+def _render_admin():
+    """Render system administration and multitenant management."""
+    ui.section_header("System Administration", "Platform-wide configuration.")
+    
+    data = _load_mock_data()
+    health = data.get("system_health", {})
+    
+    if health:
+        col1, col2, col3, col4 = st.columns(4)
+        with col1: ui.card_metric("System Uptime", f"{health['uptime_percentage']}%", "Stable")
+        with col2: ui.card_metric("API Calls (24h)", f"{health['total_api_calls_24h']:,}", "Normal")
+        with col3: ui.card_metric("Error Rate", f"{health['error_rate_percentage']}%", "Healthy")
+        with col4: ui.card_metric("Token Usage", f"{health['anthropic_tokens_used_24h']:,}", "Claude 3.5")
+        
+        st.divider()
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("#### 🖥️ Server Resources")
+            ui.card_metric("CPU Usage", f"{health['cpu_usage_percentage']}%", "Target < 70%")
+            ui.card_metric("Memory", f"{health['memory_usage_mb']} MB", "Limit: 1GB")
+        with c2:
+            st.markdown("#### 📡 Integration Status")
+            ui.card_metric("Active Webhooks", str(health['active_webhooks']), "GHL Connected")
+            ui.card_metric("SMS Sent (24h)", str(health['sms_sent_24h']), "98% Compliant")
+    else:
+        st.warning("System health data unavailable.")
+
+
+@st.cache_data(ttl=60)
+def _load_mock_data() -> Dict[str, Any]:
+    """Load mock analytics data."""
+    mock_file = project_root / "ghl_real_estate_ai" / "data" / "mock_analytics.json"
+    if mock_file.exists():
+        with open(mock_file, "r") as f:
+            return json.load(f)
+    return {"tenants": [], "conversations": []}
+
+if __name__ == "__main__":
+    render()
