@@ -38,21 +38,21 @@ MODULES = {
     "💰 Margin Hunter": {
         "name": "margin_hunter",
         "title": "Margin Hunter",
-        "icon": "assets/icons/margin_hunter.png",
+        "icon": "assets/icons/margin_hunter.svg",
         "desc": "Advanced institutional-grade unit economics engine. Delivers high-fidelity sensitivity analysis, real-time break-even modeling, and multi-scenario margin optimization.",
         "status": "active"
     },
     "📊 Market Pulse": {
         "name": "market_pulse",
         "title": "Market Pulse",
-        "icon": "assets/icons/market_pulse.png",
+        "icon": "assets/icons/market_pulse.svg",
         "desc": "Institutional-grade technical analysis suite. High-performance charting engine featuring RSI, MACD, and volume profile analysis for professional asset evaluation.",
         "status": "active"
     },
     "🔍 Data Detective": {
         "name": "data_detective",
         "title": "Data Detective",
-        "icon": "assets/icons/data_detective.png",
+        "icon": "assets/icons/data_detective.svg",
         "desc": "Heuristic data profiling engine. Automates exploratory data analysis (EDA) with advanced correlation mapping, statistical quality scoring, and automated insight generation.",
         "status": "new"
     },
@@ -66,7 +66,7 @@ MODULES = {
     "✍️ Content Engine": {
         "name": "content_engine",
         "title": "Content Engine",
-        "icon": "assets/icons/content_engine.png",
+        "icon": "assets/icons/content_engine.svg",
         "desc": "Strategic content synthesis platform leveraging Anthropic's Claude 3.5 Sonnet to generate high-authority LinkedIn thought leadership and technical documentation.",
         "status": "active"
     },
@@ -87,9 +87,37 @@ MODULES = {
     "🏗️ DevOps Control": {
         "name": "devops_control",
         "title": "DevOps Control",
-        "icon": "assets/icons/devops.svg",
+        "icon": "assets/icons/devops_control.svg",
         "desc": "Full-spectrum CI/CD orchestration console. Real-time monitoring of build pipelines, test coverage analytics, and autonomous deployment status tracking.",
         "status": "active"
+    },
+    "🏠 Real Estate AI": {
+        "name": "real_estate_ai",
+        "title": "GHL Real Estate AI",
+        "icon": "assets/icons/real_estate.svg",
+        "desc": "Institutional-grade real estate orchestration engine. Features automated lead qualification, predictive scoring models, and multi-tenant GHL integration.",
+        "status": "new"
+    },
+    "🧮 ROI Calculators": {
+        "name": "roi_calculators",
+        "title": "ROI & Growth Calculators",
+        "icon": "assets/icons/calculator.svg",
+        "desc": "High-fidelity financial modeling for multiple verticals. Quantify the impact of AI-driven optimization on revenue, retention, and conversion metrics.",
+        "status": "new"
+    },
+    "🎯 Strategy Planner": {
+        "name": "service_selector",
+        "title": "AI Strategy Planner",
+        "icon": "assets/icons/strategy.svg",
+        "desc": "Interactive diagnostic tool to architect your optimal AI service stack. Tailored roadmaps based on industry, volume, and operational challenges.",
+        "status": "new"
+    },
+    "🏢 Vertical Solutions": {
+        "name": "landing_pages",
+        "title": "Vertical Industry Solutions",
+        "icon": "assets/icons/verticals.svg",
+        "desc": "Deeply integrated AI architectures tailored for SaaS, E-commerce, Healthcare, and Real Estate. Industry-specific value propositions and stacks.",
+        "status": "new"
     },
     "🤖 Agent Logic": {
         "name": "agent_logic",
@@ -101,10 +129,11 @@ MODULES = {
     "💼 Financial Analyst": {
         "name": "financial_analyst",
         "title": "Financial Analyst",
-        "icon": "assets/icons/financial_analyst.png",
+        "icon": "assets/icons/financial_analyst.svg",
         "desc": "Comprehensive fundamental analysis framework. Delivers deep-dive financial statement audits, ratio analysis, and intrinsic valuation modeling.",
         "status": "active"
     },
+
     "🎨 Design System": {
         "name": "design_system",
         "title": "Design System Gallery",
@@ -248,10 +277,38 @@ def _render_overview(ui):
     col1, col2, col3, col4 = st.columns(4)
     with col1: ui.card_metric("Flagship Module", "ARETE", "Self-Maintaining AI")
     with col2: ui.card_metric("Active Modules", f"{len(MODULES)}", "LangGraph + Claude")
-    with col3: ui.card_metric("Test Coverage", "220+", "Production-Ready")
+    with col3: ui.card_metric("Test Coverage", "247+", "Production-Ready")
     with col4: ui.card_metric("Architecture", "Stateful Agents", "Autonomous")
 
     ui.spacer(40)
+    
+    # Founding Client Program Banner
+    st.markdown(
+        """
+        <div style='
+            background: linear-gradient(90deg, #020617 0%, #1e293b 100%);
+            padding: 32px;
+            border-radius: 16px;
+            border-left: 8px solid #10B981;
+            margin-bottom: 40px;
+            color: white;
+        '>
+            <h2 style='margin: 0; color: #10B981; font-family: "Space Grotesk", sans-serif;'>🚀 Founding Client Program</h2>
+            <p style='font-size: 1.1rem; margin: 16px 0; opacity: 0.9;'>
+                I am accepting <strong>3 new partners</strong> for the Q1 2026 cohort. 
+                Get institutional-grade AI infrastructure at a <strong>30% founding discount</strong> in exchange for a documented case study.
+            </p>
+            <div style='display: flex; gap: 20px; align-items: center;'>
+                <div style='background: rgba(16, 185, 129, 0.1); padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);'>
+                    <span style='color: #10B981; font-weight: 700;'>2 OF 3 SLOTS REMAINING</span>
+                </div>
+                <a href='mailto:caymanroden@gmail.com' style='color: white; text-decoration: none; font-weight: 600; border-bottom: 2px solid #10B981;'>Apply for Founding Partnership →</a>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.markdown("### 🛠️ Module Suite")
 
     # Dynamic Feature Grid (Rows of 3)
@@ -304,6 +361,18 @@ def _render_overview(ui):
             """,
         )
 
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+
+        ui.use_case_card(
+            icon="📈",
+            title="For Marketing Teams",
+            description="""
+                **Marketing Analytics** replaces agency dashboards costing
+                $200-500/month. 5 attribution models, A/B test calculators,
+                and campaign ROI tracking. One-time build you own forever.
+            """,
+        )
+
     with col2:
         ui.use_case_card(
             icon="🔍",
@@ -319,12 +388,26 @@ def _render_overview(ui):
         st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
 
         ui.use_case_card(
-            icon="📈",
-            title="For Marketing Teams",
+            icon="🏠",
+            title="For Real Estate Teams",
             description="""
-                **Marketing Analytics** replaces agency dashboards costing
-                $200-500/month. 5 attribution models, A/B test calculators,
-                and campaign ROI tracking. One-time build you own forever.
+                **GHL Real Estate AI** replaces manual lead qualification
+                drudgery. 24/7 autonomous engagement, predictive scoring,
+                and automated re-engagement that recovers 20% more leads
+                without human intervention.
+            """,
+        )
+
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+
+        ui.use_case_card(
+            icon="🏗️",
+            title="For Engineering Teams",
+            description="""
+                **ARETE-Architect** elevates developers to architects.
+                Autonomous code maintenance, self-healing CI/CD pipelines,
+                and real-time DevOps orchestration that reduces maintenance
+                overhead by 80%.
             """,
         )
 

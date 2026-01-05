@@ -1,0 +1,8 @@
+{
+  "salesforce": {
+    "enabled": true
+  },
+  "hubspot": {
+    "enabled": true
+  }
+}

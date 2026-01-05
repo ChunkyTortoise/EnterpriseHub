@@ -1,0 +1,30 @@
+# GHL Real Estate AI - Production Dependencies
+# Minimal requirements for Render.com deployment
+
+# FastAPI + ASGI Server
+fastapi>=0.109.0,<0.112.0
+uvicorn[standard]>=0.27.0,<0.31.0
+pydantic>=2.5.0,<3.0.0
+pydantic-settings>=2.1.0,<3.0.0
+
+# Anthropic Claude SDK
+anthropic>=0.18.0,<0.35.0
+
+# Vector Database & Embeddings
+chromadb>=0.4.22,<0.6.0
+sentence-transformers>=2.3.0,<3.0.0
+
+# HTTP Client (for GHL API calls)
+httpx>=0.26.0,<0.28.0
+requests>=2.31.0,<3.0.0
+
+# Utilities
+python-dotenv>=1.0.0,<2.0.0
+python-multipart>=0.0.6,<0.1.0
+
+# Numpy (required by sentence-transformers)
+numpy>=1.24.0,<2.0.0
+
+# Security Dependencies (added by Agent 5)
+python-jose[cryptography]>=3.3.0,<4.0.0
+passlib[bcrypt]>=1.7.4,<2.0.0

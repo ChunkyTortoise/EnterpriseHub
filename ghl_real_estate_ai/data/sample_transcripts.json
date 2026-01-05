@@ -1,0 +1,780 @@
+{
+  "schema_version": "1.0",
+  "description": "Sample successful closing conversations for transcript analysis framework",
+  "transcripts": [
+    {
+      "id": "transcript_001",
+      "date": "2025-12-15T14:23:00Z",
+      "lead_type": "buyer",
+      "outcome": "closed",
+      "close_reason": "scheduled_showing",
+      "questions_answered": 5,
+      "conversation_duration_minutes": 8,
+      "messages": [
+        {
+          "timestamp": "2025-12-15T14:23:00Z",
+          "speaker": "bot",
+          "message": "Hey Sarah! What's up?",
+          "metadata": {"stage": "initial_contact"}
+        },
+        {
+          "timestamp": "2025-12-15T14:23:45Z",
+          "speaker": "user",
+          "message": "Hi! I'm looking to buy a house in Austin",
+          "metadata": {"intent": "buying"}
+        },
+        {
+          "timestamp": "2025-12-15T14:24:10Z",
+          "speaker": "bot",
+          "message": "Nice! What's your budget?",
+          "metadata": {"stage": "qualifying", "question_type": "budget"}
+        },
+        {
+          "timestamp": "2025-12-15T14:24:55Z",
+          "speaker": "user",
+          "message": "$400k max",
+          "metadata": {"extracted_data": {"budget": "400000"}
+        },
+        {
+          "timestamp": "2025-12-15T14:25:20Z",
+          "speaker": "bot",
+          "message": "Perfect. What area are you interested in?",
+          "metadata": {"stage": "qualifying", "question_type": "location"}
+        },
+        {
+          "timestamp": "2025-12-15T14:26:00Z",
+          "speaker": "user",
+          "message": "Round Rock or Pflugerville, good schools for my kids",
+          "metadata": {"extracted_data": {"location": "Round Rock, Pflugerville", "must_haves": "good schools"}
+        },
+        {
+          "timestamp": "2025-12-15T14:26:30Z",
+          "speaker": "bot",
+          "message": "When do you need to move?",
+          "metadata": {"stage": "qualifying", "question_type": "timeline"}
+        },
+        {
+          "timestamp": "2025-12-15T14:27:15Z",
+          "speaker": "user",
+          "message": "End of June, lease ends then",
+          "metadata": {"extracted_data": {"timeline": "End of June", "urgency": "high"}
+        },
+        {
+          "timestamp": "2025-12-15T14:27:45Z",
+          "speaker": "bot",
+          "message": "Got it. How many beds/baths?",
+          "metadata": {"stage": "qualifying", "question_type": "property_requirements"}
+        },
+        {
+          "timestamp": "2025-12-15T14:28:20Z",
+          "speaker": "user",
+          "message": "3 bed 2 bath minimum",
+          "metadata": {"extracted_data": {"bedrooms": "3", "bathrooms": "2"}
+        },
+        {
+          "timestamp": "2025-12-15T14:28:50Z",
+          "speaker": "bot",
+          "message": "Are you pre-approved or still working on that?",
+          "metadata": {"stage": "qualifying", "question_type": "financing"}
+        },
+        {
+          "timestamp": "2025-12-15T14:29:30Z",
+          "speaker": "user",
+          "message": "Just got pre-approved last week for $425k",
+          "metadata": {"extracted_data": {"financing": "pre-approved", "pre_approval_amount": "425000"}
+        },
+        {
+          "timestamp": "2025-12-15T14:30:00Z",
+          "speaker": "bot",
+          "message": "Want me to get someone on the phone with you?",
+          "metadata": {"stage": "closing", "action": "offer_appointment"}
+        },
+        {
+          "timestamp": "2025-12-15T14:30:45Z",
+          "speaker": "user",
+          "message": "Yeah that'd be great!",
+          "metadata": {"intent": "accepted_appointment"}
+        }
+      ],
+      "insights": {
+        "successful_patterns": [
+          "Direct budget question early",
+          "Location tied to lifestyle needs (schools)",
+          "Timeline with specific deadline",
+          "Financing status confirmed qualification",
+          "Quick close after 5 questions answered"
+        ],
+        "key_moments": [
+          "User mentioned 'good schools' - lifestyle driver identified",
+          "Pre-approval confirmed - high qualification",
+          "Positive response to direct appointment offer"
+        ]
+      }
+    },
+    {
+      "id": "transcript_002",
+      "date": "2025-12-16T10:15:00Z",
+      "lead_type": "seller",
+      "outcome": "closed",
+      "close_reason": "scheduled_valuation",
+      "questions_answered": 4,
+      "conversation_duration_minutes": 6,
+      "messages": [
+        {
+          "timestamp": "2025-12-16T10:15:00Z",
+          "speaker": "bot",
+          "message": "Hey Marcus! What's up?",
+          "metadata": {"stage": "initial_contact"}
+        },
+        {
+          "timestamp": "2025-12-16T10:15:30Z",
+          "speaker": "user",
+          "message": "Thinking about selling my house",
+          "metadata": {"intent": "selling"}
+        },
+        {
+          "timestamp": "2025-12-16T10:16:00Z",
+          "speaker": "bot",
+          "message": "Where's the property?",
+          "metadata": {"stage": "qualifying", "question_type": "location"}
+        },
+        {
+          "timestamp": "2025-12-16T10:16:45Z",
+          "speaker": "user",
+          "message": "Hyde Park, 3 bed 2 bath",
+          "metadata": {"extracted_data": {"location": "Hyde Park", "bedrooms": "3", "bathrooms": "2"}
+        },
+        {
+          "timestamp": "2025-12-16T10:17:15Z",
+          "speaker": "bot",
+          "message": "What's prompting the move?",
+          "metadata": {"stage": "qualifying", "question_type": "motivation"}
+        },
+        {
+          "timestamp": "2025-12-16T10:18:00Z",
+          "speaker": "user",
+          "message": "Got a job offer in Dallas, need to sell fast",
+          "metadata": {"extracted_data": {"motivation": "relocation", "urgency": "high", "timeline": "ASAP"}
+        },
+        {
+          "timestamp": "2025-12-16T10:18:30Z",
+          "speaker": "bot",
+          "message": "Is it move-in ready or needs work?",
+          "metadata": {"stage": "qualifying", "question_type": "home_condition"}
+        },
+        {
+          "timestamp": "2025-12-16T10:19:10Z",
+          "speaker": "user",
+          "message": "Move-in ready, just updated kitchen and baths",
+          "metadata": {"extracted_data": {"home_condition": "move-in ready", "recent_updates": "kitchen, bathrooms"}
+        },
+        {
+          "timestamp": "2025-12-16T10:19:40Z",
+          "speaker": "bot",
+          "message": "Should I schedule a valuation?",
+          "metadata": {"stage": "closing", "action": "offer_valuation"}
+        },
+        {
+          "timestamp": "2025-12-16T10:20:15Z",
+          "speaker": "user",
+          "message": "Yes please, sooner the better",
+          "metadata": {"intent": "accepted_valuation", "urgency_confirmed": true}
+        }
+      ],
+      "insights": {
+        "successful_patterns": [
+          "Immediate location qualification",
+          "Motivation question revealed urgency (relocation)",
+          "Home condition confirmed listing path vs wholesale",
+          "Direct valuation offer after 4 questions",
+          "User urgency language: 'need to sell fast', 'sooner the better'"
+        ],
+        "key_moments": [
+          "Job relocation = strong motivation",
+          "Move-in ready + recent updates = listing candidate",
+          "Positive response to immediate action"
+        ]
+      }
+    },
+    {
+      "id": "transcript_003",
+      "date": "2025-12-17T16:45:00Z",
+      "lead_type": "buyer",
+      "outcome": "closed",
+      "close_reason": "sent_listings",
+      "questions_answered": 6,
+      "conversation_duration_minutes": 12,
+      "messages": [
+        {
+          "timestamp": "2025-12-17T16:45:00Z",
+          "speaker": "bot",
+          "message": "Hey! What's up?",
+          "metadata": {"stage": "initial_contact"}
+        },
+        {
+          "timestamp": "2025-12-17T16:46:00Z",
+          "speaker": "user",
+          "message": "Looking for a house, first time buyer",
+          "metadata": {"intent": "buying", "buyer_type": "first_time"}
+        },
+        {
+          "timestamp": "2025-12-17T16:46:30Z",
+          "speaker": "bot",
+          "message": "Nice! What's your budget?",
+          "metadata": {"stage": "qualifying", "question_type": "budget"}
+        },
+        {
+          "timestamp": "2025-12-17T16:47:20Z",
+          "speaker": "user",
+          "message": "Not sure, maybe $300k?",
+          "metadata": {"extracted_data": {"budget": "300000", "confidence": "low"}
+        },
+        {
+          "timestamp": "2025-12-17T16:47:50Z",
+          "speaker": "bot",
+          "message": "Have you talked to a lender yet?",
+          "metadata": {"stage": "qualifying", "question_type": "financing"}
+        },
+        {
+          "timestamp": "2025-12-17T16:48:30Z",
+          "speaker": "user",
+          "message": "No not yet, do I need to?",
+          "metadata": {"extracted_data": {"financing": "not pre-approved", "needs_education": true}
+        },
+        {
+          "timestamp": "2025-12-17T16:49:00Z",
+          "speaker": "bot",
+          "message": "Yeah, helps to know what you can actually afford. Want a referral?",
+          "metadata": {"stage": "educating", "offering_resource": "lender_referral"}
+        },
+        {
+          "timestamp": "2025-12-17T16:49:45Z",
+          "speaker": "user",
+          "message": "Sure that would help",
+          "metadata": {"intent": "accepted_referral"}
+        },
+        {
+          "timestamp": "2025-12-17T16:50:15Z",
+          "speaker": "bot",
+          "message": "What area are you interested in?",
+          "metadata": {"stage": "qualifying", "question_type": "location"}
+        },
+        {
+          "timestamp": "2025-12-17T16:51:00Z",
+          "speaker": "user",
+          "message": "Somewhere affordable with good commute to downtown",
+          "metadata": {"extracted_data": {"location_criteria": "affordable, downtown commute"}
+        },
+        {
+          "timestamp": "2025-12-17T16:51:30Z",
+          "speaker": "bot",
+          "message": "Round Rock or Pflugerville work? More house for the money",
+          "metadata": {"stage": "educating", "offering_alternatives": true}
+        },
+        {
+          "timestamp": "2025-12-17T16:52:10Z",
+          "speaker": "user",
+          "message": "Yeah open to that",
+          "metadata": {"extracted_data": {"location": "Round Rock, Pflugerville", "flexibility": "high"}
+        },
+        {
+          "timestamp": "2025-12-17T16:52:40Z",
+          "speaker": "bot",
+          "message": "When do you need to move?",
+          "metadata": {"stage": "qualifying", "question_type": "timeline"}
+        },
+        {
+          "timestamp": "2025-12-17T16:53:20Z",
+          "speaker": "user",
+          "message": "Within 3 months ideally",
+          "metadata": {"extracted_data": {"timeline": "3 months", "urgency": "medium"}
+        },
+        {
+          "timestamp": "2025-12-17T16:53:50Z",
+          "speaker": "bot",
+          "message": "Any must-haves? Pool, garage, office space?",
+          "metadata": {"stage": "qualifying", "question_type": "must_haves"}
+        },
+        {
+          "timestamp": "2025-12-17T16:54:40Z",
+          "speaker": "user",
+          "message": "Work from home so need an office. 2 car garage would be nice",
+          "metadata": {"extracted_data": {"must_haves": "home office, 2 car garage", "lifestyle": "work from home"}
+        },
+        {
+          "timestamp": "2025-12-17T16:55:10Z",
+          "speaker": "bot",
+          "message": "Want me to send you some listings that fit?",
+          "metadata": {"stage": "closing", "action": "offer_listings"}
+        },
+        {
+          "timestamp": "2025-12-17T16:55:50Z",
+          "speaker": "user",
+          "message": "Yes please!",
+          "metadata": {"intent": "accepted_listings"}
+        }
+      ],
+      "insights": {
+        "successful_patterns": [
+          "Identified first-time buyer early",
+          "Offered lender referral when no pre-approval",
+          "Educated on location alternatives (affordability)",
+          "Discovered lifestyle needs (work from home)",
+          "Patient approach - gathered 6 data points before close",
+          "Offered low-commitment next step (listings vs appointment)"
+        ],
+        "key_moments": [
+          "Financing gap identified - offered education resource",
+          "Work from home = specific property requirement",
+          "Flexibility on location = good candidate for education"
+        ]
+      }
+    },
+    {
+      "id": "transcript_004",
+      "date": "2025-12-18T11:30:00Z",
+      "lead_type": "seller",
+      "outcome": "closed",
+      "close_reason": "wholesale_offer",
+      "questions_answered": 5,
+      "conversation_duration_minutes": 7,
+      "messages": [
+        {
+          "timestamp": "2025-12-18T11:30:00Z",
+          "speaker": "bot",
+          "message": "Hey Jennifer! What's up?",
+          "metadata": {"stage": "initial_contact"}
+        },
+        {
+          "timestamp": "2025-12-18T11:30:45Z",
+          "speaker": "user",
+          "message": "Need to sell my house ASAP",
+          "metadata": {"intent": "selling", "urgency": "high"}
+        },
+        {
+          "timestamp": "2025-12-18T11:31:15Z",
+          "speaker": "bot",
+          "message": "Where's the property?",
+          "metadata": {"stage": "qualifying", "question_type": "location"}
+        },
+        {
+          "timestamp": "2025-12-18T11:32:00Z",
+          "speaker": "user",
+          "message": "East Austin, 78721",
+          "metadata": {"extracted_data": {"location": "East Austin", "zip": "78721"}
+        },
+        {
+          "timestamp": "2025-12-18T11:32:30Z",
+          "speaker": "bot",
+          "message": "What's prompting the quick sale?",
+          "metadata": {"stage": "qualifying", "question_type": "motivation"}
+        },
+        {
+          "timestamp": "2025-12-18T11:33:15Z",
+          "speaker": "user",
+          "message": "Inherited it from my mom, don't want to deal with repairs or listing",
+          "metadata": {"extracted_data": {"motivation": "inherited", "pathway_indicator": "wholesale"}
+        },
+        {
+          "timestamp": "2025-12-18T11:33:45Z",
+          "speaker": "bot",
+          "message": "What's the condition? Move-in ready or needs work?",
+          "metadata": {"stage": "qualifying", "question_type": "home_condition"}
+        },
+        {
+          "timestamp": "2025-12-18T11:34:30Z",
+          "speaker": "user",
+          "message": "Needs a lot of work. Roof, foundation, cosmetic stuff",
+          "metadata": {"extracted_data": {"home_condition": "fixer-upper", "pathway": "wholesale"}
+        },
+        {
+          "timestamp": "2025-12-18T11:35:00Z",
+          "speaker": "bot",
+          "message": "Interested in a fast cash offer? Sell as-is, no repairs needed",
+          "metadata": {"stage": "closing", "action": "offer_wholesale", "pathway_confirmed": "wholesale"}
+        },
+        {
+          "timestamp": "2025-12-18T11:35:45Z",
+          "speaker": "user",
+          "message": "Yes exactly what I need",
+          "metadata": {"intent": "accepted_wholesale"}
+        },
+        {
+          "timestamp": "2025-12-18T11:36:15Z",
+          "speaker": "bot",
+          "message": "I'll connect you with our buyer. They can make an offer within 24 hours",
+          "metadata": {"stage": "closing", "action": "connect_buyer"}
+        },
+        {
+          "timestamp": "2025-12-18T11:36:50Z",
+          "speaker": "user",
+          "message": "Perfect thanks",
+          "metadata": {"outcome": "closed", "satisfaction": "high"}
+        }
+      ],
+      "insights": {
+        "successful_patterns": [
+          "ASAP urgency detected immediately",
+          "Motivation question revealed pathway (inherited + no repairs)",
+          "Condition question confirmed wholesale path",
+          "Direct wholesale offer matched user needs",
+          "Fast close after pathway identified"
+        ],
+        "key_moments": [
+          "Inherited property = likely wholesale candidate",
+          "User: 'don't want to deal with repairs' = clear pathway signal",
+          "Positive immediate response to cash offer",
+          "Emphasis on speed matched user urgency"
+        ],
+        "pathway_signals": [
+          "as-is",
+          "fast",
+          "no repairs",
+          "fixer-upper",
+          "inherited"
+        ]
+      }
+    },
+    {
+      "id": "transcript_005",
+      "date": "2025-12-19T13:20:00Z",
+      "lead_type": "buyer",
+      "outcome": "closed",
+      "close_reason": "agent_call_scheduled",
+      "questions_answered": 7,
+      "conversation_duration_minutes": 10,
+      "messages": [
+        {
+          "timestamp": "2025-12-19T13:20:00Z",
+          "speaker": "bot",
+          "message": "Hey David! What's up?",
+          "metadata": {"stage": "initial_contact"}
+        },
+        {
+          "timestamp": "2025-12-19T13:20:30Z",
+          "speaker": "user",
+          "message": "Looking to buy investment property",
+          "metadata": {"intent": "buying", "buyer_type": "investor"}
+        },
+        {
+          "timestamp": "2025-12-19T13:21:00Z",
+          "speaker": "bot",
+          "message": "Nice! What's your budget?",
+          "metadata": {"stage": "qualifying", "question_type": "budget"}
+        },
+        {
+          "timestamp": "2025-12-19T13:21:45Z",
+          "speaker": "user",
+          "message": "$250k-300k range",
+          "metadata": {"extracted_data": {"budget_min": "250000", "budget_max": "300000"}
+        },
+        {
+          "timestamp": "2025-12-19T13:22:15Z",
+          "speaker": "bot",
+          "message": "What area?",
+          "metadata": {"stage": "qualifying", "question_type": "location"}
+        },
+        {
+          "timestamp": "2025-12-19T13:23:00Z",
+          "speaker": "user",
+          "message": "Looking at Manor or Del Valle, good rental demand there",
+          "metadata": {"extracted_data": {"location": "Manor, Del Valle", "investment_strategy": "rental"}
+        },
+        {
+          "timestamp": "2025-12-19T13:23:30Z",
+          "speaker": "bot",
+          "message": "When are you looking to close?",
+          "metadata": {"stage": "qualifying", "question_type": "timeline"}
+        },
+        {
+          "timestamp": "2025-12-19T13:24:15Z",
+          "speaker": "user",
+          "message": "Next 60 days if I find the right deal",
+          "metadata": {"extracted_data": {"timeline": "60 days", "urgency": "high", "price_sensitive": true}
+        },
+        {
+          "timestamp": "2025-12-19T13:24:45Z",
+          "speaker": "bot",
+          "message": "What are you looking for? Single family, duplex?",
+          "metadata": {"stage": "qualifying", "question_type": "property_type"}
+        },
+        {
+          "timestamp": "2025-12-19T13:25:30Z",
+          "speaker": "user",
+          "message": "3/2 single family, targeting $1800/month rent",
+          "metadata": {"extracted_data": {"bedrooms": "3", "bathrooms": "2", "target_rent": "1800"}
+        },
+        {
+          "timestamp": "2025-12-19T13:26:00Z",
+          "speaker": "bot",
+          "message": "Paying cash or financing?",
+          "metadata": {"stage": "qualifying", "question_type": "financing"}
+        },
+        {
+          "timestamp": "2025-12-19T13:26:45Z",
+          "speaker": "user",
+          "message": "Cash buyer",
+          "metadata": {"extracted_data": {"financing": "cash", "qualification": "high"}
+        },
+        {
+          "timestamp": "2025-12-19T13:27:15Z",
+          "speaker": "bot",
+          "message": "What's driving the purchase now?",
+          "metadata": {"stage": "qualifying", "question_type": "motivation"}
+        },
+        {
+          "timestamp": "2025-12-19T13:28:00Z",
+          "speaker": "user",
+          "message": "1031 exchange deadline",
+          "metadata": {"extracted_data": {"motivation": "1031 exchange", "urgency_reason": "tax deadline"}
+        },
+        {
+          "timestamp": "2025-12-19T13:28:30Z",
+          "speaker": "bot",
+          "message": "Want me to connect you with an agent who specializes in investment properties?",
+          "metadata": {"stage": "closing", "action": "offer_specialist"}
+        },
+        {
+          "timestamp": "2025-12-19T13:29:10Z",
+          "speaker": "user",
+          "message": "Yes, need someone who understands 1031 timelines",
+          "metadata": {"intent": "accepted_specialist", "requirements": "1031 experience"}
+        }
+      ],
+      "insights": {
+        "successful_patterns": [
+          "Identified investor immediately (different qualification needs)",
+          "Asked about investment strategy (rental demand)",
+          "Timeline question revealed urgency (1031 deadline)",
+          "Property type with rent target = sophisticated buyer",
+          "Cash buyer = high qualification",
+          "Matched specialist to buyer needs (1031 expertise)",
+          "All 7 qualifying questions answered"
+        ],
+        "key_moments": [
+          "1031 exchange = hard deadline = high urgency",
+          "Cash buyer = can close fast",
+          "Specific rent target shows market knowledge",
+          "Asked for specialist with specific expertise"
+        ],
+        "buyer_sophistication": "high",
+        "special_requirements": ["1031_exchange", "investment_analysis"]
+      }
+    },
+    {
+      "id": "transcript_006",
+      "date": "2025-12-20T09:45:00Z",
+      "lead_type": "seller",
+      "outcome": "closed",
+      "close_reason": "listing_consultation_scheduled",
+      "questions_answered": 6,
+      "conversation_duration_minutes": 11,
+      "messages": [
+        {
+          "timestamp": "2025-12-20T09:45:00Z",
+          "speaker": "bot",
+          "message": "Hey Lisa! What's up?",
+          "metadata": {"stage": "initial_contact"}
+        },
+        {
+          "timestamp": "2025-12-20T09:45:40Z",
+          "speaker": "user",
+          "message": "Want to know what my house is worth",
+          "metadata": {"intent": "valuation", "selling_intent": "exploratory"}
+        },
+        {
+          "timestamp": "2025-12-20T09:46:10Z",
+          "speaker": "bot",
+          "message": "I can help with that. Where's the property?",
+          "metadata": {"stage": "qualifying", "question_type": "location"}
+        },
+        {
+          "timestamp": "2025-12-20T09:46:55Z",
+          "speaker": "user",
+          "message": "Tarrytown, near the lake",
+          "metadata": {"extracted_data": {"location": "Tarrytown", "neighborhood_features": "near lake"}
+        },
+        {
+          "timestamp": "2025-12-20T09:47:25Z",
+          "speaker": "bot",
+          "message": "Nice area! What's the home like? Beds/baths/sq ft?",
+          "metadata": {"stage": "qualifying", "question_type": "property_details"}
+        },
+        {
+          "timestamp": "2025-12-20T09:48:10Z",
+          "speaker": "user",
+          "message": "4 bed 3 bath, about 2400 sq ft",
+          "metadata": {"extracted_data": {"bedrooms": "4", "bathrooms": "3", "sqft": "2400"}
+        },
+        {
+          "timestamp": "2025-12-20T09:48:40Z",
+          "speaker": "bot",
+          "message": "What's the overall condition?",
+          "metadata": {"stage": "qualifying", "question_type": "home_condition"}
+        },
+        {
+          "timestamp": "2025-12-20T09:49:30Z",
+          "speaker": "user",
+          "message": "Great condition, we renovated 2 years ago. New kitchen, updated baths, hardwood floors",
+          "metadata": {"extracted_data": {"home_condition": "excellent", "recent_updates": "kitchen, bathrooms, flooring", "update_age": "2 years"}
+        },
+        {
+          "timestamp": "2025-12-20T09:50:00Z",
+          "speaker": "bot",
+          "message": "What's prompting you to check value? Thinking about selling soon?",
+          "metadata": {"stage": "qualifying", "question_type": "motivation"}
+        },
+        {
+          "timestamp": "2025-12-20T09:50:50Z",
+          "speaker": "user",
+          "message": "Maybe in the next few months. Want to know if now is a good time",
+          "metadata": {"extracted_data": {"timeline": "few months", "motivation": "market timing"}
+        },
+        {
+          "timestamp": "2025-12-20T09:51:20Z",
+          "speaker": "bot",
+          "message": "Do you have a price in mind or want me to pull neighborhood stats?",
+          "metadata": {"stage": "qualifying", "question_type": "price_expectations"}
+        },
+        {
+          "timestamp": "2025-12-20T09:52:05Z",
+          "speaker": "user",
+          "message": "No idea honestly, haven't looked at market in years",
+          "metadata": {"extracted_data": {"price_expectations": "unknown", "needs_education": true}
+        },
+        {
+          "timestamp": "2025-12-20T09:52:35Z",
+          "speaker": "bot",
+          "message": "Tarrytown is hot right now. Want me to schedule a consultation? Agent can walk through comps and current market",
+          "metadata": {"stage": "closing", "action": "offer_consultation", "value_proposition": "market education"}
+        },
+        {
+          "timestamp": "2025-12-20T09:53:20Z",
+          "speaker": "user",
+          "message": "Yes that would be helpful",
+          "metadata": {"intent": "accepted_consultation"}
+        },
+        {
+          "timestamp": "2025-12-20T09:53:50Z",
+          "speaker": "bot",
+          "message": "Perfect! They'll also give you tips on what upgrades give best ROI if you decide to list",
+          "metadata": {"stage": "closing", "additional_value": "listing_strategy"}
+        },
+        {
+          "timestamp": "2025-12-20T09:54:30Z",
+          "speaker": "user",
+          "message": "Great, when can we do it?",
+          "metadata": {"outcome": "closed", "engagement": "high"}
+        }
+      ],
+      "insights": {
+        "successful_patterns": [
+          "Started with valuation curiosity (soft entry)",
+          "Detailed property questions built rapport",
+          "Condition questions revealed listing potential (not wholesale)",
+          "Motivation question uncovered market timing concern",
+          "Offered education (market stats) as value-add",
+          "Framed consultation as educational vs sales pitch",
+          "Added value with ROI tips mention"
+        ],
+        "key_moments": [
+          "Recent renovation = ready to list for top dollar",
+          "No price knowledge = opportunity to educate",
+          "Market timing concern = address with data",
+          "Positive engagement after value proposition"
+        ],
+        "listing_indicators": [
+          "excellent_condition",
+          "recent_updates",
+          "high_value_neighborhood",
+          "wants_market_education"
+        ]
+      }
+    },
+    {
+      "id": "transcript_007",
+      "date": "2025-12-21T15:10:00Z",
+      "lead_type": "buyer",
+      "outcome": "closed",
+      "close_reason": "showing_scheduled",
+      "questions_answered": 4,
+      "conversation_duration_minutes": 5,
+      "messages": [
+        {
+          "timestamp": "2025-12-21T15:10:00Z",
+          "speaker": "bot",
+          "message": "Hey! What's up?",
+          "metadata": {"stage": "initial_contact"}
+        },
+        {
+          "timestamp": "2025-12-21T15:10:25Z",
+          "speaker": "user",
+          "message": "Saw your listing on 5th Street. Still available?",
+          "metadata": {"intent": "specific_property", "urgency": "high"}
+        },
+        {
+          "timestamp": "2025-12-21T15:10:50Z",
+          "speaker": "bot",
+          "message": "Yes! Want to see it?",
+          "metadata": {"stage": "closing", "action": "offer_showing_direct"}
+        },
+        {
+          "timestamp": "2025-12-21T15:11:20Z",
+          "speaker": "user",
+          "message": "Yeah can I see it this weekend?",
+          "metadata": {"intent": "showing_request", "timeline": "this weekend"}
+        },
+        {
+          "timestamp": "2025-12-21T15:11:45Z",
+          "speaker": "bot",
+          "message": "Perfect. Are you pre-approved?",
+          "metadata": {"stage": "qualifying", "question_type": "financing"}
+        },
+        {
+          "timestamp": "2025-12-21T15:12:20Z",
+          "speaker": "user",
+          "message": "Yes, up to $500k",
+          "metadata": {"extracted_data": {"financing": "pre-approved", "budget": "500000"}
+        },
+        {
+          "timestamp": "2025-12-21T15:12:45Z",
+          "speaker": "bot",
+          "message": "Great! Saturday at 2pm or Sunday at 11am?",
+          "metadata": {"stage": "closing", "action": "offer_specific_times"}
+        },
+        {
+          "timestamp": "2025-12-21T15:13:15Z",
+          "speaker": "user",
+          "message": "Saturday works",
+          "metadata": {"outcome": "closed", "showing_confirmed": "Saturday 2pm"}
+        }
+      ],
+      "insights": {
+        "successful_patterns": [
+          "Specific property inquiry = hot lead",
+          "Skip extensive qualifying for hot inbound",
+          "Immediate showing offer",
+          "One qualification question (financing) before confirming",
+          "Specific time options (not vague)",
+          "Fast close in 5 minutes"
+        ],
+        "key_moments": [
+          "Inbound property inquiry = highest intent",
+          "Pre-approval confirmed = qualified buyer",
+          "Quick close before lead cools"
+        ],
+        "conversation_type": "hot_inbound",
+        "time_to_close_minutes": 3
+      }
+    }
+  ],
+  "metadata": {
+    "total_transcripts": 7,
+    "successful_closes": 7,
+    "close_rate": "100%",
+    "avg_questions_to_close": 5.3,
+    "avg_conversation_duration": 8.4,
+    "buyer_transcripts": 4,
+    "seller_transcripts": 3
+  }
+}
