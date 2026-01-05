@@ -86,6 +86,20 @@ async def startup_event():
             "model": settings.claude_model
         }
     )
+    
+    # Auto-register primary tenant from environment variables
+    if settings.ghl_location_id and settings.ghl_api_key:
+        try:
+            from ghl_real_estate_ai.services.tenant_service import TenantService
+            tenant_service = TenantService()
+            await tenant_service.save_tenant_config(
+                location_id=settings.ghl_location_id,
+                anthropic_api_key=settings.anthropic_api_key,
+                ghl_api_key=settings.ghl_api_key
+            )
+            logger.info(f"Auto-registered primary tenant: {settings.ghl_location_id}")
+        except Exception as e:
+            logger.error(f"Failed to auto-register primary tenant: {e}")
 
 
 @app.on_event("shutdown")
