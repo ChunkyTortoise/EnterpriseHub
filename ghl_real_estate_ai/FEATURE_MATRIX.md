@@ -10,11 +10,50 @@ Complete feature inventory for all 8 Tier 1 & Tier 2 pages.
 |---------|--------|-------|------------|--------|---------------|
 | **Tier 1 Features** | ✅ Complete | 4 | 12+ | 15+ | ~47K bytes |
 | **Tier 2 Features** | ✅ Complete | 4 | 12+ | 15+ | ~71K bytes |
+| **Tier 3 Features** | 🏗️ Backend Ready | 4 | TBD | TBD | 4 New Services |
 | **Total** | ✅ Complete | 8 | 24+ | 30+ | ~118K bytes |
 
 ---
 
 ## 📋 Feature Breakdown by Page
+
+...
+
+### 9️⃣ Team & Lead Management (Tier 3 - Backend Ready)
+
+| Feature Category | Components | Status |
+|-----------------|------------|--------|
+| **Agent Management**| | |
+| • Agent Profiles | CRUD Operations | ✅ |
+| • Specialty Tags | Multi-select | ✅ |
+| • Role Assignment | Admin/Agent | ✅ |
+| **Assignment** | | |
+| • Round Robin | Automated Logic | ✅ |
+| • Manual Reassignment| Override | ✅ |
+| • Load Balancing | Metric-based | ✅ |
+| **Performance** | | |
+| • Agent Leaderboard | Rank by Conv Rate | ✅ |
+| • Conversion Metrics | Per-agent tracking | ✅ |
+| • Rating System | 1-5 star scale | ✅ |
+
+---
+
+### 🔟 Voice AI & CRM Sync (Tier 3 - Backend Ready)
+
+| Feature Category | Components | Status |
+|-----------------|------------|--------|
+| **Voice AI** | | |
+| • Inbound Handling | Twilio/TwiML | ✅ |
+| • STT Transcription | Audio to Text | ✅ |
+| • TTS Synthesis | Text to Audio | ✅ |
+| **Property Match** | | |
+| • Preferences Correlation| Logic Engine | ✅ |
+| • Listing Suggestions | Multi-match | ✅ |
+| • SMS Formatting | Character optimized| ✅ |
+| **CRM Integration** | | |
+| • Salesforce Sync | Lead/Deal push | ✅ |
+| • HubSpot Sync | Contact/Deal push| ✅ |
+| • Config Manager | Auth/Settings | ✅ |
 
 ### 1️⃣ Executive Dashboard (Tier 1)
 
