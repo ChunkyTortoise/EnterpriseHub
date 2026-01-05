@@ -410,6 +410,11 @@ class ReportScheduler:
     """Schedule automated report generation and delivery"""
     
     def __init__(self):
+        """
+        Execute init operation.
+
+        Args:
+        """
         self.schedules = []
         
     def schedule_report(

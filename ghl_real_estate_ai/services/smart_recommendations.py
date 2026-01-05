@@ -408,6 +408,11 @@ class RecommendationTracker:
     """Track implementation of recommendations"""
     
     def __init__(self):
+        """
+        Execute init operation.
+
+        Args:
+        """
         self.implemented = []
         self.in_progress = []
         self.dismissed = []

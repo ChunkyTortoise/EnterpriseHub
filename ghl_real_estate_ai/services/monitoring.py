@@ -392,6 +392,12 @@ class SystemHealthDashboard:
     """Provides a snapshot of system health."""
     
     def __init__(self, location_id: str):
+        """
+        Execute init operation.
+
+        Args:
+            location_id: Unique identifier
+        """
         self.location_id = location_id
         self.performance_monitor = PerformanceMonitor(location_id)
         self.error_tracker = ErrorTracker(location_id)
