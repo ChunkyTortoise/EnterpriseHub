@@ -14,6 +14,8 @@ services:
         sync: false
       - key: GHL_API_KEY
         sync: false
+      - key: GHL_LOCATION_ID
+        sync: false
       - key: PYTHON_VERSION
         value: 3.9.18
     healthCheckPath: /health
