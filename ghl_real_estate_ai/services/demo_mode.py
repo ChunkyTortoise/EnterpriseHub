@@ -234,6 +234,16 @@ class DemoDataGenerator:
         }
     
     def _generate_trends(self, conversations: List[Dict], days: int) -> Dict[str, List]:
+        """
+        Execute generate trends operation.
+
+        Args:
+            conversations: Conversations parameter
+            days: Days parameter
+
+        Returns:
+            Result of the operation
+        """
         """Generate trend data"""
         daily_data = {}
         

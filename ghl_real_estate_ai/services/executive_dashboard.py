@@ -14,6 +14,12 @@ class ExecutiveDashboardService:
     """Generate executive-level KPIs and insights"""
     
     def __init__(self, data_dir: Path = None):
+        """
+        Execute init operation.
+
+        Args:
+            data_dir: Data to process
+        """
         self.data_dir = data_dir or Path(__file__).parent.parent / "data"
         
     def get_executive_summary(

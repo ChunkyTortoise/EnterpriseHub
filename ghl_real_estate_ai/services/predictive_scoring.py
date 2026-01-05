@@ -345,6 +345,11 @@ class BatchPredictor:
     """Batch prediction for multiple leads"""
     
     def __init__(self):
+        """
+        Execute init operation.
+
+        Args:
+        """
         self.scorer = PredictiveLeadScorer()
     
     def predict_batch(

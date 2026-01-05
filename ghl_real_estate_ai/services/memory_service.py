@@ -47,6 +47,15 @@ class MemoryService:
         
         # Sanitize contact_id and location_id (only allow alphanumeric, dash, underscore)
         def sanitize(id_str: str) -> str:
+        """
+        Execute sanitize operation.
+
+        Args:
+            id_str: Unique identifier
+
+        Returns:
+            Result of the operation
+        """
             # Strip any path components and keep only the filename part
             filename = os.path.basename(id_str)
             # Remove any characters that aren't alphanumeric, dash, or underscore
