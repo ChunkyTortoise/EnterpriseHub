@@ -57,14 +57,32 @@ def render():
     if not SERVICES_AVAILABLE:
         st.error(f"⚠️ GHL Services are not fully loaded. Some features may be disabled. Error: {IMPORT_ERROR}")
     
-    # st.markdown("### 🏠 GHL Real Estate AI - Platform Console")
+    # Service Context Sidebar
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("### 📘 Service Context")
+        st.info(
+            """
+            **Catalog Reference:** Service 3
+            **Category:** Automation
+            
+            **Value Prop:** 
+            Replaces manual lead qualification with 24/7 autonomous agents.
+            
+            **Typical ROI:**
+            - 60% reduction in support costs
+            - 3x increase in qualified leads
+            """
+        )
+        st.markdown("---")
+
     ui.section_header("GHL Real Estate AI", "Institutional-grade real estate orchestration engine.")
     
     # Unified Tabs
     tabs = st.tabs([
         "🎮 Playground", 
         "📈 Dashboard", 
-        "📊 Executive", 
+        "📊 Executive & ROI", 
         "🔮 Predictive",
         "🔄 Lifecycle",
         "🎯 Campaigns",
@@ -96,117 +114,28 @@ def render():
     with tabs[7]:
         _render_admin()
 
-def _render_playground():
-    """Render the interactive chat demo."""
-    if not DEMO_COMPONENTS_AVAILABLE:
-        st.warning("Playground components not found.")
-        return
-
-    # Initialize services
-    if 'claude_service' not in st.session_state:
-        st.session_state.claude_service = MockClaudeService()
-
-    # Initialize conversation state
-    init_conversation_state()
-
-    # Layout
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        ui.section_header("AI Conversation Playground", "Experience real-time lead qualification.")
-        render_chat_interface()
-
-        user_input = st.chat_input("Type your message here...", key="playground_input")
-        if user_input:
-            add_message('user', user_input)
-            response, updated_data = st.session_state.claude_service.generate_response(
-                user_input,
-                st.session_state.messages,
-                st.session_state.extracted_data
-            )
-            add_message('assistant', response)
-            update_extracted_data(updated_data)
-            calculate_lead_score()
-            st.rerun()
-
-    with col2:
-        ui.section_header("Lead Intelligence", "Real-time extraction.")
-        render_lead_dashboard()
-        
-        with st.expander("🎯 Demo Scenarios"):
-            scenario = st.selectbox("Load Scenario:", ["Fresh", "Cold", "Warm", "Hot"])
-            if st.button("Apply Scenario"):
-                # Simplified scenario application
-                st.session_state.messages = []
-                st.session_state.extracted_data = {}
-                st.rerun()
-
-    st.divider()
-    ui.section_header("Property Matches", "RAG-powered recommendations.")
-    render_property_matches()
-
-def _render_analytics_dashboard():
-    """Render the core analytics dashboard."""
-    ui.section_header("Core Analytics Overview", "Multi-tenant performance monitoring.")
-    
-    # Load mock data
-    data = _load_mock_data()
-    tenants = data.get("tenants", [])
-    all_conversations = data.get("conversations", [])
-    
-    # Filters
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        tenant_options = ["All Tenants"] + [t["name"] for t in tenants]
-        selected_tenant = st.selectbox("Select Tenant", tenant_options, key="ana_tenant")
-    with col2:
-        date_range = st.selectbox("Date Range", ["Last 7 Days", "Last 30 Days", "Custom"], key="ana_date")
-    with col3:
-        lead_filter = st.multiselect("Classifications", ["hot", "warm", "cold"], default=["hot", "warm", "cold"], key="ana_lead")
-
-    # Metrics Row
-    m_col1, m_col2, m_col3, m_col4 = st.columns(4)
-    with m_col1: ui.card_metric("Total Conversations", "1,284", "Active Sessions")
-    with m_col2: ui.card_metric("Avg Lead Score", "74.2", "Quality Score")
-    with m_col3: ui.card_metric("Hot Leads", "342", "High Intent")
-    with m_col4: ui.card_metric("Conversion Prob.", "24.5%", "Success Rate")
-
-    # Charts
-    st.divider()
-    c_col1, c_col2 = st.columns(2)
-    
-    if all_conversations:
-        df = pd.DataFrame(all_conversations)
-        df['start_time'] = pd.to_datetime(df['start_time'])
-        df['date'] = df['start_time'].dt.date
-        
-        with c_col1:
-            st.markdown("**Conversation Volume**")
-            volume_df = df.groupby('date').size().reset_index(name='count')
-            fig_vol = px.line(
-                volume_df, x='date', y='count',
-                labels={'date': 'Date', 'count': 'Conversations'},
-                color_discrete_sequence=['#10B981']
-            )
-            fig_vol.update_layout(ui.get_plotly_template())
-            st.plotly_chart(fig_vol, use_container_width=True)
-            
-        with c_col2:
-            st.markdown("**Lead Distribution**")
-            dist_df = df.groupby('classification').size().reset_index(name='count')
-            fig_dist = px.pie(
-                dist_df, names='classification', values='count',
-                color_discrete_sequence=['#10B981', '#3B82F6', '#94A3B8']
-            )
-            fig_dist.update_layout(ui.get_plotly_template())
-            st.plotly_chart(fig_dist, use_container_width=True)
-    else:
-        with c_col1: st.info("No conversation data available for timeline.")
-        with c_col2: st.info("No classification data available for distribution.")
-
 def _render_executive_dashboard():
-    """Render executive-level strategic insights."""
+    """Render executive-level strategic insights and ROI Calculator."""
     ui.section_header("Executive Strategic Insights", "Institutional-grade portfolio analysis.")
+    
+    # ROI Calculator Section
+    with st.expander("💰 ROI & Savings Calculator", expanded=True):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            leads_mo = st.number_input("Monthly Leads", value=200, step=50)
+        with c2:
+            time_per_lead = st.number_input("Minutes per Lead (Manual)", value=15, step=5)
+        with c3:
+            hourly_rate = st.number_input("Support Staff Hourly Rate ($)", value=25, step=5)
+            
+        # Calculation
+        hours_saved = (leads_mo * time_per_lead * 0.60) / 60 # Assuming 60% automation
+        money_saved = hours_saved * hourly_rate
+        annual_savings = money_saved * 12
+        
+        st.markdown(f"### 💸 Projected Savings: **${money_saved:,.0f}/mo** | **${annual_savings:,.0f}/yr**")
+        st.caption(f"Based on 60% automation of {leads_mo} leads/mo")
+
     if not SERVICES_AVAILABLE: return
 
     exec_service = ExecutiveDashboardService()

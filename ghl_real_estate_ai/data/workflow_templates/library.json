@@ -1,0 +1,125 @@
+{
+  "templates": [
+    {
+      "id": "new_lead_welcome",
+      "name": "New Lead Welcome Sequence",
+      "category": "lead_nurturing",
+      "description": "Instantly respond to new leads with personalized welcome message",
+      "trigger": "lead_created",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_sms",
+          "delay_minutes": 0,
+          "template": "Hi {{firstName}}! Thanks for your interest in {{property}}. I'm {{agentName}} and I'll help you find your perfect property. When's a good time to chat?"
+        },
+        {
+          "order": 2,
+          "action": "send_email",
+          "delay_minutes": 60,
+          "subject": "Your Property Search Begins Here",
+          "template": "Hi {{firstName}},\n\nI wanted to personally reach out and welcome you. I've reviewed your interest in {{property}} and I think I can help.\n\nLet's schedule a quick 15-minute call to discuss your needs.\n\n[CALENDAR_LINK]\n\nBest,\n{{agentName}}"
+        }
+      ]
+    },
+    {
+      "id": "no_response_followup",
+      "name": "No Response Follow-up",
+      "category": "re_engagement",
+      "description": "Automatically follow up with leads who haven't responded",
+      "trigger": "no_response_48h",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_sms",
+          "delay_minutes": 0,
+          "template": "Hi {{firstName}}, just checking in! Are you still interested in {{property}}? I have some similar listings you might love."
+        },
+        {
+          "order": 2,
+          "action": "send_email",
+          "delay_minutes": 1440,
+          "subject": "Still thinking about {{property}}?",
+          "template": "Hi {{firstName}},\n\nI noticed you were interested in {{property}}. Life gets busy, I get it!\n\nI've found 3 similar properties that match your criteria:\n{{similarProperties}}\n\nWant to see them?\n\n{{agentName}}"
+        }
+      ]
+    },
+    {
+      "id": "appointment_reminder",
+      "name": "Appointment Reminder Series",
+      "category": "appointments",
+      "description": "Send reminders before scheduled appointments",
+      "trigger": "appointment_scheduled",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_sms",
+          "delay_minutes": -1440,
+          "template": "Reminder: You have an appointment tomorrow at {{appointmentTime}} to view {{property}}. Looking forward to it! - {{agentName}}"
+        },
+        {
+          "order": 2,
+          "action": "send_sms",
+          "delay_minutes": -120,
+          "template": "Your appointment is in 2 hours at {{appointmentTime}}. Address: {{propertyAddress}}. See you soon!"
+        },
+        {
+          "order": 3,
+          "action": "send_sms",
+          "delay_minutes": -30,
+          "template": "Starting in 30 minutes! I'm at {{propertyAddress}} and ready when you are."
+        }
+      ]
+    },
+    {
+      "id": "hot_lead_fast_track",
+      "name": "Hot Lead Fast Track",
+      "category": "lead_nurturing",
+      "description": "Priority handling for high-score leads",
+      "trigger": "lead_score_above_80",
+      "steps": [
+        {
+          "order": 1,
+          "action": "notify_agent",
+          "delay_minutes": 0,
+          "priority": "high",
+          "message": "🔥 HOT LEAD: {{firstName}} {{lastName}} - Score: {{leadScore}}"
+        },
+        {
+          "order": 2,
+          "action": "send_sms",
+          "delay_minutes": 5,
+          "template": "{{firstName}}, I can tell you're serious about finding a property! I've cleared my schedule. Can you talk in the next 15 minutes?"
+        },
+        {
+          "order": 3,
+          "action": "assign_to_senior_agent",
+          "delay_minutes": 10,
+          "condition": "no_response"
+        }
+      ]
+    },
+    {
+      "id": "price_drop_alert",
+      "name": "Price Drop Alert",
+      "category": "property_updates",
+      "description": "Notify leads when properties they viewed drop in price",
+      "trigger": "property_price_decreased",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_sms",
+          "delay_minutes": 0,
+          "template": "🎉 Great news {{firstName}}! {{property}} just dropped to {{newPrice}} (was {{oldPrice}}). Want to see it before someone else grabs it?"
+        },
+        {
+          "order": 2,
+          "action": "send_email",
+          "delay_minutes": 30,
+          "subject": "Price Drop: {{property}}",
+          "template": "{{firstName}},\n\nThe property you were interested in just became more affordable!\n\nProperty: {{property}}\nWas: {{oldPrice}}\nNow: {{newPrice}}\nSavings: {{savings}}\n\nThis won't last long. Let's schedule a viewing.\n\n{{agentName}}"
+        }
+      ]
+    }
+  ]
+}

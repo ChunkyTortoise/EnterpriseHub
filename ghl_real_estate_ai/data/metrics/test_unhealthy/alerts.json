@@ -166,5 +166,26 @@
     "message": "System down",
     "timestamp": "2026-01-05T13:42:52.102663",
     "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-05T18:15:52.222202",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-05T18:48:06.226226",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-05T18:48:49.421253",
+    "location_id": "test_unhealthy"
   }
 ]

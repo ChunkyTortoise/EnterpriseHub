@@ -1,152 +1,163 @@
-"""
-Vertical Landing Pages Module
-Institutional-grade positioning for SaaS, E-commerce, and Healthcare verticals.
-"""
 import streamlit as st
 import utils.ui as ui
 
 def render():
-    """Main render function for Landing Pages."""
-    ui.section_header("Vertical Solutions", "Deeply integrated AI architectures tailored for your industry.")
+    """
+    Renders the Service-First Landing Page for EnterpriseHub.
+    This page serves as the high-impact entry point for potential clients,
+    showcase Cayman's certifications, skills, and the Professional Services Catalog.
+    """
     
-    vertical = st.sidebar.selectbox(
-        "Select Vertical",
-        ["B2B SaaS", "E-commerce", "Healthcare", "Real Estate"]
+    # Hero Section: Professional Positioning
+    st.markdown(
+        """
+        <div style='text-align: center; padding: 60px 0 40px 0;'>
+            <h1 style='font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 20px;'>
+                Production-Grade <span style='color: #10B981;'>AI Systems</span><br>
+                & Data Infrastructure
+            </h1>
+            <p style='font-size: 1.4rem; color: #64748b; max-width: 800px; margin: 0 auto 40px auto;'>
+                Delivering measurable business outcomes through institutional-grade expertise 
+                in Generative AI, LLMOps, and Business Intelligence.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
-    
-    if vertical == "B2B SaaS":
-        _render_saas_page()
-    elif vertical == "E-commerce":
-        _render_ecommerce_page()
-    elif vertical == "Healthcare":
-        _render_healthcare_page()
-    elif vertical == "Real Estate":
-        _render_real_estate_page()
 
-def _render_saas_page():
-    ui.hero_section("AI-Driven SaaS Scaling", "Reduce churn by 15% and increase LTV through predictive intelligence.")
+    # Trust Bar: Certifications & Hours
+    cols = st.columns(4)
+    with cols[0]:
+        ui.card_metric("Certifications", "19", "IBM, Google, Microsoft")
+    with cols[1]:
+        ui.card_metric("Training Hours", "1,768", "Advanced AI & Data")
+    with cols[2]:
+        ui.card_metric("Project Delivery", "2x Faster", "Full-Time Focus")
+    with cols[3]:
+        ui.card_metric("Fixed Pricing", "Transparent", "20% Below Market")
+
+    ui.spacer(60)
+
+    # Decision Tree: "Find Your Solution"
+    st.markdown("### 🎯 Find Your Ideal AI Solution")
+    st.markdown("Answer a few questions to see which service delivers the highest ROI for your current challenge.")
+    
+    with st.container(border=True):
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            challenge = st.selectbox(
+                "What is your primary business challenge?",
+                [
+                    "Manual processes consuming team time",
+                    "Poor data visibility and decision-making",
+                    "Growth and customer acquisition challenges",
+                    "Legacy systems blocking progress",
+                    "Need strategic guidance first"
+                ]
+            )
+        with col2:
+            industry = st.selectbox(
+                "What industry are you in?",
+                ["B2B SaaS", "E-commerce", "Healthcare", "Professional Services", "Real Estate", "Manufacturing"]
+            )
+        
+        # Simple Recommendation Engine based on Catalog Decision Tree
+        recommendations = {
+            "Manual processes consuming team time": ["Service 3: Custom RAG Agents", "Service 4: Multi-Agent Workflows", "Service 6: Business Automation"],
+            "Poor data visibility and decision-making": ["Service 8: BI Dashboards", "Service 9: Automated Reporting", "Service 10: Predictive Analytics"],
+            "Growth and customer acquisition challenges": ["Service 12: Programmatic SEO", "Service 13: Email Automation", "Service 16: Marketing Attribution"],
+            "Legacy systems blocking progress": ["Service 19: Excel to Web App Modernization", "Service 20: Competitor Intelligence"],
+            "Need strategic guidance first": ["Service 1: AI Strategy Assessment", "Service 25: Fractional AI Leadership"]
+        }
+        
+        st.markdown(f"**Recommended focus for {industry}:**")
+        recs = recommendations.get(challenge, [])
+        for rec in recs:
+            st.markdown(f"- ✅ {rec}")
+        
+        if st.button("Generate Detailed Implementation Roadmap", type="primary"):
+            st.success("Roadmap initialized. Navigate to 'Strategy Planner' for the full diagnostic.")
+
+    ui.spacer(60)
+
+    # Credential Inventory (Summary of Courses.md and Catalog)
+    ui.credential_inventory()
+
+    ui.spacer(60)
+
+    # Industry Solutions Section
+    ui.section_header("Vertical Industry Solutions", "Deeply integrated AI architectures for your sector")
     
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("#### 🎯 The Challenge")
-        st.write("SaaS companies struggle with high CAC and churn. Sales teams waste time on low-quality trial users, and support is overwhelmed by repetitive technical queries.")
+        ui.use_case_card(
+            icon="🚀",
+            title="B2B SaaS",
+            description="""
+                Focus on CAC reduction, churn prevention, and automated unit economics. 
+                <strong>Service Bundle 2</strong> recommended for growth-stage startups.
+            """,
+        )
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+        ui.use_case_card(
+            icon="🛍️",
+            title="E-commerce",
+            description="""
+                Dynamic pricing, inventory forecasting, and programmatic SEO for 100+ product pages. 
+                <strong>Service Bundle 4</strong> optimized for high-volume stores.
+            """,
+        )
     with col2:
-        st.markdown("#### 🚀 The Solution")
-        st.write("We deploy predictive churn models and autonomous RAG support agents that handle 60% of tickets, while lead scoring prioritizes high-LTV accounts.")
+        ui.use_case_card(
+            icon="🏥",
+            title="Healthcare",
+            description="""
+                HIPAA-compliant patient agents and clinical knowledge management. 
+                <strong>Service Bundle 5</strong> addresses critical regulatory and operational gaps.
+            """,
+        )
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+        ui.use_case_card(
+            icon="💼",
+            title="Professional Services",
+            description="""
+                Automated proposal generation and knowledge linking for law and consulting firms. 
+                <strong>Service Bundle 3</strong> for scaling delivery without adding headcount.
+            """,
+        )
 
-    st.divider()
-    
-    # CASE STUDY: ARETE-Architect
-    st.markdown("#### 💎 Case Study: ARETE-Architect Integration")
-    c1, c2, c3 = st.columns(3)
-    with c1: ui.card_metric("Dev Velocity", "81% Faster", "Task Completion")
-    with c2: ui.card_metric("Efficiency ROI", "18.9x", "1,790% Gain")
-    with c3: ui.card_metric("Code Quality", "10/10", "Zero-Defect Goal")
-    
-    st.info("💡 **Impact:** One SaaS partner reduced their feature deployment cycle from 150 hours to just 28.5 hours using our autonomous agent swarm.")
+    ui.spacer(60)
 
-    st.divider()
-    st.markdown("#### 📦 SaaS Implementation Stack")
-    cols = st.columns(3)
-    with cols[0]:
-        ui.feature_card("🔮", "Predictive Churn", "Identify at-risk accounts 30 days before they cancel.")
-    with cols[1]:
-        ui.feature_card("🤖", "RAG Support", "Instant, accurate technical support using your documentation.")
-    with cols[2]:
-        ui.feature_card("📊", "Unit Economics", "Board-ready dashboards for CAC, LTV, and Payback.")
-
-def _render_ecommerce_page():
-    ui.hero_section("E-commerce Profit Optimization", "Boost gross margins by 2-3% through dynamic pricing and personalization.")
+    # "The Cayman Advantage" Grid
+    ui.section_header("The Cayman Advantage", "Why mid-market companies choose this platform")
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("#### 🎯 The Challenge")
-        st.write("E-commerce brands face thinning margins and rising ad costs. Generic marketing fails to convert, and inventory mismanagement leads to stockouts or dead stock.")
+        st.markdown("### 🛡️ Enterprise Grade")
+        st.markdown("Every project includes 300+ automated tests, ensuring your AI systems are reliable, secure, and production-ready.")
     with col2:
-        st.markdown("#### 🚀 The Solution")
-        st.write("Autonomous competitor tracking enables real-time price optimization. AI personalization engines boost conversion by 12%, and forecasting prevents inventory waste.")
+        st.markdown("### 💰 ROI Obsessed")
+        st.markdown("We don't just build features; we build outcomes. Every service is mapped to a clear ROI model with measurable payback periods.")
+    with col3:
+        st.markdown("### ⚡ Full-Time Velocity")
+        st.markdown("By maintaining a limited client roster and working full-time on your project, I deliver 2x faster than part-time freelancers.")
 
-    st.divider()
-    
-    # CASE STUDY: Margin Hunter
-    st.markdown("#### 💎 Case Study: Institutional Profit Modeling")
-    c1, c2, c3 = st.columns(3)
-    with c1: ui.card_metric("Computation Speed", "<100ms", "100 Scenarios")
-    with c2: ui.card_metric("Margin Recovery", "+2.5%", "Gross Profit Lift")
-    with c3: ui.card_metric("Hours Saved", "10h/week", "Manual Modeling")
-    
-    st.info("💡 **Impact:** A multi-SKU retailer identified 'profit leakers' across 500+ items in seconds using our sensitivity heatmap engine.")
+    ui.spacer(60)
 
-    st.divider()
-    st.markdown("#### 📦 E-commerce Implementation Stack")
-    cols = st.columns(3)
-    with cols[0]:
-        ui.feature_card("🛒", "Dynamic Pricing", "Automated competitor monitoring and price adjustments.")
-    with cols[1]:
-        ui.feature_card("✍️", "SEO Content", "Programmatic generation of high-ranking product guides.")
-    with cols[2]:
-        ui.feature_card("🔄", "Cart Recovery", "LLM-powered personalized re-engagement sequences.")
+    # Call to Action
+    st.markdown(
+        """
+        <div style='background: #F8FAFC; padding: 40px; border-radius: 20px; text-align: center; border: 1px solid #E2E8F0;'>
+            <h2>Ready to Architect Your AI Future?</h2>
+            <p style='color: #64748b; margin-bottom: 24px;'>Explore the modules in the sidebar to see live demos of these services in action.</p>
+            <div style='display: flex; justify-content: center; gap: 16px;'>
+                <a href='mailto:caymanroden@gmail.com' style='background: #0F172A; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;'>Get a Free Assessment</a>
+                <a href='https://chunkytortoise.github.io/EnterpriseHub/' style='background: white; color: #0F172A; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; border: 1px solid #E2E8F0;'>View Portfolio</a>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-def _render_healthcare_page():
-    ui.hero_section("Healthcare Operational Excellence", "Reduce administrative burden by 50% while maintaining HIPAA compliance.")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("#### 🎯 The Challenge")
-        st.write("Medical practices are bogged down by manual scheduling and inquiry handling. Clinicians spend 40% of their time on documentation instead of patient care.")
-    with col2:
-        st.markdown("#### 🚀 The Solution")
-        st.write("HIPAA-compliant RAG agents handle routine inquiries and scheduling. AI-powered workflow optimization streamlines patient onboarding and documentation.")
-
-    st.divider()
-    
-    # CASE STUDY: Workflow Automation
-    st.markdown("#### 💎 Case Study: Clinical Admin Reduction")
-    c1, c2, c3 = st.columns(3)
-    with c1: ui.card_metric("Admin Time", "-50%", "Weekly Savings")
-    with c2: ui.card_metric("Inquiry Response", "Instant", "24/7 Coverage")
-    with c3: ui.card_metric("Patient LTV", "+12%", "Improved Retention")
-    
-    st.info("💡 **Impact:** A multi-location practice automated 60% of routine patient inquiries while maintaining strict HIPAA data isolation standards.")
-
-    st.divider()
-    st.markdown("#### 📦 Healthcare Implementation Stack")
-    cols = st.columns(3)
-    with cols[0]:
-        ui.feature_card("🏥", "Patient RAG", "Safe, compliant inquiry handling for routine medical questions.")
-    with cols[1]:
-        ui.feature_card("🔄", "Workflow Sync", "Integrated scheduling and EHR data flow automation.")
-    with cols[2]:
-        ui.feature_card("🛡️", "Compliance Audit", "Automated monitoring for data privacy and HIPAA adherence.")
-
-def _render_real_estate_page():
-    ui.hero_section("Real Estate Lead Orchestration", "Turn every inquiry into a scheduled viewing with 24/7 AI engagement.")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("#### 🎯 The Challenge")
-        st.write("Real estate leads come in at all hours. Slow response times (even by 5 minutes) reduce conversion by 400%. Manual qualification is tedious and inconsistent.")
-    with col2:
-        st.markdown("#### 🚀 The Solution")
-        st.write("Instant AI engagement across SMS and Web. Our agents qualify budget and timeline in real-time, only booking appointments for high-intent buyers.")
-
-    st.divider()
-    
-    # CASE STUDY: GHL Real Estate AI
-    st.markdown("#### 💎 Case Study: Elite AI Orchestration")
-    c1, c2, c3 = st.columns(3)
-    with c1: ui.card_metric("API Endpoints", "27+", "Full-Spectrum API")
-    with c2: ui.card_metric("Test Rigor", "247+", "Verified Tests")
-    with c3: ui.card_metric("Code Health", "100%", "Pass Rate")
-    
-    st.info("💡 **Impact:** Delivered a production-ready GHL integration with 100% test pass rate and enterprise-grade security middleware (JWT/Rate Limiting).")
-
-    st.divider()
-    st.markdown("#### 📦 Real Estate Implementation Stack")
-    cols = st.columns(3)
-    with cols[0]:
-        ui.feature_card("🏠", "Property RAG", "Context-aware chat using your current listing data.")
-    with cols[1]:
-        ui.feature_card("📞", "Lead Scorer", "Predictive conversion probability for every contact.")
-    with cols[2]:
-        ui.feature_card("👔", "Agent Console", "Multi-tenant GHL integration for team oversight.")
+if __name__ == "__main__":
+    render()

@@ -1645,6 +1645,69 @@ def login_modal() -> bool:
     return False
 
 
+def service_header(title: str, category: str, service_id: str, roi_model: str) -> None:
+    """
+    Renders a consistent, high-impact header for all service modules.
+    Connects the technical tool to the Professional Services Catalog context.
+    """
+    with st.container():
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            section_header(title)
+            st.markdown(f"**Category:** {category} | **Catalog Reference:** {service_id}")
+        with col2:
+            st.markdown(
+                f"""
+                <div style='background: #f0fdf4; border: 1px solid #10b981; padding: 16px; border-radius: 8px;'>
+                    <div style='color: #065f46; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;'>Catalog ROI Model</div>
+                    <div style='color: #047857; font-size: 1.0rem; font-weight: 800;'>{roi_model}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+    st.divider()
+
+def credential_inventory() -> None:
+    """
+    Renders the 19 Certifications summary in a professional tabbed interface.
+    """
+    section_header("Credential Authority", "19 Professional Certifications | 1,768 Training Hours")
+    
+    tabs = st.tabs(["Generative AI & LLMOps", "Data Science & BI", "Growth & Strategy"])
+    
+    with tabs[0]:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("#### Specialized AI Training")
+            st.markdown("- **IBM:** Generative AI Engineering (144 hrs)")
+            st.markdown("- **Duke:** LLMOps Specialization (48 hrs)")
+            st.markdown("- **Vanderbilt:** GenAI Strategic Leader")
+            st.markdown("- **IBM:** RAG and Agentic AI")
+            st.markdown("- **Google Cloud:** GenAI Leader Certificate")
+        with col2:
+            st.info("Architecting production-grade RAG systems, multi-agent swarms, and self-healing CI/CD pipelines.")
+
+    with tabs[1]:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("#### Advanced Data Analysis")
+            st.markdown("- **Google:** Data Analytics Professional (181 hrs)")
+            st.markdown("- **Microsoft:** AI-Enhanced Data Analysis (120 hrs)")
+            st.markdown("- **IBM:** BI Analyst Professional (141 hrs)")
+            st.markdown("- **Google:** Business Intelligence (80 hrs)")
+        with col2:
+            st.info("Building interactive dashboards, predictive modeling, and automated ETL pipelines with Python and SQL.")
+
+    with tabs[2]:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("#### Strategy & Growth")
+            st.markdown("- **Google:** Digital Marketing & E-commerce (190 hrs)")
+            st.markdown("- **Meta:** Social Media Marketing (83 hrs)")
+            st.markdown("- **Vanderbilt:** AI Personal Automation")
+        with col2:
+            st.info("Aligning technical implementation with core business KPIs, marketing attribution, and revenue growth.")
+
 def footer() -> None:
     """Renders the standard footer."""
     footer_html = """
