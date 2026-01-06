@@ -460,5 +460,47 @@
     "message": "Test error",
     "timestamp": "2026-01-04T15:53:20.612654",
     "location_id": "test_alerts"
+  },
+  {
+    "level": "info",
+    "title": "Info",
+    "message": "Test info",
+    "timestamp": "2026-01-05T13:41:19.455971",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "warning",
+    "title": "Warning",
+    "message": "Test warning",
+    "timestamp": "2026-01-05T13:41:19.456910",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "error",
+    "title": "Error",
+    "message": "Test error",
+    "timestamp": "2026-01-05T13:41:19.457620",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "info",
+    "title": "Info",
+    "message": "Test info",
+    "timestamp": "2026-01-05T13:42:52.090748",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "warning",
+    "title": "Warning",
+    "message": "Test warning",
+    "timestamp": "2026-01-05T13:42:52.091756",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "error",
+    "title": "Error",
+    "message": "Test error",
+    "timestamp": "2026-01-05T13:42:52.092587",
+    "location_id": "test_alerts"
   }
 ]

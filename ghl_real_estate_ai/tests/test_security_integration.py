@@ -11,7 +11,7 @@ import os
 from ghl_real_estate_ai.ghl_real_estate_ai.api.middleware import (
     JWTAuth,
     APIKeyAuth,
-    RateLimiter,
+    RateLimitMiddleware,
     SecurityHeadersMiddleware
 )
 
