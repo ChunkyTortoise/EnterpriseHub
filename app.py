@@ -1,415 +1,176 @@
 """
 Enterprise Hub - Main Application Entry Point.
-
-A unified platform for market analysis and enterprise tooling
-with multiple mission-critical modules.
+A unified platform for professional AI services and engineering excellence.
 """
 
 import streamlit as st
 import sys
-
-# FAST BOOT: Minimal imports at top level
-# We delay importing 'utils.ui' and 'modules.*' until inside main()
+import importlib
 
 # ENTERPRISE CONFIGURATION
 st.set_page_config(
     page_title="Unified Enterprise Hub | Cayman Roden",
     layout="wide",
     initial_sidebar_state="expanded",
-    menu_items={
-        "Get Help": "https://github.com/ChunkyTortoise/enterprise-hub",
-        "Report a bug": "https://github.com/ChunkyTortoise/enterprise-hub/issues",
-        "About": (
-            "# Enterprise Hub\nA unified platform for market analysis and enterprise tooling."
-        ),
-    },
 )
 
-# --- MODULE REGISTRY ---
-# Flagship AI Technical Co-Founder module takes precedence
+# --- SERVICE CATEGORIES & MODULE REGISTRY ---
+CATEGORIES = {
+    "⭐ Flagship": ["🏗️ ARETE-Architect"],
+    "🤖 Intelligent Automation": ["Custom RAG Agents", "Multi-Agent Swarms", "Content Engine", "Business Automation"],
+    "📊 BI & Analytics": ["Margin Hunter", "Market Pulse", "Data Detective", "Marketing Analytics", "Smart Forecast", "Automated Reporting"],
+    "🏢 Vertical Solutions": ["GHL Real Estate AI", "Vertical Insights"],
+    "🛠️ Infrastructure & Strategy": ["Technical Due Diligence", "DevOps Control", "AI Strategy Planner", "ROI Calculators", "Design System"]
+}
+
 MODULES = {
     "🏗️ ARETE-Architect": {
-        "name": "arete_architect",
-        "title": "ARETE-Architect: AI Technical Co-Founder",
-        "icon": "assets/icons/arete_architect.svg",
-        "desc": "Flagship autonomous technical co-founder powered by LangGraph. Features self-healing code generation, deep architectural mapping, and automated CI/CD integration.",
-        "status": "hero"
+        "name": "arete_architect", "title": "ARETE-Architect: AI Technical Co-Founder",
+        "icon": "assets/icons/arete_architect.svg", "status": "hero", "service_id": "S4",
+        "category": "Intelligent Automation", "roi_model": "340 hours saved/week | 10,450% ROI"
     },
-    "💰 Margin Hunter": {
-        "name": "margin_hunter",
-        "title": "Margin Hunter",
-        "icon": "assets/icons/margin_hunter.svg",
-        "desc": "Advanced institutional-grade unit economics engine. Delivers high-fidelity sensitivity analysis, real-time break-even modeling, and multi-scenario margin optimization.",
-        "status": "active"
+    "Custom RAG Agents": {
+        "name": "real_estate_ai", "title": "Knowledge-Augmented RAG Agents",
+        "icon": "assets/icons/arete_architect.svg", "status": "active", "service_id": "S3",
+        "category": "Intelligent Automation", "roi_model": "60% reduction in support workload"
     },
-    "📊 Market Pulse": {
-        "name": "market_pulse",
-        "title": "Market Pulse",
-        "icon": "assets/icons/market_pulse.svg",
-        "desc": "Institutional-grade technical analysis suite. High-performance charting engine featuring RSI, MACD, and volume profile analysis for professional asset evaluation.",
-        "status": "active"
+    "Multi-Agent Swarms": {
+        "name": "multi_agent", "title": "Multi-Agent Swarm Orchestration",
+        "icon": "assets/icons/multi_agent.svg", "status": "active", "service_id": "S4",
+        "category": "Intelligent Automation", "roi_model": "85% automation of manual lead research"
     },
-    "🔍 Data Detective": {
-        "name": "data_detective",
-        "title": "Data Detective",
-        "icon": "assets/icons/data_detective.svg",
-        "desc": "Heuristic data profiling engine. Automates exploratory data analysis (EDA) with advanced correlation mapping, statistical quality scoring, and automated insight generation.",
-        "status": "new"
+    "Content Engine": {
+        "name": "content_engine", "title": "Programmatic SEO & Content Engine",
+        "icon": "assets/icons/content_engine.svg", "status": "active", "service_id": "S12",
+        "category": "Intelligent Automation", "roi_model": "50x increase in volume at 1/300th cost"
     },
-    "📈 Marketing Analytics": {
-        "name": "marketing_analytics",
-        "title": "Marketing Analytics",
-        "icon": "assets/icons/marketing_analytics.svg",
-        "desc": "Enterprise-scale marketing attribution and ROI orchestration engine. Features multi-variant statistical testing, cohort analysis, and sophisticated attribution modeling.",
-        "status": "new"
+    "Business Automation": {
+        "name": "business_automation", "title": "Workflow & Business Automation",
+        "icon": "assets/icons/calculator.svg", "status": "active", "service_id": "S6",
+        "category": "Intelligent Automation", "roi_model": "Recover 85-90% of manual task productivity"
     },
-    "✍️ Content Engine": {
-        "name": "content_engine",
-        "title": "Content Engine",
-        "icon": "assets/icons/content_engine.svg",
-        "desc": "Strategic content synthesis platform leveraging Anthropic's Claude 3.5 Sonnet to generate high-authority LinkedIn thought leadership and technical documentation.",
-        "status": "active"
+    "Margin Hunter": {
+        "name": "margin_hunter", "title": "Margin Hunter: Unit Economics Engine",
+        "icon": "assets/icons/margin_hunter.svg", "status": "active", "service_id": "S1",
+        "category": "BI & Analytics", "roi_model": "Identifies 5-10 initiatives with 6-12 month payback"
     },
-    "🧠 Smart Forecast": {
-        "name": "smart_forecast",
-        "title": "Smart Forecast Engine",
-        "icon": "assets/icons/smart_forecast.svg",
-        "desc": "Predictive intelligence engine leveraging Random Forest ensembles and rolling-window backtesting to deliver statistically rigorous time-series forecasting.",
-        "status": "new"
+    "Market Pulse": {
+        "name": "market_pulse", "title": "Market Pulse: Technical Analysis",
+        "icon": "assets/icons/market_pulse.svg", "status": "active", "service_id": "S8",
+        "category": "BI & Analytics", "roi_model": "$24,000/year savings on Terminal subs"
     },
-    "🤖 Multi-Agent Workflow": {
-        "name": "multi_agent",
-        "title": "Multi-Agent Workflow",
-        "icon": "assets/icons/multi_agent.svg",
-        "desc": "State-of-the-art agentic orchestration. Synchronizes specialized sub-agents (Data, Tech, News, Chief) for comprehensive 360° asset intelligence.",
-        "status": "new"
+    "Data Detective": {
+        "name": "data_detective", "title": "Data Detective: Automated EDA",
+        "icon": "assets/icons/data_detective.svg", "status": "active", "service_id": "S11",
+        "category": "BI & Analytics", "roi_model": "Reduces analysis from 2 hours to 2 minutes"
     },
-    "🏗️ DevOps Control": {
-        "name": "devops_control",
-        "title": "DevOps Control",
-        "icon": "assets/icons/devops_control.svg",
-        "desc": "Full-spectrum CI/CD orchestration console. Real-time monitoring of build pipelines, test coverage analytics, and autonomous deployment status tracking.",
-        "status": "active"
+    "Marketing Analytics": {
+        "name": "marketing_analytics", "title": "Marketing Attribution Hub",
+        "icon": "assets/icons/marketing_analytics.svg", "status": "active", "service_id": "S16",
+        "category": "BI & Analytics", "roi_model": "20-40% improvement in spend efficiency"
     },
-    "🏠 Real Estate AI": {
-        "name": "real_estate_ai",
-        "title": "GHL Real Estate AI",
-        "icon": "assets/icons/real_estate.svg",
-        "desc": "Institutional-grade real estate orchestration engine. Features automated lead qualification, predictive scoring models, and multi-tenant GHL integration.",
-        "status": "new"
+    "Smart Forecast": {
+        "name": "smart_forecast", "title": "Smart Forecast: Predictive Intelligence",
+        "icon": "assets/icons/smart_forecast.svg", "status": "active", "service_id": "S10",
+        "category": "BI & Analytics", "roi_model": "15-25% improvement in forecast accuracy"
     },
-    "🧮 ROI Calculators": {
-        "name": "roi_calculators",
-        "title": "ROI & Growth Calculators",
-        "icon": "assets/icons/calculator.svg",
-        "desc": "High-fidelity financial modeling for multiple verticals. Quantify the impact of AI-driven optimization on revenue, retention, and conversion metrics.",
-        "status": "new"
+    "Automated Reporting": {
+        "name": "automated_reporting", "title": "Automated Reporting Pipelines",
+        "icon": "assets/icons/strategy.svg", "status": "active", "service_id": "S9",
+        "category": "BI & Analytics", "roi_model": "Eliminate 8+ hours/week of manual Excel work"
     },
-    "🎯 Strategy Planner": {
-        "name": "service_selector",
-        "title": "AI Strategy Planner",
-        "icon": "assets/icons/strategy.svg",
-        "desc": "Interactive diagnostic tool to architect your optimal AI service stack. Tailored roadmaps based on industry, volume, and operational challenges.",
-        "status": "new"
+    "GHL Real Estate AI": {
+        "name": "real_estate_ai", "title": "GHL Real Estate AI",
+        "icon": "assets/icons/real_estate.svg", "status": "active", "service_id": "V1",
+        "category": "Vertical Solutions", "roi_model": "$518,400/year incremental revenue potential"
     },
-    "🏢 Vertical Solutions": {
-        "name": "landing_pages",
-        "title": "Vertical Industry Solutions",
-        "icon": "assets/icons/verticals.svg",
-        "desc": "Deeply integrated AI architectures tailored for SaaS, E-commerce, Healthcare, and Real Estate. Industry-specific value propositions and stacks.",
-        "status": "new"
+    "Vertical Insights": {
+        "name": "landing_pages", "title": "Industry-Specific Value Stacks",
+        "icon": "assets/icons/verticals.svg", "status": "new", "service_id": "STRAT",
+        "category": "Vertical Solutions", "roi_model": "20% reduction in churn via industry patterns"
     },
-    "🤖 Agent Logic": {
-        "name": "agent_logic",
-        "title": "Agent Logic",
-        "icon": "assets/icons/agent_logic.svg",
-        "desc": "Autonomous market intelligence agent. Orchestrates NLP-driven sentiment analysis and real-time news aggregation for proactive market positioning.",
-        "status": "active"
+    "Technical Due Diligence": {
+        "name": "technical_due_diligence", "title": "Technical Due Diligence",
+        "icon": "assets/icons/design_system.svg", "status": "active", "service_id": "S2",
+        "category": "Infrastructure & Strategy", "roi_model": "Prevents $200k-$2M+ acquisition value loss"
     },
-    "💼 Financial Analyst": {
-        "name": "financial_analyst",
-        "title": "Financial Analyst",
-        "icon": "assets/icons/financial_analyst.svg",
-        "desc": "Comprehensive fundamental analysis framework. Delivers deep-dive financial statement audits, ratio analysis, and intrinsic valuation modeling.",
-        "status": "active"
+    "AI Strategy Planner": {
+        "name": "service_selector", "title": "AI Strategy & Readiness Planner",
+        "icon": "assets/icons/strategy.svg", "status": "new", "service_id": "S1",
+        "category": "Infrastructure & Strategy", "roi_model": "Prevents $50k-$200k in misallocated spend"
     },
-
-    "🎨 Design System": {
-        "name": "design_system",
-        "title": "Design System Gallery",
-        "icon": "assets/icons/design_system.svg",
-        "desc": "Centralized UI/UX architecture laboratory showcasing the project's institutional-grade glassmorphic components and WCAG-compliant theme engine.",
-        "status": "active"
+    "ROI Calculators": {
+        "name": "roi_calculators", "title": "ROI & Growth Calculators",
+        "icon": "assets/icons/calculator.svg", "status": "new", "service_id": "STRAT",
+        "category": "Infrastructure & Strategy", "roi_model": "Instant data-driven investment justification"
+    },
+    "DevOps Control": {
+        "name": "devops_control", "title": "DevOps & MLOps Control",
+        "icon": "assets/icons/devops_control.svg", "status": "active", "service_id": "S18",
+        "category": "Infrastructure & Strategy", "roi_model": "80% reduction in maintenance overhead"
+    },
+    "Design System": {
+        "name": "design_system", "title": "Design System Gallery",
+        "icon": "assets/icons/design_system.svg", "status": "active", "service_id": "UI",
+        "category": "Infrastructure & Strategy", "roi_model": "WCAG AAA compliance for all deployments"
     },
 }
 
 def main():
-    """Main application function with Lazy Loading."""
+    import utils.ui as ui
+    if "theme" not in st.session_state: st.session_state.theme = "light"
     
-    # Lazy Import UI to prevent import loops or early crashes
-    try:
-        import utils.ui as ui
-        from utils.logger import get_logger
-        logger = get_logger(__name__)
-    except ImportError as e:
-        st.error(f"Critical System Error: Failed to load core utilities. {e}")
-        st.stop()
-
-    # Initialize session state
-    if "theme" not in st.session_state:
-        st.session_state.theme = "light"
-    if "username" not in st.session_state:
-        st.session_state.username = "Guest"
-
-    try:
-        # PRODUCTION GATEWAY (Optional - removed for public demo)
-        # if not ui.login_modal(): st.stop()
-
-        # Initialize page variable
-        page = "🏠 Overview"
-
-        # SIDEBARNAVIGATION
-        with st.sidebar:
-            st.markdown(
-                f"""
-                <div style='margin-bottom: 32px;'>
-                    <h1 style='
-                        font-family: "Space Grotesk", sans-serif;
-                        font-size: 1.5rem;
-                        font-weight: 800;
-                        letter-spacing: -0.05em;
-                        margin: 0;
-                        color: #0F172A;
-                    '>
-                        ENTERPRISE<span style='color: #10B981;'>HUB</span>
-                    </h1>
-                    <div style='
-                        color: #64748b;
-                        font-size: 0.7rem;
-                        font-weight: 600;
-                        letter-spacing: 0.1em;
-                        text-transform: uppercase;
-                    '>
-                        Platform Console v5.0.1
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            # Theme Toggle - RESTORED ALL 4 THEMES
-            st.markdown("---")
-            st.markdown("**🎨 Theme**")
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("☀️ Light", use_container_width=True):
-                    st.session_state.theme = "light"
-                    st.rerun()
-                if st.button("🌊 Ocean", use_container_width=True):
-                    st.session_state.theme = "ocean"
-                    st.rerun()
-            with col2:
-                if st.button("🌙 Dark", use_container_width=True):
-                    st.session_state.theme = "dark"
-                    st.rerun()
-                if st.button("🌅 Sunset", use_container_width=True):
-                    st.session_state.theme = "sunset"
-                    st.rerun()
-
-            # Navigation
-            st.markdown("---")
-            pages = ["🏠 Overview"] + list(MODULES.keys())
-            page = st.radio("Navigate:", pages, label_visibility="collapsed")
-
-            st.markdown("---")
-            st.markdown("### 👤 **Cayman Roden**")
-            st.markdown("Full-Stack Python Developer")
-            st.markdown("[View Portfolio](https://chunkytortoise.github.io/EnterpriseHub/)")
-
-        # Setup UI
-        ui.setup_interface(st.session_state.theme)
-
-        # MAIN CONTAINER
-        if page == "🏠 Overview":
-            _render_overview(ui)
-        elif page in MODULES:
-            module_info = MODULES[page]
-            _load_and_render_module(module_info["name"], module_info["title"])
+    with st.sidebar:
+        st.markdown("<h1 style='color: #10B981;'>ENTERPRISE HUB</h1>", unsafe_allow_html=True)
+        st.markdown("Cayman Roden | Services Console")
+        st.divider()
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("☀️ Light", use_container_width=True):
+                st.session_state.theme = "light"; st.rerun()
+        with col2:
+            if st.button("🌙 Dark", use_container_width=True):
+                st.session_state.theme = "dark"; st.rerun()
         
-        # Footer
-        ui.footer()
+        st.divider()
+        st.markdown("### 🧭 Navigation")
+        nav_options = ["🏠 Overview"]
+        for cat, mods in CATEGORIES.items():
+            nav_options.append(f"--- {cat} ---")
+            nav_options.extend(mods)
+        
+        selection = st.radio("Go to:", nav_options, label_visibility="collapsed")
+        page = selection if selection in MODULES or selection == "🏠 Overview" else "🏠 Overview"
+        
+        st.divider()
+        st.markdown("### 👤 Cayman Roden")
+        st.markdown("AI Systems Architect")
+        st.markdown("[View Portfolio](https://chunkytortoise.github.io/EnterpriseHub/)")
 
-    except Exception as e:
-        st.error("❌ An unexpected error occurred in the application.")
-        st.exception(e)
+    ui.setup_interface(st.session_state.theme)
 
-def _load_and_render_module(module_name, module_title):
-    """Dynamically imports and renders a module to save memory/startup time."""
-    import importlib
-    import streamlit as st
-    import utils.ui as ui  # Re-import locally to be safe
+    if page == "🏠 Overview":
+        from modules import landing_pages
+        landing_pages.render()
+    elif page in MODULES:
+        _load_and_render_module(MODULES[page])
+    
+    ui.footer()
 
-    ui.section_header(module_title)
-
-    with st.spinner(f"Loading {module_title}..."):
+def _load_and_render_module(module_info):
+    import utils.ui as ui
+    ui.service_header(
+        title=module_info["title"],
+        category=module_info.get("category", "General"),
+        service_id=module_info.get("service_id", "N/A"),
+        roi_model=module_info.get("roi_model", "N/A")
+    )
+    with st.spinner(f"Loading {module_info['title']}..."):
         try:
-            # THIS IS THE KEY FIX: Import only when requested
-            module = importlib.import_module(f"modules.{module_name}")
+            module = importlib.import_module(f"modules.{module_info['name']}")
             module.render()
-        except ModuleNotFoundError:
-            st.warning(f"⚠️ Module '{module_name}' is not yet deployed.")
         except Exception as e:
-            st.error(f"❌ Failed to load {module_title}")
-            st.exception(e)
-
-def _render_overview(ui):
-    """Render the overview/home page - RESTORED TO FULL RICH UI."""
-    import streamlit as st
-    
-    # Hero Section
-    ui.hero_section(
-        "Unified Enterprise Hub",
-        f"A production-grade business intelligence platform consolidating "
-        f"{len(MODULES)} mission-critical tools into a single, cloud-native interface."
-    )
-
-    # Metrics Row - Highlighting ARETE and Technical Co-Founder capabilities
-    col1, col2, col3, col4 = st.columns(4)
-    with col1: ui.card_metric("Flagship Module", "ARETE", "Self-Maintaining AI")
-    with col2: ui.card_metric("Active Modules", f"{len(MODULES)}", "LangGraph + Claude")
-    with col3: ui.card_metric("Test Coverage", "247+", "Production-Ready")
-    with col4: ui.card_metric("Architecture", "Stateful Agents", "Autonomous")
-
-    ui.spacer(40)
-    
-    # Founding Client Program Banner
-    st.markdown(
-        """
-        <div style='
-            background: linear-gradient(90deg, #020617 0%, #1e293b 100%);
-            padding: 32px;
-            border-radius: 16px;
-            border-left: 8px solid #10B981;
-            margin-bottom: 40px;
-            color: white;
-        '>
-            <h2 style='margin: 0; color: #10B981; font-family: "Space Grotesk", sans-serif;'>🚀 Founding Client Program</h2>
-            <p style='font-size: 1.1rem; margin: 16px 0; opacity: 0.9;'>
-                I am accepting <strong>3 new partners</strong> for the Q1 2026 cohort. 
-                Get institutional-grade AI infrastructure at a <strong>30% founding discount</strong> in exchange for a documented case study.
-            </p>
-            <div style='display: flex; gap: 20px; align-items: center;'>
-                <div style='background: rgba(16, 185, 129, 0.1); padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);'>
-                    <span style='color: #10B981; font-weight: 700;'>2 OF 3 SLOTS REMAINING</span>
-                </div>
-                <a href='mailto:caymanroden@gmail.com' style='color: white; text-decoration: none; font-weight: 600; border-bottom: 2px solid #10B981;'>Apply for Founding Partnership →</a>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.markdown("### 🛠️ Module Suite")
-
-    # Dynamic Feature Grid (Rows of 3)
-    module_keys = list(MODULES.keys())
-    for i in range(0, len(module_keys), 3):
-        cols = st.columns(3)
-        for j in range(3):
-            if i + j < len(module_keys):
-                key = module_keys[i + j]
-                info = MODULES[key]
-                with cols[j]:
-                    ui.feature_card(
-                        icon=info["icon"] if info["icon"] else "🚀",
-                        title=info["title"],
-                        description=info["desc"],
-                        status=info["status"],
-                        icon_path=info["icon"] if info.get("icon") else None,
-                    )
-        ui.spacer(20)
-
-    ui.spacer(40)
-    ui.section_header(
-        "Built For Real Business Challenges",
-        ("See how EnterpriseHub replaces manual workflows and expensive subscriptions"),
-    )
-
-    col1, col2 = st.columns(2)
-    with col1:
-        ui.use_case_card(
-            icon="💡",
-            title="For SaaS Founders",
-            description="""
-                <strong>Margin Hunter</strong> replaces Excel spreadsheet
-                chaos for pricing decisions. Run 100 profit scenarios
-                simultaneously with sensitivity heatmaps. Break-even
-                analysis that updates in real-time as you adjust prices.
-            """,
-        )
-
-        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
-
-        ui.use_case_card(
-            icon="📊",
-            title="For Finance Teams",
-            description="""
-                <strong>Market Pulse</strong> eliminates Bloomberg Terminal
-                dependency for basic technical analysis. 4-panel charts
-                (Price/RSI/MACD/Volume) with institutional-grade indicators.
-                Save $24,000/year in subscriptions.
-            """,
-        )
-
-        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
-
-        ui.use_case_card(
-            icon="📈",
-            title="For Marketing Teams",
-            description="""
-                **Marketing Analytics** replaces agency dashboards costing
-                $200-500/month. 5 attribution models, A/B test calculators,
-                and campaign ROI tracking. One-time build you own forever.
-            """,
-        )
-
-    with col2:
-        ui.use_case_card(
-            icon="🔍",
-            title="For Data Analysts",
-            description="""
-                <strong>Data Detective</strong> reduces exploratory data
-                analysis from 2 hours to 2 minutes. AI-powered insights,
-                correlation heatmaps, and quality scoring. Upload CSV → Get
-                actionable findings instantly.
-            """,
-        )
-
-        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
-
-        ui.use_case_card(
-            icon="🏠",
-            title="For Real Estate Teams",
-            description="""
-                **GHL Real Estate AI** replaces manual lead qualification
-                drudgery. 24/7 autonomous engagement, predictive scoring,
-                and automated re-engagement that recovers 20% more leads
-                without human intervention.
-            """,
-        )
-
-        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
-
-        ui.use_case_card(
-            icon="🏗️",
-            title="For Engineering Teams",
-            description="""
-                **ARETE-Architect** elevates developers to architects.
-                Autonomous code maintenance, self-healing CI/CD pipelines,
-                and real-time DevOps orchestration that reduces maintenance
-                overhead by 80%.
-            """,
-        )
+            st.error(f"❌ Failed to load {module_info['title']}"); st.exception(e)
 
 if __name__ == "__main__":
     main()
