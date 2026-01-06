@@ -432,24 +432,19 @@ class SmartDocumentGenerator:
     def _get_required_disclosures(self, jurisdiction: str) -> List[str]:
         """Get required disclosures for jurisdiction"""
         # Sample requirements - in production, fetch from legal database
+        # Note: These should map to DocumentType enum values
         requirements = {
-            "CA": ["lead_paint", "natural_hazards", "mello_roos", "earthquake"],
-            "TX": ["lead_paint", "addendum_residential", "seller_disclosure"],
-            "FL": ["lead_paint", "property_condition", "radon"],
-            "NY": ["lead_paint", "property_condition", "disclosure_statement"]
+            "CA": ["disclosure_packet", "addendum"],
+            "TX": ["disclosure_packet", "addendum"],
+            "FL": ["disclosure_packet", "addendum"],
+            "NY": ["disclosure_packet", "addendum"]
         }
-        return requirements.get(jurisdiction, ["lead_paint"])
+        return requirements.get(jurisdiction, ["disclosure_packet"])
     
     def _get_optional_disclosures(self, property_data: Dict[str, Any]) -> List[str]:
         """Get optional disclosures based on property characteristics"""
-        optional = []
-        if property_data.get("has_pool"):
-            optional.append("pool_safety")
-        if property_data.get("has_septic"):
-            optional.append("septic_inspection")
-        if property_data.get("in_hoa"):
-            optional.append("hoa_documents")
-        return optional
+        # Return empty list for now - optional docs would need custom handling
+        return []
     
     def _prepare_signers(self, signers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Prepare signer information"""
