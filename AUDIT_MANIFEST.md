@@ -1,93 +1,64 @@
 # AUDIT MANIFEST: GHL Real Estate AI Handoff
+**Status: COMPLETED**
+**Date: Jan 5, 2026**
 
-This manifest tracks the forensic audit of the repository to prepare the "Golden State" deliverable for Jorge.
+This manifest records the final "Golden State" of the repository after forensic cleanup.
 
-## 🟢 KEEP (Golden Root & Core Package)
-*Essential files for the application and professional repository standards.*
+## 🟢 ACTIVE (The "Golden Root")
+*These files remain in the root directory for production and maintenance.*
 
-- `ghl_real_estate_ai/` - **Source of Truth** (Core Logic)
-- `app.py` - Main Entry Point
-- `README.md` - Primary Documentation
-- `JORGE_START_HERE.md` - (To be created) White Glove Handoff Map
-- `requirements.txt` - Production Dependencies
-- `pyproject.toml` - Project Configuration
-- `railway.json` - Deployment Configuration
+### Application Core
+- `app.py` - Main Application
+- `demo_app.py` - Public Demo
+- `ghl_real_estate_ai/` - Core Python Package
+- `modules/` - Business Modules
+- `utils/` - Utility Functions
+- `pages/` - Streamlit Pages
+- `assets/` - Static Assets (Images, CSS)
+
+### Configuration
+- `requirements.txt` - Python Dependencies
+- `dev-requirements.txt` - Development Dependencies
+- `packages.txt` - System Dependencies
+- `pyproject.toml` - Project Settings
+- `railway.json` - Railway Config
+- `render.yaml` - Render Config
 - `.env.example` - Environment Template
-- `.gitignore` - Git Configuration
+- `.gitignore` - Git Ignore Rules
+- `Makefile` - Command Shortcuts
+
+### Documentation
+- `README.md` - Public Documentation
+- `JORGE_START_HERE.md` - Client Handoff Guide
+- `AUTHORS.md` - Credits
 - `LICENSE` - Legal
-- `AUTHORS.md` - Project Authors
-- `CHANGELOG.md` - Project History
-- `docs/` - Canonical Documentation
+- `CHANGELOG.md` - History
+- `docs/` - Technical Documentation (Deployment, Monitoring, etc.)
+
+### Tests
 - `tests/` - Test Suite
-- `assets/` - Professional Assets
-- `utils/`, `modules/`, `prompts/`, `scenarios/`, `scripts/`, `pages/`, `data/`, `portfolio/` - Core Directories
 
-## 🟡 ARCHIVE (Move to `_archive/` or `docs/`)
-*Files to be preserved for history or moved to appropriate subdirectories.*
+## 🟡 ARCHIVED (Moved to `_archive/`)
+*Historical artifacts moved to preserve root cleanliness.*
 
-### Move to `_archive/sessions/`
-- `SESSION_HANDOFF*.md` (50+ files)
-- `SESSION_HANDOFF_OLD.md`
+- **`_archive/sessions/`**: 50+ Session Handoff logs.
+- **`_archive/strategy/`**: 10+ Business & Planning documents (Action Plans, GTM Strategy).
+- **`_archive/internal/`**: Persona definitions, internal logs, and verification reports.
+- **`_archive/deliveries/`**: Previous milestone handoff packages.
+- **`_archive/duplicates/`**: Redundant `ghl-real-estate-ai` (hyphenated) folder.
+- **`_archive/reference/`**: `ghl-real-estate-ai-starter` kit.
+- **`_archive/reports/`**: Cleanup assessments and audit reports.
 
-### Move to `assets/screenshots/`
-- `Screenshot_*.jpg` (10 files)
-- `imported_screenshots/`
-
-### Move to `docs/` (Professional Manuals)
-- `DEPLOY_NOW_RAILWAY.md`
-- `RAILWAY_DEPLOYMENT_GUIDE.md`
-- `STREAMLIT_DEPLOYMENT.md`
-- `MONITORING_SETUP_GUIDE.md`
-- `INCIDENT_RESPONSE_PLAYBOOK.md`
-- `WEBHOOK_SETUP_INSTRUCTIONS.md`
-- `DEPLOYMENT_INSTRUCTIONS.md`
-- `DEPLOYMENT_CHECKLIST.md`
-
-### Move to `_archive/deliveries/`
-- `JORGE_DELIVERY_JAN_03/`
-- `JORGE_FINAL_DELIVERY.md`
-- `JORGE_HANDOFF_EMAIL.txt`
-- `EMAIL_TO_JORGE_2026-01-04.md`
-
-### Move to `_archive/strategy/`
-- `90_DAY_ACTION_PLAN.md`
-- `GO_TO_MARKET_CHECKLIST.md`
-- `STRATEGIC_IMPLEMENTATION_ROADMAP.md`
-- `FINAL_DEPLOYMENT_GAMEPLAN_2026-01-05.md`
-- `FINAL_SUMMARY.md`
-- `PRICING_ANALYSIS_AND_STRATEGY.md`
-- `COMPETITIVE_POSITIONING_ANALYSIS.md`
-- `CAYMAN_RODEN_PROFESSIONAL_SERVICES_CATALOG.md`
-- `SERVICES_CATALOG_REFINEMENT.md`
-- `PORTFOLIO_FINALIZATION_PLANS.md`
-
-### Move to `_archive/internal/`
-- `AGENT_SWARM_PERSONAS_2026-01-05.md`
-- `PERSONA_0_MASTER_ORCHESTRATOR.md`
-- `PERSONA_IMPROVEMENTS_COMPLETE.md`
-- `PERSONA_SWARM_ORCHESTRATOR.md`
-- `Persona_Orchestrator.md`
-- `PERSONA0.md`
-- `PERSONA_GHL_AUDITOR.md`
-- `VERIFICATION_REPORT_2026-01-05.md`
-- `ROVODEV_ACCOUNT_SWITCHING.md`
-- `EnterpriseHub.code-workspace`
-- `agent_docs/`
-- `automation/`
-- `agentforge/`
-- `better-t-app/`
-
-## 🔴 DELETE (Immediate Cleanup)
-*Junk, logs, or temporary development artifacts.*
+## 🔴 DELETED (Removed)
+*Junk and temporary files permanently removed.*
 
 - `ghl_test_results.log`
+- `coverage.json`, `htmlcov/`
+- `job_desc.txt`, `courses.md`
 - `tmp_rovodev_*`
-- `coverage.json`
-- `job_desc.txt`
-- `courses.md`
-- `htmlcov/`
+- `.resume_timestamp`
+- `evaluation_prompt.md`
+- Loose `Screenshot_*.jpg` files (Moved to `assets/screenshots/` before deletion of originals if any remained)
 
-## ❓ FLAG (Requires Decision/Action)
-- `ghl-real-estate-ai/` - **Action**: Diff with `ghl_real_estate_ai/`. If redundant, archive.
-- `ghl-real-estate-ai-starter/` - **Action**: Archive as "Starter Kit" or delete if redundant.
-- `demo_app.py` - **Action**: Is this used for Jorge's demo? If not, archive.
+---
+*Audit completed by Persona B (Forensic Auditor).*
