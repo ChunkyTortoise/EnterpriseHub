@@ -1,0 +1,38 @@
+{
+  "workflow_id": "6a61b680-16e8-4b80-8076-c89a3af89fe5",
+  "name": "Simple Welcome Workflow",
+  "description": "Send welcome message to new leads",
+  "trigger": {
+    "trigger_type": "lead_created",
+    "conditions": {},
+    "enabled": true
+  },
+  "actions": [
+    {
+      "action_id": "send_welcome",
+      "action_type": "send_sms",
+      "config": {
+        "message": "Welcome! Thanks for reaching out."
+      },
+      "conditions": [],
+      "next_action_id": "update_status",
+      "delay_seconds": 0
+    },
+    {
+      "action_id": "update_status",
+      "action_type": "update_status",
+      "config": {
+        "status": "contacted"
+      },
+      "conditions": [],
+      "next_action_id": null,
+      "delay_seconds": 0
+    }
+  ],
+  "enabled": true,
+  "created_at": "2026-01-06T03:43:26.661718",
+  "updated_at": "2026-01-06T03:43:26.662021",
+  "created_by": "user",
+  "execution_count": 1,
+  "success_count": 1
+}

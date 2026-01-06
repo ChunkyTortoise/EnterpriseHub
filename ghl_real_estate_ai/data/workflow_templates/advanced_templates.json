@@ -1,0 +1,273 @@
+{
+  "templates": [
+    {
+      "id": "cold_lead_reactivation",
+      "name": "Cold Lead Reactivation Campaign",
+      "category": "re_engagement",
+      "description": "Win back leads that went cold 30+ days ago",
+      "trigger": "lead_inactive_30_days",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_email",
+          "delay_minutes": 0,
+          "subject": "Still looking for your dream home?",
+          "template": "Hi {{firstName}},\n\nI know it's been a while since we last spoke. The market has changed quite a bit!\n\nNew properties matching your criteria:\n{{newListings}}\n\nInterested in taking a fresh look?\n\n{{agentName}}"
+        },
+        {
+          "order": 2,
+          "action": "send_sms",
+          "delay_minutes": 2880,
+          "template": "{{firstName}}, I sent you some new listings. Any catch your eye? 🏡"
+        },
+        {
+          "order": 3,
+          "action": "offer_incentive",
+          "delay_minutes": 5760,
+          "template": "{{firstName}}, I'd love to help you find your home. Book a call this week and I'll include a free home valuation ($500 value)."
+        }
+      ]
+    },
+    {
+      "id": "viewing_followup",
+      "name": "Post-Viewing Follow-up",
+      "category": "appointments",
+      "description": "Structured follow-up after property viewing",
+      "trigger": "appointment_completed",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_sms",
+          "delay_minutes": 120,
+          "template": "Thanks for viewing {{property}} today! What did you think? Any questions?"
+        },
+        {
+          "order": 2,
+          "action": "send_email",
+          "delay_minutes": 1440,
+          "subject": "Thoughts on {{property}}?",
+          "template": "Hi {{firstName}},\n\nI hope you enjoyed seeing {{property}} yesterday.\n\nHere's what we covered:\n• {{feature1}}\n• {{feature2}}\n• {{feature3}}\n\nReady to move forward? Let's discuss next steps.\n\n{{agentName}}"
+        },
+        {
+          "order": 3,
+          "action": "recommend_similar",
+          "delay_minutes": 2880,
+          "condition": "no_offer_made"
+        }
+      ]
+    },
+    {
+      "id": "seasonal_campaign",
+      "name": "Seasonal Market Update",
+      "category": "nurturing",
+      "description": "Quarterly market updates for all leads",
+      "trigger": "quarterly",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_email",
+          "delay_minutes": 0,
+          "subject": "Q{{quarter}} {{year}} Market Update - {{city}}",
+          "template": "Hi {{firstName}},\n\nHere's what's happening in the {{city}} real estate market:\n\n📊 Median Price: {{medianPrice}} ({{priceChange}}%)\n📈 Days on Market: {{avgDays}}\n🏠 Inventory: {{inventory}} homes\n\nBest time to buy? {{buyerMarket}}\n\nLet's discuss your options.\n\n{{agentName}}"
+        }
+      ]
+    },
+    {
+      "id": "offer_preparation",
+      "name": "Offer Preparation Workflow",
+      "category": "transaction",
+      "description": "Guide leads through making an offer",
+      "trigger": "lead_ready_to_offer",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_checklist",
+          "delay_minutes": 0,
+          "items": [
+            "Pre-approval letter",
+            "Earnest money ready",
+            "Home inspection scheduled",
+            "Insurance quotes obtained"
+          ]
+        },
+        {
+          "order": 2,
+          "action": "schedule_call",
+          "delay_minutes": 60,
+          "template": "Let's review your offer strategy. Book a time: {{calendarLink}}"
+        },
+        {
+          "order": 3,
+          "action": "send_market_analysis",
+          "delay_minutes": 120,
+          "template": "Here's the competitive market analysis for {{property}}"
+        }
+      ]
+    },
+    {
+      "id": "birthday_campaign",
+      "name": "Birthday & Anniversary Campaign",
+      "category": "relationship",
+      "description": "Celebrate client milestones",
+      "trigger": "birthday_or_anniversary",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_sms",
+          "delay_minutes": 0,
+          "template": "🎉 Happy {{occasion}} {{firstName}}! Hope you're enjoying your home at {{address}}. Let me know if you ever need anything!"
+        },
+        {
+          "order": 2,
+          "action": "send_gift_card",
+          "delay_minutes": 60,
+          "value": 25,
+          "message": "Small gift from us to celebrate!"
+        }
+      ]
+    },
+    {
+      "id": "referral_request",
+      "name": "Referral Request Sequence",
+      "category": "relationship",
+      "description": "Ask satisfied clients for referrals",
+      "trigger": "deal_closed_30_days",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_email",
+          "delay_minutes": 0,
+          "subject": "How's your new home?",
+          "template": "Hi {{firstName}},\n\nIt's been a month since you moved in! How's everything going?\n\nIf you know anyone else looking to buy or sell, I'd love to help them too.\n\n{{referralLink}}\n\n{{agentName}}"
+        },
+        {
+          "order": 2,
+          "action": "send_sms",
+          "delay_minutes": 2880,
+          "template": "{{firstName}}, loving your home? Know anyone else house hunting? I'd appreciate the referral! 🏡"
+        }
+      ]
+    },
+    {
+      "id": "open_house_invitation",
+      "name": "Open House Invitation",
+      "category": "events",
+      "description": "Invite leads to open house events",
+      "trigger": "open_house_scheduled",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_email",
+          "delay_minutes": -10080,
+          "subject": "Open House This Weekend: {{property}}",
+          "template": "{{firstName}},\n\nJoin us this weekend!\n\n🏠 {{property}}\n📅 {{date}} at {{time}}\n📍 {{address}}\n\nRefreshments provided. No appointment needed!\n\n{{agentName}}"
+        },
+        {
+          "order": 2,
+          "action": "send_sms",
+          "delay_minutes": -1440,
+          "template": "Reminder: Open house tomorrow at {{time}} for {{property}}. Hope to see you there!"
+        },
+        {
+          "order": 3,
+          "action": "send_sms",
+          "delay_minutes": -120,
+          "template": "Open house starts in 2 hours! {{address}}"
+        }
+      ]
+    },
+    {
+      "id": "mortgage_preapproval",
+      "name": "Mortgage Pre-approval Nudge",
+      "category": "qualification",
+      "description": "Encourage leads to get pre-approved",
+      "trigger": "lead_not_preapproved",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_email",
+          "delay_minutes": 0,
+          "subject": "Get Pre-Approved in 24 Hours",
+          "template": "Hi {{firstName}},\n\nBefore we start viewing homes, let's get you pre-approved.\n\nWhy it matters:\n✓ Know your exact budget\n✓ Sellers take you seriously\n✓ Close faster\n\nI work with trusted lenders: {{lenderLinks}}\n\n{{agentName}}"
+        },
+        {
+          "order": 2,
+          "action": "send_lender_introduction",
+          "delay_minutes": 1440,
+          "template": "Connecting you with {{lenderName}}..."
+        }
+      ]
+    },
+    {
+      "id": "buyer_education",
+      "name": "First-Time Buyer Education Series",
+      "category": "education",
+      "description": "5-part education series for first-time buyers",
+      "trigger": "first_time_buyer_identified",
+      "steps": [
+        {
+          "order": 1,
+          "action": "send_email",
+          "delay_minutes": 0,
+          "subject": "Part 1: How Much Home Can You Afford?",
+          "template": "Welcome to our home buying guide! Over the next 5 weeks, I'll walk you through everything..."
+        },
+        {
+          "order": 2,
+          "action": "send_email",
+          "delay_minutes": 10080,
+          "subject": "Part 2: Understanding Mortgages",
+          "template": "This week: Different types of mortgages and which is right for you..."
+        },
+        {
+          "order": 3,
+          "action": "send_email",
+          "delay_minutes": 20160,
+          "subject": "Part 3: The Home Inspection Process",
+          "template": "What to expect during inspections and how to negotiate repairs..."
+        },
+        {
+          "order": 4,
+          "action": "send_email",
+          "delay_minutes": 30240,
+          "subject": "Part 4: Making a Winning Offer",
+          "template": "Strategies to get your offer accepted in a competitive market..."
+        },
+        {
+          "order": 5,
+          "action": "send_email",
+          "delay_minutes": 40320,
+          "subject": "Part 5: Closing Day - What to Expect",
+          "template": "The final steps to becoming a homeowner..."
+        }
+      ]
+    },
+    {
+      "id": "luxury_concierge",
+      "name": "Luxury Concierge Service",
+      "category": "luxury",
+      "description": "VIP treatment for luxury property leads",
+      "trigger": "luxury_property_inquiry",
+      "steps": [
+        {
+          "order": 1,
+          "action": "personal_call",
+          "delay_minutes": 15,
+          "template": "Make personal call within 15 minutes"
+        },
+        {
+          "order": 2,
+          "action": "send_luxury_portfolio",
+          "delay_minutes": 60,
+          "template": "Curated portfolio of exclusive listings"
+        },
+        {
+          "order": 3,
+          "action": "schedule_private_viewing",
+          "delay_minutes": 120,
+          "template": "Offer private viewing with refreshments"
+        }
+      ]
+    }
+  ]
+}

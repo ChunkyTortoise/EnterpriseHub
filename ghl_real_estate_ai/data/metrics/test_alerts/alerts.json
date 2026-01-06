@@ -502,5 +502,68 @@
     "message": "Test error",
     "timestamp": "2026-01-05T13:42:52.092587",
     "location_id": "test_alerts"
+  },
+  {
+    "level": "info",
+    "title": "Info",
+    "message": "Test info",
+    "timestamp": "2026-01-05T18:15:52.211576",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "warning",
+    "title": "Warning",
+    "message": "Test warning",
+    "timestamp": "2026-01-05T18:15:52.212539",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "error",
+    "title": "Error",
+    "message": "Test error",
+    "timestamp": "2026-01-05T18:15:52.213346",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "info",
+    "title": "Info",
+    "message": "Test info",
+    "timestamp": "2026-01-05T18:48:06.215894",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "warning",
+    "title": "Warning",
+    "message": "Test warning",
+    "timestamp": "2026-01-05T18:48:06.216969",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "error",
+    "title": "Error",
+    "message": "Test error",
+    "timestamp": "2026-01-05T18:48:06.217836",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "info",
+    "title": "Info",
+    "message": "Test info",
+    "timestamp": "2026-01-05T18:48:49.412190",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "warning",
+    "title": "Warning",
+    "message": "Test warning",
+    "timestamp": "2026-01-05T18:48:49.413161",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "error",
+    "title": "Error",
+    "message": "Test error",
+    "timestamp": "2026-01-05T18:48:49.413951",
+    "location_id": "test_alerts"
   }
 ]

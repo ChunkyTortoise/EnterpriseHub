@@ -55,6 +55,118 @@
       "started_at": null,
       "completed_at": null,
       "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260105_181539",
+      "location_id": "integration_test",
+      "operation_type": "tag",
+      "created_at": "2026-01-05T18:15:39.303286",
+      "created_by": "tester",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead1",
+        "lead2"
+      ],
+      "parameters": {
+        "tags": [
+          "integration_test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260105_184723",
+      "location_id": "integration_test",
+      "operation_type": "tag",
+      "created_at": "2026-01-05T18:47:23.180916",
+      "created_by": "tester",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead1",
+        "lead2"
+      ],
+      "parameters": {
+        "tags": [
+          "integration_test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260105_184753",
+      "location_id": "integration_test",
+      "operation_type": "tag",
+      "created_at": "2026-01-05T18:47:53.451117",
+      "created_by": "tester",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead1",
+        "lead2"
+      ],
+      "parameters": {
+        "tags": [
+          "integration_test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260105_184835",
+      "location_id": "integration_test",
+      "operation_type": "tag",
+      "created_at": "2026-01-05T18:48:35.848293",
+      "created_by": "tester",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead1",
+        "lead2"
+      ],
+      "parameters": {
+        "tags": [
+          "integration_test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
     }
   ],
   "templates": {}

@@ -1,11 +1,11 @@
 <div align="center">
   <img src="assets/hero/background_editorial.png" width="100%" style="border-radius: 12px; margin-bottom: 24px;" alt="EnterpriseHub Banner">
-  <h1>🚀 EnterpriseHub v5.0: Elite AI Console</h1>
-  <p><strong>The "Lead Architect" Platform for High-Ticket Engineering</strong></p>
+  <h1>🚀 EnterpriseHub v6.0: AI Service Showcase</h1>
+  <p><strong>The Professional Services Portal for Production-Grade AI Systems</strong></p>
 
   [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
   [![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
-  [![Design System](https://img.shields.io/badge/UI-Studio%20Dark-10B981.svg)](utils/ui.py)
+  [![Design System](https://img.shields.io/badge/UI-Editorial%20Mint-10B981.svg)](utils/ui.py)
   [![Tests](https://img.shields.io/badge/tests-517%2B%20passing-059669.svg?logo=pytest&logoColor=white)](https://github.com/ChunkyTortoise/enterprise-hub)
   [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](https://opensource.org/licenses/MIT)
 
@@ -14,7 +14,7 @@
   <strong>
     <a href="https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/">🎯 Try Live Demo</a>
     &nbsp;&nbsp;•&nbsp;&nbsp;
-    <a href="docs/DEMO_GUIDE.md">📋 High-Ticket Demo Guide</a>
+    <a href="docs/SERVICE_CATALOG.md">📋 2026 Service Catalog</a>
     &nbsp;&nbsp;•&nbsp;&nbsp;
     <a href="portfolio/ARETE_AGENT_CASE_STUDY.md">🦅 ARETE Case Study</a>
   </strong>
@@ -22,14 +22,14 @@
 
 ---
 
-## 🏗️ The "Lead Architect" Philosophy
+## 🏗️ The "Outcome-First" Philosophy
 
-EnterpriseHub v5.0 is not a collection of dashboards—it is a **Self-Maintaining Autonomous Ecosystem**. Built to demonstrate Staff-level engineering, it leverages a custom-built **Studio Dark** design system and a **Multi-Agent Swarm** architecture to solve high-stakes business problems.
+EnterpriseHub v6.0 is a **Professional Services Showcase** designed to demonstrate measurable business outcomes through high-fidelity AI engineering. It maps 19 professional certifications and 1,768 hours of advanced training directly to 31 mission-critical AI services.
 
 ### 🏛️ Core Design Principles
-- **Institutional Aesthetics**: Moving beyond "standard" UI to a custom, high-contrast SaaS experience (WCAG AAA compliant).
-- **Transparent Intelligence**: Features like **Cognitive Operations Trace** make the AI's reasoning visible and auditable.
-- **Production-Ready Rigor**: 517+ automated tests and a modular monolith architecture designed for enterprise scale.
+- **Institutional Authority**: Showcasing 19 certifications from IBM, Google, Microsoft, and Vanderbilt.
+- **ROI Transparency**: Every module includes an integrated ROI model and payback period calculation.
+- **Production-Ready Rigor**: 517+ automated tests verifying every system, ensuring enterprise-grade reliability.
 
 ---
 
