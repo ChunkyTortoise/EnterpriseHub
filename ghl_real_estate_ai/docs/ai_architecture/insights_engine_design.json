@@ -1,0 +1,66 @@
+{
+  "service_name": "ai_insights_engine",
+  "description": "Real-time AI-generated business insights",
+  "components": {
+    "data_aggregator": {
+      "description": "Aggregates data from all AI services",
+      "inputs": [
+        "lead_scores",
+        "triggers",
+        "predictions",
+        "recommendations"
+      ],
+      "outputs": [
+        "aggregated_metrics"
+      ]
+    },
+    "pattern_detector": {
+      "description": "Detects patterns and anomalies",
+      "algorithm": "Anomaly Detection + Pattern Mining",
+      "inputs": [
+        "aggregated_metrics",
+        "historical_data"
+      ],
+      "outputs": [
+        "detected_patterns"
+      ]
+    },
+    "insight_generator": {
+      "description": "Generates actionable insights",
+      "algorithm": "NLG (Natural Language Generation)",
+      "inputs": [
+        "patterns",
+        "business_context"
+      ],
+      "outputs": [
+        "insights"
+      ]
+    }
+  },
+  "insight_categories": [
+    "performance_trends",
+    "opportunity_alerts",
+    "risk_warnings",
+    "optimization_suggestions",
+    "market_signals"
+  ],
+  "api_interface": {
+    "endpoint": "/api/ai/insights",
+    "method": "GET",
+    "output": {
+      "insights": [
+        {
+          "id": "string",
+          "category": "string",
+          "severity": "high|medium|low",
+          "title": "string",
+          "description": "string",
+          "metrics": "object",
+          "recommended_actions": [
+            "string"
+          ]
+        }
+      ]
+    }
+  }
+}

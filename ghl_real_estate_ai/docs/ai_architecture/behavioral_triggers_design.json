@@ -1,0 +1,79 @@
+{
+  "service_name": "behavioral_triggers",
+  "description": "Event-based automation triggers from user behavior",
+  "components": {
+    "event_detector": {
+      "description": "Detects behavioral events in real-time",
+      "inputs": [
+        "user_actions",
+        "system_events"
+      ],
+      "outputs": [
+        "detected_events"
+      ]
+    },
+    "trigger_engine": {
+      "description": "Evaluates trigger conditions",
+      "inputs": [
+        "events",
+        "trigger_rules"
+      ],
+      "outputs": [
+        "fired_triggers"
+      ]
+    },
+    "action_executor": {
+      "description": "Executes triggered actions",
+      "inputs": [
+        "triggers"
+      ],
+      "outputs": [
+        "actions_taken"
+      ]
+    }
+  },
+  "trigger_types": [
+    {
+      "name": "engagement_drop",
+      "condition": "No interaction for N days",
+      "action": "Send re-engagement email"
+    },
+    {
+      "name": "high_engagement_spike",
+      "condition": "Multiple actions in short time",
+      "action": "Notify agent for immediate follow-up"
+    },
+    {
+      "name": "price_sensitivity",
+      "condition": "Repeated views of lower-priced properties",
+      "action": "Adjust property recommendations"
+    },
+    {
+      "name": "decision_signals",
+      "condition": "Calculator usage + multiple viewings",
+      "action": "Trigger urgency sequence"
+    },
+    {
+      "name": "abandonment",
+      "condition": "Started but didn't complete action",
+      "action": "Send completion reminder"
+    }
+  ],
+  "api_interface": {
+    "endpoint": "/api/ai/behavioral-triggers",
+    "method": "POST",
+    "input": {
+      "event_type": "string",
+      "lead_id": "string",
+      "event_data": "object"
+    },
+    "output": {
+      "triggers_fired": [
+        "string"
+      ],
+      "actions_queued": [
+        "object"
+      ]
+    }
+  }
+}

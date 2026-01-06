@@ -1,0 +1,120 @@
+{
+  "service_name": "predictive_lead_scoring",
+  "description": "ML-based lead scoring with real-time predictions",
+  "components": {
+    "feature_extractor": {
+      "description": "Extracts features from lead data",
+      "inputs": [
+        "lead_data",
+        "interaction_history",
+        "demographics"
+      ],
+      "outputs": [
+        "feature_vector"
+      ]
+    },
+    "scoring_model": {
+      "description": "Predicts lead quality score (0-100)",
+      "algorithm": "Gradient Boosting / Random Forest",
+      "inputs": [
+        "feature_vector"
+      ],
+      "outputs": [
+        "score",
+        "confidence",
+        "factors"
+      ]
+    },
+    "explainability": {
+      "description": "Explains scoring factors",
+      "outputs": [
+        "top_factors",
+        "impact_scores"
+      ]
+    }
+  },
+  "features": [
+    {
+      "name": "engagement_score",
+      "type": "numeric",
+      "description": "Email/SMS engagement rate",
+      "importance": "high"
+    },
+    {
+      "name": "response_time",
+      "type": "numeric",
+      "description": "Average response time in hours",
+      "importance": "high"
+    },
+    {
+      "name": "page_views",
+      "type": "numeric",
+      "description": "Number of property page views",
+      "importance": "medium"
+    },
+    {
+      "name": "budget_match",
+      "type": "numeric",
+      "description": "Budget alignment score (0-1)",
+      "importance": "high"
+    },
+    {
+      "name": "timeline_urgency",
+      "type": "categorical",
+      "description": "Purchase timeline: immediate/soon/exploring",
+      "importance": "high"
+    },
+    {
+      "name": "property_matches",
+      "type": "numeric",
+      "description": "Number of matching properties",
+      "importance": "medium"
+    },
+    {
+      "name": "communication_quality",
+      "type": "numeric",
+      "description": "Quality of lead responses (0-1)",
+      "importance": "medium"
+    },
+    {
+      "name": "source_quality",
+      "type": "categorical",
+      "description": "Lead source quality score",
+      "importance": "low"
+    }
+  ],
+  "api_interface": {
+    "endpoint": "/api/ai/lead-score",
+    "method": "POST",
+    "input": {
+      "lead_id": "string",
+      "include_explanation": "boolean"
+    },
+    "output": {
+      "lead_id": "string",
+      "score": "number (0-100)",
+      "confidence": "number (0-1)",
+      "tier": "string (hot/warm/cold)",
+      "factors": [
+        {
+          "name": "string",
+          "impact": "number",
+          "value": "any"
+        }
+      ],
+      "recommendations": [
+        "string"
+      ]
+    }
+  },
+  "data_requirements": {
+    "historical_data": "Minimum 100 leads with outcomes",
+    "features": "Lead data, interactions, demographics",
+    "labels": "Conversion status (closed/lost)"
+  },
+  "performance_targets": {
+    "latency": "< 100ms",
+    "accuracy": "> 75%",
+    "throughput": "1000 requests/min"
+  }
+}

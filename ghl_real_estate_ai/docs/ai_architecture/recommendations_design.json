@@ -1,0 +1,58 @@
+{
+  "service_name": "smart_recommendations",
+  "description": "AI-powered recommendations for properties, actions, and content",
+  "components": {
+    "property_recommender": {
+      "description": "Recommends properties to leads",
+      "algorithm": "Collaborative Filtering + Content-Based",
+      "inputs": [
+        "lead_preferences",
+        "viewing_history"
+      ],
+      "outputs": [
+        "property_recommendations"
+      ]
+    },
+    "action_recommender": {
+      "description": "Recommends next best actions for agents",
+      "algorithm": "Reinforcement Learning",
+      "inputs": [
+        "lead_state",
+        "agent_history"
+      ],
+      "outputs": [
+        "action_recommendations"
+      ]
+    },
+    "content_recommender": {
+      "description": "Recommends marketing content",
+      "algorithm": "Content-Based Filtering",
+      "inputs": [
+        "lead_profile",
+        "engagement_history"
+      ],
+      "outputs": [
+        "content_recommendations"
+      ]
+    }
+  },
+  "api_interface": {
+    "endpoint": "/api/ai/recommendations",
+    "method": "POST",
+    "input": {
+      "lead_id": "string",
+      "recommendation_type": "properties|actions|content",
+      "limit": "number"
+    },
+    "output": {
+      "recommendations": [
+        {
+          "id": "string",
+          "type": "string",
+          "score": "number",
+          "reason": "string"
+        }
+      ]
+    }
+  }
+}

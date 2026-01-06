@@ -1,0 +1,71 @@
+{
+  "service_name": "deal_prediction",
+  "description": "Predicts likelihood of deal closing and expected close date",
+  "components": {
+    "feature_engineer": {
+      "description": "Extracts deal-stage features",
+      "inputs": [
+        "deal_data",
+        "interaction_history",
+        "lead_score"
+      ],
+      "outputs": [
+        "feature_vector"
+      ]
+    },
+    "close_probability_model": {
+      "description": "Predicts probability of closing (0-1)",
+      "algorithm": "Logistic Regression / Neural Network",
+      "inputs": [
+        "feature_vector"
+      ],
+      "outputs": [
+        "close_probability",
+        "confidence_interval"
+      ]
+    },
+    "close_date_predictor": {
+      "description": "Predicts expected close date",
+      "algorithm": "Time Series / Regression",
+      "inputs": [
+        "feature_vector",
+        "close_probability"
+      ],
+      "outputs": [
+        "predicted_date",
+        "date_range"
+      ]
+    }
+  },
+  "features": [
+    "deal_age_days",
+    "stage_duration",
+    "lead_score",
+    "engagement_trend",
+    "price_point",
+    "financing_status",
+    "objections_count",
+    "last_interaction_days",
+    "agent_response_time",
+    "competitor_mentions"
+  ],
+  "api_interface": {
+    "endpoint": "/api/ai/deal-prediction",
+    "method": "POST",
+    "input": {
+      "deal_id": "string"
+    },
+    "output": {
+      "deal_id": "string",
+      "close_probability": "number (0-1)",
+      "predicted_close_date": "date",
+      "confidence": "string (high/medium/low)",
+      "risk_factors": [
+        "string"
+      ],
+      "recommendations": [
+        "string"
+      ]
+    }
+  }
+}
