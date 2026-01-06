@@ -1,0 +1,19 @@
+# Local Development & Archives
+_archive_v1_20260104/
+.chroma_db/
+reports/
+htmlcov/
+tests/
+docs/
+streamlit_demo/
+
+# Python/System
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.env
+venv/
+.venv/
+.git/
+.DS_Store

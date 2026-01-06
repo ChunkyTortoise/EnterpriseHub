@@ -44,3 +44,7 @@ def render():
         </div>
         """, unsafe_allow_html=True
     )
+
+    # Virtual Consultant Integration
+    from modules import virtual_consultant
+    virtual_consultant.render()

@@ -5,7 +5,20 @@ All notable changes to EnterpriseHub will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [6.0.0] - 2026-01-06
+
+### Added
+- **Virtual AI Architect**: Implemented a new autonomous lead-intake consultant on the landing page using the Persona-Orchestrator framework from `PERSONA0.md`.
+- **ROI Lab (Centralized Logic)**: Extracted all ROI math into `utils/roi_logic.py` for cross-platform consistency and 100% testability.
+- **Interactive Service Simulators**:
+  - **Technical Due Diligence (S2)**: Added a preliminary AI Audit Generator for risk assessment.
+  - **Business Automation (S6)**: Added a Workflow Automation Simulator to architect autonomous process replacements.
+- **Unit Testing**: Added dedicated test suite for centralized ROI logic (`tests/test_roi_logic.py`), bringing total passing tests to 522.
+
+### Changed
+- **Landing Page Evolution**: Integrated the Virtual Consultant widget to provide an automated diagnostic experience for new users.
+- **Module Depth**: Elevated Technical Due Diligence and Business Automation from high-fidelity mocks to functional interactive demos.
+- **README Overhaul**: Updated project documentation to reflect the specialized "Professional Services Showcase" positioning.
 
 ## [5.1.0] - 2026-01-04
 

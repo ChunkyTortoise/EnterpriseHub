@@ -1,0 +1,103 @@
+{
+  "consolidation_plan": {
+    "hub_1_executive_command": {
+      "name": "🏢 Executive Command Center",
+      "description": "High-level KPIs, revenue tracking, and system health",
+      "pages": [
+        "1_Executive_Dashboard.py",
+        "09_🎯_AI_Insights.py",
+        "4_📄_Reports.py"
+      ],
+      "key_features": [
+        "Total pipeline value",
+        "Hot leads count",
+        "AI engagement rate",
+        "Revenue metrics"
+      ]
+    },
+    "hub_2_lead_intelligence": {
+      "name": "🧠 Lead Intelligence Hub",
+      "description": "Deep dive into individual leads with AI-powered insights",
+      "pages": [
+        "2_Predictive_Scoring.py",
+        "25_🎯_AI_Lead_Scoring.py",
+        "26_🎯_Smart_Segmentation.py",
+        "27_🎨_Content_Personalization.py"
+      ],
+      "key_features": [
+        "Lead profile selector",
+        "Score breakdown and why",
+        "Segment analysis",
+        "Personalized property matches"
+      ]
+    },
+    "hub_3_automation_studio": {
+      "name": "🤖 Automation Studio",
+      "description": "Visual switchboard to toggle AI features on/off",
+      "pages": [
+        "11_🤖_Smart_Automation.py",
+        "12_🔄_Workflow_Automation.py",
+        "12_📧_Auto_FollowUp_Sequences.py",
+        "8_🚀_Hot_Lead_Fast_Lane.py",
+        "14_🛒_Workflow_Marketplace.py"
+      ],
+      "key_features": [
+        "One-click automation toggles",
+        "Trigger configuration",
+        "Workflow library",
+        "Behavioral triggers"
+      ]
+    },
+    "hub_4_sales_copilot": {
+      "name": "💰 Sales Copilot",
+      "description": "Agent tools for active deals and client meetings",
+      "pages": [
+        "7_💰_Deal_Closer_AI.py",
+        "13_📄_Smart_Document_Generator.py",
+        "11_🚀_One_Click_Property_Launch.py",
+        "14_📋_Meeting_Prep_Assistant.py",
+        "9_💵_Commission_Calculator.py"
+      ],
+      "key_features": [
+        "CMA generator",
+        "Meeting prep assistant",
+        "Document templates",
+        "Commission calculator"
+      ]
+    },
+    "hub_5_ops_optimization": {
+      "name": "📈 Ops & Optimization",
+      "description": "Manager-level analytics and team performance tracking",
+      "pages": [
+        "8_✅_Quality_Assurance.py",
+        "6_Revenue_Attribution.py",
+        "7_🏆_Competitive_Benchmarking.py",
+        "10_🎓_Agent_Coaching.py",
+        "10_📊_Win_Loss_Analysis.py"
+      ],
+      "key_features": [
+        "ROI dashboards",
+        "Coaching recommendations",
+        "Quality scores",
+        "Win/loss analysis"
+      ]
+    },
+    "other_pages": {
+      "name": "Additional Features",
+      "pages": [
+        "3_🎬_Demo_Mode.py",
+        "5_💡_Recommendations.py",
+        "13_🔗_GHL_Integration.py",
+        "15_📝_My_Templates.py",
+        "16_✨_WOW_Features.py"
+      ],
+      "disposition": "Keep as standalone or integrate into relevant hubs"
+    }
+  },
+  "implementation_notes": {
+    "approach": "Create 5 main hub pages that use st.tabs() for sub-features",
+    "navigation": "Radio buttons in sidebar for hub selection",
+    "state_management": "Use st.session_state to track current hub and sub-tab",
+    "backward_compatibility": "Keep original pages for now, mark as deprecated"
+  }
+}

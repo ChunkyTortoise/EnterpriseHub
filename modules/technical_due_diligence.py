@@ -6,6 +6,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import utils.ui as ui
+import time
 
 def render():
     """Main render function for Technical Due Diligence."""
@@ -21,6 +22,143 @@ def render():
         
     with tabs[2]:
         _render_valuation_impact()
+    
+    with st.expander("🚀 **Interactive: Generate Preliminary Audit Report**", expanded=False):
+        _render_audit_generator()
+
+def _render_audit_generator():
+    st.markdown("### 📝 AI-Powered Architecture Audit Generator")
+    st.write("Enter system details and optionally upload architecture files for comprehensive analysis.")
+    
+    with st.form("audit_form"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            target_name = st.text_input("Target System/Company Name", placeholder="e.g., Nexus AI Corp")
+            tech_stack = st.text_area("High-Level Tech Stack", placeholder="e.g., Python, FastAPI, OpenAI API, Pinecone, AWS Lambda", height=100)
+        
+        with col2:
+            compliance_needs = st.multiselect("Compliance Requirements", ["SOC2", "HIPAA", "GDPR", "PCI-DSS", "None"])
+            
+            st.markdown("**📎 Optional: Upload Architecture Files**")
+            uploaded_file = st.file_uploader(
+                "Upload JSON, Terraform, or YAML config", 
+                type=['json', 'tf', 'yaml', 'yml', 'txt'],
+                help="Upload infrastructure-as-code or config files for deeper analysis"
+            )
+        
+        col_submit1, col_submit2 = st.columns([3, 1])
+        with col_submit1:
+            submitted = st.form_submit_button("🚀 Generate Audit Report", type="primary", use_container_width=True)
+        with col_submit2:
+            st.caption("Takes ~2 seconds")
+        
+        if submitted:
+            if not target_name:
+                st.error("Please provide a target name.")
+            else:
+                from utils.audit_agent import AuditAgent
+                
+                # Process uploaded file
+                file_content = None
+                file_type = None
+                if uploaded_file:
+                    file_content = uploaded_file.read().decode('utf-8')
+                    file_type = uploaded_file.name.split('.')[-1]
+                    st.success(f"✅ Analyzing uploaded {file_type.upper()} file: {uploaded_file.name}")
+                
+                agent = AuditAgent(target_name, tech_stack, compliance_needs, file_content, file_type)
+                
+                with st.spinner("🧠 AI Agent scanning architecture patterns & security vulnerabilities..."):
+                    time.sleep(2.0) # Simulate deep analysis
+                    
+                    st.success(f"✅ Audit Report Generated for {target_name}")
+                    ui.toast(f"Audit report generated for {target_name}", "success")
+                    
+                    # Get all findings (base + file analysis)
+                    findings = agent.get_all_findings()
+                    
+                    # Summary metrics
+                    st.markdown("---")
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        critical_count = len([f for f in findings if f['severity'] == 'Critical'])
+                        ui.card_metric("Critical Issues", str(critical_count), "🚨 Urgent")
+                    with col2:
+                        high_count = len([f for f in findings if f['severity'] == 'High'])
+                        ui.card_metric("High Priority", str(high_count), "⚠️ Important")
+                    with col3:
+                        medium_count = len([f for f in findings if f['severity'] == 'Medium'])
+                        ui.card_metric("Medium Risk", str(medium_count), "📊 Review")
+                    with col4:
+                        ui.card_metric("Total Findings", str(len(findings)), "Complete Scan")
+                    
+                    st.markdown("---")
+                    
+                    c1, c2 = st.columns([3, 2])
+                    
+                    with c1:
+                        st.markdown(f"#### 🚩 Priority Findings for {target_name}")
+                        
+                        # Group by severity
+                        for severity in ['Critical', 'High', 'Medium', 'Low']:
+                            severity_findings = [f for f in findings if f['severity'] == severity]
+                            if severity_findings:
+                                st.markdown(f"##### {severity} Severity ({len(severity_findings)})")
+                                
+                                for f in severity_findings:
+                                    severity_color = {"Critical": "red", "High": "orange", "Medium": "blue", "Low": "gray"}.get(f['severity'], "gray")
+                                    with st.expander(f":{severity_color}[{f.get('category', 'General')}] - {f['issue']}", expanded=(severity == 'Critical')):
+                                        st.write(f"**Details:** {f['details']}")
+                                        st.info(f"**Remediation:** {f['remediation']}")
+                    
+                    with c2:
+                        st.markdown("#### 📊 System Debt Distribution")
+                        debt_data = agent.get_system_debt_data()
+                        fig = go.Figure(data=[
+                            go.Bar(
+                                x=debt_data['nodes'], 
+                                y=debt_data['debt_scores'],
+                                marker_color=["#ef4444" if s > 60 else "#3b82f6" for s in debt_data['debt_scores']]
+                            )
+                        ])
+                        fig.update_layout(
+                            height=300, 
+                            margin=dict(l=10, r=10, t=10, b=10),
+                            yaxis_title="Debt Index",
+                            template=ui.get_plotly_template()
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                        st.caption("Visualizing estimated technical debt across core infrastructure components.")
+
+                    st.divider()
+                    
+                    # Export options
+                    st.markdown("#### 📥 Export Audit Report")
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        # Generate markdown report
+                        markdown_report = agent.generate_audit_report_markdown()
+                        st.download_button(
+                            label="📄 Download Markdown Report",
+                            data=markdown_report,
+                            file_name=f"audit_report_{target_name.replace(' ', '_')}.md",
+                            mime="text/markdown",
+                            use_container_width=True
+                        )
+                    
+                    with col2:
+                        st.button("📧 Email to Team", use_container_width=True, disabled=True)
+                        st.caption("Coming in v6.5")
+                    
+                    with col3:
+                        st.button("📊 Generate PDF", use_container_width=True, disabled=True)
+                        st.caption("Coming in v6.5")
+                    
+                    st.divider()
+                    st.info("💡 **Next Step:** Proceed to **S2 Deep-Dive** for full source code scanning, dependency analysis, and vulnerability mapping.")
+                    st.markdown("[📅 Schedule Deep-Dive Assessment](mailto:caymanroden@gmail.com?subject=S2%20Technical%20Due%20Diligence)")
 
 def _render_audit_framework():
     st.markdown("### 📋 AI System Audit Framework")

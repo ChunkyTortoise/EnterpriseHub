@@ -1,161 +1,107 @@
-/* Real Estate Professional Theme - Zillow/Realtor.com Style */
+/* 
+GHL Real Estate AI - Enhanced Styles
+Professional branding for Jorge Salas
+*/
+
+/* ==================== Global Styles ==================== */
 
 :root {
-    --re-primary: #006AFF;
-    --re-primary-dark: #0052CC;
-    --re-success: #00A32A;
-    --re-warning: #F59E0B;
-    --re-danger: #EF4444;
-    --re-text-dark: #2A2A33;
-    --re-text-light: #6B7280;
-    --re-bg-light: #F7F8FA;
-    --re-border: #E5E7EB;
+    --primary-blue: #006AFF;
+    --primary-dark: #0052CC;
+    --success-green: #10B981;
+    --warning-orange: #F59E0B;
+    --danger-red: #EF4444;
+    --neutral-light: #F7F8FA;
+    --neutral-gray: #6B7280;
+    --text-dark: #2A2A33;
+    --white: #FFFFFF;
 }
 
-.main {
-    background-color: var(--re-bg-light);
-    font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+/* Remove Streamlit branding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* ==================== Typography ==================== */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    color: var(--text-dark);
+    line-height: 1.6;
 }
 
-/* Card styling for professional look */
-.stChatMessage {
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* ==================== Metric Cards ==================== */
+
+[data-testid="metric-container"] {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F7F8FA 100%);
+    border: 1px solid #E5E7EB;
     border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    background-color: white;
-    border: 1px solid var(--re-border);
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
 }
 
-/* Metric cards */
-.stMetric {
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    border-left: 4px solid var(--re-primary);
+[data-testid="metric-container"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-blue);
 }
 
-/* Hot lead highlight */
-.hot-lead {
-    border-left-color: var(--re-success) !important;
-    background: linear-gradient(90deg, rgba(0,163,42,0.05) 0%, white 10%);
+[data-testid="stMetricLabel"] {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--neutral-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Warm lead highlight */
-.warm-lead {
-    border-left-color: var(--re-warning) !important;
-    background: linear-gradient(90deg, rgba(245,158,11,0.05) 0%, white 10%);
-}
-
-/* Cold lead highlight */
-.cold-lead {
-    border-left-color: var(--re-text-light) !important;
-}
-
-/* Headers */
-h1, h2, h3, h4 {
-    color: var(--re-text-dark);
-    font-weight: 700;
-}
-
-h1 {
+[data-testid="stMetricValue"] {
     font-size: 2rem;
-    margin-bottom: 0.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
 }
 
-h2 {
-    font-size: 1.5rem;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-}
+/* ==================== Buttons ==================== */
 
-/* Buttons */
 .stButton > button {
-    background-color: var(--re-primary);
-    color: white;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+    color: var(--white);
     border: none;
     border-radius: 8px;
-    padding: 12px 24px;
+    padding: 0.75rem 1.5rem;
     font-weight: 600;
-    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 106, 255, 0.2);
 }
 
 .stButton > button:hover {
-    background-color: var(--re-primary-dark);
-    box-shadow: 0 4px 8px rgba(0,106,255,0.2);
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 106, 255, 0.3);
 }
 
-/* Sidebar */
-.css-1d391kg {
-    background-color: white;
-    border-right: 1px solid var(--re-border);
-}
+/* ==================== Tabs ==================== */
 
-/* Code blocks */
-code {
-    background-color: #F3F4F6;
-    color: var(--re-primary-dark);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.9em;
-}
-
-/* Tags/Badges */
-.tag {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-right: 8px;
-}
-
-.tag-hot {
-    background-color: #DCFCE7;
-    color: #166534;
-}
-
-.tag-warm {
-    background-color: #FEF3C7;
-    color: #92400E;
-}
-
-.tag-cold {
-    background-color: #F3F4F6;
-    color: #4B5563;
-}
-
-/* Property cards (for future use) */
-.property-card {
-    background: white;
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.5rem;
+    background: var(--neutral-light);
+    padding: 0.5rem;
     border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 1px solid var(--re-border);
 }
 
-.property-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+.stTabs [data-baseweb="tab"] {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
-/* Progress bars */
-.stProgress > div > div {
-    background-color: var(--re-primary);
-}
-
-/* Links */
-a {
-    color: var(--re-primary);
-    text-decoration: none;
-    font-weight: 500;
-}
-
-a:hover {
-    color: var(--re-primary-dark);
-    text-decoration: underline;
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+    color: var(--white) !important;
+    box-shadow: 0 2px 8px rgba(0, 106, 255, 0.3);
 }
