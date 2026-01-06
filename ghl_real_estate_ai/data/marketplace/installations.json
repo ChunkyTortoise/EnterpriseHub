@@ -1,0 +1,49 @@
+{
+  "installations": [
+    {
+      "installation_id": "dceea8f9-a842-49b0-b569-d193e598225b",
+      "template_id": "tmpl_demo",
+      "template_name": "Demo Welcome Template",
+      "workflow_id": "c2c3fca0-9d33-4605-94f1-0052d6b55158",
+      "tenant_id": "demo_user",
+      "customizations": {
+        "agentName": "Sarah Johnson",
+        "companyName": "Dream Homes Realty"
+      },
+      "installed_at": "2026-01-06T04:38:11.090115"
+    },
+    {
+      "installation_id": "12dab431-c63c-4de2-b075-c8e9f943971e",
+      "template_id": "tmpl_003",
+      "template_name": "Appointment Reminder Series",
+      "workflow_id": "1e85a09f-00dc-4d9c-831a-ac128391ac38",
+      "tenant_id": "test_user",
+      "customizations": {},
+      "installed_at": "2026-01-06T04:40:08.235820"
+    },
+    {
+      "installation_id": "1a29d3bd-82bb-4401-8d08-7e3729c71ea3",
+      "template_id": "tmpl_001",
+      "template_name": "New Lead Welcome Sequence",
+      "workflow_id": "ccec98ea-178a-4774-b38a-f1f8ad17f053",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agentName": "TestValue",
+        "companyName": "TestValue"
+      },
+      "installed_at": "2026-01-06T04:40:08.237616"
+    },
+    {
+      "installation_id": "a6221fbe-8d08-472f-99bb-2511c1d7132c",
+      "template_id": "tmpl_001",
+      "template_name": "New Lead Welcome Sequence",
+      "workflow_id": "7ed07571-b9b6-44df-84f8-37dc422d9548",
+      "tenant_id": "verification_test",
+      "customizations": {
+        "agentName": "TestValue",
+        "companyName": "TestValue"
+      },
+      "installed_at": "2026-01-06T04:42:04.719623"
+    }
+  ]
+}

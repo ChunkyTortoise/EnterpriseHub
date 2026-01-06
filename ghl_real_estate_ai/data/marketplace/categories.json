@@ -1,0 +1,60 @@
+{
+  "categories": [
+    {
+      "id": "lead_nurturing",
+      "name": "Lead Nurturing",
+      "icon": "📱",
+      "description": "Build relationships with new leads and guide them through the sales funnel",
+      "count": 15
+    },
+    {
+      "id": "re_engagement",
+      "name": "Re-engagement",
+      "icon": "🔄",
+      "description": "Win back cold leads and reactivate dormant contacts",
+      "count": 10
+    },
+    {
+      "id": "appointments",
+      "name": "Appointments",
+      "icon": "📅",
+      "description": "Manage appointment scheduling, reminders, and follow-ups",
+      "count": 8
+    },
+    {
+      "id": "transactions",
+      "name": "Transactions",
+      "icon": "💰",
+      "description": "Handle deals, negotiations, and closing processes",
+      "count": 6
+    },
+    {
+      "id": "relationship",
+      "name": "Relationship",
+      "icon": "❤️",
+      "description": "Maintain long-term client relationships and referral programs",
+      "count": 5
+    },
+    {
+      "id": "education",
+      "name": "Education",
+      "icon": "📚",
+      "description": "Educate clients about the buying/selling process",
+      "count": 4
+    },
+    {
+      "id": "events",
+      "name": "Events",
+      "icon": "🎉",
+      "description": "Promote and manage open houses and special events",
+      "count": 2
+    },
+    {
+      "id": "luxury",
+      "name": "Luxury",
+      "icon": "💎",
+      "description": "Premium workflows for high-end property marketing",
+      "count": 3
+    }
+  ]
+}
