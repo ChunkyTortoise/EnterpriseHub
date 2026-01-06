@@ -159,6 +159,25 @@ def main():
 
 def _load_and_render_module(module_info):
     import utils.ui as ui
+    
+    # 1. Centralized Service Sidebar
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown(f"### 📘 Service Context: {module_info.get('service_id', 'N/A')}")
+        st.info(
+            f"""
+            **Category:** {module_info.get('category', 'General')}
+            
+            **Value Prop:** 
+            {module_info.get('desc', 'Professional AI services and engineering.')}
+            
+            **ROI Model:**
+            {module_info.get('roi_model', 'Measurable business outcomes.')}
+            """
+        )
+        st.markdown("---")
+
+    # 2. Main Page Header
     ui.service_header(
         title=module_info["title"],
         category=module_info.get("category", "General"),
