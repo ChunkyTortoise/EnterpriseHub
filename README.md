@@ -1,12 +1,12 @@
 <div align="center">
   <img src="assets/hero/background_editorial.png" width="100%" style="border-radius: 12px; margin-bottom: 24px;" alt="EnterpriseHub Banner">
-  <h1>🚀 EnterpriseHub v6.0: AI Service Showcase</h1>
-  <p><strong>The Professional Services Portal for Production-Grade AI Systems</strong></p>
+  <h1>🚀 EnterpriseHub v6.0: Professional AI Services</h1>
+  <p><strong>The Specialized Portal for Production-Grade AI Engineering & Strategy</strong></p>
 
   [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
-  [![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
+  [![Streamlit](https://img.shields.io/badge/Streamlit-1.41+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
   [![Design System](https://img.shields.io/badge/UI-Editorial%20Mint-10B981.svg)](utils/ui.py)
-  [![Tests](https://img.shields.io/badge/tests-517%2B%20passing-059669.svg?logo=pytest&logoColor=white)](https://github.com/ChunkyTortoise/enterprise-hub)
+  [![Tests](https://img.shields.io/badge/tests-522%20passing-059669.svg?logo=pytest&logoColor=white)](https://github.com/ChunkyTortoise/enterprise-hub)
   [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](https://opensource.org/licenses/MIT)
 
   <br>
@@ -14,7 +14,7 @@
   <strong>
     <a href="https://enterprise-app-mwrxqf7cccewnomrbhjttf.streamlit.app/">🎯 Try Live Demo</a>
     &nbsp;&nbsp;•&nbsp;&nbsp;
-    <a href="docs/SERVICE_CATALOG.md">📋 2026 Service Catalog</a>
+    <a href="docs/SERVICE_CATALOG.md">📋 31-Service Catalog</a>
     &nbsp;&nbsp;•&nbsp;&nbsp;
     <a href="portfolio/ARETE_AGENT_CASE_STUDY.md">🦅 ARETE Case Study</a>
   </strong>
@@ -22,14 +22,15 @@
 
 ---
 
-## 🏗️ The "Outcome-First" Philosophy
+## 🏗️ v6.0: The Professional Services Overhaul
 
-EnterpriseHub v6.0 is a **Professional Services Showcase** designed to demonstrate measurable business outcomes through high-fidelity AI engineering. It maps 19 professional certifications and 1,768 hours of advanced training directly to 31 mission-critical AI services.
+EnterpriseHub has evolved from an "AI Tool Console" into a **Professional AI Services Showcase**. Directly aligned with Cayman Roden's **31-Service Catalog**, the platform now features high-fidelity diagnostic tools and automated strategy architecture.
 
-### 🏛️ Core Design Principles
-- **Institutional Authority**: Showcasing 19 certifications from IBM, Google, Microsoft, and Vanderbilt.
-- **ROI Transparency**: Every module includes an integrated ROI model and payback period calculation.
-- **Production-Ready Rigor**: 517+ automated tests verifying every system, ensuring enterprise-grade reliability.
+### 🏛️ Key Capabilities
+- **🤖 Virtual AI Architect**: Autonomous strategy lead-intake agent using the Persona-Orchestrator framework to map business challenges to specific technical solutions.
+- **🔍 Technical Due Diligence (S2)**: Rigorous technical audit framework for PE firms and investors to identify AI debt, security risks, and valuation impact.
+- **⚡ Business Automation (S6)**: Interactive workflow simulator that architects autonomous replacements for manual enterprise processes.
+- **📊 ROI Lab**: Multi-vertical financial models (SaaS Churn, Agency Lead Gen, Programmatic SEO) with 100% verified math logic.
 
 ---
 

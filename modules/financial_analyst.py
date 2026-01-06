@@ -349,7 +349,7 @@ def _display_performance_charts(financials: FinancialsDict) -> None:
         )
         fig_perf.update_layout(
             title="Revenue vs Net Income (Annual)",
-            template="plotly_dark",
+            template=ui.get_plotly_template(),
             height=400,
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
@@ -703,7 +703,7 @@ def _display_historical_trends(financials: FinancialsDict) -> None:
                 title="Current Ratio (Liquidity)",
                 yaxis_title="Ratio",
                 height=300,
-                template="plotly_dark",
+                template=ui.get_plotly_template(),
                 showlegend=False
             )
             fig.add_hline(y=2.0, line_dash="dash", line_color="gray", annotation_text="Healthy: 2.0+")
@@ -724,7 +724,7 @@ def _display_historical_trends(financials: FinancialsDict) -> None:
                 title="Return on Equity (ROE)",
                 yaxis_title="ROE (%)",
                 height=300,
-                template="plotly_dark",
+                template=ui.get_plotly_template(),
                 showlegend=False
             )
             fig.add_hline(y=15.0, line_dash="dash", line_color="gray", annotation_text="Strong: 15%+")
@@ -746,7 +746,7 @@ def _display_historical_trends(financials: FinancialsDict) -> None:
                 title="Debt-to-Equity (Leverage)",
                 yaxis_title="D/E Ratio",
                 height=300,
-                template="plotly_dark",
+                template=ui.get_plotly_template(),
                 showlegend=False
             )
             fig.add_hline(y=1.0, line_dash="dash", line_color="gray", annotation_text="Moderate: <1.0")
@@ -775,7 +775,7 @@ def _display_historical_trends(financials: FinancialsDict) -> None:
                 title="Profit Margins",
                 yaxis_title="Margin (%)",
                 height=300,
-                template="plotly_dark",
+                template=ui.get_plotly_template(),
                 legend=dict(orientation="h", y=1.1)
             )
             st.plotly_chart(fig, use_container_width=True)
@@ -884,7 +884,7 @@ def _display_quarterly_trends(symbol: str) -> None:
                 title="Quarterly Revenue Trend",
                 yaxis_title="Revenue ($B)",
                 height=300,
-                template="plotly_dark",
+                template=ui.get_plotly_template(),
                 showlegend=False
             )
             st.plotly_chart(fig, use_container_width=True)
@@ -1031,7 +1031,7 @@ def _display_dcf_waterfall(latest_fcf: float, result, shares_outstanding: float)
         title="DCF Valuation Build-Up",
         showlegend=False,
         height=450,
-        template="plotly_dark",
+        template=ui.get_plotly_template(),
         yaxis_title="Value (Billions $)",
         xaxis_title="",
         font=dict(size=12)

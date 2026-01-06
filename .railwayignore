@@ -1,3 +1,9 @@
+# Heavy specific folders (Added to fix deployment hang)
+ghl_real_estate_ai/_archive_v1_20260104/
+ghl_real_estate_ai/.chroma_db/
+_archive_v1_20260104/
+.chroma_db/
+
 # Python
 __pycache__/
 *.py[cod]

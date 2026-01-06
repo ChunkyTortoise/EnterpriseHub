@@ -68,16 +68,10 @@ with st.sidebar:
         "📈 Ops & Optimization"
     ]
     
-    # Calculate index safely
-    try:
-        default_index = hub_options.index(st.session_state.current_hub)
-    except ValueError:
-        default_index = 0
-    
     selected_hub = st.radio(
         "Select Hub:",
         hub_options,
-        index=default_index,
+        index=hub_options.index(st.session_state.current_hub) if st.session_state.current_hub in hub_options else 0,
         label_visibility="collapsed"
     )
     
