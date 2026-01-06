@@ -3,6 +3,7 @@ GHL Real Estate AI - Interactive Demo
 Main Streamlit Application
 """
 import streamlit as st
+st.write("DEBUG: App is starting...")
 import sys
 from pathlib import Path
 

@@ -10,7 +10,7 @@ from pathlib import Path
 import json
 
 
-class CompetitiveBenchmarkingEngine:
+class BenchmarkingEngine:
     """Compare performance against industry benchmarks"""
     
     # Industry benchmarks based on real estate data

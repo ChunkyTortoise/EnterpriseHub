@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 
 
-class DemoDataGenerator:
+class DemoModeManager:
     """Generate realistic demo data for live demonstrations"""
     
     def __init__(self):
@@ -310,7 +310,7 @@ class DemoScenario:
             raise ValueError(f"Unknown scenario: {scenario_id}")
         
         scenario = cls.SCENARIOS[scenario_id]
-        generator = DemoDataGenerator()
+        generator = DemoModeManager()
         
         return generator.generate_demo_dataset(
             num_conversations=scenario["conversations"],

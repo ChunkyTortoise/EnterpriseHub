@@ -11,7 +11,7 @@ import json
 import statistics
 
 
-class SmartRecommendationsEngine:
+class RecommendationEngine:
     """Generate intelligent, actionable recommendations"""
     
     IMPACT_LEVELS = {
