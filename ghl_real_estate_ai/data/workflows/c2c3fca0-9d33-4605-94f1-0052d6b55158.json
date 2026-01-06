@@ -1,0 +1,28 @@
+{
+  "workflow_id": "c2c3fca0-9d33-4605-94f1-0052d6b55158",
+  "name": "My Welcome Workflow",
+  "description": "A demo template for testing",
+  "trigger": {
+    "trigger_type": "lead_created",
+    "conditions": {}
+  },
+  "actions": [
+    {
+      "action_id": "action_1",
+      "action_type": "send_sms",
+      "config": {
+        "message": "Hi! I'm Sarah Johnson from Dream Homes Realty. Thanks for reaching out!"
+      },
+      "conditions": [],
+      "delay_seconds": 0
+    }
+  ],
+  "enabled": true,
+  "created_at": "2026-01-06T04:38:11.089820",
+  "updated_at": "2026-01-06T04:38:11.089956",
+  "created_by": "demo_user",
+  "template_id": "tmpl_demo",
+  "template_version": "1.0.0",
+  "execution_count": 0,
+  "success_count": 0
+}
