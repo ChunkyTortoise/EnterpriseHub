@@ -41,6 +41,14 @@ def test_assign_lead_round_robin():
 
 def test_leaderboard():
     """Test leaderboard calculation."""
+    import shutil
+    from pathlib import Path
+    
+    # Clean up any existing test data
+    test_dir = Path(__file__).parent.parent / "data" / "teams" / "test_location_leaderboard"
+    if test_dir.exists():
+        shutil.rmtree(test_dir)
+    
     manager = TeamManager("test_location_leaderboard")
     
     manager.add_agent("a1", "Top Agent", "a1@test.com")

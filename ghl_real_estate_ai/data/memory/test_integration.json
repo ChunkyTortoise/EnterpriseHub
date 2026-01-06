@@ -1,17 +1,17 @@
 {
   "contact_id": "test_integration",
-  "last_interaction_at": "2026-01-03T22:53:29.968552",
+  "last_interaction_at": "2026-01-04T20:43:03.444971",
   "conversation_history": [
     {
       "role": "user",
       "content": "Looking to buy",
-      "timestamp": "2026-01-03T22:53:29.968555"
+      "timestamp": "2026-01-04T20:43:03.444978"
     }
   ],
   "extracted_preferences": {
     "goal": "buy"
   },
   "last_reengagement_trigger": "24h",
-  "last_reengagement_at": "2026-01-04T23:53:29.968628",
-  "updated_at": "2026-01-04T23:53:29.968630"
+  "last_reengagement_at": "2026-01-05T21:43:03.445074",
+  "updated_at": "2026-01-05T21:43:03.445077"
 }

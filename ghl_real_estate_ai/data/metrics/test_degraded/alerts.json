@@ -152,5 +152,19 @@
     "message": "api_response_time_ms = 600 (threshold: 500)",
     "timestamp": "2026-01-04T15:53:20.619282",
     "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-05T13:41:19.465317",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-05T13:42:52.101256",
+    "location_id": "test_degraded"
   }
 ]
