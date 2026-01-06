@@ -102,7 +102,7 @@ class RevenueAttributionEngine:
         
         conversations = [
             c for c in data.get("conversations", [])
-            if start_date <= datetime.fromisoformat(c["timestamp"]) <= end_date
+            if start_date <= datetime.fromisoformat(c.get("start_time", c.get("timestamp"))) <= end_date
         ]
         
         return conversations

@@ -31,6 +31,14 @@ class SequenceStatus(Enum):
 
 
 @dataclass
+class LeadProfile:
+    """Lead profile for sequence targeting"""
+    lead_id: str
+    name: str
+    attributes: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class SequenceStep:
     """Individual step in a sequence"""
     step_id: str
