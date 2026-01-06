@@ -565,5 +565,26 @@
     "message": "Test error",
     "timestamp": "2026-01-05T18:48:49.413951",
     "location_id": "test_alerts"
+  },
+  {
+    "level": "info",
+    "title": "Info",
+    "message": "Test info",
+    "timestamp": "2026-01-05T23:48:43.373728",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "warning",
+    "title": "Warning",
+    "message": "Test warning",
+    "timestamp": "2026-01-05T23:48:43.374845",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "error",
+    "title": "Error",
+    "message": "Test error",
+    "timestamp": "2026-01-05T23:48:43.375724",
+    "location_id": "test_alerts"
   }
 ]
