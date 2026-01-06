@@ -829,25 +829,6 @@ def show_diff_preview(original: str, modified: str, filename: str) -> None:
 def render() -> None:
     """Render the ARETE-Architect interface."""
 
-    # Service Context Sidebar
-    with st.sidebar:
-        st.markdown("---")
-        st.markdown("### 📘 Service Context")
-        st.info(
-            """
-            **Catalog Reference:** Service 4
-            **Category:** Flagship Automation
-            
-            **Value Prop:** 
-            AI Technical Co-Founder that builds, tests, and deploys code autonomously.
-            
-            **Typical ROI:**
-            - 10,450% 12-month ROI
-            - 340+ engineering hours saved/week
-            """
-        )
-        st.markdown("---")
-
     ui.section_header(
         "ARETE-Architect: Your AI Technical Co-Founder",
         "Self-maintaining autonomous agent with GitHub integration, LangGraph workflows, and continuous evolution capabilities. Built to replace manual development workflows.",

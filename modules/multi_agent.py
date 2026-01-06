@@ -143,25 +143,6 @@ def retry_with_exponential_backoff(
 def render() -> None:
     """Render the Multi-Agent Orchestrator interface."""
     
-    # Service Context Sidebar
-    with st.sidebar:
-        st.markdown("---")
-        st.markdown("### 📘 Service Context")
-        st.info(
-            """
-            **Catalog Reference:** Service 4
-            **Category:** Intelligent Automation
-            
-            **Value Prop:** 
-            Orchestrates specialized AI agents for complex, multi-step business workflows.
-            
-            **Typical ROI:**
-            - 85% automation of research tasks
-            - 10x faster decision making
-            """
-        )
-        st.markdown("---")
-
     ui.section_header("🤖 Multi-Agent Workflows", "Autonomous Analysis Teams")
 
     # Workflow Selection
