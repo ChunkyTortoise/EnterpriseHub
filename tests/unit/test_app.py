@@ -5,6 +5,7 @@ Tests module registry, helper functions, and module loading logic.
 """
 
 from unittest.mock import patch, MagicMock
+import utils.ui  # Ensure utils.ui is loaded for mocking
 
 
 class TestModuleRegistry:
@@ -34,6 +35,10 @@ class TestModuleRegistry:
             "🧠 Smart Forecast",
             "🏗️ DevOps Control",
             "🎨 Design System",
+            "🏠 Real Estate AI",
+            "🧮 ROI Calculators",
+            "🏢 Vertical Solutions",
+            "🎯 Strategy Planner",
         ]
 
         for module in expected_modules:
@@ -118,8 +123,8 @@ class TestRenderOverview:
 
         _render_overview(mock_ui)
 
-        # Should call feature_card multiple times (12 modules shown)
-        assert mock_ui.feature_card.call_count == 12
+        # Should call feature_card multiple times (16 modules shown)
+        assert mock_ui.feature_card.call_count == 16
 
     @patch("app.st")
     def test_overview_shows_use_cases(self, mock_st):
@@ -134,8 +139,8 @@ class TestRenderOverview:
 
         _render_overview(mock_ui)
 
-        # Should call use_case_card 4 times (2x2 grid)
-        assert mock_ui.use_case_card.call_count == 4
+        # Should call use_case_card 6 times (grid layout)
+        assert mock_ui.use_case_card.call_count == 6
 
     @patch("app.st")
     def test_overview_uses_spacers(self, mock_st):
@@ -271,10 +276,10 @@ class TestModuleMetadata:
         assert len(module_titles) == len(set(module_titles))
 
     def test_module_count_matches_expected(self):
-        """Test that we have exactly 12 modules."""
+        """Test that we have exactly 16 modules."""
         from app import MODULES
 
-        assert len(MODULES) == 12
+        assert len(MODULES) == 16
 
     def test_module_keys_have_emojis(self):
         """Test that module keys include emojis."""
