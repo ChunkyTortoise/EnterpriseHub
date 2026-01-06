@@ -27,92 +27,110 @@ MODULES = {
     "🏗️ ARETE-Architect": {
         "name": "arete_architect", "title": "ARETE-Architect: AI Technical Co-Founder",
         "icon": "assets/icons/arete_architect.svg", "status": "hero", "service_id": "S4",
-        "category": "Intelligent Automation", "roi_model": "340 hours saved/week | 10,450% ROI"
+        "category": "Intelligent Automation", "roi_model": "340 hours saved/week | 10,450% ROI",
+        "desc": "An autonomous technical partner that builds, tests, and deploys production code while maintaining its own architecture."
     },
     "Custom RAG Agents": {
         "name": "real_estate_ai", "title": "Knowledge-Augmented RAG Agents",
         "icon": "assets/icons/arete_architect.svg", "status": "active", "service_id": "S3",
-        "category": "Intelligent Automation", "roi_model": "60% reduction in support workload"
+        "category": "Intelligent Automation", "roi_model": "60% reduction in support workload",
+        "desc": "Context-aware agents that ingest your proprietary documents to provide accurate, source-cited responses 24/7."
     },
     "Multi-Agent Swarms": {
         "name": "multi_agent", "title": "Multi-Agent Swarm Orchestration",
         "icon": "assets/icons/multi_agent.svg", "status": "active", "service_id": "S4",
-        "category": "Intelligent Automation", "roi_model": "85% automation of manual lead research"
+        "category": "Intelligent Automation", "roi_model": "85% automation of manual lead research",
+        "desc": "Specialized AI teams (Researcher, Analyst, Writer) working in parallel to solve multi-step business logic challenges."
     },
     "Content Engine": {
         "name": "content_engine", "title": "Programmatic SEO & Content Engine",
         "icon": "assets/icons/content_engine.svg", "status": "active", "service_id": "S12",
-        "category": "Intelligent Automation", "roi_model": "50x increase in volume at 1/300th cost"
+        "category": "Intelligent Automation", "roi_model": "50x increase in volume at 1/300th cost",
+        "desc": "AI-powered content factory generating high-authority thought leadership and SEO-optimized articles in your brand voice."
     },
     "Business Automation": {
         "name": "business_automation", "title": "Workflow & Business Automation",
         "icon": "assets/icons/calculator.svg", "status": "active", "service_id": "S6",
-        "category": "Intelligent Automation", "roi_model": "Recover 85-90% of manual task productivity"
+        "category": "Intelligent Automation", "roi_model": "Recover 85-90% of manual task productivity",
+        "desc": "Custom Zapier, n8n, and GPT integrations that eliminate administrative friction and automate repetitive cross-app workflows."
     },
     "Margin Hunter": {
         "name": "margin_hunter", "title": "Margin Hunter: Unit Economics Engine",
         "icon": "assets/icons/margin_hunter.svg", "status": "active", "service_id": "S1",
-        "category": "BI & Analytics", "roi_model": "Identifies 5-10 initiatives with 6-12 month payback"
+        "category": "BI & Analytics", "roi_model": "Identifies 5-10 initiatives with 6-12 month payback",
+        "desc": "Institutional-grade break-even and sensitivity analysis modeling to optimize product margins and pricing strategy."
     },
     "Market Pulse": {
         "name": "market_pulse", "title": "Market Pulse: Technical Analysis",
         "icon": "assets/icons/market_pulse.svg", "status": "active", "service_id": "S8",
-        "category": "BI & Analytics", "roi_model": "$24,000/year savings on Terminal subs"
+        "category": "BI & Analytics", "roi_model": "$24,000/year savings on Terminal subs",
+        "desc": "Real-time technical analysis suite featuring RSI, MACD, and volume profiles for professional-grade asset evaluation."
     },
     "Data Detective": {
         "name": "data_detective", "title": "Data Detective: Automated EDA",
         "icon": "assets/icons/data_detective.svg", "status": "active", "service_id": "S11",
-        "category": "BI & Analytics", "roi_model": "Reduces analysis from 2 hours to 2 minutes"
+        "category": "BI & Analytics", "roi_model": "Reduces analysis from 2 hours to 2 minutes",
+        "desc": "AI-powered data profiling and quality auditing that instantly identifies trends, correlations, and anomalies in any dataset."
     },
     "Marketing Analytics": {
         "name": "marketing_analytics", "title": "Marketing Attribution Hub",
         "icon": "assets/icons/marketing_analytics.svg", "status": "active", "service_id": "S16",
-        "category": "BI & Analytics", "roi_model": "20-40% improvement in spend efficiency"
+        "category": "BI & Analytics", "roi_model": "20-40% improvement in spend efficiency",
+        "desc": "Multi-channel attribution modeling and ROI orchestration to quantify exactly which marketing dollars are driving growth."
     },
     "Smart Forecast": {
         "name": "smart_forecast", "title": "Smart Forecast: Predictive Intelligence",
         "icon": "assets/icons/smart_forecast.svg", "status": "active", "service_id": "S10",
-        "category": "BI & Analytics", "roi_model": "15-25% improvement in forecast accuracy"
+        "category": "BI & Analytics", "roi_model": "15-25% improvement in forecast accuracy",
+        "desc": "Advanced predictive engine using ensemble machine learning to deliver statistically rigorous business and financial forecasting."
     },
     "Automated Reporting": {
         "name": "automated_reporting", "title": "Automated Reporting Pipelines",
         "icon": "assets/icons/strategy.svg", "status": "active", "service_id": "S9",
-        "category": "BI & Analytics", "roi_model": "Eliminate 8+ hours/week of manual Excel work"
+        "category": "BI & Analytics", "roi_model": "Eliminate 8+ hours/week of manual Excel work",
+        "desc": "Python-driven data pipelines that clean, transform, and deliver polished executive reports to your inbox automatically."
     },
     "GHL Real Estate AI": {
         "name": "real_estate_ai", "title": "GHL Real Estate AI",
         "icon": "assets/icons/real_estate.svg", "status": "active", "service_id": "V1",
-        "category": "Vertical Solutions", "roi_model": "$518,400/year incremental revenue potential"
+        "category": "Vertical Solutions", "roi_model": "$518,400/year incremental revenue potential",
+        "desc": "Integrated lead qualification and predictive scoring engine built specifically for the GoHighLevel ecosystem."
     },
     "Vertical Insights": {
         "name": "landing_pages", "title": "Industry-Specific Value Stacks",
         "icon": "assets/icons/verticals.svg", "status": "new", "service_id": "STRAT",
-        "category": "Vertical Solutions", "roi_model": "20% reduction in churn via industry patterns"
+        "category": "Vertical Solutions", "roi_model": "20% reduction in churn via industry patterns",
+        "desc": "Tailored AI architectures and strategic roadmaps for SaaS, E-commerce, Healthcare, and Professional Services."
     },
     "Technical Due Diligence": {
         "name": "technical_due_diligence", "title": "Technical Due Diligence",
         "icon": "assets/icons/design_system.svg", "status": "active", "service_id": "S2",
-        "category": "Infrastructure & Strategy", "roi_model": "Prevents $200k-$2M+ acquisition value loss"
+        "category": "Infrastructure & Strategy", "roi_model": "Prevents $200k-$2M+ acquisition value loss",
+        "desc": "Rigorous technical audits of AI systems for investors and private equity firms to identify hidden debt and security risks."
     },
     "AI Strategy Planner": {
         "name": "service_selector", "title": "AI Strategy & Readiness Planner",
         "icon": "assets/icons/strategy.svg", "status": "new", "service_id": "S1",
-        "category": "Infrastructure & Strategy", "roi_model": "Prevents $50k-$200k in misallocated spend"
+        "category": "Infrastructure & Strategy", "roi_model": "Prevents $50k-$200k in misallocated spend",
+        "desc": "Interactive diagnostic tool to assess AI readiness and architect a prioritized roadmap based on your unique business goals."
     },
     "ROI Calculators": {
         "name": "roi_calculators", "title": "ROI & Growth Calculators",
         "icon": "assets/icons/calculator.svg", "status": "new", "service_id": "STRAT",
-        "category": "Infrastructure & Strategy", "roi_model": "Instant data-driven investment justification"
+        "category": "Infrastructure & Strategy", "roi_model": "Instant data-driven investment justification",
+        "desc": "Financial modeling laboratory to quantify the bottom-line impact of AI implementations before you invest."
     },
     "DevOps Control": {
         "name": "devops_control", "title": "DevOps & MLOps Control",
         "icon": "assets/icons/devops_control.svg", "status": "active", "service_id": "S18",
-        "category": "Infrastructure & Strategy", "roi_model": "80% reduction in maintenance overhead"
+        "category": "Infrastructure & Strategy", "roi_model": "80% reduction in maintenance overhead",
+        "desc": "Command center for CI/CD pipelines and MLOps, monitoring system health and autonomous deployment status."
     },
     "Design System": {
         "name": "design_system", "title": "Design System Gallery",
         "icon": "assets/icons/design_system.svg", "status": "active", "service_id": "UI",
-        "category": "Infrastructure & Strategy", "roi_model": "WCAG AAA compliance for all deployments"
+        "category": "Infrastructure & Strategy", "roi_model": "WCAG AAA compliance for all deployments",
+        "desc": "Centralized library of the platform's high-contrast, professional UI components and accessibility standards."
     },
 }
 

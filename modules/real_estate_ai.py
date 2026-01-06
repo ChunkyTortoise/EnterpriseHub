@@ -57,25 +57,6 @@ def render():
     if not SERVICES_AVAILABLE:
         st.error(f"⚠️ GHL Services are not fully loaded. Some features may be disabled. Error: {IMPORT_ERROR}")
     
-    # Service Context Sidebar
-    with st.sidebar:
-        st.markdown("---")
-        st.markdown("### 📘 Service Context")
-        st.info(
-            """
-            **Catalog Reference:** Service 3
-            **Category:** Automation
-            
-            **Value Prop:** 
-            Replaces manual lead qualification with 24/7 autonomous agents.
-            
-            **Typical ROI:**
-            - 60% reduction in support costs
-            - 3x increase in qualified leads
-            """
-        )
-        st.markdown("---")
-
     ui.section_header("GHL Real Estate AI", "Institutional-grade real estate orchestration engine.")
     
     # Unified Tabs
