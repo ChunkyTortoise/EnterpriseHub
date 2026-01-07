@@ -3,7 +3,7 @@
 **System Status:** ✅ PRODUCTION READY
 **Verification Date:** January 6, 2026
 **Client:** Jorge Salas
-**Deployed URL:** [https://backend-production-3120b.up.railway.app](https://backend-production-3120b.up.railway.app)
+**Deployed URL:** [Pending Streamlit Cloud Deployment]
 
 ---
 
@@ -51,7 +51,7 @@ To connect this AI system to your live GoHighLevel account:
 2.  Create a new workflow (e.g., "AI Lead Route").
 3.  Add a **Webhook** action.
 4.  Method: `POST`
-5.  URL: `https://backend-production-3120b.up.railway.app/webhooks/ghl` (or your custom domain)
+5.  URL: `[Your Streamlit App URL]/webhooks/ghl` (or your custom domain)
 6.  Save and Publish.
 
 ### Step 2: Import Leads (Optional)
