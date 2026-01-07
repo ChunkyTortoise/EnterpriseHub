@@ -147,3 +147,7 @@ elbow_method.png
 .arete_memory_*.json
 ghl_real_estate_ai/streamlit_demo/data/
 ghl-real-estate-ai/
+
+# Archives and Cleanup
+_archive/
+scripts/gemini_cleanup.py

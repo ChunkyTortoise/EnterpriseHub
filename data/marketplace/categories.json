@@ -1,0 +1,28 @@
+{
+  "categories": [
+    {
+      "id": "lead_nurturing",
+      "name": "Lead Nurturing",
+      "icon": "🌱",
+      "count": 15
+    },
+    {
+      "id": "appointment_booking",
+      "name": "Appointment Booking",
+      "icon": "📅",
+      "count": 8
+    },
+    {
+      "id": "customer_support",
+      "name": "Customer Support",
+      "icon": "🎧",
+      "count": 12
+    },
+    {
+      "id": "marketing_automation",
+      "name": "Marketing Automation",
+      "icon": "📢",
+      "count": 20
+    }
+  ]
+}

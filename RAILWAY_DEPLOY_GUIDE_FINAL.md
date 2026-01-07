@@ -10,8 +10,8 @@
 
 ```bash
 # Jorge's GHL Credentials
-GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
-GHL_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QmxETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As
+GHL_LOCATION_ID=your_location_id_here
+GHL_API_KEY=your_ghl_api_key_here
 
 # Your Anthropic API Key
 ANTHROPIC_API_KEY=sk-ant-YOUR-KEY-HERE
@@ -50,9 +50,9 @@ ANTHROPIC_API_KEY=sk-ant-YOUR-KEY-HERE
 3. Click **"+ New Variable"** for each:
 
 ```bash
-GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
+GHL_LOCATION_ID=your_location_id_here
 
-GHL_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QmxETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As
+GHL_API_KEY=your_ghl_api_key_here
 
 ANTHROPIC_API_KEY=sk-ant-YOUR-KEY-HERE
 
@@ -127,9 +127,9 @@ GHL_BACKEND_URL=https://YOUR-BACKEND-URL.up.railway.app
 # Same credentials as backend
 ANTHROPIC_API_KEY=sk-ant-YOUR-KEY-HERE
 
-GHL_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QmxETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As
+GHL_API_KEY=your_ghl_api_key_here
 
-GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
+GHL_LOCATION_ID=your_location_id_here
 
 PORT=8501
 

@@ -1,0 +1,178 @@
+/**
+ * Portal Swipe Animations
+ * 
+ * Custom animations for the Tinder-style swipe interface.
+ * Mobile-first, performance-optimized using CSS transforms.
+ */
+
+/* ===== Slide Up Animation (Feedback Modal) ===== */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Fade In Delay (Swipe Hints) ===== */
+@keyframes fadeInDelay {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.animate-fade-in-delay {
+  animation: fadeInDelay 3s ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+/* ===== Bounce Animation (High Intent Alert) ===== */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+/* ===== Pulse Animation (Instructions) ===== */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ===== Scale Active (Button Press) ===== */
+.active\:scale-95:active {
+  transform: scale(0.95);
+}
+
+/* ===== Card Stack Shadow ===== */
+.card-container {
+  perspective: 1000px;
+}
+
+.card-container > * {
+  transform-origin: center center;
+  transition: transform 0.3s ease-out;
+}
+
+/* ===== Smooth Hover Effects ===== */
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+
+.transition-colors {
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+/* ===== Mobile Optimizations ===== */
+@media (max-width: 640px) {
+  /* Reduce animation complexity on mobile for performance */
+  .animate-fade-in-delay {
+    animation-duration: 2s;
+  }
+  
+  /* Make touch targets larger */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ===== Backdrop Blur Support ===== */
+.backdrop-blur-sm {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ===== Gradient Overlays ===== */
+.bg-gradient-to-t {
+  background: linear-gradient(to top, var(--tw-gradient-stops));
+}
+
+.bg-gradient-to-r {
+  background: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+/* ===== Loading State ===== */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ===== Card Swipe Feedback ===== */
+.card-swipe-left {
+  animation: swipeLeft 0.3s ease-out;
+}
+
+.card-swipe-right {
+  animation: swipeRight 0.3s ease-out;
+}
+
+@keyframes swipeLeft {
+  to {
+    transform: translateX(-150%) rotate(-30deg);
+    opacity: 0;
+  }
+}
+
+@keyframes swipeRight {
+  to {
+    transform: translateX(150%) rotate(30deg);
+    opacity: 0;
+  }
+}
+
+/* ===== High Intent Glow Effect ===== */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.8);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* ===== Accessibility: Reduce Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

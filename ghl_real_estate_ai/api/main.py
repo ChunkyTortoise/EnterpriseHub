@@ -15,6 +15,7 @@ from ghl_real_estate_ai.api.routes import (
     bulk_operations,
     crm,
     lead_lifecycle,
+    portal,
     properties,
     team,
     voice,
@@ -25,6 +26,7 @@ from ghl_real_estate_ai.api.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
+from ghl_real_estate_ai.api.middleware.error_handler import ErrorHandlerMiddleware
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -42,6 +44,9 @@ app = FastAPI(
 # HTTPS enforcement in production
 if os.getenv("ENVIRONMENT") == "production":
     app.add_middleware(HTTPSRedirectMiddleware)
+
+# Add Error Handler Middleware
+app.add_middleware(ErrorHandlerMiddleware)
 
 # Add CORS middleware
 app.add_middleware(
@@ -65,6 +70,7 @@ app.include_router(lead_lifecycle.router, prefix="/api")
 # Authentication routes (added by Agent 5)
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(properties.router, prefix="/api")
+app.include_router(portal.router, prefix="/api")
 app.include_router(team.router, prefix="/api")
 app.include_router(crm.router, prefix="/api")
 app.include_router(voice.router, prefix="/api")

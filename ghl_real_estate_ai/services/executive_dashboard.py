@@ -5,7 +5,7 @@ Provides KPI calculations and executive-level insights
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -45,11 +45,12 @@ class ExecutiveDashboardService:
         # Identify action items
         action_items = self._identify_action_items(metrics, conversations)
 
+        now = datetime.now(timezone.utc)
         return {
             "period": {
                 "days": days,
-                "start_date": (datetime.now() - timedelta(days=days)).isoformat(),
-                "end_date": datetime.now().isoformat(),
+                "start_date": (now - timedelta(days=days)).isoformat(),
+                "end_date": now.isoformat(),
             },
             "metrics": metrics,
             "insights": insights,
@@ -69,12 +70,15 @@ class ExecutiveDashboardService:
             data = json.load(f)
 
         # Filter by date range
-        cutoff = datetime.now() - timedelta(days=days)
-        conversations = [
-            c
-            for c in data.get("conversations", [])
-            if datetime.fromisoformat(c["timestamp"]) >= cutoff
-        ]
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        conversations = []
+        for c in data.get("conversations", []):
+            ts_str = c.get("timestamp") or c.get("start_time")
+            if ts_str:
+                # Handle Z or +00:00
+                ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                if ts >= cutoff:
+                    conversations.append(c)
 
         return conversations
 
@@ -276,7 +280,10 @@ class ExecutiveDashboardService:
         daily_data = {}
 
         for conv in conversations:
-            date = datetime.fromisoformat(conv["timestamp"]).date()
+            ts_str = conv.get("timestamp") or conv.get("start_time")
+            if not ts_str:
+                continue
+            date = datetime.fromisoformat(ts_str.replace("Z", "+00:00")).date()
             if date not in daily_data:
                 daily_data[date] = []
             daily_data[date].append(conv)

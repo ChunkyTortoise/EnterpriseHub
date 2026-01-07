@@ -8,13 +8,13 @@ from unittest.mock import Mock, patch, MagicMock
 import os
 
 # Test security modules directly without TestClient
-from ghl_real_estate_ai.ghl_real_estate_ai.api.middleware import (
+from ghl_real_estate_ai.api.middleware import (
     JWTAuth,
     APIKeyAuth,
     RateLimitMiddleware,
     SecurityHeadersMiddleware
 )
-from ghl_real_estate_ai.ghl_real_estate_ai.api.middleware.rate_limiter import RateLimiter
+from ghl_real_estate_ai.api.middleware.rate_limiter import RateLimiter
 
 
 class TestJWTAuthentication:
@@ -186,7 +186,7 @@ class TestSecurityIntegration:
     
     def test_all_security_components_importable(self):
         """Test that all security components can be imported."""
-        from ghl_real_estate_ai.ghl_real_estate_ai.api.middleware import (
+        from ghl_real_estate_ai.api.middleware import (
             JWTAuth,
             get_current_user,
             APIKeyAuth,
@@ -231,14 +231,14 @@ class TestEnvironmentConfiguration:
     
     def test_jwt_secret_key_configured(self):
         """Test JWT secret key configuration."""
-        from ghl_real_estate_ai.ghl_real_estate_ai.api.middleware.jwt_auth import SECRET_KEY
+        from ghl_real_estate_ai.api.middleware.jwt_auth import SECRET_KEY
         
         assert SECRET_KEY is not None
         assert len(SECRET_KEY) > 0
     
     def test_jwt_algorithm_configured(self):
         """Test JWT algorithm configuration."""
-        from ghl_real_estate_ai.ghl_real_estate_ai.api.middleware.jwt_auth import ALGORITHM
+        from ghl_real_estate_ai.api.middleware.jwt_auth import ALGORITHM
         
         assert ALGORITHM == "HS256"
 

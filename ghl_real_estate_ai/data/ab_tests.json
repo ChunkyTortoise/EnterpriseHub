@@ -25110,6 +25110,3254 @@
       "traffic_split": 0.5,
       "min_sample_size": 30,
       "confidence_level": 0.95
+    },
+    "exp_20260106_173602_498508": {
+      "id": "exp_20260106_173602_498508",
+      "name": "Test Experiment",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:36:02.498511",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello!"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there!"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173602_572400": {
+      "id": "exp_20260106_173602_572400",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:36:02.572403",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173602_641487": {
+      "id": "exp_20260106_173602_641487",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:36:02.641491",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c1",
+              "conversion": true,
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:02.707176"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173602_774267": {
+      "id": "exp_20260106_173602_774267",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:36:02.774270",
+      "status": "active",
+      "metric": "lead_score",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c0",
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:02.832944"
+            },
+            {
+              "contact_id": "c1",
+              "lead_score": 61,
+              "recorded_at": "2026-01-06T17:36:02.954674"
+            },
+            {
+              "contact_id": "c2",
+              "lead_score": 62,
+              "recorded_at": "2026-01-06T17:36:03.072377"
+            },
+            {
+              "contact_id": "c3",
+              "lead_score": 63,
+              "recorded_at": "2026-01-06T17:36:03.188419"
+            },
+            {
+              "contact_id": "c4",
+              "lead_score": 64,
+              "recorded_at": "2026-01-06T17:36:03.314787"
+            },
+            {
+              "contact_id": "c5",
+              "lead_score": 65,
+              "recorded_at": "2026-01-06T17:36:03.455548"
+            },
+            {
+              "contact_id": "c6",
+              "lead_score": 66,
+              "recorded_at": "2026-01-06T17:36:03.561028"
+            },
+            {
+              "contact_id": "c7",
+              "lead_score": 67,
+              "recorded_at": "2026-01-06T17:36:03.667169"
+            },
+            {
+              "contact_id": "c8",
+              "lead_score": 68,
+              "recorded_at": "2026-01-06T17:36:03.774022"
+            },
+            {
+              "contact_id": "c9",
+              "lead_score": 69,
+              "recorded_at": "2026-01-06T17:36:03.881397"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c10",
+              "lead_score": 70,
+              "recorded_at": "2026-01-06T17:36:02.894499"
+            },
+            {
+              "contact_id": "c11",
+              "lead_score": 71,
+              "recorded_at": "2026-01-06T17:36:03.014508"
+            },
+            {
+              "contact_id": "c12",
+              "lead_score": 72,
+              "recorded_at": "2026-01-06T17:36:03.131497"
+            },
+            {
+              "contact_id": "c13",
+              "lead_score": 73,
+              "recorded_at": "2026-01-06T17:36:03.245478"
+            },
+            {
+              "contact_id": "c14",
+              "lead_score": 74,
+              "recorded_at": "2026-01-06T17:36:03.402734"
+            },
+            {
+              "contact_id": "c15",
+              "lead_score": 75,
+              "recorded_at": "2026-01-06T17:36:03.507854"
+            },
+            {
+              "contact_id": "c16",
+              "lead_score": 76,
+              "recorded_at": "2026-01-06T17:36:03.614101"
+            },
+            {
+              "contact_id": "c17",
+              "lead_score": 77,
+              "recorded_at": "2026-01-06T17:36:03.720540"
+            },
+            {
+              "contact_id": "c18",
+              "lead_score": 78,
+              "recorded_at": "2026-01-06T17:36:03.827910"
+            },
+            {
+              "contact_id": "c19",
+              "lead_score": 79,
+              "recorded_at": "2026-01-06T17:36:03.934334"
+            }
+          ]
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173603_992197": {
+      "id": "exp_20260106_173603_992197",
+      "name": "Exp 1",
+      "description": "",
+      "location_id": "test_location_list_1767749763990",
+      "created_at": "2026-01-06T17:36:03.992198",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173604_45209": {
+      "id": "exp_20260106_173604_45209",
+      "name": "Exp 2",
+      "description": "",
+      "location_id": "test_location_list_1767749763990",
+      "created_at": "2026-01-06T17:36:04.045218",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173604_230816": {
+      "id": "exp_20260106_173604_230816",
+      "name": "Winner Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:36:04.230817",
+      "status": "active",
+      "metric": "lead_score",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:04.286195"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:04.403836"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:04.532275"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:04.663011"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:04.774190"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:04.885126"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:05.019476"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:05.127266"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:05.235710"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:05.346343"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:05.456312"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:05.563701"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:05.673912"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:05.781582"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:05.889434"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:05.996001"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:06.104123"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:06.211390"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:06.346076"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:06.452642"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:06.564496"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:06.675452"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:06.792235"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:06.902478"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:07.009539"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:07.120742"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:07.235415"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:07.345463"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:07.453192"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:07.561059"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:07.693986"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:07.807931"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:07.921694"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:08.032189"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:36:08.146731"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:04.342669"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:04.471001"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:04.596968"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:04.718775"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:04.829289"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:04.964447"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:05.073550"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:05.181706"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:05.290651"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:05.400296"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:05.510292"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:05.616601"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:05.728165"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:05.835908"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:05.942266"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:06.050034"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:06.157944"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:06.291464"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:06.399374"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:06.508565"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:06.619353"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:06.729664"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:06.847907"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:06.955875"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:07.063735"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:07.182022"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:07.290602"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:07.399128"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:07.507077"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:07.615287"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:07.750055"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:07.864352"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:07.976606"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:08.086197"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:36:08.202666"
+            }
+          ]
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173608_266101": {
+      "id": "exp_20260106_173608_266101",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:36:08.266103",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173608_335281": {
+      "id": "exp_20260106_173608_335281",
+      "name": "Persist Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:36:08.335285",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 75,
+              "recorded_at": "2026-01-06T17:36:08.391223"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173621_640181": {
+      "id": "exp_20260106_173621_640181",
+      "name": "Test Experiment",
+      "description": "Greeting test",
+      "location_id": "test_loc",
+      "created_at": "2026-01-06T17:36:21.640183",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173707_277308": {
+      "id": "exp_20260106_173707_277308",
+      "name": "Test Experiment",
+      "description": "Greeting test",
+      "location_id": "test_loc",
+      "created_at": "2026-01-06T17:37:07.277310",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173734_776078": {
+      "id": "exp_20260106_173734_776078",
+      "name": "Test Experiment",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:37:34.776081",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello!"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there!"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173734_835448": {
+      "id": "exp_20260106_173734_835448",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:37:34.835451",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173734_893088": {
+      "id": "exp_20260106_173734_893088",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:37:34.893089",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c1",
+              "conversion": true,
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:34.950152"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173735_9882": {
+      "id": "exp_20260106_173735_9882",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:37:35.009884",
+      "status": "active",
+      "metric": "lead_score",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c0",
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:35.064431"
+            },
+            {
+              "contact_id": "c1",
+              "lead_score": 61,
+              "recorded_at": "2026-01-06T17:37:35.173866"
+            },
+            {
+              "contact_id": "c2",
+              "lead_score": 62,
+              "recorded_at": "2026-01-06T17:37:35.282908"
+            },
+            {
+              "contact_id": "c3",
+              "lead_score": 63,
+              "recorded_at": "2026-01-06T17:37:35.391782"
+            },
+            {
+              "contact_id": "c4",
+              "lead_score": 64,
+              "recorded_at": "2026-01-06T17:37:35.500354"
+            },
+            {
+              "contact_id": "c5",
+              "lead_score": 65,
+              "recorded_at": "2026-01-06T17:37:35.614434"
+            },
+            {
+              "contact_id": "c6",
+              "lead_score": 66,
+              "recorded_at": "2026-01-06T17:37:35.731878"
+            },
+            {
+              "contact_id": "c7",
+              "lead_score": 67,
+              "recorded_at": "2026-01-06T17:37:35.852881"
+            },
+            {
+              "contact_id": "c8",
+              "lead_score": 68,
+              "recorded_at": "2026-01-06T17:37:35.997475"
+            },
+            {
+              "contact_id": "c9",
+              "lead_score": 69,
+              "recorded_at": "2026-01-06T17:37:36.114833"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c10",
+              "lead_score": 70,
+              "recorded_at": "2026-01-06T17:37:35.118872"
+            },
+            {
+              "contact_id": "c11",
+              "lead_score": 71,
+              "recorded_at": "2026-01-06T17:37:35.228848"
+            },
+            {
+              "contact_id": "c12",
+              "lead_score": 72,
+              "recorded_at": "2026-01-06T17:37:35.337410"
+            },
+            {
+              "contact_id": "c13",
+              "lead_score": 73,
+              "recorded_at": "2026-01-06T17:37:35.445963"
+            },
+            {
+              "contact_id": "c14",
+              "lead_score": 74,
+              "recorded_at": "2026-01-06T17:37:35.554270"
+            },
+            {
+              "contact_id": "c15",
+              "lead_score": 75,
+              "recorded_at": "2026-01-06T17:37:35.672130"
+            },
+            {
+              "contact_id": "c16",
+              "lead_score": 76,
+              "recorded_at": "2026-01-06T17:37:35.791388"
+            },
+            {
+              "contact_id": "c17",
+              "lead_score": 77,
+              "recorded_at": "2026-01-06T17:37:35.914722"
+            },
+            {
+              "contact_id": "c18",
+              "lead_score": 78,
+              "recorded_at": "2026-01-06T17:37:36.057298"
+            },
+            {
+              "contact_id": "c19",
+              "lead_score": 79,
+              "recorded_at": "2026-01-06T17:37:36.173417"
+            }
+          ]
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173736_232461": {
+      "id": "exp_20260106_173736_232461",
+      "name": "Exp 1",
+      "description": "",
+      "location_id": "test_location_list_1767749856230",
+      "created_at": "2026-01-06T17:37:36.232463",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173736_292591": {
+      "id": "exp_20260106_173736_292591",
+      "name": "Exp 2",
+      "description": "",
+      "location_id": "test_location_list_1767749856230",
+      "created_at": "2026-01-06T17:37:36.292595",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173736_503507": {
+      "id": "exp_20260106_173736_503507",
+      "name": "Winner Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:37:36.503511",
+      "status": "active",
+      "metric": "lead_score",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:36.559472"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:36.673990"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:36.790892"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:36.909838"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:37.030513"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:37.148531"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:37.267687"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:37.386281"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:37.508251"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:37.627957"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:37.747216"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:37.867302"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:38.017876"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:38.136294"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:38.256784"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:38.394667"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:38.508871"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:38.619332"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:38.732862"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:38.845192"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:38.956127"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:39.078393"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:39.202086"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:39.325489"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:39.447578"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:39.568241"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:39.684676"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:39.822951"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:39.946026"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:40.061741"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:40.174343"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:40.288674"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:40.405640"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:40.520681"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:37:40.639496"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:36.618007"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:36.729722"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:36.851973"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:36.970178"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:37.089707"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:37.207298"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:37.324822"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:37.450178"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:37.567811"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:37.687658"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:37.806738"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:37.953305"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:38.077114"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:38.197661"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:38.317570"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:38.453338"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:38.564192"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:38.675176"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:38.789063"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:38.900102"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:39.015837"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:39.139924"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:39.262135"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:39.387139"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:39.508155"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:39.627753"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:39.740151"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:39.884998"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:40.004216"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:40.117733"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:40.229552"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:40.347308"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:40.463966"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:40.577899"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:37:40.704703"
+            }
+          ]
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173740_772646": {
+      "id": "exp_20260106_173740_772646",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:37:40.772648",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173740_838458": {
+      "id": "exp_20260106_173740_838458",
+      "name": "Persist Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:37:40.838463",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 75,
+              "recorded_at": "2026-01-06T17:37:40.896609"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173741_253272": {
+      "id": "exp_20260106_173741_253272",
+      "name": "Test Experiment",
+      "description": "Greeting test",
+      "location_id": "test_loc",
+      "created_at": "2026-01-06T17:37:41.253276",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173928_61499": {
+      "id": "exp_20260106_173928_61499",
+      "name": "Test Experiment",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:39:28.061501",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello!"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there!"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173928_209758": {
+      "id": "exp_20260106_173928_209758",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:39:28.209761",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173928_270792": {
+      "id": "exp_20260106_173928_270792",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:39:28.270794",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c1",
+              "conversion": true,
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:28.325463"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173928_387584": {
+      "id": "exp_20260106_173928_387584",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:39:28.387587",
+      "status": "active",
+      "metric": "lead_score",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c0",
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:28.445127"
+            },
+            {
+              "contact_id": "c1",
+              "lead_score": 61,
+              "recorded_at": "2026-01-06T17:39:28.560391"
+            },
+            {
+              "contact_id": "c2",
+              "lead_score": 62,
+              "recorded_at": "2026-01-06T17:39:28.673826"
+            },
+            {
+              "contact_id": "c3",
+              "lead_score": 63,
+              "recorded_at": "2026-01-06T17:39:28.788004"
+            },
+            {
+              "contact_id": "c4",
+              "lead_score": 64,
+              "recorded_at": "2026-01-06T17:39:28.905584"
+            },
+            {
+              "contact_id": "c5",
+              "lead_score": 65,
+              "recorded_at": "2026-01-06T17:39:29.023352"
+            },
+            {
+              "contact_id": "c6",
+              "lead_score": 66,
+              "recorded_at": "2026-01-06T17:39:29.137909"
+            },
+            {
+              "contact_id": "c7",
+              "lead_score": 67,
+              "recorded_at": "2026-01-06T17:39:29.249737"
+            },
+            {
+              "contact_id": "c8",
+              "lead_score": 68,
+              "recorded_at": "2026-01-06T17:39:29.381644"
+            },
+            {
+              "contact_id": "c9",
+              "lead_score": 69,
+              "recorded_at": "2026-01-06T17:39:29.503078"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c10",
+              "lead_score": 70,
+              "recorded_at": "2026-01-06T17:39:28.502567"
+            },
+            {
+              "contact_id": "c11",
+              "lead_score": 71,
+              "recorded_at": "2026-01-06T17:39:28.617818"
+            },
+            {
+              "contact_id": "c12",
+              "lead_score": 72,
+              "recorded_at": "2026-01-06T17:39:28.732000"
+            },
+            {
+              "contact_id": "c13",
+              "lead_score": 73,
+              "recorded_at": "2026-01-06T17:39:28.847185"
+            },
+            {
+              "contact_id": "c14",
+              "lead_score": 74,
+              "recorded_at": "2026-01-06T17:39:28.966732"
+            },
+            {
+              "contact_id": "c15",
+              "lead_score": 75,
+              "recorded_at": "2026-01-06T17:39:29.081179"
+            },
+            {
+              "contact_id": "c16",
+              "lead_score": 76,
+              "recorded_at": "2026-01-06T17:39:29.193757"
+            },
+            {
+              "contact_id": "c17",
+              "lead_score": 77,
+              "recorded_at": "2026-01-06T17:39:29.325161"
+            },
+            {
+              "contact_id": "c18",
+              "lead_score": 78,
+              "recorded_at": "2026-01-06T17:39:29.441301"
+            },
+            {
+              "contact_id": "c19",
+              "lead_score": 79,
+              "recorded_at": "2026-01-06T17:39:29.557809"
+            }
+          ]
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173929_617408": {
+      "id": "exp_20260106_173929_617408",
+      "name": "Exp 1",
+      "description": "",
+      "location_id": "test_location_list_1767749969615",
+      "created_at": "2026-01-06T17:39:29.617410",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173929_673211": {
+      "id": "exp_20260106_173929_673211",
+      "name": "Exp 2",
+      "description": "",
+      "location_id": "test_location_list_1767749969615",
+      "created_at": "2026-01-06T17:39:29.673215",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173929_860443": {
+      "id": "exp_20260106_173929_860443",
+      "name": "Winner Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:39:29.860445",
+      "status": "active",
+      "metric": "lead_score",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:29.915012"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:30.029277"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:30.140603"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:30.250485"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:30.367906"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:30.477305"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:30.589423"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:30.704448"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:30.816261"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:30.929914"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:31.039286"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:31.150497"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:31.264244"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:31.376872"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:31.490996"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:31.601829"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:31.713329"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:31.828544"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:31.948617"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:32.067111"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:32.182106"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:32.293376"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:32.408045"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:32.521850"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:32.641117"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:32.756594"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:32.871795"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:33.010284"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:33.121410"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:33.234355"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:33.344049"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:33.456811"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:33.590281"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:33.700734"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T17:39:33.811239"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:29.971680"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:30.084731"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:30.195881"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:30.310677"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:30.422350"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:30.532828"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:30.648562"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:30.760303"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:30.872054"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:30.984383"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:31.095545"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:31.206432"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:31.319395"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:31.434451"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:31.546924"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:31.657451"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:31.770745"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:31.889070"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:32.007287"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:32.123945"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:32.236977"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:32.348247"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:32.466061"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:32.582342"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:32.698204"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:32.815372"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:32.931161"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:33.066100"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:33.178089"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:33.289699"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:33.401102"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:33.524859"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:33.645838"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:33.756398"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T17:39:33.867677"
+            }
+          ]
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173933_928888": {
+      "id": "exp_20260106_173933_928888",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:39:33.928890",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173933_989738": {
+      "id": "exp_20260106_173933_989738",
+      "name": "Persist Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:39:33.989740",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 75,
+              "recorded_at": "2026-01-06T17:39:34.045724"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_173934_248317": {
+      "id": "exp_20260106_173934_248317",
+      "name": "Test Experiment",
+      "description": "Greeting test",
+      "location_id": "test_loc",
+      "created_at": "2026-01-06T17:39:34.248319",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_181506_986242": {
+      "id": "exp_20260106_181506_986242",
+      "name": "Test Experiment",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:15:06.986245",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello!"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there!"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_181507_11314": {
+      "id": "exp_20260106_181507_11314",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:15:07.011317",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_181507_34322": {
+      "id": "exp_20260106_181507_34322",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:15:07.034323",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c1",
+              "conversion": true,
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:07.055028"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_181507_80296": {
+      "id": "exp_20260106_181507_80296",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:15:07.080298",
+      "status": "active",
+      "metric": "lead_score",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c0",
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.102307"
+            },
+            {
+              "contact_id": "c1",
+              "lead_score": 61,
+              "recorded_at": "2026-01-06T18:15:07.140519"
+            },
+            {
+              "contact_id": "c2",
+              "lead_score": 62,
+              "recorded_at": "2026-01-06T18:15:07.182029"
+            },
+            {
+              "contact_id": "c3",
+              "lead_score": 63,
+              "recorded_at": "2026-01-06T18:15:07.221806"
+            },
+            {
+              "contact_id": "c4",
+              "lead_score": 64,
+              "recorded_at": "2026-01-06T18:15:07.260460"
+            },
+            {
+              "contact_id": "c5",
+              "lead_score": 65,
+              "recorded_at": "2026-01-06T18:15:07.299742"
+            },
+            {
+              "contact_id": "c6",
+              "lead_score": 66,
+              "recorded_at": "2026-01-06T18:15:07.339511"
+            },
+            {
+              "contact_id": "c7",
+              "lead_score": 67,
+              "recorded_at": "2026-01-06T18:15:07.378791"
+            },
+            {
+              "contact_id": "c8",
+              "lead_score": 68,
+              "recorded_at": "2026-01-06T18:15:07.417415"
+            },
+            {
+              "contact_id": "c9",
+              "lead_score": 69,
+              "recorded_at": "2026-01-06T18:15:07.458459"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c10",
+              "lead_score": 70,
+              "recorded_at": "2026-01-06T18:15:07.121679"
+            },
+            {
+              "contact_id": "c11",
+              "lead_score": 71,
+              "recorded_at": "2026-01-06T18:15:07.160941"
+            },
+            {
+              "contact_id": "c12",
+              "lead_score": 72,
+              "recorded_at": "2026-01-06T18:15:07.202054"
+            },
+            {
+              "contact_id": "c13",
+              "lead_score": 73,
+              "recorded_at": "2026-01-06T18:15:07.241432"
+            },
+            {
+              "contact_id": "c14",
+              "lead_score": 74,
+              "recorded_at": "2026-01-06T18:15:07.279856"
+            },
+            {
+              "contact_id": "c15",
+              "lead_score": 75,
+              "recorded_at": "2026-01-06T18:15:07.318679"
+            },
+            {
+              "contact_id": "c16",
+              "lead_score": 76,
+              "recorded_at": "2026-01-06T18:15:07.359371"
+            },
+            {
+              "contact_id": "c17",
+              "lead_score": 77,
+              "recorded_at": "2026-01-06T18:15:07.398488"
+            },
+            {
+              "contact_id": "c18",
+              "lead_score": 78,
+              "recorded_at": "2026-01-06T18:15:07.437932"
+            },
+            {
+              "contact_id": "c19",
+              "lead_score": 79,
+              "recorded_at": "2026-01-06T18:15:07.477766"
+            }
+          ]
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_181507_501806": {
+      "id": "exp_20260106_181507_501806",
+      "name": "Exp 1",
+      "description": "",
+      "location_id": "test_location_list_1767752107499",
+      "created_at": "2026-01-06T18:15:07.501810",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_181507_522210": {
+      "id": "exp_20260106_181507_522210",
+      "name": "Exp 2",
+      "description": "",
+      "location_id": "test_location_list_1767752107499",
+      "created_at": "2026-01-06T18:15:07.522214",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_181507_599959": {
+      "id": "exp_20260106_181507_599959",
+      "name": "Winner Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:15:07.599961",
+      "status": "active",
+      "metric": "lead_score",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.620512"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.666019"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.705110"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.745281"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.783016"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.831969"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.870055"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.908463"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.946758"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:07.988344"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.030286"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.070288"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.107157"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.143830"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.182045"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.220794"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.261154"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.300288"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.340590"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.380892"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.420371"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.460639"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.500934"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.540328"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.579128"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.616646"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.653860"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.693452"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.733331"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.773268"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.813100"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.851437"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.889025"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.928542"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:15:08.966876"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:07.646342"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:07.685620"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:07.724924"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:07.764189"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:07.802271"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:07.851133"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:07.889013"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:07.927425"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:07.967195"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.008715"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.050201"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.088884"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.125471"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.162911"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.200939"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.241447"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.280937"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.320041"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.360890"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.400383"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.439832"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.480578"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.520549"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.559384"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.598413"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.634935"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.673937"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.713727"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.752676"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.794108"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.832274"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.870594"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.908785"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.948148"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:15:08.985353"
+            }
+          ]
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_181509_11302": {
+      "id": "exp_20260106_181509_11302",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:15:09.011305",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_181509_38668": {
+      "id": "exp_20260106_181509_38668",
+      "name": "Persist Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:15:09.038671",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 75,
+              "recorded_at": "2026-01-06T18:15:09.058205"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_181509_202490": {
+      "id": "exp_20260106_181509_202490",
+      "name": "Test Experiment",
+      "description": "Greeting test",
+      "location_id": "test_loc",
+      "created_at": "2026-01-06T18:15:09.202492",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_182025_412876": {
+      "id": "exp_20260106_182025_412876",
+      "name": "Test Experiment",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:20:25.412878",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello!"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there!"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_182025_433991": {
+      "id": "exp_20260106_182025_433991",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:20:25.433993",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_182025_454907": {
+      "id": "exp_20260106_182025_454907",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:20:25.454908",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c1",
+              "conversion": true,
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:25.473005"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_182025_495514": {
+      "id": "exp_20260106_182025_495514",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:20:25.495518",
+      "status": "active",
+      "metric": "lead_score",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c0",
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:25.514086"
+            },
+            {
+              "contact_id": "c1",
+              "lead_score": 61,
+              "recorded_at": "2026-01-06T18:20:25.550528"
+            },
+            {
+              "contact_id": "c2",
+              "lead_score": 62,
+              "recorded_at": "2026-01-06T18:20:25.588107"
+            },
+            {
+              "contact_id": "c3",
+              "lead_score": 63,
+              "recorded_at": "2026-01-06T18:20:25.623933"
+            },
+            {
+              "contact_id": "c4",
+              "lead_score": 64,
+              "recorded_at": "2026-01-06T18:20:25.661359"
+            },
+            {
+              "contact_id": "c5",
+              "lead_score": 65,
+              "recorded_at": "2026-01-06T18:20:25.698617"
+            },
+            {
+              "contact_id": "c6",
+              "lead_score": 66,
+              "recorded_at": "2026-01-06T18:20:25.735852"
+            },
+            {
+              "contact_id": "c7",
+              "lead_score": 67,
+              "recorded_at": "2026-01-06T18:20:25.773672"
+            },
+            {
+              "contact_id": "c8",
+              "lead_score": 68,
+              "recorded_at": "2026-01-06T18:20:25.810591"
+            },
+            {
+              "contact_id": "c9",
+              "lead_score": 69,
+              "recorded_at": "2026-01-06T18:20:25.847591"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": [
+            {
+              "contact_id": "c10",
+              "lead_score": 70,
+              "recorded_at": "2026-01-06T18:20:25.532382"
+            },
+            {
+              "contact_id": "c11",
+              "lead_score": 71,
+              "recorded_at": "2026-01-06T18:20:25.569765"
+            },
+            {
+              "contact_id": "c12",
+              "lead_score": 72,
+              "recorded_at": "2026-01-06T18:20:25.605924"
+            },
+            {
+              "contact_id": "c13",
+              "lead_score": 73,
+              "recorded_at": "2026-01-06T18:20:25.642703"
+            },
+            {
+              "contact_id": "c14",
+              "lead_score": 74,
+              "recorded_at": "2026-01-06T18:20:25.680111"
+            },
+            {
+              "contact_id": "c15",
+              "lead_score": 75,
+              "recorded_at": "2026-01-06T18:20:25.716784"
+            },
+            {
+              "contact_id": "c16",
+              "lead_score": 76,
+              "recorded_at": "2026-01-06T18:20:25.755282"
+            },
+            {
+              "contact_id": "c17",
+              "lead_score": 77,
+              "recorded_at": "2026-01-06T18:20:25.792585"
+            },
+            {
+              "contact_id": "c18",
+              "lead_score": 78,
+              "recorded_at": "2026-01-06T18:20:25.829194"
+            },
+            {
+              "contact_id": "c19",
+              "lead_score": 79,
+              "recorded_at": "2026-01-06T18:20:25.866386"
+            }
+          ]
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_182025_888863": {
+      "id": "exp_20260106_182025_888863",
+      "name": "Exp 1",
+      "description": "",
+      "location_id": "test_location_list_1767752425886",
+      "created_at": "2026-01-06T18:20:25.888864",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_182025_906885": {
+      "id": "exp_20260106_182025_906885",
+      "name": "Exp 2",
+      "description": "",
+      "location_id": "test_location_list_1767752425886",
+      "created_at": "2026-01-06T18:20:25.906886",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_182025_982298": {
+      "id": "exp_20260106_182025_982298",
+      "name": "Winner Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:20:25.982301",
+      "status": "active",
+      "metric": "lead_score",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.001795"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.041788"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.083537"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.125695"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.167616"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.208409"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.247763"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.287210"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.327764"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.368165"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.408876"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.450074"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.498631"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.535381"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.571982"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.610316"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.648984"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.687071"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.726001"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.765614"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.802970"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.840251"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.879278"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.917715"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.955535"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:26.994145"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:27.034472"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:27.075190"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:27.115951"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:27.159030"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:27.199765"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:27.238851"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:27.279286"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:27.318588"
+            },
+            {
+              "lead_score": 60,
+              "recorded_at": "2026-01-06T18:20:27.357900"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.021511"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.063172"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.105145"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.147041"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.187523"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.228113"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.267725"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.307634"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.348155"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.388622"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.429306"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.471026"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.517302"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.553777"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.591978"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.629387"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.667878"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.706547"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.745705"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.784185"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.821630"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.858801"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.899107"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.936678"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:26.974627"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:27.013707"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:27.055023"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:27.095184"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:27.136263"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:27.180328"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:27.219080"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:27.258486"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:27.298799"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:27.337800"
+            },
+            {
+              "lead_score": 80,
+              "recorded_at": "2026-01-06T18:20:27.377216"
+            }
+          ]
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_182027_403344": {
+      "id": "exp_20260106_182027_403344",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:20:27.403347",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_182027_431145": {
+      "id": "exp_20260106_182027_431145",
+      "name": "Persist Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:20:27.431146",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": [
+            {
+              "lead_score": 75,
+              "recorded_at": "2026-01-06T18:20:27.450168"
+            }
+          ]
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
+    },
+    "exp_20260106_182027_581755": {
+      "id": "exp_20260106_182027_581755",
+      "name": "Test Experiment",
+      "description": "Greeting test",
+      "location_id": "test_loc",
+      "created_at": "2026-01-06T18:20:27.581756",
+      "status": "active",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {
+            "message": "Hello"
+          },
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {
+            "message": "Hi there"
+          },
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95
     }
   },
   "completed": {
@@ -26369,6 +29617,146 @@
       "min_sample_size": 30,
       "confidence_level": 0.95,
       "completed_at": "2026-01-06T17:28:54.205555",
+      "final_analysis": {
+        "error": "Experiment not found"
+      }
+    },
+    "exp_20260106_173604_104410": {
+      "id": "exp_20260106_173604_104410",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:36:04.104412",
+      "status": "completed",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95,
+      "completed_at": "2026-01-06T17:36:04.157812",
+      "final_analysis": {
+        "error": "Experiment not found"
+      }
+    },
+    "exp_20260106_173736_359109": {
+      "id": "exp_20260106_173736_359109",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:37:36.359112",
+      "status": "completed",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95,
+      "completed_at": "2026-01-06T17:37:36.422844",
+      "final_analysis": {
+        "error": "Experiment not found"
+      }
+    },
+    "exp_20260106_173929_732308": {
+      "id": "exp_20260106_173929_732308",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T17:39:29.732310",
+      "status": "completed",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95,
+      "completed_at": "2026-01-06T17:39:29.788978",
+      "final_analysis": {
+        "error": "Experiment not found"
+      }
+    },
+    "exp_20260106_181507_546007": {
+      "id": "exp_20260106_181507_546007",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:15:07.546010",
+      "status": "completed",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95,
+      "completed_at": "2026-01-06T18:15:07.565129",
+      "final_analysis": {
+        "error": "Experiment not found"
+      }
+    },
+    "exp_20260106_182025_928285": {
+      "id": "exp_20260106_182025_928285",
+      "name": "Test",
+      "description": "",
+      "location_id": "test_location",
+      "created_at": "2026-01-06T18:20:25.928287",
+      "status": "completed",
+      "metric": "conversion_rate",
+      "variants": {
+        "a": {
+          "name": "Control",
+          "config": {},
+          "results": []
+        },
+        "b": {
+          "name": "Test",
+          "config": {},
+          "results": []
+        }
+      },
+      "traffic_split": 0.5,
+      "min_sample_size": 30,
+      "confidence_level": 0.95,
+      "completed_at": "2026-01-06T18:20:25.946843",
       "final_analysis": {
         "error": "Experiment not found"
       }

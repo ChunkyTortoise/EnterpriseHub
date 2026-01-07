@@ -353,13 +353,15 @@ async def get_campaign_details(location_id: str, campaign_id: str):
         )
 
 
+class OptimizationRequest(BaseModel):
+    """Request model for optimization suggestions."""
+    conversation_history: List[str]
+    current_lead_score: int
+    questions_answered: List[str]
+
 # Conversation Optimization Endpoints
 @router.post("/optimize/next-question")
-async def suggest_next_question(
-    conversation_history: List[str],
-    current_lead_score: int,
-    questions_answered: List[str],
-):
+async def suggest_next_question(request: OptimizationRequest):
     """
     Get AI-powered suggestion for the next best question to ask.
 
@@ -369,9 +371,9 @@ async def suggest_next_question(
         optimizer = ConversationOptimizer()
 
         suggestion = optimizer.suggest_next_question(
-            conversation_history=conversation_history,
-            current_lead_score=current_lead_score,
-            questions_answered=questions_answered,
+            conversation_history=request.conversation_history,
+            current_lead_score=request.current_lead_score,
+            questions_answered=request.questions_answered,
         )
 
         return suggestion
