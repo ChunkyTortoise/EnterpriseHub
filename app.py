@@ -12,20 +12,12 @@ import json
 import os
 
 # --- PATH CONFIGURATION ---
-# Script is at root, project is in ghl_real_estate_ai
-PROJECT_ROOT = Path(__file__).parent / "ghl_real_estate_ai"
-DEMO_ROOT = PROJECT_ROOT / "streamlit_demo"
+BASE_DIR = Path(__file__).parent
+PROJECT_ROOT = BASE_DIR / "ghl_real_estate_ai"
 
-# Add directories to sys.path for imports
+# Add directories to sys.path
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-if str(DEMO_ROOT) not in sys.path:
-    sys.path.insert(0, str(DEMO_ROOT))
-
-# Also add the services directory specifically
-SERVICES_DIR = DEMO_ROOT / "services"
-if str(SERVICES_DIR) not in sys.path:
-    sys.path.insert(0, str(SERVICES_DIR))
 
 # Import services
 try:
@@ -91,7 +83,7 @@ st.set_page_config(
 )
 
 # Load custom CSS
-css_path = DEMO_ROOT / "assets" / "styles.css"
+css_path = PROJECT_ROOT / "streamlit_demo" / "assets" / "styles.css"
 if css_path.exists():
     with open(css_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
