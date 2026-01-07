@@ -18,10 +18,11 @@ Lead Classifications (Jorge's Criteria):
 - Warm Lead: 2 questions answered (follow up within 24 hours)
 - Cold Lead: 0-1 questions answered (nurture campaign)
 """
-from typing import Dict, Any, List
-from datetime import datetime
+
 import re
-from typing import Dict, Any, List
+from datetime import datetime
+from typing import Any, Dict, List
+
 from ghl_real_estate_ai.ghl_utils.config import settings
 
 
@@ -36,9 +37,9 @@ class LeadScorer:
     def calculate(self, context: Dict[str, Any]) -> int:
         """
         Calculate lead score based on NUMBER OF QUESTIONS ANSWERED.
-        
+
         Jorge's Requirement: Count questions answered, not points.
-        
+
         Qualifying Questions:
         1. Budget: Did they provide a budget/price range?
         2. Location: Did they specify a location/area?
@@ -115,7 +116,7 @@ class LeadScorer:
             "this week",
             "next week",
             "soon",
-            "right away"
+            "right away",
         ]
 
         return any(keyword in timeline_lower for keyword in urgent_keywords)
@@ -123,7 +124,7 @@ class LeadScorer:
     def classify(self, score: int) -> str:
         """
         Classify lead based on number of questions answered.
-        
+
         Jorge's Rules:
         - Hot: 3+ questions answered
         - Warm: 2 questions answered
@@ -160,27 +161,27 @@ class LeadScorer:
                 "Notify agent via SMS immediately",
                 "Schedule showing within 24-48 hours",
                 "Prioritize in CRM dashboard",
-                "Send pre-approval checklist if not completed"
+                "Send pre-approval checklist if not completed",
             ]
         elif classification == "warm":
             return [
                 "Tag as 'Warm Lead'",
                 "Follow up within 24 hours",
                 "Send market update email",
-                "Add to weekly follow-up sequence"
+                "Add to weekly follow-up sequence",
             ]
         else:
             return [
                 "Tag as 'Cold Lead'",
                 "Add to nurture campaign",
                 "Send educational content",
-                "Follow up in 7 days"
+                "Follow up in 7 days",
             ]
 
     def calculate_with_reasoning(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """
         Calculate score with detailed reasoning breakdown.
-        
+
         Returns question count (0-7) instead of points (0-100).
 
         Args:
@@ -198,7 +199,11 @@ class LeadScorer:
         questions_answered = []
 
         if prefs.get("budget"):
-            questions_answered.append(f"Budget: ${prefs.get('budget'):,}" if isinstance(prefs.get('budget'), (int, float)) else f"Budget: {prefs.get('budget')}")
+            questions_answered.append(
+                f"Budget: ${prefs.get('budget'):,}"
+                if isinstance(prefs.get("budget"), (int, float))
+                else f"Budget: {prefs.get('budget')}"
+            )
         if prefs.get("location"):
             questions_answered.append(f"Location: {prefs.get('location')}")
         if prefs.get("timeline"):
@@ -219,12 +224,16 @@ class LeadScorer:
         if prefs.get("home_condition"):
             questions_answered.append(f"Home Condition: {prefs.get('home_condition')}")
 
-        reasoning = " | ".join(questions_answered) if questions_answered else "No qualifying questions answered yet"
+        reasoning = (
+            " | ".join(questions_answered)
+            if questions_answered
+            else "No qualifying questions answered yet"
+        )
 
         return {
             "score": score,
             "questions_answered": score,  # Make it explicit this is question count
             "classification": classification,
             "reasoning": reasoning,
-            "recommended_actions": actions
+            "recommended_actions": actions,
         }

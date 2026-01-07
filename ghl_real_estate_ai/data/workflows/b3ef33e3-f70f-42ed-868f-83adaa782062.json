@@ -1,0 +1,15 @@
+{
+  "workflow_id": "b3ef33e3-f70f-42ed-868f-83adaa782062",
+  "name": "New Lead Welcome Sequence",
+  "description": "Instantly respond to new leads with personalized welcome message and nurture sequence. Includes SMS + Email follow-up.",
+  "trigger": {},
+  "actions": [],
+  "enabled": true,
+  "created_at": "2026-01-07T01:05:11.839188",
+  "updated_at": "2026-01-07T01:05:11.839189",
+  "created_by": "integration_test",
+  "template_id": "tmpl_001",
+  "template_version": "1.0.0",
+  "execution_count": 0,
+  "success_count": 0
+}

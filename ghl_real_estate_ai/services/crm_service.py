@@ -5,20 +5,25 @@ Handles synchronization of leads and opportunities with external CRMs:
 - Salesforce
 - HubSpot
 """
+
 import json
-import httpx
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional, Any
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import httpx
+
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class CRMService:
     """
     Base service for CRM integrations.
     """
+
     def __init__(self, location_id: str):
         self.location_id = location_id
         self.config_dir = Path(__file__).parent.parent / "data" / "crm" / location_id
@@ -29,13 +34,13 @@ class CRMService:
     def _load_config(self) -> Dict[str, Any]:
         """Load CRM configuration."""
         if self.config_file.exists():
-            with open(self.config_file, 'r') as f:
+            with open(self.config_file, "r") as f:
                 return json.load(f)
         return {"salesforce": {"enabled": False}, "hubspot": {"enabled": False}}
 
     def _save_config(self):
         """Save CRM configuration."""
-        with open(self.config_file, 'w') as f:
+        with open(self.config_file, "w") as f:
             json.dump(self.config, f, indent=2)
 
     async def sync_lead(self, contact_data: Dict[str, Any]):
@@ -43,10 +48,10 @@ class CRMService:
         results = {}
         if self.config.get("salesforce", {}).get("enabled"):
             results["salesforce"] = await self._sync_to_salesforce(contact_data)
-        
+
         if self.config.get("hubspot", {}).get("enabled"):
             results["hubspot"] = await self._sync_to_hubspot(contact_data)
-            
+
         return results
 
     async def _sync_to_salesforce(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -54,7 +59,7 @@ class CRMService:
         if settings.test_mode:
             logger.info(f"[TEST MODE] Syncing lead {data.get('id')} to Salesforce")
             return {"status": "success", "platform": "salesforce", "id": "sf_lead_123"}
-            
+
         # Implementation for Salesforce REST API would go here
         # Requires OAuth2 flow and instance URL
         return {"status": "not_implemented", "platform": "salesforce"}
@@ -73,7 +78,7 @@ class CRMService:
         """Update configuration for a CRM platform."""
         if platform not in ["salesforce", "hubspot"]:
             raise ValueError("Invalid CRM platform")
-            
+
         self.config[platform].update(config)
         self._save_config()
         logger.info(f"Updated {platform} configuration for {self.location_id}")

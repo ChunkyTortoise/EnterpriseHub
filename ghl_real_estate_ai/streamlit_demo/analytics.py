@@ -252,18 +252,23 @@ def create_lead_score_distribution_chart(conversations: List[Dict]) -> go.Figure
     fig = go.Figure(data=[go.Histogram(
         x=scores,
         nbinsx=20,
-        marker_color='#1f77b4',
-        opacity=0.75,
+        marker_color=COLORS['primary'],
+        opacity=0.8,
         name='Lead Scores'
     )])
 
     fig.update_layout(
-        title="Lead Score Distribution",
+        title="<b>Lead Score Distribution</b>",
         xaxis_title="Lead Score",
         yaxis_title="Count",
         showlegend=False,
         height=300,
-        margin=dict(l=20, r=20, t=40, b=20)
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=60, b=20),
+        font=dict(color=COLORS['text']),
+        xaxis=dict(gridcolor=COLORS['grid']),
+        yaxis=dict(gridcolor=COLORS['grid'])
     )
 
     return fig
@@ -277,19 +282,22 @@ def create_classification_pie_chart(conversations: List[Dict]) -> go.Figure:
         "cold": classifications.count("cold")
     }
 
-    colors = {'hot': '#ff4b4b', 'warm': '#ffa500', 'cold': '#4b9aff'}
+    pie_colors = [COLORS['danger'], COLORS['warning'], COLORS['primary']]
 
     fig = go.Figure(data=[go.Pie(
-        labels=list(class_counts.keys()),
+        labels=[k.upper() for k in class_counts.keys()],
         values=list(class_counts.values()),
-        marker_colors=[colors[k] for k in class_counts.keys()],
-        hole=0.3
+        marker=dict(colors=pie_colors, line=dict(color='#ffffff', width=2)),
+        hole=0.4
     )])
 
     fig.update_layout(
-        title="Lead Classification Breakdown",
+        title="<b>Lead Classification Breakdown</b>",
         height=300,
-        margin=dict(l=20, r=20, t=40, b=20)
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=60, b=20),
+        font=dict(color=COLORS['text']),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
     )
 
     return fig
@@ -312,19 +320,24 @@ def create_conversation_timeline(conversations: List[Dict]) -> go.Figure:
         x=dates,
         y=counts,
         mode='lines+markers',
-        marker=dict(size=8, color='#1f77b4'),
-        line=dict(width=2, color='#1f77b4'),
+        marker=dict(size=8, color=COLORS['primary']),
+        line=dict(width=3, color=COLORS['primary']),
         fill='tozeroy',
-        fillcolor='rgba(31, 119, 180, 0.2)'
+        fillcolor='rgba(37, 99, 235, 0.1)'
     )])
 
     fig.update_layout(
-        title="Conversation Volume Over Time",
+        title="<b>Conversation Volume Over Time</b>",
         xaxis_title="Date",
-        yaxis_title="Number of Conversations",
+        yaxis_title="Volume",
         showlegend=False,
         height=300,
-        margin=dict(l=20, r=20, t=40, b=20)
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=60, b=20),
+        font=dict(color=COLORS['text']),
+        xaxis=dict(gridcolor=COLORS['grid']),
+        yaxis=dict(gridcolor=COLORS['grid'])
     )
 
     return fig
@@ -340,18 +353,26 @@ def create_response_time_chart(conversations: List[Dict]) -> go.Figure:
     avg_cold = sum(cold_times) / len(cold_times) if cold_times else 0
 
     fig = go.Figure(data=[go.Bar(
-        x=['Hot Leads', 'Warm Leads', 'Cold Leads'],
+        x=['HOT', 'WARM', 'COLD'],
         y=[avg_hot, avg_warm, avg_cold],
-        marker_color=['#ff4b4b', '#ffa500', '#4b9aff']
+        marker_color=[COLORS['danger'], COLORS['warning'], COLORS['primary']],
+        marker_line_color='#ffffff',
+        marker_line_width=1.5,
+        opacity=0.8
     )])
 
     fig.update_layout(
-        title="Avg Response Time by Lead Type (seconds)",
+        title="<b>Avg Response Time (Seconds)</b>",
         xaxis_title="Lead Type",
-        yaxis_title="Avg Response Time (s)",
+        yaxis_title="Seconds",
         showlegend=False,
         height=300,
-        margin=dict(l=20, r=20, t=40, b=20)
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=60, b=20),
+        font=dict(color=COLORS['text']),
+        xaxis=dict(gridcolor=COLORS['grid']),
+        yaxis=dict(gridcolor=COLORS['grid'])
     )
 
     return fig
@@ -366,18 +387,26 @@ def create_intent_breakdown(conversations: List[Dict]) -> go.Figure:
     }
 
     fig = go.Figure(data=[go.Bar(
-        x=list(intent_counts.keys()),
+        x=[k.upper() for k in intent_counts.keys()],
         y=list(intent_counts.values()),
-        marker_color='#2ecc71'
+        marker_color=COLORS['success'],
+        marker_line_color='#ffffff',
+        marker_line_width=1.5,
+        opacity=0.8
     )])
 
     fig.update_layout(
-        title="Contact Intent Distribution",
+        title="<b>Contact Intent Distribution</b>",
         xaxis_title="Intent Type",
         yaxis_title="Count",
         showlegend=False,
         height=300,
-        margin=dict(l=20, r=20, t=40, b=20)
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=60, b=20),
+        font=dict(color=COLORS['text']),
+        xaxis=dict(gridcolor=COLORS['grid']),
+        yaxis=dict(gridcolor=COLORS['grid'])
     )
 
     return fig

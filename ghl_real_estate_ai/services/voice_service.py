@@ -6,13 +6,17 @@ Handles:
 - Text-to-Speech (TTS) conversion
 - Voice sentiment analysis
 """
-import httpx
+
 import os
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+import httpx
+
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class VoiceService:
     """

@@ -18,15 +18,16 @@ Date: 2026-01-05
 """
 
 import json
-from typing import Dict, List, Optional, Tuple
+import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import math
+from typing import Dict, List, Optional, Tuple
 
 
 @dataclass
 class LeadFeatures:
     """Lead feature vector for scoring"""
+
     engagement_score: float  # 0-1: email/SMS engagement rate
     response_time: float  # hours: avg response time
     page_views: int  # number of property page views
@@ -40,6 +41,7 @@ class LeadFeatures:
 @dataclass
 class LeadScore:
     """Lead scoring result"""
+
     lead_id: str
     score: float  # 0-100
     confidence: float  # 0-1
@@ -52,28 +54,24 @@ class LeadScore:
 class PredictiveLeadScorer:
     """
     ML-based lead scoring engine
-    
+
     Uses a combination of:
     - Engagement metrics
     - Behavioral signals
     - Demographic fit
     - Historical patterns
     """
-    
+
     def __init__(self):
         self.feature_weights = self._initialize_weights()
-        self.timeline_mapping = {
-            "immediate": 1.0,
-            "soon": 0.7,
-            "exploring": 0.3
-        }
+        self.timeline_mapping = {"immediate": 1.0, "soon": 0.7, "exploring": 0.3}
         self.source_mapping = {
             "organic": 0.9,
             "referral": 1.0,
             "paid": 0.6,
-            "other": 0.5
+            "other": 0.5,
         }
-    
+
     def _initialize_weights(self) -> Dict[str, float]:
         """Initialize feature weights (learned from historical data)"""
         return {
@@ -84,25 +82,25 @@ class PredictiveLeadScorer:
             "timeline_urgency": 0.15,
             "property_matches": 0.08,
             "communication_quality": 0.10,
-            "source_quality": 0.02
+            "source_quality": 0.02,
         }
-    
+
     def extract_features(self, lead_data: Dict) -> LeadFeatures:
         """
         Extract features from lead data
-        
+
         Args:
             lead_data: Raw lead information
-            
+
         Returns:
             LeadFeatures object
         """
         # Calculate engagement score
         engagement_score = self._calculate_engagement(lead_data)
-        
+
         # Calculate response time
         response_time = self._calculate_response_time(lead_data)
-        
+
         # Extract other features
         page_views = lead_data.get("page_views", 0)
         budget_match = self._calculate_budget_match(lead_data)
@@ -110,7 +108,7 @@ class PredictiveLeadScorer:
         property_matches = lead_data.get("property_matches", 0)
         communication_quality = self._assess_communication_quality(lead_data)
         source_quality = lead_data.get("source", "other")
-        
+
         return LeadFeatures(
             engagement_score=engagement_score,
             response_time=response_time,
@@ -119,44 +117,48 @@ class PredictiveLeadScorer:
             timeline_urgency=timeline_urgency,
             property_matches=property_matches,
             communication_quality=communication_quality,
-            source_quality=source_quality
+            source_quality=source_quality,
         )
-    
-    def score_lead(self, lead_id: str, lead_data: Dict, include_explanation: bool = True) -> LeadScore:
+
+    def score_lead(
+        self, lead_id: str, lead_data: Dict, include_explanation: bool = True
+    ) -> LeadScore:
         """
         Score a lead using ML model
-        
+
         Args:
             lead_id: Lead identifier
             lead_data: Lead information
             include_explanation: Whether to include factor explanations
-            
+
         Returns:
             LeadScore with predictions and explanations
         """
         # Extract features
         features = self.extract_features(lead_data)
-        
+
         # Calculate raw score
         raw_score, feature_contributions = self._calculate_score(features)
-        
+
         # Normalize to 0-100
         normalized_score = self._normalize_score(raw_score)
-        
+
         # Calculate confidence
         confidence = self._calculate_confidence(features, feature_contributions)
-        
+
         # Assign tier
         tier = self._assign_tier(normalized_score, confidence)
-        
+
         # Generate explanations
         factors = []
         if include_explanation:
             factors = self._explain_score(features, feature_contributions)
-        
+
         # Generate recommendations
-        recommendations = self._generate_recommendations(normalized_score, tier, features)
-        
+        recommendations = self._generate_recommendations(
+            normalized_score, tier, features
+        )
+
         return LeadScore(
             lead_id=lead_id,
             score=round(normalized_score, 2),
@@ -164,83 +166,103 @@ class PredictiveLeadScorer:
             tier=tier,
             factors=factors,
             recommendations=recommendations,
-            scored_at=datetime.now()
+            scored_at=datetime.now(),
         )
-    
+
     def _calculate_score(self, features: LeadFeatures) -> Tuple[float, Dict]:
         """Calculate weighted score and track contributions"""
         contributions = {}
         total_score = 0.0
-        
+
         # Engagement score (0-1)
-        engagement_contrib = features.engagement_score * self.feature_weights["engagement_score"]
+        engagement_contrib = (
+            features.engagement_score * self.feature_weights["engagement_score"]
+        )
         contributions["engagement_score"] = engagement_contrib
         total_score += engagement_contrib
-        
+
         # Response time (inverse - faster is better)
-        response_contrib = self._score_response_time(features.response_time) * self.feature_weights["response_time"]
+        response_contrib = (
+            self._score_response_time(features.response_time)
+            * self.feature_weights["response_time"]
+        )
         contributions["response_time"] = response_contrib
         total_score += response_contrib
-        
+
         # Page views (normalized)
-        page_views_contrib = min(features.page_views / 20.0, 1.0) * self.feature_weights["page_views"]
+        page_views_contrib = (
+            min(features.page_views / 20.0, 1.0) * self.feature_weights["page_views"]
+        )
         contributions["page_views"] = page_views_contrib
         total_score += page_views_contrib
-        
+
         # Budget match (0-1)
         budget_contrib = features.budget_match * self.feature_weights["budget_match"]
         contributions["budget_match"] = budget_contrib
         total_score += budget_contrib
-        
+
         # Timeline urgency
         timeline_score = self.timeline_mapping.get(features.timeline_urgency, 0.5)
         timeline_contrib = timeline_score * self.feature_weights["timeline_urgency"]
         contributions["timeline_urgency"] = timeline_contrib
         total_score += timeline_contrib
-        
+
         # Property matches
-        matches_contrib = min(features.property_matches / 10.0, 1.0) * self.feature_weights["property_matches"]
+        matches_contrib = (
+            min(features.property_matches / 10.0, 1.0)
+            * self.feature_weights["property_matches"]
+        )
         contributions["property_matches"] = matches_contrib
         total_score += matches_contrib
-        
+
         # Communication quality
-        comm_contrib = features.communication_quality * self.feature_weights["communication_quality"]
+        comm_contrib = (
+            features.communication_quality
+            * self.feature_weights["communication_quality"]
+        )
         contributions["communication_quality"] = comm_contrib
         total_score += comm_contrib
-        
+
         # Source quality
         source_score = self.source_mapping.get(features.source_quality, 0.5)
         source_contrib = source_score * self.feature_weights["source_quality"]
         contributions["source_quality"] = source_contrib
         total_score += source_contrib
-        
+
         return total_score, contributions
-    
+
     def _normalize_score(self, raw_score: float) -> float:
         """Normalize score to 0-100 range"""
         # Apply sigmoid for smooth distribution
         normalized = 1 / (1 + math.exp(-10 * (raw_score - 0.5)))
         return normalized * 100
-    
-    def _calculate_confidence(self, features: LeadFeatures, contributions: Dict) -> float:
+
+    def _calculate_confidence(
+        self, features: LeadFeatures, contributions: Dict
+    ) -> float:
         """Calculate confidence in the prediction"""
         # Higher confidence when we have more data points
-        data_completeness = sum([
-            1 if features.engagement_score > 0 else 0,
-            1 if features.response_time > 0 else 0,
-            1 if features.page_views > 0 else 0,
-            1 if features.budget_match > 0 else 0,
-            1 if features.property_matches > 0 else 0,
-            1 if features.communication_quality > 0 else 0,
-        ]) / 6.0
-        
+        data_completeness = (
+            sum(
+                [
+                    1 if features.engagement_score > 0 else 0,
+                    1 if features.response_time > 0 else 0,
+                    1 if features.page_views > 0 else 0,
+                    1 if features.budget_match > 0 else 0,
+                    1 if features.property_matches > 0 else 0,
+                    1 if features.communication_quality > 0 else 0,
+                ]
+            )
+            / 6.0
+        )
+
         # Higher confidence when contributions are balanced (not dominated by one feature)
         contrib_values = list(contributions.values())
         balance = 1.0 - (max(contrib_values) - min(contrib_values))
-        
+
         confidence = (data_completeness * 0.7) + (balance * 0.3)
         return max(0.3, min(confidence, 0.95))  # Clamp between 0.3 and 0.95
-    
+
     def _assign_tier(self, score: float, confidence: float) -> str:
         """Assign tier based on score and confidence"""
         # Adjust thresholds based on confidence
@@ -251,37 +273,43 @@ class PredictiveLeadScorer:
         else:
             hot_threshold = 70
             warm_threshold = 50
-        
+
         if score >= hot_threshold:
             return "hot"
         elif score >= warm_threshold:
             return "warm"
         else:
             return "cold"
-    
+
     def _explain_score(self, features: LeadFeatures, contributions: Dict) -> List[Dict]:
         """Generate explanations for the score"""
         factors = []
-        
+
         # Sort by contribution
-        sorted_contribs = sorted(contributions.items(), key=lambda x: x[1], reverse=True)
-        
+        sorted_contribs = sorted(
+            contributions.items(), key=lambda x: x[1], reverse=True
+        )
+
         for feature_name, contribution in sorted_contribs[:5]:  # Top 5 factors
             impact = "positive" if contribution > 0.05 else "neutral"
-            
+
             # Get human-readable description
             description = self._get_feature_description(feature_name, features)
-            
-            factors.append({
-                "name": feature_name.replace("_", " ").title(),
-                "impact": round(contribution * 100, 1),
-                "value": description,
-                "sentiment": impact
-            })
-        
+
+            factors.append(
+                {
+                    "name": feature_name.replace("_", " ").title(),
+                    "impact": round(contribution * 100, 1),
+                    "value": description,
+                    "sentiment": impact,
+                }
+            )
+
         return factors
-    
-    def _get_feature_description(self, feature_name: str, features: LeadFeatures) -> str:
+
+    def _get_feature_description(
+        self, feature_name: str, features: LeadFeatures
+    ) -> str:
         """Get human-readable feature description"""
         descriptions = {
             "engagement_score": f"{features.engagement_score*100:.0f}% engagement rate",
@@ -291,78 +319,91 @@ class PredictiveLeadScorer:
             "timeline_urgency": f"{features.timeline_urgency} timeline",
             "property_matches": f"{features.property_matches} matching properties",
             "communication_quality": f"{features.communication_quality*100:.0f}% communication quality",
-            "source_quality": f"{features.source_quality} source"
+            "source_quality": f"{features.source_quality} source",
         }
         return descriptions.get(feature_name, "N/A")
-    
-    def _generate_recommendations(self, score: float, tier: str, features: LeadFeatures) -> List[str]:
+
+    def _generate_recommendations(
+        self, score: float, tier: str, features: LeadFeatures
+    ) -> List[str]:
         """Generate action recommendations"""
         recommendations = []
-        
+
         if tier == "hot":
             recommendations.append("🔥 Priority follow-up within 1 hour")
             recommendations.append("Schedule property viewing ASAP")
             if features.budget_match > 0.8:
-                recommendations.append("Lead is well-qualified - present financing options")
-        
+                recommendations.append(
+                    "Lead is well-qualified - present financing options"
+                )
+
         elif tier == "warm":
             recommendations.append("Follow up within 24 hours")
             if features.engagement_score < 0.5:
                 recommendations.append("Increase engagement with personalized content")
             if features.property_matches < 3:
                 recommendations.append("Send more property recommendations")
-        
+
         else:  # cold
             recommendations.append("Add to nurture campaign")
             recommendations.append("Re-engage with educational content")
             if features.response_time > 48:
                 recommendations.append("Try different communication channel")
-        
+
         # Specific recommendations based on features
         if features.timeline_urgency == "immediate":
-            recommendations.append("Lead has urgent timeline - prioritize showing availability")
-        
+            recommendations.append(
+                "Lead has urgent timeline - prioritize showing availability"
+            )
+
         if features.communication_quality < 0.5:
-            recommendations.append("Improve response quality - ask more qualifying questions")
-        
+            recommendations.append(
+                "Improve response quality - ask more qualifying questions"
+            )
+
         return recommendations[:5]  # Return top 5
-    
+
     def _calculate_engagement(self, lead_data: Dict) -> float:
         """Calculate engagement score from interactions"""
         opens = lead_data.get("email_opens", 0)
         clicks = lead_data.get("email_clicks", 0)
         sent = lead_data.get("emails_sent", 1)
-        
+
         open_rate = opens / max(sent, 1)
         click_rate = clicks / max(sent, 1)
-        
+
         return (open_rate * 0.6) + (click_rate * 0.4)
-    
+
     def _calculate_response_time(self, lead_data: Dict) -> float:
         """Calculate average response time in hours"""
         responses = lead_data.get("response_times", [])
-        
+
         # Also check messages for response_time_seconds (common in legacy data)
         messages = lead_data.get("messages", [])
-        msg_responses = [m.get("response_time_seconds") / 3600.0 for m in messages if m.get("response_time_seconds") is not None]
-        
+        msg_responses = [
+            m.get("response_time_seconds") / 3600.0
+            for m in messages
+            if m.get("response_time_seconds") is not None
+        ]
+
         all_responses = responses + msg_responses
-        
+
         if not all_responses:
             return 48.0  # Default to 48 hours if no data
-        
+
         return sum(all_responses) / len(all_responses)
-    
+
     def _calculate_budget_match(self, lead_data: Dict) -> float:
         """Calculate budget alignment score"""
         lead_budget = lead_data.get("budget", 0)
-        
+
         # If budget is not in lead_data, try to extract from messages
         if lead_budget == 0:
             for msg in lead_data.get("messages", []):
                 content = msg.get("content", msg.get("text", "")).lower()
                 if "$" in content:
                     import re
+
                     matches = re.findall(r"\$(\d+k?)", content)
                     if matches:
                         val = matches[0].replace("k", "000")
@@ -370,51 +411,60 @@ class PredictiveLeadScorer:
                         break
 
         viewed_prices = lead_data.get("viewed_property_prices", [])
-        
+
         if not viewed_prices:
             # Check for location_fit or other indicators of fit
             if lead_data.get("location_fit"):
                 return lead_data.get("location_fit")
             return 0.5  # Default to neutral
-            
+
         if lead_budget == 0:
             return 0.5
-        
+
         avg_viewed = sum(viewed_prices) / len(viewed_prices)
-        
+
         # Perfect match = 1.0, large mismatch = 0.0
         ratio = min(lead_budget, avg_viewed) / max(lead_budget, avg_viewed)
         return ratio
-    
+
     def _assess_communication_quality(self, lead_data: Dict) -> float:
         """Assess quality of lead's communications"""
         messages = lead_data.get("messages", [])
-        
+
         if not messages:
             # Use lead_score as a proxy if available
             return min(lead_data.get("lead_score", 50) / 100.0, 1.0)
-        
+
         quality_score = 0.0
-        
+
         for msg in messages:
             content = msg.get("content", msg.get("text", ""))
-            
+
             # Longer messages = better engagement
             length_score = min(len(content) / 200.0, 1.0) * 0.3
-            
+
             # Questions indicate interest
             question_count = content.count("?")
             question_score = min(question_count / 3.0, 1.0) * 0.4
-            
+
             # Specific details indicate seriousness
-            has_details = any(keyword in content.lower() 
-                            for keyword in ["budget", "timeline", "location", "bedrooms", "cash", "approved"])
+            has_details = any(
+                keyword in content.lower()
+                for keyword in [
+                    "budget",
+                    "timeline",
+                    "location",
+                    "bedrooms",
+                    "cash",
+                    "approved",
+                ]
+            )
             detail_score = 0.3 if has_details else 0.0
-            
-            quality_score += (length_score + question_score + detail_score)
-        
+
+            quality_score += length_score + question_score + detail_score
+
         return min(quality_score / len(messages), 1.0)
-    
+
     def _score_response_time(self, response_time: float) -> float:
         """Convert response time to score (faster = better)"""
         # < 1 hour = 1.0, > 48 hours = 0.0
@@ -425,11 +475,11 @@ class PredictiveLeadScorer:
         else:
             # Linear decay
             return 1.0 - (response_time / 48.0)
-    
+
     def batch_score(self, leads: List[Dict]) -> List[LeadScore]:
         """Score multiple leads in batch"""
         return [self.score_lead(lead["id"], lead) for lead in leads]
-    
+
     def to_dict(self, score: LeadScore) -> Dict:
         """Convert LeadScore to dictionary"""
         return {
@@ -439,14 +489,14 @@ class PredictiveLeadScorer:
             "tier": score.tier,
             "factors": score.factors,
             "recommendations": score.recommendations,
-            "scored_at": score.scored_at.isoformat()
+            "scored_at": score.scored_at.isoformat(),
         }
 
 
 # Example usage
 if __name__ == "__main__":
     scorer = PredictiveLeadScorer()
-    
+
     # Example lead data
     lead_data = {
         "id": "lead_123",
@@ -460,15 +510,17 @@ if __name__ == "__main__":
         "timeline": "soon",
         "property_matches": 7,
         "messages": [
-            {"content": "I'm interested in properties in downtown. What's available in my budget of $500k?"},
-            {"content": "Can we schedule a viewing next week?"}
+            {
+                "content": "I'm interested in properties in downtown. What's available in my budget of $500k?"
+            },
+            {"content": "Can we schedule a viewing next week?"},
         ],
-        "source": "organic"
+        "source": "organic",
     }
-    
+
     # Score the lead
     result = scorer.score_lead("lead_123", lead_data)
-    
+
     print(f"\n🎯 Lead Scoring Result")
     print(f"   Score: {result.score}/100")
     print(f"   Tier: {result.tier.upper()}")

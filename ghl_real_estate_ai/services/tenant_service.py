@@ -4,15 +4,17 @@ Tenant Service for GHL Real Estate AI.
 Manages multi-tenancy by storing and retrieving API keys per GHL Location.
 Ensures each team is charged on their own account.
 """
+
 import json
-from typing import Dict, Any, Optional
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class TenantService:
     """
@@ -35,7 +37,7 @@ class TenantService:
         Fallbacks: Specific File -> Default Settings -> Agency Master Key.
         """
         file_path = self._get_file_path(location_id)
-        
+
         # 1. Check for specific tenant file
         if file_path.exists():
             try:
@@ -43,15 +45,15 @@ class TenantService:
                     return json.load(f)
             except Exception as e:
                 logger.error(f"Failed to read tenant file for {location_id}: {e}")
-        
+
         # 2. Fallback to default credentials from settings if this is the primary account
         if location_id == settings.ghl_location_id:
             return {
                 "location_id": settings.ghl_location_id,
                 "anthropic_api_key": settings.anthropic_api_key,
-                "ghl_api_key": settings.ghl_api_key
+                "ghl_api_key": settings.ghl_api_key,
             }
-            
+
         # 3. Fallback to Agency Master Key (Jorge's Requirement)
         if settings.ghl_agency_api_key:
             logger.info(f"Using Agency Master Key for location {location_id}")
@@ -59,9 +61,9 @@ class TenantService:
                 "location_id": location_id,
                 "anthropic_api_key": settings.anthropic_api_key,
                 "ghl_api_key": settings.ghl_agency_api_key,
-                "is_agency_scoped": True
+                "is_agency_scoped": True,
             }
-            
+
         return {}
 
     async def save_tenant_config(
@@ -69,7 +71,7 @@ class TenantService:
         location_id: str,
         anthropic_api_key: str,
         ghl_api_key: str,
-        ghl_calendar_id: Optional[str] = None
+        ghl_calendar_id: Optional[str] = None,
     ) -> None:
         """Save/Update configuration for a specific tenant (sub-account)."""
         config = {
@@ -77,7 +79,7 @@ class TenantService:
             "anthropic_api_key": anthropic_api_key,
             "ghl_api_key": ghl_api_key,
             "ghl_calendar_id": ghl_calendar_id,
-            "updated_at": datetime.utcnow().isoformat()
+            "updated_at": datetime.utcnow().isoformat(),
         }
 
         file_path = self._get_file_path(location_id)
@@ -90,7 +92,7 @@ class TenantService:
         config = {
             "agency_id": agency_id,
             "agency_api_key": api_key,
-            "updated_at": datetime.utcnow().isoformat()
+            "updated_at": datetime.utcnow().isoformat(),
         }
         file_path = self.tenants_dir / "agency_master.json"
         with open(file_path, "w") as f:

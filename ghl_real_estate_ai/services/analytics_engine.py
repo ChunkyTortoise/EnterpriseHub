@@ -10,15 +10,16 @@ Provides comprehensive metrics collection for:
 
 Performance target: <50ms overhead per conversation
 """
-import time
-import json
+
 import asyncio
-from pathlib import Path
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from collections import defaultdict
-from dataclasses import dataclass, asdict
+import json
 import statistics
+import time
+from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.executive_dashboard import ExecutiveDashboardService
@@ -31,6 +32,7 @@ logger = get_logger(__name__)
 @dataclass
 class ConversationMetrics:
     """Metrics captured for a single conversation event."""
+
     contact_id: str
     location_id: str
     timestamp: str
@@ -69,6 +71,7 @@ class ConversationMetrics:
 @dataclass
 class ConversionFunnel:
     """Conversion funnel metrics."""
+
     cold_leads: int = 0
     warm_leads: int = 0
     hot_leads: int = 0
@@ -100,7 +103,9 @@ class MetricsCollector:
         self._buffer_size = 100  # Flush to disk every 100 metrics
         logger.info(f"Metrics collector initialized at {self.storage_dir}")
 
-    def _get_metrics_file(self, location_id: str, date_str: Optional[str] = None) -> Path:
+    def _get_metrics_file(
+        self, location_id: str, date_str: Optional[str] = None
+    ) -> Path:
         """Get metrics file path for a location and date."""
         if not date_str:
             date_str = datetime.utcnow().strftime("%Y-%m-%d")
@@ -121,7 +126,7 @@ class MetricsCollector:
         response_time_ms: float,
         context: Dict[str, Any],
         appointment_scheduled: bool = False,
-        experiment_data: Optional[Dict[str, str]] = None
+        experiment_data: Optional[Dict[str, str]] = None,
     ) -> ConversationMetrics:
         """
         Record a conversation event with comprehensive metrics.
@@ -163,18 +168,25 @@ class MetricsCollector:
         # Calculate conversation duration
         created_at = context.get("created_at")
         if created_at:
-            created_dt = datetime.fromisoformat(created_at) if isinstance(created_at, str) else created_at
+            created_dt = (
+                datetime.fromisoformat(created_at)
+                if isinstance(created_at, str)
+                else created_at
+            )
             duration = (datetime.utcnow() - created_dt).total_seconds()
         else:
             duration = 0.0
 
         # Calculate conversion probability
         scorer = PredictiveLeadScorer()
-        prediction = scorer.predict_conversion({
-            "contact_id": contact_id,
-            "lead_score": lead_score,
-            "messages": context.get("conversation_history", []) + [{"text": message}]
-        })
+        prediction = scorer.predict_conversion(
+            {
+                "contact_id": contact_id,
+                "lead_score": lead_score,
+                "messages": context.get("conversation_history", [])
+                + [{"text": message}],
+            }
+        )
         conversion_probability = prediction.get("conversion_probability", 0.0)
 
         # Build metrics object
@@ -200,8 +212,10 @@ class MetricsCollector:
             tone_score=tone_score,
             is_returning_lead=context.get("is_returning_lead", False),
             pathway=context.get("extracted_preferences", {}).get("pathway"),
-            experiment_id=experiment_data.get("experiment_id") if experiment_data else None,
-            variant=experiment_data.get("variant") if experiment_data else None
+            experiment_id=(
+                experiment_data.get("experiment_id") if experiment_data else None
+            ),
+            variant=experiment_data.get("variant") if experiment_data else None,
         )
 
         # Add to buffer
@@ -214,7 +228,9 @@ class MetricsCollector:
         # Log performance
         collection_time_ms = (time.time() - start_time) * 1000
         if collection_time_ms > 50:
-            logger.warning(f"Metrics collection took {collection_time_ms:.2f}ms (target: <50ms)")
+            logger.warning(
+                f"Metrics collection took {collection_time_ms:.2f}ms (target: <50ms)"
+            )
 
         return metrics
 
@@ -245,11 +261,25 @@ class MetricsCollector:
             keywords.append("budget")
 
         # Location - check for specific location indicators or place names
-        if any(word in message_lower for word in ["location", "area", "neighborhood", "city", "downtown", "suburb", "district"]):
+        if any(
+            word in message_lower
+            for word in [
+                "location",
+                "area",
+                "neighborhood",
+                "city",
+                "downtown",
+                "suburb",
+                "district",
+            ]
+        ):
             keywords.append("location")
 
         # Timeline
-        if any(word in message_lower for word in ["when", "timeline", "soon", "asap", "urgent"]):
+        if any(
+            word in message_lower
+            for word in ["when", "timeline", "soon", "asap", "urgent"]
+        ):
             keywords.append("timeline")
 
         # Property type
@@ -257,11 +287,17 @@ class MetricsCollector:
             keywords.append("property_specs")
 
         # Financing
-        if any(word in message_lower for word in ["mortgage", "financing", "pre-approved", "cash"]):
+        if any(
+            word in message_lower
+            for word in ["mortgage", "financing", "pre-approved", "cash"]
+        ):
             keywords.append("financing")
 
         # Appointment
-        if any(word in message_lower for word in ["appointment", "viewing", "tour", "schedule", "meet"]):
+        if any(
+            word in message_lower
+            for word in ["appointment", "viewing", "tour", "schedule", "meet"]
+        ):
             keywords.append("appointment")
 
         return keywords
@@ -272,19 +308,29 @@ class MetricsCollector:
         message_lower = message.lower()
 
         # Seller topics
-        if any(word in message_lower for word in ["sell", "selling", "list", "listing"]):
+        if any(
+            word in message_lower for word in ["sell", "selling", "list", "listing"]
+        ):
             topics.append("seller")
 
         # Buyer topics
-        if any(word in message_lower for word in ["buy", "buying", "purchase", "looking for"]):
+        if any(
+            word in message_lower
+            for word in ["buy", "buying", "purchase", "looking for"]
+        ):
             topics.append("buyer")
 
         # Wholesale
-        if any(word in message_lower for word in ["as-is", "fast sale", "cash offer", "quick"]):
+        if any(
+            word in message_lower
+            for word in ["as-is", "fast sale", "cash offer", "quick"]
+        ):
             topics.append("wholesale")
 
         # Investment
-        if any(word in message_lower for word in ["investment", "rental", "flip", "roi"]):
+        if any(
+            word in message_lower for word in ["investment", "rental", "flip", "roi"]
+        ):
             topics.append("investment")
 
         return topics
@@ -320,7 +366,7 @@ class MetricsCollector:
         self,
         location_id: str,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
     ) -> List[ConversationMetrics]:
         """
         Retrieve metrics for a location within date range.
@@ -379,7 +425,7 @@ class ConversionTracker:
         self,
         location_id: str,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
     ) -> ConversionFunnel:
         """
         Calculate conversion funnel metrics.
@@ -392,7 +438,9 @@ class ConversionTracker:
         Returns:
             ConversionFunnel with calculated metrics
         """
-        metrics = await self.metrics_collector.get_metrics(location_id, start_date, end_date)
+        metrics = await self.metrics_collector.get_metrics(
+            location_id, start_date, end_date
+        )
 
         if not metrics:
             return ConversionFunnel()
@@ -402,15 +450,13 @@ class ConversionTracker:
             "cold": set(),
             "warm": set(),
             "hot": set(),
-            "appointment": set()
+            "appointment": set(),
         }
 
         # Track progression times
-        contact_progression: Dict[str, Dict[str, Any]] = defaultdict(lambda: {
-            "first_seen": None,
-            "became_hot": None,
-            "message_count_to_hot": 0
-        })
+        contact_progression: Dict[str, Dict[str, Any]] = defaultdict(
+            lambda: {"first_seen": None, "became_hot": None, "message_count_to_hot": 0}
+        )
 
         for metric in metrics:
             contact_id = metric.contact_id
@@ -427,16 +473,21 @@ class ConversionTracker:
                 contacts_by_stage["appointment"].add(contact_id)
 
             # Track when they became hot
-            if classification == "hot" and contact_progression[contact_id]["became_hot"] is None:
+            if (
+                classification == "hot"
+                and contact_progression[contact_id]["became_hot"] is None
+            ):
                 contact_progression[contact_id]["became_hot"] = metric.timestamp
-                contact_progression[contact_id]["message_count_to_hot"] = metric.message_count
+                contact_progression[contact_id][
+                    "message_count_to_hot"
+                ] = metric.message_count
 
         # Calculate counts
         funnel = ConversionFunnel(
             cold_leads=len(contacts_by_stage["cold"]),
             warm_leads=len(contacts_by_stage["warm"]),
             hot_leads=len(contacts_by_stage["hot"]),
-            appointments_scheduled=len(contacts_by_stage["appointment"])
+            appointments_scheduled=len(contacts_by_stage["appointment"]),
         )
 
         # Calculate conversion rates
@@ -444,9 +495,15 @@ class ConversionTracker:
 
         if total_leads > 0:
             funnel.cold_to_warm_rate = len(contacts_by_stage["warm"]) / total_leads
-            funnel.warm_to_hot_rate = len(contacts_by_stage["hot"]) / max(len(contacts_by_stage["warm"]), 1)
-            funnel.hot_to_appointment_rate = len(contacts_by_stage["appointment"]) / max(len(contacts_by_stage["hot"]), 1)
-            funnel.overall_conversion_rate = len(contacts_by_stage["appointment"]) / total_leads
+            funnel.warm_to_hot_rate = len(contacts_by_stage["hot"]) / max(
+                len(contacts_by_stage["warm"]), 1
+            )
+            funnel.hot_to_appointment_rate = len(
+                contacts_by_stage["appointment"]
+            ) / max(len(contacts_by_stage["hot"]), 1)
+            funnel.overall_conversion_rate = (
+                len(contacts_by_stage["appointment"]) / total_leads
+            )
 
         # Calculate average time and messages to hot
         times_to_hot = []
@@ -478,7 +535,7 @@ class ResponseTimeAnalyzer:
         self,
         location_id: str,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Analyze response time patterns.
@@ -496,7 +553,9 @@ class ResponseTimeAnalyzer:
                 }
             }
         """
-        metrics = await self.metrics_collector.get_metrics(location_id, start_date, end_date)
+        metrics = await self.metrics_collector.get_metrics(
+            location_id, start_date, end_date
+        )
 
         if not metrics:
             return {"error": "No metrics found"}
@@ -506,7 +565,9 @@ class ResponseTimeAnalyzer:
         times_by_classification = defaultdict(list)
 
         for metric in metrics:
-            times_by_classification[metric.classification].append(metric.response_time_ms)
+            times_by_classification[metric.classification].append(
+                metric.response_time_ms
+            )
 
         # Calculate overall statistics
         result = {
@@ -514,7 +575,7 @@ class ResponseTimeAnalyzer:
             "median_response_time_ms": statistics.median(all_times),
             "p95_response_time_ms": self._percentile(all_times, 0.95),
             "p99_response_time_ms": self._percentile(all_times, 0.99),
-            "by_classification": {}
+            "by_classification": {},
         }
 
         # Calculate by classification
@@ -522,7 +583,7 @@ class ResponseTimeAnalyzer:
             result["by_classification"][classification] = {
                 "avg": statistics.mean(times),
                 "median": statistics.median(times),
-                "p95": self._percentile(times, 0.95)
+                "p95": self._percentile(times, 0.95),
             }
 
         return result
@@ -545,7 +606,7 @@ class ComplianceMonitor:
         self,
         location_id: str,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Check SMS compliance metrics.
@@ -560,7 +621,9 @@ class ComplianceMonitor:
                 "violations": List[Dict]
             }
         """
-        metrics = await self.metrics_collector.get_metrics(location_id, start_date, end_date)
+        metrics = await self.metrics_collector.get_metrics(
+            location_id, start_date, end_date
+        )
 
         if not metrics:
             return {"error": "No metrics found"}
@@ -571,12 +634,14 @@ class ComplianceMonitor:
         violations = []
         for metric in metrics:
             if not metric.sms_compliant:
-                violations.append({
-                    "contact_id": metric.contact_id,
-                    "timestamp": metric.timestamp,
-                    "length": metric.sms_length,
-                    "exceeded_by": metric.sms_length - 160
-                })
+                violations.append(
+                    {
+                        "contact_id": metric.contact_id,
+                        "timestamp": metric.timestamp,
+                        "length": metric.sms_length,
+                        "exceeded_by": metric.sms_length - 160,
+                    }
+                )
 
         message_lengths = [m.sms_length for m in metrics]
         tone_scores = [m.tone_score for m in metrics]
@@ -587,7 +652,7 @@ class ComplianceMonitor:
             "compliance_rate": compliant / total if total > 0 else 0.0,
             "avg_message_length": statistics.mean(message_lengths),
             "avg_tone_score": statistics.mean(tone_scores),
-            "violations": violations[:10]  # Return first 10 violations
+            "violations": violations[:10],  # Return first 10 violations
         }
 
 
@@ -602,7 +667,7 @@ class TopicDistributionAnalyzer:
         self,
         location_id: str,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Analyze topic and keyword distribution.
@@ -623,7 +688,9 @@ class TopicDistributionAnalyzer:
                 }
             }
         """
-        metrics = await self.metrics_collector.get_metrics(location_id, start_date, end_date)
+        metrics = await self.metrics_collector.get_metrics(
+            location_id, start_date, end_date
+        )
 
         if not metrics:
             return {"error": "No metrics found"}
@@ -647,25 +714,19 @@ class TopicDistributionAnalyzer:
 
         # Calculate percentages
         keywords = {
-            keyword: {
-                "count": count,
-                "percentage": (count / total) * 100
-            }
+            keyword: {"count": count, "percentage": (count / total) * 100}
             for keyword, count in keyword_counts.items()
         }
 
         topics = {
-            topic: {
-                "count": count,
-                "percentage": (count / total) * 100
-            }
+            topic: {"count": count, "percentage": (count / total) * 100}
             for topic, count in topic_counts.items()
         }
 
         return {
             "keywords": keywords,
             "topics": topics,
-            "pathways": dict(pathway_counts)
+            "pathways": dict(pathway_counts),
         }
 
 
@@ -719,16 +780,19 @@ class AnalyticsEngine:
         response_time_ms: float,
         context: Dict[str, Any],
         appointment_scheduled: bool = False,
-        experiment_data: Optional[Dict[str, str]] = None
+        experiment_data: Optional[Dict[str, str]] = None,
     ) -> ConversationMetrics:
         """Record a conversation event."""
         # Calculate conversion probability using predictive scorer
-        prediction = self.predictive_scorer.predict_conversion({
-            "contact_id": contact_id,
-            "lead_score": lead_score,
-            "messages": context.get("conversation_history", []) + [{"text": message}]
-        })
-        
+        prediction = self.predictive_scorer.predict_conversion(
+            {
+                "contact_id": contact_id,
+                "lead_score": lead_score,
+                "messages": context.get("conversation_history", [])
+                + [{"text": message}],
+            }
+        )
+
         return await self.metrics_collector.record_conversation_event(
             contact_id=contact_id,
             location_id=location_id,
@@ -739,50 +803,58 @@ class AnalyticsEngine:
             response_time_ms=response_time_ms,
             context=context,
             appointment_scheduled=appointment_scheduled,
-            experiment_data=experiment_data
+            experiment_data=experiment_data,
         )
 
     async def get_conversion_funnel(
         self,
         location_id: str,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
     ) -> ConversionFunnel:
         """Get conversion funnel metrics."""
-        return await self.conversion_tracker.calculate_funnel(location_id, start_date, end_date)
+        return await self.conversion_tracker.calculate_funnel(
+            location_id, start_date, end_date
+        )
 
     async def analyze_response_times(
         self,
         location_id: str,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Analyze response times."""
-        return await self.response_time_analyzer.analyze_response_times(location_id, start_date, end_date)
+        return await self.response_time_analyzer.analyze_response_times(
+            location_id, start_date, end_date
+        )
 
     async def check_compliance(
         self,
         location_id: str,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Check SMS compliance."""
-        return await self.compliance_monitor.check_compliance(location_id, start_date, end_date)
+        return await self.compliance_monitor.check_compliance(
+            location_id, start_date, end_date
+        )
 
     async def analyze_topics(
         self,
         location_id: str,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Analyze topic distribution."""
-        return await self.topic_analyzer.analyze_topics(location_id, start_date, end_date)
+        return await self.topic_analyzer.analyze_topics(
+            location_id, start_date, end_date
+        )
 
     async def get_comprehensive_report(
         self,
         location_id: str,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Get comprehensive analytics report.
@@ -793,7 +865,7 @@ class AnalyticsEngine:
             self.get_conversion_funnel(location_id, start_date, end_date),
             self.analyze_response_times(location_id, start_date, end_date),
             self.check_compliance(location_id, start_date, end_date),
-            self.analyze_topics(location_id, start_date, end_date)
+            self.analyze_topics(location_id, start_date, end_date),
         )
 
         # Get executive insights and revenue attribution (sync operations for now)
@@ -803,9 +875,13 @@ class AnalyticsEngine:
                 sd = datetime.strptime(start_date, "%Y-%m-%d")
                 ed = datetime.strptime(end_date, "%Y-%m-%d")
                 days = (ed - sd).days + 1
-            
-            executive_summary = self.executive_dashboard.get_executive_summary(location_id, days=days)
-            revenue_report = self.revenue_attribution.get_full_attribution_report(location_id)
+
+            executive_summary = self.executive_dashboard.get_executive_summary(
+                location_id, days=days
+            )
+            revenue_report = self.revenue_attribution.get_full_attribution_report(
+                location_id
+            )
         except Exception as e:
             logger.error(f"Failed to get executive or revenue reports: {e}")
             executive_summary = {}
@@ -815,14 +891,14 @@ class AnalyticsEngine:
             "location_id": location_id,
             "date_range": {
                 "start": start_date or datetime.utcnow().strftime("%Y-%m-%d"),
-                "end": end_date or datetime.utcnow().strftime("%Y-%m-%d")
+                "end": end_date or datetime.utcnow().strftime("%Y-%m-%d"),
             },
             "conversion_funnel": asdict(funnel),
             "response_times": response_times,
             "compliance": compliance,
             "topics": topics,
             "executive_summary": executive_summary,
-            "revenue_attribution": revenue_report
+            "revenue_attribution": revenue_report,
         }
 
 

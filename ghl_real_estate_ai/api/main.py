@@ -4,16 +4,29 @@ FastAPI Main Application for GHL Real Estate AI.
 Entry point for the webhook server that processes GoHighLevel messages
 and returns AI-generated responses.
 """
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from ghl_real_estate_ai.ghl_utils.config import settings
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.api.routes import webhook, analytics, bulk_operations, lead_lifecycle, properties, team, crm, voice
-from ghl_real_estate_ai.ghl_real_estate_ai.api.middleware import (
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+import os
+
+from ghl_real_estate_ai.api.routes import (
+    analytics,
+    bulk_operations,
+    crm,
+    lead_lifecycle,
+    properties,
+    team,
+    voice,
+    webhook,
+    auth,
+)
+from ghl_real_estate_ai.api.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
-    get_current_user
 )
+from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -23,8 +36,12 @@ app = FastAPI(
     version=settings.version,
     description="AI-powered real estate assistant for GoHighLevel - Phase 3 Voice Enhanced",
     docs_url="/docs" if settings.environment == "development" else None,
-    redoc_url="/redoc" if settings.environment == "development" else None
+    redoc_url="/redoc" if settings.environment == "development" else None,
 )
+
+# HTTPS enforcement in production
+if os.getenv("ENVIRONMENT") == "production":
+    app.add_middleware(HTTPSRedirectMiddleware)
 
 # Add CORS middleware
 app.add_middleware(
@@ -46,12 +63,12 @@ app.include_router(bulk_operations.router, prefix="/api")
 app.include_router(lead_lifecycle.router, prefix="/api")
 
 # Authentication routes (added by Agent 5)
-from ghl_real_estate_ai.api.routes import auth
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(properties.router, prefix="/api")
 app.include_router(team.router, prefix="/api")
 app.include_router(crm.router, prefix="/api")
 app.include_router(voice.router, prefix="/api")
+
 
 # Root endpoint
 @app.get("/")
@@ -62,7 +79,11 @@ async def root():
         "version": settings.version,
         "status": "running",
         "environment": settings.environment,
-        "docs": "/docs" if settings.environment == "development" else "disabled in production"
+        "docs": (
+            "/docs"
+            if settings.environment == "development"
+            else "disabled in production"
+        ),
     }
 
 
@@ -72,7 +93,7 @@ async def health():
     return {
         "status": "healthy",
         "service": settings.app_name,
-        "version": settings.version
+        "version": settings.version,
     }
 
 
@@ -81,21 +102,19 @@ async def startup_event():
     """Run on application startup."""
     logger.info(
         f"Starting {settings.app_name} v{settings.version}",
-        extra={
-            "environment": settings.environment,
-            "model": settings.claude_model
-        }
+        extra={"environment": settings.environment, "model": settings.claude_model},
     )
-    
+
     # Auto-register primary tenant from environment variables
     if settings.ghl_location_id and settings.ghl_api_key:
         try:
             from ghl_real_estate_ai.services.tenant_service import TenantService
+
             tenant_service = TenantService()
             await tenant_service.save_tenant_config(
                 location_id=settings.ghl_location_id,
                 anthropic_api_key=settings.anthropic_api_key,
-                ghl_api_key=settings.ghl_api_key
+                ghl_api_key=settings.ghl_api_key,
             )
             logger.info(f"Auto-registered primary tenant: {settings.ghl_location_id}")
         except Exception as e:
@@ -110,10 +129,11 @@ async def shutdown_event():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "api.main:app",
         host="0.0.0.0",
         port=8000,
         reload=settings.environment == "development",
-        log_level=settings.log_level.lower()
+        log_level=settings.log_level.lower(),
     )

@@ -194,5 +194,89 @@
     "message": "api_response_time_ms = 600 (threshold: 500)",
     "timestamp": "2026-01-05T23:48:43.383792",
     "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:04:11.132121",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:05:17.568419",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:07:03.074672",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:08:07.093856",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:09:59.377625",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:11:06.390639",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:12:20.886726",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:13:31.514749",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:18:05.292398",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:18:48.824286",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:20:14.156721",
+    "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-06T17:29:15.815569",
+    "location_id": "test_degraded"
   }
 ]

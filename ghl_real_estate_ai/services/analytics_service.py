@@ -3,16 +3,18 @@ Analytics Service for GHL Real Estate AI.
 
 Tracks and retrieves system performance metrics and lead conversion data.
 """
+
+import asyncio
 import json
 import os
-from typing import Dict, Any, List, Optional
 from datetime import datetime
 from pathlib import Path
-import asyncio
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class AnalyticsService:
     """
@@ -38,11 +40,11 @@ class AnalyticsService:
         return tenant_dir / f"events_{date_str}.jsonl"
 
     async def track_event(
-        self, 
-        event_type: str, 
-        location_id: str, 
-        contact_id: Optional[str] = None, 
-        data: Optional[Dict[str, Any]] = None
+        self,
+        event_type: str,
+        location_id: str,
+        contact_id: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Track a specific event.
@@ -58,11 +60,11 @@ class AnalyticsService:
             "event_type": event_type,
             "contact_id": contact_id,
             "location_id": location_id,
-            "data": data or {}
+            "data": data or {},
         }
 
         file_path = self._get_location_file(location_id)
-        
+
         try:
             # We use JSONL (JSON Lines) for efficient appending
             with open(file_path, "a") as f:
@@ -71,10 +73,10 @@ class AnalyticsService:
             logger.error(f"Failed to track event {event_type} for {location_id}: {e}")
 
     async def get_events(
-        self, 
-        location_id: str, 
+        self,
+        location_id: str,
         date_str: Optional[str] = None,
-        event_type: Optional[str] = None
+        event_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Retrieve events for a specific location and date.
@@ -89,9 +91,9 @@ class AnalyticsService:
         """
         if not date_str:
             date_str = datetime.utcnow().strftime("%Y-%m-%d")
-            
+
         file_path = self.analytics_dir / location_id / f"events_{date_str}.jsonl"
-        
+
         events = []
         if file_path.exists():
             try:
@@ -103,15 +105,17 @@ class AnalyticsService:
                                 events.append(event)
             except Exception as e:
                 logger.error(f"Failed to read events from {file_path}: {e}")
-        
+
         return events
 
-    async def get_daily_summary(self, location_id: str, date_str: Optional[str] = None) -> Dict[str, Any]:
+    async def get_daily_summary(
+        self, location_id: str, date_str: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Generate a summary of metrics for a specific day.
         """
         events = await self.get_events(location_id, date_str)
-        
+
         summary = {
             "total_messages": 0,
             "incoming_messages": 0,
@@ -119,19 +123,19 @@ class AnalyticsService:
             "leads_scored": 0,
             "hot_leads": 0,
             "avg_lead_score": 0,
-            "active_contacts": set()
+            "active_contacts": set(),
         }
-        
+
         total_score = 0
         scored_count = 0
-        
+
         for event in events:
             etype = event.get("event_type")
             data = event.get("data", {})
-            
+
             if event.get("contact_id"):
                 summary["active_contacts"].add(event.get("contact_id"))
-                
+
             if etype == "message_received":
                 summary["incoming_messages"] += 1
                 summary["total_messages"] += 1
@@ -143,13 +147,13 @@ class AnalyticsService:
                 score = data.get("score", 0)
                 total_score += score
                 scored_count += 1
-                if score >= 70: # Standard hot lead threshold
+                if score >= 70:  # Standard hot lead threshold
                     summary["hot_leads"] += 1
-        
+
         summary["active_contacts_count"] = len(summary["active_contacts"])
-        del summary["active_contacts"] # Don't return the set
-        
+        del summary["active_contacts"]  # Don't return the set
+
         if scored_count > 0:
             summary["avg_lead_score"] = total_score / scored_count
-            
+
         return summary

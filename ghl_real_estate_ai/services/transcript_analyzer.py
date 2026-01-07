@@ -14,14 +14,14 @@ Author: Phase 2 Agent C2
 Version: 1.0.0
 """
 
-import json
 import csv
-from typing import Dict, Any, List, Optional, Tuple
+import json
+import re
+from collections import Counter, defaultdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from collections import Counter, defaultdict
-import re
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -31,6 +31,7 @@ logger = get_logger(__name__)
 @dataclass
 class ConversationMetrics:
     """Metrics for a single conversation."""
+
     transcript_id: str
     lead_type: str
     outcome: str
@@ -46,6 +47,7 @@ class ConversationMetrics:
 @dataclass
 class PatternInsights:
     """Insights extracted from pattern analysis."""
+
     winning_questions: List[Dict[str, Any]]
     successful_closing_phrases: List[str]
     optimal_question_order: List[str]
@@ -100,7 +102,7 @@ class TranscriptAnalyzer:
             raise FileNotFoundError(f"Transcript file not found: {filepath}")
 
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 data = json.load(f)
 
             # Handle different JSON structures
@@ -124,7 +126,9 @@ class TranscriptAnalyzer:
                     self.transcripts.append(transcript)
                     imported_count += 1
                 else:
-                    logger.warning(f"Skipped invalid transcript: {transcript.get('id', 'unknown')}")
+                    logger.warning(
+                        f"Skipped invalid transcript: {transcript.get('id', 'unknown')}"
+                    )
 
             logger.info(f"Imported {imported_count} transcripts from {filepath}")
             return imported_count
@@ -165,16 +169,13 @@ class TranscriptAnalyzer:
 
         try:
             # Group messages by transcript ID
-            transcripts_dict = defaultdict(lambda: {
-                "messages": [],
-                "metadata": {}
-            })
+            transcripts_dict = defaultdict(lambda: {"messages": [], "metadata": {}})
 
-            with open(file_path, 'r', newline='', encoding='utf-8') as f:
+            with open(file_path, "r", newline="", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
 
                 for row in reader:
-                    transcript_id = row.get('id')
+                    transcript_id = row.get("id")
                     if not transcript_id:
                         logger.warning("Skipping row with missing ID")
                         continue
@@ -183,18 +184,18 @@ class TranscriptAnalyzer:
                     if not transcripts_dict[transcript_id]["metadata"]:
                         transcripts_dict[transcript_id]["metadata"] = {
                             "id": transcript_id,
-                            "date": row.get('date'),
-                            "lead_type": row.get('lead_type'),
-                            "outcome": row.get('outcome'),
-                            "close_reason": row.get('close_reason', '')
+                            "date": row.get("date"),
+                            "lead_type": row.get("lead_type"),
+                            "outcome": row.get("outcome"),
+                            "close_reason": row.get("close_reason", ""),
                         }
 
                     # Add message
                     message = {
-                        "timestamp": row.get('timestamp'),
-                        "speaker": row.get('speaker'),
-                        "message": row.get('message'),
-                        "metadata": {}
+                        "timestamp": row.get("timestamp"),
+                        "speaker": row.get("speaker"),
+                        "message": row.get("message"),
+                        "metadata": {},
                     }
                     transcripts_dict[transcript_id]["messages"].append(message)
 
@@ -203,7 +204,7 @@ class TranscriptAnalyzer:
             for transcript_id, data in transcripts_dict.items():
                 transcript = {
                     **data["metadata"],
-                    "messages": sorted(data["messages"], key=lambda m: m["timestamp"])
+                    "messages": sorted(data["messages"], key=lambda m: m["timestamp"]),
                 }
 
                 if self._validate_transcript(transcript):
@@ -227,14 +228,17 @@ class TranscriptAnalyzer:
         Returns:
             True if valid, False otherwise
         """
-        required_fields = ['id', 'lead_type', 'outcome', 'messages']
+        required_fields = ["id", "lead_type", "outcome", "messages"]
 
         for field in required_fields:
             if field not in transcript:
                 logger.warning(f"Transcript missing required field: {field}")
                 return False
 
-        if not isinstance(transcript['messages'], list) or len(transcript['messages']) == 0:
+        if (
+            not isinstance(transcript["messages"], list)
+            or len(transcript["messages"]) == 0
+        ):
             logger.warning(f"Transcript {transcript['id']} has no messages")
             return False
 
@@ -260,7 +264,9 @@ class TranscriptAnalyzer:
         logger.info(f"Calculated metrics for {len(self.metrics)} transcripts")
         return self.metrics
 
-    def _calculate_single_metrics(self, transcript: Dict[str, Any]) -> ConversationMetrics:
+    def _calculate_single_metrics(
+        self, transcript: Dict[str, Any]
+    ) -> ConversationMetrics:
         """
         Calculate metrics for a single transcript.
 
@@ -270,46 +276,55 @@ class TranscriptAnalyzer:
         Returns:
             ConversationMetrics object
         """
-        messages = transcript.get('messages', [])
+        messages = transcript.get("messages", [])
 
         # Duration calculation
         if len(messages) >= 2:
-            start_time = datetime.fromisoformat(messages[0]['timestamp'].replace('Z', '+00:00'))
-            end_time = datetime.fromisoformat(messages[-1]['timestamp'].replace('Z', '+00:00'))
+            start_time = datetime.fromisoformat(
+                messages[0]["timestamp"].replace("Z", "+00:00")
+            )
+            end_time = datetime.fromisoformat(
+                messages[-1]["timestamp"].replace("Z", "+00:00")
+            )
             duration_minutes = (end_time - start_time).total_seconds() / 60
         else:
             duration_minutes = 0.0
 
         # Count questions asked by bot
         questions_asked = sum(
-            1 for msg in messages
-            if msg['speaker'] == 'bot' and '?' in msg['message']
+            1 for msg in messages if msg["speaker"] == "bot" and "?" in msg["message"]
         )
 
         # Calculate average response time
         response_times = []
         for i in range(1, len(messages)):
-            if messages[i]['speaker'] != messages[i-1]['speaker']:
-                prev_time = datetime.fromisoformat(messages[i-1]['timestamp'].replace('Z', '+00:00'))
-                curr_time = datetime.fromisoformat(messages[i]['timestamp'].replace('Z', '+00:00'))
+            if messages[i]["speaker"] != messages[i - 1]["speaker"]:
+                prev_time = datetime.fromisoformat(
+                    messages[i - 1]["timestamp"].replace("Z", "+00:00")
+                )
+                curr_time = datetime.fromisoformat(
+                    messages[i]["timestamp"].replace("Z", "+00:00")
+                )
                 response_times.append((curr_time - prev_time).total_seconds())
 
-        avg_response_time = sum(response_times) / len(response_times) if response_times else 0.0
+        avg_response_time = (
+            sum(response_times) / len(response_times) if response_times else 0.0
+        )
 
         # Detect pathway if present
         pathway = self._detect_pathway(messages)
 
         return ConversationMetrics(
-            transcript_id=transcript.get('id', ''),
-            lead_type=transcript.get('lead_type', ''),
-            outcome=transcript.get('outcome', ''),
-            close_reason=transcript.get('close_reason', ''),
-            questions_answered=transcript.get('questions_answered', 0),
+            transcript_id=transcript.get("id", ""),
+            lead_type=transcript.get("lead_type", ""),
+            outcome=transcript.get("outcome", ""),
+            close_reason=transcript.get("close_reason", ""),
+            questions_answered=transcript.get("questions_answered", 0),
             duration_minutes=duration_minutes,
             message_count=len(messages),
             avg_response_time_seconds=avg_response_time,
             questions_asked=questions_asked,
-            pathway_identified=pathway
+            pathway_identified=pathway,
         )
 
     def _detect_pathway(self, messages: List[Dict[str, Any]]) -> Optional[str]:
@@ -323,18 +338,29 @@ class TranscriptAnalyzer:
             "wholesale", "listing", or None
         """
         # Combine all messages into text
-        text = " ".join(msg['message'].lower() for msg in messages)
+        text = " ".join(msg["message"].lower() for msg in messages)
 
         # Wholesale indicators
         wholesale_keywords = [
-            'as-is', 'cash offer', 'fast sale', 'quick',
-            'inherited', 'fixer', 'needs work', 'no repairs'
+            "as-is",
+            "cash offer",
+            "fast sale",
+            "quick",
+            "inherited",
+            "fixer",
+            "needs work",
+            "no repairs",
         ]
 
         # Listing indicators
         listing_keywords = [
-            'top dollar', 'best price', 'market value',
-            'move-in ready', 'updated', 'renovated', 'excellent condition'
+            "top dollar",
+            "best price",
+            "market value",
+            "move-in ready",
+            "updated",
+            "renovated",
+            "excellent condition",
         ]
 
         wholesale_count = sum(1 for kw in wholesale_keywords if kw in text)
@@ -362,7 +388,7 @@ class TranscriptAnalyzer:
             self.calculate_metrics()
 
         # Filter to successful closes
-        successful = [m for m in self.metrics if m.outcome == 'closed']
+        successful = [m for m in self.metrics if m.outcome == "closed"]
 
         if not successful:
             logger.warning("No successful transcripts to analyze")
@@ -374,7 +400,7 @@ class TranscriptAnalyzer:
                 avg_conversation_duration=0.0,
                 keyword_patterns={},
                 close_rate_by_lead_type={},
-                successful_pathway_signals={}
+                successful_pathway_signals={},
             )
 
         # Analyze question patterns
@@ -407,13 +433,15 @@ class TranscriptAnalyzer:
             avg_conversation_duration=avg_duration,
             keyword_patterns=keywords,
             close_rate_by_lead_type=close_rates,
-            successful_pathway_signals=pathway_signals
+            successful_pathway_signals=pathway_signals,
         )
 
         logger.info("Pattern analysis complete")
         return insights
 
-    def _extract_winning_questions(self, metrics: List[ConversationMetrics]) -> List[Dict[str, Any]]:
+    def _extract_winning_questions(
+        self, metrics: List[ConversationMetrics]
+    ) -> List[Dict[str, Any]]:
         """
         Extract questions that appear in successful conversations.
 
@@ -427,27 +455,35 @@ class TranscriptAnalyzer:
         question_counter = Counter()
 
         for transcript in self.transcripts:
-            if transcript['outcome'] == 'closed':
+            if transcript["outcome"] == "closed":
                 bot_questions = [
-                    msg['message'] for msg in transcript['messages']
-                    if msg['speaker'] == 'bot' and '?' in msg['message']
+                    msg["message"]
+                    for msg in transcript["messages"]
+                    if msg["speaker"] == "bot" and "?" in msg["message"]
                 ]
 
                 # Extract question types from metadata
-                for msg in transcript['messages']:
-                    if msg['speaker'] == 'bot' and msg.get('metadata', {}).get('question_type'):
-                        q_type = msg['metadata']['question_type']
+                for msg in transcript["messages"]:
+                    if msg["speaker"] == "bot" and msg.get("metadata", {}).get(
+                        "question_type"
+                    ):
+                        q_type = msg["metadata"]["question_type"]
                         question_counter[q_type] += 1
 
         # Convert to structured format
         total_closed = len(metrics)
         for q_type, count in question_counter.most_common():
-            question_patterns.append({
-                "question_type": q_type,
-                "frequency": count,
-                "appears_in_percent": (count / total_closed) * 100 if total_closed > 0 else 0,
-                "recommended": count / total_closed > 0.5  # Appears in >50% of successful convos
-            })
+            question_patterns.append(
+                {
+                    "question_type": q_type,
+                    "frequency": count,
+                    "appears_in_percent": (
+                        (count / total_closed) * 100 if total_closed > 0 else 0
+                    ),
+                    "recommended": count / total_closed
+                    > 0.5,  # Appears in >50% of successful convos
+                }
+            )
 
         return question_patterns
 
@@ -464,14 +500,15 @@ class TranscriptAnalyzer:
         closing_phrases = []
 
         for transcript in self.transcripts:
-            if transcript['outcome'] == 'closed':
-                messages = transcript['messages']
+            if transcript["outcome"] == "closed":
+                messages = transcript["messages"]
 
                 # Find closing stage messages
                 closing_messages = [
-                    msg['message'] for msg in messages
-                    if msg['speaker'] == 'bot' and
-                    msg.get('metadata', {}).get('stage') == 'closing'
+                    msg["message"]
+                    for msg in messages
+                    if msg["speaker"] == "bot"
+                    and msg.get("metadata", {}).get("stage") == "closing"
                 ]
 
                 closing_phrases.extend(closing_messages)
@@ -480,7 +517,9 @@ class TranscriptAnalyzer:
         phrase_counter = Counter(closing_phrases)
         return [phrase for phrase, count in phrase_counter.most_common(10)]
 
-    def _determine_question_order(self, metrics: List[ConversationMetrics]) -> List[str]:
+    def _determine_question_order(
+        self, metrics: List[ConversationMetrics]
+    ) -> List[str]:
         """
         Determine the optimal order of qualifying questions.
 
@@ -493,11 +532,13 @@ class TranscriptAnalyzer:
         question_order_sequences = []
 
         for transcript in self.transcripts:
-            if transcript['outcome'] == 'closed':
+            if transcript["outcome"] == "closed":
                 sequence = []
-                for msg in transcript['messages']:
-                    if msg['speaker'] == 'bot' and msg.get('metadata', {}).get('question_type'):
-                        q_type = msg['metadata']['question_type']
+                for msg in transcript["messages"]:
+                    if msg["speaker"] == "bot" and msg.get("metadata", {}).get(
+                        "question_type"
+                    ):
+                        q_type = msg["metadata"]["question_type"]
                         if q_type not in sequence:  # Only track first occurrence
                             sequence.append(q_type)
 
@@ -517,7 +558,7 @@ class TranscriptAnalyzer:
         # Sort by average position (questions asked earlier have lower avg position)
         optimal_order = sorted(
             position_scores.keys(),
-            key=lambda q: sum(position_scores[q]) / len(position_scores[q])
+            key=lambda q: sum(position_scores[q]) / len(position_scores[q]),
         )
 
         return optimal_order
@@ -533,16 +574,29 @@ class TranscriptAnalyzer:
 
         # Keywords to track (expanded from insights)
         tracked_keywords = [
-            'budget', 'location', 'timeline', 'beds', 'baths', 'pre-approved',
-            'asap', 'urgent', 'cash', 'financing', 'schools', 'move-in ready',
-            'fixer', 'as-is', 'renovated', 'updated', 'condition'
+            "budget",
+            "location",
+            "timeline",
+            "beds",
+            "baths",
+            "pre-approved",
+            "asap",
+            "urgent",
+            "cash",
+            "financing",
+            "schools",
+            "move-in ready",
+            "fixer",
+            "as-is",
+            "renovated",
+            "updated",
+            "condition",
         ]
 
         for transcript in self.transcripts:
-            if transcript['outcome'] == 'closed':
+            if transcript["outcome"] == "closed":
                 text = " ".join(
-                    msg['message'].lower()
-                    for msg in transcript['messages']
+                    msg["message"].lower() for msg in transcript["messages"]
                 )
 
                 for keyword in tracked_keywords:
@@ -561,17 +615,27 @@ class TranscriptAnalyzer:
         close_rates = {}
 
         # By lead type
-        buyer_total = sum(1 for m in self.metrics if m.lead_type == 'buyer')
-        buyer_closed = sum(1 for m in self.metrics if m.lead_type == 'buyer' and m.outcome == 'closed')
+        buyer_total = sum(1 for m in self.metrics if m.lead_type == "buyer")
+        buyer_closed = sum(
+            1 for m in self.metrics if m.lead_type == "buyer" and m.outcome == "closed"
+        )
 
-        seller_total = sum(1 for m in self.metrics if m.lead_type == 'seller')
-        seller_closed = sum(1 for m in self.metrics if m.lead_type == 'seller' and m.outcome == 'closed')
+        seller_total = sum(1 for m in self.metrics if m.lead_type == "seller")
+        seller_closed = sum(
+            1 for m in self.metrics if m.lead_type == "seller" and m.outcome == "closed"
+        )
 
-        close_rates['buyer'] = (buyer_closed / buyer_total * 100) if buyer_total > 0 else 0.0
-        close_rates['seller'] = (seller_closed / seller_total * 100) if seller_total > 0 else 0.0
-        close_rates['overall'] = (
-            (buyer_closed + seller_closed) / (buyer_total + seller_total) * 100
-        ) if (buyer_total + seller_total) > 0 else 0.0
+        close_rates["buyer"] = (
+            (buyer_closed / buyer_total * 100) if buyer_total > 0 else 0.0
+        )
+        close_rates["seller"] = (
+            (seller_closed / seller_total * 100) if seller_total > 0 else 0.0
+        )
+        close_rates["overall"] = (
+            ((buyer_closed + seller_closed) / (buyer_total + seller_total) * 100)
+            if (buyer_total + seller_total) > 0
+            else 0.0
+        )
 
         return close_rates
 
@@ -582,38 +646,44 @@ class TranscriptAnalyzer:
         Returns:
             Dictionary with wholesale and listing signal keywords
         """
-        pathway_signals = {
-            "wholesale": [],
-            "listing": []
-        }
+        pathway_signals = {"wholesale": [], "listing": []}
 
         # Analyze transcripts with identified pathways
         for transcript in self.transcripts:
-            if transcript['outcome'] == 'closed':
-                pathway = self._detect_pathway(transcript['messages'])
+            if transcript["outcome"] == "closed":
+                pathway = self._detect_pathway(transcript["messages"])
 
                 if pathway:
                     # Extract insights if available
-                    insights = transcript.get('insights', {})
-                    signals = insights.get('pathway_signals', [])
+                    insights = transcript.get("insights", {})
+                    signals = insights.get("pathway_signals", [])
 
                     if signals and pathway in pathway_signals:
                         pathway_signals[pathway].extend(signals)
 
         # Deduplicate
-        pathway_signals['wholesale'] = list(set(pathway_signals['wholesale']))
-        pathway_signals['listing'] = list(set(pathway_signals['listing']))
+        pathway_signals["wholesale"] = list(set(pathway_signals["wholesale"]))
+        pathway_signals["listing"] = list(set(pathway_signals["listing"]))
 
         # Add known patterns if empty
-        if not pathway_signals['wholesale']:
-            pathway_signals['wholesale'] = [
-                'as-is', 'fast', 'cash offer', 'no repairs', 'inherited', 'fixer'
+        if not pathway_signals["wholesale"]:
+            pathway_signals["wholesale"] = [
+                "as-is",
+                "fast",
+                "cash offer",
+                "no repairs",
+                "inherited",
+                "fixer",
             ]
 
-        if not pathway_signals['listing']:
-            pathway_signals['listing'] = [
-                'top dollar', 'best price', 'market value', 'move-in ready',
-                'updated', 'renovated'
+        if not pathway_signals["listing"]:
+            pathway_signals["listing"] = [
+                "top dollar",
+                "best price",
+                "market value",
+                "move-in ready",
+                "updated",
+                "renovated",
             ]
 
         return pathway_signals
@@ -622,7 +692,9 @@ class TranscriptAnalyzer:
     # INSIGHTS GENERATION
     # ==============================================================================
 
-    def generate_insights_report(self, output_path: Optional[str] = None) -> Dict[str, Any]:
+    def generate_insights_report(
+        self, output_path: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Generate comprehensive insights report.
 
@@ -642,23 +714,25 @@ class TranscriptAnalyzer:
             "generated_at": datetime.utcnow().isoformat(),
             "summary": {
                 "total_transcripts": len(self.transcripts),
-                "successful_closes": len([m for m in self.metrics if m.outcome == 'closed']),
-                "close_rate": patterns.close_rate_by_lead_type.get('overall', 0.0),
+                "successful_closes": len(
+                    [m for m in self.metrics if m.outcome == "closed"]
+                ),
+                "close_rate": patterns.close_rate_by_lead_type.get("overall", 0.0),
                 "avg_questions_to_close": patterns.avg_questions_to_close,
-                "avg_conversation_duration_minutes": patterns.avg_conversation_duration
+                "avg_conversation_duration_minutes": patterns.avg_conversation_duration,
             },
             "patterns": {
                 "winning_questions": patterns.winning_questions,
                 "successful_closing_phrases": patterns.successful_closing_phrases,
                 "optimal_question_order": patterns.optimal_question_order,
                 "keyword_patterns": patterns.keyword_patterns,
-                "pathway_signals": patterns.successful_pathway_signals
+                "pathway_signals": patterns.successful_pathway_signals,
             },
             "metrics": {
                 "close_rates": patterns.close_rate_by_lead_type,
-                "conversations_by_type": self._get_type_breakdown()
+                "conversations_by_type": self._get_type_breakdown(),
             },
-            "recommendations": self._generate_recommendations(patterns)
+            "recommendations": self._generate_recommendations(patterns),
         }
 
         # Save to file if requested
@@ -666,7 +740,7 @@ class TranscriptAnalyzer:
             output_file = Path(output_path)
             output_file.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(output_file, 'w') as f:
+            with open(output_file, "w") as f:
                 json.dump(report, f, indent=2)
 
             logger.info(f"Insights report saved to {output_path}")
@@ -676,12 +750,14 @@ class TranscriptAnalyzer:
     def _get_type_breakdown(self) -> Dict[str, int]:
         """Get breakdown of conversations by type."""
         return {
-            "buyer": sum(1 for m in self.metrics if m.lead_type == 'buyer'),
-            "seller": sum(1 for m in self.metrics if m.lead_type == 'seller'),
-            "total": len(self.metrics)
+            "buyer": sum(1 for m in self.metrics if m.lead_type == "buyer"),
+            "seller": sum(1 for m in self.metrics if m.lead_type == "seller"),
+            "total": len(self.metrics),
         }
 
-    def _generate_recommendations(self, patterns: PatternInsights) -> List[Dict[str, str]]:
+    def _generate_recommendations(
+        self, patterns: PatternInsights
+    ) -> List[Dict[str, str]]:
         """
         Generate actionable recommendations based on patterns.
 
@@ -695,52 +771,66 @@ class TranscriptAnalyzer:
 
         # Question order recommendation
         if patterns.optimal_question_order:
-            recommendations.append({
-                "category": "Question Sequencing",
-                "recommendation": f"Lead with {patterns.optimal_question_order[0]} question, "
-                                f"followed by {', '.join(patterns.optimal_question_order[1:3])}",
-                "impact": "high",
-                "implementation": "Update system_prompts.py qualifying section"
-            })
+            recommendations.append(
+                {
+                    "category": "Question Sequencing",
+                    "recommendation": f"Lead with {patterns.optimal_question_order[0]} question, "
+                    f"followed by {', '.join(patterns.optimal_question_order[1:3])}",
+                    "impact": "high",
+                    "implementation": "Update system_prompts.py qualifying section",
+                }
+            )
 
         # Question count recommendation
         if patterns.avg_questions_to_close < 7:
-            recommendations.append({
-                "category": "Qualification Efficiency",
-                "recommendation": f"On average, {patterns.avg_questions_to_close:.1f} questions "
-                                f"answered before close. Don't over-qualify - offer action after 3-4 questions.",
-                "impact": "high",
-                "implementation": "Adjust lead_scorer.py thresholds"
-            })
+            recommendations.append(
+                {
+                    "category": "Qualification Efficiency",
+                    "recommendation": f"On average, {patterns.avg_questions_to_close:.1f} questions "
+                    f"answered before close. Don't over-qualify - offer action after 3-4 questions.",
+                    "impact": "high",
+                    "implementation": "Adjust lead_scorer.py thresholds",
+                }
+            )
 
         # Duration recommendation
         if patterns.avg_conversation_duration < 10:
-            recommendations.append({
-                "category": "Conversation Pacing",
-                "recommendation": f"Successful conversations average {patterns.avg_conversation_duration:.1f} minutes. "
-                                f"Keep it concise and move to action quickly.",
-                "impact": "medium",
-                "implementation": "Emphasize brevity in prompts"
-            })
+            recommendations.append(
+                {
+                    "category": "Conversation Pacing",
+                    "recommendation": f"Successful conversations average {patterns.avg_conversation_duration:.1f} minutes. "
+                    f"Keep it concise and move to action quickly.",
+                    "impact": "medium",
+                    "implementation": "Emphasize brevity in prompts",
+                }
+            )
 
         # Pathway signals
         if patterns.successful_pathway_signals:
-            recommendations.append({
-                "category": "Pathway Detection",
-                "recommendation": "Add pathway detection keywords to early qualification",
-                "impact": "high",
-                "implementation": f"Monitor for wholesale signals: {', '.join(patterns.successful_pathway_signals.get('wholesale', [])[:3])}"
-            })
+            recommendations.append(
+                {
+                    "category": "Pathway Detection",
+                    "recommendation": "Add pathway detection keywords to early qualification",
+                    "impact": "high",
+                    "implementation": f"Monitor for wholesale signals: {', '.join(patterns.successful_pathway_signals.get('wholesale', [])[:3])}",
+                }
+            )
 
         # Closing phrases
         if patterns.successful_closing_phrases:
-            top_phrase = patterns.successful_closing_phrases[0] if patterns.successful_closing_phrases else ""
-            recommendations.append({
-                "category": "Closing Language",
-                "recommendation": f"Most successful closing phrase: '{top_phrase}'",
-                "impact": "medium",
-                "implementation": "Add to APPOINTMENT_SETTING_PROMPT templates"
-            })
+            top_phrase = (
+                patterns.successful_closing_phrases[0]
+                if patterns.successful_closing_phrases
+                else ""
+            )
+            recommendations.append(
+                {
+                    "category": "Closing Language",
+                    "recommendation": f"Most successful closing phrase: '{top_phrase}'",
+                    "impact": "medium",
+                    "implementation": "Add to APPOINTMENT_SETTING_PROMPT templates",
+                }
+            )
 
         return recommendations
 
@@ -761,7 +851,7 @@ class TranscriptAnalyzer:
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_file, 'w', newline='') as f:
+        with open(output_file, "w", newline="") as f:
             if not self.metrics:
                 logger.warning("No metrics to export")
                 return
@@ -800,13 +890,17 @@ if __name__ == "__main__":
         print(f"\nPattern Analysis:")
         print(f"  - Average questions to close: {patterns.avg_questions_to_close:.1f}")
         print(f"  - Average duration: {patterns.avg_conversation_duration:.1f} minutes")
-        print(f"  - Optimal question order: {', '.join(patterns.optimal_question_order[:3])}")
+        print(
+            f"  - Optimal question order: {', '.join(patterns.optimal_question_order[:3])}"
+        )
 
         # Generate report
-        report = analyzer.generate_insights_report(output_path="data/insights_report.json")
+        report = analyzer.generate_insights_report(
+            output_path="data/insights_report.json"
+        )
         print(f"\nInsights report generated: data/insights_report.json")
         print(f"\nTop Recommendations:")
-        for i, rec in enumerate(report['recommendations'][:3], 1):
+        for i, rec in enumerate(report["recommendations"][:3], 1):
             print(f"  {i}. [{rec['category']}] {rec['recommendation']}")
 
     except Exception as e:

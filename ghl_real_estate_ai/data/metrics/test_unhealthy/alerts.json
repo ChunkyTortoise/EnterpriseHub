@@ -194,5 +194,89 @@
     "message": "System down",
     "timestamp": "2026-01-05T23:48:43.385064",
     "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:04:11.133404",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:05:17.569172",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:07:03.076272",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:08:07.095104",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:09:59.378964",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:11:06.392153",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:12:20.888002",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:13:31.516029",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:18:05.293563",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:18:48.825315",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:20:14.158586",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:29:15.817304",
+    "location_id": "test_unhealthy"
   }
 ]

@@ -2,16 +2,18 @@
 GHL Webhook Service - Path B Backend Integration
 Handles webhook triggers from GoHighLevel for lead qualification
 """
-from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
+
+import hashlib
+import hmac
+import logging
+import os
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import anthropic
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
-import os
-import hmac
-import hashlib
-import anthropic
-from datetime import datetime
-import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +23,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="GHL Real Estate AI Webhook Service",
     description="AI-powered lead qualification for Jorge Salas",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Initialize Anthropic client
@@ -40,8 +42,9 @@ QUALIFICATION_QUESTIONS = {
     "timeline": "When are you hoping to buy or sell?",
     "preapproval": "Are you pre-approved for a mortgage?",
     "motivation": "What's motivating your decision to buy/sell right now?",
-    "seller_condition": "What's the current condition of your home?"  # For sellers
+    "seller_condition": "What's the current condition of your home?",  # For sellers
 }
+
 
 # Jorge's Lead Scoring Logic
 def calculate_lead_score(answers: Dict[str, Any]) -> tuple[int, str]:
@@ -52,7 +55,7 @@ def calculate_lead_score(answers: Dict[str, Any]) -> tuple[int, str]:
     - Cold: 1 or less qualifying questions answered
     """
     answered_count = sum(1 for v in answers.values() if v)
-    
+
     if answered_count >= 3:
         return 85, "Hot"  # Score 85 = Hot Lead
     elif answered_count == 2:
@@ -63,6 +66,7 @@ def calculate_lead_score(answers: Dict[str, Any]) -> tuple[int, str]:
 
 class GHLWebhookPayload(BaseModel):
     """GHL webhook payload structure"""
+
     contactId: str
     locationId: str
     tags: Optional[List[str]] = []
@@ -72,6 +76,7 @@ class GHLWebhookPayload(BaseModel):
 
 class LeadQualificationState(BaseModel):
     """Track lead qualification progress"""
+
     contact_id: str
     current_question: str = "budget"
     answers: Dict[str, Any] = Field(default_factory=dict)
@@ -89,23 +94,21 @@ def verify_webhook_signature(request: Request, body: bytes) -> bool:
     if not GHL_WEBHOOK_SECRET:
         logger.warning("GHL_WEBHOOK_SECRET not set - skipping verification in dev mode")
         return True
-    
+
     signature = request.headers.get("X-GHL-Signature", "")
-    computed = hmac.new(
-        GHL_WEBHOOK_SECRET.encode(),
-        body,
-        hashlib.sha256
-    ).hexdigest()
-    
+    computed = hmac.new(GHL_WEBHOOK_SECRET.encode(), body, hashlib.sha256).hexdigest()
+
     return hmac.compare_digest(signature, computed)
 
 
-def get_ai_response(contact_data: Dict, conversation_history: List, question_type: str) -> str:
+def get_ai_response(
+    contact_data: Dict, conversation_history: List, question_type: str
+) -> str:
     """
     Generate AI response using Claude with Jorge's tone:
     Professional, friendly, direct, and curious
     """
-    
+
     system_prompt = """You are an AI assistant for Jorge Salas, a professional real estate agent. 
 Your communication style is:
 - Professional and friendly
@@ -120,15 +123,12 @@ Examples of Jorge's tone:
 Your goal is to qualify leads by asking the right questions naturally in conversation.
 Keep responses SHORT (1-2 sentences max). This is SMS, not email.
 """
-    
+
     # Build conversation context
     messages = []
     for msg in conversation_history:
-        messages.append({
-            "role": msg["role"],
-            "content": msg["content"]
-        })
-    
+        messages.append({"role": msg["role"], "content": msg["content"]})
+
     # Add current question based on what we need to know
     if question_type == "budget":
         question = "Quick question - what's your budget range looking like?"
@@ -144,22 +144,24 @@ Keep responses SHORT (1-2 sentences max). This is SMS, not email.
         question = "Just curious - what's driving the decision right now?"
     else:
         question = "Thanks for that info. Anything else I should know?"
-    
-    messages.append({
-        "role": "user",
-        "content": f"Generate a natural follow-up question to ask about: {question_type}. Keep it under 160 chars."
-    })
-    
+
+    messages.append(
+        {
+            "role": "user",
+            "content": f"Generate a natural follow-up question to ask about: {question_type}. Keep it under 160 chars.",
+        }
+    )
+
     try:
         response = anthropic_client.messages.create(
             model="claude-sonnet-4-20250514",
             max_tokens=150,
             system=system_prompt,
-            messages=messages
+            messages=messages,
         )
-        
+
         return response.content[0].text.strip()
-    
+
     except Exception as e:
         logger.error(f"Anthropic API error: {e}")
         # Fallback to direct question
@@ -169,28 +171,28 @@ Keep responses SHORT (1-2 sentences max). This is SMS, not email.
 async def send_sms_via_ghl(contact_id: str, location_id: str, message: str):
     """Send SMS message via GHL API"""
     import httpx
-    
+
     url = f"{GHL_API_BASE_URL}/conversations/messages"
-    
+
     headers = {
         "Authorization": f"Bearer {GHL_API_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
-    
+
     payload = {
         "contactId": contact_id,
         "locationId": location_id,
         "message": message,
-        "type": "SMS"
+        "type": "SMS",
     }
-    
+
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             logger.info(f"SMS sent to contact {contact_id}")
             return response.json()
-    
+
     except Exception as e:
         logger.error(f"Failed to send SMS: {e}")
         raise
@@ -199,22 +201,22 @@ async def send_sms_via_ghl(contact_id: str, location_id: str, message: str):
 async def update_contact_tag(contact_id: str, location_id: str, tag: str):
     """Add tag to contact in GHL"""
     import httpx
-    
+
     url = f"{GHL_API_BASE_URL}/contacts/{contact_id}/tags"
-    
+
     headers = {
         "Authorization": f"Bearer {GHL_API_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
-    
+
     payload = {"tags": [tag]}
-    
+
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             logger.info(f"Tag '{tag}' added to contact {contact_id}")
-    
+
     except Exception as e:
         logger.error(f"Failed to update tag: {e}")
 
@@ -226,7 +228,7 @@ async def root():
         "service": "GHL Real Estate AI Webhook",
         "status": "active",
         "version": "1.0.0",
-        "for": "Jorge Salas"
+        "for": "Jorge Salas",
     }
 
 
@@ -234,105 +236,87 @@ async def root():
 async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks):
     """
     Main webhook endpoint for GHL triggers
-    
+
     Trigger conditions (from Jorge's clarification):
     - Contact tagged "AI Assistant: ON"
     - Disengagement when score >= 70
     """
-    
+
     # Verify webhook signature
     body = await request.body()
     if not verify_webhook_signature(request, body):
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
-    
+
     # Parse payload
     try:
         payload = await request.json()
         logger.info(f"Received webhook: {payload}")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
-    
+
     contact_id = payload.get("contactId")
     location_id = payload.get("locationId")
     tags = payload.get("tags", [])
-    
+
     # Check if AI should engage
     ai_on = "AI Assistant: ON" in tags or "ai_on" in tags
     ai_off = "AI Assistant: OFF" in tags or "ai_off" in tags
-    
+
     if ai_off or not ai_on:
         logger.info(f"AI not engaged for contact {contact_id} - tags: {tags}")
         return JSONResponse({"status": "skipped", "reason": "AI not enabled"})
-    
+
     # Get or create qualification state
     if contact_id not in qualification_states:
-        qualification_states[contact_id] = LeadQualificationState(
-            contact_id=contact_id
-        )
-    
+        qualification_states[contact_id] = LeadQualificationState(contact_id=contact_id)
+
     state = qualification_states[contact_id]
-    
+
     # Check if we should disengage (score >= 70)
     if state.score >= 70:
-        logger.info(f"Lead {contact_id} is HOT (score: {state.score}) - handing off to human")
-        
+        logger.info(
+            f"Lead {contact_id} is HOT (score: {state.score}) - handing off to human"
+        )
+
         # Tag as "Hot Lead" in GHL
         background_tasks.add_task(
-            update_contact_tag,
-            contact_id,
-            location_id,
-            "Hot Lead"
+            update_contact_tag, contact_id, location_id, "Hot Lead"
         )
-        
+
         # Turn off AI
         background_tasks.add_task(
-            update_contact_tag,
-            contact_id,
-            location_id,
-            "AI Assistant: OFF"
+            update_contact_tag, contact_id, location_id, "AI Assistant: OFF"
         )
-        
+
         # Send handoff message
         handoff_msg = "Thanks for all the info! A team member will reach out shortly to help you. 🎉"
         background_tasks.add_task(
-            send_sms_via_ghl,
-            contact_id,
-            location_id,
-            handoff_msg
+            send_sms_via_ghl, contact_id, location_id, handoff_msg
         )
-        
-        return JSONResponse({
-            "status": "handoff",
-            "score": state.score,
-            "status_label": state.status
-        })
-    
+
+        return JSONResponse(
+            {"status": "handoff", "score": state.score, "status_label": state.status}
+        )
+
     # Generate next qualifying question
     conversation_history = []  # In production, load from DB
-    
-    ai_message = get_ai_response(
-        payload,
-        conversation_history,
-        state.current_question
-    )
-    
+
+    ai_message = get_ai_response(payload, conversation_history, state.current_question)
+
     # Send SMS via GHL
-    background_tasks.add_task(
-        send_sms_via_ghl,
-        contact_id,
-        location_id,
-        ai_message
-    )
-    
+    background_tasks.add_task(send_sms_via_ghl, contact_id, location_id, ai_message)
+
     # Update state
     state.message_count += 1
-    
-    return JSONResponse({
-        "status": "sent",
-        "message": ai_message,
-        "score": state.score,
-        "question": state.current_question
-    })
+
+    return JSONResponse(
+        {
+            "status": "sent",
+            "message": ai_message,
+            "score": state.score,
+            "question": state.current_question,
+        }
+    )
 
 
 @app.post("/webhook/ghl/response")
@@ -341,50 +325,61 @@ async def handle_contact_response(request: Request, background_tasks: Background
     Handle incoming responses from contacts
     Extract answers and update lead score
     """
-    
+
     payload = await request.json()
     contact_id = payload.get("contactId")
     message = payload.get("message", "")
     location_id = payload.get("locationId")
-    
+
     if contact_id not in qualification_states:
         return JSONResponse({"status": "no_active_session"})
-    
+
     state = qualification_states[contact_id]
-    
+
     # Store answer (in production, use NLP to extract structured data)
     state.answers[state.current_question] = message
-    
+
     # Move to next question
     questions = list(QUALIFICATION_QUESTIONS.keys())
     current_idx = questions.index(state.current_question)
-    
+
     if current_idx + 1 < len(questions):
         state.current_question = questions[current_idx + 1]
-    
+
     # Recalculate score
     score, status = calculate_lead_score(state.answers)
     state.score = score
     state.status = status
-    
+
     # Update GHL tags based on status
     if status == "Hot":
-        background_tasks.add_task(update_contact_tag, contact_id, location_id, "Hot Lead")
+        background_tasks.add_task(
+            update_contact_tag, contact_id, location_id, "Hot Lead"
+        )
     elif status == "Warm":
-        background_tasks.add_task(update_contact_tag, contact_id, location_id, "Warm Lead")
+        background_tasks.add_task(
+            update_contact_tag, contact_id, location_id, "Warm Lead"
+        )
     else:
-        background_tasks.add_task(update_contact_tag, contact_id, location_id, "Cold Lead")
-    
-    logger.info(f"Contact {contact_id} - Score: {score} ({status}), Answers: {len(state.answers)}")
-    
-    return JSONResponse({
-        "status": "processed",
-        "score": score,
-        "status_label": status,
-        "answers_count": len(state.answers)
-    })
+        background_tasks.add_task(
+            update_contact_tag, contact_id, location_id, "Cold Lead"
+        )
+
+    logger.info(
+        f"Contact {contact_id} - Score: {score} ({status}), Answers: {len(state.answers)}"
+    )
+
+    return JSONResponse(
+        {
+            "status": "processed",
+            "score": score,
+            "status_label": status,
+            "answers_count": len(state.answers),
+        }
+    )
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
