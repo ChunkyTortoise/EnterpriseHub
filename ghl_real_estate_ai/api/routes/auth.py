@@ -8,7 +8,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from ghl_real_estate_ai.ghl_real_estate_ai.api.middleware import (
+from ghl_real_estate_ai.api.middleware import (
     JWTAuth,
     get_current_user,
 )

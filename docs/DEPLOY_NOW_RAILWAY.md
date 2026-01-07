@@ -22,7 +22,7 @@
 2. Add Service → Set root directory to: ghl_real_estate_ai
 3. Add environment variables:
    - GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
-   - GHL_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QmxETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As
+   - GHL_API_KEY=your_ghl_api_key_here
    - ANTHROPIC_API_KEY=sk-ant-YOUR-KEY (or placeholder)
 4. Generate domain → Copy URL
 5. Test: curl https://YOUR-URL/health
@@ -78,7 +78,7 @@ See **RAILWAY_DEPLOYMENT_GUIDE.md** for detailed walkthrough with screenshots an
 
 ```bash
 GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
-GHL_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QmxETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As
+GHL_API_KEY=your_ghl_api_key_here
 Client Email: realtorjorgesalas@gmail.com
 ```
 

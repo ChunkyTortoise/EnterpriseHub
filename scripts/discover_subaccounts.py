@@ -3,7 +3,7 @@ import json
 import os
 
 # Credentials from chat history
-AGENCY_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QmxETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As"
+AGENCY_API_KEY = "your_agency_api_key_here"
 # The provided key looks like a Location/User JWT, but let's try it as a Bearer token.
 
 def discover_locations():

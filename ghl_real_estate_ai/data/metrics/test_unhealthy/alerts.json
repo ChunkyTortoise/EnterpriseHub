@@ -278,5 +278,40 @@
     "message": "System down",
     "timestamp": "2026-01-06T17:29:15.817304",
     "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:36:26.727214",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:38:00.827301",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T17:39:53.895909",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T18:15:31.312947",
+    "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-06T18:20:47.129777",
+    "location_id": "test_unhealthy"
   }
 ]

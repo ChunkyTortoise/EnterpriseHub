@@ -1,0 +1,99 @@
+{
+  "listings": [
+    {
+      "id": "rc_001",
+      "title": "Modern Hillside Retreat",
+      "price": 1250000,
+      "bedrooms": 4,
+      "bathrooms": 3,
+      "sqft": 3200,
+      "property_type": "Single Family Home",
+      "address": {
+        "street": "12345 Hilltop Dr",
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91737",
+        "neighborhood": "Alta Loma"
+      },
+      "description": "Stunning hillside home with panoramic city views. Features a gourmet kitchen, infinity pool, and open-concept living space.",
+      "listing_url": "https://example.com/rc-001",
+      "status": "Active"
+    },
+    {
+      "id": "rc_002",
+      "title": "Victoria Gardens Luxury Condo",
+      "price": 645000,
+      "bedrooms": 2,
+      "bathrooms": 2,
+      "sqft": 1450,
+      "property_type": "Condo",
+      "address": {
+        "street": "789 Shoppers Ln",
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91739",
+        "neighborhood": "Victoria Gardens"
+      },
+      "description": "Walk to everything! Modern luxury condo in the heart of Victoria Gardens. High ceilings and premium finishes throughout.",
+      "listing_url": "https://example.com/rc-002",
+      "status": "Pending"
+    },
+    {
+      "id": "rc_003",
+      "title": "Family Oasis with Guest House",
+      "price": 985000,
+      "bedrooms": 5,
+      "bathrooms": 4,
+      "sqft": 2800,
+      "property_type": "Single Family Home",
+      "address": {
+        "street": "456 Family Way",
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91730",
+        "neighborhood": "Deer Creek"
+      },
+      "description": "Perfect for multi-generational living. Main house features 4BR/3BA and the detached guest house offers 1BR/1BA.",
+      "listing_url": "https://example.com/rc-003",
+      "status": "Active"
+    },
+    {
+      "id": "rc_004",
+      "title": "Charming North RC Starter",
+      "price": 725000,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "sqft": 1800,
+      "property_type": "Single Family Home",
+      "address": {
+        "street": "321 Oak St",
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91701",
+        "neighborhood": "North Rancho"
+      },
+      "description": "Cozy family home in a quiet cul-de-sac. Large backyard with fruit trees and new HVAC system.",
+      "listing_url": "https://example.com/rc-004",
+      "status": "Active"
+    },
+    {
+      "id": "rc_005",
+      "title": "Etiwanda High-Tech Estate",
+      "price": 1450000,
+      "bedrooms": 6,
+      "bathrooms": 5,
+      "sqft": 4500,
+      "property_type": "Estate",
+      "address": {
+        "street": "999 Tech Ct",
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91739",
+        "neighborhood": "Etiwanda"
+      },
+      "description": "Smart home integration throughout. Massive lot with outdoor kitchen, sports court, and private theater.",
+      "listing_url": "https://example.com/rc-005",
+      "status": "Active"
+    }
+  ]
+}

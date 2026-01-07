@@ -317,6 +317,48 @@
         "companyName": "TestValue"
       },
       "installed_at": "2026-01-07T01:29:10.772537"
+    },
+    {
+      "installation_id": "c4caf50a-e484-4602-9162-2a9402abd7b7",
+      "template_id": "tmpl_003",
+      "template_name": "Appointment Reminder Series",
+      "workflow_id": "619e14e5-2d43-41cb-ae2e-c5bfbaec92c0",
+      "tenant_id": "test_user",
+      "customizations": {},
+      "installed_at": "2026-01-07T02:15:25.861336"
+    },
+    {
+      "installation_id": "3129c7ee-8255-480c-b786-bac357b24cbc",
+      "template_id": "tmpl_001",
+      "template_name": "New Lead Welcome Sequence",
+      "workflow_id": "6661e1b1-024d-4fce-be39-aac0e8a85903",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agentName": "TestValue",
+        "companyName": "TestValue"
+      },
+      "installed_at": "2026-01-07T02:15:25.868051"
+    },
+    {
+      "installation_id": "c417c4af-4c9c-46b2-b209-2fba0a53789f",
+      "template_id": "tmpl_003",
+      "template_name": "Appointment Reminder Series",
+      "workflow_id": "6ba1de7f-ac8e-4085-b4b4-066a4b97889d",
+      "tenant_id": "test_user",
+      "customizations": {},
+      "installed_at": "2026-01-07T02:20:41.484286"
+    },
+    {
+      "installation_id": "271fa955-1c6c-434e-becb-b513ffd20ffb",
+      "template_id": "tmpl_001",
+      "template_name": "New Lead Welcome Sequence",
+      "workflow_id": "8b2bbec7-18c6-4367-bd3a-f7a074fde9bb",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agentName": "TestValue",
+        "companyName": "TestValue"
+      },
+      "installed_at": "2026-01-07T02:20:41.491119"
     }
   ]
 }

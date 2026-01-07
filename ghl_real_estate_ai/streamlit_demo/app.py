@@ -21,30 +21,35 @@ if str(parent_root) not in sys.path:
 import json
 from pathlib import Path
 
-# Import services
+# Import services - using proper parent path
 try:
+    # Ensure parent directory is in path for imports
+    parent_services = Path(__file__).parent.parent
+    if str(parent_services) not in sys.path:
+        sys.path.insert(0, str(parent_services))
+    
     from services.lead_scorer import LeadScorer
     from services.ai_smart_segmentation import AISmartSegmentationService
     from services.deal_closer_ai import DealCloserAI
     from services.commission_calculator import CommissionCalculator, CommissionType, DealStage
     from services.meeting_prep_assistant import MeetingPrepAssistant, MeetingType
     from services.executive_dashboard import ExecutiveDashboardService
-    from services.quality_assurance import QualityAssuranceService
-    from services.revenue_attribution import RevenueAttributionService
-    from services.competitive_benchmarking import CompetitiveBenchmarkingService
+    from services.quality_assurance import QualityAssuranceEngine
+    from services.revenue_attribution import RevenueAttributionEngine
+    from services.competitive_benchmarking import BenchmarkingEngine
     from services.agent_coaching import AgentCoachingService
     from services.smart_document_generator import SmartDocumentGenerator, DocumentType
     from services.predictive_scoring import PredictiveLeadScorer
     from services.ai_content_personalization import AIContentPersonalizationService
-    from services.workflow_marketplace import WorkflowMarketplace
-    from services.auto_followup_sequences import AutoFollowupSequences
+    from services.workflow_marketplace import WorkflowMarketplaceService
+    from services.auto_followup_sequences import AutoFollowUpSequences
+    from services.property_matcher import PropertyMatcher
+    
+    SERVICES_LOADED = True
 except ImportError as e:
-    # Fallback for different directory structures
-    st.error(f"Error importing services: {e}")
-    # Try alternate import path if necessary
-    sys.path.append(str(Path(__file__).parent))
-    from services.lead_scorer import LeadScorer
-    # ... other imports could be handled here or fail gracefully
+    st.error(f"⚠️ Error importing services: {e}")
+    st.error("Please ensure you're running from the correct directory")
+    SERVICES_LOADED = False
 
 # Helper function to load data
 def load_mock_data():
@@ -56,7 +61,10 @@ def load_mock_data():
 
 # Initialize services
 @st.cache_resource
-def get_services():
+def get_services(market="Austin"):
+    listings_file = "property_listings.json" if market == "Austin" else "property_listings_rancho.json"
+    listings_path = Path(__file__).parent.parent / "data" / "knowledge_base" / listings_file
+    
     return {
         "lead_scorer": LeadScorer(),
         "segmentation": AISmartSegmentationService(),
@@ -67,16 +75,14 @@ def get_services():
         "meeting_prep": MeetingPrepAssistant(),
         "executive": ExecutiveDashboardService(),
         "doc_gen": SmartDocumentGenerator(),
-        "qa": QualityAssuranceService(),
-        "revenue": RevenueAttributionService(),
-        "benchmarking": CompetitiveBenchmarkingService(),
+        "qa": QualityAssuranceEngine(),
+        "revenue": RevenueAttributionEngine(),
+        "benchmarking": BenchmarkingEngine(),
         "coaching": AgentCoachingService(),
-        "sequences": AutoFollowupSequences(),
-        "marketplace": WorkflowMarketplace()
+        "sequences": AutoFollowUpSequences(),
+        "marketplace": WorkflowMarketplaceService(),
+        "property_matcher": PropertyMatcher(listings_path=str(listings_path))
     }
-
-services = get_services()
-mock_data = load_mock_data()
 
 # Page config
 st.set_page_config(
@@ -88,6 +94,23 @@ st.set_page_config(
         'About': "AI-Powered Lead Qualification System for Real Estate Professionals"
     }
 )
+
+# Sidebar - Settings (Early for service init)
+with st.sidebar:
+    st.markdown("### ⚙️ AI Configuration")
+    selected_market = st.selectbox("Select Market:", ["Austin, TX", "Rancho Cucamonga, CA"])
+    market_key = "Austin" if "Austin" in selected_market else "Rancho"
+    
+    ai_tone = st.select_slider(
+        "AI Voice Tone:",
+        options=["Professional", "Natural", "Direct/Casual"],
+        value="Natural"
+    )
+    
+    st.markdown("---")
+
+services = get_services(market=market_key)
+mock_data = load_mock_data()
 
 # Load custom CSS
 css_path = Path(__file__).parent / "assets" / "styles.css"
@@ -389,8 +412,10 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
     st.header("🧠 Lead Intelligence Hub")
     st.markdown("*Deep dive into individual leads with AI-powered insights*")
     
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "🎯 Lead Scoring",
+        "🏠 Property Matcher (Phase 2)",
+        "🌐 Buyer Portal (Phase 3)",
         "📊 Segmentation",
         "🎨 Personalization",
         "🔮 Predictions"
@@ -404,42 +429,53 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         with col_map:
             st.markdown("#### 📍 Hot Lead Clusters")
             # Generate mock map data
-            map_data = pd.DataFrame({
-                'lat': [30.2672, 30.2700, 30.2500, 30.2800, 30.2600],
-                'lon': [-97.7431, -97.7500, -97.7300, -97.7600, -97.7400],
-                'type': ['Hot', 'Hot', 'Warm', 'Cold', 'Hot'],
-                'value': [100, 80, 50, 20, 90]
-            })
+            if market_key == "Rancho":
+                map_data = pd.DataFrame({
+                    'lat': [34.1200, 34.1100, 34.1000, 34.1300, 34.1150],
+                    'lon': [-117.5700, -117.5800, -117.5600, -117.5900, -117.5750],
+                    'type': ['Hot', 'Hot', 'Warm', 'Cold', 'Hot'],
+                    'value': [100, 80, 50, 20, 90]
+                })
+            else:
+                map_data = pd.DataFrame({
+                    'lat': [30.2672, 30.2700, 30.2500, 30.2800, 30.2600],
+                    'lon': [-97.7431, -97.7500, -97.7300, -97.7600, -97.7400],
+                    'type': ['Hot', 'Hot', 'Warm', 'Cold', 'Hot'],
+                    'value': [100, 80, 50, 20, 90]
+                })
             
             st.map(map_data, zoom=11, use_container_width=True)
-            st.caption("Real-time visualization of high-value lead activity")
+            st.caption(f"Real-time visualization of high-value lead activity in {selected_market}")
 
         with col_details:
             # Lead selector with mapping to context
             lead_options = {
             "Sarah Johnson": {
                 "extracted_preferences": {
-                    "budget": 400000,
-                    "location": "Downtown",
+                    "budget": 1300000 if market_key == "Rancho" else 800000,
+                    "location": "Alta Loma" if market_key == "Rancho" else "Downtown",
                     "timeline": "ASAP",
-                    "bedrooms": 3,
-                    "bathrooms": 2,
+                    "bedrooms": 4,
+                    "bathrooms": 3,
                     "must_haves": "Pool",
                     "financing": "Pre-approved",
                     "motivation": "Relocating for work",
-                    "home_condition": "Excellent"
+                    "home_condition": "Excellent",
+                    "property_type": "Single Family Home"
                 }
             },
             "Mike Chen": {
                 "extracted_preferences": {
-                    "location": "Suburbs",
+                    "location": "Victoria Gardens" if market_key == "Rancho" else "Suburbs",
                     "timeline": "6 months",
-                    "bedrooms": 4
+                    "bedrooms": 2,
+                    "budget": 700000 if market_key == "Rancho" else 450000,
+                    "property_type": "Condo"
                 }
             },
             "Emily Davis": {
                 "extracted_preferences": {
-                    "budget": 300000
+                    "budget": 1000000 if market_key == "Rancho" else 300000
                 }
             }
         }
@@ -478,8 +514,96 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         st.markdown("#### Recommended Actions")
         for action in result["recommended_actions"]:
             st.markdown(f"- {action}")
-    
+
     with tab2:
+        st.subheader("🏠 Smart Property Matcher")
+        st.markdown("*Phase 2: Automatically connecting lead preferences to your inventory*")
+        
+        # Use the same selected lead
+        current_prefs = lead_options[selected_lead_name]["extracted_preferences"]
+        
+        col_p1, col_p2 = st.columns([1, 2])
+        with col_p1:
+            st.markdown("#### Lead Criteria")
+            for k, v in current_prefs.items():
+                st.write(f"**{k.replace('_', ' ').title()}:** {v}")
+            
+            if st.button("🔄 Refresh Matches"):
+                st.rerun()
+
+        with col_p2:
+            st.markdown(f"#### Top Matches in {selected_market}")
+            matches = services["property_matcher"].find_matches(current_prefs)
+            
+            if not matches:
+                st.warning("No perfect matches found. Try broadening the criteria.")
+            else:
+                for match in matches:
+                    # Visual Card Container
+                    with st.container(border=True):
+                        c1, c2 = st.columns([2, 1])
+                        with c1:
+                            match_pct = int(match['match_score']*100)
+                            badge_color = "green" if match_pct > 85 else "blue"
+                            st.markdown(f"### {match['title']}")
+                            st.markdown(f"**💰 ${match['price']:,}** | <span style='background-color: {badge_color}; color: white; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem;'>{match_pct}% MATCH</span>", unsafe_allow_html=True)
+                            st.write(f"📍 {match['address']['neighborhood']} | {match['bedrooms']}BR / {match['bathrooms']}BA")
+                        with c2:
+                            st.markdown(f"<div style='text-align: right; color: gray; font-size: 0.8rem;'>ID: {match['id']}</div>", unsafe_allow_html=True)
+                            if st.button(f"🚀 Send SMS", key=f"send_{match['id']}", use_container_width=True):
+                                sms_text = services["property_matcher"].format_match_for_sms(match)
+                                if ai_tone == "Direct/Casual":
+                                    sms_text = f"Hey {selected_lead_name}! Just found this: " + sms_text.replace("Check it out:", "You'll love it -")
+                                st.success("Queued for GHL SMS")
+                                st.code(sms_text)
+                        
+                        with st.expander("View AI Reasoning"):
+                            st.write(f"AI matched this listing because it falls within {selected_lead_name}'s budget of ${current_prefs.get('budget', 0):,} and is located in the preferred area of {current_prefs.get('location', 'Unknown')}.")
+
+    with tab3:
+        st.subheader("🌐 Self-Service Buyer Portal")
+        st.markdown("*Phase 3: Give leads their own dashboard to update criteria*")
+        
+        st.info(f"Each lead gets a unique link like: `portal.jorgesalas.ai/l/{selected_lead_name.lower().replace(' ', '-')}`")
+        
+        # Preview of the portal
+        st.markdown("#### 📱 Portal Preview (Lead's View)")
+        
+        # Center the mobile mockup
+        _, center_col, _ = st.columns([1, 2, 1])
+        
+        with center_col:
+            portal_container = st.container(border=True)
+            with portal_container:
+                st.markdown("""
+                <div style='background: #f0f2f6; padding: 10px; border-radius: 15px 15px 0 0; text-align: center; border-bottom: 1px solid #ddd;'>
+                    <span style='font-size: 0.7rem; color: #666;'>🔒 portal.jorgesalas.ai</span>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(f"<h3 style='text-align: center; margin-top: 1rem;'>Hey {selected_lead_name}! 👋</h3>", unsafe_allow_html=True)
+                st.markdown("<p style='text-align: center; font-size: 0.9rem; opacity: 0.8;'>I've filtered the best Rancho homes for you.</p>", unsafe_allow_html=True)
+                
+                p_new_budget = st.slider("Max Budget", 500000, 2000000, current_prefs.get('budget', 1000000), step=50000)
+                
+                st.markdown("---")
+                
+                # Simple list of images/cards
+                portal_matches = services["property_matcher"].find_matches({"budget": p_new_budget, "location": current_prefs.get('location')}, limit=2)
+                for pm in portal_matches:
+                    st.markdown(f"""
+                    <div style='background: white; padding: 1rem; border-radius: 10px; border: 1px solid #eee; margin-bottom: 1rem; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.05);'>
+                        <div style='font-weight: 700; color: #006AFF;'>${pm['price']:,}</div>
+                        <div style='font-size: 0.85rem; font-weight: 600;'>{pm['title']}</div>
+                        <div style='font-size: 0.75rem; color: #666;'>{pm['bedrooms']} BR | {pm['bathrooms']} BA | {pm['address']['neighborhood']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                if st.button("Update My Search", use_container_width=True):
+                    st.balloons()
+                    st.success("Synced to GHL!")
+    
+    with tab4:
         st.subheader("Smart Segmentation")
         
         # Prepare lead data from mock_data
@@ -527,7 +651,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         else:
             st.info("No lead data available for segmentation.")
         
-    with tab3:
+    with tab5:
         st.subheader("Content Personalization")
         
         selected_lead_p = st.selectbox("Select Lead for Personalization:", list(lead_options.keys()), key="p_lead")
@@ -563,7 +687,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
                 st.caption(rec['why_recommended'])
                 st.button(f"View {rec['property_id']}", key=f"btn_{rec['property_id']}")
 
-    with tab4:
+    with tab6:
         st.subheader("Predictive Scoring")
         
         selected_lead_pred = st.selectbox("Select Lead for Prediction:", list(lead_options.keys()), key="pred_lead")
@@ -614,31 +738,67 @@ elif selected_hub == "🤖 Automation Studio":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### 🤖 Smart AI Features")
+            st.markdown("#### 🤖 Core AI Agents")
             
-            ai_assistant = st.toggle("AI Assistant (Qualification)", value=True)
+            ai_assistant = st.toggle("AI Qualifier (Phase 1)", value=True)
             if ai_assistant:
-                st.success("✅ Active - Qualifying new leads via SMS")
-            else:
-                st.warning("⚠️ Inactive - Manual qualification required")
+                st.success("✅ Active - Extracting criteria via SMS")
             
-            auto_followup = st.toggle("Auto Follow-Up Sequences", value=True)
-            if auto_followup:
-                st.success("✅ Active - Nurturing 47 leads")
+            smart_matcher = st.toggle("Property Matcher (Phase 2)", value=True)
+            if smart_matcher:
+                st.success("✅ Active - Auto-suggesting listings")
             
-            hot_lead_lane = st.toggle("Hot Lead Fast Lane", value=True)
-            if hot_lead_lane:
-                st.success("✅ Active - 8 leads in priority queue")
-        
+            buyer_portal = st.toggle("Buyer Portal Sync (Phase 3)", value=True)
+            
         with col2:
-            st.markdown("#### 🎯 Behavioral Triggers")
+            st.markdown("#### ⚡ Phase 4: Follow-Up Triggers")
             
-            property_views = st.toggle("Property View Tracking", value=True)
-            email_opens = st.toggle("Email Engagement Scoring", value=True)
-            calendar_sync = st.toggle("Calendar Appointment Sync", value=False)
+            st.toggle("New Listing SMS Alerts", value=True, help="Texts lead when a match hits the market")
+            st.toggle("Price Drop Re-engagement", value=True, help="Follows up if a favorite home drops in price")
+            st.toggle("30-Day 'Cold Lead' Revive", value=False, help="Conversational check-in for dormant leads")
             
         st.markdown("---")
-        st.info("💡 **Pro Tip:** Toggle AI Assistant ON/OFF to control when AI engages with leads")
+        
+        st.subheader("🧪 AI Training Lab")
+        st.markdown("*Adjust how the AI 'sounds' to your leads*")
+        
+        # Dynamic prompt preview based on sidebar slider
+        base_prompt = ""
+        if ai_tone == "Professional":
+            base_prompt = "You are a senior real estate advisor. Use formal language, emphasize market data, and maintain a polite, service-oriented distance."
+        elif ai_tone == "Natural":
+            base_prompt = "You are a helpful assistant on Jorge's team. Be friendly, use first names, and keep sentences concise but helpful."
+        else: # Direct/Casual
+            base_prompt = "You are Jorge. Be extremely direct and casual. Skip the fluff. Get the budget and location ASAP so we don't waste time."
+            
+        st.text_area("Live System Prompt (What the AI is thinking):", value=base_prompt, height=100)
+        
+        st.markdown("#### 💬 Live Voice Simulator")
+        st.markdown("*Type a message below to see how the AI responds in **" + ai_tone + "** mode:*")
+        
+        test_input = st.text_input("Test Lead Message:", placeholder="Ex: 'I'm looking for a 3-bed home in Rancho near Victoria Gardens'")
+        
+        if test_input:
+            with st.chat_message("assistant"):
+                if ai_tone == "Professional":
+                    st.write(f"Thank you for reaching out to Jorge's team. I have noted your interest in the {market_key} area. Based on current market trends, a 3-bedroom property in that specific neighborhood typically commands a premium. May I ask what your anticipated budget range is for this acquisition?")
+                elif ai_tone == "Natural":
+                    st.write(f"That sounds like a great area! Victoria Gardens is super popular right now. I'd love to help you find a 3-bed there. To narrow it down for Jorge, what's the budget range you're hoping to stay within?")
+                else: # Direct/Casual
+                    st.write(f"Got it. 3-beds in {market_key} are moving fast. What's your max budget? I'll see what we have in the inventory right now so we don't waste time.")
+            
+            st.caption(f"✨ This response is generated using the **{ai_tone}** persona profile.")
+        
+        st.markdown("---")
+        st.subheader("🔗 GoHighLevel Sync Log")
+        st.markdown("*Real-time data flowing between AI and your CRM*")
+        
+        log_data = [
+            {"time": "10:45 AM", "event": "Preference Extracted", "detail": "Budget: $1.3M (Sarah Johnson)", "ghl_field": "contact.budget"},
+            {"time": "10:46 AM", "event": "GHL Sync Complete", "detail": "Updated Custom Field", "ghl_field": "contact.preferred_area"},
+            {"time": "11:02 AM", "event": "Phase 2 Match", "detail": "Sent 3 RC Listings via SMS", "ghl_field": "contact.tags -> AI-Matched"},
+        ]
+        st.table(log_data)
     
     with tab2:
         st.subheader("Auto Follow-Up Sequences")

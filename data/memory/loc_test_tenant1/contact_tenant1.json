@@ -1,0 +1,9 @@
+{
+  "messages": [
+    "Secret tenant 1 data"
+  ],
+  "lead_score": 75,
+  "sensitive_info": "Tenant 1 private info",
+  "updated_at": "2026-01-07T01:40:05.701904",
+  "location_id": "loc_test_tenant1"
+}

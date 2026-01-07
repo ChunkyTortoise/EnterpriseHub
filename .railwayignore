@@ -4,6 +4,25 @@ ghl_real_estate_ai/.chroma_db/
 _archive_v1_20260104/
 .chroma_db/
 
+# Exclude root-level heavy folders
+assets/
+htmlcov/
+_archive/
+portfolio/
+docs/
+modules/
+pages/
+tests/
+utils/
+scripts/
+scenarios/
+prompts/
+data/
+.agent/
+.chroma_db/
+.github/
+JORGE_DELIVERY_PACKAGE/
+
 # Python
 __pycache__/
 *.py[cod]
