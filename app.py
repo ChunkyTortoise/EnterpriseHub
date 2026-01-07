@@ -19,25 +19,114 @@ PROJECT_ROOT = BASE_DIR / "ghl_real_estate_ai"
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-# Import services
+# --- ROBUST SERVICE IMPORTS ---
+class MockService:
+    """Fallback for missing services to prevent app crash"""
+    def __init__(self, *args, **kwargs): pass
+    def __getattr__(self, name):
+        def method(*args, **kwargs): return {}
+        return method
+
+# Individual service imports with fallbacks
 try:
     from services.lead_scorer import LeadScorer
+except ImportError:
+    st.warning("LeadScorer unavailable, using mock.")
+    LeadScorer = MockService
+
+try:
     from services.ai_smart_segmentation import AISmartSegmentationService
+except ImportError:
+    st.warning("Segmentation Service unavailable, using mock.")
+    AISmartSegmentationService = MockService
+
+try:
     from services.deal_closer_ai import DealCloserAI
+except ImportError:
+    st.warning("DealCloser AI unavailable, using mock.")
+    DealCloserAI = MockService
+
+try:
     from services.commission_calculator import CommissionCalculator, CommissionType, DealStage
+except ImportError:
+    st.warning("Commission Calculator unavailable, using mock.")
+    CommissionCalculator = MockService
+    class CommissionType: BUYER_AGENT=1; SELLER_AGENT=2; DUAL_AGENCY=3
+    class DealStage: CLOSED=1
+
+try:
     from services.meeting_prep_assistant import MeetingPrepAssistant, MeetingType
+except ImportError:
+    st.warning("Meeting Prep unavailable, using mock.")
+    MeetingPrepAssistant = MockService
+    class MeetingType: DISCOVERY=1
+
+try:
     from services.executive_dashboard import ExecutiveDashboardService
+except ImportError:
+    st.warning("Executive Dashboard unavailable, using mock.")
+    ExecutiveDashboardService = MockService
+
+try:
     from services.quality_assurance import QualityAssuranceService
-    from services.revenue_attribution import RevenueAttributionService
+except ImportError:
+    st.warning("QA Service unavailable, using mock.")
+    QualityAssuranceService = MockService
+
+try:
+    from services.revenue_attribution import RevenueAttributionEngine as RevenueAttributionService
+except ImportError:
+    st.warning("Revenue Attribution unavailable, using mock.")
+    RevenueAttributionService = MockService
+
+try:
     from services.competitive_benchmarking import CompetitiveBenchmarkingService
+except ImportError:
+    st.warning("Benchmarking unavailable, using mock.")
+    CompetitiveBenchmarkingService = MockService
+
+try:
     from services.agent_coaching import AgentCoachingService
+except ImportError:
+    st.warning("Agent Coaching unavailable, using mock.")
+    AgentCoachingService = MockService
+
+try:
     from services.smart_document_generator import SmartDocumentGenerator, DocumentType
+except ImportError:
+    st.warning("Doc Generator unavailable, using mock.")
+    SmartDocumentGenerator = MockService
+    class DocumentType: LISTING_AGREEMENT=1
+
+try:
     from services.predictive_scoring import PredictiveLeadScorer
+except ImportError:
+    st.warning("Predictive Scorer unavailable, using mock.")
+    PredictiveLeadScorer = MockService
+
+try:
     from services.ai_content_personalization import AIContentPersonalizationService
+except ImportError:
+    st.warning("Personalization unavailable, using mock.")
+    AIContentPersonalizationService = MockService
+
+try:
     from services.workflow_marketplace import WorkflowMarketplace
+except ImportError:
+    st.warning("Workflow Marketplace unavailable, using mock.")
+    WorkflowMarketplace = MockService
+
+try:
     from services.auto_followup_sequences import AutoFollowupSequences
-except ImportError as e:
-    st.error(f"Error importing services: {e}")
+except ImportError:
+    st.warning("Auto Followup unavailable, using mock.")
+    AutoFollowupSequences = MockService
+
+try:
+    from services.analytics_engine import AnalyticsEngine
+except ImportError:
+    st.warning("Analytics Engine unavailable, using mock.")
+    AnalyticsEngine = MockService
 
 # Helper function to load data
 def load_mock_data():
@@ -65,7 +154,8 @@ def get_services():
         "benchmarking": CompetitiveBenchmarkingService(),
         "coaching": AgentCoachingService(),
         "sequences": AutoFollowupSequences(),
-        "marketplace": WorkflowMarketplace()
+        "marketplace": WorkflowMarketplace(),
+        "analytics": AnalyticsEngine()
     }
 
 services = get_services()
