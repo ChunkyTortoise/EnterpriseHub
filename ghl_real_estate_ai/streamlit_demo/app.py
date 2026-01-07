@@ -8,6 +8,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from pathlib import Path
+
 # Add project root to sys.path
 # This ensures ghl_real_estate_ai.services can be found
 project_root = Path(__file__).parent.parent
@@ -19,6 +20,31 @@ if str(parent_root) not in sys.path:
 
 import json
 from pathlib import Path
+
+# Import services
+try:
+    from services.lead_scorer import LeadScorer
+    from services.ai_smart_segmentation import AISmartSegmentationService
+    from services.deal_closer_ai import DealCloserAI
+    from services.commission_calculator import CommissionCalculator, CommissionType, DealStage
+    from services.meeting_prep_assistant import MeetingPrepAssistant, MeetingType
+    from services.executive_dashboard import ExecutiveDashboardService
+    from services.quality_assurance import QualityAssuranceService
+    from services.revenue_attribution import RevenueAttributionService
+    from services.competitive_benchmarking import CompetitiveBenchmarkingService
+    from services.agent_coaching import AgentCoachingService
+    from services.smart_document_generator import SmartDocumentGenerator, DocumentType
+    from services.ai_predictive_lead_scoring import PredictiveLeadScorer
+    from services.ai_content_personalization import AIContentPersonalizationService
+    from services.workflow_marketplace import WorkflowMarketplace
+    from services.auto_followup_sequences import AutoFollowupSequences
+except ImportError as e:
+    # Fallback for different directory structures
+    st.error(f"Error importing services: {e}")
+    # Try alternate import path if necessary
+    sys.path.append(str(Path(__file__).parent))
+    from services.lead_scorer import LeadScorer
+    # ... other imports could be handled here or fail gracefully
 
 # Helper function to load data
 def load_mock_data():
@@ -51,22 +77,6 @@ def get_services():
 
 services = get_services()
 mock_data = load_mock_data()
-
-from services.lead_scorer import LeadScorer
-from services.ai_smart_segmentation import AISmartSegmentationService
-from services.deal_closer_ai import DealCloserAI
-from services.commission_calculator import CommissionCalculator, CommissionType, DealStage
-from services.meeting_prep_assistant import MeetingPrepAssistant, MeetingType
-from services.executive_dashboard import ExecutiveDashboardService
-from services.quality_assurance import QualityAssuranceService
-from services.revenue_attribution import RevenueAttributionService
-from services.competitive_benchmarking import CompetitiveBenchmarkingService
-from services.agent_coaching import AgentCoachingService
-from services.smart_document_generator import SmartDocumentGenerator, DocumentType
-from services.ai_predictive_lead_scoring import PredictiveLeadScorer
-from services.ai_content_personalization import AIContentPersonalizationService
-from services.workflow_marketplace import WorkflowMarketplace
-from services.auto_followup_sequences import AutoFollowupSequences
 
 # Page config
 st.set_page_config(
