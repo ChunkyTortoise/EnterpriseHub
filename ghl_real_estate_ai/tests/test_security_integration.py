@@ -14,6 +14,7 @@ from ghl_real_estate_ai.ghl_real_estate_ai.api.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware
 )
+from ghl_real_estate_ai.ghl_real_estate_ai.api.middleware.rate_limiter import RateLimiter
 
 
 class TestJWTAuthentication:

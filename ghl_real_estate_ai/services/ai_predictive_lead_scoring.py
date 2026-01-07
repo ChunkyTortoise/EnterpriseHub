@@ -341,18 +341,44 @@ class PredictiveLeadScorer:
     def _calculate_response_time(self, lead_data: Dict) -> float:
         """Calculate average response time in hours"""
         responses = lead_data.get("response_times", [])
-        if not responses:
+        
+        # Also check messages for response_time_seconds (common in legacy data)
+        messages = lead_data.get("messages", [])
+        msg_responses = [m.get("response_time_seconds") / 3600.0 for m in messages if m.get("response_time_seconds") is not None]
+        
+        all_responses = responses + msg_responses
+        
+        if not all_responses:
             return 48.0  # Default to 48 hours if no data
         
-        return sum(responses) / len(responses)
+        return sum(all_responses) / len(all_responses)
     
     def _calculate_budget_match(self, lead_data: Dict) -> float:
         """Calculate budget alignment score"""
         lead_budget = lead_data.get("budget", 0)
+        
+        # If budget is not in lead_data, try to extract from messages
+        if lead_budget == 0:
+            for msg in lead_data.get("messages", []):
+                content = msg.get("content", msg.get("text", "")).lower()
+                if "$" in content:
+                    import re
+                    matches = re.findall(r"\$(\d+k?)", content)
+                    if matches:
+                        val = matches[0].replace("k", "000")
+                        lead_budget = int(val)
+                        break
+
         viewed_prices = lead_data.get("viewed_property_prices", [])
         
-        if not viewed_prices or lead_budget == 0:
+        if not viewed_prices:
+            # Check for location_fit or other indicators of fit
+            if lead_data.get("location_fit"):
+                return lead_data.get("location_fit")
             return 0.5  # Default to neutral
+            
+        if lead_budget == 0:
+            return 0.5
         
         avg_viewed = sum(viewed_prices) / len(viewed_prices)
         
@@ -365,26 +391,29 @@ class PredictiveLeadScorer:
         messages = lead_data.get("messages", [])
         
         if not messages:
-            return 0.5  # Default
+            # Use lead_score as a proxy if available
+            return min(lead_data.get("lead_score", 50) / 100.0, 1.0)
         
         quality_score = 0.0
         
         for msg in messages:
+            content = msg.get("content", msg.get("text", ""))
+            
             # Longer messages = better engagement
-            length_score = min(len(msg.get("content", "")) / 200.0, 1.0) * 0.3
+            length_score = min(len(content) / 200.0, 1.0) * 0.3
             
             # Questions indicate interest
-            question_count = msg.get("content", "").count("?")
+            question_count = content.count("?")
             question_score = min(question_count / 3.0, 1.0) * 0.4
             
             # Specific details indicate seriousness
-            has_details = any(keyword in msg.get("content", "").lower() 
-                            for keyword in ["budget", "timeline", "location", "bedrooms"])
+            has_details = any(keyword in content.lower() 
+                            for keyword in ["budget", "timeline", "location", "bedrooms", "cash", "approved"])
             detail_score = 0.3 if has_details else 0.0
             
-            quality_score += (length_score + question_score + detail_score) / len(messages)
+            quality_score += (length_score + question_score + detail_score)
         
-        return min(quality_score, 1.0)
+        return min(quality_score / len(messages), 1.0)
     
     def _score_response_time(self, response_time: float) -> float:
         """Convert response time to score (faster = better)"""
