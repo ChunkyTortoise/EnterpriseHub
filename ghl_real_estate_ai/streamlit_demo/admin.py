@@ -10,9 +10,10 @@ import json
 from pathlib import Path
 
 # Add project root to sys.path
-project_root = Path(__file__).parent.parent
+# enterprisehub/ghl_real_estate_ai/streamlit_demo/admin.py
+project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
-    sys.path.append(str(project_root))
+    sys.path.insert(0, str(project_root))
 
 from ghl_real_estate_ai.services.tenant_service import TenantService
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
@@ -80,7 +81,7 @@ if page == "Tenant Management":
 
     # 2. List Registered Tenants
     st.subheader("Registered Tenants")
-    tenants_dir = Path("data/tenants")
+    tenants_dir = project_root / "data" / "tenants"
     if tenants_dir.exists():
         tenant_files = list(tenants_dir.glob("*.json"))
         if tenant_files:
@@ -105,7 +106,7 @@ elif page == "Knowledge Base":
     st.header("📚 Knowledge Base Management")
     
     # Select Tenant
-    tenants_dir = Path("data/tenants")
+    tenants_dir = project_root / "data" / "tenants"
     available_locations = ["global"]
     if tenants_dir.exists():
         available_locations.extend([f.stem for f in tenants_dir.glob("*.json")])
@@ -166,7 +167,7 @@ elif page == "Analytics":
     st.header("📊 Performance Analytics")
     
     # Select Tenant
-    tenants_dir = Path("data/tenants")
+    tenants_dir = project_root / "data" / "tenants"
     available_locations = ["global"]
     if tenants_dir.exists():
         available_locations.extend([f.stem for f in tenants_dir.glob("*.json")])

@@ -27,7 +27,7 @@ try:
     from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
     from ghl_real_estate_ai.services.bulk_operations import BulkOperationsManager
     from ghl_real_estate_ai.services.executive_dashboard import ExecutiveDashboardService
-    from ghl_real_estate_ai.services.predictive_scoring import PredictiveScoringService
+    from ghl_real_estate_ai.services.predictive_scoring import PredictiveLeadScorer
     from ghl_real_estate_ai.services.revenue_attribution import RevenueAttributionService
     from ghl_real_estate_ai.services.competitive_benchmarking import CompetitiveBenchmarkingService
     from ghl_real_estate_ai.services.quality_assurance import QualityAssuranceService
@@ -145,7 +145,7 @@ def _render_predictive_scoring():
     ui.section_header("Predictive Lead Intelligence", "Ensemble-based conversion forecasting.")
     if not SERVICES_AVAILABLE: return
     
-    predictive = PredictiveScoringService()
+    predictive = PredictiveLeadScorer()
     analysis = predictive.get_model_performance()
     
     col1, col2 = st.columns(2)

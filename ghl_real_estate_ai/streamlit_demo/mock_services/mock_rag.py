@@ -2,13 +2,43 @@
 Mock RAG Service - Property matching simulation.
 """
 import json
+import os
 from typing import List, Dict
 
 
 class MockRAGService:
     """Simulates property retrieval and matching."""
 
-    def __init__(self, knowledge_base_path: str = "data/knowledge_base/property_listings.json"):
+    def __init__(self, knowledge_base_path: str = None):
+        if knowledge_base_path is None:
+            # Priority 1: Check local data folder (Deployment / Streamlit Cloud)
+            # .../streamlit_demo/mock_services/mock_rag.py -> .../streamlit_demo/data/...
+            local_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "data", "knowledge_base", "property_listings.json"
+            )
+
+            # Priority 2: Check project root (Development)
+            # enterprisehub/ghl_real_estate_ai/streamlit_demo/mock_services/mock_rag.py
+            # -> enterprisehub/data/knowledge_base/property_listings.json
+            project_root_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+                "data", "knowledge_base", "property_listings.json"
+            )
+            
+            # Priority 3: Check ghl_real_estate_ai root (Intermediate)
+            ghl_root_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                "data", "knowledge_base", "property_listings.json"
+            )
+
+            if os.path.exists(local_path):
+                knowledge_base_path = local_path
+            elif os.path.exists(ghl_root_path):
+                knowledge_base_path = ghl_root_path
+            else:
+                knowledge_base_path = project_root_path
+
         # Load actual property data
         with open(knowledge_base_path, 'r') as f:
             data = json.load(f)

@@ -13,9 +13,10 @@ import plotly.graph_objects as go
 from collections import defaultdict
 
 # Add project root to sys.path
-project_root = Path(__file__).parent.parent
+# enterprisehub/ghl_real_estate_ai/streamlit_demo/analytics.py
+project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
-    sys.path.append(str(project_root))
+    sys.path.insert(0, str(project_root))
 
 # Import campaign analytics
 try:
@@ -73,10 +74,18 @@ st.markdown("""
 @st.cache_data(ttl=60)
 def load_mock_data() -> Dict[str, Any]:
     """Load mock analytics data from JSON file."""
-    mock_file = project_root / "data" / "mock_analytics.json"
-    if mock_file.exists():
-        with open(mock_file, "r") as f:
-            return json.load(f)
+    # Try multiple possible paths
+    possible_paths = [
+        project_root / "data" / "mock_analytics.json",
+        project_root / "ghl_real_estate_ai" / "data" / "mock_analytics.json",
+        Path(__file__).parent / "data" / "mock_analytics.json"
+    ]
+    
+    for mock_file in possible_paths:
+        if mock_file.exists():
+            with open(mock_file, "r") as f:
+                return json.load(f)
+    
     return {
         "tenants": [],
         "conversations": [],
