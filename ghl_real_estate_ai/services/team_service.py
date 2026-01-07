@@ -3,13 +3,16 @@ Team Management Service for GHL Real Estate AI.
 
 Handles agent profiles, team structure, and lead assignment logic.
 """
+
 import json
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class TeamManager:
     """
@@ -31,25 +34,25 @@ class TeamManager:
     def _load_agents(self) -> Dict[str, Any]:
         """Load agent data from file."""
         if self.agents_file.exists():
-            with open(self.agents_file, 'r') as f:
+            with open(self.agents_file, "r") as f:
                 return json.load(f)
         return {}
 
     def _load_assignments(self) -> Dict[str, Any]:
         """Load assignment data from file."""
         if self.assignments_file.exists():
-            with open(self.assignments_file, 'r') as f:
+            with open(self.assignments_file, "r") as f:
                 return json.load(f)
         return {"last_index": -1, "mapping": {}}
 
     def _save_agents(self):
         """Save agent data to file."""
-        with open(self.agents_file, 'w') as f:
+        with open(self.agents_file, "w") as f:
             json.dump(self.agents, f, indent=2)
 
     def _save_assignments(self):
         """Save assignment data to file."""
-        with open(self.assignments_file, 'w') as f:
+        with open(self.assignments_file, "w") as f:
             json.dump(self.assignments, f, indent=2)
 
     def add_agent(
@@ -58,7 +61,7 @@ class TeamManager:
         name: str,
         email: str,
         role: str = "agent",
-        specialties: List[str] = None
+        specialties: List[str] = None,
     ):
         """Add a new agent to the team."""
         self.agents[agent_id] = {
@@ -72,9 +75,9 @@ class TeamManager:
                 "total_leads": 0,
                 "converted_leads": 0,
                 "avg_response_time": 0,
-                "rating": 5.0
+                "rating": 5.0,
             },
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         }
         self._save_agents()
         logger.info(f"Added agent {name} ({agent_id}) to location {self.location_id}")
@@ -87,7 +90,9 @@ class TeamManager:
         """List all agents in the location."""
         return [a for a in self.agents.values() if a["status"] == status]
 
-    def assign_lead(self, contact_id: str, criteria: Dict[str, Any] = None) -> Optional[str]:
+    def assign_lead(
+        self, contact_id: str, criteria: Dict[str, Any] = None
+    ) -> Optional[str]:
         """
         Assign a lead to an agent using Round Robin or criteria matching.
         """
@@ -97,26 +102,34 @@ class TeamManager:
 
         active_agents = self.list_agents()
         if not active_agents:
-            logger.warning(f"No active agents available for assignment in {self.location_id}")
+            logger.warning(
+                f"No active agents available for assignment in {self.location_id}"
+            )
             return None
 
         # Round Robin Logic
-        self.assignments["last_index"] = (self.assignments["last_index"] + 1) % len(active_agents)
+        self.assignments["last_index"] = (self.assignments["last_index"] + 1) % len(
+            active_agents
+        )
         selected_agent = active_agents[self.assignments["last_index"]]
-        
+
         agent_id = selected_agent["id"]
         self.assignments["mapping"][contact_id] = agent_id
-        
+
         # Update agent metrics
         self.agents[agent_id]["metrics"]["total_leads"] += 1
-        
+
         self._save_assignments()
         self._save_agents()
-        
-        logger.info(f"Assigned lead {contact_id} to agent {selected_agent['name']} ({agent_id})")
+
+        logger.info(
+            f"Assigned lead {contact_id} to agent {selected_agent['name']} ({agent_id})"
+        )
         return agent_id
 
-    def update_agent_performance(self, agent_id: str, conversion: bool = False, rating: float = None):
+    def update_agent_performance(
+        self, agent_id: str, conversion: bool = False, rating: float = None
+    ):
         """Update agent performance metrics."""
         if agent_id not in self.agents:
             return
@@ -124,12 +137,14 @@ class TeamManager:
         metrics = self.agents[agent_id]["metrics"]
         if conversion:
             metrics["converted_leads"] += 1
-        
+
         if rating is not None:
             # Weighted average for rating
             current_rating = metrics.get("rating", 5.0)
             total_leads = metrics.get("total_leads", 1)
-            metrics["rating"] = round((current_rating * (total_leads - 1) + rating) / total_leads, 2)
+            metrics["rating"] = round(
+                (current_rating * (total_leads - 1) + rating) / total_leads, 2
+            )
 
         self._save_agents()
 
@@ -141,13 +156,15 @@ class TeamManager:
             leads = metrics["total_leads"]
             conv = metrics["converted_leads"]
             rate = (conv / leads * 100) if leads > 0 else 0
-            
-            leaderboard.append({
-                "name": agent["name"],
-                "total_leads": leads,
-                "conversions": conv,
-                "conversion_rate": round(rate, 1),
-                "rating": metrics["rating"]
-            })
-            
+
+            leaderboard.append(
+                {
+                    "name": agent["name"],
+                    "total_leads": leads,
+                    "conversions": conv,
+                    "conversion_rate": round(rate, 1),
+                    "rating": metrics["rating"],
+                }
+            )
+
         return sorted(leaderboard, key=lambda x: x["conversion_rate"], reverse=True)

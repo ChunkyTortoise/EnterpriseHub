@@ -34,7 +34,7 @@ try:
     from services.competitive_benchmarking import CompetitiveBenchmarkingService
     from services.agent_coaching import AgentCoachingService
     from services.smart_document_generator import SmartDocumentGenerator, DocumentType
-    from services.ai_predictive_lead_scoring import PredictiveLeadScorer
+    from services.predictive_scoring import PredictiveLeadScorer
     from services.ai_content_personalization import AIContentPersonalizationService
     from services.workflow_marketplace import WorkflowMarketplace
     from services.auto_followup_sequences import AutoFollowupSequences
@@ -280,9 +280,17 @@ if selected_hub == "🏢 Executive Command Center":
         
         st.markdown("---")
         
-        # Charts placeholder
-        st.markdown("### 📈 Revenue Trends")
-        
+        # Enterprise Color Palette
+        COLORS = {
+            'primary': '#2563eb',
+            'secondary': '#64748b',
+            'success': '#22c55e',
+            'warning': '#f59e0b',
+            'danger': '#ef4444',
+            'text': '#1e293b',
+            'grid': '#e2e8f0'
+        }
+
         # Mock data for revenue trends
         dates = pd.date_range(end=pd.Timestamp.now(), periods=6, freq='ME')
         revenue_data = {
@@ -293,16 +301,33 @@ if selected_hub == "🏢 Executive Command Center":
         df_rev = pd.DataFrame(revenue_data)
         
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=df_rev['Month'], y=df_rev['Revenue'], name='Revenue',
-                                line=dict(color='#006AFF', width=4)))
-        fig.add_trace(go.Scatter(x=df_rev['Month'], y=df_rev['Target'], name='Target',
-                                line=dict(color='#82CAFF', width=2, dash='dash')))
+        fig.add_trace(go.Scatter(
+            x=df_rev['Month'], 
+            y=df_rev['Revenue'], 
+            name='Actual Revenue',
+            line=dict(color=COLORS['primary'], width=4),
+            marker=dict(size=8),
+            fill='tozeroy',
+            fillcolor='rgba(37, 99, 235, 0.1)'
+        ))
+        fig.add_trace(go.Scatter(
+            x=df_rev['Month'], 
+            y=df_rev['Target'], 
+            name='Target Revenue',
+            line=dict(color=COLORS['secondary'], width=2, dash='dash')
+        ))
         
         fig.update_layout(
+            title="<b>Revenue Performance vs Target</b>",
             template="plotly_white",
-            margin=dict(l=20, r=20, t=20, b=20),
-            height=300,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            margin=dict(l=20, r=20, t=60, b=20),
+            height=350,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color=COLORS['text']),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            xaxis=dict(gridcolor=COLORS['grid']),
+            yaxis=dict(gridcolor=COLORS['grid'])
         )
         st.plotly_chart(fig, use_container_width=True)
         

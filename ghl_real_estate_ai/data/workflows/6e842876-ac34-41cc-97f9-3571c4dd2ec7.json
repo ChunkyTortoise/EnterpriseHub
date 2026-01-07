@@ -1,0 +1,15 @@
+{
+  "workflow_id": "6e842876-ac34-41cc-97f9-3571c4dd2ec7",
+  "name": "Appointment Reminder Series",
+  "description": "Send timely reminders before scheduled appointments (24h, 2h, 30min) to reduce no-shows by 70%.",
+  "trigger": {},
+  "actions": [],
+  "enabled": true,
+  "created_at": "2026-01-07T01:05:11.833107",
+  "updated_at": "2026-01-07T01:05:11.833110",
+  "created_by": "test_user",
+  "template_id": "tmpl_003",
+  "template_version": "1.0.0",
+  "execution_count": 0,
+  "success_count": 0
+}

@@ -20,24 +20,26 @@ Usage:
             context=lead["context"]
         )
 """
+
 import asyncio
+import json
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List
 from enum import Enum
 from pathlib import Path
-import json
+from typing import Any, Dict, List, Optional
 
+from ghl_real_estate_ai.api.schemas.ghl import MessageType
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.prompts.reengagement_templates import get_reengagement_message
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.prompts.reengagement_templates import get_reengagement_message
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.api.schemas.ghl import MessageType
 
 logger = get_logger(__name__)
 
 
 class ReengagementTrigger(Enum):
     """Re-engagement trigger levels based on time elapsed."""
+
     HOURS_24 = "24h"
     HOURS_48 = "48h"
     HOURS_72 = "72h"
@@ -54,7 +56,7 @@ class ReengagementEngine:
     def __init__(
         self,
         ghl_client: Optional[GHLClient] = None,
-        memory_service: Optional[MemoryService] = None
+        memory_service: Optional[MemoryService] = None,
     ):
         """
         Initialize re-engagement engine.
@@ -66,7 +68,9 @@ class ReengagementEngine:
         self.ghl_client = ghl_client or GHLClient()
         self.memory_service = memory_service or MemoryService(storage_type="file")
 
-    async def detect_trigger(self, context: Dict[str, Any]) -> Optional[ReengagementTrigger]:
+    async def detect_trigger(
+        self, context: Dict[str, Any]
+    ) -> Optional[ReengagementTrigger]:
         """
         Detect if a lead needs re-engagement based on time elapsed.
 
@@ -85,13 +89,17 @@ class ReengagementEngine:
         # Get last interaction timestamp
         last_interaction_str = context.get("last_interaction_at")
         if not last_interaction_str:
-            logger.warning(f"No last_interaction_at for contact {context.get('contact_id')}")
+            logger.warning(
+                f"No last_interaction_at for contact {context.get('contact_id')}"
+            )
             return None
 
         try:
             last_interaction = datetime.fromisoformat(last_interaction_str)
         except (ValueError, TypeError) as e:
-            logger.error(f"Invalid timestamp format: {last_interaction_str}, error: {e}")
+            logger.error(
+                f"Invalid timestamp format: {last_interaction_str}, error: {e}"
+            )
             return None
 
         # Calculate hours since last interaction
@@ -111,7 +119,10 @@ class ReengagementEngine:
 
         elif hours_elapsed >= 48:
             # 48-72h trigger
-            if last_trigger in [ReengagementTrigger.HOURS_48.value, ReengagementTrigger.HOURS_72.value]:
+            if last_trigger in [
+                ReengagementTrigger.HOURS_48.value,
+                ReengagementTrigger.HOURS_72.value,
+            ]:
                 logger.info(f"48h trigger already sent for {context.get('contact_id')}")
                 return None
             return ReengagementTrigger.HOURS_48
@@ -134,7 +145,7 @@ class ReengagementEngine:
         contact_name: str,
         action: Optional[str] = None,
         is_buyer: Optional[bool] = None,
-        is_seller: Optional[bool] = None
+        is_seller: Optional[bool] = None,
     ) -> str:
         """
         Get re-engagement message for specific trigger.
@@ -154,10 +165,12 @@ class ReengagementEngine:
             contact_name=contact_name,
             action=action,
             is_buyer=is_buyer,
-            is_seller=is_seller
+            is_seller=is_seller,
         )
 
-    def _determine_lead_goal(self, context: Dict[str, Any]) -> tuple[Optional[str], Optional[bool], Optional[bool]]:
+    def _determine_lead_goal(
+        self, context: Dict[str, Any]
+    ) -> tuple[Optional[str], Optional[bool], Optional[bool]]:
         """
         Determine lead's goal (buy/sell) from context.
 
@@ -188,10 +201,7 @@ class ReengagementEngine:
         return None, None, None
 
     async def send_reengagement_message(
-        self,
-        contact_id: str,
-        contact_name: str,
-        context: Dict[str, Any]
+        self, contact_id: str, contact_name: str, context: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """
         Send re-engagement message to a silent lead.
@@ -219,20 +229,18 @@ class ReengagementEngine:
             contact_name=contact_name,
             action=action,
             is_buyer=is_buyer,
-            is_seller=is_seller
+            is_seller=is_seller,
         )
 
         logger.info(
             f"Sending {trigger.value} re-engagement to {contact_id}: {message}",
-            extra={"contact_id": contact_id, "trigger": trigger.value}
+            extra={"contact_id": contact_id, "trigger": trigger.value},
         )
 
         # Send via GHL
         try:
             result = await self.ghl_client.send_message(
-                contact_id=contact_id,
-                message=message,
-                channel=MessageType.SMS
+                contact_id=contact_id, message=message, channel=MessageType.SMS
             )
 
             # Update context to track re-engagement
@@ -243,12 +251,16 @@ class ReengagementEngine:
             await self.memory_service.save_context(
                 contact_id=contact_id,
                 context=context,
-                location_id=context.get("location_id")
+                location_id=context.get("location_id"),
             )
 
             logger.info(
                 f"Successfully sent {trigger.value} re-engagement to {contact_id}",
-                extra={"contact_id": contact_id, "trigger": trigger.value, "message_id": result.get("messageId")}
+                extra={
+                    "contact_id": contact_id,
+                    "trigger": trigger.value,
+                    "message_id": result.get("messageId"),
+                },
             )
 
             return result
@@ -256,13 +268,12 @@ class ReengagementEngine:
         except Exception as e:
             logger.error(
                 f"Failed to send re-engagement to {contact_id}: {str(e)}",
-                extra={"contact_id": contact_id, "error": str(e)}
+                extra={"contact_id": contact_id, "error": str(e)},
             )
             return None
 
     async def scan_for_silent_leads(
-        self,
-        memory_dir: Optional[Path] = None
+        self, memory_dir: Optional[Path] = None
     ) -> List[Dict[str, Any]]:
         """
         Scan memory service for silent leads that need re-engagement.
@@ -298,13 +309,17 @@ class ReengagementEngine:
                     # Extract contact name from context or conversation
                     contact_name = self._extract_contact_name(context)
 
-                    silent_leads.append({
-                        "contact_id": contact_id,
-                        "contact_name": contact_name,
-                        "context": context,
-                        "trigger": trigger,
-                        "hours_since_interaction": self._calculate_hours_since(context)
-                    })
+                    silent_leads.append(
+                        {
+                            "contact_id": contact_id,
+                            "contact_name": contact_name,
+                            "context": context,
+                            "trigger": trigger,
+                            "hours_since_interaction": self._calculate_hours_since(
+                                context
+                            ),
+                        }
+                    )
 
             except Exception as e:
                 logger.error(f"Error scanning {file_path}: {str(e)}")
@@ -349,10 +364,7 @@ class ReengagementEngine:
         except (ValueError, TypeError):
             return 0.0
 
-    async def process_all_silent_leads(
-        self,
-        dry_run: bool = False
-    ) -> Dict[str, Any]:
+    async def process_all_silent_leads(self, dry_run: bool = False) -> Dict[str, Any]:
         """
         Process all silent leads and send re-engagement messages.
 
@@ -369,7 +381,7 @@ class ReengagementEngine:
             "messages_sent": 0,
             "errors": 0,
             "dry_run": dry_run,
-            "results": []
+            "results": [],
         }
 
         for lead in silent_leads:
@@ -381,39 +393,43 @@ class ReengagementEngine:
             if dry_run:
                 logger.info(
                     f"[DRY RUN] Would send {trigger.value} to {contact_id} ({contact_name})",
-                    extra={"contact_id": contact_id, "trigger": trigger.value}
+                    extra={"contact_id": contact_id, "trigger": trigger.value},
                 )
-                summary["results"].append({
-                    "contact_id": contact_id,
-                    "trigger": trigger.value,
-                    "status": "dry_run"
-                })
+                summary["results"].append(
+                    {
+                        "contact_id": contact_id,
+                        "trigger": trigger.value,
+                        "status": "dry_run",
+                    }
+                )
             else:
                 result = await self.send_reengagement_message(
-                    contact_id=contact_id,
-                    contact_name=contact_name,
-                    context=context
+                    contact_id=contact_id, contact_name=contact_name, context=context
                 )
 
                 if result:
                     summary["messages_sent"] += 1
-                    summary["results"].append({
-                        "contact_id": contact_id,
-                        "trigger": trigger.value,
-                        "status": "sent",
-                        "message_id": result.get("messageId")
-                    })
+                    summary["results"].append(
+                        {
+                            "contact_id": contact_id,
+                            "trigger": trigger.value,
+                            "status": "sent",
+                            "message_id": result.get("messageId"),
+                        }
+                    )
                 else:
                     summary["errors"] += 1
-                    summary["results"].append({
-                        "contact_id": contact_id,
-                        "trigger": trigger.value,
-                        "status": "error"
-                    })
+                    summary["results"].append(
+                        {
+                            "contact_id": contact_id,
+                            "trigger": trigger.value,
+                            "status": "error",
+                        }
+                    )
 
         logger.info(
             f"Re-engagement batch complete: {summary['messages_sent']} sent, {summary['errors']} errors",
-            extra=summary
+            extra=summary,
         )
 
         return summary
@@ -422,6 +438,7 @@ class ReengagementEngine:
 # ==============================================================================
 # CLI INTERFACE
 # ==============================================================================
+
 
 async def main():
     """CLI interface for testing re-engagement engine."""
