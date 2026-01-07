@@ -47,33 +47,92 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better mobile responsiveness
+# Custom CSS for Enterprise UI
 st.markdown("""
 <style>
-    .metric-card {
-        background-color: #f0f2f6;
-        padding: 20px;
-        border-radius: 10px;
-        margin: 10px 0;
+    /* Main Background & Typography */
+    .stApp {
+        background-color: #f8f9fa;
+        font-family: 'Inter', sans-serif;
     }
-    .stMetric {
+    
+    /* Metrics Cards */
+    div[data-testid="stMetric"] {
         background-color: white;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        transition: all 0.3s ease;
     }
-    @media (max-width: 768px) {
-        .stMetric {
-            font-size: 0.9em;
-        }
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+        border-color: #d0d0d0;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    div[data-testid="stMetricValue"] {
+        color: #1e293b;
+        font-weight: 700;
+    }
+    
+    /* Charts Containers */
+    .stPlotlyChart {
+        background-color: white;
+        border-radius: 12px;
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    
+    /* Tables */
+    div[data-testid="stTable"] {
+        background-color: white;
+        border-radius: 12px;
+        padding: 10px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    
+    /* Headers */
+    h1, h2, h3 {
+        color: #1e293b;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+    
+    /* Custom Classes */
+    .metric-card {
+        background-color: #ffffff;
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Load mock data
+# Enterprise Color Palette
+COLORS = {
+    'primary': '#2563eb',    # Blue
+    'secondary': '#64748b',  # Slate
+    'success': '#22c55e',    # Green
+    'warning': '#f59e0b',    # Amber
+    'danger': '#ef4444',     # Red
+    'info': '#3b82f6',       # Light Blue
+    'background': '#ffffff',
+    'text': '#1e293b',
+    'grid': '#e2e8f0'
+}
+
+# Load data with robust fallback
 @st.cache_data(ttl=60)
 def load_mock_data() -> Dict[str, Any]:
-    """Load mock analytics data from JSON file."""
+    """Load mock analytics data or generate fallback."""
     # Try multiple possible paths
     possible_paths = [
         project_root / "data" / "mock_analytics.json",
@@ -83,13 +142,50 @@ def load_mock_data() -> Dict[str, Any]:
     
     for mock_file in possible_paths:
         if mock_file.exists():
-            with open(mock_file, "r") as f:
-                return json.load(f)
+            try:
+                with open(mock_file, "r") as f:
+                    return json.load(f)
+            except json.JSONDecodeError:
+                pass # Fallback if corrupted
     
+    # Fallback Data Generator
+    now = datetime.now()
     return {
-        "tenants": [],
-        "conversations": [],
-        "system_health": {}
+        "tenants": [
+            {"name": "Luxury Living ATX", "location_id": "loc_123", "region": "Austin", "tier": "Enterprise"},
+            {"name": "Dallas Realty Grp", "location_id": "loc_456", "region": "Dallas", "tier": "Professional"},
+            {"name": "Houston Homes", "location_id": "loc_789", "region": "Houston", "tier": "Starter"}
+        ],
+        "conversations": [
+            {
+                "contact_id": f"c_{i}",
+                "contact_name": f"Client {i}",
+                "location_id": "loc_123" if i % 2 == 0 else "loc_456",
+                "start_time": (now - timedelta(days=i%10, hours=i%24)).isoformat(),
+                "message_count": 5 + (i * 2),
+                "lead_score": 60 + (i % 40),
+                "classification": ["hot", "warm", "cold"][i % 3],
+                "intent": ["buyer", "seller", "browsing"][i % 3],
+                "budget": f"${500 + (i*50)}k",
+                "response_time_avg_seconds": 120 - (i * 5),
+                "conversion_probability": 0.1 + (i * 0.05)
+            } for i in range(20)
+        ],
+        "system_health": {
+            "uptime_percentage": 99.98,
+            "error_rate_percentage": 0.05,
+            "total_api_calls_24h": 15430,
+            "avg_response_time_ms": 450,
+            "anthropic_api_latency_avg_ms": 1200,
+            "cache_hit_rate": 0.85,
+            "active_webhooks": 12,
+            "cpu_usage_percentage": 45,
+            "memory_usage_mb": 2048,
+            "disk_usage_gb": 10.5,
+            "sms_sent_24h": 1250,
+            "sms_compliance_rate": 0.99,
+            "anthropic_tokens_used_24h": 2500000
+        }
     }
 
 def filter_conversations_by_date(
