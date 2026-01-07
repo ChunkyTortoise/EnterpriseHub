@@ -4,12 +4,69 @@ Main Application with 5 Core Hubs
 """
 import streamlit as st
 import sys
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from pathlib import Path
+# Add project root to sys.path
+# This ensures ghl_real_estate_ai.services can be found
+project_root = Path(__file__).parent.parent
+parent_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+if str(parent_root) not in sys.path:
+    sys.path.insert(0, str(parent_root))
+
+import json
 from pathlib import Path
 
-# Add project root to sys.path
-project_root = Path(__file__).parent.parent
-if str(project_root) not in sys.path:
-    sys.path.append(str(project_root))
+# Helper function to load data
+def load_mock_data():
+    data_path = Path(__file__).parent.parent / "data" / "mock_analytics.json"
+    if data_path.exists():
+        with open(data_path) as f:
+            return json.load(f)
+    return {}
+
+# Initialize services
+@st.cache_resource
+def get_services():
+    return {
+        "lead_scorer": LeadScorer(),
+        "segmentation": AISmartSegmentationService(),
+        "predictive_scorer": PredictiveLeadScorer(),
+        "personalization": AIContentPersonalizationService(),
+        "deal_closer": DealCloserAI(),
+        "commission_calc": CommissionCalculator(),
+        "meeting_prep": MeetingPrepAssistant(),
+        "executive": ExecutiveDashboardService(),
+        "doc_gen": SmartDocumentGenerator(),
+        "qa": QualityAssuranceService(),
+        "revenue": RevenueAttributionService(),
+        "benchmarking": CompetitiveBenchmarkingService(),
+        "coaching": AgentCoachingService(),
+        "sequences": AutoFollowupSequences(),
+        "marketplace": WorkflowMarketplace()
+    }
+
+services = get_services()
+mock_data = load_mock_data()
+
+from services.lead_scorer import LeadScorer
+from services.ai_smart_segmentation import AISmartSegmentationService
+from services.deal_closer_ai import DealCloserAI
+from services.commission_calculator import CommissionCalculator, CommissionType, DealStage
+from services.meeting_prep_assistant import MeetingPrepAssistant, MeetingType
+from services.executive_dashboard import ExecutiveDashboardService
+from services.quality_assurance import QualityAssuranceService
+from services.revenue_attribution import RevenueAttributionService
+from services.competitive_benchmarking import CompetitiveBenchmarkingService
+from services.agent_coaching import AgentCoachingService
+from services.smart_document_generator import SmartDocumentGenerator, DocumentType
+from services.ai_predictive_lead_scoring import PredictiveLeadScorer
+from services.ai_content_personalization import AIContentPersonalizationService
+from services.workflow_marketplace import WorkflowMarketplace
+from services.auto_followup_sequences import AutoFollowupSequences
 
 # Page config
 st.set_page_config(
@@ -28,26 +85,88 @@ if css_path.exists():
     with open(css_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Enhanced branding header
+# Enhanced premium branding header with animations
 st.markdown("""
-<div style='background: linear-gradient(135deg, #006AFF 0%, #0052CC 100%); 
-            padding: 2rem; border-radius: 12px; margin-bottom: 2rem; color: white;'>
-    <h1 style='margin: 0; font-size: 2.5rem; font-weight: 700; color: white;'>
-        🏠 GHL Real Estate AI - Command Center
-    </h1>
-    <p style='margin: 0.5rem 0 0 0; font-size: 1.1rem; opacity: 0.95;'>
-        Professional AI-powered lead qualification and automation for Jorge Salas
-    </p>
-    <div style='margin-top: 1rem; display: flex; gap: 2rem; font-size: 0.9rem;'>
-        <span style='background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px;'>
-            ✅ AI Mode: Active
-        </span>
-        <span style='background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px;'>
-            🔗 GHL Sync: Live
-        </span>
-        <span style='background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px;'>
-            📊 Multi-Tenant Ready
-        </span>
+<div style='background: linear-gradient(135deg, #006AFF 0%, #0047AB 100%); 
+            padding: 3rem 2.5rem; 
+            border-radius: 20px; 
+            margin-bottom: 2.5rem; 
+            color: white;
+            box-shadow: 0 20px 40px rgba(0, 106, 255, 0.3);
+            position: relative;
+            overflow: hidden;'>
+    <!-- Animated background pattern -->
+    <div style='position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+                background-image: 
+                    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+                opacity: 0.6;'></div>
+    
+    <div style='position: relative; z-index: 1;'>
+        <div style='display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem;'>
+            <div style='font-size: 4rem; line-height: 1;'>🏠</div>
+            <div>
+                <h1 style='margin: 0; font-size: 2.75rem; font-weight: 800; color: white; 
+                           text-shadow: 0 2px 10px rgba(0,0,0,0.2);'>
+                    GHL Real Estate AI
+                </h1>
+                <p style='margin: 0.25rem 0 0 0; font-size: 1.15rem; opacity: 0.95; font-weight: 500;'>
+                    Enterprise Command Center
+                </p>
+            </div>
+        </div>
+        
+        <p style='margin: 1.5rem 0; font-size: 1.05rem; opacity: 0.9; max-width: 800px;'>
+            Professional AI-powered lead qualification and automation system for <strong>Jorge Salas</strong>
+        </p>
+        
+        <div style='margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;'>
+            <div style='background: rgba(255,255,255,0.25); 
+                        padding: 0.75rem 1.25rem; 
+                        border-radius: 10px;
+                        backdrop-filter: blur(10px);
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
+                <span style='font-size: 1.2rem;'>✅</span>
+                <span style='font-weight: 600;'>AI Mode: Active</span>
+            </div>
+            <div style='background: rgba(255,255,255,0.25); 
+                        padding: 0.75rem 1.25rem; 
+                        border-radius: 10px;
+                        backdrop-filter: blur(10px);
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
+                <span style='font-size: 1.2rem;'>🔗</span>
+                <span style='font-weight: 600;'>GHL Sync: Live</span>
+            </div>
+            <div style='background: rgba(255,255,255,0.25); 
+                        padding: 0.75rem 1.25rem; 
+                        border-radius: 10px;
+                        backdrop-filter: blur(10px);
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
+                <span style='font-size: 1.2rem;'>📊</span>
+                <span style='font-weight: 600;'>Multi-Tenant Ready</span>
+            </div>
+            <div style='background: rgba(16, 185, 129, 0.9); 
+                        padding: 0.75rem 1.25rem; 
+                        border-radius: 10px;
+                        backdrop-filter: blur(10px);
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        animation: pulse 2s ease-in-out infinite;'>
+                <span style='font-size: 1.2rem;'>🚀</span>
+                <span style='font-weight: 700;'>5 Hubs Live</span>
+            </div>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -90,8 +209,22 @@ with st.sidebar:
     if st.button("🔄 Refresh Data", use_container_width=True):
         st.rerun()
     
-    if st.button("📥 Export Report", use_container_width=True):
-        st.info("Export functionality coming soon")
+    # Export functionality
+    metrics_data = {
+        "Metric": ["Total Pipeline", "Hot Leads", "Conversion Rate", "Avg Deal Size"],
+        "Value": ["$2.4M", "23", "34%", "$385K"],
+        "Change": ["+15%", "+8", "+2%", "+$12K"]
+    }
+    df_metrics = pd.DataFrame(metrics_data)
+    csv = df_metrics.to_csv(index=False).encode('utf-8')
+    
+    st.download_button(
+        "📥 Export Report",
+        data=csv,
+        file_name="executive_metrics.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
     
     st.markdown("---")
     
@@ -99,7 +232,19 @@ with st.sidebar:
     st.markdown("### 📊 System Status")
     st.metric("Active Leads", "47", "+12")
     st.metric("AI Conversations", "156", "+23")
-    st.metric("Hot Leads Today", "8", "+3")
+    
+    st.markdown("---")
+    st.markdown("### 📡 Live Feed")
+    st.markdown("""
+    <div style="font-size: 0.8rem; color: #666;">
+    Creating contract for <b>John Doe</b><br>
+    <span style="color: green">● Just now</span><br><br>
+    New lead: <b>Sarah Smith</b> (Downtown)<br>
+    <span style="color: gray">● 2 mins ago</span><br><br>
+    AI handled objection: <b>Mike Ross</b><br>
+    <span style="color: gray">● 15 mins ago</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Main content area
 if selected_hub == "🏢 Executive Command Center":
@@ -127,15 +272,83 @@ if selected_hub == "🏢 Executive Command Center":
         
         # Charts placeholder
         st.markdown("### 📈 Revenue Trends")
-        st.info("💡 **Executive Dashboard:** Full metrics and charts loading from original page components...")
+        
+        # Mock data for revenue trends
+        dates = pd.date_range(end=pd.Timestamp.now(), periods=6, freq='ME')
+        revenue_data = {
+            'Month': dates.strftime('%b %Y'),
+            'Revenue': [180000, 210000, 195000, 240000, 225000, 280000],
+            'Target': [200000, 200000, 220000, 220000, 250000, 250000]
+        }
+        df_rev = pd.DataFrame(revenue_data)
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df_rev['Month'], y=df_rev['Revenue'], name='Revenue',
+                                line=dict(color='#006AFF', width=4)))
+        fig.add_trace(go.Scatter(x=df_rev['Month'], y=df_rev['Target'], name='Target',
+                                line=dict(color='#82CAFF', width=2, dash='dash')))
+        
+        fig.update_layout(
+            template="plotly_white",
+            margin=dict(l=20, r=20, t=20, b=20),
+            height=300,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        st.plotly_chart(fig, use_container_width=True)
         
     with tab2:
-        st.subheader("AI Insights")
-        st.info("💡 **AI Insights:** Real-time intelligence from lead interactions...")
+        st.subheader("AI System Insights")
         
+        # Get dynamic insights
+        summary = services["executive"].get_executive_summary("demo_location")
+        insights = summary.get("insights", [])
+        
+        if not insights:
+            insights = [
+                {"type": "success", "title": "Response Time Excellence", "message": "Average response time of 1.8 minutes beats target"},
+                {"type": "warning", "title": "Weekend Coverage", "message": "Saturday response times averaged 15 mins (Target: 5 mins)"}
+            ]
+
+        for insight in insights:
+            if insight["type"] == "success":
+                st.success(f"**{insight['title']}**: {insight['message']}")
+            elif insight["type"] == "warning":
+                st.warning(f"**{insight['title']}**: {insight['message']}")
+            else:
+                st.info(f"**{insight['title']}**: {insight['message']}")
+        
+        st.markdown("#### 📈 System Performance")
+        health = mock_data.get("system_health", {})
+        if health:
+            c1, c2, c3 = st.columns(3)
+            c1.metric("API Uptime", f"{health['uptime_percentage']}%")
+            c2.metric("Avg Latency", f"{health['avg_response_time_ms']}ms")
+            c3.metric("SMS Compliance", f"{health['sms_compliance_rate']*100}%")
+
     with tab3:
-        st.subheader("Reports")
-        st.info("💡 **Reports:** Comprehensive reporting and analytics...")
+        st.subheader("Actionable Executive Report")
+        
+        action_items = summary.get("action_items", [])
+        if not action_items:
+             action_items = [
+                {"priority": "high", "title": "5 Hot Leads Pending", "action": "Schedule showings for Downtown cluster", "impact": "Potential $2.5M Volume"},
+                {"priority": "medium", "title": "Review Weekend Staffing", "action": "Add on-call agent for Saturdays", "impact": "Improve conversion by ~5%"}
+            ]
+
+        st.dataframe(
+            pd.DataFrame(action_items),
+            column_config={
+                "priority": "Priority",
+                "title": "Opportunity",
+                "action": "Recommended Action",
+                "impact": "Estimated Impact"
+            },
+            hide_index=True,
+            use_container_width=True
+        )
+        
+        if st.button("📧 Email Report to Jorge"):
+            st.toast("Report sent to jorge@example.com")
 
 elif selected_hub == "🧠 Lead Intelligence Hub":
     st.header("🧠 Lead Intelligence Hub")
@@ -151,45 +364,208 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
     with tab1:
         st.subheader("AI Lead Scoring")
         
-        # Lead selector
-        lead_name = st.selectbox(
+        col_map, col_details = st.columns([1, 1])
+        
+        with col_map:
+            st.markdown("#### 📍 Hot Lead Clusters")
+            # Generate mock map data
+            map_data = pd.DataFrame({
+                'lat': [30.2672, 30.2700, 30.2500, 30.2800, 30.2600],
+                'lon': [-97.7431, -97.7500, -97.7300, -97.7600, -97.7400],
+                'type': ['Hot', 'Hot', 'Warm', 'Cold', 'Hot'],
+                'value': [100, 80, 50, 20, 90]
+            })
+            
+            st.map(map_data, zoom=11, use_container_width=True)
+            st.caption("Real-time visualization of high-value lead activity")
+
+        with col_details:
+            # Lead selector with mapping to context
+            lead_options = {
+            "Sarah Johnson": {
+                "extracted_preferences": {
+                    "budget": 400000,
+                    "location": "Downtown",
+                    "timeline": "ASAP",
+                    "bedrooms": 3,
+                    "bathrooms": 2,
+                    "must_haves": "Pool",
+                    "financing": "Pre-approved",
+                    "motivation": "Relocating for work",
+                    "home_condition": "Excellent"
+                }
+            },
+            "Mike Chen": {
+                "extracted_preferences": {
+                    "location": "Suburbs",
+                    "timeline": "6 months",
+                    "bedrooms": 4
+                }
+            },
+            "Emily Davis": {
+                "extracted_preferences": {
+                    "budget": 300000
+                }
+            }
+        }
+        
+        selected_lead_name = st.selectbox(
             "Select a lead:",
-            ["Sarah Johnson (Hot - 85)", "Mike Chen (Warm - 62)", "Emily Davis (Cold - 28)"]
+            list(lead_options.keys())
         )
         
-        if "Hot" in lead_name:
-            st.success("🔥 **Hot Lead** - Ready for immediate engagement")
-            
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Score", "85/100", "")
-            with col2:
-                st.metric("Engagement", "High", "")
-            with col3:
-                st.metric("Intent", "Strong", "")
-            
-            st.markdown("#### Why This Score?")
-            st.markdown("""
-            - ✅ Pre-approved for $400K
-            - ✅ Needs to move within 30 days
-            - ✅ Specific neighborhood preference
-            - ✅ Responded to 5+ qualifying questions
-            - ✅ Viewed 3 properties this week
-            """)
+        # Calculate Score using centralized service
+        lead_context = lead_options[selected_lead_name]
+        result = services["lead_scorer"].calculate_with_reasoning(lead_context)
+        
+        # Display Results
+        score = result["score"]
+        classification = result["classification"]
+        
+        if classification == "hot":
+            st.success(f"🔥 **Hot Lead** - Score: {score}/7 Questions Answered")
+        elif classification == "warm":
+            st.warning(f"⚠️ **Warm Lead** - Score: {score}/7 Questions Answered")
         else:
-            st.info("💡 **Lead Intelligence:** Full scoring breakdown and insights loading...")
+            st.info(f"❄️ **Cold Lead** - Score: {score}/7 Questions Answered")
+            
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Questions Answered", f"{score}/7", "")
+        with col2:
+            st.metric("Engagement Class", classification.title(), "")
+        with col3:
+            st.metric("Lead Intent", "Calculated", "")
+        
+        st.markdown("#### AI Analysis Breakdown")
+        st.info(f"**Qualifying Data Found:** {result['reasoning']}")
+        
+        st.markdown("#### Recommended Actions")
+        for action in result["recommended_actions"]:
+            st.markdown(f"- {action}")
     
     with tab2:
         st.subheader("Smart Segmentation")
-        st.info("💡 **Segmentation:** Lead segments and cohort analysis...")
+        
+        # Prepare lead data from mock_data
+        leads_for_segmentation = []
+        if "conversations" in mock_data:
+            for conv in mock_data["conversations"]:
+                leads_for_segmentation.append({
+                    "id": conv.get("contact_id"),
+                    "name": conv.get("contact_name"),
+                    "engagement_score": conv.get("message_count") * 10, # Mock engagement
+                    "lead_score": conv.get("lead_score"),
+                    "budget": 500000 if conv.get("budget") == "unknown" else 1500000, # Simplified
+                    "last_activity_days_ago": 2,
+                    "buyer_type": "luxury_buyer" if "lux" in conv.get("contact_id", "") else "standard",
+                    "interested_property_type": "single_family"
+                })
+
+        if leads_for_segmentation:
+            import asyncio
+            # Use the service
+            result = asyncio.run(services["segmentation"].segment_leads(leads_for_segmentation, method="behavioral"))
+            
+            # Display segments in columns
+            cols = st.columns(len(result["segments"]))
+            for i, seg in enumerate(result["segments"]):
+                with cols[i]:
+                    st.metric(seg["name"].replace("_", " ").title(), f"{seg['size']} Leads")
+            
+            # Selected segment details
+            selected_seg_name = st.selectbox("View Segment Details:", [s["name"] for s in result["segments"]])
+            selected_seg = next(s for s in result["segments"] if s["name"] == selected_seg_name)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("#### 📊 Characteristics")
+                char = selected_seg["characteristics"]
+                st.write(f"- **Avg Engagement:** {char['avg_engagement']}%")
+                st.write(f"- **Avg Lead Score:** {char['avg_lead_score']}")
+                st.write(f"- **Total Segment Value:** ${char['total_value']:,.0f}")
+                
+            with col2:
+                st.markdown("#### ⚡ Recommended Actions")
+                for action in selected_seg["recommended_actions"]:
+                    st.markdown(f"- {action}")
+        else:
+            st.info("No lead data available for segmentation.")
         
     with tab3:
         st.subheader("Content Personalization")
-        st.info("💡 **Personalization:** AI-matched properties and messaging...")
         
+        selected_lead_p = st.selectbox("Select Lead for Personalization:", list(lead_options.keys()), key="p_lead")
+        
+        import asyncio
+        # Mock lead data for personalization
+        lead_data_p = {
+            "name": selected_lead_p,
+            "budget": 650000,
+            "engagement_score": 78,
+            "last_activity_days_ago": 2,
+            "location": "Austin, TX",
+            "device": "mobile",
+            "source": "paid",
+            "preferences": {
+                "property_type": "single_family",
+                "bedrooms": 3,
+                "location": "suburban"
+            }
+        }
+        
+        p_result = asyncio.run(services["personalization"].personalize_content("lead_123", lead_data_p))
+        
+        st.write(f"**Strategy:** {p_result['personalization_suite']['overall_strategy']['focus']}")
+        
+        st.markdown("#### 🏠 Recommended Properties")
+        recs = p_result["personalization_suite"]["properties"]["recommendations"]
+        cols = st.columns(len(recs))
+        for i, rec in enumerate(recs):
+            with cols[i]:
+                st.write(f"**{rec['title']}**")
+                st.write(f"${rec['price']:,.0f}")
+                st.caption(rec['why_recommended'])
+                st.button(f"View {rec['property_id']}", key=f"btn_{rec['property_id']}")
+
     with tab4:
         st.subheader("Predictive Scoring")
-        st.info("💡 **Predictions:** ML-powered conversion predictions...")
+        
+        selected_lead_pred = st.selectbox("Select Lead for Prediction:", list(lead_options.keys()), key="pred_lead")
+        
+        # Mock lead data for prediction
+        lead_data_pred = {
+            "id": "lead_123",
+            "email_opens": 8,
+            "email_clicks": 5,
+            "emails_sent": 10,
+            "response_times": [2.5, 1.8, 3.2],
+            "page_views": 12,
+            "budget": 500000,
+            "viewed_property_prices": [480000, 520000, 495000],
+            "timeline": "soon",
+            "property_matches": 7,
+            "messages": [{"content": "I'm interested in properties in downtown."}],
+            "source": "organic"
+        }
+        
+        pred_result = services["predictive_scorer"].score_lead("lead_123", lead_data_pred)
+        
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            st.metric("Conversion Probability", f"{pred_result.score}%")
+            st.write(f"**Confidence:** {pred_result.confidence*100:.1f}%")
+            st.write(f"**Tier:** {pred_result.tier.upper()}")
+            
+        with col2:
+            st.markdown("#### 🔍 Contributing Factors")
+            for factor in pred_result.factors:
+                sentiment_icon = "✅" if factor["sentiment"] == "positive" else "ℹ️"
+                st.write(f"{sentiment_icon} **{factor['name']}:** {factor['value']} ({factor['impact']}%)")
+        
+        st.markdown("#### 🏃 Recommended Strategy")
+        for rec in pred_result.recommendations:
+            st.markdown(f"- {rec}")
 
 elif selected_hub == "🤖 Automation Studio":
     st.header("🤖 Automation Studio")
@@ -231,11 +607,42 @@ elif selected_hub == "🤖 Automation Studio":
     
     with tab2:
         st.subheader("Auto Follow-Up Sequences")
-        st.info("💡 **Sequences:** Email and SMS automation sequences...")
+        
+        perf = services["sequences"].get_sequence_performance("demo_seq")
+        
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Conversion Rate", f"{perf['metrics']['conversion_rate']*100:.1f}%")
+        col2.metric("Email Open Rate", f"{perf['channel_performance']['email']['open_rate']*100:.0f}%")
+        col3.metric("SMS Response", f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%")
+
+        # Sequence Table
+        sequences_data = [
+            {"Name": "New Lead (Buyer) - 7 Day", "Status": "Active", "Enrolled": perf['metrics']['total_enrolled'], "Open Rate": f"{perf['channel_performance']['email']['open_rate']*100:.0f}%", "Reply Rate": f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%"},
+            {"Name": "Seller Reactivation", "Status": "Active", "Enrolled": 12, "Open Rate": "75%", "Reply Rate": "35%"},
+            {"Name": "Cold Lead Win-back", "Status": "Paused", "Enrolled": 0, "Open Rate": "-", "Reply Rate": "-"},
+        ]
+        
+        st.dataframe(pd.DataFrame(sequences_data), use_container_width=True, hide_index=True)
+        
+        if st.button("➕ Create New Sequence"):
+            st.toast("Opening Sequence Builder...")
         
     with tab3:
-        st.subheader("Workflow Library")
-        st.info("💡 **Workflows:** Custom workflow templates and marketplace...")
+        st.subheader("Workflow Marketplace")
+        st.markdown("*Install pre-built real estate automations with one click*")
+        
+        # Browse marketplace
+        templates = services["marketplace"].get_featured_templates(6)
+        
+        # Display in a grid
+        cols = st.columns(3)
+        for i, t in enumerate(templates):
+            with cols[i % 3]:
+                st.markdown(f"### {t.icon} {t.name}")
+                st.write(t.description[:80] + "...")
+                st.caption(f"⭐ {t.rating} | 📥 {t.downloads_count:,} installs")
+                if st.button(f"Install", key=f"inst_{t.id}", use_container_width=True):
+                    st.success(f"Installed {t.name}!")
 
 elif selected_hub == "💰 Sales Copilot":
     st.header("💰 Sales Copilot")
@@ -250,27 +657,170 @@ elif selected_hub == "💰 Sales Copilot":
     
     with tab1:
         st.subheader("Deal Closer AI")
-        st.info("💡 **Deal Closer:** AI-powered negotiation and closing assistance...")
+        st.markdown("*Your always-on negotiation coach. Ask how to handle objections, negotiate fees, or close deals.*")
+        
+        # Initialize chat history
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+            # Add initial welcome message
+            st.session_state.messages.append({"role": "assistant", "content": "I'm ready to help you close. Paste an objection or ask for negotiation advice."})
+
+        # Display chat messages from history on app rerun
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+        # React to user input
+        if prompt := st.chat_input("Ex: 'Client says 6% commission is too high'"):
+            # Display user message
+            st.chat_message("user").markdown(prompt)
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            
+            with st.spinner("Analyzing negotiation strategy..."):
+                lead_context = {
+                    "name": "Prospect",
+                    "stage": "objection_handling",
+                    "budget_min": 400000,
+                    "budget_max": 600000
+                }
+                
+                # Get AI response
+                result = services["deal_closer"].generate_response(prompt, lead_context)
+                
+                # Format the response nicely
+                response_content = f"""
+{result['response']}
+
+---
+**💡 Key Talking Points:**
+{chr(10).join([f'- {p}' for p in result['talking_points']])}
+
+**🏃 Next Best Action:**
+{result['follow_up_actions'][0] if result['follow_up_actions'] else 'Schedule follow-up'}
+"""
+                # Display assistant response
+                with st.chat_message("assistant"):
+                    st.markdown(response_content)
+                
+                st.session_state.messages.append({"role": "assistant", "content": response_content})
         
     with tab2:
         st.subheader("Smart Document Generator")
         
-        doc_type = st.selectbox(
+        doc_type_str = st.selectbox(
             "Document Type:",
-            ["CMA Report", "Listing Presentation", "Buyer Guide", "Market Analysis"]
+            [t.value.replace("_", " ").title() for t in DocumentType]
         )
         
-        if st.button("🚀 Generate Document", use_container_width=True):
+        # Mapping for enum
+        type_enum = next(t for t in DocumentType if t.value.replace("_", " ").title() == doc_type_str)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            party_name = st.text_input("Buyer/Client Name:", "John Doe")
+            address = st.text_input("Property Address:", "123 Main St, Austin, TX")
+            
+        with col2:
+            price_doc = st.number_input("Transaction Price ($):", value=450000)
+            jurisdiction = st.selectbox("Jurisdiction:", ["TX", "CA", "FL", "NY"])
+
+        if st.button("🚀 Generate & Prepare for Signature", use_container_width=True):
             with st.spinner("Generating professional document..."):
-                st.success("✅ Document generated! Download ready.")
+                doc_data = {
+                    "property_address": address,
+                    "purchase_price": price_doc,
+                    "buyer_name": party_name,
+                    "jurisdiction": jurisdiction
+                }
+                doc = services["doc_gen"].generate_document(type_enum, f"template_{type_enum.value}", doc_data)
+                
+                st.success(f"✅ {doc_type_str} Generated (ID: {doc['id']})")
+                st.info(f"**Compliance Status:** {doc['legal_requirements']['compliance_status'].upper()}")
+                
+                # Signature status
+                st.markdown("#### ✍️ E-Signature Status")
+                sig_status = services["doc_gen"].check_signature_status("sig_123")
+                st.write(f"**Overall Status:** {sig_status['overall_status'].replace('_', ' ').title()}")
+                st.progress(sig_status['completion']['percentage'])
+                st.write(f"{sig_status['completion']['signed']} of {sig_status['completion']['total']} parties signed.")
         
     with tab3:
         st.subheader("Meeting Prep Assistant")
-        st.info("💡 **Meeting Prep:** Client research and meeting briefings...")
+        st.markdown("*Generate a comprehensive briefing for your next client meeting*")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            meeting_lead = st.selectbox("Select Lead for Meeting:", list(lead_options.keys()), key="mtg_lead")
+            m_type = st.selectbox("Meeting Type:", [t.value.replace("_", " ").title() for t in MeetingType])
+        
+        if st.button("📄 Generate Briefing Doc", use_container_width=True):
+            with st.spinner("Compiling data and generating brief..."):
+                # Convert back to enum
+                type_enum = next(t for t in MeetingType if t.value.replace("_", " ").title() == m_type)
+                
+                brief = services["meeting_prep"].prepare_meeting_brief(type_enum, "contact_123")
+                
+                st.markdown("---")
+                st.success(f"✅ Briefing for {meeting_lead} Generated")
+                
+                tab_a, tab_b, tab_c = st.tabs(["📋 Agenda", "🗣️ Talking Points", "🗂️ Required Docs"])
+                
+                with tab_a:
+                    for item in brief["agenda"]:
+                        st.write(f"**{item['time']}**: {item['topic']}")
+                        
+                with tab_b:
+                    for point in brief["talking_points"]:
+                        st.write(f"- {point}")
+                        
+                with tab_c:
+                    for doc in brief["documents_to_bring"]:
+                        st.write(f"- {doc}")
         
     with tab4:
-        st.subheader("Commission Calculator")
-        st.info("💡 **Calculator:** Real-time commission and ROI calculations...")
+        st.subheader("Commission & ROI Calculator")
+        
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            st.markdown("#### 💰 Deal Parameters")
+            prop_price = st.number_input("Property Price ($)", min_value=100000, value=500000, step=10000)
+            comm_type_str = st.selectbox("Commission Type", ["Buyer Agent", "Seller Agent", "Dual Agency"])
+            
+            mapping = {
+                "Buyer Agent": CommissionType.BUYER_AGENT,
+                "Seller Agent": CommissionType.SELLER_AGENT,
+                "Dual Agency": CommissionType.DUAL_AGENCY
+            }
+            comm_type = mapping[comm_type_str]
+            
+            custom_rate = st.slider("Commission Rate (%)", 1.0, 6.0, 2.5, 0.1) / 100
+            broker_split = st.slider("Brokerage Split (%)", 50, 100, 80) / 100
+            
+            calc = CommissionCalculator(brokerage_split=broker_split)
+            result = calc.calculate_commission(prop_price, comm_type, custom_rate=custom_rate)
+            
+        with col2:
+            st.markdown("#### 📊 Results")
+            st.metric("Net Commission to You", f"${result['net_commission']:,.2f}")
+            st.write(f"**Gross Commission:** ${result['gross_commission']:,.2f}")
+            st.write(f"**Brokerage Share:** ${result['brokerage_portion']:,.2f}")
+            st.write(f"**Effective Rate:** {result['effective_rate']}%")
+            
+            st.markdown("---")
+            st.markdown("#### 🤖 Automation ROI Impact")
+            
+            # Show impact of using AI features
+            features = st.multiselect(
+                "Select AI features used for this deal:",
+                ["deal_closer_ai", "hot_lead_fastlane", "auto_followup", "voice_receptionist"],
+                default=["deal_closer_ai", "hot_lead_fastlane"]
+            )
+            
+            impact = calc._calculate_automation_impact(features)
+            st.success(f"🔥 **ROI Multiplier:** {impact['roi_multiplier']}x")
+            st.write(f"**Conversion Improvement:** +{impact['improvement_pct']}%")
+            st.caption("These features increase the statistical probability of closing this deal.")
 
 elif selected_hub == "📈 Ops & Optimization":
     st.header("📈 Ops & Optimization")
@@ -284,20 +834,48 @@ elif selected_hub == "📈 Ops & Optimization":
     ])
     
     with tab1:
-        st.subheader("Quality Assurance")
-        st.info("💡 **Quality:** Conversation quality scoring and compliance...")
+        st.subheader("AI Quality Assurance")
+        qa_report = services["qa"].generate_qa_report("demo_location")
         
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Overall Quality", f"{qa_report['overall_score']}%", "+2%")
+        col2.metric("Compliance Rate", f"{qa_report['compliance_rate']}%", "Stable")
+        col3.metric("Empathy Score", f"{qa_report['empathy_score']}/10", "+0.5")
+        
+        st.markdown("#### 🎯 Improvement Areas")
+        for area in qa_report["improvement_areas"]:
+            st.warning(f"**{area['topic']}**: {area['recommendation']}")
+            
     with tab2:
         st.subheader("Revenue Attribution")
-        st.info("💡 **Revenue:** Track which channels and campaigns drive revenue...")
+        attr_data = services["revenue"].get_attribution_data("demo_location")
+        
+        # Display attribution chart
+        df_attr = pd.DataFrame(attr_data["channels"])
+        fig = px.pie(df_attr, values='revenue', names='channel', title='Revenue by Lead Source',
+                     color_discrete_sequence=px.colors.sequential.RdBu)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.write(f"**Total Attributed Revenue:** ${attr_data['total_revenue']:,.0f}")
         
     with tab3:
         st.subheader("Competitive Benchmarking")
-        st.info("💡 **Benchmarks:** Compare performance against market standards...")
+        bench = services["benchmarking"].get_benchmarks("demo_location")
         
+        for metric, data in bench.items():
+            st.write(f"**{metric.replace('_', ' ').title()}**")
+            cols = st.columns([2, 1])
+            cols[0].progress(data["percentile"] / 100)
+            cols[1].write(f"{data['percentile']}th Percentile")
+            
     with tab4:
-        st.subheader("Agent Coaching")
-        st.info("💡 **Coaching:** AI-powered coaching recommendations for team...")
+        st.subheader("AI Agent Coaching")
+        recommendations = services["coaching"].get_coaching_recommendations("demo_agent")
+        
+        for rec in recommendations:
+            with st.expander(f"💡 {rec['title']}"):
+                st.write(rec['description'])
+                st.info(f"**Impact:** {rec['expected_impact']}")
 
 # Footer
 st.markdown("---")

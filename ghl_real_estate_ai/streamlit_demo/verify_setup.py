@@ -1,11 +1,19 @@
 """
 Verification script to test all demo components before deployment.
 """
-import sys
 import os
+import sys
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Mock environment variables before importing anything that uses Settings
+os.environ["ANTHROPIC_API_KEY"] = "mock_key"
+os.environ["GHL_API_KEY"] = "mock_key"
+os.environ["GHL_LOCATION_ID"] = "mock_id"
+
+# Add project root to path
+# __file__ is enterprisehub/ghl_real_estate_ai/streamlit_demo/verify_setup.py
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
 
 
 def verify_imports():
@@ -13,14 +21,14 @@ def verify_imports():
     print("🔍 Verifying imports...")
 
     try:
-        from streamlit_demo.mock_services.mock_claude import MockClaudeService
+        from ghl_real_estate_ai.streamlit_demo.mock_services.mock_claude import MockClaudeService
         print("  ✅ MockClaudeService imported")
     except Exception as e:
         print(f"  ❌ MockClaudeService import failed: {e}")
         return False
 
     try:
-        from streamlit_demo.mock_services.mock_rag import MockRAGService
+        from ghl_real_estate_ai.streamlit_demo.mock_services.mock_rag import MockRAGService
         print("  ✅ MockRAGService imported")
     except Exception as e:
         print(f"  ❌ MockRAGService import failed: {e}")
@@ -41,7 +49,7 @@ def verify_mock_claude():
     print("\n🤖 Testing MockClaude service...")
 
     try:
-        from streamlit_demo.mock_services.mock_claude import MockClaudeService
+        from ghl_real_estate_ai.streamlit_demo.mock_services.mock_claude import MockClaudeService
         claude = MockClaudeService()
 
         # Test basic response
@@ -71,7 +79,7 @@ def verify_mock_rag():
     print("\n🏠 Testing MockRAG service...")
 
     try:
-        from streamlit_demo.mock_services.mock_rag import MockRAGService
+        from ghl_real_estate_ai.streamlit_demo.mock_services.mock_rag import MockRAGService
         rag = MockRAGService()
 
         # Test property search

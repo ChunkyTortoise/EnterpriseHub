@@ -1,107 +1,625 @@
 /* 
-GHL Real Estate AI - Enhanced Styles
+GHL Real Estate AI - Ultra Premium Enterprise Styles
 Professional branding for Jorge Salas
+Optimized for high-impact demos and presentations
 */
 
-/* ==================== Global Styles ==================== */
-
+/* ==================== Global Variables ==================== */
 :root {
     --primary-blue: #006AFF;
-    --primary-dark: #0052CC;
-    --success-green: #10B981;
-    --warning-orange: #F59E0B;
-    --danger-red: #EF4444;
-    --neutral-light: #F7F8FA;
-    --neutral-gray: #6B7280;
-    --text-dark: #2A2A33;
-    --white: #FFFFFF;
+    --primary-dark: #0047AB;
+    --accent-green: #10B981;
+    --accent-purple: #8B5CF6;
+    --accent-orange: #F59E0B;
+    
+    /* Premium Gradients */
+    --primary-gradient: linear-gradient(135deg, #006AFF 0%, #0047AB 100%);
+    --secondary-gradient: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    --purple-gradient: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    --orange-gradient: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    --glass-gradient: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%);
+    
+    /* Backgrounds */
+    --bg-light: #F8FAFC;
+    --bg-gradient: linear-gradient(180deg, #F8FAFC 0%, #E8F0FE 100%);
+    --card-bg: #FFFFFF;
+    
+    /* Text */
+    --text-primary: #1E293B;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    
+    /* Borders & Shadows */
+    --border-color: #E2E8F0;
+    --border-hover: #CBD5E1;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    --glow-blue: 0 0 20px rgba(0, 106, 255, 0.3);
+    --glow-green: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+/* ==================== Main Container ==================== */
+.stApp {
+    background: var(--bg-gradient);
+    animation: fadeIn 0.5s ease-in;
 }
 
 /* Remove Streamlit branding */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 
-/* ==================== Typography ==================== */
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-    color: var(--text-dark);
-    line-height: 1.6;
+/* ==================== Animations ==================== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    color: var(--text-dark);
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* ==================== Metric Cards ==================== */
-
-[data-testid="metric-container"] {
-    background: linear-gradient(135deg, #FFFFFF 0%, #F7F8FA 100%);
-    border: 1px solid #E5E7EB;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    transition: all 0.3s ease;
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
 }
 
-[data-testid="metric-container"]:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: var(--shadow-md); }
+    50% { box-shadow: var(--glow-blue); }
+}
+
+/* ==================== Headers & Typography ==================== */
+h1, h2, h3 {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--text-primary);
+    letter-spacing: -0.025em;
+}
+
+h1 { font-weight: 800; }
+h2 { font-weight: 700; }
+h3 { font-weight: 600; }
+
+/* ==================== Premium Cards ==================== */
+div[data-testid="stExpander"] {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideUp 0.4s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+div[data-testid="stExpander"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: var(--primary-gradient);
+    transition: left 0.3s ease;
+}
+
+div[data-testid="stExpander"]:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
     border-color: var(--primary-blue);
 }
 
+div[data-testid="stExpander"]:hover::before {
+    left: 0;
+}
+
+/* Glassmorphism effect for special cards */
+.glass-card {
+    background: var(--glass-gradient) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* ==================== Metric Cards ==================== */
+[data-testid="metric-container"] {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.5s ease-out;
+}
+
+/* Animated gradient border effect */
+[data-testid="metric-container"]::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: var(--primary-gradient);
+    border-radius: 16px;
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.3s ease;
+}
+
+[data-testid="metric-container"]:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: var(--shadow-xl), var(--glow-blue);
+    border-color: transparent;
+}
+
+[data-testid="metric-container"]:hover::before {
+    opacity: 1;
+}
+
 [data-testid="stMetricLabel"] {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--neutral-gray);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
 }
 
 [data-testid="stMetricValue"] {
-    font-size: 2rem;
+    font-size: 2.25rem;
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+[data-testid="stMetricDelta"] {
     font-weight: 700;
-    color: var(--text-dark);
+    font-size: 0.95rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+/* Positive delta styling */
+[data-testid="stMetricDelta"] svg[fill="green"] {
+    filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.3));
+}
+
+/* Negative delta styling */
+[data-testid="stMetricDelta"] svg[fill="red"] {
+    filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.3));
 }
 
 /* ==================== Buttons ==================== */
-
 .stButton > button {
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
-    color: var(--white);
+    background: var(--primary-gradient);
+    color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 0.75rem 1.5rem;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.95rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 106, 255, 0.2);
+    letter-spacing: 0.025em;
+    box-shadow: 0 4px 12px rgba(0, 106, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Button shine effect */
+.stButton > button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+
+.stButton > button:hover::before {
+    left: 100%;
 }
 
 .stButton > button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 106, 255, 0.3);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 16px rgba(0, 106, 255, 0.4);
+}
+
+.stButton > button:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Secondary/Submit Button style */
+div[data-testid="stFormSubmitButton"] > button {
+    background: var(--secondary-gradient);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+div[data-testid="stFormSubmitButton"] > button:hover {
+    box-shadow: 0 8px 16px rgba(16, 185, 129, 0.4);
+}
+
+/* ==================== Chat Interface ==================== */
+[data-testid="stChatMessage"] {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+[data-testid="stChatMessage"][data-testid="user"] {
+    background-color: #EFF6FF; /* Light blue bg for user */
 }
 
 /* ==================== Tabs ==================== */
-
 .stTabs [data-baseweb="tab-list"] {
-    gap: 0.5rem;
-    background: var(--neutral-light);
+    background: var(--card-bg);
+    gap: 4px;
     padding: 0.5rem;
     border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
 }
 
 .stTabs [data-baseweb="tab"] {
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
     font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
     transition: all 0.3s ease;
 }
 
+.stTabs [data-baseweb="tab"]:hover {
+    background: var(--bg-light);
+    color: var(--text-primary);
+}
+
 .stTabs [aria-selected="true"] {
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
-    color: var(--white) !important;
+    background: var(--primary-gradient) !important;
+    color: white !important;
     box-shadow: 0 2px 8px rgba(0, 106, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* ==================== Sidebar ==================== */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+    border-right: 2px solid var(--border-color);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h1, 
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2, 
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 {
+    color: var(--text-primary);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Sidebar navigation items */
+[data-testid="stSidebar"] .stRadio > div {
+    background: var(--card-bg);
+    padding: 0.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+[data-testid="stSidebar"] .stRadio label {
+    transition: all 0.2s ease;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+}
+
+[data-testid="stSidebar"] .stRadio label:hover {
+    background: var(--bg-light);
+    transform: translateX(4px);
+}
+/* ==================== Data Tables ==================== */
+[data-testid="stDataFrame"] {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+}
+
+[data-testid="stDataFrame"] table {
+    border-collapse: collapse;
+}
+
+[data-testid="stDataFrame"] thead {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+[data-testid="stDataFrame"] th {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1rem !important;
+}
+
+[data-testid="stDataFrame"] tbody tr {
+    transition: all 0.2s ease;
+}
+
+[data-testid="stDataFrame"] tbody tr:hover {
+    background: var(--bg-light);
+    transform: scale(1.01);
+}
+
+[data-testid="stDataFrame"] td {
+    padding: 0.75rem !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* ==================== Charts & Plotly ==================== */
+.js-plotly-plot {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+}
+
+.js-plotly-plot:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+/* ==================== Input Fields ==================== */
+[data-testid="stTextInput"] input,
+[data-testid="stNumberInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-testid="stSelectbox"] select {
+    border: 2px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    padding: 0.75rem !important;
+    font-size: 0.95rem !important;
+    transition: all 0.2s ease !important;
+    background: var(--card-bg) !important;
+}
+
+[data-testid="stTextInput"] input:focus,
+[data-testid="stNumberInput"] input:focus,
+[data-testid="stTextArea"] textarea:focus,
+[data-testid="stSelectbox"] select:focus {
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 0 0 3px rgba(0, 106, 255, 0.1) !important;
+    outline: none !important;
+}
+
+/* ==================== Progress Bars ==================== */
+[data-testid="stProgress"] > div > div {
+    background: var(--primary-gradient) !important;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 106, 255, 0.3);
+}
+
+[data-testid="stProgress"] > div {
+    background: var(--bg-light) !important;
+    border-radius: 10px;
+    height: 12px !important;
+}
+
+/* ==================== Status Indicators ==================== */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.status-success {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.status-warning {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.status-error {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.status-info {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 106, 255, 0.3);
+}
+
+/* ==================== Loading Spinners ==================== */
+[data-testid="stSpinner"] > div {
+    border-color: var(--primary-blue) transparent transparent transparent !important;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ==================== Alerts & Messages ==================== */
+[data-testid="stAlert"] {
+    border-radius: 12px;
+    border-left: 4px solid;
+    box-shadow: var(--shadow-md);
+    animation: slideUp 0.4s ease-out;
+}
+
+[data-testid="stAlert"][data-baseweb="notification"] {
+    background: var(--card-bg);
+}
+
+/* Success alert */
+[data-testid="stAlert"] [data-baseweb="notification-positive"] {
+    border-left-color: var(--accent-green);
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+}
+
+/* Info alert */
+[data-testid="stAlert"] [data-baseweb="notification-info"] {
+    border-left-color: var(--primary-blue);
+    background: linear-gradient(90deg, rgba(0, 106, 255, 0.1) 0%, transparent 100%);
+}
+
+/* Warning alert */
+[data-testid="stAlert"] [data-baseweb="notification-warning"] {
+    border-left-color: var(--accent-orange);
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, transparent 100%);
+}
+
+/* Error alert */
+[data-testid="stAlert"] [data-baseweb="notification-error"] {
+    border-left-color: #EF4444;
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, transparent 100%);
+}
+
+/* ==================== Custom Badge Styles ==================== */
+.badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-primary {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.badge-success {
+    background: var(--secondary-gradient);
+    color: white;
+}
+
+.badge-warning {
+    background: var(--orange-gradient);
+    color: white;
+}
+
+.badge-purple {
+    background: var(--purple-gradient);
+    color: white;
+}
+
+/* ==================== Tooltips ==================== */
+[data-testid="stTooltipIcon"] {
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+[data-testid="stTooltipIcon"]:hover {
+    color: var(--primary-blue);
+    transform: scale(1.2);
+}
+
+/* ==================== Scrollbar Styling ==================== */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-light);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-gradient);
+    border-radius: 10px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 768px) {
+    [data-testid="stMetricValue"] {
+        font-size: 1.5rem;
+    }
+    
+    .stButton > button {
+        width: 100%;
+    }
+    
+    [data-testid="stSidebar"] {
+        box-shadow: none;
+    }
+}
+
+/* ==================== Print Styles ==================== */
+@media print {
+    [data-testid="stSidebar"],
+    .stButton,
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+    
+    .stApp {
+        background: white !important;
+    }
+}
+
+/* ==================== High Contrast Mode ==================== */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --text-secondary: #000000;
+    }
+}
+
+/* ==================== Reduced Motion ==================== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* ==================== Dark Mode Support (Future) ==================== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-light: #1E293B;
+        --card-bg: #2D3748;
+        --text-primary: #F8FAFC;
+        --text-secondary: #CBD5E1;
+        --border-color: #4A5568;
+    }
 }
