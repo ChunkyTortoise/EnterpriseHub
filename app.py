@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 from pathlib import Path
 import json
 import os
+from utils.ui import sparkline
 
 # --- PATH CONFIGURATION ---
 BASE_DIR = Path(__file__).parent
@@ -161,6 +162,21 @@ def get_services():
 services = get_services()
 mock_data = load_mock_data()
 
+# Initialize Global AI State (Zustand equivalent)
+if "ai_config" not in st.session_state:
+    st.session_state.ai_config = {
+        "market": "Austin, TX",
+        "voice_tone": 0.5,  # 0.0 = Professional, 1.0 = Natural
+        "response_speed": "Standard"
+    }
+
+# Initialize Prompt Versioning
+if "prompt_versions" not in st.session_state:
+    st.session_state.prompt_versions = [
+        {"version": "v1.0", "tag": "Baseline", "content": "You are a helpful assistant.", "timestamp": "2026-01-01"},
+        {"version": "v1.1", "tag": "Production", "content": "You are a professional real estate assistant.", "timestamp": "2026-01-05"}
+    ]
+
 # Page config
 st.set_page_config(
     page_title="GHL Real Estate AI - Jorge Salas",
@@ -189,6 +205,7 @@ st.markdown("""
             position: relative;
             overflow: hidden;'>
     <!-- Animated background pattern -->
+    <!-- Header verified -->
     <div style='position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
                 background-image: 
                     radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
@@ -321,10 +338,49 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # System status
-    st.markdown("### 📊 System Status")
-    st.metric("Active Leads", "47", "+12")
-    st.metric("AI Conversations", "156", "+23")
+    # Global AI Configuration (Synced State)
+    with st.expander("⚙️ AI Configuration", expanded=True):
+        new_market = st.selectbox(
+            "Target Market",
+            ["Austin, TX", "Dallas, TX", "Houston, TX", "San Antonio, TX"],
+            index=0,
+            key="market_selector"
+        )
+        if new_market != st.session_state.ai_config["market"]:
+            st.session_state.ai_config["market"] = new_market
+            st.toast(f"Market switched to {new_market}", icon="🌍")
+            # Rerun to propagate state if needed, or rely on Streamlit reactivity
+            
+        tone = st.slider(
+            "Voice Tone",
+            0.0, 1.0, 
+            st.session_state.ai_config["voice_tone"], 
+            0.1,
+            key="tone_slider",
+            help="0=Professional, 1=Casual/Natural"
+        )
+        if tone != st.session_state.ai_config["voice_tone"]:
+            st.session_state.ai_config["voice_tone"] = tone
+            st.toast(f"Voice tone updated to {tone}", icon="🤖")
+
+    st.markdown("---")
+    
+    # System status with Sparklines
+    st.markdown("### 📊 System Health")
+    
+    # Active Leads Sparkline
+    c1, c2 = st.columns([1.5, 1])
+    with c1:
+        st.metric("Active Leads", "47", "+12")
+    with c2:
+        st.plotly_chart(sparkline([10, 15, 12, 25, 30, 42, 47], color="#2563eb", height=50), use_container_width=True, config={'displayModeBar': False})
+        
+    # AI Conversations Sparkline
+    c3, c4 = st.columns([1.5, 1])
+    with c3:
+        st.metric("AI Convos", "156", "+23")
+    with c4:
+        st.plotly_chart(sparkline([80, 95, 110, 105, 130, 145, 156], color="#16a34a", height=50), use_container_width=True, config={'displayModeBar': False})
     
     st.markdown("---")
     st.markdown("### 📡 Live Feed")
@@ -646,6 +702,18 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
                 st.caption(rec['why_recommended'])
                 st.button(f"View {rec['property_id']}", key=f"btn_{rec['property_id']}")
 
+        st.markdown("---")
+        st.markdown("#### 🔗 Shareable Client Portal")
+        # Generate a personalized portal link
+        portal_url = f"https://portal.ghl-ai.com/view/{selected_lead_p.replace(' ', '').lower()}/collection-a7"
+        
+        c_link, c_sms = st.columns([3, 1])
+        with c_link:
+            st.code(portal_url, language="text")
+        with c_sms:
+            if st.button("📱 SMS Link", use_container_width=True):
+                st.toast("Link sent via SMS!", icon="📨")
+
     with tab4:
         st.subheader("Predictive Scoring")
         
@@ -689,7 +757,7 @@ elif selected_hub == "🤖 Automation Studio":
     st.header("🤖 Automation Studio")
     st.markdown("*Visual switchboard to toggle AI features on/off*")
     
-    tab1, tab2, tab3 = st.tabs(["⚙️ Automations", "📧 Sequences", "🔄 Workflows"])
+    tab1, tab2, tab3, tab4 = st.tabs(["⚙️ Automations", "📧 Sequences", "🔄 Workflows", "🧪 AI Training Lab"])
     
     with tab1:
         st.subheader("AI Automation Control Panel")
@@ -761,6 +829,58 @@ elif selected_hub == "🤖 Automation Studio":
                 st.caption(f"⭐ {t.rating} | 📥 {t.downloads_count:,} installs")
                 if st.button(f"Install", key=f"inst_{t.id}", use_container_width=True):
                     st.success(f"Installed {t.name}!")
+
+    with tab4:
+        st.subheader("AI Training Lab & Version Control")
+        st.caption("Experiment with system prompts safely. Revert if quality drops.")
+        
+        col_editor, col_history = st.columns([2, 1])
+        
+        with col_history:
+            st.markdown("#### 📜 Version History")
+            versions = st.session_state.prompt_versions
+            
+            for v in reversed(versions):
+                with st.container(border=True):
+                    st.caption(f"{v['timestamp']} • {v['version']}")
+                    st.write(f"**{v['tag']}**")
+                    if st.button("Revert", key=f"rev_{v['version']}", use_container_width=True):
+                        st.session_state.current_prompt = v['content']
+                        st.toast(f"Reverted to {v['version']}")
+                        st.rerun()
+
+        with col_editor:
+            st.markdown("#### Current System Prompt")
+            
+            # Default content if not set
+            if "current_prompt" not in st.session_state:
+                st.session_state.current_prompt = versions[-1]["content"]
+
+            current_prompt = st.text_area(
+                "System Instruction", 
+                value=st.session_state.current_prompt,
+                height=300,
+                help="This prompt governs the behavior of the AI Assistant."
+            )
+            
+            c_save, c_test = st.columns(2)
+            with c_save:
+                if st.button("💾 Save New Version", use_container_width=True, type="primary"):
+                    new_ver = f"v1.{len(versions)}"
+                    st.session_state.prompt_versions.append({
+                        "version": new_ver,
+                        "tag": "Experimental",
+                        "content": current_prompt,
+                        "timestamp": "Just now"
+                    })
+                    st.session_state.current_prompt = current_prompt
+                    st.success(f"Saved {new_ver}!")
+                    st.rerun()
+                    
+            with c_test:
+                if st.button("🧪 Test Prompt", use_container_width=True):
+                    st.info("Simulation running... Response generated in 1.2s")
+
 
 elif selected_hub == "💰 Sales Copilot":
     st.header("💰 Sales Copilot")
