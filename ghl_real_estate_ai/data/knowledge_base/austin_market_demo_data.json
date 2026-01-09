@@ -1,0 +1,397 @@
+{
+  "austin_market_data": {
+    "title": "Austin Real Estate Market Data - Demo Scenarios",
+    "last_updated": "2026-01-08",
+    "market_context": "Data specifically curated for Jorge's demo scenarios"
+  },
+
+  "hot_properties_by_persona": {
+    "sarah_apple_engineer": [
+      {
+        "id": "prop_sarah_001",
+        "address": "2847 Glenwood Trail, Round Rock, TX 78665",
+        "price": 525000,
+        "bedrooms": 3,
+        "bathrooms": 2.5,
+        "sqft": 2180,
+        "year_built": 2020,
+        "features": [
+          "Home office with built-in desk",
+          "Gigabit fiber internet ready",
+          "15-minute drive to Apple campus",
+          "Open concept perfect for virtual meetings",
+          "Quiet neighborhood away from traffic"
+        ],
+        "why_perfect_for_sarah": [
+          "Brand new construction - no repair surprises",
+          "Home office eliminates commute on remote days",
+          "Round Rock = tech professional hub",
+          "Move-in ready for 45-day timeline",
+          "Under her $550k budget"
+        ],
+        "neighborhood": "Teravista",
+        "schools": "Round Rock ISD (9/10 rating)",
+        "commute_to_apple": "12 minutes",
+        "demo_talking_points": [
+          "This home was built for tech professionals like you",
+          "Half your Apple colleagues live in this area",
+          "You'll save $2,000/month vs San Francisco",
+          "No traffic - reverse commute to campus"
+        ]
+      }
+    ],
+
+    "mike_growing_family": [
+      {
+        "id": "prop_mike_001",
+        "address": "1205 Settlers Valley Dr, Pflugerville, TX 78660",
+        "price": 365000,
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "sqft": 1890,
+        "year_built": 2019,
+        "features": [
+          "Fenced backyard perfect for kids",
+          "Playground visible from kitchen window",
+          "Quiet cul-de-sac location",
+          "Open floor plan for family gatherings",
+          "Two-car garage with storage"
+        ],
+        "why_perfect_for_mike": [
+          "Under $400k budget with room to spare",
+          "Excellent Pflugerville ISD schools",
+          "20-minute drive to Dell Seton for Jessica",
+          "Safe neighborhood for growing family",
+          "Move-in ready, no fixing needed"
+        ],
+        "neighborhood": "Settlers Valley",
+        "schools": {
+          "elementary": "Timmerman Elementary (8/10)",
+          "middle": "Dessau Middle (8/10)",
+          "high": "Pflugerville High (7/10)"
+        },
+        "commute_to_dell_seton": "18 minutes",
+        "family_amenities": [
+          "Community pool and playground",
+          "Walking trails throughout neighborhood",
+          "Youth sports leagues",
+          "Highly rated pediatrician 5 minutes away"
+        ],
+        "demo_talking_points": [
+          "This is exactly what growing families choose",
+          "Your kids will have playmates on every block",
+          "Schools are the reason families move here",
+          "You'll build equity while your family grows"
+        ]
+      }
+    ],
+
+    "david_investor": [
+      {
+        "id": "prop_david_001",
+        "address": "14821 Willow Ridge Dr, Manor, TX 78653",
+        "price": 285000,
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "sqft": 1420,
+        "year_built": 2018,
+        "features": [
+          "Turnkey rental condition",
+          "Quality tenant already in place",
+          "Low maintenance exterior",
+          "Energy efficient construction",
+          "Property management friendly layout"
+        ],
+        "investment_metrics": {
+          "purchase_price": 285000,
+          "current_rent": 1650,
+          "annual_rent": 19800,
+          "expenses": {
+            "taxes": 4560,
+            "insurance": 1200,
+            "maintenance": 1000,
+            "vacancy": 990,
+            "total": 7750
+          },
+          "net_operating_income": 12050,
+          "cash_flow_monthly": 270,
+          "cap_rate": "4.2%",
+          "rental_yield": "6.9%"
+        },
+        "why_perfect_for_david": [
+          "Immediate positive cash flow of $270/month",
+          "Tenant in place - no vacancy period",
+          "Manor is Austin's growth corridor",
+          "Easy to manage property type",
+          "Can duplicate this model 3-4 times"
+        ],
+        "market_context": {
+          "manor_growth": "Major tech companies expanding nearby",
+          "rental_demand": "95% occupancy rate in area",
+          "appreciation_forecast": "8-12% annually next 3 years",
+          "exit_strategy": "Strong resale to owner-occupants"
+        },
+        "demo_talking_points": [
+          "This is what smart money is buying in Austin",
+          "Manor is where Pflugerville was 10 years ago",
+          "You can own 4 of these with your budget",
+          "Austin growth = automatic equity building"
+        ]
+      }
+    ],
+
+    "robert_luxury": [
+      {
+        "id": "prop_robert_sell",
+        "address": "5418 Scenic View Dr, Steiner Ranch, TX 78732",
+        "price": 1150000,
+        "bedrooms": 4,
+        "bathrooms": 3.5,
+        "sqft": 4480,
+        "lot_size": "0.8 acres",
+        "year_built": 2016,
+        "features": [
+          "Hill Country views from every room",
+          "Resort-style backyard with pool",
+          "Gourmet kitchen with butler's pantry",
+          "Primary suite with spa bathroom",
+          "Three-car garage plus golf cart garage"
+        ],
+        "luxury_selling_points": [
+          "Steiner Ranch = Austin's premier community",
+          "Lake Travis access and amenities",
+          "Award-winning LTISD schools",
+          "Private golf course membership",
+          "Minutes to Whole Foods flagship"
+        ],
+        "why_list_with_jorge": [
+          "Jorge specializes in Steiner Ranch luxury",
+          "Professional photography and virtual tour",
+          "Targeted marketing to qualified buyers",
+          "Experience with luxury negotiations",
+          "Track record of quick luxury sales"
+        ]
+      },
+      {
+        "id": "prop_robert_buy",
+        "address": "98 San Jacinto Blvd #1204, Austin, TX 78701",
+        "price": 975000,
+        "bedrooms": 2,
+        "bathrooms": 2.5,
+        "sqft": 1650,
+        "floor": "12th floor",
+        "year_built": 2021,
+        "features": [
+          "Floor-to-ceiling windows",
+          "Downtown skyline views",
+          "Balcony overlooking Lady Bird Lake",
+          "High-end appliances and finishes",
+          "Concierge and valet services"
+        ],
+        "luxury_condo_amenities": [
+          "Rooftop pool and lounge",
+          "State-of-the-art fitness center",
+          "Private wine storage",
+          "24/7 concierge service",
+          "Secured parking garage"
+        ],
+        "walkable_lifestyle": [
+          "2 blocks to top restaurants",
+          "Walking distance to ACL Live",
+          "Steps from Town Lake hike/bike trail",
+          "Whole Foods Market in building",
+          "Cultural events year-round"
+        ],
+        "why_perfect_for_robert": [
+          "Lock-and-leave luxury lifestyle",
+          "No yard maintenance or pool care",
+          "Everything walkable - no driving needed",
+          "Concierge handles travel and deliveries",
+          "Investment-grade building with appreciation"
+        ]
+      }
+    ]
+  },
+
+  "market_intelligence": {
+    "tech_corridor_data": {
+      "title": "Austin Tech Corridor Growth",
+      "companies_expanding": [
+        "Apple - 15,000 new employees by 2025",
+        "Tesla - 20,000 employees at Gigafactory",
+        "Meta - 5,000 employees at new campus",
+        "Amazon - 3,000 employees at fulfillment center"
+      ],
+      "housing_demand_areas": [
+        "Round Rock - Apple employees",
+        "Pflugerville - Tesla employees",
+        "Cedar Park - General tech workers",
+        "Manor - Service industry workers"
+      ],
+      "salary_ranges": {
+        "apple_engineers": "120k-180k",
+        "tesla_production": "55k-85k",
+        "meta_developers": "130k-200k",
+        "amazon_logistics": "45k-65k"
+      }
+    },
+
+    "school_district_rankings": {
+      "title": "Austin Area School District Rankings (GreatSchools.org)",
+      "top_districts": [
+        {
+          "name": "Lake Travis ISD",
+          "rating": "10/10",
+          "home_price_range": "$600k-2M+",
+          "reputation": "Elite academics and athletics"
+        },
+        {
+          "name": "Round Rock ISD",
+          "rating": "9/10",
+          "home_price_range": "$350k-800k",
+          "reputation": "Tech-friendly, excellent STEM programs"
+        },
+        {
+          "name": "Pflugerville ISD",
+          "rating": "8/10",
+          "home_price_range": "$280k-500k",
+          "reputation": "Rapidly improving, great value"
+        },
+        {
+          "name": "Leander ISD",
+          "rating": "8/10",
+          "home_price_range": "$300k-600k",
+          "reputation": "Fast growth, new facilities"
+        }
+      ]
+    },
+
+    "investment_hotspots": {
+      "title": "Austin Investment Property Hotspots",
+      "emerging_areas": [
+        {
+          "area": "Manor",
+          "why_hot": "Major employer growth, affordable entry point",
+          "typical_price": "$250k-350k",
+          "rental_rates": "$1500-1800",
+          "cash_flow": "Positive $200-400/month",
+          "appreciation_forecast": "10-15% annually"
+        },
+        {
+          "area": "Del Valle",
+          "why_hot": "Austin airport expansion, Tesla proximity",
+          "typical_price": "$200k-300k",
+          "rental_rates": "$1300-1600",
+          "cash_flow": "Positive $100-300/month",
+          "appreciation_forecast": "8-12% annually"
+        },
+        {
+          "area": "East Austin (78721/78722)",
+          "why_hot": "Gentrification wave, walkable to downtown",
+          "typical_price": "$400k-600k",
+          "rental_rates": "$2000-2800",
+          "cash_flow": "Break-even to $200/month",
+          "appreciation_forecast": "12-18% annually"
+        }
+      ]
+    }
+  },
+
+  "demo_conversation_starters": {
+    "sarah_apple": {
+      "trigger": "Hi, I'm relocating from San Francisco to Austin for Apple. I need to find a house quickly!",
+      "ai_first_response": "Welcome to Austin! Apple's bringing so many great people here. What's your timeline for closing?",
+      "follow_up_questions": [
+        "What's your budget? (Austin prices will be a pleasant surprise)",
+        "Where will you be working? (North campus or downtown?)",
+        "Any must-haves? (Home office is popular with tech folks)",
+        "Familiar with Round Rock area? (Most Apple people love it there)"
+      ]
+    },
+
+    "mike_family": {
+      "trigger": "First-time buyers, looking for family home under $400k with good schools",
+      "ai_first_response": "Congratulations on taking this big step! What's prompting the move to homeownership?",
+      "follow_up_questions": [
+        "Any kids? (School districts will be important)",
+        "Where do you work? (Want to minimize commute)",
+        "Have you talked to a lender yet? (Let's get you pre-approved)",
+        "Any must-haves? (Yard, garage, home office?)"
+      ]
+    },
+
+    "david_investor": {
+      "trigger": "Looking for investment properties in Austin, cash buyer, need positive cash flow",
+      "ai_first_response": "Great! Austin's investment market is strong. What's your target cash flow per property?",
+      "follow_up_questions": [
+        "What price range works for your cash position?",
+        "Single family or open to duplexes?",
+        "How many properties are you looking to acquire?",
+        "Familiar with Manor or Del Valle? (Great cash flow areas)"
+      ]
+    },
+
+    "robert_luxury": {
+      "trigger": "Friends recommended you for selling our Steiner Ranch home and finding downtown condo",
+      "ai_first_response": "We'd be honored to help! Steiner Ranch is such a beautiful area. What's prompting the move downtown?",
+      "follow_up_questions": [
+        "What do you love about your current home? (Great for marketing)",
+        "What draws you to downtown living? (Culture, walkability, convenience?)",
+        "Any specific downtown areas in mind? (Condo vs townhome?)",
+        "Timeline for making this transition? (Can coordinate both transactions)"
+      ]
+    }
+  },
+
+  "jorge_talking_points": {
+    "value_proposition": [
+      "Jorge, imagine never missing a lead because you were showing a house",
+      "Picture qualified buyers calling YOU, not shopping around",
+      "Think about closing 3x more deals with half the effort",
+      "Envision being THE Austin agent all the tech relocations call"
+    ],
+
+    "pain_points_addressed": [
+      "No more unqualified leads wasting your weekends",
+      "No more prospects going cold while you're busy",
+      "No more losing deals to faster-responding agents",
+      "No more wondering if leads are real or just browsing"
+    ],
+
+    "competitive_advantage": [
+      "While others answer phones, your AI qualifies 24/7",
+      "While others chase leads, qualified prospects find you",
+      "While others do showings, you close contracts",
+      "While others stress about pipelines, yours stays full"
+    ]
+  },
+
+  "success_metrics_projection": {
+    "title": "Jorge's Projected Results - First 90 Days",
+    "current_state": {
+      "monthly_leads": 15,
+      "qualified_leads": 3,
+      "appointments_set": 8,
+      "contracts_signed": 2,
+      "avg_commission": 12000,
+      "monthly_income": 24000,
+      "hours_worked": 60
+    },
+    "with_ai_state": {
+      "monthly_leads": 45,
+      "qualified_leads": 25,
+      "appointments_set": 30,
+      "contracts_signed": 8,
+      "avg_commission": 14500,
+      "monthly_income": 116000,
+      "hours_worked": 45
+    },
+    "improvement": {
+      "lead_increase": "200%",
+      "qualification_improvement": "733%",
+      "income_increase": "383%",
+      "time_saved": "15 hours/week",
+      "stress_reduction": "Massive - AI never sleeps"
+    }
+  }
+}

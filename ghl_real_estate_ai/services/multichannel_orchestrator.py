@@ -1,16 +1,27 @@
 """
-Multi-Channel Sequence Orchestrator
-Coordinates messages across SMS, Email, Voice in intelligent sequences
+Enhanced Multi-Channel Sequence Orchestrator
 
-Feature 12: Multi-Channel Sequence Orchestrator
-Smart channel selection and dynamic sequencing based on engagement.
+Advanced coordination of messages across SMS, Email, Voice, and Social channels.
+Features intelligent timing, A/B testing, behavioral triggers, and engagement optimization.
+
+Enhanced Features:
+- Behavioral trigger sequences
+- Cross-channel message coordination
+- A/B testing integration
+- Machine learning-powered optimization
+- Advanced analytics and insights
 """
 
 import json
+import asyncio
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
+from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 
 class Channel(Enum):
@@ -21,6 +32,8 @@ class Channel(Enum):
     VOICE = "voice"
     WHATSAPP = "whatsapp"
     DIRECT_MAIL = "direct_mail"
+    SOCIAL = "social"
+    PUSH_NOTIFICATION = "push_notification"
 
 
 class SequenceStatus(Enum):
@@ -30,6 +43,26 @@ class SequenceStatus(Enum):
     PAUSED = "paused"
     COMPLETED = "completed"
     STOPPED = "stopped"
+    FAILED = "failed"
+
+
+class TriggerType(Enum):
+    """Sequence trigger types"""
+
+    IMMEDIATE = "immediate"
+    TIME_BASED = "time_based"
+    BEHAVIOR_BASED = "behavior_based"
+    ENGAGEMENT_BASED = "engagement_based"
+    SCORE_BASED = "score_based"
+
+
+class Priority(Enum):
+    """Message priority levels"""
+
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    URGENT = 4
 
 
 @dataclass

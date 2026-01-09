@@ -156,7 +156,85 @@ class MemoryService:
             "updated_at": datetime.utcnow().isoformat(),
             "last_interaction_at": datetime.utcnow().isoformat(),
             "previous_sessions_summary": "",
+            # Lead Intelligence Enhancement Features (2026-01-09)
+            "lead_intelligence": {
+                "behavioral_features": {},
+                "engagement_metrics": {
+                    "engagement_velocity": 0.0,
+                    "sentiment_progression": 0.0,
+                    "response_consistency": 0.0
+                },
+                "churn_risk": {
+                    "risk_score": 0.0,
+                    "risk_level": "low",
+                    "prediction_horizon": "30_days",
+                    "last_prediction": None
+                },
+                "property_matching": {
+                    "lifestyle_scores": {},
+                    "behavioral_weights": {},
+                    "match_history": []
+                },
+                "workflow_automation": {
+                    "active_workflows": [],
+                    "completed_workflows": [],
+                    "next_scheduled_action": None
+                },
+                "real_time_events": {
+                    "last_score_update": None,
+                    "recent_alerts": [],
+                    "websocket_session_id": None
+                }
+            }
         }
+
+    async def update_lead_intelligence(
+        self,
+        contact_id: str,
+        intelligence_data: Dict[str, Any],
+        location_id: Optional[str] = None,
+    ) -> None:
+        """
+        Update lead intelligence data for a contact.
+
+        Args:
+            contact_id: GHL contact ID
+            intelligence_data: Lead intelligence data to update
+            location_id: Optional GHL location ID for tenant isolation
+        """
+        context = await self.get_context(contact_id, location_id)
+
+        if "lead_intelligence" not in context:
+            context["lead_intelligence"] = self._get_default_context(contact_id, location_id)["lead_intelligence"]
+
+        # Deep merge intelligence data
+        for category, data in intelligence_data.items():
+            if category in context["lead_intelligence"]:
+                if isinstance(data, dict) and isinstance(context["lead_intelligence"][category], dict):
+                    context["lead_intelligence"][category].update(data)
+                else:
+                    context["lead_intelligence"][category] = data
+            else:
+                context["lead_intelligence"][category] = data
+
+        await self.save_context(contact_id, context, location_id)
+        logger.info(f"Updated lead intelligence for contact {contact_id}")
+
+    async def get_lead_intelligence(
+        self, contact_id: str, location_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Get lead intelligence data for a contact.
+
+        Args:
+            contact_id: GHL contact ID
+            location_id: Optional GHL location ID for tenant isolation
+
+        Returns:
+            Lead intelligence data dict
+        """
+        context = await self.get_context(contact_id, location_id)
+        return context.get("lead_intelligence", {})
 
     async def clear_context(self, contact_id: str) -> None:
         """Clear context for a contact."""

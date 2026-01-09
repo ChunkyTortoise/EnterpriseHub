@@ -1,0 +1,569 @@
+{
+  "demo_package": {
+    "title": "Jorge's Real Estate AI - Live Demo Scenarios",
+    "subtitle": "Austin, TX Market-Specific Demo Package",
+    "description": "Realistic demo scenarios showing Jorge's business transformed by AI - designed to create immediate 'I need this NOW' response",
+    "target_audience": "Jorge - Real Estate Professional, Austin, TX",
+    "demo_duration": "5 minutes to ROI realization"
+  },
+
+  "austin_buyer_personas": [
+    {
+      "persona_id": "tech_professional_sarah",
+      "name": "Sarah Chen",
+      "age": 32,
+      "occupation": "Software Engineer at Apple",
+      "income": "$165k",
+      "location_current": "San Francisco, CA",
+      "pain_points": [
+        "Relocating to Austin for Apple's campus expansion",
+        "Needs to close before lease expires in 45 days",
+        "Never bought a house outside of California",
+        "Worried about Austin market knowledge gap",
+        "Working 60+ hour weeks, no time for house hunting"
+      ],
+      "austin_specific_needs": [
+        "Close to Apple campus (North Austin)",
+        "Good internet for remote work days",
+        "Walkable neighborhood with coffee shops",
+        "Under $600k (Austin prices still shock SF buyers)",
+        "Modern home with home office space"
+      ],
+      "timeline": "URGENT - 45 days",
+      "budget": "$550k",
+      "likely_areas": ["Round Rock", "Cedar Park", "North Austin"],
+      "demo_conversation_trigger": "Incoming text: 'Hi, I'm relocating from SF to Austin for work. Need to find a house quickly!'",
+      "jorge_roi_moment": "This lead books a showing within 8 minutes, saves Jorge 2 hours of back-and-forth"
+    },
+
+    {
+      "persona_id": "growing_family_mike",
+      "name": "Mike & Jessica Rodriguez",
+      "age": "35 & 33",
+      "occupation": "He: Construction Manager, She: Nurse at Dell Seton",
+      "income": "$145k combined",
+      "location_current": "East Austin Apartment",
+      "pain_points": [
+        "Outgrowing 2-bedroom apartment with new baby",
+        "Need 3+ bedrooms but budget is tight",
+        "Jessica works night shifts - needs quiet neighborhood",
+        "Want good schools for growing family",
+        "First-time homebuyers, intimidated by process"
+      ],
+      "austin_specific_needs": [
+        "Good school districts (8+ rating)",
+        "Safe neighborhood for kids",
+        "Close to Dell Seton Medical Center",
+        "Fenced yard for future dog",
+        "Under $400k (tough in current market)"
+      ],
+      "timeline": "3-4 months (lease ends)",
+      "budget": "$380k max",
+      "likely_areas": ["Pflugerville", "Manor", "Del Valle"],
+      "demo_conversation_trigger": "Web form: 'First time buyers, need help finding family home under $400k'",
+      "jorge_roi_moment": "AI instantly identifies first-time buyer needs, books them with Jorge's first-time buyer specialist"
+    },
+
+    {
+      "persona_id": "investor_david",
+      "name": "David Kim",
+      "age": 45,
+      "occupation": "Real Estate Investor",
+      "income": "$300k+ portfolio income",
+      "location_current": "Dallas, TX",
+      "pain_points": [
+        "Managing 12 rental properties in Dallas",
+        "Wants to expand to Austin market",
+        "Needs cash-flowing properties ($200+ per month)",
+        "Looking for emerging neighborhoods before prices spike",
+        "Time is money - no patience for non-qualified leads"
+      ],
+      "austin_specific_needs": [
+        "Properties under $350k that rent for $1800+",
+        "Areas with development/growth potential",
+        "Quick closing (cash buyer)",
+        "Multiple properties if right deal",
+        "Agent who understands investment metrics"
+      ],
+      "timeline": "Ready to close immediately",
+      "budget": "$300-350k per property",
+      "likely_areas": ["Manor", "Del Valle", "East Austin"],
+      "demo_conversation_trigger": "Phone inquiry: 'Looking for investment properties in Austin, cash buyer'",
+      "jorge_roi_moment": "AI identifies investor, connects to Jorge's investment specialist, leads to 3-property purchase"
+    },
+
+    {
+      "persona_id": "luxury_downsizer_robert",
+      "name": "Robert & Linda Williams",
+      "age": "58 & 55",
+      "occupation": "Retired Tech Executive & Interior Designer",
+      "income": "$400k+ investment income",
+      "location_current": "Large Steiner Ranch home",
+      "pain_points": [
+        "Empty nesters in 4,500 sq ft home",
+        "Want luxury but less maintenance",
+        "Desire walkable lifestyle near culture",
+        "Worried about selling large home in current market",
+        "Want personal service, not junior agents"
+      ],
+      "austin_specific_needs": [
+        "Luxury condo or townhome downtown",
+        "Walking distance to restaurants/arts",
+        "High-end finishes and amenities",
+        "$800k-1.2M range",
+        "Professional photography and marketing for current home"
+      ],
+      "timeline": "Flexible but decisive when right property appears",
+      "budget": "$900k-1.2M",
+      "likely_areas": ["Downtown", "West Campus", "Clarksville"],
+      "demo_conversation_trigger": "Referral call: 'Friends said you could help us downsize from Steiner Ranch'",
+      "jorge_roi_moment": "AI recognizes luxury seller + buyer combo, books Jorge personally for $2M+ transaction value"
+    }
+  ],
+
+  "demo_conversation_flows": [
+    {
+      "scenario_id": "sarah_tech_relocation",
+      "persona": "tech_professional_sarah",
+      "conversation_flow": {
+        "intro": "DEMO: Watch how the AI handles Sarah's relocation inquiry",
+        "messages": [
+          {
+            "time": "0:00",
+            "speaker": "Sarah (Text)",
+            "message": "Hi, I'm relocating from SF to Austin for work. Need to find a house quickly!",
+            "ai_thinking": "Relocation detected → High urgency → Qualify quickly"
+          },
+          {
+            "time": "0:05",
+            "speaker": "AI Assistant",
+            "message": "Welcome to Austin! I'm here to help. What's your timeline?",
+            "jorge_note": "AI immediately recognizes relocation urgency pattern"
+          },
+          {
+            "time": "0:45",
+            "speaker": "Sarah",
+            "message": "Need to close in 45 days max, lease expires then",
+            "ai_thinking": "45 days = very urgent → Priority qualification"
+          },
+          {
+            "time": "0:50",
+            "speaker": "AI Assistant",
+            "message": "Got it. What's your budget? Austin prices are different from SF.",
+            "jorge_note": "AI knows to address SF price expectations"
+          },
+          {
+            "time": "1:20",
+            "speaker": "Sarah",
+            "message": "$550k. Is that realistic in Austin?",
+            "ai_thinking": "Budget confirmed → Area recommendations incoming"
+          },
+          {
+            "time": "1:25",
+            "speaker": "AI Assistant",
+            "message": "Perfect! That's a great budget here. Where will you be working?",
+            "jorge_note": "AI gathering commute requirements"
+          },
+          {
+            "time": "2:00",
+            "speaker": "Sarah",
+            "message": "Apple campus in North Austin",
+            "ai_thinking": "Apple campus → Round Rock/Cedar Park optimal"
+          },
+          {
+            "time": "2:05",
+            "speaker": "AI Assistant",
+            "message": "Round Rock has great options for Apple employees. 3br/2ba homes, new construction, 15-min commute. Need home office space?",
+            "jorge_note": "AI knows Apple employee patterns and suggests perfect areas"
+          },
+          {
+            "time": "2:45",
+            "speaker": "Sarah",
+            "message": "Yes! Office space is crucial. This sounds perfect.",
+            "ai_thinking": "High interest + urgency = book appointment now"
+          },
+          {
+            "time": "2:50",
+            "speaker": "AI Assistant",
+            "message": "Great! I'm connecting you with Jorge - he specializes in tech relocations. Can you talk in 10 minutes?",
+            "jorge_note": "AI books Jorge immediately - no delays for hot urgent leads"
+          },
+          {
+            "time": "3:15",
+            "speaker": "Sarah",
+            "message": "Yes! This is exactly what I needed.",
+            "ai_thinking": "CLOSED - Appointment booked"
+          }
+        ],
+        "outcome": {
+          "time_to_close": "3 minutes 15 seconds",
+          "questions_answered": 4,
+          "appointment_booked": true,
+          "lead_quality": "A+ (Urgent, qualified, motivated)",
+          "jorge_roi": "Saves 2 hours of phone tag, books $550k buyer instantly"
+        }
+      }
+    },
+
+    {
+      "scenario_id": "mike_first_time_buyer",
+      "persona": "growing_family_mike",
+      "conversation_flow": {
+        "intro": "DEMO: Watch how AI nurtures first-time buyers with education",
+        "messages": [
+          {
+            "time": "0:00",
+            "speaker": "Mike (Web Form)",
+            "message": "First time buyers, need help finding family home under $400k",
+            "ai_thinking": "First-time buyer → Needs education + patience"
+          },
+          {
+            "time": "0:05",
+            "speaker": "AI Assistant",
+            "message": "Congrats on taking this step! What's prompting the move?",
+            "jorge_note": "AI uses encouraging tone for first-timers"
+          },
+          {
+            "time": "0:40",
+            "speaker": "Mike",
+            "message": "Our apartment is too small now with the baby. Need 3 bedrooms and a yard.",
+            "ai_thinking": "Growing family → School districts important"
+          },
+          {
+            "time": "0:45",
+            "speaker": "AI Assistant",
+            "message": "That's exciting! Good schools important? I know great family neighborhoods under $400k.",
+            "jorge_note": "AI anticipates school district needs for families"
+          },
+          {
+            "time": "1:20",
+            "speaker": "Mike",
+            "message": "Yes, definitely want good schools. And my wife works at Dell Seton so can't be too far.",
+            "ai_thinking": "Dell Seton + schools + $400k = Pflugerville perfect"
+          },
+          {
+            "time": "1:25",
+            "speaker": "AI Assistant",
+            "message": "Perfect! Pflugerville has excellent schools (8/10 ratings) and quick drive to Dell Seton. Homes in your budget with yards. Have you talked to a lender yet?",
+            "jorge_note": "AI knows Austin geography + provides school ratings + checks financing"
+          },
+          {
+            "time": "2:10",
+            "speaker": "Mike",
+            "message": "No, we're pretty new to this whole process.",
+            "ai_thinking": "Needs lender referral → Education pathway"
+          },
+          {
+            "time": "2:15",
+            "speaker": "AI Assistant",
+            "message": "No worries! I'll connect you with Jorge's preferred lender who specializes in first-time buyers. They can walk you through everything and get you pre-approved. Want to start there?",
+            "jorge_note": "AI offers education path before house hunting"
+          },
+          {
+            "time": "3:00",
+            "speaker": "Mike",
+            "message": "That would be amazing, thank you!",
+            "ai_thinking": "CLOSED - Lender referral accepted"
+          }
+        ],
+        "outcome": {
+          "time_to_close": "3 minutes",
+          "path": "Education → Pre-approval → House hunting",
+          "lead_nurturing": "Set up for 2-week follow-up after pre-approval",
+          "jorge_roi": "Proper qualification prevents wasted showings, builds long-term client relationship"
+        }
+      }
+    },
+
+    {
+      "scenario_id": "david_investor_speed",
+      "persona": "investor_david",
+      "conversation_flow": {
+        "intro": "DEMO: Watch AI immediately recognize and fast-track investor",
+        "messages": [
+          {
+            "time": "0:00",
+            "speaker": "David (Phone)",
+            "message": "Looking for investment properties in Austin, cash buyer",
+            "ai_thinking": "INVESTOR ALERT → Fast track → Skip basic qualifying"
+          },
+          {
+            "time": "0:03",
+            "speaker": "AI Assistant",
+            "message": "Great! What's your target price range and cash flow goal?",
+            "jorge_note": "AI jumps straight to investor metrics - no time wasting"
+          },
+          {
+            "time": "0:25",
+            "speaker": "David",
+            "message": "Under $350k, need to cash flow at least $200/month",
+            "ai_thinking": "Specific metrics → Qualified investor"
+          },
+          {
+            "time": "0:28",
+            "speaker": "AI Assistant",
+            "message": "Perfect. We have several properties in Manor and Del Valle hitting those numbers. How many are you looking to acquire?",
+            "jorge_note": "AI knows cash-flowing areas + asks scale question"
+          },
+          {
+            "time": "0:50",
+            "speaker": "David",
+            "message": "Could do 3-5 if the deals are right",
+            "ai_thinking": "MAJOR CLIENT → Jorge needs this personally"
+          },
+          {
+            "time": "0:53",
+            "speaker": "AI Assistant",
+            "message": "Understood. Jorge handles our investor clients personally - he's got a portfolio of off-market deals. Can you speak with him in the next hour?",
+            "jorge_note": "AI recognizes high-value client, books Jorge immediately"
+          },
+          {
+            "time": "1:10",
+            "speaker": "David",
+            "message": "Yes, I'm available now actually",
+            "ai_thinking": "CLOSED - Immediate transfer to Jorge"
+          }
+        ],
+        "outcome": {
+          "time_to_close": "1 minute 10 seconds",
+          "lead_value": "$1M-1.75M potential (3-5 properties)",
+          "path": "Direct to Jorge - no delays",
+          "jorge_roi": "Captures major investor before they call competition"
+        }
+      }
+    }
+  ],
+
+  "seller_scenarios": [
+    {
+      "scenario_id": "inherited_property_wholesale",
+      "title": "Jennifer's Inherited Property - East Austin",
+      "setup": "Jennifer inherited her mother's 1960s home in East Austin. Needs major repairs but great location.",
+      "conversation_flow": {
+        "intro": "DEMO: Watch AI identify wholesale opportunity instantly",
+        "messages": [
+          {
+            "time": "0:00",
+            "speaker": "Jennifer (Text)",
+            "message": "Inherited my mom's house, need to sell it fast",
+            "ai_thinking": "Inherited + fast = wholesale candidate"
+          },
+          {
+            "time": "0:05",
+            "speaker": "AI Assistant",
+            "message": "Sorry for your loss. Where's the property?",
+            "jorge_note": "AI shows empathy while gathering info"
+          },
+          {
+            "time": "0:35",
+            "speaker": "Jennifer",
+            "message": "East Austin, near 6th Street. It's a mess though.",
+            "ai_thinking": "East Austin + mess = potential wholesale"
+          },
+          {
+            "time": "0:40",
+            "speaker": "AI Assistant",
+            "message": "What kind of condition? Move-in ready or needs work?",
+            "jorge_note": "AI qualifying for wholesale vs listing path"
+          },
+          {
+            "time": "1:15",
+            "speaker": "Jennifer",
+            "message": "Needs everything - roof, plumbing, flooring. I don't want to deal with contractors.",
+            "ai_thinking": "Major repairs + no renovations = wholesale path confirmed"
+          },
+          {
+            "time": "1:20",
+            "speaker": "AI Assistant",
+            "message": "Understood. We can connect you with a cash buyer who'll take it as-is - no repairs needed. Close in 2 weeks. Interested?",
+            "jorge_note": "AI offers perfect solution for her situation"
+          },
+          {
+            "time": "1:50",
+            "speaker": "Jennifer",
+            "message": "Yes! That's exactly what I need.",
+            "ai_thinking": "CLOSED - Wholesale referral"
+          }
+        ],
+        "outcome": {
+          "time_to_close": "1 minute 50 seconds",
+          "path": "Wholesale cash buyer referral",
+          "jorge_roi": "Jorge earns referral fee without listing work, wholesale partner handles everything"
+        }
+      }
+    },
+
+    {
+      "scenario_id": "luxury_listing_steiner",
+      "title": "Robert's Luxury Steiner Ranch Listing",
+      "setup": "Empty nesters want to downsize from 4,500 sq ft Steiner Ranch home to luxury downtown condo",
+      "conversation_flow": {
+        "intro": "DEMO: AI recognizes luxury seller + buyer combination",
+        "messages": [
+          {
+            "time": "0:00",
+            "speaker": "Robert (Referral Call)",
+            "message": "Friends said you could help us downsize from Steiner Ranch",
+            "ai_thinking": "Steiner Ranch = luxury market + referral = high-quality"
+          },
+          {
+            "time": "0:05",
+            "speaker": "AI Assistant",
+            "message": "Absolutely! What's prompting the move?",
+            "jorge_note": "AI gathers motivation for both buying and selling"
+          },
+          {
+            "time": "0:40",
+            "speaker": "Robert",
+            "message": "Kids are grown, house is too big. Want something downtown, walkable to restaurants.",
+            "ai_thinking": "Empty nester downsize + luxury + downtown = high-value combo deal"
+          },
+          {
+            "time": "0:45",
+            "speaker": "AI Assistant",
+            "message": "That's a great move! What's your Steiner Ranch home like? Beds/baths/sq ft?",
+            "jorge_note": "AI gathering listing information while buyer needs develop"
+          },
+          {
+            "time": "1:20",
+            "speaker": "Robert",
+            "message": "4 bed, 3.5 bath, about 4,500 sq ft. Pool, outdoor kitchen, lake views.",
+            "ai_thinking": "High-value listing + needs downtown buyer match"
+          },
+          {
+            "time": "1:25",
+            "speaker": "AI Assistant",
+            "message": "Beautiful! That'll be in high demand. For downtown, are you thinking condo or townhome? What's your budget?",
+            "jorge_note": "AI developing buyer profile while securing listing"
+          },
+          {
+            "time": "2:00",
+            "speaker": "Robert",
+            "message": "Probably condo, $900k-1.2M range. We want luxury but low maintenance.",
+            "ai_thinking": "Luxury buyer profile + luxury seller = Jorge's specialty"
+          },
+          {
+            "time": "2:05",
+            "speaker": "AI Assistant",
+            "message": "Perfect! Jorge specializes in luxury properties and knows the downtown condo market well. He can help with both selling Steiner and finding your downtown home. Can you meet this week?",
+            "jorge_note": "AI bundles both transactions, presents Jorge as luxury specialist"
+          },
+          {
+            "time": "2:35",
+            "speaker": "Robert",
+            "message": "Yes, we'd like to meet Jorge soon.",
+            "ai_thinking": "CLOSED - Both transactions captured"
+          }
+        ],
+        "outcome": {
+          "time_to_close": "2 minutes 35 seconds",
+          "transaction_value": "$2M+ combined (sell $1.1M + buy $1M)",
+          "jorge_roi": "Double-ended luxury transaction - Jorge's highest profit scenario"
+        }
+      }
+    }
+  ],
+
+  "success_stories": [
+    {
+      "story_id": "apple_engineer_success",
+      "title": "Sarah's Apple Relocation - 3 Days from Inquiry to Contract",
+      "client": "Sarah Chen - Apple Software Engineer",
+      "situation": "Relocating from San Francisco, 45-day deadline, $550k budget",
+      "ai_intervention": [
+        "AI immediately recognized relocation urgency",
+        "Instantly connected to Jorge within 8 minutes",
+        "AI pre-qualified: budget, timeline, work location, home office needs",
+        "Suggested Round Rock before Sarah even knew the area"
+      ],
+      "outcome": {
+        "days_to_contract": 3,
+        "purchase_price": "$525k",
+        "commission": "$15,750",
+        "jorge_time_saved": "8 hours of phone qualification",
+        "client_satisfaction": "5/5 - 'Jorge knew exactly what I needed'"
+      },
+      "before_ai": "Would have taken 2 weeks of back-and-forth calls, possibly lost to faster agent",
+      "after_ai": "Client felt heard and understood immediately, trusted Jorge's expertise"
+    },
+
+    {
+      "story_id": "investor_portfolio_success",
+      "title": "David's Investment Portfolio - 4 Properties in 30 Days",
+      "client": "David Kim - Dallas Investor",
+      "situation": "Expanding to Austin market, cash buyer, looking for cash-flowing properties",
+      "ai_intervention": [
+        "AI recognized investor language immediately",
+        "Bypassed standard qualifying for direct Jorge connection",
+        "AI highlighted David as priority: cash buyer + multiple properties",
+        "Provided investment analysis on recommended areas"
+      ],
+      "outcome": {
+        "properties_purchased": 4,
+        "total_value": "$1.3M",
+        "commission": "$39,000",
+        "timeline": "30 days",
+        "repeat_business": "Now Jorge's top investor client"
+      },
+      "before_ai": "Investors typically call 5+ agents, go with fastest response",
+      "after_ai": "David felt Jorge understood investment goals immediately, became exclusive client"
+    },
+
+    {
+      "story_id": "first_time_buyer_success",
+      "title": "Mike & Jessica's First Home Journey",
+      "client": "Rodriguez Family - Growing Family",
+      "situation": "First-time buyers, $380k budget, needed education and guidance",
+      "ai_intervention": [
+        "AI identified first-time buyer status immediately",
+        "Provided education pathway instead of rushing to showings",
+        "Connected to preferred lender for pre-approval process",
+        "Followed up automatically during loan process"
+      ],
+      "outcome": {
+        "purchase_price": "$365k",
+        "commission": "$10,950",
+        "client_education_level": "Highly informed and grateful",
+        "referrals_generated": "3 friends in similar situation"
+      },
+      "before_ai": "First-timers often get discouraged by pushy agents",
+      "after_ai": "Felt supported through entire process, became raving fans"
+    }
+  ],
+
+  "roi_calculator": {
+    "title": "Jorge's 30-Day AI ROI Projection",
+    "assumptions": "Based on current Austin market and Jorge's typical transaction volume",
+    "metrics": {
+      "current_monthly_leads": 15,
+      "current_conversion_rate": "20%",
+      "current_avg_commission": "$12,000",
+      "current_monthly_income": "$36,000",
+
+      "with_ai_monthly_leads": 40,
+      "with_ai_conversion_rate": "45%",
+      "with_ai_avg_commission": "$14,500",
+      "with_ai_monthly_income": "$261,000",
+
+      "monthly_income_increase": "$225,000",
+      "time_saved_hours": 80,
+      "stress_reduction": "Massive - AI handles qualification 24/7"
+    },
+    "year_one_projection": {
+      "additional_income": "$2.7M",
+      "additional_transactions": 120,
+      "time_saved_hours": 960,
+      "stress_level": "Dramatically reduced - AI never sleeps"
+    }
+  },
+
+  "demo_script": {
+    "title": "5-Minute Demo Script for Jorge",
+    "opening": "Jorge, I'm going to show you exactly how AI will transform your business. Watch these real Austin scenarios...",
+    "scenario_1": "First, Sarah from San Francisco - relocating for Apple [Run Sarah demo] - Jorge, this lead books with you in 3 minutes. No phone tag, no wasted time.",
+    "scenario_2": "Next, David the investor from Dallas [Run David demo] - Cash buyer, multiple properties, books immediately. This is a $1.3M month for you.",
+    "scenario_3": "Finally, the Rodriguez family [Run Mike demo] - First-time buyers who become raving fans and refer 3 more families.",
+    "roi_reveal": "Jorge, in 30 days, this system could generate an additional $225,000 in commissions. Your time? Cut in half. Your stress? Gone.",
+    "closing": "The question isn't whether you can afford this AI system. It's whether you can afford to let your competition have it first."
+  }
+}
