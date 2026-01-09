@@ -13,10 +13,17 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
 
-from ghl_real_estate_ai.ghl_utils.config import settings
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+import logging
+import os
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
+
+class Settings:
+    """Mock settings for demo mode"""
+    def __init__(self):
+        self.MEMORY_DIR = os.getenv("MEMORY_DIR", "data/memory")
+
+settings = Settings()
 
 class MemoryService:
     """

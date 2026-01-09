@@ -214,7 +214,7 @@
 ### **API Keys & Access:**
 - ✅ Claude AI (Anthropic) - Connected
 - ✅ GHL Lyrio Sub-account - Connected
-- ✅ Location ID: 3xt4qayAh35BlDLaUv7P
+- ✅ Location ID: REDACTED_LOCATION_ID
 - ✅ Contact Email: realtorjorgesalas@gmail.com
 
 ### **Active Services:**

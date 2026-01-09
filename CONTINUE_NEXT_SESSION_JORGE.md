@@ -119,8 +119,8 @@ python3 -m streamlit run app.py --server.port 8502
 ## WHAT'S COMPLETED
 
 ### Configuration
-- ✅ Claude API: Connected (sk-ant-api03-E2oxnNzE...)
-- ✅ GHL Lyrio: Connected (3xt4qayAh35BlDLaUv7P)
+- ✅ Claude API: Connected (sk-ant-REDACTED)
+- ✅ GHL Lyrio: Connected (REDACTED_LOCATION_ID)
 - ✅ Email: realtorjorgesalas@gmail.com
 - ✅ All environment variables set
 
@@ -201,9 +201,9 @@ Last PID: 37715 (probably stopped due to errors)
 Location: `ghl_real_estate_ai/streamlit_demo/.env`
 Contents:
 ```
-ANTHROPIC_API_KEY=sk-ant-api03-REDACTED
+ANTHROPIC_API_KEY=sk-ant-REDACTED
 GHL_API_KEY=REDACTED
-GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
+GHL_LOCATION_ID=REDACTED_LOCATION_ID
 GHL_AGENCY_API_KEY=REDACTED
 REALTOR_EMAIL=realtorjorgesalas@gmail.com
 ```
@@ -319,7 +319,7 @@ done
 **Name:** Jorge Salas  
 **Email:** realtorjorgesalas@gmail.com  
 **Business:** Real Estate (Lyrio)  
-**GHL Location:** 3xt4qayAh35BlDLaUv7P  
+**GHL Location:** REDACTED_LOCATION_ID  
 **Meeting:** Tomorrow 12 PM  
 **Status:** Waiting on visuals, expects 2-hour delay
 

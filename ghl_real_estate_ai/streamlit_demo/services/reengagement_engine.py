@@ -27,13 +27,28 @@ from enum import Enum
 from pathlib import Path
 import json
 
-from ghl_real_estate_ai.services.ghl_client import GHLClient
-from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.prompts.reengagement_templates import get_reengagement_message
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.api.schemas.ghl import MessageType
+# Local imports (avoid circular dependencies)
+try:
+    from services.ghl_client import GHLClient
+    from services.memory_service import MemoryService
+except ImportError:
+    # Fallback - these services optional for demo mode
+    GHLClient = None
+    MemoryService = None
 
-logger = get_logger(__name__)
+import logging
+logger = logging.getLogger(__name__)
+
+# Mock MessageType enum
+from enum import Enum
+class MessageType(str, Enum):
+    SMS = "SMS"
+    EMAIL = "Email"
+    WHATSAPP = "WhatsApp"
+
+def get_reengagement_message(trigger_type: str, lead_context: dict) -> str:
+    """Fallback message template generator"""
+    return f"Hi {lead_context.get('name', 'there')}! Just wanted to check in..."
 
 
 class ReengagementTrigger(Enum):

@@ -1,35 +1,33 @@
-# Use an official lightweight Python image.
-# 3.11 is stable and performant for FastAPI.
+# Use Python 3.11 to avoid onnxruntime/chromadb issues on newer Pythons/Silicon
 FROM python:3.11-slim
 
-# Set working directory inside the container
 WORKDIR /app
 
-# Set environment variables
-# PYTHONDONTWRITEBYTECODE: Prevents Python from writing pyc files to disc
-# PYTHONUNBUFFERED: Ensures python output is sent straight to terminal (logs)
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Install system dependencies (needed for some Python packages)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    software-properties-common \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file first to leverage Docker cache
-COPY requirements.txt .
+# Copy requirements first for caching
+COPY ghl_real_estate_ai/requirements_clean.txt .
 
-# Install python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies
+RUN pip3 install --no-cache-dir -r requirements_clean.txt
 
-# Copy the rest of the application code
+# Copy the rest of the application
 COPY . .
 
-# Expose the port FastAPI runs on
-EXPOSE 8000
+# Set PYTHONPATH to include the project root
+ENV PYTHONPATH=/app
 
-# Command to run the application using uvicorn
-# main:app refers to main.py file and 'app' object
-# --host 0.0.0.0 is crucial for Docker containers
-# We use sh -c to allow environment variable expansion for $PORT
-CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
+# Expose Streamlit port
+EXPOSE 8501
+
+# Healthcheck
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+
+# Run the application
+ENTRYPOINT ["streamlit", "run", "ghl_real_estate_ai/streamlit_demo/app.py", "--server.port=8501", "--server.address=0.0.0.0"]

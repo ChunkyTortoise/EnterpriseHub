@@ -143,7 +143,7 @@
 
 ### **Connected Systems:**
 - ✅ Claude AI (Anthropic API)
-- ✅ GoHighLevel (Lyrio location: 3xt4qayAh35BlDLaUv7P)
+- ✅ GoHighLevel (Lyrio location: REDACTED_LOCATION_ID)
 - ✅ Contact: realtorjorgesalas@gmail.com
 
 ### **Currently Active For:**

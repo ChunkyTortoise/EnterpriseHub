@@ -313,5 +313,12 @@
     "message": "api_response_time_ms = 600 (threshold: 500)",
     "timestamp": "2026-01-06T18:20:47.128528",
     "location_id": "test_degraded"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-01-07T17:20:25.483502",
+    "location_id": "test_degraded"
   }
 ]

@@ -359,6 +359,27 @@
         "companyName": "TestValue"
       },
       "installed_at": "2026-01-07T02:20:41.491119"
+    },
+    {
+      "installation_id": "b9e5c8f6-25bc-4012-8b82-e5eac6b1a959",
+      "template_id": "tmpl_003",
+      "template_name": "Appointment Reminder Series",
+      "workflow_id": "2e91e744-7cda-4684-bb22-adc13738969b",
+      "tenant_id": "test_user",
+      "customizations": {},
+      "installed_at": "2026-01-08T01:20:20.628728"
+    },
+    {
+      "installation_id": "cdc09237-350f-4539-83e4-8e9177919a3d",
+      "template_id": "tmpl_001",
+      "template_name": "New Lead Welcome Sequence",
+      "workflow_id": "796cec3e-bdc3-4c88-b9ed-fd6f2def6724",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agentName": "TestValue",
+        "companyName": "TestValue"
+      },
+      "installed_at": "2026-01-08T01:20:20.636432"
     }
   ]
 }

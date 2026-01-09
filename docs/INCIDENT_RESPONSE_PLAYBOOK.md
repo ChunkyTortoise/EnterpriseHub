@@ -360,7 +360,7 @@ Cayman
    time curl -s [BACKEND_URL]/health
 
    # Test analytics endpoint
-   time curl -s "[BACKEND_URL]/api/analytics/dashboard?location_id=3xt4qayAh35BlDLaUv7P"
+   time curl -s "[BACKEND_URL]/api/analytics/dashboard?location_id=REDACTED_LOCATION_ID"
    ```
 
 2. **Review Render Metrics**:
@@ -395,7 +395,7 @@ Cayman
 2. Test direct GHL API call:
    ```bash
    curl -H "Authorization: Bearer [GHL_API_KEY]" \
-     "https://rest.gohighlevel.com/v1/locations/3xt4qayAh35BlDLaUv7P"
+     "https://rest.gohighlevel.com/v1/locations/REDACTED_LOCATION_ID"
    ```
 3. If GHL is slow:
    - No immediate fix available (external dependency)
@@ -506,7 +506,7 @@ Cayman
 
 2. **Test Backend API Directly**:
    ```bash
-   curl "[BACKEND_URL]/api/analytics/dashboard?location_id=3xt4qayAh35BlDLaUv7P"
+   curl "[BACKEND_URL]/api/analytics/dashboard?location_id=REDACTED_LOCATION_ID"
    # Should return JSON data or auth challenge (not CORS error)
    ```
 
@@ -890,7 +890,7 @@ Track and review:
 curl [BACKEND_URL]/health
 
 # Backend analytics (requires auth)
-curl "[BACKEND_URL]/api/analytics/dashboard?location_id=3xt4qayAh35BlDLaUv7P"
+curl "[BACKEND_URL]/api/analytics/dashboard?location_id=REDACTED_LOCATION_ID"
 
 # Frontend (HTML response)
 curl -I [FRONTEND_URL]

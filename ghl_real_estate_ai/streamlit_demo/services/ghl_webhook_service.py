@@ -9,7 +9,13 @@ from typing import Optional, Dict, Any, List
 import os
 import hmac
 import hashlib
-import anthropic
+# Optional import for AI features
+try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+    anthropic = None
 from datetime import datetime
 import logging
 
@@ -25,7 +31,7 @@ app = FastAPI(
 )
 
 # Initialize Anthropic client
-anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY")) if ANTHROPIC_AVAILABLE else None
 
 # Configuration
 GHL_WEBHOOK_SECRET = os.getenv("GHL_WEBHOOK_SECRET", "")

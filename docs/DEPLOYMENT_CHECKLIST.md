@@ -66,7 +66,7 @@ In Render Dashboard → Your Service → "Environment" tab, add these **EXACT** 
 
 ```bash
 # GoHighLevel Configuration
-GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
+GHL_LOCATION_ID=REDACTED_LOCATION_ID
 GHL_API_KEY=your_ghl_api_key_here
 
 # Anthropic API Key (YOUR KEY - DO NOT COMMIT TO GIT)

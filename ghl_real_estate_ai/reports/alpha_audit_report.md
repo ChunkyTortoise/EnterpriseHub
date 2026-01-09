@@ -3,15 +3,15 @@
 Generated: 2026-01-05
 
 ## Summary
-- Files Analyzed: 212
-- Total Lines: 64,159
-- Issues Found: 145
+- Files Analyzed: 281
+- Total Lines: 92,564
+- Issues Found: 180
 
 ## Issue Breakdown
 - 🔴 Critical: 0
-- 🟠 High: 60
-- 🟡 Medium: 9
-- 🔵 Low: 76
+- 🟠 High: 72
+- 🟡 Medium: 11
+- 🔵 Low: 97
 
 ## Issues by Category
 
@@ -20,7 +20,7 @@ Generated: 2026-01-05
 - [medium] tests/test_memory_service_extended.py:14 - Wildcard import detected
 - [medium] tests/test_reengagement_engine_extended.py:14 - Wildcard import detected
 
-### Maintainability (80 issues)
+### Maintainability (103 issues)
 - [low] core/conversation_manager.py:310 - Function 'generate_response' is very long (265 lines)
 - [low] agents/iota_revenue_attribution.py:62 - Function 'create_attribution_service' is very long (336 lines)
 - [low] agents/swarm_orchestrator.py:163 - Function '_initialize_tasks' is very long (203 lines)
@@ -32,14 +32,14 @@ Generated: 2026-01-05
 - [low] agents/alpha_integration_validator.py:189 - Function 'task_5_generate_report' is very long (123 lines)
 - [low] agents/delta_executive_dashboard.py:62 - Function 'create_dashboard_service' is very long (317 lines)
 
-### Security (63 issues)
+### Security (75 issues)
 - [high] core/llm_client.py:60 - Potential hardcoded secret detected
 - [high] core/llm_client.py:91 - Potential hardcoded secret detected
 - [high] core/llm_client.py:100 - Potential hardcoded secret detected
 - [high] core/llm_client.py:117 - Potential hardcoded secret detected
-- [high] tests/test_security_integration.py:24 - Potential hardcoded secret detected
-- [high] tests/test_security_integration.py:32 - Potential hardcoded secret detected
-- [high] tests/test_security_integration.py:49 - Potential hardcoded secret detected
-- [high] tests/test_security_integration.py:57 - Potential hardcoded secret detected
-- [high] tests/test_security_integration.py:64 - Potential hardcoded secret detected
-- [high] tests/test_security_integration.py:75 - Potential hardcoded secret detected
+- [high] tests/test_security_integration.py:25 - Potential hardcoded secret detected
+- [high] tests/test_security_integration.py:33 - Potential hardcoded secret detected
+- [high] tests/test_security_integration.py:50 - Potential hardcoded secret detected
+- [high] tests/test_security_integration.py:58 - Potential hardcoded secret detected
+- [high] tests/test_security_integration.py:65 - Potential hardcoded secret detected
+- [high] tests/test_security_integration.py:76 - Potential hardcoded secret detected

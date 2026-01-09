@@ -7,9 +7,9 @@ import json
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Any
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 class TeamManager:
     """

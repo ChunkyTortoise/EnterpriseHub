@@ -43,6 +43,66 @@ class GHLClient:
             "Version": "2021-07-28",
         }
 
+    def check_health(self):
+        """
+        Check if GHL API is accessible.
+        Synchronous method for Streamlit.
+        """
+        if settings.test_mode or self.api_key == "dummy":
+            # Mock response object
+            class MockResponse:
+                status_code = 200
+            return MockResponse()
+        
+        # Simple ping to a lightweight endpoint
+        try:
+            with httpx.Client() as client:
+                response = client.get(
+                    f"{self.base_url}/locations/{self.location_id}",
+                    headers=self.headers,
+                    timeout=5.0
+                )
+                return response
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            class ErrorResponse:
+                status_code = 500
+            return ErrorResponse()
+
+    def get_conversations(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Fetch recent conversations from GHL."""
+        if settings.test_mode or self.api_key == "dummy":
+            return []
+            
+        endpoint = f"{self.base_url}/conversations/search"
+        params = {"locationId": self.location_id, "limit": limit}
+        
+        try:
+            with httpx.Client() as client:
+                response = client.get(endpoint, params=params, headers=self.headers)
+                response.raise_for_status()
+                return response.json().get("conversations", [])
+        except Exception as e:
+            logger.error(f"Failed to fetch conversations: {e}")
+            return []
+
+    def get_opportunities(self) -> List[Dict[str, Any]]:
+        """Fetch opportunities (pipeline) from GHL."""
+        if settings.test_mode or self.api_key == "dummy":
+            return []
+            
+        endpoint = f"{self.base_url}/opportunities/search"
+        params = {"locationId": self.location_id}
+        
+        try:
+            with httpx.Client() as client:
+                response = client.get(endpoint, params=params, headers=self.headers)
+                response.raise_for_status()
+                return response.json().get("opportunities", [])
+        except Exception as e:
+            logger.error(f"Failed to fetch opportunities: {e}")
+            return []
+
     async def send_message(
         self, contact_id: str, message: str, channel: MessageType = MessageType.SMS
     ) -> Dict[str, Any]:
@@ -461,3 +521,127 @@ class GHLClient:
                 results.append({"error": str(e), "action": action.type})
 
         return results
+
+    def fetch_dashboard_data(self) -> dict:
+        """
+        Fetch real-time dashboard data from GHL API.
+        
+        This method replaces mock data with live CRM data for:
+        - Active conversations
+        - Pipeline opportunities
+        - Revenue metrics
+        - Lead activity feed
+        
+        Returns:
+            dict: Dashboard data matching mock_analytics.json structure
+        """
+        if settings.test_mode or self.api_key == "dummy":
+            return {
+                "system_health": {
+                    "uptime_percentage": 99.9,
+                    "avg_response_time_ms": 145,
+                    "sms_compliance_rate": 0.98
+                },
+                "conversations": [],
+                "revenue": {"total": 0},
+                "is_mock": True
+            }
+
+        try:
+            logger.info("Fetching live dashboard data from GHL API")
+            
+            # Fetch conversations (last 50)
+            conversations = self.get_conversations(limit=50)
+            
+            # Fetch opportunities (pipeline)
+            opportunities = self.get_opportunities()
+            
+            # Calculate revenue metrics
+            total_pipeline = sum(
+                float(opp.get("monetary_value", 0) or 0) 
+                for opp in opportunities
+            )
+            
+            won_deals = [
+                opp for opp in opportunities 
+                if opp.get("status") == "won"
+            ]
+            total_revenue = sum(
+                float(deal.get("monetary_value", 0) or 0) 
+                for deal in won_deals
+            )
+            
+            # Calculate conversion rate
+            total_leads = len(conversations)
+            qualified_leads = len([
+                c for c in conversations 
+                if c.get("tags") and any(
+                    tag in c.get("tags", []) 
+                    for tag in ["Hot Lead", "Qualified"]
+                )
+            ])
+            conversion_rate = (
+                (qualified_leads / total_leads * 100) 
+                if total_leads > 0 else 0
+            )
+            
+            # Build activity feed from recent conversations
+            activity_feed = []
+            for conv in conversations[:10]:  # Last 10 activities
+                contact_name = conv.get("contactName", "Unknown")
+                last_message = conv.get("lastMessageBody", "")[:50]
+                timestamp = conv.get("lastMessageDate", "")
+                
+                activity_feed.append({
+                    "type": "conversation",
+                    "contact": contact_name,
+                    "message": last_message,
+                    "timestamp": timestamp
+                })
+            
+            # Return structured data
+            return {
+                "conversations": conversations,
+                "opportunities": opportunities,
+                "metrics": {
+                    "total_pipeline": total_pipeline,
+                    "total_revenue": total_revenue,
+                    "conversion_rate": conversion_rate,
+                    "active_leads": total_leads,
+                    "qualified_leads": qualified_leads,
+                    "won_deals": len(won_deals)
+                },
+                "activity_feed": activity_feed,
+                "system_health": {
+                    "status": "live",
+                    "api_connected": True,
+                    "last_sync": self._get_current_timestamp()
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch dashboard data: {e}")
+            # Return minimal structure to prevent crashes
+            return {
+                "conversations": [],
+                "opportunities": [],
+                "metrics": {
+                    "total_pipeline": 0,
+                    "total_revenue": 0,
+                    "conversion_rate": 0,
+                    "active_leads": 0,
+                    "qualified_leads": 0,
+                    "won_deals": 0
+                },
+                "activity_feed": [],
+                "system_health": {
+                    "status": "error",
+                    "api_connected": False,
+                    "error": str(e)
+                }
+            }
+    
+    def _get_current_timestamp(self) -> str:
+        """Get current timestamp in ISO format"""
+        from datetime import datetime
+        return datetime.utcnow().isoformat() + "Z"

@@ -6,9 +6,9 @@ Matches lead preferences to available property listings.
 import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 class PropertyMatcher:
     """

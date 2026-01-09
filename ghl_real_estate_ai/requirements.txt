@@ -1,35 +1,42 @@
 # GHL Real Estate AI - Production Dependencies
-# Minimal requirements for Render.com deployment
+# Compatible with Python 3.10, 3.11, 3.12, 3.14
+# Tested on: Linux (amd64), macOS (arm64/Intel)
 
 # FastAPI + ASGI Server
-fastapi>=0.109.0,<0.112.0
-uvicorn[standard]>=0.27.0,<0.31.0
-pydantic>=2.5.0,<3.0.0
-pydantic-settings>=2.1.0,<3.0.0
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+pydantic==2.6.1
+pydantic-settings==2.1.0
 
 # Anthropic Claude SDK
-anthropic>=0.18.0,<0.35.0
+anthropic==0.18.1
 
-# Vector Database & Embeddings
-chromadb>=0.4.22,<0.6.0
-sentence-transformers>=2.3.0,<3.0.0
+# Vector Database & Embeddings (pinned for stability)
+chromadb==0.4.24
+sentence-transformers==2.3.1
+onnxruntime==1.16.3; sys_platform == 'linux' or (sys_platform == 'darwin' and platform_machine == 'x86_64')
+onnxruntime-silicon==1.16.3; sys_platform == 'darwin' and platform_machine == 'arm64'
 
 # HTTP Client (for GHL API calls)
-httpx>=0.26.0,<0.28.0
-requests>=2.31.0,<3.0.0
+httpx==0.26.0
+requests==2.31.0
 
 # Utilities
-python-dotenv>=1.0.0,<2.0.0
-python-multipart>=0.0.6,<0.1.0
+python-dotenv==1.0.1
+python-multipart==0.0.6
 
-# Numpy (required by sentence-transformers)
-numpy>=1.24.0,<2.0.0
+# Numpy (compatible with all platforms)
+numpy==1.26.3
 
-# Security Dependencies (added by Agent 5)
-python-jose[cryptography]>=3.3.0,<4.0.0
-passlib[bcrypt]>=1.7.4,<2.0.0
+# Security Dependencies
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
 
 # UI & Dashboard
-streamlit>=1.30.0,<2.0.0
-pandas>=2.0.0,<3.0.0
-plotly>=5.18.0,<6.0.0
+streamlit==1.30.0
+pandas==2.1.4
+plotly==5.18.0
+
+# Additional ML dependencies
+scikit-learn==1.4.0
+tokenizers==0.15.1

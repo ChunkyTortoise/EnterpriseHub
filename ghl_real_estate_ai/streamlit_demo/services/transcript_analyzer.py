@@ -23,9 +23,9 @@ from collections import Counter, defaultdict
 import re
 from dataclasses import dataclass, asdict
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @dataclass
