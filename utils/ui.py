@@ -99,6 +99,31 @@ LIGHT_THEME["button_text"] = "#FFFFFF"
 THEME = LIGHT_THEME
 
 
+import plotly.graph_objects as go
+
+def sparkline(data: list[float], color: str = "#2563eb", height: int = 40) -> go.Figure:
+    """
+    Generates a minimal sparkline chart using Plotly.
+    """
+    fig = go.Figure(go.Scatter(
+        y=data,
+        mode='lines',
+        fill='tozeroy',
+        line=dict(color=color, width=2),
+        fillcolor=f"{color}33"  # approx 20% opacity
+    ))
+    fig.update_layout(
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=height,
+        xaxis=dict(visible=False, fixedrange=True),
+        yaxis=dict(visible=False, fixedrange=True)
+    )
+    return fig
+
+
 def get_base64_image(file_path: str) -> str:
     """Read a local file and return its base64 representation."""
     try:
