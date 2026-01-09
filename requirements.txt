@@ -55,4 +55,4 @@ streamlit-chat==0.1.1
 # ==============================================================================
 python-dotenv==1.0.0  # Environment variable management
 openpyxl==3.1.2  # Excel file support for data export
-PyGithub>=2.1.1 # GitHub API interactions
+PyGithub>=2.1.1 # GitHub API interactionsfastmcp

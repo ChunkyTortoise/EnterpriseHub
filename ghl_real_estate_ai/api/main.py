@@ -14,6 +14,7 @@ from ghl_real_estate_ai.api.routes import (
     analytics,
     bulk_operations,
     crm,
+    health,
     lead_lifecycle,
     portal,
     properties,
@@ -66,6 +67,7 @@ app.include_router(webhook.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(bulk_operations.router, prefix="/api")
 app.include_router(lead_lifecycle.router, prefix="/api")
+app.include_router(health.router)  # Health endpoint at root level
 
 # Authentication routes (added by Agent 5)
 app.include_router(auth.router, prefix="/api/auth")
@@ -93,14 +95,7 @@ async def root():
     }
 
 
-@app.get("/health")
-async def health():
-    """Health check endpoint for Railway."""
-    return {
-        "status": "healthy",
-        "service": settings.app_name,
-        "version": settings.version,
-    }
+# Health endpoint now handled by health router
 
 
 @app.on_event("startup")
