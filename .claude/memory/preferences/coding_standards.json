@@ -1,0 +1,46 @@
+{
+  "language_preferences": {
+    "python": {
+      "line_length": 88,
+      "type_hints": "required",
+      "docstring_style": "google",
+      "async_style": "preferred_for_io"
+    },
+    "typescript": {
+      "strict_mode": true,
+      "explicit_any": false,
+      "function_style": "arrow_functions",
+      "import_style": "named_imports"
+    }
+  },
+  "testing_preferences": {
+    "framework": "pytest",
+    "structure": "arrange_act_assert",
+    "naming": "should_action_when_condition",
+    "coverage_threshold": 85,
+    "mock_strategy": "dependency_injection"
+  },
+  "architecture_preferences": {
+    "patterns": {
+      "preferred": ["strategy", "repository", "factory", "observer"],
+      "avoid": ["singleton", "god_object"]
+    },
+    "principles": {
+      "solid_compliance": "strict",
+      "dry_threshold": 3,
+      "kiss_preference": "simple_over_clever"
+    }
+  },
+  "real_estate_domain": {
+    "response_time_requirements": {
+      "lead_response": "under_2_minutes",
+      "property_search": "under_5_seconds",
+      "analytics_refresh": "under_30_seconds"
+    },
+    "data_accuracy_requirements": {
+      "property_matching": 85,
+      "lead_scoring": 80,
+      "price_prediction": 75
+    }
+  }
+}

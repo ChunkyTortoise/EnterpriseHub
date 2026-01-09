@@ -1,0 +1,206 @@
+{
+  "listings": [
+    {
+      "id": "prop_ml_demo_001",
+      "price": 745000,
+      "address": {
+        "street": "2100 Rainey Street",
+        "neighborhood": "Rainey District",
+        "city": "Austin",
+        "zip": "78701",
+        "lat": 30.2603,
+        "lng": -97.7353
+      },
+      "bedrooms": 3,
+      "bathrooms": 2.5,
+      "sqft": 2050,
+      "property_type": "Modern Townhome",
+      "year_built": 2020,
+      "amenities": ["garage", "roof_deck", "smart_home", "granite_counters", "walk_to_downtown"],
+      "school_rating": 8.2,
+      "crime_score": 7.8,
+      "walkability_score": 92,
+      "days_on_market": 8,
+      "price_per_sqft": 363.41,
+      "listing_url": "https://example.com/prop1",
+      "description": "Stunning modern townhome in the heart of Rainey District with rooftop deck and city views",
+      "photos": ["https://example.com/photo1.jpg"],
+      "mls_id": "ATX123456"
+    },
+    {
+      "id": "prop_ml_demo_002",
+      "price": 650000,
+      "address": {
+        "street": "1845 East 6th Street",
+        "neighborhood": "East Austin",
+        "city": "Austin",
+        "zip": "78702",
+        "lat": 30.2691,
+        "lng": -97.7249
+      },
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "sqft": 1850,
+      "property_type": "Single Family",
+      "year_built": 2018,
+      "amenities": ["garage", "pool", "solar_panels", "fenced_yard", "food_truck_park"],
+      "school_rating": 7.9,
+      "crime_score": 6.5,
+      "walkability_score": 85,
+      "days_on_market": 12,
+      "price_per_sqft": 351.35,
+      "listing_url": "https://example.com/prop2",
+      "description": "Charming East Austin home with pool and solar panels, walking distance to famous food trucks",
+      "photos": ["https://example.com/photo2.jpg"],
+      "mls_id": "ATX234567"
+    },
+    {
+      "id": "prop_ml_demo_003",
+      "price": 825000,
+      "address": {
+        "street": "3200 Duval Street",
+        "neighborhood": "Crestview",
+        "city": "Austin",
+        "zip": "78705",
+        "lat": 30.3089,
+        "lng": -97.7311
+      },
+      "bedrooms": 4,
+      "bathrooms": 3,
+      "sqft": 2450,
+      "property_type": "Single Family",
+      "year_built": 2019,
+      "amenities": ["garage", "office", "master_suite", "garden", "luxury_finishes"],
+      "school_rating": 9.1,
+      "crime_score": 8.8,
+      "walkability_score": 78,
+      "days_on_market": 18,
+      "price_per_sqft": 336.73,
+      "listing_url": "https://example.com/prop3",
+      "description": "Luxurious 4-bedroom home in highly rated Crestview with dedicated office space",
+      "photos": ["https://example.com/photo3.jpg"],
+      "mls_id": "ATX345678"
+    },
+    {
+      "id": "prop_ml_demo_004",
+      "price": 590000,
+      "address": {
+        "street": "1250 Crossing Place",
+        "neighborhood": "Mueller",
+        "city": "Austin",
+        "zip": "78723",
+        "lat": 30.2953,
+        "lng": -97.7073
+      },
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "sqft": 1920,
+      "property_type": "Single Family",
+      "year_built": 2016,
+      "amenities": ["garage", "green_building", "lake_access", "community_pool", "trails"],
+      "school_rating": 8.5,
+      "crime_score": 8.2,
+      "walkability_score": 68,
+      "days_on_market": 25,
+      "price_per_sqft": 307.29,
+      "listing_url": "https://example.com/prop4",
+      "description": "Sustainable living in Mueller with lake access and community amenities",
+      "photos": ["https://example.com/photo4.jpg"],
+      "mls_id": "ATX456789"
+    },
+    {
+      "id": "prop_ml_demo_005",
+      "price": 890000,
+      "address": {
+        "street": "4567 Bee Creek Road",
+        "neighborhood": "Westlake",
+        "city": "Austin",
+        "zip": "78746",
+        "lat": 30.2721,
+        "lng": -97.8206
+      },
+      "bedrooms": 4,
+      "bathrooms": 3.5,
+      "sqft": 2850,
+      "property_type": "Single Family",
+      "year_built": 2021,
+      "amenities": ["three_car_garage", "pool", "wine_cellar", "lake_view", "gourmet_kitchen"],
+      "school_rating": 9.8,
+      "crime_score": 9.5,
+      "walkability_score": 45,
+      "days_on_market": 35,
+      "price_per_sqft": 312.28,
+      "listing_url": "https://example.com/prop5",
+      "description": "Luxury lakefront home in prestigious Westlake with wine cellar and gourmet kitchen",
+      "photos": ["https://example.com/photo5.jpg"],
+      "mls_id": "ATX567890"
+    }
+  ],
+  "demo_scenarios": [
+    {
+      "name": "Young Tech Professional",
+      "preferences": {
+        "budget": 750000,
+        "location": "East Austin",
+        "bedrooms": 3,
+        "property_type": "Single Family",
+        "must_haves": ["garage", "walkable"],
+        "nice_to_haves": ["pool", "modern", "food_scene"]
+      },
+      "expected_top_match": "prop_ml_demo_002",
+      "confidence_factors": ["budget_value", "location_perfect", "walkability_high"]
+    },
+    {
+      "name": "Growing Family",
+      "preferences": {
+        "budget": 850000,
+        "location": "Crestview",
+        "bedrooms": 4,
+        "property_type": "Single Family",
+        "must_haves": ["garage", "good_schools", "office"],
+        "nice_to_haves": ["yard", "quiet_neighborhood"]
+      },
+      "expected_top_match": "prop_ml_demo_003",
+      "confidence_factors": ["school_excellent", "space_adequate", "neighborhood_match"]
+    },
+    {
+      "name": "Downtown Lifestyle Buyer",
+      "preferences": {
+        "budget": 800000,
+        "location": "Downtown",
+        "bedrooms": 3,
+        "property_type": "Townhome",
+        "must_haves": ["walkable", "modern"],
+        "nice_to_haves": ["rooftop", "city_views", "smart_home"]
+      },
+      "expected_top_match": "prop_ml_demo_001",
+      "confidence_factors": ["location_premium", "lifestyle_match", "amenities_perfect"]
+    },
+    {
+      "name": "Eco-Conscious Buyer",
+      "preferences": {
+        "budget": 650000,
+        "location": "Mueller",
+        "bedrooms": 3,
+        "property_type": "Single Family",
+        "must_haves": ["green_building", "garage"],
+        "nice_to_haves": ["community_amenities", "sustainable"]
+      },
+      "expected_top_match": "prop_ml_demo_004",
+      "confidence_factors": ["sustainability_focus", "community_fit", "price_value"]
+    },
+    {
+      "name": "Luxury Buyer",
+      "preferences": {
+        "budget": 950000,
+        "location": "Westlake",
+        "bedrooms": 4,
+        "property_type": "Single Family",
+        "must_haves": ["pool", "luxury_finishes"],
+        "nice_to_haves": ["wine_cellar", "lake_view", "gourmet_kitchen"]
+      },
+      "expected_top_match": "prop_ml_demo_005",
+      "confidence_factors": ["luxury_amenities", "prestige_location", "investment_quality"]
+    }
+  ]
+}

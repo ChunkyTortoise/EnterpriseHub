@@ -1,0 +1,225 @@
+# Real-time Configuration Environments
+# Quick reference for different deployment scenarios
+
+development:
+  description: "Local development with minimal real-time features"
+  redis:
+    url: "redis://localhost:6379"
+    password: null
+    db: 0
+    max_connections: 10
+    socket_timeout: 30
+  websocket:
+    host: "localhost"
+    port: 8765
+    secure: false
+    origins: "localhost:8501,127.0.0.1:8501"
+    reconnect_attempts: 3
+  realtime:
+    enabled: true
+    use_websocket: true
+    poll_interval: 3
+    max_events: 100
+    cache_ttl: 1800
+
+testing:
+  description: "Testing environment with enhanced logging"
+  redis:
+    url: "redis://localhost:6379"
+    password: null
+    db: 1
+    max_connections: 5
+    socket_timeout: 10
+  websocket:
+    host: "localhost"
+    port: 8766
+    secure: false
+    origins: "localhost:8501,127.0.0.1:8501"
+    reconnect_attempts: 1
+  realtime:
+    enabled: true
+    use_websocket: false  # Force polling for predictable tests
+    poll_interval: 1
+    max_events: 50
+    cache_ttl: 300
+
+staging:
+  description: "Staging environment with production-like settings"
+  redis:
+    url: "${REDIS_URL}"  # From Railway or cloud provider
+    password: "${REDIS_PASSWORD}"
+    db: 0
+    max_connections: 15
+    socket_timeout: 30
+  websocket:
+    host: "0.0.0.0"
+    port: 8765
+    secure: true  # Use wss:// for staging
+    origins: "staging.yourdomain.com"
+    reconnect_attempts: 5
+  realtime:
+    enabled: true
+    use_websocket: true
+    poll_interval: 2
+    max_events: 500
+    cache_ttl: 3600
+
+production:
+  description: "Production environment with optimized settings"
+  redis:
+    url: "${REDIS_URL}"  # From Railway or cloud provider
+    password: "${REDIS_PASSWORD}"
+    db: 0
+    max_connections: 25
+    socket_timeout: 30
+    health_check_interval: 60
+  websocket:
+    host: "0.0.0.0"
+    port: 8765
+    secure: true  # Always use wss:// in production
+    origins: "yourdomain.com,www.yourdomain.com"
+    ping_interval: 30
+    reconnect_attempts: 10
+    max_size: 2097152  # 2MB
+  realtime:
+    enabled: true
+    use_websocket: true
+    poll_interval: 1  # More responsive
+    max_events: 2000
+    cache_ttl: 7200
+    high_priority_threshold: 4
+
+docker:
+  description: "Docker containerized deployment"
+  redis:
+    url: "redis://redis:6379"  # Docker service name
+    password: null
+    db: 0
+    max_connections: 20
+    socket_timeout: 30
+  websocket:
+    host: "0.0.0.0"
+    port: 8765
+    secure: false  # Handled by reverse proxy
+    origins: "*"  # Configure reverse proxy for CORS
+    reconnect_attempts: 5
+  realtime:
+    enabled: true
+    use_websocket: true
+    poll_interval: 2
+    max_events: 1000
+    cache_ttl: 3600
+
+railway:
+  description: "Railway platform deployment"
+  redis:
+    url: "${REDIS_URL}"  # Auto-provided by Railway
+    password: null  # Included in REDIS_URL
+    db: 0
+    max_connections: 20
+    socket_timeout: 30
+    retry_on_timeout: true
+  websocket:
+    host: "0.0.0.0"
+    port: "${PORT:-8501}"  # Use Railway's PORT variable
+    secure: true
+    origins: "${RAILWAY_PUBLIC_DOMAIN}"
+    ping_interval: 30
+    reconnect_attempts: 8
+  realtime:
+    enabled: true
+    use_websocket: true
+    poll_interval: 2
+    max_events: 1500
+    cache_ttl: 3600
+
+# Environment variable mappings
+environment_variables:
+  development:
+    ENVIRONMENT: "development"
+    LOG_LEVEL: "DEBUG"
+    REALTIME_ENABLED: "true"
+    REDIS_URL: "redis://localhost:6379"
+    WEBSOCKET_HOST: "localhost"
+    WEBSOCKET_SECURE: "false"
+
+  staging:
+    ENVIRONMENT: "staging"
+    LOG_LEVEL: "INFO"
+    REALTIME_ENABLED: "true"
+    WEBSOCKET_SECURE: "true"
+    WEBSOCKET_ORIGINS: "staging.yourdomain.com"
+
+  production:
+    ENVIRONMENT: "production"
+    LOG_LEVEL: "WARNING"
+    REALTIME_ENABLED: "true"
+    WEBSOCKET_SECURE: "true"
+    WEBSOCKET_PING_INTERVAL: "30"
+    REALTIME_MAX_EVENTS: "2000"
+
+# Quick setup commands
+setup_commands:
+  development:
+    - "brew install redis"
+    - "brew services start redis"
+    - "pip install -r requirements.txt"
+    - "cp .env.example .env"
+    - "streamlit run streamlit_demo/app.py"
+
+  docker:
+    - "docker-compose up -d redis"
+    - "docker build -t ghl-realtime ."
+    - "docker run -p 8501:8501 --link redis ghl-realtime"
+
+  railway:
+    - "railway add --database redis"
+    - "railway deploy"
+    - "railway open"
+
+# Troubleshooting
+common_issues:
+  redis_connection_failed:
+    symptoms: ["ConnectionError", "Redis ping failed"]
+    solutions:
+      - "Check if Redis server is running: redis-cli ping"
+      - "Verify REDIS_URL format: redis://localhost:6379"
+      - "Check firewall settings for port 6379"
+
+  websocket_connection_refused:
+    symptoms: ["Connection refused", "WebSocket failed to connect"]
+    solutions:
+      - "Check if WebSocket server is running on correct port"
+      - "Verify WEBSOCKET_HOST and WEBSOCKET_PORT settings"
+      - "Check firewall settings for WebSocket port"
+
+  streamlit_not_updating:
+    symptoms: ["No real-time updates", "Data not refreshing"]
+    solutions:
+      - "Verify REALTIME_ENABLED=true"
+      - "Check browser console for WebSocket errors"
+      - "Enable auto-refresh in Streamlit"
+
+# Performance tuning
+performance_tuning:
+  high_traffic:
+    redis:
+      max_connections: 50
+      socket_timeout: 60
+    websocket:
+      max_size: 4194304  # 4MB
+      max_queue: 200
+    realtime:
+      max_events: 5000
+      batch_size: 100
+
+  low_resource:
+    redis:
+      max_connections: 5
+      socket_timeout: 10
+    websocket:
+      max_size: 524288  # 512KB
+      max_queue: 16
+    realtime:
+      max_events: 200
+      poll_interval: 5

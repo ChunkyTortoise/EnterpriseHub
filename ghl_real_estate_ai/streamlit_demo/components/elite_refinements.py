@@ -10,13 +10,13 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 
-def styled_segment_card(title: str, engagement: int, score: int, 
-                       price: str, actions: List[str], 
+def styled_segment_card(title: str, engagement: int, score: int,
+                       price: str, actions: List[str],
                        lead_count: Optional[int] = None):
     """
     Elite Component to fix the 'HTML Leak' seen in Screenshots 21-22.
     Renders professional data cards with proper HTML escaping and styling.
-    
+
     Args:
         title: Segment name (e.g., "Highly Active", "Warming Up")
         engagement: Engagement percentage (0-100)
@@ -29,81 +29,77 @@ def styled_segment_card(title: str, engagement: int, score: int,
     if engagement >= 80:
         badge_bg = "#dcfce7"
         badge_color = "#166534"
+        card_bg = "#f0fdf4"
     elif engagement >= 60:
         badge_bg = "#fef3c7"
         badge_color = "#92400e"
+        card_bg = "#fffbeb"
     else:
         badge_bg = "#fee2e2"
         badge_color = "#991b1b"
-    
-    # Build actions HTML with proper escaping
-    actions_html = ''.join([f'<li style="margin: 4px 0;">{action}</li>' for action in actions])
-    
-    lead_badge = f"""
-        <span style="background: #e0e7ff; color: #3730a3; padding: 4px 12px; 
-                     border-radius: 20px; font-size: 0.75rem; font-weight: bold; margin-left: 8px;">
-            {lead_count} leads
-        </span>
-    """ if lead_count else ""
-    
-    card_html = f"""
-    <div style="
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); 
-        border-radius: 12px; 
-        border: 1px solid #e2e8f0; 
-        padding: 24px; 
-        margin-bottom: 16px; 
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        transition: all 0.3s ease;">
-        
-        <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <div style="display: flex; align-items: center;">
-                <h4 style="margin: 0; color: #1e293b; font-size: 1.25rem; font-weight: 600;">
-                    {title}
-                </h4>
-                {lead_badge}
-            </div>
-            <span style="background: {badge_bg}; color: {badge_color}; 
-                         padding: 6px 14px; border-radius: 20px; 
-                         font-size: 0.8rem; font-weight: 600;">
+        card_bg = "#fef2f2"
+
+    # Use Streamlit native components instead of complex HTML
+    with st.container():
+        # Create a styled container with background color
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, {card_bg} 0%, #ffffff 100%);
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Header row with title and engagement badge
+        col1, col2 = st.columns([3, 1])
+
+        with col1:
+            if lead_count:
+                st.markdown(f"### {title} ({lead_count} leads)")
+            else:
+                st.markdown(f"### {title}")
+
+        with col2:
+            st.markdown(f"""
+            <div style="
+                background: {badge_bg};
+                color: {badge_color};
+                padding: 8px 16px;
+                border-radius: 20px;
+                text-align: center;
+                font-weight: bold;
+                font-size: 0.9rem;">
                 {engagement}% Active
-            </span>
-        </div>
-        
-        <!-- Metrics Row -->
-        <div style="display: flex; gap: 24px; margin-bottom: 16px; padding-bottom: 16px; 
-                    border-bottom: 1px solid #f1f5f9;">
-            <div style="flex: 1;">
-                <p style="margin: 0; color: #94a3b8; font-size: 0.75rem; 
-                          text-transform: uppercase; font-weight: 600;">AI Score</p>
-                <p style="margin: 4px 0 0 0; color: #1e293b; font-size: 1.5rem; font-weight: 700;">
-                    {score}
-                </p>
             </div>
-            <div style="flex: 1;">
-                <p style="margin: 0; color: #94a3b8; font-size: 0.75rem; 
-                          text-transform: uppercase; font-weight: 600;">Est. Value</p>
-                <p style="margin: 4px 0 0 0; color: #10b981; font-size: 1.5rem; font-weight: 700;">
-                    {price}
-                </p>
-            </div>
-        </div>
-        
-        <!-- Recommended Actions -->
-        <div>
-            <p style="margin: 0 0 8px 0; font-size: 0.75rem; font-weight: 700; 
-                      color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
-                🎯 Recommended Actions
-            </p>
-            <ul style="padding-left: 20px; margin: 0; font-size: 0.9rem; color: #334155; line-height: 1.6;">
-                {actions_html}
-            </ul>
-        </div>
-    </div>
-    """
-    
-    st.markdown(card_html, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+
+        # Metrics row
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric(
+                label="AI Score",
+                value=f"{score}",
+                delta=None
+            )
+
+        with col2:
+            st.metric(
+                label="Est. Value",
+                value=price,
+                delta=None
+            )
+
+        # Recommended Actions
+        st.markdown("**🎯 Recommended Actions:**")
+        for action in actions:
+            st.markdown(f"• {action}")
+
+        # Add some spacing
+        st.markdown("<br>", unsafe_allow_html=True)
 
 
 def render_dynamic_timeline(days_remaining: int, actions_completed: int = 0, 

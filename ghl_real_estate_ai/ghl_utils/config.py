@@ -36,6 +36,41 @@ class Settings(BaseSettings):
     database_url: Optional[str] = None  # PostgreSQL (Railway auto-provides)
     redis_url: Optional[str] = None  # Redis for session state
 
+    # Redis Configuration (Real-time Features)
+    redis_password: Optional[str] = None
+    redis_db: int = 0
+    redis_max_connections: int = 20
+    redis_socket_timeout: int = 30
+    redis_socket_connect_timeout: int = 30
+    redis_retry_on_timeout: bool = True
+    redis_health_check_interval: int = 30
+
+    # WebSocket Configuration (Real-time Updates)
+    websocket_host: str = "localhost"
+    websocket_port: int = 8765
+    websocket_path: str = "/ws"
+    websocket_protocol: str = "ws"
+    websocket_secure: bool = False
+    websocket_origins: str = "localhost:8501,127.0.0.1:8501"
+    websocket_ping_interval: int = 20
+    websocket_ping_timeout: int = 10
+    websocket_close_timeout: int = 10
+    websocket_max_size: int = 1048576  # 1MB
+    websocket_max_queue: int = 32
+    websocket_reconnect_attempts: int = 5
+    websocket_reconnect_delay: int = 2
+    websocket_fallback_to_polling: bool = True
+
+    # Real-time Service Configuration
+    realtime_enabled: bool = True
+    realtime_use_websocket: bool = True
+    realtime_poll_interval: int = 2
+    realtime_max_events: int = 1000
+    realtime_cache_ttl: int = 3600
+    realtime_event_dedup_window: int = 30
+    realtime_high_priority_threshold: int = 3
+    realtime_batch_size: int = 50
+
     # Vector Database
     chroma_persist_directory: str = "./data/embeddings/chroma_db"
     chroma_collection_name: str = "real_estate_kb"

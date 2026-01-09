@@ -1,0 +1,62 @@
+# GHL Real Estate AI - Streamlit Demo Requirements
+# Updated with Enhanced Lead Intelligence System ML Dependencies
+# Compatible with Python 3.14.2
+# Date: 2026-01-09
+
+# ==============================================================================
+# Core UI Framework
+# ==============================================================================
+streamlit==1.50.0
+streamlit-chat==0.1.1
+plotly==6.5.0
+
+# ==============================================================================
+# AI & Language Models
+# ==============================================================================
+anthropic==0.40.0
+chromadb==0.5.23
+sentence-transformers==3.3.1
+
+# ==============================================================================
+# Enhanced ML Dependencies for Lead Intelligence
+# ==============================================================================
+# Core ML Infrastructure
+redis==7.1.0                    # Real-time caching and data storage
+xgboost==3.1.2                  # Lead scoring and conversion prediction
+shap==0.50.0                    # Model explainability
+
+# Data Science Foundation
+numpy==2.4.0
+pandas==2.3.3
+scipy==1.16.3
+scikit-learn==1.8.0
+joblib==1.5.3
+
+# Advanced ML Capabilities
+imbalanced-learn==0.14.1        # Handle imbalanced lead datasets
+category-encoders==2.8.1        # Advanced categorical encoding
+statsmodels==0.14.6             # Statistical modeling and forecasting
+
+# Performance & Visualization
+numba==0.63.0b1                 # JIT compilation for performance
+matplotlib==3.10.8              # Enhanced plotting capabilities
+seaborn==0.13.2                 # Statistical visualization
+
+# ==============================================================================
+# Utilities & Configuration
+# ==============================================================================
+python-dotenv==1.0.1
+pydantic>=2.0.0
+
+# ==============================================================================
+# Testing (Development)
+# ==============================================================================
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# ==============================================================================
+# System Notes
+# ==============================================================================
+# macOS: Required system dependency - brew install libomp (for XGBoost)
+# Ubuntu/Debian: apt-get install libgomp1
+# CentOS/RHEL: yum install libgomp
