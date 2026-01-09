@@ -9,7 +9,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class MessageType(str, Enum):
@@ -61,8 +61,7 @@ class GHLWebhookEvent(BaseModel):
     message: GHLMessage
     contact: GHLContact
 
-    class Config:
-        populate_by_name = True  # Allow both snake_case and camelCase
+    model_config = ConfigDict(populate_by_name=True)  # Allow both snake_case and camelCase
 
 
 class ActionType(str, Enum):

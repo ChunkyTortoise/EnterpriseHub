@@ -1,0 +1,1 @@
+"""Agentic Hooks Registry"""

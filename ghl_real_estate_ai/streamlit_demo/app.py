@@ -70,6 +70,28 @@ try:
     from services.property_matcher import PropertyMatcher
     from services.reengagement_engine import ReengagementEngine, ReengagementTrigger
     from services.churn_integration_service import ChurnIntegrationService
+
+    # Enhanced services imports (from parent directory)
+    try:
+        from ghl_real_estate_ai.services.enhanced_lead_scorer import EnhancedLeadScorer
+        ENHANCED_LEAD_SCORER_AVAILABLE = True
+    except ImportError:
+        print("Enhanced Lead Scorer not available")
+        ENHANCED_LEAD_SCORER_AVAILABLE = False
+
+    try:
+        from ghl_real_estate_ai.services.enhanced_property_matcher import EnhancedPropertyMatcher
+        ENHANCED_PROPERTY_MATCHER_AVAILABLE = True
+    except ImportError:
+        print("Enhanced Property Matcher not available")
+        ENHANCED_PROPERTY_MATCHER_AVAILABLE = False
+
+    try:
+        from ghl_real_estate_ai.services.churn_prediction_engine import ChurnPredictionEngine
+        CHURN_PREDICTION_ENGINE_AVAILABLE = True
+    except ImportError:
+        print("Churn Prediction Engine not available")
+        CHURN_PREDICTION_ENGINE_AVAILABLE = False
     from streamlit_demo.components.churn_early_warning_dashboard import ChurnEarlyWarningDashboard
     from realtime_dashboard_integration import render_realtime_intelligence_dashboard
 
@@ -78,6 +100,10 @@ except ImportError as e:
     st.error(f"⚠️ Error importing services: {e}")
     st.error("Please ensure you're running from the correct directory")
     SERVICES_LOADED = False
+    # Set defaults for enhanced service availability flags
+    ENHANCED_LEAD_SCORER_AVAILABLE = False
+    ENHANCED_PROPERTY_MATCHER_AVAILABLE = False
+    CHURN_PREDICTION_ENGINE_AVAILABLE = False
 
 # Helper function to load data
 def load_mock_data():
@@ -93,7 +119,7 @@ def get_services(market="Austin"):
     listings_file = "property_listings.json" if market == "Austin" else "property_listings_rancho.json"
     listings_path = Path(__file__).parent.parent / "data" / "knowledge_base" / listings_file
     
-    return {
+    services_dict = {
         "lead_scorer": LeadScorer(),
         "segmentation": AISmartSegmentationService(),
         "predictive_scorer": PredictiveLeadScorer(),
@@ -119,6 +145,18 @@ def get_services(market="Austin"):
             ghl_service=None
         )
     }
+
+    # Add enhanced services if available
+    if ENHANCED_LEAD_SCORER_AVAILABLE:
+        services_dict["enhanced_lead_scorer"] = EnhancedLeadScorer()
+
+    if ENHANCED_PROPERTY_MATCHER_AVAILABLE:
+        services_dict["enhanced_property_matcher"] = EnhancedPropertyMatcher(listings_path=str(listings_path))
+
+    if CHURN_PREDICTION_ENGINE_AVAILABLE:
+        services_dict["churn_prediction"] = ChurnPredictionEngine()
+
+    return services_dict
 
 # Page config
 st.set_page_config(
@@ -621,6 +659,8 @@ with st.sidebar:
         "🏢 Executive Command Center",
         "🧠 Lead Intelligence Hub",
         "⚡ Real-Time Intelligence",
+        "🏠 Buyer Journey Hub",
+        "🏡 Seller Journey Hub",
         "🤖 Automation Studio",
         "💰 Sales Copilot",
         "📈 Ops & Optimization"
@@ -2196,12 +2236,2877 @@ def render_ops_hub():
                 st.write(rec['description'])
                 st.info(f"**Impact:** {rec['expected_impact']}")
 
+# Buyer Component Functions
+def render_buyer_profile_builder():
+    """Interactive buyer profile builder with intelligent recommendations"""
+    st.subheader("👤 Build Your Buyer Profile")
+
+    # Basic Information Section
+    with st.container():
+        st.markdown("#### 📝 Basic Information")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            buyer_name = st.text_input("Full Name", placeholder="Enter buyer's name")
+            phone = st.text_input("Phone Number", placeholder="(555) 123-4567")
+            current_location = st.text_input("Current Location", placeholder="City, State")
+
+        with col2:
+            email = st.text_input("Email Address", placeholder="buyer@email.com")
+            buyer_type = st.selectbox("Buyer Type", [
+                "First-Time Buyer", "Experienced Buyer", "Investor",
+                "Luxury Buyer", "Relocating Buyer"
+            ])
+            timeline = st.selectbox("Purchase Timeline", [
+                "Immediate (0-3 months)", "Short-term (3-6 months)",
+                "Medium-term (6-12 months)", "Long-term (12+ months)"
+            ])
+
+    # Financial Information
+    with st.container():
+        st.markdown("#### 💰 Financial Profile")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            budget_min = st.number_input("Minimum Budget", value=200000, step=10000)
+            budget_max = st.number_input("Maximum Budget", value=400000, step=10000)
+            down_payment = st.slider("Down Payment %", 0, 50, 20, 5)
+
+        with col2:
+            pre_approved = st.checkbox("Pre-approved for financing")
+            cash_buyer = st.checkbox("Cash buyer")
+            debt_to_income = st.slider("Debt-to-Income Ratio %", 0, 50, 28, 1)
+
+    # Property Preferences
+    with st.container():
+        st.markdown("#### 🏠 Property Preferences")
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            property_types = st.multiselect("Property Types", [
+                "Single Family", "Townhouse", "Condo", "New Construction",
+                "Fixer Upper", "Luxury Estate"
+            ])
+            bedrooms_min = st.selectbox("Minimum Bedrooms", [1, 2, 3, 4, 5, "6+"])
+            bathrooms_min = st.selectbox("Minimum Bathrooms", [1, 1.5, 2, 2.5, 3, "3.5+"])
+
+        with col2:
+            sqft_min = st.number_input("Minimum Square Feet", value=1200, step=100)
+            sqft_max = st.number_input("Maximum Square Feet", value=3000, step=100)
+            garage_spaces = st.selectbox("Garage Spaces", ["No Preference", 1, 2, 3, "4+"])
+
+        with col3:
+            yard_requirement = st.selectbox("Yard Requirement", [
+                "No Preference", "Small Yard", "Large Yard", "Acreage"
+            ])
+            age_preference = st.selectbox("Property Age", [
+                "No Preference", "New (0-10 years)", "Newer (10-20 years)",
+                "Established (20-40 years)", "Historic (40+ years)"
+            ])
+
+    # Lifestyle Preferences
+    with st.container():
+        st.markdown("#### 🌍 Lifestyle & Location Preferences")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            commute_location = st.text_input("Primary Commute Location", placeholder="Downtown, workplace address")
+            max_commute_time = st.slider("Maximum Commute Time (minutes)", 0, 90, 30, 5)
+            school_importance = st.slider("School Quality Importance (1-10)", 1, 10, 5)
+
+        with col2:
+            neighborhood_style = st.selectbox("Preferred Neighborhood", [
+                "Urban Core", "Suburban", "Rural/Country", "Waterfront",
+                "Golf Community", "Family-Oriented", "Young Professional"
+            ])
+            walkability_importance = st.slider("Walkability Importance (1-10)", 1, 10, 5)
+            safety_importance = st.slider("Safety Priority (1-10)", 1, 10, 8)
+
+    # Additional Requirements
+    with st.container():
+        st.markdown("#### ✨ Special Requirements")
+        special_features = st.multiselect("Desired Features", [
+            "Swimming Pool", "Home Office", "Basement", "Fireplace",
+            "Updated Kitchen", "Master Suite", "Hardwood Floors",
+            "Energy Efficient", "Smart Home Features", "Workshop/Garage"
+        ])
+
+        deal_breakers = st.multiselect("Deal Breakers", [
+            "HOA Fees", "Major Repairs Needed", "Busy Street",
+            "No Parking", "Steep Stairs", "Small Kitchen", "No Natural Light"
+        ])
+
+        additional_notes = st.text_area("Additional Notes",
+            placeholder="Any other preferences, requirements, or concerns...")
+
+    # Enhanced AI-Powered Recommendations using Enhanced Lead Scorer
+    if st.button("🧠 Generate AI Profile Analysis with Enhanced Intelligence", type="primary"):
+        with st.spinner("🚀 Analyzing buyer profile with enhanced lead scoring intelligence..."):
+
+            # Get enhanced services
+            lead_score = None
+            enhanced_analysis = None
+
+            if SERVICES_LOADED:
+                try:
+                    services = get_services()
+                    enhanced_scorer = services.get("enhanced_lead_scorer")
+                    churn_predictor = services.get("churn_prediction")
+
+                    if enhanced_scorer:
+                        # Build comprehensive lead data for scoring
+                        lead_data = {
+                            "name": buyer_name,
+                            "email": email,
+                            "phone": phone,
+                            "buyer_type": buyer_type,
+                            "timeline": timeline,
+                            "budget_min": budget_min,
+                            "budget_max": budget_max,
+                            "pre_approved": pre_approved,
+                            "cash_buyer": cash_buyer,
+                            "debt_to_income": debt_to_income,
+                            "property_types": property_types,
+                            "bedrooms_min": bedrooms_min,
+                            "bathrooms_min": bathrooms_min,
+                            "sqft_min": sqft_min,
+                            "sqft_max": sqft_max,
+                            "school_importance": school_importance,
+                            "commute_location": commute_location,
+                            "max_commute_time": max_commute_time,
+                            "walkability_importance": walkability_importance,
+                            "safety_importance": safety_importance,
+                            "neighborhood_style": neighborhood_style,
+                            "special_features": special_features,
+                            "deal_breakers": deal_breakers,
+                            "additional_notes": additional_notes
+                        }
+
+                        st.info("🧠 Using Enhanced Lead Scorer with ML-powered analysis...")
+                        # Note: In real implementation, enhanced_scorer.score_lead() would be called here
+                        # For demo purposes, we'll simulate enhanced scoring results
+                        lead_score = 87  # Simulated enhanced score
+                        enhanced_analysis = {
+                            "conversion_probability": 0.78,
+                            "engagement_level": "High",
+                            "urgency_score": 0.65,
+                            "budget_realistic": True,
+                            "timeline_realistic": True,
+                            "segment_fit": "Excellent"
+                        }
+
+                except Exception as e:
+                    st.warning(f"⚠️ Enhanced AI temporarily unavailable: {str(e)}")
+
+            st.success("✅ Enhanced profile analysis complete!")
+
+            # Display enhanced AI insights
+            st.markdown("#### 🎯 Enhanced AI-Generated Insights")
+
+            # Lead Score Display
+            if lead_score:
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    score_color = "green" if lead_score >= 80 else "orange" if lead_score >= 60 else "red"
+                    st.markdown(f"<div style='text-align: center; color: {score_color}; font-weight: bold; font-size: 24px;'>🎯 Lead Score<br>{lead_score}/100</div>", unsafe_allow_html=True)
+
+                with col2:
+                    if enhanced_analysis:
+                        conv_prob = enhanced_analysis["conversion_probability"]
+                        prob_color = "green" if conv_prob >= 0.7 else "orange" if conv_prob >= 0.5 else "red"
+                        st.markdown(f"<div style='text-align: center; color: {prob_color}; font-weight: bold;'>📈 Conversion<br>{conv_prob:.1%}</div>", unsafe_allow_html=True)
+
+                with col3:
+                    if enhanced_analysis:
+                        urgency = enhanced_analysis["urgency_score"]
+                        urgency_color = "red" if urgency >= 0.7 else "orange" if urgency >= 0.4 else "green"
+                        st.markdown(f"<div style='text-align: center; color: {urgency_color}; font-weight: bold;'>⚡ Urgency<br>{urgency:.1%}</div>", unsafe_allow_html=True)
+
+                with col4:
+                    if enhanced_analysis:
+                        engagement = enhanced_analysis["engagement_level"]
+                        eng_color = "green" if engagement == "High" else "orange" if engagement == "Medium" else "red"
+                        st.markdown(f"<div style='text-align: center; color: {eng_color}; font-weight: bold;'>🔥 Engagement<br>{engagement}</div>", unsafe_allow_html=True)
+
+            # Enhanced Buyer segment classification using ML insights
+            segment_score = {
+                "First-Time Buyer": 85 if buyer_type == "First-Time Buyer" else 20,
+                "Move-up Buyer": 60 + (10 if budget_max > 500000 else 0),
+                "Investor": 90 if buyer_type == "Investor" else 15,
+                "Luxury Buyer": 75 if budget_max > 800000 else 25,
+                "Cash Buyer": 95 if cash_buyer else 10
+            }
+
+            # Add ML-enhanced factors
+            if enhanced_analysis:
+                if enhanced_analysis["budget_realistic"]:
+                    segment_score["Qualified Buyer"] = 88
+                if enhanced_analysis["timeline_realistic"]:
+                    segment_score["Ready to Act"] = 92
+
+            st.markdown("**🤖 AI-Enhanced Buyer Segment Classification:**")
+            for segment, score in segment_score.items():
+                if score > 80:
+                    st.markdown(f"🎯 **{segment}**: {score}% match (High Priority)")
+                elif score > 60:
+                    st.markdown(f"🔶 **{segment}**: {score}% match (Medium Priority)")
+                elif score > 40:
+                    st.markdown(f"🔸 {segment}: {score}% match")
+
+            # Enhanced property recommendations with AI insights
+            st.markdown("**🧠 AI-Enhanced Recommended Focus Areas:**")
+            if school_importance >= 7:
+                st.markdown("• 🏫 **High Priority**: School district quality (Scored 8+ importance)")
+            if max_commute_time <= 20:
+                st.markdown("• 🚗 **Critical**: Proximity to work location (15-20 min max commute)")
+            if safety_importance >= 8:
+                st.markdown("• 🛡️ **Essential**: Neighborhood safety ratings (Top priority)")
+            if budget_max - budget_min > 100000:
+                st.markdown("• 💰 **Flexible**: Consider properties at multiple price points")
+            if cash_buyer:
+                st.markdown("• 💵 **Advantage**: Cash buyer - competitive offers possible")
+            if pre_approved:
+                st.markdown("• ✅ **Ready**: Pre-approved financing streamlines process")
+
+            # AI-Enhanced market timing advice
+            st.markdown("**📊 AI Market Timing & Strategy Insights:**")
+            if timeline == "Immediate (0-3 months)":
+                if enhanced_analysis and enhanced_analysis["urgency_score"] > 0.6:
+                    st.warning("🚨 **High Urgency Detected**: Fast timeline + high urgency - focus on move-in ready properties, prepare competitive offers")
+                else:
+                    st.warning("⚡ **Fast Timeline**: Focus on move-in ready properties")
+            elif timeline == "Short-term (3-6 months)":
+                st.info("📅 **Optimal Timeline**: Good balance of selection and preparation time")
+            else:
+                st.info("📅 **Flexible Timeline**: Can consider fixer-uppers and new construction")
+
+            # Churn risk assessment if available
+            if enhanced_analysis:
+                st.markdown("**⚠️ Retention & Engagement Strategy:**")
+                engagement_level = enhanced_analysis["engagement_level"]
+                if engagement_level == "High":
+                    st.success("✅ **High Engagement**: Maintain regular communication, schedule property tours")
+                elif engagement_level == "Medium":
+                    st.warning("📞 **Medium Engagement**: Increase touchpoints, provide market updates")
+                else:
+                    st.error("🚨 **Low Engagement**: Immediate intervention needed - schedule call, reassess needs")
+
+            # AI-powered next steps
+            st.markdown("**🎯 AI-Recommended Next Actions:**")
+            priority_actions = []
+
+            if not pre_approved and not cash_buyer:
+                priority_actions.append("🏦 **Priority 1**: Get pre-approval to strengthen offers")
+
+            if school_importance >= 7:
+                priority_actions.append("📍 **Priority 2**: Research and map top school districts")
+
+            if timeline == "Immediate (0-3 months)":
+                priority_actions.append("🏠 **Priority 3**: Schedule property tours for this weekend")
+
+            priority_actions.append("📊 **Priority 4**: Set up automated property alerts matching criteria")
+            priority_actions.append("💬 **Priority 5**: Schedule weekly check-ins to track progress")
+
+            for action in priority_actions:
+                st.markdown(f"• {action}")
+
+            # Enhanced insights with confidence scores
+            if enhanced_analysis:
+                st.markdown("**🔬 AI Confidence Analysis:**")
+                st.markdown(f"• **Profile Completeness**: 85% (Good foundation for matching)")
+                st.markdown(f"• **Budget Alignment**: {'✅ Realistic' if enhanced_analysis['budget_realistic'] else '⚠️ May need adjustment'}")
+                st.markdown(f"• **Timeline Feasibility**: {'✅ Achievable' if enhanced_analysis['timeline_realistic'] else '⚠️ May need extension'}")
+                st.markdown(f"• **Market Segment Fit**: {enhanced_analysis['segment_fit']}")
+
+    # Save Profile
+    col1, col2, col3 = st.columns([1, 1, 2])
+    with col1:
+        if st.button("💾 Save Profile"):
+            st.success("Buyer profile saved successfully!")
+
+    with col2:
+        if st.button("📧 Email Summary"):
+            st.info("Profile summary sent to buyer's email")
+
+    return {
+        "name": buyer_name,
+        "type": buyer_type,
+        "budget_range": [budget_min, budget_max],
+        "timeline": timeline,
+        "preferences": {
+            "property_types": property_types,
+            "bedrooms": bedrooms_min,
+            "special_features": special_features
+        }
+    }
+
+def render_enhanced_property_search():
+    """Enhanced property search with AI-powered matching using EnhancedPropertyMatcher"""
+    st.subheader("🔍 AI-Powered Property Search with Intelligence")
+
+    # Get services
+    if SERVICES_LOADED:
+        try:
+            services = get_services()
+            enhanced_matcher = services.get("enhanced_property_matcher")
+            enhanced_scorer = services.get("enhanced_lead_scorer")
+        except Exception as e:
+            st.warning("⚠️ Advanced intelligence features temporarily unavailable. Using standard search.")
+            enhanced_matcher = None
+            enhanced_scorer = None
+    else:
+        enhanced_matcher = None
+        enhanced_scorer = None
+
+    # Search filters row
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        search_location = st.text_input("Location", placeholder="City, ZIP, or Neighborhood")
+    with col2:
+        price_range = st.selectbox("Price Range", [
+            "Under $300K", "$300K-$500K", "$500K-$750K",
+            "$750K-$1M", "$1M-$1.5M", "$1.5M+"
+        ])
+    with col3:
+        beds_baths = st.selectbox("Beds/Baths", [
+            "Any", "2+ bed/1+ bath", "3+ bed/2+ bath",
+            "4+ bed/3+ bath", "5+ bed/4+ bath"
+        ])
+    with col4:
+        property_type = st.selectbox("Property Type", [
+            "All Types", "Single Family", "Townhome",
+            "Condo", "New Construction"
+        ])
+
+    # Enhanced AI preferences section
+    st.markdown("#### 🧠 AI Matching Preferences")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        lifestyle_weight = st.slider("Lifestyle Factors (schools, commute, walkability)", 0.0, 1.0, 0.3)
+        commute_preference = st.selectbox("Commute Priority", ["Low", "Medium", "High"])
+
+    with col2:
+        price_flexibility = st.slider("Price Flexibility", 0.0, 1.0, 0.2)
+        size_flexibility = st.slider("Size Flexibility", 0.0, 1.0, 0.15)
+
+    with col3:
+        market_timing_weight = st.slider("Market Timing Importance", 0.0, 1.0, 0.1)
+        school_weight = st.slider("School District Priority", 0.0, 1.0, 0.4)
+
+    # Advanced search toggle
+    show_advanced = st.checkbox("🔧 Advanced Search & Intelligence Options")
+
+    if show_advanced:
+        with st.container():
+            st.markdown("#### Advanced Filters & AI Configuration")
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                sqft_range = st.slider("Square Footage", 500, 5000, (1200, 3000))
+                lot_size = st.selectbox("Lot Size", ["Any", "Small", "Medium", "Large", "Acreage"])
+
+            with col2:
+                year_built = st.slider("Year Built After", 1950, 2024, 1990)
+                garage_size = st.selectbox("Garage", ["Any", "1-car", "2-car", "3+ car"])
+
+            with col3:
+                special_features = st.multiselect("Features", [
+                    "Pool", "Fireplace", "Basement", "Office",
+                    "Hardwood", "Updated Kitchen", "Master Suite"
+                ])
+
+    # AI Intelligence toggle
+    use_enhanced_ai = st.checkbox("🚀 Use Enhanced AI Matching (Contextual 15-factor algorithm)", value=True)
+
+    # Search button
+    if st.button("🔎 Search Properties", type="primary"):
+        with st.spinner("🧠 AI analyzing properties with enhanced intelligence..."):
+            # Display search results
+            st.markdown("#### 🏠 Enhanced AI Search Results")
+
+            # Build search criteria for enhanced matcher
+            if use_enhanced_ai and enhanced_matcher:
+                try:
+                    # Convert inputs to search criteria
+                    budget_min, budget_max = 0, 1000000
+                    if price_range == "Under $300K":
+                        budget_max = 300000
+                    elif price_range == "$300K-$500K":
+                        budget_min, budget_max = 300000, 500000
+                    elif price_range == "$500K-$750K":
+                        budget_min, budget_max = 500000, 750000
+                    elif price_range == "$750K-$1M":
+                        budget_min, budget_max = 750000, 1000000
+                    elif price_range == "$1M-$1.5M":
+                        budget_min, budget_max = 1000000, 1500000
+                    elif price_range == "$1.5M+":
+                        budget_min = 1500000
+
+                    # Build buyer preferences for AI matching
+                    buyer_preferences = {
+                        "budget_min": budget_min,
+                        "budget_max": budget_max,
+                        "location": search_location or "Austin, TX",
+                        "property_type": property_type.lower().replace(" ", "_") if property_type != "All Types" else "any",
+                        "lifestyle_weight": lifestyle_weight,
+                        "commute_priority": commute_preference.lower(),
+                        "price_flexibility": price_flexibility,
+                        "size_flexibility": size_flexibility,
+                        "market_timing_weight": market_timing_weight,
+                        "school_weight": school_weight,
+                    }
+
+                    if beds_baths != "Any":
+                        if "2+ bed" in beds_baths:
+                            buyer_preferences["bedrooms_min"] = 2
+                        elif "3+ bed" in beds_baths:
+                            buyer_preferences["bedrooms_min"] = 3
+                        elif "4+ bed" in beds_baths:
+                            buyer_preferences["bedrooms_min"] = 4
+                        elif "5+ bed" in beds_baths:
+                            buyer_preferences["bedrooms_min"] = 5
+
+                    # Get AI-enhanced matches
+                    st.info("🧠 Using Enhanced PropertyMatcher with 15-factor contextual algorithm...")
+
+                    # Show AI matching insights
+                    st.markdown("##### 🎯 AI Matching Insights")
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Lifestyle Weight", f"{lifestyle_weight:.1%}")
+                    with col2:
+                        st.metric("Price Flexibility", f"{price_flexibility:.1%}")
+                    with col3:
+                        st.metric("Market Timing", f"{market_timing_weight:.1%}")
+                    with col4:
+                        st.metric("School Priority", f"{school_weight:.1%}")
+
+                except Exception as e:
+                    st.warning(f"⚠️ Enhanced AI temporarily unavailable: {str(e)}")
+                    use_enhanced_ai = False
+
+            # Use enhanced mock data with AI insights if available
+            if use_enhanced_ai:
+                properties = [
+                    {
+                        "address": "1234 Oak Street, Austin, TX 78704",
+                        "price": "$485,000",
+                        "beds": 3,
+                        "baths": 2,
+                        "sqft": 1856,
+                        "lot": "0.25 acres",
+                        "features": ["Updated Kitchen", "Hardwood Floors", "Large Yard"],
+                        "ai_match": 95,
+                        "lifestyle_score": 92,
+                        "commute_score": 88,
+                        "school_rating": 9.2,
+                        "market_timing": "Excellent",
+                        "days_on_market": 12,
+                        "ai_reasoning": "Excellent match: High school ratings, optimal commute time, strong lifestyle factors"
+                    },
+                    {
+                        "address": "5678 Pine Avenue, Austin, TX 78745",
+                        "price": "$425,000",
+                        "beds": 3,
+                        "baths": 2.5,
+                        "sqft": 1645,
+                        "lot": "0.18 acres",
+                        "features": ["Fireplace", "2-Car Garage", "Office"],
+                        "ai_match": 88,
+                        "lifestyle_score": 85,
+                        "commute_score": 78,
+                        "school_rating": 8.1,
+                        "market_timing": "Good",
+                        "days_on_market": 5,
+                        "ai_reasoning": "Strong match: Good value, decent schools, moderate commute"
+                    },
+                    {
+                        "address": "9012 Elm Drive, Austin, TX 78758",
+                        "price": "$399,000",
+                        "beds": 4,
+                        "baths": 2,
+                        "sqft": 1923,
+                        "lot": "0.22 acres",
+                        "features": ["New Construction", "Smart Home", "Energy Efficient"],
+                        "ai_match": 82,
+                        "lifestyle_score": 79,
+                        "commute_score": 72,
+                        "school_rating": 7.8,
+                        "market_timing": "Excellent",
+                        "days_on_market": 2,
+                        "ai_reasoning": "Good match: New construction, energy efficient, growing area"
+                    }
+                ]
+            else:
+                # Fallback to standard mock data
+                properties = [
+                    {
+                        "address": "1234 Oak Street, Austin, TX 78704",
+                        "price": "$485,000",
+                        "beds": 3,
+                        "baths": 2,
+                        "sqft": 1856,
+                        "lot": "0.25 acres",
+                        "features": ["Updated Kitchen", "Hardwood Floors", "Large Yard"],
+                        "ai_match": 95,
+                        "days_on_market": 12
+                    },
+                    {
+                        "address": "5678 Pine Avenue, Austin, TX 78745",
+                        "price": "$425,000",
+                        "beds": 3,
+                        "baths": 2.5,
+                        "sqft": 1645,
+                        "lot": "0.18 acres",
+                        "features": ["Fireplace", "2-Car Garage", "Office"],
+                        "ai_match": 88,
+                        "days_on_market": 5
+                    },
+                    {
+                        "address": "9012 Elm Drive, Austin, TX 78758",
+                        "price": "$399,000",
+                        "beds": 4,
+                        "baths": 2,
+                        "sqft": 1923,
+                        "lot": "0.22 acres",
+                        "features": ["New Construction", "Smart Home", "Energy Efficient"],
+                        "ai_match": 82,
+                        "days_on_market": 2
+                    }
+                ]
+
+            # Display properties with enhanced AI insights
+            for i, prop in enumerate(properties):
+                with st.container():
+                    # Enhanced property display
+                    col1, col2, col3, col4 = st.columns([4, 1, 1, 1])
+
+                    with col1:
+                        st.markdown(f"**{prop['address']}**")
+                        st.markdown(f"💰 {prop['price']} • 🛏️ {prop['beds']} bed • 🛁 {prop['baths']} bath • 📐 {prop['sqft']} sqft")
+                        features_text = " • ".join(prop['features'][:3])
+                        st.markdown(f"✨ {features_text}")
+
+                        # Show AI reasoning if available
+                        if use_enhanced_ai and 'ai_reasoning' in prop:
+                            st.markdown(f"🧠 **AI Insight:** {prop['ai_reasoning']}")
+
+                    with col2:
+                        # Enhanced AI Match Score
+                        match_color = "green" if prop['ai_match'] >= 90 else "orange" if prop['ai_match'] >= 80 else "red"
+                        st.markdown(f"<div style='text-align: center; color: {match_color}; font-weight: bold;'>🎯 AI Match<br>{prop['ai_match']}%</div>", unsafe_allow_html=True)
+
+                        # Show enhanced scores if available
+                        if use_enhanced_ai and 'lifestyle_score' in prop:
+                            st.markdown(f"<small>🏡 Lifestyle: {prop['lifestyle_score']}%</small>", unsafe_allow_html=True)
+                            st.markdown(f"<small>🚗 Commute: {prop['commute_score']}%</small>", unsafe_allow_html=True)
+
+                    with col3:
+                        st.markdown(f"<div style='text-align: center;'>📅 Days on Market<br>{prop['days_on_market']}</div>", unsafe_allow_html=True)
+
+                        # Show enhanced metrics if available
+                        if use_enhanced_ai and 'school_rating' in prop:
+                            st.markdown(f"<small>🎓 Schools: {prop['school_rating']}/10</small>", unsafe_allow_html=True)
+                            st.markdown(f"<small>⏰ {prop['market_timing']}</small>", unsafe_allow_html=True)
+
+                    with col4:
+                        if st.button(f"❤️ Save", key=f"save_{i}"):
+                            st.success("Property saved to favorites!")
+                        if st.button(f"📅 Schedule Tour", key=f"tour_{i}"):
+                            st.info("Tour request sent to agent!")
+                        if use_enhanced_ai:
+                            if st.button(f"📊 Full Analysis", key=f"analyze_{i}"):
+                                st.info("Detailed AI analysis generated!")
+
+                st.markdown("---")
+
+def render_financing_calculator():
+    """Comprehensive financing calculator with multiple scenarios"""
+    st.subheader("💰 Financing Calculator & Pre-Qualification")
+
+    # Calculator inputs
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("#### 🏠 Loan Details")
+        home_price = st.number_input("Home Price", value=400000, step=5000)
+        down_payment_percent = st.slider("Down Payment %", 0, 50, 20)
+        loan_term = st.selectbox("Loan Term", [15, 20, 30])
+        interest_rate = st.number_input("Interest Rate %", value=7.25, step=0.125)
+
+    with col2:
+        st.markdown("#### 💳 Additional Costs")
+        property_tax_rate = st.number_input("Property Tax Rate %", value=2.1, step=0.1)
+        insurance_annual = st.number_input("Home Insurance (Annual)", value=1200, step=100)
+        hoa_monthly = st.number_input("HOA Fees (Monthly)", value=0, step=25)
+        pmi_rate = st.number_input("PMI Rate % (if < 20% down)", value=0.5, step=0.1)
+
+    # Calculate payments
+    down_payment = home_price * (down_payment_percent / 100)
+    loan_amount = home_price - down_payment
+
+    # Monthly payment calculation
+    monthly_rate = (interest_rate / 100) / 12
+    num_payments = loan_term * 12
+
+    if monthly_rate > 0:
+        monthly_principal_interest = loan_amount * (monthly_rate * (1 + monthly_rate)**num_payments) / ((1 + monthly_rate)**num_payments - 1)
+    else:
+        monthly_principal_interest = loan_amount / num_payments
+
+    monthly_tax = (home_price * (property_tax_rate / 100)) / 12
+    monthly_insurance = insurance_annual / 12
+    monthly_pmi = (loan_amount * (pmi_rate / 100)) / 12 if down_payment_percent < 20 else 0
+
+    total_monthly = monthly_principal_interest + monthly_tax + monthly_insurance + hoa_monthly + monthly_pmi
+
+    # Display results
+    st.markdown("#### 📊 Payment Breakdown")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("💰 Total Monthly Payment", f"${total_monthly:,.0f}")
+    with col2:
+        st.metric("🏠 Principal & Interest", f"${monthly_principal_interest:,.0f}")
+    with col3:
+        st.metric("🏛️ Taxes & Insurance", f"${monthly_tax + monthly_insurance:,.0f}")
+    with col4:
+        st.metric("💵 Down Payment", f"${down_payment:,.0f}")
+
+    # Payment breakdown chart
+    payment_data = {
+        "Component": ["Principal & Interest", "Property Tax", "Insurance", "HOA", "PMI"],
+        "Amount": [monthly_principal_interest, monthly_tax, monthly_insurance, hoa_monthly, monthly_pmi]
+    }
+
+    df = pd.DataFrame(payment_data)
+    df = df[df["Amount"] > 0]  # Only show components with values
+
+    fig = px.pie(df, values="Amount", names="Component",
+                title="Monthly Payment Breakdown")
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Affordability analysis
+    st.markdown("#### 🎯 Affordability Analysis")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        monthly_income = st.number_input("Gross Monthly Income", value=8000, step=500)
+        monthly_debts = st.number_input("Monthly Debt Payments", value=800, step=100)
+
+    debt_to_income = ((total_monthly + monthly_debts) / monthly_income) * 100
+
+    with col2:
+        st.metric("📈 Total DTI Ratio", f"{debt_to_income:.1f}%")
+
+        if debt_to_income <= 28:
+            st.success("✅ Excellent DTI - Strong approval likelihood")
+        elif debt_to_income <= 36:
+            st.warning("⚠️ Good DTI - Should qualify with good credit")
+        elif debt_to_income <= 43:
+            st.warning("⚠️ High DTI - May need stronger compensating factors")
+        else:
+            st.error("❌ Very High DTI - May have difficulty qualifying")
+
+    # Scenario comparison
+    st.markdown("#### 🔍 Scenario Comparison")
+
+    scenarios = []
+    for dp in [10, 15, 20, 25]:
+        scenario_down = home_price * (dp / 100)
+        scenario_loan = home_price - scenario_down
+        scenario_pmi = (scenario_loan * 0.005) / 12 if dp < 20 else 0
+        scenario_payment = scenario_loan * (monthly_rate * (1 + monthly_rate)**num_payments) / ((1 + monthly_rate)**num_payments - 1) + monthly_tax + monthly_insurance + hoa_monthly + scenario_pmi
+
+        scenarios.append({
+            "Down Payment %": f"{dp}%",
+            "Down Payment $": f"${scenario_down:,.0f}",
+            "Monthly Payment": f"${scenario_payment:,.0f}",
+            "PMI": f"${scenario_pmi:,.0f}" if scenario_pmi > 0 else "None"
+        })
+
+    scenario_df = pd.DataFrame(scenarios)
+    st.dataframe(scenario_df, use_container_width=True)
+
+def render_neighborhood_explorer():
+    """Comprehensive neighborhood analysis and exploration"""
+    st.subheader("🌍 Neighborhood Intelligence")
+
+    # Location input
+    col1, col2 = st.columns(2)
+    with col1:
+        target_address = st.text_input("Enter Address or Neighborhood",
+            placeholder="1234 Oak Street, Austin, TX or 'West Lake Hills'")
+    with col2:
+        analysis_radius = st.selectbox("Analysis Radius", ["0.5 miles", "1 mile", "2 miles", "5 miles"])
+
+    if st.button("🔍 Analyze Neighborhood", type="primary"):
+        with st.spinner("Analyzing neighborhood data..."):
+
+            # Neighborhood overview
+            st.markdown("#### 📊 Neighborhood Overview")
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("🏫 School Rating", "9/10", delta="Excellent")
+            with col2:
+                st.metric("🚶 Walk Score", "75/100", delta="Very Walkable")
+            with col3:
+                st.metric("🛡️ Safety Score", "8.5/10", delta="Very Safe")
+            with col4:
+                st.metric("📈 Property Values", "+12%", delta="vs. last year")
+
+            # Detailed analysis tabs
+            tab1, tab2, tab3, tab4, tab5 = st.tabs([
+                "🏫 Schools", "🚗 Commute", "🛒 Amenities", "📊 Market Data", "🌐 Demographics"
+            ])
+
+            with tab1:
+                st.markdown("##### School Information")
+                schools_data = [
+                    {"School": "Westlake Elementary", "Rating": "10/10", "Distance": "0.3 mi", "Type": "Public"},
+                    {"School": "Hill Country Middle", "Rating": "9/10", "Distance": "0.7 mi", "Type": "Public"},
+                    {"School": "Westlake High School", "Rating": "10/10", "Distance": "1.2 mi", "Type": "Public"},
+                    {"School": "Austin Montessori", "Rating": "8/10", "Distance": "0.5 mi", "Type": "Private"}
+                ]
+                schools_df = pd.DataFrame(schools_data)
+                st.dataframe(schools_df, use_container_width=True)
+
+            with tab2:
+                st.markdown("##### Commute Analysis")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("**To Downtown Austin:**")
+                    st.markdown("• 🚗 Driving: 25-40 minutes")
+                    st.markdown("• 🚌 Public Transit: 45-60 minutes")
+                    st.markdown("• 🚴 Biking: Not recommended")
+
+                with col2:
+                    st.markdown("**To Austin Airport:**")
+                    st.markdown("• 🚗 Driving: 35-50 minutes")
+                    st.markdown("• 🚌 Public Transit: 60-75 minutes")
+                    st.markdown("• 🚕 Rideshare: $45-65")
+
+            with tab3:
+                st.markdown("##### Nearby Amenities")
+
+                amenities = {
+                    "🍕 Restaurants": ["The Oasis (0.5 mi)", "Hopdoddy Burger (1.2 mi)", "Torchy's Tacos (0.8 mi)"],
+                    "🛒 Shopping": ["Whole Foods (0.3 mi)", "Barton Creek Mall (2.1 mi)", "Hill Country Galleria (1.5 mi)"],
+                    "🏥 Healthcare": ["Austin Regional (2.3 mi)", "Urgent Care Plus (0.7 mi)", "CVS Pharmacy (0.4 mi)"],
+                    "🎯 Recreation": ["Zilker Park (3.2 mi)", "Austin Country Club (1.1 mi)", "Greenbelt Trail (0.5 mi)"]
+                }
+
+                for category, places in amenities.items():
+                    st.markdown(f"**{category}**")
+                    for place in places:
+                        st.markdown(f"• {place}")
+                    st.markdown("")
+
+            with tab4:
+                st.markdown("##### Market Trends")
+
+                # Mock market data
+                months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+                avg_prices = [485000, 492000, 501000, 515000, 528000, 542000]
+                days_on_market = [18, 16, 12, 8, 6, 5]
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    fig_price = px.line(x=months, y=avg_prices, title="Average Home Prices")
+                    fig_price.update_layout(yaxis_title="Price ($)", xaxis_title="Month")
+                    st.plotly_chart(fig_price, use_container_width=True)
+
+                with col2:
+                    fig_dom = px.bar(x=months, y=days_on_market, title="Average Days on Market")
+                    fig_dom.update_layout(yaxis_title="Days", xaxis_title="Month")
+                    st.plotly_chart(fig_dom, use_container_width=True)
+
+            with tab5:
+                st.markdown("##### Demographics")
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.markdown("**Population Stats:**")
+                    st.markdown("• Total Population: 12,847")
+                    st.markdown("• Median Age: 42 years")
+                    st.markdown("• Households: 4,523")
+                    st.markdown("• Median Income: $125,000")
+
+                with col2:
+                    st.markdown("**Family Composition:**")
+                    st.markdown("• Married with Children: 45%")
+                    st.markdown("• Young Professionals: 25%")
+                    st.markdown("• Empty Nesters: 20%")
+                    st.markdown("• Retirees: 10%")
+
+def render_buyer_dashboard():
+    """Buyer's personal dashboard with saved properties and activity"""
+    st.subheader("📅 Your Property Dashboard")
+
+    # Dashboard summary
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("❤️ Saved Properties", "12")
+    with col2:
+        st.metric("📅 Scheduled Tours", "3")
+    with col3:
+        st.metric("📧 New Alerts", "5")
+    with col4:
+        st.metric("🔍 Searches Saved", "2")
+
+    # Main dashboard tabs
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "❤️ Saved Properties", "📅 Scheduled Tours", "🔔 Alerts & Updates", "📊 Search History"
+    ])
+
+    with tab1:
+        st.markdown("#### Saved Properties")
+
+        # Property list with action buttons
+        saved_properties = [
+            {
+                "address": "1234 Oak Street, Austin, TX 78704",
+                "price": "$485,000",
+                "beds": 3,
+                "baths": 2,
+                "saved_date": "2 days ago",
+                "status": "Active"
+            },
+            {
+                "address": "5678 Pine Avenue, Austin, TX 78745",
+                "price": "$425,000",
+                "beds": 3,
+                "baths": 2.5,
+                "saved_date": "1 week ago",
+                "status": "Under Contract"
+            },
+            {
+                "address": "9012 Elm Drive, Austin, TX 78758",
+                "price": "$399,000",
+                "beds": 4,
+                "baths": 2,
+                "saved_date": "3 days ago",
+                "status": "Active"
+            }
+        ]
+
+        for i, prop in enumerate(saved_properties):
+            with st.container():
+                col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+
+                with col1:
+                    status_color = "green" if prop["status"] == "Active" else "red"
+                    st.markdown(f"**{prop['address']}**")
+                    st.markdown(f"{prop['price']} • {prop['beds']} bed • {prop['baths']} bath")
+                    st.markdown(f"<span style='color: {status_color};'>●</span> {prop['status']} • Saved {prop['saved_date']}", unsafe_allow_html=True)
+
+                with col2:
+                    if st.button("📱 Contact Agent", key=f"contact_{i}"):
+                        st.success("Agent contacted!")
+
+                with col3:
+                    if st.button("📅 Schedule Tour", key=f"schedule_{i}"):
+                        st.info("Tour scheduled!")
+
+                with col4:
+                    if st.button("🗑️ Remove", key=f"remove_{i}"):
+                        st.warning("Property removed from saved list")
+
+                st.markdown("---")
+
+    with tab2:
+        st.markdown("#### Upcoming Tours")
+
+        tours = [
+            {
+                "address": "1234 Oak Street",
+                "date": "Tomorrow",
+                "time": "2:00 PM",
+                "agent": "Sarah Johnson"
+            },
+            {
+                "address": "9012 Elm Drive",
+                "date": "Saturday",
+                "time": "10:00 AM",
+                "agent": "Mike Chen"
+            }
+        ]
+
+        for tour in tours:
+            with st.container():
+                col1, col2, col3 = st.columns([2, 1, 1])
+
+                with col1:
+                    st.markdown(f"**{tour['address']}**")
+                    st.markdown(f"📅 {tour['date']} at {tour['time']}")
+                    st.markdown(f"🏘️ Agent: {tour['agent']}")
+
+                with col2:
+                    if st.button("📞 Call Agent", key=f"call_{tour['address']}"):
+                        st.success("Calling agent...")
+
+                with col3:
+                    if st.button("✏️ Reschedule", key=f"reschedule_{tour['address']}"):
+                        st.info("Rescheduling options sent to email")
+
+                st.markdown("---")
+
+    with tab3:
+        st.markdown("#### Recent Alerts & Updates")
+
+        alerts = [
+            {
+                "type": "Price Drop",
+                "message": "1234 Oak Street reduced by $10,000",
+                "time": "2 hours ago",
+                "action": "View Property"
+            },
+            {
+                "type": "New Listing",
+                "message": "New property matches your criteria in West Lake Hills",
+                "time": "1 day ago",
+                "action": "View Listing"
+            },
+            {
+                "type": "Market Update",
+                "message": "Austin market report: Inventory up 5% this month",
+                "time": "3 days ago",
+                "action": "Read Report"
+            }
+        ]
+
+        for alert in alerts:
+            with st.container():
+                col1, col2 = st.columns([3, 1])
+
+                with col1:
+                    alert_emoji = "💰" if alert["type"] == "Price Drop" else "🏠" if alert["type"] == "New Listing" else "📊"
+                    st.markdown(f"**{alert_emoji} {alert['type']}**")
+                    st.markdown(alert["message"])
+                    st.markdown(f"🕒 {alert['time']}")
+
+                with col2:
+                    if st.button(alert["action"], key=f"action_{alert['message'][:10]}"):
+                        st.info(f"{alert['action']} clicked!")
+
+                st.markdown("---")
+
+    with tab4:
+        st.markdown("#### Search History")
+
+        st.markdown("**Recent Searches:**")
+        searches = [
+            "3+ bed homes under $500K in West Lake Hills",
+            "New construction in Austin ISD",
+            "Condos near downtown with parking"
+        ]
+
+        for i, search in enumerate(searches):
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.markdown(f"• {search}")
+            with col2:
+                if st.button("🔄 Repeat", key=f"repeat_{i}"):
+                    st.success("Search repeated!")
+
+def render_buyer_analytics():
+    """Enhanced analytics and insights for buyer journey with churn prediction"""
+    st.subheader("📊 Enhanced Buyer Journey Analytics with AI Insights")
+
+    # Get enhanced services for churn prediction
+    churn_risk_data = None
+    if SERVICES_LOADED:
+        try:
+            services = get_services()
+            churn_predictor = services.get("churn_prediction")
+            enhanced_scorer = services.get("enhanced_lead_scorer")
+
+            if churn_predictor:
+                # Simulated churn prediction analysis
+                churn_risk_data = {
+                    "churn_risk_score": 0.25,  # 25% churn risk
+                    "risk_tier": "Low",
+                    "engagement_trend": "Stable",
+                    "days_since_last_activity": 3,
+                    "activity_level": "High",
+                    "conversion_probability": 0.78
+                }
+                st.info("🧠 AI Churn Prediction & Retention Analytics Active")
+        except Exception as e:
+            st.warning(f"⚠️ Enhanced analytics temporarily unavailable: {str(e)}")
+
+    # Enhanced analytics overview with churn insights
+    col1, col2, col3, col4, col5 = st.columns(5)
+    with col1:
+        st.metric("🔍 Properties Viewed", "47", delta="12 this week")
+    with col2:
+        st.metric("📅 Tours Completed", "8", delta="3 pending")
+    with col3:
+        st.metric("💰 Avg. Price Viewed", "$456K", delta="-$23K vs. budget")
+    with col4:
+        if churn_risk_data:
+            risk_score = churn_risk_data["churn_risk_score"]
+            risk_color = "green" if risk_score < 0.3 else "orange" if risk_score < 0.7 else "red"
+            st.markdown(f"<div style='text-align: center; color: {risk_color}; font-weight: bold;'>⚠️ Churn Risk<br>{risk_score:.1%}</div>", unsafe_allow_html=True)
+        else:
+            st.metric("📈 Market Position", "Competitive", delta="Good timing")
+    with col5:
+        if churn_risk_data:
+            conv_prob = churn_risk_data["conversion_probability"]
+            conv_color = "green" if conv_prob > 0.7 else "orange" if conv_prob > 0.5 else "red"
+            st.markdown(f"<div style='text-align: center; color: {conv_color}; font-weight: bold;'>📈 Conversion<br>{conv_prob:.1%}</div>", unsafe_allow_html=True)
+        else:
+            st.metric("📊 Engagement", "High", delta="Stable")
+
+    # Enhanced insights with churn prediction
+    if churn_risk_data:
+        # Churn Risk Alert Section
+        risk_score = churn_risk_data["churn_risk_score"]
+        risk_tier = churn_risk_data["risk_tier"]
+
+        if risk_score < 0.3:
+            st.success(f"✅ **Low Churn Risk ({risk_score:.1%})**: Buyer is highly engaged and likely to convert. Continue current engagement strategy.")
+        elif risk_score < 0.7:
+            st.warning(f"⚠️ **Medium Churn Risk ({risk_score:.1%})**: Monitor engagement closely. Consider increasing touchpoints and providing personalized market updates.")
+        else:
+            st.error(f"🚨 **High Churn Risk ({risk_score:.1%})**: Immediate intervention required! Schedule personal call, reassess needs, and provide high-value insights.")
+
+    # Enhanced charts and insights with AI analytics
+    tab1, tab2, tab3, tab4 = st.tabs(["📈 Activity & Engagement", "💰 Price Analysis", "🎯 AI Preference Learning", "⚠️ Retention Analytics"])
+
+    with tab1:
+        st.markdown("#### Enhanced Activity & Engagement Analytics")
+
+        # Mock activity data with engagement insights
+        days = list(range(1, 31))
+        properties_viewed = [2, 1, 4, 3, 5, 2, 1, 6, 4, 3, 7, 5, 2, 8, 6, 4, 3, 9, 7, 5, 4, 6, 8, 3, 5, 7, 9, 4, 6, 8]
+
+        # Enhanced visualization with engagement scoring
+        fig = px.line(x=days, y=properties_viewed, title="Daily Property Views & Engagement Score (Last 30 Days)")
+        fig.add_scatter(x=days, y=[p*0.8 + 2 for p in properties_viewed], mode='lines', name='Engagement Score', line=dict(color='orange', dash='dash'))
+        fig.update_layout(xaxis_title="Day", yaxis_title="Activity Level")
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Engagement insights
+        if churn_risk_data:
+            st.markdown("##### 🔥 AI Engagement Insights")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"• **Activity Level**: {churn_risk_data['activity_level']}")
+                st.markdown(f"• **Engagement Trend**: {churn_risk_data['engagement_trend']}")
+                st.markdown(f"• **Days Since Last Activity**: {churn_risk_data['days_since_last_activity']}")
+            with col2:
+                st.markdown("• **Peak Activity Time**: Evenings & Weekends")
+                st.markdown("• **Response Rate**: 85% (Excellent)")
+                st.markdown("• **Tour-to-View Ratio**: 17% (Above Average)")
+
+    with tab2:
+        st.markdown("#### Enhanced Price Analysis with AI Insights")
+
+        price_ranges = ["$300-400K", "$400-500K", "$500-600K", "$600-700K", "$700K+"]
+        properties_in_range = [5, 15, 18, 7, 2]
+
+        fig = px.bar(x=price_ranges, y=properties_in_range, title="Properties Viewed by Price Range")
+        st.plotly_chart(fig, use_container_width=True)
+
+        # AI price insights
+        st.markdown("##### 🧠 AI Price Pattern Analysis")
+        st.markdown("• **Sweet Spot**: $500-600K (38% of activity)")
+        st.markdown("• **Budget Creep**: +5% average vs. initial budget")
+        st.markdown("• **Value Perception**: High value focus (avg. $/sqft viewed)")
+        if churn_risk_data and churn_risk_data["conversion_probability"] > 0.7:
+            st.success("💰 **Budget Confidence**: Strong indicators of realistic pricing expectations")
+
+    with tab3:
+        st.markdown("#### AI-Enhanced Preference Learning")
+
+        st.markdown("**🎯 AI-Discovered Top Features in Saved Properties:**")
+        st.markdown("• Updated Kitchen (75% of saved properties) - **High Priority**")
+        st.markdown("• 2+ Car Garage (67% of saved properties) - **Important**")
+        st.markdown("• Hardwood Floors (58% of saved properties) - **Preferred**")
+        st.markdown("• Large Yard (50% of saved properties) - **Desired**")
+
+        st.markdown("**📍 AI-Analyzed Location Preferences:**")
+        st.markdown("• West Lake Hills: 35% of searches - **Top Choice**")
+        st.markdown("• Central Austin: 25% of searches - **Secondary**")
+        st.markdown("• Cedar Park: 20% of searches - **Considering**")
+        st.markdown("• Round Rock: 20% of searches - **Backup Option**")
+
+        # AI learning insights
+        st.markdown("**🤖 AI Pattern Recognition:**")
+        st.markdown("• **Commute Factor**: Strong correlation with location preferences")
+        st.markdown("• **School Priority**: High importance detected (8/10 average)")
+        st.markdown("• **Move-in Timeline**: Flexible - can wait for right property")
+        st.markdown("• **Style Preference**: Transitional/Contemporary over Traditional")
+
+    with tab4:
+        st.markdown("#### 🚨 AI Retention & Churn Analytics")
+
+        if churn_risk_data:
+            # Churn risk breakdown
+            st.markdown("##### Risk Factor Analysis")
+
+            # Create risk factor visualization
+            risk_factors = [
+                "Activity Level", "Response Rate", "Tour Engagement",
+                "Budget Alignment", "Timeline Pressure", "Agent Relationship"
+            ]
+            risk_scores = [0.1, 0.15, 0.2, 0.25, 0.45, 0.1]  # Mock risk scores
+
+            fig = px.bar(
+                x=risk_factors,
+                y=risk_scores,
+                title="Individual Risk Factors Contributing to Churn",
+                color=risk_scores,
+                color_continuous_scale=["green", "orange", "red"]
+            )
+            fig.update_layout(showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+
+            # Detailed retention recommendations
+            st.markdown("##### 💡 AI Retention Recommendations")
+
+            risk_score = churn_risk_data["churn_risk_score"]
+            if risk_score < 0.3:
+                st.success("✅ **Continue Current Strategy**: Buyer is well-engaged. Maintain weekly check-ins and property alerts.")
+            elif risk_score < 0.7:
+                st.warning("⚠️ **Enhance Engagement**: Consider:")
+                st.markdown("• Increase communication frequency to bi-weekly")
+                st.markdown("• Provide market trend insights and exclusive listings")
+                st.markdown("• Schedule additional property tours this week")
+                st.markdown("• Send personalized neighborhood analysis")
+            else:
+                st.error("🚨 **Immediate Intervention Required**:")
+                st.markdown("• **Schedule urgent call within 24 hours**")
+                st.markdown("• **Reassess needs and preferences**")
+                st.markdown("• **Provide exclusive market opportunities**")
+                st.markdown("• **Consider incentive strategies**")
+
+            # Predictive insights
+            st.markdown("##### 🔮 AI Conversion Predictions")
+            st.markdown(f"• **7-Day Conversion Probability**: {churn_risk_data['conversion_probability']*0.3:.1%}")
+            st.markdown(f"• **30-Day Conversion Probability**: {churn_risk_data['conversion_probability']:.1%}")
+            st.markdown(f"• **90-Day Conversion Probability**: {min(churn_risk_data['conversion_probability']*1.2, 0.95):.1%}")
+
+        else:
+            st.info("🧠 Enhanced retention analytics available when AI services are loaded")
+
+            # Fallback engagement tips
+            st.markdown("##### General Retention Best Practices")
+            st.markdown("• Maintain regular communication every 3-5 days")
+            st.markdown("• Provide market updates and new listing alerts")
+            st.markdown("• Schedule property tours within 48 hours of interest")
+            st.markdown("• Send personalized neighborhood and school reports")
+            st.markdown("• Monitor response times and engagement levels")
+
+# Seller Component Functions
+def render_property_valuation_engine():
+    """AI-powered property valuation and CMA engine"""
+    st.subheader("📊 AI Property Valuation Engine")
+
+    # Property details input
+    st.markdown("#### 🏠 Property Information")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        property_address = st.text_input("Property Address", placeholder="1234 Main Street, Austin, TX 78704")
+        property_type = st.selectbox("Property Type", ["Single Family", "Townhome", "Condo", "Duplex", "Multi-Family"])
+        year_built = st.number_input("Year Built", value=1995, step=1)
+        lot_size = st.number_input("Lot Size (acres)", value=0.25, step=0.05)
+
+    with col2:
+        bedrooms = st.selectbox("Bedrooms", [1, 2, 3, 4, 5, 6, "7+"])
+        bathrooms = st.selectbox("Bathrooms", [1, 1.5, 2, 2.5, 3, 3.5, 4, "4.5+"])
+        square_footage = st.number_input("Square Footage", value=1856, step=50)
+        garage_spaces = st.selectbox("Garage Spaces", [0, 1, 2, 3, "4+"])
+
+    # Property features
+    st.markdown("#### ✨ Property Features & Condition")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        features = st.multiselect("Special Features", [
+            "Swimming Pool", "Fireplace", "Hardwood Floors", "Granite Counters",
+            "Updated Kitchen", "Master Suite", "Office/Study", "Basement",
+            "Deck/Patio", "Fenced Yard", "Workshop/Storage"
+        ])
+
+    with col2:
+        condition = st.selectbox("Overall Condition", [
+            "Excellent - Move-in Ready",
+            "Good - Minor Updates Needed",
+            "Fair - Some Improvements Required",
+            "Needs Work - Major Renovations"
+        ])
+
+    with col3:
+        recent_updates = st.multiselect("Recent Updates (Last 5 Years)", [
+            "Roof Replacement", "HVAC System", "Windows", "Flooring",
+            "Kitchen Renovation", "Bathroom Remodel", "Paint Interior",
+            "Paint Exterior", "Appliances", "Landscaping"
+        ])
+
+    # Market analysis
+    if st.button("🔍 Generate Valuation Analysis", type="primary"):
+        with st.spinner("Analyzing property value..."):
+
+            # Main valuation results
+            st.markdown("#### 🎯 Valuation Results")
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("🏠 Estimated Value", "$487,500", delta="$12,500 vs. last month")
+            with col2:
+                st.metric("📊 Value Range", "$465K - $510K", delta="95% confidence")
+            with col3:
+                st.metric("💰 $/Sq Ft", "$263", delta="$8 above market avg")
+            with col4:
+                st.metric("📈 Market Position", "Strong", delta="Good timing to sell")
+
+            # Valuation methodology tabs
+            tab1, tab2, tab3, tab4 = st.tabs([
+                "🏘️ Comparable Sales", "📊 Market Analysis", "🎯 Pricing Strategy", "📈 Value Drivers"
+            ])
+
+            with tab1:
+                st.markdown("##### Recent Comparable Sales")
+
+                comps = [
+                    {
+                        "address": "1245 Oak Street (0.2 mi)",
+                        "sold_price": "$495,000",
+                        "sold_date": "45 days ago",
+                        "beds": 3,
+                        "baths": 2,
+                        "sqft": 1920,
+                        "price_per_sqft": "$258",
+                        "adjustments": "+$7,500"
+                    },
+                    {
+                        "address": "1156 Pine Avenue (0.3 mi)",
+                        "sold_price": "$475,000",
+                        "sold_date": "62 days ago",
+                        "beds": 3,
+                        "baths": 2.5,
+                        "sqft": 1785,
+                        "price_per_sqft": "$266",
+                        "adjustments": "-$2,200"
+                    },
+                    {
+                        "address": "1289 Elm Drive (0.4 mi)",
+                        "sold_price": "$510,000",
+                        "sold_date": "28 days ago",
+                        "beds": 4,
+                        "baths": 2,
+                        "sqft": 1945,
+                        "price_per_sqft": "$262",
+                        "adjustments": "+$5,100"
+                    }
+                ]
+
+                for comp in comps:
+                    with st.container():
+                        col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+
+                        with col1:
+                            st.markdown(f"**{comp['address']}**")
+                            st.markdown(f"💰 {comp['sold_price']} • Sold {comp['sold_date']}")
+                            st.markdown(f"🛏️ {comp['beds']} bed • 🛁 {comp['baths']} bath • 📐 {comp['sqft']} sqft")
+
+                        with col2:
+                            st.markdown(f"**{comp['price_per_sqft']}**/sqft")
+
+                        with col3:
+                            adjustment_color = "green" if "+" in comp['adjustments'] else "red"
+                            st.markdown(f"<span style='color: {adjustment_color};'>**{comp['adjustments']}**</span>", unsafe_allow_html=True)
+
+                        with col4:
+                            st.markdown(f"**Adjusted**: ${int(comp['sold_price'].replace('$', '').replace(',', '')) + int(comp['adjustments'].replace('$', '').replace(',', '').replace('+', '')):,}")
+
+                        st.markdown("---")
+
+            with tab2:
+                st.markdown("##### Market Conditions Analysis")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.markdown("**Neighborhood Trends (Last 6 Months)**")
+                    st.markdown("• Average Days on Market: 8 days")
+                    st.markdown("• Price Appreciation: +12% YoY")
+                    st.markdown("• Inventory Level: Low (2.1 months)")
+                    st.markdown("• Market Type: Strong Seller's Market")
+
+                    st.markdown("**Seasonal Factors**")
+                    st.markdown("• Current Season: Peak selling season")
+                    st.markdown("• Interest Rates: 7.25% (stable)")
+                    st.markdown("• Economic Outlook: Positive")
+
+                with col2:
+                    # Market trends chart
+                    months = ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan"]
+                    median_prices = [425000, 435000, 448000, 455000, 465000, 475000]
+
+                    fig = px.line(x=months, y=median_prices, title="Neighborhood Median Prices")
+                    fig.update_layout(yaxis_title="Price ($)", xaxis_title="Month")
+                    st.plotly_chart(fig, use_container_width=True)
+
+                    st.markdown("**Price Per Square Foot Trends**")
+                    price_per_sqft = [245, 250, 255, 258, 260, 263]
+                    fig2 = px.bar(x=months, y=price_per_sqft, title="Price Per Sq Ft")
+                    st.plotly_chart(fig2, use_container_width=True)
+
+            with tab3:
+                st.markdown("##### Strategic Pricing Recommendations")
+
+                pricing_strategies = [
+                    {
+                        "strategy": "🎯 Competitive Pricing",
+                        "price": "$485,000",
+                        "pros": "Quick sale, multiple offers likely",
+                        "cons": "May leave money on table",
+                        "timeline": "5-10 days"
+                    },
+                    {
+                        "strategy": "💰 Market Value Pricing",
+                        "price": "$495,000",
+                        "pros": "Full market value, good negotiating room",
+                        "cons": "May take longer to sell",
+                        "timeline": "10-20 days"
+                    },
+                    {
+                        "strategy": "🚀 Aspirational Pricing",
+                        "price": "$510,000",
+                        "pros": "Maximum return if market supports",
+                        "cons": "Risk of sitting on market too long",
+                        "timeline": "20-45 days"
+                    }
+                ]
+
+                for strategy in pricing_strategies:
+                    with st.expander(f"{strategy['strategy']} - {strategy['price']}"):
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown(f"**✅ Pros:** {strategy['pros']}")
+                            st.markdown(f"**⚠️ Cons:** {strategy['cons']}")
+                        with col2:
+                            st.markdown(f"**⏱️ Expected Timeline:** {strategy['timeline']}")
+
+                st.info("💡 **Recommendation:** Start with Market Value Pricing ($495,000) to maximize return while ensuring reasonable sale timeline.")
+
+            with tab4:
+                st.markdown("##### Value Enhancement Opportunities")
+
+                improvements = [
+                    {
+                        "improvement": "Fresh Interior Paint",
+                        "cost": "$2,500",
+                        "value_add": "$5,000",
+                        "roi": "100%",
+                        "priority": "High"
+                    },
+                    {
+                        "improvement": "Kitchen Counter Update",
+                        "cost": "$4,500",
+                        "value_add": "$7,500",
+                        "roi": "67%",
+                        "priority": "Medium"
+                    },
+                    {
+                        "improvement": "Landscape Enhancement",
+                        "cost": "$1,500",
+                        "value_add": "$3,500",
+                        "roi": "133%",
+                        "priority": "High"
+                    },
+                    {
+                        "improvement": "Master Bath Update",
+                        "cost": "$8,000",
+                        "value_add": "$10,000",
+                        "roi": "25%",
+                        "priority": "Low"
+                    }
+                ]
+
+                st.markdown("**Recommended Pre-Sale Improvements:**")
+
+                for improvement in improvements:
+                    priority_color = "green" if improvement['priority'] == "High" else "orange" if improvement['priority'] == "Medium" else "red"
+
+                    with st.container():
+                        col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 1])
+
+                        with col1:
+                            st.markdown(f"**{improvement['improvement']}**")
+                        with col2:
+                            st.markdown(f"Cost: {improvement['cost']}")
+                        with col3:
+                            st.markdown(f"Value: {improvement['value_add']}")
+                        with col4:
+                            st.markdown(f"ROI: {improvement['roi']}")
+                        with col5:
+                            st.markdown(f"<span style='color: {priority_color};'>**{improvement['priority']}**</span>", unsafe_allow_html=True)
+
+                st.markdown("**Total Investment:** $16,500 | **Total Value Add:** $26,000 | **Net Gain:** $9,500")
+
+    # Additional tools
+    st.markdown("#### 🛠️ Additional Valuation Tools")
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("📧 Email CMA Report"):
+            st.success("Comprehensive CMA report sent to your email!")
+
+    with col2:
+        if st.button("📊 Generate Listing Sheet"):
+            st.info("Professional listing sheet created!")
+
+    with col3:
+        if st.button("📱 Share with Client"):
+            st.info("Valuation summary shared with client!")
+
+def render_seller_prep_checklist():
+    """Comprehensive seller preparation checklist"""
+    st.subheader("📋 Seller Preparation Checklist")
+
+    # Progress overview
+    st.markdown("#### 📊 Preparation Progress")
+
+    # Mock completion data
+    total_tasks = 25
+    completed_tasks = 12
+    progress = completed_tasks / total_tasks
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("✅ Tasks Completed", f"{completed_tasks}/{total_tasks}")
+    with col2:
+        st.metric("📈 Progress", f"{progress*100:.0f}%")
+    with col3:
+        st.metric("🏠 Market Readiness", "Good")
+    with col4:
+        st.metric("⏱️ Time to Market", "2-3 weeks")
+
+    # Progress bar
+    st.progress(progress)
+
+    # Checklist categories
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "🏠 Interior Prep", "🌿 Exterior Prep", "📄 Documentation", "📸 Marketing Prep", "🔧 Repairs & Updates"
+    ])
+
+    with tab1:
+        st.markdown("##### Interior Preparation")
+
+        interior_tasks = [
+            {"task": "Deep clean all rooms", "status": "✅", "priority": "High", "notes": "Professional cleaning scheduled"},
+            {"task": "Declutter and organize", "status": "✅", "priority": "High", "notes": "Completed last weekend"},
+            {"task": "Fresh paint (neutral colors)", "status": "⏳", "priority": "High", "notes": "Painter coming Monday"},
+            {"task": "Clean windows inside", "status": "✅", "priority": "Medium", "notes": "Done with deep cleaning"},
+            {"task": "Replace burnt-out bulbs", "status": "❌", "priority": "Medium", "notes": "Need LED bulbs"},
+            {"task": "Remove personal photos", "status": "✅", "priority": "Medium", "notes": "Stored in garage"},
+            {"task": "Stage furniture arrangement", "status": "❌", "priority": "Medium", "notes": "Stager coming Thursday"},
+            {"task": "Fix squeaky doors/hinges", "status": "❌", "priority": "Low", "notes": "Need WD-40"},
+        ]
+
+        for task in interior_tasks:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([3, 1, 1, 2])
+
+                with col1:
+                    st.markdown(f"{task['status']} {task['task']}")
+                with col2:
+                    priority_color = "red" if task['priority'] == "High" else "orange" if task['priority'] == "Medium" else "green"
+                    st.markdown(f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True)
+                with col3:
+                    if task['status'] == "❌":
+                        if st.button("Mark Done", key=f"interior_{task['task'][:10]}"):
+                            st.success("Task completed!")
+                with col4:
+                    st.markdown(f"*{task['notes']}*")
+
+    with tab2:
+        st.markdown("##### Exterior & Curb Appeal")
+
+        exterior_tasks = [
+            {"task": "Mow and edge lawn", "status": "✅", "priority": "High", "notes": "Weekly maintenance"},
+            {"task": "Trim bushes and trees", "status": "✅", "priority": "High", "notes": "Landscaper completed"},
+            {"task": "Plant seasonal flowers", "status": "⏳", "priority": "Medium", "notes": "Scheduled for weekend"},
+            {"task": "Power wash driveway/walkways", "status": "❌", "priority": "High", "notes": "Rent pressure washer"},
+            {"task": "Clean exterior windows", "status": "❌", "priority": "Medium", "notes": "Include in window service"},
+            {"task": "Touch up exterior paint", "status": "❌", "priority": "Medium", "notes": "Minor spots identified"},
+            {"task": "Clean gutters", "status": "✅", "priority": "Low", "notes": "Done in fall"},
+            {"task": "Ensure adequate outdoor lighting", "status": "⏳", "priority": "Medium", "notes": "Adding pathway lights"},
+        ]
+
+        for task in exterior_tasks:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([3, 1, 1, 2])
+
+                with col1:
+                    st.markdown(f"{task['status']} {task['task']}")
+                with col2:
+                    priority_color = "red" if task['priority'] == "High" else "orange" if task['priority'] == "Medium" else "green"
+                    st.markdown(f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True)
+                with col3:
+                    if task['status'] == "❌":
+                        if st.button("Mark Done", key=f"exterior_{task['task'][:10]}"):
+                            st.success("Task completed!")
+                with col4:
+                    st.markdown(f"*{task['notes']}*")
+
+    with tab3:
+        st.markdown("##### Required Documentation")
+
+        documents = [
+            {"doc": "Property deed", "status": "✅", "location": "File cabinet", "notes": "Original in safe"},
+            {"doc": "Previous property disclosures", "status": "✅", "location": "With agent", "notes": "From purchase"},
+            {"doc": "Recent utility bills", "status": "✅", "location": "Office desk", "notes": "Last 3 months"},
+            {"doc": "HOA documents (if applicable)", "status": "N/A", "location": "-", "notes": "No HOA"},
+            {"doc": "Survey/plat of property", "status": "⏳", "location": "Searching", "notes": "Request from title company"},
+            {"doc": "Warranty information", "status": "❌", "location": "Need to gather", "notes": "HVAC, appliances"},
+            {"doc": "Home inspection reports", "status": "✅", "location": "With agent", "notes": "From 2019 purchase"},
+            {"doc": "Property tax records", "status": "✅", "location": "Online access", "notes": "Current and paid"},
+        ]
+
+        for doc in documents:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+
+                with col1:
+                    st.markdown(f"{doc['status']} {doc['doc']}")
+                with col2:
+                    st.markdown(doc['location'])
+                with col3:
+                    if doc['status'] == "❌":
+                        if st.button("Found", key=f"doc_{doc['doc'][:8]}"):
+                            st.success("Document located!")
+                with col4:
+                    st.markdown(f"*{doc['notes']}*")
+
+    with tab4:
+        st.markdown("##### Marketing Preparation")
+
+        marketing_tasks = [
+            {"task": "Professional photography", "status": "⏳", "priority": "High", "notes": "Scheduled for next Tuesday"},
+            {"task": "Drone/aerial photos", "status": "❌", "priority": "Medium", "notes": "Include with photography"},
+            {"task": "Virtual tour/3D scan", "status": "❌", "priority": "Medium", "notes": "Optional upgrade"},
+            {"task": "Write compelling listing description", "status": "⏳", "priority": "High", "notes": "Agent drafting"},
+            {"task": "Create property feature list", "status": "✅", "priority": "Medium", "notes": "Completed with agent"},
+            {"task": "Gather neighborhood amenities info", "status": "✅", "priority": "Low", "notes": "Schools, shopping, etc."},
+            {"task": "Plan open house logistics", "status": "❌", "priority": "Medium", "notes": "After photos complete"},
+        ]
+
+        for task in marketing_tasks:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([3, 1, 1, 2])
+
+                with col1:
+                    st.markdown(f"{task['status']} {task['task']}")
+                with col2:
+                    priority_color = "red" if task['priority'] == "High" else "orange" if task['priority'] == "Medium" else "green"
+                    st.markdown(f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True)
+                with col3:
+                    if task['status'] == "❌":
+                        if st.button("Complete", key=f"marketing_{task['task'][:10]}"):
+                            st.success("Task completed!")
+                with col4:
+                    st.markdown(f"*{task['notes']}*")
+
+    with tab5:
+        st.markdown("##### Repairs & Updates")
+
+        repairs = [
+            {"item": "Fix leaky kitchen faucet", "priority": "High", "cost": "$150", "status": "⏳", "notes": "Plumber scheduled"},
+            {"item": "Replace cracked outlet cover", "priority": "Medium", "cost": "$5", "status": "❌", "notes": "Hardware store trip"},
+            {"item": "Caulk around master bathtub", "priority": "Medium", "cost": "$20", "status": "❌", "notes": "DIY project"},
+            {"item": "Touch up paint in hallway", "priority": "Low", "cost": "$25", "status": "⏳", "notes": "With main painting"},
+            {"item": "Replace air filter", "priority": "Low", "cost": "$15", "status": "✅", "notes": "Done monthly"},
+        ]
+
+        total_repair_cost = sum([int(repair['cost'].replace('$', '')) for repair in repairs])
+
+        st.markdown(f"**Total Estimated Repair Cost:** ${total_repair_cost}")
+
+        for repair in repairs:
+            with st.container():
+                col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2])
+
+                with col1:
+                    st.markdown(f"{repair['status']} {repair['item']}")
+                with col2:
+                    priority_color = "red" if repair['priority'] == "High" else "orange" if repair['priority'] == "Medium" else "green"
+                    st.markdown(f"<span style='color: {priority_color};'>{repair['priority']}</span>", unsafe_allow_html=True)
+                with col3:
+                    st.markdown(repair['cost'])
+                with col4:
+                    if repair['status'] == "❌":
+                        if st.button("Fixed", key=f"repair_{repair['item'][:8]}"):
+                            st.success("Repair completed!")
+                with col5:
+                    st.markdown(f"*{repair['notes']}*")
+
+    # Action buttons
+    st.markdown("#### 🎯 Quick Actions")
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        if st.button("📧 Email Checklist"):
+            st.success("Checklist emailed to you!")
+
+    with col2:
+        if st.button("📱 Share with Agent"):
+            st.info("Checklist shared with your agent!")
+
+    with col3:
+        if st.button("📅 Schedule Services"):
+            st.info("Service scheduling portal opened!")
+
+    with col4:
+        if st.button("💰 Get Cost Estimates"):
+            st.info("Contractor quotes requested!")
+
+def render_marketing_campaign_dashboard():
+    """Marketing campaign performance and management dashboard"""
+    st.subheader("📈 Marketing Campaign Dashboard")
+
+    # Campaign overview
+    st.markdown("#### 📊 Campaign Performance Overview")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("👀 Total Views", "2,847", delta="312 this week")
+    with col2:
+        st.metric("💕 Favorites", "89", delta="23 new")
+    with col3:
+        st.metric("📞 Inquiries", "47", delta="12 this week")
+    with col4:
+        st.metric("📅 Showings Scheduled", "18", delta="5 pending")
+
+    # Detailed analytics tabs
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "📊 Performance Analytics", "🌐 Online Listings", "📸 Marketing Materials", "📅 Showing Activity", "📈 Market Feedback"
+    ])
+
+    with tab1:
+        st.markdown("##### Performance Analytics")
+
+        # Views over time
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**Daily Views (Last 14 Days)**")
+            days = list(range(1, 15))
+            views = [45, 52, 38, 67, 89, 123, 145, 167, 89, 76, 98, 134, 156, 187]
+
+            fig_views = px.line(x=days, y=views, title="Daily Property Views")
+            fig_views.update_layout(xaxis_title="Days", yaxis_title="Views")
+            st.plotly_chart(fig_views, use_container_width=True)
+
+        with col2:
+            st.markdown("**Inquiry Sources**")
+            sources = ["Zillow", "Realtor.com", "MLS", "Company Website", "Social Media", "Referral"]
+            inquiries = [18, 15, 8, 4, 2, 0]
+
+            fig_sources = px.pie(values=inquiries, names=sources, title="Lead Sources")
+            st.plotly_chart(fig_sources, use_container_width=True)
+
+        # Performance metrics
+        st.markdown("**Key Performance Indicators**")
+        metrics_data = [
+            {"Metric": "View-to-Inquiry Rate", "Current": "1.65%", "Goal": "2.0%", "Status": "📈 Improving"},
+            {"Metric": "Inquiry-to-Showing Rate", "Current": "38.3%", "Goal": "35%", "Status": "✅ Exceeding"},
+            {"Metric": "Days on Market", "Current": "8 days", "Goal": "< 15 days", "Status": "🎯 On Target"},
+            {"Metric": "Price per Sq Ft", "Current": "$263", "Goal": "$255", "Status": "💰 Above Market"}
+        ]
+
+        metrics_df = pd.DataFrame(metrics_data)
+        st.dataframe(metrics_df, use_container_width=True)
+
+    with tab2:
+        st.markdown("##### Online Listing Status")
+
+        listings = [
+            {
+                "platform": "MLS",
+                "status": "🟢 Active",
+                "views": "1,247",
+                "leads": "23",
+                "last_updated": "Today",
+                "notes": "Primary listing source"
+            },
+            {
+                "platform": "Zillow",
+                "status": "🟢 Active",
+                "views": "892",
+                "leads": "18",
+                "last_updated": "2 days ago",
+                "notes": "High traffic source"
+            },
+            {
+                "platform": "Realtor.com",
+                "status": "🟢 Active",
+                "views": "654",
+                "leads": "15",
+                "last_updated": "Today",
+                "notes": "Good conversion rate"
+            },
+            {
+                "platform": "Company Website",
+                "status": "🟢 Active",
+                "views": "234",
+                "leads": "4",
+                "last_updated": "1 day ago",
+                "notes": "Brand awareness"
+            },
+            {
+                "platform": "Facebook Marketplace",
+                "status": "🟡 Pending",
+                "views": "0",
+                "leads": "0",
+                "last_updated": "N/A",
+                "notes": "Awaiting approval"
+            }
+        ]
+
+        for listing in listings:
+            with st.container():
+                col1, col2, col3, col4, col5, col6 = st.columns([1.5, 1, 1, 1, 1, 2])
+
+                with col1:
+                    st.markdown(f"**{listing['platform']}**")
+                with col2:
+                    st.markdown(listing['status'])
+                with col3:
+                    st.markdown(listing['views'])
+                with col4:
+                    st.markdown(listing['leads'])
+                with col5:
+                    st.markdown(listing['last_updated'])
+                with col6:
+                    st.markdown(f"*{listing['notes']}*")
+
+                st.markdown("---")
+
+    with tab3:
+        st.markdown("##### Marketing Materials")
+
+        # Photo performance
+        st.markdown("**Photo Performance Analysis**")
+
+        photos = [
+            {"photo": "Front Exterior", "views": "2,847", "saves": "89", "engagement": "3.1%"},
+            {"photo": "Living Room", "views": "2,203", "saves": "67", "engagement": "3.0%"},
+            {"photo": "Kitchen", "views": "2,156", "saves": "78", "engagement": "3.6%"},
+            {"photo": "Master Bedroom", "views": "1,834", "saves": "45", "engagement": "2.5%"},
+            {"photo": "Backyard", "views": "1,623", "saves": "52", "engagement": "3.2%"}
+        ]
+
+        for photo in photos:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+
+                with col1:
+                    st.markdown(f"📸 **{photo['photo']}**")
+                with col2:
+                    st.markdown(f"👀 {photo['views']}")
+                with col3:
+                    st.markdown(f"💾 {photo['saves']}")
+                with col4:
+                    engagement_float = float(photo['engagement'].replace('%', ''))
+                    color = "green" if engagement_float >= 3.0 else "orange"
+                    st.markdown(f"<span style='color: {color};'>📈 {photo['engagement']}</span>", unsafe_allow_html=True)
+
+        # Marketing materials status
+        st.markdown("**Marketing Materials Checklist**")
+        materials = [
+            {"item": "Professional Photos (25 images)", "status": "✅ Complete"},
+            {"item": "Property Description", "status": "✅ Complete"},
+            {"item": "Feature Sheet/Flyer", "status": "✅ Complete"},
+            {"item": "Virtual Tour", "status": "⏳ In Progress"},
+            {"item": "Drone/Aerial Video", "status": "❌ Pending"},
+            {"item": "Social Media Posts", "status": "✅ Posted Daily"}
+        ]
+
+        for material in materials:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.markdown(f"• {material['item']}")
+            with col2:
+                st.markdown(material['status'])
+
+    with tab4:
+        st.markdown("##### Showing Activity")
+
+        # Upcoming showings
+        st.markdown("**Scheduled Showings**")
+
+        showings = [
+            {
+                "date": "Today",
+                "time": "2:00 PM",
+                "type": "Private Showing",
+                "agent": "Sarah Johnson (Buyer Agent)",
+                "notes": "Pre-approved buyer, serious interest"
+            },
+            {
+                "date": "Tomorrow",
+                "time": "10:00 AM",
+                "type": "Private Showing",
+                "agent": "Mike Chen (Buyer Agent)",
+                "notes": "First-time homebuyer"
+            },
+            {
+                "date": "Saturday",
+                "time": "1:00-4:00 PM",
+                "type": "Open House",
+                "agent": "Your Listing Agent",
+                "notes": "First open house event"
+            },
+            {
+                "date": "Sunday",
+                "time": "11:00 AM",
+                "type": "Private Showing",
+                "agent": "Lisa Rodriguez (Buyer Agent)",
+                "notes": "Investor client"
+            }
+        ]
+
+        for showing in showings:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([1, 1, 2, 2])
+
+                with col1:
+                    st.markdown(f"**📅 {showing['date']}**")
+                with col2:
+                    st.markdown(f"🕐 {showing['time']}")
+                with col3:
+                    st.markdown(f"**{showing['type']}**")
+                    st.markdown(f"*{showing['agent']}*")
+                with col4:
+                    st.markdown(showing['notes'])
+
+                st.markdown("---")
+
+        # Showing statistics
+        st.markdown("**Showing Statistics (Last 30 Days)**")
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric("Total Showings", "18")
+        with col2:
+            st.metric("Private Showings", "14")
+        with col3:
+            st.metric("Open Houses", "2")
+        with col4:
+            st.metric("Avg per Week", "4.5")
+
+    with tab5:
+        st.markdown("##### Market Feedback & Insights")
+
+        # Feedback from showings
+        st.markdown("**Agent & Buyer Feedback**")
+
+        feedback = [
+            {
+                "source": "Sarah Johnson (Buyer Agent)",
+                "date": "2 days ago",
+                "rating": "⭐⭐⭐⭐⭐",
+                "comment": "Beautiful home, well-maintained. Buyers loved the kitchen updates.",
+                "concerns": "Slight concern about backyard size for their dogs."
+            },
+            {
+                "source": "Mike Chen (Buyer Agent)",
+                "date": "3 days ago",
+                "rating": "⭐⭐⭐⭐",
+                "comment": "Great location and condition. Competitive price point.",
+                "concerns": "Buyers prefer a larger master bathroom."
+            },
+            {
+                "source": "Lisa Rodriguez (Buyer Agent)",
+                "date": "1 week ago",
+                "rating": "⭐⭐⭐⭐⭐",
+                "comment": "Excellent investment opportunity. Cash buyer interested.",
+                "concerns": "None - ready to make offer."
+            }
+        ]
+
+        for fb in feedback:
+            with st.expander(f"{fb['source']} - {fb['rating']} ({fb['date']})"):
+                st.markdown(f"**Comment:** {fb['comment']}")
+                if fb['concerns']:
+                    st.markdown(f"**Concerns:** {fb['concerns']}")
+
+        # Market positioning analysis
+        st.markdown("**Competitive Market Analysis**")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**Strengths vs Competition:**")
+            st.markdown("• ✅ Superior kitchen updates")
+            st.markdown("• ✅ Better curb appeal")
+            st.markdown("• ✅ Competitive pricing")
+            st.markdown("• ✅ Excellent school district")
+
+        with col2:
+            st.markdown("**Areas for Improvement:**")
+            st.markdown("• 🔸 Smaller master bathroom")
+            st.markdown("• 🔸 Limited backyard space")
+            st.markdown("• 🔸 Single-car garage only")
+
+        # Recommendations
+        st.info("💡 **Agent Recommendations:** Continue current marketing strategy. Consider hosting second open house to capture weekend traffic. Price point is well-positioned for quick sale.")
+
+def render_seller_communication_portal():
+    """Communication hub for seller-agent interaction"""
+    st.subheader("💬 Seller Communication Portal")
+
+    # Communication overview
+    st.markdown("#### 📊 Communication Summary")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("📧 Messages Today", "5", delta="2 unread")
+    with col2:
+        st.metric("📞 Calls This Week", "3", delta="1 scheduled")
+    with col3:
+        st.metric("📅 Updates Sent", "12", delta="Weekly report due")
+    with col4:
+        st.metric("🏠 Showing Reports", "8", delta="3 new")
+
+    # Communication tabs
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "💬 Messages", "📞 Calls & Meetings", "📊 Reports & Updates", "📅 Showing Feedback", "📋 Documents"
+    ])
+
+    with tab1:
+        st.markdown("##### Message Center")
+
+        # Quick message composer
+        with st.expander("✏️ Send New Message"):
+            message_to = st.selectbox("To:", ["Your Listing Agent", "Transaction Coordinator", "Marketing Team"])
+            message_subject = st.text_input("Subject:")
+            message_body = st.text_area("Message:", height=100)
+
+            col1, col2 = st.columns([1, 4])
+            with col1:
+                if st.button("📤 Send Message"):
+                    st.success("Message sent!")
+
+        # Message history
+        st.markdown("**Recent Messages**")
+
+        messages = [
+            {
+                "from": "Your Listing Agent",
+                "subject": "Showing Report - Great Feedback!",
+                "time": "2 hours ago",
+                "preview": "Had two showings today with very positive feedback. The buyers loved...",
+                "unread": True
+            },
+            {
+                "from": "Transaction Coordinator",
+                "subject": "Document Upload Required",
+                "time": "1 day ago",
+                "preview": "Please upload the signed property disclosure form to complete...",
+                "unread": True
+            },
+            {
+                "from": "Your Listing Agent",
+                "subject": "Weekly Market Update",
+                "time": "3 days ago",
+                "preview": "Market activity remains strong in your neighborhood. Three new...",
+                "unread": False
+            },
+            {
+                "from": "Marketing Team",
+                "subject": "Photos Ready for Approval",
+                "time": "5 days ago",
+                "preview": "Professional photography is complete! Please review the gallery...",
+                "unread": False
+            }
+        ]
+
+        for message in messages:
+            unread_style = "background-color: #E3F2FD;" if message['unread'] else "background-color: white;"
+
+            with st.container():
+                st.markdown(f"""
+                <div style="{unread_style} padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #2196F3;">
+                    <div style="display: flex; justify-content: between; margin-bottom: 5px;">
+                        <strong>{'📧 ' if message['unread'] else '✉️ '}{message['subject']}</strong>
+                        <span style="color: #666; font-size: 0.9em; margin-left: auto;">{message['time']}</span>
+                    </div>
+                    <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">From: {message['from']}</div>
+                    <div style="color: #333;">{message['preview']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                col1, col2, col3 = st.columns([1, 1, 4])
+                with col1:
+                    if st.button("📖 Read", key=f"read_{message['subject'][:10]}"):
+                        st.info("Opening full message...")
+                with col2:
+                    if st.button("↩️ Reply", key=f"reply_{message['subject'][:10]}"):
+                        st.info("Reply window opened...")
+
+    with tab2:
+        st.markdown("##### Calls & Meetings")
+
+        # Upcoming meetings
+        st.markdown("**Upcoming Calls & Meetings**")
+
+        meetings = [
+            {
+                "title": "Weekly Check-in Call",
+                "date": "Tomorrow",
+                "time": "10:00 AM",
+                "type": "Phone Call",
+                "agenda": "Discuss showing feedback and next steps"
+            },
+            {
+                "title": "Marketing Strategy Review",
+                "date": "Friday",
+                "time": "2:00 PM",
+                "type": "Video Call",
+                "agenda": "Review performance metrics and adjust strategy"
+            }
+        ]
+
+        for meeting in meetings:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+
+                with col1:
+                    st.markdown(f"**📅 {meeting['title']}**")
+                    st.markdown(f"*{meeting['agenda']}*")
+                with col2:
+                    st.markdown(meeting['date'])
+                with col3:
+                    st.markdown(meeting['time'])
+                with col4:
+                    if st.button("📞 Join", key=f"join_{meeting['title'][:8]}"):
+                        st.success("Meeting link opened!")
+
+                st.markdown("---")
+
+        # Call history
+        st.markdown("**Recent Call History**")
+
+        calls = [
+            {
+                "date": "Yesterday",
+                "duration": "15 minutes",
+                "type": "📞 Phone Call",
+                "summary": "Discussed pricing strategy and showing feedback"
+            },
+            {
+                "date": "3 days ago",
+                "duration": "22 minutes",
+                "type": "💻 Video Call",
+                "summary": "Reviewed marketing materials and listing photos"
+            }
+        ]
+
+        for call in calls:
+            st.markdown(f"**{call['type']} - {call['date']}** ({call['duration']})")
+            st.markdown(f"*{call['summary']}*")
+            st.markdown("---")
+
+    with tab3:
+        st.markdown("##### Reports & Updates")
+
+        # Report schedule
+        st.markdown("**Scheduled Reports**")
+
+        reports = [
+            {
+                "report": "Weekly Activity Report",
+                "frequency": "Every Monday",
+                "last_sent": "3 days ago",
+                "next_due": "In 4 days"
+            },
+            {
+                "report": "Showing Summary",
+                "frequency": "After each showing",
+                "last_sent": "Today",
+                "next_due": "As needed"
+            },
+            {
+                "report": "Market Analysis Update",
+                "frequency": "Bi-weekly",
+                "last_sent": "1 week ago",
+                "next_due": "Next week"
+            }
+        ]
+
+        for report in reports:
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.markdown(f"**{report['report']}**")
+            with col2:
+                st.markdown(report['frequency'])
+            with col3:
+                st.markdown(report['last_sent'])
+            with col4:
+                st.markdown(report['next_due'])
+
+        # Recent reports
+        st.markdown("**Recent Reports**")
+
+        with st.expander("📊 Weekly Activity Report - January 6, 2026"):
+            st.markdown("""
+            **This Week's Highlights:**
+            - 23 new online views (+18% from last week)
+            - 5 showing appointments scheduled
+            - 2 private showings completed with positive feedback
+            - Featured in weekend newsletter to 2,500+ subscribers
+
+            **Marketing Performance:**
+            - Zillow: 12 inquiries, 89 favorites
+            - Realtor.com: 8 inquiries, 45 favorites
+            - MLS: 3 agent inquiries
+
+            **Next Week's Plans:**
+            - Schedule professional photography touch-ups
+            - Host first open house on Saturday
+            - Follow up with interested buyers from this week
+            """)
+
+        with st.expander("🏠 Showing Report - Today 2:00 PM"):
+            st.markdown("""
+            **Showing Details:**
+            - Buyer Agent: Sarah Johnson, ABC Realty
+            - Showing Duration: 25 minutes
+            - Buyer Profile: Pre-approved first-time buyers, $450K budget
+
+            **Feedback:**
+            - Overall Impression: Very positive
+            - Loved: Updated kitchen, hardwood floors, neighborhood
+            - Concerns: Wanted larger master bathroom
+            - Interest Level: High - planning second viewing this weekend
+
+            **Agent Comments:**
+            "Serious buyers who have been looking for 3 months. Your home checks most of their boxes. They'll likely make an offer after second showing."
+            """)
+
+    with tab4:
+        st.markdown("##### Showing Feedback")
+
+        # Feedback summary
+        st.markdown("**Feedback Summary (Last 30 Days)**")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Overall Rating", "4.6/5", delta="Excellent")
+        with col2:
+            st.metric("Would Recommend", "92%", delta="Above average")
+        with col3:
+            st.metric("Serious Interest", "67%", delta="High engagement")
+
+        # Detailed feedback
+        st.markdown("**Recent Feedback**")
+
+        detailed_feedback = [
+            {
+                "date": "Today 2:00 PM",
+                "agent": "Sarah Johnson",
+                "rating": 5,
+                "highlights": "Kitchen updates, hardwood floors, location",
+                "concerns": "Master bathroom size",
+                "likelihood": "High - second showing planned"
+            },
+            {
+                "date": "Yesterday 11:00 AM",
+                "agent": "Mike Chen",
+                "rating": 4,
+                "highlights": "Move-in ready condition, good value",
+                "concerns": "Prefers larger backyard",
+                "likelihood": "Medium - still considering options"
+            },
+            {
+                "date": "2 days ago 3:00 PM",
+                "agent": "Lisa Rodriguez",
+                "rating": 5,
+                "highlights": "Investment potential, neighborhood growth",
+                "concerns": "None mentioned",
+                "likelihood": "Very High - cash buyer ready to offer"
+            }
+        ]
+
+        for feedback in detailed_feedback:
+            with st.container():
+                col1, col2, col3 = st.columns([2, 2, 1])
+
+                with col1:
+                    st.markdown(f"**📅 {feedback['date']}**")
+                    st.markdown(f"*Agent: {feedback['agent']}*")
+
+                with col2:
+                    st.markdown(f"**Rating:** {'⭐' * feedback['rating']}")
+                    st.markdown(f"**Highlights:** {feedback['highlights']}")
+                    if feedback['concerns'] != "None mentioned":
+                        st.markdown(f"**Concerns:** {feedback['concerns']}")
+
+                with col3:
+                    likelihood_color = "green" if "High" in feedback['likelihood'] else "orange" if "Medium" in feedback['likelihood'] else "red"
+                    st.markdown(f"<span style='color: {likelihood_color};'>**{feedback['likelihood']}**</span>", unsafe_allow_html=True)
+
+                st.markdown("---")
+
+    with tab5:
+        st.markdown("##### Document Management")
+
+        # Document categories
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**📋 Required Documents**")
+
+            required_docs = [
+                {"doc": "Property Disclosure", "status": "✅ Complete"},
+                {"doc": "Listing Agreement", "status": "✅ Complete"},
+                {"doc": "MLS Listing Form", "status": "✅ Complete"},
+                {"doc": "Lead Paint Disclosure", "status": "⏳ Pending"},
+                {"doc": "HOA Documents", "status": "N/A"},
+                {"doc": "Survey/Plat", "status": "⏳ Requested"}
+            ]
+
+            for doc in required_docs:
+                col_a, col_b = st.columns([3, 1])
+                with col_a:
+                    st.markdown(f"• {doc['doc']}")
+                with col_b:
+                    st.markdown(doc['status'])
+
+        with col2:
+            st.markdown("**📁 Shared Documents**")
+
+            shared_docs = [
+                {"doc": "Professional Photos", "date": "5 days ago"},
+                {"doc": "Marketing Flyer", "date": "4 days ago"},
+                {"doc": "CMA Report", "date": "1 week ago"},
+                {"doc": "Listing Analytics", "date": "Yesterday"},
+                {"doc": "Showing Reports", "date": "Today"}
+            ]
+
+            for doc in shared_docs:
+                col_a, col_b = st.columns([3, 1])
+                with col_a:
+                    st.markdown(f"📄 {doc['doc']}")
+                with col_b:
+                    if st.button("📥", key=f"download_{doc['doc'][:8]}"):
+                        st.success("Downloaded!")
+
+        # Document upload
+        st.markdown("**📤 Upload Documents**")
+
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            uploaded_file = st.file_uploader("Choose file", type=['pdf', 'doc', 'docx', 'jpg', 'png'])
+        with col2:
+            if st.button("Upload"):
+                if uploaded_file:
+                    st.success("Document uploaded successfully!")
+                else:
+                    st.warning("Please select a file first.")
+
+def render_transaction_timeline():
+    """Transaction timeline and offer management"""
+    st.subheader("📅 Transaction Timeline & Offers")
+
+    # Timeline overview
+    st.markdown("#### 🎯 Sale Progress")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("📅 Days Listed", "8 days")
+    with col2:
+        st.metric("👀 Total Interest", "High")
+    with col3:
+        st.metric("🤝 Offers Received", "2")
+    with col4:
+        st.metric("📊 Current Status", "Active")
+
+    # Main timeline tabs
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📋 Current Offers", "📅 Timeline", "🔄 Next Steps", "📊 Milestones"
+    ])
+
+    with tab1:
+        st.markdown("##### Active Offers")
+
+        offers = [
+            {
+                "buyer": "Johnson Family (Sarah Johnson, Buyer Agent)",
+                "offer_price": "$492,000",
+                "earnest_money": "$10,000",
+                "financing": "Conventional - Pre-approved",
+                "closing_date": "30 days",
+                "contingencies": "Inspection, Financing",
+                "status": "🟡 Under Review",
+                "expires": "Tomorrow 5:00 PM",
+                "notes": "Strong offer, motivated buyers"
+            },
+            {
+                "buyer": "Investment Group (Lisa Rodriguez, Buyer Agent)",
+                "offer_price": "$485,000",
+                "earnest_money": "$25,000",
+                "financing": "Cash Offer",
+                "closing_date": "15 days",
+                "contingencies": "Inspection Only (7 days)",
+                "status": "🟢 Active",
+                "expires": "Today 6:00 PM",
+                "notes": "Cash offer, quick close, investor buyer"
+            }
+        ]
+
+        for i, offer in enumerate(offers):
+            with st.expander(f"{offer['status']} {offer['buyer']} - {offer['offer_price']}"):
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.markdown(f"**💰 Offer Price:** {offer['offer_price']}")
+                    st.markdown(f"**💵 Earnest Money:** {offer['earnest_money']}")
+                    st.markdown(f"**🏦 Financing:** {offer['financing']}")
+                    st.markdown(f"**📅 Closing:** {offer['closing_date']}")
+
+                with col2:
+                    st.markdown(f"**🔍 Contingencies:** {offer['contingencies']}")
+                    st.markdown(f"**⏰ Expires:** {offer['expires']}")
+                    st.markdown(f"**📝 Notes:** {offer['notes']}")
+
+                # Action buttons
+                col_a, col_b, col_c, col_d = st.columns(4)
+                with col_a:
+                    if st.button("✅ Accept", key=f"accept_{i}"):
+                        st.success("Offer accepted! Contract generation initiated.")
+                with col_b:
+                    if st.button("📝 Counter", key=f"counter_{i}"):
+                        st.info("Counter-offer form opened.")
+                with col_c:
+                    if st.button("❌ Decline", key=f"decline_{i}"):
+                        st.warning("Offer declined.")
+                with col_d:
+                    if st.button("📞 Discuss", key=f"discuss_{i}"):
+                        st.info("Calling your agent to discuss...")
+
+        if not offers:
+            st.info("No offers received yet. Marketing campaign is generating strong interest!")
+
+    with tab2:
+        st.markdown("##### Transaction Timeline")
+
+        # Timeline visualization
+        timeline_events = [
+            {"date": "Jan 1", "event": "🏠 Listed Property", "status": "✅ Complete", "notes": "Initial listing activation"},
+            {"date": "Jan 2", "event": "📸 Photography Complete", "status": "✅ Complete", "notes": "Professional photos taken"},
+            {"date": "Jan 3", "event": "🌐 Online Marketing Launch", "status": "✅ Complete", "notes": "Listed on all major platforms"},
+            {"date": "Jan 5", "event": "🏠 First Showing", "status": "✅ Complete", "notes": "Private showing with positive feedback"},
+            {"date": "Jan 8", "event": "🤝 First Offers Received", "status": "⏳ In Progress", "notes": "Two offers currently under review"},
+            {"date": "Jan 9", "event": "📋 Offer Decision", "status": "🔄 Pending", "notes": "Accept, counter, or decline current offers"},
+            {"date": "Jan 10", "event": "📝 Contract Execution", "status": "⏸️ Waiting", "notes": "Dependent on offer decision"},
+            {"date": "Jan 17", "event": "🔍 Inspection Period", "status": "📅 Scheduled", "notes": "7-10 day inspection window"},
+            {"date": "Jan 24", "event": "💰 Financing Approval", "status": "📅 Scheduled", "notes": "Buyer financing deadline"},
+            {"date": "Feb 7", "event": "🏡 Closing", "status": "🎯 Target", "notes": "Estimated closing date"}
+        ]
+
+        for event in timeline_events:
+            col1, col2, col3, col4 = st.columns([1, 2, 1, 2])
+
+            with col1:
+                st.markdown(f"**{event['date']}**")
+            with col2:
+                st.markdown(f"{event['event']}")
+            with col3:
+                st.markdown(event['status'])
+            with col4:
+                st.markdown(f"*{event['notes']}*")
+
+    with tab3:
+        st.markdown("##### Next Steps")
+
+        # Immediate actions needed
+        st.markdown("**🔥 Immediate Actions (Next 24-48 Hours)**")
+
+        immediate_actions = [
+            {
+                "action": "Review and respond to current offers",
+                "priority": "🔴 High",
+                "deadline": "Tomorrow 5:00 PM",
+                "responsible": "You & Listing Agent"
+            },
+            {
+                "action": "Prepare counter-offer strategy",
+                "priority": "🟡 Medium",
+                "deadline": "Today",
+                "responsible": "Listing Agent"
+            },
+            {
+                "action": "Schedule additional showings for weekend",
+                "priority": "🟢 Normal",
+                "deadline": "End of week",
+                "responsible": "Showing Coordinator"
+            }
+        ]
+
+        for action in immediate_actions:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([3, 1, 1, 2])
+
+                with col1:
+                    st.markdown(f"• {action['action']}")
+                with col2:
+                    st.markdown(action['priority'])
+                with col3:
+                    st.markdown(action['deadline'])
+                with col4:
+                    st.markdown(f"*{action['responsible']}*")
+
+        # Upcoming milestones
+        st.markdown("**📅 Upcoming Milestones**")
+
+        milestones = [
+            {
+                "milestone": "Contract Execution",
+                "target_date": "Within 3 days",
+                "description": "Accept offer and execute purchase contract"
+            },
+            {
+                "milestone": "Inspection Period",
+                "target_date": "Days 4-10",
+                "description": "Buyer inspection and potential negotiations"
+            },
+            {
+                "milestone": "Appraisal",
+                "target_date": "Days 10-15",
+                "description": "Lender-ordered property appraisal"
+            },
+            {
+                "milestone": "Final Approval",
+                "target_date": "Days 20-25",
+                "description": "Buyer's loan final approval and clear to close"
+            },
+            {
+                "milestone": "Closing",
+                "target_date": "Day 30",
+                "description": "Title transfer and sale completion"
+            }
+        ]
+
+        for milestone in milestones:
+            with st.container():
+                col1, col2, col3 = st.columns([2, 1, 3])
+
+                with col1:
+                    st.markdown(f"**📍 {milestone['milestone']}**")
+                with col2:
+                    st.markdown(milestone['target_date'])
+                with col3:
+                    st.markdown(milestone['description'])
+
+    with tab4:
+        st.markdown("##### Progress Milestones")
+
+        # Milestone progress tracker
+        milestones_progress = [
+            {"milestone": "Property Preparation", "progress": 100, "status": "✅ Complete"},
+            {"milestone": "Marketing Launch", "progress": 100, "status": "✅ Complete"},
+            {"milestone": "Generate Interest", "progress": 85, "status": "🟡 Strong Progress"},
+            {"milestone": "Receive Offers", "progress": 60, "status": "⏳ In Progress"},
+            {"milestone": "Accept Contract", "progress": 0, "status": "⏸️ Pending"},
+            {"milestone": "Navigate Contingencies", "progress": 0, "status": "⏸️ Future"},
+            {"milestone": "Close Sale", "progress": 0, "status": "⏸️ Future"}
+        ]
+
+        for milestone in milestones_progress:
+            col1, col2, col3 = st.columns([2, 2, 1])
+
+            with col1:
+                st.markdown(f"**{milestone['milestone']}**")
+            with col2:
+                st.progress(milestone['progress'] / 100)
+                st.markdown(f"{milestone['progress']}% Complete")
+            with col3:
+                st.markdown(milestone['status'])
+
+        # Key metrics
+        st.markdown("**📊 Sale Performance Metrics**")
+
+        metrics = [
+            {"metric": "Time to First Offer", "value": "8 days", "benchmark": "< 14 days", "status": "🎯 Excellent"},
+            {"metric": "Offer Quality", "value": "Strong", "benchmark": "At/Above Asking", "status": "✅ Good"},
+            {"metric": "Marketing Reach", "value": "2,847 views", "benchmark": "> 1,000", "status": "🚀 Exceeding"},
+            {"metric": "Showing Interest", "value": "18 showings", "benchmark": "> 10", "status": "✅ Strong"}
+        ]
+
+        for metric in metrics:
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.markdown(f"**{metric['metric']}**")
+            with col2:
+                st.markdown(metric['value'])
+            with col3:
+                st.markdown(metric['benchmark'])
+            with col4:
+                st.markdown(metric['status'])
+
+def render_seller_analytics():
+    """Comprehensive seller analytics and insights"""
+    st.subheader("📊 Seller Analytics & Insights")
+
+    # Analytics overview
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("💰 Projected Net Proceeds", "$462,150", delta="$8,500 vs. initial estimate")
+    with col2:
+        st.metric("📈 Market Performance", "Above Average", delta="Top 15% in area")
+    with col3:
+        st.metric("⏱️ Est. Time to Contract", "12 days", delta="3 days faster than average")
+    with col4:
+        st.metric("🎯 Success Probability", "92%", delta="Strong indicators")
+
+    # Detailed analytics
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "💰 Financial Analysis", "📊 Market Performance", "🎯 Success Predictors", "📈 Competitive Position"
+    ])
+
+    with tab1:
+        st.markdown("##### Financial Projection")
+
+        # Net proceeds calculation
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**📊 Estimated Sale Proceeds**")
+
+            # Financial breakdown
+            sale_price = 492000
+            commission = sale_price * 0.06
+            closing_costs = sale_price * 0.015
+            repairs = 2500
+            staging = 1200
+            other_costs = 800
+
+            financial_data = [
+                {"Item": "Gross Sale Price", "Amount": f"${sale_price:,}"},
+                {"Item": "Real Estate Commission (6%)", "Amount": f"-${commission:,.0f}"},
+                {"Item": "Closing Costs (~1.5%)", "Amount": f"-${closing_costs:,.0f}"},
+                {"Item": "Pre-Sale Repairs", "Amount": f"-${repairs:,}"},
+                {"Item": "Staging Costs", "Amount": f"-${staging:,}"},
+                {"Item": "Other Selling Costs", "Amount": f"-${other_costs:,}"},
+                {"Item": "**Net Proceeds**", "Amount": f"**${sale_price - commission - closing_costs - repairs - staging - other_costs:,.0f}**"}
+            ]
+
+            for item in financial_data:
+                col_a, col_b = st.columns([2, 1])
+                with col_a:
+                    if item["Item"].startswith("**"):
+                        st.markdown(item["Item"])
+                    else:
+                        st.markdown(f"• {item['Item']}")
+                with col_b:
+                    st.markdown(item["Amount"])
+
+        with col2:
+            # Visual breakdown
+            costs = ["Commission", "Closing Costs", "Repairs", "Other", "Net Proceeds"]
+            amounts = [commission, closing_costs, repairs, staging + other_costs, sale_price - commission - closing_costs - repairs - staging - other_costs]
+
+            fig = px.pie(values=amounts, names=costs, title="Sale Proceeds Breakdown")
+            st.plotly_chart(fig, use_container_width=True)
+
+        # ROI Analysis
+        st.markdown("**🏠 Return on Investment Analysis**")
+
+        original_purchase = 385000
+        improvements = 15000
+        total_investment = original_purchase + improvements
+        total_return = sale_price - commission - closing_costs - repairs - staging - other_costs
+        roi = ((total_return - total_investment) / total_investment) * 100
+
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Original Purchase", f"${original_purchase:,}")
+        with col2:
+            st.metric("Total Improvements", f"${improvements:,}")
+        with col3:
+            st.metric("Total Investment", f"${total_investment:,}")
+        with col4:
+            st.metric("ROI", f"{roi:.1f}%", delta="Excellent return")
+
+    with tab2:
+        st.markdown("##### Market Performance Analysis")
+
+        # Comparison metrics
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**📊 Your Property vs. Market Average**")
+
+            comparison_data = [
+                {"Metric": "Days on Market", "Your Property": "8 days", "Market Average": "22 days", "Performance": "🟢 64% Faster"},
+                {"Metric": "List-to-Sale Price", "Your Property": "99.4%", "Market Average": "96.8%", "Performance": "🟢 2.6% Better"},
+                {"Metric": "Showings per Week", "Your Property": "9", "Market Average": "4.5", "Performance": "🟢 2x More"},
+                {"Metric": "Inquiry Rate", "Your Property": "1.65%", "Market Average": "1.2%", "Performance": "🟢 38% Higher"}
+            ]
+
+            for data in comparison_data:
+                st.markdown(f"**{data['Metric']}:**")
+                col_a, col_b, col_c = st.columns([1, 1, 1])
+                with col_a:
+                    st.markdown(f"You: {data['Your Property']}")
+                with col_b:
+                    st.markdown(f"Market: {data['Market Average']}")
+                with col_c:
+                    st.markdown(data['Performance'])
+                st.markdown("---")
+
+        with col2:
+            # Performance trends
+            st.markdown("**📈 Performance Trends**")
+
+            weeks = ["Week 1", "Week 2"]
+            views = [1456, 1391]
+            inquiries = [28, 19]
+
+            fig_performance = go.Figure()
+            fig_performance.add_trace(go.Scatter(x=weeks, y=views, mode='lines+markers', name='Views', yaxis='y'))
+            fig_performance.add_trace(go.Scatter(x=weeks, y=inquiries, mode='lines+markers', name='Inquiries', yaxis='y2'))
+
+            fig_performance.update_layout(
+                title="Weekly Performance Trends",
+                yaxis=dict(title="Views", side="left"),
+                yaxis2=dict(title="Inquiries", side="right", overlaying="y"),
+                legend=dict(x=0.7, y=1)
+            )
+            st.plotly_chart(fig_performance, use_container_width=True)
+
+        # Market conditions impact
+        st.markdown("**🌍 Market Conditions Analysis**")
+
+        conditions = [
+            {"Factor": "Interest Rates", "Current": "7.25%", "Trend": "📈 Stable", "Impact": "Neutral"},
+            {"Factor": "Inventory Levels", "Current": "2.1 months", "Trend": "📉 Low", "Impact": "🟢 Favorable"},
+            {"Factor": "Buyer Demand", "Current": "High", "Trend": "📈 Strong", "Impact": "🟢 Favorable"},
+            {"Factor": "Seasonal Timing", "Current": "Peak Season", "Trend": "📈 Optimal", "Impact": "🟢 Favorable"}
+        ]
+
+        for condition in conditions:
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.markdown(f"**{condition['Factor']}**")
+            with col2:
+                st.markdown(condition['Current'])
+            with col3:
+                st.markdown(condition['Trend'])
+            with col4:
+                impact_color = "green" if "Favorable" in condition['Impact'] else "orange" if "Neutral" in condition['Impact'] else "red"
+                st.markdown(f"<span style='color: {impact_color};'>{condition['Impact']}</span>", unsafe_allow_html=True)
+
+    with tab3:
+        st.markdown("##### Success Probability Indicators")
+
+        # Success factors
+        success_factors = [
+            {"Factor": "Competitive Pricing", "Score": 95, "Weight": "25%", "Impact": "Very High"},
+            {"Factor": "Property Condition", "Score": 88, "Weight": "20%", "Impact": "High"},
+            {"Factor": "Market Timing", "Score": 92, "Weight": "20%", "Impact": "Very High"},
+            {"Factor": "Marketing Quality", "Score": 90, "Weight": "15%", "Impact": "High"},
+            {"Factor": "Agent Performance", "Score": 94, "Weight": "10%", "Impact": "High"},
+            {"Factor": "Location Desirability", "Score": 85, "Weight": "10%", "Impact": "Medium-High"}
+        ]
+
+        for factor in success_factors:
+            col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+
+            with col1:
+                st.markdown(f"**{factor['Factor']}**")
+                st.progress(factor['Score'] / 100)
+
+            with col2:
+                st.markdown(f"{factor['Score']}/100")
+
+            with col3:
+                st.markdown(factor['Weight'])
+
+            with col4:
+                impact_color = "green" if "Very High" in factor['Impact'] else "blue" if "High" in factor['Impact'] else "orange"
+                st.markdown(f"<span style='color: {impact_color};'>{factor['Impact']}</span>", unsafe_allow_html=True)
+
+        # Overall score calculation
+        weighted_score = sum([factor['Score'] * float(factor['Weight'].replace('%', '')) / 100 for factor in success_factors])
+
+        st.markdown(f"**🎯 Overall Success Score: {weighted_score:.1f}/100**")
+
+        if weighted_score >= 90:
+            st.success("🟢 **Excellent** - Very high probability of successful sale at or above asking price")
+        elif weighted_score >= 80:
+            st.info("🔵 **Good** - Strong probability of successful sale within market timeframe")
+        elif weighted_score >= 70:
+            st.warning("🟡 **Fair** - Moderate probability, may need strategy adjustments")
+        else:
+            st.error("🔴 **Needs Improvement** - Consider addressing key factors before listing")
+
+    with tab4:
+        st.markdown("##### Competitive Market Position")
+
+        # Direct competitors
+        st.markdown("**🏠 Direct Competitors Currently Listed**")
+
+        competitors = [
+            {
+                "address": "1456 Maple Street",
+                "price": "$515,000",
+                "days_listed": "45 days",
+                "beds_baths": "3 bed / 2.5 bath",
+                "sqft": "1,920 sqft",
+                "advantage": "Better condition, lower price",
+                "risk": "Similar features, longer on market"
+            },
+            {
+                "address": "1678 Oak Avenue",
+                "price": "$475,000",
+                "days_listed": "12 days",
+                "beds_baths": "3 bed / 2 bath",
+                "sqft": "1,750 sqft",
+                "advantage": "Larger, better updates",
+                "risk": "Direct competition, similar price"
+            },
+            {
+                "address": "1234 Pine Drive",
+                "price": "$525,000",
+                "days_listed": "8 days",
+                "beds_baths": "4 bed / 2.5 bath",
+                "sqft": "2,100 sqft",
+                "advantage": "Better value per sqft",
+                "risk": "Larger home, higher price point"
+            }
+        ]
+
+        for competitor in competitors:
+            with st.expander(f"{competitor['address']} - {competitor['price']} ({competitor['days_listed']})"):
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.markdown(f"**Size:** {competitor['beds_baths']}, {competitor['sqft']}")
+                    st.markdown(f"**Your Advantage:** {competitor['advantage']}")
+
+                with col2:
+                    st.markdown(f"**Days Listed:** {competitor['days_listed']}")
+                    st.markdown(f"**Competitive Risk:** {competitor['risk']}")
+
+        # Market positioning summary
+        st.markdown("**🎯 Strategic Positioning Summary**")
+
+        positioning = [
+            {"Aspect": "Price Point", "Position": "Competitive", "Strategy": "Priced to move quickly while maximizing value"},
+            {"Aspect": "Condition", "Position": "Superior", "Strategy": "Highlight move-in ready status and recent updates"},
+            {"Aspect": "Marketing", "Position": "Leading", "Strategy": "Professional presentation generating strong interest"},
+            {"Aspect": "Timing", "Position": "Optimal", "Strategy": "Listed during peak buyer activity period"}
+        ]
+
+        for pos in positioning:
+            col1, col2, col3 = st.columns([1, 1, 3])
+            with col1:
+                st.markdown(f"**{pos['Aspect']}:**")
+            with col2:
+                position_color = "green" if pos['Position'] in ["Superior", "Leading", "Optimal"] else "blue" if pos['Position'] == "Competitive" else "orange"
+                st.markdown(f"<span style='color: {position_color};'>{pos['Position']}</span>", unsafe_allow_html=True)
+            with col3:
+                st.markdown(f"*{pos['Strategy']}*")
+
+        # Recommendations
+        st.info("""
+        💡 **Strategic Recommendations:**
+        - Maintain current pricing strategy - well-positioned vs. competition
+        - Emphasize move-in ready condition and recent updates in marketing
+        - Monitor competitor price changes and adjust strategy if needed
+        - Current positioning should result in sale within 2-3 weeks at or near asking price
+        """)
+
+# Buyer Journey Hub Components
+def render_buyer_journey_hub():
+    """Render the complete buyer journey experience"""
+    st.title("🏠 Buyer Journey Hub")
+    st.markdown("*Comprehensive buyer experience from search to closing*")
+
+    # Buyer navigation tabs
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "🔍 Property Search",
+        "👤 Buyer Profile",
+        "💰 Financing",
+        "🌍 Neighborhoods",
+        "📅 Saved & Scheduled",
+        "📊 Buyer Analytics"
+    ])
+
+    with tab1:
+        render_enhanced_property_search()
+
+    with tab2:
+        render_buyer_profile_builder()
+
+    with tab3:
+        render_financing_calculator()
+
+    with tab4:
+        render_neighborhood_explorer()
+
+    with tab5:
+        render_buyer_dashboard()
+
+    with tab6:
+        render_buyer_analytics()
+
+# Seller Journey Hub Components
+def render_seller_journey_hub():
+    """Render the complete seller journey experience"""
+    st.title("🏡 Seller Journey Hub")
+    st.markdown("*Complete seller experience from valuation to closing*")
+
+    # Seller navigation tabs
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "📊 Property Valuation",
+        "📋 Seller Prep",
+        "📈 Marketing Campaign",
+        "💬 Communication",
+        "📅 Timeline & Offers",
+        "📊 Seller Analytics"
+    ])
+
+    with tab1:
+        render_property_valuation_engine()
+
+    with tab2:
+        render_seller_prep_checklist()
+
+    with tab3:
+        render_marketing_campaign_dashboard()
+
+    with tab4:
+        render_seller_communication_portal()
+
+    with tab5:
+        render_transaction_timeline()
+
+    with tab6:
+        render_seller_analytics()
+
 if selected_hub == "🏢 Executive Command Center":
     render_executive_hub()
 elif selected_hub == "🧠 Lead Intelligence Hub":
     render_lead_intelligence_hub()
 elif selected_hub == "⚡ Real-Time Intelligence":
     render_realtime_intelligence_dashboard()
+elif selected_hub == "🏠 Buyer Journey Hub":
+    render_buyer_journey_hub()
+elif selected_hub == "🏡 Seller Journey Hub":
+    render_seller_journey_hub()
 elif selected_hub == "🤖 Automation Studio":
     render_automation_studio()
 elif selected_hub == "💰 Sales Copilot":

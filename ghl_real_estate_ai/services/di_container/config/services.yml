@@ -1,0 +1,187 @@
+# GHL Real Estate AI - Service Configuration
+# Production-ready dependency injection configuration
+
+base:
+  variables:
+    data_dir: "${DATA_DIR:/Users/cave/enterprisehub/ghl_real_estate_ai/data/knowledge_base}"
+    redis_url: "${REDIS_URL:redis://localhost:6379}"
+    mls_api_base: "${MLS_API_BASE:https://api.mls.com}"
+    mls_api_key: "${MLS_API_KEY}"
+    openai_api_key: "${OPENAI_API_KEY}"
+    enable_monitoring: "${ENABLE_MONITORING:true}"
+    log_level: "${LOG_LEVEL:INFO}"
+
+  imports:
+    - "ghl_real_estate_ai.services.repositories"
+    - "ghl_real_estate_ai.services.scoring"
+
+  services:
+    # Repository Factory - Singleton
+    - name: "RepositoryFactory"
+      service_type: "ghl_real_estate_ai.services.repositories.repository_factory.RepositoryFactory"
+      lifetime: "singleton"
+      tags: ["repository", "factory"]
+
+    # Cache Backends
+    - name: "MemoryCacheBackend"
+      service_type: "ghl_real_estate_ai.services.repositories.caching_repository.MemoryCacheBackend"
+      lifetime: "singleton"
+      tags: ["cache", "memory"]
+      configuration:
+        max_size: 1000
+
+    - name: "RedisCacheBackend"
+      service_type: "ghl_real_estate_ai.services.repositories.caching_repository.RedisCacheBackend"
+      lifetime: "singleton"
+      tags: ["cache", "redis"]
+      condition: "${redis_url} != 'redis://localhost:6379'"
+      configuration:
+        redis_url: "${redis_url}"
+        key_prefix: "ghl_prop_cache:"
+
+    # Primary Property Repository
+    - name: "PropertyRepository"
+      service_type: "ghl_real_estate_ai.services.repositories.interfaces.IPropertyRepository"
+      factory: "ghl_real_estate_ai.services.di_container.factories.create_property_repository"
+      lifetime: "singleton"
+      tags: ["repository", "primary"]
+      health_check: "ghl_real_estate_ai.services.di_container.health_checks.repository_health_check"
+
+    # Property Query Builder
+    - name: "PropertyQueryBuilder"
+      service_type: "ghl_real_estate_ai.services.repositories.query_builder.PropertyQueryBuilder"
+      lifetime: "transient"
+      tags: ["query", "builder"]
+
+    # Property Data Service
+    - name: "PropertyDataService"
+      service_type: "ghl_real_estate_ai.services.repositories.property_data_service.PropertyDataService"
+      lifetime: "singleton"
+      tags: ["service", "data"]
+
+    # Scoring Services (Strategy Pattern Integration)
+    - name: "ScoringFactory"
+      service_type: "ghl_real_estate_ai.services.scoring.ScoringFactory"
+      lifetime: "singleton"
+      tags: ["scoring", "factory"]
+
+    - name: "PropertyMatcherContext"
+      service_type: "ghl_real_estate_ai.services.scoring.PropertyMatcherContext"
+      lifetime: "scoped"
+      tags: ["scoring", "context"]
+
+    # Monitoring Services
+    - name: "PerformanceMonitor"
+      service_type: "ghl_real_estate_ai.services.monitoring.PerformanceMonitor"
+      lifetime: "singleton"
+      tags: ["monitoring", "performance"]
+      condition: "${enable_monitoring} == 'true'"
+
+    # Configuration Service
+    - name: "ConfigurationService"
+      service_type: "ghl_real_estate_ai.services.config.ConfigurationService"
+      lifetime: "singleton"
+      tags: ["config", "service"]
+
+environments:
+  development:
+    variables:
+      log_level: "DEBUG"
+      enable_monitoring: "true"
+      data_dir: "./data/knowledge_base"
+      cache_ttl: 300  # 5 minutes
+
+    services:
+      # Override for development - use JSON repository
+      - name: "PropertyRepository"
+        service_type: "ghl_real_estate_ai.services.repositories.interfaces.IPropertyRepository"
+        factory: "ghl_real_estate_ai.services.di_container.factories.create_json_repository"
+        configuration:
+          data_paths:
+            - "${data_dir}/austin_market_demo_data.json"
+            - "${data_dir}/jorge_demo_scenarios.json"
+          cache_ttl: 300
+          auto_refresh: true
+
+      # Development-specific services
+      - name: "DevelopmentDataSeeder"
+        service_type: "ghl_real_estate_ai.services.development.DataSeeder"
+        lifetime: "singleton"
+        tags: ["development", "seeder"]
+
+  staging:
+    variables:
+      log_level: "INFO"
+      enable_monitoring: "true"
+      cache_ttl: 900  # 15 minutes
+
+    services:
+      # Staging uses hybrid repository (JSON + Mock MLS)
+      - name: "PropertyRepository"
+        service_type: "ghl_real_estate_ai.services.repositories.interfaces.IPropertyRepository"
+        factory: "ghl_real_estate_ai.services.di_container.factories.create_hybrid_repository"
+        configuration:
+          json_paths:
+            - "${data_dir}/austin_market_demo_data.json"
+          mls_config:
+            api_base_url: "${mls_api_base}"
+            api_key: "${mls_api_key}"
+            provider: "mock"
+            rate_limit: 5
+          fallback_to_json: true
+
+  production:
+    variables:
+      log_level: "WARNING"
+      enable_monitoring: "true"
+      cache_ttl: 1800  # 30 minutes
+
+    services:
+      # Production uses MLS repository with Redis cache
+      - name: "PropertyRepository"
+        service_type: "ghl_real_estate_ai.services.repositories.interfaces.IPropertyRepository"
+        factory: "ghl_real_estate_ai.services.di_container.factories.create_mls_repository"
+        configuration:
+          api_base_url: "${mls_api_base}"
+          api_key: "${mls_api_key}"
+          provider: "production_mls"
+          rate_limit: 10
+          timeout: 30
+          retry_attempts: 3
+          cache_backend: "RedisCacheBackend"
+
+      # Production monitoring
+      - name: "ErrorReporting"
+        service_type: "ghl_real_estate_ai.services.monitoring.ErrorReporting"
+        lifetime: "singleton"
+        tags: ["monitoring", "errors"]
+        configuration:
+          sentry_dsn: "${SENTRY_DSN}"
+
+      # Production metrics
+      - name: "MetricsCollector"
+        service_type: "ghl_real_estate_ai.services.monitoring.MetricsCollector"
+        lifetime: "singleton"
+        tags: ["monitoring", "metrics"]
+        configuration:
+          prometheus_endpoint: "${PROMETHEUS_ENDPOINT:/metrics}"
+
+  testing:
+    variables:
+      log_level: "DEBUG"
+      enable_monitoring: "false"
+
+    services:
+      # Testing uses mock repository
+      - name: "PropertyRepository"
+        service_type: "ghl_real_estate_ai.services.repositories.interfaces.IPropertyRepository"
+        factory: "ghl_real_estate_ai.services.di_container.factories.create_mock_repository"
+        configuration:
+          mock_data_count: 100
+          seed: 12345
+
+      # Mock services for testing
+      - name: "MockScoringService"
+        service_type: "ghl_real_estate_ai.services.testing.MockScoringService"
+        lifetime: "singleton"
+        tags: ["testing", "mock", "scoring"]
