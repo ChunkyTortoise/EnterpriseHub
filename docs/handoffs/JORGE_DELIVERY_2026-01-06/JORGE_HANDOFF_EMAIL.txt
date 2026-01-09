@@ -13,7 +13,7 @@ The transition to Railway is complete. Your real estate AI platform is now runni
 - Tests: 298/298 Passing (100% Coverage)
 - Security: Grade A+ (Zero Vulnerabilities)
 - Infrastructure: Railway.app (Production Tier)
-- Location ID: 3xt4qayAh35BlDLaUv7P
+- Location ID: REDACTED_LOCATION_ID
 
 📦 WHAT'S INCLUDED:
 1. Workflow Marketplace: 20+ professional templates ready to install.

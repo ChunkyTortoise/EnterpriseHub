@@ -10,9 +10,9 @@ from datetime import datetime
 from pathlib import Path
 import asyncio
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 class AnalyticsService:
     """

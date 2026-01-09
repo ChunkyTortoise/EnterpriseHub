@@ -5,6 +5,8 @@ Manages environment variables and application settings using Pydantic.
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+from enum import Enum
+import os
 
 
 class Settings(BaseSettings):
@@ -93,3 +95,83 @@ class Settings(BaseSettings):
 # Global settings instance
 # This will be imported throughout the application
 settings = Settings()
+
+
+# Environment Mode Detection
+class EnvironmentMode(Enum):
+    """Application environment modes"""
+    DEMO = "demo"           # Mock data, no API calls (default)
+    STAGING = "staging"     # Real API, test account
+    PRODUCTION = "production"  # Real API, production account
+
+
+def get_environment() -> EnvironmentMode:
+    """
+    Detect environment based on GHL_API_KEY and ENVIRONMENT variable
+    
+    Returns:
+        EnvironmentMode: Current environment (DEMO, STAGING, or PRODUCTION)
+    """
+    env_var = os.getenv("ENVIRONMENT", "").lower()
+    api_key = os.getenv("GHL_API_KEY", "")
+    
+    # Explicit environment variable takes precedence
+    if env_var == "production":
+        return EnvironmentMode.PRODUCTION
+    elif env_var == "staging":
+        return EnvironmentMode.STAGING
+    elif env_var == "demo":
+        return EnvironmentMode.DEMO
+    
+    # Auto-detect based on API key
+    if not api_key or api_key == "demo_mode" or api_key == "dummy":
+        return EnvironmentMode.DEMO
+    elif api_key.startswith("test_") or "test" in api_key.lower():
+        return EnvironmentMode.STAGING
+    else:
+        return EnvironmentMode.PRODUCTION
+
+
+def is_mock_mode() -> bool:
+    """
+    Check if application should use mock data
+    
+    Returns:
+        bool: True if in DEMO mode, False otherwise
+    """
+    return get_environment() == EnvironmentMode.DEMO
+
+
+def get_environment_display() -> dict:
+    """
+    Get environment display information for UI
+    
+    Returns:
+        dict: Environment info with icon, color, and message
+    """
+    env = get_environment()
+    
+    if env == EnvironmentMode.DEMO:
+        return {
+            "icon": "🎭",
+            "name": "Demo Mode",
+            "color": "#F59E0B",
+            "message": "Using sample data. Set GHL_API_KEY to enable live sync.",
+            "banner_type": "info"
+        }
+    elif env == EnvironmentMode.STAGING:
+        return {
+            "icon": "🧪",
+            "name": "Staging Mode",
+            "color": "#3B82F6",
+            "message": "Connected to test environment.",
+            "banner_type": "info"
+        }
+    else:  # PRODUCTION
+        return {
+            "icon": "✅",
+            "name": "Live Mode",
+            "color": "#10B981",
+            "message": "Connected to GoHighLevel production.",
+            "banner_type": "success"
+        }

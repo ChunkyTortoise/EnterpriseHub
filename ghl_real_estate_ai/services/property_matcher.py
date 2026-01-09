@@ -144,6 +144,37 @@ class PropertyMatcher:
 
         return score
 
+    def generate_match_reasoning(self, property: Dict[str, Any], preferences: Dict[str, Any]) -> str:
+        """
+        Generate the 'Why' - a human-readable reason for the match.
+        """
+        reasons = []
+        
+        # Budget
+        budget = preferences.get("budget", 0)
+        price = property.get("price", 0)
+        if budget and price <= budget:
+            savings = budget - price
+            if savings > 50000:
+                reasons.append(f"it's ${savings/1000:.0f}k under your budget")
+            else:
+                reasons.append("it fits your price range")
+                
+        # Location
+        loc = preferences.get("location")
+        if loc and isinstance(loc, str) and loc.lower() in str(property.get("address")).lower():
+            reasons.append(f"it's in {loc}")
+            
+        # Features/Bedrooms
+        beds = preferences.get("bedrooms")
+        if beds and property.get("bedrooms", 0) >= beds:
+            reasons.append(f"has the {beds}+ bedrooms you needed")
+            
+        if not reasons:
+            return "it's a strong overall match for your criteria"
+            
+        return f"I picked this because {', and '.join(reasons)}."
+
     def format_match_for_sms(self, property: Dict[str, Any]) -> str:
         """Format a property match for an SMS message."""
         addr = property.get("address", {})

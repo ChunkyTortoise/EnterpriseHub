@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  ghl-ai-demo:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: ghl-real-estate-ai
+    ports:
+      - "8501:8501"
+    environment:
+      # Environment mode: demo, staging, or production
+      - ENVIRONMENT=${ENVIRONMENT:-demo}
+      
+      # API Keys (set these in .env file)
+      - GHL_API_KEY=${GHL_API_KEY:-demo_mode}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      
+      # Database settings
+      - CHROMA_DB_PATH=/app/.chroma_db
+      
+      # Streamlit settings
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_HEADLESS=true
+    
+    volumes:
+      # Persist data directories
+      - ./data:/app/data
+      - ./.chroma_db:/app/.chroma_db
+      
+      # Optional: Mount local code for development
+      # - ./streamlit_demo:/app/streamlit_demo
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    networks:
+      - ghl-network
+
+networks:
+  ghl-network:
+    driver: bridge

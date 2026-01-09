@@ -7,7 +7,7 @@
 ## ✅ ALREADY HAVE (Working Now)
 
 - ✅ Claude API Key
-- ✅ GHL Lyrio Location ID: 3xt4qayAh35BlDLaUv7P
+- ✅ GHL Lyrio Location ID: REDACTED_LOCATION_ID
 - ✅ GHL Lyrio API Key
 - ✅ Email: realtorjorgesalas@gmail.com
 

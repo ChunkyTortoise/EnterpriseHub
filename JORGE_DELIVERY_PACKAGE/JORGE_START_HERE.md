@@ -91,7 +91,7 @@ Click through each hub in the sidebar:
 ## 🔧 CURRENT SETUP
 
 **Connected To:**
-- Location: Lyrio (3xt4qayAh35BlDLaUv7P)
+- Location: Lyrio (REDACTED_LOCATION_ID)
 - Email: realtorjorgesalas@gmail.com
 - Claude AI: Active
 - GHL API: Connected

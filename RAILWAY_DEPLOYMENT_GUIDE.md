@@ -19,9 +19,9 @@
 3. Add these environment variables:
 
 ```bash
-GHL_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QmxETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As
+GHL_API_KEY=REDACTED_GHL_KEY
 
-GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
+GHL_LOCATION_ID=REDACTED_LOCATION_ID
 
 APP_ENV=production
 
@@ -180,7 +180,7 @@ railway up
 
 # Set environment variables
 railway variables set GHL_API_KEY="your_key_here"
-railway variables set GHL_LOCATION_ID="3xt4qayAh35BlDLaUv7P"
+railway variables set GHL_LOCATION_ID="REDACTED_LOCATION_ID"
 railway variables set APP_ENV="production"
 
 # View logs

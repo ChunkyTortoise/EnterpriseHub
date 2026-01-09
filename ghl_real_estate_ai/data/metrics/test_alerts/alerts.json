@@ -943,5 +943,26 @@
     "message": "Test error",
     "timestamp": "2026-01-06T18:20:47.123398",
     "location_id": "test_alerts"
+  },
+  {
+    "level": "info",
+    "title": "Info",
+    "message": "Test info",
+    "timestamp": "2026-01-07T17:20:25.472262",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "warning",
+    "title": "Warning",
+    "message": "Test warning",
+    "timestamp": "2026-01-07T17:20:25.473852",
+    "location_id": "test_alerts"
+  },
+  {
+    "level": "error",
+    "title": "Error",
+    "message": "Test error",
+    "timestamp": "2026-01-07T17:20:25.475551",
+    "location_id": "test_alerts"
   }
 ]

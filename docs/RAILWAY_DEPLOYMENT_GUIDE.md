@@ -23,8 +23,8 @@ Before starting deployment, ensure you have:
 ### Jorge's GoHighLevel Credentials
 
 ```bash
-GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
-GHL_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QmxETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As
+GHL_LOCATION_ID=REDACTED_LOCATION_ID
+GHL_API_KEY=REDACTED_GHL_KEY
 ```
 
 ### Anthropic API Key (You'll provide)
@@ -61,8 +61,8 @@ ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ```bash
 # Required immediately
-GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
-GHL_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QmxETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As
+GHL_LOCATION_ID=REDACTED_LOCATION_ID
+GHL_API_KEY=REDACTED_GHL_KEY
 
 # Add when you have it (service won't fully start without this)
 ANTHROPIC_API_KEY=sk-ant-your-key-here
@@ -112,7 +112,7 @@ GHL_BACKEND_URL=https://YOUR-BACKEND-URL.railway.app
 
 # Same as backend
 ANTHROPIC_API_KEY=sk-ant-your-key-here
-GHL_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QmxETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As
+GHL_API_KEY=REDACTED_GHL_KEY
 
 # Optional
 PORT=8501

@@ -21,7 +21,7 @@
 1. New Project → Deploy from GitHub → enterprisehub
 2. Add Service → Set root directory to: ghl_real_estate_ai
 3. Add environment variables:
-   - GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
+   - GHL_LOCATION_ID=REDACTED_LOCATION_ID
    - GHL_API_KEY=your_ghl_api_key_here
    - ANTHROPIC_API_KEY=sk-ant-YOUR-KEY (or placeholder)
 4. Generate domain → Copy URL
@@ -77,7 +77,7 @@ See **RAILWAY_DEPLOYMENT_GUIDE.md** for detailed walkthrough with screenshots an
 ## 📋 Jorge's Credentials (Already Documented)
 
 ```bash
-GHL_LOCATION_ID=3xt4qayAh35BlDLaUv7P
+GHL_LOCATION_ID=REDACTED_LOCATION_ID
 GHL_API_KEY=your_ghl_api_key_here
 Client Email: realtorjorgesalas@gmail.com
 ```

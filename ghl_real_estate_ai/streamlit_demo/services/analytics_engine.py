@@ -20,12 +20,20 @@ from collections import defaultdict
 from dataclasses import dataclass, asdict
 import statistics
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.executive_dashboard import ExecutiveDashboardService
-from ghl_real_estate_ai.services.predictive_scoring import PredictiveLeadScorer
-from ghl_real_estate_ai.services.revenue_attribution import RevenueAttributionEngine
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
+
+# Import services from parent directory
+try:
+    from services.executive_dashboard import ExecutiveDashboardService
+    from services.predictive_scoring import PredictiveLeadScorer
+    from services.revenue_attribution import RevenueAttributionEngine
+except ImportError:
+    # Fallback for standalone execution
+    from ..services.executive_dashboard import ExecutiveDashboardService
+    from ..services.predictive_scoring import PredictiveLeadScorer
+    from ..services.revenue_attribution import RevenueAttributionEngine
 
 
 @dataclass

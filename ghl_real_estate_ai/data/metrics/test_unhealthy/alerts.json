@@ -313,5 +313,12 @@
     "message": "System down",
     "timestamp": "2026-01-06T18:20:47.129777",
     "location_id": "test_unhealthy"
+  },
+  {
+    "level": "critical",
+    "title": "Critical",
+    "message": "System down",
+    "timestamp": "2026-01-07T17:20:25.484939",
+    "location_id": "test_unhealthy"
   }
 ]

@@ -1,20 +1,19 @@
 version: '3.8'
 
 services:
-  backend:
-    build: .
-    container_name: ghl_real_estate_backend
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ghl_real_estate_ai
     ports:
-      - "8000:8000"
-    volumes:
-      # Mount the local directory to the container for live reloading
-      - .:/app
-      # Persist the SQLite database file specifically
-      - sqlite_data:/app/database
+      - "8501:8501"
     env_file:
       - .env
-    # Command override for development to enable hot-reload
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-
-volumes:
-  sqlite_data:
+    volumes:
+      # Mount the code for live reloading (optional, can be removed for prod)
+      - ./:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TEST_MODE=false
+    restart: unless-stopped

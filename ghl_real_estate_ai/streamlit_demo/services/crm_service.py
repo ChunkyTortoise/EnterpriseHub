@@ -10,10 +10,17 @@ import httpx
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Any
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.ghl_utils.config import settings
+import logging
+import os
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
+
+class Settings:
+    """Mock settings for demo mode"""
+    def __init__(self):
+        self.GHL_API_KEY = os.getenv("GHL_API_KEY", "")
+
+settings = Settings()
 
 class CRMService:
     """

@@ -445,7 +445,7 @@ class GHLAPIClient:
 
 # Jorge's Production Credentials
 JORGE_CREDENTIALS = {
-    "location_id": "3xt4qayAh35BlDLaUv7P",
+    "location_id": "REDACTED_LOCATION_ID",
     "api_key": "your_ghl_api_key_here",
     "email": "realtorjorgesalas@gmail.com"
 }

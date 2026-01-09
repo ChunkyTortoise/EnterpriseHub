@@ -5,22 +5,22 @@
     {
       "role": "user",
       "content": "Hi, my name is John and I'm looking for a 3-bedroom house in Austin.",
-      "timestamp": "2026-01-07T02:20:44.214278"
+      "timestamp": "2026-01-08T01:20:22.862018"
     },
     {
       "role": "assistant",
       "content": "Hello! I remember you.",
-      "timestamp": "2026-01-07T02:20:44.214279"
+      "timestamp": "2026-01-08T01:20:22.862019"
     },
     {
       "role": "user",
       "content": "Actually, my budget is $500,000.",
-      "timestamp": "2026-01-07T02:20:47.111811"
+      "timestamp": "2026-01-08T01:20:25.459368"
     },
     {
       "role": "assistant",
       "content": "I see you're still looking for that house in Austin!",
-      "timestamp": "2026-01-07T02:20:47.111812"
+      "timestamp": "2026-01-08T01:20:25.459369"
     }
   ],
   "extracted_preferences": {
@@ -30,9 +30,9 @@
   },
   "lead_score": 0,
   "conversation_stage": "initial_contact",
-  "created_at": "2026-01-07T02:20:44.214274",
-  "updated_at": "2026-01-07T02:20:47.111816",
-  "last_interaction_at": "2026-01-07T02:20:47.111813",
+  "created_at": "2026-01-08T01:20:22.862014",
+  "updated_at": "2026-01-08T01:20:25.459374",
+  "last_interaction_at": "2026-01-08T01:20:25.459370",
   "previous_sessions_summary": "",
   "last_lead_score": 3
 }

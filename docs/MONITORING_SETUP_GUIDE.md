@@ -73,7 +73,7 @@ curl -I [BACKEND_URL - pending Agent 2]/health
 # Response body: {"status":"healthy","service":"GHL Real Estate AI","version":"3.0"}
 
 # Test backend analytics API
-curl -I "[BACKEND_URL - pending Agent 2]/api/analytics/dashboard?location_id=3xt4qayAh35BlDLaUv7P"
+curl -I "[BACKEND_URL - pending Agent 2]/api/analytics/dashboard?location_id=REDACTED_LOCATION_ID"
 
 # Test frontend (should return HTML)
 curl -I [FRONTEND_URL - pending Agent 3]
@@ -142,7 +142,7 @@ curl -I [FRONTEND_URL - pending Agent 3]
    ```
    Monitor Type: HTTP(s)
    Friendly Name: GHL Backend - Analytics API
-   URL (or IP): [BACKEND_URL - pending Agent 2]/api/analytics/dashboard?location_id=3xt4qayAh35BlDLaUv7P
+   URL (or IP): [BACKEND_URL - pending Agent 2]/api/analytics/dashboard?location_id=REDACTED_LOCATION_ID
    Monitoring Interval: 5 minutes
    Monitor Timeout: 60 seconds
 
@@ -325,7 +325,7 @@ done
 **Backend Analytics API**:
 ```bash
 # Test analytics endpoint
-time curl -s "[BACKEND_URL - pending Agent 2]/api/analytics/dashboard?location_id=3xt4qayAh35BlDLaUv7P" > /dev/null
+time curl -s "[BACKEND_URL - pending Agent 2]/api/analytics/dashboard?location_id=REDACTED_LOCATION_ID" > /dev/null
 
 # Expected: 1-2s (first call may be slower due to GHL API)
 ```

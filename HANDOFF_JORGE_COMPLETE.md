@@ -29,7 +29,7 @@ Fixed 6 import errors in `ghl_real_estate_ai/streamlit_demo/app.py`:
 
 ### System Configuration
 - Claude API Key: Configured and working
-- GHL Lyrio Account: Connected (3xt4qayAh35BlDLaUv7P)
+- GHL Lyrio Account: Connected (REDACTED_LOCATION_ID)
 - Email: realtorjorgesalas@gmail.com
 - All 5 hubs: Operational
 - 31 AI services: Active
@@ -175,7 +175,7 @@ When Jorge is ready:
 **Configuration:**
 - Claude API: Active
 - GHL Lyrio: Connected
-- Location ID: 3xt4qayAh35BlDLaUv7P
+- Location ID: REDACTED_LOCATION_ID
 - Email: realtorjorgesalas@gmail.com
 
 **Services:**
@@ -234,7 +234,7 @@ Should return: HTTP Status: 200
 
 **Client:** Jorge Salas  
 **Email:** realtorjorgesalas@gmail.com  
-**GHL Location:** Lyrio (3xt4qayAh35BlDLaUv7P)  
+**GHL Location:** Lyrio (REDACTED_LOCATION_ID)  
 **System:** GHL Real Estate AI with 5 Hubs
 
 ---
