@@ -529,7 +529,7 @@ class PerformanceDashboard:
                 if st.button(
                     tab_label,
                     key=f"perf_tab_{tab_key}",
-                    use_container_width=True,
+                    width='stretch',
                     type="primary" if st.session_state.performance_tab == tab_key else "secondary"
                 ):
                     st.session_state.performance_tab = tab_key
@@ -699,7 +699,7 @@ class PerformanceDashboard:
         fig.update_yaxes(title_text="Conversion Rate (%)", row=2, col=1)
         fig.update_yaxes(title_text="Response Time (min)", secondary_y=True, row=2, col=1)
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         st.markdown('</div>', unsafe_allow_html=True)
 
     def _render_revenue_breakdown_chart(self, data: Dict[str, Any]):
@@ -727,7 +727,7 @@ class PerformanceDashboard:
             legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.1)
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Revenue insights
         top_source = max(revenue_sources, key=revenue_sources.get)
@@ -833,7 +833,7 @@ class PerformanceDashboard:
             hovermode='x unified'
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         st.markdown('</div>', unsafe_allow_html=True)
 
     def _render_agent_cards(self, agents: List[Dict[str, Any]]):
@@ -892,7 +892,7 @@ class PerformanceDashboard:
                         yaxis_title="Score"
                     )
 
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
 
     def _render_campaigns_tab(self):
         """Render campaign performance tab"""
@@ -914,7 +914,7 @@ class PerformanceDashboard:
 
         st.dataframe(
             display_df,
-            use_container_width=True,
+            width='stretch',
             hide_index=True
         )
 
@@ -944,7 +944,7 @@ class PerformanceDashboard:
             yaxis_title="ROI (%)"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         st.markdown('</div>', unsafe_allow_html=True)
 
     def _render_goals_tab(self):
@@ -1015,7 +1015,7 @@ class PerformanceDashboard:
             yaxis_title="Progress"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         st.markdown('</div>', unsafe_allow_html=True)
 
     def _get_performance_data(self) -> Dict[str, Any]:

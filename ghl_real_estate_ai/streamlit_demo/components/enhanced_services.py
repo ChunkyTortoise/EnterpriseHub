@@ -104,7 +104,7 @@ def render_mock_ai_lead_insights(lead_data: Dict[str, Any]):
             }
         ))
         fig.update_layout(height=180, margin=dict(l=10, r=10, t=30, b=10))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     with c2:
         st.markdown(f"#### Status: {health['status']}")

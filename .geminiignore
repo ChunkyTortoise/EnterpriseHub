@@ -1,0 +1,71 @@
+# Gemini CLI Ignore File - EnterpriseHub
+# Excludes files/directories from context discovery
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ML Models (too large)
+*.h5
+*.pkl
+*.joblib
+*.model
+models/*.pt
+models/*.ckpt
+
+# Data files (too large)
+*.csv
+*.parquet
+*.json.gz
+data/
+datasets/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Environment
+.env.local
+.env.*.local
+
+# Node modules (if any)
+node_modules/
+
+# Documentation build
+docs/_build/
+
+# Gemini/Claude internals
+.gemini/tmp/
+.claude/sessions/

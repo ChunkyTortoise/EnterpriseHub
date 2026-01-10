@@ -132,17 +132,17 @@ def render_enhanced_property_matcher(lead_context: Dict):
                     """, unsafe_allow_html=True)
 
             with col_actions:
-                if st.button("📤 Send to Lead", key=f"enhanced_send_{idx}", use_container_width=True):
+                if st.button("📤 Send to Lead", key=f"enhanced_send_{idx}", width='stretch'):
                     st.toast(f"Sent {property['address']} to lead!", icon="✅")
 
-                if st.button("📅 Schedule Showing", key=f"enhanced_schedule_{idx}", use_container_width=True):
+                if st.button("📅 Schedule Showing", key=f"enhanced_schedule_{idx}", width='stretch'):
                     st.toast("Opening calendar...", icon="📅")
 
-                if st.button("💾 Save for Later", key=f"enhanced_save_{idx}", use_container_width=True):
+                if st.button("💾 Save for Later", key=f"enhanced_save_{idx}", width='stretch'):
                     st.toast("Property saved!", icon="💾")
 
                 # FEEDBACK LOOP: Missed Match Button
-                if st.button("❌ Missed Match?", key=f"missed_match_{idx}", use_container_width=True, help="Tell us why this isn't a good match to help Jorge's AI learn."):
+                if st.button("❌ Missed Match?", key=f"missed_match_{idx}", width='stretch', help="Tell us why this isn't a good match to help Jorge's AI learn."):
                     st.session_state[f"show_feedback_{idx}"] = True
 
                 if st.session_state.get(f"show_feedback_{idx}"):
@@ -184,7 +184,7 @@ def render_enhanced_property_matcher(lead_context: Dict):
                                 st.rerun()
 
                 # ML Insights Button
-                if st.button("🧠 ML Insights", key=f"ml_insights_{idx}", use_container_width=True):
+                if st.button("🧠 ML Insights", key=f"ml_insights_{idx}", width='stretch'):
                     st.info("Feature importance analysis: Budget (35%), Location (30%), Features (25%), Market (10%)")
 
     # Enhanced batch actions
@@ -192,15 +192,15 @@ def render_enhanced_property_matcher(lead_context: Dict):
     col_batch1, col_batch2, col_batch3 = st.columns(3)
 
     with col_batch1:
-        if st.button("📧 Send Top 3 Properties", use_container_width=True, type="primary"):
+        if st.button("📧 Send Top 3 Properties", width='stretch', type="primary"):
             st.success("Top 3 ML-matched properties sent via email!")
 
     with col_batch2:
-        if st.button("🔄 Find More Matches", use_container_width=True):
+        if st.button("🔄 Find More Matches", width='stretch'):
             st.info("Searching MLS with enhanced ML algorithms...")
 
     with col_batch3:
-        if st.button("📊 Show ML Analytics", use_container_width=True):
+        if st.button("📊 Show ML Analytics", width='stretch'):
             st.info("Opening advanced property analytics dashboard...")
 
 

@@ -158,7 +158,7 @@ def render_premium_property_card(property: Dict[str, Any], index: int = 0):
             if st.button(
                 "📤 Send to Lead",
                 key=f"premium_send_{index}",
-                use_container_width=True,
+                width='stretch',
                 type="primary"
             ):
                 st.toast(f"Sent {address} to lead!", icon="✅")
@@ -167,7 +167,7 @@ def render_premium_property_card(property: Dict[str, Any], index: int = 0):
             if st.button(
                 "📅 Schedule Tour",
                 key=f"premium_schedule_{index}",
-                use_container_width=True
+                width='stretch'
             ):
                 st.toast("Opening calendar...", icon="📅")
 

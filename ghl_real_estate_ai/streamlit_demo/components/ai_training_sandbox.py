@@ -54,14 +54,14 @@ def render_ai_training_sandbox(ai_tone: str = "Natural"):
         template_col1, template_col2 = st.columns(2)
         
         with template_col1:
-            if st.button("🤝 Consultative Closer", use_container_width=True, key="template_consultative"):
+            if st.button("🤝 Consultative Closer", width='stretch', key="template_consultative"):
                 consultative_prompt = "You are a senior real estate advisor with 15+ years experience. Use consultative selling techniques: ask open-ended questions, listen actively, and provide comprehensive market analysis. Build trust through expertise. Always offer 3 options and explain pros/cons. Your goal is to guide, not push."
                 st.session_state.active_prompt = consultative_prompt
                 st.toast("✅ Consultative Closer prompt loaded!", icon="🤝")
                 st.rerun()
         
         with template_col2:
-            if st.button("⚡ Speed Qualifier", use_container_width=True, key="template_speed"):
+            if st.button("⚡ Speed Qualifier", width='stretch', key="template_speed"):
                 speed_prompt = "You are a direct, time-efficient real estate assistant. Get to the point fast: Ask budget, location, timeline in the first 3 messages. Skip small talk. If the lead doesn't match criteria, politely redirect. Your goal is to qualify or disqualify within 2 minutes."
                 st.session_state.active_prompt = speed_prompt
                 st.toast("✅ Speed Qualifier prompt loaded!", icon="⚡")
@@ -71,14 +71,14 @@ def render_ai_training_sandbox(ai_tone: str = "Natural"):
         template_col3, template_col4 = st.columns(2)
         
         with template_col3:
-            if st.button("🏡 Luxury Specialist", use_container_width=True, key="template_luxury"):
+            if st.button("🏡 Luxury Specialist", width='stretch', key="template_luxury"):
                 luxury_prompt = "You are an exclusive luxury real estate specialist. Use sophisticated language, emphasize investment value and lifestyle benefits. Reference high-end amenities, architectural features, and neighborhood prestige. Your clients expect white-glove service and discretion."
                 st.session_state.active_prompt = luxury_prompt
                 st.toast("✅ Luxury Specialist prompt loaded!", icon="🏡")
                 st.rerun()
         
         with template_col4:
-            if st.button("🏠 First-Time Buyer Helper", use_container_width=True, key="template_firsttime"):
+            if st.button("🏠 First-Time Buyer Helper", width='stretch', key="template_firsttime"):
                 firsttime_prompt = "You are a patient, educational real estate guide for first-time home buyers. Explain the process step-by-step, define industry terms, and address common fears (mortgage, closing costs, inspection). Use encouraging language. Your goal is to make buying feel achievable and exciting."
                 st.session_state.active_prompt = firsttime_prompt
                 st.toast("✅ First-Time Buyer Helper prompt loaded!", icon="🏠")
@@ -173,7 +173,7 @@ def render_ai_training_sandbox(ai_tone: str = "Natural"):
         col_send, col_reset = st.columns([3, 1])
         
         with col_send:
-            if st.button("🚀 Send", use_container_width=True, type="primary") and user_input:
+            if st.button("🚀 Send", width='stretch', type="primary") and user_input:
                 # Add user message
                 st.session_state.sandbox_chat.append({"role": "user", "content": user_input})
                 
@@ -188,7 +188,7 @@ def render_ai_training_sandbox(ai_tone: str = "Natural"):
                 st.rerun()
         
         with col_reset:
-            if st.button("🗑️", use_container_width=True, help="Clear conversation"):
+            if st.button("🗑️", width='stretch', help="Clear conversation"):
                 st.session_state.sandbox_chat = [
                     {"role": "assistant", "content": f"Conversation cleared. I'm ready to test in {ai_tone} mode!"}
                 ]

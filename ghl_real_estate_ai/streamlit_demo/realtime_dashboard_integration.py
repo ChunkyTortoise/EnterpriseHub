@@ -40,7 +40,10 @@ def render_realtime_intelligence_dashboard():
 
     # Import and initialize services with error handling
     try:
-        # Import components
+        # Import NEW real-time dashboard component
+        from components.realtime_dashboard import render_realtime_dashboard
+
+        # Import existing components
         from services.realtime_data_service import get_realtime_service
         from services.dashboard_state_manager import get_dashboard_state_manager, dashboard_sidebar_controls
         from components.mobile_responsive_layout import get_layout_manager
@@ -60,27 +63,36 @@ def render_realtime_intelligence_dashboard():
             dashboard_sidebar_controls()
 
         # Main dashboard tabs
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
             "🎯 Live Overview",
+            "⚡ Real-Time Scoring",
             "📊 Lead Scoreboard",
             "🚨 Alert Center",
             "📈 Interactive Analytics",
-            "⚡ Performance"
+            "🏥 Performance"
         ])
 
         with tab1:
             render_overview_dashboard(realtime_service, state_manager, layout_manager)
 
         with tab2:
-            render_live_lead_scoreboard(realtime_service, state_manager)
+            # NEW: Advanced Real-Time Scoring Dashboard
+            try:
+                render_realtime_dashboard()
+            except Exception as e:
+                st.error(f"⚠️ Real-Time Dashboard Error: {e}")
+                st.info("💡 The advanced real-time dashboard requires WebSocket connections and Redis")
 
         with tab3:
-            render_alert_center(realtime_service, state_manager)
+            render_live_lead_scoreboard(realtime_service, state_manager)
 
         with tab4:
-            render_interactive_analytics(realtime_service, state_manager)
+            render_alert_center(realtime_service, state_manager)
 
         with tab5:
+            render_interactive_analytics(realtime_service, state_manager)
+
+        with tab6:
             render_performance_dashboard(realtime_service, state_manager)
 
     except ImportError as e:
@@ -222,7 +234,7 @@ def render_overview_dashboard(realtime_service, state_manager, layout_manager):
             yaxis_title="Count"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         if st.button("➡️ View Full Analytics", key="goto_analytics"):
             st.info("Switch to 'Interactive Analytics' tab for detailed insights!")
@@ -243,7 +255,7 @@ def render_overview_dashboard(realtime_service, state_manager, layout_manager):
                 for event in recent_events[-5:]  # Last 5 events for overview
             ])
 
-            st.dataframe(events_df, use_container_width=True, hide_index=True)
+            st.dataframe(events_df, width='stretch', hide_index=True)
         else:
             st.info("📡 Waiting for real-time events...")
 
@@ -328,6 +340,6 @@ def render_fallback_dashboard(error_message: str):
     st.info("💡 **Tip:** If components don't load, try refreshing the page or check that all required dependencies are installed.")
 
     # Refresh button
-    if st.button("🔄 Refresh Dashboard", use_container_width=True):
+    if st.button("🔄 Refresh Dashboard", width='stretch'):
         st.cache_data.clear()
         st.rerun()

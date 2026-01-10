@@ -220,7 +220,7 @@ def render_actionable_heatmap(df_activity: pd.DataFrame,
         margin=dict(l=80, r=20, t=40, b=40)
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
     
     # Peak engagement insight with automation
     col1, col2 = st.columns([2, 1])

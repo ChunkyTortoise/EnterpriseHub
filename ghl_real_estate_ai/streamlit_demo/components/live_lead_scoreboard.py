@@ -404,7 +404,7 @@ class LiveLeadScoreboard:
         """, unsafe_allow_html=True)
 
         # Add click interaction
-        if st.button(f"View Details", key=f"lead_details_{lead['id']}", use_container_width=True):
+        if st.button(f"View Details", key=f"lead_details_{lead['id']}", width='stretch'):
             self._show_lead_details(lead)
 
     def _format_time_diff(self, time_diff: timedelta) -> str:
@@ -461,7 +461,7 @@ class LiveLeadScoreboard:
                     margin=dict(l=0, r=0, t=30, b=0)
                 )
 
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
             # Scoring factors analysis
             st.markdown("**🎯 Scoring Factors:**")
@@ -471,7 +471,7 @@ class LiveLeadScoreboard:
             ])
 
             if not factors_df.empty:
-                st.dataframe(factors_df, hide_index=True, use_container_width=True)
+                st.dataframe(factors_df, hide_index=True, width='stretch')
 
             # Action buttons
             col1, col2, col3 = st.columns(3)
@@ -584,7 +584,7 @@ class LiveLeadScoreboard:
             margin=dict(l=20, r=20, t=20, b=20)
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
 
 def render_live_lead_scoreboard(realtime_service, state_manager):

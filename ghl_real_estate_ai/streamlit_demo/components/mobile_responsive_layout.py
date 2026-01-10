@@ -526,7 +526,7 @@ class ResponsiveLayoutManager:
                         item['label'],
                         key=f"nav_{item['key']}",
                         type=button_type,
-                        use_container_width=True
+                        width='stretch'
                     ):
                         return item['key']
 
@@ -595,12 +595,12 @@ class ResponsiveLayoutManager:
 
             # Wrap in scrollable container
             st.markdown('<div class="scroll-mobile">', unsafe_allow_html=True)
-            st.dataframe(df_display, use_container_width=True, **kwargs)
+            st.dataframe(df_display, width='stretch', **kwargs)
             st.markdown('</div>', unsafe_allow_html=True)
 
         else:
             # Regular dataframe for desktop/tablet
-            st.dataframe(df, use_container_width=True, **kwargs)
+            st.dataframe(df, width='stretch', **kwargs)
 
     def responsive_plotly_chart(self, fig, **kwargs):
         """Render responsive Plotly chart"""
@@ -628,7 +628,7 @@ class ResponsiveLayoutManager:
 
         # Add responsive container
         st.markdown('<div class="chart-responsive">', unsafe_allow_html=True)
-        st.plotly_chart(fig, use_container_width=True, **kwargs)
+        st.plotly_chart(fig, width='stretch', **kwargs)
         st.markdown('</div>', unsafe_allow_html=True)
 
     def device_specific_content(self,
@@ -713,7 +713,7 @@ class ResponsiveLayoutManager:
                         tab_label,
                         key=f"tab_{tab_key}",
                         type=button_type,
-                        use_container_width=True
+                        width='stretch'
                     ):
                         st.session_state.current_tab = tab_key
                         selected_tab = tab_key

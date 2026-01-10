@@ -42,6 +42,11 @@ try:
         QualificationTracker,
         create_qualification_tracker
     )
+    from streamlit_components.nurturing_campaign_manager import (
+        NurturingCampaignManager
+    )
+    from services.lead_nurturing_agent import LeadNurturingAgent
+    from services.nurturing_trigger_integration import NurturingTriggerIntegration
     from models.evaluation_models import (
         LeadEvaluationResult,
         ScoringBreakdown,
@@ -52,10 +57,17 @@ try:
         EngagementLevel,
         ActionPriority
     )
+    from models.nurturing_models import (
+        NurturingCampaign,
+        LeadType,
+        CampaignStatus
+    )
     ENHANCED_COMPONENTS_AVAILABLE = True
+    NURTURING_COMPONENTS_AVAILABLE = True
 except ImportError as e:
     print(f"Enhanced components not available: {e}")
     ENHANCED_COMPONENTS_AVAILABLE = False
+    NURTURING_COMPONENTS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -145,11 +157,12 @@ def render_full_enhanced_demo(lead_name: str, lead_data: Dict[str, Any]):
     """Render the full enhanced demo with all components."""
 
     # Create tabs for different features
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "🤖 Enhanced Chat",
         "📊 Live Analytics",
         "📋 Qualification Tracker",
         "🎯 Agent Dashboard",
+        "🎯 Nurturing Campaigns",
         "📈 Performance Metrics"
     ])
 
@@ -166,6 +179,9 @@ def render_full_enhanced_demo(lead_name: str, lead_data: Dict[str, Any]):
         render_agent_dashboard_demo(lead_name, lead_data)
 
     with tab5:
+        render_nurturing_campaigns_demo(lead_name, lead_data)
+
+    with tab6:
         render_performance_metrics_demo()
 
 
@@ -478,6 +494,172 @@ def render_agent_dashboard_demo(lead_name: str, lead_data: Dict[str, Any]):
         st.error(f"Agent dashboard error: {e}")
 
 
+def render_nurturing_campaigns_demo(lead_name: str, lead_data: Dict[str, Any]):
+    """Render nurturing campaigns demonstration."""
+    st.markdown("### 🎯 Automated Lead Nurturing Campaign Management")
+
+    if not NURTURING_COMPONENTS_AVAILABLE:
+        st.warning("⚠️ Nurturing components not available. Showing preview interface.")
+        render_nurturing_preview(lead_name, lead_data)
+        return
+
+    try:
+        # Initialize nurturing campaign manager
+        campaign_manager = NurturingCampaignManager()
+
+        # Demo header with campaign status for current lead
+        render_nurturing_demo_header(lead_name, lead_data)
+
+        # Main nurturing interface
+        campaign_manager.render()
+
+        # Lead-specific nurturing actions
+        render_lead_specific_nurturing_actions(lead_name, lead_data)
+
+    except Exception as e:
+        st.error(f"Nurturing campaign error: {str(e)}")
+        render_nurturing_preview(lead_name, lead_data)
+
+
+def render_nurturing_demo_header(lead_name: str, lead_data: Dict[str, Any]):
+    """Render demo header for nurturing campaigns."""
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, #1a365d 0%, #2c5aa0 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        color: white;
+    ">
+        <h3 style="margin: 0; color: white;">🎯 Campaign Status for {lead_name}</h3>
+        <div style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        ">
+            <div>
+                <strong>Campaign:</strong><br/>
+                <span style="color: #a0c4ff;">First-Time Buyer Journey</span>
+            </div>
+            <div>
+                <strong>Status:</strong><br/>
+                <span style="color: #48bb78;">✅ Active</span>
+            </div>
+            <div>
+                <strong>Progress:</strong><br/>
+                <span style="color: #a0c4ff;">Step 2 of 5</span>
+            </div>
+            <div>
+                <strong>Next Action:</strong><br/>
+                <span style="color: #fbbf24;">📧 Tomorrow 2:00 PM</span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_lead_specific_nurturing_actions(lead_name: str, lead_data: Dict[str, Any]):
+    """Render lead-specific nurturing actions."""
+    st.markdown("### 🚀 Lead-Specific Actions")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button(f"🎯 Enroll {lead_name} in Premium Sequence", type="primary"):
+            st.success(f"✅ {lead_name} enrolled in Luxury Buyer sequence!")
+
+    with col2:
+        if st.button("⚡ Send Immediate Follow-up"):
+            st.success("📧 Immediate follow-up message sent!")
+
+    with col3:
+        if st.button("⏸️ Pause Current Campaign"):
+            st.warning("Campaign paused. Resume anytime.")
+
+    # Enrollment recommendations
+    st.markdown("#### 💡 AI Enrollment Recommendations")
+
+    evaluation_result = generate_comprehensive_mock_evaluation(lead_name, lead_data)
+    score = evaluation_result.scoring_breakdown.composite_score
+
+    if score > 85:
+        recommended_sequence = "Luxury Buyer Experience"
+        priority = "HIGH"
+        color = "#10B981"
+    elif score > 70:
+        recommended_sequence = "First-Time Buyer Journey"
+        priority = "MEDIUM"
+        color = "#F59E0B"
+    else:
+        recommended_sequence = "Re-engagement Sequence"
+        priority = "LOW"
+        color = "#6B7280"
+
+    st.markdown(f"""
+    <div style="
+        background: {color}15;
+        border: 1px solid {color};
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+    ">
+        <h5 style="color: {color}; margin-top: 0;">
+            Recommended: {recommended_sequence}
+        </h5>
+        <p style="margin-bottom: 0;">
+            Based on lead score of {score:.1f}, this sequence has a
+            <strong>{85 if score > 85 else 65}% predicted success rate</strong> for this lead type.
+        </p>
+        <small style="color: {color};">Priority: {priority}</small>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_nurturing_preview(lead_name: str, lead_data: Dict[str, Any]):
+    """Render preview when nurturing components aren't available."""
+    st.markdown("### 🎯 Lead Nurturing Campaign Preview")
+
+    st.info("🚀 **Coming Soon**: Automated lead nurturing with personalized follow-up sequences!")
+
+    # Mock campaign data
+    st.markdown("#### 📊 Example Campaign Performance")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Active Campaigns", "42", "+8")
+    with col2:
+        st.metric("Response Rate", "34.7%", "+4.2%")
+    with col3:
+        st.metric("Engagement Score", "8.5/10", "+0.3")
+    with col4:
+        st.metric("Conversions", "23", "+5")
+
+    # Example sequence
+    st.markdown("#### 📋 Example: First-Time Buyer Sequence")
+
+    sequence_steps = [
+        {"step": 1, "delay": "2 hours", "action": "Welcome & Education Email", "response_rate": "42%"},
+        {"step": 2, "delay": "1 day", "action": "Buying Process Guide", "response_rate": "38%"},
+        {"step": 3, "delay": "3 days", "action": "Pre-qualification SMS", "response_rate": "29%"},
+        {"step": 4, "delay": "5 days", "action": "Property Matches", "response_rate": "45%"},
+        {"step": 5, "delay": "1 week", "action": "Market Insights", "response_rate": "31%"}
+    ]
+
+    for step in sequence_steps:
+        col1, col2, col3, col4 = st.columns([1, 2, 3, 1])
+
+        with col1:
+            st.write(f"**Step {step['step']}**")
+        with col2:
+            st.write(step['delay'])
+        with col3:
+            st.write(step['action'])
+        with col4:
+            st.write(step['response_rate'])
+
+
 def render_performance_metrics_demo():
     """Render system performance metrics."""
     st.markdown("### 📈 System Performance Metrics")
@@ -495,6 +677,20 @@ def render_performance_metrics_demo():
         st.metric("Conversations Today", "47", "+12")
         st.metric("Objections Detected", "18", "+3")
         st.metric("Successful Qualifications", "23", "+8")
+
+    # Add nurturing metrics if available
+    if NURTURING_COMPONENTS_AVAILABLE:
+        st.markdown("#### 🎯 Nurturing Performance")
+
+        col3, col4 = st.columns(2)
+
+        with col3:
+            st.metric("Active Campaigns", "42", "+8")
+            st.metric("Response Rate", "34.7%", "+4.2%")
+
+        with col4:
+            st.metric("Engagement Score", "8.5/10", "+0.3")
+            st.metric("Campaign Completions", "23", "+5")
 
     # Performance charts
     render_performance_charts()
@@ -521,7 +717,7 @@ def render_performance_charts():
         height=300
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 
 def generate_mock_analysis(conversation: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -797,6 +993,18 @@ def test_enhanced_components():
         test_results['qualification_tracker'] = "✅ Available"
     except Exception as e:
         test_results['qualification_tracker'] = f"❌ Error: {str(e)}"
+
+    try:
+        from streamlit_components.nurturing_campaign_manager import NurturingCampaignManager
+        test_results['nurturing_campaigns'] = "✅ Available"
+    except Exception as e:
+        test_results['nurturing_campaigns'] = f"❌ Error: {str(e)}"
+
+    try:
+        from services.lead_nurturing_agent import LeadNurturingAgent
+        test_results['nurturing_agent'] = "✅ Available"
+    except Exception as e:
+        test_results['nurturing_agent'] = f"❌ Error: {str(e)}"
 
     # Display test results
     for component, status in test_results.items():

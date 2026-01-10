@@ -69,7 +69,7 @@ def render_interactive_lead_map(leads_data: List[Dict[str, Any]], market: str = 
         # Capture click events using Plotly events
         selected_points = st.plotly_chart(
             fig, 
-            use_container_width=True,
+            width='stretch',
             key="lead_map",
             on_select="rerun"
         )
@@ -434,7 +434,7 @@ def render_lead_analysis(lead: Dict[str, Any]):
         button_label = action.get('label', 'Action')
         button_icon = action.get('icon', '▶️')
         
-        if st.button(f"{button_icon} {button_label}", use_container_width=True, key=f"action_{action.get('id')}"):
+        if st.button(f"{button_icon} {button_label}", width='stretch', key=f"action_{action.get('id')}"):
             st.toast(f"✅ {action.get('toast', 'Action triggered!')}", icon="🚀")
     
     # Activity timeline

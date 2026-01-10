@@ -81,10 +81,10 @@ with st.sidebar:
     
     # Quick actions
     st.markdown("### ⚡ Quick Actions")
-    if st.button("🔄 Refresh Data", use_container_width=True):
+    if st.button("🔄 Refresh Data", width='stretch'):
         st.rerun()
     
-    if st.button("📥 Export Report", use_container_width=True):
+    if st.button("📥 Export Report", width='stretch'):
         st.info("Export functionality coming soon")
     
     st.markdown("---")
@@ -254,7 +254,7 @@ elif selected_hub == "💰 Sales Copilot":
             ["CMA Report", "Listing Presentation", "Buyer Guide", "Market Analysis"]
         )
         
-        if st.button("🚀 Generate Document", use_container_width=True):
+        if st.button("🚀 Generate Document", width='stretch'):
             with st.spinner("Generating professional document..."):
                 st.success("✅ Document generated! Download ready.")
         

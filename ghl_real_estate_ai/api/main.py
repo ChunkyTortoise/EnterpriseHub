@@ -18,6 +18,7 @@ from ghl_real_estate_ai.api.routes import (
     lead_lifecycle,
     portal,
     properties,
+    realtime,
     team,
     voice,
     webhook,
@@ -83,6 +84,9 @@ app.include_router(portal.router, prefix="/api")
 app.include_router(team.router, prefix="/api")
 app.include_router(crm.router, prefix="/api")
 app.include_router(voice.router, prefix="/api")
+
+# Real-time WebSocket routes
+app.include_router(realtime.router, prefix="/api")
 
 
 # Root endpoint

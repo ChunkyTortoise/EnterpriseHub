@@ -85,7 +85,7 @@ class WorkflowDesignerComponent:
         cols = st.columns(6)
         for idx, (name, config) in enumerate(self.action_blocks.items()):
             with cols[idx % 6]:
-                if st.button(f"{config['icon']} {name.split()[1]}", use_container_width=True):
+                if st.button(f"{config['icon']} {name.split()[1]}", width='stretch'):
                     self._add_step(config)
         
         st.markdown("---")
@@ -103,13 +103,13 @@ class WorkflowDesignerComponent:
         # Export/Save
         col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button("💾 Save Workflow", type="primary", use_container_width=True):
+            if st.button("💾 Save Workflow", type="primary", width='stretch'):
                 workflow = self._build_workflow(workflow_name, workflow_trigger)
                 st.success("✅ Workflow saved!")
                 return workflow
         
         with col2:
-            if st.button("📥 Export JSON", use_container_width=True):
+            if st.button("📥 Export JSON", width='stretch'):
                 workflow = self._build_workflow(workflow_name, workflow_trigger)
                 st.download_button(
                     "⬇️ Download",
@@ -119,7 +119,7 @@ class WorkflowDesignerComponent:
                 )
         
         with col3:
-            if st.button("🗑️ Clear All", use_container_width=True):
+            if st.button("🗑️ Clear All", width='stretch'):
                 st.session_state.workflow_steps = []
                 st.rerun()
         

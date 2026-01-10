@@ -553,7 +553,7 @@ def render_insight_card(title, value, description, status='info', action_label=N
     """, unsafe_allow_html=True)
     
     if action_label and action_key:
-        if st.button(action_label, key=action_key, use_container_width=True):
+        if st.button(action_label, key=action_key, width='stretch'):
             st.session_state.current_hub = "🧠 Lead Intelligence Hub"
             st.rerun()
 
@@ -883,7 +883,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🔄 Refresh Data", use_container_width=True, type="primary"):
+    if st.button("🔄 Refresh Data", width='stretch', type="primary"):
         # Clear all caches to ensure fresh data
         st.cache_data.clear()
         st.cache_resource.clear()
@@ -987,7 +987,7 @@ def render_revenue_funnel():
         stage=["Conversations", "Active Leads", "Hot Leads", "Tours", "Contracts"]
     )
     fig = px.funnel(data, x='number', y='stage', color_discrete_sequence=['#2563eb'])
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 # Main content area
 @ui_error_boundary("Executive Command Center")
@@ -1401,22 +1401,22 @@ def render_lead_intelligence_hub():
         col_act1, col_act2, col_act3, col_act4 = st.columns(4)
         
         with col_act1:
-            if st.button("📞 Call Now", use_container_width=True, type="primary"):
+            if st.button("📞 Call Now", width='stretch', type="primary"):
                 st.toast(f"Calling {selected_lead_name}...", icon="📞")
                 st.success("Call initiated via GHL")
         
         with col_act2:
-            if st.button("💬 Send SMS", use_container_width=True):
+            if st.button("💬 Send SMS", width='stretch'):
                 st.toast(f"Opening SMS composer for {selected_lead_name}", icon="💬")
                 st.info("SMS template loaded in GHL")
         
         with col_act3:
-            if st.button("📧 Send Email", use_container_width=True):
+            if st.button("📧 Send Email", width='stretch'):
                 st.toast(f"Email draft created for {selected_lead_name}", icon="📧")
                 st.success("Email queued in GHL")
         
         with col_act4:
-            if st.button("📅 Schedule Tour", use_container_width=True):
+            if st.button("📅 Schedule Tour", width='stretch'):
                 st.toast("Opening calendar...", icon="📅")
                 st.success("Calendar integration ready")
         
@@ -1855,7 +1855,7 @@ def render_lead_intelligence_hub():
                 paper_bgcolor='rgba(0,0,0,0)',
                 font={'color': "#1e293b", 'family': "Inter"}
             )
-            st.plotly_chart(fig_gauge, use_container_width=True)
+            st.plotly_chart(fig_gauge, width='stretch')
             
             st.markdown(f"""
             <div style='text-align: center; margin-top: -20px;'>
@@ -2017,7 +2017,7 @@ def render_lead_intelligence_hub():
             
             col1, col2 = st.columns([3, 1])
             with col2:
-                if st.button("🚀 Run Action", key=f"run_action_pred_{i}", use_container_width=True):
+                if st.button("🚀 Run Action", key=f"run_action_pred_{i}", width='stretch'):
                     with st.spinner("Executing GHL trigger..."):
                         import time
                         time.sleep(1)
@@ -2485,7 +2485,7 @@ def render_ops_hub():
             st.markdown("#### ⚙️ Retraining Control")
             st.write("Retraining the model incorporates recent feedback into the matching algorithms.")
             
-            if st.button("🚀 Trigger AI Retraining", type="primary", use_container_width=True):
+            if st.button("🚀 Trigger AI Retraining", type="primary", width='stretch'):
                 with st.spinner("Processing feedback and retraining ML models..."):
                     try:
                         from services.property_matcher_ml import PropertyMatcherML
@@ -2515,7 +2515,7 @@ def render_ops_hub():
                         "comments": "Comments"
                     },
                     hide_index=True,
-                    use_container_width=True
+                    width='stretch'
                 )
             else:
                 st.write("No feedback items to display.")
@@ -3171,7 +3171,7 @@ def render_financing_calculator():
 
     fig = px.pie(df, values="Amount", names="Component",
                 title="Monthly Payment Breakdown")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     # Affordability analysis
     st.markdown("#### 🎯 Affordability Analysis")
@@ -3213,7 +3213,7 @@ def render_financing_calculator():
         })
 
     scenario_df = pd.DataFrame(scenarios)
-    st.dataframe(scenario_df, use_container_width=True)
+    st.dataframe(scenario_df, width='stretch')
 
 def render_neighborhood_explorer():
     """Comprehensive neighborhood analysis and exploration"""
@@ -3257,7 +3257,7 @@ def render_neighborhood_explorer():
                     {"School": "Austin Montessori", "Rating": "8/10", "Distance": "0.5 mi", "Type": "Private"}
                 ]
                 schools_df = pd.DataFrame(schools_data)
-                st.dataframe(schools_df, use_container_width=True)
+                st.dataframe(schools_df, width='stretch')
 
             with tab2:
                 st.markdown("##### Commute Analysis")
@@ -3303,12 +3303,12 @@ def render_neighborhood_explorer():
                 with col1:
                     fig_price = px.line(x=months, y=avg_prices, title="Average Home Prices")
                     fig_price.update_layout(yaxis_title="Price ($)", xaxis_title="Month")
-                    st.plotly_chart(fig_price, use_container_width=True)
+                    st.plotly_chart(fig_price, width='stretch')
 
                 with col2:
                     fig_dom = px.bar(x=months, y=days_on_market, title="Average Days on Market")
                     fig_dom.update_layout(yaxis_title="Days", xaxis_title="Month")
-                    st.plotly_chart(fig_dom, use_container_width=True)
+                    st.plotly_chart(fig_dom, width='stretch')
 
             with tab5:
                 st.markdown("##### Demographics")
@@ -3574,7 +3574,7 @@ def render_buyer_analytics():
         fig = px.line(x=days, y=properties_viewed, title="Daily Property Views & Engagement Score (Last 30 Days)")
         fig.add_scatter(x=days, y=[p*0.8 + 2 for p in properties_viewed], mode='lines', name='Engagement Score', line=dict(color='orange', dash='dash'))
         fig.update_layout(xaxis_title="Day", yaxis_title="Activity Level")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Engagement insights
         if churn_risk_data:
@@ -3596,7 +3596,7 @@ def render_buyer_analytics():
         properties_in_range = [5, 15, 18, 7, 2]
 
         fig = px.bar(x=price_ranges, y=properties_in_range, title="Properties Viewed by Price Range")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # AI price insights
         st.markdown("##### 🧠 AI Price Pattern Analysis")
@@ -3650,7 +3650,7 @@ def render_buyer_analytics():
                 color_continuous_scale=["green", "orange", "red"]
             )
             fig.update_layout(showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
             # Detailed retention recommendations
             st.markdown("##### 💡 AI Retention Recommendations")
@@ -3838,12 +3838,12 @@ def render_property_valuation_engine():
 
                     fig = px.line(x=months, y=median_prices, title="Neighborhood Median Prices")
                     fig.update_layout(yaxis_title="Price ($)", xaxis_title="Month")
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
 
                     st.markdown("**Price Per Square Foot Trends**")
                     price_per_sqft = [245, 250, 255, 258, 260, 263]
                     fig2 = px.bar(x=months, y=price_per_sqft, title="Price Per Sq Ft")
-                    st.plotly_chart(fig2, use_container_width=True)
+                    st.plotly_chart(fig2, width='stretch')
 
             with tab3:
                 st.markdown("##### Strategic Pricing Recommendations")
@@ -4190,7 +4190,7 @@ def render_marketing_campaign_dashboard():
 
             fig_views = px.line(x=days, y=views, title="Daily Property Views")
             fig_views.update_layout(xaxis_title="Days", yaxis_title="Views")
-            st.plotly_chart(fig_views, use_container_width=True)
+            st.plotly_chart(fig_views, width='stretch')
 
         with col2:
             st.markdown("**Inquiry Sources**")
@@ -4198,7 +4198,7 @@ def render_marketing_campaign_dashboard():
             inquiries = [18, 15, 8, 4, 2, 0]
 
             fig_sources = px.pie(values=inquiries, names=sources, title="Lead Sources")
-            st.plotly_chart(fig_sources, use_container_width=True)
+            st.plotly_chart(fig_sources, width='stretch')
 
         # Performance metrics
         st.markdown("**Key Performance Indicators**")
@@ -4210,7 +4210,7 @@ def render_marketing_campaign_dashboard():
         ]
 
         metrics_df = pd.DataFrame(metrics_data)
-        st.dataframe(metrics_df, use_container_width=True)
+        st.dataframe(metrics_df, width='stretch')
 
     with tab2:
         st.markdown("##### Online Listing Status")
@@ -5104,7 +5104,7 @@ def render_seller_analytics():
             amounts = [commission, closing_costs, repairs, staging + other_costs, sale_price - commission - closing_costs - repairs - staging - other_costs]
 
             fig = px.pie(values=amounts, names=costs, title="Sale Proceeds Breakdown")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         # ROI Analysis
         st.markdown("**🏠 Return on Investment Analysis**")
@@ -5170,7 +5170,7 @@ def render_seller_analytics():
                 yaxis2=dict(title="Inquiries", side="right", overlaying="y"),
                 legend=dict(x=0.7, y=1)
             )
-            st.plotly_chart(fig_performance, use_container_width=True)
+            st.plotly_chart(fig_performance, width='stretch')
 
         # Market conditions impact
         st.markdown("**🌍 Market Conditions Analysis**")
