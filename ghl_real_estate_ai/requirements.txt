@@ -35,7 +35,7 @@ passlib[bcrypt]==1.7.4
 # UI & Dashboard
 streamlit==1.30.0
 pandas==2.1.4
-plotly==5.18.0
+plotly==6.5.1
 
 # Additional ML dependencies
 scikit-learn==1.4.0
