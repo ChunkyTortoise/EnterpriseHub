@@ -16,7 +16,7 @@ shap==0.50.0                    # Model explainability and feature importance
 numpy==2.4.0                    # Numerical computing foundation
 pandas==2.3.3                   # Data manipulation and analysis
 scipy==1.16.3                   # Scientific computing algorithms
-scikit-learn==1.8.0             # Machine learning library
+scikit-learn==1.6.1             # Machine learning library
 joblib==1.5.3                   # Parallel computing and model serialization
 
 # ==============================================================================
