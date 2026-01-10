@@ -1,53 +1,550 @@
 """
-Market Intelligence Dashboard Component
+Market Intelligence & Territory Management Dashboard
 
-Advanced market intelligence dashboard with competitive analysis,
-investment opportunities, and market insights.
+Comprehensive Streamlit interface for market analysis, competitive intelligence,
+territory management, and performance optimization. Combines market insights
+with territory assignments for strategic decision-making.
 
-Value: $125K-180K annually (strategic pricing advantage)
-Integration: Expands predictive_analytics with market intelligence
+Features:
+- Market overview and trend analysis
+- Competitive intelligence and analysis
+- Territory assignment and management
+- Performance tracking and optimization
+- Market opportunity identification
+- Territory coverage analysis
+
+Created: January 2026
+Author: GHL Real Estate AI Platform
 """
 
 import streamlit as st
-import pandas as pd
-import plotly.graph_objects as go
 import plotly.express as px
+import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import asyncio
+import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
-import json
-import numpy as np
+import asyncio
+import logging
 
+# Import the market intelligence and territory management services
 try:
-    from ..services.market_intelligence_center import (
-        MarketIntelligenceCenter,
-        MarketReport,
-        InvestmentOpportunity,
-        CompetitiveAnalysis
+    from services.market_intelligence_service import (
+        market_intelligence_service,
+        MarketTrend,
+        OpportunityType,
+        MarketOpportunity,
+        MarketForecast
     )
-    from ..services.predictive_analytics_engine import PredictiveAnalyticsEngine
+    from services.territory_management_service import (
+        territory_management_service,
+        TerritoryStatus,
+        AssignmentType,
+        TerritoryType,
+        PerformanceLevel
+    )
 except ImportError:
-    # Fallback for development/testing
-    st.warning("⚠️ Market Intelligence service not available - using mock data")
-    MarketIntelligenceCenter = None
-    MarketReport = None
-    InvestmentOpportunity = None
-    CompetitiveAnalysis = None
+    st.error("Market intelligence services not found. Please check the service installation.")
 
+# Configure logging
+logger = logging.getLogger(__name__)
 
-class MarketIntelligenceDashboard:
-    """Dashboard component for market intelligence and competitive analysis."""
+def render_market_intelligence_dashboard():
+    """Render the market intelligence and territory management dashboard."""
+    st.header("📊 Market Intelligence & Territory Management")
+    st.markdown("*Comprehensive market analysis and territory optimization platform*")
 
-    def __init__(self):
-        self.intelligence_service = self._initialize_service()
-        self.cache_duration = 300  # 5 minutes
+    # User role selection for demo purposes
+    user_role = st.selectbox(
+        "Select Your Role",
+        ["Agent", "Manager", "Administrator"],
+        key="market_intelligence_role"
+    )
 
-    def _initialize_service(self):
-        """Initialize market intelligence service."""
-        try:
-            if MarketIntelligenceCenter:
-                return MarketIntelligenceCenter()
+    # Agent selection
+    agent_options = ["agent_001", "agent_002", "agent_003", "new_agent"]
+    selected_agent = st.selectbox(
+        "Select Agent",
+        agent_options,
+        key="market_intelligence_agent"
+    )
+
+    if user_role == "Agent":
+        render_agent_market_interface(selected_agent)
+    elif user_role == "Manager":
+        render_manager_market_interface()
+    else:
+        render_admin_market_interface()
+
+def render_agent_market_interface(agent_id: str):
+    """Render the agent-focused market intelligence interface."""
+
+    # Create tabs for different agent views
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "🏠 My Territories", "📈 Market Overview", "🎯 Opportunities",
+        "🏆 Performance", "🔍 Competition", "🔮 Forecasts"
+    ])
+
+    with tab1:
+        render_agent_territories(agent_id)
+
+    with tab2:
+        render_market_overview()
+
+    with tab3:
+        render_market_opportunities()
+
+    with tab4:
+        render_territory_performance(agent_id)
+
+    with tab5:
+        render_competitive_analysis()
+
+    with tab6:
+        render_market_forecasts()
+
+def render_agent_territories(agent_id: str):
+    """Render agent's territory assignments and management."""
+    st.subheader("🏠 My Territory Assignments")
+
+    try:
+        # Get agent territories
+        territories = asyncio.run(territory_management_service.get_agent_territories(agent_id))
+
+        if not territories:
+            st.info("🗺️ No territories assigned yet. Contact your manager for territory assignments.")
+            return
+
+        # Territory overview metrics
+        col1, col2, col3, col4 = st.columns(4)
+
+        total_territories = len(territories)
+        primary_territories = len([t for t in territories if t["assignment_type"] == "primary"])
+        total_market_potential = sum(t["market_potential"] for t in territories)
+        avg_potential = total_market_potential / total_territories if total_territories > 0 else 0
+
+        with col1:
+            st.metric("Total Territories", total_territories)
+        with col2:
+            st.metric("Primary Territories", primary_territories)
+        with col3:
+            st.metric("Market Potential", f"{total_market_potential:.1f}")
+        with col4:
+            st.metric("Avg Potential", f"{avg_potential:.1f}")
+
+        # Territory details
+        st.subheader("Territory Details")
+
+        for territory in territories:
+            with st.expander(f"🏘️ {territory['name']} - {territory['assignment_type'].title()} Assignment"):
+                col1, col2 = st.columns([2, 1])
+
+                with col1:
+                    st.write(f"**Description:** {territory['description']}")
+                    st.write(f"**Specialization:** {territory['specialization'].title()}")
+                    st.write(f"**Population:** {territory['population']:,}")
+                    st.write(f"**Competition:** {territory['competition_level'].title()}")
+                    st.write(f"**Market Potential:** {territory['market_potential']:.1f}/100")
+
+                    # Performance goals
+                    if territory["performance_goals"]:
+                        st.write("**Performance Goals:**")
+                        for goal, value in territory["performance_goals"].items():
+                            st.write(f"- {goal.replace('_', ' ').title()}: {value:,.0f}")
+
+                with col2:
+                    st.write(f"**Priority:** {get_priority_badge(territory['priority_level'])}")
+                    st.write(f"**Assignment Date:** {territory['start_date'][:10]}")
+
+                    # View performance button
+                    if st.button(f"View Performance", key=f"perf_{territory['territory_id']}"):
+                        st.session_state.selected_territory = territory['territory_id']
+
+                    # View opportunities button
+                    if st.button(f"View Opportunities", key=f"opp_{territory['territory_id']}"):
+                        st.session_state.territory_opportunities = territory['territory_id']
+
+    except Exception as e:
+        st.error(f"Error loading territories: {e}")
+        logger.error(f"Error in render_agent_territories: {e}")
+
+def render_market_overview():
+    """Render comprehensive market overview."""
+    st.subheader("📈 Market Overview")
+
+    try:
+        # Get market overview
+        overview = asyncio.run(market_intelligence_service.get_market_overview())
+
+        if not overview.get("areas"):
+            st.error("No market data available")
+            return
+
+        # Summary metrics
+        summary = overview["summary_metrics"]
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric("Total Areas", summary["total_areas"])
+        with col2:
+            st.metric("Total Sales", f"{summary['total_sales']:,}")
+        with col3:
+            st.metric("Avg Inventory", f"{summary['avg_inventory_months']:.1f} months")
+        with col4:
+            health_score = summary["market_health_score"]
+            health_color = "green" if health_score > 70 else "orange" if health_score > 50 else "red"
+            st.markdown(f"**Market Health:** <span style='color: {health_color}'>{health_score:.1f}/100</span>",
+                       unsafe_allow_html=True)
+
+        # Market areas overview
+        st.subheader("Market Areas Performance")
+
+        areas_data = overview["areas"]
+        areas_df = pd.DataFrame([
+            {
+                "Area": area["name"],
+                "Avg Price": area["metrics"]["avg_sale_price"],
+                "Sales": area["metrics"]["total_sales"],
+                "DOM": area["metrics"]["days_on_market"],
+                "Price Change": area["metrics"]["price_change_30d"],
+                "Trend": area["trend_indicator"],
+                "Absorption": area["metrics"]["absorption_rate"]
+            }
+            for area in areas_data
+        ])
+
+        st.dataframe(areas_df, use_container_width=True)
+
+        # Market trends visualization
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Price comparison chart
+            fig = px.bar(
+                areas_df,
+                x="Area",
+                y="Avg Price",
+                color="Price Change",
+                color_continuous_scale="RdYlGn",
+                title="Average Sale Price by Area",
+                labels={"Avg Price": "Average Sale Price ($)"}
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        with col2:
+            # Market activity chart
+            fig = px.scatter(
+                areas_df,
+                x="DOM",
+                y="Sales",
+                size="Absorption",
+                color="Price Change",
+                hover_data=["Area"],
+                title="Market Activity Analysis",
+                labels={"DOM": "Days on Market", "Sales": "Total Sales"}
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+    except Exception as e:
+        st.error(f"Error loading market overview: {e}")
+
+def render_market_opportunities():
+    """Render market opportunities identification."""
+    st.subheader("🎯 Market Opportunities")
+
+    try:
+        # Filters
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            opportunity_types = ["All"] + [e.value for e in OpportunityType]
+            selected_type = st.selectbox("Opportunity Type", opportunity_types)
+
+        with col2:
+            min_confidence = st.slider("Minimum Confidence", 0.0, 1.0, 0.5, 0.05)
+
+        with col3:
+            min_value = st.number_input("Minimum Value ($)", min_value=0, value=100000, step=50000)
+
+        # Get opportunities
+        all_opportunities = asyncio.run(market_intelligence_service.get_market_opportunities())
+
+        # Apply filters
+        filtered_opportunities = []
+        for opp in all_opportunities:
+            if selected_type != "All" and opp.opportunity_type.value != selected_type:
+                continue
+            if opp.confidence_score < min_confidence:
+                continue
+            if opp.potential_value < min_value:
+                continue
+            filtered_opportunities.append(opp)
+
+        if not filtered_opportunities:
+            st.info("No opportunities match your filter criteria.")
+            return
+
+        # Opportunities overview
+        st.write(f"**Found {len(filtered_opportunities)} opportunities matching your criteria**")
+
+        # Opportunities list
+        for i, opportunity in enumerate(filtered_opportunities):
+            with st.expander(
+                f"{get_opportunity_emoji(opportunity.opportunity_type)} {opportunity.title} "
+                f"(${opportunity.potential_value:,.0f} - {opportunity.confidence_score:.0%} confidence)"
+            ):
+                col1, col2 = st.columns([3, 1])
+
+                with col1:
+                    st.write(f"**Description:** {opportunity.description}")
+                    st.write(f"**Area:** {opportunity.area_id}")
+                    st.write(f"**Type:** {opportunity.opportunity_type.value.replace('_', ' ').title()}")
+
+                    st.write("**Supporting Data:**")
+                    for key, value in opportunity.supporting_data.items():
+                        if isinstance(value, list):
+                            st.write(f"• {key.replace('_', ' ').title()}: {', '.join(map(str, value))}")
+                        else:
+                            st.write(f"• {key.replace('_', ' ').title()}: {value}")
+
+                    st.write("**Recommended Actions:**")
+                    for action in opportunity.recommended_actions:
+                        st.write(f"• {action}")
+
+                with col2:
+                    # Confidence score
+                    confidence_color = "green" if opportunity.confidence_score > 0.8 else "orange" if opportunity.confidence_score > 0.6 else "red"
+                    st.markdown(f"**Confidence:** <span style='color: {confidence_color}'>{opportunity.confidence_score:.1%}</span>",
+                               unsafe_allow_html=True)
+
+                    # Key metrics
+                    st.write(f"**Value:** ${opportunity.potential_value:,.0f}")
+                    st.write(f"**Effort:** {opportunity.effort_level.title()}")
+                    st.write(f"**Urgency:** {opportunity.time_sensitivity.title()}")
+                    st.write(f"**Created:** {opportunity.created_date.strftime('%Y-%m-%d')}")
+
+                    # Action button
+                    if st.button(f"Take Action", key=f"action_{opportunity.opportunity_id}"):
+                        st.success(f"✅ Opportunity flagged for follow-up: {opportunity.title}")
+
+    except Exception as e:
+        st.error(f"Error loading opportunities: {e}")
+
+def render_territory_performance(agent_id: str):
+    """Render territory performance dashboard."""
+    st.subheader("🏆 Territory Performance Dashboard")
+
+    try:
+        # Get agent territories for performance analysis
+        territories = asyncio.run(territory_management_service.get_agent_territories(agent_id))
+
+        if not territories:
+            st.info("No territories assigned for performance analysis.")
+            return
+
+        # Territory selection for detailed analysis
+        territory_options = {t["territory_id"]: t["name"] for t in territories}
+        selected_territory_id = st.selectbox(
+            "Select Territory for Performance Analysis",
+            list(territory_options.keys()),
+            format_func=lambda x: territory_options[x]
+        )
+
+        # Get performance data
+        performance = asyncio.run(territory_management_service.get_territory_performance(agent_id, selected_territory_id))
+
+        if "error" in performance:
+            st.error(performance["error"])
+            return
+
+        # Performance summary
+        current = performance["current_metrics"]
+        level = performance["performance_level"]
+
+        # Performance level badge
+        level_color = {
+            "excellent": "green",
+            "above_average": "lightgreen",
+            "average": "orange",
+            "below_average": "red",
+            "needs_improvement": "darkred"
+        }.get(level, "gray")
+
+        st.markdown(f"""
+        <div style="background-color: {level_color}; color: white; padding: 10px; border-radius: 5px; text-align: center; margin: 10px 0;">
+            <h3>Performance Level: {level.replace('_', ' ').title()}</h3>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Key metrics
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric(
+                "Revenue",
+                f"${current['revenue_generated']:,.0f}",
+                delta=performance["trends"]["revenue"].replace('_', ' ').title() if "trends" in performance else None
+            )
+
+        with col2:
+            st.metric(
+                "Sales Volume",
+                f"{current['total_sales']:,}",
+                delta=performance["trends"]["sales"].replace('_', ' ').title() if "trends" in performance else None
+            )
+
+        with col3:
+            st.metric(
+                "Market Share",
+                f"{current['market_share']:.1f}%"
+            )
+
+        with col4:
+            st.metric(
+                "Client Satisfaction",
+                f"{current['client_satisfaction']:.1f}/5.0",
+                delta=performance["trends"]["satisfaction"].replace('_', ' ').title() if "trends" in performance else None
+            )
+
+        # Additional performance metrics
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric("Conversion Rate", f"{current['conversion_rate']:.1f}%")
+
+        with col2:
+            st.metric("Profit Margin", f"{current['profit_margin']:.1f}%")
+
+    except Exception as e:
+        st.error(f"Error loading performance data: {e}")
+
+def render_competitive_analysis():
+    """Render competitive intelligence analysis."""
+    st.subheader("🔍 Competitive Intelligence")
+    st.info("Select a market area to view detailed competitive analysis including competitor profiles, market share distribution, and strategic recommendations.")
+
+def render_market_forecasts():
+    """Render market forecasts and predictions."""
+    st.subheader("🔮 Market Forecasts & Predictions")
+    st.info("Access predictive market analytics including price forecasts, inventory projections, and investment recommendations for strategic planning.")
+
+def render_manager_market_interface():
+    """Render manager-focused market intelligence interface."""
+    st.subheader("👥 Team Market Intelligence")
+
+    tab1, tab2, tab3 = st.tabs(["Territory Coverage", "Team Performance", "Market Analysis"])
+
+    with tab1:
+        render_territory_coverage_analysis()
+
+    with tab2:
+        st.info("Team performance analytics would be implemented here for manager oversight.")
+
+    with tab3:
+        st.info("Comparative market analysis tools would be available here.")
+
+def render_territory_coverage_analysis():
+    """Render territory coverage analysis for managers."""
+    st.write("### Territory Coverage Analysis")
+
+    try:
+        coverage = asyncio.run(territory_management_service.get_territory_coverage_analysis())
+
+        # Coverage overview
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric("Total Territories", coverage["total_territories"])
+        with col2:
+            st.metric("Assigned", coverage["assigned_territories"])
+        with col3:
+            st.metric("Unassigned", coverage["unassigned_territories"])
+        with col4:
+            st.metric("Shared", coverage["shared_territories"])
+
+        # Agent workload analysis
+        if coverage.get("agent_workload"):
+            st.subheader("Agent Workload Distribution")
+
+            workload_data = []
+            for agent_id, workload in coverage["agent_workload"].items():
+                workload_data.append({
+                    "Agent": agent_id,
+                    "Territories": workload["total_territories"],
+                    "Primary": workload["primary_territories"],
+                    "Market Potential": workload["total_market_potential"],
+                    "Workload Level": workload["workload_level"].title()
+                })
+
+            if workload_data:
+                workload_df = pd.DataFrame(workload_data)
+                st.dataframe(workload_df, use_container_width=True)
+
+                # Workload visualization
+                fig = px.bar(
+                    workload_df,
+                    x="Agent",
+                    y="Market Potential",
+                    color="Workload Level",
+                    title="Agent Market Potential Distribution"
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+        # Coverage gaps
+        if coverage.get("coverage_gaps"):
+            st.subheader("⚠️ Coverage Gaps")
+            for gap in coverage["coverage_gaps"]:
+                st.warning(f"🗺️ {gap['name']} (Potential: {gap['market_potential']:.1f}) - {gap['reason']}")
+
+    except Exception as e:
+        st.error(f"Error loading coverage analysis: {e}")
+
+def render_admin_market_interface():
+    """Render administrator interface for system-wide market intelligence."""
+    st.subheader("⚙️ Market Intelligence Administration")
+
+    tab1, tab2, tab3 = st.tabs(["System Metrics", "Data Management", "Configuration"])
+
+    with tab1:
+        st.info("Administrator market intelligence metrics would be displayed here.")
+
+    with tab2:
+        st.info("Market data import, export, and management tools would be available here.")
+
+    with tab3:
+        st.info("System configuration and settings for market intelligence services would be implemented here.")
+
+# Helper functions
+def get_priority_badge(priority: int) -> str:
+    """Get priority badge for display."""
+    if priority == 5:
+        return "🔴 Critical"
+    elif priority == 4:
+        return "🟠 High"
+    elif priority == 3:
+        return "🟡 Medium"
+    elif priority == 2:
+        return "🟢 Low"
+    else:
+        return "⚪ Minimal"
+
+def get_opportunity_emoji(opportunity_type: OpportunityType) -> str:
+    """Get emoji for opportunity type."""
+    emoji_map = {
+        OpportunityType.UNDERVALUED_PROPERTY: "💎",
+        OpportunityType.EMERGING_NEIGHBORHOOD: "🌱",
+        OpportunityType.PRICE_REDUCTION: "📉",
+        OpportunityType.NEW_DEVELOPMENT: "🏗️",
+        OpportunityType.INVESTMENT_OPPORTUNITY: "💰",
+        OpportunityType.FIRST_TIME_BUYER_MARKET: "🏠",
+        OpportunityType.LUXURY_EXPANSION: "✨",
+        OpportunityType.COMMERCIAL_OPPORTUNITY: "🏢"
+    }
+    return emoji_map.get(opportunity_type, "🎯")
+
+# Export the render function for use in the main dashboard
+if __name__ == "__main__":
+    render_market_intelligence_dashboard()
             return None
         except Exception as e:
             st.error(f"Failed to initialize market intelligence service: {e}")

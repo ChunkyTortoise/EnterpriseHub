@@ -17,6 +17,9 @@ import asyncio
 from .claude_agent_chat import render_claude_agent_interface
 from .claude_conversation_templates import render_claude_conversation_templates
 from .agent_onboarding_dashboard import render_agent_onboarding_dashboard
+from .communication_automation_dashboard import render_communication_automation_dashboard
+from .goal_achievement_dashboard import render_goal_achievement_dashboard
+from .market_intelligence_dashboard import render_market_intelligence_dashboard
 from .interactive_lead_map import render_interactive_lead_map, generate_sample_lead_data
 from .lead_dashboard import render_lead_dashboard
 
@@ -42,13 +45,16 @@ def render_comprehensive_lead_intelligence_hub():
     render_page_header()
 
     # Main dashboard layout
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs([
         "🎯 Intelligence Hub",
         "🤖 AI Assistant",
         "🎯 AI Templates",
         "🎓 Agent Training",
+        "📧 Communication",
+        "🏆 Goal Tracking",
+        "📊 Market Intelligence",
         "📍 Lead Map",
-        "📊 Analytics",
+        "📈 Analytics",
         "⚡ Quick Actions"
     ])
 
@@ -65,12 +71,21 @@ def render_comprehensive_lead_intelligence_hub():
         render_agent_onboarding_dashboard()
 
     with tab5:
-        render_enhanced_lead_map()
+        render_communication_automation_dashboard()
 
     with tab6:
-        render_advanced_analytics()
+        render_goal_achievement_dashboard()
 
     with tab7:
+        render_market_intelligence_dashboard()
+
+    with tab8:
+        render_enhanced_lead_map()
+
+    with tab9:
+        render_advanced_analytics()
+
+    with tab10:
         render_quick_actions_dashboard()
 
 
