@@ -1,0 +1,425 @@
+/*
+GHL Real Estate AI - Luxury Financial Terminal Enhancement
+Aesthetic: Premium Real Estate meets Bloomberg Terminal
+*/
+
+/* Import Premium Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* Luxury Color Palette */
+  --luxury-navy: #0a1628;
+  --luxury-deep-blue: #1e3a8a;
+  --luxury-gold: #d4af37;
+  --luxury-bronze: #cd7f32;
+  --luxury-pearl: #f8fafc;
+  --luxury-platinum: #e2e8f0;
+  --luxury-charcoal: #1e293b;
+  --luxury-emerald: #059669;
+  --luxury-ruby: #dc2626;
+
+  /* Typography */
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Shadows & Effects */
+  --shadow-luxury: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-elegant: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --glow-gold: 0 0 20px rgba(212, 175, 55, 0.3);
+  --glow-blue: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Global Enhancements */
+.main .block-container {
+  padding-top: 2rem;
+  max-width: 1400px;
+  font-family: var(--font-body);
+}
+
+/* Enhanced Typography Hierarchy */
+h1, h2, h3 {
+  font-family: var(--font-display) !important;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+h1 { font-size: 2.75rem; line-height: 1.1; }
+h2 { font-size: 2.25rem; line-height: 1.15; }
+h3 { font-size: 1.875rem; line-height: 1.2; }
+
+/* Premium Header Enhancement */
+.main > div:first-child > div:first-child {
+  background: linear-gradient(135deg, var(--luxury-navy) 0%, var(--luxury-deep-blue) 50%, var(--luxury-charcoal) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.main > div:first-child > div:first-child::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 25% 25%, var(--luxury-gold) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, var(--luxury-bronze) 0%, transparent 50%);
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* Luxury Metric Cards */
+div[data-testid="metric-container"] {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  border-radius: 16px !important;
+  padding: 2rem !important;
+  box-shadow: var(--shadow-premium) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+div[data-testid="metric-container"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--luxury-gold) 0%, var(--luxury-bronze) 100%);
+  border-radius: 0 2px 2px 0;
+}
+
+div[data-testid="metric-container"]:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-luxury), var(--glow-gold);
+}
+
+/* Enhanced Metric Values */
+div[data-testid="metric-container"] [data-testid="metric-value"] {
+  font-family: var(--font-display) !important;
+  font-weight: 800 !important;
+  font-size: 2.5rem !important;
+  background: linear-gradient(135deg, var(--luxury-deep-blue), var(--luxury-gold));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+/* Sophisticated Tabs */
+.stTabs [data-baseweb="tab-list"] {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(226, 232, 240, 0.6) 100%) !important;
+  border-radius: 16px !important;
+  padding: 8px !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.stTabs [data-baseweb="tab"] {
+  background: transparent !important;
+  border-radius: 12px !important;
+  font-family: var(--font-body) !important;
+  font-weight: 600 !important;
+  padding: 12px 24px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+  background: linear-gradient(135deg, var(--luxury-deep-blue) 0%, var(--luxury-navy) 100%) !important;
+  color: white !important;
+  box-shadow: var(--shadow-elegant), var(--glow-blue) !important;
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(205, 127, 50, 0.1) 100%);
+  opacity: 0.6;
+}
+
+/* Premium Button Styling */
+.stButton > button {
+  background: linear-gradient(135deg, var(--luxury-deep-blue) 0%, var(--luxury-navy) 100%) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px 28px !important;
+  font-family: var(--font-body) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.025em !important;
+  box-shadow: var(--shadow-elegant) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.stButton > button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-premium), var(--glow-blue);
+}
+
+.stButton > button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.stButton > button:hover::before {
+  left: 100%;
+}
+
+/* Chart Container Enhancement */
+.js-plotly-plot {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%) !important;
+  border-radius: 16px !important;
+  padding: 1rem !important;
+  box-shadow: var(--shadow-premium) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+/* Sidebar Luxury Enhancement */
+.css-1d391kg {
+  background: linear-gradient(180deg, var(--luxury-navy) 0%, var(--luxury-charcoal) 100%) !important;
+  border-right: 1px solid rgba(212, 175, 55, 0.2) !important;
+}
+
+.sidebar .sidebar-content {
+  background: transparent !important;
+}
+
+/* Enhanced Select Boxes */
+div[data-baseweb="select"] {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  box-shadow: var(--shadow-elegant) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* Premium Data Tables */
+.stDataFrame {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: var(--shadow-premium) !important;
+  border: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.stDataFrame thead {
+  background: linear-gradient(135deg, var(--luxury-deep-blue) 0%, var(--luxury-navy) 100%) !important;
+  color: white !important;
+}
+
+.stDataFrame th {
+  font-family: var(--font-body) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-size: 0.75rem !important;
+}
+
+.stDataFrame td {
+  font-family: var(--font-mono) !important;
+  font-weight: 500 !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5) !important;
+}
+
+/* Premium Loading States */
+.stSpinner > div {
+  border: 3px solid rgba(212, 175, 55, 0.3) !important;
+  border-top: 3px solid var(--luxury-gold) !important;
+}
+
+/* Enhanced Alerts */
+.stAlert {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%) !important;
+  border-radius: 16px !important;
+  border: none !important;
+  box-shadow: var(--shadow-premium) !important;
+  backdrop-filter: blur(20px);
+}
+
+/* Micro-interactions */
+@keyframes luxury-pulse {
+  0%, 100% {
+    box-shadow: var(--shadow-elegant);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: var(--shadow-premium), var(--glow-gold);
+    transform: scale(1.02);
+  }
+}
+
+.luxury-pulse {
+  animation: luxury-pulse 3s ease-in-out infinite;
+}
+
+/* Premium Success States */
+div[data-testid="stSuccess"] {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%) !important;
+  border: 1px solid rgba(5, 150, 105, 0.2) !important;
+  border-left: 4px solid var(--luxury-emerald) !important;
+}
+
+/* Premium Error States */
+div[data-testid="stError"] {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%) !important;
+  border: 1px solid rgba(220, 38, 38, 0.2) !important;
+  border-left: 4px solid var(--luxury-ruby) !important;
+}
+
+/* Enhanced Text Inputs */
+.stTextInput > div > div > input {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  border-radius: 12px !important;
+  font-family: var(--font-body) !important;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stTextInput > div > div > input:focus {
+  border-color: var(--luxury-gold) !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1), var(--shadow-elegant) !important;
+}
+
+/* Premium Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--luxury-gold) 0%, var(--luxury-bronze) 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--luxury-bronze) 0%, var(--luxury-gold) 100%);
+}
+
+/* Luxury Text Styling */
+.luxury-display {
+  font-family: var(--font-display) !important;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--luxury-deep-blue), var(--luxury-gold));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+.luxury-body {
+  font-family: var(--font-body) !important;
+  font-weight: 500;
+  color: var(--luxury-charcoal);
+  line-height: 1.6;
+}
+
+.luxury-mono {
+  font-family: var(--font-mono) !important;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+/* Premium Card Containers */
+.luxury-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--shadow-premium);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  backdrop-filter: blur(20px) saturate(180%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.luxury-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--luxury-gold) 0%, var(--luxury-bronze) 100%);
+}
+
+.luxury-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-luxury), var(--glow-gold);
+}
+
+/* Enhanced Status Indicators */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.875rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.status-indicator.active {
+  background: rgba(5, 150, 105, 0.1);
+  color: var(--luxury-emerald);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.status-indicator.warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--luxury-bronze);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* Responsive Enhancements */
+@media (max-width: 768px) {
+  h1 { font-size: 2.25rem; }
+  h2 { font-size: 1.875rem; }
+  h3 { font-size: 1.5rem; }
+
+  .luxury-card {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  div[data-testid="metric-container"] {
+    padding: 1.5rem !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .luxury-card,
+  div[data-testid="metric-container"] {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+}

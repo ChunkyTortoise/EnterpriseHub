@@ -4,6 +4,7 @@ Main Application with 5 Core Hubs
 """
 import streamlit as st
 import sys
+import asyncio
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -129,6 +130,20 @@ except ImportError:
     st.warning("Analytics Engine unavailable, using mock.")
     AnalyticsEngine = MockService
 
+try:
+    from services.enhanced_lead_scorer import EnhancedLeadScorer
+    from services.churn_prediction_engine import ChurnPredictionEngine
+    from services.enhanced_property_matcher import EnhancedPropertyMatcher
+    from services.advanced_workflow_engine import AdvancedWorkflowEngine
+    from services.behavioral_weighting_engine import BehavioralWeightingEngine
+    from services.memory_service import MemoryService
+    from services.lead_lifecycle import LeadLifecycleTracker
+    from services.behavioral_triggers import BehavioralTriggerEngine
+    ENHANCED_SERVICES_AVAILABLE = True
+except ImportError as e:
+    st.warning(f"Enhanced services partially unavailable: {e}")
+    ENHANCED_SERVICES_AVAILABLE = False
+
 # Helper function to load data
 def load_mock_data():
     data_path = PROJECT_ROOT / "data" / "mock_analytics.json"
@@ -140,7 +155,7 @@ def load_mock_data():
 # Initialize services
 @st.cache_resource
 def get_services():
-    return {
+    base_services = {
         "lead_scorer": LeadScorer(),
         "segmentation": AISmartSegmentationService(),
         "predictive_scorer": PredictiveLeadScorer(),
@@ -158,6 +173,30 @@ def get_services():
         "marketplace": WorkflowMarketplace(),
         "analytics": AnalyticsEngine()
     }
+    
+    if ENHANCED_SERVICES_AVAILABLE:
+        try:
+            # Core support services for enhanced engine
+            memory = MemoryService()
+            lifecycle = LeadLifecycleTracker()
+            behavioral = BehavioralTriggerEngine()
+            
+            base_services.update({
+                "enhanced_lead_scorer": EnhancedLeadScorer(),
+                "churn_prediction": ChurnPredictionEngine(
+                    memory_service=memory,
+                    lifecycle_tracker=lifecycle,
+                    behavioral_engine=behavioral,
+                    lead_scorer=base_services["lead_scorer"]
+                ),
+                "enhanced_property_matcher": EnhancedPropertyMatcher(),
+                "workflow_engine": AdvancedWorkflowEngine(),
+                "behavioral_weighting": BehavioralWeightingEngine()
+            })
+        except Exception as e:
+            st.error(f"Error initializing enhanced services: {e}")
+            
+    return base_services
 
 services = get_services()
 mock_data = load_mock_data()
@@ -189,89 +228,94 @@ st.set_page_config(
 )
 
 # Load custom CSS
-css_path = PROJECT_ROOT / "streamlit_demo" / "assets" / "styles.css"
+css_path = PROJECT_ROOT / "streamlit_demo" / "assets" / "styles_dark_lux.css"
 if css_path.exists():
     with open(css_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # Enhanced premium branding header with animations
 st.markdown("""
-<div style='background: linear-gradient(135deg, #006AFF 0%, #0047AB 100%); 
+<div style='background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
             padding: 3rem 2.5rem; 
             border-radius: 20px; 
             margin-bottom: 2.5rem; 
-            color: white;
-            box-shadow: 0 20px 40px rgba(0, 106, 255, 0.3);
+            color: #f8fafc;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             position: relative;
             overflow: hidden;'>
     <!-- Animated background pattern -->
-    <!-- Header verified -->
     <div style='position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
                 background-image: 
-                    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-                opacity: 0.6;'></div>
+                    radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+                opacity: 0.8;'></div>
     
     <div style='position: relative; z-index: 1;'>
         <div style='display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem;'>
-            <div style='font-size: 4rem; line-height: 1;'>🏠</div>
+            <div style='font-size: 4rem; line-height: 1; filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));'>🏠</div>
             <div>
-                <h1 style='margin: 0; font-size: 2.75rem; font-weight: 800; color: white; 
-                           text-shadow: 0 2px 10px rgba(0,0,0,0.2);'>
+                <h1 style='margin: 0; font-size: 2.75rem; font-weight: 800; color: #f8fafc; 
+                           text-shadow: 0 4px 20px rgba(0,0,0,0.5); font-family: "Plus Jakarta Sans", sans-serif;'>
                     GHL Real Estate AI
                 </h1>
-                <p style='margin: 0.25rem 0 0 0; font-size: 1.15rem; opacity: 0.95; font-weight: 500;'>
-                    Enterprise Command Center
+                <p style='margin: 0.25rem 0 0 0; font-size: 1.15rem; color: #94a3b8; font-weight: 500; letter-spacing: 0.05em;'>
+                    ENTERPRISE COMMAND CENTER
                 </p>
             </div>
         </div>
         
-        <p style='margin: 1.5rem 0; font-size: 1.05rem; opacity: 0.9; max-width: 800px;'>
-            Professional AI-powered lead qualification and automation system for <strong>Jorge Salas</strong>
+        <p style='margin: 1.5rem 0; font-size: 1.05rem; color: #cbd5e1; max-width: 800px; line-height: 1.6;'>
+            Professional AI-powered lead qualification and automation system for <strong style='color: #3b82f6;'>Jorge Salas</strong>
         </p>
         
         <div style='margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;'>
-            <div style='background: rgba(255,255,255,0.25); 
+            <div style='background: rgba(30, 41, 59, 0.6); 
                         padding: 0.75rem 1.25rem; 
                         border-radius: 10px;
+                        border: 1px solid rgba(255, 255, 255, 0.1);
                         backdrop-filter: blur(10px);
                         display: flex;
                         align-items: center;
                         gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
-                <span style='font-size: 1.2rem;'>✅</span>
+                        color: #f8fafc;'>
+                <span style='color: #10b981;'>✅</span>
                 <span style='font-weight: 600;'>AI Mode: Active</span>
             </div>
-            <div style='background: rgba(255,255,255,0.25); 
+            <div style='background: rgba(30, 41, 59, 0.6); 
                         padding: 0.75rem 1.25rem; 
                         border-radius: 10px;
+                        border: 1px solid rgba(255, 255, 255, 0.1);
                         backdrop-filter: blur(10px);
                         display: flex;
                         align-items: center;
                         gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
-                <span style='font-size: 1.2rem;'>🔗</span>
+                        color: #f8fafc;'>
+                <span style='color: #3b82f6;'>🔗</span>
                 <span style='font-weight: 600;'>GHL Sync: Live</span>
             </div>
-            <div style='background: rgba(255,255,255,0.25); 
+            <div style='background: rgba(30, 41, 59, 0.6); 
                         padding: 0.75rem 1.25rem; 
                         border-radius: 10px;
+                        border: 1px solid rgba(255, 255, 255, 0.1);
                         backdrop-filter: blur(10px);
                         display: flex;
                         align-items: center;
                         gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
-                <span style='font-size: 1.2rem;'>📊</span>
+                        color: #f8fafc;'>
+                <span style='color: #f59e0b;'>📊</span>
                 <span style='font-weight: 600;'>Multi-Tenant Ready</span>
             </div>
-            <div style='background: rgba(16, 185, 129, 0.9); 
+            <div style='background: rgba(16, 185, 129, 0.2); 
                         padding: 0.75rem 1.25rem; 
                         border-radius: 10px;
+                        border: 1px solid rgba(16, 185, 129, 0.3);
                         backdrop-filter: blur(10px);
                         display: flex;
                         align-items: center;
                         gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        color: #34d399;
+                        box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
                         animation: pulse 2s ease-in-out infinite;'>
                 <span style='font-size: 1.2rem;'>🚀</span>
                 <span style='font-weight: 700;'>5 Hubs Live</span>
@@ -373,14 +417,14 @@ with st.sidebar:
     with c1:
         st.metric("Active Leads", "47", "+12")
     with c2:
-        st.plotly_chart(sparkline([10, 15, 12, 25, 30, 42, 47], color="#2563eb", height=50), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(sparkline([10, 15, 12, 25, 30, 42, 47], color="#3b82f6", height=50), use_container_width=True, config={'displayModeBar': False})
         
     # AI Conversations Sparkline
     c3, c4 = st.columns([1.5, 1])
     with c3:
         st.metric("AI Convos", "156", "+23")
     with c4:
-        st.plotly_chart(sparkline([80, 95, 110, 105, 130, 145, 156], color="#16a34a", height=50), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(sparkline([80, 95, 110, 105, 130, 145, 156], color="#10b981", height=50), use_container_width=True, config={'displayModeBar': False})
     
     st.markdown("---")
     st.markdown("### 📡 Live Feed")
@@ -404,30 +448,49 @@ if selected_hub == "🏢 Executive Command Center":
     tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "🎯 AI Insights", "📄 Reports"])
     
     with tab1:
-        st.subheader("Executive Dashboard")
+        st.subheader("Executive Command Center")
         
-        # Key metrics
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Total Pipeline", "$2.4M", "+15%")
-        with col2:
-            st.metric("Hot Leads", "23", "+8")
-        with col3:
-            st.metric("Conversion Rate", "34%", "+2%")
-        with col4:
-            st.metric("Avg Deal Size", "$385K", "+$12K")
+        # Bento Grid Metrics
+        st.markdown("""
+        <div class="bento-grid">
+            <div class="bento-item">
+                <div class="bento-header">
+                    <div class="bento-title">💰 Total Pipeline</div>
+                    <div class="bento-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">+15%</div>
+                </div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">$2.4M</div>
+                <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">Across 47 active properties</div>
+            </div>
+            <div class="bento-item">
+                <div class="bento-header">
+                    <div class="bento-title">🔥 Hot Leads</div>
+                    <div class="bento-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">+8</div>
+                </div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">23</div>
+                <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">Ready for immediate conversion</div>
+            </div>
+            <div class="bento-item">
+                <div class="bento-header">
+                    <div class="bento-title">📈 Conv. Rate</div>
+                    <div class="bento-badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">+2%</div>
+                </div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">34%</div>
+                <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">AI-assisted closing efficiency</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        st.markdown("---")
+        st.markdown("<br>", unsafe_allow_html=True)
         
-        # Enterprise Color Palette
+        # Enterprise Color Palette (Dark Lux)
         COLORS = {
-            'primary': '#2563eb',
-            'secondary': '#64748b',
-            'success': '#22c55e',
-            'warning': '#f59e0b',
-            'danger': '#ef4444',
-            'text': '#1e293b',
-            'grid': '#e2e8f0'
+            'primary': '#3b82f6',    # Blue 500
+            'secondary': '#94a3b8',  # Slate 400
+            'success': '#10b981',    # Emerald 500
+            'warning': '#f59e0b',    # Amber 500
+            'danger': '#ef4444',     # Red 500
+            'text': '#f8fafc',       # Slate 50
+            'grid': 'rgba(255,255,255,0.1)'
         }
 
         # Mock data for revenue trends
@@ -458,7 +521,7 @@ if selected_hub == "🏢 Executive Command Center":
         
         fig.update_layout(
             title="<b>Revenue Performance vs Target</b>",
-            template="plotly_white",
+            template="plotly_dark",
             margin=dict(l=20, r=20, t=60, b=20),
             height=350,
             paper_bgcolor='rgba(0,0,0,0)',
@@ -528,8 +591,9 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
     st.header("🧠 Lead Intelligence Hub")
     st.markdown("*Deep dive into individual leads with AI-powered insights*")
     
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "🎯 Lead Scoring",
+        "🚨 Churn Risk",
         "📊 Segmentation",
         "🎨 Personalization",
         "🔮 Predictions"
@@ -557,6 +621,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
             # Lead selector with mapping to context
             lead_options = {
             "Sarah Johnson": {
+                "id": "lead_001",
                 "extracted_preferences": {
                     "budget": 400000,
                     "location": "Downtown",
@@ -570,6 +635,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
                 }
             },
             "Mike Chen": {
+                "id": "lead_002",
                 "extracted_preferences": {
                     "location": "Suburbs",
                     "timeline": "6 months",
@@ -577,6 +643,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
                 }
             },
             "Emily Davis": {
+                "id": "lead_003",
                 "extracted_preferences": {
                     "budget": 300000
                 }
@@ -590,12 +657,24 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         
         # Calculate Score using centralized service
         lead_context = lead_options[selected_lead_name]
-        result = services["lead_scorer"].calculate_with_reasoning(lead_context)
+        
+        if "enhanced_lead_scorer" in services:
+            with st.spinner("Calculating enhanced lead score..."):
+                result_obj = asyncio.run(services["enhanced_lead_scorer"].score_lead(
+                    lead_context.get("id", "unknown"), lead_context
+                ))
+                score = round(result_obj.final_score / 100 * 7, 1) # Map back to 0-7 for UI consistency
+                classification = result_obj.classification
+                reasoning = result_obj.reasoning
+                rec_actions = result_obj.recommended_actions
+        else:
+            result = services["lead_scorer"].calculate_with_reasoning(lead_context)
+            score = result["score"]
+            classification = result["classification"]
+            reasoning = result["reasoning"]
+            rec_actions = result["recommended_actions"]
         
         # Display Results
-        score = result["score"]
-        classification = result["classification"]
-        
         if classification == "hot":
             st.success(f"🔥 **Hot Lead** - Score: {score}/7 Questions Answered")
         elif classification == "warm":
@@ -612,13 +691,51 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
             st.metric("Lead Intent", "Calculated", "")
         
         st.markdown("#### AI Analysis Breakdown")
-        st.info(f"**Qualifying Data Found:** {result['reasoning']}")
+        st.info(f"**Qualifying Data Found:** {reasoning}")
         
         st.markdown("#### Recommended Actions")
-        for action in result["recommended_actions"]:
+        for action in rec_actions:
             st.markdown(f"- {action}")
-    
+
     with tab2:
+        st.subheader("🚨 Churn Early Warning")
+        st.markdown("*Predictive analysis of lead abandonment risk*")
+        
+        if "churn_prediction" in services:
+            with st.spinner("Analyzing churn risk factors..."):
+                lead_id = lead_options[selected_lead_name].get("id", "unknown")
+                churn_result = asyncio.run(services["churn_prediction"].predict_churn_risk(lead_id))
+                
+                c1, c2, c3 = st.columns(3)
+                
+                # Gauge-style metric for risk
+                risk_color = "#ef4444" if churn_result.risk_score_14d > 60 else "#f59e0b" if churn_result.risk_score_14d > 30 else "#10b981"
+                
+                with c1:
+                    st.metric("14-Day Churn Risk", f"{churn_result.risk_score_14d:.1f}%", delta=None)
+                with c2:
+                    st.metric("Risk Tier", churn_result.risk_tier.value.upper())
+                with c3:
+                    st.metric("Model Confidence", f"{churn_result.confidence*100:.0f}%")
+                
+                st.markdown("---")
+                col_factors, col_actions = st.columns(2)
+                
+                with col_factors:
+                    st.markdown("#### 🔍 Top Risk Factors")
+                    for factor, importance in churn_result.top_risk_factors[:5]:
+                        st.write(f"**{factor.replace('_', ' ').title()}**: {importance:.2f}")
+                        st.progress(min(1.0, importance * 2)) # Scale for visibility
+                
+                with col_actions:
+                    st.markdown("#### ⚡ Recommended Interventions")
+                    for action in churn_result.recommended_actions:
+                        st.info(f"✅ {action}")
+        else:
+            st.warning("Churn prediction service unavailable.")
+            st.info("The full Churn Prediction Engine provides 26 behavioral features and multi-horizon risk scoring.")
+    
+    with tab3:
         st.subheader("Smart Segmentation")
         
         # Prepare lead data from mock_data
@@ -666,7 +783,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         else:
             st.info("No lead data available for segmentation.")
         
-    with tab3:
+    with tab4:
         st.subheader("Content Personalization")
         
         selected_lead_p = st.selectbox("Select Lead for Personalization:", list(lead_options.keys()), key="p_lead")
@@ -692,15 +809,47 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         
         st.write(f"**Strategy:** {p_result['personalization_suite']['overall_strategy']['focus']}")
         
-        st.markdown("#### 🏠 Recommended Properties")
-        recs = p_result["personalization_suite"]["properties"]["recommendations"]
-        cols = st.columns(len(recs))
-        for i, rec in enumerate(recs):
-            with cols[i]:
-                st.write(f"**{rec['title']}**")
-                st.write(f"${rec['price']:,.0f}")
-                st.caption(rec['why_recommended'])
-                st.button(f"View {rec['property_id']}", key=f"btn_{rec['property_id']}")
+        if "enhanced_property_matcher" in services:
+            st.markdown("#### 🚀 Enhanced Property Matches (15-Factor AI)")
+            enhanced_matches = services["enhanced_property_matcher"].find_enhanced_matches(
+                lead_data_p.get("preferences", {}), limit=3
+            )
+            
+            # Bento Grid Layout
+            cols = st.columns(3)
+            for i, match in enumerate(enhanced_matches):
+                with cols[i]:
+                    st.markdown(f"""
+                    <div class="bento-item">
+                        <div class="bento-header">
+                            <div class="bento-title">🏠 {match.property['address']['neighborhood']}</div>
+                            <div class="bento-badge">{int(match.overall_score*100)}% Match</div>
+                        </div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: #3b82f6; margin-bottom: 0.5rem;">
+                            ${match.property['price']:,}
+                        </div>
+                        <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem; flex-grow: 1;">
+                            {match.reasoning.primary_strengths[0] if match.reasoning.primary_strengths else 'Top choice for your profile'}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
+                            <div style="font-size: 0.75rem; color: #64748b;">
+                                Prob: <b>{match.predicted_showing_request:.1%}</b>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    if st.button(f"View Details {i}", key=f"details_{i}", use_container_width=True):
+                        st.info(f"Showing details for {match.property['address']['street']}")
+        else:
+            st.markdown("#### 🏠 Recommended Properties")
+            recs = p_result["personalization_suite"]["properties"]["recommendations"]
+            cols = st.columns(len(recs))
+            for i, rec in enumerate(recs):
+                with cols[i]:
+                    st.write(f"**{rec['title']}**")
+                    st.write(f"${rec['price']:,.0f}")
+                    st.caption(rec['why_recommended'])
+                    st.button(f"View {rec['property_id']}", key=f"btn_{rec['property_id']}")
 
         st.markdown("---")
         st.markdown("#### 🔗 Shareable Client Portal")
@@ -714,7 +863,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
             if st.button("📱 SMS Link", use_container_width=True):
                 st.toast("Link sent via SMS!", icon="📨")
 
-    with tab4:
+    with tab5:
         st.subheader("Predictive Scoring")
         
         selected_lead_pred = st.selectbox("Select Lead for Prediction:", list(lead_options.keys()), key="pred_lead")
@@ -830,6 +979,16 @@ elif selected_hub == "🤖 Automation Studio":
                 if st.button(f"Install", key=f"inst_{t.id}", use_container_width=True):
                     st.success(f"Installed {t.name}!")
 
+        if "workflow_engine" in services:
+            st.markdown("---")
+            st.subheader("⚙️ Advanced Workflow Engine")
+            st.success("✅ Engine Online - Ready for conditional branching")
+            
+            with st.expander("View Active Executions", expanded=False):
+                st.info("No active executions in the last 24 hours.")
+                if st.button("🚀 Run Test Workflow (New Lead Sequence)"):
+                    st.toast("Triggering Advanced Workflow: New Lead Sequence", icon="⚡")
+
     with tab4:
         st.subheader("AI Training Lab & Version Control")
         st.caption("Experiment with system prompts safely. Revert if quality drops.")
@@ -915,6 +1074,20 @@ elif selected_hub == "💰 Sales Copilot":
             st.session_state.messages.append({"role": "user", "content": prompt})
             
             with st.spinner("Analyzing negotiation strategy..."):
+                # Waveform animation while "thinking"
+                st.markdown("""
+                <div class="waveform-container">
+                    <div class="waveform-bar" style="animation-delay: 0.0s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.1s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.2s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.3s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.4s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.5s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.6s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.7s"></div>
+                </div>
+                """, unsafe_allow_html=True)
+                
                 lead_context = {
                     "name": "Prospect",
                     "stage": "objection_handling",
@@ -1118,14 +1291,14 @@ elif selected_hub == "📈 Ops & Optimization":
 # Footer
 st.markdown("---")
 st.markdown("""
-<div style='text-align: center; padding: 2rem; background: #F7F8FA; border-radius: 12px; margin-top: 3rem;'>
-    <div style='color: #2A2A33; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;'>
+<div style='text-align: center; padding: 2rem; background: #0f172a; border-radius: 12px; margin-top: 3rem; border: 1px solid rgba(255,255,255,0.05);'>
+    <div style='color: #f8fafc; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;'>
         🚀 Production-Ready Multi-Tenant AI System
     </div>
-    <div style='color: #6B7280; font-size: 0.9rem;'>
+    <div style='color: #94a3b8; font-size: 0.9rem;'>
         Built for Jorge Salas | Claude Sonnet 4.5 | GHL Integration Ready
     </div>
-    <div style='margin-top: 1rem; color: #6B7280; font-size: 0.85rem;'>
+    <div style='margin-top: 1rem; color: #64748b; font-size: 0.85rem;'>
         Consolidated Hub Architecture | Path B Backend | 522+ Tests Passing
     </div>
 </div>

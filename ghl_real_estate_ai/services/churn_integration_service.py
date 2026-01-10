@@ -43,11 +43,32 @@ from .churn_intervention_orchestrator import (
     InterventionStatus
 )
 from .memory_service import MemoryService
-from .lead_lifecycle_tracker import LeadLifecycleTracker
-from .behavioral_trigger_engine import BehavioralTriggerEngine
+from .lead_lifecycle import LeadLifecycleTracker
 from .lead_scorer import LeadScorer
 from .reengagement_engine import ReengagementEngine
-from .ghl_service import GHLService
+
+# Optional imports with fallback
+try:
+    from .behavioral_triggers import BehavioralTriggerEngine
+    BEHAVIORAL_ENGINE_AVAILABLE = True
+except ImportError:
+    try:
+        from .ai_behavioral_triggers import BehavioralTriggerEngine
+        BEHAVIORAL_ENGINE_AVAILABLE = True
+    except ImportError:
+        BehavioralTriggerEngine = None
+        BEHAVIORAL_ENGINE_AVAILABLE = False
+
+try:
+    from .ghl_api_client import GHLAPIClient as GHLService
+    GHL_SERVICE_AVAILABLE = True
+except ImportError:
+    try:
+        from .ghl_client import GHLClient as GHLService
+        GHL_SERVICE_AVAILABLE = True
+    except ImportError:
+        GHLService = None
+        GHL_SERVICE_AVAILABLE = False
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -89,12 +110,12 @@ class ChurnIntegrationService:
     """
 
     def __init__(self,
-                 memory_service: MemoryService,
-                 lifecycle_tracker: LeadLifecycleTracker,
-                 behavioral_engine: BehavioralTriggerEngine,
-                 lead_scorer: LeadScorer,
-                 reengagement_engine: ReengagementEngine,
-                 ghl_service: GHLService,
+                 memory_service: Optional[MemoryService],
+                 lifecycle_tracker: Optional[LeadLifecycleTracker],
+                 behavioral_engine: Optional[BehavioralTriggerEngine],
+                 lead_scorer: Optional[LeadScorer],
+                 reengagement_engine: Optional[ReengagementEngine],
+                 ghl_service: Optional[GHLService],
                  model_path: Optional[str] = None):
 
         # Store service dependencies
@@ -105,20 +126,31 @@ class ChurnIntegrationService:
         self.reengagement_engine = reengagement_engine
         self.ghl_service = ghl_service
 
-        # Initialize core churn components
-        self.prediction_engine = ChurnPredictionEngine(
-            memory_service=memory_service,
-            lifecycle_tracker=lifecycle_tracker,
-            behavioral_engine=behavioral_engine,
-            lead_scorer=lead_scorer,
-            model_path=model_path
-        )
+        # Initialize logger
+        self.logger = logging.getLogger(__name__ + '.ChurnIntegrationService')
 
-        self.intervention_orchestrator = InterventionOrchestrator(
-            reengagement_engine=reengagement_engine,
-            memory_service=memory_service,
-            ghl_service=ghl_service
-        )
+        # Initialize core churn components (with None checking)
+        try:
+            self.prediction_engine = ChurnPredictionEngine(
+                memory_service=memory_service,
+                lifecycle_tracker=lifecycle_tracker,
+                behavioral_engine=behavioral_engine,
+                lead_scorer=lead_scorer,
+                model_path=model_path
+            ) if all([memory_service, lifecycle_tracker, behavioral_engine, lead_scorer]) else None
+        except Exception as e:
+            self.prediction_engine = None
+            self.logger.warning(f"Could not initialize ChurnPredictionEngine: {e}")
+
+        try:
+            self.intervention_orchestrator = InterventionOrchestrator(
+                reengagement_engine=reengagement_engine,
+                memory_service=memory_service,
+                ghl_service=ghl_service
+            ) if all([reengagement_engine, memory_service, ghl_service]) else None
+        except Exception as e:
+            self.intervention_orchestrator = None
+            self.logger.warning(f"Could not initialize InterventionOrchestrator: {e}")
 
         # Service configuration
         self.config = {

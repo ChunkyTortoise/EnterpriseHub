@@ -49,13 +49,20 @@ if os.getenv("ENVIRONMENT") == "production":
 # Add Error Handler Middleware
 app.add_middleware(ErrorHandlerMiddleware)
 
-# Add CORS middleware
+# Add CORS middleware with secure configuration
+allowed_origins = ["*"] if settings.environment == "development" else [
+    "https://app.gohighlevel.com",
+    "https://*.gohighlevel.com",
+    "https://ghl-integration.gohighlevel.com",
+    # Add your production domains here
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict to GHL domains
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Authorization", "Content-Type", "X-GHL-Signature"],
 )
 # Security middleware (added by Agent 5)
 app.add_middleware(RateLimitMiddleware, requests_per_minute=60)

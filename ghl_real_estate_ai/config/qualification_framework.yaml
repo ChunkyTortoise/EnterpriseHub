@@ -1,0 +1,449 @@
+# Comprehensive Lead Qualification Framework
+# Defines systematic approach to lead evaluation and information gathering
+
+version: "2.0.0"
+last_updated: "2026-01-09"
+created_by: "Lead Evaluation Orchestrator"
+
+# Critical qualification fields that must be gathered
+critical_fields:
+  budget:
+    display_name: "Budget Range"
+    description: "Lead's budget or price range preference"
+    priority: 1
+    required: true
+    validation_pattern: "\\$?[0-9,]+\\s*-?\\s*\\$?[0-9,]*|under\\s*\\$?[0-9,]+|over\\s*\\$?[0-9,]+"
+    extraction_keywords:
+      - "budget"
+      - "price range"
+      - "afford"
+      - "spend"
+      - "max"
+      - "minimum"
+      - "looking for under"
+      - "around"
+      - "between"
+    follow_up_questions:
+      - "What's your ideal budget range?"
+      - "Are you pre-approved for financing?"
+      - "What's the maximum you'd be comfortable spending?"
+    scoring_weight: 0.25
+
+  timeline:
+    display_name: "Purchase Timeline"
+    description: "When the lead wants to purchase"
+    priority: 2
+    required: true
+    validation_pattern: "(asap|immediately|[0-9]+\\s*(days?|weeks?|months?)|by\\s*[0-9]+|this\\s*(month|quarter|year))"
+    extraction_keywords:
+      - "when"
+      - "timeline"
+      - "move"
+      - "close"
+      - "need to buy"
+      - "looking to purchase"
+      - "asap"
+      - "immediately"
+      - "soon"
+      - "next month"
+    follow_up_questions:
+      - "When are you hoping to complete your purchase?"
+      - "Is there a specific date you need to move in by?"
+      - "What's driving your timeline?"
+    scoring_weight: 0.20
+
+  location:
+    display_name: "Preferred Location"
+    description: "Desired location, neighborhoods, or areas"
+    priority: 3
+    required: true
+    validation_pattern: "[A-Za-z\\s]+,?\\s*[A-Z]{2}|zip\\s*[0-9]{5}|[A-Za-z\\s]+\\s+(area|neighborhood|district)"
+    extraction_keywords:
+      - "location"
+      - "area"
+      - "neighborhood"
+      - "zip"
+      - "school district"
+      - "commute"
+      - "near"
+      - "close to"
+      - "prefer"
+    follow_up_questions:
+      - "What areas or neighborhoods interest you most?"
+      - "How important is the school district?"
+      - "What's your ideal commute time?"
+    scoring_weight: 0.20
+
+  property_type:
+    display_name: "Property Type"
+    description: "Type of property desired (house, condo, townhome, etc.)"
+    priority: 4
+    required: true
+    validation_pattern: "(house|home|condo|condominium|townhouse|townhome|apartment|single family|multi family|duplex|land)"
+    extraction_keywords:
+      - "house"
+      - "home"
+      - "condo"
+      - "townhouse"
+      - "apartment"
+      - "single family"
+      - "duplex"
+      - "property type"
+    follow_up_questions:
+      - "What type of property are you looking for?"
+      - "Do you prefer a house or condo?"
+      - "Are you open to townhomes?"
+    scoring_weight: 0.15
+
+  bedrooms:
+    display_name: "Number of Bedrooms"
+    description: "Desired number of bedrooms"
+    priority: 5
+    required: false
+    validation_pattern: "[0-9]+\\s*bed|[0-9]+\\s*br|[0-9]+\\s*bedroom"
+    extraction_keywords:
+      - "bedroom"
+      - "bed"
+      - "br"
+      - "rooms"
+    follow_up_questions:
+      - "How many bedrooms do you need?"
+      - "Will this number change in the next few years?"
+    scoring_weight: 0.10
+
+# Secondary qualification fields
+secondary_fields:
+  bathrooms:
+    display_name: "Number of Bathrooms"
+    description: "Desired number of bathrooms"
+    priority: 6
+    required: false
+    validation_pattern: "[0-9]+\\.?5?\\s*bath|[0-9]+\\.?5?\\s*ba"
+    extraction_keywords:
+      - "bathroom"
+      - "bath"
+      - "ba"
+      - "full bath"
+      - "half bath"
+
+  square_footage:
+    display_name: "Square Footage"
+    description: "Desired square footage range"
+    priority: 7
+    required: false
+    validation_pattern: "[0-9,]+\\s*sq\\s*ft|[0-9,]+\\s*square\\s*feet"
+    extraction_keywords:
+      - "square feet"
+      - "sq ft"
+      - "size"
+      - "square footage"
+
+  financing:
+    display_name: "Financing Status"
+    description: "Pre-approval status and financing type"
+    priority: 8
+    required: false
+    validation_pattern: "(pre-?approved|pre-?qualified|cash|financing|mortgage|loan)"
+    extraction_keywords:
+      - "pre-approved"
+      - "pre-qualified"
+      - "financing"
+      - "mortgage"
+      - "cash buyer"
+      - "loan"
+
+  current_situation:
+    display_name: "Current Living Situation"
+    description: "Current housing situation (rent, own, living with family, etc.)"
+    priority: 9
+    required: false
+    validation_pattern: "(rent|own|renting|buying|selling|lease|living with)"
+    extraction_keywords:
+      - "currently"
+      - "living"
+      - "rent"
+      - "own"
+      - "selling"
+      - "lease"
+
+# Urgency detection patterns
+urgency_patterns:
+  high_urgency:
+    keywords:
+      - "asap"
+      - "immediately"
+      - "urgent"
+      - "soon as possible"
+      - "this week"
+      - "this month"
+      - "need to move"
+      - "have to buy"
+      - "deadline"
+      - "running out of time"
+    score_boost: 15
+
+  medium_urgency:
+    keywords:
+      - "next month"
+      - "within 30 days"
+      - "by end of"
+      - "hopefully soon"
+      - "would like to"
+      - "planning to"
+    score_boost: 8
+
+  timeline_indicators:
+    life_events:
+      - "new job"
+      - "getting married"
+      - "having a baby"
+      - "divorce"
+      - "retirement"
+      - "kids starting school"
+    score_boost: 12
+
+    market_timing:
+      - "rates going up"
+      - "before prices rise"
+      - "market conditions"
+      - "good time to buy"
+    score_boost: 5
+
+# Objection detection patterns
+objection_patterns:
+  price:
+    keywords:
+      - "too expensive"
+      - "over budget"
+      - "can't afford"
+      - "price is high"
+      - "costs too much"
+      - "out of my range"
+    severity_multipliers:
+      strong: 2.0
+      moderate: 1.5
+      weak: 1.0
+
+  timeline:
+    keywords:
+      - "not ready"
+      - "too soon"
+      - "need more time"
+      - "not in a rush"
+      - "just looking"
+      - "thinking about it"
+
+  location:
+    keywords:
+      - "too far"
+      - "wrong area"
+      - "not my neighborhood"
+      - "don't like the location"
+      - "commute is bad"
+
+  financing:
+    keywords:
+      - "credit issues"
+      - "need to get approved"
+      - "waiting on loan"
+      - "financing problems"
+      - "bank issues"
+
+  features:
+    keywords:
+      - "too small"
+      - "too big"
+      - "wrong style"
+      - "needs too much work"
+      - "doesn't have"
+      - "missing"
+
+# Sentiment analysis patterns
+sentiment_patterns:
+  positive:
+    keywords:
+      - "love"
+      - "perfect"
+      - "exactly what"
+      - "excited"
+      - "great"
+      - "amazing"
+      - "wonderful"
+      - "interested"
+    score: 2
+
+  negative:
+    keywords:
+      - "hate"
+      - "terrible"
+      - "awful"
+      - "disappointed"
+      - "frustrated"
+      - "angry"
+      - "upset"
+      - "not happy"
+    score: -2
+
+  neutral:
+    keywords:
+      - "okay"
+      - "fine"
+      - "alright"
+      - "decent"
+      - "not bad"
+    score: 0
+
+# Engagement level indicators
+engagement_indicators:
+  highly_engaged:
+    patterns:
+      - "asking detailed questions"
+      - "requesting showing"
+      - "talking about next steps"
+      - "discussing timeline"
+      - "mentioning specific features"
+    score_range: [8, 10]
+
+  engaged:
+    patterns:
+      - "asking questions"
+      - "providing feedback"
+      - "showing interest"
+      - "responsive to questions"
+    score_range: [6, 8]
+
+  moderately_engaged:
+    patterns:
+      - "basic responses"
+      - "some questions"
+      - "polite but reserved"
+    score_range: [4, 6]
+
+  passive:
+    patterns:
+      - "short answers"
+      - "minimal questions"
+      - "not volunteering information"
+    score_range: [2, 4]
+
+  disengaged:
+    patterns:
+      - "one word answers"
+      - "no questions"
+      - "seems distracted"
+      - "long response delays"
+    score_range: [0, 2]
+
+# Scoring weights for composite calculation
+scoring_weights:
+  budget_alignment: 0.25
+  timeline_urgency: 0.20
+  location_preference: 0.20
+  qualification_completeness: 0.15
+  engagement_level: 0.10
+  communication_quality: 0.05
+  urgency_signals: 0.05
+
+# Qualification tiers
+qualification_tiers:
+  hot_lead:
+    score_threshold: 85
+    description: "Highly qualified lead ready for immediate action"
+    required_fields: ["budget", "timeline", "location"]
+    actions:
+      - "Schedule showing immediately"
+      - "Send property recommendations"
+      - "Prioritize response time"
+
+  warm_lead:
+    score_threshold: 70
+    description: "Well-qualified lead with good potential"
+    required_fields: ["budget", "timeline"]
+    actions:
+      - "Continue qualification conversation"
+      - "Send market information"
+      - "Schedule follow-up call"
+
+  developing_lead:
+    score_threshold: 50
+    description: "Lead with potential, needs more qualification"
+    required_fields: ["budget"]
+    actions:
+      - "Focus on qualification questions"
+      - "Build rapport and trust"
+      - "Provide educational content"
+
+  cold_lead:
+    score_threshold: 30
+    description: "Early stage lead requiring nurturing"
+    required_fields: []
+    actions:
+      - "Nurture with valuable content"
+      - "Build relationship slowly"
+      - "Focus on education over selling"
+
+  unqualified:
+    score_threshold: 0
+    description: "Lead not currently qualified or interested"
+    required_fields: []
+    actions:
+      - "Long-term nurture sequence"
+      - "Minimal resource allocation"
+      - "Automated follow-up only"
+
+# Real-time assistance triggers
+assistance_triggers:
+  objection_detected:
+    threshold: 0.7
+    actions:
+      - "Suggest objection handling responses"
+      - "Provide relevant market data"
+      - "Offer alternative solutions"
+
+  qualification_stalled:
+    conditions:
+      - "No new fields in 5 minutes"
+      - "Conversation longer than 10 minutes"
+    actions:
+      - "Suggest qualification questions"
+      - "Provide conversation pivots"
+      - "Recommend qualification techniques"
+
+  high_engagement_opportunity:
+    conditions:
+      - "Positive sentiment detected"
+      - "Multiple questions asked"
+    actions:
+      - "Suggest next step actions"
+      - "Recommend showing scheduling"
+      - "Provide property matches"
+
+  losing_engagement:
+    conditions:
+      - "Short responses detected"
+      - "Response time increasing"
+      - "Negative sentiment"
+    actions:
+      - "Suggest engagement strategies"
+      - "Recommend conversation pivots"
+      - "Provide value-add information"
+
+# Configuration for different evaluation modes
+evaluation_modes:
+  real_time:
+    max_processing_time_ms: 500
+    use_cached_results: true
+    enable_ml_scoring: true
+    enable_semantic_analysis: true
+
+  batch:
+    max_processing_time_ms: 5000
+    use_cached_results: false
+    enable_ml_scoring: true
+    enable_semantic_analysis: true
+
+  quick:
+    max_processing_time_ms: 200
+    use_cached_results: true
+    enable_ml_scoring: false
+    enable_semantic_analysis: false

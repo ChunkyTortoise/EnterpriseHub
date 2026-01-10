@@ -13,9 +13,16 @@ import os
 # Configuration
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 if not SECRET_KEY:
-    if os.getenv("ENVIRONMENT") == "production":
+    environment = os.getenv("ENVIRONMENT", "").lower()
+    if environment == "production":
         raise ValueError("JWT_SECRET_KEY environment variable must be set in production")
-    SECRET_KEY = "dev-secret-key-do-not-use-in-production"
+
+    # Generate a cryptographically secure key for development
+    import secrets
+    SECRET_KEY = secrets.token_urlsafe(32)
+    print(f"WARNING: Using generated JWT secret for development. Set JWT_SECRET_KEY environment variable.")
+    print(f"Generated secret: {SECRET_KEY}")
+    print("For production, use: openssl rand -base64 32")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

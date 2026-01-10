@@ -1,12 +1,13 @@
 # 🚀 START HERE - Jorge Salas
 
-**Your GHL Real Estate AI is LIVE!**
+**Your GHL Real Estate AI is LIVE (Dark Lux Edition)!**
 
 ---
 
 ## ✅ EVERYTHING IS READY
 
-- ✅ Dashboard: http://localhost:8502
+- ✅ **New UI:** "Dark Lux" Gotham Aesthetic
+- ✅ Dashboard: http://localhost:8501 (or 8502)
 - ✅ Claude AI: Connected
 - ✅ GHL Lyrio: Connected
 - ✅ 5 Hubs: Operational
@@ -16,13 +17,17 @@
 
 ## 📖 READ THESE FILES (IN ORDER):
 
-### 1️⃣ **JORGE_EXECUTIVE_SUMMARY.md** (5-min read)
+### 1️⃣ **SESSION_HANDOFF_2026-01-09_DARK_LUX.md** (New!)
+- Details on the new visual overhaul
+- How to run the new high-end interface
+
+### 2️⃣ **JORGE_EXECUTIVE_SUMMARY.md** (5-min read)
 - Quick overview of all 5 hubs
 - What each service does
 - Why you need it
 - 4-week implementation plan
 
-### 2️⃣ **JORGE_COMPLETE_DELIVERY_PACKAGE.md** (15-min read)
+### 3️⃣ **JORGE_COMPLETE_DELIVERY_PACKAGE.md** (15-min read)
 - Full documentation
 - Detailed service catalog
 - Workflow integration steps
@@ -34,9 +39,11 @@
 ## 🎯 DO THIS NOW (5 MINUTES):
 
 ### Step 1: Open Dashboard
+```bash
+# In your terminal:
+streamlit run app.py
 ```
-Open in browser: http://localhost:8502
-```
+*Then open http://localhost:8501 in your browser.*
 
 ### Step 2: Test Lead Qualification
 1. Go to your GHL (Lyrio account)
@@ -45,7 +52,7 @@ Open in browser: http://localhost:8502
 4. Watch AI qualify them automatically
 
 ### Step 3: Explore Your 5 Hubs
-Click through each hub in the sidebar:
+Click through each hub in the sidebar (now with Glassmorphism!):
 - 🏢 Executive Command Center
 - 🧠 Lead Intelligence Hub
 - 🤖 Automation Studio
@@ -106,10 +113,9 @@ Click through each hub in the sidebar:
 
 ### Dashboard Won't Open?
 ```bash
-# Restart it:
-kill 26772
-cd ghl_real_estate_ai/streamlit_demo
-python3 -m streamlit run app.py --server.port 8502
+# Kill existing processes and restart:
+pkill -f streamlit
+streamlit run app.py
 ```
 
 ### Want Cloud Deployment?
@@ -125,7 +131,7 @@ python3 -m streamlit run app.py --server.port 8502
 
 ## 🎉 YOU'RE ALL SET!
 
-**Next Action:** Open http://localhost:8502 and start using it!
+**Next Action:** Open the terminal and run `streamlit run app.py`.
 
 **Questions?** Read the full docs in `JORGE_COMPLETE_DELIVERY_PACKAGE.md`
 
@@ -133,6 +139,5 @@ python3 -m streamlit run app.py --server.port 8502
 
 ---
 
-**Dashboard PID:** 26772 (to stop: `kill 26772`)  
-**Status:** ✅ RUNNING  
-**URL:** http://localhost:8502
+**Status:** ✅ INSTALLED & READY  
+**Theme:** 🌑 Dark Lux (Production Grade)

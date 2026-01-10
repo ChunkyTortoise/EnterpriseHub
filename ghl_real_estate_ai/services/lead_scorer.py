@@ -23,7 +23,18 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List
 
-from ghl_real_estate_ai.ghl_utils.config import settings
+try:
+    from ghl_real_estate_ai.ghl_utils.config import settings
+except ImportError:
+    # Fallback for streamlit demo context
+    try:
+        from ghl_utils.config import settings
+    except ImportError:
+        # Define minimal settings for demo
+        class DemoSettings:
+            DEMO_MODE = True
+            LEAD_QUALIFICATION_THRESHOLD = 3
+        settings = DemoSettings()
 
 
 class LeadScorer:

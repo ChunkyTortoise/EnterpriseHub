@@ -14,7 +14,10 @@ Flow:
 8. Send response back to GHL
 """
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status, Request, Header
+import hmac
+import hashlib
+import os
 
 from ghl_real_estate_ai.api.schemas.ghl import (
     ActionType,
@@ -42,8 +45,53 @@ tenant_service = TenantService()
 analytics_service = AnalyticsService()
 
 
+def verify_webhook_signature(raw_body: bytes, signature: str) -> bool:
+    """
+    Verify GoHighLevel webhook signature.
+
+    Args:
+        raw_body: Raw request body bytes
+        signature: X-GHL-Signature header value
+
+    Returns:
+        bool: True if signature is valid
+    """
+    webhook_secret = os.getenv("GHL_WEBHOOK_SECRET")
+    if not webhook_secret:
+        # Log security warning but don't fail in development
+        environment = os.getenv("ENVIRONMENT", "").lower()
+        if environment == "production":
+            logger.error("GHL_WEBHOOK_SECRET not configured in production!")
+            return False
+        else:
+            logger.warning("GHL_WEBHOOK_SECRET not configured - webhook signature verification disabled")
+            return True
+
+    if not signature:
+        return False
+
+    # Remove 'sha256=' prefix if present
+    if signature.startswith('sha256='):
+        signature = signature[7:]
+
+    # Compute HMAC signature
+    expected_signature = hmac.new(
+        webhook_secret.encode('utf-8'),
+        raw_body,
+        hashlib.sha256
+    ).hexdigest()
+
+    # Secure comparison
+    return hmac.compare_digest(expected_signature, signature)
+
+
 @router.post("/webhook", response_model=GHLWebhookResponse)
-async def handle_ghl_webhook(event: GHLWebhookEvent, background_tasks: BackgroundTasks):
+async def handle_ghl_webhook(
+    event: GHLWebhookEvent,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    x_ghl_signature: str = Header(None, alias="X-GHL-Signature")
+):
     """
     Handle incoming webhook from GoHighLevel.
 
@@ -53,13 +101,27 @@ async def handle_ghl_webhook(event: GHLWebhookEvent, background_tasks: Backgroun
     Args:
         event: GHL webhook event payload
         background_tasks: FastAPI background tasks for async operations
+        request: FastAPI request object for signature verification
+        x_ghl_signature: GHL webhook signature header
 
     Returns:
         GHLWebhookResponse with AI message and actions
 
     Raises:
-        HTTPException: If webhook processing fails
+        HTTPException: If webhook processing fails or signature invalid
     """
+    # Verify webhook signature for security
+    raw_body = await request.body()
+    if not verify_webhook_signature(raw_body, x_ghl_signature):
+        logger.error(
+            f"Invalid webhook signature from GHL for location {event.location_id}",
+            extra={"contact_id": event.contact_id, "signature_provided": bool(x_ghl_signature)}
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid webhook signature"
+        )
+
     contact_id = event.contact_id
     location_id = event.location_id
     user_message = event.message.body
