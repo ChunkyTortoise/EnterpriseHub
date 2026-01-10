@@ -56,8 +56,7 @@
   },
 
   "hooks": {
-    "enabled": true,
-    "notifications": true,
+    "notifications": [],
     "BeforeTool": [
       {
         "name": "prevent-commit-secrets",
@@ -109,10 +108,10 @@
     "maxSessionTurns": -1,
     "compressionThreshold": 0.7,
     "summarizeToolOutput": {
-      "bash": 10000,
-      "read": 50000,
-      "grep": 20000,
-      "glob": 10000
+      "bash": {},
+      "read": {},
+      "grep": {},
+      "glob": {}
     }
   },
 

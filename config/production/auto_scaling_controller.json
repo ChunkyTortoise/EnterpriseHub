@@ -1,0 +1,15 @@
+{
+  "environment": "production",
+  "log_level": "INFO",
+  "redis_url": "redis://redis:6379/0",
+  "postgres_url": "postgresql://ai_operations_app:secure_production_password@postgres:5432/ai_operations",
+  "health_check_interval": 30,
+  "metrics_retention_days": 90,
+  "min_instances": 1,
+  "max_instances": 10,
+  "target_cpu_utilization": 70,
+  "target_memory_utilization": 80,
+  "scale_up_cooldown_minutes": 5,
+  "scale_down_cooldown_minutes": 10,
+  "cost_optimization_enabled": true
+}

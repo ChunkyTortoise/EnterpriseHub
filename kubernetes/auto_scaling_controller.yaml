@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auto_scaling_controller
+  namespace: ai-operations
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auto_scaling_controller
+  template:
+    metadata:
+      labels:
+        app: auto_scaling_controller
+    spec:
+      containers:
+      - env:
+        - name: ENVIRONMENT
+          value: production
+        - name: CONFIG_FILE
+          value: /config/auto_scaling_controller.json
+        image: ai-operations/auto_scaling_controller:latest
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        name: auto_scaling_controller
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /config
+          name: config
+      volumes:
+      - configMap:
+          name: auto_scaling_controller-config
+        name: config

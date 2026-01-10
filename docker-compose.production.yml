@@ -1,0 +1,179 @@
+networks:
+  ai_operations:
+    driver: bridge
+services:
+  auto_scaling_controller:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.auto_scaling_controller
+    depends_on:
+    - redis
+    - postgres
+    environment:
+    - ENVIRONMENT=production
+    - REDIS_URL=redis://redis:6379/0
+    - POSTGRES_URL=postgresql://postgres:password@postgres:5432/ai_operations
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - python -c 'import auto_scaling_controller'
+      timeout: 10s
+    networks:
+    - ai_operations
+    ports:
+    - 8047:8047
+    restart: unless-stopped
+  enhanced_ml_integration:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.enhanced_ml_integration
+    depends_on:
+    - redis
+    - postgres
+    environment:
+    - ENVIRONMENT=production
+    - REDIS_URL=redis://redis:6379/0
+    - POSTGRES_URL=postgresql://postgres:password@postgres:5432/ai_operations
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - python -c 'import enhanced_ml_integration'
+      timeout: 10s
+    networks:
+    - ai_operations
+    ports:
+    - 8002:8002
+    restart: unless-stopped
+  intelligent_monitoring_engine:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.intelligent_monitoring_engine
+    depends_on:
+    - redis
+    - postgres
+    environment:
+    - ENVIRONMENT=production
+    - REDIS_URL=redis://redis:6379/0
+    - POSTGRES_URL=postgresql://postgres:password@postgres:5432/ai_operations
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - python -c 'import intelligent_monitoring_engine'
+      timeout: 10s
+    networks:
+    - ai_operations
+    ports:
+    - 8073:8073
+    restart: unless-stopped
+  nginx:
+    depends_on:
+    - intelligent_monitoring_engine
+    - auto_scaling_controller
+    - self_healing_system
+    - performance_predictor
+    - operations_dashboard
+    - enhanced_ml_integration
+    image: nginx:alpine
+    networks:
+    - ai_operations
+    ports:
+    - 80:80
+    - 443:443
+    restart: unless-stopped
+    volumes:
+    - ./nginx.conf:/etc/nginx/nginx.conf
+  operations_dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.operations_dashboard
+    depends_on:
+    - redis
+    - postgres
+    environment:
+    - ENVIRONMENT=production
+    - REDIS_URL=redis://redis:6379/0
+    - POSTGRES_URL=postgresql://postgres:password@postgres:5432/ai_operations
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - python -c 'import operations_dashboard'
+      timeout: 10s
+    networks:
+    - ai_operations
+    ports:
+    - 8054:8054
+    restart: unless-stopped
+  performance_predictor:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.performance_predictor
+    depends_on:
+    - redis
+    - postgres
+    environment:
+    - ENVIRONMENT=production
+    - REDIS_URL=redis://redis:6379/0
+    - POSTGRES_URL=postgresql://postgres:password@postgres:5432/ai_operations
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - python -c 'import performance_predictor'
+      timeout: 10s
+    networks:
+    - ai_operations
+    ports:
+    - 8016:8016
+    restart: unless-stopped
+  postgres:
+    environment:
+    - POSTGRES_DB=ai_operations
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=password
+    image: postgres:15-alpine
+    networks:
+    - ai_operations
+    ports:
+    - 5432:5432
+    restart: unless-stopped
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    networks:
+    - ai_operations
+    ports:
+    - 6379:6379
+    restart: unless-stopped
+    volumes:
+    - redis_data:/data
+  self_healing_system:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.self_healing_system
+    depends_on:
+    - redis
+    - postgres
+    environment:
+    - ENVIRONMENT=production
+    - REDIS_URL=redis://redis:6379/0
+    - POSTGRES_URL=postgresql://postgres:password@postgres:5432/ai_operations
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - python -c 'import self_healing_system'
+      timeout: 10s
+    networks:
+    - ai_operations
+    ports:
+    - 8086:8086
+    restart: unless-stopped
+version: '3.8'
+volumes:
+  postgres_data: {}
+  redis_data: {}

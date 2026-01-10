@@ -1,0 +1,12 @@
+{
+  "environment": "production",
+  "log_level": "INFO",
+  "redis_url": "redis://redis:6379/0",
+  "postgres_url": "postgresql://ai_operations_app:secure_production_password@postgres:5432/ai_operations",
+  "health_check_interval": 30,
+  "metrics_retention_days": 90,
+  "prediction_horizon_minutes": 30,
+  "bottleneck_threshold": 0.85,
+  "capacity_buffer_percentage": 20,
+  "retraining_interval_hours": 24
+}

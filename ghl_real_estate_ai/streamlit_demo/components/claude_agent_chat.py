@@ -7,6 +7,7 @@ about leads, get insights, and receive AI-powered recommendations.
 
 import streamlit as st
 import asyncio
+import concurrent.futures
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import json
@@ -177,7 +178,20 @@ def render_claude_agent_interface():
 
         if claude_agent_service:
             try:
-                stats = claude_agent_service.get_agent_stats(agent_id)
+                # Get agent stats with proper async handling
+                try:
+                    # Check if we're already in an event loop
+                    loop = asyncio.get_running_loop()
+                    # Use thread executor to avoid blocking
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(
+                            asyncio.run,
+                            claude_agent_service.get_agent_stats(agent_id)
+                        )
+                        stats = future.result(timeout=5)  # 5 second timeout for stats
+                except RuntimeError:
+                    # No running loop, safe to create one
+                    stats = asyncio.run(claude_agent_service.get_agent_stats(agent_id))
 
                 st.metric("Total Conversations", stats.get('total_conversations', 0))
                 st.metric("Active Leads", stats.get('active_leads', 0))
@@ -191,6 +205,9 @@ def render_claude_agent_interface():
                 </div>
                 """, unsafe_allow_html=True)
 
+            except concurrent.futures.TimeoutError:
+                st.warning("⏱️ Agent stats loading timed out. Using basic metrics.")
+                st.metric("Status", "Timeout")
             except Exception as e:
                 st.warning(f"Could not load agent stats: {str(e)}")
 
@@ -226,13 +243,21 @@ def handle_user_query(agent_id: str, query: str, lead_id: Optional[str] = None):
     try:
         # Show processing spinner
         with st.spinner("Claude is analyzing..."):
-            # Use asyncio to run the async function
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            response = loop.run_until_complete(
-                chat_with_claude(agent_id, query, lead_id)
-            )
-            loop.close()
+            # Enhanced async handling for Streamlit compatibility
+            try:
+                # Check if we're already in an event loop
+                loop = asyncio.get_running_loop()
+                # Use thread executor to avoid blocking
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        asyncio.run,
+                        chat_with_claude(agent_id, query, lead_id)
+                    )
+                    response = future.result(timeout=30)  # 30 second timeout
+            except RuntimeError:
+                # No running loop, safe to create one
+                response = asyncio.run(chat_with_claude(agent_id, query, lead_id))
 
         # Add messages to chat history
         add_message_to_chat("user", query)
@@ -247,8 +272,20 @@ def handle_user_query(agent_id: str, query: str, lead_id: Optional[str] = None):
         st.toast("✅ Response generated!", icon="🎉")
         st.rerun()
 
+    except concurrent.futures.TimeoutError:
+        st.error("⏱️ Request timed out after 30 seconds. Please try a shorter query or check your connection.")
+        add_message_to_chat("user", query)
+        add_message_to_chat("assistant", "Request timed out. Please try a shorter query or try again later.", {})
+        st.rerun()
     except Exception as e:
-        st.error(f"Error getting Claude response: {str(e)}")
+        error_msg = str(e)
+        if "event loop" in error_msg.lower():
+            st.error("🔄 Chat system initialization error. Refreshing the page may help.")
+        elif "api" in error_msg.lower():
+            st.error(f"🌐 API connection error: {error_msg}")
+        else:
+            st.error(f"❌ Error getting Claude response: {error_msg}")
+
         add_message_to_chat("user", query)
         add_message_to_chat("assistant", "I apologize, but I encountered an error. Please try again.", {})
         st.rerun()

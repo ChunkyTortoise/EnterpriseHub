@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: operations_dashboard
+  namespace: ai-operations
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: operations_dashboard
+  template:
+    metadata:
+      labels:
+        app: operations_dashboard
+    spec:
+      containers:
+      - env:
+        - name: ENVIRONMENT
+          value: production
+        - name: CONFIG_FILE
+          value: /config/operations_dashboard.json
+        image: ai-operations/operations_dashboard:latest
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        name: operations_dashboard
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /config
+          name: config
+      volumes:
+      - configMap:
+          name: operations_dashboard-config
+        name: config

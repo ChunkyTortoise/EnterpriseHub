@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intelligent_monitoring_engine
+  namespace: ai-operations
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: intelligent_monitoring_engine
+  template:
+    metadata:
+      labels:
+        app: intelligent_monitoring_engine
+    spec:
+      containers:
+      - env:
+        - name: ENVIRONMENT
+          value: production
+        - name: CONFIG_FILE
+          value: /config/intelligent_monitoring_engine.json
+        image: ai-operations/intelligent_monitoring_engine:latest
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        name: intelligent_monitoring_engine
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /config
+          name: config
+      volumes:
+      - configMap:
+          name: intelligent_monitoring_engine-config
+        name: config

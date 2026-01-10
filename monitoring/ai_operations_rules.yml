@@ -1,0 +1,73 @@
+
+groups:
+  - name: ai_operations_alerts
+    rules:
+      # High anomaly detection rate
+      - alert: HighAnomalyRate
+        expr: rate(anomalies_detected_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High anomaly detection rate"
+          description: "{{ $labels.service }} detecting anomalies at rate {{ $value }}/sec"
+
+      # ML model accuracy degradation
+      - alert: MLModelAccuracyDegraded
+        expr: ml_model_accuracy < 0.85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ML model accuracy degraded"
+          description: "{{ $labels.model }} accuracy dropped to {{ $value }}"
+
+      # Auto-scaling failures
+      - alert: AutoScalingFailed
+        expr: rate(scaling_failures_total[10m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Auto-scaling failures detected"
+          description: "Scaling failures at rate {{ $value }}/sec"
+
+      # Self-healing system down
+      - alert: SelfHealingDown
+        expr: up{job="ai-operations",instance=~".*self_healing.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Self-healing system is down"
+          description: "Self-healing system instance {{ $labels.instance }} is down"
+
+      # Dashboard unavailable
+      - alert: DashboardUnavailable
+        expr: up{job="ai-operations",instance=~".*dashboard.*"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Operations dashboard unavailable"
+          description: "Dashboard instance {{ $labels.instance }} is unavailable"
+
+      # High prediction latency
+      - alert: HighPredictionLatency
+        expr: prediction_latency_seconds{quantile="0.95"} > 1.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High prediction latency"
+          description: "95th percentile prediction latency is {{ $value }}s"
+
+      # Resource exhaustion
+      - alert: HighMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory usage"
+          description: "{{ $labels.pod }} memory usage is {{ $value | humanizePercentage }}"

@@ -262,6 +262,9 @@ class EnhancedWebhookProcessor:
             if success:
                 self._performance_metrics['successful_processed'] += 1
 
+                # NEW: Trigger workflow evaluation
+                await self._trigger_workflow_evaluation(event)
+
             return self._create_result(
                 webhook_id, success, processing_time_ms,
                 circuit_breaker_state=cb_state.state.value
@@ -570,6 +573,54 @@ class EnhancedWebhookProcessor:
         except Exception as e:
             logger.error(f"Failed to reset circuit breaker for {endpoint}: {e}")
             return False
+
+    async def _trigger_workflow_evaluation(self, event: WebhookEvent) -> None:
+        """Trigger workflow evaluation after successful webhook processing."""
+        try:
+            # Import here to avoid circular imports
+            from ghl_real_estate_ai.services.enhanced_advanced_workflow_engine import get_enhanced_advanced_workflow_engine
+
+            workflow_engine = get_enhanced_advanced_workflow_engine()
+
+            # Determine if this event should trigger a workflow
+            trigger_events = {
+                "contact.created": "first_time_buyer_nurture",
+                "contact.updated": None,  # No automatic trigger
+                "opportunity.created": "investment_buyer_journey",
+                "appointment.scheduled": None  # Handled by behavioral triggers
+            }
+
+            workflow_id = trigger_events.get(event.event_type)
+            if workflow_id:
+                # Check if contact qualifies for workflow
+                contact_tags = event.payload.get("tags", [])
+                budget = event.payload.get("customFields", {}).get("budget_range", 0)
+
+                # Determine appropriate workflow based on contact data
+                if "First-Time Buyer" in contact_tags:
+                    workflow_id = "first_time_buyer_nurture"
+                elif "Investor" in contact_tags or (isinstance(budget, (int, float)) and budget > 500000):
+                    workflow_id = "investment_buyer_journey"
+                elif isinstance(budget, (int, float)) and budget > 1000000:
+                    workflow_id = "luxury_buyer_experience"
+
+                if workflow_id:
+                    # Start workflow
+                    execution_id = await workflow_engine.start_workflow(
+                        workflow_id=workflow_id,
+                        contact_id=event.contact_id,
+                        trigger_event={
+                            "type": event.event_type,
+                            "webhook_id": event.webhook_id,
+                            "payload": event.payload,
+                            "timestamp": event.received_at.isoformat()
+                        }
+                    )
+
+                    logger.info(f"Started workflow {workflow_id} for contact {event.contact_id} (execution: {execution_id})")
+
+        except Exception as e:
+            logger.error(f"Error triggering workflow evaluation: {e}")
 
 
 # Singleton instance

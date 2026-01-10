@@ -1,0 +1,12 @@
+{
+  "environment": "production",
+  "log_level": "INFO",
+  "redis_url": "redis://redis:6379/0",
+  "postgres_url": "postgresql://ai_operations_app:secure_production_password@postgres:5432/ai_operations",
+  "health_check_interval": 30,
+  "metrics_retention_days": 90,
+  "port": 8080,
+  "websocket_enabled": true,
+  "refresh_interval_seconds": 5,
+  "max_concurrent_connections": 100
+}
