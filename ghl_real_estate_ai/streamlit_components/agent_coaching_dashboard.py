@@ -52,7 +52,24 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 
-# Enterprise component imports
+# === UNIFIED ENTERPRISE THEME INTEGRATION ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    UNIFIED_ENTERPRISE_THEME_AVAILABLE = True
+except ImportError:
+    UNIFIED_ENTERPRISE_THEME_AVAILABLE = False
+
+# Enterprise component imports (legacy fallback)
 from .enhanced_enterprise_base import EnhancedEnterpriseComponent
 from .enterprise_theme_system import (
     create_enterprise_card,
@@ -247,46 +264,88 @@ class AgentCoachingDashboard(EnhancedEnterpriseComponent):
     ) -> None:
         """Render top-level agent performance metrics."""
 
-        col1, col2, col3, col4 = st.columns(4)
-
-        with col1:
+        if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+            # Prepare agent performance metrics for unified enterprise display
             quality_score = performance.overall_quality_score if performance else 0.0
             quality_delta = performance.overall_quality_score - 70 if performance else 0.0
-
-            create_enterprise_metric(
-                label="Quality Score",
-                value=f"{quality_score:.1f}",
-                delta=f"{quality_delta:+.1f}",
-                delta_color="success" if quality_delta > 0 else "error",
-                icon="🎯"
-            )
-
-        with col2:
             coaching_alerts = session.coaching_alerts_sent if session else 0
-
-            create_enterprise_metric(
-                label="Coaching Alerts",
-                value=str(coaching_alerts),
-                help_text="Real-time coaching interventions today",
-                icon="💡"
-            )
-
-        with col3:
             conversations = session.conversations_monitored if session else 0
-
-            create_enterprise_metric(
-                label="Conversations",
-                value=str(conversations),
-                help_text="Monitored conversations in current session",
-                icon="💬"
-            )
-
-        with col4:
             improvement = session.improvement_delta if session else 0.0
 
-            create_enterprise_metric(
-                label="Improvement",
-                value=f"{improvement:+.1f}%",
+            agent_metrics = [
+                {
+                    "label": "🎯 Quality Score",
+                    "value": f"{quality_score:.1f}",
+                    "delta": f"{quality_delta:+.1f}",
+                    "delta_type": "positive" if quality_delta > 0 else "negative" if quality_delta < 0 else "neutral",
+                    "icon": "🎯"
+                },
+                {
+                    "label": "💡 Coaching Alerts",
+                    "value": str(coaching_alerts),
+                    "delta": "Real-time interventions today",
+                    "delta_type": "positive" if coaching_alerts > 0 else "neutral",
+                    "icon": "💡"
+                },
+                {
+                    "label": "💬 Conversations",
+                    "value": str(conversations),
+                    "delta": "Monitored in current session",
+                    "delta_type": "positive" if conversations > 0 else "neutral",
+                    "icon": "💬"
+                },
+                {
+                    "label": "📈 Improvement",
+                    "value": f"{improvement:+.1f}%",
+                    "delta": "Performance delta",
+                    "delta_type": "positive" if improvement > 0 else "negative" if improvement < 0 else "neutral",
+                    "icon": "📈"
+                }
+            ]
+
+            enterprise_kpi_grid(agent_metrics, columns=4)
+        else:
+            # Legacy fallback styling
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                quality_score = performance.overall_quality_score if performance else 0.0
+                quality_delta = performance.overall_quality_score - 70 if performance else 0.0
+
+                create_enterprise_metric(
+                    label="Quality Score",
+                    value=f"{quality_score:.1f}",
+                    delta=f"{quality_delta:+.1f}",
+                    delta_color="success" if quality_delta > 0 else "error",
+                    icon="🎯"
+                )
+
+            with col2:
+                coaching_alerts = session.coaching_alerts_sent if session else 0
+
+                create_enterprise_metric(
+                    label="Coaching Alerts",
+                    value=str(coaching_alerts),
+                    help_text="Real-time coaching interventions today",
+                    icon="💡"
+                )
+
+            with col3:
+                conversations = session.conversations_monitored if session else 0
+
+                create_enterprise_metric(
+                    label="Conversations",
+                    value=str(conversations),
+                    help_text="Monitored conversations in current session",
+                    icon="💬"
+                )
+
+            with col4:
+                improvement = session.improvement_delta if session else 0.0
+
+                create_enterprise_metric(
+                    label="Improvement",
+                    value=f"{improvement:+.1f}%",
                 delta_color="success" if improvement > 0 else "neutral",
                 help_text="Quality score change this session",
                 icon="📈"
@@ -883,41 +942,77 @@ class AgentCoachingDashboard(EnhancedEnterpriseComponent):
     def _render_team_metrics_row(self, tenant_id: str) -> None:
         """Render team-level performance metrics."""
 
-        col1, col2, col3, col4 = st.columns(4)
+        if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+            # Prepare team performance metrics for unified enterprise display
+            team_metrics = [
+                {
+                    "label": "👥 Active Agents",
+                    "value": "12",
+                    "delta": "+2",
+                    "delta_type": "positive",
+                    "icon": "👥"
+                },
+                {
+                    "label": "📊 Avg Quality Score",
+                    "value": "78.5",
+                    "delta": "+5.2",
+                    "delta_type": "positive",
+                    "icon": "📊"
+                },
+                {
+                    "label": "⏱️ Training Time Saved",
+                    "value": "50%",
+                    "delta": "Compared to traditional training",
+                    "delta_type": "positive",
+                    "icon": "⏱️"
+                },
+                {
+                    "label": "📈 Productivity Increase",
+                    "value": "25%",
+                    "delta": "Agent productivity improvement",
+                    "delta_type": "positive",
+                    "icon": "📈"
+                }
+            ]
 
-        with col1:
-            create_enterprise_metric(
-                label="Active Agents",
-                value="12",
-                delta="+2",
-                delta_color="success",
-                icon="👥"
-            )
+            enterprise_kpi_grid(team_metrics, columns=4)
+        else:
+            # Legacy fallback styling
+            col1, col2, col3, col4 = st.columns(4)
 
-        with col2:
-            create_enterprise_metric(
-                label="Avg Quality Score",
-                value="78.5",
-                delta="+5.2",
-                delta_color="success",
-                icon="📊"
-            )
+            with col1:
+                create_enterprise_metric(
+                    label="Active Agents",
+                    value="12",
+                    delta="+2",
+                    delta_color="success",
+                    icon="👥"
+                )
 
-        with col3:
-            create_enterprise_metric(
-                label="Training Time Saved",
-                value="50%",
-                help_text="Compared to traditional training",
-                icon="⏱️"
-            )
+            with col2:
+                create_enterprise_metric(
+                    label="Avg Quality Score",
+                    value="78.5",
+                    delta="+5.2",
+                    delta_color="success",
+                    icon="📊"
+                )
 
-        with col4:
-            create_enterprise_metric(
-                label="Productivity Increase",
-                value="25%",
-                help_text="Agent productivity improvement",
-                icon="📈"
-            )
+            with col3:
+                create_enterprise_metric(
+                    label="Training Time Saved",
+                    value="50%",
+                    help_text="Compared to traditional training",
+                    icon="⏱️"
+                )
+
+            with col4:
+                create_enterprise_metric(
+                    label="Productivity Increase",
+                    value="25%",
+                    help_text="Agent productivity improvement",
+                    icon="📈"
+                )
 
     def _render_team_performance_comparison(self, tenant_id: str) -> None:
         """Render team performance comparison chart."""
