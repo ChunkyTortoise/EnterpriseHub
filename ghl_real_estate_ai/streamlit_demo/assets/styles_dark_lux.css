@@ -178,7 +178,7 @@ p, li, div {
 /* ==================== Buttons ==================== */
 .stButton > button {
     background: var(--bg-highlight);
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     font-weight: 600;
@@ -190,20 +190,36 @@ p, li, div {
     border-color: var(--text-secondary);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    color: var(--text-primary) !important;
 }
 
-/* Primary Action Buttons (target specific text if possible, or assume first child in cols) */
-/* We can't target specific buttons easily without custom components, 
-   but we can style the 'FormSubmit' button */
+/* Primary Action Buttons */
 [data-testid="stFormSubmitButton"] button {
-    background: var(--primary);
+    background: var(--primary) !important;
+    color: white !important;
     border: none;
     box-shadow: 0 0 15px var(--primary-glow);
 }
 
 [data-testid="stFormSubmitButton"] button:hover {
-    background: #2563eb; /* Darker blue */
+    background: #2563eb !important; /* Darker blue */
+    color: white !important;
     box-shadow: 0 0 25px var(--primary-glow);
+}
+
+/* Fix blue button text visibility */
+button[kind="primary"],
+button[kind="secondary"] {
+    color: white !important;
+}
+
+/* Tab buttons text visibility */
+.stTabs [data-baseweb="tab"] {
+    color: var(--text-muted) !important;
+}
+
+.stTabs [aria-selected="true"] {
+    color: white !important;
 }
 
 /* ==================== Inputs ==================== */
@@ -289,6 +305,68 @@ header[data-testid="stHeader"] {
 /* Hide footer */
 footer {
     display: none;
+}
+
+/* ==================== Notifications & Alerts ==================== */
+/* Style success/info/warning messages */
+.stAlert {
+    background: rgba(15, 23, 42, 0.9) !important;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: var(--text-primary) !important;
+}
+
+/* Hide cluttered success notifications */
+.stAlert[data-baseweb="notification"] {
+    display: none !important;
+}
+
+/* Professional notification styling */
+.stSuccess {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981 !important;
+}
+
+.stInfo {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #3b82f6 !important;
+}
+
+.stWarning {
+    background: rgba(245, 158, 11, 0.1) !important;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #f59e0b !important;
+}
+
+/* ==================== Enhanced Professional Styling ==================== */
+/* Better contrast for all text elements */
+* {
+    color: var(--text-primary);
+}
+
+/* Improve selectbox visibility */
+div[data-baseweb="select"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-subtle) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Better radio button styling */
+.stRadio label {
+    color: var(--text-primary) !important;
+}
+
+/* Improve slider styling */
+.stSlider {
+    color: var(--text-primary) !important;
+}
+
+/* Professional card styling */
+.element-container {
+    background: transparent;
+    border-radius: 8px;
 }
 
 /* ==================== Bento Grid ==================== */

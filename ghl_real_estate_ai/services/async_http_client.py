@@ -26,7 +26,7 @@ from contextlib import asynccontextmanager
 
 import aiohttp
 from aiohttp import ClientSession, ClientTimeout, TCPConnector
-from aiohttp.client_exceptions import ClientError, ClientTimeout as AioTimeout
+from aiohttp.client_exceptions import ClientError
 
 from ghl_real_estate_ai.services.redis_optimization_service import get_optimized_redis_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -423,7 +423,7 @@ class AsyncHTTPClient:
                     # If not successful and retryable, continue to retry logic
                     last_exception = ClientError(f"HTTP {response.status}")
 
-            except (ClientError, AioTimeout, asyncio.TimeoutError) as e:
+            except (ClientError, asyncio.TimeoutError) as e:
                 last_exception = e
 
             except Exception as e:

@@ -440,12 +440,12 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 # Main content area
-if selected_hub == "🏢 Executive Command Center":
-    st.header("🏢 Executive Command Center")
+if selected_hub == "Executive Command Center":
+    st.header("Executive Command Center")
     st.markdown("*High-level KPIs, revenue tracking, and system health*")
-    
+
     # Tabs for sub-features
-    tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "🎯 AI Insights", "📄 Reports"])
+    tab1, tab2, tab3 = st.tabs(["Dashboard", "AI Insights", "Reports"])
     
     with tab1:
         st.subheader("Executive Command Center")
@@ -455,7 +455,7 @@ if selected_hub == "🏢 Executive Command Center":
         <div class="bento-grid">
             <div class="bento-item">
                 <div class="bento-header">
-                    <div class="bento-title">💰 Total Pipeline</div>
+                    <div class="bento-title">Total Pipeline</div>
                     <div class="bento-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">+15%</div>
                 </div>
                 <div style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">$2.4M</div>
@@ -463,7 +463,7 @@ if selected_hub == "🏢 Executive Command Center":
             </div>
             <div class="bento-item">
                 <div class="bento-header">
-                    <div class="bento-title">🔥 Hot Leads</div>
+                    <div class="bento-title">Hot Leads</div>
                     <div class="bento-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">+8</div>
                 </div>
                 <div style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">23</div>
@@ -471,7 +471,7 @@ if selected_hub == "🏢 Executive Command Center":
             </div>
             <div class="bento-item">
                 <div class="bento-header">
-                    <div class="bento-title">📈 Conv. Rate</div>
+                    <div class="bento-title">Conversion Rate</div>
                     <div class="bento-badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">+2%</div>
                 </div>
                 <div style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">34%</div>
@@ -587,16 +587,16 @@ if selected_hub == "🏢 Executive Command Center":
         if st.button("📧 Email Report to Jorge"):
             st.toast("Report sent to jorge@example.com")
 
-elif selected_hub == "🧠 Lead Intelligence Hub":
-    st.header("🧠 Lead Intelligence Hub")
+elif selected_hub == "Lead Intelligence Hub":
+    st.header("Lead Intelligence Hub")
     st.markdown("*Deep dive into individual leads with AI-powered insights*")
-    
+
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🎯 Lead Scoring",
-        "🚨 Churn Risk",
-        "📊 Segmentation",
-        "🎨 Personalization",
-        "🔮 Predictions"
+        "Lead Scoring",
+        "Churn Risk",
+        "Segmentation",
+        "Personalization",
+        "Predictions"
     ])
     
     with tab1:
@@ -902,11 +902,11 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         for rec in pred_result.recommendations:
             st.markdown(f"- {rec}")
 
-elif selected_hub == "🤖 Automation Studio":
-    st.header("🤖 Automation Studio")
+elif selected_hub == "Automation Studio":
+    st.header("Automation Studio")
     st.markdown("*Visual switchboard to toggle AI features on/off*")
-    
-    tab1, tab2, tab3, tab4 = st.tabs(["⚙️ Automations", "📧 Sequences", "🔄 Workflows", "🧪 AI Training Lab"])
+
+    tab1, tab2, tab3, tab4 = st.tabs(["Automations", "Sequences", "Workflows", "AI Training Lab"])
     
     with tab1:
         st.subheader("AI Automation Control Panel")
@@ -1041,15 +1041,15 @@ elif selected_hub == "🤖 Automation Studio":
                     st.info("Simulation running... Response generated in 1.2s")
 
 
-elif selected_hub == "💰 Sales Copilot":
-    st.header("💰 Sales Copilot")
+elif selected_hub == "Sales Copilot":
+    st.header("Sales Copilot")
     st.markdown("*Agent tools for active deals and client meetings*")
-    
+
     tab1, tab2, tab3, tab4 = st.tabs([
-        "💼 Deal Closer",
-        "📄 Documents",
-        "📋 Meeting Prep",
-        "💵 Calculator"
+        "Deal Closer",
+        "Documents",
+        "Meeting Prep",
+        "Calculator"
     ])
     
     with tab1:
@@ -1233,15 +1233,15 @@ elif selected_hub == "💰 Sales Copilot":
             st.write(f"**Conversion Improvement:** +{impact['improvement_pct']}%")
             st.caption("These features increase the statistical probability of closing this deal.")
 
-elif selected_hub == "📈 Ops & Optimization":
-    st.header("📈 Ops & Optimization")
+elif selected_hub == "Ops & Optimization":
+    st.header("Ops & Optimization")
     st.markdown("*Manager-level analytics and team performance tracking*")
-    
+
     tab1, tab2, tab3, tab4 = st.tabs([
-        "✅ Quality",
-        "💰 Revenue",
-        "🏆 Benchmarks",
-        "🎓 Coaching"
+        "Quality",
+        "Revenue",
+        "Benchmarks",
+        "Coaching"
     ])
     
     with tab1:

@@ -193,6 +193,7 @@ class TestCompetitiveIntelligenceEngineInitialization:
             mock_redis.return_value.initialize = AsyncMock()
             mock_http.return_value.initialize = AsyncMock()
             mock_db.return_value.initialize = AsyncMock()
+            mock_db.return_value.cached_query = AsyncMock(return_value=[])
 
             start_time = time.time()
             engine = CompetitiveIntelligenceEngine({})

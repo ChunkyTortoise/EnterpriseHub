@@ -123,32 +123,25 @@ class MarketInfluence:
 class ConversionForecast:
     """Comprehensive conversion prediction with actionable insights"""
 
+    # Required fields (no defaults)
     lead_id: str
-    forecast_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-
-    # Core predictions
     expected_conversion_date: datetime
     confidence_interval: Tuple[datetime, datetime]  # Lower and upper bounds
     conversion_probability: float  # 0.0 to 1.0
-
-    # Timeline analysis
     current_stage: ConversionStage
     estimated_stages_remaining: int
     probability_curve: List[Tuple[datetime, float]]  # Daily conversion probabilities
-
-    # Optimization insights
     optimal_touchpoints: List[InterventionWindow]
     risk_factors: List[RiskFactor]
     acceleration_opportunities: List[InterventionWindow]
-
-    # Context
     market_context: MarketInfluence
     behavioral_insights: Dict[str, Any]
     historical_patterns: Dict[str, Any]
-
-    # Metadata
     model_ensemble_weights: Dict[str, float]
     prediction_accuracy_score: float
+
+    # Optional fields (with defaults)
+    forecast_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = field(default_factory=datetime.now)
     processing_time_ms: float = 0.0
 
@@ -549,8 +542,8 @@ class PredictiveLeadLifecycleEngine:
         # In production, these would be persisted components
         self.feature_extractors = {
             "behavioral": self._extract_behavioral_features,
-            "temporal": self._extract_temporal_features,
-            "contextual": self._extract_contextual_features
+            "temporal": self._extract_historical_pattern_features,
+            "contextual": self._extract_market_context_features
         }
 
         logger.info("Feature engineering initialized")

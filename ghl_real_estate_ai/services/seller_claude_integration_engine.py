@@ -31,9 +31,15 @@ from .intelligent_seller_nurturing import (
 )
 from .real_time_market_intelligence import RealTimeMarketIntelligence
 from .advanced_cache_optimization import advanced_cache
+from .property_valuation_engine import PropertyValuationEngine
+from .property_valuation_models import (
+    PropertyData, PropertyLocation, PropertyFeatures, PropertyType,
+    ValuationRequest, ComprehensiveValuation
+)
 from ..models.seller_models import SellerLead, SellerGoals, SellerProperty
 from ..utils.conversation_validator import validate_conversation_safety
 from ..utils.performance_monitor import track_performance
+from ..utils.async_utils import safe_run_async
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +102,13 @@ class SellerWorkflowState:
     recommended_next_actions: List[str]
     automated_actions_pending: List[str]
 
+    # Property valuation integration
+    property_valuation_status: str = "not_started"  # not_started, in_progress, completed, failed
+    latest_valuation_id: Optional[str] = None
+    valuation_requested_at: Optional[datetime] = None
+    estimated_property_value: Optional[float] = None
+    valuation_confidence_score: Optional[float] = None
+
 
 @dataclass
 class IntegrationResponse:
@@ -128,6 +141,9 @@ class SellerClaudeIntegrationEngine:
         )
         self.nurturing_service = IntelligentSellerNurturing()
         self.market_intelligence = RealTimeMarketIntelligence()
+
+        # Property valuation integration
+        self.valuation_engine = PropertyValuationEngine()
 
         # Workflow and state management
         self.workflow_states: Dict[str, SellerWorkflowState] = {}
@@ -1128,6 +1144,558 @@ class SellerClaudeIntegrationEngine:
             focus_areas = ['information_gathering', 'market_education']
 
         return focus_areas
+
+    # ======================================================================
+    # Property Valuation Integration Methods
+    # ======================================================================
+
+    async def trigger_automatic_property_valuation(
+        self,
+        seller_id: str,
+        property_info: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Automatically trigger property valuation when seller reaches appropriate stage.
+
+        Args:
+            seller_id: Seller identifier
+            property_info: Optional property information extracted from conversation
+
+        Returns:
+            Valuation trigger result with status and next actions
+        """
+        try:
+            logger.info(f"Triggering automatic property valuation for seller {seller_id}")
+
+            # Get current workflow state
+            workflow_state = await self._get_workflow_state(seller_id)
+            if not workflow_state:
+                logger.warning(f"No workflow state found for seller {seller_id}")
+                return {
+                    'success': False,
+                    'error': 'Seller workflow state not found',
+                    'next_actions': ['initialize_seller_workflow']
+                }
+
+            # Check if valuation is appropriate for current stage
+            if not self._should_trigger_valuation(workflow_state, property_info):
+                return {
+                    'success': False,
+                    'reason': 'Valuation not appropriate for current stage',
+                    'current_stage': workflow_state.current_stage.value,
+                    'next_actions': ['continue_information_gathering']
+                }
+
+            # Extract property data from available sources
+            property_data = await self._extract_property_data_for_valuation(
+                seller_id, property_info
+            )
+
+            if not property_data:
+                # Request property information from seller
+                return await self._request_property_information(seller_id)
+
+            # Create valuation request
+            valuation_request = ValuationRequest(
+                property_data=property_data,
+                seller_id=seller_id,
+                include_mls_data=True,
+                include_ml_prediction=True,
+                include_third_party=True,
+                include_claude_insights=True,
+                generate_cma_report=True
+            )
+
+            # Update workflow state to indicate valuation in progress
+            await self._update_valuation_status(
+                seller_id,
+                "in_progress",
+                valuation_requested_at=datetime.utcnow()
+            )
+
+            # Generate comprehensive valuation
+            valuation_result = await safe_run_async(
+                self.valuation_engine.generate_comprehensive_valuation(valuation_request)
+            )
+
+            # Update workflow state with valuation results
+            await self._update_valuation_status(
+                seller_id,
+                "completed",
+                valuation_id=valuation_result.valuation_id,
+                estimated_value=float(valuation_result.estimated_value),
+                confidence_score=valuation_result.confidence_score
+            )
+
+            # Update workflow stage if appropriate
+            if workflow_state.current_stage == WorkflowStage.INFORMATION_GATHERING:
+                await self._advance_workflow_stage(
+                    seller_id,
+                    WorkflowStage.PROPERTY_EVALUATION
+                )
+
+            # Trigger Claude insights about the valuation
+            valuation_insights = await self._generate_valuation_insights(
+                seller_id, valuation_result
+            )
+
+            # Schedule follow-up nurturing based on valuation
+            await self._schedule_valuation_follow_up(seller_id, valuation_result)
+
+            logger.info(
+                f"Property valuation completed for seller {seller_id}: "
+                f"${valuation_result.estimated_value:,.0f} "
+                f"(confidence: {valuation_result.confidence_score:.1%})"
+            )
+
+            return {
+                'success': True,
+                'valuation_id': valuation_result.valuation_id,
+                'estimated_value': float(valuation_result.estimated_value),
+                'confidence_score': valuation_result.confidence_score,
+                'valuation_insights': valuation_insights,
+                'next_actions': [
+                    'share_valuation_results',
+                    'schedule_pricing_discussion',
+                    'prepare_market_analysis'
+                ]
+            }
+
+        except Exception as e:
+            logger.error(f"Property valuation failed for seller {seller_id}: {e}")
+            await self._update_valuation_status(seller_id, "failed")
+
+            return {
+                'success': False,
+                'error': str(e),
+                'next_actions': ['manual_valuation_required', 'agent_intervention']
+            }
+
+    async def get_property_valuation_status(
+        self,
+        seller_id: str
+    ) -> Dict[str, Any]:
+        """
+        Get current property valuation status for seller.
+
+        Args:
+            seller_id: Seller identifier
+
+        Returns:
+            Current valuation status and related information
+        """
+        try:
+            workflow_state = await self._get_workflow_state(seller_id)
+            if not workflow_state:
+                return {
+                    'status': 'no_workflow',
+                    'message': 'Seller workflow not initialized'
+                }
+
+            valuation_status = {
+                'status': workflow_state.property_valuation_status,
+                'valuation_id': workflow_state.latest_valuation_id,
+                'requested_at': workflow_state.valuation_requested_at.isoformat() if workflow_state.valuation_requested_at else None,
+                'estimated_value': workflow_state.estimated_property_value,
+                'confidence_score': workflow_state.valuation_confidence_score
+            }
+
+            # Add valuation readiness assessment
+            valuation_status['readiness_assessment'] = await self._assess_valuation_readiness(seller_id)
+
+            # Add recommendations based on status
+            valuation_status['recommendations'] = self._get_valuation_recommendations(
+                workflow_state.property_valuation_status,
+                workflow_state.current_stage
+            )
+
+            return valuation_status
+
+        except Exception as e:
+            logger.error(f"Failed to get valuation status for seller {seller_id}: {e}")
+            return {
+                'status': 'error',
+                'error': str(e)
+            }
+
+    async def handle_property_valuation_webhook(
+        self,
+        seller_id: str,
+        property_address: str,
+        trigger_source: str = "ghl_webhook"
+    ) -> Dict[str, Any]:
+        """
+        Handle incoming GHL webhook that should trigger property valuation.
+
+        Args:
+            seller_id: Seller identifier
+            property_address: Property address from webhook
+            trigger_source: Source of the trigger (ghl_webhook, manual, etc.)
+
+        Returns:
+            Webhook processing result
+        """
+        try:
+            logger.info(
+                f"Processing property valuation webhook for seller {seller_id} "
+                f"at {property_address} from {trigger_source}"
+            )
+
+            # Extract property information from address
+            property_info = {
+                'address': property_address,
+                'trigger_source': trigger_source,
+                'webhook_timestamp': datetime.utcnow().isoformat()
+            }
+
+            # Trigger automatic valuation
+            valuation_result = await self.trigger_automatic_property_valuation(
+                seller_id, property_info
+            )
+
+            # Log webhook processing
+            webhook_log = {
+                'seller_id': seller_id,
+                'property_address': property_address,
+                'trigger_source': trigger_source,
+                'valuation_success': valuation_result['success'],
+                'processing_timestamp': datetime.utcnow().isoformat()
+            }
+
+            if valuation_result['success']:
+                webhook_log['valuation_id'] = valuation_result['valuation_id']
+                webhook_log['estimated_value'] = valuation_result['estimated_value']
+
+            logger.info(f"Property valuation webhook processed: {webhook_log}")
+
+            return {
+                'webhook_processed': True,
+                'valuation_result': valuation_result,
+                'webhook_log': webhook_log
+            }
+
+        except Exception as e:
+            logger.error(f"Property valuation webhook failed: {e}")
+            return {
+                'webhook_processed': False,
+                'error': str(e),
+                'seller_id': seller_id
+            }
+
+    # ======================================================================
+    # Property Valuation Helper Methods
+    # ======================================================================
+
+    def _should_trigger_valuation(
+        self,
+        workflow_state: SellerWorkflowState,
+        property_info: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """Determine if property valuation should be triggered."""
+        # Check if already completed recently
+        if (workflow_state.property_valuation_status == "completed" and
+            workflow_state.valuation_requested_at and
+            (datetime.utcnow() - workflow_state.valuation_requested_at).days < 30):
+            return False
+
+        # Check workflow stage appropriateness
+        appropriate_stages = {
+            WorkflowStage.INFORMATION_GATHERING,
+            WorkflowStage.PROPERTY_EVALUATION,
+            WorkflowStage.PRICING_DISCUSSION
+        }
+
+        if workflow_state.current_stage not in appropriate_stages:
+            return False
+
+        # Check seller engagement level
+        if workflow_state.engagement_level < 0.6:
+            return False
+
+        # Check if we have sufficient property information
+        if property_info and 'address' in property_info:
+            return True
+
+        # Check if property information was gathered in conversation
+        return 'property_details' in workflow_state.outstanding_tasks
+
+    async def _extract_property_data_for_valuation(
+        self,
+        seller_id: str,
+        property_info: Optional[Dict[str, Any]] = None
+    ) -> Optional[PropertyData]:
+        """Extract property data from available sources for valuation."""
+        try:
+            # Start with property_info if provided
+            if property_info and 'address' in property_info:
+                address = property_info['address']
+            else:
+                # Try to extract from conversation history or seller profile
+                # This would query stored property information
+                address = await self._get_stored_property_address(seller_id)
+
+            if not address:
+                return None
+
+            # Parse address components (simplified)
+            address_parts = address.split(',')
+            if len(address_parts) < 3:
+                return None
+
+            street_address = address_parts[0].strip()
+            city = address_parts[1].strip()
+            state_zip = address_parts[2].strip().split()
+            state = state_zip[0] if state_zip else "CA"
+            zip_code = state_zip[1] if len(state_zip) > 1 else "00000"
+
+            # Create property location
+            location = PropertyLocation(
+                address=street_address,
+                city=city,
+                state=state,
+                zip_code=zip_code
+            )
+
+            # Create basic property features (could be enhanced with conversation data)
+            features = PropertyFeatures(
+                bedrooms=property_info.get('bedrooms') if property_info else None,
+                bathrooms=property_info.get('bathrooms') if property_info else None,
+                square_footage=property_info.get('square_footage') if property_info else None
+            )
+
+            # Determine property type (default to single family)
+            property_type = PropertyType.SINGLE_FAMILY
+            if property_info and 'property_type' in property_info:
+                try:
+                    property_type = PropertyType(property_info['property_type'])
+                except ValueError:
+                    pass
+
+            return PropertyData(
+                property_type=property_type,
+                location=location,
+                features=features
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to extract property data for seller {seller_id}: {e}")
+            return None
+
+    async def _update_valuation_status(
+        self,
+        seller_id: str,
+        status: str,
+        valuation_id: Optional[str] = None,
+        valuation_requested_at: Optional[datetime] = None,
+        estimated_value: Optional[float] = None,
+        confidence_score: Optional[float] = None
+    ) -> None:
+        """Update property valuation status in workflow state."""
+        workflow_state = await self._get_workflow_state(seller_id)
+        if workflow_state:
+            workflow_state.property_valuation_status = status
+            if valuation_id:
+                workflow_state.latest_valuation_id = valuation_id
+            if valuation_requested_at:
+                workflow_state.valuation_requested_at = valuation_requested_at
+            if estimated_value:
+                workflow_state.estimated_property_value = estimated_value
+            if confidence_score:
+                workflow_state.valuation_confidence_score = confidence_score
+
+            # Store updated state (in production, this would persist to database)
+            self.workflow_states[seller_id] = workflow_state
+
+    async def _generate_valuation_insights(
+        self,
+        seller_id: str,
+        valuation_result: ComprehensiveValuation
+    ) -> Dict[str, Any]:
+        """Generate Claude insights about the valuation for the seller."""
+        try:
+            # Prepare context for Claude
+            valuation_context = {
+                'estimated_value': float(valuation_result.estimated_value),
+                'confidence_score': valuation_result.confidence_score,
+                'comparable_count': len(valuation_result.comparable_sales),
+                'ml_prediction_available': valuation_result.ml_prediction is not None,
+                'claude_insights_available': valuation_result.claude_insights is not None
+            }
+
+            # Generate seller-specific insights
+            insights = await self.claude_agent.generate_valuation_discussion_points(
+                seller_id=seller_id,
+                valuation_context=valuation_context
+            )
+
+            return {
+                'discussion_points': insights.get('discussion_points', []),
+                'pricing_recommendations': insights.get('pricing_recommendations', []),
+                'next_steps': insights.get('next_steps', []),
+                'questions_to_address': insights.get('questions_to_address', [])
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to generate valuation insights for seller {seller_id}: {e}")
+            return {
+                'discussion_points': ['Review valuation results together'],
+                'next_steps': ['Schedule pricing discussion']
+            }
+
+    async def _schedule_valuation_follow_up(
+        self,
+        seller_id: str,
+        valuation_result: ComprehensiveValuation
+    ) -> None:
+        """Schedule appropriate follow-up actions after valuation completion."""
+        try:
+            # Determine follow-up timing based on valuation confidence
+            if valuation_result.confidence_score > 0.8:
+                # High confidence - schedule pricing discussion
+                follow_up_delay = timedelta(hours=2)
+                action_type = "pricing_discussion"
+            else:
+                # Lower confidence - schedule additional data gathering
+                follow_up_delay = timedelta(hours=6)
+                action_type = "additional_data_gathering"
+
+            # Create nurturing sequence
+            follow_up_actions = [
+                {
+                    'type': action_type,
+                    'seller_id': seller_id,
+                    'valuation_id': valuation_result.valuation_id,
+                    'scheduled_for': datetime.utcnow() + follow_up_delay,
+                    'priority': 'high'
+                }
+            ]
+
+            # Add to nurturing system
+            for action in follow_up_actions:
+                await self.nurturing_service.schedule_action(action)
+
+            logger.info(f"Scheduled valuation follow-up for seller {seller_id}")
+
+        except Exception as e:
+            logger.error(f"Failed to schedule valuation follow-up for seller {seller_id}: {e}")
+
+    async def _request_property_information(self, seller_id: str) -> Dict[str, Any]:
+        """Request property information from seller when not available."""
+        return {
+            'success': False,
+            'reason': 'insufficient_property_data',
+            'next_actions': [
+                'request_property_address',
+                'request_property_details',
+                'schedule_property_visit'
+            ],
+            'conversation_prompt': (
+                "To provide you with an accurate property valuation, I'll need some "
+                "basic information about your property. Could you please share the "
+                "full address of the property you're considering selling?"
+            )
+        }
+
+    async def _assess_valuation_readiness(self, seller_id: str) -> Dict[str, Any]:
+        """Assess seller's readiness for property valuation."""
+        workflow_state = await self._get_workflow_state(seller_id)
+        if not workflow_state:
+            return {'ready': False, 'reason': 'no_workflow_state'}
+
+        readiness_factors = {
+            'engagement_level': workflow_state.engagement_level > 0.6,
+            'property_info_available': 'property_details' in workflow_state.milestone_achievements,
+            'appropriate_stage': workflow_state.current_stage in {
+                WorkflowStage.INFORMATION_GATHERING,
+                WorkflowStage.PROPERTY_EVALUATION,
+                WorkflowStage.PRICING_DISCUSSION
+            },
+            'no_recent_valuation': (
+                workflow_state.property_valuation_status != "completed" or
+                not workflow_state.valuation_requested_at or
+                (datetime.utcnow() - workflow_state.valuation_requested_at).days > 30
+            )
+        }
+
+        readiness_score = sum(readiness_factors.values()) / len(readiness_factors)
+
+        return {
+            'ready': readiness_score > 0.75,
+            'readiness_score': readiness_score,
+            'factors': readiness_factors,
+            'blocking_factors': [
+                factor for factor, passed in readiness_factors.items()
+                if not passed
+            ]
+        }
+
+    def _get_valuation_recommendations(
+        self,
+        valuation_status: str,
+        current_stage: WorkflowStage
+    ) -> List[str]:
+        """Get recommendations based on valuation status and workflow stage."""
+        recommendations = []
+
+        if valuation_status == "not_started":
+            if current_stage == WorkflowStage.INFORMATION_GATHERING:
+                recommendations.append("Gather property address and basic details")
+            recommendations.append("Trigger property valuation when ready")
+
+        elif valuation_status == "in_progress":
+            recommendations.append("Valuation processing - prepare for results discussion")
+
+        elif valuation_status == "completed":
+            recommendations.extend([
+                "Review valuation results with seller",
+                "Discuss pricing strategy",
+                "Move to listing preparation if appropriate"
+            ])
+
+        elif valuation_status == "failed":
+            recommendations.extend([
+                "Manual valuation required",
+                "Gather additional property information",
+                "Consider agent property visit"
+            ])
+
+        return recommendations
+
+    async def _get_stored_property_address(self, seller_id: str) -> Optional[str]:
+        """Get stored property address for seller (placeholder for database query)."""
+        # In production, this would query the database for stored property information
+        # For now, return None to indicate no stored address
+        return None
+
+    async def _advance_workflow_stage(
+        self,
+        seller_id: str,
+        new_stage: WorkflowStage
+    ) -> None:
+        """Advance seller to new workflow stage."""
+        workflow_state = await self._get_workflow_state(seller_id)
+        if workflow_state:
+            workflow_state.current_stage = new_stage
+            workflow_state.last_interaction = datetime.utcnow()
+
+            # Update completion percentage based on stage
+            stage_completion = {
+                WorkflowStage.INITIAL_CONTACT: 10,
+                WorkflowStage.INFORMATION_GATHERING: 25,
+                WorkflowStage.PROPERTY_EVALUATION: 40,
+                WorkflowStage.PRICING_DISCUSSION: 60,
+                WorkflowStage.TIMELINE_PLANNING: 75,
+                WorkflowStage.LISTING_PREPARATION: 90,
+                WorkflowStage.ACTIVE_SELLING: 95,
+                WorkflowStage.COMPLETED: 100
+            }
+
+            workflow_state.completion_percentage = stage_completion.get(new_stage, 0)
+
+            # Store updated state
+            self.workflow_states[seller_id] = workflow_state
+
+            logger.info(f"Advanced seller {seller_id} to stage {new_stage.value}")
 
 
 # Global instance for easy access

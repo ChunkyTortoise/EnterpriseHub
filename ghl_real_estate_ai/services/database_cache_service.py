@@ -28,7 +28,7 @@ from contextlib import asynccontextmanager
 
 # Database imports
 import asyncpg
-import aioredis
+import redis.asyncio as redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 

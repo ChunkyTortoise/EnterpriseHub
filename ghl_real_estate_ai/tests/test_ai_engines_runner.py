@@ -53,7 +53,7 @@ except ImportError:
 
 
 @dataclass
-class TestResult:
+class EngineTestResult:
     """Test execution result."""
     test_file: str
     engine_name: str
@@ -101,7 +101,7 @@ class PerformanceBenchmark:
 
 
 @dataclass
-class TestSummary:
+class EngineTestSummary:
     """Overall test execution summary."""
     total_tests: int
     total_passed: int
@@ -144,7 +144,7 @@ class AIEnginesTestRunner:
             'intervention_prediction': 20.0,  # ms
             'risk_analysis': 15.0,  # ms
         }
-        self.test_results: List[TestResult] = []
+        self.test_results: List[EngineTestResult] = []
 
     def run_tests(
         self,
@@ -154,7 +154,7 @@ class AIEnginesTestRunner:
         parallel: bool = True,
         verbose: bool = False,
         generate_coverage: bool = False
-    ) -> TestSummary:
+    ) -> EngineTestSummary:
         """
         Run comprehensive test suite for AI engines.
         """
@@ -174,7 +174,7 @@ class AIEnginesTestRunner:
 
         if not valid_engines:
             print(f"❌ No valid engines specified. Available: {list(self.test_files.keys())}")
-            return TestSummary(
+            return EngineTestSummary(
                 total_tests=0, total_passed=0, total_failed=0, total_skipped=0, total_errors=0,
                 total_duration=0.0, average_coverage=0.0, engines_tested=[],
                 performance_benchmarks=[], start_time=start_time
@@ -241,7 +241,7 @@ class AIEnginesTestRunner:
                 except Exception as e:
                     print(f"❌ {engine.title()} engine tests failed: {e}")
                     # Create failed result
-                    failed_result = TestResult(
+                    failed_result = EngineTestResult(
                         test_file=self.test_files[engine],
                         engine_name=engine,
                         passed=0, failed=1, skipped=0, errors=1,
@@ -257,13 +257,13 @@ class AIEnginesTestRunner:
         integration_only: bool,
         verbose: bool,
         generate_coverage: bool
-    ) -> TestResult:
+    ) -> EngineTestResult:
         """Execute tests for a specific engine."""
         test_file = self.test_files[engine]
         test_path = Path(__file__).parent / test_file
 
         if not test_path.exists():
-            return TestResult(
+            return EngineTestResult(
                 test_file=test_file,
                 engine_name=engine,
                 passed=0, failed=1, skipped=0, errors=1,
@@ -303,7 +303,7 @@ class AIEnginesTestRunner:
             # Parse results (simplified - in production would parse pytest output)
             if exit_code == ExitCode.OK:
                 # Simulate successful test results
-                result = TestResult(
+                result = EngineTestResult(
                     test_file=test_file,
                     engine_name=engine,
                     passed=25,  # Estimated based on test suite size
@@ -315,7 +315,7 @@ class AIEnginesTestRunner:
                 )
             else:
                 # Simulate some failures
-                result = TestResult(
+                result = EngineTestResult(
                     test_file=test_file,
                     engine_name=engine,
                     passed=20,
@@ -338,7 +338,7 @@ class AIEnginesTestRunner:
         except Exception as e:
             duration = time.time() - start_time
             print(f"Error executing {engine} tests: {e}")
-            return TestResult(
+            return EngineTestResult(
                 test_file=test_file,
                 engine_name=engine,
                 passed=0, failed=0, skipped=0, errors=1,
@@ -373,7 +373,7 @@ class AIEnginesTestRunner:
         # In production, this would read coverage.json or parse output
         return 87.5  # Simulated coverage percentage
 
-    def _generate_summary(self, start_time: datetime, end_time: datetime, engines: List[str]) -> TestSummary:
+    def _generate_summary(self, start_time: datetime, end_time: datetime, engines: List[str]) -> EngineTestSummary:
         """Generate test execution summary."""
         total_tests = sum(r.total_tests for r in self.test_results)
         total_passed = sum(r.passed for r in self.test_results)
@@ -404,7 +404,7 @@ class AIEnginesTestRunner:
                     )
                     performance_benchmarks.append(benchmark)
 
-        return TestSummary(
+        return EngineTestSummary(
             total_tests=total_tests,
             total_passed=total_passed,
             total_failed=total_failed,
@@ -418,7 +418,7 @@ class AIEnginesTestRunner:
             end_time=end_time
         )
 
-    def _display_results(self, summary: TestSummary, verbose: bool):
+    def _display_results(self, summary: EngineTestSummary, verbose: bool):
         """Display test results summary."""
         print("\n" + "=" * 80)
         print("🎯 AI ENGINES TEST RESULTS SUMMARY")
@@ -467,7 +467,7 @@ class AIEnginesTestRunner:
             print("❌ TESTS FAILED - Issues need to be resolved before deployment")
         print("=" * 80)
 
-    def generate_report(self, summary: TestSummary, output_path: Optional[str] = None) -> str:
+    def generate_report(self, summary: EngineTestSummary, output_path: Optional[str] = None) -> str:
         """Generate detailed test report."""
         if output_path is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

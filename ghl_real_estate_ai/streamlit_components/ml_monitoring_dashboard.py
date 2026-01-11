@@ -241,48 +241,154 @@ class MLMonitoringDashboard(EnterpriseComponent):
         """Render performance metrics grid"""
         st.subheader("Current Performance Metrics")
 
-        metrics_cols = st.columns(3)
+        if ENTERPRISE_THEME_AVAILABLE:
+            # Collect all metrics for enterprise display
+            all_model_metrics = []
 
-        for i, (model_name, metrics_list) in enumerate(performance_data.items()):
-            if not metrics_list:
-                continue
+            for model_name, metrics_list in performance_data.items():
+                if not metrics_list:
+                    continue
 
-            latest_metrics = metrics_list[-1]
-            col_idx = i % 3
+                latest_metrics = metrics_list[-1]
 
-            with metrics_cols[col_idx]:
-                with st.container():
-                    st.markdown(f"### {model_name}")
+                if model_name == "Lead Scoring":
+                    # Lead scoring specific metrics
+                    accuracy = latest_metrics.get('accuracy', 0.95)
+                    precision = latest_metrics.get('precision', 0.93)
+                    inference_time = latest_metrics.get('inference_time_ms', 145)
 
-                    if model_name == "Lead Scoring":
-                        # Lead scoring specific metrics
-                        accuracy = latest_metrics.get('accuracy', 0.95)
-                        precision = latest_metrics.get('precision', 0.93)
-                        inference_time = latest_metrics.get('inference_time_ms', 145)
+                    model_metrics = [
+                        {
+                            "label": f"🎯 {model_name} - Accuracy",
+                            "value": f"{accuracy:.1%}",
+                            "delta": "+0.2%",
+                            "delta_type": "positive",
+                            "icon": "🎯"
+                        },
+                        {
+                            "label": f"🎯 {model_name} - Precision",
+                            "value": f"{precision:.1%}",
+                            "delta": "+0.1%",
+                            "delta_type": "positive",
+                            "icon": "🎯"
+                        },
+                        {
+                            "label": f"⚡ {model_name} - Inference",
+                            "value": f"{inference_time:.0f}ms",
+                            "delta": "-5ms",
+                            "delta_type": "positive",
+                            "icon": "⚡"
+                        }
+                    ]
 
-                        st.metric("Accuracy", f"{accuracy:.1%}", delta="+0.2%")
-                        st.metric("Precision", f"{precision:.1%}", delta="+0.1%")
-                        st.metric("Inference Time", f"{inference_time:.0f}ms", delta="-5ms")
+                elif model_name == "Churn Prediction":
+                    # Churn prediction specific metrics
+                    precision = latest_metrics.get('precision', 0.94)
+                    recall = latest_metrics.get('recall', 0.89)
+                    inference_time = latest_metrics.get('inference_time_ms', 198)
 
-                    elif model_name == "Churn Prediction":
-                        # Churn prediction specific metrics
-                        precision = latest_metrics.get('precision', 0.94)
-                        recall = latest_metrics.get('recall', 0.89)
-                        inference_time = latest_metrics.get('inference_time_ms', 198)
+                    model_metrics = [
+                        {
+                            "label": f"🔄 {model_name} - Precision",
+                            "value": f"{precision:.1%}",
+                            "delta": "-0.1%",
+                            "delta_type": "negative",
+                            "icon": "🔄"
+                        },
+                        {
+                            "label": f"🔄 {model_name} - Recall",
+                            "value": f"{recall:.1%}",
+                            "delta": "+0.3%",
+                            "delta_type": "positive",
+                            "icon": "🔄"
+                        },
+                        {
+                            "label": f"⚡ {model_name} - Inference",
+                            "value": f"{inference_time:.0f}ms",
+                            "delta": "+8ms",
+                            "delta_type": "negative",
+                            "icon": "⚡"
+                        }
+                    ]
 
-                        st.metric("Precision", f"{precision:.1%}", delta="-0.1%")
-                        st.metric("Recall", f"{recall:.1%}", delta="+0.3%")
-                        st.metric("Inference Time", f"{inference_time:.0f}ms", delta="+8ms")
+                elif model_name == "Property Matching":
+                    # Property matching specific metrics
+                    satisfaction = latest_metrics.get('satisfaction_score', 0.91)
+                    match_quality = latest_metrics.get('match_quality', 0.87)
+                    response_time = latest_metrics.get('response_time_ms', 85)
 
-                    elif model_name == "Property Matching":
-                        # Property matching specific metrics
-                        satisfaction = latest_metrics.get('satisfaction_score', 0.91)
-                        match_quality = latest_metrics.get('match_quality', 0.87)
-                        response_time = latest_metrics.get('response_time_ms', 85)
+                    model_metrics = [
+                        {
+                            "label": f"🏠 {model_name} - Satisfaction",
+                            "value": f"{satisfaction:.1%}",
+                            "delta": "+2.5%",
+                            "delta_type": "positive",
+                            "icon": "🏠"
+                        },
+                        {
+                            "label": f"🏠 {model_name} - Match Quality",
+                            "value": f"{match_quality:.1%}",
+                            "delta": "+1.0%",
+                            "delta_type": "positive",
+                            "icon": "🏠"
+                        },
+                        {
+                            "label": f"⚡ {model_name} - Response Time",
+                            "value": f"{response_time:.0f}ms",
+                            "delta": "-3ms",
+                            "delta_type": "positive",
+                            "icon": "⚡"
+                        }
+                    ]
 
-                        st.metric("Satisfaction", f"{satisfaction:.1%}", delta="+2.5%")
-                        st.metric("Match Quality", f"{match_quality:.1%}", delta="+1.0%")
-                        st.metric("Response Time", f"{response_time:.0f}ms", delta="-3ms")
+                # Add section header and metrics for this model
+                enterprise_section_header(f"### {model_name}")
+                enterprise_kpi_grid(model_metrics, columns=3)
+
+        else:
+            # Legacy fallback styling
+            metrics_cols = st.columns(3)
+
+            for i, (model_name, metrics_list) in enumerate(performance_data.items()):
+                if not metrics_list:
+                    continue
+
+                latest_metrics = metrics_list[-1]
+                col_idx = i % 3
+
+                with metrics_cols[col_idx]:
+                    with st.container():
+                        st.markdown(f"### {model_name}")
+
+                        if model_name == "Lead Scoring":
+                            # Lead scoring specific metrics
+                            accuracy = latest_metrics.get('accuracy', 0.95)
+                            precision = latest_metrics.get('precision', 0.93)
+                            inference_time = latest_metrics.get('inference_time_ms', 145)
+
+                            st.metric("Accuracy", f"{accuracy:.1%}", delta="+0.2%")
+                            st.metric("Precision", f"{precision:.1%}", delta="+0.1%")
+                            st.metric("Inference Time", f"{inference_time:.0f}ms", delta="-5ms")
+
+                        elif model_name == "Churn Prediction":
+                            # Churn prediction specific metrics
+                            precision = latest_metrics.get('precision', 0.94)
+                            recall = latest_metrics.get('recall', 0.89)
+                            inference_time = latest_metrics.get('inference_time_ms', 198)
+
+                            st.metric("Precision", f"{precision:.1%}", delta="-0.1%")
+                            st.metric("Recall", f"{recall:.1%}", delta="+0.3%")
+                            st.metric("Inference Time", f"{inference_time:.0f}ms", delta="+8ms")
+
+                        elif model_name == "Property Matching":
+                            # Property matching specific metrics
+                            satisfaction = latest_metrics.get('satisfaction_score', 0.91)
+                            match_quality = latest_metrics.get('match_quality', 0.87)
+                            response_time = latest_metrics.get('response_time_ms', 85)
+
+                            st.metric("Satisfaction", f"{satisfaction:.1%}", delta="+2.5%")
+                            st.metric("Match Quality", f"{match_quality:.1%}", delta="+1.0%")
+                            st.metric("Response Time", f"{response_time:.0f}ms", delta="-3ms")
 
     def _render_performance_trend_charts(self, performance_data: Dict[str, List[Dict]]):
         """Render performance trend charts"""
