@@ -13,6 +13,7 @@ import os
 from ghl_real_estate_ai.api.routes import (
     analytics,
     bulk_operations,
+    claude_endpoints,
     crm,
     health,
     lead_lifecycle,
@@ -85,6 +86,9 @@ app.include_router(portal.router, prefix="/api")
 app.include_router(team.router, prefix="/api")
 app.include_router(crm.router, prefix="/api")
 app.include_router(voice.router, prefix="/api")
+
+# Claude AI Integration routes (15 endpoints)
+app.include_router(claude_endpoints.router)
 
 # Real-time WebSocket routes
 app.include_router(realtime.router, prefix="/api")
