@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{document_title}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .document-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .header .analysis-date {
+            margin-top: 15px;
+            font-size: 0.95em;
+            opacity: 0.8;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .executive-summary {
+            background: linear-gradient(135deg, #e8f4f8 0%, #ffffff 100%);
+            border-left: 5px solid #3498db;
+            padding: 30px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+
+        .executive-summary h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .executive-summary p {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+            font-weight: 500;
+        }
+
+        .section-content {
+            font-size: 1.05em;
+            line-height: 1.7;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .metric-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .metric-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .metric-change {
+            font-size: 0.85em;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        .metric-change.positive {
+            color: #27ae60;
+        }
+
+        .metric-change.negative {
+            color: #e74c3c;
+        }
+
+        .metric-change.neutral {
+            color: #f39c12;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            border: 1px solid #e9ecef;
+            text-align: center;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7f8c8d;
+            font-size: 1.1em;
+            font-weight: 500;
+            margin: 15px 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .table th {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .table td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 0.95em;
+        }
+
+        .table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .table tr:hover {
+            background: #e8f4f8;
+        }
+
+        .trend-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .trend-up {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .trend-down {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+
+        .trend-stable {
+            background: #fef9e7;
+            color: #f39c12;
+        }
+
+        .insight-box {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffffff 100%);
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .insight-title {
+            font-size: 1.3em;
+            color: #856404;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .insight-content {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .recommendations {
+            background: linear-gradient(135deg, #d1ecf1 0%, #ffffff 100%);
+            border-left: 5px solid #17a2b8;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+
+        .recommendations h3 {
+            color: #0c5460;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            padding: 10px 0;
+            border-bottom: 1px solid #bee5eb;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .recommendations li:before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #17a2b8;
+            font-weight: bold;
+        }
+
+        .recommendations li:last-child {
+            border-bottom: none;
+        }
+
+        .forecast-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .forecast-title {
+            font-size: 1.5em;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .forecast-item {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .forecast-period {
+            font-size: 0.9em;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .forecast-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .footer p {
+            margin-bottom: 5px;
+        }
+
+        .footer .disclaimer {
+            opacity: 0.8;
+            font-size: 0.85em;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .content {
+                padding: 25px 20px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .forecast-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+
+            .document-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .header {
+                background: #2c3e50 !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .metric-card {
+                box-shadow: none;
+                border: 1px solid #dee2e6;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>{{analysis_area}} Market Analysis</h1>
+            <p class="subtitle">Comprehensive Residential Market Report</p>
+            <p class="analysis-date">Analysis Period: {{analysis_period}} | Generated: {{generation_date}}</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Executive Summary -->
+            <div class="executive-summary">
+                <h2>Executive Summary</h2>
+                <p>The {{analysis_area}} residential market demonstrates <strong>{{market_condition}}</strong> conditions with {{price_trend_direction}} price trends and {{inventory_level}} inventory levels. Current median sale price of <strong>${{median_sale_price:,.0f}}</strong> represents {{price_change_percentage}} change from the previous period, indicating {{market_strength}} market fundamentals.</p>
+
+                <p>Properties in the {{price_range_focus}} price range are experiencing an average of {{days_on_market}} days on market, with {{absorption_rate}}% absorption rate. This analysis provides comprehensive insights for buyers, sellers, and investors in the current market environment.</p>
+            </div>
+
+            <!-- Key Market Metrics -->
+            <div class="section">
+                <h2 class="section-title">Key Market Metrics</h2>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-value">${{median_sale_price:,.0f}}</span>
+                        <div class="metric-label">Median Sale Price</div>
+                        <div class="metric-change {{price_trend_class}}">{{price_change_percentage}} from last period</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <span class="metric-value">{{days_on_market}}</span>
+                        <div class="metric-label">Average Days on Market</div>
+                        <div class="metric-change {{dom_trend_class}}">{{dom_change}} days vs. last period</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <span class="metric-value">{{inventory_months}}</span>
+                        <div class="metric-label">Months of Inventory</div>
+                        <div class="metric-change {{inventory_trend_class}}">{{inventory_change}} month change</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <span class="metric-value">{{sale_to_list_ratio}}%</span>
+                        <div class="metric-label">Sale-to-List Price Ratio</div>
+                        <div class="metric-change {{ratio_trend_class}}">{{ratio_change}} from last period</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <span class="metric-value">{{new_listings}}</span>
+                        <div class="metric-label">New Listings</div>
+                        <div class="metric-change {{listings_trend_class}}">{{listings_change}}% change</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <span class="metric-value">{{closed_sales}}</span>
+                        <div class="metric-label">Closed Sales</div>
+                        <div class="metric-change {{sales_trend_class}}">{{sales_change}}% change</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Trends Chart -->
+            <div class="section">
+                <h2 class="section-title">Price Trend Analysis</h2>
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 20px; color: #2c3e50;">Median Sale Price Trend - 12 Month Period</h3>
+                    <div class="chart-placeholder">
+                        Price trend chart visualization would appear here
+                        <br>Showing {{price_trend_direction}} trend with {{price_volatility}} volatility
+                    </div>
+                </div>
+
+                <div class="section-content">
+                    <p>The price trend analysis reveals {{price_trend_description}}. Over the past 12 months, the market has experienced {{price_pattern}} with {{seasonal_effects}}. Current pricing indicators suggest {{future_price_direction}} in the near term.</p>
+                </div>
+            </div>
+
+            <!-- Inventory Analysis -->
+            <div class="section">
+                <h2 class="section-title">Inventory & Market Activity</h2>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Property Type</th>
+                            <th>Active Listings</th>
+                            <th>Avg. DOM</th>
+                            <th>Median Price</th>
+                            <th>Market Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#property_types}}
+                        <tr>
+                            <td>{{type_name}}</td>
+                            <td>{{active_count}}</td>
+                            <td>{{avg_dom}}</td>
+                            <td>${{median_price:,.0f}}</td>
+                            <td><span class="trend-indicator {{trend_class}}">{{trend_status}}</span></td>
+                        </tr>
+                        {{/property_types}}
+                    </tbody>
+                </table>
+
+                <div class="insight-box">
+                    <div class="insight-title">Market Insight</div>
+                    <div class="insight-content">
+                        {{market_insight_text}}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparative Market Analysis -->
+            <div class="section">
+                <h2 class="section-title">Comparative Market Analysis</h2>
+
+                <div class="section-content">
+                    <p>Comparative analysis with surrounding markets shows {{area_performance}} relative performance. {{analysis_area}} ranks {{market_ranking}} among comparable residential markets in the region.</p>
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Market Area</th>
+                            <th>Median Price</th>
+                            <th>Price Change</th>
+                            <th>Days on Market</th>
+                            <th>Inventory Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#comparable_markets}}
+                        <tr>
+                            <td>{{market_name}} {{#if is_current}}(Current Market){{/if}}</td>
+                            <td>${{median_price:,.0f}}</td>
+                            <td class="{{price_change_class}}">{{price_change}}</td>
+                            <td>{{days_on_market}}</td>
+                            <td>{{inventory_level}}</td>
+                        </tr>
+                        {{/comparable_markets}}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Market Forecast -->
+            <div class="forecast-section">
+                <h3 class="forecast-title">Market Forecast & Projections</h3>
+
+                <div class="forecast-grid">
+                    <div class="forecast-item">
+                        <div class="forecast-period">Next 3 Months</div>
+                        <div class="forecast-value">{{q1_forecast}}%</div>
+                        <div>Price Change</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div class="forecast-period">Next 6 Months</div>
+                        <div class="forecast-value">{{q2_forecast}}%</div>
+                        <div>Price Change</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div class="forecast-period">Next 12 Months</div>
+                        <div class="forecast-value">{{annual_forecast}}%</div>
+                        <div>Price Change</div>
+                    </div>
+                    <div class="forecast-item">
+                        <div class="forecast-period">Market Activity</div>
+                        <div class="forecast-value">{{activity_forecast}}</div>
+                        <div>Expected Level</div>
+                    </div>
+                </div>
+
+                <div class="insight-box">
+                    <div class="insight-title">Forecast Analysis</div>
+                    <div class="insight-content">
+                        {{forecast_rationale}}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment Opportunities -->
+            <div class="section">
+                <h2 class="section-title">Investment Opportunities & Risk Factors</h2>
+
+                <div class="section-content">
+                    <p><strong>Opportunities:</strong> {{investment_opportunities}}</p>
+                    <p><strong>Risk Factors:</strong> {{risk_factors}}</p>
+                    <p><strong>Market Outlook:</strong> {{market_outlook}}</p>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="recommendations">
+                <h3>Strategic Recommendations</h3>
+                <ul>
+                    {{#recommendations}}
+                    <li>{{recommendation_text}}</li>
+                    {{/recommendations}}
+                </ul>
+            </div>
+
+            <!-- Data Sources & Methodology -->
+            <div class="section">
+                <h2 class="section-title">Data Sources & Methodology</h2>
+                <div class="section-content">
+                    <p><strong>Primary Data Sources:</strong> {{data_sources}}</p>
+                    <p><strong>Analysis Period:</strong> {{analysis_period}}</p>
+                    <p><strong>Sample Size:</strong> {{sample_size}} transactions</p>
+                    <p><strong>Geographic Scope:</strong> {{geographic_scope}}</p>
+                    <p><strong>Methodology:</strong> {{methodology_description}}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>{{company_name}} Market Research Division</strong></p>
+            <p>{{analyst_name}}, Senior Market Analyst | {{contact_info}}</p>
+            <div class="disclaimer">
+                This market analysis is based on available data and professional analysis. Market conditions can change rapidly, and this report should be considered alongside current market conditions. This analysis is for informational purposes and does not constitute investment advice.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

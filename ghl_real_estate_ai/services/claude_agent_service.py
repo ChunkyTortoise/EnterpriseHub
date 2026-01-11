@@ -96,7 +96,7 @@ class ClaudeAgentService:
         self.client = AsyncAnthropic(api_key=settings.anthropic_api_key)
         self.lead_scorer = LeadScorer()
         self.redis_service = redis_conversation_service
-        self.market_intelligence = AdvancedMarketIntelligenceEngine()
+        self.market_intelligence = AdvancedMarketIntelligenceEngine("default_location")
         self.engagement_engine = predictive_engagement_engine
         self.mobile_assistance = mobile_agent_assistance
 

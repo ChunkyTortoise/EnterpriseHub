@@ -186,10 +186,11 @@ class MemoryMappedCache:
     def _initialize_mmap(self) -> None:
         """Initialize memory-mapped file"""
         try:
-            # Create or open file
-            if not self.cache_file.exists():
+            # Ensure file exists with proper size
+            if not self.cache_file.exists() or self.cache_file.stat().st_size < self.max_size_bytes:
                 with open(self.cache_file, 'wb') as f:
                     f.write(b'\x00' * self.max_size_bytes)
+                    f.flush()
 
             # Open for memory mapping
             self.mmap_file = open(self.cache_file, 'r+b')

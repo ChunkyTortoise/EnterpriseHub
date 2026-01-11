@@ -37,6 +37,16 @@ from .enterprise_theme import (
     ENTERPRISE_PLOTLY_THEME,
 )
 
+from .performance_monitor import (
+    performance_monitor,
+    track_render_performance,
+    track_usage,
+    EnterpriseDesignSystemMonitor,
+    ComponentMetrics,
+    UsageAnalytics,
+    PerformanceAlert,
+)
+
 __version__ = "2.0.0"
 __author__ = "EnterpriseHub Design Team"
 
@@ -55,4 +65,11 @@ __all__ = [
     "apply_plotly_theme",
     "ENTERPRISE_COLORS",
     "ENTERPRISE_PLOTLY_THEME",
+    "performance_monitor",
+    "track_render_performance",
+    "track_usage",
+    "EnterpriseDesignSystemMonitor",
+    "ComponentMetrics",
+    "UsageAnalytics",
+    "PerformanceAlert",
 ]

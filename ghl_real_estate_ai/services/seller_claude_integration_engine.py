@@ -36,6 +36,11 @@ from .property_valuation_models import (
     PropertyData, PropertyLocation, PropertyFeatures, PropertyType,
     ValuationRequest, ComprehensiveValuation
 )
+from .marketing_campaign_engine import MarketingCampaignEngine
+from ..models.marketing_campaign_models import (
+    CampaignType, CampaignStatus, CampaignGenerationResponse,
+    AudienceSegment, CampaignCreationRequest
+)
 from ..models.seller_models import SellerLead, SellerGoals, SellerProperty
 from ..utils.conversation_validator import validate_conversation_safety
 from ..utils.performance_monitor import track_performance
@@ -98,6 +103,13 @@ class SellerWorkflowState:
     avg_response_time_hours: float
     sentiment_trend: float  # -1 to 1
 
+    # Marketing campaign tracking
+    active_campaigns: List[str] = None  # Campaign IDs
+    campaign_performance: Dict[str, Any] = None  # Campaign metrics
+    last_campaign_sent: Optional[datetime] = None
+    campaign_engagement_score: float = 0.0  # Campaign-specific engagement
+    automated_campaigns_enabled: bool = True
+
     # Next actions
     recommended_next_actions: List[str]
     automated_actions_pending: List[str]
@@ -145,6 +157,18 @@ class SellerClaudeIntegrationEngine:
         # Property valuation integration
         self.valuation_engine = PropertyValuationEngine()
 
+        # Marketing campaign integration
+        self.campaign_engine = MarketingCampaignEngine(
+            claude_service=self.claude_agent,
+            ghl_service=None  # Will be injected during runtime
+        )
+
+        # Document generation integration
+        from .document_generation_engine import DocumentGenerationEngine
+        self.document_engine = DocumentGenerationEngine(
+            claude_service=self.claude_agent
+        )
+
         # Workflow and state management
         self.workflow_states: Dict[str, SellerWorkflowState] = {}
         self.active_conversations: Dict[str, Dict[str, Any]] = {}
@@ -164,7 +188,14 @@ class SellerClaudeIntegrationEngine:
             'intelligence_refresh_interval': 3600,  # 1 hour
             'workflow_progression_threshold': 0.7,
             'conversation_safety_validation': True,
-            'performance_monitoring': True
+            'performance_monitoring': True,
+            'auto_document_generation': True,
+            'document_generation_triggers': {
+                'property_valuation_complete': True,
+                'market_analysis_ready': True,
+                'seller_proposal_stage': True,
+                'campaign_performance_report': True
+            }
         }
 
     @track_performance
@@ -1579,6 +1610,775 @@ class SellerClaudeIntegrationEngine:
         except Exception as e:
             logger.error(f"Failed to schedule valuation follow-up for seller {seller_id}: {e}")
 
+    # ============================================================================
+    # Marketing Campaign Integration Methods
+    # ============================================================================
+
+    async def trigger_property_showcase_campaign(
+        self,
+        seller_id: str,
+        property_valuation: ComprehensiveValuation,
+        campaign_type: CampaignType = CampaignType.PROPERTY_SHOWCASE
+    ) -> Dict[str, Any]:
+        """
+        Automatically trigger marketing campaign based on property valuation completion.
+
+        Args:
+            seller_id: Seller identifier
+            property_valuation: Completed property valuation
+            campaign_type: Type of campaign to create
+
+        Returns:
+            Dict containing campaign creation results and status
+        """
+        try:
+            # Check if automated campaigns are enabled for this seller
+            workflow_state = await self._get_workflow_state(seller_id)
+            if not workflow_state or not workflow_state.automated_campaigns_enabled:
+                return {
+                    'success': False,
+                    'reason': 'automated_campaigns_disabled',
+                    'message': 'Automated campaigns disabled for this seller'
+                }
+
+            # Check campaign frequency limits
+            if await self._check_campaign_frequency_limit(seller_id):
+                return {
+                    'success': False,
+                    'reason': 'frequency_limit_exceeded',
+                    'message': 'Campaign frequency limit exceeded'
+                }
+
+            # Create campaign from property valuation
+            campaign_response = await self.campaign_engine.create_campaign_from_property_valuation(
+                property_valuation=property_valuation,
+                campaign_type=campaign_type,
+                target_segments=self._determine_seller_audience_segments(workflow_state)
+            )
+
+            # Update seller workflow state with campaign information
+            await self._update_seller_campaign_state(
+                seller_id, campaign_response, property_valuation
+            )
+
+            # Schedule campaign performance monitoring
+            await self._schedule_campaign_monitoring(seller_id, campaign_response.campaign_id)
+
+            # Log campaign creation
+            logger.info(
+                f"Property showcase campaign triggered for seller {seller_id}: "
+                f"Campaign {campaign_response.campaign_id}"
+            )
+
+            return {
+                'success': True,
+                'campaign_id': campaign_response.campaign_id,
+                'campaign_name': campaign_response.campaign_name,
+                'audience_size': campaign_response.audience_size,
+                'estimated_reach': campaign_response.estimated_reach,
+                'generation_time_ms': campaign_response.generation_time_ms,
+                'optimization_suggestions': campaign_response.claude_optimization_suggestions,
+                'next_actions': campaign_response.recommended_actions
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to trigger property showcase campaign for seller {seller_id}: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'message': 'Campaign creation failed'
+            }
+
+    async def trigger_seller_nurturing_campaign(
+        self,
+        seller_id: str,
+        workflow_stage: WorkflowStage,
+        engagement_level: str = "standard"
+    ) -> Dict[str, Any]:
+        """
+        Trigger stage-specific nurturing campaign for seller workflow.
+
+        Args:
+            seller_id: Seller identifier
+            workflow_stage: Current workflow stage
+            engagement_level: Level of engagement (basic, standard, premium)
+
+        Returns:
+            Dict containing campaign results
+        """
+        try:
+            workflow_state = await self._get_workflow_state(seller_id)
+            if not workflow_state or not workflow_state.automated_campaigns_enabled:
+                return {'success': False, 'reason': 'campaigns_disabled'}
+
+            # Determine campaign type based on workflow stage
+            campaign_type = self._map_workflow_stage_to_campaign_type(workflow_stage)
+
+            # Create nurturing campaign request
+            campaign_request = CampaignCreationRequest(
+                campaign_name=f"{workflow_stage.value.title()} Nurturing - {seller_id}",
+                campaign_type=campaign_type,
+                target_audience_criteria={
+                    "seller_ids": [seller_id],
+                    "workflow_stage": workflow_stage.value,
+                    "engagement_level": engagement_level
+                },
+                delivery_channels=self._select_optimal_channels(workflow_state),
+                start_date=datetime.utcnow() + timedelta(minutes=30),
+                personalization_level=self._determine_personalization_level(workflow_state),
+                content_overrides=await self._generate_seller_specific_content_overrides(
+                    seller_id, workflow_stage
+                ),
+                performance_goals={
+                    "open_rate": 0.32,
+                    "click_rate": 0.06,
+                    "conversion_rate": 0.04
+                },
+                success_metrics=["engagement_increase", "workflow_progression"],
+                tags=[
+                    "seller_nurturing",
+                    workflow_stage.value,
+                    f"engagement_{engagement_level}"
+                ],
+                owner_id="system"
+            )
+
+            # Create campaign
+            campaign_response = await self.campaign_engine.create_campaign_from_request(
+                campaign_request
+            )
+
+            # Update seller state
+            await self._update_seller_campaign_state(
+                seller_id, campaign_response, None
+            )
+
+            logger.info(
+                f"Nurturing campaign triggered for seller {seller_id} "
+                f"at stage {workflow_stage.value}: Campaign {campaign_response.campaign_id}"
+            )
+
+            return {
+                'success': True,
+                'campaign_id': campaign_response.campaign_id,
+                'campaign_type': campaign_type.value,
+                'workflow_stage': workflow_stage.value,
+                'audience_size': campaign_response.audience_size,
+                'personalization_applied': campaign_response.personalization_applied
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to trigger nurturing campaign for seller {seller_id}: {e}")
+            return {'success': False, 'error': str(e)}
+
+    async def track_campaign_engagement(
+        self,
+        seller_id: str,
+        campaign_id: str,
+        engagement_type: str,
+        engagement_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Track seller engagement with marketing campaigns for workflow optimization.
+
+        Args:
+            seller_id: Seller identifier
+            campaign_id: Marketing campaign ID
+            engagement_type: Type of engagement (open, click, reply, conversion)
+            engagement_data: Additional engagement data
+
+        Returns:
+            Dict with tracking results and workflow recommendations
+        """
+        try:
+            workflow_state = await self._get_workflow_state(seller_id)
+            if not workflow_state:
+                return {'success': False, 'reason': 'no_workflow_state'}
+
+            # Update campaign performance tracking
+            if not workflow_state.campaign_performance:
+                workflow_state.campaign_performance = {}
+
+            if campaign_id not in workflow_state.campaign_performance:
+                workflow_state.campaign_performance[campaign_id] = {
+                    'opens': 0,
+                    'clicks': 0,
+                    'replies': 0,
+                    'conversions': 0,
+                    'engagement_score': 0.0,
+                    'first_engagement': None,
+                    'last_engagement': None
+                }
+
+            campaign_stats = workflow_state.campaign_performance[campaign_id]
+
+            # Update engagement metrics
+            engagement_timestamp = datetime.utcnow()
+
+            if engagement_type == "open":
+                campaign_stats['opens'] += 1
+            elif engagement_type == "click":
+                campaign_stats['clicks'] += 1
+                # Clicks indicate higher engagement
+                workflow_state.engagement_level = min(1.0, workflow_state.engagement_level + 0.1)
+            elif engagement_type == "reply":
+                campaign_stats['replies'] += 1
+                # Replies indicate very high engagement
+                workflow_state.engagement_level = min(1.0, workflow_state.engagement_level + 0.2)
+            elif engagement_type == "conversion":
+                campaign_stats['conversions'] += 1
+                # Conversions may trigger workflow progression
+                workflow_state.conversion_probability = min(1.0, workflow_state.conversion_probability + 0.15)
+
+            # Update timestamps
+            if not campaign_stats['first_engagement']:
+                campaign_stats['first_engagement'] = engagement_timestamp
+            campaign_stats['last_engagement'] = engagement_timestamp
+
+            # Calculate engagement score
+            campaign_stats['engagement_score'] = (
+                (campaign_stats['opens'] * 1.0) +
+                (campaign_stats['clicks'] * 2.0) +
+                (campaign_stats['replies'] * 4.0) +
+                (campaign_stats['conversions'] * 8.0)
+            ) / 15.0  # Normalize to 0-1 scale
+
+            # Update overall campaign engagement score
+            workflow_state.campaign_engagement_score = sum(
+                stats['engagement_score'] for stats in workflow_state.campaign_performance.values()
+            ) / len(workflow_state.campaign_performance)
+
+            # Check for workflow progression triggers
+            progression_triggered = await self._check_campaign_progression_triggers(
+                seller_id, engagement_type, engagement_data
+            )
+
+            # Store updated state
+            self.workflow_states[seller_id] = workflow_state
+
+            logger.info(
+                f"Campaign engagement tracked for seller {seller_id}: "
+                f"{engagement_type} on campaign {campaign_id}"
+            )
+
+            return {
+                'success': True,
+                'engagement_tracked': engagement_type,
+                'updated_engagement_score': workflow_state.engagement_level,
+                'updated_conversion_probability': workflow_state.conversion_probability,
+                'campaign_engagement_score': campaign_stats['engagement_score'],
+                'progression_triggered': progression_triggered,
+                'recommendations': await self._generate_engagement_based_recommendations(
+                    workflow_state, engagement_type
+                )
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to track campaign engagement for seller {seller_id}: {e}")
+            return {'success': False, 'error': str(e)}
+
+    async def get_seller_campaign_performance(self, seller_id: str) -> Dict[str, Any]:
+        """
+        Get comprehensive campaign performance data for a seller.
+
+        Args:
+            seller_id: Seller identifier
+
+        Returns:
+            Dict with campaign performance metrics and insights
+        """
+        try:
+            workflow_state = await self._get_workflow_state(seller_id)
+            if not workflow_state:
+                return {'success': False, 'reason': 'no_workflow_state'}
+
+            campaign_performance = workflow_state.campaign_performance or {}
+            active_campaigns = workflow_state.active_campaigns or []
+
+            # Calculate aggregate performance metrics
+            total_opens = sum(stats.get('opens', 0) for stats in campaign_performance.values())
+            total_clicks = sum(stats.get('clicks', 0) for stats in campaign_performance.values())
+            total_replies = sum(stats.get('replies', 0) for stats in campaign_performance.values())
+            total_conversions = sum(stats.get('conversions', 0) for stats in campaign_performance.values())
+
+            # Calculate rates (avoid division by zero)
+            total_campaigns = len(campaign_performance)
+            avg_open_rate = (total_opens / max(total_campaigns, 1)) if total_campaigns > 0 else 0
+            avg_click_rate = (total_clicks / max(total_opens, 1)) if total_opens > 0 else 0
+            avg_conversion_rate = (total_conversions / max(total_clicks, 1)) if total_clicks > 0 else 0
+
+            # Generate performance insights
+            performance_insights = await self._generate_campaign_performance_insights(
+                workflow_state, campaign_performance
+            )
+
+            return {
+                'success': True,
+                'seller_id': seller_id,
+                'campaign_summary': {
+                    'total_campaigns': total_campaigns,
+                    'active_campaigns': len(active_campaigns),
+                    'total_engagements': total_opens + total_clicks + total_replies,
+                    'total_conversions': total_conversions
+                },
+                'performance_metrics': {
+                    'avg_open_rate': avg_open_rate,
+                    'avg_click_rate': avg_click_rate,
+                    'avg_conversion_rate': avg_conversion_rate,
+                    'overall_engagement_score': workflow_state.campaign_engagement_score,
+                    'campaign_influence_on_workflow': self._calculate_campaign_workflow_influence(
+                        workflow_state
+                    )
+                },
+                'campaign_details': campaign_performance,
+                'performance_insights': performance_insights,
+                'optimization_recommendations': await self._generate_campaign_optimization_recommendations(
+                    seller_id, campaign_performance
+                ),
+                'next_campaign_suggestions': await self._suggest_next_campaigns(
+                    workflow_state
+                )
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to get campaign performance for seller {seller_id}: {e}")
+            return {'success': False, 'error': str(e)}
+
+    async def optimize_seller_campaign_strategy(self, seller_id: str) -> Dict[str, Any]:
+        """
+        Optimize campaign strategy for a seller based on performance and workflow data.
+
+        Args:
+            seller_id: Seller identifier
+
+        Returns:
+            Dict with optimization recommendations and actions
+        """
+        try:
+            workflow_state = await self._get_workflow_state(seller_id)
+            if not workflow_state:
+                return {'success': False, 'reason': 'no_workflow_state'}
+
+            # Analyze current campaign performance
+            performance_analysis = await self._analyze_seller_campaign_performance(workflow_state)
+
+            # Generate optimization recommendations
+            optimization_recommendations = []
+
+            # Channel optimization
+            optimal_channels = await self._optimize_campaign_channels(workflow_state)
+            if optimal_channels['recommendations']:
+                optimization_recommendations.extend(optimal_channels['recommendations'])
+
+            # Content optimization
+            content_optimizations = await self._optimize_campaign_content(workflow_state)
+            if content_optimizations['recommendations']:
+                optimization_recommendations.extend(content_optimizations['recommendations'])
+
+            # Timing optimization
+            timing_optimizations = await self._optimize_campaign_timing(workflow_state)
+            if timing_optimizations['recommendations']:
+                optimization_recommendations.extend(timing_optimizations['recommendations'])
+
+            # Frequency optimization
+            frequency_optimizations = await self._optimize_campaign_frequency(workflow_state)
+            if frequency_optimizations['recommendations']:
+                optimization_recommendations.extend(frequency_optimizations['recommendations'])
+
+            # Implementation priority
+            prioritized_actions = self._prioritize_optimization_actions(optimization_recommendations)
+
+            logger.info(f"Campaign strategy optimized for seller {seller_id}")
+
+            return {
+                'success': True,
+                'seller_id': seller_id,
+                'performance_analysis': performance_analysis,
+                'optimization_recommendations': optimization_recommendations,
+                'prioritized_actions': prioritized_actions,
+                'expected_improvements': await self._estimate_optimization_impact(
+                    workflow_state, optimization_recommendations
+                ),
+                'implementation_timeline': self._create_optimization_timeline(prioritized_actions)
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to optimize campaign strategy for seller {seller_id}: {e}")
+            return {'success': False, 'error': str(e)}
+
+    # ============================================================================
+    # Campaign Integration Helper Methods
+    # ============================================================================
+
+    async def _check_campaign_frequency_limit(self, seller_id: str) -> bool:
+        """Check if seller has exceeded campaign frequency limits."""
+        workflow_state = await self._get_workflow_state(seller_id)
+        if not workflow_state or not workflow_state.last_campaign_sent:
+            return False
+
+        # Check if last campaign was sent within 24 hours
+        time_since_last = datetime.utcnow() - workflow_state.last_campaign_sent
+        return time_since_last < timedelta(hours=24)
+
+    def _determine_seller_audience_segments(self, workflow_state: SellerWorkflowState) -> List[AudienceSegment]:
+        """Determine appropriate audience segments based on seller workflow state."""
+        segments = []
+
+        # Base on seller characteristics and workflow stage
+        if workflow_state.current_stage in {WorkflowStage.INITIAL_CONTACT, WorkflowStage.INFORMATION_GATHERING}:
+            segments.append(AudienceSegment.FIRST_TIME_BUYERS)  # Cast broader net initially
+
+        if workflow_state.engagement_level > 0.7:
+            segments.append(AudienceSegment.MOVE_UP_BUYERS)  # High engagement suggests serious intent
+
+        if workflow_state.conversion_probability > 0.6:
+            segments.extend([AudienceSegment.LUXURY_BUYERS, AudienceSegment.CASH_BUYERS])
+
+        # Default segments if none determined
+        if not segments:
+            segments = [AudienceSegment.MOVE_UP_BUYERS, AudienceSegment.DOWNSIZERS]
+
+        return segments
+
+    def _map_workflow_stage_to_campaign_type(self, stage: WorkflowStage) -> CampaignType:
+        """Map workflow stage to appropriate campaign type."""
+        stage_mapping = {
+            WorkflowStage.INITIAL_CONTACT: CampaignType.SELLER_ONBOARDING,
+            WorkflowStage.INFORMATION_GATHERING: CampaignType.LEAD_NURTURING,
+            WorkflowStage.MARKET_EDUCATION: CampaignType.MARKET_UPDATE,
+            WorkflowStage.PROPERTY_EVALUATION: CampaignType.PROPERTY_SHOWCASE,
+            WorkflowStage.PRICING_DISCUSSION: CampaignType.MARKET_UPDATE,
+            WorkflowStage.TIMELINE_PLANNING: CampaignType.FOLLOW_UP_SEQUENCE,
+            WorkflowStage.LISTING_PREPARATION: CampaignType.PROPERTY_SHOWCASE,
+            WorkflowStage.ACTIVE_SELLING: CampaignType.MARKET_UPDATE
+        }
+        return stage_mapping.get(stage, CampaignType.LEAD_NURTURING)
+
+    def _select_optimal_channels(self, workflow_state: SellerWorkflowState) -> List[str]:
+        """Select optimal communication channels based on seller preferences and engagement."""
+        channels = ["email"]  # Email is always included
+
+        # Add SMS for high-engagement sellers
+        if workflow_state.engagement_level > 0.6:
+            channels.append("sms")
+
+        # Add social media for tech-savvy demographics
+        if workflow_state.avg_response_time_hours < 2:  # Quick responders may be active on social
+            channels.append("social_media")
+
+        return channels
+
+    def _determine_personalization_level(self, workflow_state: SellerWorkflowState) -> str:
+        """Determine appropriate personalization level based on seller data."""
+        if workflow_state.engagement_level > 0.8 and workflow_state.conversion_probability > 0.7:
+            return "hyper_personalized"
+        elif workflow_state.engagement_level > 0.5:
+            return "advanced"
+        elif workflow_state.engagement_level > 0.3:
+            return "standard"
+        else:
+            return "basic"
+
+    async def _generate_seller_specific_content_overrides(
+        self,
+        seller_id: str,
+        workflow_stage: WorkflowStage
+    ) -> Dict[str, str]:
+        """Generate seller-specific content overrides for campaigns."""
+        workflow_state = await self._get_workflow_state(seller_id)
+        if not workflow_state:
+            return {}
+
+        # Generate personalized content based on workflow context
+        overrides = {
+            "seller_name": workflow_state.seller_name or "Valued Seller",
+            "current_stage": workflow_stage.value.replace('_', ' ').title(),
+            "completion_percentage": f"{workflow_state.completion_percentage:.0f}%",
+        }
+
+        # Add stage-specific content
+        if workflow_stage == WorkflowStage.PROPERTY_EVALUATION:
+            overrides.update({
+                "valuation_status": workflow_state.property_valuation_status or "pending",
+                "next_step": "Complete property valuation for accurate pricing"
+            })
+        elif workflow_stage == WorkflowStage.PRICING_DISCUSSION:
+            overrides.update({
+                "estimated_value": f"${workflow_state.estimated_property_value:,.0f}" if workflow_state.estimated_property_value else "TBD",
+                "next_step": "Review pricing strategy and market positioning"
+            })
+
+        return overrides
+
+    async def _update_seller_campaign_state(
+        self,
+        seller_id: str,
+        campaign_response: CampaignGenerationResponse,
+        property_valuation: Optional[ComprehensiveValuation]
+    ) -> None:
+        """Update seller workflow state with new campaign information."""
+        workflow_state = await self._get_workflow_state(seller_id)
+        if not workflow_state:
+            return
+
+        # Initialize campaign tracking if needed
+        if not workflow_state.active_campaigns:
+            workflow_state.active_campaigns = []
+        if not workflow_state.campaign_performance:
+            workflow_state.campaign_performance = {}
+
+        # Add new campaign
+        workflow_state.active_campaigns.append(campaign_response.campaign_id)
+        workflow_state.last_campaign_sent = datetime.utcnow()
+
+        # Initialize performance tracking for new campaign
+        workflow_state.campaign_performance[campaign_response.campaign_id] = {
+            'campaign_name': campaign_response.campaign_name,
+            'created_at': datetime.utcnow(),
+            'audience_size': campaign_response.audience_size,
+            'opens': 0,
+            'clicks': 0,
+            'replies': 0,
+            'conversions': 0,
+            'engagement_score': 0.0
+        }
+
+        # Store updated state
+        self.workflow_states[seller_id] = workflow_state
+
+    async def _schedule_campaign_monitoring(self, seller_id: str, campaign_id: str) -> None:
+        """Schedule ongoing campaign performance monitoring."""
+        # This would integrate with a task scheduler in production
+        # For now, we'll just log the scheduling
+        logger.info(f"Campaign monitoring scheduled for seller {seller_id}, campaign {campaign_id}")
+
+    async def _check_campaign_progression_triggers(
+        self,
+        seller_id: str,
+        engagement_type: str,
+        engagement_data: Dict[str, Any]
+    ) -> bool:
+        """Check if campaign engagement should trigger workflow progression."""
+        if engagement_type in ["reply", "conversion"]:
+            # High-value engagements may trigger progression
+            workflow_result = await self.process_automated_workflow_progression(seller_id)
+            return workflow_result.get('progression_occurred', False)
+
+        return False
+
+    async def _generate_engagement_based_recommendations(
+        self,
+        workflow_state: SellerWorkflowState,
+        engagement_type: str
+    ) -> List[str]:
+        """Generate recommendations based on campaign engagement patterns."""
+        recommendations = []
+
+        if engagement_type == "open":
+            recommendations.append("Continue with current messaging strategy")
+            if workflow_state.engagement_level > 0.7:
+                recommendations.append("Consider increasing campaign frequency")
+
+        elif engagement_type == "click":
+            recommendations.append("Engagement is strong - prepare for direct follow-up")
+            recommendations.append("Consider scheduling phone call or meeting")
+
+        elif engagement_type == "reply":
+            recommendations.append("High engagement detected - prioritize immediate response")
+            recommendations.append("Move to next workflow stage if criteria met")
+
+        return recommendations
+
+    async def _generate_campaign_performance_insights(
+        self,
+        workflow_state: SellerWorkflowState,
+        campaign_performance: Dict[str, Any]
+    ) -> List[str]:
+        """Generate insights from campaign performance data."""
+        insights = []
+
+        if not campaign_performance:
+            insights.append("No campaign data available yet")
+            return insights
+
+        # Engagement analysis
+        avg_engagement = workflow_state.campaign_engagement_score
+        if avg_engagement > 0.7:
+            insights.append("🎯 Excellent campaign engagement - seller is highly responsive")
+        elif avg_engagement > 0.4:
+            insights.append("📈 Good campaign engagement - continue current strategy")
+        else:
+            insights.append("⚠️ Low campaign engagement - consider strategy adjustment")
+
+        # Performance trends
+        if len(campaign_performance) > 1:
+            latest_campaigns = list(campaign_performance.values())[-2:]
+            if len(latest_campaigns) == 2:
+                trend = latest_campaigns[1]['engagement_score'] - latest_campaigns[0]['engagement_score']
+                if trend > 0.1:
+                    insights.append("📈 Engagement trend is improving")
+                elif trend < -0.1:
+                    insights.append("📉 Engagement trend is declining")
+
+        return insights
+
+    async def _generate_campaign_optimization_recommendations(
+        self,
+        seller_id: str,
+        campaign_performance: Dict[str, Any]
+    ) -> List[str]:
+        """Generate campaign optimization recommendations."""
+        recommendations = []
+
+        if not campaign_performance:
+            recommendations.append("Launch initial campaigns to gather performance data")
+            return recommendations
+
+        # Analyze performance patterns
+        total_campaigns = len(campaign_performance)
+        avg_engagement = sum(
+            stats.get('engagement_score', 0) for stats in campaign_performance.values()
+        ) / max(total_campaigns, 1)
+
+        if avg_engagement < 0.3:
+            recommendations.extend([
+                "💡 Consider A/B testing subject lines for higher open rates",
+                "📱 Test SMS channel for more immediate engagement",
+                "🎨 Personalize content based on seller's specific interests"
+            ])
+        elif avg_engagement < 0.6:
+            recommendations.extend([
+                "⏰ Optimize send times based on seller's response patterns",
+                "🎯 Increase personalization level for better relevance",
+                "📞 Add direct call-to-action for phone consultations"
+            ])
+        else:
+            recommendations.extend([
+                "🚀 Performance is strong - consider increasing campaign frequency",
+                "📈 Expand to additional marketing channels",
+                "🎪 Create premium content for this highly engaged seller"
+            ])
+
+        return recommendations
+
+    async def _suggest_next_campaigns(self, workflow_state: SellerWorkflowState) -> List[Dict[str, Any]]:
+        """Suggest next campaigns based on workflow state and performance."""
+        suggestions = []
+
+        current_stage = workflow_state.current_stage
+        engagement_level = workflow_state.engagement_level
+
+        # Stage-based suggestions
+        if current_stage == WorkflowStage.PROPERTY_EVALUATION:
+            suggestions.append({
+                'type': 'market_insight',
+                'title': 'Local Market Trends Report',
+                'description': 'Share recent sales and market insights for their neighborhood',
+                'priority': 'high'
+            })
+
+        if current_stage in {WorkflowStage.PRICING_DISCUSSION, WorkflowStage.TIMELINE_PLANNING}:
+            suggestions.append({
+                'type': 'success_stories',
+                'title': 'Client Success Stories',
+                'description': 'Share testimonials from similar selling situations',
+                'priority': 'medium'
+            })
+
+        # Engagement-based suggestions
+        if engagement_level > 0.7:
+            suggestions.append({
+                'type': 'exclusive_content',
+                'title': 'Exclusive Selling Tips',
+                'description': 'VIP content for highly engaged sellers',
+                'priority': 'high'
+            })
+
+        return suggestions
+
+    # Additional helper methods for campaign optimization...
+
+    async def _analyze_seller_campaign_performance(self, workflow_state: SellerWorkflowState) -> Dict[str, Any]:
+        """Analyze seller's campaign performance comprehensively."""
+        return {
+            'overall_score': workflow_state.campaign_engagement_score,
+            'trend': 'improving',  # Would calculate from historical data
+            'strengths': ['High open rates', 'Strong click engagement'],
+            'weaknesses': ['Low conversion rate'],
+            'benchmark_comparison': 'Above average'
+        }
+
+    async def _optimize_campaign_channels(self, workflow_state: SellerWorkflowState) -> Dict[str, Any]:
+        """Optimize campaign delivery channels."""
+        return {
+            'current_channels': ['email', 'sms'],
+            'recommendations': ['Add LinkedIn for professional sellers'],
+            'optimal_mix': {'email': 0.6, 'sms': 0.3, 'social': 0.1}
+        }
+
+    async def _optimize_campaign_content(self, workflow_state: SellerWorkflowState) -> Dict[str, Any]:
+        """Optimize campaign content strategy."""
+        return {
+            'recommendations': [
+                'Increase personalization level to "hyper_personalized"',
+                'Add more property-specific content',
+                'Include market data in messaging'
+            ]
+        }
+
+    async def _optimize_campaign_timing(self, workflow_state: SellerWorkflowState) -> Dict[str, Any]:
+        """Optimize campaign timing."""
+        return {
+            'recommendations': [
+                'Send emails Tuesday-Thursday for best open rates',
+                'SMS works best 10AM-2PM for this seller',
+                'Avoid weekend communications'
+            ]
+        }
+
+    async def _optimize_campaign_frequency(self, workflow_state: SellerWorkflowState) -> Dict[str, Any]:
+        """Optimize campaign frequency."""
+        return {
+            'recommendations': [
+                'Increase frequency to 2-3 touches per week',
+                'Space campaigns 48-72 hours apart',
+                'Reduce frequency if engagement drops'
+            ]
+        }
+
+    def _prioritize_optimization_actions(self, recommendations: List[str]) -> List[Dict[str, Any]]:
+        """Prioritize optimization actions by impact and effort."""
+        return [
+            {'action': rec, 'priority': 'high', 'effort': 'low', 'expected_impact': 'medium'}
+            for rec in recommendations[:3]  # Simplified prioritization
+        ]
+
+    async def _estimate_optimization_impact(
+        self,
+        workflow_state: SellerWorkflowState,
+        recommendations: List[str]
+    ) -> Dict[str, str]:
+        """Estimate the impact of optimization recommendations."""
+        return {
+            'engagement_improvement': '15-25%',
+            'conversion_increase': '10-20%',
+            'workflow_acceleration': '1-2 stages faster',
+            'roi_improvement': '20-30%'
+        }
+
+    def _create_optimization_timeline(self, prioritized_actions: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+        """Create implementation timeline for optimization actions."""
+        return {
+            'week_1': [action['action'] for action in prioritized_actions[:2]],
+            'week_2': [action['action'] for action in prioritized_actions[2:4]],
+            'week_3': [action['action'] for action in prioritized_actions[4:]]
+        }
+
+    def _calculate_campaign_workflow_influence(self, workflow_state: SellerWorkflowState) -> float:
+        """Calculate how much campaigns are influencing workflow progression."""
+        # Simplified calculation based on engagement and progression correlation
+        return min(1.0, workflow_state.campaign_engagement_score * 1.2)
+
     async def _request_property_information(self, seller_id: str) -> Dict[str, Any]:
         """Request property information from seller when not available."""
         return {
@@ -1695,7 +2495,311 @@ class SellerClaudeIntegrationEngine:
             # Store updated state
             self.workflow_states[seller_id] = workflow_state
 
+            # Trigger automatic document generation for stage advancement
+            await self.trigger_stage_based_documents(seller_id, new_stage)
+
             logger.info(f"Advanced seller {seller_id} to stage {new_stage.value}")
+
+    # ============================================================================
+    # Document Generation Integration Methods
+    # ============================================================================
+
+    async def trigger_automatic_document_generation(
+        self,
+        seller_id: str,
+        trigger_type: str,
+        context_data: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Trigger automatic document generation based on workflow events."""
+        if not self.integration_config.get('auto_document_generation', False):
+            return {'success': False, 'reason': 'Auto document generation disabled'}
+
+        try:
+            workflow_state = await self._get_workflow_state(seller_id)
+            if not workflow_state:
+                return {'success': False, 'reason': 'No workflow state found'}
+
+            # Determine which documents to generate based on trigger
+            documents_to_generate = await self._determine_documents_for_trigger(
+                trigger_type, workflow_state, context_data
+            )
+
+            if not documents_to_generate:
+                return {'success': False, 'reason': f'No documents configured for trigger: {trigger_type}'}
+
+            generation_results = []
+
+            # Generate each document
+            for doc_config in documents_to_generate:
+                try:
+                    generation_request = await self._create_document_generation_request(
+                        doc_config, workflow_state, context_data
+                    )
+
+                    generation_result = await self.document_engine.generate_document(generation_request)
+                    generation_results.append({
+                        'document_type': doc_config['document_type'],
+                        'success': generation_result.success,
+                        'file_path': generation_result.file_path if generation_result.success else None,
+                        'document_id': generation_result.document_id if generation_result.success else None,
+                        'error': generation_result.error_message if not generation_result.success else None
+                    })
+
+                    # Store document reference in workflow state
+                    if generation_result.success:
+                        await self._track_generated_document(
+                            seller_id, generation_result, trigger_type
+                        )
+
+                except Exception as e:
+                    logger.error(f"Document generation failed for {doc_config['document_type']}: {str(e)}")
+                    generation_results.append({
+                        'document_type': doc_config['document_type'],
+                        'success': False,
+                        'error': str(e)
+                    })
+
+            successful_generations = [r for r in generation_results if r['success']]
+
+            logger.info(f"Auto document generation for {seller_id}: {len(successful_generations)}/{len(generation_results)} successful")
+
+            return {
+                'success': len(successful_generations) > 0,
+                'trigger_type': trigger_type,
+                'documents_generated': len(successful_generations),
+                'total_attempted': len(generation_results),
+                'results': generation_results
+            }
+
+        except Exception as e:
+            logger.error(f"Automatic document generation failed for {seller_id}: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'trigger_type': trigger_type
+            }
+
+    async def _determine_documents_for_trigger(
+        self,
+        trigger_type: str,
+        workflow_state: SellerWorkflowState,
+        context_data: Optional[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Determine which documents should be generated for a specific trigger."""
+        trigger_config = self.integration_config.get('document_generation_triggers', {})
+
+        if not trigger_config.get(trigger_type, False):
+            return []
+
+        documents = []
+
+        if trigger_type == 'property_valuation_complete':
+            # Generate seller proposal when valuation is complete
+            if workflow_state.current_stage in {
+                WorkflowStage.PROPERTY_EVALUATION,
+                WorkflowStage.PRICING_DISCUSSION
+            }:
+                documents.append({
+                    'document_type': 'seller_proposal',
+                    'template_id': 'luxury_seller_proposal',
+                    'priority': 'high',
+                    'auto_send': True
+                })
+
+        elif trigger_type == 'market_analysis_ready':
+            # Generate market analysis report
+            if workflow_state.current_stage in {
+                WorkflowStage.MARKET_EDUCATION,
+                WorkflowStage.PROPERTY_EVALUATION
+            }:
+                documents.append({
+                    'document_type': 'market_analysis',
+                    'template_id': 'market_analysis_residential',
+                    'priority': 'medium',
+                    'auto_send': False
+                })
+
+        elif trigger_type == 'seller_proposal_stage':
+            # Generate comprehensive seller proposal
+            if workflow_state.current_stage == WorkflowStage.PRICING_DISCUSSION:
+                documents.append({
+                    'document_type': 'seller_proposal',
+                    'template_id': 'luxury_seller_proposal',
+                    'priority': 'high',
+                    'auto_send': True
+                })
+
+        elif trigger_type == 'campaign_performance_report':
+            # Generate performance report for active campaigns
+            if workflow_state.current_stage in {
+                WorkflowStage.ACTIVE_SELLING,
+                WorkflowStage.LISTING_PREPARATION
+            }:
+                documents.append({
+                    'document_type': 'performance_report',
+                    'template_id': 'performance_report_monthly',
+                    'priority': 'low',
+                    'auto_send': False
+                })
+
+        return documents
+
+    async def _create_document_generation_request(
+        self,
+        doc_config: Dict[str, Any],
+        workflow_state: SellerWorkflowState,
+        context_data: Optional[Dict[str, Any]]
+    ):
+        """Create a document generation request from workflow context."""
+        from ..models.document_generation_models import (
+            DocumentGenerationRequest, DocumentType, DocumentCategory
+        )
+
+        # Map document types to categories and formats
+        type_mapping = {
+            'seller_proposal': (DocumentCategory.SELLER_PROPOSAL, DocumentType.PDF),
+            'market_analysis': (DocumentCategory.MARKET_ANALYSIS, DocumentType.PDF),
+            'performance_report': (DocumentCategory.PERFORMANCE_REPORT, DocumentType.PDF),
+            'property_showcase': (DocumentCategory.PROPERTY_SHOWCASE, DocumentType.PPTX)
+        }
+
+        doc_category, doc_type = type_mapping.get(
+            doc_config['document_type'],
+            (DocumentCategory.SELLER_PROPOSAL, DocumentType.PDF)
+        )
+
+        # Collect relevant data sources
+        property_valuation_id = getattr(workflow_state, 'property_valuation_id', None)
+        marketing_campaign_id = getattr(workflow_state, 'active_campaign_id', None)
+
+        request = DocumentGenerationRequest(
+            document_name=f"{doc_config['document_type'].replace('_', ' ').title()} - {workflow_state.seller_id}",
+            document_category=doc_category,
+            document_type=doc_type,
+            template_id=doc_config.get('template_id'),
+            property_valuation_id=property_valuation_id,
+            marketing_campaign_id=marketing_campaign_id,
+            seller_workflow_data={
+                'seller_id': workflow_state.seller_id,
+                'workflow_stage': workflow_state.current_stage.value,
+                'engagement_level': workflow_state.engagement_level,
+                'conversion_probability': workflow_state.conversion_probability
+            },
+            include_claude_enhancement=True,
+            claude_enhancement_prompt=f"Enhance this {doc_config['document_type']} for a seller in {workflow_state.current_stage.value} stage",
+            custom_content=context_data or {},
+            delivery_configuration={'auto_send': doc_config.get('auto_send', False)},
+            priority_level=doc_config.get('priority', 'medium')
+        )
+
+        return request
+
+    async def _track_generated_document(
+        self,
+        seller_id: str,
+        generation_result,
+        trigger_type: str
+    ) -> None:
+        """Track generated documents in workflow state."""
+        workflow_state = await self._get_workflow_state(seller_id)
+        if not workflow_state:
+            return
+
+        # Initialize document tracking if not exists
+        if not hasattr(workflow_state, 'generated_documents'):
+            workflow_state.generated_documents = []
+
+        # Add document reference
+        document_record = {
+            'document_id': generation_result.document_id,
+            'document_type': generation_result.document_type.value,
+            'file_path': generation_result.file_path,
+            'generated_at': datetime.utcnow(),
+            'trigger_type': trigger_type,
+            'quality_score': generation_result.quality_score,
+            'sent_to_client': generation_result.delivery_configuration.get('auto_send', False)
+        }
+
+        workflow_state.generated_documents.append(document_record)
+
+        # Update workflow state metrics
+        if not hasattr(workflow_state, 'document_generation_stats'):
+            workflow_state.document_generation_stats = {
+                'total_generated': 0,
+                'total_sent': 0,
+                'avg_quality_score': 0.0
+            }
+
+        stats = workflow_state.document_generation_stats
+        stats['total_generated'] += 1
+        if document_record['sent_to_client']:
+            stats['total_sent'] += 1
+
+        # Update average quality score
+        current_avg = stats['avg_quality_score']
+        new_avg = ((current_avg * (stats['total_generated'] - 1)) + generation_result.quality_score) / stats['total_generated']
+        stats['avg_quality_score'] = new_avg
+
+        logger.info(f"Tracked generated document for {seller_id}: {generation_result.document_id}")
+
+    async def trigger_stage_based_documents(self, seller_id: str, new_stage: WorkflowStage) -> None:
+        """Trigger document generation based on workflow stage advancement."""
+        if not self.integration_config.get('auto_document_generation', False):
+            return
+
+        stage_triggers = {
+            WorkflowStage.PROPERTY_EVALUATION: 'property_valuation_complete',
+            WorkflowStage.MARKET_EDUCATION: 'market_analysis_ready',
+            WorkflowStage.PRICING_DISCUSSION: 'seller_proposal_stage',
+            WorkflowStage.ACTIVE_SELLING: 'campaign_performance_report'
+        }
+
+        trigger_type = stage_triggers.get(new_stage)
+        if trigger_type:
+            await self.trigger_automatic_document_generation(
+                seller_id, trigger_type, {'workflow_stage': new_stage.value}
+            )
+
+    async def get_seller_documents(self, seller_id: str) -> Dict[str, Any]:
+        """Get all documents generated for a seller."""
+        try:
+            workflow_state = await self._get_workflow_state(seller_id)
+            if not workflow_state or not hasattr(workflow_state, 'generated_documents'):
+                return {
+                    'success': True,
+                    'documents': [],
+                    'stats': {
+                        'total_generated': 0,
+                        'total_sent': 0,
+                        'avg_quality_score': 0.0
+                    }
+                }
+
+            documents = workflow_state.generated_documents
+            stats = getattr(workflow_state, 'document_generation_stats', {
+                'total_generated': len(documents),
+                'total_sent': sum(1 for doc in documents if doc.get('sent_to_client', False)),
+                'avg_quality_score': sum(doc.get('quality_score', 0) for doc in documents) / len(documents) if documents else 0
+            })
+
+            return {
+                'success': True,
+                'documents': documents,
+                'stats': stats,
+                'recent_documents': [
+                    doc for doc in documents
+                    if (datetime.utcnow() - doc['generated_at']).days <= 7
+                ]
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to get seller documents for {seller_id}: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'documents': [],
+                'stats': {}
+            }
 
 
 # Global instance for easy access

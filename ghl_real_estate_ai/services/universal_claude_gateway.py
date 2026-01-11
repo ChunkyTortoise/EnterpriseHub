@@ -30,6 +30,10 @@ from .enhanced_claude_agent_service import (
     EnhancedClaudeAgentService, EnhancedCoachingResponse
 )
 from .agent_profile_service import AgentProfileService
+from .claude_performance_optimizer import (
+    ClaudePerformanceOptimizer, get_performance_optimizer,
+    optimize_claude_request, cache_claude_response
+)
 from ..models.agent_profile_models import (
     AgentProfile, AgentSession, AgentRole, GuidanceType
 )
@@ -147,23 +151,35 @@ class UniversalClaudeGateway:
         self.enhanced_claude = EnhancedClaudeAgentService()
         self.agent_profile_service = AgentProfileService()
 
+        # Performance optimizer
+        self.performance_optimizer: Optional[ClaudePerformanceOptimizer] = None
+
         # Service registry for dynamic loading
         self.claude_services: Dict[str, Any] = {}
         self.service_health: Dict[str, Dict[str, Any]] = {}
-
-        # Performance optimization
-        self.response_cache: Dict[str, Dict[str, Any]] = {}
-        self.cache_ttl_seconds = 300  # 5 minutes default
 
         # Routing intelligence
         self.routing_rules = self._initialize_routing_rules()
         self.performance_history: Dict[str, List[float]] = {}
 
-        # Cost optimization
+        # Legacy cache support (will be migrated to performance optimizer)
+        self.response_cache: Dict[str, Dict[str, Any]] = {}
+        self.cache_ttl_seconds = 300
+
+        # Legacy cost optimization (will be migrated to performance optimizer)
         self.model_selection_cache: Dict[str, str] = {}
         self.usage_tracking: Dict[str, int] = {}
 
         logger.info("Universal Claude Gateway initialized")
+
+    async def initialize(self) -> None:
+        """Initialize async components including performance optimizer."""
+        try:
+            # Initialize performance optimizer
+            self.performance_optimizer = await get_performance_optimizer()
+            logger.info("Performance optimizer integrated with Universal Claude Gateway")
+        except Exception as e:
+            logger.warning(f"Performance optimizer initialization warning: {e}")
 
     def _initialize_routing_rules(self) -> List[ServiceRoutingRule]:
         """Initialize intelligent service routing rules."""
@@ -260,44 +276,58 @@ class UniversalClaudeGateway:
         start_time = datetime.now()
 
         try:
-            # 1. Load agent profile and session context
+            # 0. Initialize performance optimizer if not done
+            if not self.performance_optimizer:
+                await self.initialize()
+
+            # 1. Performance optimization: Check cache first
+            cached_response = None
+            if request.enable_caching and self.performance_optimizer:
+                cached_response, is_cache_hit = await self.performance_optimizer.optimize_request(request)
+                if is_cache_hit and cached_response:
+                    cached_response.processing_time_ms = (
+                        datetime.now() - start_time
+                    ).total_seconds() * 1000
+                    logger.debug(f"Cache hit for query: {request.query[:50]}...")
+                    return cached_response
+
+            # 2. Load agent profile and session context
             agent_profile, session_context = await self._load_agent_context(
                 request.agent_id, request.session_id, request.location_id
             )
 
-            # 2. Intelligent service routing
+            # 3. Intelligent service routing with performance optimization
             service_name, fallback_chain = await self._route_to_service(
                 request, agent_profile
             )
 
-            # 3. Check cache if enabled
-            if request.enable_caching:
-                cached_response = await self._check_cache(request)
-                if cached_response:
-                    cached_response.processing_time_ms = (
-                        datetime.now() - start_time
-                    ).total_seconds() * 1000
-                    return cached_response
+            # 4. Optimize model selection if performance optimizer available
+            if self.performance_optimizer:
+                optimal_model = await self.performance_optimizer.optimize_model_selection(request)
+                # Store optimal model for service execution (would need service support)
+                request.context = request.context or {}
+                request.context['optimal_model'] = optimal_model
 
-            # 4. Execute query with selected service
+            # 5. Execute query with selected service
             response = await self._execute_with_service(
                 service_name, request, agent_profile, session_context, fallback_chain
             )
 
-            # 5. Enhance response with universal context
+            # 6. Enhance response with universal context
             enhanced_response = await self._enhance_response_context(
                 response, agent_profile, session_context, service_name
             )
 
-            # 6. Update session context and cache
+            # 7. Update session context
             await self._update_session_context(
                 request, enhanced_response, agent_profile
             )
 
-            if request.enable_caching:
-                await self._cache_response(request, enhanced_response)
+            # 8. Cache response with performance optimizer
+            if request.enable_caching and self.performance_optimizer:
+                await self.performance_optimizer.cache_response(request, enhanced_response)
 
-            # 7. Track performance metrics
+            # 9. Track performance metrics
             processing_time = (datetime.now() - start_time).total_seconds() * 1000
             enhanced_response.processing_time_ms = processing_time
 
@@ -305,7 +335,8 @@ class UniversalClaudeGateway:
 
             logger.info(
                 f"Universal query processed: {service_name} | "
-                f"{processing_time:.1f}ms | Agent: {agent_profile.primary_role if agent_profile else 'unknown'}"
+                f"{processing_time:.1f}ms | Agent: {agent_profile.primary_role if agent_profile else 'unknown'} | "
+                f"Optimized: {self.performance_optimizer is not None}"
             )
 
             return enhanced_response
@@ -695,10 +726,11 @@ class UniversalClaudeGateway:
 
     # Performance monitoring methods
     async def get_service_health(self) -> Dict[str, Any]:
-        """Get health status of all Claude services."""
+        """Get comprehensive health status of all Claude services with optimization metrics."""
 
         health_status = {}
 
+        # Legacy performance history
         for service_name, history in self.performance_history.items():
             if history:
                 avg_time = sum(history) / len(history)
@@ -708,11 +740,56 @@ class UniversalClaudeGateway:
                     "status": "healthy" if avg_time < 1000 else "slow"
                 }
 
+        # Enhanced performance optimizer metrics
+        if self.performance_optimizer:
+            try:
+                optimizer_stats = await self.performance_optimizer.get_performance_statistics()
+                health_status["performance_optimization"] = {
+                    "enabled": True,
+                    "total_requests": optimizer_stats.get("total_requests", 0),
+                    "avg_response_time_ms": optimizer_stats.get("avg_response_time_ms", 0),
+                    "cache_hit_rate": optimizer_stats.get("cache_hit_rate", 0),
+                    "cost_savings_usd": optimizer_stats.get("estimated_cost_savings_usd", 0),
+                    "compression_savings_mb": optimizer_stats.get("compression_savings_mb", 0),
+                    "error_rate": optimizer_stats.get("error_rate", 0),
+                    "status": "optimal" if optimizer_stats.get("cache_hit_rate", 0) > 0.5 else "normal"
+                }
+            except Exception as e:
+                logger.error(f"Error getting optimizer stats: {e}")
+                health_status["performance_optimization"] = {
+                    "enabled": True,
+                    "status": "error",
+                    "error": str(e)
+                }
+        else:
+            health_status["performance_optimization"] = {
+                "enabled": False,
+                "status": "not_initialized"
+            }
+
         return health_status
 
     async def get_cache_statistics(self) -> Dict[str, Any]:
-        """Get cache performance statistics."""
+        """Get comprehensive cache performance statistics."""
 
+        # Use performance optimizer statistics if available
+        if self.performance_optimizer:
+            try:
+                optimizer_stats = await self.performance_optimizer.get_performance_statistics()
+                return {
+                    "total_cached_responses": optimizer_stats.get("cache_size_entries", 0),
+                    "valid_cache_entries": optimizer_stats.get("cache_size_entries", 0),
+                    "cache_hit_rate": f"{optimizer_stats.get('cache_hit_rate', 0):.1%}",
+                    "cache_hits": optimizer_stats.get("total_cache_hits", 0),
+                    "cache_misses": optimizer_stats.get("total_cache_misses", 0),
+                    "compression_savings_mb": optimizer_stats.get("compression_savings_mb", 0),
+                    "cost_savings_usd": optimizer_stats.get("estimated_cost_savings_usd", 0),
+                    "performance_optimized": True
+                }
+            except Exception as e:
+                logger.error(f"Error getting optimizer cache stats: {e}")
+
+        # Fallback to legacy cache statistics
         total_entries = len(self.response_cache)
         current_time = datetime.now()
 
@@ -724,8 +801,9 @@ class UniversalClaudeGateway:
         return {
             "total_cached_responses": total_entries,
             "valid_cache_entries": valid_entries,
-            "cache_hit_rate": "Not yet available",  # Would track this with usage
-            "cache_ttl_seconds": self.cache_ttl_seconds
+            "cache_hit_rate": "Not available (legacy mode)",
+            "cache_ttl_seconds": self.cache_ttl_seconds,
+            "performance_optimized": False
         }
 
 

@@ -1,0 +1,270 @@
+{
+  "template_registry": {
+    "luxury_seller_proposal": {
+      "template_id": "luxury_seller_proposal",
+      "template_name": "Luxury Seller Proposal",
+      "template_file": "seller_proposal_luxury.html",
+      "document_category": "seller_proposal",
+      "document_type": "pdf",
+      "template_style": "luxury",
+      "description": "Premium seller proposal template for luxury properties with professional design and comprehensive market analysis",
+      "property_types": ["luxury_home", "luxury_condo", "estate", "high_end"],
+      "market_segments": ["luxury", "premium"],
+      "target_audience": ["luxury_sellers", "high_net_worth"],
+      "required_data_sources": ["property_valuation"],
+      "optional_data_sources": ["marketing_campaign", "seller_workflow"],
+      "content_placeholders": {
+        "seller_name": "Client name",
+        "property_address": "Property address",
+        "estimated_value": "Property valuation amount",
+        "confidence_score": "Valuation confidence percentage",
+        "days_on_market": "Expected days on market",
+        "price_appreciation": "Market appreciation percentage",
+        "neighborhood": "Property neighborhood",
+        "market_activity": "Current market activity level",
+        "above_asking_percentage": "Average percentage of asking price achieved",
+        "comparable_sales": "Array of comparable sales data",
+        "agent_name": "Agent name",
+        "agent_phone": "Agent phone number",
+        "agent_email": "Agent email address",
+        "company_name": "Company name",
+        "generation_date": "Document generation date"
+      },
+      "supports_branding": true,
+      "allows_customization": true,
+      "preview_available": true,
+      "estimated_generation_time_ms": 1800,
+      "quality_score": 0.95
+    },
+
+    "market_analysis_residential": {
+      "template_id": "market_analysis_residential",
+      "template_name": "Residential Market Analysis",
+      "template_file": "market_analysis_residential.html",
+      "document_category": "market_analysis",
+      "document_type": "pdf",
+      "template_style": "executive",
+      "description": "Comprehensive residential market analysis with trends, metrics, and forecasting",
+      "property_types": ["single_family", "condo", "townhouse", "multi_family"],
+      "market_segments": ["residential", "investment", "first_time_buyer"],
+      "target_audience": ["buyers", "sellers", "investors", "agents"],
+      "required_data_sources": ["property_valuation", "claude_generated"],
+      "optional_data_sources": ["marketing_campaign"],
+      "content_placeholders": {
+        "analysis_area": "Market analysis area",
+        "analysis_period": "Analysis time period",
+        "generation_date": "Report generation date",
+        "market_condition": "Current market condition description",
+        "price_trend_direction": "Price trend direction",
+        "inventory_level": "Inventory level description",
+        "median_sale_price": "Median sale price",
+        "price_change_percentage": "Price change percentage",
+        "market_strength": "Market strength indicator",
+        "price_range_focus": "Focus price range",
+        "days_on_market": "Average days on market",
+        "absorption_rate": "Market absorption rate",
+        "inventory_months": "Months of inventory",
+        "sale_to_list_ratio": "Sale to list price ratio",
+        "new_listings": "New listings count",
+        "closed_sales": "Closed sales count",
+        "property_types": "Array of property type data",
+        "comparable_markets": "Array of comparable market data",
+        "recommendations": "Array of strategic recommendations",
+        "company_name": "Company name",
+        "analyst_name": "Market analyst name",
+        "contact_info": "Contact information"
+      },
+      "supports_branding": true,
+      "allows_customization": true,
+      "preview_available": true,
+      "estimated_generation_time_ms": 2200,
+      "quality_score": 0.93
+    },
+
+    "performance_report_monthly": {
+      "template_id": "performance_report_monthly",
+      "template_name": "Monthly Performance Report",
+      "template_file": "performance_report_monthly.html",
+      "document_category": "performance_report",
+      "document_type": "pdf",
+      "template_style": "executive",
+      "description": "Comprehensive monthly performance analytics with KPIs, campaign metrics, and business insights",
+      "property_types": ["all"],
+      "market_segments": ["all"],
+      "target_audience": ["agents", "brokers", "managers", "executives"],
+      "required_data_sources": ["marketing_campaign", "seller_workflow"],
+      "optional_data_sources": ["property_valuation"],
+      "content_placeholders": {
+        "report_title": "Report title",
+        "report_period": "Reporting period",
+        "generation_date": "Report generation date",
+        "total_leads": "Total leads count",
+        "conversion_rate": "Lead conversion rate",
+        "total_revenue": "Total revenue generated",
+        "roi_multiple": "ROI multiple",
+        "email_open_rate": "Email open rate percentage",
+        "campaigns_active": "Active campaigns count",
+        "total_campaigns": "Total campaigns executed",
+        "avg_open_rate": "Average open rate",
+        "avg_click_rate": "Average click rate",
+        "campaigns_above_target": "Campaigns above target",
+        "campaigns": "Array of campaign performance data",
+        "lead_quality_score": "Lead quality score",
+        "engagement_score": "Engagement score",
+        "satisfaction_score": "Client satisfaction score",
+        "goal_achievement": "Goal achievement percentage",
+        "detailed_metrics": "Array of detailed metrics",
+        "insights": "Array of business insights",
+        "recommendations": "Array of strategic recommendations",
+        "company_name": "Company name",
+        "analyst_name": "Report analyst name",
+        "contact_information": "Contact information",
+        "next_report_date": "Next report date"
+      },
+      "supports_branding": true,
+      "allows_customization": true,
+      "preview_available": true,
+      "estimated_generation_time_ms": 2000,
+      "quality_score": 0.94
+    }
+  },
+
+  "template_categories": {
+    "seller_proposal": {
+      "description": "Professional proposals for potential sellers",
+      "common_use_cases": ["luxury_listings", "market_analysis", "service_presentation"],
+      "typical_audience": ["property_owners", "potential_sellers"],
+      "recommended_templates": ["luxury_seller_proposal"]
+    },
+    "market_analysis": {
+      "description": "Comprehensive market research and analysis reports",
+      "common_use_cases": ["market_research", "investment_analysis", "buyer_education"],
+      "typical_audience": ["buyers", "sellers", "investors", "analysts"],
+      "recommended_templates": ["market_analysis_residential"]
+    },
+    "performance_report": {
+      "description": "Business performance and analytics reporting",
+      "common_use_cases": ["monthly_reporting", "campaign_analysis", "roi_tracking"],
+      "typical_audience": ["management", "stakeholders", "analysts"],
+      "recommended_templates": ["performance_report_monthly"]
+    },
+    "property_showcase": {
+      "description": "Property marketing and showcase presentations",
+      "common_use_cases": ["property_marketing", "buyer_presentations"],
+      "typical_audience": ["buyers", "prospects"],
+      "recommended_templates": []
+    },
+    "listing_presentation": {
+      "description": "Professional listing presentations for clients",
+      "common_use_cases": ["client_presentations", "service_overview"],
+      "typical_audience": ["potential_clients", "sellers"],
+      "recommended_templates": []
+    }
+  },
+
+  "template_styles": {
+    "luxury": {
+      "description": "Premium design with gold accents and sophisticated typography",
+      "color_scheme": ["#1a1a1a", "#d4af37", "#ffffff", "#f8f9fa"],
+      "typography": "Georgia, serif with luxury spacing",
+      "visual_elements": ["gradient_backgrounds", "premium_borders", "luxury_patterns"],
+      "best_for": ["high_end_properties", "luxury_market", "premium_services"]
+    },
+    "executive": {
+      "description": "Professional business design with clean lines and data visualization",
+      "color_scheme": ["#2c3e50", "#3498db", "#ffffff", "#f8f9fa"],
+      "typography": "Arial, sans-serif with professional spacing",
+      "visual_elements": ["data_charts", "clean_tables", "business_icons"],
+      "best_for": ["business_reports", "market_analysis", "professional_presentations"]
+    },
+    "modern": {
+      "description": "Contemporary design with gradient accents and interactive elements",
+      "color_scheme": ["#667eea", "#764ba2", "#ffffff", "#f8f9fa"],
+      "typography": "Segoe UI with modern spacing",
+      "visual_elements": ["gradients", "cards", "progress_indicators"],
+      "best_for": ["performance_reports", "dashboard_style", "engaging_presentations"]
+    },
+    "classic": {
+      "description": "Traditional design with timeless elements and conservative styling",
+      "color_scheme": ["#333333", "#666666", "#ffffff", "#f5f5f5"],
+      "typography": "Times New Roman with traditional spacing",
+      "visual_elements": ["borders", "traditional_tables", "conservative_layout"],
+      "best_for": ["formal_documents", "legal_presentations", "traditional_clients"]
+    },
+    "minimalist": {
+      "description": "Clean, simple design focusing on content with minimal visual elements",
+      "color_scheme": ["#333333", "#999999", "#ffffff"],
+      "typography": "Helvetica with generous white space",
+      "visual_elements": ["minimal_borders", "clean_typography", "white_space"],
+      "best_for": ["content_focus", "simple_reports", "clean_presentations"]
+    }
+  },
+
+  "integration_mappings": {
+    "property_valuation": {
+      "data_fields": [
+        "property_address", "estimated_value", "confidence_score", "valuation_date",
+        "comparable_sales", "market_trends", "neighborhood_data", "property_features"
+      ],
+      "compatible_categories": ["seller_proposal", "market_analysis", "property_showcase"],
+      "processing_priority": "high"
+    },
+    "marketing_campaign": {
+      "data_fields": [
+        "campaign_name", "performance_metrics", "audience_data", "engagement_stats",
+        "roi_data", "conversion_metrics", "channel_performance"
+      ],
+      "compatible_categories": ["performance_report", "seller_proposal"],
+      "processing_priority": "medium"
+    },
+    "seller_workflow": {
+      "data_fields": [
+        "seller_name", "workflow_stage", "engagement_level", "interaction_history",
+        "progress_metrics", "satisfaction_data"
+      ],
+      "compatible_categories": ["seller_proposal", "performance_report"],
+      "processing_priority": "medium"
+    },
+    "claude_generated": {
+      "data_fields": [
+        "enhanced_content", "market_insights", "recommendations", "analysis_text"
+      ],
+      "compatible_categories": ["all"],
+      "processing_priority": "low"
+    }
+  },
+
+  "performance_benchmarks": {
+    "generation_targets": {
+      "pdf_generation_ms": 2000,
+      "docx_generation_ms": 1500,
+      "pptx_generation_ms": 3000,
+      "html_generation_ms": 800,
+      "template_processing_ms": 500,
+      "content_integration_ms": 800,
+      "claude_enhancement_ms": 1000
+    },
+    "quality_standards": {
+      "minimum_quality_score": 0.85,
+      "content_completeness_threshold": 0.80,
+      "design_consistency_score": 0.90,
+      "data_accuracy_threshold": 0.95
+    },
+    "success_metrics": {
+      "template_cache_hit_rate_target": 0.80,
+      "generation_success_rate_target": 0.99,
+      "user_satisfaction_target": 0.90,
+      "template_reuse_rate_target": 0.75
+    }
+  },
+
+  "configuration_metadata": {
+    "version": "1.0.0",
+    "last_updated": "2026-01-10",
+    "total_templates": 3,
+    "supported_categories": 5,
+    "supported_styles": 5,
+    "integration_sources": 4,
+    "schema_version": "2024.1"
+  }
+}

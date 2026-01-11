@@ -14,7 +14,7 @@ from enum import Enum
 from dataclasses import dataclass, field
 import json
 
-from services.learning.interfaces import (
+from ghl_real_estate_ai.services.learning.interfaces import (
     BehavioralEvent, EventType, LearningContext,
     IBehaviorTracker, IFeatureEngineer, IPersonalizationEngine
 )

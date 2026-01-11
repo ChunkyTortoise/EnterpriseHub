@@ -25,7 +25,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 # Local imports
-from models.evaluation_models import (
+from ghl_real_estate_ai.models.evaluation_models import (
     ObjectionAnalysis,
     RecommendedAction,
     SentimentType,

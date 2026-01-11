@@ -36,6 +36,31 @@ class MockService:
         def method(*args, **kwargs): return {}
         return method
 
+# Smart Navigation imports
+try:
+    from services.smart_navigation_service import (
+        initialize_smart_navigation,
+        render_smart_breadcrumbs,
+        render_contextual_actions,
+        update_nav_context
+    )
+    SMART_NAVIGATION_AVAILABLE = True
+except ImportError:
+    st.warning("Smart Navigation Service unavailable, using basic navigation.")
+    SMART_NAVIGATION_AVAILABLE = False
+
+# Enhanced Visualization imports
+try:
+    from services.enhanced_visualization_service import (
+        create_enhanced_visualizations,
+        generate_real_estate_charts,
+        ChartTheme
+    )
+    ENHANCED_VISUALIZATION_AVAILABLE = True
+except ImportError:
+    st.warning("Enhanced Visualization Service unavailable, using basic charts.")
+    ENHANCED_VISUALIZATION_AVAILABLE = False
+
 # Individual service imports with fallbacks
 try:
     from services.lead_scorer import LeadScorer
@@ -124,6 +149,43 @@ try:
 except ImportError:
     st.warning("Workflow Marketplace unavailable, using mock.")
     WorkflowMarketplace = MockService
+
+# User Onboarding Service imports
+try:
+    from services.user_onboarding_service import (
+        initialize_onboarding,
+        render_onboarding_trigger,
+        render_contextual_help,
+        handle_onboarding_flow
+    )
+    USER_ONBOARDING_AVAILABLE = True
+except ImportError:
+    st.warning("User Onboarding Service unavailable, basic onboarding only.")
+    USER_ONBOARDING_AVAILABLE = False
+
+# Unified Workflow Engine imports
+try:
+    from services.unified_workflow_engine import (
+        initialize_workflow_engine,
+        render_workflow_dashboard,
+        UnifiedWorkflowEngine
+    )
+    UNIFIED_WORKFLOW_AVAILABLE = True
+except ImportError:
+    st.warning("Unified Workflow Engine unavailable, using basic automation.")
+    UNIFIED_WORKFLOW_AVAILABLE = False
+
+# Advanced Dashboard Suite imports
+try:
+    from services.advanced_dashboard_suite import (
+        initialize_dashboard_suite,
+        render_advanced_dashboards,
+        AdvancedDashboardSuite
+    )
+    ADVANCED_DASHBOARD_AVAILABLE = True
+except ImportError:
+    st.warning("Advanced Dashboard Suite unavailable, using basic dashboards.")
+    ADVANCED_DASHBOARD_AVAILABLE = False
 
 try:
     from services.auto_followup_sequences import AutoFollowupSequences
@@ -426,6 +488,10 @@ with st.sidebar:
     with c4:
         st.plotly_chart(sparkline([80, 95, 110, 105, 130, 145, 156], color="#10b981", height=50), use_container_width=True, config={'displayModeBar': False})
     
+    # User Onboarding Trigger
+    if USER_ONBOARDING_AVAILABLE:
+        render_onboarding_trigger()
+
     st.markdown("---")
     st.markdown("### Live Feed")
     st.markdown("""
@@ -439,14 +505,42 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# Main content area
+# Initialize Smart Navigation
+if SMART_NAVIGATION_AVAILABLE:
+    smart_nav = initialize_smart_navigation()
+
+# Initialize Enhanced Visualizations
+if ENHANCED_VISUALIZATION_AVAILABLE:
+    viz_service = create_enhanced_visualizations()
+
+# Handle active onboarding flow (overlay)
+if USER_ONBOARDING_AVAILABLE:
+    handle_onboarding_flow()
+
+# Main content area with enhanced navigation
 if selected_hub == "Executive Command Center":
+    # Update navigation context
+    if SMART_NAVIGATION_AVAILABLE:
+        update_nav_context("executive", hub="Executive Command Center", section="dashboard")
+
+        # Render breadcrumb navigation
+        render_smart_breadcrumbs()
+
+        # Render contextual actions sidebar
+        with st.sidebar:
+            st.markdown("---")
+            render_contextual_actions("executive")
+
+    # Contextual Help for Executive Hub
+    if USER_ONBOARDING_AVAILABLE:
+        render_contextual_help("executive")
+
     st.header("Executive Command Center")
     st.markdown("*High-level KPIs, revenue tracking, and system health*")
 
     # Tabs for sub-features
-    tab1, tab2, tab3 = st.tabs(["Dashboard", "AI Insights", "Reports"])
-    
+    tab1, tab2, tab3, tab4 = st.tabs(["Dashboard", "Advanced Analytics", "AI Insights", "Reports"])
+
     with tab1:
         st.subheader("Executive Command Center")
         
@@ -532,8 +626,33 @@ if selected_hub == "Executive Command Center":
             yaxis=dict(gridcolor=COLORS['grid'])
         )
         st.plotly_chart(fig, use_container_width=True)
-        
+
     with tab2:
+        # Advanced Analytics Dashboard Suite
+        if ADVANCED_DASHBOARD_AVAILABLE:
+            render_advanced_dashboards()
+        else:
+            st.warning("Advanced Dashboard Suite unavailable")
+            st.info("**Available in full version:**\n\n"
+                   "- Cross-hub analytics correlation\n"
+                   "- Predictive insights and forecasting\n"
+                   "- Custom dashboard builder\n"
+                   "- AI-powered anomaly detection\n"
+                   "- ROI attribution analysis\n"
+                   "- Real-time performance monitoring")
+
+            # Show basic preview
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Cross-Hub Correlation", "78%", "+5%")
+            with col2:
+                st.metric("Prediction Accuracy", "94%", "+2%")
+            with col3:
+                st.metric("Custom Dashboards", "12", "+3")
+            with col4:
+                st.metric("Anomalies Detected", "2", "-1")
+
+    with tab3:
         st.subheader("AI System Insights")
         
         # Get dynamic insights
@@ -562,7 +681,60 @@ if selected_hub == "Executive Command Center":
             c2.metric("Avg Latency", f"{health['avg_response_time_ms']}ms")
             c3.metric("SMS Compliance", f"{health['sms_compliance_rate']*100}%")
 
-    with tab3:
+        # Enhanced Real Estate Visualizations
+        if ENHANCED_VISUALIZATION_AVAILABLE:
+            st.markdown("---")
+            st.markdown("#### 🎯 Enhanced Analytics Dashboard")
+
+            viz_col1, viz_col2 = st.columns(2)
+
+            with viz_col1:
+                # Lead Conversion Funnel
+                funnel_data = {
+                    "Website Visitors": 2840,
+                    "Lead Inquiries": 485,
+                    "Qualified Leads": 156,
+                    "Appointments": 89,
+                    "Contracts": 23
+                }
+                funnel_fig = viz_service.generate_conversion_funnel(
+                    funnel_data,
+                    title="Lead Conversion Funnel",
+                    height=300
+                )
+                st.plotly_chart(funnel_fig, use_container_width=True)
+
+            with viz_col2:
+                # Commission Analysis
+                commission_data = {
+                    "breakdown": {
+                        "Buyer Commission": 125000,
+                        "Seller Commission": 95000,
+                        "Referral Fees": 15000,
+                        "Other Revenue": 8000
+                    },
+                    "monthly_trend": {
+                        "Jan": 45000,
+                        "Feb": 52000,
+                        "Mar": 48000,
+                        "Apr": 58000,
+                        "May": 65000,
+                        "Jun": 72000
+                    },
+                    "deal_sizes": [15000, 18000, 22000, 16000, 25000, 19000, 21000, 17000, 23000, 20000],
+                    "projections": {
+                        "Q1": {"projected": 150000, "actual": 145000},
+                        "Q2": {"projected": 170000, "actual": 175000}
+                    }
+                }
+                commission_fig = viz_service.generate_commission_analysis(
+                    commission_data,
+                    title="Commission Analysis",
+                    height=300
+                )
+                st.plotly_chart(commission_fig, use_container_width=True)
+
+    with tab4:
         st.subheader("Actionable Executive Report")
         
         action_items = summary.get("action_items", [])
@@ -588,6 +760,22 @@ if selected_hub == "Executive Command Center":
             st.toast("Report sent to jorge@example.com")
 
 elif selected_hub == "Lead Intelligence Hub":
+    # Update navigation context
+    if SMART_NAVIGATION_AVAILABLE:
+        update_nav_context("leads", hub="Lead Intelligence Hub", section="scoring")
+
+        # Render breadcrumb navigation
+        render_smart_breadcrumbs()
+
+        # Render contextual actions sidebar
+        with st.sidebar:
+            st.markdown("---")
+            render_contextual_actions("leads")
+
+    # Contextual Help for Leads Hub
+    if USER_ONBOARDING_AVAILABLE:
+        render_contextual_help("leads")
+
     st.header("Lead Intelligence Hub")
     st.markdown("*Deep dive into individual leads with AI-powered insights*")
 
@@ -605,16 +793,34 @@ elif selected_hub == "Lead Intelligence Hub":
         col_map, col_details = st.columns([1, 1])
         
         with col_map:
-            st.markdown("#### 📍 Hot Lead Clusters")
-            # Generate mock map data
-            map_data = pd.DataFrame({
-                'lat': [30.2672, 30.2700, 30.2500, 30.2800, 30.2600],
-                'lon': [-97.7431, -97.7500, -97.7300, -97.7600, -97.7400],
-                'type': ['Hot', 'Hot', 'Warm', 'Cold', 'Hot'],
-                'value': [100, 80, 50, 20, 90]
-            })
-            
-            st.map(map_data, zoom=11, use_container_width=True)
+            st.markdown("#### 📍 Lead Density Heatmap")
+
+            if ENHANCED_VISUALIZATION_AVAILABLE:
+                # Enhanced geographic heatmap
+                location_data = pd.DataFrame({
+                    'lat': [30.2672, 30.2700, 30.2500, 30.2800, 30.2600, 30.2680, 30.2720, 30.2540],
+                    'lon': [-97.7431, -97.7500, -97.7300, -97.7600, -97.7400, -97.7420, -97.7480, -97.7320],
+                    'lead_density': [95, 88, 65, 45, 92, 78, 85, 58],
+                    'location_name': ['Downtown', 'Westlake', 'East Austin', 'North Austin', 'South Austin', 'Central', 'West Campus', 'Mueller']
+                })
+
+                heatmap_fig = viz_service.generate_lead_density_map(
+                    location_data,
+                    metric='lead_density',
+                    title="Lead Density Analysis",
+                    height=400
+                )
+                st.plotly_chart(heatmap_fig, use_container_width=True)
+            else:
+                # Fallback to basic map
+                map_data = pd.DataFrame({
+                    'lat': [30.2672, 30.2700, 30.2500, 30.2800, 30.2600],
+                    'lon': [-97.7431, -97.7500, -97.7300, -97.7600, -97.7400],
+                    'type': ['Hot', 'Hot', 'Warm', 'Cold', 'Hot'],
+                    'value': [100, 80, 50, 20, 90]
+                })
+                st.map(map_data, zoom=11, use_container_width=True)
+
             st.caption("Real-time visualization of high-value lead activity")
 
         with col_details:
@@ -903,145 +1109,174 @@ elif selected_hub == "Lead Intelligence Hub":
             st.markdown(f"- {rec}")
 
 elif selected_hub == "Automation Studio":
-    st.header("Automation Studio")
-    st.markdown("*Visual switchboard to toggle AI features on/off*")
-
-    tab1, tab2, tab3, tab4 = st.tabs(["Automations", "Sequences", "Workflows", "AI Training Lab"])
-    
-    with tab1:
-        st.subheader("AI Automation Control Panel")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### 🤖 Smart AI Features")
-            
-            ai_assistant = st.toggle("AI Assistant (Qualification)", value=True)
-            if ai_assistant:
-                st.success("✅ Active - Qualifying new leads via SMS")
-            else:
-                st.warning("⚠️ Inactive - Manual qualification required")
-            
-            auto_followup = st.toggle("Auto Follow-Up Sequences", value=True)
-            if auto_followup:
-                st.success("✅ Active - Nurturing 47 leads")
-            
-            hot_lead_lane = st.toggle("Hot Lead Fast Lane", value=True)
-            if hot_lead_lane:
-                st.success("✅ Active - 8 leads in priority queue")
-        
-        with col2:
-            st.markdown("#### 🎯 Behavioral Triggers")
-            
-            property_views = st.toggle("Property View Tracking", value=True)
-            email_opens = st.toggle("Email Engagement Scoring", value=True)
-            calendar_sync = st.toggle("Calendar Appointment Sync", value=False)
-            
-        st.markdown("---")
-        st.info("💡 **Pro Tip:** Toggle AI Assistant ON/OFF to control when AI engages with leads")
-    
-    with tab2:
-        st.subheader("Auto Follow-Up Sequences")
-        
-        perf = services["sequences"].get_sequence_performance("demo_seq")
-        
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Conversion Rate", f"{perf['metrics']['conversion_rate']*100:.1f}%")
-        col2.metric("Email Open Rate", f"{perf['channel_performance']['email']['open_rate']*100:.0f}%")
-        col3.metric("SMS Response", f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%")
-
-        # Sequence Table
-        sequences_data = [
-            {"Name": "New Lead (Buyer) - 7 Day", "Status": "Active", "Enrolled": perf['metrics']['total_enrolled'], "Open Rate": f"{perf['channel_performance']['email']['open_rate']*100:.0f}%", "Reply Rate": f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%"},
-            {"Name": "Seller Reactivation", "Status": "Active", "Enrolled": 12, "Open Rate": "75%", "Reply Rate": "35%"},
-            {"Name": "Cold Lead Win-back", "Status": "Paused", "Enrolled": 0, "Open Rate": "-", "Reply Rate": "-"},
-        ]
-        
-        st.dataframe(pd.DataFrame(sequences_data), use_container_width=True, hide_index=True)
-        
-        if st.button("➕ Create New Sequence"):
-            st.toast("Opening Sequence Builder...")
-        
-    with tab3:
-        st.subheader("Workflow Marketplace")
-        st.markdown("*Install pre-built real estate automations with one click*")
-        
-        # Browse marketplace
-        templates = services["marketplace"].get_featured_templates(6)
-        
-        # Display in a grid
-        cols = st.columns(3)
-        for i, t in enumerate(templates):
-            with cols[i % 3]:
-                st.markdown(f"### {t.icon} {t.name}")
-                st.write(t.description[:80] + "...")
-                st.caption(f"⭐ {t.rating} | 📥 {t.downloads_count:,} installs")
-                if st.button(f"Install", key=f"inst_{t.id}", use_container_width=True):
-                    st.success(f"Installed {t.name}!")
-
-        if "workflow_engine" in services:
+    # Update navigation context
+    if SMART_NAVIGATION_AVAILABLE:
+        update_nav_context("automation", hub="Automation Studio", section="automations")
+        render_smart_breadcrumbs()
+        with st.sidebar:
             st.markdown("---")
-            st.subheader("⚙️ Advanced Workflow Engine")
-            st.success("✅ Engine Online - Ready for conditional branching")
-            
-            with st.expander("View Active Executions", expanded=False):
-                st.info("No active executions in the last 24 hours.")
-                if st.button("🚀 Run Test Workflow (New Lead Sequence)"):
-                    st.toast("Triggering Advanced Workflow: New Lead Sequence", icon="⚡")
+            render_contextual_actions("automation")
 
-    with tab4:
-        st.subheader("AI Training Lab & Version Control")
-        st.caption("Experiment with system prompts safely. Revert if quality drops.")
-        
-        col_editor, col_history = st.columns([2, 1])
-        
-        with col_history:
-            st.markdown("#### 📜 Version History")
-            versions = st.session_state.prompt_versions
-            
-            for v in reversed(versions):
-                with st.container(border=True):
-                    st.caption(f"{v['timestamp']} • {v['version']}")
-                    st.write(f"**{v['tag']}**")
-                    if st.button("Revert", key=f"rev_{v['version']}", use_container_width=True):
-                        st.session_state.current_prompt = v['content']
-                        st.toast(f"Reverted to {v['version']}")
+    # Contextual Help for Automation Hub
+    if USER_ONBOARDING_AVAILABLE:
+        render_contextual_help("automation")
+
+    st.header("Automation Studio")
+    st.markdown("*Advanced workflow automation with conditional branching and cross-hub integration*")
+
+    # Initialize and render unified workflow engine
+    if UNIFIED_WORKFLOW_AVAILABLE:
+        render_workflow_dashboard()
+    else:
+        # Fallback to basic automation interface
+        tab1, tab2, tab3, tab4 = st.tabs(["Automations", "Sequences", "Workflows", "AI Training Lab"])
+
+        with tab1:
+            st.subheader("AI Automation Control Panel")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("#### 🤖 Smart AI Features")
+
+                ai_assistant = st.toggle("AI Assistant (Qualification)", value=True)
+                if ai_assistant:
+                    st.success("✅ Active - Qualifying new leads via SMS")
+                else:
+                    st.warning("⚠️ Inactive - Manual qualification required")
+
+                auto_followup = st.toggle("Auto Follow-Up Sequences", value=True)
+                if auto_followup:
+                    st.success("✅ Active - Nurturing 47 leads")
+
+                hot_lead_lane = st.toggle("Hot Lead Fast Lane", value=True)
+                if hot_lead_lane:
+                    st.success("✅ Active - 8 leads in priority queue")
+
+            with col2:
+                st.markdown("#### 🎯 Behavioral Triggers")
+
+                property_views = st.toggle("Property View Tracking", value=True)
+                email_opens = st.toggle("Email Engagement Scoring", value=True)
+                calendar_sync = st.toggle("Calendar Appointment Sync", value=False)
+
+            st.markdown("---")
+            st.info("💡 **Pro Tip:** Toggle AI Assistant ON/OFF to control when AI engages with leads")
+
+        with tab2:
+            st.subheader("Auto Follow-Up Sequences")
+
+            perf = services["sequences"].get_sequence_performance("demo_seq")
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Conversion Rate", f"{perf['metrics']['conversion_rate']*100:.1f}%")
+            col2.metric("Email Open Rate", f"{perf['channel_performance']['email']['open_rate']*100:.0f}%")
+            col3.metric("SMS Response", f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%")
+
+            # Sequence Table
+            sequences_data = [
+                {"Name": "New Lead (Buyer) - 7 Day", "Status": "Active", "Enrolled": perf['metrics']['total_enrolled'], "Open Rate": f"{perf['channel_performance']['email']['open_rate']*100:.0f}%", "Reply Rate": f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%"},
+                {"Name": "Seller Reactivation", "Status": "Active", "Enrolled": 12, "Open Rate": "75%", "Reply Rate": "35%"},
+                {"Name": "Cold Lead Win-back", "Status": "Paused", "Enrolled": 0, "Open Rate": "-", "Reply Rate": "-"},
+            ]
+
+            st.dataframe(pd.DataFrame(sequences_data), use_container_width=True, hide_index=True)
+
+            if st.button("➕ Create New Sequence"):
+                st.toast("Opening Sequence Builder...")
+
+        with tab3:
+            st.subheader("Workflow Marketplace")
+            st.markdown("*Install pre-built real estate automations with one click*")
+
+            # Browse marketplace
+            templates = services["marketplace"].get_featured_templates(6)
+
+            # Display in a grid
+            cols = st.columns(3)
+            for i, t in enumerate(templates):
+                with cols[i % 3]:
+                    st.markdown(f"### {t.icon} {t.name}")
+                    st.write(t.description[:80] + "...")
+                    st.caption(f"⭐ {t.rating} | 📥 {t.downloads_count:,} installs")
+                    if st.button(f"Install", key=f"inst_{t.id}", use_container_width=True):
+                        st.success(f"Installed {t.name}!")
+
+            if "workflow_engine" in services:
+                st.markdown("---")
+                st.subheader("⚙️ Advanced Workflow Engine")
+                st.success("✅ Engine Online - Ready for conditional branching")
+
+                with st.expander("View Active Executions", expanded=False):
+                    st.info("No active executions in the last 24 hours.")
+                    if st.button("🚀 Run Test Workflow (New Lead Sequence)"):
+                        st.toast("Triggering Advanced Workflow: New Lead Sequence", icon="⚡")
+
+        with tab4:
+            st.subheader("AI Training Lab & Version Control")
+            st.caption("Experiment with system prompts safely. Revert if quality drops.")
+
+            col_editor, col_history = st.columns([2, 1])
+
+            with col_history:
+                st.markdown("#### 📜 Version History")
+                versions = st.session_state.prompt_versions
+
+                for v in reversed(versions):
+                    with st.container(border=True):
+                        st.caption(f"{v['timestamp']} • {v['version']}")
+                        st.write(f"**{v['tag']}**")
+                        if st.button("Revert", key=f"rev_{v['version']}", use_container_width=True):
+                            st.session_state.current_prompt = v['content']
+                            st.toast(f"Reverted to {v['version']}")
+                            st.rerun()
+
+            with col_editor:
+                st.markdown("#### Current System Prompt")
+
+                # Default content if not set
+                if "current_prompt" not in st.session_state:
+                    st.session_state.current_prompt = versions[-1]["content"]
+
+                current_prompt = st.text_area(
+                    "System Instruction",
+                    value=st.session_state.current_prompt,
+                    height=300,
+                    help="This prompt governs the behavior of the AI Assistant."
+                )
+
+                c_save, c_test = st.columns(2)
+                with c_save:
+                    if st.button("💾 Save New Version", use_container_width=True, type="primary"):
+                        new_ver = f"v1.{len(versions)}"
+                        st.session_state.prompt_versions.append({
+                            "version": new_ver,
+                            "tag": "Experimental",
+                            "content": current_prompt,
+                            "timestamp": "Just now"
+                        })
+                        st.session_state.current_prompt = current_prompt
+                        st.success(f"Saved {new_ver}!")
                         st.rerun()
 
-        with col_editor:
-            st.markdown("#### Current System Prompt")
-            
-            # Default content if not set
-            if "current_prompt" not in st.session_state:
-                st.session_state.current_prompt = versions[-1]["content"]
-
-            current_prompt = st.text_area(
-                "System Instruction", 
-                value=st.session_state.current_prompt,
-                height=300,
-                help="This prompt governs the behavior of the AI Assistant."
-            )
-            
-            c_save, c_test = st.columns(2)
-            with c_save:
-                if st.button("💾 Save New Version", use_container_width=True, type="primary"):
-                    new_ver = f"v1.{len(versions)}"
-                    st.session_state.prompt_versions.append({
-                        "version": new_ver,
-                        "tag": "Experimental",
-                        "content": current_prompt,
-                        "timestamp": "Just now"
-                    })
-                    st.session_state.current_prompt = current_prompt
-                    st.success(f"Saved {new_ver}!")
-                    st.rerun()
-                    
-            with c_test:
-                if st.button("🧪 Test Prompt", use_container_width=True):
-                    st.info("Simulation running... Response generated in 1.2s")
+                with c_test:
+                    if st.button("🧪 Test Prompt", use_container_width=True):
+                        st.info("Simulation running... Response generated in 1.2s")
 
 
 elif selected_hub == "Sales Copilot":
+    # Update navigation context
+    if SMART_NAVIGATION_AVAILABLE:
+        update_nav_context("sales", hub="Sales Copilot", section="deal_closer")
+        render_smart_breadcrumbs()
+        with st.sidebar:
+            st.markdown("---")
+            render_contextual_actions("sales")
+
+    # Contextual Help for Sales Hub
+    if USER_ONBOARDING_AVAILABLE:
+        render_contextual_help("sales")
+
     st.header("Sales Copilot")
     st.markdown("*Agent tools for active deals and client meetings*")
 
@@ -1234,14 +1469,28 @@ elif selected_hub == "Sales Copilot":
             st.caption("These features increase the statistical probability of closing this deal.")
 
 elif selected_hub == "Ops & Optimization":
+    # Update navigation context
+    if SMART_NAVIGATION_AVAILABLE:
+        update_nav_context("operations", hub="Ops & Optimization", section="quality")
+        render_smart_breadcrumbs()
+        with st.sidebar:
+            st.markdown("---")
+            render_contextual_actions("operations")
+
+    # Contextual Help for Operations Hub
+    if USER_ONBOARDING_AVAILABLE:
+        render_contextual_help("operations")
+
     st.header("Ops & Optimization")
     st.markdown("*Manager-level analytics and team performance tracking*")
 
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "Quality",
         "Revenue",
         "Benchmarks",
-        "Coaching"
+        "Coaching",
+        "Real-Time Collaboration",
+        "Performance Monitoring"
     ])
     
     with tab1:
@@ -1282,11 +1531,129 @@ elif selected_hub == "Ops & Optimization":
     with tab4:
         st.subheader("AI Agent Coaching")
         recommendations = services["coaching"].get_coaching_recommendations("demo_agent")
-        
+
         for rec in recommendations:
             with st.expander(f"💡 {rec['title']}"):
                 st.write(rec['description'])
                 st.info(f"**Impact:** {rec['expected_impact']}")
+
+    with tab5:
+        st.subheader("👥 Real-Time Collaboration Hub")
+        st.markdown("**Live team coordination, messaging, and performance monitoring**")
+        st.markdown("---")
+
+        # Import and render collaboration dashboard
+        try:
+            from ghl_real_estate_ai.streamlit_components.realtime_collaboration_dashboard import (
+                RealtimeCollaborationDashboard
+            )
+
+            collaboration_dashboard = RealtimeCollaborationDashboard()
+            collaboration_dashboard.render()
+
+        except ImportError as e:
+            st.error(f"Real-Time Collaboration Dashboard not available: {e}")
+            st.info("**Note:** This feature requires the collaboration services to be installed.")
+
+            # Show demo preview
+            st.markdown("### Preview Features")
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.metric("👥 Agents Online", "8", "+2 from yesterday")
+                st.markdown("**Live Team Presence**")
+                st.markdown("- Real-time status tracking")
+                st.markdown("- Workload monitoring")
+                st.markdown("- Capacity utilization")
+
+            with col2:
+                st.metric("🎯 Active Leads", "23", "+7 today")
+                st.markdown("**Intelligent Lead Assignment**")
+                st.markdown("- AI-powered routing")
+                st.markdown("- Multi-factor matching")
+                st.markdown("- Sub-5s assignment time")
+
+            with col3:
+                st.metric("💬 Messages Today", "142", "45s avg response")
+                st.markdown("**Team Communication**")
+                st.markdown("- Room-based collaboration")
+                st.markdown("- <50ms message delivery")
+                st.markdown("- Real-time notifications")
+
+            st.markdown("---")
+
+            st.info("📝 **To enable this feature:**\n\n"
+                   "1. Ensure collaboration services are running\n"
+                   "2. Configure WebSocket hub and Redis\n"
+                   "3. Initialize Live Agent Coordinator\n\n"
+                   "This dashboard provides comprehensive real-time team coordination with "
+                   "live updates, intelligent lead routing, and performance analytics.")
+
+
+    with tab6:
+        st.subheader("📊 Performance Monitoring Console")
+        st.markdown("**Comprehensive real-time monitoring of all ultra-performance optimizations**")
+        st.markdown("---")
+
+        # Import and render performance monitoring console
+        try:
+            from ghl_real_estate_ai.streamlit_components.performance_monitoring_console import (
+                PerformanceMonitoringConsole
+            )
+
+            perf_console = PerformanceMonitoringConsole()
+            perf_console.render()
+
+        except ImportError as e:
+            st.error(f"Performance Monitoring Console not available: {e}")
+            st.info("**Note:** This feature requires performance monitoring services to be installed.")
+
+            # Show demo preview
+            st.markdown("### Performance Overview")
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                st.metric("⚡ Avg Response Time", "85ms", "-15ms vs target")
+                st.markdown("**System Performance**")
+                st.markdown("- Cache hit rate: 99.2%")
+                st.markdown("- Database queries: <25ms")
+                st.markdown("- Redis operations: <10ms")
+
+            with col2:
+                st.metric("🎯 Cache Hit Rate", "99.2%", "+0.2% vs target")
+                st.markdown("**Predictive Caching**")
+                st.markdown("- Lookup time: 0.8ms")
+                st.markdown("- Prediction accuracy: 94.2%")
+                st.markdown("- Cache size: 2.4GB")
+
+            with col3:
+                st.metric("💬 Message Latency", "42ms", "-8ms vs target")
+                st.markdown("**Real-Time Collaboration**")
+                st.markdown("- Active users: 487")
+                st.markdown("- Messages/sec: 2,450")
+                st.markdown("- Delivery rate: 99.98%")
+
+            with col4:
+                st.metric("🚨 System Health", "99.8%", "All operational")
+                st.markdown("**Infrastructure**")
+                st.markdown("- CPU usage: 45%")
+                st.markdown("- Memory: 55%")
+                st.markdown("- Uptime: 99.97%")
+
+            st.markdown("---")
+
+            st.info("📊 **Performance Monitoring Console Features:**\n\n"
+                   "1. **Executive Dashboard**: Business impact metrics and ROI analysis\n"
+                   "2. **Real-Time Metrics**: Live performance monitoring across all services\n"
+                   "3. **Trend Analysis**: Historical trends with anomaly detection\n"
+                   "4. **Alerts & Health**: Automated alerting and health checks\n"
+                   "5. **Cost Optimization**: Monthly savings breakdown and ROI tracking\n"
+                   "6. **Service Details**: Deep-dive into each optimization service\n\n"
+                   "This console provides comprehensive visibility into all ultra-performance "
+                   "optimizations including predictive cache, database optimizer, Redis service, "
+                   "real-time collaboration, and ML batch inference.")
 
 # Footer
 st.markdown("---")

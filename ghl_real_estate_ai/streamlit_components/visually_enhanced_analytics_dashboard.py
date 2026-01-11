@@ -50,6 +50,23 @@ from .enhanced_tooltip_system import (
     create_enhanced_tooltip
 )
 
+# === UNIFIED ENTERPRISE THEME INTEGRATION ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    UNIFIED_ENTERPRISE_THEME_AVAILABLE = True
+except ImportError:
+    UNIFIED_ENTERPRISE_THEME_AVAILABLE = False
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -575,16 +592,44 @@ class VisuallyEnhancedAnalyticsDashboard:
         st.plotly_chart(network_fig, use_container_width=True)
 
         # Network insights
-        col1, col2, col3 = st.columns(3)
+        # Neural network metrics with unified enterprise design
+        if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+            neural_network_metrics = [
+                {
+                    "label": "Active Nodes",
+                    "value": "24",
+                    "delta": "+3",
+                    "delta_type": "positive",
+                    "icon": "🔗"
+                },
+                {
+                    "label": "Decision Paths",
+                    "value": "156",
+                    "delta": "+12",
+                    "delta_type": "positive",
+                    "icon": "🛤️"
+                },
+                {
+                    "label": "Processing Speed",
+                    "value": "89ms",
+                    "delta": "-15ms",
+                    "delta_type": "positive",
+                    "icon": "⚡"
+                }
+            ]
+            enterprise_kpi_grid(neural_network_metrics, columns=3)
+        else:
+            # Legacy fallback
+            col1, col2, col3 = st.columns(3)
 
-        with col1:
-            st.metric("Active Nodes", "24", delta="3")
+            with col1:
+                st.metric("Active Nodes", "24", delta="3")
 
-        with col2:
-            st.metric("Decision Paths", "156", delta="12")
+            with col2:
+                st.metric("Decision Paths", "156", delta="12")
 
-        with col3:
-            st.metric("Processing Speed", "89ms", delta="-15ms")
+            with col3:
+                st.metric("Processing Speed", "89ms", delta="-15ms")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -605,11 +650,19 @@ class VisuallyEnhancedAnalyticsDashboard:
                 content=""
             )
 
-            st.metric(
-                "Improvement",
-                "+42.5%",
-                delta="+7.3% from last week"
-            )
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                enterprise_metric(
+                    "Improvement",
+                    "+42.5%",
+                    delta="+7.3% from last week",
+                    icon="🎯"
+                )
+            else:
+                st.metric(
+                    "Improvement",
+                    "+42.5%",
+                    delta="+7.3% from last week"
+                )
 
             # Enhanced tooltip for agent efficiency
             tooltip_data = TooltipData(
@@ -645,11 +698,19 @@ class VisuallyEnhancedAnalyticsDashboard:
                 content=""
             )
 
-            st.metric(
-                "Increase",
-                "+28.3%",
-                delta="+4.1% from last week"
-            )
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                enterprise_metric(
+                    "Increase",
+                    "+28.3%",
+                    delta="+4.1% from last week",
+                    icon="📈"
+                )
+            else:
+                st.metric(
+                    "Increase",
+                    "+28.3%",
+                    delta="+4.1% from last week"
+                )
 
         with bi_col3:
             # Decision Speed card
@@ -658,11 +719,19 @@ class VisuallyEnhancedAnalyticsDashboard:
                 content=""
             )
 
-            st.metric(
-                "Faster",
-                "+65.8%",
-                delta="+8.9% from last week"
-            )
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                enterprise_metric(
+                    "Faster",
+                    "+65.8%",
+                    delta="+8.9% from last week",
+                    icon="⚡"
+                )
+            else:
+                st.metric(
+                    "Faster",
+                    "+65.8%",
+                    delta="+8.9% from last week"
+                )
 
         # Business trends visualization
         self._render_flowing_data_streams()
@@ -753,16 +822,44 @@ class VisuallyEnhancedAnalyticsDashboard:
             st.plotly_chart(fig_usage, use_container_width=True)
 
         # Component insights with enhanced tooltips
-        insights_col1, insights_col2, insights_col3 = st.columns(3)
+        # Performance insights with unified enterprise design
+        if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+            performance_insights_data = [
+                {
+                    "label": "Avg Response Time",
+                    "value": "234ms",
+                    "delta": "-45ms",
+                    "delta_type": "positive",
+                    "icon": "⏱️"
+                },
+                {
+                    "label": "Error Rate",
+                    "value": "0.034%",
+                    "delta": "-0.008%",
+                    "delta_type": "positive",
+                    "icon": "🚫"
+                },
+                {
+                    "label": "User Satisfaction",
+                    "value": "94.2%",
+                    "delta": "+2.7%",
+                    "delta_type": "positive",
+                    "icon": "😊"
+                }
+            ]
+            enterprise_kpi_grid(performance_insights_data, columns=3)
+        else:
+            # Legacy fallback
+            insights_col1, insights_col2, insights_col3 = st.columns(3)
 
-        with insights_col1:
-            st.metric("Avg Response Time", "234ms", delta="-45ms")
+            with insights_col1:
+                st.metric("Avg Response Time", "234ms", delta="-45ms")
 
-        with insights_col2:
-            st.metric("Error Rate", "0.034%", delta="-0.008%")
+            with insights_col2:
+                st.metric("Error Rate", "0.034%", delta="-0.008%")
 
-        with insights_col3:
-            st.metric("User Satisfaction", "94.2%", delta="+2.7%")
+            with insights_col3:
+                st.metric("User Satisfaction", "94.2%", delta="+2.7%")
 
         st.markdown('</div>', unsafe_allow_html=True)
 

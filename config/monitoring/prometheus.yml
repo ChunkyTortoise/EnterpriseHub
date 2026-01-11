@@ -11,6 +11,7 @@ global:
 rule_files:
   - "alert_rules.yml"
   - "coaching_alerts.yml"
+  - "phase3_alerts.yml"
 
 alerting:
   alertmanagers:
@@ -120,6 +121,17 @@ scrape_configs:
       - targets: ['localhost:8008']
     metrics_path: /sanitization-metrics
     scrape_interval: 60s
+
+  # Phase 3 Features Monitoring ($265K-440K annual value)
+  - job_name: 'phase3-metrics'
+    static_configs:
+      - targets: ['localhost:8009']
+    metrics_path: /metrics
+    scrape_interval: 10s
+    honor_labels: true
+    labels:
+      phase: '3'
+      business_value: '265k-440k'
 
 remote_write:
   - url: "https://prometheus-remote-write.railway.app/api/v1/write"

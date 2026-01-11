@@ -98,7 +98,7 @@ class PredictiveEngagementEngine:
 
     def __init__(self):
         self.redis_service = redis_conversation_service
-        self.market_intelligence = AdvancedMarketIntelligenceEngine()
+        self.market_intelligence = AdvancedMarketIntelligenceEngine("default_location")
 
         # Behavioral signal weights
         self.signal_weights = {

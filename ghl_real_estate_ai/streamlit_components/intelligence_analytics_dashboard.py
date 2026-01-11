@@ -30,6 +30,23 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
 
+# === UNIFIED ENTERPRISE THEME INTEGRATION ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    UNIFIED_ENTERPRISE_THEME_AVAILABLE = True
+except ImportError:
+    UNIFIED_ENTERPRISE_THEME_AVAILABLE = False
+
 from ..services.intelligence_performance_monitor import (
     IntelligencePerformanceMonitor,
     performance_monitor,
@@ -190,29 +207,53 @@ class IntelligenceAnalyticsDashboard:
         try:
             health_metrics = await self.monitor.get_dashboard_health()
 
-            # Health metrics cards
-            col1, col2, col3 = st.columns(3)
+            # Health metrics cards with unified enterprise design
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                health_metrics_data = [
+                    {
+                        "label": "System Uptime",
+                        "value": f"{health_metrics.uptime_percentage:.1f}%",
+                        "icon": "⏱️",
+                        "delta_type": "positive" if health_metrics.uptime_percentage > 99.5 else "neutral"
+                    },
+                    {
+                        "label": "Active Users (24h)",
+                        "value": str(health_metrics.active_users_24h),
+                        "icon": "👥",
+                        "delta_type": "positive"
+                    },
+                    {
+                        "label": "Sessions Today",
+                        "value": str(health_metrics.total_sessions_today),
+                        "icon": "📊",
+                        "delta_type": "positive"
+                    }
+                ]
+                enterprise_kpi_grid(health_metrics_data, columns=3)
+            else:
+                # Legacy fallback
+                col1, col2, col3 = st.columns(3)
 
-            with col1:
-                st.metric(
-                    "System Uptime",
-                    f"{health_metrics.uptime_percentage:.1f}%",
-                    delta=None
-                )
+                with col1:
+                    st.metric(
+                        "System Uptime",
+                        f"{health_metrics.uptime_percentage:.1f}%",
+                        delta=None
+                    )
 
-            with col2:
-                st.metric(
-                    "Active Users (24h)",
-                    health_metrics.active_users_24h,
-                    delta=None
-                )
+                with col2:
+                    st.metric(
+                        "Active Users (24h)",
+                        health_metrics.active_users_24h,
+                        delta=None
+                    )
 
-            with col3:
-                st.metric(
-                    "Sessions Today",
-                    health_metrics.total_sessions_today,
-                    delta=None
-                )
+                with col3:
+                    st.metric(
+                        "Sessions Today",
+                        health_metrics.total_sessions_today,
+                        delta=None
+                    )
 
             # Health status indicators
             col1, col2, col3 = st.columns(3)
@@ -254,7 +295,7 @@ class IntelligenceAnalyticsDashboard:
 
             df = pd.DataFrame(performance_data)
 
-            # Response time chart
+            # Response time chart with enterprise theming
             fig_response = px.bar(
                 df,
                 x='Component',
@@ -265,6 +306,11 @@ class IntelligenceAnalyticsDashboard:
             )
             fig_response.add_hline(y=500, line_dash="dash", line_color="red",
                                  annotation_text="500ms Threshold")
+
+            # Apply enterprise theme
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                apply_plotly_theme(fig_response)
+
             st.plotly_chart(fig_response, use_container_width=True)
 
             # Performance score gauge
@@ -290,6 +336,11 @@ class IntelligenceAnalyticsDashboard:
                 }
             ))
             fig_gauge.update_layout(height=300)
+
+            # Apply enterprise theme
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                apply_plotly_theme(fig_gauge)
+
             st.plotly_chart(fig_gauge, use_container_width=True)
 
         except Exception as e:
@@ -358,28 +409,29 @@ class IntelligenceAnalyticsDashboard:
                 st.info("No business intelligence data available")
                 return
 
-            # Create metrics cards
-            col1, col2, col3 = st.columns(3)
-
-            for i, metric in enumerate(bi_metrics[:6]):  # Show top 6 metrics
-                col = [col1, col2, col3][i % 3]
-
-                with col:
+            # Create metrics cards with unified enterprise design
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                bi_metrics_data = []
+                for metric in bi_metrics[:6]:  # Show top 6 metrics
                     # Format trend indicator
                     trend_icon = {
                         'up': '📈',
                         'down': '📉',
                         'stable': '➡️'
-                    }.get(metric.trend_direction, '➡️')
+                    }.get(metric.trend_direction, '📊')
 
                     # Calculate delta if comparison available
                     delta = None
+                    delta_type = "neutral"
                     if metric.comparison_period:
+                        delta_value = metric.value - metric.comparison_period
                         if metric.trend_direction == 'down' and 'time' in metric.metric_name:
                             # For time-based metrics, down is good
-                            delta = f"-{metric.value - metric.comparison_period:.1f}"
+                            delta = f"-{abs(delta_value):.1f}"
+                            delta_type = "positive" if delta_value < 0 else "negative"
                         else:
-                            delta = f"{metric.value - metric.comparison_period:.1f}"
+                            delta = f"+{delta_value:.1f}" if delta_value > 0 else f"{delta_value:.1f}"
+                            delta_type = "positive" if delta_value > 0 else "negative"
 
                     # Display metric
                     metric_name = metric.metric_name.replace('_', ' ').title()
@@ -391,11 +443,54 @@ class IntelligenceAnalyticsDashboard:
                     elif metric.unit == "score":
                         unit_suffix = "/100"
 
-                    st.metric(
-                        f"{trend_icon} {metric_name}",
-                        f"{metric.value:.1f}{unit_suffix}",
-                        delta=delta
-                    )
+                    bi_metrics_data.append({
+                        "label": metric_name,
+                        "value": f"{metric.value:.1f}{unit_suffix}",
+                        "delta": delta,
+                        "delta_type": delta_type,
+                        "icon": trend_icon
+                    })
+
+                enterprise_kpi_grid(bi_metrics_data, columns=3)
+            else:
+                # Legacy fallback
+                col1, col2, col3 = st.columns(3)
+
+                for i, metric in enumerate(bi_metrics[:6]):  # Show top 6 metrics
+                    col = [col1, col2, col3][i % 3]
+
+                    with col:
+                        # Format trend indicator
+                        trend_icon = {
+                            'up': '📈',
+                            'down': '📉',
+                            'stable': '➡️'
+                        }.get(metric.trend_direction, '➡️')
+
+                        # Calculate delta if comparison available
+                        delta = None
+                        if metric.comparison_period:
+                            if metric.trend_direction == 'down' and 'time' in metric.metric_name:
+                                # For time-based metrics, down is good
+                                delta = f"-{metric.value - metric.comparison_period:.1f}"
+                            else:
+                                delta = f"{metric.value - metric.comparison_period:.1f}"
+
+                        # Display metric
+                        metric_name = metric.metric_name.replace('_', ' ').title()
+                        unit_suffix = ""
+                        if metric.unit == "percentage":
+                            unit_suffix = "%"
+                        elif metric.unit == "minutes":
+                            unit_suffix = " min"
+                        elif metric.unit == "score":
+                            unit_suffix = "/100"
+
+                        st.metric(
+                            f"{trend_icon} {metric_name}",
+                            f"{metric.value:.1f}{unit_suffix}",
+                            delta=delta
+                        )
 
             # Business intelligence trends chart
             st.markdown("#### Business Intelligence Trends")
@@ -428,6 +523,11 @@ class IntelligenceAnalyticsDashboard:
                     title="Current vs Previous Period Comparison"
                 )
                 fig_trends.update_xaxes(tickangle=45)
+
+                # Apply enterprise theme
+                if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                    apply_plotly_theme(fig_trends)
+
                 st.plotly_chart(fig_trends, use_container_width=True)
 
         except Exception as e:
@@ -446,38 +546,71 @@ class IntelligenceAnalyticsDashboard:
             # Get detailed performance data
             perf = await self.monitor.get_component_performance(selected_component, 24)
 
-            # Performance summary cards
-            col1, col2, col3, col4 = st.columns(4)
+            # Performance summary cards with unified enterprise design
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                performance_data = [
+                    {
+                        "label": "Total Renders",
+                        "value": str(perf.total_renders),
+                        "icon": "🔄",
+                        "delta_type": "positive"
+                    },
+                    {
+                        "label": "Avg Render Time",
+                        "value": f"{perf.avg_render_time:.1f}ms",
+                        "delta": f"{perf.avg_render_time - 500:.1f}ms" if perf.avg_render_time > 0 else None,
+                        "delta_type": "negative" if perf.avg_render_time > 500 else "positive",
+                        "icon": "⏱️"
+                    },
+                    {
+                        "label": "Error Rate",
+                        "value": f"{perf.error_rate:.2%}",
+                        "delta": f"{(perf.error_rate - 0.05)*100:.1f}%" if perf.error_rate > 0 else None,
+                        "delta_type": "negative" if perf.error_rate > 0.05 else "positive",
+                        "icon": "⚠️"
+                    },
+                    {
+                        "label": "Performance Score",
+                        "value": f"{perf.performance_score:.0f}/100",
+                        "delta": f"{perf.performance_score - 85:.0f}" if perf.performance_score > 0 else None,
+                        "delta_type": "positive" if perf.performance_score > 85 else "negative",
+                        "icon": "📊"
+                    }
+                ]
+                enterprise_kpi_grid(performance_data, columns=4)
+            else:
+                # Legacy fallback
+                col1, col2, col3, col4 = st.columns(4)
 
-            with col1:
-                st.metric("Total Renders", perf.total_renders)
+                with col1:
+                    st.metric("Total Renders", perf.total_renders)
 
-            with col2:
-                st.metric(
-                    "Avg Render Time",
-                    f"{perf.avg_render_time:.1f}ms",
-                    delta=f"{perf.avg_render_time - 500:.1f}ms" if perf.avg_render_time > 0 else None
-                )
+                with col2:
+                    st.metric(
+                        "Avg Render Time",
+                        f"{perf.avg_render_time:.1f}ms",
+                        delta=f"{perf.avg_render_time - 500:.1f}ms" if perf.avg_render_time > 0 else None
+                    )
 
-            with col3:
-                st.metric(
-                    "Error Rate",
-                    f"{perf.error_rate:.2%}",
-                    delta=f"{(perf.error_rate - 0.05)*100:.1f}%" if perf.error_rate > 0 else None
-                )
+                with col3:
+                    st.metric(
+                        "Error Rate",
+                        f"{perf.error_rate:.2%}",
+                        delta=f"{(perf.error_rate - 0.05)*100:.1f}%" if perf.error_rate > 0 else None
+                    )
 
-            with col4:
-                score_color = "normal"
-                if perf.performance_score > 90:
-                    score_color = "inverse"
-                elif perf.performance_score < 70:
-                    score_color = "off"
+                with col4:
+                    score_color = "normal"
+                    if perf.performance_score > 90:
+                        score_color = "inverse"
+                    elif perf.performance_score < 70:
+                        score_color = "off"
 
-                st.metric(
-                    "Performance Score",
-                    f"{perf.performance_score:.0f}/100",
-                    delta=f"{perf.performance_score - 85:.0f}" if perf.performance_score > 0 else None
-                )
+                    st.metric(
+                        "Performance Score",
+                        f"{perf.performance_score:.0f}/100",
+                        delta=f"{perf.performance_score - 85:.0f}" if perf.performance_score > 0 else None
+                    )
 
             # Performance percentiles
             st.markdown("#### Response Time Distribution")
@@ -525,28 +658,58 @@ class IntelligenceAnalyticsDashboard:
 
             df_claude = pd.DataFrame(claude_data)
 
-            # Claude services overview
-            col1, col2, col3 = st.columns(3)
-
-            with col1:
+            # Claude services overview with unified enterprise design
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
                 avg_response_time = df_claude['Avg Response (ms)'].mean()
-                st.metric(
-                    "Avg Claude Response",
-                    f"{avg_response_time:.1f}ms",
-                    delta=f"{avg_response_time - 200:.1f}ms"
-                )
-
-            with col2:
                 total_requests = df_claude['Requests/Min'].sum()
-                st.metric("Total Requests/Min", f"{total_requests:.0f}")
-
-            with col3:
                 avg_success_rate = df_claude['Success Rate (%)'].mean()
-                st.metric(
-                    "Overall Success Rate",
-                    f"{avg_success_rate:.1f}%",
-                    delta=f"{avg_success_rate - 99:.1f}%"
-                )
+
+                claude_overview_data = [
+                    {
+                        "label": "Avg Claude Response",
+                        "value": f"{avg_response_time:.1f}ms",
+                        "delta": f"{avg_response_time - 200:.1f}ms",
+                        "delta_type": "negative" if avg_response_time > 200 else "positive",
+                        "icon": "🤖"
+                    },
+                    {
+                        "label": "Total Requests/Min",
+                        "value": f"{total_requests:.0f}",
+                        "icon": "📈",
+                        "delta_type": "positive"
+                    },
+                    {
+                        "label": "Overall Success Rate",
+                        "value": f"{avg_success_rate:.1f}%",
+                        "delta": f"{avg_success_rate - 99:.1f}%",
+                        "delta_type": "positive" if avg_success_rate >= 99 else "negative",
+                        "icon": "✅"
+                    }
+                ]
+                enterprise_kpi_grid(claude_overview_data, columns=3)
+            else:
+                # Legacy fallback
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    avg_response_time = df_claude['Avg Response (ms)'].mean()
+                    st.metric(
+                        "Avg Claude Response",
+                        f"{avg_response_time:.1f}ms",
+                        delta=f"{avg_response_time - 200:.1f}ms"
+                    )
+
+                with col2:
+                    total_requests = df_claude['Requests/Min'].sum()
+                    st.metric("Total Requests/Min", f"{total_requests:.0f}")
+
+                with col3:
+                    avg_success_rate = df_claude['Success Rate (%)'].mean()
+                    st.metric(
+                        "Overall Success Rate",
+                        f"{avg_success_rate:.1f}%",
+                        delta=f"{avg_success_rate - 99:.1f}%"
+                    )
 
             # Claude performance charts
             col1, col2 = st.columns(2)
@@ -571,21 +734,46 @@ class IntelligenceAnalyticsDashboard:
                 fig_cache.add_hline(y=80, line_dash="dash", line_color="green")
                 st.plotly_chart(fig_cache, use_container_width=True)
 
-            # Cost analysis
+            # Cost analysis with unified enterprise design
             st.markdown("#### Cost Analysis")
 
             total_cost = df_claude['Token Usage'].sum() * df_claude['Cost per Request ($)'].mean()
-            col1, col2, col3 = st.columns(3)
+            monthly_cost = total_cost * 30
 
-            with col1:
-                st.metric("Daily Token Usage", f"{df_claude['Token Usage'].sum():,}")
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                cost_analysis_data = [
+                    {
+                        "label": "Daily Token Usage",
+                        "value": f"{df_claude['Token Usage'].sum():,}",
+                        "icon": "🔤",
+                        "delta_type": "neutral"
+                    },
+                    {
+                        "label": "Estimated Daily Cost",
+                        "value": f"${total_cost:.2f}",
+                        "icon": "💰",
+                        "delta_type": "neutral"
+                    },
+                    {
+                        "label": "Estimated Monthly Cost",
+                        "value": f"${monthly_cost:.2f}",
+                        "icon": "📅",
+                        "delta_type": "neutral"
+                    }
+                ]
+                enterprise_kpi_grid(cost_analysis_data, columns=3)
+            else:
+                # Legacy fallback
+                col1, col2, col3 = st.columns(3)
 
-            with col2:
-                st.metric("Estimated Daily Cost", f"${total_cost:.2f}")
+                with col1:
+                    st.metric("Daily Token Usage", f"{df_claude['Token Usage'].sum():,}")
 
-            with col3:
-                monthly_cost = total_cost * 30
-                st.metric("Estimated Monthly Cost", f"${monthly_cost:.2f}")
+                with col2:
+                    st.metric("Estimated Daily Cost", f"${total_cost:.2f}")
+
+                with col3:
+                    st.metric("Estimated Monthly Cost", f"${monthly_cost:.2f}")
 
         except Exception as e:
             st.error(f"Failed to load Claude services performance: {e}")
@@ -622,8 +810,28 @@ class IntelligenceAnalyticsDashboard:
 
             with col2:
                 st.markdown("#### User Engagement Metrics")
-                for metric, value in user_data['User Engagement'].items():
-                    st.metric(metric, value)
+                if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                    engagement_metrics_data = []
+                    for metric, value in user_data['User Engagement'].items():
+                        icon = "⏱️" if "Duration" in metric else "📊" if "Pages" in metric else "↩️" if "Bounce" in metric else "🔄"
+                        engagement_metrics_data.append({
+                            "label": metric,
+                            "value": value,
+                            "icon": icon,
+                            "delta_type": "positive"
+                        })
+
+                    # Use single column layout for these specific metrics
+                    for metric_data in engagement_metrics_data:
+                        enterprise_metric(
+                            metric_data["label"],
+                            metric_data["value"],
+                            icon=metric_data["icon"]
+                        )
+                else:
+                    # Legacy fallback
+                    for metric, value in user_data['User Engagement'].items():
+                        st.metric(metric, value)
 
             # User behavior trends (mock data)
             st.markdown("#### User Activity Trends")

@@ -1,0 +1,582 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "phase3-monitoring",
+    "title": "Phase 3 Production Monitoring - $265K-440K Annual Value",
+    "tags": ["phase3", "production", "business-impact"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "10s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["10s", "30s", "1m", "5m"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "7d"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Phase 3 Executive Summary",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 24, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(phase3_revenue_impact_dollars[24h])) * 365",
+            "legendFormat": "Projected Annual Revenue",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "fields": "",
+            "calcs": ["lastNotNull"]
+          },
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 265000, "color": "yellow"},
+                {"value": 350000, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Real-Time Lead Intelligence - WebSocket Latency",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(websocket_latency_seconds_bucket{feature=\"realtime_intelligence\"}[5m])) * 1000",
+            "legendFormat": "P95 Latency (ms)",
+            "refId": "A"
+          },
+          {
+            "expr": "50",
+            "legendFormat": "Target: 50ms",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ms",
+            "label": "Latency",
+            "show": true
+          },
+          {
+            "format": "short",
+            "show": true
+          }
+        ],
+        "alert": {
+          "name": "WebSocket Latency High",
+          "conditions": [
+            {
+              "evaluator": {"params": [50], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ]
+        }
+      },
+      {
+        "id": 3,
+        "title": "Real-Time Intelligence - Active Connections",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "websocket_active_connections{feature=\"realtime_intelligence\"}",
+            "legendFormat": "Active Connections",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Connections",
+            "show": true
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Property Intelligence - Vision Analysis Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(vision_analysis_duration_seconds_bucket{feature=\"property_intelligence\"}[5m]))",
+            "legendFormat": "P95 Analysis Time (s)",
+            "refId": "A"
+          },
+          {
+            "expr": "1.5",
+            "legendFormat": "Target: 1.5s",
+            "refId": "B"
+          },
+          {
+            "expr": "1.19",
+            "legendFormat": "Achieved: 1.19s",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Duration",
+            "show": true
+          }
+        ],
+        "alert": {
+          "name": "Vision Analysis Slow",
+          "conditions": [
+            {
+              "evaluator": {"params": [1.5], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ]
+        }
+      },
+      {
+        "id": 5,
+        "title": "Property Intelligence - Match Satisfaction",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "property_match_satisfaction_score{feature=\"property_intelligence\"} * 100",
+            "legendFormat": "Satisfaction %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 75, "color": "yellow"},
+                {"value": 88, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Churn Prevention - Intervention Latency",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(churn_intervention_latency_seconds_bucket{feature=\"churn_prevention\"}[5m]))",
+            "legendFormat": "P95 Intervention Latency (s)",
+            "refId": "A"
+          },
+          {
+            "expr": "30",
+            "legendFormat": "Target: 30s",
+            "refId": "B"
+          },
+          {
+            "expr": "1",
+            "legendFormat": "Achieved: <1s",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Latency",
+            "show": true,
+            "max": 60
+          }
+        ],
+        "alert": {
+          "name": "Churn Intervention Slow",
+          "conditions": [
+            {
+              "evaluator": {"params": [30], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ]
+        }
+      },
+      {
+        "id": 7,
+        "title": "Churn Prevention - ROI Multiplier",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "churn_prevention_roi_multiplier{feature=\"churn_prevention\"}",
+            "legendFormat": "ROI Multiplier",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 1000, "color": "yellow"},
+                {"value": 1875, "color": "green"}
+              ]
+            }
+          },
+          "overrides": []
+        }
+      },
+      {
+        "id": 8,
+        "title": "AI Coaching - Analysis Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(coaching_analysis_duration_seconds_bucket{feature=\"ai_coaching\"}[5m]))",
+            "legendFormat": "P95 Analysis Time (s)",
+            "refId": "A"
+          },
+          {
+            "expr": "2",
+            "legendFormat": "Target: 2s",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Duration",
+            "show": true
+          }
+        ],
+        "alert": {
+          "name": "Coaching Analysis Slow",
+          "conditions": [
+            {
+              "evaluator": {"params": [2], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ]
+        }
+      },
+      {
+        "id": 9,
+        "title": "AI Coaching - Agent Engagement",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "rate(coaching_alerts_viewed_total{feature=\"ai_coaching\"}[5m]) / rate(coaching_alerts_delivered_total{feature=\"ai_coaching\"}[5m]) * 100",
+            "legendFormat": "Alert View Rate %",
+            "refId": "A"
+          },
+          {
+            "expr": "60",
+            "legendFormat": "Target: 60%",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percent",
+            "label": "Engagement",
+            "show": true,
+            "min": 0,
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Business Impact - Revenue by Feature",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 36},
+        "targets": [
+          {
+            "expr": "rate(phase3_revenue_impact_dollars{feature=\"realtime_intelligence\"}[1h]) * 24 * 365",
+            "legendFormat": "Real-Time Intelligence ($75K-120K)",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(phase3_revenue_impact_dollars{feature=\"property_intelligence\"}[1h]) * 24 * 365",
+            "legendFormat": "Property Intelligence ($75K-150K)",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(phase3_revenue_impact_dollars{feature=\"churn_prevention\"}[1h]) * 24 * 365",
+            "legendFormat": "Churn Prevention ($55K-80K)",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(phase3_revenue_impact_dollars{feature=\"ai_coaching\"}[1h]) * 24 * 365",
+            "legendFormat": "AI Coaching ($60K-90K)",
+            "refId": "D"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "currencyUSD",
+            "label": "Projected Annual Revenue",
+            "show": true
+          }
+        ],
+        "stack": true
+      },
+      {
+        "id": 11,
+        "title": "Conversion Rate Impact",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 44},
+        "targets": [
+          {
+            "expr": "conversion_rate_with_phase3 * 100",
+            "legendFormat": "With Phase 3",
+            "refId": "A"
+          },
+          {
+            "expr": "conversion_rate_baseline * 100",
+            "legendFormat": "Baseline",
+            "refId": "B"
+          },
+          {
+            "expr": "(conversion_rate_with_phase3 - conversion_rate_baseline) / conversion_rate_baseline * 100",
+            "legendFormat": "Lift %",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percent",
+            "label": "Conversion Rate",
+            "show": true
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Feature Adoption Rates",
+        "type": "bargauge",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 44},
+        "targets": [
+          {
+            "expr": "feature_adoption_rate{phase=\"3\"} * 100",
+            "legendFormat": "{{feature}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "A/B Test Statistical Significance",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 52},
+        "targets": [
+          {
+            "expr": "ab_test_control_size{phase=\"3\"}",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          },
+          {
+            "expr": "ab_test_treatment_size{phase=\"3\"}",
+            "format": "table",
+            "instant": true,
+            "refId": "B"
+          },
+          {
+            "expr": "ab_test_p_value{phase=\"3\"}",
+            "format": "table",
+            "instant": true,
+            "refId": "C"
+          },
+          {
+            "expr": "ab_test_duration_hours",
+            "format": "table",
+            "instant": true,
+            "refId": "D"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge",
+            "options": {}
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Infrastructure Costs vs Revenue",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 60},
+        "targets": [
+          {
+            "expr": "sum(rate(phase3_revenue_impact_dollars[24h])) * 24",
+            "legendFormat": "Daily Revenue",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(feature_infrastructure_cost_dollars{phase=\"3\"}[24h])) * 24",
+            "legendFormat": "Daily Infrastructure Cost",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(claude_api_cost_dollars[24h])) * 24",
+            "legendFormat": "Daily API Cost",
+            "refId": "C"
+          },
+          {
+            "expr": "sum(rate(phase3_revenue_impact_dollars[24h])) * 24 - (sum(rate(feature_infrastructure_cost_dollars{phase=\"3\"}[24h])) * 24 + sum(rate(claude_api_cost_dollars[24h])) * 24)",
+            "legendFormat": "Daily Net Impact",
+            "refId": "D"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "currencyUSD",
+            "label": "Amount",
+            "show": true
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "NPS Scores by Feature",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 68},
+        "targets": [
+          {
+            "expr": "phase3_nps_score",
+            "legendFormat": "{{feature}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "background"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 30, "color": "yellow"},
+                {"value": 50, "color": "green"}
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "feature",
+          "type": "query",
+          "query": "label_values(phase3_revenue_impact_dollars, feature)",
+          "multi": true,
+          "includeAll": true,
+          "allValue": ".*"
+        },
+        {
+          "name": "time_range",
+          "type": "interval",
+          "query": "5m,15m,1h,6h,24h,7d",
+          "current": {
+            "text": "1h",
+            "value": "1h"
+          }
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertstate=\"firing\", phase=\"3\"}",
+          "iconColor": "red",
+          "name": "Phase 3 Alerts",
+          "tagKeys": "feature,severity",
+          "textFormat": "{{alertname}}: {{summary}}",
+          "titleFormat": "Alert"
+        },
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "changes(feature_adoption_rate{phase=\"3\"}[5m]) > 0.1",
+          "iconColor": "blue",
+          "name": "Feature Rollout Changes",
+          "titleFormat": "Rollout Update"
+        }
+      ]
+    }
+  },
+  "overwrite": true
+}

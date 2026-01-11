@@ -28,6 +28,23 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import numpy as np
 
+# === UNIFIED ENTERPRISE THEME INTEGRATION ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    UNIFIED_ENTERPRISE_THEME_AVAILABLE = True
+except ImportError:
+    UNIFIED_ENTERPRISE_THEME_AVAILABLE = False
+
 # Enhanced services integration
 try:
     from ghl_real_estate_ai.services.claude_streaming_service import (
@@ -255,11 +272,53 @@ class EnhancedLeadIntelligenceDashboard:
         with col2:
             st.markdown("### 🎯 Today's Performance")
 
-            # Key metrics
-            st.metric("Streaming Sessions", "89", "↑12%")
-            st.metric("Behavioral Predictions", "142", "↑8%")
-            st.metric("Coaching Interventions", "156", "↑15%")
-            st.metric("A/B Test Confidence", "94.2%", "↑2.1%")
+            # Key metrics with unified enterprise design
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                key_metrics_data = [
+                    {
+                        "label": "Streaming Sessions",
+                        "value": "89",
+                        "delta": "+12%",
+                        "delta_type": "positive",
+                        "icon": "🌊"
+                    },
+                    {
+                        "label": "Behavioral Predictions",
+                        "value": "142",
+                        "delta": "+8%",
+                        "delta_type": "positive",
+                        "icon": "🧠"
+                    },
+                    {
+                        "label": "Coaching Interventions",
+                        "value": "156",
+                        "delta": "+15%",
+                        "delta_type": "positive",
+                        "icon": "🎯"
+                    },
+                    {
+                        "label": "A/B Test Confidence",
+                        "value": "94.2%",
+                        "delta": "+2.1%",
+                        "delta_type": "positive",
+                        "icon": "📊"
+                    }
+                ]
+
+                # Use single column layout to fit in the col2 container
+                for metric_data in key_metrics_data:
+                    enterprise_metric(
+                        metric_data["label"],
+                        metric_data["value"],
+                        delta=metric_data["delta"],
+                        icon=metric_data["icon"]
+                    )
+            else:
+                # Legacy fallback
+                st.metric("Streaming Sessions", "89", "↑12%")
+                st.metric("Behavioral Predictions", "142", "↑8%")
+                st.metric("Coaching Interventions", "156", "↑15%")
+                st.metric("A/B Test Confidence", "94.2%", "↑2.1%")
 
         st.markdown("---")
 
@@ -315,12 +374,48 @@ class EnhancedLeadIntelligenceDashboard:
         with col2:
             st.markdown("### 📊 Active Streams")
             active_streams = st.session_state.enhanced_dashboard_state.get('active_streams', {})
-            st.metric("Currently Active", len(active_streams))
+
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                enterprise_metric(
+                    "Currently Active",
+                    str(len(active_streams)),
+                    icon="📊"
+                )
+            else:
+                st.metric("Currently Active", len(active_streams))
 
         with col3:
             st.markdown("### ⚡ Performance")
-            st.metric("Avg Latency", "45ms", "↓8ms")
-            st.metric("Cache Hit Rate", "85.2%", "↑3.1%")
+
+            if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+                performance_metrics_data = [
+                    {
+                        "label": "Avg Latency",
+                        "value": "45ms",
+                        "delta": "-8ms",
+                        "delta_type": "positive",
+                        "icon": "⚡"
+                    },
+                    {
+                        "label": "Cache Hit Rate",
+                        "value": "85.2%",
+                        "delta": "+3.1%",
+                        "delta_type": "positive",
+                        "icon": "💾"
+                    }
+                ]
+
+                for metric_data in performance_metrics_data:
+                    enterprise_metric(
+                        metric_data["label"],
+                        metric_data["value"],
+                        delta=metric_data["delta"],
+                        icon=metric_data["icon"]
+                    )
+            else:
+                # Legacy fallback
+                st.metric("Avg Latency", "45ms", "↓8ms")
+                st.metric("Cache Hit Rate", "85.2%", "↑3.1%")
 
         # Stream management
         st.markdown("### 🔄 Stream Management")
@@ -548,20 +643,54 @@ class EnhancedLeadIntelligenceDashboard:
 
         st.markdown("## 📊 Coaching Analytics Center")
 
-        # Coaching performance metrics
-        col1, col2, col3, col4 = st.columns(4)
+        # Coaching performance metrics with unified enterprise design
+        if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+            coaching_metrics_data = [
+                {
+                    "label": "Coaching Sessions Today",
+                    "value": "156",
+                    "delta": "+15%",
+                    "delta_type": "positive",
+                    "icon": "🎯"
+                },
+                {
+                    "label": "Avg Effectiveness Score",
+                    "value": "87.6%",
+                    "delta": "+4.2%",
+                    "delta_type": "positive",
+                    "icon": "📊"
+                },
+                {
+                    "label": "Objection Resolution Rate",
+                    "value": "91.3%",
+                    "delta": "+6.8%",
+                    "delta_type": "positive",
+                    "icon": "🛡️"
+                },
+                {
+                    "label": "Agent Satisfaction",
+                    "value": "94.1%",
+                    "delta": "+2.3%",
+                    "delta_type": "positive",
+                    "icon": "😊"
+                }
+            ]
+            enterprise_kpi_grid(coaching_metrics_data, columns=4)
+        else:
+            # Legacy fallback
+            col1, col2, col3, col4 = st.columns(4)
 
-        with col1:
-            st.metric("Coaching Sessions Today", "156", "↑15%")
+            with col1:
+                st.metric("Coaching Sessions Today", "156", "↑15%")
 
-        with col2:
-            st.metric("Avg Effectiveness Score", "87.6%", "↑4.2%")
+            with col2:
+                st.metric("Avg Effectiveness Score", "87.6%", "↑4.2%")
 
-        with col3:
-            st.metric("Objection Resolution Rate", "91.3%", "↑6.8%")
+            with col3:
+                st.metric("Objection Resolution Rate", "91.3%", "↑6.8%")
 
-        with col4:
-            st.metric("Agent Satisfaction", "94.1%", "↑2.3%")
+            with col4:
+                st.metric("Agent Satisfaction", "94.1%", "↑2.3%")
 
         # Strategy performance comparison
         st.markdown("### 📈 Coaching Strategy Performance")
@@ -745,38 +874,99 @@ class EnhancedLeadIntelligenceDashboard:
         # Statistical significance calculator
         st.markdown("### 📈 Statistical Analysis")
 
-        stat_col1, stat_col2, stat_col3 = st.columns(3)
+        if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+            statistical_metrics_data = [
+                {
+                    "label": "P-Value",
+                    "value": "0.032",
+                    "delta": "Significant!",
+                    "delta_type": "positive",
+                    "icon": "📊"
+                },
+                {
+                    "label": "Confidence Interval",
+                    "value": "94.8%",
+                    "delta": "+2.1%",
+                    "delta_type": "positive",
+                    "icon": "📈"
+                },
+                {
+                    "label": "Effect Size",
+                    "value": "12.3%",
+                    "delta": "Strong",
+                    "delta_type": "positive",
+                    "icon": "💪"
+                }
+            ]
+            enterprise_kpi_grid(statistical_metrics_data, columns=3)
+        else:
+            # Legacy fallback
+            stat_col1, stat_col2, stat_col3 = st.columns(3)
 
-        with stat_col1:
-            st.metric("P-Value", "0.032", "Significant!")
+            with stat_col1:
+                st.metric("P-Value", "0.032", "Significant!")
 
-        with stat_col2:
-            st.metric("Confidence Interval", "94.8%", "↑2.1%")
+            with stat_col2:
+                st.metric("Confidence Interval", "94.8%", "↑2.1%")
 
-        with stat_col3:
-            st.metric("Effect Size", "12.3%", "Strong")
+            with stat_col3:
+                st.metric("Effect Size", "12.3%", "Strong")
 
     def _render_performance_tab(self):
         """Render performance monitoring interface."""
 
         st.markdown("## 📈 Performance Monitoring Center")
 
-        # System performance overview
+        # System performance overview with unified enterprise design
         st.markdown("### ⚡ System Performance Overview")
 
-        perf_col1, perf_col2, perf_col3, perf_col4 = st.columns(4)
+        if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+            performance_overview_data = [
+                {
+                    "label": "API Response Time",
+                    "value": "45ms",
+                    "delta": "-8ms",
+                    "delta_type": "positive",
+                    "icon": "🚀"
+                },
+                {
+                    "label": "Streaming Latency",
+                    "value": "47ms",
+                    "delta": "-12ms",
+                    "delta_type": "positive",
+                    "icon": "📡"
+                },
+                {
+                    "label": "Prediction Accuracy",
+                    "value": "94.8%",
+                    "delta": "+1.2%",
+                    "delta_type": "positive",
+                    "icon": "🎯"
+                },
+                {
+                    "label": "System Uptime",
+                    "value": "99.94%",
+                    "delta": "+0.01%",
+                    "delta_type": "positive",
+                    "icon": "🟢"
+                }
+            ]
+            enterprise_kpi_grid(performance_overview_data, columns=4)
+        else:
+            # Legacy fallback
+            perf_col1, perf_col2, perf_col3, perf_col4 = st.columns(4)
 
-        with perf_col1:
-            st.metric("API Response Time", "45ms", "↓8ms")
+            with perf_col1:
+                st.metric("API Response Time", "45ms", "↓8ms")
 
-        with perf_col2:
-            st.metric("Streaming Latency", "47ms", "↓12ms")
+            with perf_col2:
+                st.metric("Streaming Latency", "47ms", "↓12ms")
 
-        with perf_col3:
-            st.metric("Prediction Accuracy", "94.8%", "↑1.2%")
+            with perf_col3:
+                st.metric("Prediction Accuracy", "94.8%", "↑1.2%")
 
-        with perf_col4:
-            st.metric("System Uptime", "99.94%", "↑0.01%")
+            with perf_col4:
+                st.metric("System Uptime", "99.94%", "↑0.01%")
 
         # Performance trends
         st.markdown("### 📊 Performance Trends (Last 24 Hours)")

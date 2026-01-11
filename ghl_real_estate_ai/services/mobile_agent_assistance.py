@@ -99,7 +99,7 @@ class MobileAgentAssistance:
     """
 
     def __init__(self):
-        self.market_intelligence = AdvancedMarketIntelligenceEngine()
+        self.market_intelligence = AdvancedMarketIntelligenceEngine("default_location")
         self.engagement_engine = predictive_engagement_engine
         self.redis_service = redis_conversation_service
 
