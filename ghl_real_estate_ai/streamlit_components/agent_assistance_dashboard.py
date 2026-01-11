@@ -1,5 +1,5 @@
 """
-Real-Time Agent Assistance Dashboard Components
+Real-Time Agent Assistance Dashboard Components - Enterprise Enhanced
 
 Streamlit components that provide live insights and guidance to real estate agents
 during conversations with prospects. Integrates with the Lead Evaluation Orchestrator
@@ -12,6 +12,8 @@ Components:
 - Real-Time Conversation Analysis
 - Next Best Action Recommendations
 - Market Intelligence Panel
+
+Enhanced with Enterprise Design System v2.0 for Fortune 500 visual sophistication.
 """
 
 import asyncio
@@ -25,6 +27,23 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
+
+# === ENTERPRISE THEME INTEGRATION ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    ENTERPRISE_THEME_AVAILABLE = True
+except ImportError:
+    ENTERPRISE_THEME_AVAILABLE = False
 
 # Local imports
 from models.evaluation_models import (
@@ -48,16 +67,23 @@ class AgentAssistanceDashboard:
         """Initialize dashboard with default settings."""
         self.refresh_interval = 2  # seconds
         self.max_history_items = 50
-        self.color_scheme = {
-            'primary': '#d4af37',  # Luxury gold
-            'secondary': '#1e3a8a',  # Deep blue
-            'success': '#059669',  # Emerald
-            'warning': '#f59e0b',  # Amber
-            'danger': '#dc2626',  # Red
-            'background': '#f8fafc',  # Light gray
-            'card': '#ffffff',  # White
-            'text': '#1e293b'  # Charcoal
-        }
+
+        # === ENTERPRISE COLOR SYSTEM ===
+        if ENTERPRISE_THEME_AVAILABLE:
+            # Use enterprise design system colors
+            self.colors = ENTERPRISE_COLORS
+        else:
+            # Fallback to legacy color scheme
+            self.color_scheme = {
+                'primary': '#d4af37',  # Luxury gold
+                'secondary': '#1e3a8a',  # Deep blue
+                'success': '#059669',  # Emerald
+                'warning': '#f59e0b',  # Amber
+                'danger': '#dc2626',  # Red
+                'background': '#f8fafc',  # Light gray
+                'card': '#ffffff',  # White
+                'text': '#1e293b'  # Charcoal
+            }
 
     def render_main_dashboard(
         self,
@@ -876,29 +902,52 @@ class AgentAssistanceDashboard:
             time.sleep(self.refresh_interval)
             st.rerun()
 
-    # Helper methods for styling and colors
+    # === ENTERPRISE COLOR HELPER METHODS ===
     def _get_progress_color(self, value: float) -> str:
-        """Get color based on progress value."""
-        if value >= 80:
-            return self.color_scheme['success']
-        elif value >= 60:
-            return self.color_scheme['warning']
-        elif value >= 40:
-            return self.color_scheme['secondary']
+        """Get color based on progress value using enterprise colors."""
+        if ENTERPRISE_THEME_AVAILABLE:
+            if value >= 80:
+                return self.colors['success']['500']
+            elif value >= 60:
+                return self.colors['warning']['500']
+            elif value >= 40:
+                return self.colors['navy']['600']
+            else:
+                return self.colors['danger']['500']
         else:
-            return self.color_scheme['danger']
+            # Legacy fallback
+            if value >= 80:
+                return self.color_scheme['success']
+            elif value >= 60:
+                return self.color_scheme['warning']
+            elif value >= 40:
+                return self.color_scheme['secondary']
+            else:
+                return self.color_scheme['danger']
 
     def _get_sentiment_color(self, sentiment: SentimentType) -> str:
-        """Get color for sentiment."""
-        sentiment_colors = {
-            SentimentType.VERY_POSITIVE: self.color_scheme['success'],
-            SentimentType.POSITIVE: self.color_scheme['success'],
-            SentimentType.NEUTRAL: self.color_scheme['secondary'],
-            SentimentType.CONCERNED: self.color_scheme['warning'],
-            SentimentType.FRUSTRATED: self.color_scheme['danger'],
-            SentimentType.ANGRY: self.color_scheme['danger']
-        }
-        return sentiment_colors.get(sentiment, self.color_scheme['secondary'])
+        """Get color for sentiment using enterprise colors."""
+        if ENTERPRISE_THEME_AVAILABLE:
+            sentiment_colors = {
+                SentimentType.VERY_POSITIVE: self.colors['success']['500'],
+                SentimentType.POSITIVE: self.colors['success']['500'],
+                SentimentType.NEUTRAL: self.colors['navy']['600'],
+                SentimentType.CONCERNED: self.colors['warning']['500'],
+                SentimentType.FRUSTRATED: self.colors['danger']['500'],
+                SentimentType.ANGRY: self.colors['danger']['500']
+            }
+            return sentiment_colors.get(sentiment, self.colors['navy']['600'])
+        else:
+            # Legacy fallback
+            sentiment_colors = {
+                SentimentType.VERY_POSITIVE: self.color_scheme['success'],
+                SentimentType.POSITIVE: self.color_scheme['success'],
+                SentimentType.NEUTRAL: self.color_scheme['secondary'],
+                SentimentType.CONCERNED: self.color_scheme['warning'],
+                SentimentType.FRUSTRATED: self.color_scheme['danger'],
+                SentimentType.ANGRY: self.color_scheme['danger']
+            }
+            return sentiment_colors.get(sentiment, self.color_scheme['secondary'])
 
     def _get_sentiment_icon(self, sentiment: SentimentType) -> str:
         """Get icon for sentiment."""

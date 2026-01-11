@@ -1,6 +1,6 @@
 """
 GHL Real Estate AI - Consolidated Hub Interface (Root Entry Point)
-Main Application with 5 Core Hubs
+Main Application with 5 Core Hubs - Enhanced with Enterprise Visual Theme
 """
 import streamlit as st
 import sys
@@ -12,6 +12,13 @@ from pathlib import Path
 import json
 import os
 from utils.ui import sparkline
+
+# === ENTERPRISE THEME INTEGRATION ===
+try:
+    from ghl_real_estate_ai.design_system import inject_enterprise_theme
+    ENTERPRISE_THEME_AVAILABLE = True
+except ImportError:
+    ENTERPRISE_THEME_AVAILABLE = False
 
 # --- PATH CONFIGURATION ---
 BASE_DIR = Path(__file__).parent
@@ -226,6 +233,11 @@ st.set_page_config(
         'About': "AI-Powered Lead Qualification System for Real Estate Professionals"
     }
 )
+
+# === INJECT ENTERPRISE THEME ===
+if ENTERPRISE_THEME_AVAILABLE:
+    inject_enterprise_theme()
+    st.success("🎨 Enterprise Theme Activated - Fortune 500 Professional Styling")
 
 # Load custom CSS
 css_path = PROJECT_ROOT / "streamlit_demo" / "assets" / "styles_dark_lux.css"
