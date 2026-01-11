@@ -1,0 +1,32 @@
+{
+  "name": "enterprisehub-frontend",
+  "version": "1.0.0",
+  "description": "EnterpriseHub AI-Powered Real Estate Intelligence Platform - Frontend Demo",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve .",
+    "build": "echo 'Static site - no build needed'",
+    "dev": "serve ."
+  },
+  "keywords": [
+    "real-estate",
+    "ai",
+    "claude",
+    "ghl",
+    "automation",
+    "lead-intelligence"
+  ],
+  "author": "EnterpriseHub Team",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/enterprisehub-frontend"
+  },
+  "homepage": "https://enterprisehub-frontend.vercel.app"
+}

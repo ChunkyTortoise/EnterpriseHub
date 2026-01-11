@@ -27,7 +27,54 @@ Usage:
     app.run()
 """
 
+# ============================================================================
+# MIGRATION NOTES (Automated Migration - 2026-01-11)
+# ============================================================================
+# Changes Applied:
+# # - Added base class: EnterpriseDashboardComponent
+# - Added unified design system import check
+# - Consider replacing inline styled divs with enterprise_card
+#
+# This component has been migrated to enterprise standards.
+# See migration documentation for details.
+# ============================================================================
+
+# === ENTERPRISE BASE IMPORTS ===
+from .enhanced_enterprise_base import (
+    EnhancedEnterpriseComponent,
+    EnterpriseDashboardComponent,
+    EnterpriseDataComponent,
+    ComponentMetrics,
+    ComponentState
+)
+from .enterprise_theme_system import (
+    EnterpriseThemeManager,
+    ThemeVariant,
+    ComponentType,
+    inject_enterprise_theme,
+    create_enterprise_card,
+    create_enterprise_metric,
+    create_enterprise_alert
+)
+
 import asyncio
+
+# === UNIFIED DESIGN SYSTEM ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    UNIFIED_DESIGN_SYSTEM_AVAILABLE = True
+except ImportError:
+    UNIFIED_DESIGN_SYSTEM_AVAILABLE = False
 import logging
 import sys
 from pathlib import Path
@@ -48,7 +95,7 @@ from ghl_real_estate_ai.streamlit_components.monitoring_dashboard_suite import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class MonitoringApp:
+class MonitoringApp(EnterpriseDashboardComponent):
     """
     Main monitoring application orchestrating all dashboard components.
     """

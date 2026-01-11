@@ -29,6 +29,15 @@ from plotly.subplots import make_subplots
 import numpy as np
 import streamlit as st
 
+# === ENTERPRISE BASE IMPORTS ===
+from .enhanced_enterprise_base import (
+    EnhancedEnterpriseComponent,
+    EnterpriseDashboardComponent,
+    EnterpriseDataComponent,
+    ComponentMetrics,
+    ComponentState
+)
+
 from ..services.intelligence_performance_monitor import (
     IntelligencePerformanceMonitor,
     performance_monitor,
@@ -72,7 +81,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class VisuallyEnhancedAnalyticsDashboard:
+class VisuallyEnhancedAnalyticsDashboard(EnterpriseDashboardComponent):
     """
     Next-generation analytics dashboard with cutting-edge visual design.
     Showcases modern UI/UX principles with advanced interactivity and aesthetics.
@@ -80,6 +89,10 @@ class VisuallyEnhancedAnalyticsDashboard:
 
     def __init__(self):
         """Initialize the visually enhanced dashboard."""
+        super().__init__(
+            component_id="visually_enhanced_analytics_dashboard",
+            enable_metrics=True
+        )
         self.monitor = performance_monitor
         self.session_id = str(uuid.uuid4())
         self.last_update = datetime.now()

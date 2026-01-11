@@ -11,7 +11,44 @@ Interactive demo showcasing the latest advanced intelligence visualization compo
 Run with: streamlit run intelligence_dashboard_demo.py
 """
 
+# ============================================================================
+# MIGRATION NOTES (Automated Migration - 2026-01-11)
+# ============================================================================
+# Changes Applied:
+# # - Added unified design system import check
+# - Consider using enterprise_metric for consistent styling
+#
+# This component has been migrated to enterprise standards.
+# See migration documentation for details.
+# ============================================================================
+
+# === ENTERPRISE BASE IMPORTS ===
+from .enhanced_enterprise_base import (
+    EnhancedEnterpriseComponent,
+    EnterpriseDashboardComponent,
+    EnterpriseDataComponent,
+    ComponentMetrics,
+    ComponentState
+)
+
 import streamlit as st
+
+# === UNIFIED DESIGN SYSTEM ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    UNIFIED_DESIGN_SYSTEM_AVAILABLE = True
+except ImportError:
+    UNIFIED_DESIGN_SYSTEM_AVAILABLE = False
 import sys
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -40,12 +77,21 @@ except ImportError:
     EXISTING_DASHBOARDS_AVAILABLE = False
 
 
-def main():
-    """Main demo application."""
+class IntelligenceDashboardDemo(EnterpriseDashboardComponent):
+    """Intelligence dashboard demonstration component."""
 
-    # Page configuration
-    st.set_page_config(
-        page_title="🚀 Advanced Intelligence Dashboard Demo",
+    def __init__(self):
+        """Initialize the intelligence dashboard demo component."""
+        super().__init__(
+            component_id="intelligence_dashboard_demo",
+            enable_metrics=True
+        )
+
+    def render(self):
+        """Main demo application rendering."""
+        # Page configuration
+        st.set_page_config(
+            page_title="🚀 Advanced Intelligence Dashboard Demo",
         page_icon="🚀",
         layout="wide",
         initial_sidebar_state="expanded"
@@ -716,6 +762,11 @@ def render_interactive_testing(viz: AdvancedIntelligenceVisualizations):
     with diag_col3:
         st.metric("API Response Time", "125ms", "↓45ms")
 
+
+def main():
+    """Main entry point for demo application."""
+    demo = IntelligenceDashboardDemo()
+    demo.render()
 
 if __name__ == "__main__":
     main()

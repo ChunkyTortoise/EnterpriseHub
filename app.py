@@ -144,6 +144,20 @@ except ImportError:
     st.warning("Personalization unavailable, using mock.")
     AIContentPersonalizationService = MockService
 
+# Enhanced Performance Monitoring imports
+try:
+    from services.enhanced_performance_monitoring import (
+        EnhancedPerformanceMonitoringService,
+        track_model_performance,
+        get_performance_summary,
+        start_background_monitoring
+    )
+    PERFORMANCE_MONITORING_AVAILABLE = True
+except ImportError:
+    st.warning("Enhanced Performance Monitoring unavailable, using mock.")
+    PERFORMANCE_MONITORING_AVAILABLE = False
+    EnhancedPerformanceMonitoringService = MockService
+
 try:
     from services.workflow_marketplace import WorkflowMarketplace
 except ImportError:
@@ -306,86 +320,21 @@ if css_path.exists():
     with open(css_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Professional header with improved status indicators
-st.markdown("""
-<div style='background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            padding: 3rem 2.5rem;
-            border-radius: 20px;
-            margin-bottom: 2.5rem;
-            color: #f8fafc;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            position: relative;
-            overflow: hidden;'>
-    <!-- Animated background pattern -->
-    <div style='position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-                background-image:
-                    radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-                opacity: 0.8;'></div>
+# Application Header
+st.title("🏠 GHL Real Estate AI")
+st.markdown("**ENTERPRISE COMMAND CENTER**")
+st.markdown("Professional AI-powered lead qualification and automation system for **Jorge Salas**")
 
-    <div style='position: relative; z-index: 1;'>
-        <div style='display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem;'>
-            <div style='width: 4rem; height: 4rem; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
-                        border-radius: 12px; display: flex; align-items: center; justify-content: center;
-                        font-size: 1.5rem; font-weight: 800; color: white;
-                        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);'>RE</div>
-            <div>
-                <h1 style='margin: 0; font-size: 2.75rem; font-weight: 800; color: #f8fafc;
-                           text-shadow: 0 4px 20px rgba(0,0,0,0.5); font-family: "Plus Jakarta Sans", sans-serif;'>
-                    GHL Real Estate AI
-                </h1>
-                <p style='margin: 0.25rem 0 0 0; font-size: 1.15rem; color: #94a3b8; font-weight: 500; letter-spacing: 0.05em;'>
-                    ENTERPRISE COMMAND CENTER
-                </p>
-            </div>
-        </div>
+# Status indicators
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.success("🤖 AI Mode Active")
+with col2:
+    st.info("🔗 GHL Integration Live")
+with col3:
+    st.warning("🏢 Multi-Tenant Ready")
 
-        <p style='margin: 1.5rem 0; font-size: 1.05rem; color: #cbd5e1; max-width: 800px; line-height: 1.6;'>
-            Professional AI-powered lead qualification and automation system for <strong style='color: #3b82f6;'>Jorge Salas</strong>
-        </p>
-
-        <div style='margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;'>
-            <div style='background: rgba(16, 185, 129, 0.15);
-                        padding: 0.75rem 1.25rem;
-                        border-radius: 10px;
-                        border: 1px solid rgba(16, 185, 129, 0.3);
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        color: #f8fafc;'>
-                <span style='width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;'></span>
-                <span style='font-weight: 600; color: #f8fafc;'>AI Mode Active</span>
-            </div>
-            <div style='background: rgba(59, 130, 246, 0.15);
-                        padding: 0.75rem 1.25rem;
-                        border-radius: 10px;
-                        border: 1px solid rgba(59, 130, 246, 0.3);
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        color: #f8fafc;'>
-                <span style='width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; display: inline-block;'></span>
-                <span style='font-weight: 600; color: #f8fafc;'>GHL Integration Live</span>
-            </div>
-            <div style='background: rgba(245, 158, 11, 0.15);
-                        padding: 0.75rem 1.25rem;
-                        border-radius: 10px;
-                        border: 1px solid rgba(245, 158, 11, 0.3);
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        color: #f8fafc;'>
-                <span style='width: 8px; height: 8px; background: #f59e0b; border-radius: 50%; display: inline-block;'></span>
-                <span style='font-weight: 600; color: #f8fafc;'>Multi-Tenant Ready</span>
-            </div>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+st.divider()
 
 # Initialize session state for hub navigation
 if 'current_hub' not in st.session_state:
@@ -539,40 +488,37 @@ if selected_hub == "Executive Command Center":
     st.markdown("*High-level KPIs, revenue tracking, and system health*")
 
     # Tabs for sub-features
-    tab1, tab2, tab3, tab4 = st.tabs(["Dashboard", "Advanced Analytics", "AI Insights", "Reports"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Dashboard", "Advanced Analytics", "AI Insights", "Reports", "Performance Monitoring"])
 
     with tab1:
         st.subheader("Executive Command Center")
         
-        # Bento Grid Metrics
-        st.markdown("""
-        <div class="bento-grid">
-            <div class="bento-item">
-                <div class="bento-header">
-                    <div class="bento-title">Total Pipeline</div>
-                    <div class="bento-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">+15%</div>
-                </div>
-                <div style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">$2.4M</div>
-                <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">Across 47 active properties</div>
-            </div>
-            <div class="bento-item">
-                <div class="bento-header">
-                    <div class="bento-title">Hot Leads</div>
-                    <div class="bento-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">+8</div>
-                </div>
-                <div style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">23</div>
-                <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">Ready for immediate conversion</div>
-            </div>
-            <div class="bento-item">
-                <div class="bento-header">
-                    <div class="bento-title">Conversion Rate</div>
-                    <div class="bento-badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">+2%</div>
-                </div>
-                <div style="font-size: 2.5rem; font-weight: 800; color: #f8fafc;">34%</div>
-                <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">AI-assisted closing efficiency</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # Executive Metrics Dashboard
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(
+                label="Total Pipeline",
+                value="$2.4M",
+                delta="+15%",
+                help="Across 47 active properties"
+            )
+
+        with col2:
+            st.metric(
+                label="Hot Leads",
+                value="23",
+                delta="+8",
+                help="Ready for immediate conversion"
+            )
+
+        with col3:
+            st.metric(
+                label="Conversion Rate",
+                value="34%",
+                delta="+2%",
+                help="AI-assisted closing efficiency"
+            )
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -758,6 +704,212 @@ if selected_hub == "Executive Command Center":
         
         if st.button("📧 Email Report to Jorge"):
             st.toast("Report sent to jorge@example.com")
+
+    with tab5:
+        st.subheader("Performance Monitoring & ML Model Tracking")
+        st.markdown("*Real-time system health, ML model performance, and optimization insights*")
+
+        if PERFORMANCE_MONITORING_AVAILABLE:
+            # Performance monitoring dashboard
+            try:
+                # Get performance data
+                performance_data = asyncio.run(get_performance_summary())
+
+                # System Health Overview
+                st.markdown("### 🖥️ System Health Overview")
+                col1, col2, col3, col4 = st.columns(4)
+
+                system_metrics = performance_data.get('system_metrics', {})
+
+                with col1:
+                    cpu_usage = system_metrics.get('cpu_usage', 0)
+                    cpu_color = '🔴' if cpu_usage > 80 else '🟡' if cpu_usage > 60 else '🟢'
+                    st.metric(
+                        label="CPU Usage",
+                        value=f"{cpu_usage:.1f}%",
+                        help=f"{cpu_color} System CPU utilization"
+                    )
+
+                with col2:
+                    memory_usage = system_metrics.get('memory_usage', 0)
+                    memory_color = '🔴' if memory_usage > 85 else '🟡' if memory_usage > 70 else '🟢'
+                    st.metric(
+                        label="Memory Usage",
+                        value=f"{memory_usage:.1f}%",
+                        help=f"{memory_color} System memory utilization"
+                    )
+
+                with col3:
+                    api_response = system_metrics.get('api_response_time', 0)
+                    api_color = '🔴' if api_response > 500 else '🟡' if api_response > 200 else '🟢'
+                    st.metric(
+                        label="API Response",
+                        value=f"{api_response:.0f}ms",
+                        help=f"{api_color} Average API response time"
+                    )
+
+                with col4:
+                    active_sessions = system_metrics.get('active_sessions', 0)
+                    st.metric(
+                        label="Active Sessions",
+                        value=str(active_sessions),
+                        help="Currently active user sessions"
+                    )
+
+                st.markdown("---")
+
+                # ML Model Performance
+                st.markdown("### 🧠 ML Model Performance")
+
+                ml_models = performance_data.get('ml_models', {})
+                models_list = ml_models.get('models', [])
+
+                if models_list:
+                    # Create model performance table
+                    model_df = pd.DataFrame([
+                        {
+                            'Model ID': model.get('model_id', 'Unknown'),
+                            'Accuracy': f"{model.get('accuracy', 0):.2%}",
+                            'Latency (ms)': f"{model.get('latency_ms', 0):.1f}",
+                            'Predictions': f"{model.get('predictions_count', 0):,}",
+                            'Status': '🟢 Healthy' if model.get('accuracy', 0) > 0.95 else '🟡 Warning'
+                        }
+                        for model in models_list[:5]  # Show top 5 models
+                    ])
+
+                    st.dataframe(
+                        model_df,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                else:
+                    st.info("No ML model performance data available. Models will appear here once tracking starts.")
+
+                st.markdown("---")
+
+                # Alerts and Recommendations
+                col_alerts, col_recommendations = st.columns(2)
+
+                with col_alerts:
+                    st.markdown("### 🚨 Recent Alerts")
+                    alerts = performance_data.get('alerts', {})
+
+                    if alerts.get('recent'):
+                        for alert in alerts['recent'][:3]:
+                            severity = alert.get('severity', 'info')
+                            severity_icon = '🔴' if severity == 'critical' else '🟡' if severity == 'warning' else '🔵'
+                            st.warning(f"{severity_icon} **{alert.get('component', 'System')}**: {alert.get('message', 'Alert')}")
+                    else:
+                        st.success("🟢 No recent alerts - system running smoothly!")
+
+                with col_recommendations:
+                    st.markdown("### 💡 Optimization Recommendations")
+                    recommendations = performance_data.get('recommendations', {})
+
+                    if recommendations:
+                        for category, rec_list in recommendations.items():
+                            with st.expander(f"📈 {category.title()} Optimization"):
+                                for rec in rec_list[:3]:
+                                    st.markdown(f"• {rec}")
+                    else:
+                        st.success("🟢 No optimization recommendations at this time!")
+
+                # Performance Trends (Mock Data for Demo)
+                st.markdown("---")
+                st.markdown("### 📊 Performance Trends")
+
+                # Create sample trend data
+                dates = pd.date_range(end=pd.Timestamp.now(), periods=24, freq='H')
+                trend_data = pd.DataFrame({
+                    'Time': dates,
+                    'CPU %': np.random.normal(45, 10, 24),
+                    'Memory %': np.random.normal(65, 8, 24),
+                    'API Latency (ms)': np.random.normal(120, 30, 24)
+                })
+
+                # Performance trends chart
+                fig_trends = go.Figure()
+
+                fig_trends.add_trace(go.Scatter(
+                    x=trend_data['Time'],
+                    y=trend_data['CPU %'],
+                    name='CPU Usage',
+                    line=dict(color='#3b82f6', width=2),
+                    yaxis='y1'
+                ))
+
+                fig_trends.add_trace(go.Scatter(
+                    x=trend_data['Time'],
+                    y=trend_data['Memory %'],
+                    name='Memory Usage',
+                    line=dict(color='#10b981', width=2),
+                    yaxis='y1'
+                ))
+
+                fig_trends.add_trace(go.Scatter(
+                    x=trend_data['Time'],
+                    y=trend_data['API Latency (ms)'],
+                    name='API Latency',
+                    line=dict(color='#f59e0b', width=2),
+                    yaxis='y2'
+                ))
+
+                fig_trends.update_layout(
+                    title="System Performance Trends (24 Hours)",
+                    xaxis_title="Time",
+                    yaxis=dict(
+                        title="Percentage (%)",
+                        side="left",
+                        range=[0, 100]
+                    ),
+                    yaxis2=dict(
+                        title="Latency (ms)",
+                        side="right",
+                        overlaying="y",
+                        range=[0, 300]
+                    ),
+                    hovermode='x unified',
+                    template='plotly_dark',
+                    showlegend=True,
+                    height=400
+                )
+
+                st.plotly_chart(fig_trends, use_container_width=True)
+
+                # Real-time monitoring toggle
+                st.markdown("---")
+                col_toggle, col_status = st.columns([1, 2])
+
+                with col_toggle:
+                    if st.button("🔄 Start Real-time Monitoring"):
+                        try:
+                            start_background_monitoring(interval_seconds=30)
+                            st.success("✅ Real-time monitoring started!")
+                        except Exception as e:
+                            st.error(f"❌ Failed to start monitoring: {e}")
+
+                with col_status:
+                    monitoring_active = performance_data.get('monitoring_status', False)
+                    status_text = "🟢 Active" if monitoring_active else "🔴 Inactive"
+                    st.markdown(f"**Monitoring Status**: {status_text}")
+
+                    if performance_data.get('last_updated'):
+                        st.caption(f"Last updated: {performance_data['last_updated']}")
+
+            except Exception as e:
+                st.error(f"Error loading performance data: {e}")
+                st.info("💡 Performance monitoring service may need initialization.")
+        else:
+            st.warning("⚠️ Enhanced Performance Monitoring service is not available.")
+            st.markdown("""
+            **Features when available:**
+            - Real-time system health monitoring
+            - ML model performance tracking
+            - Automated drift detection
+            - Performance optimization recommendations
+            - Resource usage analytics
+            - Automated alerting system
+            """)
 
 elif selected_hub == "Lead Intelligence Hub":
     # Update navigation context

@@ -22,7 +22,45 @@ Date: 2026-01-10
 Version: 1.0.0
 """
 
+# ============================================================================
+# MIGRATION NOTES (Automated Migration - 2026-01-11)
+# ============================================================================
+# Changes Applied:
+# # - Added unified design system import check
+# - Consider replacing inline styled divs with enterprise_card
+# - Consider using enterprise_metric for consistent styling
+#
+# This component has been migrated to enterprise standards.
+# See migration documentation for details.
+# ============================================================================
+
+# === ENTERPRISE BASE IMPORTS ===
+from .enhanced_enterprise_base import (
+    EnhancedEnterpriseComponent,
+    EnterpriseDashboardComponent,
+    EnterpriseDataComponent,
+    ComponentMetrics,
+    ComponentState
+)
+
 import streamlit as st
+
+# === UNIFIED DESIGN SYSTEM ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    UNIFIED_DESIGN_SYSTEM_AVAILABLE = True
+except ImportError:
+    UNIFIED_DESIGN_SYSTEM_AVAILABLE = False
 import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
@@ -38,10 +76,19 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def render_performance_monitoring_dashboard():
-    """Render the real-time performance monitoring dashboard."""
+class PerformanceMonitoringDashboard(EnterpriseDashboardComponent):
+    """Real-time performance monitoring dashboard component."""
 
-    st.set_page_config(
+    def __init__(self):
+        """Initialize the performance monitoring dashboard component."""
+        super().__init__(
+            component_id="performance_monitoring_dashboard",
+            enable_metrics=True
+        )
+
+    def render(self):
+        """Render the real-time performance monitoring dashboard."""
+        st.set_page_config(
         page_title="Performance Monitoring - EnterpriseHub",
         page_icon="",
         layout="wide",
@@ -867,5 +914,10 @@ def render_optimization_insights_section(metrics: Dict[str, Any]):
 
 
 # Main entry point for Streamlit
+def render_performance_monitoring_dashboard():
+    """Main entry point for performance monitoring dashboard."""
+    dashboard = PerformanceMonitoringDashboard()
+    dashboard.render()
+
 if __name__ == "__main__":
     render_performance_monitoring_dashboard()

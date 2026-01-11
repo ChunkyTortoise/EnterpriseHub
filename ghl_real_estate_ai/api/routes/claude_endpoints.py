@@ -742,3 +742,381 @@ async def claude_health_check():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Health check failed: {str(e)}"
         )
+
+
+# ========================================================================
+# Voice Analysis Endpoints (NEW ENHANCEMENT)
+# ========================================================================
+
+class VoiceAnalysisRequest(BaseModel):
+    """Request model for voice call analysis."""
+    call_id: str = Field(..., description="Unique call identifier")
+    agent_id: str = Field(..., description="Agent handling the call")
+    prospect_id: Optional[str] = Field(None, description="Prospect identifier if available")
+    analysis_mode: str = Field(default="live_coaching", description="Analysis mode")
+    location_id: Optional[str] = Field(None, description="GHL location ID")
+
+
+class VoiceSegmentRequest(BaseModel):
+    """Request model for processing voice segment."""
+    call_id: str = Field(..., description="Call identifier")
+    audio_data_base64: Optional[str] = Field(None, description="Base64 encoded audio data")
+    transcription_text: Optional[str] = Field(None, description="Pre-transcribed text")
+    speaker: str = Field(..., description="Speaker: 'agent' or 'prospect'")
+    timestamp: Optional[str] = Field(None, description="Timestamp of segment")
+
+
+class VoiceAnalysisResponse(BaseModel):
+    """Response model for voice analysis."""
+    call_id: str = Field(..., description="Call identifier")
+    status: str = Field(..., description="Analysis status")
+    features_enabled: List[str] = Field(..., description="Available features")
+    audio_available: bool = Field(..., description="Audio processing availability")
+
+
+class VoiceSegmentResponse(BaseModel):
+    """Response model for voice segment processing."""
+    segment_id: str = Field(..., description="Segment identifier")
+    transcription: str = Field(..., description="Transcribed text")
+    emotional_tone: str = Field(..., description="Detected emotional tone")
+    sentiment_score: float = Field(..., description="Sentiment score (-1 to 1)")
+    objections_detected: List[str] = Field(..., description="Detected objections")
+    coaching_suggestions: List[str] = Field(..., description="Real-time coaching suggestions")
+    confidence: float = Field(..., description="Analysis confidence")
+
+
+class CallAnalysisResponse(BaseModel):
+    """Response model for complete call analysis."""
+    call_id: str = Field(..., description="Call identifier")
+    duration_seconds: float = Field(..., description="Call duration")
+    call_quality_score: float = Field(..., description="Overall call quality (0-100)")
+    rapport_score: float = Field(..., description="Rapport score (0-100)")
+    engagement_score: float = Field(..., description="Engagement score (0-100)")
+    objections_detected: List[Dict[str, Any]] = Field(..., description="All objections found")
+    follow_up_actions: List[str] = Field(..., description="Recommended follow-up actions")
+    coaching_focus_areas: List[str] = Field(..., description="Areas for improvement")
+    outcome_prediction: Dict[str, Any] = Field(..., description="Predicted call outcome")
+
+
+@router.post("/voice/start-analysis", response_model=VoiceAnalysisResponse)
+async def start_voice_analysis(
+    request: VoiceAnalysisRequest,
+    background_tasks: BackgroundTasks
+) -> VoiceAnalysisResponse:
+    """
+    Start real-time voice call analysis with Claude intelligence.
+
+    Provides live coaching, sentiment analysis, and objection detection
+    during phone conversations with prospects.
+    """
+    start_time = datetime.now()
+
+    try:
+        # Import voice analyzer
+        from ghl_real_estate_ai.services.claude_voice_analyzer import ClaudeVoiceAnalyzer, VoiceAnalysisMode
+
+        # Initialize voice analyzer
+        voice_analyzer = ClaudeVoiceAnalyzer(request.location_id or "default")
+
+        # Track request
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="claude_voice_analysis_start",
+            location_id=request.location_id or "default",
+            data={
+                "call_id": request.call_id,
+                "agent_id": request.agent_id,
+                "analysis_mode": request.analysis_mode
+            }
+        )
+
+        # Start voice analysis
+        analysis_mode = VoiceAnalysisMode(request.analysis_mode)
+        analysis_result = await voice_analyzer.start_call_analysis(
+            call_id=request.call_id,
+            agent_id=request.agent_id,
+            prospect_id=request.prospect_id,
+            analysis_mode=analysis_mode
+        )
+
+        processing_time = (datetime.now() - start_time).total_seconds() * 1000
+
+        # Track success
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="claude_voice_analysis_start_success",
+            location_id=request.location_id or "default",
+            data={
+                "call_id": request.call_id,
+                "processing_time_ms": processing_time,
+                "audio_available": analysis_result.get("audio_available", False)
+            }
+        )
+
+        return VoiceAnalysisResponse(
+            call_id=request.call_id,
+            status=analysis_result.get("status", "started"),
+            features_enabled=analysis_result.get("features_enabled", []),
+            audio_available=analysis_result.get("audio_available", False)
+        )
+
+    except Exception as e:
+        logger.error(f"Error starting voice analysis: {e}")
+
+        # Track error
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="claude_voice_analysis_start_error",
+            location_id=request.location_id or "default",
+            data={"error": str(e), "call_id": request.call_id}
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to start voice analysis: {str(e)}"
+        )
+
+
+@router.post("/voice/process-segment", response_model=VoiceSegmentResponse)
+async def process_voice_segment(
+    request: VoiceSegmentRequest,
+    background_tasks: BackgroundTasks
+) -> VoiceSegmentResponse:
+    """
+    Process voice segment and get real-time analysis with coaching.
+
+    Accepts either raw audio data or pre-transcribed text for analysis.
+    Provides sentiment, objection detection, and coaching suggestions.
+    """
+    start_time = datetime.now()
+
+    try:
+        # Import voice analyzer
+        from ghl_real_estate_ai.services.claude_voice_analyzer import ClaudeVoiceAnalyzer
+        import base64
+
+        # Initialize voice analyzer
+        voice_analyzer = ClaudeVoiceAnalyzer("default")
+
+        # Track request
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="claude_voice_segment_process",
+            location_id="default",
+            data={
+                "call_id": request.call_id,
+                "speaker": request.speaker,
+                "has_audio": bool(request.audio_data_base64),
+                "has_transcription": bool(request.transcription_text)
+            }
+        )
+
+        # Process audio data or text
+        if request.audio_data_base64:
+            # Decode audio data
+            audio_data = base64.b64decode(request.audio_data_base64)
+        else:
+            # Use empty audio data (will use transcription)
+            audio_data = b""
+
+        # Parse timestamp
+        timestamp = None
+        if request.timestamp:
+            try:
+                timestamp = datetime.fromisoformat(request.timestamp)
+            except:
+                timestamp = datetime.now()
+
+        # Process voice segment
+        segment = await voice_analyzer.process_voice_segment(
+            call_id=request.call_id,
+            audio_data=audio_data,
+            speaker=request.speaker,
+            timestamp=timestamp
+        )
+
+        # If we have pre-transcribed text, use it
+        if request.transcription_text:
+            segment.text = request.transcription_text
+
+        processing_time = (datetime.now() - start_time).total_seconds() * 1000
+
+        # Track success
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="claude_voice_segment_success",
+            location_id="default",
+            data={
+                "call_id": request.call_id,
+                "processing_time_ms": processing_time,
+                "emotional_tone": segment.emotional_tone.value,
+                "objections_count": len(segment.objections_detected)
+            }
+        )
+
+        return VoiceSegmentResponse(
+            segment_id=f"{request.call_id}_{datetime.now().timestamp()}",
+            transcription=segment.text,
+            emotional_tone=segment.emotional_tone.value,
+            sentiment_score=segment.sentiment_score,
+            objections_detected=segment.objections_detected,
+            coaching_suggestions=["Focus on building rapport", "Ask qualifying questions"],  # Simplified
+            confidence=segment.confidence
+        )
+
+    except Exception as e:
+        logger.error(f"Error processing voice segment: {e}")
+
+        # Track error
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="claude_voice_segment_error",
+            location_id="default",
+            data={"error": str(e), "call_id": request.call_id}
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process voice segment: {str(e)}"
+        )
+
+
+@router.post("/voice/end-analysis/{call_id}", response_model=CallAnalysisResponse)
+async def end_voice_analysis(
+    call_id: str,
+    background_tasks: BackgroundTasks
+) -> CallAnalysisResponse:
+    """
+    End voice call analysis and get comprehensive results.
+
+    Provides complete call analysis including quality metrics,
+    objection summary, and recommendations for follow-up.
+    """
+    start_time = datetime.now()
+
+    try:
+        # Import voice analyzer
+        from ghl_real_estate_ai.services.claude_voice_analyzer import ClaudeVoiceAnalyzer
+
+        # Initialize voice analyzer
+        voice_analyzer = ClaudeVoiceAnalyzer("default")
+
+        # Track request
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="claude_voice_analysis_end",
+            location_id="default",
+            data={"call_id": call_id}
+        )
+
+        # End call analysis
+        analysis_result = await voice_analyzer.end_call_analysis(call_id)
+
+        processing_time = (datetime.now() - start_time).total_seconds() * 1000
+
+        # Track success
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="claude_voice_analysis_end_success",
+            location_id="default",
+            data={
+                "call_id": call_id,
+                "processing_time_ms": processing_time,
+                "call_quality_score": analysis_result.call_quality_score,
+                "duration_seconds": analysis_result.duration_seconds
+            }
+        )
+
+        return CallAnalysisResponse(
+            call_id=call_id,
+            duration_seconds=analysis_result.duration_seconds,
+            call_quality_score=analysis_result.call_quality_score,
+            rapport_score=analysis_result.rapport_score,
+            engagement_score=analysis_result.engagement_score,
+            objections_detected=analysis_result.objections_detected,
+            follow_up_actions=analysis_result.immediate_follow_up_actions,
+            coaching_focus_areas=analysis_result.coaching_focus_areas,
+            outcome_prediction={
+                "predicted_outcome": analysis_result.outcome_prediction.get("predicted_outcome", "unknown"),
+                "confidence": analysis_result.outcome_prediction.get("confidence", 0.5),
+                "recommendation": analysis_result.outcome_prediction.get("recommendation", "")
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error ending voice analysis: {e}")
+
+        # Track error
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="claude_voice_analysis_end_error",
+            location_id="default",
+            data={"error": str(e), "call_id": call_id}
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to end voice analysis: {str(e)}"
+        )
+
+
+@router.get("/voice/active-calls")
+async def get_active_voice_calls():
+    """
+    Get information about currently active voice analysis sessions.
+
+    Returns real-time status of all calls being analyzed.
+    """
+    try:
+        # Import voice analyzer
+        from ghl_real_estate_ai.services.claude_voice_analyzer import ClaudeVoiceAnalyzer
+
+        # Initialize voice analyzer
+        voice_analyzer = ClaudeVoiceAnalyzer("default")
+
+        # Get active calls
+        active_calls = voice_analyzer.get_active_calls()
+
+        return {
+            "active_calls": active_calls,
+            "total_active": len(active_calls),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting active voice calls: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get active calls: {str(e)}"
+        )
+
+
+@router.get("/voice/performance-stats")
+async def get_voice_analysis_stats():
+    """
+    Get voice analysis performance statistics.
+
+    Returns metrics about voice processing performance and quality.
+    """
+    try:
+        # Import voice analyzer
+        from ghl_real_estate_ai.services.claude_voice_analyzer import ClaudeVoiceAnalyzer
+
+        # Initialize voice analyzer
+        voice_analyzer = ClaudeVoiceAnalyzer("default")
+
+        # Get performance stats
+        stats = voice_analyzer.get_performance_stats()
+
+        return {
+            **stats,
+            "timestamp": datetime.now().isoformat(),
+            "voice_analysis_enabled": True
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting voice analysis stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get voice analysis stats: {str(e)}"
+        )
