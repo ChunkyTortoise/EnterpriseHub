@@ -51,7 +51,7 @@ from ghl_real_estate_ai.services.enhanced_property_matcher_ml import (
     FeedbackType
 )
 from ghl_real_estate_ai.services.dashboard_analytics_service import get_dashboard_analytics_service
-from ghl_real_estate_ai.services.enhanced_webhook_processor import get_webhook_processor
+from ghl_real_estate_ai.services.enhanced_webhook_processor import get_enhanced_webhook_processor as get_webhook_processor
 from ghl_real_estate_ai.services.integration_cache_manager import get_integration_cache_manager
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
