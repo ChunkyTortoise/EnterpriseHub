@@ -99,20 +99,17 @@ class AgentAssistanceDashboard:
             conversation_context: Current conversation context
             live_mode: Whether to enable live updates
         """
-        st.markdown("""
-        <div class="agent-dashboard-header">
-            <h1 style="
-                font-family: 'Playfair Display', serif;
-                color: var(--luxury-charcoal, #1e293b);
-                font-size: 2rem;
-                font-weight: 700;
-                margin-bottom: 0.5rem;
-            ">🎯 Agent Intelligence Dashboard</h1>
-            <p style="color: var(--luxury-slate, #64748b); font-size: 1rem;">
-                Real-time lead insights and conversation guidance
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        # === ENTERPRISE DASHBOARD HEADER ===
+        if ENTERPRISE_THEME_AVAILABLE:
+            enterprise_section_header(
+                title="Agent Intelligence Dashboard",
+                subtitle="Real-time lead insights and conversation guidance",
+                icon="🎯"
+            )
+        else:
+            # Legacy fallback
+            st.title("🎯 Agent Intelligence Dashboard")
+            st.caption("Real-time lead insights and conversation guidance")
 
         # Create layout columns
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -156,105 +153,84 @@ class AgentAssistanceDashboard:
             self._render_live_update_controls()
 
     def _render_lead_score_card(self, evaluation_result: LeadEvaluationResult) -> None:
-        """Render lead score card with visual indicators."""
+        """Render lead score card with enterprise visual components."""
         score = evaluation_result.scoring_breakdown.composite_score
         tier = evaluation_result.qualification_progress.qualification_tier
 
-        # Determine color based on score
+        # Determine status and variant based on score
         if score >= 85:
-            color = self.color_scheme['success']
             icon = "🔥"
             status = "HOT LEAD"
+            variant = "success"
+            delta_type = "positive"
         elif score >= 70:
-            color = self.color_scheme['warning']
             icon = "⭐"
             status = "WARM LEAD"
+            variant = "warning"
+            delta_type = "positive"
         elif score >= 50:
-            color = self.color_scheme['secondary']
             icon = "📈"
             status = "DEVELOPING"
+            variant = "info"
+            delta_type = "neutral"
         else:
-            color = self.color_scheme['danger']
             icon = "❄️"
             status = "COLD LEAD"
+            variant = "danger"
+            delta_type = "negative"
 
-        st.markdown(f"""
-        <div class="luxury-card" style="
-            text-align: center;
-            padding: 1.5rem;
-            background: linear-gradient(135deg, {color}15, {color}05);
-            border: 1px solid {color}40;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-        ">
-            <div style="font-size: 3rem; margin-bottom: 0.5rem;">{icon}</div>
-            <div style="
-                font-size: 2.5rem;
-                font-weight: 800;
-                color: {color};
-                margin-bottom: 0.5rem;
-            ">{score:.1f}</div>
-            <div style="
-                font-size: 0.875rem;
-                font-weight: 600;
-                color: {color};
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                margin-bottom: 0.25rem;
-            ">{status}</div>
-            <div style="
-                font-size: 0.75rem;
-                color: var(--luxury-slate, #64748b);
-                text-transform: capitalize;
-            ">Tier: {tier.replace('_', ' ')}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        # === ENTERPRISE COMPONENT USAGE ===
+        if ENTERPRISE_THEME_AVAILABLE:
+            # Use enterprise metric component
+            enterprise_metric(
+                label=f"{icon} Lead Score",
+                value=f"{score:.1f}",
+                delta=f"Tier: {tier.replace('_', ' ').title()}",
+                delta_type=delta_type,
+                icon=icon
+            )
 
-        # Score breakdown
+            # Status badge
+            st.markdown(
+                enterprise_badge(status, variant=variant, icon=icon),
+                unsafe_allow_html=True
+            )
+        else:
+            # Legacy fallback - simplified version
+            st.metric(
+                label="Lead Score",
+                value=f"{score:.1f}",
+                delta=f"Tier: {tier.replace('_', ' ').title()}"
+            )
+
+        # === ENTERPRISE SCORE BREAKDOWN ===
         with st.expander("📊 Score Breakdown", expanded=False):
             breakdown = evaluation_result.scoring_breakdown
 
-            breakdown_data = {
-                "Budget Alignment": breakdown.budget_alignment,
-                "Timeline Urgency": breakdown.timeline_urgency,
-                "Location Match": breakdown.location_preference,
-                "Engagement Level": breakdown.engagement_level,
-                "Qualification Complete": breakdown.qualification_completeness,
-                "Communication Quality": breakdown.communication_quality
-            }
+            if ENTERPRISE_THEME_AVAILABLE:
+                # Use enterprise KPI grid for breakdown metrics
+                breakdown_metrics = [
+                    {"label": "Budget Alignment", "value": f"{breakdown.budget_alignment:.1f}", "delta_type": "neutral"},
+                    {"label": "Timeline Urgency", "value": f"{breakdown.timeline_urgency:.1f}", "delta_type": "neutral"},
+                    {"label": "Location Match", "value": f"{breakdown.location_preference:.1f}", "delta_type": "neutral"},
+                    {"label": "Engagement Level", "value": f"{breakdown.engagement_level:.1f}", "delta_type": "neutral"},
+                    {"label": "Qualification Complete", "value": f"{breakdown.qualification_completeness:.1f}", "delta_type": "neutral"},
+                    {"label": "Communication Quality", "value": f"{breakdown.communication_quality:.1f}", "delta_type": "neutral"}
+                ]
 
-            for component, value in breakdown_data.items():
-                progress_color = self._get_progress_color(value)
-                st.markdown(f"""
-                <div style="margin-bottom: 0.75rem;">
-                    <div style="
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        font-size: 0.875rem;
-                        font-weight: 500;
-                        margin-bottom: 0.25rem;
-                    ">
-                        <span>{component}</span>
-                        <span style="color: {progress_color}; font-weight: 600;">{value:.1f}</span>
-                    </div>
-                    <div style="
-                        width: 100%;
-                        height: 6px;
-                        background-color: #e2e8f0;
-                        border-radius: 3px;
-                        overflow: hidden;
-                    ">
-                        <div style="
-                            width: {value}%;
-                            height: 100%;
-                            background-color: {progress_color};
-                            border-radius: 3px;
-                            transition: width 0.3s ease;
-                        "></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                enterprise_kpi_grid(breakdown_metrics, columns=3)
+            else:
+                # Legacy fallback
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Budget Alignment", f"{breakdown.budget_alignment:.1f}")
+                    st.metric("Timeline Urgency", f"{breakdown.timeline_urgency:.1f}")
+                with col2:
+                    st.metric("Location Match", f"{breakdown.location_preference:.1f}")
+                    st.metric("Engagement Level", f"{breakdown.engagement_level:.1f}")
+                with col3:
+                    st.metric("Qualification Complete", f"{breakdown.qualification_completeness:.1f}")
+                    st.metric("Communication Quality", f"{breakdown.communication_quality:.1f}")
 
     def _render_qualification_progress(self, progress: QualificationProgress) -> None:
         """Render qualification progress tracker."""
@@ -962,15 +938,26 @@ class AgentAssistanceDashboard:
         return sentiment_icons.get(sentiment, "😐")
 
     def _get_engagement_color(self, engagement: EngagementLevel) -> str:
-        """Get color for engagement level."""
-        engagement_colors = {
-            EngagementLevel.HIGHLY_ENGAGED: self.color_scheme['success'],
-            EngagementLevel.ENGAGED: self.color_scheme['success'],
-            EngagementLevel.MODERATELY_ENGAGED: self.color_scheme['warning'],
-            EngagementLevel.PASSIVE: self.color_scheme['secondary'],
-            EngagementLevel.DISENGAGED: self.color_scheme['danger']
-        }
-        return engagement_colors.get(engagement, self.color_scheme['secondary'])
+        """Get color for engagement level using enterprise colors."""
+        if ENTERPRISE_THEME_AVAILABLE:
+            engagement_colors = {
+                EngagementLevel.HIGHLY_ENGAGED: self.colors['success']['500'],
+                EngagementLevel.ENGAGED: self.colors['success']['500'],
+                EngagementLevel.MODERATELY_ENGAGED: self.colors['warning']['500'],
+                EngagementLevel.PASSIVE: self.colors['navy']['600'],
+                EngagementLevel.DISENGAGED: self.colors['danger']['500']
+            }
+            return engagement_colors.get(engagement, self.colors['navy']['600'])
+        else:
+            # Legacy fallback
+            engagement_colors = {
+                EngagementLevel.HIGHLY_ENGAGED: self.color_scheme['success'],
+                EngagementLevel.ENGAGED: self.color_scheme['success'],
+                EngagementLevel.MODERATELY_ENGAGED: self.color_scheme['warning'],
+                EngagementLevel.PASSIVE: self.color_scheme['secondary'],
+                EngagementLevel.DISENGAGED: self.color_scheme['danger']
+            }
+            return engagement_colors.get(engagement, self.color_scheme['secondary'])
 
     def _get_engagement_icon(self, engagement: EngagementLevel) -> str:
         """Get icon for engagement level."""
@@ -984,13 +971,22 @@ class AgentAssistanceDashboard:
         return engagement_icons.get(engagement, "😐")
 
     def _get_severity_color(self, severity: float) -> str:
-        """Get color based on objection severity."""
-        if severity >= 7.0:
-            return self.color_scheme['danger']
-        elif severity >= 4.0:
-            return self.color_scheme['warning']
+        """Get color based on objection severity using enterprise colors."""
+        if ENTERPRISE_THEME_AVAILABLE:
+            if severity >= 7.0:
+                return self.colors['danger']['500']
+            elif severity >= 4.0:
+                return self.colors['warning']['500']
+            else:
+                return self.colors['navy']['600']
         else:
-            return self.color_scheme['secondary']
+            # Legacy fallback
+            if severity >= 7.0:
+                return self.color_scheme['danger']
+            elif severity >= 4.0:
+                return self.color_scheme['warning']
+            else:
+                return self.color_scheme['secondary']
 
     def _get_objection_icon(self, objection_type) -> str:
         """Get icon for objection type."""
@@ -1009,15 +1005,26 @@ class AgentAssistanceDashboard:
         return objection_icons.get(str(objection_type), "❓")
 
     def _get_priority_color(self, priority: ActionPriority) -> str:
-        """Get color for action priority."""
-        priority_colors = {
-            ActionPriority.IMMEDIATE: self.color_scheme['danger'],
-            ActionPriority.HIGH: self.color_scheme['warning'],
-            ActionPriority.MEDIUM: self.color_scheme['secondary'],
-            ActionPriority.LOW: self.color_scheme['success'],
-            ActionPriority.DEFERRED: self.color_scheme['background']
-        }
-        return priority_colors.get(priority, self.color_scheme['secondary'])
+        """Get color for action priority using enterprise colors."""
+        if ENTERPRISE_THEME_AVAILABLE:
+            priority_colors = {
+                ActionPriority.IMMEDIATE: self.colors['danger']['500'],
+                ActionPriority.HIGH: self.colors['warning']['500'],
+                ActionPriority.MEDIUM: self.colors['navy']['600'],
+                ActionPriority.LOW: self.colors['success']['500'],
+                ActionPriority.DEFERRED: self.colors['navy']['300']
+            }
+            return priority_colors.get(priority, self.colors['navy']['600'])
+        else:
+            # Legacy fallback
+            priority_colors = {
+                ActionPriority.IMMEDIATE: self.color_scheme['danger'],
+                ActionPriority.HIGH: self.color_scheme['warning'],
+                ActionPriority.MEDIUM: self.color_scheme['secondary'],
+                ActionPriority.LOW: self.color_scheme['success'],
+                ActionPriority.DEFERRED: self.color_scheme['background']
+            }
+            return priority_colors.get(priority, self.color_scheme['secondary'])
 
     def _get_priority_icon(self, priority: ActionPriority) -> str:
         """Get icon for action priority."""
