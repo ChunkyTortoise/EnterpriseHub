@@ -228,6 +228,11 @@ class ServiceRegistry:
         """Get or create EnhancedClaudeAgentService instance with graceful fallback."""
         return self._get_service("enhanced_claude_agent", "enhanced_claude_agent_service", "EnhancedClaudeAgentService")
 
+    @property
+    def universal_claude_gateway(self):
+        """Get or create UniversalClaudeGateway instance with graceful fallback."""
+        return self._get_service("universal_claude_gateway", "universal_claude_gateway", "UniversalClaudeGateway")
+
     # ========================================================================
     # High-Level Convenience Methods (Frontend-Ready)
     # ========================================================================
@@ -1070,6 +1075,267 @@ class ServiceRegistry:
         except Exception as e:
             logger.error(f"Error getting session status: {e}")
             return self._get_fallback_session_status(session_id)
+
+    # ========================================================================
+    # Universal Claude Gateway Convenience Methods
+    # ========================================================================
+
+    async def process_claude_query_with_agent_context(
+        self,
+        agent_id: str,
+        query: str,
+        session_id: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None,
+        query_type: str = "general_coaching",
+        priority: str = "normal"
+    ) -> Dict[str, Any]:
+        """
+        Process Claude query with full agent context through Universal Gateway.
+
+        Args:
+            agent_id: Agent identifier
+            query: Natural language query
+            session_id: Optional session ID for context continuity
+            context: Additional context data
+            query_type: Type of query for intelligent routing
+            priority: Query priority level
+
+        Returns:
+            Dictionary containing universal Claude response with agent context
+        """
+        try:
+            if self.demo_mode:
+                return self._get_demo_claude_response(agent_id, query)
+
+            gateway = self.universal_claude_gateway
+            if not gateway:
+                logger.warning("UniversalClaudeGateway unavailable, using fallback")
+                return self._get_fallback_claude_response(agent_id, query)
+
+            # Import enums
+            from ghl_real_estate_ai.services.universal_claude_gateway import (
+                UniversalQueryRequest, QueryType, ServicePriority
+            )
+
+            # Convert string parameters to enums
+            query_type_enum = QueryType(query_type) if query_type in QueryType.__members__ else QueryType.GENERAL_COACHING
+            priority_enum = ServicePriority(priority) if priority in ServicePriority.__members__ else ServicePriority.NORMAL
+
+            # Create universal request
+            request = UniversalQueryRequest(
+                agent_id=agent_id,
+                query=query,
+                query_type=query_type_enum,
+                session_id=session_id,
+                location_id=self.location_id,
+                context=context,
+                priority=priority_enum
+            )
+
+            # Process through gateway
+            response = await gateway.process_universal_query(request)
+
+            return {
+                "response": response.response,
+                "insights": response.insights,
+                "recommendations": response.recommendations,
+                "confidence": response.confidence,
+                "agent_role": response.agent_role,
+                "guidance_types_applied": response.guidance_types_applied,
+                "role_specific_insights": response.role_specific_insights,
+                "processing_time_ms": response.processing_time_ms,
+                "service_used": response.service_used,
+                "cached_response": response.cached_response,
+                "next_questions": response.next_questions,
+                "urgency_level": response.urgency_level,
+                "conversation_stage": response.conversation_stage,
+                "context_preserved": response.context_preserved,
+                "enhanced_features": True,
+                "universal_gateway": True
+            }
+
+        except Exception as e:
+            logger.error(f"Error processing universal Claude query: {e}")
+            return self._get_fallback_claude_response(agent_id, query)
+
+    async def get_claude_service_health_status(self) -> Dict[str, Any]:
+        """
+        Get health status of all Claude services through Universal Gateway.
+
+        Returns:
+            Dictionary containing service health metrics and status
+        """
+        try:
+            if self.demo_mode:
+                return self._get_demo_service_health()
+
+            gateway = self.universal_claude_gateway
+            if not gateway:
+                return self._get_fallback_service_health()
+
+            health_status = await gateway.get_service_health()
+            cache_stats = await gateway.get_cache_statistics()
+
+            return {
+                "service_health": health_status,
+                "cache_statistics": cache_stats,
+                "gateway_status": "healthy",
+                "total_services": len(health_status),
+                "enhanced_features": True,
+                "timestamp": datetime.now().isoformat()
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting Claude service health: {e}")
+            return self._get_fallback_service_health()
+
+    async def process_real_time_coaching_request(
+        self,
+        agent_id: str,
+        prospect_message: str,
+        conversation_context: Dict[str, Any],
+        session_id: Optional[str] = None,
+        conversation_stage: str = "discovery"
+    ) -> Dict[str, Any]:
+        """
+        Process real-time coaching request with high priority routing.
+
+        Args:
+            agent_id: Agent identifier
+            prospect_message: Latest prospect message
+            conversation_context: Current conversation context
+            session_id: Optional session ID
+            conversation_stage: Current conversation stage
+
+        Returns:
+            Dictionary containing real-time coaching response
+        """
+        try:
+            if self.demo_mode:
+                return self._get_demo_real_time_coaching(agent_id, prospect_message)
+
+            # Use Universal Gateway for real-time coaching
+            return await self.process_claude_query_with_agent_context(
+                agent_id=agent_id,
+                query=prospect_message,
+                session_id=session_id,
+                context={
+                    **conversation_context,
+                    "conversation_stage": conversation_stage,
+                    "coaching_mode": "real_time"
+                },
+                query_type="real_time_assistance",
+                priority="critical"
+            )
+
+        except Exception as e:
+            logger.error(f"Error processing real-time coaching: {e}")
+            return self._get_fallback_coaching_response(agent_id, prospect_message)
+
+    # ========================================================================
+    # Universal Claude Gateway Fallback Methods
+    # ========================================================================
+
+    def _get_demo_claude_response(self, agent_id: str, query: str) -> Dict[str, Any]:
+        """Return demo Claude response."""
+        return {
+            "response": f"Demo response for: {query[:50]}...",
+            "insights": ["Demo insight: Consider follow-up questions", "Demo insight: Monitor prospect engagement"],
+            "recommendations": ["Ask qualifying questions", "Build rapport", "Identify pain points"],
+            "confidence": 0.85,
+            "agent_role": "demo_agent",
+            "guidance_types_applied": ["response_suggestions", "strategy_coaching"],
+            "role_specific_insights": ["Demo role-specific guidance"],
+            "processing_time_ms": 250.0,
+            "service_used": "demo_universal_gateway",
+            "cached_response": False,
+            "next_questions": ["What's your timeline?", "What's most important to you?"],
+            "urgency_level": "normal",
+            "conversation_stage": "discovery",
+            "context_preserved": False,
+            "enhanced_features": False,
+            "demo_mode": True
+        }
+
+    def _get_fallback_claude_response(self, agent_id: str, query: str) -> Dict[str, Any]:
+        """Return fallback Claude response when gateway unavailable."""
+        return {
+            "response": "I apologize, but Claude services are temporarily unavailable. Please try again shortly.",
+            "insights": ["Service temporarily unavailable"],
+            "recommendations": ["Try again in a few moments", "Contact support if issue persists"],
+            "confidence": 0.1,
+            "agent_role": "unknown",
+            "guidance_types_applied": [],
+            "role_specific_insights": [],
+            "processing_time_ms": 10.0,
+            "service_used": "fallback_handler",
+            "cached_response": False,
+            "next_questions": [],
+            "urgency_level": "normal",
+            "conversation_stage": "unknown",
+            "context_preserved": False,
+            "enhanced_features": False,
+            "fallback_mode": True
+        }
+
+    def _get_demo_service_health(self) -> Dict[str, Any]:
+        """Return demo service health data."""
+        return {
+            "service_health": {
+                "enhanced_claude_agent_service": {
+                    "avg_response_time_ms": 450.0,
+                    "recent_requests": 25,
+                    "status": "healthy"
+                },
+                "claude_semantic_analyzer": {
+                    "avg_response_time_ms": 180.0,
+                    "recent_requests": 15,
+                    "status": "healthy"
+                }
+            },
+            "cache_statistics": {
+                "total_cached_responses": 45,
+                "valid_cache_entries": 38,
+                "cache_hit_rate": "72%",
+                "cache_ttl_seconds": 300
+            },
+            "gateway_status": "demo_mode",
+            "total_services": 2,
+            "enhanced_features": False,
+            "demo_mode": True
+        }
+
+    def _get_fallback_service_health(self) -> Dict[str, Any]:
+        """Return fallback service health when gateway unavailable."""
+        return {
+            "service_health": {},
+            "cache_statistics": {
+                "total_cached_responses": 0,
+                "valid_cache_entries": 0,
+                "cache_hit_rate": "N/A",
+                "cache_ttl_seconds": 0
+            },
+            "gateway_status": "unavailable",
+            "total_services": 0,
+            "enhanced_features": False,
+            "fallback_mode": True
+        }
+
+    def _get_demo_real_time_coaching(self, agent_id: str, prospect_message: str) -> Dict[str, Any]:
+        """Return demo real-time coaching response."""
+        return {
+            **self._get_demo_claude_response(agent_id, prospect_message),
+            "urgency_level": "high",
+            "coaching_mode": "real_time",
+            "demo_coaching": True
+        }
+
+    def _get_fallback_coaching_response(self, agent_id: str, prospect_message: str) -> Dict[str, Any]:
+        """Return fallback coaching response."""
+        return {
+            **self._get_fallback_claude_response(agent_id, prospect_message),
+            "coaching_mode": "fallback"
+        }
 
     # ========================================================================
     # Agent Profile System Fallback Methods

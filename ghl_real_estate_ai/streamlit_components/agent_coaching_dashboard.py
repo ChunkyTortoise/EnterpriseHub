@@ -1241,41 +1241,77 @@ class AgentCoachingDashboard(EnhancedEnterpriseComponent):
     def _render_system_metrics(self) -> None:
         """Render system-level coaching metrics."""
 
-        col1, col2, col3, col4 = st.columns(4)
+        if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+            # Prepare system performance metrics for unified enterprise display
+            system_metrics = [
+                {
+                    "label": "🎓 Total Sessions",
+                    "value": "1,247",
+                    "delta": "+18%",
+                    "delta_type": "positive",
+                    "icon": "🎓"
+                },
+                {
+                    "label": "💡 Total Alerts",
+                    "value": "8,432",
+                    "delta": "+24%",
+                    "delta_type": "positive",
+                    "icon": "💡"
+                },
+                {
+                    "label": "⚡ System Uptime",
+                    "value": "99.9%",
+                    "delta": "Last 30 days",
+                    "delta_type": "neutral",
+                    "icon": "⚡"
+                },
+                {
+                    "label": "🚀 Avg Response Time",
+                    "value": "47.3ms",
+                    "delta": "WebSocket broadcast latency",
+                    "delta_type": "neutral",
+                    "icon": "🚀"
+                }
+            ]
 
-        with col1:
-            create_enterprise_metric(
-                label="Total Sessions",
-                value="1,247",
-                delta="+18%",
-                delta_color="success",
-                icon="🎓"
-            )
+            enterprise_kpi_grid(system_metrics, columns=4)
+        else:
+            # Legacy fallback styling
+            col1, col2, col3, col4 = st.columns(4)
 
-        with col2:
-            create_enterprise_metric(
-                label="Total Alerts",
-                value="8,432",
-                delta="+24%",
-                delta_color="success",
-                icon="💡"
-            )
+            with col1:
+                create_enterprise_metric(
+                    label="Total Sessions",
+                    value="1,247",
+                    delta="+18%",
+                    delta_color="success",
+                    icon="🎓"
+                )
 
-        with col3:
-            create_enterprise_metric(
-                label="System Uptime",
-                value="99.9%",
-                help_text="Last 30 days",
-                icon="⚡"
-            )
+            with col2:
+                create_enterprise_metric(
+                    label="Total Alerts",
+                    value="8,432",
+                    delta="+24%",
+                    delta_color="success",
+                    icon="💡"
+                )
 
-        with col4:
-            create_enterprise_metric(
-                label="Avg Response Time",
-                value="47.3ms",
-                help_text="WebSocket broadcast latency",
-                icon="🚀"
-            )
+            with col3:
+                create_enterprise_metric(
+                    label="System Uptime",
+                    value="99.9%",
+                    help_text="Last 30 days",
+                    icon="⚡"
+                )
+
+            with col4:
+                create_enterprise_metric(
+                    label="Avg Response Time",
+                    value="47.3ms",
+                    help_text="WebSocket broadcast latency",
+                    icon="🚀"
+                )
 
     # ========================================================================
     # Business Impact Section

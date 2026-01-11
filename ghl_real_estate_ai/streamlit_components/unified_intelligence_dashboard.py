@@ -47,19 +47,22 @@ try:
 except ImportError:
     CLAUDE_SERVICES_AVAILABLE = False
 
-# Enterprise design system
+# === UNIFIED ENTERPRISE THEME INTEGRATION ===
 try:
     from ..design_system import (
         enterprise_metric,
         enterprise_card,
         enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
         enterprise_kpi_grid,
         enterprise_section_header,
+        apply_plotly_theme,
         ENTERPRISE_COLORS
     )
-    ENTERPRISE_THEME_AVAILABLE = True
+    UNIFIED_ENTERPRISE_THEME_AVAILABLE = True
 except ImportError:
-    ENTERPRISE_THEME_AVAILABLE = False
+    UNIFIED_ENTERPRISE_THEME_AVAILABLE = False
 
 
 class UnifiedIntelligenceDashboard:
@@ -432,64 +435,62 @@ class UnifiedIntelligenceDashboard:
         st.markdown('<div class="fade-in">', unsafe_allow_html=True)
 
         # Key metrics overview
-        if ENTERPRISE_THEME_AVAILABLE:
+        if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
             enterprise_section_header(
                 title="🎯 Intelligence Overview",
                 subtitle="Unified metrics and insights across all lead intelligence capabilities",
                 icon="🎯"
             )
+
+            # Prepare intelligence overview metrics for unified enterprise display
+            overview_metrics = [
+                {
+                    "label": "👥 Active Leads",
+                    "value": "47",
+                    "delta": "↑12% this week",
+                    "delta_type": "positive",
+                    "icon": "👥"
+                },
+                {
+                    "label": "⚡ Coaching Sessions",
+                    "value": "156",
+                    "delta": "↑15% today",
+                    "delta_type": "positive",
+                    "icon": "⚡"
+                },
+                {
+                    "label": "🎯 Conversion Rate",
+                    "value": "34.2%",
+                    "delta": "↑8.5% vs last month",
+                    "delta_type": "positive",
+                    "icon": "🎯"
+                },
+                {
+                    "label": "📈 Agent Efficiency",
+                    "value": "94.7%",
+                    "delta": "↑6.2% with AI",
+                    "delta_type": "positive",
+                    "icon": "📈"
+                }
+            ]
+
+            enterprise_kpi_grid(overview_metrics, columns=4)
         else:
+            # Legacy fallback styling
             st.markdown("## 🎯 Intelligence Overview")
 
-        # Main metrics grid
-        col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4 = st.columns(4)
 
-        with col1:
-            if ENTERPRISE_THEME_AVAILABLE:
-                enterprise_metric(
-                    label="Active Leads",
-                    value="47",
-                    delta="↑12% this week",
-                    delta_type="positive",
-                    icon="👥"
-                )
-            else:
+            with col1:
                 st.metric("Active Leads", "47", "↑12%")
 
-        with col2:
-            if ENTERPRISE_THEME_AVAILABLE:
-                enterprise_metric(
-                    label="Coaching Sessions",
-                    value="156",
-                    delta="↑15% today",
-                    delta_type="positive",
-                    icon="⚡"
-                )
-            else:
+            with col2:
                 st.metric("Coaching Sessions", "156", "↑15%")
 
-        with col3:
-            if ENTERPRISE_THEME_AVAILABLE:
-                enterprise_metric(
-                    label="Conversion Rate",
-                    value="34.2%",
-                    delta="↑8.5% vs last month",
-                    delta_type="positive",
-                    icon="🎯"
-                )
-            else:
+            with col3:
                 st.metric("Conversion Rate", "34.2%", "↑8.5%")
 
-        with col4:
-            if ENTERPRISE_THEME_AVAILABLE:
-                enterprise_metric(
-                    label="Agent Efficiency",
-                    value="94.7%",
-                    delta="↑6.2% with AI",
-                    delta_type="positive",
-                    icon="📈"
-                )
-            else:
+            with col4:
                 st.metric("Agent Efficiency", "94.7%", "↑6.2%")
 
         # Intelligence capabilities status
@@ -706,19 +707,55 @@ class UnifiedIntelligenceDashboard:
         st.markdown("## 📊 Performance Analytics Dashboard")
 
         # Performance overview metrics
-        col1, col2, col3, col4 = st.columns(4)
+        if UNIFIED_ENTERPRISE_THEME_AVAILABLE:
+            # Prepare performance metrics for unified enterprise display
+            performance_metrics = [
+                {
+                    "label": "⚡ Dashboard Load Time",
+                    "value": "0.42s",
+                    "delta": "↓0.18s",
+                    "delta_type": "positive",
+                    "icon": "⚡"
+                },
+                {
+                    "label": "🧠 Claude Response Time",
+                    "value": "45ms",
+                    "delta": "↓8ms",
+                    "delta_type": "positive",
+                    "icon": "🧠"
+                },
+                {
+                    "label": "🔧 Data Processing",
+                    "value": "125ms",
+                    "delta": "↓35ms",
+                    "delta_type": "positive",
+                    "icon": "🔧"
+                },
+                {
+                    "label": "💾 Cache Hit Rate",
+                    "value": "94.2%",
+                    "delta": "↑3.1%",
+                    "delta_type": "positive",
+                    "icon": "💾"
+                }
+            ]
 
-        with col1:
-            st.metric("Dashboard Load Time", "0.42s", "↓0.18s")
+            enterprise_kpi_grid(performance_metrics, columns=4)
+        else:
+            # Legacy fallback styling
+            col1, col2, col3, col4 = st.columns(4)
 
-        with col2:
-            st.metric("Claude Response Time", "45ms", "↓8ms")
+            with col1:
+                st.metric("Dashboard Load Time", "0.42s", "↓0.18s")
 
-        with col3:
-            st.metric("Data Processing", "125ms", "↓35ms")
+            with col2:
+                st.metric("Claude Response Time", "45ms", "↓8ms")
 
-        with col4:
-            st.metric("Cache Hit Rate", "94.2%", "↑3.1%")
+            with col3:
+                st.metric("Data Processing", "125ms", "↓35ms")
+
+            with col4:
+                st.metric("Cache Hit Rate", "94.2%", "↑3.1%")
 
         # Performance trends chart
         st.markdown("### 📈 Performance Trends (Last 24 Hours)")
