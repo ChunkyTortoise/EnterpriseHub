@@ -137,6 +137,18 @@ class AdvancedColorIntelligenceSystem:
                 'saturation_range': (80, 100),
                 'lightness_range': (60, 85),
                 'emotional_weight': 0.9
+            },
+            ColorPsychology.STABILITY: {
+                'base_hue': 25,   # Earth tones/Brown
+                'saturation_range': (40, 65),
+                'lightness_range': (40, 65),
+                'emotional_weight': 0.7
+            },
+            ColorPsychology.INNOVATION: {
+                'base_hue': 170,  # Electric teal
+                'saturation_range': (85, 100),
+                'lightness_range': (55, 80),
+                'emotional_weight': 0.95
             }
         }
 
