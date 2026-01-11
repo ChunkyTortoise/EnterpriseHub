@@ -553,7 +553,7 @@ class InteractiveAnalytics:
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Interactive hint
         st.markdown("""
@@ -563,7 +563,7 @@ class InteractiveAnalytics:
         """, unsafe_allow_html=True)
 
         # Drill-down button
-        if st.button("🔍 Drill into Time Trends", key="drill_time_trends", use_container_width=True):
+        if st.button("🔍 Drill into Time Trends", key="drill_time_trends", width='stretch'):
             self._navigate_to_view('time_trends')
 
         st.markdown('</div>', unsafe_allow_html=True)
@@ -592,7 +592,7 @@ class InteractiveAnalytics:
             margin=dict(l=0, r=0, t=20, b=0)
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Conversion rates
         col1, col2 = st.columns(2)
@@ -606,7 +606,7 @@ class InteractiveAnalytics:
             st.metric("Qualified→Closed", f"{qualified_to_closed:.1f}%")
 
         # Drill-down button
-        if st.button("🔍 Analyze Conversion Details", key="drill_conversion", use_container_width=True):
+        if st.button("🔍 Analyze Conversion Details", key="drill_conversion", width='stretch'):
             self._navigate_to_view('conversion_funnel')
 
         st.markdown('</div>', unsafe_allow_html=True)
@@ -636,14 +636,14 @@ class InteractiveAnalytics:
             legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.05)
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Top performing source
         top_source = max(source_data, key=source_data.get)
         st.success(f"🏆 Top Source: **{top_source}** ({source_data[top_source]} leads)")
 
         # Drill-down button
-        if st.button("🔍 Source Performance Analysis", key="drill_source", use_container_width=True):
+        if st.button("🔍 Source Performance Analysis", key="drill_source", width='stretch'):
             self._navigate_to_view('source_analysis')
 
         st.markdown('</div>', unsafe_allow_html=True)
@@ -696,14 +696,14 @@ class InteractiveAnalytics:
             showlegend=False
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Top performer
         top_agent = max(agents, key=lambda x: agent_data[x]['conversions'])
         st.info(f"🌟 Top Performer: **{top_agent}** ({agent_data[top_agent]['conversions']} conversions)")
 
         # Drill-down button
-        if st.button("🔍 Detailed Agent Analysis", key="drill_agent", use_container_width=True):
+        if st.button("🔍 Detailed Agent Analysis", key="drill_agent", width='stretch'):
             self._navigate_to_view('agent_performance')
 
         st.markdown('</div>', unsafe_allow_html=True)
@@ -715,19 +715,19 @@ class InteractiveAnalytics:
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            if st.button("📊 Conversion Funnel", key="nav_funnel", use_container_width=True):
+            if st.button("📊 Conversion Funnel", key="nav_funnel", width='stretch'):
                 self._navigate_to_view('conversion_funnel')
 
         with col2:
-            if st.button("👥 Agent Performance", key="nav_agents", use_container_width=True):
+            if st.button("👥 Agent Performance", key="nav_agents", width='stretch'):
                 self._navigate_to_view('agent_performance')
 
         with col3:
-            if st.button("📱 Source Analysis", key="nav_sources", use_container_width=True):
+            if st.button("📱 Source Analysis", key="nav_sources", width='stretch'):
                 self._navigate_to_view('source_analysis')
 
         with col4:
-            if st.button("📈 Time Trends", key="nav_trends", use_container_width=True):
+            if st.button("📈 Time Trends", key="nav_trends", width='stretch'):
                 self._navigate_to_view('time_trends')
 
     def _render_conversion_funnel(self):
@@ -761,7 +761,7 @@ class InteractiveAnalytics:
             title="Lead Conversion Funnel - Detailed View"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Conversion rates table
         st.subheader("📋 Stage-by-Stage Analysis")
@@ -776,7 +776,7 @@ class InteractiveAnalytics:
             for i, (stage, value) in enumerate(zip(stages, values))
         ])
 
-        st.dataframe(conversion_df, use_container_width=True)
+        st.dataframe(conversion_df, width='stretch')
 
     def _render_agent_performance(self):
         """Render detailed agent performance analysis"""
@@ -806,11 +806,11 @@ class InteractiveAnalytics:
             height=400
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Agent ranking table
         st.subheader("🏆 Agent Rankings")
-        st.dataframe(df.sort_values('conversions', ascending=False), use_container_width=True)
+        st.dataframe(df.sort_values('conversions', ascending=False), width='stretch')
 
     def _render_source_analysis(self):
         """Render detailed source analysis"""
@@ -838,7 +838,7 @@ class InteractiveAnalytics:
             hovermode='x unified'
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Source ROI analysis
         st.subheader("💰 Source ROI Analysis")
@@ -847,7 +847,7 @@ class InteractiveAnalytics:
         roi_df = pd.DataFrame(roi_data).T
         roi_df = roi_df.reset_index().rename(columns={'index': 'Source'})
 
-        st.dataframe(roi_df.sort_values('roi', ascending=False), use_container_width=True)
+        st.dataframe(roi_df.sort_values('roi', ascending=False), width='stretch')
 
     def _render_time_trends(self):
         """Render detailed time trend analysis"""
@@ -890,7 +890,7 @@ class InteractiveAnalytics:
         )
 
         fig.update_layout(height=600, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     def _navigate_to_view(self, view_name: str):
         """Navigate to a specific view"""

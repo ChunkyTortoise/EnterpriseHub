@@ -1,0 +1,299 @@
+{
+  "dashboard": {
+    "title": "EnterpriseHub System Overview",
+    "tags": ["enterprisehub", "overview", "production"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Health Score",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "100 - (system_cpu_usage_percent * 0.3 + system_memory_usage_percent * 0.3 + (rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m])) * 100 * 0.4)",
+            "refId": "A",
+            "legendFormat": "Health Score"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Request Rate",
+        "type": "graph",
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "refId": "A",
+            "legendFormat": "{{service}} - {{method}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "API Latency (P95)",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "{{service}} - {{endpoint}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Latency"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0.5], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "60s",
+          "handler": 1,
+          "name": "High API Latency",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "(rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m])) * 100",
+            "refId": "A",
+            "legendFormat": "{{service}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Error %"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 4, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "system_cpu_usage_percent",
+            "refId": "A",
+            "legendFormat": "{{host}} - {{core}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "CPU %", "max": 100},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"x": 8, "y": 4, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "system_memory_usage_percent",
+            "refId": "A",
+            "legendFormat": "{{host}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Memory %", "max": 100},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Network I/O",
+        "type": "graph",
+        "gridPos": {"x": 16, "y": 4, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "rate(system_network_bytes_total{direction=\"sent\"}[5m])",
+            "refId": "A",
+            "legendFormat": "{{interface}} - Sent"
+          },
+          {
+            "expr": "rate(system_network_bytes_total{direction=\"received\"}[5m])",
+            "refId": "B",
+            "legendFormat": "{{interface}} - Received"
+          }
+        ],
+        "yaxes": [
+          {"format": "Bps", "label": "Bytes/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Active Services",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 10, "w": 4, "h": 3},
+        "targets": [
+          {
+            "expr": "count(up{job=~\"enterprisehub.*\"} == 1)",
+            "refId": "A",
+            "legendFormat": "Services Up"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Database Connections",
+        "type": "gauge",
+        "gridPos": {"x": 4, "y": 10, "w": 4, "h": 3},
+        "targets": [
+          {
+            "expr": "database_connections_active",
+            "refId": "A",
+            "legendFormat": "{{database}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "max": 100,
+            "thresholds": {
+              "mode": "percentage",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Cache Hit Rate",
+        "type": "gauge",
+        "gridPos": {"x": 8, "y": 10, "w": 4, "h": 3},
+        "targets": [
+          {
+            "expr": "(rate(cache_operations_total{operation=\"get\",result=\"hit\"}[5m]) / rate(cache_operations_total{operation=\"get\"}[5m])) * 100",
+            "refId": "A",
+            "legendFormat": "{{cache}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "Disk Usage",
+        "type": "gauge",
+        "gridPos": {"x": 12, "y": 10, "w": 4, "h": 3},
+        "targets": [
+          {
+            "expr": "(system_disk_usage_bytes{type=\"used\"} / system_disk_usage_bytes{type=\"total\"}) * 100",
+            "refId": "A",
+            "legendFormat": "{{mount}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 80, "color": "yellow"},
+                {"value": 95, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "Alert Summary",
+        "type": "stat",
+        "gridPos": {"x": 16, "y": 10, "w": 8, "h": 3},
+        "targets": [
+          {
+            "expr": "count(ALERTS{alertstate=\"firing\"})",
+            "refId": "A",
+            "legendFormat": "Active Alerts"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "schemaVersion": 27,
+    "version": 1,
+    "uid": "enterprisehub-system-overview"
+  }
+}

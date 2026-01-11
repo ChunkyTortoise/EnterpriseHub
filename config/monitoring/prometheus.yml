@@ -1,0 +1,144 @@
+# Prometheus Configuration for EnterpriseHub AI Coaching Platform
+# Targets 99.95% uptime SLA with comprehensive metrics collection
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'enterprisehub'
+    environment: 'production'
+
+rule_files:
+  - "alert_rules.yml"
+  - "coaching_alerts.yml"
+  - "phase3_alerts.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Application Metrics - AI Coaching Platform
+  - job_name: 'ai-coaching-api'
+    static_configs:
+      - targets: ['localhost:8000']
+    metrics_path: /metrics
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # FastAPI Application Metrics
+  - job_name: 'fastapi-metrics'
+    static_configs:
+      - targets: ['localhost:8001']
+    metrics_path: /metrics
+
+  # Streamlit Components Performance
+  - job_name: 'streamlit-components'
+    static_configs:
+      - targets: ['localhost:8501']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # Redis Cluster Monitoring
+  - job_name: 'redis-cluster'
+    static_configs:
+      - targets:
+          - 'redis-master-1:9121'
+          - 'redis-master-2:9121'
+          - 'redis-master-3:9121'
+          - 'redis-replica-1:9121'
+          - 'redis-replica-2:9121'
+          - 'redis-replica-3:9121'
+
+  # PostgreSQL Database Monitoring
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # Database Sharding Performance
+  - job_name: 'database-shards'
+    static_configs:
+      - targets:
+          - 'shard-1:9187'
+          - 'shard-2:9187'
+          - 'shard-3:9187'
+          - 'shard-4:9187'
+
+  # GoHighLevel Webhook Performance
+  - job_name: 'ghl-webhooks'
+    static_configs:
+      - targets: ['localhost:8002']
+    metrics_path: /webhook-metrics
+
+  # Machine Learning Model Performance
+  - job_name: 'ml-models'
+    static_configs:
+      - targets: ['localhost:8003']
+    metrics_path: /model-metrics
+    scrape_interval: 30s
+
+  # System Metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+
+  # Container Metrics (if using Docker)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['localhost:8080']
+
+  # Blue-Green Deployment Health
+  - job_name: 'deployment-health'
+    static_configs:
+      - targets: ['localhost:8004']
+    metrics_path: /deployment-metrics
+
+  # Security & Compliance Metrics
+  - job_name: 'security-metrics'
+    static_configs:
+      - targets: ['localhost:8005']
+    metrics_path: /security-metrics
+    scrape_interval: 60s
+
+  # Advanced Coaching Analytics
+  - job_name: 'coaching-analytics'
+    static_configs:
+      - targets: ['localhost:8006']
+    metrics_path: /coaching-metrics
+    scrape_interval: 30s
+
+  # Performance Prediction Engine
+  - job_name: 'performance-prediction'
+    static_configs:
+      - targets: ['localhost:8007']
+    metrics_path: /prediction-metrics
+
+  # PII Sanitization Service
+  - job_name: 'pii-sanitization'
+    static_configs:
+      - targets: ['localhost:8008']
+    metrics_path: /sanitization-metrics
+    scrape_interval: 60s
+
+  # Phase 3 Features Monitoring ($265K-440K annual value)
+  - job_name: 'phase3-metrics'
+    static_configs:
+      - targets: ['localhost:8009']
+    metrics_path: /metrics
+    scrape_interval: 10s
+    honor_labels: true
+    labels:
+      phase: '3'
+      business_value: '265k-440k'
+
+remote_write:
+  - url: "https://prometheus-remote-write.railway.app/api/v1/write"
+    headers:
+      Authorization: "Bearer ${RAILWAY_TOKEN}"
+
+remote_read:
+  - url: "https://prometheus-remote-read.railway.app/api/v1/read"
+    headers:
+      Authorization: "Bearer ${RAILWAY_TOKEN}"

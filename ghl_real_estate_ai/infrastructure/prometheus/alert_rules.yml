@@ -1,0 +1,305 @@
+# Prometheus Alert Rules for EnterpriseHub
+# Comprehensive alerting for 99.95% uptime capability
+
+groups:
+  # Infrastructure Alerts
+  - name: infrastructure
+    interval: 30s
+    rules:
+      - alert: HighCPUUsage
+        expr: system_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High CPU usage on {{ $labels.host }}"
+          description: "CPU usage is {{ $value }}% on {{ $labels.host }}"
+
+      - alert: CriticalCPUUsage
+        expr: system_cpu_usage_percent > 95
+        for: 2m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Critical CPU usage on {{ $labels.host }}"
+          description: "CPU usage is {{ $value }}% on {{ $labels.host }} - immediate action required"
+
+      - alert: HighMemoryUsage
+        expr: system_memory_usage_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High memory usage on {{ $labels.host }}"
+          description: "Memory usage is {{ $value }}% on {{ $labels.host }}"
+
+      - alert: CriticalMemoryUsage
+        expr: system_memory_usage_percent > 95
+        for: 2m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Critical memory usage on {{ $labels.host }}"
+          description: "Memory usage is {{ $value }}% on {{ $labels.host }} - risk of OOM"
+
+      - alert: DiskSpaceLow
+        expr: (system_disk_usage_bytes{type="free"} / system_disk_usage_bytes{type="total"}) < 0.15
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Low disk space on {{ $labels.host }}:{{ $labels.mount }}"
+          description: "Only {{ $value | humanizePercentage }} free on {{ $labels.mount }}"
+
+      - alert: DiskSpaceCritical
+        expr: (system_disk_usage_bytes{type="free"} / system_disk_usage_bytes{type="total"}) < 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Critical disk space on {{ $labels.host }}:{{ $labels.mount }}"
+          description: "Only {{ $value | humanizePercentage }} free on {{ $labels.mount }}"
+
+  # Application Performance Alerts
+  - name: application_performance
+    interval: 30s
+    rules:
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "High API latency on {{ $labels.service }}"
+          description: "95th percentile latency is {{ $value }}s on {{ $labels.endpoint }}"
+
+      - alert: APIErrorRateHigh
+        expr: (rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} on {{ $labels.endpoint }}"
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: database_connections_active / database_connections_max > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "{{ $value | humanizePercentage }} of connection pool in use for {{ $labels.database }}"
+
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "95th percentile query time is {{ $value }}s for {{ $labels.table }}"
+
+  # ML Model Performance Alerts
+  - name: ml_model_performance
+    interval: 30s
+    rules:
+      - alert: MLInferenceLatencyHigh
+        expr: histogram_quantile(0.95, rate(ml_model_inference_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: ml
+        annotations:
+          summary: "High ML inference latency for {{ $labels.model }}"
+          description: "95th percentile inference time is {{ $value }}s"
+
+      - alert: MLInferenceLatencyCritical
+        expr: histogram_quantile(0.95, rate(ml_model_inference_duration_seconds_bucket[5m])) > 2.0
+        for: 2m
+        labels:
+          severity: critical
+          component: ml
+        annotations:
+          summary: "Critical ML inference latency for {{ $labels.model }}"
+          description: "95th percentile inference time is {{ $value }}s - exceeds SLA"
+
+      - alert: MLModelAccuracyDrop
+        expr: ml_model_accuracy{metric_type="precision"} < 0.85
+        for: 10m
+        labels:
+          severity: warning
+          component: ml
+        annotations:
+          summary: "ML model accuracy drop for {{ $labels.model }}"
+          description: "Model precision dropped to {{ $value }} - may need retraining"
+
+      - alert: MLModelDriftDetected
+        expr: ml_model_drift_score > 0.3
+        for: 15m
+        labels:
+          severity: warning
+          component: ml
+        annotations:
+          summary: "Model drift detected for {{ $labels.model }}"
+          description: "Drift score is {{ $value }} - model may need retraining"
+
+      - alert: MLTrainingFailure
+        expr: increase(ml_training_failures_total[1h]) > 3
+        for: 5m
+        labels:
+          severity: critical
+          component: ml
+        annotations:
+          summary: "Multiple ML training failures for {{ $labels.model }}"
+          description: "{{ $value }} training failures in the last hour"
+
+  # Business Metrics Alerts
+  - name: business_metrics
+    interval: 60s
+    rules:
+      - alert: LeadConversionRateDrop
+        expr: business_lead_conversion_rate < 10
+        for: 30m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "Lead conversion rate dropped"
+          description: "Conversion rate is {{ $value }}% - below target of 15%"
+
+      - alert: PropertyMatchSatisfactionLow
+        expr: business_property_match_satisfaction < 80
+        for: 30m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "Low property match satisfaction"
+          description: "Satisfaction score is {{ $value }} - below target of 88%"
+
+      - alert: NoLeadsProcessed
+        expr: increase(business_leads_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: critical
+          component: business
+        annotations:
+          summary: "No leads processed in last 2 hours"
+          description: "Lead processing may be stalled"
+
+  # Security Alerts
+  - name: security
+    interval: 30s
+    rules:
+      - alert: HighAuthenticationFailureRate
+        expr: (rate(security_auth_attempts_total{result="failure"}[5m]) / rate(security_auth_attempts_total[5m])) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "{{ $value | humanizePercentage }} of auth attempts failing"
+
+      - alert: RateLimitExceeded
+        expr: increase(security_rate_limit_hits_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Rate limit frequently exceeded"
+          description: "{{ $value }} rate limit hits in last 5 minutes from {{ $labels.client }}"
+
+      - alert: SuspiciousActivityDetected
+        expr: increase(security_suspicious_activity_total{severity="high"}[15m]) > 10
+        for: 5m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "High volume of suspicious activity"
+          description: "{{ $value }} high-severity suspicious events in last 15 minutes"
+
+  # Cache Performance Alerts
+  - name: cache_performance
+    interval: 30s
+    rules:
+      - alert: LowCacheHitRate
+        expr: (rate(cache_operations_total{operation="get",result="hit"}[5m]) / rate(cache_operations_total{operation="get"}[5m])) < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate for {{ $labels.cache }}"
+          description: "Hit rate is {{ $value | humanizePercentage }} - below target of 90%"
+
+      - alert: CacheMemoryHigh
+        expr: cache_size_bytes > 1073741824  # 1GB
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "High cache memory usage"
+          description: "Cache {{ $labels.cache }} is using {{ $value | humanize1024 }}"
+
+  # Service Health Alerts
+  - name: service_health
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up{job=~"enterprisehub.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: service
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service has been down for 2 minutes"
+
+      - alert: HighServiceRestart
+        expr: increase(process_start_time_seconds[30m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+          component: service
+        annotations:
+          summary: "Service {{ $labels.job }} restarting frequently"
+          description: "Service restarted {{ $value }} times in last 30 minutes"
+
+  # Capacity Planning Alerts
+  - name: capacity_planning
+    interval: 60s
+    rules:
+      - alert: PredictedCapacityShortage
+        expr: predict_linear(system_memory_usage_percent[1h], 4*3600) > 90
+        for: 15m
+        labels:
+          severity: warning
+          component: capacity
+        annotations:
+          summary: "Predicted memory shortage in 4 hours"
+          description: "Memory usage trending towards {{ $value }}% in 4 hours"
+
+      - alert: HighRequestGrowthRate
+        expr: (rate(http_requests_total[30m]) - rate(http_requests_total[30m] offset 1d)) / rate(http_requests_total[30m] offset 1d) > 0.5
+        for: 30m
+        labels:
+          severity: warning
+          component: capacity
+        annotations:
+          summary: "High request growth rate"
+          description: "Request rate growing {{ $value | humanizePercentage }} compared to yesterday"

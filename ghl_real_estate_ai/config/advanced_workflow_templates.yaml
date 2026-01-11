@@ -1,0 +1,546 @@
+# Advanced Workflow Templates
+# Comprehensive automation workflows for GHL Real Estate AI Platform
+# Supports conditional branching, behavioral triggers, and A/B testing
+
+workflows:
+  # First-Time Buyer Nurture Workflow
+  first_time_buyer_nurture:
+    name: "First-Time Buyer Complete Journey"
+    description: "Comprehensive 30-day nurturing sequence for first-time homebuyers with behavioral optimization"
+
+    triggers:
+      - type: "event_based"
+        event: "contact.created"
+        conditions:
+          - field: "tags"
+            operator: "contains"
+            value: "First-Time Buyer"
+          - field: "qualification_score"
+            operator: "greater_than"
+            value: 0.3
+
+    global_config:
+      max_execution_time_hours: 720  # 30 days
+      priority: "high"
+      behavioral_optimization: true
+
+    steps:
+      # Day 1: Immediate Welcome
+      - id: "welcome_immediate"
+        name: "Immediate Welcome Response"
+        type: "send_message"
+        config:
+          channel_selection: "optimal"
+          template_id: "first_buyer_welcome_immediate"
+          personalization:
+            urgency: "immediate"
+            message_type: "welcome"
+        delay_config:
+          type: "fixed"
+          minutes: 2
+        branches:
+          - name: "high_engagement_path"
+            conditions:
+              - field: "behavioral.engagement_spike"
+                operator: "is_true"
+                value: true
+            logic_operator: "AND"
+            next_step_id: "accelerated_qualification"
+          - name: "standard_path"
+            conditions: []
+            next_step_id: "education_email_day1"
+        retry_config:
+          max_retries: 3
+          delay_seconds: 300
+
+      # Day 1-2: Education Phase
+      - id: "education_email_day1"
+        name: "First-Time Buyer Guide Email"
+        type: "send_message"
+        config:
+          channel_selection: "email_preferred"
+          template_id: "first_buyer_guide"
+          attachments:
+            - "first_time_buyer_checklist.pdf"
+            - "financing_options_guide.pdf"
+        delay_config:
+          type: "optimal_timing"
+          default_hours: 4
+        branches:
+          - name: "email_engaged"
+            conditions:
+              - field: "email_opened"
+                operator: "is_true"
+                value: true
+              - field: "attachment_downloaded"
+                operator: "is_true"
+                value: true
+            logic_operator: "AND"
+            next_step_id: "qualification_call_offer"
+          - name: "email_not_opened"
+            conditions:
+              - field: "hours_since_sent"
+                operator: "greater_than"
+                value: 48
+              - field: "email_opened"
+                operator: "is_false"
+                value: true
+            logic_operator: "AND"
+            next_step_id: "sms_follow_up_day2"
+        default_next_step_id: "sms_follow_up_day2"
+
+      # Day 2: SMS Follow-up if needed
+      - id: "sms_follow_up_day2"
+        name: "SMS Check-in Day 2"
+        type: "send_message"
+        config:
+          channel_selection: "sms"
+          template_id: "first_buyer_sms_day2"
+          conditions:
+            - field: "email_opened"
+              operator: "is_false"
+              value: true
+        delay_config:
+          type: "optimal_timing"
+          default_hours: 48
+        branches:
+          - name: "sms_responded"
+            conditions:
+              - field: "sms_replied"
+                operator: "is_true"
+                value: true
+            next_step_id: "qualification_call_offer"
+          - name: "no_response"
+            conditions:
+              - field: "hours_since_sent"
+                operator: "greater_than"
+                value: 24
+            next_step_id: "market_insights_week1"
+        default_next_step_id: "market_insights_week1"
+
+      # Accelerated path for highly engaged leads
+      - id: "accelerated_qualification"
+        name: "Fast-Track Qualification Call"
+        type: "send_message"
+        config:
+          channel_selection: "voice_preferred"
+          template_id: "urgent_qualification_offer"
+          priority: "urgent"
+        delay_config:
+          type: "fixed"
+          hours: 1
+        branches:
+          - name: "call_scheduled"
+            conditions:
+              - field: "meeting_scheduled"
+                operator: "is_true"
+                value: true
+            next_step_id: "pre_meeting_prep"
+          - name: "call_not_scheduled"
+            conditions:
+              - field: "hours_since_sent"
+                operator: "greater_than"
+                value: 12
+            next_step_id: "education_email_day1"
+
+      # Week 1: Market Education
+      - id: "market_insights_week1"
+        name: "Weekly Market Insights"
+        type: "send_message"
+        config:
+          channel_selection: "email_preferred"
+          template_id: "market_insights_weekly"
+          dynamic_content:
+            - "local_market_trends"
+            - "new_listings_matching_criteria"
+            - "financing_rate_updates"
+        delay_config:
+          type: "optimal_timing"
+          target_day: "tuesday"
+          target_hour: 10
+        branches:
+          - name: "high_engagement"
+            conditions:
+              - field: "email_opened"
+                operator: "is_true"
+                value: true
+              - field: "links_clicked"
+                operator: "greater_than"
+                value: 2
+            logic_operator: "AND"
+            next_step_id: "property_matching_offer"
+          - name: "moderate_engagement"
+            conditions:
+              - field: "email_opened"
+                operator: "is_true"
+                value: true
+            next_step_id: "qualification_survey"
+        default_next_step_id: "qualification_survey"
+
+      # Property Matching Offer
+      - id: "property_matching_offer"
+        name: "Personalized Property Matching"
+        type: "send_message"
+        config:
+          channel_selection: "optimal"
+          template_id: "property_matching_offer"
+          ai_content_generation: true
+        delay_config:
+          type: "behavioral_optimal"
+          default_hours: 24
+        branches:
+          - name: "interested_in_matching"
+            conditions:
+              - field: "form_submitted"
+                operator: "is_true"
+                value: true
+            next_step_id: "property_recommendations"
+          - name: "not_ready"
+            conditions: []
+            next_step_id: "nurture_week2"
+
+      # Qualification Survey
+      - id: "qualification_survey"
+        name: "Buyer Qualification Survey"
+        type: "send_message"
+        config:
+          channel_selection: "email_preferred"
+          template_id: "qualification_survey"
+          form_integration: true
+        delay_config:
+          type: "optimal_timing"
+          default_hours: 72
+        branches:
+          - name: "survey_completed"
+            conditions:
+              - field: "qualification_survey_completed"
+                operator: "is_true"
+                value: true
+            next_step_id: "qualification_analysis"
+          - name: "survey_not_completed"
+            conditions:
+              - field: "days_since_sent"
+                operator: "greater_than"
+                value: 5
+            next_step_id: "survey_reminder_sms"
+
+      # Week 2: Continued Nurturing
+      - id: "nurture_week2"
+        name: "Week 2 Nurture Email"
+        type: "send_message"
+        config:
+          channel_selection: "email_preferred"
+          template_id: "week2_nurture_content"
+          content_personalization:
+            - "neighborhood_highlights"
+            - "home_buying_tips"
+            - "success_stories"
+        delay_config:
+          type: "optimal_timing"
+          target_day: "thursday"
+          target_hour: 14
+        branches:
+          - name: "engagement_increase"
+            conditions:
+              - field: "behavioral.engagement_score_delta"
+                operator: "greater_than"
+                value: 0.2
+            next_step_id: "personal_consultation_offer"
+        default_next_step_id: "nurture_week3"
+
+      # Inactivity Detection and Re-engagement
+      - id: "inactivity_reengagement"
+        name: "Inactive Lead Re-engagement"
+        type: "behavioral_trigger"
+        config:
+          trigger_type: "inactivity_risk"
+          min_confidence: 0.8
+        branches:
+          - name: "high_value_lead"
+            conditions:
+              - field: "qualification_score"
+                operator: "greater_than"
+                value: 0.6
+              - field: "days_inactive"
+                operator: "greater_than"
+                value: 7
+            logic_operator: "AND"
+            next_step_id: "personal_outreach_call"
+          - name: "standard_reengagement"
+            conditions: []
+            next_step_id: "reengagement_email"
+
+      # End workflow steps
+      - id: "qualification_complete"
+        name: "Move to Active Buyer Workflow"
+        type: "workflow_transition"
+        config:
+          target_workflow: "active_buyer_journey"
+          transfer_data: true
+
+  # Investment Buyer Workflow
+  investment_buyer_journey:
+    name: "Investment Buyer Professional Journey"
+    description: "Sophisticated workflow for real estate investors with ROI focus"
+
+    triggers:
+      - type: "event_based"
+        event: "contact.created"
+        conditions:
+          - field: "tags"
+            operator: "contains"
+            value: "Investor"
+          - field: "budget_range"
+            operator: "greater_than"
+            value: 500000
+
+    steps:
+      - id: "investor_welcome"
+        name: "Professional Investor Welcome"
+        type: "send_message"
+        config:
+          channel_selection: "email_preferred"
+          template_id: "investor_welcome_professional"
+          attachments:
+            - "market_analysis_report.pdf"
+            - "investment_opportunities_overview.pdf"
+        delay_config:
+          type: "business_hours_optimal"
+          default_hours: 1
+        branches:
+          - name: "immediate_interest"
+            conditions:
+              - field: "email_opened"
+                operator: "is_true"
+                value: true
+              - field: "attachment_downloaded"
+                operator: "greater_than"
+                value: 1
+            logic_operator: "AND"
+            next_step_id: "executive_consultation_offer"
+        default_next_step_id: "roi_analysis_day2"
+
+      - id: "roi_analysis_day2"
+        name: "ROI Analysis and Market Trends"
+        type: "send_message"
+        config:
+          channel_selection: "email_preferred"
+          template_id: "roi_analysis_detailed"
+          ai_content_generation: true
+          personalization:
+            - "investment_criteria"
+            - "preferred_locations"
+            - "budget_range"
+        delay_config:
+          type: "optimal_timing"
+          default_hours: 48
+        branches:
+          - name: "high_engagement"
+            conditions:
+              - field: "email_time_spent"
+                operator: "greater_than"
+                value: 300  # 5 minutes
+              - field: "links_clicked"
+                operator: "greater_than"
+                value: 3
+            logic_operator: "AND"
+            next_step_id: "exclusive_deal_access"
+
+  # Luxury Buyer Workflow
+  luxury_buyer_experience:
+    name: "Luxury Buyer VIP Experience"
+    description: "White-glove service workflow for luxury property buyers"
+
+    triggers:
+      - type: "event_based"
+        event: "contact.created"
+        conditions:
+          - field: "budget_range"
+            operator: "greater_than"
+            value: 1000000
+          - field: "property_type"
+            operator: "in"
+            value: ["Luxury", "Estate", "Penthouse"]
+
+    steps:
+      - id: "vip_welcome"
+        name: "VIP Concierge Welcome"
+        type: "send_message"
+        config:
+          channel_selection: "personal_call"
+          template_id: "luxury_personal_introduction"
+          priority: "urgent"
+          concierge_mode: true
+        delay_config:
+          type: "immediate"
+        branches:
+          - name: "call_connected"
+            conditions:
+              - field: "call_answered"
+                operator: "is_true"
+                value: true
+            next_step_id: "luxury_portfolio_presentation"
+          - name: "call_missed"
+            conditions:
+              - field: "call_answered"
+                operator: "is_false"
+                value: true
+            next_step_id: "luxury_welcome_email"
+
+# Behavioral Triggers Configuration
+behavioral_triggers:
+  engagement_spike_response:
+    name: "High Engagement Spike Response"
+    pattern: "property_views > 3 in 24h OR email_time_spent > 600 in session"
+    conditions:
+      - field: "qualification_score"
+        operator: "greater_than"
+        value: 0.4
+    actions:
+      - type: "inject_workflow_step"
+        step_id: "immediate_personal_outreach"
+        priority: 10
+    cooldown_hours: 12
+
+  qualification_improvement:
+    name: "Qualification Score Improvement"
+    pattern: "qualification_delta > 0.15 in 24h"
+    actions:
+      - type: "priority_routing"
+        target: "senior_agent"
+      - type: "inject_workflow_step"
+        step_id: "qualification_celebration"
+    cooldown_hours: 48
+
+  buying_signal_detection:
+    name: "Strong Buying Signal Detected"
+    pattern: "form_submission AND meeting_scheduled OR financing_inquiry"
+    conditions:
+      - field: "qualification_score"
+        operator: "greater_than"
+        value: 0.6
+    actions:
+      - type: "inject_workflow_step"
+        step_id: "urgent_follow_up_call"
+        priority: 15
+      - type: "agent_notification"
+        urgency: "high"
+    cooldown_hours: 6
+
+  inactivity_intervention:
+    name: "Inactivity Risk Intervention"
+    pattern: "days_inactive > 14 AND last_engagement_score > 0.5"
+    actions:
+      - type: "inject_workflow_step"
+        step_id: "personalized_reengagement"
+      - type: "agent_task_creation"
+        task_type: "personal_outreach"
+    cooldown_hours: 168  # 1 week
+
+# A/B Testing Configuration
+ab_tests:
+  welcome_message_optimization:
+    name: "Welcome Message Subject Line Test"
+    target_step: "welcome_immediate"
+    metric: "email_open_rate"
+    variants:
+      - id: "variant_a_professional"
+        name: "Professional Approach"
+        template_override:
+          subject: "Your Property Search Journey Begins"
+          tone: "professional"
+        traffic_percent: 33
+      - id: "variant_b_personal"
+        name: "Personal Approach"
+        template_override:
+          subject: "Hi {first_name}, let's find your dream home!"
+          tone: "friendly"
+        traffic_percent: 33
+      - id: "variant_c_urgency"
+        name: "Urgency Approach"
+        template_override:
+          subject: "⏰ Don't miss out on today's new listings"
+          tone: "urgent"
+        traffic_percent: 34
+    duration_days: 30
+    min_sample_size: 100
+
+  channel_optimization:
+    name: "Optimal Channel Selection Test"
+    target_step: "sms_follow_up_day2"
+    metric: "response_rate"
+    variants:
+      - id: "sms_primary"
+        name: "SMS Primary"
+        template_override:
+          channel_selection: "sms_preferred"
+        traffic_percent: 50
+      - id: "email_primary"
+        name: "Email Primary"
+        template_override:
+          channel_selection: "email_preferred"
+        traffic_percent: 50
+    duration_days: 21
+
+  timing_optimization:
+    name: "Message Timing Optimization"
+    target_step: "market_insights_week1"
+    metric: "email_open_rate"
+    variants:
+      - id: "morning_send"
+        name: "Morning Send (9 AM)"
+        template_override:
+          delay_config:
+            target_hour: 9
+        traffic_percent: 25
+      - id: "lunch_send"
+        name: "Lunch Send (12 PM)"
+        template_override:
+          delay_config:
+            target_hour: 12
+        traffic_percent: 25
+      - id: "afternoon_send"
+        name: "Afternoon Send (3 PM)"
+        template_override:
+          delay_config:
+            target_hour: 15
+        traffic_percent: 25
+      - id: "evening_send"
+        name: "Evening Send (6 PM)"
+        template_override:
+          delay_config:
+            target_hour: 18
+        traffic_percent: 25
+    duration_days: 14
+
+# Global Configuration
+global_settings:
+  performance_targets:
+    workflow_execution_start_ms: 100
+    step_execution_ms: 200
+    condition_evaluation_ms: 50
+    success_rate_percent: 99.5
+
+  rate_limiting:
+    email_per_hour: 100
+    sms_per_hour: 50
+    voice_per_hour: 20
+    global_daily_limit: 1000
+
+  behavioral_optimization:
+    engagement_tracking: true
+    pattern_detection: true
+    adaptive_timing: true
+    personalization_level: "high"
+
+  error_handling:
+    max_retries: 3
+    retry_delay_seconds: 300
+    circuit_breaker_threshold: 5
+    dead_letter_queue: true
+
+  analytics_tracking:
+    conversion_attribution: true
+    roi_measurement: true
+    engagement_scoring: true
+    funnel_analysis: true

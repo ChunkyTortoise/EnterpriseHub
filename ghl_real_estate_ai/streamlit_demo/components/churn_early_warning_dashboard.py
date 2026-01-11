@@ -330,7 +330,7 @@ class ChurnEarlyWarningDashboard:
         fig.update_traces(textposition='inside', textinfo='percent+label')
         fig.update_layout(showlegend=True, height=400)
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Risk score histogram
         fig2 = px.histogram(
@@ -352,7 +352,7 @@ class ChurnEarlyWarningDashboard:
             height=350
         )
 
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width='stretch')
 
     def _render_risk_trend_analysis(self, data: Dict[str, Any]):
         """Render risk trend analysis"""
@@ -400,7 +400,7 @@ class ChurnEarlyWarningDashboard:
             hovermode='x unified'
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     def _render_intervention_effectiveness(self, data: Dict[str, Any]):
         """Render intervention effectiveness metrics"""
@@ -436,7 +436,7 @@ class ChurnEarlyWarningDashboard:
             xaxis_tickangle=45
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Intervention timeline
         intervention_df['scheduled_time'] = pd.to_datetime(intervention_df['scheduled_time'])
@@ -455,7 +455,7 @@ class ChurnEarlyWarningDashboard:
             height=300
         )
 
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width='stretch')
 
     def _render_agent_workload_distribution(self, data: Dict[str, Any]):
         """Render agent workload distribution"""
@@ -504,13 +504,13 @@ class ChurnEarlyWarningDashboard:
             xaxis_tickangle=45
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Workload balance table
         st.subheader("Workload Balance")
         workload_display = workload_df[['agent', 'critical_leads', 'high_risk_leads', 'total_interventions', 'workload_score']]
         workload_display.columns = ['Agent', 'Critical', 'High Risk', 'Interventions', 'Score']
-        st.dataframe(workload_display, use_container_width=True)
+        st.dataframe(workload_display, width='stretch')
 
     def _render_high_risk_queue(self, data: Dict[str, Any]):
         """Render high-risk leads priority queue"""
@@ -601,7 +601,7 @@ class ChurnEarlyWarningDashboard:
         )
 
         fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Factor correlation matrix
         st.write("### Risk Factor Correlations")
@@ -622,7 +622,7 @@ class ChurnEarlyWarningDashboard:
         )
 
         fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     def _render_intervention_performance_details(self, data: Dict[str, Any]):
         """Detailed intervention performance analysis"""
@@ -662,14 +662,14 @@ class ChurnEarlyWarningDashboard:
             }
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # ROI ranking
         roi_df_sorted = roi_df.sort_values('roi', ascending=False)
         st.write("### ROI Rankings")
         st.dataframe(
             roi_df_sorted[['intervention', 'cost', 'success_rate', 'avg_revenue', 'roi']].round(2),
-            use_container_width=True
+            width='stretch'
         )
 
     def _render_lead_journey_mapping(self, data: Dict[str, Any]):
@@ -708,7 +708,7 @@ class ChurnEarlyWarningDashboard:
             xaxis_tickangle=45
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     def _render_predictive_insights(self, data: Dict[str, Any]):
         """Predictive insights and recommendations"""

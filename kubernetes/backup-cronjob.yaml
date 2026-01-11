@@ -1,0 +1,30 @@
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ai-operations-backup
+  namespace: ai-operations
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            command: ["/scripts/backup_ai_operations.sh"]
+            volumeMounts:
+            - name: backup-scripts
+              mountPath: /scripts
+            - name: backup-storage
+              mountPath: /backups
+          volumes:
+          - name: backup-scripts
+            configMap:
+              name: backup-scripts
+              defaultMode: 0755
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-storage-pvc
+          restartPolicy: OnFailure

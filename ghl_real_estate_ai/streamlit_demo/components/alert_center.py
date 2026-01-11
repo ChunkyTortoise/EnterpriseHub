@@ -698,14 +698,14 @@ class AlertCenter:
                 if st.button(
                     config['label'],
                     key=f"alert_action_{alert['id']}_{action}",
-                    use_container_width=True
+                    width='stretch'
                 ):
                     self._handle_alert_action(alert, action)
 
         # Mark as read button
         with cols[-1]:
             read_label = "📖 Mark Read" if not alert['read'] else "👁️ Unread"
-            if st.button(read_label, key=f"alert_read_{alert['id']}", use_container_width=True):
+            if st.button(read_label, key=f"alert_read_{alert['id']}", width='stretch'):
                 self._toggle_alert_read_status(alert)
 
         st.markdown('</div>', unsafe_allow_html=True)

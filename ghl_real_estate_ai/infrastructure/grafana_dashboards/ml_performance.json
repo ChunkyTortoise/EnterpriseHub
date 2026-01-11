@@ -1,0 +1,233 @@
+{
+  "dashboard": {
+    "title": "ML Model Performance Dashboard",
+    "tags": ["ml", "ai", "performance", "production"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "ML Inference Latency (P95)",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(ml_model_inference_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "{{model}} - {{version}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Latency (P95)", "logBase": 1},
+          {"format": "short"}
+        ],
+        "thresholds": [
+          {"value": 0.5, "colorMode": "critical", "op": "gt", "fill": true, "line": true}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "ML Predictions per Minute",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "rate(ml_model_predictions_total[1m]) * 60",
+            "refId": "A",
+            "legendFormat": "{{model}} - {{result}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Predictions/min"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Model Accuracy by Model",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 6, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "ml_model_accuracy{metric_type=\"precision\"}",
+            "refId": "A",
+            "legendFormat": "{{model}} - Precision"
+          },
+          {
+            "expr": "ml_model_accuracy{metric_type=\"recall\"}",
+            "refId": "B",
+            "legendFormat": "{{model}} - Recall"
+          },
+          {
+            "expr": "ml_model_accuracy{metric_type=\"f1\"}",
+            "refId": "C",
+            "legendFormat": "{{model}} - F1"
+          }
+        ],
+        "yaxes": [
+          {"format": "percentunit", "label": "Accuracy", "max": 1, "min": 0},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Model Drift Score",
+        "type": "graph",
+        "gridPos": {"x": 8, "y": 6, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "ml_model_drift_score",
+            "refId": "A",
+            "legendFormat": "{{model}} - {{version}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Drift Score"},
+          {"format": "short"}
+        ],
+        "thresholds": [
+          {"value": 0.3, "colorMode": "critical", "op": "gt", "fill": true, "line": true}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Feature Extraction Time",
+        "type": "graph",
+        "gridPos": {"x": 16, "y": 6, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(ml_feature_extraction_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "{{model}} - {{feature_type}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Time (P95)"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Enhanced ML Personalization - Lead Scoring",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 12, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "ml_model_accuracy{model=\"enhanced_ml_personalization\",metric_type=\"precision\"}",
+            "refId": "A",
+            "legendFormat": "Precision"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 0.85, "color": "yellow"},
+                {"value": 0.95, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Churn Prediction Accuracy",
+        "type": "stat",
+        "gridPos": {"x": 6, "y": 12, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "ml_model_accuracy{model=\"predictive_churn_prevention\",metric_type=\"precision\"}",
+            "refId": "A",
+            "legendFormat": "Precision"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 0.85, "color": "yellow"},
+                {"value": 0.92, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Real-Time Training Duration",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 12, "w": 12, "h": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(ml_training_duration_seconds_bucket{training_type=\"incremental\"}[1h]))",
+            "refId": "A",
+            "legendFormat": "{{model}} - Incremental Training"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Training Time"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Training Samples Processed",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 5},
+        "targets": [
+          {
+            "expr": "rate(ml_training_samples_total[5m])",
+            "refId": "A",
+            "legendFormat": "{{model}} - {{training_type}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Samples/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Model Performance Summary",
+        "type": "table",
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 5},
+        "targets": [
+          {
+            "expr": "ml_model_accuracy",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "model": "Model",
+                "version": "Version",
+                "metric_type": "Metric",
+                "Value": "Score"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 27,
+    "version": 1,
+    "uid": "enterprisehub-ml-performance"
+  }
+}

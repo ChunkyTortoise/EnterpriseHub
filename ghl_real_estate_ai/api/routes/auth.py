@@ -31,12 +31,35 @@ class TokenResponse(BaseModel):
     expires_in: int = 1800  # 30 minutes
 
 
-# Mock user database (replace with real database in production)
-# Passwords are hashed on-demand to avoid import-time issues
-USERS_DB = {
-    "demo_user": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVLXhKvNe",  # demo_password
-    "admin": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # admin_password
-}
+# User database - uses environment variables for security
+# Production systems should use a proper database with encrypted storage
+import os
+
+def _get_users_db():
+    """Get user database from environment variables."""
+    users = {}
+
+    # Get users from environment variables
+    demo_user_hash = os.getenv("DEMO_USER_HASH")
+    admin_user_hash = os.getenv("ADMIN_USER_HASH")
+
+    if demo_user_hash:
+        users["demo_user"] = demo_user_hash
+
+    if admin_user_hash:
+        users["admin"] = admin_user_hash
+
+    # Fallback for development only (when no env vars set)
+    if not users and os.getenv("ENVIRONMENT", "").lower() == "development":
+        # Generate temporary hashes for development
+        users = {
+            "demo_user": JWTAuth.hash_password(os.getenv("DEMO_PASSWORD", "dev_demo_123")),
+            "admin": JWTAuth.hash_password(os.getenv("ADMIN_PASSWORD", "dev_admin_456")),
+        }
+
+    return users
+
+USERS_DB = _get_users_db()
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -44,9 +67,11 @@ async def login(credentials: LoginRequest):
     """
     Authenticate user and return JWT token.
 
-    Default demo credentials:
-    - username: demo_user, password: demo_password
-    - username: admin, password: admin_password
+    Production deployment should configure user credentials via environment variables:
+    - DEMO_USER_HASH: Bcrypt hash for demo_user account
+    - ADMIN_USER_HASH: Bcrypt hash for admin account
+
+    For development, set DEMO_PASSWORD and ADMIN_PASSWORD environment variables.
     """
     # Verify user exists
     if credentials.username not in USERS_DB:

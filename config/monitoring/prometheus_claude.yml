@@ -1,0 +1,325 @@
+# Prometheus Configuration for Claude Services
+# Monitoring and metrics collection for EnterpriseHub Claude AI services
+
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+  external_labels:
+    cluster: 'enterprisehub-claude'
+    environment: 'production'
+
+rule_files:
+  - "claude_alerts.yml"
+
+scrape_configs:
+  # Claude Agent Orchestrator
+  - job_name: 'claude-agent-orchestrator'
+    static_configs:
+      - targets: ['localhost:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'agent_orchestrator'
+
+  # Claude Enterprise Intelligence
+  - job_name: 'claude-enterprise-intelligence'
+    static_configs:
+      - targets: ['localhost:8002']
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 15s
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'enterprise_intelligence'
+
+  # Claude Business Intelligence
+  - job_name: 'claude-business-intelligence'
+    static_configs:
+      - targets: ['localhost:8003']
+    metrics_path: '/metrics'
+    scrape_interval: 120s
+    scrape_timeout: 20s
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'business_intelligence'
+
+  # Claude API Integration
+  - job_name: 'claude-api-integration'
+    static_configs:
+      - targets: ['localhost:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'api_integration'
+
+  # Claude Management Orchestration
+  - job_name: 'claude-management'
+    static_configs:
+      - targets: ['localhost:8004']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'management_orchestration'
+
+  # System metrics for Claude services
+  - job_name: 'claude-node-exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - replacement: 'claude_services'
+        target_label: service_group
+
+  # Redis metrics (for Claude state management)
+  - job_name: 'claude-redis'
+    static_configs:
+      - targets: ['localhost:9121']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - replacement: 'claude_redis'
+        target_label: service
+
+  # PostgreSQL metrics (for Claude data storage)
+  - job_name: 'claude-postgres'
+    static_configs:
+      - targets: ['localhost:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - replacement: 'claude_postgres'
+        target_label: service
+
+# Recording rules for Claude services
+recording_rules:
+  - name: claude_performance_rules
+    interval: 30s
+    rules:
+      # Agent Orchestrator Rules
+      - record: claude:agent_task_completion_rate
+        expr: rate(claude_agent_tasks_completed_total[5m]) / rate(claude_agent_tasks_submitted_total[5m])
+
+      - record: claude:agent_queue_utilization
+        expr: claude_agent_queue_size / claude_agent_max_queue_size
+
+      - record: claude:agent_response_time_p95
+        expr: histogram_quantile(0.95, rate(claude_agent_task_duration_seconds_bucket[5m]))
+
+      # Enterprise Intelligence Rules
+      - record: claude:intelligence_analysis_rate
+        expr: rate(claude_intelligence_analyses_total[5m])
+
+      - record: claude:intelligence_success_rate
+        expr: rate(claude_intelligence_analyses_successful_total[5m]) / rate(claude_intelligence_analyses_total[5m])
+
+      - record: claude:intelligence_avg_duration
+        expr: avg(claude_intelligence_analysis_duration_seconds)
+
+      # Business Intelligence Rules
+      - record: claude:business_report_generation_rate
+        expr: rate(claude_business_reports_generated_total[5m])
+
+      - record: claude:business_insight_rate
+        expr: rate(claude_business_insights_generated_total[5m])
+
+      - record: claude:business_automation_percentage
+        expr: (rate(claude_business_automated_actions_total[5m]) / rate(claude_business_total_actions_total[5m])) * 100
+
+      # API Integration Rules
+      - record: claude:api_request_rate
+        expr: sum(rate(claude_api_requests_total[5m]))
+
+      - record: claude:api_error_rate
+        expr: sum(rate(claude_api_errors_total[5m])) / sum(rate(claude_api_requests_total[5m])) * 100
+
+      - record: claude:api_response_time_p95
+        expr: histogram_quantile(0.95, sum(rate(claude_api_request_duration_seconds_bucket[5m])) by (le))
+
+      # Overall System Rules
+      - record: claude:overall_service_availability
+        expr: avg(claude_service_up)
+
+      - record: claude:overall_error_rate
+        expr: sum(rate(claude_errors_total[5m])) / sum(rate(claude_requests_total[5m])) * 100
+
+      - record: claude:system_throughput
+        expr: sum(rate(claude_operations_total[5m]))
+
+      # Real Estate Business Rules
+      - record: claude:lead_processing_rate
+        expr: rate(claude_ghl_leads_processed_total[5m])
+
+      - record: claude:property_match_accuracy
+        expr: avg(claude_property_matching_accuracy_percent)
+
+      - record: claude:coaching_effectiveness
+        expr: avg(claude_coaching_effectiveness_score)
+
+# Alerting rules for Claude services
+alerting_rules:
+  - name: claude_service_alerts
+    rules:
+      # Service Down Alerts
+      - alert: ClaudeServiceDown
+        expr: claude_service_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Claude service {{ $labels.service }} is down"
+          description: "Claude service {{ $labels.service }} on instance {{ $labels.instance }} has been down for more than 1 minute."
+
+      # High Error Rate Alerts
+      - alert: ClaudeHighErrorRate
+        expr: claude:overall_error_rate > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude services high error rate"
+          description: "Claude services error rate is {{ $value }}% for more than 5 minutes."
+
+      # High Response Time Alerts
+      - alert: ClaudeHighResponseTime
+        expr: claude:api_response_time_p95 > 1000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude API high response time"
+          description: "Claude API 95th percentile response time is {{ $value }}ms for more than 2 minutes."
+
+      # Queue Backup Alerts
+      - alert: ClaudeAgentQueueBackup
+        expr: claude:agent_queue_utilization > 0.8
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude agent queue backup"
+          description: "Claude agent queue is {{ $value | humanizePercentage }} full for more than 3 minutes."
+
+      # Resource Usage Alerts
+      - alert: ClaudeHighCPUUsage
+        expr: rate(process_cpu_seconds_total{job=~"claude.*"}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "Claude service high CPU usage"
+          description: "Claude service {{ $labels.job }} CPU usage is {{ $value }}% for more than 5 minutes."
+
+      - alert: ClaudeHighMemoryUsage
+        expr: process_resident_memory_bytes{job=~"claude.*"} / 1024 / 1024 / 1024 > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "Claude service high memory usage"
+          description: "Claude service {{ $labels.job }} memory usage is {{ $value }}GB for more than 5 minutes."
+
+      # Business KPI Alerts
+      - alert: ClaudeLowLeadScoringAccuracy
+        expr: claude_lead_scoring_accuracy_percent < 95
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude lead scoring accuracy degraded"
+          description: "Claude lead scoring accuracy has dropped to {{ $value }}% for more than 10 minutes."
+
+      - alert: ClaudePropertyMatchingSatisfactionLow
+        expr: claude_property_matching_satisfaction_percent < 88
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude property matching satisfaction low"
+          description: "Claude property matching satisfaction has dropped to {{ $value }}% for more than 10 minutes."
+
+      # Critical Business Alerts
+      - alert: ClaudeRevenueImpactingIssue
+        expr: rate(claude_ghl_leads_processed_total[5m]) < 0.5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Claude lead processing critically low"
+          description: "Claude is processing fewer than 0.5 leads per second for more than 5 minutes, potentially impacting revenue."
+
+# Integration with existing alertmanager
+alertmanager_config:
+  global:
+    slack_api_url: 'YOUR_SLACK_WEBHOOK_URL'
+
+  route:
+    group_by: ['alertname', 'service']
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 12h
+    receiver: 'claude-alerts'
+    routes:
+      - match:
+          severity: critical
+        receiver: 'claude-critical'
+      - match:
+          severity: warning
+        receiver: 'claude-warnings'
+
+  receivers:
+    - name: 'claude-alerts'
+      slack_configs:
+        - channel: '#claude-monitoring'
+          title: 'Claude Services Alert'
+          text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+    - name: 'claude-critical'
+      slack_configs:
+        - channel: '#claude-alerts'
+          title: 'CRITICAL: Claude Services Alert'
+          text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}'
+      email_configs:
+        - to: 'ops-team@enterprisehub.com'
+          subject: 'CRITICAL: Claude Services Alert'
+          body: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+    - name: 'claude-warnings'
+      slack_configs:
+        - channel: '#claude-monitoring'
+          title: 'WARNING: Claude Services Alert'
+          text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'

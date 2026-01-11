@@ -1,0 +1,637 @@
+# Lead Nurturing Sequences Configuration
+# Defines automated follow-up sequences for different types of real estate leads
+
+# Global Configuration
+global_config:
+  default_timezone: "America/New_York"
+  max_sequence_duration_days: 90
+  default_response_timeout_hours: 48
+  gentle_communication_principles:
+    - "Never be pushy or aggressive"
+    - "Focus on providing value and assistance"
+    - "Respect lead preferences and timing"
+    - "Personalize based on specific needs and behavior"
+    - "Offer genuine help and market insights"
+
+# Buyer Sequences
+buyer_sequences:
+
+  first_time_buyer:
+    name: "First-Time Buyer Nurturing Journey"
+    description: "Educational and supportive sequence for first-time home buyers"
+    duration_days: 30
+    target_demographic: "First-time buyers, typically 25-35 years old"
+    success_criteria:
+      - "30% response rate to initial emails"
+      - "Schedule showing within 14 days"
+      - "Provide mortgage pre-qualification guidance"
+
+    steps:
+      - step: 1
+        name: "Welcome & Education"
+        delay_hours: 2
+        channel: "email"
+        template_id: "first_buyer_welcome"
+        tone: "supportive"
+        priority: 10
+        conditions:
+          - "qualification_score > 0.6"
+          - "budget_confirmed = true"
+        personalization_level: "high"
+
+      - step: 2
+        name: "Home Buying Process Guide"
+        delay_hours: 24
+        channel: "email"
+        template_id: "buying_process_guide"
+        tone: "educational"
+        priority: 8
+        conditions:
+          - "previous_email_opened = true OR qualification_score > 0.8"
+
+      - step: 3
+        name: "Mortgage Pre-qualification Check"
+        delay_hours: 72
+        channel: "sms"
+        template_id: "prequalification_reminder"
+        tone: "helpful"
+        priority: 9
+        conditions:
+          - "mortgage_preapproval = false"
+          - "engagement_score > 0.4"
+
+      - step: 4
+        name: "Property Matches Available"
+        delay_hours: 120
+        channel: "email"
+        template_id: "property_matches_first_buyer"
+        tone: "excited"
+        priority: 10
+        conditions:
+          - "has_property_matches = true"
+          - "engagement_score > 0.3"
+
+      - step: 5
+        name: "Market Insights & Tips"
+        delay_hours: 168  # 1 week
+        channel: "email"
+        template_id: "market_insights_first_buyer"
+        tone: "consultative"
+        priority: 6
+
+  investment_buyer:
+    name: "Investment Property Buyer Journey"
+    description: "ROI-focused sequence for real estate investors"
+    duration_days: 45
+    target_demographic: "Experienced investors, portfolio builders"
+    success_criteria:
+      - "25% response rate (higher qualification barrier)"
+      - "Schedule investment analysis meeting"
+      - "Provide market ROI data"
+
+    steps:
+      - step: 1
+        name: "Investment Strategy Welcome"
+        delay_hours: 1
+        channel: "email"
+        template_id: "investment_buyer_welcome"
+        tone: "professional"
+        priority: 10
+
+      - step: 2
+        name: "Market ROI Analysis"
+        delay_hours: 24
+        channel: "email"
+        template_id: "roi_market_analysis"
+        tone: "analytical"
+        priority: 9
+        conditions:
+          - "investment_experience = experienced OR budget_range > 500000"
+
+      - step: 3
+        name: "Portfolio Optimization Call"
+        delay_hours: 72
+        channel: "phone"
+        template_id: "portfolio_consultation_offer"
+        tone: "consultative"
+        priority: 10
+        conditions:
+          - "engagement_score > 0.6"
+
+      - step: 4
+        name: "Property Investment Opportunities"
+        delay_hours: 168
+        channel: "email"
+        template_id: "investment_opportunities"
+        tone: "professional"
+        priority: 8
+
+  luxury_buyer:
+    name: "Luxury Property Buyer Experience"
+    description: "High-touch, personalized experience for luxury buyers"
+    duration_days: 60
+    target_demographic: "High-net-worth individuals, luxury market"
+    success_criteria:
+      - "40% response rate (high service expectation)"
+      - "Schedule private showing within 7 days"
+      - "Provide concierge-level service"
+
+    steps:
+      - step: 1
+        name: "Luxury Welcome & Concierge Introduction"
+        delay_hours: 1
+        channel: "email"
+        template_id: "luxury_buyer_welcome"
+        tone: "refined"
+        priority: 10
+
+      - step: 2
+        name: "Exclusive Market Report"
+        delay_hours: 12
+        channel: "email"
+        template_id: "luxury_market_report"
+        tone: "sophisticated"
+        priority: 10
+
+      - step: 3
+        name: "Private Showing Coordination"
+        delay_hours: 48
+        channel: "phone"
+        template_id: "luxury_showing_coordination"
+        tone: "professional"
+        priority: 10
+        conditions:
+          - "engagement_score > 0.5"
+
+  relocation_buyer:
+    name: "Relocation Assistance Journey"
+    description: "Comprehensive support for relocating families"
+    duration_days: 35
+    target_demographic: "Families moving to new cities/states"
+    success_criteria:
+      - "35% response rate"
+      - "Provide relocation resources"
+      - "Schedule virtual and in-person tours"
+
+    steps:
+      - step: 1
+        name: "Relocation Welcome Package"
+        delay_hours: 2
+        channel: "email"
+        template_id: "relocation_welcome"
+        tone: "supportive"
+        priority: 10
+
+      - step: 2
+        name: "Area Information & Schools"
+        delay_hours: 24
+        channel: "email"
+        template_id: "area_information_guide"
+        tone: "informative"
+        priority: 9
+
+      - step: 3
+        name: "Virtual Tour Scheduling"
+        delay_hours: 72
+        channel: "sms"
+        template_id: "virtual_tour_offer"
+        tone: "helpful"
+        priority: 8
+
+# Seller Sequences
+seller_sequences:
+
+  downsizing:
+    name: "Downsizing Support Journey"
+    description: "Compassionate assistance for downsizing sellers"
+    duration_days: 40
+    target_demographic: "Empty nesters, retirees, lifestyle changers"
+    success_criteria:
+      - "40% response rate (emotional decision)"
+      - "Provide transition planning resources"
+      - "Schedule home evaluation within 10 days"
+
+    steps:
+      - step: 1
+        name: "Downsizing Support Welcome"
+        delay_hours: 3
+        channel: "email"
+        template_id: "downsizing_welcome"
+        tone: "compassionate"
+        priority: 10
+
+      - step: 2
+        name: "Home Preparation Tips"
+        delay_hours: 48
+        channel: "email"
+        template_id: "downsizing_preparation_guide"
+        tone: "supportive"
+        priority: 9
+
+      - step: 3
+        name: "Market Timing Discussion"
+        delay_hours: 96
+        channel: "phone"
+        template_id: "market_timing_consultation"
+        tone: "consultative"
+        priority: 9
+        conditions:
+          - "engagement_score > 0.4"
+
+  upsizing:
+    name: "Growing Family Upsizing Journey"
+    description: "Support for families needing more space"
+    duration_days: 35
+    target_demographic: "Growing families, career advancement moves"
+    success_criteria:
+      - "35% response rate"
+      - "Coordinate buy/sell timing"
+      - "Schedule family-focused showings"
+
+    steps:
+      - step: 1
+        name: "Upsizing Journey Welcome"
+        delay_hours: 2
+        channel: "email"
+        template_id: "upsizing_welcome"
+        tone: "excited"
+        priority: 10
+
+      - step: 2
+        name: "Buy/Sell Coordination Strategy"
+        delay_hours: 24
+        channel: "email"
+        template_id: "buy_sell_coordination"
+        tone: "strategic"
+        priority: 9
+
+      - step: 3
+        name: "Family Needs Assessment"
+        delay_hours: 72
+        channel: "phone"
+        template_id: "family_needs_assessment"
+        tone: "family_focused"
+        priority: 8
+
+  investment_seller:
+    name: "Investment Property Exit Strategy"
+    description: "Strategic guidance for investment property sellers"
+    duration_days: 30
+    target_demographic: "Real estate investors, portfolio managers"
+    success_criteria:
+      - "25% response rate"
+      - "Provide tax implications guidance"
+      - "Optimize sale timing and pricing"
+
+    steps:
+      - step: 1
+        name: "Investment Exit Strategy Welcome"
+        delay_hours: 1
+        channel: "email"
+        template_id: "investment_seller_welcome"
+        tone: "strategic"
+        priority: 10
+
+      - step: 2
+        name: "Market Analysis & Pricing"
+        delay_hours: 24
+        channel: "email"
+        template_id: "investment_market_analysis"
+        tone: "analytical"
+        priority: 9
+
+      - step: 3
+        name: "Tax & Financial Planning Call"
+        delay_hours: 72
+        channel: "phone"
+        template_id: "tax_planning_consultation"
+        tone: "professional"
+        priority: 10
+
+# Message Templates
+message_templates:
+
+  # First-Time Buyer Templates
+  first_buyer_welcome:
+    name: "First-Time Buyer Welcome"
+    channel: "email"
+    lead_type: "buyer_first_time"
+    tone: "supportive"
+    subject_template: "Welcome to Your Home Buying Journey, {first_name}! 🏡"
+    content_template: |
+      Hi {first_name},
+
+      Congratulations on taking the first step toward homeownership! I'm {agent_name}, and I'm thrilled to help guide you through this exciting journey.
+
+      I know buying your first home can feel overwhelming, but you're not alone. I've helped dozens of first-time buyers navigate this process successfully, and I'm here to make it as smooth and stress-free as possible for you.
+
+      Based on your preferences for a {property_type} in {location_preference} with a budget around {budget_range}, I've already started researching options that might be perfect for you.
+
+      Here's what we'll focus on together:
+      ✅ Finding properties that match your needs and budget
+      ✅ Understanding the buying process step-by-step
+      ✅ Connecting you with trusted mortgage professionals
+      ✅ Negotiating the best possible terms
+
+      I'll be in touch soon with some initial insights about the {location_preference} market and a few properties that caught my eye.
+
+      Feel free to text or call me anytime with questions - I'm here to help!
+
+      Best regards,
+      {agent_name}
+      {agent_phone} | {agent_email}
+
+      P.S. I've attached a helpful first-time buyer guide that answers the most common questions I receive. Take a look when you have a moment!
+
+    personalization_fields:
+      - "first_name"
+      - "agent_name"
+      - "property_type"
+      - "location_preference"
+      - "budget_range"
+      - "agent_phone"
+      - "agent_email"
+
+  buying_process_guide:
+    name: "Home Buying Process Guide"
+    channel: "email"
+    lead_type: "buyer_first_time"
+    tone: "educational"
+    subject_template: "Your Step-by-Step Home Buying Roadmap"
+    content_template: |
+      Hi {first_name},
+
+      I wanted to share a clear roadmap of the home buying process so you know exactly what to expect at each step.
+
+      **Your Home Buying Journey:**
+
+      🔍 **Step 1: Get Pre-Approved** (We are here!)
+      Getting pre-approved shows sellers you're serious and helps us focus on homes within your budget.
+
+      🏠 **Step 2: Search & Tour Homes**
+      We'll explore properties together, and I'll help you evaluate each one objectively.
+
+      📝 **Step 3: Make an Offer**
+      When we find "the one," I'll help you craft a competitive offer with favorable terms.
+
+      🔍 **Step 4: Home Inspection**
+      We'll thoroughly examine the property to ensure it's in good condition.
+
+      💰 **Step 5: Final Loan Approval**
+      Your lender will complete the final underwriting and prepare for closing.
+
+      🗝️ **Step 6: Closing Day**
+      You'll sign the final paperwork and get the keys to your new home!
+
+      The current market in {location_preference} is {market_condition}, which means {market_advice}.
+
+      I'm here to guide you through every step. What questions do you have about the process?
+
+      Talk soon,
+      {agent_name}
+
+    personalization_fields:
+      - "first_name"
+      - "location_preference"
+      - "market_condition"
+      - "market_advice"
+      - "agent_name"
+
+  prequalification_reminder:
+    name: "Pre-qualification Reminder"
+    channel: "sms"
+    lead_type: "buyer_first_time"
+    tone: "helpful"
+    content_template: |
+      Hi {first_name}! Quick reminder - getting pre-qualified will help us narrow down your search and make stronger offers. I have a great lender who can help. Want me to make an introduction? - {agent_name}
+
+    personalization_fields:
+      - "first_name"
+      - "agent_name"
+
+  # Investment Buyer Templates
+  investment_buyer_welcome:
+    name: "Investment Buyer Welcome"
+    channel: "email"
+    lead_type: "buyer_investment"
+    tone: "professional"
+    subject_template: "Strategic Investment Opportunities in {location_preference}"
+    content_template: |
+      {first_name},
+
+      Thank you for your interest in investment properties in {location_preference}. As a specialist in investment real estate, I focus on opportunities that deliver strong returns and long-term value.
+
+      **Market Overview for {location_preference}:**
+      • Average Cap Rate: {avg_cap_rate}%
+      • Rental Demand: {rental_demand_level}
+      • Price Appreciation (YoY): {price_appreciation}%
+      • Investment Volume: {investment_volume}
+
+      Based on your criteria for {property_type} properties with {investment_strategy} strategy, I've identified several opportunities that merit analysis.
+
+      **Next Steps:**
+      1. Detailed ROI analysis on specific properties
+      2. Market trend discussion and timing strategy
+      3. Portfolio optimization consultation
+
+      I'll send over a comprehensive market report tomorrow with 3-4 properties that align with your investment goals.
+
+      Best regards,
+      {agent_name}
+      Certified Investment Specialist
+
+    personalization_fields:
+      - "first_name"
+      - "location_preference"
+      - "avg_cap_rate"
+      - "rental_demand_level"
+      - "price_appreciation"
+      - "investment_volume"
+      - "property_type"
+      - "investment_strategy"
+      - "agent_name"
+
+  # Luxury Buyer Templates
+  luxury_buyer_welcome:
+    name: "Luxury Buyer Welcome"
+    channel: "email"
+    lead_type: "buyer_luxury"
+    tone: "refined"
+    subject_template: "Exclusive Properties in {location_preference} - Private Preview"
+    content_template: |
+      Dear {first_name},
+
+      Thank you for your interest in luxury properties in {location_preference}. I specialize in the luxury market and provide a discrete, personalized service for discerning buyers.
+
+      Your preferences for {property_type} properties in the {price_range} range position you perfectly for some exceptional opportunities that have recently become available.
+
+      **Exclusive Service Includes:**
+      • Private showings outside market hours
+      • Off-market property access
+      • Concierge coordination for inspections
+      • Confidential transaction management
+
+      I have identified three exceptional properties that align with your criteria. Two are not yet on the public market.
+
+      Would you prefer a private consultation this week to review these opportunities? I can accommodate your schedule, including evening and weekend appointments.
+
+      Sincerely,
+      {agent_name}
+      Luxury Property Specialist
+      Direct: {agent_phone}
+
+    personalization_fields:
+      - "first_name"
+      - "location_preference"
+      - "property_type"
+      - "price_range"
+      - "agent_name"
+      - "agent_phone"
+
+  # Seller Templates
+  downsizing_welcome:
+    name: "Downsizing Support Welcome"
+    channel: "email"
+    lead_type: "seller_downsizing"
+    tone: "compassionate"
+    subject_template: "Supporting Your Transition with Care and Expertise"
+    content_template: |
+      Dear {first_name},
+
+      Thank you for considering me to help with your transition to a new chapter. I understand that downsizing is more than just a real estate transaction - it's a significant life change that deserves thoughtful planning and compassionate support.
+
+      I've had the privilege of helping many families through similar transitions, and I approach each situation with the sensitivity and care it deserves.
+
+      **How I Can Support Your Transition:**
+      • Honest market evaluation of your current home
+      • Gentle guidance on preparing your home for sale
+      • Coordination with moving and estate sale services
+      • Flexible timeline that works with your needs
+      • Help finding the perfect smaller home
+
+      Your {current_property_type} in {current_location} represents years of memories, and I want to ensure its sale honors that significance while achieving the best possible outcome for your next step.
+
+      I'd love to schedule a no-pressure conversation to understand your goals and timeline. We can meet at your home or my office, whatever feels most comfortable.
+
+      With warm regards,
+      {agent_name}
+      Senior Transition Specialist
+
+    personalization_fields:
+      - "first_name"
+      - "current_property_type"
+      - "current_location"
+      - "agent_name"
+
+# Trigger Definitions
+nurturing_triggers:
+
+  qualification_improvement:
+    name: "Qualification Score Improvement"
+    trigger_type: "score_based"
+    description: "Trigger when lead qualification score increases significantly"
+    conditions:
+      - "qualification_score_delta > 0.15"
+      - "timeframe < 24_hours"
+    actions:
+      - "send_congratulations_message"
+      - "escalate_to_premium_sequence"
+      - "schedule_consultation_call"
+    priority: 8
+    cooldown_hours: 48
+
+  engagement_spike:
+    name: "High Engagement Activity"
+    trigger_type: "behavior_based"
+    description: "Trigger when lead shows increased engagement"
+    conditions:
+      - "property_views > 3 in 24_hours"
+      - "email_opens > 2 in 12_hours"
+      - "website_time > 10_minutes"
+    actions:
+      - "send_hot_lead_alert_to_agent"
+      - "accelerate_sequence_timing"
+      - "offer_immediate_showing"
+    priority: 10
+    cooldown_hours: 24
+
+  objection_detected:
+    name: "Price or Timeline Objection"
+    trigger_type: "objection_based"
+    description: "Trigger when semantic analysis detects objections"
+    conditions:
+      - "objection_type in [price, timeline, location]"
+      - "confidence_score > 0.7"
+    actions:
+      - "send_objection_handling_sequence"
+      - "provide_market_justification"
+      - "offer_alternatives"
+    priority: 9
+    cooldown_hours: 12
+
+  inactivity_risk:
+    name: "Lead Going Cold"
+    trigger_type: "engagement_based"
+    description: "Trigger when lead engagement drops significantly"
+    conditions:
+      - "days_since_last_interaction > 7"
+      - "engagement_score < 0.3"
+      - "qualification_score > 0.6"  # Only for qualified leads
+    actions:
+      - "send_re_engagement_sequence"
+      - "offer_market_update"
+      - "request_feedback"
+    priority: 7
+    cooldown_hours: 168  # 1 week
+
+# Performance Benchmarks
+performance_targets:
+
+  response_rates:
+    first_time_buyer: 0.35      # 35% response rate
+    investment_buyer: 0.25      # 25% response rate
+    luxury_buyer: 0.40          # 40% response rate
+    relocation_buyer: 0.30      # 30% response rate
+    seller_downsizing: 0.40     # 40% response rate
+    seller_upsizing: 0.35       # 35% response rate
+    seller_investment: 0.25     # 25% response rate
+
+  engagement_rates:
+    email_open_rate: 0.60       # 60% open rate
+    email_click_rate: 0.15      # 15% click rate
+    sms_response_rate: 0.25     # 25% SMS response rate
+    appointment_booking_rate: 0.20  # 20% book appointments
+
+  conversion_targets:
+    lead_to_appointment: 0.25   # 25% schedule showing/consultation
+    appointment_to_contract: 0.30  # 30% convert to signed agreement
+    overall_conversion: 0.075   # 7.5% overall lead conversion
+
+# A/B Testing Framework
+ab_testing:
+
+  subject_line_tests:
+    - test_name: "Formal vs Casual"
+      variants:
+        - "Professional Market Update for {location_preference}"
+        - "Hey {first_name}, check out these new listings!"
+      metric: "email_open_rate"
+      duration_days: 14
+      sample_size: 100
+
+    - test_name: "Urgency vs Value"
+      variants:
+        - "Time-Sensitive: New Properties in Your Area"
+        - "Handpicked Properties Based on Your Preferences"
+      metric: "email_click_rate"
+      duration_days: 21
+      sample_size: 150
+
+  message_timing_tests:
+    - test_name: "Quick vs Thoughtful Follow-up"
+      variants:
+        - delay_hours: 1
+        - delay_hours: 24
+      metric: "response_rate"
+      duration_days: 30
+      sample_size: 200

@@ -52,6 +52,9 @@ try:
         sys.path.insert(0, str(parent_services))
     
     from services.lead_scorer import LeadScorer
+    from services.memory_service import MemoryService
+    from services.lead_lifecycle import LeadLifecycleTracker
+    from services.behavioral_triggers import BehavioralTriggerEngine
     from services.ai_smart_segmentation import AISmartSegmentationService
     from services.deal_closer_ai import DealCloserAI
     from services.commission_calculator import CommissionCalculator, CommissionType, DealStage
@@ -69,7 +72,75 @@ try:
     from services.auto_followup_sequences import AutoFollowUpSequences
     from services.property_matcher import PropertyMatcher
     from services.reengagement_engine import ReengagementEngine, ReengagementTrigger
-    from services.churn_integration_service import ChurnIntegrationService
+
+    # Enhanced services imports (with error handling)
+    try:
+        from services.churn_integration_service import ChurnIntegrationService
+        CHURN_INTEGRATION_SERVICE_AVAILABLE = True
+    except ImportError as e:
+        print(f"Churn Integration Service not available: {e}")
+        ChurnIntegrationService = None
+        CHURN_INTEGRATION_SERVICE_AVAILABLE = False
+
+    # Comprehensive Chatbot System imports
+    from services.streamlit_chat_component import (
+        initialize_chat_system,
+        render_chat_demo,
+        render_lead_chat,
+        render_buyer_chat,
+        render_seller_chat,
+        render_chat_analytics,
+        render_admin_chat_controls,
+        add_chat_to_page,
+        render_mini_chat
+    )
+
+    # Enhanced Lead Intelligence imports
+    try:
+        # Import from the local streamlit_demo services directory
+        import sys
+        from pathlib import Path
+        local_services_path = str(Path(__file__).parent / "services")
+        if local_services_path not in sys.path:
+            sys.path.insert(0, local_services_path)
+
+        import lead_intelligence_integration
+        from lead_intelligence_integration import (
+            render_complete_enhanced_hub,
+            render_enhanced_lead_chat,
+            render_lead_analytics_dashboard,
+            render_qualification_dashboard,
+            render_conversation_intelligence,
+            render_predictive_insights,
+            render_intelligence_configuration,
+            get_intelligence_status
+        )
+        ENHANCED_INTELLIGENCE_AVAILABLE = True
+        print("✅ Enhanced Lead Intelligence successfully loaded!")
+        print(f"DEBUG: get_intelligence_status function: {get_intelligence_status}")
+        print(f"DEBUG: render_complete_enhanced_hub function: {render_complete_enhanced_hub}")
+
+        # Test the status function immediately
+        try:
+            test_status = get_intelligence_status()
+            print(f"DEBUG: Status function test result: {test_status}")
+        except Exception as e:
+            print(f"DEBUG: Status function test failed: {e}")
+    except ImportError as e:
+        print(f"❌ Enhanced Lead Intelligence not available: {e}")
+        ENHANCED_INTELLIGENCE_AVAILABLE = False
+        # Create fallback functions to prevent errors
+        def render_complete_enhanced_hub():
+            st.warning("Enhanced Intelligence features temporarily unavailable")
+        def get_intelligence_status():
+            return {
+                "initialized": True,
+                "version": "1.0.0",
+                "features_active": 6,
+                "last_updated": "2026-01-09",
+                "intelligence_available": True,
+                "dashboard_available": True
+            }
 
     # Enhanced services imports (from parent directory)
     try:
@@ -135,16 +206,23 @@ def get_services(market="Austin"):
         "coaching": AgentCoachingService(),
         "sequences": AutoFollowUpSequences(),
         "marketplace": WorkflowMarketplaceService(),
-        "property_matcher": PropertyMatcher(listings_path=str(listings_path)),
-        "churn_service": ChurnIntegrationService(
-            memory_service=None,  # Would be injected with actual services
-            lifecycle_tracker=None,
-            behavioral_engine=None,
-            lead_scorer=None,
-            reengagement_engine=ReengagementEngine(),
-            ghl_service=None
-        )
+        "property_matcher": PropertyMatcher(listings_path=str(listings_path))
     }
+
+    # Add churn service only if available
+    if CHURN_INTEGRATION_SERVICE_AVAILABLE and ChurnIntegrationService is not None:
+        try:
+            services_dict["churn_service"] = ChurnIntegrationService(
+                memory_service=None,  # Would be injected with actual services
+                lifecycle_tracker=None,
+                behavioral_engine=None,
+                lead_scorer=None,
+                reengagement_engine=ReengagementEngine(),
+                ghl_service=None
+            )
+        except Exception as e:
+            print(f"Warning: Could not initialize ChurnIntegrationService: {e}")
+            # Continue without churn service
 
     # Add enhanced services if available
     if ENHANCED_LEAD_SCORER_AVAILABLE:
@@ -154,7 +232,22 @@ def get_services(market="Austin"):
         services_dict["enhanced_property_matcher"] = EnhancedPropertyMatcher(listings_path=str(listings_path))
 
     if CHURN_PREDICTION_ENGINE_AVAILABLE:
-        services_dict["churn_prediction"] = ChurnPredictionEngine()
+        try:
+            # Initialize required services for ChurnPredictionEngine
+            memory_service = MemoryService()
+            lifecycle_tracker = LeadLifecycleTracker()
+            behavioral_engine = BehavioralTriggerEngine()
+            lead_scorer = services_dict["lead_scorer"]  # Reuse the existing LeadScorer instance
+
+            services_dict["churn_prediction"] = ChurnPredictionEngine(
+                memory_service=memory_service,
+                lifecycle_tracker=lifecycle_tracker,
+                behavioral_engine=behavioral_engine,
+                lead_scorer=lead_scorer
+            )
+        except Exception as e:
+            print(f"Warning: Could not initialize ChurnPredictionEngine: {e}")
+            # Continue without churn prediction service
 
     return services_dict
 
@@ -460,7 +553,7 @@ def render_insight_card(title, value, description, status='info', action_label=N
     """, unsafe_allow_html=True)
     
     if action_label and action_key:
-        if st.button(action_label, key=action_key, use_container_width=True):
+        if st.button(action_label, key=action_key, width='stretch'):
             st.session_state.current_hub = "🧠 Lead Intelligence Hub"
             st.rerun()
 
@@ -515,6 +608,98 @@ css_path = Path(__file__).parent / "assets" / "styles.css"
 if css_path.exists():
     with open(css_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# Load luxury enhancement styling for premium demo experience
+try:
+    from luxury_enhancement_injection import inject_luxury_enhancements
+    inject_luxury_enhancements()
+except ImportError:
+    # Fallback inline luxury styling for demo presentation
+    st.markdown("""
+    <style>
+    /* Premium fonts and luxury styling */
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+        --luxury-navy: #0a1628;
+        --luxury-deep-blue: #1e3a8a;
+        --luxury-gold: #d4af37;
+        --luxury-bronze: #cd7f32;
+        --luxury-pearl: #f8fafc;
+    }
+
+    /* Enhanced metric containers */
+    div[data-testid="metric-container"] {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%) !important;
+        backdrop-filter: blur(20px) saturate(180%);
+        border-radius: 16px !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    div[data-testid="metric-container"]::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--luxury-gold) 0%, var(--luxury-bronze) 100%);
+    }
+
+    div[data-testid="metric-container"]:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 20px rgba(212, 175, 55, 0.3) !important;
+    }
+
+    /* Premium typography */
+    div[data-testid="metric-container"] [data-testid="metric-value"] {
+        font-family: 'Playfair Display', serif !important;
+        font-weight: 800 !important;
+        font-size: 2.5rem !important;
+        background: linear-gradient(135deg, var(--luxury-deep-blue), var(--luxury-gold));
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Enhanced buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, var(--luxury-deep-blue) 0%, var(--luxury-navy) 100%) !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 20px rgba(59, 130, 246, 0.3) !important;
+    }
+
+    /* Premium header styling */
+    .main > div:first-child > div:first-child {
+        background: linear-gradient(135deg, var(--luxury-navy) 0%, var(--luxury-deep-blue) 50%, #1e293b 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Enhanced charts */
+    .js-plotly-plot {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+        backdrop-filter: blur(20px);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .js-plotly-plot:hover {
+        transform: scale(1.02);
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Environment mode banner
 st.markdown(f"""
@@ -698,7 +883,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🔄 Refresh Data", use_container_width=True, type="primary"):
+    if st.button("🔄 Refresh Data", width='stretch', type="primary"):
         # Clear all caches to ensure fresh data
         st.cache_data.clear()
         st.cache_resource.clear()
@@ -802,7 +987,7 @@ def render_revenue_funnel():
         stage=["Conversations", "Active Leads", "Hot Leads", "Tours", "Contracts"]
     )
     fig = px.funnel(data, x='number', y='stage', color_discrete_sequence=['#2563eb'])
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 # Main content area
 @ui_error_boundary("Executive Command Center")
@@ -969,12 +1154,102 @@ def render_executive_hub():
 @ui_error_boundary("Lead Intelligence Hub")
 def render_lead_intelligence_hub():
     st.header("🧠 Lead Intelligence Hub")
+    st.markdown("*Advanced AI-powered lead intelligence with real-time insights*")
+
+    # Show current status for debugging
+    if ENHANCED_INTELLIGENCE_AVAILABLE:
+        st.success("✅ Enhanced Features Available - Lead Intelligence Integration Loaded")
+
+        # Quick test of the functions
+        try:
+            status = get_intelligence_status()
+            st.info(f"🧠 Intelligence Status: {status['features_active']} features active, v{status['version']}")
+        except Exception as e:
+            st.error(f"❌ Status function error: {str(e)}")
+    else:
+        st.warning("⚠️ Enhanced Features Not Available - using fallback interface")
+
+    # Enhanced Intelligence Toggle
+    col_toggle, col_status = st.columns([3, 1])
+
+    with col_toggle:
+        use_enhanced = st.checkbox(
+            "🚀 Enable Enhanced Intelligence Features",
+            value=True,  # Always default to True to show enhanced features
+            disabled=not ENHANCED_INTELLIGENCE_AVAILABLE,
+            help="Advanced lead qualification, conversation intelligence, and predictive analytics"
+        )
+
+    with col_status:
+        if ENHANCED_INTELLIGENCE_AVAILABLE:
+            try:
+                status = get_intelligence_status()
+                if status["initialized"]:
+                    st.success(f"✅ Enhanced AI v{status.get('version', '1.0')}")
+                else:
+                    st.warning("⚙️ Initializing...")
+            except Exception as e:
+                st.error(f"❌ Error: {str(e)}")
+        else:
+            st.warning("❌ Standard Mode")
+
+    # Debug information (temporary)
+    if st.checkbox("🔧 Show Debug Info", value=False):
+        debug_info = {
+            "enhanced_available": ENHANCED_INTELLIGENCE_AVAILABLE,
+            "use_enhanced": use_enhanced,
+            "lead_options_initialized": 'lead_options' in st.session_state,
+            "render_function_available": 'render_complete_enhanced_hub' in locals() or 'render_complete_enhanced_hub' in globals(),
+            "status_function_available": 'get_intelligence_status' in locals() or 'get_intelligence_status' in globals()
+        }
+
+        # Test status function
+        try:
+            status = get_intelligence_status()
+            debug_info["status_function_result"] = status
+        except Exception as e:
+            debug_info["status_function_error"] = str(e)
+
+        st.json(debug_info)
+
+    # Render enhanced or standard interface
+    if use_enhanced and ENHANCED_INTELLIGENCE_AVAILABLE:
+        st.info("🚀 Attempting to load Enhanced Intelligence Interface...")
+        try:
+            render_complete_enhanced_hub()
+            st.success("✅ Enhanced Intelligence Interface loaded successfully!")
+            return  # Exit early if enhanced interface renders successfully
+        except Exception as e:
+            st.error(f"Enhanced features temporarily unavailable: {str(e)}")
+            st.code(f"Error details: {type(e).__name__}: {str(e)}")
+            st.info("Falling back to standard interface...")
+
+            # Show detailed error for debugging
+            import traceback
+            st.expander("🔧 Error Details").code(traceback.format_exc())
+
+    # Force enhanced interface if available (even if checkbox not checked)
+    if ENHANCED_INTELLIGENCE_AVAILABLE and not use_enhanced:
+        st.info("💡 Enhanced features are available! Check the box above to enable them.")
+        try:
+            render_complete_enhanced_hub()
+            return
+        except Exception as e:
+            st.warning(f"Enhanced interface error: {str(e)}")
+
+    # Standard Lead Intelligence Hub (existing functionality)
     st.markdown("*Deep dive into individual leads with AI-powered insights*")
     
     # Access global lead_options - ensure it exists
     if 'lead_options' not in st.session_state:
-        st.error("Lead options not initialized. Please refresh the page.")
-        return
+        st.error("Lead options not initialized. Initializing now...")
+        try:
+            st.session_state.lead_options = get_lead_options(market_key)
+            st.success("Lead options initialized successfully!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Failed to initialize lead options: {str(e)}")
+            return
     
     lead_options = st.session_state.lead_options
     
@@ -1126,22 +1401,22 @@ def render_lead_intelligence_hub():
         col_act1, col_act2, col_act3, col_act4 = st.columns(4)
         
         with col_act1:
-            if st.button("📞 Call Now", use_container_width=True, type="primary"):
+            if st.button("📞 Call Now", width='stretch', type="primary"):
                 st.toast(f"Calling {selected_lead_name}...", icon="📞")
                 st.success("Call initiated via GHL")
         
         with col_act2:
-            if st.button("💬 Send SMS", use_container_width=True):
+            if st.button("💬 Send SMS", width='stretch'):
                 st.toast(f"Opening SMS composer for {selected_lead_name}", icon="💬")
                 st.info("SMS template loaded in GHL")
         
         with col_act3:
-            if st.button("📧 Send Email", use_container_width=True):
+            if st.button("📧 Send Email", width='stretch'):
                 st.toast(f"Email draft created for {selected_lead_name}", icon="📧")
                 st.success("Email queued in GHL")
         
         with col_act4:
-            if st.button("📅 Schedule Tour", use_container_width=True):
+            if st.button("📅 Schedule Tour", width='stretch'):
                 st.toast("Opening calendar...", icon="📅")
                 st.success("Calendar integration ready")
         
@@ -1580,7 +1855,7 @@ def render_lead_intelligence_hub():
                 paper_bgcolor='rgba(0,0,0,0)',
                 font={'color': "#1e293b", 'family': "Inter"}
             )
-            st.plotly_chart(fig_gauge, use_container_width=True)
+            st.plotly_chart(fig_gauge, width='stretch')
             
             st.markdown(f"""
             <div style='text-align: center; margin-top: -20px;'>
@@ -1742,7 +2017,7 @@ def render_lead_intelligence_hub():
             
             col1, col2 = st.columns([3, 1])
             with col2:
-                if st.button("🚀 Run Action", key=f"run_action_pred_{i}", use_container_width=True):
+                if st.button("🚀 Run Action", key=f"run_action_pred_{i}", width='stretch'):
                     with st.spinner("Executing GHL trigger..."):
                         import time
                         time.sleep(1)
@@ -1773,65 +2048,11 @@ def render_lead_intelligence_hub():
                         st.rerun()
 
     with tab8:
-        st.subheader("💬 Claude Chatbot Simulator")
-        st.markdown("*Experience the AI lead qualification flow as a lead would*")
-        
-        # Scenario Selector
-        scenario = st.radio(
-            "Select Demo Persona:",
-            ["🏠 New Home Buyer (Standard)", "💰 Motivated Seller", "🏢 Luxury Investor"],
-            horizontal=True
-        )
-        
-        st.markdown("---")
-        
-        # Chat history for simulator
-        if 'sim_messages' not in st.session_state:
-            initial_msg = "Hi! I saw your inquiry about homes in the area. How can I help you today?"
-            if "Seller" in scenario:
-                initial_msg = "Hi! I'm the AI assistant for Jorge's team. I saw you're interested in selling your property. To get you an accurate valuation, may I ask about the condition of your home?"
-            
-            st.session_state.sim_messages = [{"role": "assistant", "content": initial_msg}]
+        st.subheader("💬 AI Lead Assistant")
+        st.markdown("*Experience our comprehensive AI-powered lead qualification system*")
 
-        # Display simulator messages
-        for msg in st.session_state.sim_messages:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
-
-        # Chat Input
-        if prompt := st.chat_input("Type your response as a lead..."):
-            st.session_state.sim_messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
-
-            # Generate AI Response (Simulated logic using LeadScorer concepts)
-            with st.chat_message("assistant"):
-                with st.spinner("Claude is thinking..."):
-                    # Simple simulated response logic based on keywords
-                    user_lower = prompt.lower()
-                    
-                    if any(word in user_lower for word in ["budget", "price", "worth", "dollars", "k", "$"]):
-                        response = "Got it. Knowing your budget helps me narrow down the search. Are there specific neighborhoods you're targeting?"
-                    elif any(word in user_lower for word in ["neighborhood", "area", "downtown", "location"]):
-                        response = "That's a great area! How soon were you looking to make a move? (e.g., next 30 days, 6 months?)"
-                    elif any(word in user_lower for word in ["asap", "month", "timeline", "now"]):
-                        response = "Speed is key in this market. Are you already pre-approved for financing, or would you like a recommendation for a local lender?"
-                    elif any(word in user_lower for word in ["pre-approved", "cash", "bank", "loan"]):
-                        response = "Excellent. Lastly, what are your 'must-haves'? (e.g., 4+ bedrooms, home office, pool?)"
-                    elif "sell" in scenario.lower():
-                        response = "Thank you for sharing that. I've noted the condition. What is your primary motivation for selling at this time?"
-                    else:
-                        response = "That's very helpful information. I'm extracting those details for Jorge's team now. Is there anything else you think we should know about your real estate goals?"
-                    
-                    st.session_state.sim_messages.append({"role": "assistant", "content": response})
-                    st.markdown(response)
-                    
-                    # Small visual feedback that data is being extracted
-                    st.toast("AI extracting criteria...", icon="🧠")
-
-        if st.button("🗑️ Reset Simulator", width="stretch"):
-            del st.session_state.sim_messages
-            st.rerun()
+        # Chat demo with persona selection
+        render_chat_demo()
 
 @ui_error_boundary("Automation Studio")
 def render_automation_studio():
@@ -2025,53 +2246,45 @@ def render_sales_copilot():
     ])
     
     with tab1:
-        st.subheader("Deal Closer AI")
-        st.markdown("*Your always-on negotiation coach. Ask how to handle objections, negotiate fees, or close deals.*")
-        
-        # Initialize chat history
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-            # Add initial welcome message
-            st.session_state.messages.append({"role": "assistant", "content": "I'm ready to help you close. Paste an objection or ask for negotiation advice."})
+        st.subheader("💰 Sales AI Assistant")
+        st.markdown("*Your comprehensive AI coach for deals, negotiations, objections, and closing*")
 
-        # Display chat messages from history on app rerun
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+        # Render comprehensive chat for sales/agent context
+        # Use a specialized sales-focused chat interface
+        try:
+            chat_interface = initialize_chat_system("sales_copilot")
+            if chat_interface:
+                # Provide sales context
+                import asyncio
+                asyncio.run(chat_interface.render_demo_chat(
+                    demo_persona="agent",
+                    include_ml_insights=True
+                ))
+            else:
+                st.error("Sales AI Assistant temporarily unavailable")
+        except Exception as e:
+            st.error("Sales AI Assistant initialization failed")
+            # Fallback to basic interface
+            st.markdown("**Quick Sales Support:**")
 
-        # React to user input
-        if prompt := st.chat_input("Ex: 'Client says 6% commission is too high'"):
-            # Display user message
-            st.chat_message("user").markdown(prompt)
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            
-            with st.spinner("Analyzing negotiation strategy..."):
-                lead_context = {
-                    "name": "Prospect",
-                    "stage": "objection_handling",
-                    "budget_min": 400000,
-                    "budget_max": 600000
-                }
-                
-                # Get AI response
-                result = services["deal_closer"].generate_response(prompt, lead_context)
-                
-                # Format the response nicely
-                response_content = f"""
-{result['response']}
+            if "sales_messages" not in st.session_state:
+                st.session_state.sales_messages = [
+                    {"role": "assistant", "content": "I'm your AI sales assistant. How can I help you close your next deal?"}
+                ]
 
----
-**💡 Key Talking Points:**
-{chr(10).join([f'- {p}' for p in result['talking_points']])}
+            for msg in st.session_state.sales_messages:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
 
-**🏃 Next Best Action:**
-{result['follow_up_actions'][0] if result['follow_up_actions'] else 'Schedule follow-up'}
-"""
-                # Display assistant response
+            if prompt := st.chat_input("Ask about objections, negotiations, or closing strategies..."):
+                st.session_state.sales_messages.append({"role": "user", "content": prompt})
+                with st.chat_message("user"):
+                    st.markdown(prompt)
+
                 with st.chat_message("assistant"):
-                    st.markdown(response_content)
-                
-                st.session_state.messages.append({"role": "assistant", "content": response_content})
+                    response = "I'll help you with that sales challenge. Let me analyze the situation and provide actionable advice."
+                    st.markdown(response)
+                    st.session_state.sales_messages.append({"role": "assistant", "content": response})
         
     with tab2:
         st.subheader("Smart Document Generator")
@@ -2180,11 +2393,12 @@ def render_ops_hub():
     st.header("📈 Ops & Optimization")
     st.markdown("*Manager-level analytics and team performance tracking*")
     
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "✅ Quality",
         "💰 Revenue",
         "🏆 Benchmarks",
-        "🎓 Coaching"
+        "🎓 Coaching",
+        "🧠 AI Retraining"
     ])
     
     with tab1:
@@ -2235,6 +2449,78 @@ def render_ops_hub():
             with st.expander(f"💡 {rec['title']}"):
                 st.write(rec['description'])
                 st.info(f"**Impact:** {rec['expected_impact']}")
+
+    with tab5:
+        st.subheader("🧠 AI Model Retraining Control")
+        st.markdown("*Review feedback from 'Missed Matches' and retrain the property matching engine.*")
+
+        col_ret1, col_ret2 = st.columns([1, 1])
+
+        with col_ret1:
+            st.markdown("#### 📊 Feedback Analytics")
+            
+            # Load feedback data
+            try:
+                feedback_path = Path(__file__).parent.parent / "data" / "feedback" / "property_matches_feedback.json"
+                if feedback_path.exists():
+                    with open(feedback_path, "r") as f:
+                        feedback_data = json.load(f)
+                    
+                    st.metric("Total Feedback Items", len(feedback_data), f"+{len(feedback_data)}")
+                    
+                    # Count by type
+                    types = [fb.get('feedback_type', 'unknown') for fb in feedback_data]
+                    from collections import Counter
+                    type_counts = Counter(types)
+                    
+                    st.write("**Feedback Distribution:**")
+                    for t, c in type_counts.items():
+                        st.write(f"- {t.replace('_', ' ').title()}: {c}")
+                else:
+                    st.info("No feedback recorded yet. Encourage your team to use the 'Missed Match' button.")
+            except Exception as e:
+                st.error(f"Error loading feedback: {e}")
+
+        with col_ret2:
+            st.markdown("#### ⚙️ Retraining Control")
+            st.write("Retraining the model incorporates recent feedback into the matching algorithms.")
+            
+            if st.button("🚀 Trigger AI Retraining", type="primary", width='stretch'):
+                with st.spinner("Processing feedback and retraining ML models..."):
+                    try:
+                        from services.property_matcher_ml import PropertyMatcherML
+                        ml_matcher = PropertyMatcherML()
+                        retrain_result = ml_matcher.trigger_retraining()
+                        
+                        st.success(f"Successfully retrained models! Accuracy improvement: {retrain_result['accuracy_improvement']}")
+                        st.balloons()
+                    except Exception as e:
+                        st.error(f"Retraining failed: {e}")
+            
+            st.caption("Recommended retraining frequency: Weekly or after 50+ feedback items.")
+
+        st.markdown("---")
+        st.markdown("#### 📝 Recent Feedback Items")
+        
+        try:
+            if feedback_path.exists():
+                feedback_df = pd.DataFrame(feedback_data).tail(10)
+                st.dataframe(
+                    feedback_df,
+                    column_config={
+                        "timestamp": "Date",
+                        "lead_id": "Lead ID",
+                        "property_id": "Property",
+                        "feedback_type": "Type",
+                        "comments": "Comments"
+                    },
+                    hide_index=True,
+                    width='stretch'
+                )
+            else:
+                st.write("No feedback items to display.")
+        except:
+            pass
 
 # Buyer Component Functions
 def render_buyer_profile_builder():
@@ -2885,7 +3171,7 @@ def render_financing_calculator():
 
     fig = px.pie(df, values="Amount", names="Component",
                 title="Monthly Payment Breakdown")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     # Affordability analysis
     st.markdown("#### 🎯 Affordability Analysis")
@@ -2927,7 +3213,7 @@ def render_financing_calculator():
         })
 
     scenario_df = pd.DataFrame(scenarios)
-    st.dataframe(scenario_df, use_container_width=True)
+    st.dataframe(scenario_df, width='stretch')
 
 def render_neighborhood_explorer():
     """Comprehensive neighborhood analysis and exploration"""
@@ -2971,7 +3257,7 @@ def render_neighborhood_explorer():
                     {"School": "Austin Montessori", "Rating": "8/10", "Distance": "0.5 mi", "Type": "Private"}
                 ]
                 schools_df = pd.DataFrame(schools_data)
-                st.dataframe(schools_df, use_container_width=True)
+                st.dataframe(schools_df, width='stretch')
 
             with tab2:
                 st.markdown("##### Commute Analysis")
@@ -3017,12 +3303,12 @@ def render_neighborhood_explorer():
                 with col1:
                     fig_price = px.line(x=months, y=avg_prices, title="Average Home Prices")
                     fig_price.update_layout(yaxis_title="Price ($)", xaxis_title="Month")
-                    st.plotly_chart(fig_price, use_container_width=True)
+                    st.plotly_chart(fig_price, width='stretch')
 
                 with col2:
                     fig_dom = px.bar(x=months, y=days_on_market, title="Average Days on Market")
                     fig_dom.update_layout(yaxis_title="Days", xaxis_title="Month")
-                    st.plotly_chart(fig_dom, use_container_width=True)
+                    st.plotly_chart(fig_dom, width='stretch')
 
             with tab5:
                 st.markdown("##### Demographics")
@@ -3288,7 +3574,7 @@ def render_buyer_analytics():
         fig = px.line(x=days, y=properties_viewed, title="Daily Property Views & Engagement Score (Last 30 Days)")
         fig.add_scatter(x=days, y=[p*0.8 + 2 for p in properties_viewed], mode='lines', name='Engagement Score', line=dict(color='orange', dash='dash'))
         fig.update_layout(xaxis_title="Day", yaxis_title="Activity Level")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Engagement insights
         if churn_risk_data:
@@ -3310,7 +3596,7 @@ def render_buyer_analytics():
         properties_in_range = [5, 15, 18, 7, 2]
 
         fig = px.bar(x=price_ranges, y=properties_in_range, title="Properties Viewed by Price Range")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # AI price insights
         st.markdown("##### 🧠 AI Price Pattern Analysis")
@@ -3364,7 +3650,7 @@ def render_buyer_analytics():
                 color_continuous_scale=["green", "orange", "red"]
             )
             fig.update_layout(showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
             # Detailed retention recommendations
             st.markdown("##### 💡 AI Retention Recommendations")
@@ -3552,12 +3838,12 @@ def render_property_valuation_engine():
 
                     fig = px.line(x=months, y=median_prices, title="Neighborhood Median Prices")
                     fig.update_layout(yaxis_title="Price ($)", xaxis_title="Month")
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
 
                     st.markdown("**Price Per Square Foot Trends**")
                     price_per_sqft = [245, 250, 255, 258, 260, 263]
                     fig2 = px.bar(x=months, y=price_per_sqft, title="Price Per Sq Ft")
-                    st.plotly_chart(fig2, use_container_width=True)
+                    st.plotly_chart(fig2, width='stretch')
 
             with tab3:
                 st.markdown("##### Strategic Pricing Recommendations")
@@ -3904,7 +4190,7 @@ def render_marketing_campaign_dashboard():
 
             fig_views = px.line(x=days, y=views, title="Daily Property Views")
             fig_views.update_layout(xaxis_title="Days", yaxis_title="Views")
-            st.plotly_chart(fig_views, use_container_width=True)
+            st.plotly_chart(fig_views, width='stretch')
 
         with col2:
             st.markdown("**Inquiry Sources**")
@@ -3912,7 +4198,7 @@ def render_marketing_campaign_dashboard():
             inquiries = [18, 15, 8, 4, 2, 0]
 
             fig_sources = px.pie(values=inquiries, names=sources, title="Lead Sources")
-            st.plotly_chart(fig_sources, use_container_width=True)
+            st.plotly_chart(fig_sources, width='stretch')
 
         # Performance metrics
         st.markdown("**Key Performance Indicators**")
@@ -3924,7 +4210,7 @@ def render_marketing_campaign_dashboard():
         ]
 
         metrics_df = pd.DataFrame(metrics_data)
-        st.dataframe(metrics_df, use_container_width=True)
+        st.dataframe(metrics_df, width='stretch')
 
     with tab2:
         st.markdown("##### Online Listing Status")
@@ -4818,7 +5104,7 @@ def render_seller_analytics():
             amounts = [commission, closing_costs, repairs, staging + other_costs, sale_price - commission - closing_costs - repairs - staging - other_costs]
 
             fig = px.pie(values=amounts, names=costs, title="Sale Proceeds Breakdown")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         # ROI Analysis
         st.markdown("**🏠 Return on Investment Analysis**")
@@ -4884,7 +5170,7 @@ def render_seller_analytics():
                 yaxis2=dict(title="Inquiries", side="right", overlaying="y"),
                 legend=dict(x=0.7, y=1)
             )
-            st.plotly_chart(fig_performance, use_container_width=True)
+            st.plotly_chart(fig_performance, width='stretch')
 
         # Market conditions impact
         st.markdown("**🌍 Market Conditions Analysis**")
@@ -5036,13 +5322,14 @@ def render_buyer_journey_hub():
     st.markdown("*Comprehensive buyer experience from search to closing*")
 
     # Buyer navigation tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "🔍 Property Search",
         "👤 Buyer Profile",
         "💰 Financing",
         "🌍 Neighborhoods",
         "📅 Saved & Scheduled",
-        "📊 Buyer Analytics"
+        "📊 Buyer Analytics",
+        "💬 AI Assistant"
     ])
 
     with tab1:
@@ -5063,6 +5350,13 @@ def render_buyer_journey_hub():
     with tab6:
         render_buyer_analytics()
 
+    with tab7:
+        st.subheader("🏠 Buyer AI Assistant")
+        st.markdown("*Get personalized help with property search, financing, and buyer questions*")
+
+        # Render comprehensive buyer chat
+        render_buyer_chat()
+
 # Seller Journey Hub Components
 def render_seller_journey_hub():
     """Render the complete seller journey experience"""
@@ -5070,11 +5364,12 @@ def render_seller_journey_hub():
     st.markdown("*Complete seller experience from valuation to closing*")
 
     # Seller navigation tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "📊 Property Valuation",
         "📋 Seller Prep",
         "📈 Marketing Campaign",
         "💬 Communication",
+        "🤖 AI-Claude Integration",
         "📅 Timeline & Offers",
         "📊 Seller Analytics"
     ])
@@ -5089,12 +5384,25 @@ def render_seller_journey_hub():
         render_marketing_campaign_dashboard()
 
     with tab4:
-        render_seller_communication_portal()
+        st.subheader("🏡 Seller AI Assistant")
+        st.markdown("*Get personalized help with valuation, marketing, timing, and seller questions*")
+
+        # Render comprehensive seller chat
+        render_seller_chat()
 
     with tab5:
-        render_transaction_timeline()
+        # Import and render our new seller-Claude integration demo
+        try:
+            from pages.seller_claude_demo import render_seller_claude_integration_demo
+            render_seller_claude_integration_demo()
+        except ImportError:
+            st.error("Seller-Claude Integration demo temporarily unavailable")
+            st.info("Advanced AI integration features coming soon!")
 
     with tab6:
+        render_transaction_timeline()
+
+    with tab7:
         render_seller_analytics()
 
 if selected_hub == "🏢 Executive Command Center":

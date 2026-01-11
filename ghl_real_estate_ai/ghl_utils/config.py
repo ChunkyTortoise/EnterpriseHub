@@ -113,6 +113,14 @@ class Settings(BaseSettings):
     previous_context_window_hours: int = 24
     rag_top_k_results: int = 3
 
+    # Enhanced Batched Processing Settings (Phase 3 Enhancement)
+    enable_webhook_batching: bool = True  # Master toggle for batched processing
+    webhook_max_batch_size: int = 5  # Maximum webhooks per batch
+    webhook_batch_timeout_seconds: float = 1.5  # Max time to wait for batch completion
+    webhook_batching_threshold: int = 2  # Minimum events to consider batching
+    webhook_conversation_window: float = 10.0  # Seconds to group conversation messages
+    webhook_location_window: float = 2.0  # Seconds to group location messages
+
     # Security
     ghl_webhook_secret: Optional[str] = None  # For signature verification
 

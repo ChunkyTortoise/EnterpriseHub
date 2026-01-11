@@ -1,0 +1,212 @@
+# Prometheus Alert Rules for EnterpriseHub AI Coaching Platform
+# Monitoring 99.95% uptime SLA and enterprise performance targets
+
+groups:
+  - name: sla_alerts
+    rules:
+      # 99.95% Uptime SLA Monitoring
+      - alert: ServiceAvailabilityBreach
+        expr: (1 - (rate(http_requests_total{job="ai-coaching-api",code=~"5.."}[5m]) / rate(http_requests_total{job="ai-coaching-api"}[5m]))) < 0.9995
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Service availability below 99.95% SLA"
+          description: "Current availability is {{ $value | humanizePercentage }}, below the 99.95% SLA threshold"
+
+      # API Response Time SLA (<200ms 95th percentile)
+      - alert: APIResponseTimeHigh
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="ai-coaching-api"}[5m])) > 0.2
+        for: 2m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "API response time above 200ms (95th percentile)"
+          description: "95th percentile response time is {{ $value }}s, exceeding 200ms target"
+
+      # ML Inference Time SLA (<500ms)
+      - alert: MLInferenceTimeLow
+        expr: histogram_quantile(0.95, rate(ml_inference_duration_seconds_bucket[5m])) > 0.5
+        for: 1m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "ML inference time above 500ms"
+          description: "ML inference taking {{ $value }}s, exceeding 500ms target"
+
+      # 1000+ Concurrent User Support
+      - alert: ConcurrentUserCapacityWarning
+        expr: active_websocket_connections > 800
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Approaching concurrent user capacity limit"
+          description: "{{ $value }} active connections, approaching 1000 user limit"
+
+      - alert: ConcurrentUserCapacityExceeded
+        expr: active_websocket_connections > 1000
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Concurrent user capacity exceeded"
+          description: "{{ $value }} active connections exceeds 1000 user capacity"
+
+  - name: infrastructure_alerts
+    rules:
+      # Redis Cluster Health
+      - alert: RedisClusterNodeDown
+        expr: up{job="redis-cluster"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Redis cluster node is down"
+          description: "Redis node {{ $labels.instance }} is down"
+
+      # Database Shard Health
+      - alert: DatabaseShardDown
+        expr: up{job="database-shards"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          team: database
+        annotations:
+          summary: "Database shard is down"
+          description: "Database shard {{ $labels.instance }} is down"
+
+      # High Database Connection Usage
+      - alert: DatabaseConnectionsHigh
+        expr: (postgres_stat_database_numbackends / postgres_settings_max_connections) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "Database connections usage high"
+          description: "Database connection usage is {{ $value | humanizePercentage }}"
+
+  - name: coaching_performance_alerts
+    rules:
+      # Coaching Session Success Rate (>95%)
+      - alert: CoachingSessionSuccessRateLow
+        expr: (rate(coaching_sessions_successful_total[5m]) / rate(coaching_sessions_total[5m])) < 0.95
+        for: 2m
+        labels:
+          severity: warning
+          team: coaching
+        annotations:
+          summary: "Coaching session success rate below 95%"
+          description: "Success rate is {{ $value | humanizePercentage }}, below 95% target"
+
+      # Training Time Reduction Target (50% improvement)
+      - alert: TrainingTimeReductionTarget
+        expr: avg(coaching_training_time_seconds) > (coaching_baseline_training_time_seconds * 0.5)
+        for: 10m
+        labels:
+          severity: warning
+          team: coaching
+        annotations:
+          summary: "Training time reduction target not met"
+          description: "Average training time {{ $value }}s exceeds 50% reduction target"
+
+      # Agent Productivity Increase (25% target)
+      - alert: AgentProductivityTarget
+        expr: (agent_productivity_score / agent_baseline_productivity_score) < 1.25
+        for: 15m
+        labels:
+          severity: warning
+          team: coaching
+        annotations:
+          summary: "Agent productivity increase target not met"
+          description: "Productivity increase is {{ $value | humanizePercentage }}, below 25% target"
+
+  - name: security_alerts
+    rules:
+      # PII Detection Rate
+      - alert: PIIDetectionFailures
+        expr: rate(pii_detection_failures_total[5m]) > 0.01
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "PII detection failures detected"
+          description: "{{ $value }} PII detection failures per second"
+
+      # Authentication Failures
+      - alert: HighAuthenticationFailures
+        expr: rate(authentication_failures_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "{{ $value }} authentication failures per second"
+
+      # Suspicious API Activity
+      - alert: SuspiciousAPIActivity
+        expr: rate(http_requests_total{code="429"}[5m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High rate of rate-limited requests"
+          description: "{{ $value }} rate-limited requests per second indicating potential abuse"
+
+  - name: business_metrics_alerts
+    rules:
+      # ROI Target Monitoring ($60K-90K annually)
+      - alert: ROITargetTracking
+        expr: coaching_roi_annual_value < 60000
+        for: 1h
+        labels:
+          severity: warning
+          team: business
+        annotations:
+          summary: "Coaching ROI below minimum target"
+          description: "Annual ROI value ${{ $value }} below $60K minimum target"
+
+      # Cost Optimization (20-30% reduction target)
+      - alert: CostOptimizationTarget
+        expr: (infrastructure_costs_current / infrastructure_costs_baseline) > 0.8
+        for: 30m
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "Cost optimization target not achieved"
+          description: "Current costs {{ $value | humanizePercentage }} of baseline, target <80%"
+
+  - name: deployment_alerts
+    rules:
+      # Blue-Green Deployment Health
+      - alert: DeploymentSwitchingTime
+        expr: deployment_switch_duration_seconds > 30
+        for: 1m
+        labels:
+          severity: warning
+          team: deployment
+        annotations:
+          summary: "Deployment switching time exceeded"
+          description: "Deployment switch took {{ $value }}s, exceeding 30s target"
+
+      # Rollback Trigger
+      - alert: DeploymentHealthCheckFailed
+        expr: deployment_health_check_success == 0
+        for: 30s
+        labels:
+          severity: critical
+          team: deployment
+        annotations:
+          summary: "Deployment health check failed"
+          description: "Health check failed, automatic rollback may be triggered"

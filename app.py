@@ -1,9 +1,10 @@
 """
 GHL Real Estate AI - Consolidated Hub Interface (Root Entry Point)
-Main Application with 5 Core Hubs
+Main Application with 5 Core Hubs - Enhanced with Enterprise Visual Theme
 """
 import streamlit as st
 import sys
+import asyncio
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -11,6 +12,13 @@ from pathlib import Path
 import json
 import os
 from utils.ui import sparkline
+
+# === ENTERPRISE THEME INTEGRATION ===
+try:
+    from ghl_real_estate_ai.design_system import inject_enterprise_theme
+    ENTERPRISE_THEME_AVAILABLE = True
+except ImportError:
+    ENTERPRISE_THEME_AVAILABLE = False
 
 # --- PATH CONFIGURATION ---
 BASE_DIR = Path(__file__).parent
@@ -27,6 +35,31 @@ class MockService:
     def __getattr__(self, name):
         def method(*args, **kwargs): return {}
         return method
+
+# Smart Navigation imports
+try:
+    from services.smart_navigation_service import (
+        initialize_smart_navigation,
+        render_smart_breadcrumbs,
+        render_contextual_actions,
+        update_nav_context
+    )
+    SMART_NAVIGATION_AVAILABLE = True
+except ImportError:
+    st.warning("Smart Navigation Service unavailable, using basic navigation.")
+    SMART_NAVIGATION_AVAILABLE = False
+
+# Enhanced Visualization imports
+try:
+    from services.enhanced_visualization_service import (
+        create_enhanced_visualizations,
+        generate_real_estate_charts,
+        ChartTheme
+    )
+    ENHANCED_VISUALIZATION_AVAILABLE = True
+except ImportError:
+    st.warning("Enhanced Visualization Service unavailable, using basic charts.")
+    ENHANCED_VISUALIZATION_AVAILABLE = False
 
 # Individual service imports with fallbacks
 try:
@@ -111,11 +144,62 @@ except ImportError:
     st.warning("Personalization unavailable, using mock.")
     AIContentPersonalizationService = MockService
 
+# Enhanced Performance Monitoring imports
+try:
+    from services.enhanced_performance_monitoring import (
+        EnhancedPerformanceMonitoringService,
+        track_model_performance,
+        get_performance_summary,
+        start_background_monitoring
+    )
+    PERFORMANCE_MONITORING_AVAILABLE = True
+except ImportError:
+    st.warning("Enhanced Performance Monitoring unavailable, using mock.")
+    PERFORMANCE_MONITORING_AVAILABLE = False
+    EnhancedPerformanceMonitoringService = MockService
+
 try:
     from services.workflow_marketplace import WorkflowMarketplace
 except ImportError:
     st.warning("Workflow Marketplace unavailable, using mock.")
     WorkflowMarketplace = MockService
+
+# User Onboarding Service imports
+try:
+    from services.user_onboarding_service import (
+        initialize_onboarding,
+        render_onboarding_trigger,
+        render_contextual_help,
+        handle_onboarding_flow
+    )
+    USER_ONBOARDING_AVAILABLE = True
+except ImportError:
+    st.warning("User Onboarding Service unavailable, basic onboarding only.")
+    USER_ONBOARDING_AVAILABLE = False
+
+# Unified Workflow Engine imports
+try:
+    from services.unified_workflow_engine import (
+        initialize_workflow_engine,
+        render_workflow_dashboard,
+        UnifiedWorkflowEngine
+    )
+    UNIFIED_WORKFLOW_AVAILABLE = True
+except ImportError:
+    st.warning("Unified Workflow Engine unavailable, using basic automation.")
+    UNIFIED_WORKFLOW_AVAILABLE = False
+
+# Advanced Dashboard Suite imports
+try:
+    from services.advanced_dashboard_suite import (
+        initialize_dashboard_suite,
+        render_advanced_dashboards,
+        AdvancedDashboardSuite
+    )
+    ADVANCED_DASHBOARD_AVAILABLE = True
+except ImportError:
+    st.warning("Advanced Dashboard Suite unavailable, using basic dashboards.")
+    ADVANCED_DASHBOARD_AVAILABLE = False
 
 try:
     from services.auto_followup_sequences import AutoFollowupSequences
@@ -129,6 +213,20 @@ except ImportError:
     st.warning("Analytics Engine unavailable, using mock.")
     AnalyticsEngine = MockService
 
+try:
+    from services.enhanced_lead_scorer import EnhancedLeadScorer
+    from services.churn_prediction_engine import ChurnPredictionEngine
+    from services.enhanced_property_matcher import EnhancedPropertyMatcher
+    from services.advanced_workflow_engine import AdvancedWorkflowEngine
+    from services.behavioral_weighting_engine import BehavioralWeightingEngine
+    from services.memory_service import MemoryService
+    from services.lead_lifecycle import LeadLifecycleTracker
+    from services.behavioral_triggers import BehavioralTriggerEngine
+    ENHANCED_SERVICES_AVAILABLE = True
+except ImportError as e:
+    st.warning(f"Enhanced services partially unavailable: {e}")
+    ENHANCED_SERVICES_AVAILABLE = False
+
 # Helper function to load data
 def load_mock_data():
     data_path = PROJECT_ROOT / "data" / "mock_analytics.json"
@@ -140,7 +238,7 @@ def load_mock_data():
 # Initialize services
 @st.cache_resource
 def get_services():
-    return {
+    base_services = {
         "lead_scorer": LeadScorer(),
         "segmentation": AISmartSegmentationService(),
         "predictive_scorer": PredictiveLeadScorer(),
@@ -158,6 +256,30 @@ def get_services():
         "marketplace": WorkflowMarketplace(),
         "analytics": AnalyticsEngine()
     }
+    
+    if ENHANCED_SERVICES_AVAILABLE:
+        try:
+            # Core support services for enhanced engine
+            memory = MemoryService()
+            lifecycle = LeadLifecycleTracker()
+            behavioral = BehavioralTriggerEngine()
+            
+            base_services.update({
+                "enhanced_lead_scorer": EnhancedLeadScorer(),
+                "churn_prediction": ChurnPredictionEngine(
+                    memory_service=memory,
+                    lifecycle_tracker=lifecycle,
+                    behavioral_engine=behavioral,
+                    lead_scorer=base_services["lead_scorer"]
+                ),
+                "enhanced_property_matcher": EnhancedPropertyMatcher(),
+                "workflow_engine": AdvancedWorkflowEngine(),
+                "behavioral_weighting": BehavioralWeightingEngine()
+            })
+        except Exception as e:
+            st.error(f"Error initializing enhanced services: {e}")
+            
+    return base_services
 
 services = get_services()
 mock_data = load_mock_data()
@@ -180,7 +302,7 @@ if "prompt_versions" not in st.session_state:
 # Page config
 st.set_page_config(
     page_title="GHL Real Estate AI - Jorge Salas",
-    page_icon="🏠",
+    page_icon="■",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
@@ -188,98 +310,31 @@ st.set_page_config(
     }
 )
 
+# === INJECT ENTERPRISE THEME ===
+if ENTERPRISE_THEME_AVAILABLE:
+    inject_enterprise_theme()
+
 # Load custom CSS
-css_path = PROJECT_ROOT / "streamlit_demo" / "assets" / "styles.css"
+css_path = PROJECT_ROOT / "streamlit_demo" / "assets" / "styles_dark_lux.css"
 if css_path.exists():
     with open(css_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Enhanced premium branding header with animations
-st.markdown("""
-<div style='background: linear-gradient(135deg, #006AFF 0%, #0047AB 100%); 
-            padding: 3rem 2.5rem; 
-            border-radius: 20px; 
-            margin-bottom: 2.5rem; 
-            color: white;
-            box-shadow: 0 20px 40px rgba(0, 106, 255, 0.3);
-            position: relative;
-            overflow: hidden;'>
-    <!-- Animated background pattern -->
-    <!-- Header verified -->
-    <div style='position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
-                background-image: 
-                    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-                opacity: 0.6;'></div>
-    
-    <div style='position: relative; z-index: 1;'>
-        <div style='display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem;'>
-            <div style='font-size: 4rem; line-height: 1;'>🏠</div>
-            <div>
-                <h1 style='margin: 0; font-size: 2.75rem; font-weight: 800; color: white; 
-                           text-shadow: 0 2px 10px rgba(0,0,0,0.2);'>
-                    GHL Real Estate AI
-                </h1>
-                <p style='margin: 0.25rem 0 0 0; font-size: 1.15rem; opacity: 0.95; font-weight: 500;'>
-                    Enterprise Command Center
-                </p>
-            </div>
-        </div>
-        
-        <p style='margin: 1.5rem 0; font-size: 1.05rem; opacity: 0.9; max-width: 800px;'>
-            Professional AI-powered lead qualification and automation system for <strong>Jorge Salas</strong>
-        </p>
-        
-        <div style='margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;'>
-            <div style='background: rgba(255,255,255,0.25); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
-                <span style='font-size: 1.2rem;'>✅</span>
-                <span style='font-weight: 600;'>AI Mode: Active</span>
-            </div>
-            <div style='background: rgba(255,255,255,0.25); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
-                <span style='font-size: 1.2rem;'>🔗</span>
-                <span style='font-weight: 600;'>GHL Sync: Live</span>
-            </div>
-            <div style='background: rgba(255,255,255,0.25); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
-                <span style='font-size: 1.2rem;'>📊</span>
-                <span style='font-weight: 600;'>Multi-Tenant Ready</span>
-            </div>
-            <div style='background: rgba(16, 185, 129, 0.9); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                        animation: pulse 2s ease-in-out infinite;'>
-                <span style='font-size: 1.2rem;'>🚀</span>
-                <span style='font-weight: 700;'>5 Hubs Live</span>
-            </div>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+# Application Header
+st.title("🏠 GHL Real Estate AI")
+st.markdown("**ENTERPRISE COMMAND CENTER**")
+st.markdown("Professional AI-powered lead qualification and automation system for **Jorge Salas**")
+
+# Status indicators
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.success("🤖 AI Mode Active")
+with col2:
+    st.info("🔗 GHL Integration Live")
+with col3:
+    st.warning("🏢 Multi-Tenant Ready")
+
+st.divider()
 
 # Initialize session state for hub navigation
 if 'current_hub' not in st.session_state:
@@ -287,14 +342,14 @@ if 'current_hub' not in st.session_state:
 
 # Sidebar navigation
 with st.sidebar:
-    st.markdown("### 🎯 Navigation")
-    
+    st.markdown("### Navigation")
+
     hub_options = [
-        "🏢 Executive Command Center",
-        "🧠 Lead Intelligence Hub",
-        "🤖 Automation Studio",
-        "💰 Sales Copilot",
-        "📈 Ops & Optimization"
+        "Executive Command Center",
+        "Lead Intelligence Hub",
+        "Automation Studio",
+        "Sales Copilot",
+        "Ops & Optimization"
     ]
     
     # Calculate index safely
@@ -313,12 +368,12 @@ with st.sidebar:
     st.session_state.current_hub = selected_hub
     
     st.markdown("---")
-    
+
     # Quick actions
-    st.markdown("### ⚡ Quick Actions")
-    if st.button("🔄 Refresh Data", use_container_width=True):
+    st.markdown("### Quick Actions")
+    if st.button("Refresh Data", use_container_width=True):
         st.rerun()
-    
+
     # Export functionality
     metrics_data = {
         "Metric": ["Total Pipeline", "Hot Leads", "Conversion Rate", "Avg Deal Size"],
@@ -327,9 +382,9 @@ with st.sidebar:
     }
     df_metrics = pd.DataFrame(metrics_data)
     csv = df_metrics.to_csv(index=False).encode('utf-8')
-    
+
     st.download_button(
-        "📥 Export Report",
+        "Export Report",
         data=csv,
         file_name="executive_metrics.csv",
         mime="text/csv",
@@ -339,7 +394,7 @@ with st.sidebar:
     st.markdown("---")
     
     # Global AI Configuration (Synced State)
-    with st.expander("⚙️ AI Configuration", expanded=True):
+    with st.expander("AI Configuration", expanded=True):
         new_market = st.selectbox(
             "Target Market",
             ["Austin, TX", "Dallas, TX", "Houston, TX", "San Antonio, TX"],
@@ -361,29 +416,33 @@ with st.sidebar:
         )
         if tone != st.session_state.ai_config["voice_tone"]:
             st.session_state.ai_config["voice_tone"] = tone
-            st.toast(f"Voice tone updated to {tone}", icon="🤖")
+            st.toast(f"Voice tone updated to {tone}")
 
     st.markdown("---")
-    
+
     # System status with Sparklines
-    st.markdown("### 📊 System Health")
+    st.markdown("### System Health")
     
     # Active Leads Sparkline
     c1, c2 = st.columns([1.5, 1])
     with c1:
         st.metric("Active Leads", "47", "+12")
     with c2:
-        st.plotly_chart(sparkline([10, 15, 12, 25, 30, 42, 47], color="#2563eb", height=50), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(sparkline([10, 15, 12, 25, 30, 42, 47], color="#3b82f6", height=50), use_container_width=True, config={'displayModeBar': False})
         
     # AI Conversations Sparkline
     c3, c4 = st.columns([1.5, 1])
     with c3:
         st.metric("AI Convos", "156", "+23")
     with c4:
-        st.plotly_chart(sparkline([80, 95, 110, 105, 130, 145, 156], color="#16a34a", height=50), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(sparkline([80, 95, 110, 105, 130, 145, 156], color="#10b981", height=50), use_container_width=True, config={'displayModeBar': False})
     
+    # User Onboarding Trigger
+    if USER_ONBOARDING_AVAILABLE:
+        render_onboarding_trigger()
+
     st.markdown("---")
-    st.markdown("### 📡 Live Feed")
+    st.markdown("### Live Feed")
     st.markdown("""
     <div style="font-size: 0.8rem; color: #666;">
     Creating contract for <b>John Doe</b><br>
@@ -395,39 +454,83 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# Main content area
-if selected_hub == "🏢 Executive Command Center":
-    st.header("🏢 Executive Command Center")
+# Initialize Smart Navigation
+if SMART_NAVIGATION_AVAILABLE:
+    smart_nav = initialize_smart_navigation()
+
+# Initialize Enhanced Visualizations
+if ENHANCED_VISUALIZATION_AVAILABLE:
+    viz_service = create_enhanced_visualizations()
+
+# Handle active onboarding flow (overlay)
+if USER_ONBOARDING_AVAILABLE:
+    handle_onboarding_flow()
+
+# Main content area with enhanced navigation
+if selected_hub == "Executive Command Center":
+    # Update navigation context
+    if SMART_NAVIGATION_AVAILABLE:
+        update_nav_context("executive", hub="Executive Command Center", section="dashboard")
+
+        # Render breadcrumb navigation
+        render_smart_breadcrumbs()
+
+        # Render contextual actions sidebar
+        with st.sidebar:
+            st.markdown("---")
+            render_contextual_actions("executive")
+
+    # Contextual Help for Executive Hub
+    if USER_ONBOARDING_AVAILABLE:
+        render_contextual_help("executive")
+
+    st.header("Executive Command Center")
     st.markdown("*High-level KPIs, revenue tracking, and system health*")
-    
+
     # Tabs for sub-features
-    tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "🎯 AI Insights", "📄 Reports"])
-    
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Dashboard", "Advanced Analytics", "AI Insights", "Reports", "Performance Monitoring"])
+
     with tab1:
-        st.subheader("Executive Dashboard")
+        st.subheader("Executive Command Center")
         
-        # Key metrics
-        col1, col2, col3, col4 = st.columns(4)
+        # Executive Metrics Dashboard
+        col1, col2, col3 = st.columns(3)
+
         with col1:
-            st.metric("Total Pipeline", "$2.4M", "+15%")
+            st.metric(
+                label="Total Pipeline",
+                value="$2.4M",
+                delta="+15%",
+                help="Across 47 active properties"
+            )
+
         with col2:
-            st.metric("Hot Leads", "23", "+8")
+            st.metric(
+                label="Hot Leads",
+                value="23",
+                delta="+8",
+                help="Ready for immediate conversion"
+            )
+
         with col3:
-            st.metric("Conversion Rate", "34%", "+2%")
-        with col4:
-            st.metric("Avg Deal Size", "$385K", "+$12K")
+            st.metric(
+                label="Conversion Rate",
+                value="34%",
+                delta="+2%",
+                help="AI-assisted closing efficiency"
+            )
         
-        st.markdown("---")
+        st.markdown("<br>", unsafe_allow_html=True)
         
-        # Enterprise Color Palette
+        # Enterprise Color Palette (Dark Lux)
         COLORS = {
-            'primary': '#2563eb',
-            'secondary': '#64748b',
-            'success': '#22c55e',
-            'warning': '#f59e0b',
-            'danger': '#ef4444',
-            'text': '#1e293b',
-            'grid': '#e2e8f0'
+            'primary': '#3b82f6',    # Blue 500
+            'secondary': '#94a3b8',  # Slate 400
+            'success': '#10b981',    # Emerald 500
+            'warning': '#f59e0b',    # Amber 500
+            'danger': '#ef4444',     # Red 500
+            'text': '#f8fafc',       # Slate 50
+            'grid': 'rgba(255,255,255,0.1)'
         }
 
         # Mock data for revenue trends
@@ -458,7 +561,7 @@ if selected_hub == "🏢 Executive Command Center":
         
         fig.update_layout(
             title="<b>Revenue Performance vs Target</b>",
-            template="plotly_white",
+            template="plotly_dark",
             margin=dict(l=20, r=20, t=60, b=20),
             height=350,
             paper_bgcolor='rgba(0,0,0,0)',
@@ -469,8 +572,33 @@ if selected_hub == "🏢 Executive Command Center":
             yaxis=dict(gridcolor=COLORS['grid'])
         )
         st.plotly_chart(fig, use_container_width=True)
-        
+
     with tab2:
+        # Advanced Analytics Dashboard Suite
+        if ADVANCED_DASHBOARD_AVAILABLE:
+            render_advanced_dashboards()
+        else:
+            st.warning("Advanced Dashboard Suite unavailable")
+            st.info("**Available in full version:**\n\n"
+                   "- Cross-hub analytics correlation\n"
+                   "- Predictive insights and forecasting\n"
+                   "- Custom dashboard builder\n"
+                   "- AI-powered anomaly detection\n"
+                   "- ROI attribution analysis\n"
+                   "- Real-time performance monitoring")
+
+            # Show basic preview
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Cross-Hub Correlation", "78%", "+5%")
+            with col2:
+                st.metric("Prediction Accuracy", "94%", "+2%")
+            with col3:
+                st.metric("Custom Dashboards", "12", "+3")
+            with col4:
+                st.metric("Anomalies Detected", "2", "-1")
+
+    with tab3:
         st.subheader("AI System Insights")
         
         # Get dynamic insights
@@ -499,7 +627,60 @@ if selected_hub == "🏢 Executive Command Center":
             c2.metric("Avg Latency", f"{health['avg_response_time_ms']}ms")
             c3.metric("SMS Compliance", f"{health['sms_compliance_rate']*100}%")
 
-    with tab3:
+        # Enhanced Real Estate Visualizations
+        if ENHANCED_VISUALIZATION_AVAILABLE:
+            st.markdown("---")
+            st.markdown("#### 🎯 Enhanced Analytics Dashboard")
+
+            viz_col1, viz_col2 = st.columns(2)
+
+            with viz_col1:
+                # Lead Conversion Funnel
+                funnel_data = {
+                    "Website Visitors": 2840,
+                    "Lead Inquiries": 485,
+                    "Qualified Leads": 156,
+                    "Appointments": 89,
+                    "Contracts": 23
+                }
+                funnel_fig = viz_service.generate_conversion_funnel(
+                    funnel_data,
+                    title="Lead Conversion Funnel",
+                    height=300
+                )
+                st.plotly_chart(funnel_fig, use_container_width=True)
+
+            with viz_col2:
+                # Commission Analysis
+                commission_data = {
+                    "breakdown": {
+                        "Buyer Commission": 125000,
+                        "Seller Commission": 95000,
+                        "Referral Fees": 15000,
+                        "Other Revenue": 8000
+                    },
+                    "monthly_trend": {
+                        "Jan": 45000,
+                        "Feb": 52000,
+                        "Mar": 48000,
+                        "Apr": 58000,
+                        "May": 65000,
+                        "Jun": 72000
+                    },
+                    "deal_sizes": [15000, 18000, 22000, 16000, 25000, 19000, 21000, 17000, 23000, 20000],
+                    "projections": {
+                        "Q1": {"projected": 150000, "actual": 145000},
+                        "Q2": {"projected": 170000, "actual": 175000}
+                    }
+                }
+                commission_fig = viz_service.generate_commission_analysis(
+                    commission_data,
+                    title="Commission Analysis",
+                    height=300
+                )
+                st.plotly_chart(commission_fig, use_container_width=True)
+
+    with tab4:
         st.subheader("Actionable Executive Report")
         
         action_items = summary.get("action_items", [])
@@ -524,15 +705,238 @@ if selected_hub == "🏢 Executive Command Center":
         if st.button("📧 Email Report to Jorge"):
             st.toast("Report sent to jorge@example.com")
 
-elif selected_hub == "🧠 Lead Intelligence Hub":
-    st.header("🧠 Lead Intelligence Hub")
+    with tab5:
+        st.subheader("Performance Monitoring & ML Model Tracking")
+        st.markdown("*Real-time system health, ML model performance, and optimization insights*")
+
+        if PERFORMANCE_MONITORING_AVAILABLE:
+            # Performance monitoring dashboard
+            try:
+                # Get performance data
+                performance_data = asyncio.run(get_performance_summary())
+
+                # System Health Overview
+                st.markdown("### 🖥️ System Health Overview")
+                col1, col2, col3, col4 = st.columns(4)
+
+                system_metrics = performance_data.get('system_metrics', {})
+
+                with col1:
+                    cpu_usage = system_metrics.get('cpu_usage', 0)
+                    cpu_color = '🔴' if cpu_usage > 80 else '🟡' if cpu_usage > 60 else '🟢'
+                    st.metric(
+                        label="CPU Usage",
+                        value=f"{cpu_usage:.1f}%",
+                        help=f"{cpu_color} System CPU utilization"
+                    )
+
+                with col2:
+                    memory_usage = system_metrics.get('memory_usage', 0)
+                    memory_color = '🔴' if memory_usage > 85 else '🟡' if memory_usage > 70 else '🟢'
+                    st.metric(
+                        label="Memory Usage",
+                        value=f"{memory_usage:.1f}%",
+                        help=f"{memory_color} System memory utilization"
+                    )
+
+                with col3:
+                    api_response = system_metrics.get('api_response_time', 0)
+                    api_color = '🔴' if api_response > 500 else '🟡' if api_response > 200 else '🟢'
+                    st.metric(
+                        label="API Response",
+                        value=f"{api_response:.0f}ms",
+                        help=f"{api_color} Average API response time"
+                    )
+
+                with col4:
+                    active_sessions = system_metrics.get('active_sessions', 0)
+                    st.metric(
+                        label="Active Sessions",
+                        value=str(active_sessions),
+                        help="Currently active user sessions"
+                    )
+
+                st.markdown("---")
+
+                # ML Model Performance
+                st.markdown("### 🧠 ML Model Performance")
+
+                ml_models = performance_data.get('ml_models', {})
+                models_list = ml_models.get('models', [])
+
+                if models_list:
+                    # Create model performance table
+                    model_df = pd.DataFrame([
+                        {
+                            'Model ID': model.get('model_id', 'Unknown'),
+                            'Accuracy': f"{model.get('accuracy', 0):.2%}",
+                            'Latency (ms)': f"{model.get('latency_ms', 0):.1f}",
+                            'Predictions': f"{model.get('predictions_count', 0):,}",
+                            'Status': '🟢 Healthy' if model.get('accuracy', 0) > 0.95 else '🟡 Warning'
+                        }
+                        for model in models_list[:5]  # Show top 5 models
+                    ])
+
+                    st.dataframe(
+                        model_df,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                else:
+                    st.info("No ML model performance data available. Models will appear here once tracking starts.")
+
+                st.markdown("---")
+
+                # Alerts and Recommendations
+                col_alerts, col_recommendations = st.columns(2)
+
+                with col_alerts:
+                    st.markdown("### 🚨 Recent Alerts")
+                    alerts = performance_data.get('alerts', {})
+
+                    if alerts.get('recent'):
+                        for alert in alerts['recent'][:3]:
+                            severity = alert.get('severity', 'info')
+                            severity_icon = '🔴' if severity == 'critical' else '🟡' if severity == 'warning' else '🔵'
+                            st.warning(f"{severity_icon} **{alert.get('component', 'System')}**: {alert.get('message', 'Alert')}")
+                    else:
+                        st.success("🟢 No recent alerts - system running smoothly!")
+
+                with col_recommendations:
+                    st.markdown("### 💡 Optimization Recommendations")
+                    recommendations = performance_data.get('recommendations', {})
+
+                    if recommendations:
+                        for category, rec_list in recommendations.items():
+                            with st.expander(f"📈 {category.title()} Optimization"):
+                                for rec in rec_list[:3]:
+                                    st.markdown(f"• {rec}")
+                    else:
+                        st.success("🟢 No optimization recommendations at this time!")
+
+                # Performance Trends (Mock Data for Demo)
+                st.markdown("---")
+                st.markdown("### 📊 Performance Trends")
+
+                # Create sample trend data
+                dates = pd.date_range(end=pd.Timestamp.now(), periods=24, freq='H')
+                trend_data = pd.DataFrame({
+                    'Time': dates,
+                    'CPU %': np.random.normal(45, 10, 24),
+                    'Memory %': np.random.normal(65, 8, 24),
+                    'API Latency (ms)': np.random.normal(120, 30, 24)
+                })
+
+                # Performance trends chart
+                fig_trends = go.Figure()
+
+                fig_trends.add_trace(go.Scatter(
+                    x=trend_data['Time'],
+                    y=trend_data['CPU %'],
+                    name='CPU Usage',
+                    line=dict(color='#3b82f6', width=2),
+                    yaxis='y1'
+                ))
+
+                fig_trends.add_trace(go.Scatter(
+                    x=trend_data['Time'],
+                    y=trend_data['Memory %'],
+                    name='Memory Usage',
+                    line=dict(color='#10b981', width=2),
+                    yaxis='y1'
+                ))
+
+                fig_trends.add_trace(go.Scatter(
+                    x=trend_data['Time'],
+                    y=trend_data['API Latency (ms)'],
+                    name='API Latency',
+                    line=dict(color='#f59e0b', width=2),
+                    yaxis='y2'
+                ))
+
+                fig_trends.update_layout(
+                    title="System Performance Trends (24 Hours)",
+                    xaxis_title="Time",
+                    yaxis=dict(
+                        title="Percentage (%)",
+                        side="left",
+                        range=[0, 100]
+                    ),
+                    yaxis2=dict(
+                        title="Latency (ms)",
+                        side="right",
+                        overlaying="y",
+                        range=[0, 300]
+                    ),
+                    hovermode='x unified',
+                    template='plotly_dark',
+                    showlegend=True,
+                    height=400
+                )
+
+                st.plotly_chart(fig_trends, use_container_width=True)
+
+                # Real-time monitoring toggle
+                st.markdown("---")
+                col_toggle, col_status = st.columns([1, 2])
+
+                with col_toggle:
+                    if st.button("🔄 Start Real-time Monitoring"):
+                        try:
+                            start_background_monitoring(interval_seconds=30)
+                            st.success("✅ Real-time monitoring started!")
+                        except Exception as e:
+                            st.error(f"❌ Failed to start monitoring: {e}")
+
+                with col_status:
+                    monitoring_active = performance_data.get('monitoring_status', False)
+                    status_text = "🟢 Active" if monitoring_active else "🔴 Inactive"
+                    st.markdown(f"**Monitoring Status**: {status_text}")
+
+                    if performance_data.get('last_updated'):
+                        st.caption(f"Last updated: {performance_data['last_updated']}")
+
+            except Exception as e:
+                st.error(f"Error loading performance data: {e}")
+                st.info("💡 Performance monitoring service may need initialization.")
+        else:
+            st.warning("⚠️ Enhanced Performance Monitoring service is not available.")
+            st.markdown("""
+            **Features when available:**
+            - Real-time system health monitoring
+            - ML model performance tracking
+            - Automated drift detection
+            - Performance optimization recommendations
+            - Resource usage analytics
+            - Automated alerting system
+            """)
+
+elif selected_hub == "Lead Intelligence Hub":
+    # Update navigation context
+    if SMART_NAVIGATION_AVAILABLE:
+        update_nav_context("leads", hub="Lead Intelligence Hub", section="scoring")
+
+        # Render breadcrumb navigation
+        render_smart_breadcrumbs()
+
+        # Render contextual actions sidebar
+        with st.sidebar:
+            st.markdown("---")
+            render_contextual_actions("leads")
+
+    # Contextual Help for Leads Hub
+    if USER_ONBOARDING_AVAILABLE:
+        render_contextual_help("leads")
+
+    st.header("Lead Intelligence Hub")
     st.markdown("*Deep dive into individual leads with AI-powered insights*")
-    
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🎯 Lead Scoring",
-        "📊 Segmentation",
-        "🎨 Personalization",
-        "🔮 Predictions"
+
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "Lead Scoring",
+        "Churn Risk",
+        "Segmentation",
+        "Personalization",
+        "Predictions"
     ])
     
     with tab1:
@@ -541,22 +945,41 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         col_map, col_details = st.columns([1, 1])
         
         with col_map:
-            st.markdown("#### 📍 Hot Lead Clusters")
-            # Generate mock map data
-            map_data = pd.DataFrame({
-                'lat': [30.2672, 30.2700, 30.2500, 30.2800, 30.2600],
-                'lon': [-97.7431, -97.7500, -97.7300, -97.7600, -97.7400],
-                'type': ['Hot', 'Hot', 'Warm', 'Cold', 'Hot'],
-                'value': [100, 80, 50, 20, 90]
-            })
-            
-            st.map(map_data, zoom=11, use_container_width=True)
+            st.markdown("#### 📍 Lead Density Heatmap")
+
+            if ENHANCED_VISUALIZATION_AVAILABLE:
+                # Enhanced geographic heatmap
+                location_data = pd.DataFrame({
+                    'lat': [30.2672, 30.2700, 30.2500, 30.2800, 30.2600, 30.2680, 30.2720, 30.2540],
+                    'lon': [-97.7431, -97.7500, -97.7300, -97.7600, -97.7400, -97.7420, -97.7480, -97.7320],
+                    'lead_density': [95, 88, 65, 45, 92, 78, 85, 58],
+                    'location_name': ['Downtown', 'Westlake', 'East Austin', 'North Austin', 'South Austin', 'Central', 'West Campus', 'Mueller']
+                })
+
+                heatmap_fig = viz_service.generate_lead_density_map(
+                    location_data,
+                    metric='lead_density',
+                    title="Lead Density Analysis",
+                    height=400
+                )
+                st.plotly_chart(heatmap_fig, use_container_width=True)
+            else:
+                # Fallback to basic map
+                map_data = pd.DataFrame({
+                    'lat': [30.2672, 30.2700, 30.2500, 30.2800, 30.2600],
+                    'lon': [-97.7431, -97.7500, -97.7300, -97.7600, -97.7400],
+                    'type': ['Hot', 'Hot', 'Warm', 'Cold', 'Hot'],
+                    'value': [100, 80, 50, 20, 90]
+                })
+                st.map(map_data, zoom=11, use_container_width=True)
+
             st.caption("Real-time visualization of high-value lead activity")
 
         with col_details:
             # Lead selector with mapping to context
             lead_options = {
             "Sarah Johnson": {
+                "id": "lead_001",
                 "extracted_preferences": {
                     "budget": 400000,
                     "location": "Downtown",
@@ -570,6 +993,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
                 }
             },
             "Mike Chen": {
+                "id": "lead_002",
                 "extracted_preferences": {
                     "location": "Suburbs",
                     "timeline": "6 months",
@@ -577,6 +1001,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
                 }
             },
             "Emily Davis": {
+                "id": "lead_003",
                 "extracted_preferences": {
                     "budget": 300000
                 }
@@ -590,12 +1015,24 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         
         # Calculate Score using centralized service
         lead_context = lead_options[selected_lead_name]
-        result = services["lead_scorer"].calculate_with_reasoning(lead_context)
+        
+        if "enhanced_lead_scorer" in services:
+            with st.spinner("Calculating enhanced lead score..."):
+                result_obj = asyncio.run(services["enhanced_lead_scorer"].score_lead(
+                    lead_context.get("id", "unknown"), lead_context
+                ))
+                score = round(result_obj.final_score / 100 * 7, 1) # Map back to 0-7 for UI consistency
+                classification = result_obj.classification
+                reasoning = result_obj.reasoning
+                rec_actions = result_obj.recommended_actions
+        else:
+            result = services["lead_scorer"].calculate_with_reasoning(lead_context)
+            score = result["score"]
+            classification = result["classification"]
+            reasoning = result["reasoning"]
+            rec_actions = result["recommended_actions"]
         
         # Display Results
-        score = result["score"]
-        classification = result["classification"]
-        
         if classification == "hot":
             st.success(f"🔥 **Hot Lead** - Score: {score}/7 Questions Answered")
         elif classification == "warm":
@@ -612,13 +1049,51 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
             st.metric("Lead Intent", "Calculated", "")
         
         st.markdown("#### AI Analysis Breakdown")
-        st.info(f"**Qualifying Data Found:** {result['reasoning']}")
+        st.info(f"**Qualifying Data Found:** {reasoning}")
         
         st.markdown("#### Recommended Actions")
-        for action in result["recommended_actions"]:
+        for action in rec_actions:
             st.markdown(f"- {action}")
-    
+
     with tab2:
+        st.subheader("🚨 Churn Early Warning")
+        st.markdown("*Predictive analysis of lead abandonment risk*")
+        
+        if "churn_prediction" in services:
+            with st.spinner("Analyzing churn risk factors..."):
+                lead_id = lead_options[selected_lead_name].get("id", "unknown")
+                churn_result = asyncio.run(services["churn_prediction"].predict_churn_risk(lead_id))
+                
+                c1, c2, c3 = st.columns(3)
+                
+                # Gauge-style metric for risk
+                risk_color = "#ef4444" if churn_result.risk_score_14d > 60 else "#f59e0b" if churn_result.risk_score_14d > 30 else "#10b981"
+                
+                with c1:
+                    st.metric("14-Day Churn Risk", f"{churn_result.risk_score_14d:.1f}%", delta=None)
+                with c2:
+                    st.metric("Risk Tier", churn_result.risk_tier.value.upper())
+                with c3:
+                    st.metric("Model Confidence", f"{churn_result.confidence*100:.0f}%")
+                
+                st.markdown("---")
+                col_factors, col_actions = st.columns(2)
+                
+                with col_factors:
+                    st.markdown("#### 🔍 Top Risk Factors")
+                    for factor, importance in churn_result.top_risk_factors[:5]:
+                        st.write(f"**{factor.replace('_', ' ').title()}**: {importance:.2f}")
+                        st.progress(min(1.0, importance * 2)) # Scale for visibility
+                
+                with col_actions:
+                    st.markdown("#### ⚡ Recommended Interventions")
+                    for action in churn_result.recommended_actions:
+                        st.info(f"✅ {action}")
+        else:
+            st.warning("Churn prediction service unavailable.")
+            st.info("The full Churn Prediction Engine provides 26 behavioral features and multi-horizon risk scoring.")
+    
+    with tab3:
         st.subheader("Smart Segmentation")
         
         # Prepare lead data from mock_data
@@ -666,7 +1141,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         else:
             st.info("No lead data available for segmentation.")
         
-    with tab3:
+    with tab4:
         st.subheader("Content Personalization")
         
         selected_lead_p = st.selectbox("Select Lead for Personalization:", list(lead_options.keys()), key="p_lead")
@@ -692,15 +1167,47 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         
         st.write(f"**Strategy:** {p_result['personalization_suite']['overall_strategy']['focus']}")
         
-        st.markdown("#### 🏠 Recommended Properties")
-        recs = p_result["personalization_suite"]["properties"]["recommendations"]
-        cols = st.columns(len(recs))
-        for i, rec in enumerate(recs):
-            with cols[i]:
-                st.write(f"**{rec['title']}**")
-                st.write(f"${rec['price']:,.0f}")
-                st.caption(rec['why_recommended'])
-                st.button(f"View {rec['property_id']}", key=f"btn_{rec['property_id']}")
+        if "enhanced_property_matcher" in services:
+            st.markdown("#### 🚀 Enhanced Property Matches (15-Factor AI)")
+            enhanced_matches = services["enhanced_property_matcher"].find_enhanced_matches(
+                lead_data_p.get("preferences", {}), limit=3
+            )
+            
+            # Bento Grid Layout
+            cols = st.columns(3)
+            for i, match in enumerate(enhanced_matches):
+                with cols[i]:
+                    st.markdown(f"""
+                    <div class="bento-item">
+                        <div class="bento-header">
+                            <div class="bento-title">🏠 {match.property['address']['neighborhood']}</div>
+                            <div class="bento-badge">{int(match.overall_score*100)}% Match</div>
+                        </div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: #3b82f6; margin-bottom: 0.5rem;">
+                            ${match.property['price']:,}
+                        </div>
+                        <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem; flex-grow: 1;">
+                            {match.reasoning.primary_strengths[0] if match.reasoning.primary_strengths else 'Top choice for your profile'}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
+                            <div style="font-size: 0.75rem; color: #64748b;">
+                                Prob: <b>{match.predicted_showing_request:.1%}</b>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    if st.button(f"View Details {i}", key=f"details_{i}", use_container_width=True):
+                        st.info(f"Showing details for {match.property['address']['street']}")
+        else:
+            st.markdown("#### 🏠 Recommended Properties")
+            recs = p_result["personalization_suite"]["properties"]["recommendations"]
+            cols = st.columns(len(recs))
+            for i, rec in enumerate(recs):
+                with cols[i]:
+                    st.write(f"**{rec['title']}**")
+                    st.write(f"${rec['price']:,.0f}")
+                    st.caption(rec['why_recommended'])
+                    st.button(f"View {rec['property_id']}", key=f"btn_{rec['property_id']}")
 
         st.markdown("---")
         st.markdown("#### 🔗 Shareable Client Portal")
@@ -714,7 +1221,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
             if st.button("📱 SMS Link", use_container_width=True):
                 st.toast("Link sent via SMS!", icon="📨")
 
-    with tab4:
+    with tab5:
         st.subheader("Predictive Scoring")
         
         selected_lead_pred = st.selectbox("Select Lead for Prediction:", list(lead_options.keys()), key="pred_lead")
@@ -753,144 +1260,183 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
         for rec in pred_result.recommendations:
             st.markdown(f"- {rec}")
 
-elif selected_hub == "🤖 Automation Studio":
-    st.header("🤖 Automation Studio")
-    st.markdown("*Visual switchboard to toggle AI features on/off*")
-    
-    tab1, tab2, tab3, tab4 = st.tabs(["⚙️ Automations", "📧 Sequences", "🔄 Workflows", "🧪 AI Training Lab"])
-    
-    with tab1:
-        st.subheader("AI Automation Control Panel")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### 🤖 Smart AI Features")
-            
-            ai_assistant = st.toggle("AI Assistant (Qualification)", value=True)
-            if ai_assistant:
-                st.success("✅ Active - Qualifying new leads via SMS")
-            else:
-                st.warning("⚠️ Inactive - Manual qualification required")
-            
-            auto_followup = st.toggle("Auto Follow-Up Sequences", value=True)
-            if auto_followup:
-                st.success("✅ Active - Nurturing 47 leads")
-            
-            hot_lead_lane = st.toggle("Hot Lead Fast Lane", value=True)
-            if hot_lead_lane:
-                st.success("✅ Active - 8 leads in priority queue")
-        
-        with col2:
-            st.markdown("#### 🎯 Behavioral Triggers")
-            
-            property_views = st.toggle("Property View Tracking", value=True)
-            email_opens = st.toggle("Email Engagement Scoring", value=True)
-            calendar_sync = st.toggle("Calendar Appointment Sync", value=False)
-            
-        st.markdown("---")
-        st.info("💡 **Pro Tip:** Toggle AI Assistant ON/OFF to control when AI engages with leads")
-    
-    with tab2:
-        st.subheader("Auto Follow-Up Sequences")
-        
-        perf = services["sequences"].get_sequence_performance("demo_seq")
-        
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Conversion Rate", f"{perf['metrics']['conversion_rate']*100:.1f}%")
-        col2.metric("Email Open Rate", f"{perf['channel_performance']['email']['open_rate']*100:.0f}%")
-        col3.metric("SMS Response", f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%")
+elif selected_hub == "Automation Studio":
+    # Update navigation context
+    if SMART_NAVIGATION_AVAILABLE:
+        update_nav_context("automation", hub="Automation Studio", section="automations")
+        render_smart_breadcrumbs()
+        with st.sidebar:
+            st.markdown("---")
+            render_contextual_actions("automation")
 
-        # Sequence Table
-        sequences_data = [
-            {"Name": "New Lead (Buyer) - 7 Day", "Status": "Active", "Enrolled": perf['metrics']['total_enrolled'], "Open Rate": f"{perf['channel_performance']['email']['open_rate']*100:.0f}%", "Reply Rate": f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%"},
-            {"Name": "Seller Reactivation", "Status": "Active", "Enrolled": 12, "Open Rate": "75%", "Reply Rate": "35%"},
-            {"Name": "Cold Lead Win-back", "Status": "Paused", "Enrolled": 0, "Open Rate": "-", "Reply Rate": "-"},
-        ]
-        
-        st.dataframe(pd.DataFrame(sequences_data), use_container_width=True, hide_index=True)
-        
-        if st.button("➕ Create New Sequence"):
-            st.toast("Opening Sequence Builder...")
-        
-    with tab3:
-        st.subheader("Workflow Marketplace")
-        st.markdown("*Install pre-built real estate automations with one click*")
-        
-        # Browse marketplace
-        templates = services["marketplace"].get_featured_templates(6)
-        
-        # Display in a grid
-        cols = st.columns(3)
-        for i, t in enumerate(templates):
-            with cols[i % 3]:
-                st.markdown(f"### {t.icon} {t.name}")
-                st.write(t.description[:80] + "...")
-                st.caption(f"⭐ {t.rating} | 📥 {t.downloads_count:,} installs")
-                if st.button(f"Install", key=f"inst_{t.id}", use_container_width=True):
-                    st.success(f"Installed {t.name}!")
+    # Contextual Help for Automation Hub
+    if USER_ONBOARDING_AVAILABLE:
+        render_contextual_help("automation")
 
-    with tab4:
-        st.subheader("AI Training Lab & Version Control")
-        st.caption("Experiment with system prompts safely. Revert if quality drops.")
-        
-        col_editor, col_history = st.columns([2, 1])
-        
-        with col_history:
-            st.markdown("#### 📜 Version History")
-            versions = st.session_state.prompt_versions
-            
-            for v in reversed(versions):
-                with st.container(border=True):
-                    st.caption(f"{v['timestamp']} • {v['version']}")
-                    st.write(f"**{v['tag']}**")
-                    if st.button("Revert", key=f"rev_{v['version']}", use_container_width=True):
-                        st.session_state.current_prompt = v['content']
-                        st.toast(f"Reverted to {v['version']}")
+    st.header("Automation Studio")
+    st.markdown("*Advanced workflow automation with conditional branching and cross-hub integration*")
+
+    # Initialize and render unified workflow engine
+    if UNIFIED_WORKFLOW_AVAILABLE:
+        render_workflow_dashboard()
+    else:
+        # Fallback to basic automation interface
+        tab1, tab2, tab3, tab4 = st.tabs(["Automations", "Sequences", "Workflows", "AI Training Lab"])
+
+        with tab1:
+            st.subheader("AI Automation Control Panel")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("#### 🤖 Smart AI Features")
+
+                ai_assistant = st.toggle("AI Assistant (Qualification)", value=True)
+                if ai_assistant:
+                    st.success("✅ Active - Qualifying new leads via SMS")
+                else:
+                    st.warning("⚠️ Inactive - Manual qualification required")
+
+                auto_followup = st.toggle("Auto Follow-Up Sequences", value=True)
+                if auto_followup:
+                    st.success("✅ Active - Nurturing 47 leads")
+
+                hot_lead_lane = st.toggle("Hot Lead Fast Lane", value=True)
+                if hot_lead_lane:
+                    st.success("✅ Active - 8 leads in priority queue")
+
+            with col2:
+                st.markdown("#### 🎯 Behavioral Triggers")
+
+                property_views = st.toggle("Property View Tracking", value=True)
+                email_opens = st.toggle("Email Engagement Scoring", value=True)
+                calendar_sync = st.toggle("Calendar Appointment Sync", value=False)
+
+            st.markdown("---")
+            st.info("💡 **Pro Tip:** Toggle AI Assistant ON/OFF to control when AI engages with leads")
+
+        with tab2:
+            st.subheader("Auto Follow-Up Sequences")
+
+            perf = services["sequences"].get_sequence_performance("demo_seq")
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Conversion Rate", f"{perf['metrics']['conversion_rate']*100:.1f}%")
+            col2.metric("Email Open Rate", f"{perf['channel_performance']['email']['open_rate']*100:.0f}%")
+            col3.metric("SMS Response", f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%")
+
+            # Sequence Table
+            sequences_data = [
+                {"Name": "New Lead (Buyer) - 7 Day", "Status": "Active", "Enrolled": perf['metrics']['total_enrolled'], "Open Rate": f"{perf['channel_performance']['email']['open_rate']*100:.0f}%", "Reply Rate": f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%"},
+                {"Name": "Seller Reactivation", "Status": "Active", "Enrolled": 12, "Open Rate": "75%", "Reply Rate": "35%"},
+                {"Name": "Cold Lead Win-back", "Status": "Paused", "Enrolled": 0, "Open Rate": "-", "Reply Rate": "-"},
+            ]
+
+            st.dataframe(pd.DataFrame(sequences_data), use_container_width=True, hide_index=True)
+
+            if st.button("➕ Create New Sequence"):
+                st.toast("Opening Sequence Builder...")
+
+        with tab3:
+            st.subheader("Workflow Marketplace")
+            st.markdown("*Install pre-built real estate automations with one click*")
+
+            # Browse marketplace
+            templates = services["marketplace"].get_featured_templates(6)
+
+            # Display in a grid
+            cols = st.columns(3)
+            for i, t in enumerate(templates):
+                with cols[i % 3]:
+                    st.markdown(f"### {t.icon} {t.name}")
+                    st.write(t.description[:80] + "...")
+                    st.caption(f"⭐ {t.rating} | 📥 {t.downloads_count:,} installs")
+                    if st.button(f"Install", key=f"inst_{t.id}", use_container_width=True):
+                        st.success(f"Installed {t.name}!")
+
+            if "workflow_engine" in services:
+                st.markdown("---")
+                st.subheader("⚙️ Advanced Workflow Engine")
+                st.success("✅ Engine Online - Ready for conditional branching")
+
+                with st.expander("View Active Executions", expanded=False):
+                    st.info("No active executions in the last 24 hours.")
+                    if st.button("🚀 Run Test Workflow (New Lead Sequence)"):
+                        st.toast("Triggering Advanced Workflow: New Lead Sequence", icon="⚡")
+
+        with tab4:
+            st.subheader("AI Training Lab & Version Control")
+            st.caption("Experiment with system prompts safely. Revert if quality drops.")
+
+            col_editor, col_history = st.columns([2, 1])
+
+            with col_history:
+                st.markdown("#### 📜 Version History")
+                versions = st.session_state.prompt_versions
+
+                for v in reversed(versions):
+                    with st.container(border=True):
+                        st.caption(f"{v['timestamp']} • {v['version']}")
+                        st.write(f"**{v['tag']}**")
+                        if st.button("Revert", key=f"rev_{v['version']}", use_container_width=True):
+                            st.session_state.current_prompt = v['content']
+                            st.toast(f"Reverted to {v['version']}")
+                            st.rerun()
+
+            with col_editor:
+                st.markdown("#### Current System Prompt")
+
+                # Default content if not set
+                if "current_prompt" not in st.session_state:
+                    st.session_state.current_prompt = versions[-1]["content"]
+
+                current_prompt = st.text_area(
+                    "System Instruction",
+                    value=st.session_state.current_prompt,
+                    height=300,
+                    help="This prompt governs the behavior of the AI Assistant."
+                )
+
+                c_save, c_test = st.columns(2)
+                with c_save:
+                    if st.button("💾 Save New Version", use_container_width=True, type="primary"):
+                        new_ver = f"v1.{len(versions)}"
+                        st.session_state.prompt_versions.append({
+                            "version": new_ver,
+                            "tag": "Experimental",
+                            "content": current_prompt,
+                            "timestamp": "Just now"
+                        })
+                        st.session_state.current_prompt = current_prompt
+                        st.success(f"Saved {new_ver}!")
                         st.rerun()
 
-        with col_editor:
-            st.markdown("#### Current System Prompt")
-            
-            # Default content if not set
-            if "current_prompt" not in st.session_state:
-                st.session_state.current_prompt = versions[-1]["content"]
-
-            current_prompt = st.text_area(
-                "System Instruction", 
-                value=st.session_state.current_prompt,
-                height=300,
-                help="This prompt governs the behavior of the AI Assistant."
-            )
-            
-            c_save, c_test = st.columns(2)
-            with c_save:
-                if st.button("💾 Save New Version", use_container_width=True, type="primary"):
-                    new_ver = f"v1.{len(versions)}"
-                    st.session_state.prompt_versions.append({
-                        "version": new_ver,
-                        "tag": "Experimental",
-                        "content": current_prompt,
-                        "timestamp": "Just now"
-                    })
-                    st.session_state.current_prompt = current_prompt
-                    st.success(f"Saved {new_ver}!")
-                    st.rerun()
-                    
-            with c_test:
-                if st.button("🧪 Test Prompt", use_container_width=True):
-                    st.info("Simulation running... Response generated in 1.2s")
+                with c_test:
+                    if st.button("🧪 Test Prompt", use_container_width=True):
+                        st.info("Simulation running... Response generated in 1.2s")
 
 
-elif selected_hub == "💰 Sales Copilot":
-    st.header("💰 Sales Copilot")
+elif selected_hub == "Sales Copilot":
+    # Update navigation context
+    if SMART_NAVIGATION_AVAILABLE:
+        update_nav_context("sales", hub="Sales Copilot", section="deal_closer")
+        render_smart_breadcrumbs()
+        with st.sidebar:
+            st.markdown("---")
+            render_contextual_actions("sales")
+
+    # Contextual Help for Sales Hub
+    if USER_ONBOARDING_AVAILABLE:
+        render_contextual_help("sales")
+
+    st.header("Sales Copilot")
     st.markdown("*Agent tools for active deals and client meetings*")
-    
+
     tab1, tab2, tab3, tab4 = st.tabs([
-        "💼 Deal Closer",
-        "📄 Documents",
-        "📋 Meeting Prep",
-        "💵 Calculator"
+        "Deal Closer",
+        "Documents",
+        "Meeting Prep",
+        "Calculator"
     ])
     
     with tab1:
@@ -915,6 +1461,20 @@ elif selected_hub == "💰 Sales Copilot":
             st.session_state.messages.append({"role": "user", "content": prompt})
             
             with st.spinner("Analyzing negotiation strategy..."):
+                # Waveform animation while "thinking"
+                st.markdown("""
+                <div class="waveform-container">
+                    <div class="waveform-bar" style="animation-delay: 0.0s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.1s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.2s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.3s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.4s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.5s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.6s"></div>
+                    <div class="waveform-bar" style="animation-delay: 0.7s"></div>
+                </div>
+                """, unsafe_allow_html=True)
+                
                 lead_context = {
                     "name": "Prospect",
                     "stage": "objection_handling",
@@ -1060,15 +1620,29 @@ elif selected_hub == "💰 Sales Copilot":
             st.write(f"**Conversion Improvement:** +{impact['improvement_pct']}%")
             st.caption("These features increase the statistical probability of closing this deal.")
 
-elif selected_hub == "📈 Ops & Optimization":
-    st.header("📈 Ops & Optimization")
+elif selected_hub == "Ops & Optimization":
+    # Update navigation context
+    if SMART_NAVIGATION_AVAILABLE:
+        update_nav_context("operations", hub="Ops & Optimization", section="quality")
+        render_smart_breadcrumbs()
+        with st.sidebar:
+            st.markdown("---")
+            render_contextual_actions("operations")
+
+    # Contextual Help for Operations Hub
+    if USER_ONBOARDING_AVAILABLE:
+        render_contextual_help("operations")
+
+    st.header("Ops & Optimization")
     st.markdown("*Manager-level analytics and team performance tracking*")
-    
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "✅ Quality",
-        "💰 Revenue",
-        "🏆 Benchmarks",
-        "🎓 Coaching"
+
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "Quality",
+        "Revenue",
+        "Benchmarks",
+        "Coaching",
+        "Real-Time Collaboration",
+        "Performance Monitoring"
     ])
     
     with tab1:
@@ -1109,23 +1683,141 @@ elif selected_hub == "📈 Ops & Optimization":
     with tab4:
         st.subheader("AI Agent Coaching")
         recommendations = services["coaching"].get_coaching_recommendations("demo_agent")
-        
+
         for rec in recommendations:
             with st.expander(f"💡 {rec['title']}"):
                 st.write(rec['description'])
                 st.info(f"**Impact:** {rec['expected_impact']}")
 
+    with tab5:
+        st.subheader("👥 Real-Time Collaboration Hub")
+        st.markdown("**Live team coordination, messaging, and performance monitoring**")
+        st.markdown("---")
+
+        # Import and render collaboration dashboard
+        try:
+            from ghl_real_estate_ai.streamlit_components.realtime_collaboration_dashboard import (
+                RealtimeCollaborationDashboard
+            )
+
+            collaboration_dashboard = RealtimeCollaborationDashboard()
+            collaboration_dashboard.render()
+
+        except ImportError as e:
+            st.error(f"Real-Time Collaboration Dashboard not available: {e}")
+            st.info("**Note:** This feature requires the collaboration services to be installed.")
+
+            # Show demo preview
+            st.markdown("### Preview Features")
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.metric("👥 Agents Online", "8", "+2 from yesterday")
+                st.markdown("**Live Team Presence**")
+                st.markdown("- Real-time status tracking")
+                st.markdown("- Workload monitoring")
+                st.markdown("- Capacity utilization")
+
+            with col2:
+                st.metric("🎯 Active Leads", "23", "+7 today")
+                st.markdown("**Intelligent Lead Assignment**")
+                st.markdown("- AI-powered routing")
+                st.markdown("- Multi-factor matching")
+                st.markdown("- Sub-5s assignment time")
+
+            with col3:
+                st.metric("💬 Messages Today", "142", "45s avg response")
+                st.markdown("**Team Communication**")
+                st.markdown("- Room-based collaboration")
+                st.markdown("- <50ms message delivery")
+                st.markdown("- Real-time notifications")
+
+            st.markdown("---")
+
+            st.info("📝 **To enable this feature:**\n\n"
+                   "1. Ensure collaboration services are running\n"
+                   "2. Configure WebSocket hub and Redis\n"
+                   "3. Initialize Live Agent Coordinator\n\n"
+                   "This dashboard provides comprehensive real-time team coordination with "
+                   "live updates, intelligent lead routing, and performance analytics.")
+
+
+    with tab6:
+        st.subheader("📊 Performance Monitoring Console")
+        st.markdown("**Comprehensive real-time monitoring of all ultra-performance optimizations**")
+        st.markdown("---")
+
+        # Import and render performance monitoring console
+        try:
+            from ghl_real_estate_ai.streamlit_components.performance_monitoring_console import (
+                PerformanceMonitoringConsole
+            )
+
+            perf_console = PerformanceMonitoringConsole()
+            perf_console.render()
+
+        except ImportError as e:
+            st.error(f"Performance Monitoring Console not available: {e}")
+            st.info("**Note:** This feature requires performance monitoring services to be installed.")
+
+            # Show demo preview
+            st.markdown("### Performance Overview")
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                st.metric("⚡ Avg Response Time", "85ms", "-15ms vs target")
+                st.markdown("**System Performance**")
+                st.markdown("- Cache hit rate: 99.2%")
+                st.markdown("- Database queries: <25ms")
+                st.markdown("- Redis operations: <10ms")
+
+            with col2:
+                st.metric("🎯 Cache Hit Rate", "99.2%", "+0.2% vs target")
+                st.markdown("**Predictive Caching**")
+                st.markdown("- Lookup time: 0.8ms")
+                st.markdown("- Prediction accuracy: 94.2%")
+                st.markdown("- Cache size: 2.4GB")
+
+            with col3:
+                st.metric("💬 Message Latency", "42ms", "-8ms vs target")
+                st.markdown("**Real-Time Collaboration**")
+                st.markdown("- Active users: 487")
+                st.markdown("- Messages/sec: 2,450")
+                st.markdown("- Delivery rate: 99.98%")
+
+            with col4:
+                st.metric("🚨 System Health", "99.8%", "All operational")
+                st.markdown("**Infrastructure**")
+                st.markdown("- CPU usage: 45%")
+                st.markdown("- Memory: 55%")
+                st.markdown("- Uptime: 99.97%")
+
+            st.markdown("---")
+
+            st.info("📊 **Performance Monitoring Console Features:**\n\n"
+                   "1. **Executive Dashboard**: Business impact metrics and ROI analysis\n"
+                   "2. **Real-Time Metrics**: Live performance monitoring across all services\n"
+                   "3. **Trend Analysis**: Historical trends with anomaly detection\n"
+                   "4. **Alerts & Health**: Automated alerting and health checks\n"
+                   "5. **Cost Optimization**: Monthly savings breakdown and ROI tracking\n"
+                   "6. **Service Details**: Deep-dive into each optimization service\n\n"
+                   "This console provides comprehensive visibility into all ultra-performance "
+                   "optimizations including predictive cache, database optimizer, Redis service, "
+                   "real-time collaboration, and ML batch inference.")
+
 # Footer
 st.markdown("---")
 st.markdown("""
-<div style='text-align: center; padding: 2rem; background: #F7F8FA; border-radius: 12px; margin-top: 3rem;'>
-    <div style='color: #2A2A33; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;'>
+<div style='text-align: center; padding: 2rem; background: #0f172a; border-radius: 12px; margin-top: 3rem; border: 1px solid rgba(255,255,255,0.05);'>
+    <div style='color: #f8fafc; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;'>
         🚀 Production-Ready Multi-Tenant AI System
     </div>
-    <div style='color: #6B7280; font-size: 0.9rem;'>
+    <div style='color: #94a3b8; font-size: 0.9rem;'>
         Built for Jorge Salas | Claude Sonnet 4.5 | GHL Integration Ready
     </div>
-    <div style='margin-top: 1rem; color: #6B7280; font-size: 0.85rem;'>
+    <div style='margin-top: 1rem; color: #64748b; font-size: 0.85rem;'>
         Consolidated Hub Architecture | Path B Backend | 522+ Tests Passing
     </div>
 </div>

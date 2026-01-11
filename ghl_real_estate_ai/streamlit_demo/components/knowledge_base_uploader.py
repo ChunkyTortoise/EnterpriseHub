@@ -74,7 +74,7 @@ def render_knowledge_base_uploader():
                         st.caption(f"Preview: {doc['preview'][:150]}...")
                 
                 with col_action:
-                    if st.button("🗑️ Remove", key=f"remove_{idx}", use_container_width=True):
+                    if st.button("🗑️ Remove", key=f"remove_{idx}", width='stretch'):
                         st.session_state.knowledge_base.pop(idx)
                         st.toast(f"Removed {doc['name']}", icon="🗑️")
                         st.rerun()

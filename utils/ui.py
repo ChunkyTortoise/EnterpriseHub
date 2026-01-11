@@ -105,12 +105,21 @@ def sparkline(data: list[float], color: str = "#2563eb", height: int = 40) -> go
     """
     Generates a minimal sparkline chart using Plotly.
     """
+    # Convert hex color to rgba for fill opacity
+    if color.startswith('#'):
+        # Remove # and convert hex to rgb
+        hex_color = color.lstrip('#')
+        rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        fillcolor = f"rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, 0.2)"
+    else:
+        fillcolor = color
+
     fig = go.Figure(go.Scatter(
         y=data,
         mode='lines',
         fill='tozeroy',
         line=dict(color=color, width=2),
-        fillcolor=f"{color}33"  # approx 20% opacity
+        fillcolor=fillcolor
     ))
     fig.update_layout(
         showlegend=False,

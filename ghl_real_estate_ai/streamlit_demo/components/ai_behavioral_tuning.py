@@ -102,7 +102,7 @@ def render_behavioral_tuning_panel(phase_name: str, phase_config: Dict[str, Any]
         col_save, col_reset = st.columns([3, 1])
         
         with col_save:
-            if st.button("💾 Save Behavior Profile", use_container_width=True, key=f"{phase_name}_save"):
+            if st.button("💾 Save Behavior Profile", width='stretch', key=f"{phase_name}_save"):
                 save_behavior_config(phase_name, {
                     'followup_count': followup_count,
                     'response_delay': response_delay,
@@ -114,7 +114,7 @@ def render_behavioral_tuning_panel(phase_name: str, phase_config: Dict[str, Any]
                 st.toast(f"{phase_name} behavior saved!", icon="✅")
         
         with col_reset:
-            if st.button("🔄", use_container_width=True, help="Reset to defaults", key=f"{phase_name}_reset"):
+            if st.button("🔄", width='stretch', help="Reset to defaults", key=f"{phase_name}_reset"):
                 st.toast("Reset to defaults", icon="🔄")
                 st.rerun()
 

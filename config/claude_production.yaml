@@ -1,0 +1,296 @@
+# Claude Services Production Configuration
+# Production deployment configuration for Claude services integration
+# Created: January 2026
+
+environment: production
+
+# Service configurations
+services:
+  agent_orchestrator:
+    enabled: true
+    instances: 3
+    auto_scaling:
+      enabled: true
+      min_instances: 2
+      max_instances: 10
+      target_cpu: 70
+      target_memory: 80
+    resources:
+      memory: 1Gi
+      cpu: 1.0
+      disk: 5Gi
+    networking:
+      port: 8001
+      health_check_path: /health
+      readiness_path: /ready
+    configuration:
+      max_concurrent_tasks: 100
+      task_timeout: 300
+      retry_attempts: 3
+      priority_queue_size: 1000
+      agent_pool_size: 20
+
+  enterprise_intelligence:
+    enabled: true
+    instances: 2
+    auto_scaling:
+      enabled: true
+      min_instances: 1
+      max_instances: 5
+      target_cpu: 75
+      target_memory: 85
+    resources:
+      memory: 2Gi
+      cpu: 2.0
+      disk: 10Gi
+    networking:
+      port: 8002
+      health_check_path: /health
+      readiness_path: /ready
+    configuration:
+      analysis_interval: 300
+      prediction_window: 3600
+      optimization_threshold: 0.8
+      cache_ttl: 1800
+      background_workers: 4
+
+  business_intelligence:
+    enabled: true
+    instances: 2
+    auto_scaling:
+      enabled: true
+      min_instances: 1
+      max_instances: 4
+      target_cpu: 80
+      target_memory: 85
+    resources:
+      memory: 1Gi
+      cpu: 1.5
+      disk: 8Gi
+    networking:
+      port: 8003
+      health_check_path: /health
+      readiness_path: /ready
+    configuration:
+      report_generation_workers: 3
+      insight_refresh_interval: 600
+      report_cache_ttl: 3600
+      scheduled_reports: true
+      real_time_insights: true
+
+  api_integration:
+    enabled: true
+    instances: 4
+    auto_scaling:
+      enabled: true
+      min_instances: 2
+      max_instances: 20
+      target_cpu: 60
+      target_memory: 75
+    resources:
+      memory: 512Mi
+      cpu: 0.5
+      disk: 2Gi
+    networking:
+      port: 8000
+      health_check_path: /health
+      readiness_path: /ready
+      load_balancer: true
+    configuration:
+      rate_limiting:
+        requests_per_minute: 1000
+        requests_per_hour: 50000
+      timeout: 30
+      cors_enabled: true
+      api_versioning: true
+
+# Infrastructure configuration
+infrastructure:
+  redis:
+    cluster: true
+    nodes: 6
+    memory_per_node: 2Gi
+    persistence: true
+    backup_schedule: "0 2 * * *"
+    high_availability: true
+
+  database:
+    type: postgresql
+    host: ${POSTGRES_HOST}
+    port: 5432
+    database: enterprisehub_production
+    pool_size: 20
+    max_overflow: 30
+    pool_timeout: 30
+    connection_timeout: 10
+
+  monitoring:
+    enabled: true
+    prometheus:
+      enabled: true
+      scrape_interval: 30s
+      retention: 15d
+    grafana:
+      enabled: true
+      dashboards: true
+    alerting:
+      enabled: true
+      channels:
+        - email
+        - slack
+      rules:
+        - name: claude_service_down
+          condition: up == 0
+          duration: 1m
+        - name: claude_high_error_rate
+          condition: error_rate > 0.05
+          duration: 5m
+        - name: claude_high_latency
+          condition: response_time_p95 > 1000
+          duration: 2m
+
+  networking:
+    ingress:
+      enabled: true
+      class: nginx
+      tls: true
+      domain: claude.enterprisehub.com
+    service_mesh:
+      enabled: false  # Can be enabled for advanced traffic management
+
+  security:
+    authentication:
+      enabled: true
+      provider: oauth2
+      token_validation: true
+    authorization:
+      enabled: true
+      rbac: true
+    encryption:
+      in_transit: true
+      at_rest: true
+    network_policies: true
+
+# Deployment configuration
+deployment:
+  strategy: blue_green
+  rollback:
+    enabled: true
+    automatic: true
+    health_check_threshold: 3
+  health_checks:
+    startup_probe:
+      initial_delay: 30
+      period: 10
+      timeout: 5
+      failure_threshold: 6
+    liveness_probe:
+      period: 20
+      timeout: 5
+      failure_threshold: 3
+    readiness_probe:
+      period: 10
+      timeout: 3
+      failure_threshold: 2
+
+# Performance configuration
+performance:
+  caching:
+    levels:
+      - application
+      - redis
+      - cdn
+    policies:
+      agent_results: 1800  # 30 minutes
+      intelligence_analysis: 3600  # 1 hour
+      business_reports: 7200  # 2 hours
+      api_responses: 300  # 5 minutes
+
+  optimization:
+    auto_tuning: true
+    performance_targets:
+      api_response_time_p95: 200  # ms
+      agent_task_completion: 5000  # ms
+      intelligence_analysis: 10000  # ms
+      report_generation: 30000  # ms
+    resource_limits:
+      cpu_throttling_threshold: 90
+      memory_pressure_threshold: 85
+      disk_usage_threshold: 80
+
+# Business configuration
+business:
+  sla_targets:
+    availability: 99.95
+    response_time_p95: 200  # ms
+    error_rate_max: 0.01  # 1%
+    throughput_min: 1000  # requests/minute
+
+  cost_optimization:
+    enabled: true
+    targets:
+      infrastructure_cost_reduction: 30  # %
+      operational_efficiency_gain: 50  # %
+      automation_coverage: 90  # %
+
+  value_metrics:
+    agent_task_automation: true
+    intelligence_insights_generated: true
+    business_report_automation: true
+    api_request_volume: true
+
+# Environment variables
+environment_variables:
+  CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  GHL_API_KEY: ${GHL_API_KEY}
+  REDIS_URL: ${REDIS_CLUSTER_URL}
+  POSTGRES_URL: ${POSTGRES_URL}
+  MONITORING_ENDPOINT: ${MONITORING_ENDPOINT}
+  LOG_LEVEL: INFO
+  ENVIRONMENT: production
+
+# Logging configuration
+logging:
+  level: INFO
+  format: structured
+  destinations:
+    - console
+    - elasticsearch
+  retention: 30d
+  sampling:
+    enabled: true
+    rate: 0.1  # Sample 10% of debug logs
+
+# Backup and disaster recovery
+backup:
+  enabled: true
+  schedule: "0 1 * * *"  # Daily at 1 AM
+  retention: 30d
+  destinations:
+    - s3
+  encryption: true
+
+disaster_recovery:
+  enabled: true
+  rpo: 1h  # Recovery Point Objective
+  rto: 15m  # Recovery Time Objective
+  failover:
+    automatic: true
+    health_check_failures: 3
+  backup_regions:
+    - us-west-2
+    - us-east-1
+
+# Compliance and governance
+compliance:
+  data_classification: true
+  audit_logging: true
+  data_retention:
+    user_data: 7_years
+    system_logs: 1_year
+    metrics: 2_years
+  privacy:
+    pii_detection: true
+    data_anonymization: true
+    consent_management: true

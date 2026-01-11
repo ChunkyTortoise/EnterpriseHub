@@ -1,0 +1,247 @@
+# Claude Services Development Configuration
+# Development environment configuration for Claude services integration
+# Created: January 2026
+
+environment: development
+
+# Service configurations (simplified for development)
+services:
+  agent_orchestrator:
+    enabled: true
+    instances: 1
+    auto_scaling:
+      enabled: false
+    resources:
+      memory: 512Mi
+      cpu: 0.5
+      disk: 2Gi
+    networking:
+      port: 8001
+      health_check_path: /health
+    configuration:
+      max_concurrent_tasks: 10
+      task_timeout: 60
+      retry_attempts: 2
+      priority_queue_size: 100
+      agent_pool_size: 5
+
+  enterprise_intelligence:
+    enabled: true
+    instances: 1
+    auto_scaling:
+      enabled: false
+    resources:
+      memory: 1Gi
+      cpu: 1.0
+      disk: 4Gi
+    networking:
+      port: 8002
+      health_check_path: /health
+    configuration:
+      analysis_interval: 600  # 10 minutes
+      prediction_window: 1800  # 30 minutes
+      optimization_threshold: 0.7
+      cache_ttl: 300  # 5 minutes
+      background_workers: 2
+
+  business_intelligence:
+    enabled: true
+    instances: 1
+    auto_scaling:
+      enabled: false
+    resources:
+      memory: 512Mi
+      cpu: 0.5
+      disk: 2Gi
+    networking:
+      port: 8003
+      health_check_path: /health
+    configuration:
+      report_generation_workers: 1
+      insight_refresh_interval: 300  # 5 minutes
+      report_cache_ttl: 600  # 10 minutes
+      scheduled_reports: false
+      real_time_insights: true
+
+  api_integration:
+    enabled: true
+    instances: 1
+    auto_scaling:
+      enabled: false
+    resources:
+      memory: 256Mi
+      cpu: 0.25
+      disk: 1Gi
+    networking:
+      port: 8000
+      health_check_path: /health
+      load_balancer: false
+    configuration:
+      rate_limiting:
+        requests_per_minute: 100
+        requests_per_hour: 5000
+      timeout: 30
+      cors_enabled: true
+      api_versioning: false
+
+# Infrastructure configuration (local development)
+infrastructure:
+  redis:
+    cluster: false
+    host: localhost
+    port: 6379
+    database: 0
+    memory: 256Mi
+    persistence: false
+
+  database:
+    type: postgresql
+    host: localhost
+    port: 5432
+    database: enterprisehub_dev
+    pool_size: 5
+    max_overflow: 10
+    pool_timeout: 30
+    connection_timeout: 5
+
+  monitoring:
+    enabled: true
+    prometheus:
+      enabled: false  # Disabled for dev simplicity
+    grafana:
+      enabled: false  # Disabled for dev simplicity
+    alerting:
+      enabled: false
+
+  networking:
+    ingress:
+      enabled: false
+    service_mesh:
+      enabled: false
+
+  security:
+    authentication:
+      enabled: false  # Simplified for development
+    authorization:
+      enabled: false
+    encryption:
+      in_transit: false
+      at_rest: false
+    network_policies: false
+
+# Deployment configuration (simplified)
+deployment:
+  strategy: rolling
+  rollback:
+    enabled: false
+  health_checks:
+    startup_probe:
+      initial_delay: 10
+      period: 5
+      timeout: 3
+      failure_threshold: 3
+    liveness_probe:
+      period: 10
+      timeout: 3
+      failure_threshold: 2
+    readiness_probe:
+      period: 5
+      timeout: 2
+      failure_threshold: 1
+
+# Performance configuration (relaxed for development)
+performance:
+  caching:
+    levels:
+      - application
+      - redis
+    policies:
+      agent_results: 300  # 5 minutes
+      intelligence_analysis: 600  # 10 minutes
+      business_reports: 900  # 15 minutes
+      api_responses: 60  # 1 minute
+
+  optimization:
+    auto_tuning: false
+    performance_targets:
+      api_response_time_p95: 500  # ms (relaxed)
+      agent_task_completion: 10000  # ms
+      intelligence_analysis: 20000  # ms
+      report_generation: 60000  # ms
+    resource_limits:
+      cpu_throttling_threshold: 95
+      memory_pressure_threshold: 90
+      disk_usage_threshold: 85
+
+# Business configuration (development targets)
+business:
+  sla_targets:
+    availability: 95.0  # Relaxed for development
+    response_time_p95: 500  # ms
+    error_rate_max: 0.05  # 5%
+    throughput_min: 10  # requests/minute
+
+  cost_optimization:
+    enabled: false
+
+  value_metrics:
+    agent_task_automation: true
+    intelligence_insights_generated: false
+    business_report_automation: false
+    api_request_volume: false
+
+# Environment variables (development)
+environment_variables:
+  CLAUDE_API_KEY: ${CLAUDE_API_KEY_DEV}
+  OPENAI_API_KEY: ${OPENAI_API_KEY_DEV}
+  GHL_API_KEY: ${GHL_API_KEY_DEV}
+  REDIS_URL: redis://localhost:6379/0
+  POSTGRES_URL: postgresql://postgres:password@localhost:5432/enterprisehub_dev
+  MONITORING_ENDPOINT: http://localhost:9090
+  LOG_LEVEL: DEBUG
+  ENVIRONMENT: development
+
+# Logging configuration (verbose for development)
+logging:
+  level: DEBUG
+  format: human_readable
+  destinations:
+    - console
+  retention: 7d
+  sampling:
+    enabled: false  # No sampling in development
+
+# Backup and disaster recovery (disabled for development)
+backup:
+  enabled: false
+
+disaster_recovery:
+  enabled: false
+
+# Compliance and governance (simplified for development)
+compliance:
+  data_classification: false
+  audit_logging: false
+  data_retention:
+    user_data: 30d
+    system_logs: 7d
+    metrics: 30d
+  privacy:
+    pii_detection: false
+    data_anonymization: false
+    consent_management: false
+
+# Development-specific features
+development:
+  hot_reload: true
+  debug_mode: true
+  test_data:
+    enabled: true
+    auto_generate: true
+  mock_services:
+    enabled: true
+    external_apis: true
+  profiling:
+    enabled: true
+    memory_profiling: true
+    cpu_profiling: true

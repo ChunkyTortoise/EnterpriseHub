@@ -1,0 +1,182 @@
+{
+  "agent_001": {
+    "id": "agent_001",
+    "name": "Test Agent",
+    "email": "test@example.com",
+    "role": "agent",
+    "specialties": [
+      "residential",
+      "first_time_buyers"
+    ],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-11T04:11:02.673774"
+  },
+  "agent_002": {
+    "id": "agent_002",
+    "name": "Test Agent",
+    "email": "test@example.com",
+    "role": "agent",
+    "specialties": [
+      "residential",
+      "first_time_buyers"
+    ],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-11T04:11:02.675622"
+  },
+  "agent_003": {
+    "id": "agent_003",
+    "name": "Test Agent",
+    "email": "test@example.com",
+    "role": "agent",
+    "specialties": [
+      "residential",
+      "first_time_buyers"
+    ],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-11T04:11:02.683415"
+  },
+  "agent_000": {
+    "id": "agent_000",
+    "name": "Test Agent",
+    "email": "test@example.com",
+    "role": "agent",
+    "specialties": [
+      "residential",
+      "first_time_buyers"
+    ],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-11T04:11:02.660287"
+  },
+  "agent_004": {
+    "id": "agent_004",
+    "name": "Test Agent",
+    "email": "test@example.com",
+    "role": "agent",
+    "specialties": [
+      "residential",
+      "first_time_buyers"
+    ],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-11T04:11:02.683620"
+  },
+  "agent_005": {
+    "id": "agent_005",
+    "name": "Agent 5",
+    "email": "test@example.com",
+    "role": "agent",
+    "specialties": [
+      "residential",
+      "first_time_buyers"
+    ],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-11T04:11:02.619101"
+  },
+  "agent_006": {
+    "id": "agent_006",
+    "name": "Agent 6",
+    "email": "test@example.com",
+    "role": "agent",
+    "specialties": [
+      "residential",
+      "first_time_buyers"
+    ],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-11T04:11:02.619439"
+  },
+  "agent_007": {
+    "id": "agent_007",
+    "name": "Agent 7",
+    "email": "test@example.com",
+    "role": "agent",
+    "specialties": [
+      "residential",
+      "first_time_buyers"
+    ],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-11T04:11:02.619758"
+  },
+  "agent_008": {
+    "id": "agent_008",
+    "name": "Agent 8",
+    "email": "test@example.com",
+    "role": "agent",
+    "specialties": [
+      "residential",
+      "first_time_buyers"
+    ],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-11T04:11:02.620074"
+  },
+  "agent_009": {
+    "id": "agent_009",
+    "name": "Agent 9",
+    "email": "test@example.com",
+    "role": "agent",
+    "specialties": [
+      "residential",
+      "first_time_buyers"
+    ],
+    "status": "active",
+    "metrics": {
+      "total_leads": 0,
+      "converted_leads": 0,
+      "avg_response_time": 0,
+      "rating": 5.0
+    },
+    "created_at": "2026-01-11T04:11:02.620399"
+  }
+}

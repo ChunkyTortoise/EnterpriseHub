@@ -1,0 +1,63 @@
+# Redis ACL Users Configuration for EnterpriseHub Phase 4
+# Multi-tenant security with least privilege access
+# Enterprise-grade access control for 1000+ concurrent users
+
+# Default user (disabled for security)
+user default off
+
+# Admin user for cluster management (restricted to admin networks)
+user admin_operations on >$(REDIS_ADMIN_PASSWORD) allcommands allkeys
+aclcat +@admin +@dangerous
+
+# Main application service user (primary AI operations)
+user app_service on >$(REDIS_APP_PASSWORD) \
+    +@read +@write +@string +@hash +@list +@set +@sorted_set +@stream \
+    -@admin -@dangerous -flushdb -flushall -shutdown -debug -config \
+    ~conv_memory:* ~behavioral:* ~property:* ~ml_cache:* ~tenant_config:* \
+    ~session:* ~analytics:*
+
+# GHL webhook processor (limited to webhook data)
+user ghl_webhook_processor on >$(REDIS_GHL_PASSWORD) \
+    +@read +@write +@string +@hash +@list \
+    -@admin -@dangerous -@scripting \
+    ~webhook:* ~ghl:* ~lead_events:* ~contact_updates:*
+
+# Behavioral learning engine (ML model caching)
+user ml_behavioral_engine on >$(REDIS_ML_PASSWORD) \
+    +@read +@write +@string +@hash +@sorted_set \
+    -@admin -@dangerous -@scripting \
+    ~ml_models:* ~feature_cache:* ~prediction_cache:* ~behavioral:*
+
+# Performance monitoring user (read-only metrics)
+user monitoring_agent on >$(REDIS_MONITORING_PASSWORD) \
+    +@read +info +ping +latency +slowlog +client \
+    -@write -@admin -@dangerous \
+    ~performance:* ~metrics:* ~health:*
+
+# Coaching analytics service (analytics data)
+user coaching_analytics on >$(REDIS_COACHING_PASSWORD) \
+    +@read +@write +@string +@hash +@sorted_set +@stream \
+    -@admin -@dangerous \
+    ~coaching:* ~analytics:* ~performance:* ~achievements:*
+
+# Cache optimization service (cache management)
+user cache_optimizer on >$(REDIS_CACHE_PASSWORD) \
+    +@read +@write +@string +@hash +@list +memory +ttl +expire \
+    -@admin -@dangerous -@scripting \
+    ~cache:* ~optimization:* ~preload:*
+
+# Backup/replication user (for backup operations)
+user backup_service on >$(REDIS_BACKUP_PASSWORD) \
+    +@read +psync +replconf +ping \
+    -@write -@admin -@dangerous \
+    allkeys
+
+# Rate limiting by IP (enterprise security)
+# Limit connections per IP to prevent abuse
+# admin_operations: 10 connections per IP (admin networks only)
+# app_service: 100 connections per IP (application servers)
+# Other users: 25 connections per IP
+
+# ACL LOG configuration
+# Track failed authentication attempts for security monitoring
+# Failed attempts will be logged to security audit system

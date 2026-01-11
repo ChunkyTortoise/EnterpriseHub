@@ -1,0 +1,220 @@
+# AI Coaching Specific Alert Rules
+# Monitoring business KPIs and coaching effectiveness targets
+
+groups:
+  - name: coaching_kpis
+    rules:
+      # Core Coaching Effectiveness Metrics
+      - alert: CoachingEffectivenessDecline
+        expr: (sum(rate(coaching_sessions_improved_total[1h])) / sum(rate(coaching_sessions_total[1h]))) < 0.85
+        for: 15m
+        labels:
+          severity: warning
+          team: coaching
+          priority: high
+        annotations:
+          summary: "Coaching effectiveness below 85% threshold"
+          description: "Only {{ $value | humanizePercentage }} of coaching sessions showing improvement"
+
+      # Training Time Reduction Progress (50% target)
+      - alert: TrainingTimeReductionStalled
+        expr: |
+          (
+            avg_over_time(coaching_training_duration_minutes[24h]) /
+            avg_over_time(coaching_baseline_training_duration_minutes[24h])
+          ) > 0.6
+        for: 2h
+        labels:
+          severity: warning
+          team: coaching
+        annotations:
+          summary: "Training time reduction progress insufficient"
+          description: "Current training time {{ $value | humanizePercentage }} of baseline, target <50%"
+
+      # Agent Productivity Monitoring (25% increase target)
+      - alert: AgentProductivityBelowTarget
+        expr: |
+          (
+            avg_over_time(agent_deals_closed_per_day[7d]) /
+            avg_over_time(agent_baseline_deals_per_day[7d])
+          ) < 1.15
+        for: 6h
+        labels:
+          severity: warning
+          team: coaching
+        annotations:
+          summary: "Agent productivity increase below trajectory"
+          description: "Productivity {{ $value | humanizePercentage }} of baseline, target >125%"
+
+      # AI Model Prediction Accuracy for Coaching
+      - alert: CoachingPredictionAccuracyLow
+        expr: coaching_model_accuracy_score < 0.92
+        for: 30m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Coaching prediction model accuracy degraded"
+          description: "Model accuracy {{ $value | humanizePercentage }}, below 92% threshold"
+
+  - name: coaching_business_impact
+    rules:
+      # Revenue Impact Tracking
+      - alert: RevenueImpactBelowProjection
+        expr: coaching_revenue_impact_monthly < 7500  # $90K annually / 12 months
+        for: 4h
+        labels:
+          severity: warning
+          team: business
+        annotations:
+          summary: "Monthly revenue impact below $90K annual projection"
+          description: "Monthly impact ${{ $value }}, below $7,500 target for $90K annual goal"
+
+      # Lead Conversion Improvement
+      - alert: LeadConversionImprovementStalled
+        expr: |
+          (
+            avg_over_time(lead_conversion_rate[7d]) -
+            avg_over_time(baseline_lead_conversion_rate[7d])
+          ) < 0.05
+        for: 12h
+        labels:
+          severity: warning
+          team: coaching
+        annotations:
+          summary: "Lead conversion improvement below 5% target"
+          description: "Conversion rate improvement {{ $value | humanizePercentage }}, target >5%"
+
+      # Customer Satisfaction with AI Coaching
+      - alert: CoachingSatisfactionLow
+        expr: coaching_satisfaction_score < 4.2  # Out of 5
+        for: 2h
+        labels:
+          severity: warning
+          team: coaching
+        annotations:
+          summary: "Coaching satisfaction below 4.2/5 threshold"
+          description: "Average satisfaction {{ $value }}/5, below quality threshold"
+
+  - name: coaching_technical_performance
+    rules:
+      # Real-time Coaching Response Time
+      - alert: CoachingResponseTimeLow
+        expr: histogram_quantile(0.95, rate(coaching_response_duration_seconds_bucket[5m])) > 2.0
+        for: 3m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Coaching response time above 2 seconds"
+          description: "95th percentile response time {{ $value }}s for coaching requests"
+
+      # Coaching Session Concurrent Limit
+      - alert: ConcurrentCoachingSessionsHigh
+        expr: active_coaching_sessions > 150
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High number of concurrent coaching sessions"
+          description: "{{ $value }} active coaching sessions, approaching capacity"
+
+      # AI Context Window Utilization
+      - alert: AIContextUtilizationHigh
+        expr: (ai_context_tokens_used / ai_context_tokens_available) > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "AI context window utilization high"
+          description: "Context utilization {{ $value | humanizePercentage }}, may affect quality"
+
+      # Coaching Data Pipeline Health
+      - alert: CoachingDataPipelineFailures
+        expr: rate(coaching_data_pipeline_failures_total[10m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          team: data
+        annotations:
+          summary: "Coaching data pipeline failures detected"
+          description: "{{ $value }} pipeline failures per second affecting coaching insights"
+
+  - name: coaching_model_health
+    rules:
+      # Model Drift Detection
+      - alert: CoachingModelDrift
+        expr: coaching_model_drift_score > 0.15
+        for: 30m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Coaching model drift detected"
+          description: "Model drift score {{ $value }}, may need retraining"
+
+      # Feature Importance Stability
+      - alert: FeatureImportanceInstability
+        expr: |
+          (
+            abs(coaching_feature_importance_change_rate) > 0.2
+          )
+        for: 1h
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Coaching model feature importance unstable"
+          description: "Feature importance changing {{ $value | humanizePercentage }} per hour"
+
+      # SHAP Explanation Quality
+      - alert: SHAPExplanationQualityLow
+        expr: shap_explanation_confidence_score < 0.8
+        for: 45m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "SHAP explanation confidence low"
+          description: "Explanation confidence {{ $value }}, may affect coaching quality"
+
+  - name: coaching_cost_optimization
+    rules:
+      # AI API Cost Efficiency
+      - alert: AIAPICostEfficiencyLow
+        expr: (coaching_ai_cost_per_session / coaching_revenue_per_session) > 0.15
+        for: 2h
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "AI API cost efficiency below target"
+          description: "Cost {{ $value | humanizePercentage }} of revenue per session, target <15%"
+
+      # Infrastructure Cost Per User
+      - alert: InfrastructureCostPerUserHigh
+        expr: (total_infrastructure_cost_hourly / active_users_count) > 0.10
+        for: 4h
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "Infrastructure cost per user above $0.10/hour"
+          description: "Cost per user ${{ $value }}/hour, affecting profit margins"
+
+      # Coaching ROI Tracking
+      - alert: CoachingROIBelowMinimum
+        expr: |
+          (
+            (coaching_revenue_generated_monthly - coaching_costs_monthly) /
+            coaching_costs_monthly
+          ) < 5.0
+        for: 6h
+        labels:
+          severity: critical
+          team: business
+        annotations:
+          summary: "Coaching ROI below 500% minimum target"
+          description: "ROI {{ $value | humanizePercentage }}, below business viability threshold"

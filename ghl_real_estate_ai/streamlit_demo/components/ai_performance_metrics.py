@@ -109,7 +109,7 @@ def render_ai_metrics_dashboard():
         
         # Response time chart
         fig = create_response_time_chart(metrics['daily_response_times'])
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         
         st.markdown("#### ⏱️ Time Saved")
         

@@ -1,0 +1,211 @@
+{
+  "_comment": "EnterpriseHub Gemini CLI Configuration - Feature Parity with Claude Code",
+  "_version": "1.0.0",
+  "_lastUpdated": "2026-01-09",
+
+  "general": {
+    "previewFeatures": true,
+    "enablePromptCompletion": true,
+    "vimMode": false,
+    "sessionRetention": {
+      "enabled": true,
+      "maxAge": "30d",
+      "maxCount": 100,
+      "minRetention": "1d"
+    }
+  },
+
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    },
+    "environmentVariableRedaction": {
+      "enabled": true,
+      "allowed": ["GHL_LOCATION_ID", "RAILWAY_PROJECT_ID", "VERCEL_PROJECT_ID"],
+      "blocked": [
+        "GHL_API_KEY",
+        "GHL_WEBHOOK_SECRET",
+        "OPENAI_API_KEY",
+        "ML_MODEL_STORAGE",
+        "POSTGRES_URL",
+        "REDIS_URL",
+        "REAL_ESTATE_API_KEY",
+        "MLS_INTEGRATION_KEY"
+      ]
+    },
+    "disableYoloMode": false,
+    "enablePermanentToolApproval": false,
+    "folderTrust": {
+      "enabled": true
+    }
+  },
+
+  "tools": {
+    "sandbox": true,
+    "allowed": ["bash", "write", "edit", "read", "glob", "grep"],
+    "enableHooks": true,
+    "useRipgrep": true,
+    "shell": {
+      "enableInteractiveShell": true,
+      "inactivityTimeout": 300,
+      "enableShellOutputEfficiency": true
+    },
+    "enableToolOutputTruncation": true,
+    "truncateToolOutputThreshold": 4000000,
+    "truncateToolOutputLines": 1000
+  },
+
+  "hooks": {
+    "notifications": [],
+    "BeforeTool": [
+      {
+        "name": "prevent-commit-secrets",
+        "command": "bash",
+        "args": [
+          "-c",
+          "if grep -r 'API_KEY\\|SECRET\\|TOKEN\\|PASSWORD' . 2>/dev/null | grep -v '.gemini\\|.claude\\|node_modules\\|.git'; then echo 'ERROR: Found potential secrets'; exit 1; else exit 0; fi"
+        ],
+        "targetTools": ["bash"],
+        "exit": {
+          "0": "allow",
+          "1": "block"
+        }
+      }
+    ],
+    "AfterTool": [
+      {
+        "name": "auto-format-python",
+        "command": "bash",
+        "args": [
+          "-c",
+          "if [ -f \"${GEMINI_TOOL_OUTPUT_FILE}\" ] && [[ \"${GEMINI_TOOL_OUTPUT_FILE}\" == *.py ]]; then black \"${GEMINI_TOOL_OUTPUT_FILE}\" 2>/dev/null || true; fi"
+        ],
+        "targetTools": ["write", "edit"]
+      }
+    ]
+  },
+
+  "experimental": {
+    "enableAgents": true,
+    "extensionManagement": true,
+    "extensionReloading": false,
+    "jitContext": true,
+    "skills": true,
+    "codebaseInvestigatorSettings": {
+      "enabled": true,
+      "maxNumTurns": 10,
+      "maxTimeMinutes": 5,
+      "thinkingBudget": 8192,
+      "model": "auto"
+    },
+    "cliHelpAgentSettings": {
+      "enabled": true
+    }
+  },
+
+  "model": {
+    "name": "gemini-2.5-flash",
+    "maxSessionTurns": -1,
+    "compressionThreshold": 0.7,
+    "summarizeToolOutput": {
+      "bash": {},
+      "read": {},
+      "grep": {},
+      "glob": {}
+    }
+  },
+
+  "modelConfigs": {
+    "aliases": {
+      "fast": {
+        "model": "gemini-2.5-flash",
+        "temperature": 0.7,
+        "description": "Fast development, prototyping"
+      },
+      "precise": {
+        "model": "gemini-2.5-pro",
+        "temperature": 0.3,
+        "description": "Complex ML tasks, production features"
+      },
+      "exploration": {
+        "model": "gemini-2.5-flash",
+        "temperature": 0.9,
+        "description": "Large codebase analysis, creative solutions"
+      }
+    }
+  },
+
+  "ui": {
+    "theme": "dark",
+    "showLineNumbers": true,
+    "hideContextSummary": false,
+    "useFullWidth": true,
+    "hideTips": false,
+    "hideBanner": false,
+    "showMemoryUsage": false,
+    "footer": {
+      "hideCWD": false,
+      "hideSandboxStatus": false,
+      "hideModelInfo": false,
+      "hideContextPercentage": false
+    },
+    "hideFooter": false,
+    "incrementalRendering": true
+  },
+
+  "context": {
+    "fileName": "GEMINI.md",
+    "discoveryMaxDirs": 200,
+    "includeDirectories": [
+      "ghl_real_estate_ai/",
+      "ghl_real_estate_ai/services/",
+      "ghl_real_estate_ai/streamlit_demo/",
+      ".claude/skills/"
+    ],
+    "loadMemoryFromIncludeDirectories": true,
+    "fileFiltering": {
+      "respectGitIgnore": true,
+      "respectGeminiIgnore": true,
+      "enableRecursiveFileSearch": true,
+      "disableFuzzySearch": false
+    }
+  },
+
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "includeTools": [
+        "create_issue",
+        "list_repos",
+        "create_pr",
+        "search_code",
+        "get_file_contents"
+      ],
+      "excludeTools": ["delete_repo", "force_push"],
+      "trust": false,
+      "description": "GitHub integration for EnterpriseHub"
+    }
+  },
+
+  "privacy": {
+    "usageStatisticsEnabled": false
+  },
+
+  "telemetry": {
+    "enabled": true,
+    "target": "local",
+    "otlpEndpoint": "http://localhost:4318",
+    "otlpProtocol": "grpc",
+    "logPrompts": false,
+    "outfile": "/tmp/gemini-enterprisehub-telemetry.json",
+    "useCollector": false
+  },
+
+  "output": {
+    "format": "text"
+  }
+}

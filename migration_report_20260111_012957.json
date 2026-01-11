@@ -1,0 +1,1383 @@
+{
+  "generated_at": "2026-01-11T01:29:57.310621",
+  "component_analysis": {
+    "summary": {
+      "total_components": 48,
+      "average_score": 58.9,
+      "components_needing_migration": 47,
+      "migration_percentage": 97.9
+    },
+    "base_class_distribution": {
+      "EnterpriseDashboardComponent": 39,
+      "NoBase": 7,
+      "EnhancedEnterpriseComponent": 1,
+      "EnterpriseComponent": 1
+    },
+    "theme_distribution": {
+      "unified_design_system": 48
+    },
+    "claude_distribution": {
+      "none": 45,
+      "partial": 2,
+      "full": 1
+    },
+    "priority_breakdown": {
+      "critical": 7,
+      "high": 0,
+      "medium": 40,
+      "low": 1
+    },
+    "priority_lists": {
+      "critical": [
+        "enterprise_theme_system.py",
+        "realtime_collaboration_dashboard.py",
+        "universal_claude_coaching_dashboard.py",
+        "complete_ui_ux_demo.py",
+        "intelligence_dashboard_demo.py",
+        "performance_monitoring_dashboard.py",
+        "visually_enhanced_analytics_dashboard.py"
+      ],
+      "high": [],
+      "medium": [
+        "phase3_business_analytics_dashboard.py",
+        "advanced_color_intelligence_system.py",
+        "multimodal_document_intelligence_dashboard.py",
+        "enterprise_performance_dashboard.py",
+        "enhanced_agent_assistance_dashboard.py",
+        "workflow_design_system.py",
+        "enhanced_visual_design_system.py",
+        "unified_intelligence_dashboard.py",
+        "mobile_optimization_suite.py",
+        "next_level_visual_showcase.py",
+        "intelligence_analytics_dashboard.py",
+        "enhanced_tooltip_system.py",
+        "marketing_campaign_dashboard.py",
+        "accessibility_performance_suite.py",
+        "nurturing_campaign_manager.py",
+        "persistent_claude_chat.py",
+        "advanced_unified_analytics_dashboard.py",
+        "agent_coaching_dashboard.py",
+        "ml_monitoring_dashboard.py",
+        "phase3_roi_dashboard.py",
+        "business_intelligence_dashboard.py",
+        "realtime_visual_feedback_engine.py",
+        "seller_analytics_dashboard.py",
+        "streamlit_cache_integration.py",
+        "document_generation_dashboard.py",
+        "advanced_intelligence_visualizations.py",
+        "enhanced_lead_intelligence_dashboard.py",
+        "claude_coaching_widget.py",
+        "monitoring_app.py",
+        "advanced_visual_animation_engine.py",
+        "agent_assistance_dashboard.py",
+        "voice_coaching_dashboard.py",
+        "unified_multi_tenant_admin.py",
+        "advanced_ui_system.py",
+        "performance_monitoring_console.py",
+        "qualification_tracker.py",
+        "realtime_lead_intelligence_hub.py",
+        "security_compliance_dashboard.py",
+        "monitoring_dashboard_suite.py",
+        "ab_testing_integration.py"
+      ],
+      "low": [
+        "property_valuation_dashboard.py"
+      ]
+    },
+    "components_by_score": [
+      [
+        "enterprise_theme_system.py",
+        33
+      ],
+      [
+        "realtime_collaboration_dashboard.py",
+        33
+      ],
+      [
+        "universal_claude_coaching_dashboard.py",
+        33
+      ],
+      [
+        "complete_ui_ux_demo.py",
+        33
+      ],
+      [
+        "intelligence_dashboard_demo.py",
+        33
+      ],
+      [
+        "performance_monitoring_dashboard.py",
+        33
+      ],
+      [
+        "visually_enhanced_analytics_dashboard.py",
+        33
+      ],
+      [
+        "phase3_business_analytics_dashboard.py",
+        61
+      ],
+      [
+        "advanced_color_intelligence_system.py",
+        61
+      ],
+      [
+        "multimodal_document_intelligence_dashboard.py",
+        61
+      ],
+      [
+        "enterprise_performance_dashboard.py",
+        61
+      ],
+      [
+        "enhanced_agent_assistance_dashboard.py",
+        61
+      ],
+      [
+        "workflow_design_system.py",
+        61
+      ],
+      [
+        "enhanced_visual_design_system.py",
+        61
+      ],
+      [
+        "mobile_optimization_suite.py",
+        61
+      ],
+      [
+        "next_level_visual_showcase.py",
+        61
+      ],
+      [
+        "intelligence_analytics_dashboard.py",
+        61
+      ],
+      [
+        "enhanced_tooltip_system.py",
+        61
+      ],
+      [
+        "marketing_campaign_dashboard.py",
+        61
+      ],
+      [
+        "nurturing_campaign_manager.py",
+        61
+      ],
+      [
+        "agent_coaching_dashboard.py",
+        61
+      ],
+      [
+        "ml_monitoring_dashboard.py",
+        61
+      ],
+      [
+        "phase3_roi_dashboard.py",
+        61
+      ],
+      [
+        "realtime_visual_feedback_engine.py",
+        61
+      ],
+      [
+        "seller_analytics_dashboard.py",
+        61
+      ],
+      [
+        "document_generation_dashboard.py",
+        61
+      ],
+      [
+        "advanced_intelligence_visualizations.py",
+        61
+      ],
+      [
+        "enhanced_lead_intelligence_dashboard.py",
+        61
+      ],
+      [
+        "claude_coaching_widget.py",
+        61
+      ],
+      [
+        "monitoring_app.py",
+        61
+      ],
+      [
+        "advanced_visual_animation_engine.py",
+        61
+      ],
+      [
+        "agent_assistance_dashboard.py",
+        61
+      ],
+      [
+        "voice_coaching_dashboard.py",
+        61
+      ],
+      [
+        "unified_multi_tenant_admin.py",
+        61
+      ],
+      [
+        "advanced_ui_system.py",
+        61
+      ],
+      [
+        "performance_monitoring_console.py",
+        61
+      ],
+      [
+        "qualification_tracker.py",
+        61
+      ],
+      [
+        "realtime_lead_intelligence_hub.py",
+        61
+      ],
+      [
+        "security_compliance_dashboard.py",
+        61
+      ],
+      [
+        "monitoring_dashboard_suite.py",
+        61
+      ],
+      [
+        "ab_testing_integration.py",
+        61
+      ],
+      [
+        "business_intelligence_dashboard.py",
+        66
+      ],
+      [
+        "accessibility_performance_suite.py",
+        69
+      ],
+      [
+        "unified_intelligence_dashboard.py",
+        75
+      ],
+      [
+        "advanced_unified_analytics_dashboard.py",
+        75
+      ],
+      [
+        "streamlit_cache_integration.py",
+        75
+      ],
+      [
+        "persistent_claude_chat.py",
+        76
+      ],
+      [
+        "property_valuation_dashboard.py",
+        86
+      ]
+    ],
+    "high_value_components": [
+      "phase3_business_analytics_dashboard.py",
+      "advanced_color_intelligence_system.py",
+      "unified_intelligence_dashboard.py",
+      "next_level_visual_showcase.py",
+      "intelligence_analytics_dashboard.py",
+      "marketing_campaign_dashboard.py",
+      "persistent_claude_chat.py",
+      "advanced_unified_analytics_dashboard.py",
+      "agent_coaching_dashboard.py",
+      "phase3_roi_dashboard.py",
+      "business_intelligence_dashboard.py",
+      "realtime_collaboration_dashboard.py",
+      "seller_analytics_dashboard.py",
+      "document_generation_dashboard.py",
+      "advanced_intelligence_visualizations.py",
+      "enhanced_lead_intelligence_dashboard.py",
+      "monitoring_app.py",
+      "advanced_visual_animation_engine.py",
+      "agent_assistance_dashboard.py",
+      "voice_coaching_dashboard.py",
+      "property_valuation_dashboard.py",
+      "realtime_lead_intelligence_hub.py",
+      "visually_enhanced_analytics_dashboard.py"
+    ],
+    "timestamp": "2026-01-11T01:29:56.469449"
+  },
+  "theme_compliance": {
+    "total_components": 49,
+    "uses_design_system": 30,
+    "uses_enterprise_theme": 39,
+    "needs_migration": 5,
+    "migration_effort": {
+      "low": 15,
+      "medium": 30,
+      "high": 4
+    },
+    "components": [
+      {
+        "file_name": "phase3_business_analytics_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "advanced_color_intelligence_system.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [
+          "#FFFFFF",
+          "#2C3E50"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "multimodal_document_intelligence_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "enterprise_performance_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "enhanced_agent_assistance_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 37,
+        "hardcoded_colors": [],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "workflow_design_system.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 8,
+        "hardcoded_colors": [
+          "#bae6fd",
+          "#1d4ed8",
+          "#166534",
+          "#374151",
+          "#e5e7eb",
+          "#0369a1",
+          "#6b7280",
+          "#f9fafb",
+          "#d1d5db",
+          "#fefce8",
+          "#1f2937",
+          "#3b82f6",
+          "#e2e8f0",
+          "#fef2f2",
+          "#f0f9ff",
+          "#9ca3af",
+          "#dbeafe",
+          "#dcfce7",
+          "#a16207",
+          "#f3f4f6",
+          "#fde047",
+          "#0c4a6e"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "high"
+      },
+      {
+        "file_name": "enhanced_visual_design_system.py",
+        "inline_style_blocks": 4,
+        "style_attributes": 0,
+        "hardcoded_colors": [
+          "#1FFFE1",
+          "#4F46E5",
+          "#0891B2",
+          "#6B7280",
+          "#7C3AED",
+          "#00D4AA",
+          "#374151",
+          "#8B5CF6",
+          "#155E75",
+          "#6366F1",
+          "#EC4899",
+          "#3B82F6",
+          "#F97316",
+          "#06B6D4",
+          "#A855F7",
+          "#1F2937",
+          "#0E7490",
+          "#00E5C3"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "high"
+      },
+      {
+        "file_name": "unified_intelligence_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 8,
+        "hardcoded_colors": [
+          "#3b82f6",
+          "#e2e8f0",
+          "#8b5cf6",
+          "#ec4899"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": false,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "mobile_optimization_suite.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 7,
+        "hardcoded_colors": [
+          "#f0f9ff",
+          "#1f2937",
+          "#3b82f6",
+          "#0369a1",
+          "#6b7280",
+          "#60a5fa",
+          "#f9fafb",
+          "#374151",
+          "#e5e7eb",
+          "#d1d5db",
+          "#f3f4f6",
+          "#ffffff"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "next_level_visual_showcase.py",
+        "inline_style_blocks": 2,
+        "style_attributes": 53,
+        "hardcoded_colors": [
+          "#2C3E50",
+          "#ced4da",
+          "#7C3AED",
+          "#ffffff",
+          "#e9ecef",
+          "#f8f9fa",
+          "#7F8C8D",
+          "#6c757d",
+          "#4C1D95",
+          "#96CEB4",
+          "#00C851",
+          "#dee2e6",
+          "#4ECDC4",
+          "#3B82F6",
+          "#FFD700",
+          "#45B7D1",
+          "#FF8800",
+          "#065F46",
+          "#495057",
+          "#868e96"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "high"
+      },
+      {
+        "file_name": "intelligence_analytics_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "enhanced_tooltip_system.py",
+        "inline_style_blocks": 4,
+        "style_attributes": 7,
+        "hardcoded_colors": [
+          "#6366F1",
+          "#6B7280",
+          "#1F2937",
+          "#374151",
+          "#1D4ED8",
+          "#3B82F6"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "marketing_campaign_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 12,
+        "hardcoded_colors": [
+          "#f8f9fa",
+          "#2E86AB",
+          "#d4edda",
+          "#A23B72",
+          "#f8d7da",
+          "#721c24",
+          "#155724",
+          "#F18F01",
+          "#C73E1D"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "accessibility_performance_suite.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 0,
+        "hardcoded_colors": [
+          "#e0e0e0",
+          "#374151",
+          "#f0f0f0",
+          "#065f46",
+          "#f9fafb",
+          "#d1d5db",
+          "#fee2e2",
+          "#1f2937",
+          "#3b82f6",
+          "#111827",
+          "#78350f",
+          "#7f1d1d",
+          "#fef3c7",
+          "#f3f4f6",
+          "#059669",
+          "#d1fae5"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "nurturing_campaign_manager.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 7,
+        "hardcoded_colors": [
+          "#f7fafc",
+          "#718096",
+          "#38a169",
+          "#ffffff",
+          "#a0c4ff",
+          "#f56565",
+          "#ed8936",
+          "#c471f5",
+          "#3182ce",
+          "#dd6b20",
+          "#2c5aa0",
+          "#2d3748",
+          "#e2e8f0",
+          "#48bb78",
+          "#f093fb",
+          "#667eea",
+          "#764ba2"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "persistent_claude_chat.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 7,
+        "hardcoded_colors": [
+          "#48bb78",
+          "#2d3748",
+          "#e2e8f0",
+          "#667eea",
+          "#718096",
+          "#38a169",
+          "#764ba2",
+          "#4a5568",
+          "#f8f9ff"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "enterprise_theme_system.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 3,
+        "hardcoded_colors": [
+          "#6366f1",
+          "#e5e7eb",
+          "#ffffff",
+          "#ec4899",
+          "#9d5a1f",
+          "#a3692a",
+          "#8da4be",
+          "#e2e8f0",
+          "#2d4a70"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "advanced_unified_analytics_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 1,
+        "hardcoded_colors": [
+          "#1f77b4",
+          "#44ff44",
+          "#ff4444",
+          "#ff7f0e"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": false,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "agent_coaching_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 97,
+        "hardcoded_colors": [
+          "#6b7280",
+          "#ea580c",
+          "#6366f1",
+          "#d4a143",
+          "#ffffff"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": false,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "ml_monitoring_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [
+          "#1f77b4",
+          "#2ca02c",
+          "#ff7f0e"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "phase3_roi_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 2,
+        "hardcoded_colors": [
+          "#2a5298",
+          "#6b7280",
+          "#fee2e2",
+          "#1e3c72",
+          "#e2e8f0",
+          "#06B6D4",
+          "#dbeafe",
+          "#fef3c7",
+          "#dcfce7",
+          "#16a34a",
+          "#059669"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "business_intelligence_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [
+          "#00cc96"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "realtime_visual_feedback_engine.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 15,
+        "hardcoded_colors": [
+          "#FF8800",
+          "#7F8C8D",
+          "#34495E",
+          "#00C851",
+          "#FF4444",
+          "#3498DB"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "realtime_collaboration_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 13,
+        "hardcoded_colors": [
+          "#4CAF50",
+          "#FF9800",
+          "#F44336",
+          "#757575",
+          "#f9f9f9",
+          "#E3F2FD",
+          "#D32F2F",
+          "#F5F5F5",
+          "#e0e0e0",
+          "#2196F3",
+          "#f0f0f0"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": false,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "seller_analytics_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "streamlit_cache_integration.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "document_generation_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 5,
+        "hardcoded_colors": [
+          "#f8f9fa",
+          "#004085",
+          "#fff3cd",
+          "#cce5ff",
+          "#856404",
+          "#667eea",
+          "#dee2e6",
+          "#f8d7da",
+          "#721c24",
+          "#e1e5e9",
+          "#155724",
+          "#764ba2",
+          "#d4edda",
+          "#e8f4f8"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "advanced_intelligence_visualizations.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 47,
+        "hardcoded_colors": [
+          "#3b82f6",
+          "#6b7280",
+          "#8b5cf6"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "enhanced_lead_intelligence_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 16,
+        "hardcoded_colors": [
+          "#06b6d4",
+          "#3b82f6",
+          "#6b7280",
+          "#f9fafb",
+          "#8b5cf6",
+          "#cbd5e1"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "claude_coaching_widget.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 1,
+        "hardcoded_colors": [
+          "#f8f9fa",
+          "#007bff",
+          "#667eea",
+          "#dee2e6",
+          "#e7f3ff",
+          "#764ba2"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "universal_claude_coaching_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 0,
+        "hardcoded_colors": [
+          "#ffeaa7",
+          "#f5c6cb",
+          "#f8f9fa",
+          "#fff3cd",
+          "#007bff",
+          "#856404",
+          "#667eea",
+          "#dee2e6",
+          "#e7f3ff",
+          "#c3e6cb",
+          "#721c24",
+          "#f8d7da",
+          "#155724",
+          "#764ba2",
+          "#d4edda",
+          "#ffc107"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": false,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "complete_ui_ux_demo.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 7,
+        "hardcoded_colors": [
+          "#3b82f6",
+          "#6b7280",
+          "#000000",
+          "#8b5cf6",
+          "#f3f4f6",
+          "#ffffff"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": false,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "monitoring_app.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 10,
+        "hardcoded_colors": [
+          "#a8edea",
+          "#e9ecef",
+          "#f8f9fa",
+          "#f5576c",
+          "#f093fb",
+          "#fee140",
+          "#43e97b",
+          "#667eea",
+          "#00f2fe",
+          "#fa709a",
+          "#fed6e3",
+          "#764ba2",
+          "#4facfe",
+          "#38f9d7"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "advanced_visual_animation_engine.py",
+        "inline_style_blocks": 2,
+        "style_attributes": 16,
+        "hardcoded_colors": [
+          "#2C3E50",
+          "#2E86AB",
+          "#3498DB",
+          "#F5576C",
+          "#2a5298",
+          "#4FACFE",
+          "#f5576c",
+          "#7F8C8D",
+          "#FF4444",
+          "#667EEA",
+          "#1e3c72",
+          "#F093FB",
+          "#FF6B6B",
+          "#96CEB4",
+          "#34495E",
+          "#00C851",
+          "#4ECDC4",
+          "#764BA2",
+          "#45B7D1",
+          "#f093fb",
+          "#FF8800",
+          "#667eea",
+          "#00FF88",
+          "#FFEAA7",
+          "#764ba2"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "high"
+      },
+      {
+        "file_name": "agent_assistance_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 101,
+        "hardcoded_colors": [
+          "#3b82f6",
+          "#e2e8f0",
+          "#8b5cf6",
+          "#059669",
+          "#ffffff"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "claude_component_mixin.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 1,
+        "hardcoded_colors": [
+          "#4299e1",
+          "#48bb78",
+          "#718096",
+          "#f56565",
+          "#ed8936"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": false,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "voice_coaching_dashboard.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "unified_multi_tenant_admin.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "advanced_ui_system.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 5,
+        "hardcoded_colors": [
+          "#333333",
+          "#e0e0e0",
+          "#059669",
+          "#374151",
+          "#f0f0f0",
+          "#e5e7eb",
+          "#ffffff",
+          "#06b6d4",
+          "#6b7280",
+          "#f9fafb",
+          "#000000",
+          "#d1d5db",
+          "#1f2937",
+          "#3b82f6",
+          "#ea580c",
+          "#111827",
+          "#7c3aed"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "performance_monitoring_console.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 0,
+        "hardcoded_colors": [],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "intelligence_dashboard_demo.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 2,
+        "hardcoded_colors": [
+          "#3b82f6",
+          "#8b5cf6",
+          "#cbd5e1"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": false,
+        "migration_effort": "low"
+      },
+      {
+        "file_name": "qualification_tracker.py",
+        "inline_style_blocks": 0,
+        "style_attributes": 30,
+        "hardcoded_colors": [
+          "#7C3AED",
+          "#3B82F6",
+          "#667eea",
+          "#8B5CF6",
+          "#E2E8F0",
+          "#764ba2"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "property_valuation_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 8,
+        "hardcoded_colors": [
+          "#f1f3f4",
+          "#dc3545",
+          "#f8f9fa",
+          "#1e3c72",
+          "#fff3cd",
+          "#28a745",
+          "#e8f5e8",
+          "#2a5298",
+          "#ffc107"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "realtime_lead_intelligence_hub.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 0,
+        "hardcoded_colors": [
+          "#06b6d4",
+          "#3b82f6",
+          "#6b7280",
+          "#f9fafb",
+          "#e5e7eb",
+          "#059669",
+          "#ffffff"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "performance_monitoring_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 32,
+        "hardcoded_colors": [
+          "#1a1a2e",
+          "#dc3545",
+          "#00d26a",
+          "#38b6ff",
+          "#0f3460",
+          "#ff6b35",
+          "#16213e",
+          "#ffc107"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": false,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "security_compliance_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 1,
+        "hardcoded_colors": [
+          "#ff9500",
+          "#ffb347",
+          "#fff3e0",
+          "#f8f9fa",
+          "#fff5f5",
+          "#00cc88",
+          "#ff6b6b",
+          "#ffebee",
+          "#ff4b4b",
+          "#ffcc00",
+          "#fff8f0",
+          "#00aa77"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "monitoring_dashboard_suite.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 4,
+        "hardcoded_colors": [
+          "#f5576c",
+          "#f093fb",
+          "#667eea",
+          "#764ba2",
+          "#4facfe",
+          "#2E3440"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "visually_enhanced_analytics_dashboard.py",
+        "inline_style_blocks": 1,
+        "style_attributes": 4,
+        "hardcoded_colors": [
+          "#EC4899",
+          "#f5576c",
+          "#F97316",
+          "#f093fb",
+          "#6B7280",
+          "#06B6D4",
+          "#667eea",
+          "#1F2937",
+          "#374151",
+          "#8B5CF6",
+          "#A855F7",
+          "#764ba2",
+          "#4facfe",
+          "#3B82F6"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": false,
+        "uses_enterprise_theme": false,
+        "migration_effort": "medium"
+      },
+      {
+        "file_name": "ab_testing_integration.py",
+        "inline_style_blocks": 2,
+        "style_attributes": 10,
+        "hardcoded_colors": [
+          "#e9ecef",
+          "#f8f9fa",
+          "#EC4899",
+          "#ced4da",
+          "#6B7280",
+          "#7C3AED",
+          "#6c757d",
+          "#dee2e6",
+          "#4C1D95",
+          "#5a6268",
+          "#495057"
+        ],
+        "hardcoded_fonts": [],
+        "hardcoded_spacing": [],
+        "uses_design_system": true,
+        "uses_enterprise_theme": true,
+        "migration_effort": "medium"
+      }
+    ],
+    "design_system_adoption": 61.2,
+    "enterprise_theme_adoption": 79.6,
+    "migration_needed_percentage": 10.2
+  },
+  "validation_results": {
+    "summary": {
+      "total_components": 48,
+      "total_validations": 288,
+      "overall_pass_rate": 91.0,
+      "average_score": 80.1
+    },
+    "by_validation_type": {
+      "syntax": {
+        "valid": 48,
+        "invalid": 0,
+        "avg_score": 100.0
+      },
+      "imports": {
+        "valid": 48,
+        "invalid": 0,
+        "avg_score": 82.625
+      },
+      "structure": {
+        "valid": 22,
+        "invalid": 26,
+        "avg_score": 64.625
+      },
+      "theme": {
+        "valid": 48,
+        "invalid": 0,
+        "avg_score": 67.29166666666667
+      },
+      "performance": {
+        "valid": 48,
+        "invalid": 0,
+        "avg_score": 69.58333333333333
+      },
+      "claude": {
+        "valid": 48,
+        "invalid": 0,
+        "avg_score": 96.25
+      }
+    },
+    "components_needing_attention": [
+      {
+        "component": "enterprise_theme_system.py",
+        "avg_score": 58.3,
+        "issues": [
+          "imports",
+          "structure",
+          "performance"
+        ]
+      },
+      {
+        "component": "complete_ui_ux_demo.py",
+        "avg_score": 54.5,
+        "issues": [
+          "imports",
+          "structure",
+          "theme"
+        ]
+      },
+      {
+        "component": "monitoring_app.py",
+        "avg_score": 65.5,
+        "issues": [
+          "imports",
+          "structure",
+          "theme"
+        ]
+      },
+      {
+        "component": "intelligence_dashboard_demo.py",
+        "avg_score": 52.0,
+        "issues": [
+          "imports",
+          "structure",
+          "theme",
+          "performance"
+        ]
+      },
+      {
+        "component": "performance_monitoring_dashboard.py",
+        "avg_score": 52.0,
+        "issues": [
+          "imports",
+          "structure",
+          "theme",
+          "performance"
+        ]
+      },
+      {
+        "component": "visually_enhanced_analytics_dashboard.py",
+        "avg_score": 55.3,
+        "issues": [
+          "imports",
+          "structure",
+          "theme"
+        ]
+      }
+    ],
+    "timestamp": "2026-01-11T01:29:57.310614"
+  },
+  "recommendations": [
+    "High migration need: 98% of components require migration",
+    "Claude integration opportunity: 45 components lack Claude AI integration"
+  ]
+}

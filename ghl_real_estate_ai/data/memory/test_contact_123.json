@@ -5,22 +5,22 @@
     {
       "role": "user",
       "content": "Hi, my name is John and I'm looking for a 3-bedroom house in Austin.",
-      "timestamp": "2026-01-08T01:20:22.862018"
+      "timestamp": "2026-01-10T08:45:31.434471"
     },
     {
       "role": "assistant",
       "content": "Hello! I remember you.",
-      "timestamp": "2026-01-08T01:20:22.862019"
+      "timestamp": "2026-01-10T08:45:31.434473"
     },
     {
       "role": "user",
       "content": "Actually, my budget is $500,000.",
-      "timestamp": "2026-01-08T01:20:25.459368"
+      "timestamp": "2026-01-10T08:45:31.439672"
     },
     {
       "role": "assistant",
       "content": "I see you're still looking for that house in Austin!",
-      "timestamp": "2026-01-08T01:20:25.459369"
+      "timestamp": "2026-01-10T08:45:31.439674"
     }
   ],
   "extracted_preferences": {
@@ -30,9 +30,56 @@
   },
   "lead_score": 0,
   "conversation_stage": "initial_contact",
-  "created_at": "2026-01-08T01:20:22.862014",
-  "updated_at": "2026-01-08T01:20:25.459374",
-  "last_interaction_at": "2026-01-08T01:20:25.459370",
+  "created_at": "2026-01-10T08:45:31.434456",
+  "updated_at": "2026-01-10T08:45:31.439680",
+  "last_interaction_at": "2026-01-10T08:45:31.439676",
   "previous_sessions_summary": "",
+  "session_status": {
+    "last_session_date": "2026-01-10T08:45:31.434462",
+    "completed_systems": [
+      "real_time_lead_scoring_pipeline",
+      "unified_lead_intelligence_schema",
+      "ml_behavioral_features_engine",
+      "modular_statusline_plugin_system"
+    ],
+    "in_progress_agents": {
+      "a059964": "dynamic_scoring_weights",
+      "ad71ba7": "contextual_property_matching",
+      "ab5d2ca": "advanced_workflow_automation",
+      "a52bf61": "real_time_intelligence_dashboard",
+      "a39dab4": "churn_prediction_system"
+    },
+    "next_session_priority": "verify_agent_completion_status_then_continue_or_demo",
+    "expected_business_impact": "25_to_30_percent_conversion_improvement"
+  },
+  "lead_intelligence": {
+    "behavioral_features": {},
+    "engagement_metrics": {
+      "engagement_velocity": 0.0,
+      "sentiment_progression": 0.0,
+      "response_consistency": 0.0
+    },
+    "churn_risk": {
+      "risk_score": 0.0,
+      "risk_level": "low",
+      "prediction_horizon": "30_days",
+      "last_prediction": null
+    },
+    "property_matching": {
+      "lifestyle_scores": {},
+      "behavioral_weights": {},
+      "match_history": []
+    },
+    "workflow_automation": {
+      "active_workflows": [],
+      "completed_workflows": [],
+      "next_scheduled_action": null
+    },
+    "real_time_events": {
+      "last_score_update": null,
+      "recent_alerts": [],
+      "websocket_session_id": null
+    }
+  },
   "last_lead_score": 3
 }

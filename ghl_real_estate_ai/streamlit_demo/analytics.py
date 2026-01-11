@@ -568,26 +568,26 @@ with tab1:
 
         with col1:
             timeline_chart = create_conversation_timeline(filtered_conversations)
-            st.plotly_chart(timeline_chart, use_container_width=True)
+            st.plotly_chart(timeline_chart, width='stretch')
 
         with col2:
             pie_chart = create_classification_pie_chart(filtered_conversations)
-            st.plotly_chart(pie_chart, use_container_width=True)
+            st.plotly_chart(pie_chart, width='stretch')
 
         # Row 2: Score Distribution + Response Time
         col1, col2 = st.columns(2)
 
         with col1:
             score_chart = create_lead_score_distribution_chart(filtered_conversations)
-            st.plotly_chart(score_chart, use_container_width=True)
+            st.plotly_chart(score_chart, width='stretch')
 
         with col2:
             response_chart = create_response_time_chart(filtered_conversations)
-            st.plotly_chart(response_chart, use_container_width=True)
+            st.plotly_chart(response_chart, width='stretch')
 
         # Row 3: Intent Breakdown
         intent_chart = create_intent_breakdown(filtered_conversations)
-        st.plotly_chart(intent_chart, use_container_width=True)
+        st.plotly_chart(intent_chart, width='stretch')
     else:
         st.info("No conversations found for the selected filters. Try adjusting your date range or tenant selection.")
 
@@ -667,11 +667,11 @@ with tab2:
                 col1, col2 = st.columns(2)
                 with col1:
                     score_chart = create_lead_score_distribution_chart(tenant_convs_filtered)
-                    st.plotly_chart(score_chart, use_container_width=True)
+                    st.plotly_chart(score_chart, width='stretch')
 
                 with col2:
                     intent_chart = create_intent_breakdown(tenant_convs_filtered)
-                    st.plotly_chart(intent_chart, use_container_width=True)
+                    st.plotly_chart(intent_chart, width='stretch')
 
                 # Recent conversations table
                 st.subheader("Recent Conversations")
@@ -911,7 +911,7 @@ if CAMPAIGN_ANALYTICS_AVAILABLE:
                             showlegend=True
                         )
                         
-                        st.plotly_chart(fig_roi, use_container_width=True)
+                        st.plotly_chart(fig_roi, width='stretch')
                         
                         # ROI metrics table
                         st.markdown("**Financial Metrics:**")
@@ -944,7 +944,7 @@ if CAMPAIGN_ANALYTICS_AVAILABLE:
                             height=350
                         )
                         
-                        st.plotly_chart(fig_funnel, use_container_width=True)
+                        st.plotly_chart(fig_funnel, width='stretch')
                         
                         # Funnel conversion rates
                         st.markdown("**Stage Conversion Rates:**")
@@ -1018,7 +1018,7 @@ if CAMPAIGN_ANALYTICS_AVAILABLE:
                             showlegend=True
                         )
                         
-                        st.plotly_chart(fig_trend, use_container_width=True)
+                        st.plotly_chart(fig_trend, width='stretch')
                     
                     # Campaign Actions
                     st.divider()
@@ -1066,7 +1066,7 @@ if CAMPAIGN_ANALYTICS_AVAILABLE:
                             height=300
                         )
                         
-                        st.plotly_chart(fig_channel_leads, use_container_width=True)
+                        st.plotly_chart(fig_channel_leads, width='stretch')
                     
                     with col2:
                         fig_channel_roi = go.Figure(data=[go.Bar(
@@ -1082,7 +1082,7 @@ if CAMPAIGN_ANALYTICS_AVAILABLE:
                             height=300
                         )
                         
-                        st.plotly_chart(fig_channel_roi, use_container_width=True)
+                        st.plotly_chart(fig_channel_roi, width='stretch')
 
 # Lead Lifecycle Tab (if available)
 if LEAD_LIFECYCLE_AVAILABLE:
@@ -1144,7 +1144,7 @@ if LEAD_LIFECYCLE_AVAILABLE:
                         height=400
                     )
                     
-                    st.plotly_chart(fig_funnel, use_container_width=True)
+                    st.plotly_chart(fig_funnel, width='stretch')
                 
                 # Funnel Metrics
                 col1, col2, col3, col4 = st.columns(4)
@@ -1185,7 +1185,7 @@ if LEAD_LIFECYCLE_AVAILABLE:
                 if stage_data:
                     import pandas as pd
                     df_stages = pd.DataFrame(stage_data)
-                    st.dataframe(df_stages, use_container_width=True, hide_index=True)
+                    st.dataframe(df_stages, width='stretch', hide_index=True)
                 
                 st.divider()
                 
@@ -1596,7 +1596,7 @@ if BULK_OPERATIONS_AVAILABLE:
                     "created_at": "Created"
                 })
                 
-                st.dataframe(df_ops, use_container_width=True, hide_index=True)
+                st.dataframe(df_ops, width='stretch', hide_index=True)
             else:
                 st.info("No operations yet. Create your first bulk operation above!")
             
@@ -1637,7 +1637,7 @@ if BULK_OPERATIONS_AVAILABLE:
                         height=300
                     )
                     
-                    st.plotly_chart(fig_types, use_container_width=True)
+                    st.plotly_chart(fig_types, width='stretch')
                 
                 with col2:
                     # Pie chart of operations by status
@@ -1653,7 +1653,7 @@ if BULK_OPERATIONS_AVAILABLE:
                             height=300
                         )
                         
-                        st.plotly_chart(fig_status, use_container_width=True)
+                        st.plotly_chart(fig_status, width='stretch')
             
             # Message Templates Management
             st.divider()

@@ -1,0 +1,386 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "EnterpriseHub Infrastructure Monitoring",
+    "tags": ["infrastructure", "redis", "postgres", "deployment"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Redis Cluster Health",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "up{job=\"redis-cluster\"}",
+            "legendFormat": "{{instance}}",
+            "format": "table"
+          },
+          {
+            "expr": "redis_connected_clients{job=\"redis-cluster\"}",
+            "legendFormat": "{{instance}} Clients",
+            "format": "table"
+          },
+          {
+            "expr": "redis_memory_used_bytes{job=\"redis-cluster\"} / 1024 / 1024",
+            "legendFormat": "{{instance}} Memory MB",
+            "format": "table"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Database Shard Status",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "up{job=\"database-shards\"}",
+            "legendFormat": "{{instance}}",
+            "format": "table"
+          },
+          {
+            "expr": "postgres_stat_database_numbackends{job=\"database-shards\"}",
+            "legendFormat": "{{instance}} Connections",
+            "format": "table"
+          },
+          {
+            "expr": "rate(postgres_stat_database_xact_commit{job=\"database-shards\"}[5m])",
+            "legendFormat": "{{instance}} TPS",
+            "format": "table"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Redis Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes{job=\"redis-cluster\"} / 1024 / 1024",
+            "legendFormat": "{{instance}} Memory (MB)"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "short",
+            "label": "Memory (MB)"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Database Connection Pool",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "postgres_stat_database_numbackends{job=\"database-shards\"}",
+            "legendFormat": "{{instance}} Active Connections"
+          },
+          {
+            "expr": "postgres_settings_max_connections{job=\"database-shards\"}",
+            "legendFormat": "{{instance}} Max Connections"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Blue-Green Deployment Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "deployment_active_environment",
+            "legendFormat": "Active Environment"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "blue",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            },
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "Blue"
+                  },
+                  "1": {
+                    "text": "Green"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 6,
+        "title": "Deployment Switch Time",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "deployment_switch_duration_seconds",
+            "legendFormat": "Last Switch Duration"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 20
+                },
+                {
+                  "color": "red",
+                  "value": 30
+                }
+              ]
+            },
+            "unit": "s"
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 16
+        }
+      },
+      {
+        "id": 7,
+        "title": "Health Check Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "deployment_health_check_success",
+            "legendFormat": "Health Check"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            },
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "Failed"
+                  },
+                  "1": {
+                    "text": "Healthy"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 12,
+          "y": 16
+        }
+      },
+      {
+        "id": 8,
+        "title": "Rollback Readiness",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "deployment_rollback_ready",
+            "legendFormat": "Rollback Ready"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            },
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "Not Ready"
+                  },
+                  "1": {
+                    "text": "Ready"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 16
+        }
+      },
+      {
+        "id": 9,
+        "title": "System Resource Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "{{instance}} CPU Usage %"
+          },
+          {
+            "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+            "legendFormat": "{{instance}} Memory Usage %"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent",
+            "max": 100,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 20
+        }
+      },
+      {
+        "id": 10,
+        "title": "Network I/O",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "irate(node_network_receive_bytes_total[5m]) / 1024 / 1024",
+            "legendFormat": "{{instance}} {{device}} RX MB/s"
+          },
+          {
+            "expr": "irate(node_network_transmit_bytes_total[5m]) / 1024 / 1024",
+            "legendFormat": "{{instance}} {{device}} TX MB/s"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "short",
+            "label": "MB/s"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        }
+      },
+      {
+        "id": 11,
+        "title": "Security Metrics",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "rate(pii_detection_failures_total[5m])",
+            "legendFormat": "PII Detection Failures/s",
+            "format": "table"
+          },
+          {
+            "expr": "rate(authentication_failures_total[5m])",
+            "legendFormat": "Auth Failures/s",
+            "format": "table"
+          },
+          {
+            "expr": "rate(http_requests_total{code=\"429\"}[5m])",
+            "legendFormat": "Rate Limited Requests/s",
+            "format": "table"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 28
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}

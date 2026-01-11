@@ -146,13 +146,13 @@ def render_property_matcher(lead_context: Dict):
                         """, unsafe_allow_html=True)
             
             with col_actions:
-                if st.button("📤 Send to Lead", key=f"send_{idx}", use_container_width=True):
+                if st.button("📤 Send to Lead", key=f"send_{idx}", width='stretch'):
                     st.toast(f"Sent {property['address']} to lead!", icon="✅")
                 
-                if st.button("📅 Schedule Showing", key=f"schedule_{idx}", use_container_width=True):
+                if st.button("📅 Schedule Showing", key=f"schedule_{idx}", width='stretch'):
                     st.toast("Opening calendar...", icon="📅")
                 
-                if st.button("💾 Save for Later", key=f"save_{idx}", use_container_width=True):
+                if st.button("💾 Save for Later", key=f"save_{idx}", width='stretch'):
                     st.toast("Property saved!", icon="💾")
     
     # Batch actions
@@ -160,11 +160,11 @@ def render_property_matcher(lead_context: Dict):
     col_batch1, col_batch2 = st.columns(2)
     
     with col_batch1:
-        if st.button("📧 Send Top 3 Properties", use_container_width=True, type="primary"):
+        if st.button("📧 Send Top 3 Properties", width='stretch', type="primary"):
             st.success("Top 3 properties sent via email!")
     
     with col_batch2:
-        if st.button("🔄 Find More Matches", use_container_width=True):
+        if st.button("🔄 Find More Matches", width='stretch'):
             st.info("Searching MLS database...")
 
 

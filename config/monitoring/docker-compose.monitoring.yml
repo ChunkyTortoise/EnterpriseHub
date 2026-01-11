@@ -1,0 +1,304 @@
+# Docker Compose for EnterpriseHub Monitoring Stack
+# Prometheus + Grafana + AlertManager for 99.95% uptime SLA monitoring
+
+version: '3.8'
+
+networks:
+  monitoring:
+    driver: bridge
+  app_network:
+    external: true
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:
+
+services:
+  # Prometheus - Metrics collection and storage
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: enterprisehub_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - ./coaching_alerts.yml:/etc/prometheus/coaching_alerts.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=10GB'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      - '--query.max-concurrency=50'
+      - '--query.timeout=120s'
+    networks:
+      - monitoring
+      - app_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # AlertManager - Alert routing and notification
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    container_name: enterprisehub_alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--cluster.advertise-address=0.0.0.0:9093'
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana - Visualization and dashboards
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: enterprisehub_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-enterprisehub_admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_USERS_AUTO_ASSIGN_ORG=true
+      - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Viewer
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_SERVER_DOMAIN=localhost
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/enterprise_sla_dashboard.json
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Node Exporter - System metrics
+  node_exporter:
+    image: prom/node-exporter:v1.6.0
+    container_name: enterprisehub_node_exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - monitoring
+
+  # cAdvisor - Container metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: enterprisehub_cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    networks:
+      - monitoring
+    devices:
+      - /dev/kmsg
+
+  # Redis Exporter - Redis cluster monitoring
+  redis_exporter:
+    image: oliver006/redis_exporter:v1.51.0
+    container_name: enterprisehub_redis_exporter
+    restart: unless-stopped
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=${REDIS_CLUSTER_ENDPOINT:-redis://localhost:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    networks:
+      - monitoring
+      - app_network
+    command:
+      - '--redis.addr=${REDIS_CLUSTER_ENDPOINT:-redis://localhost:6379}'
+      - '--redis.password=${REDIS_PASSWORD}'
+
+  # PostgreSQL Exporter - Database monitoring
+  postgres_exporter:
+    image: wrouesnel/postgres_exporter:v0.12.0
+    container_name: enterprisehub_postgres_exporter
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=${POSTGRES_EXPORTER_URL}
+    networks:
+      - monitoring
+      - app_network
+
+  # Enterprise Metrics Collector - Custom business metrics
+  enterprise_metrics:
+    build:
+      context: ../../
+      dockerfile: Dockerfile.metrics
+    container_name: enterprisehub_enterprise_metrics
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GHL_API_KEY=${GHL_API_KEY}
+      - METRICS_COLLECTION_INTERVAL=15
+      - LOG_LEVEL=INFO
+    networks:
+      - monitoring
+      - app_network
+    depends_on:
+      - prometheus
+    volumes:
+      - ../../logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Webhook Metrics - GHL webhook performance
+  webhook_metrics:
+    build:
+      context: ../../
+      dockerfile: Dockerfile.webhook_metrics
+    container_name: enterprisehub_webhook_metrics
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - GHL_WEBHOOK_SECRET=${GHL_WEBHOOK_SECRET}
+      - METRICS_PORT=8002
+    networks:
+      - monitoring
+      - app_network
+
+  # ML Model Metrics - AI performance monitoring
+  ml_metrics:
+    build:
+      context: ../../
+      dockerfile: Dockerfile.ml_metrics
+    container_name: enterprisehub_ml_metrics
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    environment:
+      - MODEL_STORAGE_PATH=/app/models
+      - METRICS_PORT=8003
+      - PREDICTION_LOG_LEVEL=INFO
+    networks:
+      - monitoring
+      - app_network
+    volumes:
+      - ../../models:/app/models:ro
+
+  # Deployment Health Monitor
+  deployment_monitor:
+    build:
+      context: ../../
+      dockerfile: Dockerfile.deployment_monitor
+    container_name: enterprisehub_deployment_monitor
+    restart: unless-stopped
+    ports:
+      - "8004:8004"
+    environment:
+      - RAILWAY_PROJECT_ID=${RAILWAY_PROJECT_ID}
+      - RAILWAY_TOKEN=${RAILWAY_TOKEN}
+      - VERCEL_PROJECT_ID=${VERCEL_PROJECT_ID}
+      - VERCEL_TOKEN=${VERCEL_TOKEN}
+      - METRICS_PORT=8004
+    networks:
+      - monitoring
+      - app_network
+
+  # Security Metrics Monitor
+  security_monitor:
+    build:
+      context: ../../
+      dockerfile: Dockerfile.security_monitor
+    container_name: enterprisehub_security_monitor
+    restart: unless-stopped
+    ports:
+      - "8005:8005"
+    environment:
+      - PII_DETECTION_SERVICE_URL=${PII_DETECTION_SERVICE_URL}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - METRICS_PORT=8005
+    networks:
+      - monitoring
+      - app_network
+
+  # Log aggregation with Loki (optional)
+  loki:
+    image: grafana/loki:2.8.0
+    container_name: enterprisehub_loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring
+
+  # Log shipping with Promtail (optional)
+  promtail:
+    image: grafana/promtail:2.8.0
+    container_name: enterprisehub_promtail
+    restart: unless-stopped
+    volumes:
+      - /var/log:/var/log:ro
+      - ./promtail-config.yaml:/etc/promtail/config.yml
+      - ../../logs:/app/logs:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - monitoring
+    depends_on:
+      - loki

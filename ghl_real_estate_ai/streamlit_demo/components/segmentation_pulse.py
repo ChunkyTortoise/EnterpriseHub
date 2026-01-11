@@ -86,11 +86,11 @@ def render_segmentation_pulse(segment_data: Dict[str, Any]):
     col_a, col_b, col_c = st.columns(3)
     
     with col_a:
-        if st.button("📧 Send Campaign to Segment", use_container_width=True):
+        if st.button("📧 Send Campaign to Segment", width='stretch'):
             st.success("Campaign queued for this segment!")
     
     with col_b:
-        if st.button("📊 View All Leads", use_container_width=True):
+        if st.button("📊 View All Leads", width='stretch'):
             st.info("Opening lead details...")
     
     with col_c:
@@ -110,7 +110,7 @@ def render_segmentation_pulse(segment_data: Dict[str, Any]):
             data=csv,
             file_name=f"segment_{segment_data.get('name', 'data')}.csv",
             mime="text/csv",
-            use_container_width=True
+            width='stretch'
         )
 
 
@@ -167,7 +167,7 @@ def render_lead_score_distribution():
         hovermode='x unified'
     )
     
-    st.plotly_chart(fig, use_container_width=True, key="lead_score_dist")
+    st.plotly_chart(fig, width='stretch', key="lead_score_dist")
     
     # Insights below chart
     col_i1, col_i2, col_i3 = st.columns(3)

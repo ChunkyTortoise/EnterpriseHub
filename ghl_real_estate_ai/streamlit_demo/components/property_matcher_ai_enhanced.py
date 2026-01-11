@@ -132,17 +132,59 @@ def render_enhanced_property_matcher(lead_context: Dict):
                     """, unsafe_allow_html=True)
 
             with col_actions:
-                if st.button("📤 Send to Lead", key=f"enhanced_send_{idx}", use_container_width=True):
+                if st.button("📤 Send to Lead", key=f"enhanced_send_{idx}", width='stretch'):
                     st.toast(f"Sent {property['address']} to lead!", icon="✅")
 
-                if st.button("📅 Schedule Showing", key=f"enhanced_schedule_{idx}", use_container_width=True):
+                if st.button("📅 Schedule Showing", key=f"enhanced_schedule_{idx}", width='stretch'):
                     st.toast("Opening calendar...", icon="📅")
 
-                if st.button("💾 Save for Later", key=f"enhanced_save_{idx}", use_container_width=True):
+                if st.button("💾 Save for Later", key=f"enhanced_save_{idx}", width='stretch'):
                     st.toast("Property saved!", icon="💾")
 
+                # FEEDBACK LOOP: Missed Match Button
+                if st.button("❌ Missed Match?", key=f"missed_match_{idx}", width='stretch', help="Tell us why this isn't a good match to help Jorge's AI learn."):
+                    st.session_state[f"show_feedback_{idx}"] = True
+
+                if st.session_state.get(f"show_feedback_{idx}"):
+                    with st.form(key=f"feedback_form_{idx}"):
+                        st.markdown("**Help AI Learn**")
+                        feedback_reason = st.text_area("Why is this a missed match?", placeholder="e.g., Too far from work, neighborhood feels unsafe, budget doesn't account for HOA...")
+                        
+                        col_f1, col_f2 = st.columns(2)
+                        with col_f1:
+                            if st.form_submit_button("Submit & Learn"):
+                                # Record feedback in ML service
+                                try:
+                                    import sys
+                                    from pathlib import Path
+                                    sys.path.append(str(Path(__file__).parent.parent.parent))
+                                    from services.property_matcher_ml import PropertyMatcherML
+                                    
+                                    ml_matcher = PropertyMatcherML()
+                                    lead_id = lead_context.get('lead_id', 'demo_lead')
+                                    property_id = property.get('id', 'unknown')
+                                    
+                                    success = ml_matcher.record_feedback(
+                                        lead_id=lead_id,
+                                        property_id=property_id,
+                                        feedback_type="missed_match",
+                                        comments=feedback_reason
+                                    )
+                                    
+                                    if success:
+                                        st.success("Thanks! Jorge's AI is learning.")
+                                        st.session_state[f"show_feedback_{idx}"] = False
+                                        st.toast("Feedback recorded - AI retraining queued", icon="🧠")
+                                except Exception as e:
+                                    st.error(f"Error recording feedback: {e}")
+                        
+                        with col_f2:
+                            if st.form_submit_button("Cancel"):
+                                st.session_state[f"show_feedback_{idx}"] = False
+                                st.rerun()
+
                 # ML Insights Button
-                if st.button("🧠 ML Insights", key=f"ml_insights_{idx}", use_container_width=True):
+                if st.button("🧠 ML Insights", key=f"ml_insights_{idx}", width='stretch'):
                     st.info("Feature importance analysis: Budget (35%), Location (30%), Features (25%), Market (10%)")
 
     # Enhanced batch actions
@@ -150,15 +192,15 @@ def render_enhanced_property_matcher(lead_context: Dict):
     col_batch1, col_batch2, col_batch3 = st.columns(3)
 
     with col_batch1:
-        if st.button("📧 Send Top 3 Properties", use_container_width=True, type="primary"):
+        if st.button("📧 Send Top 3 Properties", width='stretch', type="primary"):
             st.success("Top 3 ML-matched properties sent via email!")
 
     with col_batch2:
-        if st.button("🔄 Find More Matches", use_container_width=True):
+        if st.button("🔄 Find More Matches", width='stretch'):
             st.info("Searching MLS with enhanced ML algorithms...")
 
     with col_batch3:
-        if st.button("📊 Show ML Analytics", use_container_width=True):
+        if st.button("📊 Show ML Analytics", width='stretch'):
             st.info("Opening advanced property analytics dashboard...")
 
 

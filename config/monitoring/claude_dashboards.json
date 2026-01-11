@@ -1,0 +1,491 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Claude Services - Enterprise Monitoring",
+    "tags": ["claude", "ai-services", "enterprise", "real-estate"],
+    "timezone": "browser",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Claude Services Overview",
+        "type": "stat",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "sum(claude_service_up)",
+            "legendFormat": "Services Up",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(claude_requests_total[5m]))",
+            "legendFormat": "Requests/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "avg(claude_response_time_seconds) * 1000",
+            "legendFormat": "Avg Response Time (ms)",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(claude_errors_total[5m]) / rate(claude_requests_total[5m]) * 100",
+            "legendFormat": "Error Rate (%)",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "min": 0,
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 80
+                },
+                {
+                  "color": "green",
+                  "value": 95
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Agent Orchestrator Performance",
+        "type": "graph",
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(claude_agent_tasks_submitted_total[5m])",
+            "legendFormat": "Tasks Submitted/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(claude_agent_tasks_completed_total[5m])",
+            "legendFormat": "Tasks Completed/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "claude_agent_queue_size",
+            "legendFormat": "Queue Size",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Tasks/sec",
+            "min": 0
+          },
+          {
+            "label": "Queue Size",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Enterprise Intelligence Metrics",
+        "type": "graph",
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(claude_intelligence_analyses_total[5m])",
+            "legendFormat": "Analyses/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "claude_intelligence_analysis_duration_seconds",
+            "legendFormat": "Analysis Duration",
+            "refId": "B"
+          },
+          {
+            "expr": "claude_intelligence_recommendations_generated",
+            "legendFormat": "Recommendations Generated",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Rate",
+            "min": 0
+          },
+          {
+            "label": "Duration (s)",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Business Intelligence Automation",
+        "type": "graph",
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 0,
+          "y": 17
+        },
+        "targets": [
+          {
+            "expr": "rate(claude_business_reports_generated_total[5m])",
+            "legendFormat": "Reports Generated/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(claude_business_insights_generated_total[5m])",
+            "legendFormat": "Insights Generated/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "claude_business_report_generation_duration_seconds",
+            "legendFormat": "Report Generation Duration",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Rate",
+            "min": 0
+          },
+          {
+            "label": "Duration (s)",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "API Integration Performance",
+        "type": "graph",
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 12,
+          "y": 17
+        },
+        "targets": [
+          {
+            "expr": "rate(claude_api_requests_total[5m])",
+            "legendFormat": "API Requests/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(claude_api_request_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "95th Percentile Response Time (ms)",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(claude_api_errors_total[5m]) / rate(claude_api_requests_total[5m]) * 100",
+            "legendFormat": "Error Rate (%)",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "min": 0
+          },
+          {
+            "label": "Response Time (ms)",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Resource Utilization",
+        "type": "graph",
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 0,
+          "y": 26
+        },
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{job=~\"claude.*\"}[5m]) * 100",
+            "legendFormat": "CPU Usage % - {{instance}}",
+            "refId": "A"
+          },
+          {
+            "expr": "process_resident_memory_bytes{job=~\"claude.*\"} / 1024 / 1024",
+            "legendFormat": "Memory Usage MB - {{instance}}",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "CPU %",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "label": "Memory MB",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Service Health Status",
+        "type": "stat",
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 12,
+          "y": 26
+        },
+        "targets": [
+          {
+            "expr": "claude_service_up{service=\"agent_orchestrator\"}",
+            "legendFormat": "Agent Orchestrator",
+            "refId": "A"
+          },
+          {
+            "expr": "claude_service_up{service=\"enterprise_intelligence\"}",
+            "legendFormat": "Enterprise Intelligence",
+            "refId": "B"
+          },
+          {
+            "expr": "claude_service_up{service=\"business_intelligence\"}",
+            "legendFormat": "Business Intelligence",
+            "refId": "C"
+          },
+          {
+            "expr": "claude_service_up{service=\"api_integration\"}",
+            "legendFormat": "API Integration",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "0": {
+                    "text": "DOWN",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "UP",
+                    "color": "green"
+                  }
+                }
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Agent Role Distribution",
+        "type": "piechart",
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 0,
+          "y": 35
+        },
+        "targets": [
+          {
+            "expr": "sum by (agent_role) (rate(claude_agent_tasks_submitted_total[5m]))",
+            "legendFormat": "{{agent_role}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "pieType": "donut",
+          "tooltip": {
+            "mode": "single"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right"
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Real Estate Business KPIs",
+        "type": "graph",
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 12,
+          "y": 35
+        },
+        "targets": [
+          {
+            "expr": "claude_lead_scoring_accuracy_percent",
+            "legendFormat": "Lead Scoring Accuracy %",
+            "refId": "A"
+          },
+          {
+            "expr": "claude_property_matching_satisfaction_percent",
+            "legendFormat": "Property Match Satisfaction %",
+            "refId": "B"
+          },
+          {
+            "expr": "claude_churn_prediction_precision_percent",
+            "legendFormat": "Churn Prediction Precision %",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(claude_ghl_leads_processed_total[5m]) * 60",
+            "legendFormat": "GHL Leads Processed/min",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Accuracy %",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "label": "Leads/min",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Error Rate by Service",
+        "type": "graph",
+        "gridPos": {
+          "h": 9,
+          "w": 24,
+          "x": 0,
+          "y": 44
+        },
+        "targets": [
+          {
+            "expr": "rate(claude_errors_total{service=\"agent_orchestrator\"}[5m])",
+            "legendFormat": "Agent Orchestrator Errors/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(claude_errors_total{service=\"enterprise_intelligence\"}[5m])",
+            "legendFormat": "Enterprise Intelligence Errors/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(claude_errors_total{service=\"business_intelligence\"}[5m])",
+            "legendFormat": "Business Intelligence Errors/sec",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(claude_errors_total{service=\"api_integration\"}[5m])",
+            "legendFormat": "API Integration Errors/sec",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Errors/sec",
+            "min": 0
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [0.1],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "2m",
+          "frequency": "30s",
+          "handler": 1,
+          "name": "High Error Rate Alert",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "query": "label_values(claude_service_up, service)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true
+        },
+        {
+          "name": "instance",
+          "type": "query",
+          "query": "label_values(claude_service_up{service=~\"$service\"}, instance)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "changes(claude_deployment_timestamp[1d])",
+          "iconColor": "blue",
+          "titleFormat": "Claude Deployment",
+          "textFormat": "Service: {{service}}"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "dashboard": {
+    "title": "AI-Enhanced Operations Production Dashboard",
+    "panels": [
+      {
+        "title": "Component Health Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job='ai-operations'}"
+          }
+        ]
+      },
+      {
+        "title": "API Response Times",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))"
+          }
+        ]
+      },
+      {
+        "title": "ML Model Accuracy",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ml_model_accuracy"
+          }
+        ]
+      },
+      {
+        "title": "Auto-scaling Activity",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(scaling_events_total[5m])"
+          }
+        ]
+      },
+      {
+        "title": "Incident Auto-resolution Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(incidents_auto_resolved_total[1h]) / rate(incidents_total[1h])"
+          }
+        ]
+      },
+      {
+        "title": "Resource Utilization",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total[5m])"
+          },
+          {
+            "expr": "container_memory_usage_bytes"
+          }
+        ]
+      }
+    ]
+  }
+}

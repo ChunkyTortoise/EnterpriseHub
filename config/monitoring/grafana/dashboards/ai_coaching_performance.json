@@ -1,0 +1,355 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "AI Coaching Performance Dashboard",
+    "tags": ["ai", "coaching", "performance", "business"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Training Time Reduction (50% Target)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "(avg_over_time(coaching_training_duration_minutes[24h]) / avg_over_time(coaching_baseline_training_duration_minutes[24h])) * 100",
+            "legendFormat": "% of Baseline"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 50
+                },
+                {
+                  "color": "red",
+                  "value": 70
+                }
+              ]
+            },
+            "unit": "percent",
+            "max": 100,
+            "min": 0
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Agent Productivity Increase (25% Target)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "((avg_over_time(agent_deals_closed_per_day[7d]) / avg_over_time(agent_baseline_deals_per_day[7d])) - 1) * 100",
+            "legendFormat": "% Increase"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 15
+                },
+                {
+                  "color": "green",
+                  "value": 25
+                }
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 6,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Monthly ROI Impact",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "coaching_revenue_impact_monthly",
+            "legendFormat": "Revenue Impact"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 5000
+                },
+                {
+                  "color": "green",
+                  "value": 7500
+                }
+              ]
+            },
+            "unit": "currencyUSD"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 4,
+        "title": "Coaching Effectiveness",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "(sum(rate(coaching_sessions_improved_total[1h])) / sum(rate(coaching_sessions_total[1h]))) * 100",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 80
+                },
+                {
+                  "color": "green",
+                  "value": 85
+                }
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        }
+      },
+      {
+        "id": 5,
+        "title": "Coaching Sessions Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(coaching_sessions_total[5m]) * 60",
+            "legendFormat": "Total Sessions/min"
+          },
+          {
+            "expr": "rate(coaching_sessions_improved_total[5m]) * 60",
+            "legendFormat": "Successful Sessions/min"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 6,
+        "title": "ML Model Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "coaching_model_accuracy_score",
+            "legendFormat": "Accuracy"
+          },
+          {
+            "expr": "coaching_model_drift_score",
+            "legendFormat": "Drift Score"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 7,
+        "title": "Lead Conversion Improvement",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "avg_over_time(lead_conversion_rate[7d]) * 100",
+            "legendFormat": "Current Conversion Rate"
+          },
+          {
+            "expr": "avg_over_time(baseline_lead_conversion_rate[7d]) * 100",
+            "legendFormat": "Baseline Conversion Rate"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 8,
+        "title": "Coaching Satisfaction Score",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "coaching_satisfaction_score",
+            "legendFormat": "Satisfaction"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 3.5
+                },
+                {
+                  "color": "green",
+                  "value": 4.2
+                }
+              ]
+            },
+            "min": 0,
+            "max": 5,
+            "unit": "short"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      },
+      {
+        "id": 9,
+        "title": "Active Coaching Sessions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "active_coaching_sessions",
+            "legendFormat": "Active Sessions"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 10,
+        "title": "AI Context Utilization",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "(ai_context_tokens_used / ai_context_tokens_available) * 100",
+            "legendFormat": "Context Usage %"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent",
+            "max": 100,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 8,
+          "y": 24
+        }
+      },
+      {
+        "id": 11,
+        "title": "Cost Efficiency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "(coaching_ai_cost_per_session / coaching_revenue_per_session) * 100",
+            "legendFormat": "Cost as % of Revenue"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 16,
+          "y": 24
+        }
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}

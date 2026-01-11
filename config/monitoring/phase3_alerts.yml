@@ -1,0 +1,566 @@
+# Phase 3 Feature Alert Rules
+# Monitoring $265K-440K annual value features with real business impact tracking
+# Created: January 2026
+
+groups:
+  # ============================================================================
+  # Real-Time Lead Intelligence Dashboard Alerts ($75K-120K/year)
+  # ============================================================================
+  - name: realtime_intelligence_alerts
+    rules:
+      # WebSocket Latency SLA (<50ms target, achieved 47.3ms)
+      - alert: WebSocketLatencyHigh
+        expr: histogram_quantile(0.95, rate(websocket_latency_seconds_bucket{feature="realtime_intelligence"}[5m])) > 0.050
+        for: 2m
+        labels:
+          severity: warning
+          feature: realtime_intelligence
+          business_impact: high
+          annual_value: "75k-120k"
+        annotations:
+          summary: "WebSocket latency above 50ms target"
+          description: "P95 latency is {{ $value | humanizeDuration }}, exceeding 50ms target (achieved: 47.3ms)"
+          impact: "Degraded real-time lead intelligence experience"
+          revenue_risk: "$205-330/day"
+
+      - alert: WebSocketLatencyCritical
+        expr: histogram_quantile(0.95, rate(websocket_latency_seconds_bucket{feature="realtime_intelligence"}[5m])) > 0.100
+        for: 1m
+        labels:
+          severity: critical
+          feature: realtime_intelligence
+          business_impact: critical
+          annual_value: "75k-120k"
+        annotations:
+          summary: "WebSocket latency critically high"
+          description: "P95 latency is {{ $value | humanizeDuration }}, 2x above target"
+          impact: "Severe degradation in real-time features"
+          revenue_risk: "$410-660/day"
+          action: "Consider emergency rollback of realtime_intelligence feature"
+
+      # Event Bus Performance
+      - alert: EventBusProcessingDelayed
+        expr: event_bus_processing_lag_seconds{feature="realtime_intelligence"} > 5
+        for: 2m
+        labels:
+          severity: warning
+          feature: realtime_intelligence
+          business_impact: medium
+        annotations:
+          summary: "Event bus processing lag detected"
+          description: "Event processing lag is {{ $value }}s, should be <1s"
+          impact: "Delayed ML coordination for real-time intelligence"
+          action: "Check ML service health and Redis connectivity"
+
+      # Dashboard Refresh Rate
+      - alert: DashboardRefreshRateLow
+        expr: rate(dashboard_refresh_total{feature="realtime_intelligence"}[5m]) < 0.5
+        for: 5m
+        labels:
+          severity: warning
+          feature: realtime_intelligence
+          business_impact: medium
+        annotations:
+          summary: "Dashboard refresh rate below expected"
+          description: "Refresh rate {{ $value }}/s, expected >0.5/s for active users"
+          impact: "Stale real-time intelligence data"
+
+      # Active Connection Monitoring
+      - alert: RealTimeConnectionsLow
+        expr: websocket_active_connections{feature="realtime_intelligence"} < 10 and hour() >= 9 and hour() <= 17
+        for: 10m
+        labels:
+          severity: warning
+          feature: realtime_intelligence
+          business_impact: low
+        annotations:
+          summary: "Low real-time dashboard adoption during business hours"
+          description: "Only {{ $value }} active connections, expected >10 during business hours"
+          impact: "Low feature adoption may indicate UX issues"
+
+      # Data Stream Health (6 streams)
+      - alert: DataStreamFailure
+        expr: realtime_data_stream_health{feature="realtime_intelligence"} < 1
+        for: 1m
+        labels:
+          severity: critical
+          feature: realtime_intelligence
+          business_impact: high
+        annotations:
+          summary: "Real-time data stream failure"
+          description: "Stream {{ $labels.stream_name }} failed, {{ $value }} streams healthy out of 6"
+          impact: "Incomplete real-time intelligence data"
+          action: "Check stream {{ $labels.stream_name }} endpoint health"
+
+  # ============================================================================
+  # Multimodal Property Intelligence Alerts ($75K-150K/year)
+  # ============================================================================
+  - name: property_intelligence_alerts
+    rules:
+      # Claude Vision Analysis Time (<1.5s target, achieved 1.19s)
+      - alert: VisionAnalysisTimeSlow
+        expr: histogram_quantile(0.95, rate(vision_analysis_duration_seconds_bucket{feature="property_intelligence"}[5m])) > 1.5
+        for: 2m
+        labels:
+          severity: warning
+          feature: property_intelligence
+          business_impact: high
+          annual_value: "75k-150k"
+        annotations:
+          summary: "Vision analysis time above 1.5s target"
+          description: "P95 analysis time is {{ $value }}s, exceeding 1.5s target (achieved: 1.19s)"
+          impact: "Delayed property intelligence insights"
+          revenue_risk: "$205-410/day"
+
+      - alert: VisionAnalysisTimeCritical
+        expr: histogram_quantile(0.95, rate(vision_analysis_duration_seconds_bucket{feature="property_intelligence"}[5m])) > 3.0
+        for: 1m
+        labels:
+          severity: critical
+          feature: property_intelligence
+          business_impact: critical
+          annual_value: "75k-150k"
+        annotations:
+          summary: "Vision analysis critically slow"
+          description: "P95 analysis time is {{ $value }}s, 2x above target"
+          impact: "Property intelligence feature severely degraded"
+          revenue_risk: "$410-820/day"
+          action: "Check Claude API health and rate limits"
+
+      # Neighborhood API Performance
+      - alert: NeighborhoodAPILatencyHigh
+        expr: histogram_quantile(0.95, rate(neighborhood_api_duration_seconds_bucket{feature="property_intelligence"}[5m])) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          feature: property_intelligence
+          business_impact: medium
+        annotations:
+          summary: "Neighborhood API latency high"
+          description: "P95 latency is {{ $value }}s, should be <500ms"
+          impact: "Delayed neighborhood intelligence data"
+
+      # Property Matching Satisfaction
+      - alert: PropertyMatchSatisfactionLow
+        expr: avg_over_time(property_match_satisfaction_score{feature="property_intelligence"}[1h]) < 0.88
+        for: 30m
+        labels:
+          severity: warning
+          feature: property_intelligence
+          business_impact: high
+        annotations:
+          summary: "Property match satisfaction below target"
+          description: "Average satisfaction score {{ $value | humanizePercentage }}, below 88% target"
+          impact: "User dissatisfaction with property recommendations"
+          action: "Review recent vision analysis quality and matching algorithm"
+
+      # Cache Hit Rate for Property Intelligence
+      - alert: PropertyIntelligenceCacheMissRateHigh
+        expr: (1 - rate(property_intelligence_cache_hits_total[5m]) / rate(property_intelligence_cache_requests_total[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          feature: property_intelligence
+          business_impact: medium
+        annotations:
+          summary: "Property intelligence cache miss rate high"
+          description: "Cache miss rate {{ $value | humanizePercentage }}, should be <20%"
+          impact: "Increased Claude API costs and slower response times"
+          action: "Review cache invalidation strategy and TTL settings"
+
+      # Vision API Error Rate
+      - alert: VisionAPIErrorRateHigh
+        expr: rate(vision_api_errors_total{feature="property_intelligence"}[5m]) / rate(vision_api_requests_total{feature="property_intelligence"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          feature: property_intelligence
+          business_impact: critical
+        annotations:
+          summary: "Vision API error rate above 5%"
+          description: "Error rate {{ $value | humanizePercentage }}"
+          impact: "Property intelligence feature degraded"
+          action: "Check Claude API status and authentication"
+
+  # ============================================================================
+  # Proactive Churn Prevention Alerts ($55K-80K/year)
+  # ============================================================================
+  - name: churn_prevention_alerts
+    rules:
+      # Intervention Latency (<30s target, achieved <1s)
+      - alert: ChurnInterventionLatencyHigh
+        expr: histogram_quantile(0.95, rate(churn_intervention_latency_seconds_bucket{feature="churn_prevention"}[5m])) > 30
+        for: 2m
+        labels:
+          severity: warning
+          feature: churn_prevention
+          business_impact: high
+          annual_value: "55k-80k"
+        annotations:
+          summary: "Churn intervention latency above 30s target"
+          description: "P95 intervention latency is {{ $value }}s, exceeding 30s target (achieved: <1s)"
+          impact: "Delayed churn prevention interventions"
+          revenue_risk: "$150-220/day"
+
+      - alert: ChurnInterventionLatencyCritical
+        expr: histogram_quantile(0.95, rate(churn_intervention_latency_seconds_bucket{feature="churn_prevention"}[5m])) > 60
+        for: 1m
+        labels:
+          severity: critical
+          feature: churn_prevention
+          business_impact: critical
+          annual_value: "55k-80k"
+        annotations:
+          summary: "Churn intervention critically delayed"
+          description: "P95 intervention latency is {{ $value }}s, 2x above target"
+          impact: "Ineffective churn prevention due to delays"
+          revenue_risk: "$300-440/day"
+          action: "Check notification delivery systems and orchestration service"
+
+      # Multi-Channel Notification Delivery
+      - alert: ChurnNotificationDeliveryFailed
+        expr: rate(churn_notification_failures_total{feature="churn_prevention"}[5m]) / rate(churn_notification_attempts_total{feature="churn_prevention"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          feature: churn_prevention
+          business_impact: critical
+        annotations:
+          summary: "Churn notification delivery failure rate >10%"
+          description: "Notification failure rate {{ $value | humanizePercentage }}"
+          impact: "Churn interventions not reaching at-risk users"
+          action: "Check SMS, email, and in-app notification services"
+
+      # Churn Risk Model Performance
+      - alert: ChurnRiskModelAccuracyLow
+        expr: churn_risk_model_accuracy{feature="churn_prevention"} < 0.85
+        for: 15m
+        labels:
+          severity: warning
+          feature: churn_prevention
+          business_impact: medium
+        annotations:
+          summary: "Churn risk model accuracy below threshold"
+          description: "Model accuracy {{ $value | humanizePercentage }}, should be >85%"
+          impact: "Increased false positives/negatives in churn detection"
+          action: "Review model retraining schedule and feature drift"
+
+      # Intervention Success Rate (1,875x ROI target)
+      - alert: ChurnInterventionSuccessRateLow
+        expr: avg_over_time(churn_intervention_success_rate{feature="churn_prevention"}[1h]) < 0.6
+        for: 30m
+        labels:
+          severity: warning
+          feature: churn_prevention
+          business_impact: high
+        annotations:
+          summary: "Churn intervention success rate below 60%"
+          description: "Success rate {{ $value | humanizePercentage }}, target >60%"
+          impact: "Reduced churn prevention effectiveness and ROI"
+          action: "Review intervention strategies and messaging"
+
+      # Daily Interventions Volume
+      - alert: ChurnInterventionVolumeLow
+        expr: rate(churn_interventions_triggered_total{feature="churn_prevention"}[1h]) < 0.01 and hour() >= 9 and hour() <= 17
+        for: 2h
+        labels:
+          severity: warning
+          feature: churn_prevention
+          business_impact: medium
+        annotations:
+          summary: "Low churn intervention volume during business hours"
+          description: "{{ $value }} interventions/second, expected >0.01"
+          impact: "Potential issue with churn detection pipeline"
+          action: "Verify churn risk calculation and threshold settings"
+
+  # ============================================================================
+  # AI-Powered Coaching Alerts ($60K-90K/year)
+  # ============================================================================
+  - name: ai_coaching_alerts
+    rules:
+      # Conversation Analysis Time (<2s target, achieved <2s)
+      - alert: CoachingAnalysisTimeSlow
+        expr: histogram_quantile(0.95, rate(coaching_analysis_duration_seconds_bucket{feature="ai_coaching"}[5m])) > 2.0
+        for: 2m
+        labels:
+          severity: warning
+          feature: ai_coaching
+          business_impact: high
+          annual_value: "60k-90k"
+        annotations:
+          summary: "Coaching analysis time above 2s target"
+          description: "P95 analysis time is {{ $value }}s, exceeding 2s target (achieved: <2s)"
+          impact: "Delayed coaching insights for agents"
+          revenue_risk: "$165-245/day"
+
+      - alert: CoachingAnalysisTimeCritical
+        expr: histogram_quantile(0.95, rate(coaching_analysis_duration_seconds_bucket{feature="ai_coaching"}[5m])) > 5.0
+        for: 1m
+        labels:
+          severity: critical
+          feature: ai_coaching
+          business_impact: critical
+          annual_value: "60k-90k"
+        annotations:
+          summary: "Coaching analysis critically slow"
+          description: "P95 analysis time is {{ $value }}s, 2.5x above target"
+          impact: "AI coaching feature severely degraded"
+          revenue_risk: "$330-490/day"
+          action: "Check Claude API health and coaching engine service"
+
+      # Coaching Alert Delivery
+      - alert: CoachingAlertDeliveryDelayed
+        expr: histogram_quantile(0.95, rate(coaching_alert_delivery_seconds_bucket{feature="ai_coaching"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          feature: ai_coaching
+          business_impact: medium
+        annotations:
+          summary: "Coaching alert delivery delayed"
+          description: "P95 delivery time {{ $value }}s, should be <10s for real-time coaching"
+          impact: "Delayed coaching feedback reduces effectiveness"
+
+      # Coaching Effectiveness (25% productivity target)
+      - alert: CoachingEffectivenessLow
+        expr: avg_over_time(coaching_agent_productivity_improvement{feature="ai_coaching"}[24h]) < 0.20
+        for: 1h
+        labels:
+          severity: warning
+          feature: ai_coaching
+          business_impact: high
+        annotations:
+          summary: "Coaching productivity improvement below target"
+          description: "24h productivity improvement {{ $value | humanizePercentage }}, target >20%"
+          impact: "Coaching ROI below expectations"
+          action: "Review coaching strategies and agent adoption rates"
+
+      # Agent Engagement with Coaching
+      - alert: CoachingEngagementLow
+        expr: rate(coaching_alerts_viewed_total{feature="ai_coaching"}[1h]) / rate(coaching_alerts_delivered_total{feature="ai_coaching"}[1h]) < 0.6
+        for: 30m
+        labels:
+          severity: warning
+          feature: ai_coaching
+          business_impact: medium
+        annotations:
+          summary: "Low agent engagement with coaching alerts"
+          description: "Alert view rate {{ $value | humanizePercentage }}, should be >60%"
+          impact: "Coaching insights not being utilized effectively"
+          action: "Review alert relevance and delivery mechanisms"
+
+      # Training Recommendation Quality
+      - alert: TrainingRecommendationAccuracyLow
+        expr: avg_over_time(training_recommendation_accuracy{feature="ai_coaching"}[6h]) < 0.75
+        for: 1h
+        labels:
+          severity: warning
+          feature: ai_coaching
+          business_impact: medium
+        annotations:
+          summary: "Training recommendation accuracy below threshold"
+          description: "Recommendation accuracy {{ $value | humanizePercentage }}, should be >75%"
+          impact: "Reduced coaching effectiveness and agent trust"
+          action: "Review conversation analysis model performance"
+
+  # ============================================================================
+  # Phase 3 Business Impact Alerts
+  # ============================================================================
+  - name: phase3_business_impact_alerts
+    rules:
+      # Total Revenue Impact ($265K-440K/year target)
+      - alert: Phase3RevenueImpactBelowTarget
+        expr: sum(rate(phase3_revenue_impact_dollars[24h])) * 365 < 265000
+        for: 1h
+        labels:
+          severity: warning
+          business_impact: critical
+          annual_value: "265k-440k"
+        annotations:
+          summary: "Phase 3 annual revenue impact below minimum target"
+          description: "Projected annual revenue {{ $value | humanize }}, below $265K minimum"
+          impact: "Phase 3 ROI not meeting business case expectations"
+          action: "Review feature adoption and performance metrics across all features"
+
+      # Feature Adoption Rate
+      - alert: Phase3FeatureAdoptionLow
+        expr: avg(feature_adoption_rate{phase="3"}) < 0.5
+        for: 2h
+        labels:
+          severity: warning
+          business_impact: high
+        annotations:
+          summary: "Phase 3 feature adoption below 50%"
+          description: "Average adoption rate {{ $value | humanizePercentage }}"
+          impact: "Limited value realization from Phase 3 features"
+          action: "Review user onboarding and feature discoverability"
+
+      # Conversion Rate Lift (5% target)
+      - alert: ConversionRateLiftBelowTarget
+        expr: (conversion_rate_with_phase3 - conversion_rate_baseline) / conversion_rate_baseline < 0.03
+        for: 4h
+        labels:
+          severity: warning
+          business_impact: high
+        annotations:
+          summary: "Conversion rate lift below 3% (target: 5%)"
+          description: "Conversion lift {{ $value | humanizePercentage }}"
+          impact: "Real-time intelligence not delivering expected conversion improvement"
+
+      # User Satisfaction (NPS >50 target)
+      - alert: Phase3UserSatisfactionLow
+        expr: avg_over_time(phase3_nps_score[7d]) < 40
+        for: 1h
+        labels:
+          severity: warning
+          business_impact: high
+        annotations:
+          summary: "Phase 3 NPS score below 40 (target: >50)"
+          description: "7-day average NPS {{ $value }}"
+          impact: "User dissatisfaction may affect retention and adoption"
+          action: "Review user feedback and common pain points"
+
+  # ============================================================================
+  # Phase 3 A/B Testing Alerts
+  # ============================================================================
+  - name: phase3_ab_testing_alerts
+    rules:
+      # Statistical Significance
+      - alert: ABTestLackingSignificance
+        expr: ab_test_p_value{phase="3"} > 0.05 and ab_test_duration_hours > 168
+        for: 1h
+        labels:
+          severity: warning
+          business_impact: medium
+        annotations:
+          summary: "A/B test lacking statistical significance after 1 week"
+          description: "P-value {{ $value }} for test {{ $labels.test_name }}"
+          impact: "Cannot make confident rollout decisions"
+          action: "Review test parameters and sample size"
+
+      # Control/Treatment Balance
+      - alert: ABTestGroupImbalance
+        expr: abs(ab_test_control_size - ab_test_treatment_size) / ab_test_control_size > 0.1
+        for: 30m
+        labels:
+          severity: warning
+          business_impact: low
+        annotations:
+          summary: "A/B test group imbalance detected"
+          description: "Control/treatment size difference {{ $value | humanizePercentage }}"
+          impact: "May affect test validity"
+          action: "Review traffic splitting configuration"
+
+      # Negative Performance Impact
+      - alert: ABTestNegativeImpact
+        expr: (ab_test_treatment_metric - ab_test_control_metric) / ab_test_control_metric < -0.1 and ab_test_p_value < 0.05
+        for: 2h
+        labels:
+          severity: critical
+          business_impact: critical
+        annotations:
+          summary: "A/B test showing significant negative impact"
+          description: "Treatment performing {{ $value | humanizePercentage }} worse than control"
+          impact: "Feature may be harming user experience or business metrics"
+          action: "Consider halting test and rolling back feature"
+
+  # ============================================================================
+  # Phase 3 Infrastructure Alerts
+  # ============================================================================
+  - name: phase3_infrastructure_alerts
+    rules:
+      # Railway Service Health
+      - alert: Phase3RailwayServiceDown
+        expr: up{job=~"websocket-manager|ml-services|coaching-engine|churn-orchestrator"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          business_impact: critical
+        annotations:
+          summary: "Phase 3 Railway service down"
+          description: "Service {{ $labels.job }} is down"
+          impact: "Phase 3 features unavailable or degraded"
+          action: "Check Railway dashboard and service logs"
+
+      # Vercel Dashboard Availability
+      - alert: Phase3VercelDashboardDown
+        expr: probe_success{job="vercel-dashboards",dashboard=~"intelligence|coaching|property-intelligence|analytics"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          business_impact: high
+        annotations:
+          summary: "Phase 3 Vercel dashboard unavailable"
+          description: "Dashboard {{ $labels.dashboard }} failing health checks"
+          impact: "Users cannot access Phase 3 UI"
+          action: "Check Vercel deployment status and CDN"
+
+      # Redis Connection Pool Exhaustion
+      - alert: Phase3RedisConnectionsExhausted
+        expr: redis_connected_clients{namespace="phase3"} >= redis_max_clients * 0.9
+        for: 5m
+        labels:
+          severity: critical
+          business_impact: high
+        annotations:
+          summary: "Phase 3 Redis connection pool near exhaustion"
+          description: "{{ $value }} connections, {{ redis_max_clients }} max"
+          impact: "WebSocket sessions and caching degraded"
+          action: "Review connection pooling and close leaked connections"
+
+      # PostgreSQL Query Performance
+      - alert: Phase3DatabaseQueriesSlow
+        expr: histogram_quantile(0.90, rate(postgres_query_duration_seconds_bucket{database="enterprisehub",query_type="phase3"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          business_impact: medium
+        annotations:
+          summary: "Phase 3 database queries slow"
+          description: "P90 query time {{ $value }}s, should be <50ms"
+          impact: "Degraded Phase 3 feature performance"
+          action: "Review query execution plans and database indexes"
+
+  # ============================================================================
+  # Phase 3 Cost Management Alerts
+  # ============================================================================
+  - name: phase3_cost_alerts
+    rules:
+      # Claude API Cost Tracking
+      - alert: ClaudeAPICostHigh
+        expr: rate(claude_api_cost_dollars[24h]) * 30 > 2000
+        for: 1h
+        labels:
+          severity: warning
+          business_impact: medium
+        annotations:
+          summary: "Claude API costs projected above budget"
+          description: "Monthly projection ${{ $value }}, budget $2,000"
+          impact: "Phase 3 operating costs may exceed ROI projections"
+          action: "Review API usage patterns and caching strategies"
+
+      # Infrastructure Cost per Feature
+      - alert: FeatureInfrastructureCostHigh
+        expr: rate(feature_infrastructure_cost_dollars{phase="3"}[24h]) * 365 / feature_revenue_impact_annual > 0.3
+        for: 2h
+        labels:
+          severity: warning
+          business_impact: medium
+        annotations:
+          summary: "Feature infrastructure cost ratio above 30%"
+          description: "Cost/revenue ratio {{ $value | humanizePercentage }} for {{ $labels.feature }}"
+          impact: "Reduced profit margin on feature"
+          action: "Review resource allocation and optimization opportunities"
+
+      # WebSocket Connection Cost
+      - alert: WebSocketConnectionCostIncreasing
+        expr: rate(websocket_connection_cost_dollars[24h]) > rate(websocket_connection_cost_dollars[24h] offset 7d) * 1.5
+        for: 6h
+        labels:
+          severity: warning
+          business_impact: low
+        annotations:
+          summary: "WebSocket connection costs increased 50% week-over-week"
+          description: "Current daily cost ${{ $value }}"
+          impact: "Scaling costs higher than expected"
+          action: "Review connection duration and cleanup processes"
