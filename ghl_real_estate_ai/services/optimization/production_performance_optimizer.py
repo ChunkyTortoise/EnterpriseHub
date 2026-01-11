@@ -313,9 +313,35 @@ class IntelligentModelCache:
             logger.info(f"Evicted model {cache_key}: freed {memory_freed:.1f}MB")
 
     async def _optimize_model_for_inference(self, model: Any):
-        """Optimize model for inference performance."""
+        """Optimize model for inference performance with quantization and GPU acceleration."""
 
         try:
+            # Import ML inference optimizer
+            from .ml_inference_optimizer import (
+                MLInferenceOptimizer,
+                QuantizationConfig,
+                BatchingConfig,
+                CachingConfig
+            )
+
+            # Initialize ML optimizer if not already done
+            if not hasattr(self, 'ml_optimizer'):
+                self.ml_optimizer = MLInferenceOptimizer(
+                    quantization_config=QuantizationConfig(
+                        enable_gpu=True,
+                        use_mixed_precision=True
+                    ),
+                    batching_config=BatchingConfig(
+                        max_batch_size=50,
+                        time_window_ms=50.0
+                    ),
+                    caching_config=CachingConfig(
+                        ttl_seconds=300,  # 5 minutes
+                        compression_enabled=True
+                    )
+                )
+                await self.ml_optimizer.initialize()
+
             # Enable inference mode optimizations
             if hasattr(model, 'optimize_for_inference'):
                 model.optimize_for_inference()
@@ -326,14 +352,58 @@ class IntelligentModelCache:
                 if hasattr(model.model, 'eval'):
                     model.model.eval()
 
-                # Enable various optimizations
+                # Enable JIT compilation if available
                 if hasattr(model.model, 'jit') and hasattr(model.model.jit, 'optimize_for_inference'):
                     model.model = model.model.jit.optimize_for_inference()
 
-            logger.debug("Applied inference optimizations to model")
+                # Apply quantization
+                model_type = self._detect_model_framework(model.model)
+                if model_type:
+                    quantized_model = await self._apply_quantization(model.model, model_type)
+                    if quantized_model:
+                        model.model = quantized_model
+
+            logger.debug("Applied enhanced inference optimizations with quantization")
 
         except Exception as e:
             logger.warning(f"Error optimizing model for inference: {str(e)}")
+
+    def _detect_model_framework(self, model: Any) -> Optional[str]:
+        """Detect ML framework of model."""
+        try:
+            model_class = str(type(model))
+            if 'tensorflow' in model_class.lower() or 'keras' in model_class.lower():
+                return 'tensorflow'
+            elif 'torch' in model_class.lower():
+                return 'pytorch'
+            elif 'sklearn' in model_class.lower():
+                return 'sklearn'
+            return None
+        except:
+            return None
+
+    async def _apply_quantization(self, model: Any, model_type: str) -> Optional[Any]:
+        """Apply INT8 quantization to model."""
+        try:
+            if not hasattr(self, 'ml_optimizer'):
+                return None
+
+            # Generate model name
+            model_name = f"model_{id(model)}"
+
+            # Apply quantization based on framework
+            if model_type == 'tensorflow':
+                return self.ml_optimizer.quantizer.quantize_tensorflow_model(model, model_name)
+            elif model_type == 'pytorch':
+                return self.ml_optimizer.quantizer.quantize_pytorch_model(model, model_name)
+            elif model_type == 'sklearn':
+                return self.ml_optimizer.quantizer.quantize_sklearn_model(model, model_name)
+
+            return None
+
+        except Exception as e:
+            logger.warning(f"Error applying quantization: {str(e)}")
+            return None
 
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache performance statistics."""

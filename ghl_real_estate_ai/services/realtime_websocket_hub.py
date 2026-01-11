@@ -668,6 +668,264 @@ class RealtimeWebSocketHub:
         except Exception as e:
             logger.error(f"Cleanup loop error: {e}")
 
+    # =================== COACHING BROADCAST METHODS ===================
+
+    async def broadcast_coaching_suggestions(
+        self,
+        agent_id: str,
+        tenant_id: str,
+        coaching_suggestions: List[str],
+        urgency: str = "medium",
+        conversation_stage: str = "discovery"
+    ) -> BroadcastResult:
+        """
+        Broadcast real-time coaching suggestions to a specific agent.
+
+        Args:
+            agent_id: Target agent identifier
+            tenant_id: Tenant identifier for isolation
+            coaching_suggestions: List of coaching suggestions
+            urgency: Urgency level (low, medium, high, critical)
+            conversation_stage: Current conversation stage
+
+        Returns:
+            BroadcastResult with broadcast metrics
+        """
+        try:
+            coaching_event = {
+                "event_type": "coaching_suggestions",
+                "topic": f"coaching.{agent_id}.suggestions",
+                "data": {
+                    "agent_id": agent_id,
+                    "suggestions": coaching_suggestions,
+                    "urgency": urgency,
+                    "conversation_stage": conversation_stage,
+                    "timestamp": datetime.now().isoformat()
+                },
+                "metadata": {
+                    "priority": "high" if urgency in ["high", "critical"] else "normal",
+                    "expires_at": (datetime.now() + timedelta(minutes=5)).isoformat()
+                }
+            }
+
+            # Broadcast to tenant with coaching topic filtering
+            result = await self.broadcast_to_tenant(tenant_id, coaching_event)
+
+            logger.debug(f"Coaching suggestions broadcasted to agent {agent_id}: "
+                        f"{result.connections_successful}/{result.connections_targeted} successful")
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Failed to broadcast coaching suggestions to agent {agent_id}: {e}")
+            return BroadcastResult(
+                event_type="coaching_suggestions",
+                tenant_id=tenant_id,
+                connections_targeted=0,
+                connections_successful=0,
+                connections_failed=1,
+                broadcast_time_ms=0,
+                errors=[str(e)]
+            )
+
+    async def broadcast_objection_alert(
+        self,
+        agent_id: str,
+        tenant_id: str,
+        objection_type: str,
+        suggested_responses: List[str],
+        severity: str = "medium"
+    ) -> BroadcastResult:
+        """
+        Broadcast objection detection alert to a specific agent.
+
+        Args:
+            agent_id: Target agent identifier
+            tenant_id: Tenant identifier for isolation
+            objection_type: Type of objection detected
+            suggested_responses: Suggested response options
+            severity: Objection severity (low, medium, high)
+
+        Returns:
+            BroadcastResult with broadcast metrics
+        """
+        try:
+            objection_event = {
+                "event_type": "objection_alert",
+                "topic": f"coaching.{agent_id}.objections",
+                "data": {
+                    "agent_id": agent_id,
+                    "objection_type": objection_type,
+                    "suggested_responses": suggested_responses,
+                    "severity": severity,
+                    "timestamp": datetime.now().isoformat()
+                },
+                "metadata": {
+                    "priority": "high" if severity == "high" else "normal",
+                    "alert_sound": True if severity == "high" else False,
+                    "expires_at": (datetime.now() + timedelta(minutes=3)).isoformat()
+                }
+            }
+
+            # Broadcast to tenant with objection topic filtering
+            result = await self.broadcast_to_tenant(tenant_id, objection_event)
+
+            logger.debug(f"Objection alert broadcasted to agent {agent_id}: "
+                        f"{objection_type} severity {severity}")
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Failed to broadcast objection alert to agent {agent_id}: {e}")
+            return BroadcastResult(
+                event_type="objection_alert",
+                tenant_id=tenant_id,
+                connections_targeted=0,
+                connections_successful=0,
+                connections_failed=1,
+                broadcast_time_ms=0,
+                errors=[str(e)]
+            )
+
+    async def broadcast_question_suggestion(
+        self,
+        agent_id: str,
+        tenant_id: str,
+        suggested_question: str,
+        purpose: str,
+        priority: str = "medium",
+        expected_info: str = ""
+    ) -> BroadcastResult:
+        """
+        Broadcast next question suggestion to a specific agent.
+
+        Args:
+            agent_id: Target agent identifier
+            tenant_id: Tenant identifier for isolation
+            suggested_question: The suggested question to ask
+            purpose: Question purpose (qualification, discovery, objection_handling, closing)
+            priority: Priority level (high, medium, low)
+            expected_info: What information this question should reveal
+
+        Returns:
+            BroadcastResult with broadcast metrics
+        """
+        try:
+            question_event = {
+                "event_type": "question_suggestion",
+                "topic": f"coaching.{agent_id}.questions",
+                "data": {
+                    "agent_id": agent_id,
+                    "suggested_question": suggested_question,
+                    "purpose": purpose,
+                    "priority": priority,
+                    "expected_info": expected_info,
+                    "timestamp": datetime.now().isoformat()
+                },
+                "metadata": {
+                    "priority": priority,
+                    "expires_at": (datetime.now() + timedelta(minutes=2)).isoformat()
+                }
+            }
+
+            # Broadcast to tenant with question topic filtering
+            result = await self.broadcast_to_tenant(tenant_id, question_event)
+
+            logger.debug(f"Question suggestion broadcasted to agent {agent_id}: "
+                        f"{purpose} priority {priority}")
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Failed to broadcast question suggestion to agent {agent_id}: {e}")
+            return BroadcastResult(
+                event_type="question_suggestion",
+                tenant_id=tenant_id,
+                connections_targeted=0,
+                connections_successful=0,
+                connections_failed=1,
+                broadcast_time_ms=0,
+                errors=[str(e)]
+            )
+
+    async def subscribe_to_coaching(
+        self,
+        connection_id: str,
+        agent_id: str
+    ) -> bool:
+        """
+        Subscribe a WebSocket connection to coaching topics for a specific agent.
+
+        Args:
+            connection_id: WebSocket connection identifier
+            agent_id: Agent identifier for coaching topics
+
+        Returns:
+            True if subscription successful, False otherwise
+        """
+        try:
+            connection = self._connections.get(connection_id)
+            if not connection:
+                logger.warning(f"Connection {connection_id} not found for coaching subscription")
+                return False
+
+            # Add coaching topics to subscription list
+            coaching_topics = [
+                f"coaching.{agent_id}.suggestions",
+                f"coaching.{agent_id}.objections",
+                f"coaching.{agent_id}.questions"
+            ]
+
+            for topic in coaching_topics:
+                if topic not in connection.subscription_topics:
+                    connection.subscription_topics.append(topic)
+
+            logger.info(f"Connection {connection_id} subscribed to coaching for agent {agent_id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to subscribe connection {connection_id} to coaching: {e}")
+            return False
+
+    async def unsubscribe_from_coaching(
+        self,
+        connection_id: str,
+        agent_id: str
+    ) -> bool:
+        """
+        Unsubscribe a WebSocket connection from coaching topics for a specific agent.
+
+        Args:
+            connection_id: WebSocket connection identifier
+            agent_id: Agent identifier for coaching topics
+
+        Returns:
+            True if unsubscription successful, False otherwise
+        """
+        try:
+            connection = self._connections.get(connection_id)
+            if not connection:
+                logger.warning(f"Connection {connection_id} not found for coaching unsubscription")
+                return False
+
+            # Remove coaching topics from subscription list
+            coaching_topics = [
+                f"coaching.{agent_id}.suggestions",
+                f"coaching.{agent_id}.objections",
+                f"coaching.{agent_id}.questions"
+            ]
+
+            for topic in coaching_topics:
+                if topic in connection.subscription_topics:
+                    connection.subscription_topics.remove(topic)
+
+            logger.info(f"Connection {connection_id} unsubscribed from coaching for agent {agent_id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to unsubscribe connection {connection_id} from coaching: {e}")
+            return False
+
 
 # Singleton instance
 _realtime_websocket_hub = None

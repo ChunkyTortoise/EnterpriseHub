@@ -170,7 +170,7 @@ class AdvancedCacheOptimizer:
 
     def __init__(
         self,
-        l1_max_size: int = 5000,
+        l1_max_size: int = 50000,  # Increased 10x for 90%+ hit rate (Phase 2 optimization)
         l2_redis_client=None,
         l3_database_client=None,
         enable_compression: bool = True,
@@ -440,7 +440,10 @@ class AdvancedCacheOptimizer:
         return None
 
     async def _apply_compression(self, value: Any) -> Tuple[Any, float]:
-        """Apply compression if beneficial"""
+        """
+        Aggressive compression for maximum cache efficiency.
+        Phase 2 Optimization: Enhanced compression for 50K cache capacity.
+        """
         if not self.enable_compression:
             return value, 1.0
 
@@ -449,13 +452,22 @@ class AdvancedCacheOptimizer:
             serialized = pickle.dumps(value)
             original_size = len(serialized)
 
-            # Only compress if larger than 1KB
-            if original_size > 1024:
-                compressed = zlib.compress(serialized, level=6)  # Balanced compression
+            # Aggressive compression threshold: compress if larger than 512 bytes (reduced from 1KB)
+            if original_size > 512:
+                # Use higher compression for better space efficiency
+                # Level 9 for maximum compression on larger objects
+                compression_level = 9 if original_size > 10240 else 6  # 10KB threshold
+
+                compressed = zlib.compress(serialized, level=compression_level)
                 compression_ratio = len(compressed) / original_size
 
-                # Use compression if it saves at least 20%
-                if compression_ratio < 0.8:
+                # More aggressive compression acceptance (15% savings instead of 20%)
+                if compression_ratio < 0.85:
+                    # Track compression effectiveness
+                    self.metrics.compression_effectiveness = (
+                        self.metrics.compression_effectiveness * 0.95 +
+                        (1.0 - compression_ratio) * 0.05
+                    )
                     return compressed, compression_ratio
 
             return value, 1.0
@@ -627,44 +639,73 @@ class AdvancedCacheOptimizer:
         pass
 
     async def _intelligent_eviction_l1(self) -> None:
-        """Intelligent eviction strategy for L1 cache"""
+        """
+        Aggressive intelligent eviction strategy for L1 cache.
+        Phase 2 Optimization: Enhanced eviction algorithm for 50K cache size.
+        """
         # Remove expired entries first
         expired_keys = [
             k for k, entry in self.l1_cache.items() if entry.is_expired
         ]
         for key in expired_keys:
             del self.l1_cache[key]
+            self.metrics.cache_evictions += 1
 
-        # If still over capacity, use sophisticated eviction
+        # If still over capacity, use aggressive sophisticated eviction
         if len(self.l1_cache) >= self.l1_max_size:
             # Calculate eviction scores (lower = more likely to evict)
             eviction_candidates = []
 
             for key, entry in self.l1_cache.items():
-                # Score based on access pattern, frequency, and recency
-                frequency_score = entry.access_frequency
-                recency_score = 1.0 / max(1, entry.age_seconds)
+                # Enhanced scoring algorithm for large cache
+                frequency_score = entry.access_frequency * 2.0  # Weight frequency higher
+                recency_score = 5.0 / max(1, entry.age_seconds / 60)  # Decay after 1 minute
+
+                # Enhanced pattern scoring
                 pattern_score = {
-                    AccessPattern.HOT: 10,
-                    AccessPattern.WARM: 5,
-                    AccessPattern.TEMPORAL: 3,
-                    AccessPattern.COLD: 1
+                    AccessPattern.HOT: 20,      # Keep HOT data strongly
+                    AccessPattern.WARM: 8,      # Keep WARM moderately
+                    AccessPattern.TEMPORAL: 4,  # TEMPORAL is situational
+                    AccessPattern.COLD: 0.5     # Aggressively evict COLD
                 }.get(entry.access_pattern, 2)
 
-                eviction_score = frequency_score + recency_score + pattern_score
+                # Compression bonus (compressed data takes less space)
+                compression_bonus = 5.0 if entry.compressed else 0.0
+
+                # Multi-access bonus (data accessed multiple times is valuable)
+                multi_access_bonus = min(entry.access_count * 0.5, 10.0)
+
+                eviction_score = (
+                    frequency_score +
+                    recency_score +
+                    pattern_score +
+                    compression_bonus +
+                    multi_access_bonus
+                )
                 eviction_candidates.append((eviction_score, key))
 
-            # Sort by score and remove lowest-scoring entries
+            # Sort by score and remove lowest-scoring entries aggressively
             eviction_candidates.sort()
-            evict_count = len(self.l1_cache) // 4  # Remove 25%
+            evict_count = max(
+                len(self.l1_cache) // 5,  # Remove at least 20% for larger cache
+                len(self.l1_cache) - int(self.l1_max_size * 0.9)  # Keep 10% headroom
+            )
 
             for _, key in eviction_candidates[:evict_count]:
-                # Try to promote to L2 before evicting
-                if self.l2_redis_client and self.l1_cache[key].access_count > 1:
+                # Intelligent L2 promotion for valuable data
+                if self.l2_redis_client and self.l1_cache[key].access_count > 2:
                     entry = self.l1_cache[key]
-                    await self._set_l2(key, entry.data, 3600, entry)  # 1 hour in L2
+                    # Longer TTL for frequently accessed items
+                    ttl = 7200 if entry.access_count > 5 else 3600  # 2 hours vs 1 hour
+                    await self._set_l2(key, entry.data, ttl, entry)
 
                 del self.l1_cache[key]
+                self.metrics.cache_evictions += 1
+
+            logger.info(
+                f"Aggressive eviction completed: removed {evict_count} entries, "
+                f"cache size now {len(self.l1_cache)}/{self.l1_max_size}"
+            )
 
     async def _trigger_predictive_preload(self, key: str, namespace: str) -> None:
         """Trigger predictive preloading of related data"""

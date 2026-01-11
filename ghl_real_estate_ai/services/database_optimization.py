@@ -154,9 +154,9 @@ class ConnectionPoolMetrics:
 @dataclass
 class DatabaseOptimizationConfig:
     """Database optimization configuration"""
-    # Connection pool settings
-    master_pool_size: int = 20
-    replica_pool_size: int = 30
+    # Connection pool settings (optimized for Phase 2 Week 3 performance targets)
+    master_pool_size: int = 50  # Increased from 20 for higher write throughput
+    replica_pool_size: int = 100  # Increased from 30 for read-heavy workloads
     analytics_pool_size: int = 10
     cache_pool_size: int = 15
 

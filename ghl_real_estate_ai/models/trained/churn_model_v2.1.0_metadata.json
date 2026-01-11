@@ -1,0 +1,59 @@
+{
+  "model_type": "xgboost_churn_prediction",
+  "model_version": "v2.1.0",
+  "training_date": "2026-01-10T17:14:55.846540",
+  "training_samples": 1280,
+  "test_samples": 320,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1_score": 1.0,
+  "auc_roc": 1.0,
+  "churn_rate": 0.4025,
+  "feature_count": 16,
+  "feature_names": [
+    "days_since_last_activity",
+    "interaction_velocity_7d",
+    "interaction_velocity_14d",
+    "interaction_velocity_30d",
+    "email_response_rate",
+    "sms_response_rate",
+    "avg_response_time_minutes",
+    "urgency_score",
+    "intent_strength",
+    "property_views",
+    "search_queries",
+    "days_since_creation",
+    "total_interactions",
+    "unique_interaction_days",
+    "feature_completeness",
+    "data_freshness_hours"
+  ],
+  "feature_importance": {
+    "days_since_last_activity": 765.012939453125,
+    "email_response_rate": 391.8856201171875,
+    "interaction_velocity_7d": 343.1365661621094,
+    "interaction_velocity_14d": 297.5395202636719
+  },
+  "hyperparameters": {
+    "objective": "binary:logistic",
+    "max_depth": 6,
+    "learning_rate": 0.1,
+    "n_estimators": 200,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 3,
+    "gamma": 0.1,
+    "reg_alpha": 0.1,
+    "reg_lambda": 1.0,
+    "scale_pos_weight": 1.4854368932038835,
+    "random_state": 42,
+    "eval_metric": [
+      "logloss",
+      "aucpr"
+    ]
+  },
+  "data_source": "LeadBehavioralFeatureExtractor",
+  "feature_extractor": "LeadBehavioralFeatureExtractor",
+  "meets_precision_target": true,
+  "meets_recall_target": true
+}

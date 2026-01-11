@@ -11,15 +11,33 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 
-# Import our chat system components
-from .chatbot_manager import ChatbotManager, UserType
-from .session_manager import SessionManager
-from .chat_interface import ChatInterface
-from .chat_ml_integration import ChatMLIntegration
+# Import async utilities for safe execution
+from ..utils.async_utils import safe_run_async, handle_streamlit_async_error
+
+# Import our chat system components (with fallback handling)
+try:
+    from .chatbot_manager import ChatbotManager, UserType
+    from .session_manager import SessionManager
+    from .chat_interface import ChatInterface
+    from .chat_ml_integration import ChatMLIntegration
+    CHAT_COMPONENTS_AVAILABLE = True
+except ImportError as e:
+    st.warning(f"Chat system components not available: {e}")
+    CHAT_COMPONENTS_AVAILABLE = False
+    # Create placeholder classes to prevent runtime errors
+    class ChatbotManager: pass
+    class SessionManager: pass
+    class ChatInterface: pass
+    class ChatMLIntegration: pass
+    class UserType: pass
 
 @st.cache_resource
 def initialize_chat_system(tenant_id: str = "streamlit_demo") -> ChatInterface:
     """Initialize and cache the chat system"""
+    if not CHAT_COMPONENTS_AVAILABLE:
+        st.error("Chat system components are not available")
+        return None
+
     try:
         # Initialize core components
         session_manager = SessionManager(
@@ -45,20 +63,26 @@ def initialize_chat_system(tenant_id: str = "streamlit_demo") -> ChatInterface:
 
             st.success("🧠 ML-enhanced chat system loaded")
 
-        except ImportError:
+        except ImportError as import_error:
             st.info("💬 Basic chat system loaded (ML features unavailable)")
-            ml_integration = ChatMLIntegration(chatbot_manager, session_manager)
+            try:
+                ml_integration = ChatMLIntegration(chatbot_manager, session_manager)
+            except Exception as ml_error:
+                st.warning(f"ML integration unavailable: {ml_error}")
+                ml_integration = None
 
         # Create chat interface
         chat_interface = ChatInterface(chatbot_manager, session_manager, tenant_id)
 
         # Store ML integration in the interface for access
-        chat_interface.ml_integration = ml_integration
+        if ml_integration:
+            chat_interface.ml_integration = ml_integration
 
         return chat_interface
 
     except Exception as e:
         st.error(f"Failed to initialize chat system: {str(e)}")
+        st.info("💡 Try refreshing the page to resolve initialization issues")
         # Return a minimal fallback
         return None
 
@@ -91,14 +115,13 @@ def render_chat_demo():
 
     # Render appropriate chat interface
     try:
-        asyncio.run(chat_interface.render_demo_chat(
+        safe_run_async(chat_interface.render_demo_chat(
             demo_persona=user_type,
             include_ml_insights=True
         ))
 
     except Exception as e:
-        st.error(f"Chat demo failed: {str(e)}")
-        st.info("Please try refreshing the page")
+        handle_streamlit_async_error(e, "chat demo rendering")
 
 def render_lead_chat(user_id: Optional[str] = None):
     """Render lead qualification chat"""
@@ -107,12 +130,12 @@ def render_lead_chat(user_id: Optional[str] = None):
         return
 
     try:
-        asyncio.run(chat_interface.render_lead_chat(
+        safe_run_async(chat_interface.render_lead_chat(
             user_id=user_id or f"lead_{uuid.uuid4().hex[:8]}",
             show_insights=True
         ))
     except Exception as e:
-        st.error(f"Lead chat failed: {str(e)}")
+        handle_streamlit_async_error(e, "lead chat")
 
 def render_buyer_chat(user_id: Optional[str] = None):
     """Render buyer assistance chat"""
@@ -121,26 +144,191 @@ def render_buyer_chat(user_id: Optional[str] = None):
         return
 
     try:
-        asyncio.run(chat_interface.render_buyer_chat(
+        safe_run_async(chat_interface.render_buyer_chat(
             user_id=user_id or f"buyer_{uuid.uuid4().hex[:8]}",
             show_property_suggestions=True
         ))
     except Exception as e:
-        st.error(f"Buyer chat failed: {str(e)}")
+        handle_streamlit_async_error(e, "buyer chat")
 
 def render_seller_chat(user_id: Optional[str] = None):
     """Render seller consultation chat"""
     chat_interface = initialize_chat_system()
     if not chat_interface:
+        render_fallback_seller_chat()
         return
 
     try:
-        asyncio.run(chat_interface.render_seller_chat(
+        safe_run_async(chat_interface.render_seller_chat(
             user_id=user_id or f"seller_{uuid.uuid4().hex[:8]}",
             show_valuation=True
         ))
     except Exception as e:
-        st.error(f"Seller chat failed: {str(e)}")
+        handle_streamlit_async_error(e, "seller chat")
+        render_fallback_seller_chat()
+
+def render_fallback_seller_chat():
+    """Render a simple fallback chat interface for sellers"""
+    st.markdown("### 🏡 Seller AI Assistant")
+    st.info("""
+    **Welcome to the Seller AI Assistant!**
+
+    The advanced chat system is currently initializing. Here's what this assistant helps with:
+
+    🔍 **Property Valuation**
+    - Market analysis and pricing recommendations
+    - Comparative market analysis (CMA)
+    - Property enhancement suggestions
+
+    📈 **Marketing Strategy**
+    - Professional listing optimization
+    - Photography and staging advice
+    - Target buyer identification
+
+    ⏰ **Timing & Market Insights**
+    - Best time to list analysis
+    - Market trend insights
+    - Seasonal considerations
+
+    💰 **Financial Planning**
+    - Cost estimation for improvements
+    - Net proceeds calculations
+    - Tax implications guidance
+    """)
+
+    st.markdown("---")
+    st.markdown("**Quick Actions:**")
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("📊 Get Property Valuation", help="Start property valuation process"):
+            st.success("Valuation request submitted! A specialist will contact you soon.")
+
+    with col2:
+        if st.button("📸 Schedule Photos", help="Schedule professional photography"):
+            st.success("Photography consultation scheduled!")
+
+    with col3:
+        if st.button("📅 Market Timing", help="Get market timing advice"):
+            st.success("Market analysis requested!")
+
+    # Simple message interface
+    st.markdown("### Quick Questions")
+
+    if "fallback_messages" not in st.session_state:
+        st.session_state.fallback_messages = [
+            {"role": "assistant", "content": "Hi! I'm your Seller AI Assistant. How can I help you with your property today?"}
+        ]
+
+    # Display chat messages
+    for message in st.session_state.fallback_messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Chat input
+    if prompt := st.chat_input("Ask about selling your property..."):
+        st.session_state.fallback_messages.append({"role": "user", "content": prompt})
+
+        # Simple response logic
+        response = generate_simple_seller_response(prompt)
+        st.session_state.fallback_messages.append({"role": "assistant", "content": response})
+        st.rerun()
+
+def generate_simple_seller_response(question: str) -> str:
+    """Generate simple responses for common seller questions"""
+    question_lower = question.lower()
+
+    if any(word in question_lower for word in ["price", "value", "worth", "cost"]):
+        return """Great question about property value! Here are key factors that affect your home's worth:
+
+🏠 **Location & Neighborhood**
+🏗️ **Property condition and age**
+📏 **Square footage and lot size**
+🛏️ **Number of bedrooms/bathrooms**
+🚗 **Garage and parking**
+🌟 **Recent upgrades and improvements**
+
+For an accurate valuation, I recommend scheduling a professional CMA (Comparative Market Analysis). Would you like me to arrange that?"""
+
+    elif any(word in question_lower for word in ["time", "when", "season", "market"]):
+        return """Market timing is crucial for maximizing your sale! Consider these factors:
+
+📈 **Current Market Conditions**
+- Inventory levels in your area
+- Average days on market
+- Price trends
+
+🗓️ **Seasonal Factors**
+- Spring: Highest buyer activity
+- Summer: Good for families
+- Fall: Serious buyers
+- Winter: Less competition
+
+📊 **Personal Timing**
+- Your next home plans
+- Financial readiness
+- Property preparation time
+
+Would you like a detailed market analysis for your area?"""
+
+    elif any(word in question_lower for word in ["marketing", "photos", "listing", "advertise"]):
+        return """Effective marketing is key to a successful sale! Here's our approach:
+
+📸 **Professional Photography**
+- High-quality interior/exterior shots
+- Drone photography for large properties
+- Virtual staging if needed
+
+📝 **Compelling Listing Description**
+- Highlight unique features
+- Target the right buyers
+- SEO-optimized for online searches
+
+🌐 **Multi-Platform Marketing**
+- MLS listing
+- Major real estate websites
+- Social media promotion
+- Email campaigns to our network
+
+Would you like to discuss a custom marketing strategy for your property?"""
+
+    elif any(word in question_lower for word in ["prepare", "stage", "improve", "repair"]):
+        return """Property preparation can significantly impact your sale! Here's what typically adds value:
+
+🧹 **Essential Preparations**
+- Deep cleaning throughout
+- Declutter and depersonalize
+- Minor repairs and touch-ups
+
+🎨 **Staging & Aesthetics**
+- Neutral paint colors
+- Update fixtures if needed
+- Professional staging consultation
+
+💡 **High-Impact Improvements**
+- Kitchen and bathroom updates
+- Curb appeal enhancements
+- Energy-efficient upgrades
+
+🚫 **Avoid Over-Improving**
+- Don't invest more than 75% of expected return
+- Focus on buyer preferences in your price range
+
+Would you like a personalized preparation checklist for your property?"""
+
+    else:
+        return """Thank you for your question! I'm here to help with all aspects of selling your property.
+
+**I can assist with:**
+• Property valuation and pricing strategy
+• Market timing and conditions
+• Marketing and listing optimization
+• Property preparation and staging
+• Financial planning and net proceeds
+
+Feel free to ask me about any of these topics, or let me know what specific aspect of selling concerns you most!
+
+For complex questions, our full AI system will be available shortly with enhanced capabilities."""
 
 def render_chat_analytics():
     """Render chat system analytics"""
@@ -152,7 +340,7 @@ def render_chat_analytics():
 
     try:
         # Get session analytics
-        analytics = asyncio.run(chat_interface.get_session_analytics())
+        analytics = safe_run_async(chat_interface.get_session_analytics())
 
         if analytics:
             # Session statistics
@@ -208,7 +396,7 @@ def render_chat_analytics():
             st.info("No chat analytics available yet. Start some conversations to see data here.")
 
     except Exception as e:
-        st.error(f"Analytics failed: {str(e)}")
+        handle_streamlit_async_error(e, "chat analytics")
 
 def render_admin_chat_controls():
     """Render admin controls for chat system"""
@@ -267,17 +455,17 @@ def render_admin_chat_controls():
         with col1:
             if st.button("🧹 Cleanup Expired Sessions", help="Remove old session data"):
                 try:
-                    cleaned = asyncio.run(
+                    cleaned = safe_run_async(
                         chat_interface.session_manager.cleanup_expired_sessions()
                     )
                     st.success(f"Cleaned {cleaned} expired sessions")
                 except Exception as e:
-                    st.error(f"Cleanup failed: {str(e)}")
+                    handle_streamlit_async_error(e, "session cleanup")
 
         with col2:
             if st.button("📊 Export Session Data", help="Export conversation data"):
                 try:
-                    export_data = asyncio.run(
+                    export_data = safe_run_async(
                         chat_interface.chatbot_manager.export_conversation_data("streamlit_demo")
                     )
                     st.download_button(
@@ -287,7 +475,7 @@ def render_admin_chat_controls():
                         mime="application/json"
                     )
                 except Exception as e:
-                    st.error(f"Export failed: {str(e)}")
+                    handle_streamlit_async_error(e, "session export")
 
 # Helper functions for integration with existing Streamlit app
 

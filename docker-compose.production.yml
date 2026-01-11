@@ -1,40 +1,75 @@
 networks:
   ai_operations:
     driver: bridge
+    external: false
+  postgres_network:
+    driver: bridge
+    external: false
+
 services:
   auto_scaling_controller:
     build:
       context: .
       dockerfile: docker/Dockerfile.auto_scaling_controller
     depends_on:
-    - redis
-    - postgres
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
-    - ENVIRONMENT=production
-    - REDIS_URL=redis://redis:6379/0
-    - POSTGRES_URL=postgresql://postgres:password@postgres:5432/ai_operations
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - POSTGRES_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GHL_API_KEY=${GHL_API_KEY}
+      - GHL_WEBHOOK_SECRET=${GHL_WEBHOOK_SECRET}
+      - CIRCUIT_BREAKER_FAILURE_THRESHOLD=${CIRCUIT_BREAKER_FAILURE_THRESHOLD:-5}
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=${RATE_LIMIT_REQUESTS_PER_MINUTE:-100}
     healthcheck:
       interval: 30s
       retries: 3
       test:
-      - python -c 'import auto_scaling_controller'
+        - CMD
+        - python
+        - -c
+        - 'import auto_scaling_controller'
       timeout: 10s
+      start_period: 60s
     networks:
-    - ai_operations
+      - ai_operations
+      - postgres_network
     ports:
-    - 8047:8047
+      - "8047:8047"
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+
   enhanced_ml_integration:
     build:
       context: .
       dockerfile: docker/Dockerfile.enhanced_ml_integration
     depends_on:
-    - redis
-    - postgres
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
-    - ENVIRONMENT=production
-    - REDIS_URL=redis://redis:6379/0
-    - POSTGRES_URL=postgresql://postgres:password@postgres:5432/ai_operations
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - POSTGRES_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ML_INFERENCE_TIMEOUT_MS=${ML_INFERENCE_TIMEOUT_MS:-500}
     healthcheck:
       interval: 30s
       retries: 3
@@ -131,26 +166,105 @@ services:
     restart: unless-stopped
   postgres:
     environment:
-    - POSTGRES_DB=ai_operations
-    - POSTGRES_USER=postgres
-    - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --auth-local=scram-sha-256
+      - POSTGRES_REPLICATION_USER=${POSTGRES_REPLICATION_USER}
+      - POSTGRES_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD}
     image: postgres:15-alpine
     networks:
-    - ai_operations
+      - ai_operations
+      - postgres_network
     ports:
-    - 5432:5432
+      - "5432:5432"
     restart: unless-stopped
     volumes:
-    - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./config/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./config/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+
+  # PostgreSQL Read Replica for High Availability
+  postgres-replica:
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_MASTER_SERVICE=postgres
+      - POSTGRES_REPLICATION_USER=${POSTGRES_REPLICATION_USER}
+      - POSTGRES_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD}
+    image: postgres:15-alpine
+    networks:
+      - postgres_network
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+      - ./scripts/setup_replica.sh:/docker-entrypoint-initdb.d/setup_replica.sh:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
   redis:
     image: redis:7-alpine
     networks:
-    - ai_operations
+      - ai_operations
     ports:
-    - 6379:6379
+      - "6379:6379"
     restart: unless-stopped
     volumes:
-    - redis_data:/data
+      - redis_data:/data
+      - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
   self_healing_system:
     build:
       context: .
@@ -174,6 +288,23 @@ services:
     - 8086:8086
     restart: unless-stopped
 version: '3.8'
+
 volumes:
-  postgres_data: {}
-  redis_data: {}
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/enterprisehub/data/postgres
+  postgres_replica_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/enterprisehub/data/postgres_replica
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/enterprisehub/data/redis

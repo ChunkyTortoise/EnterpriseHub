@@ -44,8 +44,9 @@ from ghl_real_estate_ai.models.lead_behavioral_features import (
     LeadBehavioralFeatures,
     LeadBehavioralFeatureExtractor
 )
-from ghl_real_estate_ai.services.integration_cache_manager import get_cache_manager
+from ghl_real_estate_ai.services.integration_cache_manager import get_integration_cache_manager as get_cache_manager
 from ghl_real_estate_ai.services.dashboard_analytics_service import get_dashboard_analytics_service
+from ghl_real_estate_ai.services.ml_service_registry import get_ml_registry_sync
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -125,12 +126,12 @@ class ChurnPrediction:
     # Intervention recommendations
     recommended_actions: List[InterventionAction]
     intervention_priority: InterventionPriority
-    estimated_time_to_churn: Optional[int] = None  # days
 
     # Performance metrics
     prediction_confidence: float
     feature_quality: float
     inference_time_ms: float
+    estimated_time_to_churn: Optional[int] = None  # days
 
 
 @dataclass
@@ -174,10 +175,11 @@ class ChurnPredictionService:
         self.feature_extractor = LeadBehavioralFeatureExtractor()
         self.cache_manager = None
         self.dashboard_service = None
+        self.ml_optimizer = get_ml_registry_sync().ml_optimizer  # ML optimization integration (GREEN phase)
 
         # Model configuration
         self.model_path = Path(__file__).parent.parent / "models" / "trained"
-        self.current_model_version = "churn_v2.1.0"
+        self.current_model_version = "v2.1.0"
 
         # Prediction thresholds
         self.risk_thresholds = {

@@ -1,0 +1,30 @@
+{
+  "prediction_horizon_minutes": 30,
+  "prediction_interval_seconds": 60,
+  "model_retrain_hours": 24,
+  "cpu_scale_up_threshold": 0.75,
+  "cpu_scale_down_threshold": 0.30,
+  "memory_scale_up_threshold": 0.80,
+  "memory_scale_down_threshold": 0.40,
+  "response_time_threshold_ms": 200,
+  "error_rate_threshold": 0.01,
+  "cost_optimization_enabled": true,
+  "max_cost_increase_percent": 15.0,
+  "min_instances": {
+    "api_instances": 2,
+    "ml_workers": 1,
+    "redis_nodes": 3,
+    "database_connections": 10,
+    "websocket_capacity": 100
+  },
+  "max_instances": {
+    "api_instances": 20,
+    "ml_workers": 10,
+    "redis_nodes": 9,
+    "database_connections": 200,
+    "websocket_capacity": 2000
+  },
+  "scaling_cooldown_minutes": 10,
+  "max_scale_up_factor": 2.0,
+  "max_scale_down_factor": 0.5
+}

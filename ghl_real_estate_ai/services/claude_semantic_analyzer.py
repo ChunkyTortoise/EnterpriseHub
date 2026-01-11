@@ -699,6 +699,377 @@ Provide analysis in JSON format:
                 "stats": await self.get_stats()
             }
 
+    # =================== ENHANCED SEMANTIC QUALIFICATION METHODS ===================
+
+    async def analyze_lead_intent(self, conversation_messages: List[Dict]) -> Dict[str, Any]:
+        """
+        Analyze conversation to determine lead intent and urgency using semantic understanding.
+
+        Args:
+            conversation_messages: List of conversation messages with role/content
+
+        Returns:
+            Dict with intent analysis results
+        """
+        try:
+            system_prompt = """You are an expert real estate lead qualification specialist. Analyze conversations to determine lead intent and urgency with deep psychological understanding.
+
+Consider:
+1. Explicit statements about buying/selling intentions
+2. Timeline indicators and urgency clues
+3. Engagement level and question quality
+4. Budget discussions and financial readiness
+5. Decision-making authority and process
+6. Behavioral signals and patterns
+
+INTENT CLASSIFICATION:
+- researching: Early stage information gathering
+- actively_looking: Viewing properties, comparing options
+- ready_to_buy: Clear intent with timeline and budget
+- ready_to_sell: Wants to list property soon
+- just_browsing: Casual interest, no clear intent
+- needs_nurturing: Has potential but requires education
+- not_qualified: Unlikely to transact in reasonable timeframe
+
+URGENCY LEVELS:
+- immediate: Ready to act within days/weeks
+- high: Ready to act within 1-3 months
+- medium: 3-6 month timeline
+- low: 6+ months or no clear timeline
+- unknown: Insufficient information
+
+Format response as JSON:
+{
+    "primary_intent": "intent_type",
+    "confidence": 0.0-1.0,
+    "urgency_level": "urgency_level",
+    "timeline": "estimated timeline string",
+    "reasoning": "detailed explanation",
+    "supporting_evidence": ["key quote 1", "key quote 2"],
+    "behavioral_signals": ["signal 1", "signal 2"],
+    "qualification_readiness": 0-100
+}"""
+
+            # Format conversation for analysis
+            conversation_text = self._format_messages_for_analysis(conversation_messages)
+
+            # Call Claude API
+            response = await self._call_claude_api(
+                f"{system_prompt}\n\nAnalyze this conversation for lead intent and urgency:\n\n{conversation_text}"
+            )
+
+            # Parse and return results
+            return self._parse_claude_response(response)
+
+        except Exception as e:
+            logger.error(f"Error in intent analysis: {str(e)}")
+            return {
+                "primary_intent": "unknown",
+                "confidence": 0.1,
+                "urgency_level": "unknown",
+                "timeline": None,
+                "reasoning": f"Analysis failed: {str(e)}",
+                "supporting_evidence": [],
+                "behavioral_signals": [],
+                "qualification_readiness": 30
+            }
+
+    async def extract_semantic_preferences(self, conversation_messages: List[str]) -> Dict[str, Any]:
+        """
+        Extract detailed preferences from conversation using semantic understanding.
+
+        Args:
+            conversation_messages: List of message texts
+
+        Returns:
+            Dict with structured preference profile
+        """
+        try:
+            system_prompt = """You are a master at extracting nuanced real estate preferences from conversations. Use semantic understanding to identify not just explicit preferences, but implied needs, lifestyle factors, and decision criteria.
+
+Extract and analyze:
+
+FINANCIAL PREFERENCES:
+- Budget ranges (explicit and implied)
+- Financial constraints or flexibility
+- Investment vs. personal use considerations
+
+LOCATION INTELLIGENCE:
+- Specific areas mentioned
+- Commute requirements
+- Lifestyle location needs (urban, suburban, rural)
+- School district importance
+- Neighborhood characteristics valued
+
+PROPERTY CHARACTERISTICS:
+- Size requirements (bedrooms, bathrooms, square footage)
+- Property type preferences
+- Architectural styles or features
+- Age preferences (new construction, historic, etc.)
+
+LIFESTYLE FACTORS:
+- Family situation impact on needs
+- Work-from-home requirements
+- Entertainment/hosting needs
+- Pet considerations
+- Accessibility needs
+
+DECISION PATTERNS:
+- What drives their decisions
+- Deal breakers vs. nice-to-haves
+- Compromise willingness
+- Timeline pressures
+
+Be comprehensive but conservative - only extract information that has clear evidence.
+
+Format as JSON:
+{
+    "budget_analysis": {
+        "explicit_range": [min, max] or null,
+        "implied_range": [min, max] or null,
+        "flexibility_indicators": ["flexible on...", "firm on..."],
+        "financial_confidence": 0-100
+    },
+    "location_profile": {
+        "preferred_areas": ["area1", "area2"],
+        "commute_requirements": "description",
+        "lifestyle_needs": ["urban access", "quiet neighborhood"],
+        "school_importance": 0-10,
+        "location_flexibility": 0-10
+    },
+    "property_requirements": {
+        "bedrooms": {number} or null,
+        "bathrooms": {number} or null,
+        "property_type": "type" or null,
+        "size_requirements": "description",
+        "must_have_features": ["feature1", "feature2"],
+        "nice_to_have_features": ["feature1", "feature2"]
+    },
+    "lifestyle_factors": {
+        "family_situation": "description",
+        "work_requirements": "description",
+        "special_needs": ["need1", "need2"],
+        "timeline_drivers": ["driver1", "driver2"]
+    },
+    "decision_psychology": {
+        "primary_motivators": ["motivator1", "motivator2"],
+        "deal_breakers": ["breaker1", "breaker2"],
+        "compromise_areas": ["area1", "area2"],
+        "decision_confidence": 0-100
+    },
+    "extraction_confidence": 0-100,
+    "reasoning": "explanation of analysis"
+}"""
+
+            messages_text = "\n".join(conversation_messages[-15:])  # Last 15 messages
+
+            response = await self._call_claude_api(
+                f"{system_prompt}\n\nExtract semantic preferences from:\n\n{messages_text}"
+            )
+
+            return self._parse_claude_response(response)
+
+        except Exception as e:
+            logger.error(f"Error extracting preferences: {str(e)}")
+            return {
+                "budget_analysis": {"financial_confidence": 0},
+                "location_profile": {"location_flexibility": 5},
+                "property_requirements": {},
+                "lifestyle_factors": {},
+                "decision_psychology": {"decision_confidence": 0},
+                "extraction_confidence": 10,
+                "reasoning": f"Extraction failed: {str(e)}"
+            }
+
+    async def assess_semantic_qualification(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Comprehensive semantic assessment of lead qualification completeness.
+
+        Args:
+            lead_data: Complete lead information including conversations, preferences, etc.
+
+        Returns:
+            Dict with detailed qualification assessment
+        """
+        try:
+            system_prompt = """You are an expert real estate qualification analyst. Assess lead qualification completeness using both explicit information and semantic understanding of conversations.
+
+Evaluate these qualification dimensions:
+
+FINANCIAL QUALIFICATION (25%):
+- Budget clarity and realism
+- Financing readiness/pre-approval status
+- Income stability indicators
+- Financial flexibility signs
+
+TIMELINE QUALIFICATION (20%):
+- Urgency and motivation clarity
+- Decision timeline reasonableness
+- External timeline pressures
+- Readiness to act indicators
+
+NEEDS CLARITY (20%):
+- Property requirements specificity
+- Location preference clarity
+- Feature priority understanding
+- Must-have vs. nice-to-have distinction
+
+DECISION AUTHORITY (15%):
+- Decision-maker identification
+- Family/partner alignment
+- Authority to commit
+- Approval process understanding
+
+MARKET READINESS (10%):
+- Market understanding level
+- Price expectation realism
+- Competition awareness
+- Process knowledge
+
+AGENT RAPPORT (10%):
+- Trust and communication quality
+- Responsiveness level
+- Openness to guidance
+- Relationship strength
+
+Provide comprehensive assessment with actionable insights.
+
+Format as JSON:
+{
+    "overall_qualification_score": 0-100,
+    "qualification_dimensions": {
+        "financial": {"score": 0-100, "strength": "assessment", "gaps": ["gap1"]},
+        "timeline": {"score": 0-100, "strength": "assessment", "gaps": ["gap1"]},
+        "needs_clarity": {"score": 0-100, "strength": "assessment", "gaps": ["gap1"]},
+        "decision_authority": {"score": 0-100, "strength": "assessment", "gaps": ["gap1"]},
+        "market_readiness": {"score": 0-100, "strength": "assessment", "gaps": ["gap1"]},
+        "agent_rapport": {"score": 0-100, "strength": "assessment", "gaps": ["gap1"]}
+    },
+    "critical_missing_info": ["info1", "info2"],
+    "strong_qualification_indicators": ["indicator1", "indicator2"],
+    "weak_qualification_signals": ["signal1", "signal2"],
+    "recommended_next_steps": [
+        {"priority": "high", "action": "action description", "expected_outcome": "outcome"}
+    ],
+    "risk_assessment": {
+        "churn_risk": 0-100,
+        "time_waste_risk": 0-100,
+        "conversion_probability": 0-100
+    },
+    "strategic_recommendations": {
+        "focus_areas": ["area1", "area2"],
+        "conversation_strategy": "strategy description",
+        "timeline_recommendations": "timeline guidance"
+    },
+    "assessment_confidence": 0-100,
+    "reasoning": "detailed explanation"
+}"""
+
+            response = await self._call_claude_api(
+                f"{system_prompt}\n\nAssess qualification for this lead:\n\n{json.dumps(lead_data, indent=2)}"
+            )
+
+            return self._parse_claude_response(response)
+
+        except Exception as e:
+            logger.error(f"Error in qualification assessment: {str(e)}")
+            return {
+                "overall_qualification_score": 50,
+                "qualification_dimensions": {},
+                "critical_missing_info": ["Unable to analyze due to error"],
+                "assessment_confidence": 10,
+                "reasoning": f"Assessment failed: {str(e)}"
+            }
+
+    async def generate_intelligent_questions(
+        self,
+        lead_profile: Dict[str, Any],
+        conversation_context: Optional[Dict] = None,
+        focus_area: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Generate intelligent, contextual questions based on semantic analysis.
+
+        Args:
+            lead_profile: Complete lead profile information
+            conversation_context: Current conversation state and history
+            focus_area: Specific area to focus questions on
+
+        Returns:
+            List of intelligent question objects
+        """
+        try:
+            system_prompt = """You are a master real estate conversationalist and question strategist. Generate intelligent, contextual questions that feel natural and advance the relationship while gathering essential information.
+
+Consider:
+- What critical information is missing for qualification
+- The lead's communication style and comfort level
+- Current conversation flow and natural transitions
+- Psychological readiness for different types of questions
+- Most effective timing and sequencing
+
+Question Categories:
+- qualification: Essential buying/selling criteria
+- discovery: Deeper lifestyle and preference understanding
+- validation: Confirming and clarifying previous information
+- commitment: Moving toward next steps and decisions
+- relationship: Building rapport and trust
+
+Generate 5-7 questions with strategic prioritization.
+
+Format as JSON array:
+[
+    {
+        "question_text": "natural, conversational question",
+        "category": "qualification|discovery|validation|commitment|relationship",
+        "priority": "critical|high|medium|low",
+        "information_target": "specific info this reveals",
+        "conversation_timing": "immediate|soon|later|when_appropriate",
+        "psychological_readiness": "early|developing|ready|advanced",
+        "expected_response_depth": "brief|moderate|detailed",
+        "follow_up_opportunities": [
+            {"natural_follow_up": "follow-up question", "context": "when to use"}
+        ],
+        "strategic_value": "why this question matters",
+        "conversation_flow_impact": "how this affects conversation",
+        "confidence": 0.0-1.0
+    }
+]"""
+
+            context_text = f"Lead Profile: {json.dumps(lead_profile, indent=2)}"
+            if conversation_context:
+                context_text += f"\n\nConversation Context: {json.dumps(conversation_context, indent=2)}"
+            if focus_area:
+                context_text += f"\n\nFocus Area: {focus_area}"
+
+            response = await self._call_claude_api(
+                f"{system_prompt}\n\nGenerate intelligent questions for:\n\n{context_text}"
+            )
+
+            questions_data = self._parse_claude_response(response)
+            return questions_data if isinstance(questions_data, list) else []
+
+        except Exception as e:
+            logger.error(f"Error generating questions: {str(e)}")
+            return [{
+                "question_text": "What's most important to you in finding your next home?",
+                "category": "discovery",
+                "priority": "high",
+                "information_target": "core preferences and motivations",
+                "confidence": 0.5,
+                "strategic_value": "Establishes foundation for needs understanding"
+            }]
+
+    def _format_messages_for_analysis(self, messages: List[Dict]) -> str:
+        """Format messages for semantic analysis."""
+        formatted = []
+        for i, msg in enumerate(messages[-10:], 1):  # Last 10 messages
+            role = msg.get("role", "unknown").title()
+            content = msg.get("content", "")
+            timestamp = msg.get("timestamp", "")
+            formatted.append(f"Message {i} [{role}]: {content}")
+        return "\n".join(formatted)
+
 
 # Factory function for easy instantiation
 def create_claude_analyzer(

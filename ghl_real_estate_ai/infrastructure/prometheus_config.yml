@@ -1,0 +1,204 @@
+# Prometheus Configuration for EnterpriseHub Phase 4
+# Enterprise-grade monitoring with comprehensive scraping and alerting
+
+global:
+  scrape_interval: 15s  # Collect metrics every 15 seconds
+  evaluation_interval: 15s  # Evaluate alert rules every 15 seconds
+  scrape_timeout: 10s
+  external_labels:
+    cluster: 'enterprisehub-production'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+# Load alert rules
+rule_files:
+  - '/etc/prometheus/rules/*.yml'
+  - '/etc/prometheus/alerts/*.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # EnterpriseHub main application
+  - job_name: 'enterprisehub-app'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - 'app:8000'  # Main FastAPI application
+        labels:
+          service: 'enterprisehub-api'
+          tier: 'application'
+
+  # EnterpriseHub ML services
+  - job_name: 'enterprisehub-ml'
+    metrics_path: '/ml/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'ml-service:8001'  # ML inference service
+        labels:
+          service: 'ml-inference'
+          tier: 'ml'
+
+  # Enhanced ML Personalization Engine
+  - job_name: 'enhanced-ml-personalization'
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'ml-personalization:8002'
+        labels:
+          service: 'enhanced-ml-personalization'
+          tier: 'ml'
+
+  # Predictive Churn Prevention
+  - job_name: 'predictive-churn'
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'churn-prevention:8003'
+        labels:
+          service: 'predictive-churn-prevention'
+          tier: 'ml'
+
+  # Real-Time Model Training
+  - job_name: 'realtime-training'
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'model-training:8004'
+        labels:
+          service: 'realtime-model-training'
+          tier: 'ml'
+
+  # Multimodal Communication Optimizer
+  - job_name: 'multimodal-optimizer'
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'communication-optimizer:8005'
+        labels:
+          service: 'multimodal-communication'
+          tier: 'ml'
+
+  # PostgreSQL database monitoring
+  - job_name: 'postgres'
+    static_configs:
+      - targets:
+          - 'postgres-exporter:9187'
+        labels:
+          service: 'postgresql'
+          tier: 'database'
+
+  # Redis monitoring
+  - job_name: 'redis'
+    static_configs:
+      - targets:
+          - 'redis-exporter:9121'
+        labels:
+          service: 'redis'
+          tier: 'cache'
+
+  # Node exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets:
+          - 'node-exporter:9100'
+        labels:
+          service: 'system'
+          tier: 'infrastructure'
+
+  # Nginx/Load balancer
+  - job_name: 'nginx'
+    static_configs:
+      - targets:
+          - 'nginx-exporter:9113'
+        labels:
+          service: 'nginx'
+          tier: 'infrastructure'
+
+  # cAdvisor for container metrics
+  - job_name: 'cadvisor'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'cadvisor:8080'
+        labels:
+          service: 'cadvisor'
+          tier: 'infrastructure'
+
+  # GoHighLevel webhook processing
+  - job_name: 'ghl-webhooks'
+    metrics_path: '/webhooks/metrics'
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - 'webhook-processor:8006'
+        labels:
+          service: 'ghl-webhooks'
+          tier: 'integration'
+
+  # Streamlit dashboard monitoring
+  - job_name: 'streamlit-dashboard'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'streamlit:8501'
+        labels:
+          service: 'streamlit-dashboard'
+          tier: 'frontend'
+
+  # Blue-Green deployment monitoring
+  - job_name: 'deployment-blue'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'app-blue:8000'
+        labels:
+          service: 'enterprisehub-api'
+          tier: 'application'
+          deployment: 'blue'
+
+  - job_name: 'deployment-green'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'app-green:8000'
+        labels:
+          service: 'enterprisehub-api'
+          tier: 'application'
+          deployment: 'green'
+
+# Remote write for long-term storage (optional - integrate with Thanos/Cortex/Mimir)
+# remote_write:
+#   - url: 'http://thanos-receiver:19291/api/v1/receive'
+#     queue_config:
+#       capacity: 10000
+#       max_shards: 50
+#       min_shards: 1
+#       max_samples_per_send: 5000
+
+# Storage configuration
+storage:
+  tsdb:
+    path: /prometheus/data
+    retention.time: 90d  # Keep 90 days of data
+    retention.size: 50GB  # Maximum storage size

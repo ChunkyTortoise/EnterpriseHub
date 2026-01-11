@@ -1,0 +1,300 @@
+{
+  "dashboard": {
+    "title": "EnterpriseHub Business Metrics Dashboard",
+    "tags": ["business", "roi", "kpi", "production"],
+    "timezone": "browser",
+    "refresh": "1m",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Lead Conversion Rate",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "business_lead_conversion_rate",
+            "refId": "A",
+            "legendFormat": "{{timeframe}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 10, "color": "yellow"},
+                {"value": 15, "color": "green"}
+              ]
+            },
+            "mappings": []
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Leads Processed (24h)",
+        "type": "stat",
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "increase(business_leads_total[24h])",
+            "refId": "A",
+            "legendFormat": "Total Leads"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Property Match Satisfaction",
+        "type": "gauge",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "business_property_match_satisfaction",
+            "refId": "A",
+            "legendFormat": "Satisfaction %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 80, "color": "yellow"},
+                {"value": 88, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Revenue Impact (24h)",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "increase(business_revenue_impact_dollars[24h])",
+            "refId": "A",
+            "legendFormat": "Revenue Impact"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "decimals": 2,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Lead Score Distribution",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "increase(business_lead_score_bucket[1h])",
+            "refId": "A",
+            "legendFormat": "Score {{le}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Leads"},
+          {"format": "short"}
+        ],
+        "bars": true,
+        "lines": false
+      },
+      {
+        "id": 6,
+        "title": "Leads by Source",
+        "type": "piechart",
+        "gridPos": {"x": 12, "y": 4, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "sum by (source) (increase(business_leads_total[24h]))",
+            "refId": "A",
+            "legendFormat": "{{source}}"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Leads by Status",
+        "type": "piechart",
+        "gridPos": {"x": 18, "y": 4, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "sum by (status) (increase(business_leads_total[24h]))",
+            "refId": "A",
+            "legendFormat": "{{status}}"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Property Matches Generated",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 10, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "rate(business_property_matches_total[5m]) * 60",
+            "refId": "A",
+            "legendFormat": "{{match_quality}} quality matches"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Matches/min"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Agent Productivity Score",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 10, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "business_agent_productivity_score",
+            "refId": "A",
+            "legendFormat": "Agent {{agent_id}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Productivity Score", "max": 100, "min": 0},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Lead Conversion Trend (7 days)",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "business_lead_conversion_rate",
+            "refId": "A",
+            "legendFormat": "Conversion Rate"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Conversion %"},
+          {"format": "short"}
+        ],
+        "lines": true,
+        "fill": 1
+      },
+      {
+        "id": 11,
+        "title": "Agent Interactions (24h)",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "sum by (interaction_type) (increase(business_agent_interactions_total[24h]))",
+            "refId": "A",
+            "legendFormat": "{{interaction_type}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Interactions"},
+          {"format": "short"}
+        ],
+        "bars": true,
+        "lines": false
+      },
+      {
+        "id": 12,
+        "title": "Revenue Impact by Service",
+        "type": "table",
+        "gridPos": {"x": 0, "y": 22, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "sum by (service, impact_type) (increase(business_revenue_impact_dollars[24h]))",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "renameByName": {
+                "service": "Service",
+                "impact_type": "Impact Type",
+                "Value": "Revenue ($)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Key Performance Indicators",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 22, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "business_lead_conversion_rate",
+            "refId": "A",
+            "legendFormat": "Conversion Rate"
+          },
+          {
+            "expr": "business_property_match_satisfaction",
+            "refId": "B",
+            "legendFormat": "Match Satisfaction"
+          },
+          {
+            "expr": "avg(business_agent_productivity_score)",
+            "refId": "C",
+            "legendFormat": "Avg Agent Productivity"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "green"}
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "schemaVersion": 27,
+    "version": 1,
+    "uid": "enterprisehub-business-metrics"
+  }
+}

@@ -1,0 +1,387 @@
+# Redis Cluster for EnterpriseHub Phase 4
+# 3 masters + 3 replicas for enterprise high availability
+# Supports 1000+ concurrent users with 99.95% uptime
+
+version: '3.8'
+
+networks:
+  redis_cluster_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis_master_1_data:
+  redis_master_2_data:
+  redis_master_3_data:
+  redis_replica_1_data:
+  redis_replica_2_data:
+  redis_replica_3_data:
+  redis_ssl_certs:
+
+services:
+  # Redis Cluster Initialization Service
+  redis_cluster_init:
+    image: redis:7.2-alpine
+    container_name: redis_cluster_init
+    depends_on:
+      - redis_master_1
+      - redis_master_2
+      - redis_master_3
+      - redis_replica_1
+      - redis_replica_2
+      - redis_replica_3
+    networks:
+      - redis_cluster_network
+    environment:
+      - REDISCLI_AUTH=${REDIS_ADMIN_PASSWORD}
+    volumes:
+      - ./scripts/init_redis_cluster.sh:/init_cluster.sh:ro
+      - redis_ssl_certs:/etc/ssl/certs:ro
+    entrypoint: ["/bin/sh", "/init_cluster.sh"]
+    restart: "no"
+
+  # Redis Master Nodes (3 masters for enterprise scale)
+  redis_master_1:
+    image: redis:7.2-alpine
+    container_name: redis_master_1
+    hostname: redis-master-1
+    networks:
+      redis_cluster_network:
+        ipv4_address: 172.20.0.11
+    ports:
+      - "7001:6380"  # TLS port
+      - "17001:16379"  # Cluster bus
+    volumes:
+      - ./config/redis/redis-cluster.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./config/redis/users.acl:/etc/redis/users.acl:ro
+      - redis_ssl_certs:/etc/ssl/certs:ro
+      - redis_master_1_data:/data
+      - ./logs/redis:/var/log/redis
+    environment:
+      - REDIS_NODE_TYPE=master
+      - REDIS_NODE_ID=1
+      - REDIS_ADMIN_PASSWORD=${REDIS_ADMIN_PASSWORD}
+      - REDIS_APP_PASSWORD=${REDIS_APP_PASSWORD}
+      - REDIS_GHL_PASSWORD=${REDIS_GHL_PASSWORD}
+      - REDIS_ML_PASSWORD=${REDIS_ML_PASSWORD}
+      - REDIS_MONITORING_PASSWORD=${REDIS_MONITORING_PASSWORD}
+      - REDIS_COACHING_PASSWORD=${REDIS_COACHING_PASSWORD}
+      - REDIS_CACHE_PASSWORD=${REDIS_CACHE_PASSWORD}
+      - REDIS_BACKUP_PASSWORD=${REDIS_BACKUP_PASSWORD}
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --cluster-announce-ip 172.20.0.11
+      --cluster-announce-port 6380
+      --cluster-announce-bus-port 16379
+    healthcheck:
+      test: ["CMD", "redis-cli", "--tls", "--cert", "/etc/ssl/certs/redis.crt", "--key", "/etc/ssl/private/redis.key", "--cacert", "/etc/ssl/certs/ca.crt", "-p", "6380", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=redis-master-1,cluster=redis,env=production"
+
+  redis_master_2:
+    image: redis:7.2-alpine
+    container_name: redis_master_2
+    hostname: redis-master-2
+    networks:
+      redis_cluster_network:
+        ipv4_address: 172.20.0.12
+    ports:
+      - "7002:6380"
+      - "17002:16379"
+    volumes:
+      - ./config/redis/redis-cluster.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./config/redis/users.acl:/etc/redis/users.acl:ro
+      - redis_ssl_certs:/etc/ssl/certs:ro
+      - redis_master_2_data:/data
+      - ./logs/redis:/var/log/redis
+    environment:
+      - REDIS_NODE_TYPE=master
+      - REDIS_NODE_ID=2
+      - REDIS_ADMIN_PASSWORD=${REDIS_ADMIN_PASSWORD}
+      - REDIS_APP_PASSWORD=${REDIS_APP_PASSWORD}
+      - REDIS_GHL_PASSWORD=${REDIS_GHL_PASSWORD}
+      - REDIS_ML_PASSWORD=${REDIS_ML_PASSWORD}
+      - REDIS_MONITORING_PASSWORD=${REDIS_MONITORING_PASSWORD}
+      - REDIS_COACHING_PASSWORD=${REDIS_COACHING_PASSWORD}
+      - REDIS_CACHE_PASSWORD=${REDIS_CACHE_PASSWORD}
+      - REDIS_BACKUP_PASSWORD=${REDIS_BACKUP_PASSWORD}
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --cluster-announce-ip 172.20.0.12
+      --cluster-announce-port 6380
+      --cluster-announce-bus-port 16379
+    healthcheck:
+      test: ["CMD", "redis-cli", "--tls", "--cert", "/etc/ssl/certs/redis.crt", "--key", "/etc/ssl/private/redis.key", "--cacert", "/etc/ssl/certs/ca.crt", "-p", "6380", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=redis-master-2,cluster=redis,env=production"
+
+  redis_master_3:
+    image: redis:7.2-alpine
+    container_name: redis_master_3
+    hostname: redis-master-3
+    networks:
+      redis_cluster_network:
+        ipv4_address: 172.20.0.13
+    ports:
+      - "7003:6380"
+      - "17003:16379"
+    volumes:
+      - ./config/redis/redis-cluster.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./config/redis/users.acl:/etc/redis/users.acl:ro
+      - redis_ssl_certs:/etc/ssl/certs:ro
+      - redis_master_3_data:/data
+      - ./logs/redis:/var/log/redis
+    environment:
+      - REDIS_NODE_TYPE=master
+      - REDIS_NODE_ID=3
+      - REDIS_ADMIN_PASSWORD=${REDIS_ADMIN_PASSWORD}
+      - REDIS_APP_PASSWORD=${REDIS_APP_PASSWORD}
+      - REDIS_GHL_PASSWORD=${REDIS_GHL_PASSWORD}
+      - REDIS_ML_PASSWORD=${REDIS_ML_PASSWORD}
+      - REDIS_MONITORING_PASSWORD=${REDIS_MONITORING_PASSWORD}
+      - REDIS_COACHING_PASSWORD=${REDIS_COACHING_PASSWORD}
+      - REDIS_CACHE_PASSWORD=${REDIS_CACHE_PASSWORD}
+      - REDIS_BACKUP_PASSWORD=${REDIS_BACKUP_PASSWORD}
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --cluster-announce-ip 172.20.0.13
+      --cluster-announce-port 6380
+      --cluster-announce-bus-port 16379
+    healthcheck:
+      test: ["CMD", "redis-cli", "--tls", "--cert", "/etc/ssl/certs/redis.crt", "--key", "/etc/ssl/private/redis.key", "--cacert", "/etc/ssl/certs/ca.crt", "-p", "6380", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=redis-master-3,cluster=redis,env=production"
+
+  # Redis Replica Nodes (3 replicas for high availability)
+  redis_replica_1:
+    image: redis:7.2-alpine
+    container_name: redis_replica_1
+    hostname: redis-replica-1
+    networks:
+      redis_cluster_network:
+        ipv4_address: 172.20.0.21
+    ports:
+      - "7004:6380"
+      - "17004:16379"
+    volumes:
+      - ./config/redis/redis-cluster.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./config/redis/users.acl:/etc/redis/users.acl:ro
+      - redis_ssl_certs:/etc/ssl/certs:ro
+      - redis_replica_1_data:/data
+      - ./logs/redis:/var/log/redis
+    environment:
+      - REDIS_NODE_TYPE=replica
+      - REDIS_NODE_ID=4
+      - REDIS_ADMIN_PASSWORD=${REDIS_ADMIN_PASSWORD}
+      - REDIS_APP_PASSWORD=${REDIS_APP_PASSWORD}
+      - REDIS_GHL_PASSWORD=${REDIS_GHL_PASSWORD}
+      - REDIS_ML_PASSWORD=${REDIS_ML_PASSWORD}
+      - REDIS_MONITORING_PASSWORD=${REDIS_MONITORING_PASSWORD}
+      - REDIS_COACHING_PASSWORD=${REDIS_COACHING_PASSWORD}
+      - REDIS_CACHE_PASSWORD=${REDIS_CACHE_PASSWORD}
+      - REDIS_BACKUP_PASSWORD=${REDIS_BACKUP_PASSWORD}
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --cluster-announce-ip 172.20.0.21
+      --cluster-announce-port 6380
+      --cluster-announce-bus-port 16379
+    healthcheck:
+      test: ["CMD", "redis-cli", "--tls", "--cert", "/etc/ssl/certs/redis.crt", "--key", "/etc/ssl/private/redis.key", "--cacert", "/etc/ssl/certs/ca.crt", "-p", "6380", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=redis-replica-1,cluster=redis,env=production"
+
+  redis_replica_2:
+    image: redis:7.2-alpine
+    container_name: redis_replica_2
+    hostname: redis-replica-2
+    networks:
+      redis_cluster_network:
+        ipv4_address: 172.20.0.22
+    ports:
+      - "7005:6380"
+      - "17005:16379"
+    volumes:
+      - ./config/redis/redis-cluster.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./config/redis/users.acl:/etc/redis/users.acl:ro
+      - redis_ssl_certs:/etc/ssl/certs:ro
+      - redis_replica_2_data:/data
+      - ./logs/redis:/var/log/redis
+    environment:
+      - REDIS_NODE_TYPE=replica
+      - REDIS_NODE_ID=5
+      - REDIS_ADMIN_PASSWORD=${REDIS_ADMIN_PASSWORD}
+      - REDIS_APP_PASSWORD=${REDIS_APP_PASSWORD}
+      - REDIS_GHL_PASSWORD=${REDIS_GHL_PASSWORD}
+      - REDIS_ML_PASSWORD=${REDIS_ML_PASSWORD}
+      - REDIS_MONITORING_PASSWORD=${REDIS_MONITORING_PASSWORD}
+      - REDIS_COACHING_PASSWORD=${REDIS_COACHING_PASSWORD}
+      - REDIS_CACHE_PASSWORD=${REDIS_CACHE_PASSWORD}
+      - REDIS_BACKUP_PASSWORD=${REDIS_BACKUP_PASSWORD}
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --cluster-announce-ip 172.20.0.22
+      --cluster-announce-port 6380
+      --cluster-announce-bus-port 16379
+    healthcheck:
+      test: ["CMD", "redis-cli", "--tls", "--cert", "/etc/ssl/certs/redis.crt", "--key", "/etc/ssl/private/redis.key", "--cacert", "/etc/ssl/certs/ca.crt", "-p", "6380", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=redis-replica-2,cluster=redis,env=production"
+
+  redis_replica_3:
+    image: redis:7.2-alpine
+    container_name: redis_replica_3
+    hostname: redis-replica-3
+    networks:
+      redis_cluster_network:
+        ipv4_address: 172.20.0.23
+    ports:
+      - "7006:6380"
+      - "17006:16379"
+    volumes:
+      - ./config/redis/redis-cluster.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./config/redis/users.acl:/etc/redis/users.acl:ro
+      - redis_ssl_certs:/etc/ssl/certs:ro
+      - redis_replica_3_data:/data
+      - ./logs/redis:/var/log/redis
+    environment:
+      - REDIS_NODE_TYPE=replica
+      - REDIS_NODE_ID=6
+      - REDIS_ADMIN_PASSWORD=${REDIS_ADMIN_PASSWORD}
+      - REDIS_APP_PASSWORD=${REDIS_APP_PASSWORD}
+      - REDIS_GHL_PASSWORD=${REDIS_GHL_PASSWORD}
+      - REDIS_ML_PASSWORD=${REDIS_ML_PASSWORD}
+      - REDIS_MONITORING_PASSWORD=${REDIS_MONITORING_PASSWORD}
+      - REDIS_COACHING_PASSWORD=${REDIS_COACHING_PASSWORD}
+      - REDIS_CACHE_PASSWORD=${REDIS_CACHE_PASSWORD}
+      - REDIS_BACKUP_PASSWORD=${REDIS_BACKUP_PASSWORD}
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --cluster-announce-ip 172.20.0.23
+      --cluster-announce-port 6380
+      --cluster-announce-bus-port 16379
+    healthcheck:
+      test: ["CMD", "redis-cli", "--tls", "--cert", "/etc/ssl/certs/redis.crt", "--key", "/etc/ssl/private/redis.key", "--cacert", "/etc/ssl/certs/ca.crt", "-p", "6380", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=redis-replica-3,cluster=redis,env=production"
+
+  # Redis Cluster Monitoring
+  redis_cluster_monitor:
+    image: redis:7.2-alpine
+    container_name: redis_cluster_monitor
+    networks:
+      - redis_cluster_network
+    environment:
+      - REDISCLI_AUTH=${REDIS_MONITORING_PASSWORD}
+    volumes:
+      - redis_ssl_certs:/etc/ssl/certs:ro
+      - ./scripts/monitor_redis_cluster.sh:/monitor.sh:ro
+    command: ["/bin/sh", "/monitor.sh"]
+    depends_on:
+      - redis_master_1
+      - redis_master_2
+      - redis_master_3
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/bin/sh", "/monitor.sh", "health"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+        labels: "service=redis-cluster-monitor,env=production"
+
+# Enterprise Performance Targets for Redis Cluster:
+# - Total Memory: 12GB (2GB per node)
+# - Throughput: 600K+ ops/sec total (100K per node)
+# - Latency: P99 <1ms
+# - Availability: 99.95% (automatic failover <5s)
+# - Concurrent Connections: 60K total (10K per node)

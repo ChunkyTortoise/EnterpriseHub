@@ -39,7 +39,7 @@ from ghl_real_estate_ai.models.lead_behavioral_features import (
     LeadBehavioralFeatureExtractor,
     extract_lead_features
 )
-from ghl_real_estate_ai.services.integration_cache_manager import get_cache_manager
+from ghl_real_estate_ai.services.integration_cache_manager import get_integration_cache_manager as get_cache_manager
 from ghl_real_estate_ai.services.dashboard_analytics_service import get_dashboard_analytics_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -78,12 +78,12 @@ class LeadScore:
     feature_quality: float  # 0-1
     prediction_confidence: float  # 0-1
 
+    # Explanation
+    top_features: List[Tuple[str, float]]  # (feature_name, contribution)
+
     # Performance metrics
     inference_time_ms: float
     cache_hit: bool = False
-
-    # Explanation
-    top_features: List[Tuple[str, float]]  # (feature_name, contribution)
     score_tier: str = ""  # "hot", "warm", "cold"
 
 

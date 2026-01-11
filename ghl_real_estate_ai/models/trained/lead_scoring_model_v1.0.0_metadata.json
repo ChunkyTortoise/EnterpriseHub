@@ -1,0 +1,50 @@
+{
+  "model_type": "gradient_boosting_lead_scoring",
+  "model_version": "v1.0.0",
+  "training_date": "2026-01-10T17:15:19.236339",
+  "training_samples": 1280,
+  "test_samples": 321,
+  "accuracy": 0.9968847352024922,
+  "cv_accuracy": 1.0,
+  "feature_count": 11,
+  "feature_names": [
+    "budget_provided",
+    "location_specified",
+    "timeline_confirmed",
+    "property_requirements",
+    "financing_status",
+    "motivation_shared",
+    "engagement_score",
+    "response_rate",
+    "property_views",
+    "days_active",
+    "interaction_frequency"
+  ],
+  "feature_importance": {
+    "engagement_score": 0.5896526340186733,
+    "response_rate": 0.4103473591559414,
+    "interaction_frequency": 3.494498960816526e-09,
+    "property_views": 3.3287213925285144e-09,
+    "timeline_confirmed": 2.1393648245752446e-12,
+    "budget_provided": 2.5627922213934264e-14,
+    "days_active": 6.481688920294346e-17,
+    "location_specified": 0.0,
+    "property_requirements": 0.0,
+    "financing_status": 0.0,
+    "motivation_shared": -7.175094541188933e-20
+  },
+  "hyperparameters": {
+    "learning_rate": 0.05,
+    "max_depth": 5,
+    "min_samples_split": 10,
+    "n_estimators": 100,
+    "subsample": 0.8
+  },
+  "classes": [
+    "cold",
+    "warm",
+    "hot"
+  ],
+  "data_source": "real_lead_conversations",
+  "meets_accuracy_target": true
+}

@@ -741,7 +741,7 @@ def create_ghl_api_config() -> APIEndpointConfig:
     """Create optimized config for GoHighLevel API"""
     return APIEndpointConfig(
         base_url="https://rest.gohighlevel.com",
-        max_concurrent=5,  # GHL rate limits
+        max_concurrent=20,  # Increased 4x for higher throughput (Phase 2 optimization)
         rate_limit_per_second=3.0,  # Conservative rate limiting
         rate_limit_strategy=RateLimitStrategy.ADAPTIVE,
         connection_timeout=10,
@@ -757,7 +757,7 @@ def create_openai_api_config() -> APIEndpointConfig:
     """Create optimized config for OpenAI API"""
     return APIEndpointConfig(
         base_url="https://api.openai.com",
-        max_concurrent=10,
+        max_concurrent=50,  # Increased 5x for ML inference throughput (Phase 2 optimization)
         rate_limit_per_second=20.0,
         rate_limit_strategy=RateLimitStrategy.TOKEN_BUCKET,
         connection_timeout=15,
@@ -773,7 +773,7 @@ def create_real_estate_api_config() -> APIEndpointConfig:
     """Create optimized config for real estate APIs"""
     return APIEndpointConfig(
         base_url="https://api.realtor.com",
-        max_concurrent=15,
+        max_concurrent=30,  # Increased 2x for property search throughput (Phase 2 optimization)
         rate_limit_per_second=10.0,
         rate_limit_strategy=RateLimitStrategy.SLIDING_WINDOW,
         connection_timeout=20,

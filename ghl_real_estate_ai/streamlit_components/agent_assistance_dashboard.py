@@ -992,6 +992,491 @@ class AgentAssistanceDashboard:
         }
         return order.get(priority, 5)
 
+    # =================== CLAUDE COACHING COMPONENTS ===================
+
+    def render_live_coaching_panel(
+        self,
+        agent_id: str,
+        coaching_suggestions: List[str],
+        urgency: str = "medium",
+        conversation_stage: str = "discovery",
+        last_updated: Optional[datetime] = None
+    ) -> None:
+        """
+        Render real-time Claude coaching panel with live suggestions.
+
+        Args:
+            agent_id: Agent identifier
+            coaching_suggestions: Current coaching suggestions from Claude
+            urgency: Urgency level (low, medium, high, critical)
+            conversation_stage: Current conversation stage
+            last_updated: When suggestions were last updated
+        """
+        # Urgency styling
+        urgency_colors = {
+            "low": "#10b981",      # emerald-500
+            "medium": "#f59e0b",   # amber-500
+            "high": "#ef4444",     # red-500
+            "critical": "#dc2626"  # red-600
+        }
+        urgency_icons = {
+            "low": "💡",
+            "medium": "⚡",
+            "high": "🔥",
+            "critical": "🚨"
+        }
+
+        urgency_color = urgency_colors.get(urgency, "#f59e0b")
+        urgency_icon = urgency_icons.get(urgency, "💡")
+
+        st.markdown(f"""
+        <div class="luxury-card" style="
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid {urgency_color};
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.95));
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="
+                    font-family: var(--font-body, Inter);
+                    font-size: 1.125rem;
+                    font-weight: 600;
+                    color: var(--luxury-charcoal, #1e293b);
+                    margin: 0;
+                ">{urgency_icon} Live Claude Coaching</h3>
+                <div style="
+                    background: {urgency_color};
+                    color: white;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 1rem;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                ">{urgency}</div>
+            </div>
+            <div style="
+                background: rgba(59, 130, 246, 0.05);
+                border-radius: 0.5rem;
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+            ">
+                <p style="margin: 0; font-size: 0.875rem; color: #3b82f6;">
+                    <strong>Conversation Stage:</strong> {conversation_stage.replace('_', ' ').title()}
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        if not coaching_suggestions:
+            st.markdown("""
+            <div style="
+                text-align: center;
+                padding: 2rem;
+                color: var(--luxury-slate, #64748b);
+                font-style: italic;
+            ">
+                🎯 Conversation flowing well<br>
+                <span style="font-size: 0.875rem;">Claude is monitoring for coaching opportunities</span>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("#### 🎯 Current Coaching Guidance")
+            for i, suggestion in enumerate(coaching_suggestions[:3], 1):
+                st.markdown(f"""
+                <div style="
+                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05));
+                    border-radius: 0.5rem;
+                    padding: 1rem;
+                    margin-bottom: 0.75rem;
+                    border-left: 3px solid #10b981;
+                ">
+                    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                        <div style="
+                            background: #10b981;
+                            color: white;
+                            width: 1.5rem;
+                            height: 1.5rem;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 0.75rem;
+                            font-weight: bold;
+                            flex-shrink: 0;
+                        ">{i}</div>
+                        <p style="margin: 0; line-height: 1.5; color: #1e293b;">
+                            {suggestion}
+                        </p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        # Last updated timestamp
+        if last_updated:
+            time_ago = datetime.now() - last_updated
+            if time_ago.total_seconds() < 60:
+                time_text = "Just now"
+            elif time_ago.total_seconds() < 3600:
+                time_text = f"{int(time_ago.total_seconds() / 60)} minutes ago"
+            else:
+                time_text = last_updated.strftime("%H:%M")
+
+            st.markdown(f"""
+            <div style="
+                text-align: right;
+                font-size: 0.75rem;
+                color: #64748b;
+                margin-top: 1rem;
+                padding-top: 0.75rem;
+                border-top: 1px solid #e2e8f0;
+            ">
+                Last updated: {time_text}
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    def render_claude_objection_assistant(
+        self,
+        objection_type: str,
+        severity: str,
+        suggested_responses: List[str],
+        talking_points: List[str],
+        follow_up_strategy: str
+    ) -> None:
+        """
+        Render enhanced Claude objection assistant with strategic guidance.
+
+        Args:
+            objection_type: Type of objection detected
+            severity: Severity level (low, medium, high)
+            suggested_responses: Claude's suggested responses
+            talking_points: Key talking points to address
+            follow_up_strategy: Recommended follow-up approach
+        """
+        severity_colors = {
+            "low": "#10b981",
+            "medium": "#f59e0b",
+            "high": "#ef4444"
+        }
+
+        objection_icons = {
+            "price": "💰", "timeline": "⏰", "location": "📍",
+            "financing": "🏦", "features": "🏠", "market": "📈",
+            "trust": "🤝", "competition": "🏆", "family": "👨‍👩‍👧‍👦"
+        }
+
+        severity_color = severity_colors.get(severity, "#f59e0b")
+        objection_icon = objection_icons.get(objection_type, "❓")
+
+        st.markdown(f"""
+        <div class="luxury-card" style="
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid {severity_color};
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.95));
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="
+                    font-family: var(--font-body, Inter);
+                    font-size: 1.125rem;
+                    font-weight: 600;
+                    color: var(--luxury-charcoal, #1e293b);
+                    margin: 0;
+                ">{objection_icon} Claude Objection Assistant</h3>
+                <div style="
+                    background: {severity_color};
+                    color: white;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 1rem;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                ">{severity.upper()}</div>
+            </div>
+
+            <div style="
+                background: rgba(239, 68, 68, 0.05);
+                border-radius: 0.5rem;
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+            ">
+                <p style="margin: 0; font-size: 0.875rem; color: #ef4444;">
+                    <strong>Objection Type:</strong> {objection_type.replace('_', ' ').title()}
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # Suggested responses
+        if suggested_responses:
+            st.markdown("#### 💬 Claude's Suggested Responses")
+            for i, response in enumerate(suggested_responses, 1):
+                st.markdown(f"""
+                <div style="
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(37, 99, 235, 0.05));
+                    border-radius: 0.5rem;
+                    padding: 1rem;
+                    margin-bottom: 0.75rem;
+                    border-left: 3px solid #3b82f6;
+                ">
+                    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                        <div style="
+                            background: #3b82f6;
+                            color: white;
+                            width: 1.5rem;
+                            height: 1.5rem;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 0.75rem;
+                            font-weight: bold;
+                            flex-shrink: 0;
+                        ">{i}</div>
+                        <p style="margin: 0; line-height: 1.5; color: #1e293b;">
+                            "{response}"
+                        </p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        # Talking points
+        if talking_points:
+            st.markdown("#### 🎯 Key Talking Points")
+            for point in talking_points:
+                st.markdown(f"• {point}")
+
+        # Follow-up strategy
+        if follow_up_strategy:
+            st.markdown(f"""
+            <div style="
+                background: rgba(16, 185, 129, 0.05);
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-top: 1rem;
+            ">
+                <h4 style="margin: 0 0 0.5rem 0; color: #10b981;">🎲 Follow-Up Strategy</h4>
+                <p style="margin: 0; color: #1e293b; line-height: 1.5;">{follow_up_strategy}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    def render_claude_question_guide(
+        self,
+        suggested_question: str,
+        purpose: str,
+        priority: str,
+        expected_info: str,
+        follow_up_questions: List[str]
+    ) -> None:
+        """
+        Render Claude's intelligent question guide with contextual recommendations.
+
+        Args:
+            suggested_question: The recommended question to ask
+            purpose: Question purpose (qualification, discovery, objection_handling, closing)
+            priority: Priority level (high, medium, low)
+            expected_info: What information this question should reveal
+            follow_up_questions: Potential follow-up questions
+        """
+        priority_colors = {
+            "high": "#ef4444",
+            "medium": "#f59e0b",
+            "low": "#10b981"
+        }
+
+        purpose_icons = {
+            "qualification": "📋",
+            "discovery": "🔍",
+            "objection_handling": "🛡️",
+            "closing": "🎯"
+        }
+
+        priority_color = priority_colors.get(priority, "#f59e0b")
+        purpose_icon = purpose_icons.get(purpose, "❓")
+
+        st.markdown(f"""
+        <div class="luxury-card" style="
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid {priority_color};
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.95));
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="
+                    font-family: var(--font-body, Inter);
+                    font-size: 1.125rem;
+                    font-weight: 600;
+                    color: var(--luxury-charcoal, #1e293b);
+                    margin: 0;
+                ">{purpose_icon} Claude Question Guide</h3>
+                <div style="
+                    background: {priority_color};
+                    color: white;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 1rem;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                ">{priority.upper()}</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # Main suggested question
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(124, 58, 237, 0.05));
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+        ">
+            <h4 style="margin: 0 0 1rem 0; color: #8b5cf6; display: flex; align-items: center; gap: 0.5rem;">
+                💬 Recommended Question
+            </h4>
+            <p style="
+                margin: 0;
+                font-size: 1.125rem;
+                color: #1e293b;
+                font-weight: 500;
+                line-height: 1.5;
+                font-style: italic;
+            ">"{suggested_question}"</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Purpose and expected info
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown(f"""
+            <div style="
+                background: rgba(59, 130, 246, 0.05);
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            ">
+                <h4 style="margin: 0 0 0.5rem 0; color: #3b82f6;">🎯 Purpose</h4>
+                <p style="margin: 0; color: #1e293b;">
+                    {purpose.replace('_', ' ').title()}
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col2:
+            st.markdown(f"""
+            <div style="
+                background: rgba(16, 185, 129, 0.05);
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            ">
+                <h4 style="margin: 0 0 0.5rem 0; color: #10b981;">🔍 Expected Info</h4>
+                <p style="margin: 0; color: #1e293b; font-size: 0.9rem;">
+                    {expected_info}
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Follow-up questions
+        if follow_up_questions:
+            st.markdown("#### 🔗 Potential Follow-Up Questions")
+            for i, follow_up in enumerate(follow_up_questions, 1):
+                st.markdown(f"**{i}.** {follow_up}")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    def render_enhanced_qualification_progress(
+        self,
+        qualification_data: Dict[str, Any],
+        semantic_completeness: float,
+        claude_insights: List[str],
+        missing_elements: List[str]
+    ) -> None:
+        """
+        Render enhanced qualification progress with Claude's semantic understanding.
+
+        Args:
+            qualification_data: Current qualification status
+            semantic_completeness: Claude's assessment of qualification completeness
+            claude_insights: Claude's insights about the qualification
+            missing_elements: Important elements Claude identifies as missing
+        """
+        # Progress color based on semantic completeness
+        if semantic_completeness >= 80:
+            progress_color = "#10b981"
+            status_text = "Well Qualified"
+            status_icon = "✅"
+        elif semantic_completeness >= 60:
+            progress_color = "#f59e0b"
+            status_text = "Partially Qualified"
+            status_icon = "⚠️"
+        else:
+            progress_color = "#ef4444"
+            status_text = "Needs More Info"
+            status_icon = "🔍"
+
+        st.markdown(f"""
+        <div class="luxury-card" style="
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid {progress_color};
+        ">
+            <h3 style="
+                font-family: var(--font-body, Inter);
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: var(--luxury-charcoal, #1e293b);
+                margin-bottom: 1rem;
+            ">{status_icon} Enhanced Qualification Progress</h3>
+        """, unsafe_allow_html=True)
+
+        # Semantic completeness gauge
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=semantic_completeness,
+            domain={'x': [0, 1], 'y': [0, 1]},
+            title={'text': "Claude's Semantic Assessment"},
+            gauge={
+                'axis': {'range': [None, 100]},
+                'bar': {'color': progress_color},
+                'steps': [
+                    {'range': [0, 50], 'color': "rgba(239, 68, 68, 0.2)"},
+                    {'range': [50, 80], 'color': "rgba(245, 158, 11, 0.2)"},
+                    {'range': [80, 100], 'color': "rgba(16, 185, 129, 0.2)"}
+                ],
+                'threshold': {
+                    'line': {'color': "red", 'width': 4},
+                    'thickness': 0.75,
+                    'value': 90
+                }
+            }
+        ))
+        fig.update_layout(height=200, margin=dict(l=20, r=20, t=40, b=20))
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Claude insights
+        if claude_insights:
+            st.markdown("#### 🧠 Claude's Insights")
+            for insight in claude_insights:
+                st.markdown(f"""
+                <div style="
+                    background: rgba(139, 92, 246, 0.05);
+                    border-radius: 0.5rem;
+                    padding: 0.75rem;
+                    margin-bottom: 0.5rem;
+                    border-left: 3px solid #8b5cf6;
+                ">
+                    <p style="margin: 0; color: #1e293b;">💡 {insight}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+        # Missing elements
+        if missing_elements:
+            st.markdown("#### 🎯 Priority Information Gaps")
+            for element in missing_elements:
+                st.markdown(f"• **{element.replace('_', ' ').title()}**")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
 
 # Factory function for easy use
 def create_agent_dashboard() -> AgentAssistanceDashboard:

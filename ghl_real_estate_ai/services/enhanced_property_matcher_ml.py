@@ -43,8 +43,8 @@ from ghl_real_estate_ai.models.matching_models import (
     FactorScore,
     LeadSegment
 )
-from ghl_real_estate_ai.services.property_matcher_ml import get_property_matcher_service
-from ghl_real_estate_ai.services.integration_cache_manager import get_cache_manager
+# from ghl_real_estate_ai.services.property_matcher_ml import get_property_matcher_service
+from ghl_real_estate_ai.services.integration_cache_manager import get_integration_cache_manager as get_cache_manager
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

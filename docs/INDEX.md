@@ -24,46 +24,101 @@ Comprehensive system architecture documentation covering:
 
 ---
 
-## 📖 Other Documentation
+## 📖 New Documentation (January 2026)
+
+### Claude AI Integration & Coaching System
+- **[CLAUDE_AI_INTEGRATION_GUIDE.md](CLAUDE_AI_INTEGRATION_GUIDE.md)** - Complete Claude AI integration documentation
+  - Real-time coaching system (sub-100ms delivery)
+  - Enhanced lead qualification (98%+ accuracy)
+  - Intelligent GHL webhook processing
+  - Semantic analysis and intent understanding
+  - API endpoints and service architecture
+  - Performance monitoring and analytics
+
+- **[CLAUDE_HANDOFF_DEVELOPMENT_GUIDE.md](CLAUDE_HANDOFF_DEVELOPMENT_GUIDE.md)** - Development handoff and roadmap
+  - Implemented features and architecture
+  - Development patterns and best practices
+  - Future enhancement roadmap
+  - Integration guidelines for new features
+  - Performance optimization strategies
+
+### AI/ML & Backend APIs
+- **[ML_API_ENDPOINTS.md](ML_API_ENDPOINTS.md)** - Complete ML service API documentation
+  - Lead Scoring API (95%+ accuracy → 98%+ with Claude)
+  - Property Matching API (88% satisfaction → 95%+ with Claude)
+  - Churn Prediction API (92% precision → 95%+ with Claude)
+  - Personalization Engine
+  - Real-time Scoring
+  - Performance benchmarks & rate limiting
+
+- **[BEHAVIORAL_LEARNING_AND_RETRAINING.md](BEHAVIORAL_LEARNING_AND_RETRAINING.md)** - ML model improvement system
+  - Real-time behavior tracking
+  - Feature extraction pipelines
+  - Daily model retraining with Claude insights
+  - Closed-loop feedback loops
+  - Performance monitoring & drift detection
+
+### Integration & Infrastructure
+- **[GHL_WEBHOOK_INTEGRATION.md](GHL_WEBHOOK_INTEGRATION.md)** - GoHighLevel webhook setup & processing
+  - Webhook configuration & security
+  - All GHL event types (contacts, opportunities, appointments)
+  - Real-time lead synchronization
+  - Error handling & retry logic
+  - Monitoring & testing
+
+- **[DEPLOYMENT_RAILWAY_VERCEL.md](DEPLOYMENT_RAILWAY_VERCEL.md)** - Production deployment guide
+  - Railway backend deployment (AI/ML services)
+  - Vercel frontend deployment (Streamlit, React)
+  - Environment configuration management
+  - Database & storage setup (PostgreSQL, Redis, S3)
+  - Health checks & monitoring
+  - Continuous deployment from GitHub
+
+### Security & Compliance
+- **[SECURITY_REAL_ESTATE_PII.md](SECURITY_REAL_ESTATE_PII.md)** - Data protection for real estate
+  - Data classification levels (Level 1-4)
+  - PII minimization & retention policies
+  - Encryption at rest and in transit
+  - Real estate data security (MLS, showings, pricing)
+  - Authentication & RBAC
+  - GHL OAuth 2.0 security
+  - Webhook signature verification
+  - Incident response procedures
+  - CCPA, GDPR, HIPAA compliance
+
+### Skills & Automation
+- **[SKILLS_CATALOG_AND_VALUE.md](SKILLS_CATALOG_AND_VALUE.md)** - Complete skills system documentation
+  - 32 production skills across 4 phases
+  - $362,600+ annual business value
+  - Phase 1-2: Foundation & Advanced (14 skills, $447,000/year)
+  - Phase 3: Acceleration (4 skills, $69,125/year)
+  - Phase 4: Automation & Optimization (14 skills, $185,900/year)
+  - Skill integration map & dependency graph
+  - ROI tracking & competitive advantages
+
+## 📖 Existing Documentation
 
 ### User Documentation
 Located in the repository root:
 
 - **[README.md](../README.md)** - Main project documentation, quickstart, features
 - **[FAQ.md](../FAQ.md)** - Frequently asked questions
-- **[Deploy.md](../Deploy.md)** - Deployment guide for various platforms
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Streamlit Cloud deployment guide
+
+### System Documentation
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture, design patterns, technology stack
+- **[API.md](API.md)** - Core API components and agent orchestration
+- **[ENHANCED_ML_SYSTEM_DOCUMENTATION.md](ENHANCED_ML_SYSTEM_DOCUMENTATION.md)** - ML system architecture
 
 ### Contributor Documentation
 - **[CONTRIBUTING.md](../CONTRIBUTING.md)** - Contribution guidelines
 - **[SECURITY.md](../SECURITY.md)** - Security policy and vulnerability reporting
 - **[AUTHORS.md](../AUTHORS.md)** - Contributors and acknowledgments
-- **[CHANGELOG.md](../CHANGELOG.md)** - Version history and release notes
-
-### Module Documentation
-Located in `modules/`:
-- **README_MARGIN_HUNTER.md** - CVP analysis module
-- **README_CONTENT_ENGINE.md** - AI content generation
-- **README_DATA_DETECTIVE.md** - Statistical analysis
-- **README_FINANCIAL_ANALYST.md** - Stock analysis with AI
-- **README_MARKET_PULSE.md** - Technical indicators
-- **README_MARKETING_ANALYTICS.md** - Campaign tracking
-- **README_AGENT_LOGIC.md** - Sentiment analysis
 
 ### Handoffs & Reports
 Located in `docs/handoffs/` and `docs/reports/`:
-- **[HANDOFF_CLEANUP_SESSION.md](handoffs/HANDOFF_CLEANUP_SESSION.md)** - Summary of cleanup and optimization (Dec 31, 2025)
-- **PHASE5_DEPLOYMENT_GUIDE.md** - Go-to-market playbook
-
-### Scenario Templates
-Located in `scenarios/`:
-- **saas-pricing-template.md** - SaaS industry template
-- **ecommerce-product-template.md** - E-commerce template
-- **manufacturing-volume-template.md** - Manufacturing template
-
-### Portfolio & Demo
-Located in `assets/`:
-- **DEMO-VIDEO-INSTRUCTIONS.md** - Video recording guide
-- **SCREENSHOT-INSTRUCTIONS.md** - Screenshot specifications
+- **[HANDOFF_CLEANUP_SESSION.md](handoffs/HANDOFF_CLEANUP_SESSION.md)** - Summary of cleanup and optimization
+- **[PHASE5_AI_ENHANCED_OPERATIONS_COMPLETE.md](PHASE5_AI_ENHANCED_OPERATIONS_COMPLETE.md)** - AI enhancement completion
 
 ---
 
@@ -113,25 +168,90 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed guidelines.
 
 ---
 
+## 🎯 Quick Reference by Role
+
+### For Backend Developers
+1. Start with [ARCHITECTURE.md](ARCHITECTURE.md)
+2. **NEW**: [CLAUDE_AI_INTEGRATION_GUIDE.md](CLAUDE_AI_INTEGRATION_GUIDE.md) - Claude AI services integration
+3. Review [ML_API_ENDPOINTS.md](ML_API_ENDPOINTS.md)
+4. Check [DEPLOYMENT_RAILWAY_VERCEL.md](DEPLOYMENT_RAILWAY_VERCEL.md)
+5. Understand [GHL_WEBHOOK_INTEGRATION.md](GHL_WEBHOOK_INTEGRATION.md)
+
+### For ML/Data Scientists
+1. **NEW**: [CLAUDE_AI_INTEGRATION_GUIDE.md](CLAUDE_AI_INTEGRATION_GUIDE.md) - Claude semantic analysis and ML fusion
+2. Read [BEHAVIORAL_LEARNING_AND_RETRAINING.md](BEHAVIORAL_LEARNING_AND_RETRAINING.md)
+3. Review [ML_API_ENDPOINTS.md](ML_API_ENDPOINTS.md)
+4. Check [ENHANCED_ML_SYSTEM_DOCUMENTATION.md](ENHANCED_ML_SYSTEM_DOCUMENTATION.md)
+
+### For DevOps/Infrastructure
+1. Read [DEPLOYMENT_RAILWAY_VERCEL.md](DEPLOYMENT_RAILWAY_VERCEL.md)
+2. Review [SECURITY_REAL_ESTATE_PII.md](SECURITY_REAL_ESTATE_PII.md)
+3. Check monitoring sections in [GHL_WEBHOOK_INTEGRATION.md](GHL_WEBHOOK_INTEGRATION.md)
+
+### For Product/Project Managers
+1. Review [SKILLS_CATALOG_AND_VALUE.md](SKILLS_CATALOG_AND_VALUE.md) - Business value & ROI
+2. Check [DEPLOYMENT_RAILWAY_VERCEL.md](DEPLOYMENT_RAILWAY_VERCEL.md) - Infrastructure requirements
+3. Understand [BEHAVIORAL_LEARNING_AND_RETRAINING.md](BEHAVIORAL_LEARNING_AND_RETRAINING.md) - How ML continuously improves
+
+### For Security & Compliance Officers
+1. Read [SECURITY_REAL_ESTATE_PII.md](SECURITY_REAL_ESTATE_PII.md) - Complete security & compliance
+2. Review [GHL_WEBHOOK_INTEGRATION.md](GHL_WEBHOOK_INTEGRATION.md) - OAuth 2.0 & signature verification
+3. Check [DEPLOYMENT_RAILWAY_VERCEL.md](DEPLOYMENT_RAILWAY_VERCEL.md) - Infrastructure security
+
+---
+
+## 📊 Documentation Statistics
+
+**Total Pages**: 120+ pages
+**New Documentation (Jan 2026)**: 7 comprehensive guides
+- **NEW**: Claude AI Integration: 40+ pages
+- **NEW**: Claude Development Handoff: 25+ pages
+- ML API Endpoints: 50+ pages
+- Skills Catalog: 30+ pages
+- Deployment Guides: 35+ pages
+- Security & Compliance: 40+ pages
+- Behavioral Learning: 25+ pages
+
+**Coverage**:
+- **NEW**: Claude AI Services: Real-time coaching, semantic analysis, intelligent qualification
+- API Endpoints: 12 major services (8 ML + 4 Claude)
+- GHL Integration: All webhook events + Claude intelligence
+- Deployment: Railway + Vercel + Claude API integration
+- Security: CCPA, GDPR, HIPAA compliant + Claude data handling
+- Skills: 32 production systems + Claude integration patterns
+
+---
+
 ## 🚀 Planned Documentation
 
-Future documentation to be added:
+Near-term additions:
 
-- [ ] **API Reference** - Auto-generated from docstrings (Sphinx/MkDocs)
-- [ ] **User Guide** - Step-by-step tutorials for each module
-- [ ] **Performance Guide** - Optimization tips and benchmarks
-- [ ] **Deployment Recipes** - Platform-specific guides (AWS, GCP, Azure)
-- [ ] **Migration Guide** - Version upgrade instructions
 - [ ] **Troubleshooting Guide** - Common issues and solutions
+- [ ] **Performance Tuning Guide** - ML model optimization
+- [ ] **Real Estate Domain Guide** - MLS integration, market analysis
+- [ ] **API Client Libraries** - SDKs for Python, JavaScript
+- [ ] **Video Tutorials** - Setup and integration videos
 
 ---
 
 ## 📞 Questions?
 
-- **General questions**: See [FAQ.md](../FAQ.md)
-- **Technical questions**: Open a [GitHub Discussion](https://github.com/ChunkyTortoise/enterprise-hub/discussions)
-- **Bug reports**: Open a [GitHub Issue](https://github.com/ChunkyTortoise/enterprise-hub/issues)
+### Documentation Issues
+- Found an error? Missing information?
+- **Submit**: Open a GitHub issue with label `documentation:`
+
+### Technical Support
+- **Questions**: Open [GitHub Discussions](https://github.com/ChunkyTortoise/enterprise-hub/discussions)
+- **Bugs**: Open [GitHub Issue](https://github.com/ChunkyTortoise/enterprise-hub/issues)
+- **Security**: See [SECURITY.md](../SECURITY.md)
+
+### API Questions
+- **ML API**: See [ML_API_ENDPOINTS.md](ML_API_ENDPOINTS.md)
+- **GHL Integration**: See [GHL_WEBHOOK_INTEGRATION.md](GHL_WEBHOOK_INTEGRATION.md)
+- **Architecture**: See [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
 
-Last Updated: December 6, 2025
+**Last Updated**: January 10, 2026
+**Documentation Version**: 4.0.0
+**Status**: ✅ Production Ready

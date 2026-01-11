@@ -29,7 +29,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, Set
 from enum import Enum
 from collections import defaultdict, deque
-import aiofiles
 from concurrent.futures import ThreadPoolExecutor
 import weakref
 
