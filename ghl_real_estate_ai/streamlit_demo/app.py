@@ -5364,11 +5364,12 @@ def render_seller_journey_hub():
     st.markdown("*Complete seller experience from valuation to closing*")
 
     # Seller navigation tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "📊 Property Valuation",
         "📋 Seller Prep",
         "📈 Marketing Campaign",
         "💬 Communication",
+        "🤖 AI-Claude Integration",
         "📅 Timeline & Offers",
         "📊 Seller Analytics"
     ])
@@ -5390,9 +5391,18 @@ def render_seller_journey_hub():
         render_seller_chat()
 
     with tab5:
-        render_transaction_timeline()
+        # Import and render our new seller-Claude integration demo
+        try:
+            from pages.seller_claude_demo import render_seller_claude_integration_demo
+            render_seller_claude_integration_demo()
+        except ImportError:
+            st.error("Seller-Claude Integration demo temporarily unavailable")
+            st.info("Advanced AI integration features coming soon!")
 
     with tab6:
+        render_transaction_timeline()
+
+    with tab7:
         render_seller_analytics()
 
 if selected_hub == "🏢 Executive Command Center":

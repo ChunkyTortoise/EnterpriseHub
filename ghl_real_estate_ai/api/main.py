@@ -19,6 +19,7 @@ from ghl_real_estate_ai.api.routes import (
     portal,
     properties,
     realtime,
+    seller_claude_api,
     team,
     voice,
     webhook,
@@ -87,6 +88,9 @@ app.include_router(voice.router, prefix="/api")
 
 # Real-time WebSocket routes
 app.include_router(realtime.router, prefix="/api")
+
+# Seller-Claude Integration routes
+app.include_router(seller_claude_api.router, prefix="/api/seller-claude")
 
 
 # Root endpoint

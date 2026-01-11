@@ -49,6 +49,24 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from collections import deque
 
+# === ENTERPRISE THEME INTEGRATION ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        enterprise_timestamp,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    ENTERPRISE_THEME_AVAILABLE = True
+except ImportError:
+    ENTERPRISE_THEME_AVAILABLE = False
+
 # WebSocket Manager and Event Bus Integration
 try:
     from ghl_real_estate_ai.services.websocket_manager import (
@@ -132,8 +150,22 @@ class RealtimeLeadIntelligenceHub:
         # Initialize session state
         self._initialize_session_state()
 
-        # Inject advanced CSS for real-time visualizations
-        self._inject_realtime_css()
+        # Initialize enterprise theme and color scheme
+        if ENTERPRISE_THEME_AVAILABLE:
+            self.colors = ENTERPRISE_COLORS
+        else:
+            # Fallback color scheme for legacy support
+            self.colors = {
+                'primary': '#059669',
+                'accent': '#06b6d4',
+                'danger': '#dc2626',
+                'warning': '#f59e0b',
+                'success': '#10b981',
+                'info': '#3b82f6',
+                'background': '#f9fafb',
+                'card': '#ffffff',
+                'border': '#e5e7eb'
+            }
 
     def _initialize_session_state(self):
         """Initialize Streamlit session state for persistence"""
@@ -191,208 +223,43 @@ class RealtimeLeadIntelligenceHub:
         if 'refresh_interval_ms' not in st.session_state:
             st.session_state.refresh_interval_ms = 500
 
-    def _inject_realtime_css(self):
-        """Inject CSS for real-time dashboard styling"""
-        st.markdown("""
-        <style>
-        /* Real-Time Dashboard Styles */
-        :root {
-            --realtime-primary: #059669;
-            --realtime-accent: #06b6d4;
-            --realtime-danger: #dc2626;
-            --realtime-warning: #f59e0b;
-            --realtime-success: #10b981;
-            --realtime-info: #3b82f6;
-            --realtime-bg: #f9fafb;
-            --realtime-card-bg: #ffffff;
-            --realtime-border: #e5e7eb;
-            --realtime-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Real-time update animation */
-        @keyframes pulse-update {
-            0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
-            50% { box-shadow: 0 0 0 10px rgba(5, 150, 105, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
-        }
-
-        .realtime-update {
-            animation: pulse-update 1s ease-in-out;
-        }
-
-        /* Stream card styling */
-        .stream-card {
-            background: var(--realtime-card-bg);
-            border: 1px solid var(--realtime-border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: var(--realtime-shadow);
-            transition: all 0.3s ease;
-        }
-
-        .stream-card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-
-        /* Stream header */
-        .stream-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid var(--realtime-border);
-        }
-
-        .stream-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #111827;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .stream-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .status-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .status-connected {
-            background-color: var(--realtime-success);
-            animation: pulse 2s infinite;
-        }
-
-        .status-disconnected {
-            background-color: var(--realtime-danger);
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* Metric cards */
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 1.5rem;
-            color: white;
-            margin-bottom: 1rem;
-        }
-
-        .metric-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .metric-label {
-            font-size: 0.875rem;
-            opacity: 0.9;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .metric-change {
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-        }
-
-        /* Alert badge */
-        .alert-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .alert-critical {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-
-        .alert-high {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-
-        .alert-medium {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-
-        /* Live feed item */
-        .feed-item {
-            background: var(--realtime-card-bg);
-            border-left: 4px solid var(--realtime-accent);
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            border-radius: 0 8px 8px 0;
-            transition: all 0.2s ease;
-        }
-
-        .feed-item:hover {
-            background: #f3f4f6;
-            border-left-width: 6px;
-        }
-
-        .feed-timestamp {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin-bottom: 0.25rem;
-        }
-
-        .feed-content {
-            font-size: 0.875rem;
-            color: #374151;
-            line-height: 1.5;
-        }
-
-        /* Performance chart container */
-        .chart-container {
-            background: var(--realtime-card-bg);
-            border-radius: 12px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-            .stream-card {
+    def _inject_legacy_css(self):
+        """Inject minimal CSS for legacy fallback when enterprise theme unavailable"""
+        if not ENTERPRISE_THEME_AVAILABLE:
+            st.markdown("""
+            <style>
+            /* Legacy fallback styles */
+            .realtime-status-connected {
+                color: #10b981;
+            }
+            .realtime-status-disconnected {
+                color: #dc2626;
+            }
+            .realtime-feed-item {
+                background: #ffffff;
+                border-left: 4px solid #06b6d4;
                 padding: 1rem;
+                margin-bottom: 0.75rem;
+                border-radius: 0 8px 8px 0;
             }
-
-            .metric-value {
-                font-size: 2rem;
-            }
-
-            .stream-title {
-                font-size: 1rem;
-            }
-        }
-        </style>
-        """, unsafe_allow_html=True)
+            </style>
+            """, unsafe_allow_html=True)
 
     def render(self):
         """Render the complete real-time intelligence dashboard"""
+        # Inject legacy CSS if needed
+        self._inject_legacy_css()
+
         # Dashboard header
-        st.title("🚀 Real-Time Lead Intelligence Hub")
-        st.markdown("**Live ML-Powered Lead Analytics & Performance Monitoring**")
+        if ENTERPRISE_THEME_AVAILABLE:
+            enterprise_section_header(
+                title="Real-Time Lead Intelligence Hub",
+                subtitle="Live ML-Powered Lead Analytics & Performance Monitoring",
+                icon="🚀"
+            )
+        else:
+            st.title("🚀 Real-Time Lead Intelligence Hub")
+            st.markdown("**Live ML-Powered Lead Analytics & Performance Monitoring**")
 
         # Connection status and controls
         self._render_connection_controls()
@@ -404,7 +271,15 @@ class RealtimeLeadIntelligenceHub:
 
         with col1:
             # Real-time data streams section
-            st.markdown("### 📊 Live Data Streams")
+            if ENTERPRISE_THEME_AVAILABLE:
+                enterprise_section_header(
+                    title="Live Data Streams",
+                    subtitle="Real-time ML intelligence streams",
+                    icon="📊",
+                    level=3
+                )
+            else:
+                st.markdown("### 📊 Live Data Streams")
 
             # Stream selection
             selected_streams = st.multiselect(
@@ -420,13 +295,29 @@ class RealtimeLeadIntelligenceHub:
 
         with col2:
             # Performance monitoring sidebar
-            st.markdown("### ⚡ Performance Monitor")
+            if ENTERPRISE_THEME_AVAILABLE:
+                enterprise_section_header(
+                    title="Performance Monitor",
+                    subtitle="System health & metrics",
+                    icon="⚡",
+                    level=3
+                )
+            else:
+                st.markdown("### ⚡ Performance Monitor")
             self._render_performance_metrics_dashboard()
 
         st.divider()
 
         # Bottom section: Live conversation feed (full width)
-        st.markdown("### 💬 Live Conversation Intelligence Feed")
+        if ENTERPRISE_THEME_AVAILABLE:
+            enterprise_section_header(
+                title="Live Conversation Intelligence Feed",
+                subtitle="Real-time conversation analysis with AI insights",
+                icon="💬",
+                level=3
+            )
+        else:
+            st.markdown("### 💬 Live Conversation Intelligence Feed")
         self._render_conversation_intelligence_feed()
 
         # Auto-refresh control at bottom
@@ -440,26 +331,31 @@ class RealtimeLeadIntelligenceHub:
 
         with col1:
             # Connection status
-            if st.session_state.websocket_connected:
-                st.markdown(
-                    """
-                    <div class="stream-status">
-                        <span class="status-indicator status-connected"></span>
-                        <strong>Connected</strong> - Receiving live updates
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+            if ENTERPRISE_THEME_AVAILABLE:
+                if st.session_state.websocket_connected:
+                    enterprise_status_indicator(
+                        label="Connected - Receiving live updates",
+                        status="success",
+                        icon="🔗"
+                    )
+                else:
+                    enterprise_status_indicator(
+                        label="Disconnected - Demo mode active",
+                        status="warning",
+                        icon="⚠️"
+                    )
             else:
-                st.markdown(
-                    """
-                    <div class="stream-status">
-                        <span class="status-indicator status-disconnected"></span>
-                        <strong>Disconnected</strong> - Demo mode active
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                # Legacy fallback
+                if st.session_state.websocket_connected:
+                    st.markdown(
+                        '<div class="realtime-status-connected"><strong>🔗 Connected</strong> - Receiving live updates</div>',
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.markdown(
+                        '<div class="realtime-status-disconnected"><strong>⚠️ Disconnected</strong> - Demo mode active</div>',
+                        unsafe_allow_html=True
+                    )
 
         with col2:
             # Connection toggle
@@ -522,23 +418,15 @@ class RealtimeLeadIntelligenceHub:
 
     def render_live_lead_scoring_stream(self):
         """Render real-time lead scoring stream with trend visualization"""
-        with st.container():
-            st.markdown(
-                """
-                <div class="stream-card realtime-update">
-                    <div class="stream-header">
-                        <div class="stream-title">
-                            🎯 Live Lead Scoring Stream
-                        </div>
-                        <div class="stream-status">
-                            <span class="status-indicator status-connected"></span>
-                            {count} updates
-                        </div>
-                    </div>
-                </div>
-                """.format(count=len(st.session_state.lead_score_stream)),
-                unsafe_allow_html=True
+        if ENTERPRISE_THEME_AVAILABLE:
+            enterprise_card(
+                title="Live Lead Scoring Stream",
+                subtitle=f"{len(st.session_state.lead_score_stream)} updates",
+                icon="🎯"
             )
+        else:
+            st.markdown("#### 🎯 Live Lead Scoring Stream")
+            st.caption(f"{len(st.session_state.lead_score_stream)} updates")
 
             # Generate demo data if empty or simulate new updates
             if len(st.session_state.lead_score_stream) < 20 or st.session_state.auto_refresh_enabled:
@@ -556,6 +444,10 @@ class RealtimeLeadIntelligenceHub:
                     vertical_spacing=0.15
                 )
 
+                # Use enterprise colors
+                primary_color = self.colors.get('primary', '#059669')
+                accent_color = self.colors.get('accent', '#06b6d4')
+
                 # Lead scores line chart
                 fig.add_trace(
                     go.Scatter(
@@ -563,17 +455,17 @@ class RealtimeLeadIntelligenceHub:
                         y=df['score'],
                         mode='lines+markers',
                         name='Lead Score',
-                        line=dict(color='#059669', width=3),
+                        line=dict(color=primary_color, width=3),
                         marker=dict(size=8),
                         fill='tozeroy',
-                        fillcolor='rgba(5, 150, 105, 0.1)'
+                        fillcolor=f'rgba(5, 150, 105, 0.1)'
                     ),
                     row=1, col=1
                 )
 
                 # Add threshold line at 0.7 (high-quality lead)
                 fig.add_hline(
-                    y=0.7, line_dash="dash", line_color="red",
+                    y=0.7, line_dash="dash", line_color=self.colors.get('danger', '#dc2626'),
                     annotation_text="High-Quality Threshold",
                     row=1, col=1
                 )
@@ -584,17 +476,21 @@ class RealtimeLeadIntelligenceHub:
                         x=df['timestamp'],
                         y=df['processing_time_ms'],
                         name='Processing Time',
-                        marker_color='#06b6d4'
+                        marker_color=accent_color
                     ),
                     row=2, col=1
                 )
 
                 # Add target latency line
                 fig.add_hline(
-                    y=35, line_dash="dot", line_color="orange",
+                    y=35, line_dash="dot", line_color=self.colors.get('warning', '#f59e0b'),
                     annotation_text="Target: <35ms",
                     row=2, col=1
                 )
+
+                # Apply enterprise theme
+                if ENTERPRISE_THEME_AVAILABLE:
+                    fig = apply_plotly_theme(fig)
 
                 fig.update_layout(
                     height=500,
@@ -611,48 +507,68 @@ class RealtimeLeadIntelligenceHub:
 
                 # Latest score metrics
                 latest = df.iloc[-1]
-                col1, col2, col3 = st.columns(3)
 
-                with col1:
-                    st.metric(
-                        "Latest Score",
-                        f"{latest['score']:.3f}",
-                        delta=f"{latest['score'] - df.iloc[-2]['score']:.3f}" if len(df) > 1 else None
-                    )
-
-                with col2:
-                    st.metric(
-                        "Avg Processing Time",
-                        f"{df['processing_time_ms'].mean():.1f}ms",
-                        delta=f"{df['processing_time_ms'].mean() - 35:.1f}ms" if df['processing_time_ms'].mean() > 35 else "✓ Under target"
-                    )
-
-                with col3:
+                if ENTERPRISE_THEME_AVAILABLE:
+                    # Use enterprise KPI grid
                     cache_hit_rate = (df['cache_hit'].sum() / len(df)) * 100
-                    st.metric(
-                        "Cache Hit Rate",
-                        f"{cache_hit_rate:.1f}%",
-                        delta="✓ Excellent" if cache_hit_rate > 90 else "⚠️ Below target"
-                    )
+                    metrics_data = [
+                        {
+                            "label": "Latest Score",
+                            "value": f"{latest['score']:.3f}",
+                            "delta": f"{latest['score'] - df.iloc[-2]['score']:.3f}" if len(df) > 1 else "New",
+                            "delta_type": "positive" if len(df) > 1 and latest['score'] > df.iloc[-2]['score'] else "neutral"
+                        },
+                        {
+                            "label": "Avg Processing Time",
+                            "value": f"{df['processing_time_ms'].mean():.1f}ms",
+                            "delta": "✓ Under target" if df['processing_time_ms'].mean() <= 35 else f"+{df['processing_time_ms'].mean() - 35:.1f}ms",
+                            "delta_type": "positive" if df['processing_time_ms'].mean() <= 35 else "negative"
+                        },
+                        {
+                            "label": "Cache Hit Rate",
+                            "value": f"{cache_hit_rate:.1f}%",
+                            "delta": "✓ Excellent" if cache_hit_rate > 90 else "⚠️ Below target",
+                            "delta_type": "positive" if cache_hit_rate > 90 else "warning"
+                        }
+                    ]
+                    enterprise_kpi_grid(metrics_data)
+                else:
+                    # Legacy metrics fallback
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        st.metric(
+                            "Latest Score",
+                            f"{latest['score']:.3f}",
+                            delta=f"{latest['score'] - df.iloc[-2]['score']:.3f}" if len(df) > 1 else None
+                        )
+
+                    with col2:
+                        st.metric(
+                            "Avg Processing Time",
+                            f"{df['processing_time_ms'].mean():.1f}ms",
+                            delta=f"{df['processing_time_ms'].mean() - 35:.1f}ms" if df['processing_time_ms'].mean() > 35 else "✓ Under target"
+                        )
+
+                    with col3:
+                        cache_hit_rate = (df['cache_hit'].sum() / len(df)) * 100
+                        st.metric(
+                            "Cache Hit Rate",
+                            f"{cache_hit_rate:.1f}%",
+                            delta="✓ Excellent" if cache_hit_rate > 90 else "⚠️ Below target"
+                        )
 
     def render_churn_risk_alerts_stream(self):
         """Render real-time churn risk alerts with intervention triggers"""
-        with st.container():
-            st.markdown(
-                """
-                <div class="stream-card">
-                    <div class="stream-header">
-                        <div class="stream-title">
-                            ⚠️ Churn Risk Alerts
-                        </div>
-                        <div class="stream-status">
-                            {count} alerts
-                        </div>
-                    </div>
-                </div>
-                """.format(count=len(st.session_state.churn_alerts_stream)),
-                unsafe_allow_html=True
+        if ENTERPRISE_THEME_AVAILABLE:
+            enterprise_card(
+                title="Churn Risk Alerts",
+                subtitle=f"{len(st.session_state.churn_alerts_stream)} alerts",
+                icon="⚠️"
             )
+        else:
+            st.markdown("#### ⚠️ Churn Risk Alerts")
+            st.caption(f"{len(st.session_state.churn_alerts_stream)} alerts")
 
             # Simulate churn alerts
             if len(st.session_state.churn_alerts_stream) < 10 or st.session_state.auto_refresh_enabled:
@@ -664,27 +580,39 @@ class RealtimeLeadIntelligenceHub:
                     risk_level = alert['data'].get('risk_level', 'medium')
                     churn_prob = alert['data'].get('churn_probability', 0.5)
 
-                    badge_class = {
-                        'critical': 'alert-critical',
-                        'high': 'alert-high',
-                        'medium': 'alert-medium'
-                    }.get(risk_level, 'alert-medium')
+                    if ENTERPRISE_THEME_AVAILABLE:
+                        # Use enterprise components
+                        col1, col2 = st.columns([3, 1])
+                        with col1:
+                            st.markdown(f"**Lead:** {alert['lead_id'][:12]} | **Churn Risk:** {churn_prob * 100:.1f}% | **Days to Churn:** ~{alert['data'].get('days_until_churn', 30)} days")
+                        with col2:
+                            # Map risk levels to badge styles
+                            badge_type = {
+                                'critical': 'error',
+                                'high': 'warning',
+                                'medium': 'info'
+                            }.get(risk_level, 'info')
+                            enterprise_badge(risk_level.upper(), variant=badge_type)
 
-                    st.markdown(
-                        f"""
-                        <div class="feed-item">
-                            <div class="feed-timestamp">
-                                {alert['timestamp'].strftime('%H:%M:%S')} - Lead: {alert['lead_id'][:12]}
+                        enterprise_timestamp(alert['timestamp'])
+                        st.divider()
+                    else:
+                        # Legacy fallback
+                        st.markdown(
+                            f"""
+                            <div class="realtime-feed-item">
+                                <div class="feed-timestamp">
+                                    {alert['timestamp'].strftime('%H:%M:%S')} - Lead: {alert['lead_id'][:12]}
+                                </div>
+                                <div class="feed-content">
+                                    <strong>{risk_level.upper()}</strong>
+                                    Churn Risk: {churn_prob * 100:.1f}% |
+                                    Days to Churn: ~{alert['data'].get('days_until_churn', 30)} days
+                                </div>
                             </div>
-                            <div class="feed-content">
-                                <span class="alert-badge {badge_class}">{risk_level.upper()}</span>
-                                Churn Risk: {churn_prob * 100:.1f}% |
-                                Days to Churn: ~{alert['data'].get('days_until_churn', 30)} days
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                            """,
+                            unsafe_allow_html=True
+                        )
 
                 # Churn distribution chart
                 df_churn = pd.DataFrame([
@@ -703,11 +631,15 @@ class RealtimeLeadIntelligenceHub:
                     nbins=20,
                     title="Churn Probability Distribution",
                     color_discrete_map={
-                        'critical': '#dc2626',
-                        'high': '#f59e0b',
-                        'medium': '#3b82f6'
+                        'critical': self.colors.get('danger', '#dc2626'),
+                        'high': self.colors.get('warning', '#f59e0b'),
+                        'medium': self.colors.get('info', '#3b82f6')
                     }
                 )
+
+                # Apply enterprise theme
+                if ENTERPRISE_THEME_AVAILABLE:
+                    fig = apply_plotly_theme(fig)
 
                 fig.update_layout(height=300, margin=dict(l=20, r=20, t=40, b=20))
                 st.plotly_chart(fig, use_container_width=True, key="churn_distribution")

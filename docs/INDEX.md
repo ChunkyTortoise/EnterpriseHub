@@ -137,9 +137,14 @@ Located in the repository root:
 - **[AUTHORS.md](../AUTHORS.md)** - Contributors and acknowledgments
 
 ### Handoffs & Reports
-Located in `docs/handoffs/` and `docs/reports/`:
+Located in `docs/handoffs/`, `docs/reports/`, and project root:
 - **[HANDOFF_CLEANUP_SESSION.md](handoffs/HANDOFF_CLEANUP_SESSION.md)** - Summary of cleanup and optimization
 - **[PHASE5_AI_ENHANCED_OPERATIONS_COMPLETE.md](PHASE5_AI_ENHANCED_OPERATIONS_COMPLETE.md)** - AI enhancement completion
+- **[SELLER_SECTION_HANDOFF.md](../SELLER_SECTION_HANDOFF.md)** - **NEW (Jan 10, 2026)** - Seller section development continuation guide
+  - Async error fixes and fallback system implementation
+  - Technical requirements and next development priorities
+  - Complete implementation details and testing protocols
+  - Ready for continued development in new chat session
 
 ---
 
@@ -198,6 +203,13 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed guidelines.
 4. Review [ML_API_ENDPOINTS.md](ML_API_ENDPOINTS.md)
 5. Check [DEPLOYMENT_RAILWAY_VERCEL.md](DEPLOYMENT_RAILWAY_VERCEL.md)
 6. Understand [GHL_WEBHOOK_INTEGRATION.md](GHL_WEBHOOK_INTEGRATION.md)
+7. **NEW**: [SELLER_SECTION_HANDOFF.md](../SELLER_SECTION_HANDOFF.md) - For seller section feature development
+
+### For Frontend/UI Developers
+1. **NEW**: [SELLER_SECTION_HANDOFF.md](../SELLER_SECTION_HANDOFF.md) - Seller section UI/UX patterns and continuation guide
+2. Review [CLAUDE_AI_INTEGRATION_GUIDE.md](CLAUDE_AI_INTEGRATION_GUIDE.md) - Chat integration patterns
+3. Check [DEPLOYMENT_RAILWAY_VERCEL.md](DEPLOYMENT_RAILWAY_VERCEL.md) - Frontend deployment
+4. Understand UI patterns in [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ### For ML/Data Scientists
 1. **NEW**: [CLAUDE_AI_INTEGRATION_GUIDE.md](CLAUDE_AI_INTEGRATION_GUIDE.md) - Claude semantic analysis and ML fusion
