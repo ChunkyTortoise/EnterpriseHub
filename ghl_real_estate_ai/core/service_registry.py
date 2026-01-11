@@ -193,7 +193,31 @@ class ServiceRegistry:
     def monitoring(self):
         """Get or create MonitoringService instance."""
         return self._get_service("monitoring", "monitoring", "MonitoringService")
-    
+
+    # ========================================================================
+    # Claude AI Services (Phase 2 Enhancement)
+    # ========================================================================
+
+    @property
+    def claude_agent(self):
+        """Get or create ClaudeAgentService instance."""
+        return self._get_service("claude_agent", "claude_agent_service", "ClaudeAgentService")
+
+    @property
+    def claude_semantic_analyzer(self):
+        """Get or create ClaudeSemanticAnalyzer instance."""
+        return self._get_service("claude_semantic_analyzer", "claude_semantic_analyzer", "ClaudeSemanticAnalyzer")
+
+    @property
+    def qualification_orchestrator(self):
+        """Get or create QualificationOrchestrator instance."""
+        return self._get_service("qualification_orchestrator", "qualification_orchestrator", "QualificationOrchestrator")
+
+    @property
+    def business_metrics(self):
+        """Get or create BusinessMetricsService instance."""
+        return self._get_service("business_metrics", "business_metrics_service", "BusinessMetricsService")
+
     # ========================================================================
     # High-Level Convenience Methods (Frontend-Ready)
     # ========================================================================
@@ -558,7 +582,445 @@ class ServiceRegistry:
             "insights": [],
             "demo_mode": True
         }
-    
+
+    # ========================================================================
+    # Claude AI Convenience Methods (Phase 2 Enhancement)
+    # ========================================================================
+
+    async def get_real_time_coaching(
+        self,
+        agent_id: str,
+        conversation_context: Dict[str, Any],
+        prospect_message: str,
+        conversation_stage: str = "discovery"
+    ) -> Dict[str, Any]:
+        """
+        Get real-time coaching suggestions for agent during conversation.
+
+        Args:
+            agent_id: Agent identifier
+            conversation_context: Current conversation context
+            prospect_message: Latest prospect message
+            conversation_stage: Current conversation stage
+
+        Returns:
+            Dictionary containing:
+            - suggestions: List of coaching suggestions
+            - objection_detected: Boolean indicating objection
+            - recommended_response: Suggested response
+            - next_questions: Recommended follow-up questions
+        """
+        try:
+            if self.demo_mode:
+                return self._get_safe_claude_coaching_fallback()
+
+            claude_agent = self.claude_agent
+            if not claude_agent:
+                return self._get_safe_claude_coaching_fallback()
+
+            return await claude_agent.get_real_time_coaching(
+                agent_id=agent_id,
+                conversation_context=conversation_context,
+                prospect_message=prospect_message,
+                conversation_stage=conversation_stage
+            )
+
+        except Exception as e:
+            logger.error(f"Error getting real-time coaching: {e}")
+            return self._get_safe_claude_coaching_fallback()
+
+    async def analyze_lead_semantics(
+        self,
+        conversation_messages: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Perform semantic analysis of lead conversations.
+
+        Args:
+            conversation_messages: List of conversation messages
+
+        Returns:
+            Dictionary containing:
+            - intent_analysis: Detected intentions and motivations
+            - semantic_preferences: Extracted preferences
+            - qualification_assessment: Qualification completeness
+            - recommended_questions: Intelligent follow-up questions
+        """
+        try:
+            if self.demo_mode:
+                return self._get_safe_claude_semantics_fallback()
+
+            semantic_analyzer = self.claude_semantic_analyzer
+            if not semantic_analyzer:
+                return self._get_safe_claude_semantics_fallback()
+
+            # Perform comprehensive semantic analysis
+            intent_analysis = await semantic_analyzer.analyze_lead_intent(conversation_messages)
+            preferences = await semantic_analyzer.extract_semantic_preferences(
+                [msg.get("content", "") for msg in conversation_messages]
+            )
+
+            # Build unified response
+            return {
+                "intent_analysis": intent_analysis,
+                "semantic_preferences": preferences,
+                "confidence": intent_analysis.get("confidence", 50),
+                "extracted_data": intent_analysis.get("extracted_data", {}),
+                "urgency_score": intent_analysis.get("urgency_score", 50),
+                "analyzed_at": datetime.now().isoformat()
+            }
+
+        except Exception as e:
+            logger.error(f"Error analyzing lead semantics: {e}")
+            return self._get_safe_claude_semantics_fallback()
+
+    async def start_intelligent_qualification(
+        self,
+        contact_id: str,
+        contact_name: str,
+        initial_message: str = "",
+        source: str = "website",
+        agent_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Start intelligent qualification flow with adaptive questioning.
+
+        Args:
+            contact_id: Unique contact identifier
+            contact_name: Contact's name
+            initial_message: Initial message from contact
+            source: Lead source
+            agent_id: Agent handling the lead
+
+        Returns:
+            Dictionary containing:
+            - flow_id: Qualification flow identifier
+            - journey_id: Lifecycle journey identifier
+            - next_questions: Recommended questions
+            - initial_analysis: Analysis of initial message
+        """
+        try:
+            if self.demo_mode:
+                return self._get_safe_claude_qualification_fallback()
+
+            orchestrator = self.qualification_orchestrator
+            if not orchestrator:
+                return self._get_safe_claude_qualification_fallback()
+
+            return await orchestrator.start_qualification_flow(
+                contact_id=contact_id,
+                contact_name=contact_name,
+                initial_message=initial_message,
+                source=source,
+                agent_id=agent_id
+            )
+
+        except Exception as e:
+            logger.error(f"Error starting qualification flow: {e}")
+            return self._get_safe_claude_qualification_fallback()
+
+    async def process_qualification_response(
+        self,
+        flow_id: str,
+        user_message: str,
+        agent_response: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Process response in qualification flow and get next recommendations.
+
+        Args:
+            flow_id: Qualification flow identifier
+            user_message: User's response/message
+            agent_response: Agent's response (if any)
+            context: Additional context data
+
+        Returns:
+            Dictionary containing:
+            - completion_percentage: Qualification completeness
+            - next_questions: Recommended questions
+            - semantic_analysis: Analysis of response
+            - agent_recommendations: Suggested actions for agent
+        """
+        try:
+            if self.demo_mode:
+                return self._get_safe_claude_qualification_fallback()
+
+            orchestrator = self.qualification_orchestrator
+            if not orchestrator:
+                return self._get_safe_claude_qualification_fallback()
+
+            return await orchestrator.process_response(
+                flow_id=flow_id,
+                user_message=user_message,
+                agent_response=agent_response,
+                context=context
+            )
+
+        except Exception as e:
+            logger.error(f"Error processing qualification response: {e}")
+            return self._get_safe_claude_qualification_fallback()
+
+    def get_qualification_analytics(self) -> Dict[str, Any]:
+        """
+        Get comprehensive qualification analytics and metrics.
+
+        Returns:
+            Dictionary containing:
+            - flow_metrics: Qualification flow statistics
+            - completion_rates: Completion rates by area
+            - performance_insights: Performance analysis
+        """
+        try:
+            if self.demo_mode:
+                return self._get_safe_claude_analytics_fallback()
+
+            orchestrator = self.qualification_orchestrator
+            if not orchestrator:
+                return self._get_safe_claude_analytics_fallback()
+
+            return orchestrator.get_qualification_analytics()
+
+        except Exception as e:
+            logger.error(f"Error getting qualification analytics: {e}")
+            return self._get_safe_claude_analytics_fallback()
+
+    # ========================================================================
+    # Claude AI Safe Fallback Methods
+    # ========================================================================
+
+    def _get_safe_claude_coaching_fallback(self) -> Dict[str, Any]:
+        """Return safe default Claude coaching data."""
+        return {
+            "suggestions": ["Configure Claude API for real-time coaching"],
+            "objection_detected": False,
+            "recommended_response": "Continue the conversation to gather more information",
+            "next_questions": [],
+            "demo_mode": True
+        }
+
+    def _get_safe_claude_semantics_fallback(self) -> Dict[str, Any]:
+        """Return safe default Claude semantics analysis."""
+        return {
+            "intent_analysis": {"intent": "unknown", "confidence": 50},
+            "semantic_preferences": {},
+            "confidence": 50,
+            "extracted_data": {},
+            "urgency_score": 50,
+            "demo_mode": True
+        }
+
+    def _get_safe_claude_qualification_fallback(self) -> Dict[str, Any]:
+        """Return safe default Claude qualification data."""
+        return {
+            "flow_id": "demo_flow",
+            "completion_percentage": 0,
+            "next_questions": [],
+            "status": "demo",
+            "demo_mode": True
+        }
+
+    def _get_safe_claude_analytics_fallback(self) -> Dict[str, Any]:
+        """Return safe default Claude analytics."""
+        return {
+            "total_flows": 0,
+            "active_flows": 0,
+            "completion_rates": {},
+            "demo_mode": True
+        }
+
+    # ========================================================================
+    # Business Intelligence Convenience Methods
+    # ========================================================================
+
+    async def get_business_dashboard_metrics(
+        self,
+        location_id: str,
+        days: int = 30
+    ) -> Dict[str, Any]:
+        """
+        Get comprehensive business intelligence dashboard metrics.
+
+        Args:
+            location_id: GHL location identifier
+            days: Number of days to analyze
+
+        Returns:
+            Dictionary with comprehensive business metrics
+        """
+        try:
+            if self.demo_mode:
+                return self._get_safe_business_metrics_fallback()
+
+            business_metrics = self.business_metrics
+            if not business_metrics:
+                return self._get_safe_business_metrics_fallback()
+
+            return await business_metrics.get_executive_dashboard_metrics(
+                location_id, days
+            )
+
+        except Exception as e:
+            logger.error(f"Error getting business dashboard metrics: {e}")
+            return self._get_safe_business_metrics_fallback()
+
+    async def track_lead_conversion(
+        self,
+        contact_id: str,
+        location_id: str,
+        stage: str,
+        ai_score: Optional[int] = None,
+        agent_id: Optional[str] = None,
+        deal_value: Optional[float] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """
+        Track lead conversion stage progression.
+
+        Args:
+            contact_id: GHL contact identifier
+            location_id: GHL location identifier
+            stage: Conversion stage name
+            ai_score: AI lead score
+            agent_id: Agent handling the lead
+            deal_value: Deal value for closed deals
+            metadata: Additional tracking data
+
+        Returns:
+            True if tracking succeeded
+        """
+        try:
+            if self.demo_mode:
+                return True
+
+            business_metrics = self.business_metrics
+            if not business_metrics:
+                return False
+
+            # Import ConversionStage enum
+            from ghl_real_estate_ai.services.business_metrics_service import ConversionStage
+            from decimal import Decimal
+
+            # Map stage string to enum
+            stage_mapping = {
+                "lead_created": ConversionStage.LEAD_CREATED,
+                "ai_qualified": ConversionStage.AI_QUALIFIED,
+                "human_contacted": ConversionStage.HUMAN_CONTACTED,
+                "appointment_scheduled": ConversionStage.APPOINTMENT_SCHEDULED,
+                "property_showing": ConversionStage.PROPERTY_SHOWING,
+                "offer_submitted": ConversionStage.OFFER_SUBMITTED,
+                "contract_signed": ConversionStage.CONTRACT_SIGNED,
+                "deal_closed": ConversionStage.DEAL_CLOSED
+            }
+
+            conversion_stage = stage_mapping.get(stage.lower())
+            if not conversion_stage:
+                logger.warning(f"Unknown conversion stage: {stage}")
+                return False
+
+            await business_metrics.track_conversion_stage(
+                contact_id=contact_id,
+                location_id=location_id,
+                stage=conversion_stage,
+                ai_score=ai_score,
+                agent_id=agent_id,
+                deal_value=Decimal(str(deal_value)) if deal_value else None,
+                metadata=metadata
+            )
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Error tracking lead conversion: {e}")
+            return False
+
+    async def track_agent_performance(
+        self,
+        agent_id: str,
+        location_id: str,
+        activity: str,
+        contact_id: Optional[str] = None,
+        deal_value: Optional[float] = None,
+        response_time_minutes: Optional[float] = None,
+        ai_recommendation_used: bool = False
+    ) -> bool:
+        """
+        Track agent performance and activity metrics.
+
+        Args:
+            agent_id: Agent identifier
+            location_id: GHL location identifier
+            activity: Activity type (contact, deal_closed, etc.)
+            contact_id: Contact involved
+            deal_value: Deal value for closed deals
+            response_time_minutes: Response time in minutes
+            ai_recommendation_used: Whether AI recommendation was used
+
+        Returns:
+            True if tracking succeeded
+        """
+        try:
+            if self.demo_mode:
+                return True
+
+            business_metrics = self.business_metrics
+            if not business_metrics:
+                return False
+
+            from decimal import Decimal
+
+            await business_metrics.track_agent_activity(
+                agent_id=agent_id,
+                location_id=location_id,
+                activity_type=activity,
+                contact_id=contact_id,
+                deal_value=Decimal(str(deal_value)) if deal_value else None,
+                response_time_minutes=response_time_minutes,
+                ai_recommendation_used=ai_recommendation_used
+            )
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Error tracking agent performance: {e}")
+            return False
+
+    def _get_safe_business_metrics_fallback(self) -> Dict[str, Any]:
+        """Return safe default business metrics."""
+        return {
+            "summary": {
+                "total_revenue": 0.0,
+                "revenue_per_lead": 0.0,
+                "conversion_rate": 0.0,
+                "webhook_success_rate": 100.0
+            },
+            "ghl_integration": {
+                "total_webhooks": 0,
+                "success_rate": 100.0,
+                "avg_processing_time": 0.5,
+                "meets_sla": True,
+                "contact_enrichment_rate": 0.0,
+                "ai_activation_rate": 0.0
+            },
+            "business_impact": {
+                "total_revenue": 0.0,
+                "revenue_per_lead": 0.0,
+                "conversion_rate": 0.0,
+                "avg_deal_size": 0.0,
+                "time_to_conversion": 0.0,
+                "ai_score_correlation": 0.0
+            },
+            "property_matching": {
+                "total_recommendations": 0,
+                "acceptance_rate": 0.0,
+                "showing_rate": 0.0,
+                "avg_recommendation_score": 0.0
+            },
+            "top_agents": [],
+            "generated_at": datetime.now().isoformat(),
+            "demo_mode": True
+        }
+
     # ========================================================================
     # System Health & Diagnostics
     # ========================================================================
@@ -603,5 +1065,9 @@ class ServiceRegistry:
             "tour_scheduler", "client_portal", "neighborhood_insights",
             "social_media", "multichannel", "listing_writer",
             "smart_automation", "workflow_builder", "reengagement",
-            "lead_lifecycle", "campaign_analytics", "memory", "monitoring"
+            "lead_lifecycle", "campaign_analytics", "memory", "monitoring",
+            # Claude AI Services (Phase 2)
+            "claude_agent", "claude_semantic_analyzer", "qualification_orchestrator",
+            # Business Intelligence Services
+            "business_metrics"
         ]

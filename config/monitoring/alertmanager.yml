@@ -1,0 +1,341 @@
+# AlertManager Configuration for EnterpriseHub
+# Routes alerts based on severity and team responsibility
+# Supports 99.95% uptime SLA notification requirements
+
+global:
+  smtp_smarthost: '${SMTP_HOST}:${SMTP_PORT}'
+  smtp_from: '${ALERT_EMAIL_FROM}'
+  smtp_auth_username: '${SMTP_USERNAME}'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_require_tls: true
+
+route:
+  group_by: ['alertname', 'severity', 'team']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'default-notifications'
+
+  routes:
+    # Critical SLA alerts - Immediate notification
+    - match:
+        severity: critical
+      receiver: 'sla-critical-alerts'
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 15m
+      continue: true
+
+    # Platform team alerts
+    - match:
+        team: platform
+      receiver: 'platform-team'
+      group_interval: 2m
+
+    # Backend team alerts
+    - match:
+        team: backend
+      receiver: 'backend-team'
+
+    # ML team alerts
+    - match:
+        team: ml
+      receiver: 'ml-team'
+
+    # Database team alerts
+    - match:
+        team: database
+      receiver: 'database-team'
+      group_wait: 15s  # Database issues need quick response
+
+    # Security team alerts
+    - match:
+        team: security
+      receiver: 'security-team'
+      group_wait: 10s  # Security issues are urgent
+
+    # Business team alerts
+    - match:
+        team: business
+      receiver: 'business-team'
+      group_interval: 15m  # Business metrics can be grouped
+
+    # Coaching team alerts
+    - match:
+        team: coaching
+      receiver: 'coaching-team'
+
+    # Operations team alerts
+    - match:
+        team: operations
+      receiver: 'operations-team'
+
+    # Deployment team alerts
+    - match:
+        team: deployment
+      receiver: 'deployment-team'
+      group_wait: 5s   # Deployment issues need immediate attention
+
+receivers:
+  # Default notification receiver
+  - name: 'default-notifications'
+    email_configs:
+      - to: '${DEFAULT_ALERT_EMAIL}'
+        subject: '[EnterpriseHub] {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Team: {{ .Labels.team }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          {{ end }}
+
+  # Critical SLA alerts - Multiple channels
+  - name: 'sla-critical-alerts'
+    email_configs:
+      - to: '${SLA_CRITICAL_EMAIL}'
+        subject: '🚨 CRITICAL SLA BREACH - {{ .GroupLabels.alertname }}'
+        body: |
+          🚨 CRITICAL ALERT - SERVICE LEVEL AGREEMENT BREACH DETECTED
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+
+          IMMEDIATE ACTION REQUIRED
+          - Check service availability dashboard
+          - Review error logs
+          - Initiate incident response
+
+          Dashboard: ${GRAFANA_URL}/d/sla-dashboard
+          Runbook: ${RUNBOOK_URL}/sla-breach
+          {{ end }}
+
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_CRITICAL}'
+        channel: '#alerts-critical'
+        title: '🚨 CRITICAL SLA BREACH'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Time:* {{ .StartsAt.Format "15:04:05 UTC" }}
+          {{ end }}
+        actions:
+          - type: button
+            text: 'View Dashboard'
+            url: '${GRAFANA_URL}/d/sla-dashboard'
+          - type: button
+            text: 'View Runbook'
+            url: '${RUNBOOK_URL}/sla-breach'
+
+    webhook_configs:
+      - url: '${PAGERDUTY_WEBHOOK_URL}'
+        send_resolved: true
+
+  # Platform team notifications
+  - name: 'platform-team'
+    email_configs:
+      - to: '${PLATFORM_TEAM_EMAIL}'
+        subject: '[Platform] {{ .GroupLabels.alertname }}'
+        body: |
+          Platform Alert Triggered
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Priority: {{ .Labels.priority | default "normal" }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          {{ end }}
+
+          Dashboard: ${GRAFANA_URL}/d/infrastructure-monitoring
+
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_PLATFORM}'
+        channel: '#platform-alerts'
+        title: 'Platform Alert'
+
+  # Backend team notifications
+  - name: 'backend-team'
+    email_configs:
+      - to: '${BACKEND_TEAM_EMAIL}'
+        subject: '[Backend] {{ .GroupLabels.alertname }}'
+        body: |
+          Backend Service Alert
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Service: {{ .Labels.job | default "unknown" }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          {{ end }}
+
+  # ML team notifications
+  - name: 'ml-team'
+    email_configs:
+      - to: '${ML_TEAM_EMAIL}'
+        subject: '[ML] {{ .GroupLabels.alertname }}'
+        body: |
+          Machine Learning Alert
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Model: {{ .Labels.model_name | default "unknown" }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          {{ end }}
+
+          Actions:
+          - Check model performance dashboard
+          - Review training metrics
+          - Validate data pipeline health
+
+  # Database team notifications
+  - name: 'database-team'
+    email_configs:
+      - to: '${DATABASE_TEAM_EMAIL}'
+        subject: '[Database] {{ .GroupLabels.alertname }}'
+        body: |
+          Database Alert - Immediate Attention Required
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Database: {{ .Labels.instance | default "unknown" }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          {{ end }}
+
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_DATABASE}'
+        channel: '#database-alerts'
+        title: 'Database Alert'
+
+  # Security team notifications
+  - name: 'security-team'
+    email_configs:
+      - to: '${SECURITY_TEAM_EMAIL}'
+        subject: '🔒 [Security] {{ .GroupLabels.alertname }}'
+        body: |
+          SECURITY ALERT DETECTED
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Security Event: {{ .Labels.failure_type | default "unknown" }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+
+          IMMEDIATE ACTIONS:
+          - Review security logs
+          - Check for unauthorized access
+          - Validate PII protection systems
+          - Consider incident response procedures
+          {{ end }}
+
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_SECURITY}'
+        channel: '#security-alerts'
+        title: '🔒 Security Alert'
+
+  # Business team notifications
+  - name: 'business-team'
+    email_configs:
+      - to: '${BUSINESS_TEAM_EMAIL}'
+        subject: '[Business Metrics] {{ .GroupLabels.alertname }}'
+        body: |
+          Business Performance Alert
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Business Impact: {{ .Annotations.business_impact | default "TBD" }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          {{ end }}
+
+          Review business dashboard for detailed metrics.
+
+  # Coaching team notifications
+  - name: 'coaching-team'
+    email_configs:
+      - to: '${COACHING_TEAM_EMAIL}'
+        subject: '[AI Coaching] {{ .GroupLabels.alertname }}'
+        body: |
+          AI Coaching Performance Alert
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Coaching Metric: {{ .Labels.coaching_metric | default "unknown" }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          {{ end }}
+
+          Dashboard: ${GRAFANA_URL}/d/ai-coaching-performance
+
+  # Operations team notifications
+  - name: 'operations-team'
+    email_configs:
+      - to: '${OPERATIONS_TEAM_EMAIL}'
+        subject: '[Operations] {{ .GroupLabels.alertname }}'
+        body: |
+          Operations Alert
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Infrastructure: {{ .Labels.instance | default "unknown" }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          {{ end }}
+
+  # Deployment team notifications
+  - name: 'deployment-team'
+    email_configs:
+      - to: '${DEPLOYMENT_TEAM_EMAIL}'
+        subject: '[Deployment] {{ .GroupLabels.alertname }}'
+        body: |
+          Deployment Alert - Action Required
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Deployment Status: {{ .Labels.deployment_status | default "unknown" }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+
+          Consider:
+          - Check deployment health
+          - Review rollback options
+          - Validate traffic switching
+          {{ end }}
+
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_DEPLOYMENT}'
+        channel: '#deployment-alerts'
+        title: 'Deployment Alert'
+
+# Alert inhibition rules
+inhibit_rules:
+  # Inhibit lower severity alerts if critical alert is firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'team']
+
+  # Inhibit coaching alerts if model is down
+  - source_match:
+      alertname: 'CoachingModelDrift'
+    target_match_re:
+      alertname: 'Coaching.*'
+    equal: ['model_name']
+
+  # Inhibit database alerts if shard is down
+  - source_match:
+      alertname: 'DatabaseShardDown'
+    target_match_re:
+      alertname: 'Database.*'
+    equal: ['instance']
+
+# Silencing templates (can be activated via API)
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
