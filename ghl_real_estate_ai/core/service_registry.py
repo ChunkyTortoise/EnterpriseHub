@@ -1072,6 +1072,276 @@ class ServiceRegistry:
             return self._get_fallback_session_status(session_id)
 
     # ========================================================================
+    # Agent Profile System Fallback Methods
+    # ========================================================================
+
+    def _get_demo_agent_session(self, agent_id: str, location_id: str) -> Dict[str, Any]:
+        """Return demo agent session data."""
+        return {
+            "session_id": f"demo_session_{agent_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            "agent_id": agent_id,
+            "location_id": location_id,
+            "active_guidance_types": ["response_suggestions", "strategy_coaching"],
+            "conversation_stage": "discovery",
+            "status": "active",
+            "enhanced_features": False,
+            "demo_mode": True,
+            "message": "Demo mode - Connect AgentProfileService for enhanced functionality"
+        }
+
+    def _get_fallback_agent_session(self, agent_id: str, location_id: str) -> Dict[str, Any]:
+        """Return fallback agent session data when service unavailable."""
+        return {
+            "session_id": f"fallback_session_{agent_id}",
+            "agent_id": agent_id,
+            "location_id": location_id,
+            "active_guidance_types": [],
+            "conversation_stage": "discovery",
+            "status": "fallback",
+            "enhanced_features": False,
+            "demo_mode": False,
+            "error": "AgentProfileService unavailable - using fallback session",
+            "message": "Configure agent profile database to enable enhanced features"
+        }
+
+    def _get_demo_location_agents(
+        self,
+        location_id: str,
+        role_filter: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Return demo agents for location."""
+        demo_agents = [
+            {
+                "agent_id": "demo_buyer_agent_001",
+                "agent_name": "Sarah Johnson",
+                "email": "sarah.johnson@demo.com",
+                "primary_role": "buyer_agent",
+                "secondary_roles": ["transaction_coordinator"],
+                "years_experience": 5,
+                "specializations": ["first_time_buyers", "luxury_homes", "investment_properties"],
+                "accessible_locations": [location_id, "demo_location_002"],
+                "preferred_guidance_types": ["response_suggestions", "strategy_coaching", "process_navigation"],
+                "communication_style": "professional",
+                "is_active": True
+            },
+            {
+                "agent_id": "demo_seller_agent_001",
+                "agent_name": "Michael Chen",
+                "email": "michael.chen@demo.com",
+                "primary_role": "seller_agent",
+                "secondary_roles": ["dual_agent"],
+                "years_experience": 8,
+                "specializations": ["luxury_market", "commercial_properties", "market_analysis"],
+                "accessible_locations": [location_id, "demo_location_003"],
+                "preferred_guidance_types": ["strategy_coaching", "performance_insights", "process_navigation"],
+                "communication_style": "professional",
+                "is_active": True
+            },
+            {
+                "agent_id": "demo_tc_agent_001",
+                "agent_name": "Jennifer Davis",
+                "email": "jennifer.davis@demo.com",
+                "primary_role": "transaction_coordinator",
+                "secondary_roles": [],
+                "years_experience": 3,
+                "specializations": ["compliance", "documentation", "closing_coordination"],
+                "accessible_locations": [location_id],
+                "preferred_guidance_types": ["process_navigation", "performance_insights"],
+                "communication_style": "formal",
+                "is_active": True
+            }
+        ]
+
+        # Apply role filter if specified
+        if role_filter:
+            demo_agents = [
+                agent for agent in demo_agents
+                if agent["primary_role"] == role_filter or role_filter in agent["secondary_roles"]
+            ]
+
+        return {
+            "status": "success",
+            "location_id": location_id,
+            "agents": demo_agents,
+            "total_count": len(demo_agents),
+            "role_filter": role_filter,
+            "enhanced_features": False,
+            "demo_mode": True,
+            "message": "Demo mode - Connect AgentProfileService for production data"
+        }
+
+    def _get_fallback_location_agents(self, location_id: str) -> Dict[str, Any]:
+        """Return fallback when AgentProfileService unavailable."""
+        return {
+            "status": "fallback",
+            "location_id": location_id,
+            "agents": [],
+            "total_count": 0,
+            "role_filter": None,
+            "enhanced_features": False,
+            "demo_mode": False,
+            "error": "AgentProfileService unavailable",
+            "message": "Configure agent profile database to access agent data"
+        }
+
+    def _get_demo_agent_profile(self, agent_id: str) -> Dict[str, Any]:
+        """Return demo agent profile data."""
+        demo_profiles = {
+            "demo_buyer_agent_001": {
+                "agent_id": "demo_buyer_agent_001",
+                "agent_name": "Sarah Johnson",
+                "email": "sarah.johnson@demo.com",
+                "primary_role": "buyer_agent",
+                "secondary_roles": ["transaction_coordinator"],
+                "years_experience": 5,
+                "specializations": ["first_time_buyers", "luxury_homes", "investment_properties"],
+                "accessible_locations": ["demo_location_001", "demo_location_002"],
+                "preferred_guidance_types": ["response_suggestions", "strategy_coaching", "process_navigation"],
+                "coaching_style_preference": "balanced",
+                "communication_style": "professional",
+                "current_session_id": f"demo_session_{agent_id}_current",
+                "active_conversations": [],
+                "skill_levels": {
+                    "negotiation": 85,
+                    "market_analysis": 78,
+                    "client_communication": 92,
+                    "closing_techniques": 80
+                },
+                "performance_metrics_summary": {
+                    "deals_closed_ytd": 24,
+                    "avg_deal_size": 425000,
+                    "conversion_rate": 0.68,
+                    "client_satisfaction": 4.8
+                },
+                "is_active": True,
+                "last_login": "2026-01-10T08:30:00Z",
+                "created_at": "2025-01-01T00:00:00Z",
+                "enhanced_features": False,
+                "demo_mode": True
+            }
+        }
+
+        return demo_profiles.get(agent_id, {
+            "agent_id": agent_id,
+            "agent_name": "Demo Agent",
+            "email": f"demo.agent@example.com",
+            "primary_role": "buyer_agent",
+            "secondary_roles": [],
+            "years_experience": 3,
+            "specializations": [],
+            "accessible_locations": [self.location_id],
+            "preferred_guidance_types": ["response_suggestions"],
+            "coaching_style_preference": "balanced",
+            "communication_style": "professional",
+            "current_session_id": None,
+            "active_conversations": [],
+            "skill_levels": {},
+            "performance_metrics_summary": {},
+            "is_active": True,
+            "last_login": None,
+            "created_at": datetime.now().isoformat(),
+            "enhanced_features": False,
+            "demo_mode": True,
+            "message": "Demo mode - Connect AgentProfileService for production data"
+        })
+
+    def _get_fallback_agent_profile(
+        self,
+        agent_id: str,
+        not_found: bool = False
+    ) -> Dict[str, Any]:
+        """Return fallback agent profile when service unavailable."""
+        if not_found:
+            return {
+                "agent_id": agent_id,
+                "error": "Agent profile not found",
+                "enhanced_features": False,
+                "demo_mode": False,
+                "message": f"Agent {agent_id} not found in database"
+            }
+
+        return {
+            "agent_id": agent_id,
+            "agent_name": "Unknown Agent",
+            "email": "unknown@example.com",
+            "primary_role": "buyer_agent",
+            "secondary_roles": [],
+            "years_experience": 0,
+            "specializations": [],
+            "accessible_locations": [self.location_id],
+            "preferred_guidance_types": [],
+            "coaching_style_preference": "balanced",
+            "communication_style": "professional",
+            "current_session_id": None,
+            "active_conversations": [],
+            "skill_levels": {},
+            "performance_metrics_summary": {},
+            "is_active": False,
+            "last_login": None,
+            "created_at": datetime.now().isoformat(),
+            "enhanced_features": False,
+            "demo_mode": False,
+            "error": "AgentProfileService unavailable",
+            "message": "Configure agent profile database to access agent data"
+        }
+
+    def _get_demo_session_status(self, session_id: str) -> Dict[str, Any]:
+        """Return demo session status."""
+        return {
+            "session_id": session_id,
+            "agent_id": "demo_buyer_agent_001",
+            "location_id": self.location_id,
+            "current_lead_id": "demo_lead_12345",
+            "conversation_stage": "qualification",
+            "active_guidance_types": ["response_suggestions", "strategy_coaching"],
+            "session_start_time": datetime.now().replace(hour=8, minute=30).isoformat(),
+            "last_activity": datetime.now().isoformat(),
+            "duration_minutes": 45,
+            "messages_exchanged": 12,
+            "guidance_requests": 3,
+            "coaching_effectiveness_score": 0.85,
+            "is_active": True,
+            "enhanced_features": False,
+            "demo_mode": True,
+            "message": "Demo mode - Connect AgentProfileService for production sessions"
+        }
+
+    def _get_fallback_session_status(
+        self,
+        session_id: str,
+        not_found: bool = False
+    ) -> Dict[str, Any]:
+        """Return fallback session status when service unavailable."""
+        if not_found:
+            return {
+                "session_id": session_id,
+                "error": "Session not found",
+                "enhanced_features": False,
+                "demo_mode": False,
+                "message": f"Session {session_id} not found in database"
+            }
+
+        return {
+            "session_id": session_id,
+            "agent_id": "unknown",
+            "location_id": self.location_id,
+            "current_lead_id": None,
+            "conversation_stage": "unknown",
+            "active_guidance_types": [],
+            "session_start_time": datetime.now().isoformat(),
+            "last_activity": datetime.now().isoformat(),
+            "duration_minutes": 0,
+            "messages_exchanged": 0,
+            "guidance_requests": 0,
+            "coaching_effectiveness_score": 0.0,
+            "is_active": False,
+            "enhanced_features": False,
+            "demo_mode": False,
+            "error": "AgentProfileService unavailable",
+            "message": "Configure agent profile database to access session data"
+        }
+
+    # ========================================================================
     # Business Intelligence Convenience Methods
     # ========================================================================
 

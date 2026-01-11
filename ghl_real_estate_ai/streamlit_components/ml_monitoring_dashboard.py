@@ -31,6 +31,23 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import json
 
+# === ENTERPRISE THEME INTEGRATION ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    ENTERPRISE_THEME_AVAILABLE = True
+except ImportError:
+    ENTERPRISE_THEME_AVAILABLE = False
+
 # Custom imports
 from ghl_real_estate_ai.services.ml_model_monitoring import (
     get_ml_monitoring_service,
@@ -108,36 +125,72 @@ class MLMonitoringDashboard(EnterpriseComponent):
         st.title("🤖 ML Model Monitoring Dashboard")
         st.markdown("---")
 
-        # Key metrics row
-        col1, col2, col3, col4 = st.columns(4)
+        # Key metrics row with enterprise styling
+        if ENTERPRISE_THEME_AVAILABLE:
+            # Prepare header metrics for enterprise KPI grid
+            header_metrics = [
+                {
+                    "label": "🎯 Lead Scoring Accuracy",
+                    "value": "96.2%",
+                    "delta": "+1.2% vs target (95%)",
+                    "delta_type": "positive",
+                    "icon": "🎯"
+                },
+                {
+                    "label": "🔄 Churn Prediction Precision",
+                    "value": "94.8%",
+                    "delta": "-0.2% vs target (95%)",
+                    "delta_type": "negative",
+                    "icon": "🔄"
+                },
+                {
+                    "label": "🏠 Property Match Satisfaction",
+                    "value": "91.5%",
+                    "delta": "+3.5% vs target (88%)",
+                    "delta_type": "positive",
+                    "icon": "🏠"
+                },
+                {
+                    "label": "🚨 Active Alerts",
+                    "value": "2",
+                    "delta": "-1 vs yesterday",
+                    "delta_type": "positive",
+                    "icon": "🚨"
+                }
+            ]
 
-        with col1:
-            st.metric(
-                label="🎯 Lead Scoring Accuracy",
-                value="96.2%",
-                delta="+1.2% vs target (95%)"
-            )
+            enterprise_kpi_grid(header_metrics, columns=4)
+        else:
+            # Legacy fallback styling
+            col1, col2, col3, col4 = st.columns(4)
 
-        with col2:
-            st.metric(
-                label="🔄 Churn Prediction Precision",
-                value="94.8%",
-                delta="-0.2% vs target (95%)"
-            )
+            with col1:
+                st.metric(
+                    label="🎯 Lead Scoring Accuracy",
+                    value="96.2%",
+                    delta="+1.2% vs target (95%)"
+                )
 
-        with col3:
-            st.metric(
-                label="🏠 Property Match Satisfaction",
-                value="91.5%",
-                delta="+3.5% vs target (88%)"
-            )
+            with col2:
+                st.metric(
+                    label="🔄 Churn Prediction Precision",
+                    value="94.8%",
+                    delta="-0.2% vs target (95%)"
+                )
 
-        with col4:
-            st.metric(
-                label="🚨 Active Alerts",
-                value="2",
-                delta="-1 vs yesterday"
-            )
+            with col3:
+                st.metric(
+                    label="🏠 Property Match Satisfaction",
+                    value="91.5%",
+                    delta="+3.5% vs target (88%)"
+                )
+
+            with col4:
+                st.metric(
+                    label="🚨 Active Alerts",
+                    value="2",
+                    delta="-1 vs yesterday"
+                )
 
         # Auto-refresh controls
         col_refresh, col_status = st.columns([3, 1])

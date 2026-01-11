@@ -331,14 +331,14 @@ if 'current_hub' not in st.session_state:
 
 # Sidebar navigation
 with st.sidebar:
-    st.markdown("### 🎯 Navigation")
-    
+    st.markdown("### Navigation")
+
     hub_options = [
-        "🏢 Executive Command Center",
-        "🧠 Lead Intelligence Hub",
-        "🤖 Automation Studio",
-        "💰 Sales Copilot",
-        "📈 Ops & Optimization"
+        "Executive Command Center",
+        "Lead Intelligence Hub",
+        "Automation Studio",
+        "Sales Copilot",
+        "Ops & Optimization"
     ]
     
     # Calculate index safely
@@ -357,12 +357,12 @@ with st.sidebar:
     st.session_state.current_hub = selected_hub
     
     st.markdown("---")
-    
+
     # Quick actions
-    st.markdown("### ⚡ Quick Actions")
-    if st.button("🔄 Refresh Data", use_container_width=True):
+    st.markdown("### Quick Actions")
+    if st.button("Refresh Data", use_container_width=True):
         st.rerun()
-    
+
     # Export functionality
     metrics_data = {
         "Metric": ["Total Pipeline", "Hot Leads", "Conversion Rate", "Avg Deal Size"],
@@ -371,9 +371,9 @@ with st.sidebar:
     }
     df_metrics = pd.DataFrame(metrics_data)
     csv = df_metrics.to_csv(index=False).encode('utf-8')
-    
+
     st.download_button(
-        "📥 Export Report",
+        "Export Report",
         data=csv,
         file_name="executive_metrics.csv",
         mime="text/csv",
@@ -383,7 +383,7 @@ with st.sidebar:
     st.markdown("---")
     
     # Global AI Configuration (Synced State)
-    with st.expander("⚙️ AI Configuration", expanded=True):
+    with st.expander("AI Configuration", expanded=True):
         new_market = st.selectbox(
             "Target Market",
             ["Austin, TX", "Dallas, TX", "Houston, TX", "San Antonio, TX"],
@@ -405,12 +405,12 @@ with st.sidebar:
         )
         if tone != st.session_state.ai_config["voice_tone"]:
             st.session_state.ai_config["voice_tone"] = tone
-            st.toast(f"Voice tone updated to {tone}", icon="🤖")
+            st.toast(f"Voice tone updated to {tone}")
 
     st.markdown("---")
-    
+
     # System status with Sparklines
-    st.markdown("### 📊 System Health")
+    st.markdown("### System Health")
     
     # Active Leads Sparkline
     c1, c2 = st.columns([1.5, 1])
@@ -427,7 +427,7 @@ with st.sidebar:
         st.plotly_chart(sparkline([80, 95, 110, 105, 130, 145, 156], color="#10b981", height=50), use_container_width=True, config={'displayModeBar': False})
     
     st.markdown("---")
-    st.markdown("### 📡 Live Feed")
+    st.markdown("### Live Feed")
     st.markdown("""
     <div style="font-size: 0.8rem; color: #666;">
     Creating contract for <b>John Doe</b><br>
