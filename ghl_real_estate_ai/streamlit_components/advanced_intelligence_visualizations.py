@@ -110,15 +110,19 @@ class AdvancedIntelligenceVisualizations:
         self.colors = self._get_colors()
 
         # Initialize session state for advanced features
-        if 'advanced_intelligence_state' not in st.session_state:
-            st.session_state.advanced_intelligence_state = {
-                'active_lead_journeys': {},
-                'sentiment_history': [],
-                'competitive_data': {},
-                'content_recommendations': [],
-                'document_analysis': {},
-                'voice_analysis': {}
-            }
+        try:
+            if 'advanced_intelligence_state' not in st.session_state:
+                st.session_state.advanced_intelligence_state = {
+                    'active_lead_journeys': {},
+                    'sentiment_history': [],
+                    'competitive_data': {},
+                    'content_recommendations': [],
+                    'document_analysis': {},
+                    'voice_analysis': {}
+                }
+        except AttributeError:
+            # Handle case when running outside streamlit context (testing)
+            pass
 
     def _get_colors(self) -> Dict[str, str]:
         """Get color scheme (enterprise or fallback)."""

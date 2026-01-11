@@ -59,6 +59,18 @@ business_metrics_service = None
 # Initialize Claude-enhanced service registry (Phase 3 Enhancement)
 service_registry = ServiceRegistry(demo_mode=False)
 
+# Initialize AI-Powered Coaching Engine (Week 8B Integration)
+from ghl_real_estate_ai.services.ai_powered_coaching_engine import (
+    get_coaching_engine,
+    initialize_coaching_engine
+)
+from ghl_real_estate_ai.services.claude_conversation_analyzer import (
+    ConversationData
+)
+
+# Global coaching engine instance
+coaching_engine = None
+
 
 async def initialize_business_metrics_service():
     """Initialize the business metrics service for webhook tracking."""
@@ -73,6 +85,18 @@ async def initialize_business_metrics_service():
         except Exception as e:
             logger.error(f"Failed to initialize business metrics service: {e}")
             business_metrics_service = None
+
+
+async def initialize_coaching_engine_for_webhook():
+    """Initialize the AI-Powered Coaching Engine for webhook processing."""
+    global coaching_engine
+    if not coaching_engine:
+        try:
+            coaching_engine = await initialize_coaching_engine()
+            logger.info("AI-Powered Coaching Engine initialized for webhook processing")
+        except Exception as e:
+            logger.error(f"Failed to initialize coaching engine: {e}")
+            coaching_engine = None
 
 
 def verify_webhook_signature(raw_body: bytes, signature: str) -> bool:
@@ -160,6 +184,10 @@ async def handle_ghl_webhook(
     # Initialize business metrics service if not already done
     if not business_metrics_service:
         await initialize_business_metrics_service()
+
+    # Initialize AI-Powered Coaching Engine if not already done (Week 8B)
+    if not coaching_engine:
+        await initialize_coaching_engine_for_webhook()
 
     # Start business metrics tracking for this webhook
     webhook_tracking_id = None
@@ -351,6 +379,59 @@ async def handle_ghl_webhook(
                 "classification": lead_scorer.classify(ai_response.lead_score),
             },
         )
+
+        # Step 2.5: AI-Powered Coaching Analysis (Week 8B Integration)
+        coaching_analysis = None
+        coaching_alert = None
+        if coaching_engine:
+            try:
+                # Create conversation data for coaching analysis
+                coaching_conversation_data = ConversationData(
+                    conversation_id=f"ghl_{contact_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                    agent_id=location_id,  # Use location_id as agent identifier
+                    tenant_id=location_id,  # Use location_id as tenant identifier
+                    lead_id=contact_id,
+                    messages=conversation_messages,
+                    start_time=datetime.now(),
+                    context={
+                        "source": "ghl_webhook",
+                        "lead_score": ai_response.lead_score,
+                        "claude_semantics": claude_semantics,
+                        "qualification_progress": qualification_progress,
+                        "contact_tags": tags
+                    }
+                )
+
+                # Analyze conversation for real-time coaching
+                coaching_analysis, coaching_alert = await coaching_engine.analyze_and_coach_real_time(
+                    coaching_conversation_data
+                )
+
+                logger.info(
+                    f"Real-time coaching analysis completed for contact {contact_id}: "
+                    f"quality_score={coaching_analysis.overall_quality_score:.1f}, "
+                    f"coaching_alert={'generated' if coaching_alert else 'none'}"
+                )
+
+                # Track coaching analytics
+                background_tasks.add_task(
+                    analytics_service.track_event,
+                    event_type="coaching_analysis",
+                    location_id=location_id,
+                    contact_id=contact_id,
+                    data={
+                        "quality_score": coaching_analysis.overall_quality_score,
+                        "conversation_effectiveness": coaching_analysis.conversation_effectiveness,
+                        "coaching_opportunities": len(coaching_analysis.coaching_insights.coaching_opportunities),
+                        "coaching_alert_generated": bool(coaching_alert),
+                        "processing_time_ms": coaching_analysis.processing_time_ms
+                    },
+                )
+
+            except Exception as e:
+                logger.error(f"Real-time coaching analysis failed for contact {contact_id}: {e}")
+                coaching_analysis = None
+                coaching_alert = None
 
         # Step 3: Update conversation context
         await conversation_manager.update_context(

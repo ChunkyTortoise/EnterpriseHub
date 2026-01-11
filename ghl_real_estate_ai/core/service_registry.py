@@ -218,6 +218,16 @@ class ServiceRegistry:
         """Get or create BusinessMetricsService instance."""
         return self._get_service("business_metrics", "business_metrics_service", "BusinessMetricsService")
 
+    @property
+    def agent_profile_service(self):
+        """Get or create AgentProfileService instance with graceful fallback."""
+        return self._get_service("agent_profile_service", "agent_profile_service", "AgentProfileService")
+
+    @property
+    def enhanced_claude_agent(self):
+        """Get or create EnhancedClaudeAgentService instance with graceful fallback."""
+        return self._get_service("enhanced_claude_agent", "enhanced_claude_agent_service", "EnhancedClaudeAgentService")
+
     # ========================================================================
     # High-Level Convenience Methods (Frontend-Ready)
     # ========================================================================
@@ -828,6 +838,238 @@ class ServiceRegistry:
             "completion_rates": {},
             "demo_mode": True
         }
+
+    # ========================================================================
+    # Agent Profile System Convenience Methods
+    # ========================================================================
+
+    async def start_agent_session_with_fallback(
+        self,
+        agent_id: str,
+        location_id: str,
+        guidance_types: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """
+        Start agent session with comprehensive fallback.
+
+        Args:
+            agent_id: Agent identifier
+            location_id: Location context for session
+            guidance_types: Optional guidance type preferences
+
+        Returns:
+            Dictionary containing session information or fallback data
+        """
+        try:
+            if self.demo_mode:
+                return self._get_demo_agent_session(agent_id, location_id)
+
+            agent_service = self.agent_profile_service
+            if not agent_service:
+                logger.warning("AgentProfileService unavailable, using fallback")
+                return self._get_fallback_agent_session(agent_id, location_id)
+
+            # Import guidance types
+            from ghl_real_estate_ai.models.agent_profile_models import GuidanceType
+
+            # Convert string guidance types to enums
+            guidance_enums = []
+            if guidance_types:
+                guidance_enums = [GuidanceType(gt) for gt in guidance_types if gt in GuidanceType.__members__]
+
+            session = await agent_service.start_agent_session(
+                agent_id=agent_id,
+                location_id=location_id,
+                guidance_types=guidance_enums
+            )
+
+            return {
+                "session_id": session.session_id,
+                "agent_id": session.agent_id,
+                "location_id": session.location_id,
+                "active_guidance_types": [gt.value for gt in session.active_guidance_types],
+                "conversation_stage": session.conversation_stage.value,
+                "status": "active",
+                "enhanced_features": True,
+                "demo_mode": False
+            }
+
+        except Exception as e:
+            logger.error(f"Error starting agent session: {e}")
+            return self._get_fallback_agent_session(agent_id, location_id)
+
+    async def get_location_agents(
+        self,
+        location_id: str,
+        role_filter: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Get all agents accessible to a location (Shared Agent Pool).
+
+        Args:
+            location_id: Location identifier
+            role_filter: Optional role filter (seller_agent, buyer_agent, transaction_coordinator)
+
+        Returns:
+            Dictionary containing agents and metadata
+        """
+        try:
+            if self.demo_mode:
+                return self._get_demo_location_agents(location_id, role_filter)
+
+            agent_service = self.agent_profile_service
+            if not agent_service:
+                return self._get_fallback_location_agents(location_id)
+
+            # Import AgentRole if needed
+            role_enum = None
+            if role_filter:
+                from ghl_real_estate_ai.models.agent_profile_models import AgentRole
+                try:
+                    role_enum = AgentRole(role_filter)
+                except ValueError:
+                    logger.warning(f"Invalid role filter: {role_filter}")
+
+            agents = await agent_service.get_agents_for_location(
+                location_id=location_id,
+                role_filter=role_enum,
+                active_only=True
+            )
+
+            return {
+                "status": "success",
+                "location_id": location_id,
+                "agents": [
+                    {
+                        "agent_id": agent.agent_id,
+                        "agent_name": agent.agent_name,
+                        "email": agent.email,
+                        "primary_role": agent.primary_role.value,
+                        "secondary_roles": [r.value for r in agent.secondary_roles],
+                        "years_experience": agent.years_experience,
+                        "specializations": agent.specializations,
+                        "accessible_locations": agent.accessible_locations,
+                        "preferred_guidance_types": [g.value for g in agent.preferred_guidance_types],
+                        "communication_style": agent.communication_style.value,
+                        "is_active": agent.is_active
+                    }
+                    for agent in agents
+                ],
+                "total_count": len(agents),
+                "role_filter": role_filter,
+                "enhanced_features": True,
+                "demo_mode": False
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting location agents: {e}")
+            return self._get_fallback_location_agents(location_id)
+
+    async def get_agent_profile_summary(
+        self,
+        agent_id: str,
+        requester_location_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Get agent profile summary with session information.
+
+        Args:
+            agent_id: Agent identifier
+            requester_location_id: Location context for access control
+
+        Returns:
+            Dictionary containing agent profile summary
+        """
+        try:
+            if self.demo_mode:
+                return self._get_demo_agent_profile(agent_id)
+
+            agent_service = self.agent_profile_service
+            if not agent_service:
+                return self._get_fallback_agent_profile(agent_id)
+
+            profile = await agent_service.get_agent_profile(
+                agent_id=agent_id,
+                requester_location_id=requester_location_id or self.location_id
+            )
+
+            if not profile:
+                return self._get_fallback_agent_profile(agent_id, not_found=True)
+
+            return {
+                "agent_id": profile.agent_id,
+                "agent_name": profile.agent_name,
+                "email": profile.email,
+                "primary_role": profile.primary_role.value,
+                "secondary_roles": [r.value for r in profile.secondary_roles],
+                "years_experience": profile.years_experience,
+                "specializations": profile.specializations,
+                "accessible_locations": profile.accessible_locations,
+                "preferred_guidance_types": [g.value for g in profile.preferred_guidance_types],
+                "coaching_style_preference": profile.coaching_style_preference.value,
+                "communication_style": profile.communication_style.value,
+                "current_session_id": profile.current_session_id,
+                "active_conversations": profile.active_conversations,
+                "skill_levels": profile.skill_levels,
+                "performance_metrics_summary": profile.performance_metrics_summary,
+                "is_active": profile.is_active,
+                "last_login": profile.last_login.isoformat() if profile.last_login else None,
+                "created_at": profile.created_at.isoformat(),
+                "enhanced_features": True,
+                "demo_mode": False
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting agent profile: {e}")
+            return self._get_fallback_agent_profile(agent_id)
+
+    async def get_agent_session_status(
+        self,
+        session_id: str
+    ) -> Dict[str, Any]:
+        """
+        Get agent session status and metrics.
+
+        Args:
+            session_id: Session identifier
+
+        Returns:
+            Dictionary containing session status and metrics
+        """
+        try:
+            if self.demo_mode:
+                return self._get_demo_session_status(session_id)
+
+            agent_service = self.agent_profile_service
+            if not agent_service:
+                return self._get_fallback_session_status(session_id)
+
+            session = await agent_service.get_agent_session(session_id)
+
+            if not session:
+                return self._get_fallback_session_status(session_id, not_found=True)
+
+            return {
+                "session_id": session.session_id,
+                "agent_id": session.agent_id,
+                "location_id": session.location_id,
+                "current_lead_id": session.current_lead_id,
+                "conversation_stage": session.conversation_stage.value,
+                "active_guidance_types": [g.value for g in session.active_guidance_types],
+                "session_start_time": session.session_start_time.isoformat(),
+                "last_activity": session.last_activity.isoformat(),
+                "duration_minutes": session.get_session_duration_minutes(),
+                "messages_exchanged": session.messages_exchanged,
+                "guidance_requests": session.guidance_requests,
+                "coaching_effectiveness_score": session.coaching_effectiveness_score,
+                "is_active": session.is_active,
+                "enhanced_features": True,
+                "demo_mode": False
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting session status: {e}")
+            return self._get_fallback_session_status(session_id)
 
     # ========================================================================
     # Business Intelligence Convenience Methods

@@ -226,7 +226,7 @@ if "prompt_versions" not in st.session_state:
 # Page config
 st.set_page_config(
     page_title="GHL Real Estate AI - Jorge Salas",
-    page_icon="🏠",
+    page_icon="■",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
@@ -237,7 +237,6 @@ st.set_page_config(
 # === INJECT ENTERPRISE THEME ===
 if ENTERPRISE_THEME_AVAILABLE:
     inject_enterprise_theme()
-    st.success("🎨 Enterprise Theme Activated - Fortune 500 Professional Styling")
 
 # Load custom CSS
 css_path = PROJECT_ROOT / "streamlit_demo" / "assets" / "styles_dark_lux.css"
@@ -245,29 +244,32 @@ if css_path.exists():
     with open(css_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Enhanced premium branding header with animations
+# Professional header with improved status indicators
 st.markdown("""
-<div style='background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-            padding: 3rem 2.5rem; 
-            border-radius: 20px; 
-            margin-bottom: 2.5rem; 
+<div style='background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 3rem 2.5rem;
+            border-radius: 20px;
+            margin-bottom: 2.5rem;
             color: #f8fafc;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.05);
             position: relative;
             overflow: hidden;'>
     <!-- Animated background pattern -->
-    <div style='position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
-                background-image: 
+    <div style='position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+                background-image:
                     radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
                     radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
                 opacity: 0.8;'></div>
-    
+
     <div style='position: relative; z-index: 1;'>
         <div style='display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem;'>
-            <div style='font-size: 4rem; line-height: 1; filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));'>🏠</div>
+            <div style='width: 4rem; height: 4rem; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+                        border-radius: 12px; display: flex; align-items: center; justify-content: center;
+                        font-size: 1.5rem; font-weight: 800; color: white;
+                        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);'>RE</div>
             <div>
-                <h1 style='margin: 0; font-size: 2.75rem; font-weight: 800; color: #f8fafc; 
+                <h1 style='margin: 0; font-size: 2.75rem; font-weight: 800; color: #f8fafc;
                            text-shadow: 0 4px 20px rgba(0,0,0,0.5); font-family: "Plus Jakarta Sans", sans-serif;'>
                     GHL Real Estate AI
                 </h1>
@@ -276,61 +278,47 @@ st.markdown("""
                 </p>
             </div>
         </div>
-        
+
         <p style='margin: 1.5rem 0; font-size: 1.05rem; color: #cbd5e1; max-width: 800px; line-height: 1.6;'>
             Professional AI-powered lead qualification and automation system for <strong style='color: #3b82f6;'>Jorge Salas</strong>
         </p>
-        
+
         <div style='margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;'>
-            <div style='background: rgba(30, 41, 59, 0.6); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        color: #f8fafc;'>
-                <span style='color: #10b981;'>✅</span>
-                <span style='font-weight: 600;'>AI Mode: Active</span>
-            </div>
-            <div style='background: rgba(30, 41, 59, 0.6); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        color: #f8fafc;'>
-                <span style='color: #3b82f6;'>🔗</span>
-                <span style='font-weight: 600;'>GHL Sync: Live</span>
-            </div>
-            <div style='background: rgba(30, 41, 59, 0.6); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        color: #f8fafc;'>
-                <span style='color: #f59e0b;'>📊</span>
-                <span style='font-weight: 600;'>Multi-Tenant Ready</span>
-            </div>
-            <div style='background: rgba(16, 185, 129, 0.2); 
-                        padding: 0.75rem 1.25rem; 
+            <div style='background: rgba(16, 185, 129, 0.15);
+                        padding: 0.75rem 1.25rem;
                         border-radius: 10px;
                         border: 1px solid rgba(16, 185, 129, 0.3);
                         backdrop-filter: blur(10px);
                         display: flex;
                         align-items: center;
                         gap: 0.5rem;
-                        color: #34d399;
-                        box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
-                        animation: pulse 2s ease-in-out infinite;'>
-                <span style='font-size: 1.2rem;'>🚀</span>
-                <span style='font-weight: 700;'>5 Hubs Live</span>
+                        color: #f8fafc;'>
+                <span style='width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;'></span>
+                <span style='font-weight: 600; color: #f8fafc;'>AI Mode Active</span>
+            </div>
+            <div style='background: rgba(59, 130, 246, 0.15);
+                        padding: 0.75rem 1.25rem;
+                        border-radius: 10px;
+                        border: 1px solid rgba(59, 130, 246, 0.3);
+                        backdrop-filter: blur(10px);
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        color: #f8fafc;'>
+                <span style='width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; display: inline-block;'></span>
+                <span style='font-weight: 600; color: #f8fafc;'>GHL Integration Live</span>
+            </div>
+            <div style='background: rgba(245, 158, 11, 0.15);
+                        padding: 0.75rem 1.25rem;
+                        border-radius: 10px;
+                        border: 1px solid rgba(245, 158, 11, 0.3);
+                        backdrop-filter: blur(10px);
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        color: #f8fafc;'>
+                <span style='width: 8px; height: 8px; background: #f59e0b; border-radius: 50%; display: inline-block;'></span>
+                <span style='font-weight: 600; color: #f8fafc;'>Multi-Tenant Ready</span>
             </div>
         </div>
     </div>

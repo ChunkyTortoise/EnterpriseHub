@@ -1,0 +1,259 @@
+# Docker Compose Configuration for Intelligence Analytics System
+# Production-ready stack for enhanced dashboard components
+#
+# This compose file includes:
+# - Intelligence Analytics Dashboard
+# - Performance Monitoring Service
+# - Redis for caching and real-time data
+# - PostgreSQL for analytics data storage
+# - Nginx for load balancing and SSL termination
+#
+# Created: January 10, 2026
+# Author: EnterpriseHub Development Team
+
+version: '3.8'
+
+services:
+  # Intelligence Analytics Dashboard
+  intelligence-dashboard:
+    build:
+      context: .
+      dockerfile: docker/intelligence-analytics.dockerfile
+    container_name: intelligence-dashboard
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      - REDIS_URL=redis://redis:6379/3
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/enterprisehub_analytics
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - GHL_API_KEY=${GHL_API_KEY}
+      - API_BASE_URL=${API_BASE_URL}
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config:ro
+      - analytics_temp:/app/temp
+    depends_on:
+      - redis
+      - postgres
+      - performance-monitor
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - intelligence-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.intelligence-dashboard.rule=Host(`analytics.enterprisehub.ai`)"
+      - "traefik.http.routers.intelligence-dashboard.tls=true"
+
+  # Performance Monitoring Service
+  performance-monitor:
+    build:
+      context: .
+      dockerfile: docker/intelligence-analytics.dockerfile
+    container_name: performance-monitor
+    restart: unless-stopped
+    command: ["python", "scripts/run_performance_monitor.py"]
+    environment:
+      - REDIS_URL=redis://redis:6379/3
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/enterprisehub_analytics
+      - MONITORING_INTERVAL=30
+      - ALERT_THRESHOLD_MS=500
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config:ro
+      - analytics_temp:/app/temp
+    depends_on:
+      - redis
+      - postgres
+    healthcheck:
+      test: ["CMD", "python", "-c", "import redis; r = redis.Redis(host='redis', port=6379, db=3); r.ping()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - intelligence-network
+
+  # Real-time Data Connector
+  realtime-connector:
+    build:
+      context: .
+      dockerfile: docker/intelligence-analytics.dockerfile
+    container_name: realtime-connector
+    restart: unless-stopped
+    ports:
+      - "8502:8502"
+    command: ["python", "scripts/run_realtime_connector.py"]
+    environment:
+      - REDIS_URL=redis://redis:6379/3
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/enterprisehub_analytics
+      - WEBSOCKET_PORT=8502
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - GHL_API_KEY=${GHL_API_KEY}
+    volumes:
+      - ./logs:/app/logs
+      - analytics_temp:/app/temp
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - intelligence-network
+
+  # Redis for caching and real-time data
+  redis:
+    image: redis:7.2-alpine
+    container_name: intelligence-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - intelligence-network
+    sysctls:
+      - net.core.somaxconn=1024
+
+  # PostgreSQL for analytics data storage
+  postgres:
+    image: postgres:15.5-alpine
+    container_name: intelligence-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=enterprisehub_analytics
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/analytics_init.sql:/docker-entrypoint-initdb.d/01_analytics_init.sql:ro
+      - ./database/indexes.sql:/docker-entrypoint-initdb.d/02_indexes.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - intelligence-network
+
+  # Nginx reverse proxy and load balancer
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: intelligence-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/intelligence.conf:/etc/nginx/conf.d/intelligence.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - intelligence-dashboard
+      - realtime-connector
+    networks:
+      - intelligence-network
+    labels:
+      - "traefik.enable=false"
+
+  # Prometheus monitoring (optional)
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: intelligence-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - intelligence-network
+    profiles:
+      - monitoring
+
+  # Grafana dashboards (optional)
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: intelligence-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - intelligence-network
+    profiles:
+      - monitoring
+
+# Networks
+networks:
+  intelligence-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Volumes
+volumes:
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/redis
+
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/postgres
+
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/prometheus
+
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/grafana
+
+  analytics_temp:
+    driver: tmpfs
+    driver_opts:
+      tmpfs-size: 500m
+
+  nginx_logs:
+    driver: local

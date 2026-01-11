@@ -1,5 +1,5 @@
 """
-Business Intelligence Dashboard Component.
+Business Intelligence Dashboard Component - Enterprise Enhanced
 
 Comprehensive real-time business metrics and KPI visualization for the
 GHL Real Estate AI platform. Displays webhook performance, conversion
@@ -12,6 +12,8 @@ Features:
 - Agent leaderboards and productivity scoring
 - Property matching effectiveness tracking
 - Revenue attribution and ROI analysis
+
+Enhanced with Enterprise Design System v2.0 for Fortune 500 visual sophistication.
 
 Integration:
 - BusinessMetricsService for data collection
@@ -28,6 +30,23 @@ import plotly.express as px
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import logging
+
+# === ENTERPRISE THEME INTEGRATION ===
+try:
+    from ..design_system import (
+        enterprise_metric,
+        enterprise_card,
+        enterprise_badge,
+        enterprise_progress_ring,
+        enterprise_status_indicator,
+        enterprise_kpi_grid,
+        enterprise_section_header,
+        apply_plotly_theme,
+        ENTERPRISE_COLORS
+    )
+    ENTERPRISE_THEME_AVAILABLE = True
+except ImportError:
+    ENTERPRISE_THEME_AVAILABLE = False
 
 from ghl_real_estate_ai.services.business_metrics_service import (
     BusinessMetricsService,
@@ -201,40 +220,81 @@ class BusinessIntelligenceDashboard(EnterpriseComponent):
 
         summary = data.get('summary', {})
 
-        # Key metrics in columns
-        col1, col2, col3, col4 = st.columns(4)
+        # Key metrics with enterprise styling
+        if ENTERPRISE_THEME_AVAILABLE:
+            # Prepare metrics for enterprise KPI grid
+            revenue_trend = data.get('revenue_trend', 0)
+            rpl_trend = data.get('rpl_trend', 0)
+            conversion_trend = data.get('conversion_trend', 0)
+            webhook_trend = data.get('webhook_trend', 0)
 
-        with col1:
-            st.metric(
-                "Total Revenue",
-                f"${summary.get('total_revenue', 0):,.2f}",
-                delta=f"${data.get('revenue_trend', 0):,.2f}",
-                help="Total revenue from closed deals in period"
-            )
+            executive_metrics = [
+                {
+                    "label": "💰 Total Revenue",
+                    "value": f"${summary.get('total_revenue', 0):,.2f}",
+                    "delta": f"${revenue_trend:,.2f}",
+                    "delta_type": "positive" if revenue_trend > 0 else "negative" if revenue_trend < 0 else "neutral",
+                    "icon": "💰"
+                },
+                {
+                    "label": "📊 Revenue per Lead",
+                    "value": f"${summary.get('revenue_per_lead', 0):,.2f}",
+                    "delta": f"{rpl_trend:+.1f}%",
+                    "delta_type": "positive" if rpl_trend > 0 else "negative" if rpl_trend < 0 else "neutral",
+                    "icon": "📊"
+                },
+                {
+                    "label": "🎯 Conversion Rate",
+                    "value": f"{summary.get('conversion_rate', 0):.1f}%",
+                    "delta": f"{conversion_trend:+.1f}%",
+                    "delta_type": "positive" if conversion_trend > 0 else "negative" if conversion_trend < 0 else "neutral",
+                    "icon": "🎯"
+                },
+                {
+                    "label": "⚡ Webhook Success",
+                    "value": f"{summary.get('webhook_success_rate', 0):.1f}%",
+                    "delta": f"{webhook_trend:+.1f}%",
+                    "delta_type": "positive" if webhook_trend > 0 else "negative" if webhook_trend < 0 else "neutral",
+                    "icon": "⚡"
+                }
+            ]
 
-        with col2:
-            st.metric(
-                "Revenue per Lead",
-                f"${summary.get('revenue_per_lead', 0):,.2f}",
-                delta=f"{data.get('rpl_trend', 0):+.1f}%",
-                help="Average revenue generated per lead"
-            )
+            enterprise_kpi_grid(executive_metrics, columns=4)
+        else:
+            # Legacy fallback styling
+            col1, col2, col3, col4 = st.columns(4)
 
-        with col3:
-            st.metric(
-                "Conversion Rate",
-                f"{summary.get('conversion_rate', 0):.1f}%",
-                delta=f"{data.get('conversion_trend', 0):+.1f}%",
-                help="Lead to closed deal conversion percentage"
-            )
+            with col1:
+                st.metric(
+                    "Total Revenue",
+                    f"${summary.get('total_revenue', 0):,.2f}",
+                    delta=f"${data.get('revenue_trend', 0):,.2f}",
+                    help="Total revenue from closed deals in period"
+                )
 
-        with col4:
-            st.metric(
-                "Webhook Success",
-                f"{summary.get('webhook_success_rate', 0):.1f}%",
-                delta=f"{data.get('webhook_trend', 0):+.1f}%",
-                help="GHL webhook processing success rate"
-            )
+            with col2:
+                st.metric(
+                    "Revenue per Lead",
+                    f"${summary.get('revenue_per_lead', 0):,.2f}",
+                    delta=f"{data.get('rpl_trend', 0):+.1f}%",
+                    help="Average revenue generated per lead"
+                )
+
+            with col3:
+                st.metric(
+                    "Conversion Rate",
+                    f"{summary.get('conversion_rate', 0):.1f}%",
+                    delta=f"{data.get('conversion_trend', 0):+.1f}%",
+                    help="Lead to closed deal conversion percentage"
+                )
+
+            with col4:
+                st.metric(
+                    "Webhook Success",
+                    f"{summary.get('webhook_success_rate', 0):.1f}%",
+                    delta=f"{data.get('webhook_trend', 0):+.1f}%",
+                    help="GHL webhook processing success rate"
+                )
 
         # Performance grade
         grade = calculate_performance_grade(summary)
@@ -260,37 +320,72 @@ class BusinessIntelligenceDashboard(EnterpriseComponent):
 
         ghl_data = data.get('ghl_integration', {})
 
-        # Performance status indicators
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            # SLA compliance
+        # Performance status indicators with enterprise styling
+        if ENTERPRISE_THEME_AVAILABLE:
+            # Prepare performance metrics for enterprise KPI grid
             processing_time = ghl_data.get('avg_processing_time', 0)
             meets_sla = processing_time < 1.0
             sla_color = "🟢" if meets_sla else "🔴"
-
-            st.metric(
-                f"Processing Time {sla_color}",
-                f"{processing_time:.3f}s",
-                delta=f"Target: <1.0s",
-                help="Average webhook processing time (SLA: <1s)"
-            )
-
-        with col2:
             enrichment_rate = ghl_data.get('contact_enrichment_rate', 0)
-            st.metric(
-                "Contact Enrichment",
-                f"{enrichment_rate:.1f}%",
-                help="Percentage of contacts enriched with AI data"
-            )
-
-        with col3:
             ai_activation = ghl_data.get('ai_activation_rate', 0)
-            st.metric(
-                "AI Activation Rate",
-                f"{ai_activation:.1f}%",
-                help="Percentage of webhooks that trigger AI processing"
-            )
+
+            performance_metrics = [
+                {
+                    "label": f"⚡ Processing Time {sla_color}",
+                    "value": f"{processing_time:.3f}s",
+                    "delta": "Target: <1.0s",
+                    "delta_type": "positive" if meets_sla else "negative",
+                    "icon": "⚡"
+                },
+                {
+                    "label": "🔄 Contact Enrichment",
+                    "value": f"{enrichment_rate:.1f}%",
+                    "delta": "AI Enhancement",
+                    "delta_type": "positive" if enrichment_rate > 70 else "neutral",
+                    "icon": "🔄"
+                },
+                {
+                    "label": "🤖 AI Activation Rate",
+                    "value": f"{ai_activation:.1f}%",
+                    "delta": "Webhook Processing",
+                    "delta_type": "positive" if ai_activation > 80 else "neutral",
+                    "icon": "🤖"
+                }
+            ]
+
+            enterprise_kpi_grid(performance_metrics, columns=3)
+        else:
+            # Legacy fallback styling
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                # SLA compliance
+                processing_time = ghl_data.get('avg_processing_time', 0)
+                meets_sla = processing_time < 1.0
+                sla_color = "🟢" if meets_sla else "🔴"
+
+                st.metric(
+                    f"Processing Time {sla_color}",
+                    f"{processing_time:.3f}s",
+                    delta=f"Target: <1.0s",
+                    help="Average webhook processing time (SLA: <1s)"
+                )
+
+            with col2:
+                enrichment_rate = ghl_data.get('contact_enrichment_rate', 0)
+                st.metric(
+                    "Contact Enrichment",
+                    f"{enrichment_rate:.1f}%",
+                    help="Percentage of contacts enriched with AI data"
+                )
+
+            with col3:
+                ai_activation = ghl_data.get('ai_activation_rate', 0)
+                st.metric(
+                    "AI Activation Rate",
+                    f"{ai_activation:.1f}%",
+                    help="Percentage of webhooks that trigger AI processing"
+                )
 
         # Performance charts
         col1, col2 = st.columns(2)
@@ -334,33 +429,68 @@ class BusinessIntelligenceDashboard(EnterpriseComponent):
         # AI impact metrics
         st.subheader("🤖 AI Impact Correlation")
 
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
+        # AI impact metrics with enterprise styling
+        if ENTERPRISE_THEME_AVAILABLE:
+            # Prepare AI impact metrics for enterprise KPI grid
             ai_correlation = business_data.get('ai_score_correlation', 0)
             correlation_strength = "Strong" if abs(ai_correlation) > 0.5 else "Moderate" if abs(ai_correlation) > 0.3 else "Weak"
-            st.metric(
-                "AI Score Correlation",
-                f"{ai_correlation:.3f}",
-                delta=f"Strength: {correlation_strength}",
-                help="Correlation between AI lead scores and conversion success"
-            )
-
-        with col2:
             avg_deal_size = business_data.get('avg_deal_size', 0)
-            st.metric(
-                "Average Deal Size",
-                f"${avg_deal_size:,.2f}",
-                help="Average value of closed deals"
-            )
-
-        with col3:
             time_to_conversion = business_data.get('time_to_conversion', 0)
-            st.metric(
-                "Time to Conversion",
-                f"{time_to_conversion:.1f} days",
-                help="Average days from lead creation to deal closure"
-            )
+
+            ai_impact_metrics = [
+                {
+                    "label": "🧠 AI Score Correlation",
+                    "value": f"{ai_correlation:.3f}",
+                    "delta": f"Strength: {correlation_strength}",
+                    "delta_type": "positive" if abs(ai_correlation) > 0.5 else "neutral" if abs(ai_correlation) > 0.3 else "negative",
+                    "icon": "🧠"
+                },
+                {
+                    "label": "💵 Average Deal Size",
+                    "value": f"${avg_deal_size:,.2f}",
+                    "delta": "Per Closed Deal",
+                    "delta_type": "positive" if avg_deal_size > 50000 else "neutral",
+                    "icon": "💵"
+                },
+                {
+                    "label": "⏱️ Time to Conversion",
+                    "value": f"{time_to_conversion:.1f} days",
+                    "delta": "Lead to Close",
+                    "delta_type": "positive" if time_to_conversion < 30 else "neutral",
+                    "icon": "⏱️"
+                }
+            ]
+
+            enterprise_kpi_grid(ai_impact_metrics, columns=3)
+        else:
+            # Legacy fallback styling
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                ai_correlation = business_data.get('ai_score_correlation', 0)
+                correlation_strength = "Strong" if abs(ai_correlation) > 0.5 else "Moderate" if abs(ai_correlation) > 0.3 else "Weak"
+                st.metric(
+                    "AI Score Correlation",
+                    f"{ai_correlation:.3f}",
+                    delta=f"Strength: {correlation_strength}",
+                    help="Correlation between AI lead scores and conversion success"
+                )
+
+            with col2:
+                avg_deal_size = business_data.get('avg_deal_size', 0)
+                st.metric(
+                    "Average Deal Size",
+                    f"${avg_deal_size:,.2f}",
+                    help="Average value of closed deals"
+                )
+
+            with col3:
+                time_to_conversion = business_data.get('time_to_conversion', 0)
+                st.metric(
+                    "Time to Conversion",
+                    f"{time_to_conversion:.1f} days",
+                    help="Average days from lead creation to deal closure"
+                )
 
         # ROI calculation
         roi_analysis = self._calculate_platform_roi(business_data)

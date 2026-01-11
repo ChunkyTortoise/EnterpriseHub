@@ -646,22 +646,15 @@ class RealtimeLeadIntelligenceHub:
 
     def render_property_match_stream(self):
         """Render real-time property matching notifications"""
-        with st.container():
-            st.markdown(
-                """
-                <div class="stream-card">
-                    <div class="stream-header">
-                        <div class="stream-title">
-                            🏠 Property Match Stream
-                        </div>
-                        <div class="stream-status">
-                            {count} matches
-                        </div>
-                    </div>
-                </div>
-                """.format(count=len(st.session_state.property_match_stream)),
-                unsafe_allow_html=True
+        if ENTERPRISE_THEME_AVAILABLE:
+            enterprise_card(
+                title="Property Match Stream",
+                subtitle=f"{len(st.session_state.property_match_stream)} matches",
+                icon="🏠"
             )
+        else:
+            st.markdown("#### 🏠 Property Match Stream")
+            st.caption(f"{len(st.session_state.property_match_stream)} matches")
 
             # Simulate property matches
             if len(st.session_state.property_match_stream) < 10 or st.session_state.auto_refresh_enabled:
@@ -674,21 +667,40 @@ class RealtimeLeadIntelligenceHub:
                     confidence = match['data'].get('confidence', 0.9)
                     property_type = match['data'].get('property_type', 'Single Family')
 
-                    st.markdown(
-                        f"""
-                        <div class="feed-item" style="border-left-color: #10b981;">
-                            <div class="feed-timestamp">
-                                {match['timestamp'].strftime('%H:%M:%S')} - Lead: {match['lead_id'][:12]}
+                    if ENTERPRISE_THEME_AVAILABLE:
+                        # Use enterprise components
+                        col1, col2 = st.columns([2, 1])
+                        with col1:
+                            st.markdown(f"**Lead:** {match['lead_id'][:12]} | **Property:** {property_type}")
+                            st.markdown(f"**Match Score:** {match_score * 100:.1f}% | **Confidence:** {confidence * 100:.1f}%")
+                        with col2:
+                            # Show quality badge based on match score
+                            if match_score >= 0.9:
+                                enterprise_badge("EXCELLENT", variant="success")
+                            elif match_score >= 0.8:
+                                enterprise_badge("GOOD", variant="info")
+                            else:
+                                enterprise_badge("FAIR", variant="warning")
+
+                        enterprise_timestamp(match['timestamp'])
+                        st.divider()
+                    else:
+                        # Legacy fallback
+                        st.markdown(
+                            f"""
+                            <div class="realtime-feed-item">
+                                <div class="feed-timestamp">
+                                    {match['timestamp'].strftime('%H:%M:%S')} - Lead: {match['lead_id'][:12]}
+                                </div>
+                                <div class="feed-content">
+                                    <strong>{property_type}</strong> |
+                                    Match Score: {match_score * 100:.1f}% |
+                                    Confidence: {confidence * 100:.1f}%
+                                </div>
                             </div>
-                            <div class="feed-content">
-                                <strong>{property_type}</strong> |
-                                Match Score: {match_score * 100:.1f}% |
-                                Confidence: {confidence * 100:.1f}%
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                            """,
+                            unsafe_allow_html=True
+                        )
 
                 # Match score distribution
                 df_matches = pd.DataFrame([
@@ -716,6 +728,10 @@ class RealtimeLeadIntelligenceHub:
                     name='Property Matches'
                 ))
 
+                # Apply enterprise theme
+                if ENTERPRISE_THEME_AVAILABLE:
+                    fig = apply_plotly_theme(fig)
+
                 fig.update_layout(
                     title="Property Match Quality Over Time",
                     xaxis_title="Time",
@@ -737,7 +753,14 @@ class RealtimeLeadIntelligenceHub:
             col1, col2 = st.columns([2, 1])
 
             with col1:
-                st.markdown("#### Recent Conversations")
+                if ENTERPRISE_THEME_AVAILABLE:
+                    enterprise_section_header(
+                        title="Recent Conversations",
+                        subtitle="Live conversation analysis",
+                        level=4
+                    )
+                else:
+                    st.markdown("#### Recent Conversations")
 
                 # Display last 10 conversations
                 for conv in list(st.session_state.conversation_stream)[-10:]:
@@ -750,24 +773,52 @@ class RealtimeLeadIntelligenceHub:
                         'negative': '😟'
                     }.get(sentiment, '😐')
 
-                    st.markdown(
-                        f"""
-                        <div class="feed-item">
-                            <div class="feed-timestamp">
-                                {conv['timestamp'].strftime('%H:%M:%S')} - {sentiment_emoji} {sentiment.title()}
+                    if ENTERPRISE_THEME_AVAILABLE:
+                        # Use enterprise components
+                        col_content, col_badge = st.columns([3, 1])
+
+                        with col_content:
+                            st.markdown(f"**Lead:** {conv['lead_id'][:12]} | **Intent:** {intent.title()}")
+                            st.markdown(f"**Message:** {conv['data'].get('snippet', 'N/A')}")
+
+                        with col_badge:
+                            # Sentiment badge
+                            sentiment_variant = {
+                                'positive': 'success',
+                                'neutral': 'info',
+                                'negative': 'warning'
+                            }.get(sentiment, 'info')
+                            enterprise_badge(f"{sentiment_emoji} {sentiment.title()}", variant=sentiment_variant)
+
+                        enterprise_timestamp(conv['timestamp'])
+                        st.divider()
+                    else:
+                        # Legacy fallback
+                        st.markdown(
+                            f"""
+                            <div class="realtime-feed-item">
+                                <div class="feed-timestamp">
+                                    {conv['timestamp'].strftime('%H:%M:%S')} - {sentiment_emoji} {sentiment.title()}
+                                </div>
+                                <div class="feed-content">
+                                    <strong>Intent:</strong> {intent.title()} |
+                                    <strong>Lead:</strong> {conv['lead_id'][:12]} |
+                                    <strong>Message:</strong> {conv['data'].get('snippet', 'N/A')}
+                                </div>
                             </div>
-                            <div class="feed-content">
-                                <strong>Intent:</strong> {intent.title()} |
-                                <strong>Lead:</strong> {conv['lead_id'][:12]} |
-                                <strong>Message:</strong> {conv['data'].get('snippet', 'N/A')}
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                            """,
+                            unsafe_allow_html=True
+                        )
 
             with col2:
-                st.markdown("#### Sentiment Analysis")
+                if ENTERPRISE_THEME_AVAILABLE:
+                    enterprise_section_header(
+                        title="Sentiment Analysis",
+                        subtitle="Real-time sentiment tracking",
+                        level=4
+                    )
+                else:
+                    st.markdown("#### Sentiment Analysis")
 
                 # Sentiment distribution pie chart
                 sentiment_counts = {}
@@ -779,8 +830,16 @@ class RealtimeLeadIntelligenceHub:
                     labels=list(sentiment_counts.keys()),
                     values=list(sentiment_counts.values()),
                     hole=0.4,
-                    marker=dict(colors=['#10b981', '#6b7280', '#dc2626'])
+                    marker=dict(colors=[
+                        self.colors.get('success', '#10b981'),
+                        self.colors.get('info', '#6b7280'),
+                        self.colors.get('danger', '#dc2626')
+                    ])
                 )])
+
+                # Apply enterprise theme
+                if ENTERPRISE_THEME_AVAILABLE:
+                    fig = apply_plotly_theme(fig)
 
                 fig.update_layout(
                     height=250,
@@ -792,22 +851,15 @@ class RealtimeLeadIntelligenceHub:
 
     def render_agent_activity_stream(self):
         """Render real-time agent interactions and responses"""
-        with st.container():
-            st.markdown(
-                """
-                <div class="stream-card">
-                    <div class="stream-header">
-                        <div class="stream-title">
-                            👥 Agent Activity Stream
-                        </div>
-                        <div class="stream-status">
-                            {count} activities
-                        </div>
-                    </div>
-                </div>
-                """.format(count=len(st.session_state.agent_activity_stream)),
-                unsafe_allow_html=True
+        if ENTERPRISE_THEME_AVAILABLE:
+            enterprise_card(
+                title="Agent Activity Stream",
+                subtitle=f"{len(st.session_state.agent_activity_stream)} activities",
+                icon="👥"
             )
+        else:
+            st.markdown("#### 👥 Agent Activity Stream")
+            st.caption(f"{len(st.session_state.agent_activity_stream)} activities")
 
             # Simulate agent activities
             if len(st.session_state.agent_activity_stream) < 10 or st.session_state.auto_refresh_enabled:
@@ -819,20 +871,33 @@ class RealtimeLeadIntelligenceHub:
                     action = activity['data'].get('action', 'viewed_lead')
                     agent_name = activity['data'].get('agent_name', 'Agent')
 
-                    st.markdown(
-                        f"""
-                        <div class="feed-item" style="border-left-color: #3b82f6;">
-                            <div class="feed-timestamp">
-                                {activity['timestamp'].strftime('%H:%M:%S')} - {agent_name}
+                    if ENTERPRISE_THEME_AVAILABLE:
+                        # Use enterprise components
+                        col1, col2 = st.columns([2, 1])
+                        with col1:
+                            st.markdown(f"**Agent:** {agent_name} | **Action:** {action.replace('_', ' ').title()}")
+                            st.markdown(f"**Lead:** {activity['lead_id'][:12]}")
+                        with col2:
+                            enterprise_badge("ACTIVITY", variant="info")
+
+                        enterprise_timestamp(activity['timestamp'])
+                        st.divider()
+                    else:
+                        # Legacy fallback
+                        st.markdown(
+                            f"""
+                            <div class="realtime-feed-item">
+                                <div class="feed-timestamp">
+                                    {activity['timestamp'].strftime('%H:%M:%S')} - {agent_name}
+                                </div>
+                                <div class="feed-content">
+                                    <strong>{action.replace('_', ' ').title()}</strong> |
+                                    Lead: {activity['lead_id'][:12]}
+                                </div>
                             </div>
-                            <div class="feed-content">
-                                <strong>{action.replace('_', ' ').title()}</strong> |
-                                Lead: {activity['lead_id'][:12]}
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                            """,
+                            unsafe_allow_html=True
+                        )
 
     def render_performance_metrics_dashboard(self):
         """Render system and ML performance tracking dashboard"""
@@ -842,39 +907,86 @@ class RealtimeLeadIntelligenceHub:
         metrics = st.session_state.dashboard_metrics
 
         # Overall health indicator
-        health_status = "🟢 Healthy" if metrics.connection_uptime > 95 else "🟡 Degraded"
-        st.markdown(f"**System Health:** {health_status}")
+        if ENTERPRISE_THEME_AVAILABLE:
+            status = "success" if metrics.connection_uptime > 95 else "warning"
+            health_label = "Healthy" if metrics.connection_uptime > 95 else "Degraded"
+            enterprise_status_indicator(
+                label=f"System Health: {health_label}",
+                status=status,
+                icon="🟢" if metrics.connection_uptime > 95 else "🟡"
+            )
+        else:
+            health_status = "🟢 Healthy" if metrics.connection_uptime > 95 else "🟡 Degraded"
+            st.markdown(f"**System Health:** {health_status}")
 
         # Key metrics
-        st.metric(
-            "Total Updates",
-            f"{metrics.total_updates_received:,}",
-            delta=f"+{len(st.session_state.lead_score_stream)}"
-        )
+        if ENTERPRISE_THEME_AVAILABLE:
+            # Use enterprise metrics
+            enterprise_metric(
+                label="Total Updates",
+                value=f"{metrics.total_updates_received:,}",
+                delta=f"+{len(st.session_state.lead_score_stream)}",
+                delta_type="positive"
+            )
 
-        st.metric(
-            "Avg Latency",
-            f"{metrics.avg_update_latency_ms:.1f}ms",
-            delta="✓ Optimal" if metrics.avg_update_latency_ms < 100 else "⚠️ High"
-        )
+            enterprise_metric(
+                label="Avg Latency",
+                value=f"{metrics.avg_update_latency_ms:.1f}ms",
+                delta="✓ Optimal" if metrics.avg_update_latency_ms < 100 else "⚠️ High",
+                delta_type="positive" if metrics.avg_update_latency_ms < 100 else "negative"
+            )
 
-        st.metric(
-            "Connection Uptime",
-            f"{metrics.connection_uptime:.1f}%",
-            delta="✓ Stable"
-        )
+            enterprise_metric(
+                label="Connection Uptime",
+                value=f"{metrics.connection_uptime:.1f}%",
+                delta="✓ Stable",
+                delta_type="positive"
+            )
 
-        st.metric(
-            "Active Streams",
-            f"{metrics.active_streams}/6",
-            delta=None
-        )
+            enterprise_metric(
+                label="Active Streams",
+                value=f"{metrics.active_streams}/6",
+                delta=None,
+                delta_type="neutral"
+            )
 
-        st.metric(
-            "Updates/sec",
-            f"{metrics.updates_per_second:.2f}",
-            delta=None
-        )
+            enterprise_metric(
+                label="Updates/sec",
+                value=f"{metrics.updates_per_second:.2f}",
+                delta=None,
+                delta_type="neutral"
+            )
+        else:
+            # Legacy metrics fallback
+            st.metric(
+                "Total Updates",
+                f"{metrics.total_updates_received:,}",
+                delta=f"+{len(st.session_state.lead_score_stream)}"
+            )
+
+            st.metric(
+                "Avg Latency",
+                f"{metrics.avg_update_latency_ms:.1f}ms",
+                delta="✓ Optimal" if metrics.avg_update_latency_ms < 100 else "⚠️ High"
+            )
+
+            st.metric(
+                "Connection Uptime",
+                f"{metrics.connection_uptime:.1f}%",
+                delta="✓ Stable"
+            )
+
+            st.metric(
+                "Active Streams",
+                f"{metrics.active_streams}/6",
+                delta=None
+            )
+
+            st.metric(
+                "Updates/sec",
+                f"{metrics.updates_per_second:.2f}",
+                delta=None
+            )
 
         # Performance trend chart
         if st.session_state.performance_stream:
@@ -888,20 +1000,27 @@ class RealtimeLeadIntelligenceHub:
 
             fig = go.Figure()
 
+            info_color = self.colors.get('info', '#3b82f6')
+            danger_color = self.colors.get('danger', '#dc2626')
+
             fig.add_trace(go.Scatter(
                 x=df_perf['timestamp'],
                 y=df_perf['latency'],
                 mode='lines',
                 name='Latency',
-                line=dict(color='#3b82f6', width=2),
+                line=dict(color=info_color, width=2),
                 fill='tozeroy',
-                fillcolor='rgba(59, 130, 246, 0.1)'
+                fillcolor=f'rgba(59, 130, 246, 0.1)'
             ))
 
             fig.add_hline(
-                y=100, line_dash="dash", line_color="red",
+                y=100, line_dash="dash", line_color=danger_color,
                 annotation_text="Target: <100ms"
             )
+
+            # Apply enterprise theme
+            if ENTERPRISE_THEME_AVAILABLE:
+                fig = apply_plotly_theme(fig)
 
             fig.update_layout(
                 title="Real-time Latency Trend",
