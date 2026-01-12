@@ -53,7 +53,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         """Process request with rate limiting."""
         # Use IP address as key (or user_id if authenticated)
-        client_ip = request.client.host
+        client_ip = request.client.host if request.client else "127.0.0.1"
         
         # Check rate limit
         if not await self.limiter.is_allowed(client_ip):

@@ -25,7 +25,7 @@ This playbook provides step-by-step response procedures for common production in
 
 ```
 Primary On-Call: [Your Name/Contact]
-Client Contact: Jorge (realtorjorgesalas@gmail.com)
+Client Contact: Jorge (realtorjorgesales@gmail.com)
 Backup Support: [Backup contact if available]
 
 Escalation Path:

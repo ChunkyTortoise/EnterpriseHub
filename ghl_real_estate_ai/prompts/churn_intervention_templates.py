@@ -37,13 +37,19 @@ class InterventionTemplate:
 
     @staticmethod
     def personalize_template(template: str, personalization_data: Dict[str, Any]) -> str:
-        """Apply personalization data to template"""
+        """Apply personalization data to template securely"""
+        from collections import defaultdict
+        
+        # Use a defaultdict to handle missing keys gracefully
+        safe_data = defaultdict(lambda: "[DATA_MISSING]")
+        safe_data.update(personalization_data)
+        
         try:
-            return template.format(**personalization_data)
-        except KeyError as e:
-            # Handle missing personalization keys gracefully
-            print(f"Missing personalization key: {e}")
-            return template.replace(f"{{{e}}}", "[DATA_MISSING]")
+            return template.format_map(safe_data)
+        except Exception as e:
+            # Fallback for complex format strings
+            logger.error(f"Error personalizing template: {e}")
+            return template
 
 class CriticalRiskTemplates:
     """Templates for critical churn risk (80-100% probability)"""
@@ -213,7 +219,7 @@ Best regards,
 """
 
         return {
-            "subject": random.choice(subject_variations).format(**personalization_data),
+            "subject": InterventionTemplate.personalize_template(random.choice(subject_variations), personalization_data),
             "body": InterventionTemplate.personalize_template(template, personalization_data)
         }
 
@@ -334,7 +340,7 @@ P.S. If your search criteria have changed or you'd like to pause updates tempora
 """
 
         return {
-            "subject": random.choice(subject_variations).format(**personalization_data),
+            "subject": InterventionTemplate.personalize_template(random.choice(subject_variations), personalization_data),
             "body": InterventionTemplate.personalize_template(template, personalization_data)
         }
 

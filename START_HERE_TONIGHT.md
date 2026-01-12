@@ -1,7 +1,7 @@
 # 🚀 START HERE - Jorge Presentation Tonight
 
 **Status:** ✅ EVERYTHING READY  
-**Dashboard:** http://localhost:8502 (RUNNING)  
+**Dashboard:** http://localhost:8515 (RUNNING)  
 **Tests:** 21/21 PASSING ✅  
 
 ---
@@ -69,7 +69,7 @@
 ## ✅ SYSTEM STATUS
 
 ```
-Dashboard:  ✅ RUNNING (port 8502)
+Dashboard:  ✅ RUNNING (port 8515)
 Tests:      ✅ 21/21 PASSING
 Services:   ✅ ALL OPERATIONAL
 Data:       ✅ DEMO DATA LOADED
@@ -80,7 +80,7 @@ Docs:       ✅ COMPLETE
 
 ## 🎬 PRE-DEMO CHECKLIST (2 Minutes)
 
-- [ ] Open browser to http://localhost:8502
+- [ ] Open browser to http://localhost:8515
 - [ ] Open JORGE_QUICK_DEMO_SCRIPT.md
 - [ ] Close unnecessary tabs/windows
 - [ ] Turn off notifications
@@ -124,9 +124,9 @@ Docs:       ✅ COMPLETE
 
 ### Dashboard Won't Load:
 ```bash
-kill 11506
+kill 40743
 cd ghl_real_estate_ai/streamlit_demo
-streamlit run app.py --server.port 8502 &
+streamlit run app.py --server.port 8515 &
 ```
 
 ### Hub Shows Error:

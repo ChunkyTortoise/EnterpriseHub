@@ -43,8 +43,8 @@ from .churn_intervention_orchestrator import (
     InterventionStatus
 )
 from .memory_service import MemoryService
-from .lead_lifecycle_tracker import LeadLifecycleTracker
-from .behavioral_trigger_engine import BehavioralTriggerEngine
+from .lead_lifecycle import LeadLifecycleTracker
+from .behavioral_triggers import BehavioralTriggerEngine
 from .lead_scorer import LeadScorer
 from .reengagement_engine import ReengagementEngine
 from .ghl_service import GHLService

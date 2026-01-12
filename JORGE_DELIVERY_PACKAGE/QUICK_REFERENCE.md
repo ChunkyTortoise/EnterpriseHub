@@ -1,9 +1,9 @@
-# 🎯 Quick Reference Card - Jorge Salas
+# 🎯 Quick Reference Card - Jorge Sales
 
 ## 🔗 Your Dashboard
 **URL:** http://localhost:8502  
 **Status:** ✅ Live & Running  
-**Email:** realtorjorgesalas@gmail.com
+**Email:** realtorjorgesales@gmail.com
 
 ---
 

@@ -121,7 +121,7 @@ python3 -m streamlit run app.py --server.port 8502
 ### Configuration
 - ✅ Claude API: Connected (sk-ant-REDACTED)
 - ✅ GHL Lyrio: Connected (REDACTED_LOCATION_ID)
-- ✅ Email: realtorjorgesalas@gmail.com
+- ✅ Email: realtorjorgesales@gmail.com
 - ✅ All environment variables set
 
 ### Documentation
@@ -205,7 +205,7 @@ ANTHROPIC_API_KEY=sk-ant-REDACTED
 GHL_API_KEY=REDACTED
 GHL_LOCATION_ID=REDACTED_LOCATION_ID
 GHL_AGENCY_API_KEY=REDACTED
-REALTOR_EMAIL=realtorjorgesalas@gmail.com
+REALTOR_EMAIL=realtorjorgesales@gmail.com
 ```
 
 ---
@@ -316,8 +316,8 @@ done
 
 ## CLIENT INFO
 
-**Name:** Jorge Salas  
-**Email:** realtorjorgesalas@gmail.com  
+**Name:** Jorge Sales  
+**Email:** realtorjorgesales@gmail.com  
 **Business:** Real Estate (Lyrio)  
 **GHL Location:** REDACTED_LOCATION_ID  
 **Meeting:** Tomorrow 12 PM  

@@ -46,7 +46,7 @@
 1. Test backend: curl https://backend-url/health
 2. Test frontend: Open in browser, check Real Estate AI module
 3. Update JORGE_HANDOFF_EMAIL.txt with live URLs
-4. Send email to realtorjorgesalas@gmail.com
+4. Send email to realtorjorgesales@gmail.com
 ```
 
 ---
@@ -79,7 +79,7 @@ See **RAILWAY_DEPLOYMENT_GUIDE.md** for detailed walkthrough with screenshots an
 ```bash
 GHL_LOCATION_ID=REDACTED_LOCATION_ID
 GHL_API_KEY=your_ghl_api_key_here
-Client Email: realtorjorgesalas@gmail.com
+Client Email: realtorjorgesales@gmail.com
 ```
 
 ---

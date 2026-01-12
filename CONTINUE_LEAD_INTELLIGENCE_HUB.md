@@ -85,7 +85,7 @@ def render_personalization_preview(lead_name: str, template: str):
     # Merge fields
     merged = template.replace("{name}", lead_name)
     merged = merged.replace("{property}", "123 Oak Street")
-    merged = merged.replace("{agent}", "Jorge Salas")
+    merged = merged.replace("{agent}", "Jorge Sales")
     
     st.markdown("#### 📧 Message Preview")
     st.markdown(f"""

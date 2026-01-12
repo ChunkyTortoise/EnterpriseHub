@@ -63,7 +63,7 @@ streamlit run app.py
 ### 4. **Clean Page Title & No Debug Labels**
 **Location:** Browser tab + entire interface
 
-**Before:** "GHL Real Estate AI - Jorge Salas" + floating "app" label  
+**Before:** "GHL Real Estate AI - Jorge Sales" + floating "app" label  
 **After:** "GHL Real Estate AI | Executive Command Center" + clean interface
 
 **What to Look For:**

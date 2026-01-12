@@ -11,6 +11,10 @@ from pathlib import Path
 import json
 import os
 from utils.ui import sparkline
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+
+# Initialize Claude Assistant
+claude = ClaudeAssistant()
 
 # --- PATH CONFIGURATION ---
 BASE_DIR = Path(__file__).parent
@@ -179,7 +183,7 @@ if "prompt_versions" not in st.session_state:
 
 # Page config
 st.set_page_config(
-    page_title="GHL Real Estate AI - Jorge Salas",
+    page_title="GHL Real Estate AI - Jorge Sales",
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -227,7 +231,7 @@ st.markdown("""
         </div>
         
         <p style='margin: 1.5rem 0; font-size: 1.05rem; opacity: 0.9; max-width: 800px;'>
-            Professional AI-powered lead qualification and automation system for <strong>Jorge Salas</strong>
+            Professional AI-powered lead qualification and automation system for <strong>Jorge Sales</strong>
         </p>
         
         <div style='margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;'>
@@ -394,6 +398,18 @@ with st.sidebar:
     <span style="color: gray">● 15 mins ago</span>
     </div>
     """, unsafe_allow_html=True)
+
+def render_claude_assistant():
+    """Delegates to the centralized ClaudeAssistant service."""
+    # Mock leads for root app context
+    leads = {"Sarah Johnson": {"classification": "hot"}} 
+    hub = st.session_state.current_hub
+    market = st.session_state.ai_config.get('market', 'Austin')
+    
+    claude.greet_user("Jorge")
+    claude.render_sidebar_panel(hub, market, leads)
+
+render_claude_assistant()
 
 # Main content area
 if selected_hub == "🏢 Executive Command Center":
@@ -1123,7 +1139,7 @@ st.markdown("""
         🚀 Production-Ready Multi-Tenant AI System
     </div>
     <div style='color: #6B7280; font-size: 0.9rem;'>
-        Built for Jorge Salas | Claude Sonnet 4.5 | GHL Integration Ready
+        Built for Jorge Sales | Claude Sonnet 4.5 | GHL Integration Ready
     </div>
     <div style='margin-top: 1rem; color: #6B7280; font-size: 0.85rem;'>
         Consolidated Hub Architecture | Path B Backend | 522+ Tests Passing

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# 🚀 Jorge Salas Demo Launcher
+# 🚀 Jorge Sales Demo Launcher
 # GHL Real Estate AI - 25-30% Conversion Improvement Demo
 # Date: January 9, 2026
 
-echo "🚀 Launching Jorge Salas Demo - GHL Real Estate AI"
+echo "🚀 Launching Jorge Sales Demo - GHL Real Estate AI"
 echo "==============================================="
 echo ""
 echo "📊 System Status:"

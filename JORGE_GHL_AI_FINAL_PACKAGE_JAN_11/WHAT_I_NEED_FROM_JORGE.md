@@ -9,7 +9,7 @@
 - ✅ Claude API Key
 - ✅ GHL Lyrio Location ID: REDACTED_LOCATION_ID
 - ✅ GHL Lyrio API Key
-- ✅ Email: realtorjorgesalas@gmail.com
+- ✅ Email: realtorjorgesales@gmail.com
 
 **Result:** System works perfectly for Lyrio sub-account right now.
 

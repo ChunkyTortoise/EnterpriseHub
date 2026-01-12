@@ -51,6 +51,15 @@ def render_property_matcher(lead_context: Dict):
                 for reason in property['match_reasons']:
                     st.success(f"✅ {reason}")
                 
+                # Claude's Psychological Deep Dive
+                try:
+                    from services.property_matcher import PropertyMatcher
+                    pm = PropertyMatcher()
+                    deep_reasoning = pm.explain_match_with_claude(property, lead_context.get('extracted_preferences', {}))
+                    st.info(f"🤖 **Claude's Psychological Insight:** {deep_reasoning}")
+                except Exception:
+                    pass
+                
                 # Score breakdown with Gap Analysis
                 st.markdown("#### 📊 Match Score Breakdown with Gap Analysis")
                 

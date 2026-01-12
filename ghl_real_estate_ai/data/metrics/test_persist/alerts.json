@@ -320,5 +320,47 @@
     "message": "Test",
     "timestamp": "2026-01-07T17:20:25.478080",
     "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-01-11T17:11:44.838851",
+    "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-01-11T17:19:18.070645",
+    "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-01-11T17:39:00.948795",
+    "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-01-11T17:45:58.675083",
+    "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-01-11T18:40:34.339024",
+    "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-01-11T18:42:23.178208",
+    "location_id": "test_persist"
   }
 ]

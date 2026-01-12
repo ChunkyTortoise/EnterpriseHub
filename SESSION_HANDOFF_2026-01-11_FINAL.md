@@ -15,7 +15,7 @@
 ## 📂 CRITICAL ARTIFACTS
 - `ghl-real-estate-ai/streamlit_demo/verify_setup.py`: Run this to confirm the system logic is intact.
 - `HANDOFF_SESSION_COMPLETE.md`: Detailed breakdown of the 10 monetization features.
-- `JORGE_GHL_AI_FINAL_PACKAGE_JAN_11/`: Final delivery files for the client Jorge Salas.
+- `JORGE_GHL_AI_FINAL_PACKAGE_JAN_11/`: Final delivery files for the client Jorge Sales.
 
 ---
 
@@ -29,7 +29,7 @@
 1. **Launch Demo**: Resolve the venv path issue and run `streamlit run streamlit_demo/app.py` inside the GHL directory.
 2. **Feature Showcase**: Verify the "AI Script" button in the Churn Dashboard and "Generate AI Report" in Analytics.
 3. **Screenshots & Portfolio**: Capture the new Cinematic UI v4.0 elements and update `PORTFOLIO.md`.
-4. **Client Handoff**: Prepare the final email to Jorge Salas using the draft in `JORGE_GHL_AI_FINAL_PACKAGE_JAN_11/EMAIL_DRAFT_CONVERSION_ENGINE.txt`.
+4. **Client Handoff**: Prepare the final email to Jorge Sales using the draft in `JORGE_GHL_AI_FINAL_PACKAGE_JAN_11/EMAIL_DRAFT_CONVERSION_ENGINE.txt`.
 5. **Upwork Proposals**: Use the "Gig Types" identified in `HANDOFF_SESSION_COMPLETE.md` to start bidding.
 
 ---

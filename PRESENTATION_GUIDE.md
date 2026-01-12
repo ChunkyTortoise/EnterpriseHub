@@ -46,5 +46,5 @@ We have configured everything for **Railway**.
 ## 🧪 Quick Tech Check
 
 *   **Status:** ✅ Running Locally
-*   **Branding:** ✅ Customized for "Jorge Salas"
+*   **Branding:** ✅ Customized for "Jorge Sales"
 *   **AI Services:** ✅ 5/5 Active (Scoring, Segmentation, Personalization, etc.)

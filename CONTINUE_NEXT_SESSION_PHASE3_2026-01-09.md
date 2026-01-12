@@ -151,7 +151,7 @@ ghl_real_estate_ai/
 - **✅ Data Pipeline**: Mock services with realistic demo data
 
 ### **Jorge Background**
-- **Client**: Jorge Salas, Austin Real Estate Professional
+- **Client**: Jorge Sales, Austin Real Estate Professional
 - **Market**: Austin tech corridor, high-value relocations
 - **Pain Points**: 85+ hours/month manual qualification, missing hot leads
 - **Goal**: Justify $5K-15K contract with premium AI features

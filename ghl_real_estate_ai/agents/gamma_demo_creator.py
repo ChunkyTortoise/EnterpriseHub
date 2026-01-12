@@ -305,7 +305,7 @@ curl -X POST "http://localhost:8000/api/lifecycle/reengage/campaign?location_id=
 ---
 
 **Created by:** Agent Gamma - Demo Creator
-**For:** Jorge Salas
+**For:** Jorge Sales
 **Date:** """ + datetime.now().strftime("%Y-%m-%d") + """
 """
         

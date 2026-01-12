@@ -1,9 +1,9 @@
-# 🎯 Quick Reference Card - Jorge Salas
+# 🎯 Quick Reference Card - Jorge Sales
 
 ## 🔗 Your Dashboard
-**URL:** http://localhost:8502  
+**URL:** http://localhost:8501  
 **Status:** ✅ Live & Running  
-**Email:** realtorjorgesalas@gmail.com
+**Email:** realtorjorgesales@gmail.com
 
 ---
 
@@ -42,9 +42,9 @@
 
 **Dashboard won't load?**
 ```bash
-kill 26772
+kill 40743
 cd ghl_real_estate_ai/streamlit_demo
-python3 -m streamlit run app.py --server.port 8502
+python3 -m streamlit run app.py --server.port 8501
 ```
 
 **Need help?**

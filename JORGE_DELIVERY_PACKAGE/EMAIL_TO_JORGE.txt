@@ -84,7 +84,7 @@ Next Week: Add document generation & advanced workflows
 Connected to:
 • Claude AI (for conversations & scoring)
 • Your GHL Lyrio account (REDACTED_LOCATION_ID)
-• Your email: realtorjorgesalas@gmail.com
+• Your email: realtorjorgesales@gmail.com
 
 Currently Active:
 • Lead qualification ✅

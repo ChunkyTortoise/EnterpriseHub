@@ -36,8 +36,8 @@ warnings.filterwarnings('ignore')
 
 # Internal imports
 from .memory_service import MemoryService
-from .lead_lifecycle_tracker import LeadLifecycleTracker
-from .behavioral_trigger_engine import BehavioralTriggerEngine
+from .lead_lifecycle import LeadLifecycleTracker
+from .behavioral_triggers import BehavioralTriggerEngine
 from .lead_scorer import LeadScorer
 
 # Configure logging
@@ -575,7 +575,7 @@ class ChurnRiskPredictor:
     def _generate_training_data(self, horizon: str) -> Tuple[np.ndarray, np.ndarray]:
         """Generate synthetic training data for model initialization"""
         n_samples = 1000
-        n_features = 26  # Number of features in ChurnFeatures
+        n_features = 27  # Number of features in ChurnFeatures
 
         # Generate synthetic feature data
         X = np.random.random((n_samples, n_features))

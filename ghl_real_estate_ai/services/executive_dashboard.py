@@ -77,6 +77,9 @@ class ExecutiveDashboardService:
             if ts_str:
                 # Handle Z or +00:00
                 ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                # Ensure ts is offset-aware for comparison
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=timezone.utc)
                 if ts >= cutoff:
                     conversations.append(c)
 

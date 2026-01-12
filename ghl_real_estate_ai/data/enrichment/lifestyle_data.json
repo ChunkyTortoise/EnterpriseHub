@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-01-12T02:35:32.658370",
+  "data_sources": [
+    "cached",
+    "estimated"
+  ],
+  "neighborhoods": {},
+  "commute_hubs": {
+    "downtown_austin": {
+      "lat": 30.2672,
+      "lng": -97.7431
+    },
+    "ut_campus": {
+      "lat": 30.2849,
+      "lng": -97.7341
+    },
+    "domain": {
+      "lat": 30.3987,
+      "lng": -97.7262
+    }
+  }
+}

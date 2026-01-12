@@ -1,4 +1,4 @@
-# 🚀 START HERE - Jorge Salas
+# 🚀 START HERE - Jorge Sales
 
 **Your GHL Real Estate AI is LIVE!**
 
@@ -92,7 +92,7 @@ Click through each hub in the sidebar:
 
 **Connected To:**
 - Location: Lyrio (REDACTED_LOCATION_ID)
-- Email: realtorjorgesalas@gmail.com
+- Email: realtorjorgesales@gmail.com
 - Claude AI: Active
 - GHL API: Connected
 

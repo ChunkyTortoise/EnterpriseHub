@@ -26,7 +26,7 @@ async def handle_incoming_call(request: Request):
     # For now, return a basic XML response to greet the caller
     twiml = """<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say>Hey! Thanks for calling Jorge Salas's real estate team. How can I help you today?</Say>
+    <Say>Hey! Thanks for calling Jorge Sales's real estate team. How can I help you today?</Say>
     <Record action="/api/voice/process" maxLength="30" />
 </Response>"""
     return Response(content=twiml, media_type="application/xml")

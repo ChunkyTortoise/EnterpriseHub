@@ -1,4 +1,4 @@
-# 🏠 Jorge Salas: GHL Real Estate AI Walkthrough
+# 🏠 Jorge Sales: GHL Real Estate AI Walkthrough
 
 This document outlines the state of the project, final requirements, and the roadmap to hit our midday production goal.
 

@@ -1,4 +1,4 @@
-# 🚀 Deployment Guide for Jorge Salas
+# 🚀 Deployment Guide for Jorge Sales
 ## GHL Real Estate AI - Complete Setup Instructions
 
 **Last Updated:** January 6, 2026  
