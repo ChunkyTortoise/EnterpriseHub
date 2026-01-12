@@ -22,6 +22,7 @@ from ghl_real_estate_ai.api.routes import (
     voice,
     webhook,
     auth,
+    lead_intelligence,
 )
 from ghl_real_estate_ai.api.middleware import (
     RateLimitMiddleware,
@@ -76,6 +77,7 @@ app.include_router(portal.router, prefix="/api")
 app.include_router(team.router, prefix="/api")
 app.include_router(crm.router, prefix="/api")
 app.include_router(voice.router, prefix="/api")
+app.include_router(lead_intelligence.router, prefix="/api")
 
 
 # Root endpoint
