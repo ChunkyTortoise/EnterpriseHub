@@ -8,83 +8,78 @@ from typing import Dict, Any
 def render_behavioral_tuning_panel(phase_name: str, phase_config: Dict[str, Any]):
     """
     Render behavioral tuning controls for a specific AI phase
-    
-    Args:
-        phase_name: Name of the phase (e.g., "Phase 1: Initial Response")
-        phase_config: Current configuration for the phase
+    Enhanced with Elite Control Deck styling.
     """
     
-    with st.expander(f"⚙️ {phase_name} Behavior Tuning", expanded=False):
-        st.markdown("*Fine-tune how the AI behaves in this phase*")
+    with st.expander(f"🎛️ {phase_name} AI Control Deck", expanded=False):
+        st.markdown(f"""
+        <div style="background: var(--primary-gradient); padding: 10px 15px; border-radius: 8px; color: white; margin-bottom: 20px;">
+            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Engine Status</div>
+            <div style="font-size: 1.1rem; font-weight: 600;">Calibrating {phase_name} Swarm</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### 🎯 Persistence Settings")
+            st.markdown("### 🎯 Engagement Strategy")
             
-            # Follow-up frequency
+            # Follow-up frequency with custom label
             followup_count = st.slider(
-                "Follow-up Attempts",
+                "Persistence Level",
                 min_value=1,
                 max_value=10,
                 value=phase_config.get('followup_count', 5),
-                help="How many times should the AI follow up before marking as cold?",
+                help="Higher values increase follow-up frequency.",
                 key=f"{phase_name}_followup"
             )
             
             # Response speed
             response_delay = st.select_slider(
-                "Response Speed",
+                "Agent Response Latency",
                 options=["Instant", "1-5 min", "15-30 min", "1-2 hours", "Next Day"],
                 value=phase_config.get('response_delay', "1-5 min"),
-                help="How quickly should the AI respond?",
                 key=f"{phase_name}_speed"
             )
             
             # Mention agent name
-            mention_agent = st.checkbox(
-                "Mention 'Jorge Sales' in intro",
+            mention_agent = st.toggle(
+                "Personal Branding (Mention Jorge)",
                 value=phase_config.get('mention_agent', True),
-                help="Should the AI mention the agent's name?",
                 key=f"{phase_name}_mention"
             )
         
         with col2:
-            st.markdown("#### 🎨 Tone & Creativity")
+            st.markdown("### 🎭 Cognitive Parameters")
             
             # Tone selector
             tone = st.select_slider(
-                "Communication Tone",
+                "Communication Archetype",
                 options=["Formal", "Professional", "Friendly", "Casual", "Direct"],
                 value=phase_config.get('tone', "Professional"),
-                help="How should the AI communicate?",
                 key=f"{phase_name}_tone"
             )
             
             # Creativity level
             creativity = st.slider(
-                "Response Creativity",
+                "Linguistic Variance (Creativity)",
                 min_value=0.0,
                 max_value=1.0,
                 value=phase_config.get('creativity', 0.5),
                 step=0.1,
-                format="%.1f",
-                help="0.0 = Predictable, 1.0 = Unique responses",
                 key=f"{phase_name}_creativity"
             )
             
             # Question aggressiveness
-            question_style = st.radio(
-                "Qualification Style",
+            question_style = st.segmented_control(
+                "Inquiry Depth",
                 ["Subtle", "Balanced", "Direct"],
-                index=1,
-                help="How aggressively should the AI qualify leads?",
-                key=f"{phase_name}_qual_style",
-                horizontal=True
+                default="Balanced",
+                key=f"{phase_name}_qual_style"
             )
         
         st.markdown("---")
-        st.markdown("#### 🎭 Behavior Preview")
+        st.markdown("### 👁️ Response Simulation")
         
         # Generate preview based on settings
         preview_text = generate_behavior_preview(
@@ -92,17 +87,20 @@ def render_behavioral_tuning_panel(phase_name: str, phase_config: Dict[str, Any]
         )
         
         st.markdown(f"""
-        <div style='background: #f8fafc; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;'>
-            <div style='font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem;'>EXAMPLE RESPONSE</div>
-            <div style='color: #374151; font-size: 0.9rem;'>{preview_text}</div>
+        <div class="glass-card" style="padding: 1.5rem; border-radius: 12px; border-left: 5px solid #8B5CF6;">
+            <div style="font-size: 0.75rem; color: #8B5CF6; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: 0.1em;">SIMULATED OUTPUT</div>
+            <div style="color: #1e293b; font-size: 1rem; line-height: 1.6; font-family: 'Inter', sans-serif;">
+                "{preview_text}"
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
         # Save button
-        col_save, col_reset = st.columns([3, 1])
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_save, col_reset = st.columns([1, 1])
         
         with col_save:
-            if st.button("💾 Save Behavior Profile", use_container_width=True, key=f"{phase_name}_save"):
+            if st.button("🚀 Commit Behavior Changes", use_container_width=True, type="primary", key=f"{phase_name}_save"):
                 save_behavior_config(phase_name, {
                     'followup_count': followup_count,
                     'response_delay': response_delay,
@@ -111,11 +109,11 @@ def render_behavioral_tuning_panel(phase_name: str, phase_config: Dict[str, Any]
                     'creativity': creativity,
                     'question_style': question_style
                 })
-                st.toast(f"{phase_name} behavior saved!", icon="✅")
+                st.toast(f"✅ Swarm calibrated for {phase_name}", icon="🚀")
         
         with col_reset:
-            if st.button("🔄", use_container_width=True, help="Reset to defaults", key=f"{phase_name}_reset"):
-                st.toast("Reset to defaults", icon="🔄")
+            if st.button("🔄 Factory Reset", use_container_width=True, key=f"{phase_name}_reset"):
+                st.toast("Resetting to baseline protocols...", icon="🔄")
                 st.rerun()
 
 

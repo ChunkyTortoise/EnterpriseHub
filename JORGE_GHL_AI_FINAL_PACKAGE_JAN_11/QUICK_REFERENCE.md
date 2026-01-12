@@ -42,7 +42,7 @@
 
 **Dashboard won't load?**
 ```bash
-kill 40743
+kill 51430
 cd ghl_real_estate_ai/streamlit_demo
 python3 -m streamlit run app.py --server.port 8501
 ```

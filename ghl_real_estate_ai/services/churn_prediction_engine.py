@@ -593,28 +593,28 @@ class ChurnRiskPredictor:
             risk_score = 0.0
 
             # Days since last interaction (feature 0)
-            risk_score += X[i, 0] * 0.3
+            risk_score += X[i, 0] * 0.5
 
             # Low interaction frequency (features 1-3)
-            risk_score += (1 - np.mean(X[i, 1:4])) * 0.2
+            risk_score += (1 - np.mean(X[i, 1:4])) * 0.3
 
             # Low response rates (features 4-6)
-            risk_score += (1 - np.mean(X[i, 4:7])) * 0.2
+            risk_score += (1 - np.mean(X[i, 4:7])) * 0.3
 
             # Negative engagement trend (feature 7)
-            if X[i, 7] < 0.3:  # Convert to declining trend
-                X[i, 7] = X[i, 7] - 0.5  # Make it negative
-                risk_score += 0.2
+            if X[i, 7] < 0.4:  # Convert to declining trend
+                X[i, 7] = X[i, 7] - 0.6  # Make it negative
+                risk_score += 0.4
 
             # Stage stagnation (feature 9)
-            risk_score += X[i, 9] * 0.1
+            risk_score += X[i, 9] * 0.2
 
             # Adjust risk based on horizon
-            horizon_multiplier = {'7d': 0.7, '14d': 1.0, '30d': 1.3}
+            horizon_multiplier = {'7d': 0.8, '14d': 1.0, '30d': 1.2}
             risk_score *= horizon_multiplier.get(horizon, 1.0)
 
             # Convert to binary label
-            y[i] = 1 if risk_score > 0.5 else 0
+            y[i] = 1 if risk_score > 0.4 else 0
 
         return X, y
 

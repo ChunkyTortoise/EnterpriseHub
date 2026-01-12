@@ -1,0 +1,15 @@
+{
+  "workflow_id": "bfc1107f-0c91-401d-b557-97a9dfa24e85",
+  "name": "Appointment Booking Bot",
+  "description": "AI bot that handles scheduling appointments directly from SMS conversations.",
+  "trigger": {},
+  "actions": [],
+  "enabled": true,
+  "created_at": "2026-01-12T03:10:28.752522",
+  "updated_at": "2026-01-12T03:10:28.752528",
+  "created_by": "test_user",
+  "template_id": "tpl_002",
+  "template_version": "2.1.0",
+  "execution_count": 0,
+  "success_count": 0
+}

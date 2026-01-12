@@ -33,6 +33,8 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.prompts.reengagement_templates import get_reengagement_message
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.core.llm_client import LLMClient
+from ghl_real_estate_ai.ghl_utils.config import settings
 
 logger = get_logger(__name__)
 
@@ -67,6 +69,10 @@ class ReengagementEngine:
         """
         self.ghl_client = ghl_client or GHLClient()
         self.memory_service = memory_service or MemoryService(storage_type="file")
+        self.llm_client = LLMClient(
+            provider="claude",
+            model=settings.claude_model
+        )
 
     async def detect_trigger(
         self, context: Dict[str, Any]
@@ -138,6 +144,44 @@ class ReengagementEngine:
         else:
             # Less than 24h, no trigger
             return None
+
+    async def agentic_reengagement(self, contact_name: str, context: Dict[str, Any]) -> str:
+        """
+        🆕 Phase 4: Sentiment-Aware Recovery
+        Uses Claude to generate a personalized re-engagement message based on history.
+        """
+        history = context.get("conversation_history", [])
+        preferences = context.get("extracted_preferences", {})
+        
+        prompt = f"""You are a senior Real Estate Concierge on Jorge's team. A lead has gone silent and you need to re-engage them.
+
+LEAD NAME: {contact_name}
+CONVERSATION HISTORY:
+{json.dumps(history[-5:], indent=2)}
+
+LEAD PREFERENCES:
+{json.dumps(preferences, indent=2)}
+
+YOUR GOAL:
+1. Reference a specific detail from their preferences (e.g. their budget or a specific neighborhood).
+2. Maintain a professional, direct, and non-pushy tone.
+3. Provide a clear "Value Hook" (e.g. "I found a new match in Downtown" or "I wanted to see if your timeline shifted").
+4. Keep it under 160 characters for SMS.
+
+Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $500k target. Still looking to move next month? - Jorge's team"
+"""
+        try:
+            response = await self.llm_client.agenerate(
+                prompt=prompt,
+                system_prompt="You are an expert Real Estate Concierge. Be direct, helpful, and concise.",
+                temperature=0.7,
+                max_tokens=150
+            )
+            return response.content.strip()
+        except Exception as e:
+            logger.error(f"Agentic re-engagement failed: {e}")
+            # Fallback to standard template logic (will be handled by caller)
+            return ""
 
     def get_message_for_trigger(
         self,
@@ -223,14 +267,18 @@ class ReengagementEngine:
         # Determine lead goal
         action, is_buyer, is_seller = self._determine_lead_goal(context)
 
-        # Get appropriate message
-        message = self.get_message_for_trigger(
-            trigger=trigger,
-            contact_name=contact_name,
-            action=action,
-            is_buyer=is_buyer,
-            is_seller=is_seller,
-        )
+        # Try agentic message first (Phase 4)
+        message = await self.agentic_reengagement(contact_name, context)
+        
+        # Fallback to template if agentic fails or returns empty
+        if not message:
+            message = self.get_message_for_trigger(
+                trigger=trigger,
+                contact_name=contact_name,
+                action=action,
+                is_buyer=is_buyer,
+                is_seller=is_seller,
+            )
 
         logger.info(
             f"Sending {trigger.value} re-engagement to {contact_id}: {message}",

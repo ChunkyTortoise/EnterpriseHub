@@ -53,5 +53,5 @@ Railway will automatically pick up the `railway.json` in the root. The command u
 ---
 
 ## 🚨 Local vs Cloud
-- **Local (Port 8515)**: Best for rapid testing and dev.
+- **Local (Port 8501)**: Best for rapid testing and dev.
 - **Cloud (Railway)**: Best for sharing with Jorge and clients.

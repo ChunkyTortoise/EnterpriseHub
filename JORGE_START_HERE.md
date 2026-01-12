@@ -6,7 +6,7 @@
 
 ## ✅ EVERYTHING IS READY
 
-- ✅ Dashboard: http://localhost:8515
+- ✅ Dashboard: http://localhost:8501
 - ✅ Claude AI: Connected
 - ✅ GHL Lyrio: Connected
 - ✅ 5 Hubs: Operational
@@ -35,7 +35,7 @@
 
 ### Step 1: Open Dashboard
 ```
-Open in browser: http://localhost:8515
+Open in browser: http://localhost:8501
 ```
 
 ### Step 2: Test Lead Qualification
@@ -108,7 +108,7 @@ Click through each hub in the sidebar:
 ```bash
 # Restart it:
 cd ghl_real_estate_ai/streamlit_demo
-python3 -m streamlit run app.py --server.port 8515
+python3 -m streamlit run app.py --server.port 8501
 ```
 
 ### Want Cloud Deployment?
@@ -124,7 +124,7 @@ python3 -m streamlit run app.py --server.port 8515
 
 ## 🎉 YOU'RE ALL SET!
 
-**Next Action:** Open http://localhost:8515 and start using it!
+**Next Action:** Open http://localhost:8501 and start using it!
 
 **Questions?** Read the full docs in `JORGE_COMPLETE_DELIVERY_PACKAGE.md`
 
@@ -133,4 +133,4 @@ python3 -m streamlit run app.py --server.port 8515
 ---
 
 **Status:** ✅ RUNNING  
-**URL:** http://localhost:8515
+**URL:** http://localhost:8501

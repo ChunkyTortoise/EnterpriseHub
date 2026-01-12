@@ -901,96 +901,194 @@ def render_transaction_timeline():
         ]
 
         for i, offer in enumerate(offers):
-            with st.container():
-                st.markdown(f"**Buyer: {offer['buyer']}**")
-                
-                col1, col2, col3 = st.columns(3)
+            with st.expander(f"{offer['status']} {offer['buyer']} - {offer['offer_price']}"):
+                col1, col2 = st.columns(2)
+
                 with col1:
-                    st.metric("Offer Price", offer['offer_price'])
+                    st.markdown(f"**💰 Offer Price:** {offer['offer_price']}")
+                    st.markdown(f"**💵 Earnest Money:** {offer['earnest_money']}")
+                    st.markdown(f"**🏦 Financing:** {offer['financing']}")
+                    st.markdown(f"**📅 Closing:** {offer['closing_date']}")
+
                 with col2:
-                    st.metric("Earnest Money", offer['earnest_money'])
-                with col3:
-                    st.metric("Closing Date", offer['closing_date'])
-                
-                col_a, col_b = st.columns(2)
+                    st.markdown(f"**🔍 Contingencies:** {offer['contingencies']}")
+                    st.markdown(f"**⏰ Expires:** {offer['expires']}")
+                    st.markdown(f"**📝 Notes:** {offer['notes']}")
+
+                # Action buttons
+                col_a, col_b, col_c, col_d = st.columns(4)
                 with col_a:
-                    st.markdown(f"**Financing:** {offer['financing']}")
-                    st.markdown(f"**Contingencies:** {offer['contingencies']}")
+                    if st.button("✅ Accept", key=f"accept_{i}"):
+                        st.success("Offer accepted! Contract generation initiated.")
                 with col_b:
-                    st.markdown(f"**Status:** {offer['status']}")
-                    st.markdown(f"**Expires:** {offer['expires']}")
-                
-                st.markdown(f"*Notes: {offer['notes']}*")
-                
-                btn_col1, btn_col2, btn_col3 = st.columns(3)
-                with btn_col1:
-                    if st.button("✅ Accept Offer", key=f"accept_{i}"):
-                        st.success("Offer accepted! Moving to closing...")
-                with btn_col2:
-                    if st.button("📝 Counter Offer", key=f"counter_{i}"):
-                        st.info("Counter offer window opened...")
-                with btn_col3:
-                    if st.button("❌ Reject Offer", key=f"reject_{i}"):
-                        st.warning("Offer rejected.")
-                
-                st.markdown("---")
+                    if st.button("📝 Counter", key=f"counter_{i}"):
+                        st.info("Counter-offer form opened.")
+                with col_c:
+                    if st.button("❌ Decline", key=f"decline_{i}"):
+                        st.warning("Offer declined.")
+                with col_d:
+                    if st.button("📞 Discuss", key=f"discuss_{i}"):
+                        st.info("Calling your agent to discuss...")
+
+        if not offers:
+            st.info("No offers received yet. Marketing campaign is generating strong interest!")
 
     with tab2:
-        st.markdown("##### Listing Timeline")
+        st.markdown("##### Transaction Timeline")
 
+        # Timeline visualization
         timeline_events = [
-            {"date": "Jan 11", "event": "2nd Offer Received", "status": "Active"},
-            {"date": "Jan 9", "event": "1st Offer Received", "status": "Under Review"},
-            {"date": "Jan 6", "event": "Price Adjusted to $495K", "status": "Completed"},
-            {"date": "Jan 4", "event": "Professional Photography", "status": "Completed"},
-            {"date": "Jan 3", "event": "Listing Agreement Signed", "status": "Completed"},
-            {"date": "Jan 1", "event": "Initial Consultation", "status": "Completed"}
+            {"date": "Jan 1", "event": "🏠 Listed Property", "status": "✅ Complete", "notes": "Initial listing activation"},
+            {"date": "Jan 2", "event": "📸 Photography Complete", "status": "✅ Complete", "notes": "Professional photos taken"},
+            {"date": "Jan 3", "event": "🌐 Online Marketing Launch", "status": "✅ Complete", "notes": "Listed on all major platforms"},
+            {"date": "Jan 5", "event": "🏠 First Showing", "status": "✅ Complete", "notes": "Private showing with positive feedback"},
+            {"date": "Jan 8", "event": "🤝 First Offers Received", "status": "⏳ In Progress", "notes": "Two offers currently under review"},
+            {"date": "Jan 9", "event": "📋 Offer Decision", "status": "🔄 Pending", "notes": "Accept, counter, or decline current offers"},
+            {"date": "Jan 10", "event": "📝 Contract Execution", "status": "⏸️ Waiting", "notes": "Dependent on offer decision"},
+            {"date": "Jan 17", "event": "🔍 Inspection Period", "status": "📅 Scheduled", "notes": "7-10 day inspection window"},
+            {"date": "Jan 24", "event": "💰 Financing Approval", "status": "📅 Scheduled", "notes": "Buyer financing deadline"},
+            {"date": "Feb 7", "event": "🏡 Closing", "status": "🎯 Target", "notes": "Estimated closing date"}
         ]
 
         for event in timeline_events:
-            col1, col2, col3 = st.columns([1, 3, 1])
+            col1, col2, col3, col4 = st.columns([1, 2, 1, 2])
+
             with col1:
                 st.markdown(f"**{event['date']}**")
             with col2:
-                st.markdown(event['event'])
+                st.markdown(f"{event['event']}")
             with col3:
                 st.markdown(event['status'])
+            with col4:
+                st.markdown(f"*{event['notes']}*")
 
     with tab3:
-        st.markdown("##### Next Steps in the Process")
+        st.markdown("##### Next Steps")
 
-        next_steps = [
-            {"step": "Review current offers with agent", "priority": "High", "timing": "Today"},
-            {"step": "Provide counter offer to Johnson family", "priority": "High", "timing": "Within 24 hours"},
-            {"step": "Gather HOA resale certificate", "priority": "Medium", "timing": "Next 3 days"},
-            {"step": "Schedule appraisal (once under contract)", "priority": "High", "timing": "TBD"}
+        # Immediate actions needed
+        st.markdown("**🔥 Immediate Actions (Next 24-48 Hours)**")
+
+        immediate_actions = [
+            {
+                "action": "Review and respond to current offers",
+                "priority": "🔴 High",
+                "deadline": "Tomorrow 5:00 PM",
+                "responsible": "You & Listing Agent"
+            },
+            {
+                "action": "Prepare counter-offer strategy",
+                "priority": "🟡 Medium",
+                "deadline": "Today",
+                "responsible": "Listing Agent"
+            },
+            {
+                "action": "Schedule additional showings for weekend",
+                "priority": "🟢 Normal",
+                "deadline": "End of week",
+                "responsible": "Showing Coordinator"
+            }
         ]
 
-        for step in next_steps:
+        for action in immediate_actions:
             with st.container():
-                st.markdown(f"**{step['step']}**")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.markdown(f"Priority: {step['priority']}")
-                with col2:
-                    st.markdown(f"Timing: {step['timing']}")
-                st.markdown("---")
+                col1, col2, col3, col4 = st.columns([3, 1, 1, 2])
 
-    with tab4:
-        st.markdown("##### Key Milestones Tracker")
+                with col1:
+                    st.markdown(f"• {action['action']}")
+                with col2:
+                    st.markdown(action['priority'])
+                with col3:
+                    st.markdown(action['deadline'])
+                with col4:
+                    st.markdown(f"*{action['responsible']}*")
+
+        # Upcoming milestones
+        st.markdown("**📅 Upcoming Milestones**")
 
         milestones = [
-            {"milestone": "Pre-listing Prep", "status": "100%", "completed": True},
-            {"milestone": "Marketing Phase", "status": "100%", "completed": True},
-            {"milestone": "Active Listing", "status": "80%", "completed": False},
-            {"milestone": "Offer Negotiation", "status": "40%", "completed": False},
-            {"milestone": "Under Contract", "status": "0%", "completed": False},
-            {"milestone": "Closing Process", "status": "0%", "completed": False}
+            {
+                "milestone": "Contract Execution",
+                "target_date": "Within 3 days",
+                "description": "Accept offer and execute purchase contract"
+            },
+            {
+                "milestone": "Inspection Period",
+                "target_date": "Days 4-10",
+                "description": "Buyer inspection and potential negotiations"
+            },
+            {
+                "milestone": "Appraisal",
+                "target_date": "Days 10-15",
+                "description": "Lender-ordered property appraisal"
+            },
+            {
+                "milestone": "Final Approval",
+                "target_date": "Days 20-25",
+                "description": "Buyer's loan final approval and clear to close"
+            },
+            {
+                "milestone": "Closing",
+                "target_date": "Day 30",
+                "description": "Title transfer and sale completion"
+            }
         ]
 
-        for m in milestones:
-            st.markdown(f"**{m['milestone']}**")
-            st.progress(int(m['status'].replace('%', '')))
+        for milestone in milestones:
+            with st.container():
+                col1, col2, col3 = st.columns([2, 1, 3])
+
+                with col1:
+                    st.markdown(f"**📍 {milestone['milestone']}**")
+                with col2:
+                    st.markdown(milestone['target_date'])
+                with col3:
+                    st.markdown(milestone['description'])
+
+    with tab4:
+        st.markdown("##### Progress Milestones")
+
+        # Milestone progress tracker
+        milestones_progress = [
+            {"milestone": "Property Preparation", "progress": 100, "status": "✅ Complete"},
+            {"milestone": "Marketing Launch", "progress": 100, "status": "✅ Complete"},
+            {"milestone": "Generate Interest", "progress": 85, "status": "🟡 Strong Progress"},
+            {"milestone": "Receive Offers", "progress": 60, "status": "⏳ In Progress"},
+            {"milestone": "Accept Contract", "progress": 0, "status": "⏸️ Pending"},
+            {"milestone": "Navigate Contingencies", "progress": 0, "status": "⏸️ Future"},
+            {"milestone": "Close Sale", "progress": 0, "status": "⏸️ Future"}
+        ]
+
+        for milestone in milestones_progress:
+            col1, col2, col3 = st.columns([2, 2, 1])
+
+            with col1:
+                st.markdown(f"**{milestone['milestone']}**")
+            with col2:
+                st.progress(milestone['progress'] / 100)
+                st.markdown(f"{milestone['progress']}% Complete")
+            with col3:
+                st.markdown(milestone['status'])
+
+        # Key metrics
+        st.markdown("**📊 Sale Performance Metrics**")
+
+        metrics = [
+            {"metric": "Time to First Offer", "value": "8 days", "benchmark": "< 14 days", "status": "🎯 Excellent"},
+            {"metric": "Offer Quality", "value": "Strong", "benchmark": "At/Above Asking", "status": "✅ Good"},
+            {"metric": "Marketing Reach", "value": "2,847 views", "benchmark": "> 1,000", "status": "🚀 Exceeding"},
+            {"metric": "Showing Interest", "value": "18 showings", "benchmark": "> 10", "status": "✅ Strong"}
+        ]
+
+        for metric in metrics:
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.markdown(f"**{metric['metric']}**")
+            with col2:
+                st.markdown(metric['value'])
+            with col3:
+                st.markdown(metric['benchmark'])
+            with col4:
+                st.markdown(metric['status'])
 
 def render_seller_analytics():
     """Comprehensive seller analytics and insights"""

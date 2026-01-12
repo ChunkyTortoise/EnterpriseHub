@@ -46,9 +46,9 @@ class RateLimiter:
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """FastAPI middleware for rate limiting."""
     
-    def __init__(self, app, requests_per_minute: int = 60):
+    def __init__(self, app, requests_per_minute: int = 1000):
         super().__init__(app)
-        self.limiter = RateLimiter(requests_per_minute=requests_per_minute)
+        self.limiter = RateLimiter(requests_per_minute=requests_per_minute, burst=100)
     
     async def dispatch(self, request: Request, call_next):
         """Process request with rate limiting."""

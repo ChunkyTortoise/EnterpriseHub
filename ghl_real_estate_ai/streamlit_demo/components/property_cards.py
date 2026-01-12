@@ -53,10 +53,7 @@ def render_premium_property_grid(properties: List[Dict], max_properties: int = 3
 def render_premium_property_card(property: Dict[str, Any], index: int = 0):
     """
     Render a single premium property card with enterprise styling.
-
-    Args:
-        property: Property data dictionary
-        index: Card index for unique keys
+    Uses CSS classes defined in styles.css for high-impact visual appeal.
     """
     # Extract property details with fallbacks
     price = property.get('price', 0)
@@ -66,113 +63,59 @@ def render_premium_property_card(property: Dict[str, Any], index: int = 0):
     address = property.get('address', 'Address TBD')
     neighborhood = property.get('neighborhood', 'Austin Area')
     match_score = property.get('match_score', 85)
+    
+    # AI reasoning fallback
+    ai_insight = property.get('match_reasons', ["Matches your budget and location preferences."])[0]
 
-    # Color coding based on match score
-    if match_score >= 90:
-        match_color = "#10b981"
-        match_bg = "#dcfce7"
-        card_bg = "#f0fdf4"
-        border_color = "#10b981"
-    elif match_score >= 80:
-        match_color = "#3b82f6"
-        match_bg = "#dbeafe"
-        card_bg = "#eff6ff"
-        border_color = "#3b82f6"
-    else:
-        match_color = "#f59e0b"
-        match_bg = "#fef3c7"
-        card_bg = "#fffbeb"
-        border_color = "#f59e0b"
-
-    # Use Streamlit native components with simplified styling
-    with st.container():
-        # Property card container with background
-        st.markdown(f"""
-        <div style="
-            background: linear-gradient(145deg, {card_bg} 0%, #ffffff 100%);
-            border-radius: 16px;
-            border: 2px solid {border_color};
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Match score badge and header
-        col1, col2 = st.columns([3, 1])
-
-        with col1:
-            st.markdown(f"### 🏡 {address}")
-            st.markdown(f"📍 **{neighborhood}**")
-
-        with col2:
-            st.markdown(f"""
-            <div style="
-                background: {match_bg};
-                color: {match_color};
-                padding: 8px 16px;
-                border-radius: 20px;
-                text-align: center;
-                font-weight: bold;
-                font-size: 0.9rem;">
-                {match_score}% Match
+    # Map match score to confidence level
+    confidence = "High" if match_score >= 90 else "Medium" if match_score >= 80 else "Low"
+    
+    # Use the sophisticated HTML structure from styles.css
+    st.markdown(f"""
+    <div class="premium-property-card">
+        <div class="property-image-container">
+            <div class="match-score-badge">
+                <span>✨ {match_score}% Match</span>
             </div>
-            """, unsafe_allow_html=True)
-
-        # Price display
-        st.markdown(f"""
-        <div style="
-            font-size: 2rem;
-            font-weight: bold;
-            color: #059669;
-            margin: 16px 0;">
-            ${price:,}
+            <div class="favorite-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </div>
+            <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=600" class="property-image" alt="Property">
         </div>
-        """, unsafe_allow_html=True)
+        <div class="property-card-content">
+            <div class="property-card-header">
+                <div class="property-title">{address}</div>
+                <div class="property-price-premium">${price:,}</div>
+            </div>
+            <div class="property-location">
+                <span>📍 {neighborhood}</span>
+            </div>
+            
+            <div class="property-specs">
+                <div class="property-spec-item">🛏️ {beds} Beds</div>
+                <div class="property-spec-item">🚿 {baths} Baths</div>
+                <div class="property-spec-item">📐 {sqft:,} sqft</div>
+            </div>
+            
+            <div class="ai-insight-box">
+                <div class="ai-insight-text">{ai_insight}</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        # Property stats using Streamlit columns
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.metric(
-                label="Bedrooms",
-                value=str(beds)
-            )
-
-        with col2:
-            st.metric(
-                label="Bathrooms",
-                value=str(baths)
-            )
-
-        with col3:
-            st.metric(
-                label="Sq Ft",
-                value=f"{sqft:,}"
-            )
-
-        # Action buttons
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if st.button(
-                "📤 Send to Lead",
-                key=f"premium_send_{index}",
-                use_container_width=True,
-                type="primary"
-            ):
-                st.toast(f"Sent {address} to lead!", icon="✅")
-
-        with col2:
-            if st.button(
-                "📅 Schedule Tour",
-                key=f"premium_schedule_{index}",
-                use_container_width=True
-            ):
-                st.toast("Opening calendar...", icon="📅")
-
-        # Add spacing
-        st.markdown("<br>", unsafe_allow_html=True)
+    # Action buttons using Streamlit columns for interactivity
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("📤 Send to Lead", key=f"premium_send_{index}", use_container_width=True, type="primary"):
+            st.toast(f"Sent {address} to lead!", icon="✅")
+    with col2:
+        if st.button("📅 Schedule Tour", key=f"premium_schedule_{index}", use_container_width=True):
+            st.toast("Opening calendar...", icon="📅")
+    
+    st.markdown("<br>", unsafe_allow_html=True)
 
 
 def render_property_card(property: dict):

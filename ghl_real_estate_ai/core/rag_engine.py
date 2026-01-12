@@ -163,7 +163,6 @@ class VectorStore:
                 where=where_filter if where_filter else None
             )
             
-            # Parse Vector Results
             candidates = {}
             if results['ids'] and results['ids'][0]:
                 for i in range(len(results['ids'][0])):

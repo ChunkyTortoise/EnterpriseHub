@@ -1,14 +1,8 @@
+# Global test configuration
 import sys
-from unittest.mock import MagicMock
+import os
 
-# Mock chromadb
-chromadb_mock = MagicMock()
-sys.modules["chromadb"] = chromadb_mock
-sys.modules["chromadb.config"] = MagicMock()
-sys.modules["chromadb.api"] = MagicMock()
-sys.modules["chromadb.api.models"] = MagicMock()
-sys.modules["chromadb.api.models.Collection"] = MagicMock()
-
-# Mock sentence_transformers
-st_mock = MagicMock()
-sys.modules["sentence_transformers"] = st_mock
+# Ensure project root is in sys.path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
