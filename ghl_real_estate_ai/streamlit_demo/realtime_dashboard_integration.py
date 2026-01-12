@@ -52,6 +52,7 @@ def render_realtime_intelligence_dashboard():
         from components.alert_center import render_alert_center
         from components.interactive_analytics import render_interactive_analytics
         from components.performance_dashboard import render_performance_dashboard
+        from components.payload_monitor import render_payload_monitor
 
         # Initialize services
         realtime_service = get_realtime_service()
@@ -68,12 +69,13 @@ def render_realtime_intelligence_dashboard():
             dashboard_sidebar_controls()
 
         # Main dashboard tabs
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
             "🎯 Live Overview",
             "📊 Lead Scoreboard",
             "🚨 Alert Center",
             "📈 Interactive Analytics",
-            "⚡ Performance"
+            "⚡ Performance",
+            "📦 Payload Monitor"
         ])
 
         with tab1:
@@ -106,6 +108,9 @@ def render_realtime_intelligence_dashboard():
 
         with tab5:
             render_performance_dashboard(realtime_service, state_manager)
+            
+        with tab6:
+            render_payload_monitor()
 
     except ImportError as e:
         render_fallback_dashboard(f"Component import error: {str(e)}")

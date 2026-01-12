@@ -106,8 +106,8 @@ Click through each hub in the sidebar:
 
 ### Dashboard Won't Open?
 ```bash
-# Restart it:
-kill 51430
+# Restart it (Stop current one first):
+pkill -f "streamlit run app.py"
 cd ghl_real_estate_ai/streamlit_demo
 python3 -m streamlit run app.py --server.port 8501
 ```
@@ -133,6 +133,6 @@ python3 -m streamlit run app.py --server.port 8501
 
 ---
 
-**Dashboard PID:** 51430 (to stop: `kill 51430`)  
+**To stop dashboard:** Run `pkill -f "streamlit run app.py"` in terminal  
 **Status:** ✅ RUNNING  
 **URL:** http://localhost:8501

@@ -6,7 +6,12 @@ Complete AI-powered automation platform for GoHighLevel real estate businesses.
 ## 🎯 Features
 
 ### Core Services (62+ Implemented)
-- Lead Management & Scoring
+- **Predictive Lead Intelligence** (Behavioral forecasting & conversion probability)
+- **Agentic Property Matching** (Claude-powered precision engine with ROI reasoning)
+- **Self-Service Architectural Portal** (Mobile-optimized lead environment)
+- **Real-Time Telemetry & Intent Scoring** (Behavioral tracking layer)
+- **Sentiment-Aware Lifecycle Recovery** (Context-driven re-engagement)
+- Lead Management & Scoring (Rule-based foundation)
 - Workflow Automation
 - Campaign Analytics
 - Revenue Attribution
