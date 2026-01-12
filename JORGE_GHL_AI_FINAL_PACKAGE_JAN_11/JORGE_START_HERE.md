@@ -1,4 +1,4 @@
-# 🚀 START HERE - Jorge Salas
+# 🚀 START HERE - Jorge Sales
 
 **Your GHL Real Estate AI is LIVE!**
 
@@ -6,7 +6,7 @@
 
 ## ✅ EVERYTHING IS READY
 
-- ✅ Dashboard: http://localhost:8502
+- ✅ Dashboard: http://localhost:8501
 - ✅ Claude AI: Connected
 - ✅ GHL Lyrio: Connected
 - ✅ 5 Hubs: Operational
@@ -35,7 +35,7 @@
 
 ### Step 1: Open Dashboard
 ```
-Open in browser: http://localhost:8502
+Open in browser: http://localhost:8501
 ```
 
 ### Step 2: Test Lead Qualification
@@ -92,7 +92,7 @@ Click through each hub in the sidebar:
 
 **Connected To:**
 - Location: Lyrio (REDACTED_LOCATION_ID)
-- Email: realtorjorgesalas@gmail.com
+- Email: realtorjorgesales@gmail.com
 - Claude AI: Active
 - GHL API: Connected
 
@@ -107,9 +107,9 @@ Click through each hub in the sidebar:
 ### Dashboard Won't Open?
 ```bash
 # Restart it:
-kill 26772
+kill 40743
 cd ghl_real_estate_ai/streamlit_demo
-python3 -m streamlit run app.py --server.port 8502
+python3 -m streamlit run app.py --server.port 8501
 ```
 
 ### Want Cloud Deployment?
@@ -125,7 +125,7 @@ python3 -m streamlit run app.py --server.port 8502
 
 ## 🎉 YOU'RE ALL SET!
 
-**Next Action:** Open http://localhost:8502 and start using it!
+**Next Action:** Open http://localhost:8501 and start using it!
 
 **Questions?** Read the full docs in `JORGE_COMPLETE_DELIVERY_PACKAGE.md`
 
@@ -133,6 +133,6 @@ python3 -m streamlit run app.py --server.port 8502
 
 ---
 
-**Dashboard PID:** 26772 (to stop: `kill 26772`)  
+**Dashboard PID:** 40743 (to stop: `kill 40743`)  
 **Status:** ✅ RUNNING  
-**URL:** http://localhost:8502
+**URL:** http://localhost:8501

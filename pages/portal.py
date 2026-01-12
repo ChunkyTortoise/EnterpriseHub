@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 import sys
+from datetime import datetime
+import json
+import asyncio
 
 # Add project root to sys.path
 project_root = Path(__file__).parent.parent
@@ -10,197 +13,150 @@ if str(project_root) not in sys.path:
 
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.demo_state import DemoStateManager
+from ghl_real_estate_ai.services.telemetry_service import TelemetryService
+from ghl_real_estate_ai.ghl_utils.ghl_api_client import GHLAPIClient
 
 # Page config - Mobile style
 st.set_page_config(
-    page_title="My Home Search - Jorge Salas",
-    page_icon="🏠",
+    page_title="Architectural Portal - Lyrio.io",
+    page_icon="🏘️",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Mobile App Look
+# Initialize Services
+telemetry = TelemetryService()
+state_mgr = DemoStateManager()
+matcher = PropertyMatcher()
+
+# Mock Lead ID for Demo (In production, this is from the URL slug)
+lead_id = st.query_params.get("id", "michael_scott_789")
+lead_name = lead_id.split("_")[0].capitalize()
+
+# Custom CSS for Architectural Branding
 st.markdown("""
 <style>
     .stApp {
-        background-color: #f0f2f5;
-        background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
-        background-size: 20px 20px;
+        background-color: #FAFAFA;
     }
     .main .block-container {
-        max-width: 400px;
-        margin: 2rem auto;
-        padding: 2rem 1rem;
+        max-width: 450px;
+        margin: 1rem auto;
+        padding: 2rem 1.5rem;
         background-color: white;
-        border-radius: 30px;
-        box-shadow: 0 20px 40px -5px rgba(0,0,0,0.2);
-        border: 8px solid #1a1a1a;
-        min-height: 80vh;
+        border-radius: 40px;
+        box-shadow: 0 30px 60px -12px rgba(0,0,0,0.25);
+        border: 12px solid #0F172A;
+        min-height: 90vh;
         position: relative;
     }
-    /* Hide default Streamlit elements for app-feel */
-    [data-testid="stHeader"] {
-        display: none;
-    }
-    [data-testid="stSidebar"] {
-        display: none;
-    }
     .property-card {
-        background-color: white;
-        padding: 0;
-        border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        margin-bottom: 1.5rem;
-        border: 1px solid #eee;
-        overflow: hidden;
-    }
-    .card-img-placeholder {
-        height: 180px;
-        background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 3rem;
-    }
-    .card-content {
-        padding: 1.25rem;
-    }
-    .price-tag {
-        color: #006AFF;
-        font-size: 1.4rem;
-        font-weight: 800;
-        margin-bottom: 0.25rem;
-    }
-    .badge {
-        background-color: #f0f7ff;
-        color: #006AFF;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        display: inline-block;
-        margin-right: 4px;
-    }
-    .bottom-nav {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        right: 20px;
         background: white;
+        border-radius: 24px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        border: 1px solid #F1F5F9;
+        overflow: hidden;
+        transition: transform 0.2s;
+    }
+    .agentic-summary {
+        background-color: #F8FAFC;
+        border-left: 4px solid #3B82F6;
         padding: 1rem;
-        display: flex;
-        justify-content: space-around;
-        border-radius: 20px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        z-index: 1000;
+        font-size: 0.85rem;
+        color: #334155;
+        font-style: italic;
+        margin-top: 1rem;
+        border-radius: 0 8px 8px 0;
+    }
+    .price-badge {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #1E293B;
+    }
+    .status-pill {
+        background: #DCFCE7;
+        color: #166534;
+        padding: 4px 12px;
+        border-radius: 99px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # App Header
-st.markdown("""
-<div style='text-align: center; padding: 1rem 0 2rem 0;'>
-    <h3 style='margin-bottom: 0;'>Welcome back, Michael! 👋</h3>
-    <p style='color: #666; font-size: 0.9rem;'>Jorge's AI found new matches for you today.</p>
+st.markdown(f"""
+<div style='text-align: left; padding: 0.5rem 0 1.5rem 0;'>
+    <span class="status-pill">Architectural Match Active</span>
+    <h2 style='margin-top: 0.5rem;'>For {lead_name}</h2>
+    <p style='color: #64748B; font-size: 0.95rem;'>Proprietary matches identified by Lyrio AI.</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Initialize Matcher
-market = st.session_state.get("market_key", "Rancho")
-listings_file = "property_listings_rancho.json" if market == "Rancho" else "property_listings.json"
-listings_path = project_root / "ghl_real_estate_ai" / "data" / "knowledge_base" / listings_file
-matcher = PropertyMatcher(listings_path=str(listings_path))
-
-# Initialize State Manager
-state_mgr = DemoStateManager()
-custom_listings = state_mgr.get_all_listings()
-
-# Sidebar Settings (Hidden by default but accessible)
-with st.sidebar:
-    st.header("Search Settings")
-    current_market = st.selectbox("Market", ["Austin", "Rancho"], index=0 if market == "Austin" else 1)
-    if st.button("Apply Changes"):
-        st.session_state.market_key = current_market
-        st.rerun()
-    
-    if st.button("Reset Demo Data"):
-        state_mgr.clear_listings()
-        st.rerun()
-
-# User Criteria Toggles
-with st.expander("🎯 My Search Criteria"):
-    budget = st.slider("Max Budget", 300000, 2000000, 1200000, step=50000)
+# Search Criteria (Linked to GHL Bi-Directional Sync)
+with st.expander("🛠️ Architectural Search Criteria"):
+    budget = st.slider("Target Cap", 300000, 2000000, 1200000, step=50000)
     beds = st.number_input("Min Bedrooms", 1, 6, 3)
-    location = st.text_input("Preferred Neighborhood", "Alta Loma" if market == "Rancho" else "Downtown")
+    location = st.text_input("Geography", "Austin, TX")
     
-    if st.button("Update My Profile", use_container_width=True):
-        st.success("Synced with Jorge's team!")
+    if st.button("Synchronize with Lyrio Core", use_container_width=True):
+        # Telemetry
+        telemetry.record_interaction(lead_id, "update_criteria", {"budget": budget, "beds": beds, "location": location})
+        st.success("Preferences Hardened & Synced to GHL!")
         st.balloons()
 
-# Property Feed
-st.markdown("#### 🏠 Your Top Matches")
+# Property Feed Logic
+st.markdown("#### 💎 Priority Matches")
 
 # Get standard matches
-standard_matches = matcher.find_matches({"budget": budget, "bedrooms": beds, "location": location})
+criteria = {"budget": budget, "bedrooms": beds, "location": location}
+matches = matcher.find_matches(criteria)
 
-# Combine with custom listings (Custom first)
-matches = custom_matches + standard_matches
-
-if not matches:
-    st.info("No matches found for your exact criteria. broadening your search...")
-    matches = matcher.find_matches({"budget": budget * 1.2}, limit=2)
-
-for prop in matches:
-    with st.container():
-        st.markdown(f"""
-        <div class="property-card">
-            <div class="card-img-placeholder">🏠</div>
-            <div class="card-content">
-                <div class="price-tag">${prop['price']:,}</div>
-                <div style='font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;'>{prop['title']}</div>
-                <div style='color: #666; font-size: 0.85rem; margin-bottom: 0.75rem;'>
-                    📍 {prop['address']['neighborhood']}
-                </div>
-                <div style='margin-bottom: 0.75rem;'>
-                    <span class="badge">{prop['bedrooms']} Beds</span>
-                    <span class="badge">{prop['bathrooms']} Baths</span>
-                    <span class="badge">{prop.get('sqft', 'N/A')} sqft</span>
-                </div>
-                <div style='font-size: 0.8rem; color: #444; line-height: 1.4;'>
-                    {prop['description'][:90]}...
+async def display_matches():
+    for prop in matches:
+        with st.container():
+            # Get Agentic Reasoning (Phase 2 Upgrade)
+            reasoning = await matcher.agentic_explain_match(prop, criteria)
+            
+            st.markdown(f"""
+            <div class="property-card">
+                <div style="height: 200px; background: #E2E8F0; display: flex; align-items: center; justify-content: center; font-size: 4rem;">🏘️</div>
+                <div style="padding: 1.5rem;">
+                    <div class="price-badge">${prop['price']:,}</div>
+                    <div style="font-weight: 700; color: #475569; margin-bottom: 0.5rem;">{prop['address']['street']}, {prop['address']['city']}</div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                        <span style="font-size: 0.8rem; color: #64748B;">🛏️ {prop['bedrooms']} Beds</span>
+                        <span style="font-size: 0.8rem; color: #64748B;">🛁 {prop['bathrooms']} Baths</span>
+                    </div>
+                    <div class="agentic-summary">
+                        "Architect's Note: {reasoning}"
+                    </div>
                 </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            if st.button("❤️ Save", key=f"save_{prop['id']}", use_container_width=True):
-                st.toast(f"Saved {prop['title']}!")
-        with c2:
-            if st.button("💬 Chat about it", key=f"chat_{prop['id']}", use_container_width=True):
-                st.toast("Connecting to Jorge's AI...")
+            """, unsafe_allow_html=True)
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("🔒 Secure Listing", key=f"save_{prop['id']}", use_container_width=True):
+                    telemetry.record_interaction(lead_id, "save", {"prop_id": prop['id']})
+                    st.toast("Listing Secured in your Vault.")
+            with c2:
+                if st.button("💬 Consult AI", key=f"chat_{prop['id']}", use_container_width=True):
+                    telemetry.record_interaction(lead_id, "chat", {"prop_id": prop['id']})
+                    st.toast("Architectural Consultant Notified.")
 
-# Footer / Bottom Nav Spacer
+# Run async display
+asyncio.run(display_matches())
+
+# Footer Nav
 st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
-
 st.markdown("""
-<div class='bottom-nav'>
-    <div style='text-align: center; color: #006AFF;'>
-        <div style='font-size: 1.5rem;'>🏠</div>
-        <div style='font-size: 0.7rem; font-weight: 700;'>Feed</div>
-    </div>
-    <div style='text-align: center; color: #999;'>
-        <div style='font-size: 1.5rem;'>❤️</div>
-        <div style='font-size: 0.7rem;'>Saved</div>
-    </div>
-    <div style='text-align: center; color: #999;'>
-        <div style='font-size: 1.5rem;'>💬</div>
-        <div style='font-size: 0.7rem;'>Chat</div>
-    </div>
-    <div style='text-align: center; color: #999;'>
-        <div style='font-size: 1.5rem;'>⚙️</div>
-        <div style='font-size: 0.7rem;'>Settings</div>
-    </div>
+<div style='position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 350px; background: #0F172A; padding: 1rem; border-radius: 30px; display: flex; justify-content: space-around; z-index: 1000;'>
+    <div style='color: white; font-size: 1.2rem;'>🏠</div>
+    <div style='color: #64748B; font-size: 1.2rem;'>💎</div>
+    <div style='color: #64748B; font-size: 1.2rem;'>🧠</div>
+    <div style='color: #64748B; font-size: 1.2rem;'>👤</div>
 </div>
 """, unsafe_allow_html=True)

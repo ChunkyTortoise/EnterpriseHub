@@ -43,7 +43,7 @@ def render_behavioral_tuning_panel(phase_name: str, phase_config: Dict[str, Any]
             
             # Mention agent name
             mention_agent = st.checkbox(
-                "Mention 'Jorge Salas' in intro",
+                "Mention 'Jorge Sales' in intro",
                 value=phase_config.get('mention_agent', True),
                 help="Should the AI mention the agent's name?",
                 key=f"{phase_name}_mention"
@@ -124,7 +124,7 @@ def generate_behavior_preview(tone: str, creativity: float, style: str, followup
     
     # Base greeting
     if mention_agent:
-        greeting = "Hi! This is Jorge Salas's AI assistant"
+        greeting = "Hi! This is Jorge Sales's AI assistant"
     else:
         greeting = "Hi! Thanks for reaching out"
     

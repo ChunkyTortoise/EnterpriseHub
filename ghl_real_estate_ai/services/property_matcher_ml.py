@@ -407,10 +407,10 @@ class PropertyMatcherML:
         if pref_beds:
             prop_beds = property_data.get('bedrooms', 0)
             if prop_beds >= pref_beds:
-                score += 0.4
-            elif prop_beds == pref_beds - 1:
                 score += 0.2
-            total_weight += 0.4
+            elif prop_beds == pref_beds - 1:
+                score += 0.1
+            total_weight += 0.2
 
         # Must-have amenities (critical)
         must_haves = preferences.get('must_haves', [])
@@ -428,13 +428,13 @@ class PropertyMatcherML:
                     must_have_matches += 1
 
             if must_have_matches == len(must_haves):
-                score += 0.3  # All must-haves satisfied
+                score += 0.6  # All must-haves satisfied
             else:
                 # Partial satisfaction reduces confidence significantly
                 satisfaction_ratio = must_have_matches / len(must_haves)
-                score += 0.3 * satisfaction_ratio * 0.5  # Reduced for partial match
+                score += 0.6 * (satisfaction_ratio ** 2) * 0.5
 
-            total_weight += 0.3
+            total_weight += 0.6
 
         # Nice-to-have amenities (bonus points)
         nice_to_haves = preferences.get('nice_to_haves', [])
@@ -450,9 +450,9 @@ class PropertyMatcherML:
                         self._get_feature_keywords(nice_to_have_lower))):
                     nice_to_have_matches += 1
 
-            bonus = min(0.2, (nice_to_have_matches / len(nice_to_haves)) * 0.2)
+            bonus = min(0.1, (nice_to_have_matches / len(nice_to_haves)) * 0.1)
             score += bonus
-            total_weight += 0.2
+            total_weight += 0.1
 
         # Property type match
         pref_type = preferences.get('property_type')
@@ -586,7 +586,7 @@ class PropertyMatcherML:
             budget_conf, location_conf, feature_conf, market_conf
         )
 
-        return ConfidenceScore(
+        score_obj = ConfidenceScore(
             overall=round(overall_percentage, 1),
             budget_match=round(budget_conf * 100, 1),
             location_match=round(location_conf * 100, 1),
@@ -594,6 +594,8 @@ class PropertyMatcherML:
             market_context=round(market_conf * 100, 1),
             reasoning=reasoning
         )
+        score_obj.confidence_level = score_obj.get_confidence_level()
+        return score_obj
 
     def _generate_detailed_reasoning(self, property_data: Dict[str, Any],
                                    preferences: Dict[str, Any],

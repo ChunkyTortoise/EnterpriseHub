@@ -28,7 +28,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from services.churn_prediction_engine import (
+from ghl_real_estate_ai.services.churn_prediction_engine import (
     ChurnPredictionEngine,
     ChurnFeatureExtractor,
     ChurnRiskPredictor,
@@ -38,20 +38,20 @@ from services.churn_prediction_engine import (
     ChurnRiskTier
 )
 
-from services.churn_intervention_orchestrator import (
+from ghl_real_estate_ai.services.churn_intervention_orchestrator import (
     InterventionOrchestrator,
     InterventionType,
     InterventionStatus,
     InterventionExecution
 )
 
-from services.churn_integration_service import (
+from ghl_real_estate_ai.services.churn_integration_service import (
     ChurnIntegrationService,
     ChurnPredictionRequest,
     ChurnSystemHealth
 )
 
-from prompts.churn_intervention_templates import (
+from ghl_real_estate_ai.prompts.churn_intervention_templates import (
     TemplateSelector,
     CriticalRiskTemplates,
     HighRiskTemplates,
@@ -192,41 +192,40 @@ class TestChurnFeatureExtractor:
         assert features.days_since_last_interaction == 7.0
         assert features.interaction_frequency_7d == 1.0
 
-    def test_feature_to_dict_conversion(self):
-        """Test feature dictionary conversion"""
-        features = ChurnFeatures(
-            days_since_last_interaction=5.0,
-            interaction_frequency_7d=3.0,
-            interaction_frequency_14d=6.0,
-            interaction_frequency_30d=12.0,
-            response_rate_7d=0.8,
-            response_rate_14d=0.7,
-            response_rate_30d=0.6,
-            engagement_trend=0.1,
-            session_duration_avg=10.0,
-            property_views_per_session=4.0,
-            saved_properties_count=3.0,
-            search_refinements_count=2.0,
-            stage_progression_velocity=0.5,
-            stage_stagnation_days=2.0,
-            backward_stage_transitions=0.0,
-            qualification_score_change=5.0,
-            email_open_rate=0.6,
-            email_click_rate=0.3,
-            sms_response_rate=0.7,
-            call_pickup_rate=0.8,
-            preferred_communication_channel_consistency=0.9,
-            budget_range_changes=1.0,
-            location_preference_changes=0.0,
-            property_type_changes=0.0,
-            feature_requirements_changes=1.0,
-            market_activity_correlation=0.5,
-            seasonal_activity_alignment=0.7
-        )
-
-        feature_dict = features.to_dict()
-        assert len(feature_dict) == 26  # All features present
-        assert feature_dict['days_since_last_interaction'] == 5.0
+        def test_feature_to_dict_conversion(self):
+            """Test feature dictionary conversion"""
+            features = ChurnFeatures(
+                days_since_last_interaction=5.0,
+                interaction_frequency_7d=3.0,
+                interaction_frequency_14d=6.0,
+                interaction_frequency_30d=12.0,
+                response_rate_7d=0.8,
+                response_rate_14d=0.7,
+                response_rate_30d=0.6,
+                engagement_trend=0.1,
+                session_duration_avg=10.0,
+                property_views_per_session=4.0,
+                saved_properties_count=3.0,
+                search_refinements_count=2.0,
+                stage_progression_velocity=0.5,
+                stage_stagnation_days=2.0,
+                backward_stage_transitions=0.0,
+                qualification_score_change=5.0,
+                email_open_rate=0.6,
+                email_click_rate=0.3,
+                sms_response_rate=0.7,
+                call_pickup_rate=0.8,
+                preferred_communication_channel_consistency=0.9,
+                budget_range_changes=1.0,
+                location_preference_changes=0.0,
+                property_type_changes=0.0,
+                feature_requirements_changes=1.0,
+                market_activity_correlation=0.5,
+                seasonal_activity_alignment=0.7
+            )
+        
+            feature_dict = features.to_dict()
+            assert len(feature_dict) == 27  # All features present        assert feature_dict['days_since_last_interaction'] == 5.0
         assert feature_dict['engagement_trend'] == 0.1
 
 class TestChurnRiskPredictor:
@@ -492,7 +491,7 @@ class TestInterventionOrchestrator:
             assert execution.scheduled_time > datetime.now() - timedelta(minutes=1)
 
     @pytest.mark.asyncio
-    async def test_intervention_execution(self, intervention_orchestrator):
+    async def test_intervention_execution(self, intervention_orchestrator, sample_churn_prediction):
         """Test intervention execution with mocked services"""
         # Mock successful execution
         intervention_orchestrator.reengagement_engine.trigger_reengagement_campaign.return_value = {'success': True}
@@ -501,7 +500,7 @@ class TestInterventionOrchestrator:
             execution_id="TEST_EXEC_001",
             lead_id="TEST_LEAD_001",
             intervention_type=InterventionType.EMAIL_REENGAGEMENT,
-            trigger_prediction=Mock(),
+            trigger_prediction=sample_churn_prediction,
             scheduled_time=datetime.now(),
             personalization_data={'lead_name': 'Test Lead'}
         )

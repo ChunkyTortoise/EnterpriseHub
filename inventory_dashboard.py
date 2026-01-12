@@ -155,7 +155,7 @@ if st.button("🚀 Reload Demo Environment (Wipes DB)"):
     
     # Mock Leads
     manager.ingest_lead({
-        "id": "l_01", "name": "Jorge Salas", 
+        "id": "l_01", "name": "Jorge Sales", 
         "preferences": {"budget": 1500000, "bedrooms": 4, "must_haves": ["has_pool", "modern_kitchen"]}
     })
     manager.ingest_lead({

@@ -3,7 +3,7 @@
 **Your AI-Powered Real Estate Business System**
 **Status:** ✅ LIVE & OPERATIONAL
 **Dashboard:** http://localhost:8502
-**Owner:** Jorge Salas (realtorjorgesalas@gmail.com)
+**Owner:** Jorge Sales (realtorjorgesales@gmail.com)
 
 ---
 
@@ -250,4 +250,4 @@ python start_dashboard.py
 
 ---
 
-*Last Updated: January 7, 2026 | System Version: 3.0.0 Premium | Owner: Jorge Salas*
+*Last Updated: January 7, 2026 | System Version: 3.0.0 Premium | Owner: Jorge Sales*

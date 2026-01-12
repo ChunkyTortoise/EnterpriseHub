@@ -25,7 +25,7 @@ from streamlit_demo.mock_services.conversation_state import (
 
 # Page config
 st.set_page_config(
-    page_title="GHL Real Estate AI - Jorge Salas",
+    page_title="GHL Real Estate AI - Jorge Sales",
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded",

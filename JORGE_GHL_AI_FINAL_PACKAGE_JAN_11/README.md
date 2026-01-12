@@ -1,4 +1,4 @@
-# 📦 Jorge Salas - GHL AI System Delivery Package
+# 📦 Jorge Sales - GHL AI System Delivery Package
 
 **Date:** January 6, 2026  
 **Status:** ✅ Complete & Ready to Send
@@ -23,7 +23,7 @@
 1. Open `EMAIL_TO_JORGE.txt`
 2. Copy the email content
 3. Attach all 4 .md files
-4. Send to: realtorjorgesalas@gmail.com
+4. Send to: realtorjorgesales@gmail.com
 
 ### Option 2: Zip & Send
 ```bash
@@ -41,7 +41,7 @@ Then email the zip file with the email text
 
 ## ✅ What's Delivered
 
-- ✅ Live AI dashboard (http://localhost:8502)
+- ✅ Live AI dashboard (http://localhost:8501)
 - ✅ Claude AI integrated
 - ✅ GHL Lyrio connected
 - ✅ 5 integrated hubs operational
@@ -55,7 +55,7 @@ Then email the zip file with the email text
 ## 🎯 Jorge's First Steps
 
 1. Read `JORGE_START_HERE.md`
-2. Open http://localhost:8502
+2. Open http://localhost:8501
 3. Tag 1 contact "Needs Qualifying" in GHL
 4. Watch AI qualify them
 5. Explore the 5 hubs
@@ -86,4 +86,4 @@ Then email the zip file with the email text
 
 **Package Status:** ✅ Ready to Send  
 **System Status:** ✅ Live & Running  
-**Dashboard:** http://localhost:8502 (PID: 26772)
+**Dashboard:** http://localhost:8501 (PID: 40743)

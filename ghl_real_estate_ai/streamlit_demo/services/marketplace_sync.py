@@ -56,7 +56,7 @@ class MarketplaceSync:
             "description": template_data.get("description"),
             "category": template_data.get("category", "custom"),
             "tags": template_data.get("tags", []),
-            "author": template_data.get("author", "Jorge Salas"),
+            "author": template_data.get("author", "Jorge Sales"),
             "version": template_data.get("version", "1.0.0"),
             "published": publish,
             "downloads": 0,
@@ -510,7 +510,7 @@ if __name__ == "__main__":
         "description": "7-day automated lead nurture",
         "category": "automation",
         "tags": ["leads", "automation", "followup"],
-        "author": "Jorge Salas",
+        "author": "Jorge Sales",
         "version": "1.0.0"
     }
     

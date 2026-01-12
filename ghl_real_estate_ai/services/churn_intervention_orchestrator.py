@@ -597,7 +597,7 @@ class InterventionOrchestrator:
         # Store metrics for later analysis
         # In production, this would go to analytics database
         intervention.engagement_metrics = metrics
-        self.logger.info(f"Intervention metrics tracked: {json.dumps(metrics)}")
+        self.logger.info(f"Intervention metrics tracked: {json.dumps(metrics, default=str)}")
 
     async def _get_daily_intervention_count(self, lead_id: str) -> int:
         """Get number of interventions sent to lead today"""

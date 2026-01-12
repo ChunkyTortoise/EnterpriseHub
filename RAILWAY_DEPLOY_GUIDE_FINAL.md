@@ -204,7 +204,7 @@ Once both services are live, update the email:
 **Backend URL**: `https://YOUR-ACTUAL-BACKEND-URL.up.railway.app`  
 **Frontend URL**: `https://YOUR-ACTUAL-FRONTEND-URL.up.railway.app`
 
-Send email to: **realtorjorgesalas@gmail.com**
+Send email to: **realtorjorgesales@gmail.com**
 
 ---
 
@@ -268,7 +268,7 @@ After deployment, verify:
 
 **Frontend Dashboard**: `_______________________________`
 
-**Jorge's Email**: realtorjorgesalas@gmail.com
+**Jorge's Email**: realtorjorgesales@gmail.com
 
 ---
 

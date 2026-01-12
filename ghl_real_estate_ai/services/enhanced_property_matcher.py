@@ -35,6 +35,10 @@ from ghl_real_estate_ai.models.matching_models import (
 )
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.predictive_buyer_scoring import PredictiveBuyerScoring
+from ghl_real_estate_ai.services.lifestyle_intelligence_service import LifestyleIntelligenceService
+from ghl_real_estate_ai.services.behavioral_weighting_engine import BehavioralWeightingEngine
+from ghl_real_estate_ai.services.market_timing_service import MarketTimingService
+from ghl_real_estate_ai.services.match_reasoning_engine import MatchReasoningEngine
 
 logger = get_logger(__name__)
 
@@ -58,11 +62,11 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         # Load behavioral data and interaction history
         self._load_interaction_data()
 
-        # Initialize component services (will be created separately)
-        self.lifestyle_service = None  # Will implement next
-        self.behavioral_engine = None  # Will implement next
-        self.market_timing_service = None  # Will implement next
-        self.reasoning_engine = None  # Will implement next
+        # Initialize specialized component services
+        self.lifestyle_service = LifestyleIntelligenceService()
+        self.behavioral_engine = BehavioralWeightingEngine()
+        self.market_timing_service = MarketTimingService()
+        self.reasoning_engine = MatchReasoningEngine()
 
     def find_enhanced_matches(
         self,
@@ -90,14 +94,27 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         # Create matching context
         context = self._create_matching_context(preferences, behavioral_profile, segment)
 
-        # Calculate adaptive weights if behavioral data available
-        adaptive_weights = self._calculate_adaptive_weights(context)
+        # 1. Analyze behavioral profile if not provided
+        if not context.behavioral_profile:
+            context.behavioral_profile = self.behavioral_engine.analyze_behavioral_profile(
+                context.lead_id, context.preferences
+            )
+
+        # 2. Calculate adaptive weights using behavioral engine
+        adaptive_weights = self.behavioral_engine.calculate_adaptive_weights(
+            context.behavioral_profile, context.preferences
+        )
 
         matches = []
 
         for property_data in self.listings:
             try:
-                # Calculate comprehensive score
+                # Apply strict budget filter if budget is specified
+                budget = context.preferences.get("budget")
+                if budget and property_data.get("price", 0) > budget * 1.15: # allow 15% stretch for matches
+                    continue
+
+                # Calculate comprehensive score using specialized services
                 score_breakdown = self._calculate_comprehensive_score(
                     property_data, context, adaptive_weights
                 )
@@ -106,9 +123,9 @@ class EnhancedPropertyMatcher(PropertyMatcher):
                 if score_breakdown.overall_score < min_score:
                     continue
 
-                # Generate reasoning
-                reasoning = self._generate_match_reasoning(
-                    property_data, score_breakdown, context
+                # Generate comprehensive reasoning using reasoning engine
+                reasoning = self.reasoning_engine.generate_comprehensive_reasoning(
+                    property_data, score_breakdown, preferences, behavioral_profile
                 )
 
                 # Create property match result
@@ -117,6 +134,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
                     overall_score=score_breakdown.overall_score,
                     score_breakdown=score_breakdown,
                     reasoning=reasoning,
+                    match_rank=None,
                     generated_at=datetime.utcnow(),
                     lead_id=context.lead_id,
                     preferences_used=preferences,
@@ -145,7 +163,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         context: MatchingContext,
         adaptive_weights: AdaptiveWeights
     ) -> MatchScoreBreakdown:
-        """Calculate comprehensive 15-factor score breakdown."""
+        """Calculate comprehensive 15-factor score breakdown using specialized services."""
 
         # 1. Traditional Factors (budget, location, bedrooms, etc.)
         traditional_scores = self._score_traditional_factors(
@@ -153,8 +171,9 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         )
 
         # 2. Lifestyle Factors (schools, commute, walkability, safety)
-        lifestyle_scores = self._score_lifestyle_factors(
-            property_data, context, adaptive_weights.lifestyle_weights
+        # Use specialized lifestyle intelligence service
+        lifestyle_scores = self.lifestyle_service.calculate_lifestyle_score(
+            property_data, context.preferences, context.behavioral_profile
         )
 
         # 3. Contextual Factors (HOA, lot size, age, parking)
@@ -163,11 +182,13 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         )
 
         # 4. Market Timing (days on market, pricing trends)
-        market_timing_score = self._score_market_timing(
-            property_data, adaptive_weights.market_timing_weight
+        # Use specialized market timing service
+        market_timing_score = self.market_timing_service.calculate_market_timing_score(
+            property_data
         )
 
         # Calculate weighted overall score
+        # Using weights from adaptive_weights
         overall_score = (
             traditional_scores.budget.weighted_score +
             traditional_scores.location.weighted_score +
@@ -175,8 +196,8 @@ class EnhancedPropertyMatcher(PropertyMatcher):
             traditional_scores.bathrooms.weighted_score +
             traditional_scores.property_type.weighted_score +
             traditional_scores.sqft.weighted_score +
-            lifestyle_scores.overall_score +
-            contextual_scores.overall_score +
+            lifestyle_scores.overall_score * 0.25 + # Lifestyle weight 25%
+            contextual_scores.overall_score * 0.10 + # Contextual weight 10%
             market_timing_score.optimal_timing_score * adaptive_weights.market_timing_weight
         )
 

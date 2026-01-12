@@ -1,4 +1,4 @@
-# 🚀 Jorge Salas Demo Guide - GHL Real Estate AI
+# 🚀 Jorge Sales Demo Guide - GHL Real Estate AI
 ## **25-30% Conversion Improvement Showcase**
 
 **Date:** January 9, 2026

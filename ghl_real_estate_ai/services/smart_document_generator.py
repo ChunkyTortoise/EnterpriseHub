@@ -410,7 +410,7 @@ class SmartDocumentGenerator:
         """Auto-populate common fields"""
         document["auto_populated_fields"] = {
             "current_date": datetime.now().strftime("%Y-%m-%d"),
-            "agent_name": data.get("agent_name", "Jorge Salas"),
+            "agent_name": data.get("agent_name", "Jorge Sales"),
             "agent_license": data.get("agent_license", ""),
             "brokerage": data.get("brokerage", ""),
         }
@@ -589,7 +589,7 @@ if __name__ == "__main__":
         [
             {"name": "John Doe", "email": "buyer@example.com", "role": "buyer"},
             {"name": "Jane Smith", "email": "seller@example.com", "role": "seller"},
-            {"name": "Jorge Salas", "email": "agent@example.com", "role": "agent"},
+            {"name": "Jorge Sales", "email": "agent@example.com", "role": "agent"},
         ],
     )
     print(f"✅ Sent to {len(sig_request['signers'])} signers")

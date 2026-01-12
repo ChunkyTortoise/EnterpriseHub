@@ -251,6 +251,30 @@ DEFAULT_SEGMENT_WEIGHTS = {
         "amenities": 0.15,
         "sqft": 0.10,
         "budget": 0.05  # Less sensitive to price
+    },
+    LeadSegment.FIRST_TIME_BUYER: {
+        "budget": 0.30,
+        "market_timing": 0.15,
+        "location": 0.15,
+        "property_condition": 0.15,
+        "sqft": 0.15,
+        "safety": 0.10
+    },
+    LeadSegment.RETIREE: {
+        "safety": 0.25,
+        "property_condition": 0.20,
+        "amenities": 0.15,
+        "location": 0.15,
+        "hoa_fee": 0.15,
+        "budget": 0.10
+    },
+    LeadSegment.DOWNSIZER: {
+        "location": 0.25,
+        "property_condition": 0.20,
+        "budget": 0.20,
+        "walkability": 0.15,
+        "sqft": 0.10,
+        "lot_size": 0.10
     }
 }
 

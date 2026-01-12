@@ -98,7 +98,7 @@ from components.elite_refinements import render_dynamic_timeline
 render_dynamic_timeline(
     days_remaining=45,
     actions_completed=2,  # Each action saves ~15%
-    agent_name="Jorge Salas"
+    agent_name="Jorge Sales"
 )
 ```
 

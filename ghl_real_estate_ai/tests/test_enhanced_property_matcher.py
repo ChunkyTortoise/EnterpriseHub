@@ -106,6 +106,11 @@ class MockEnhancedPropertyMatcher:
         matches = []
 
         for prop in self.listings:
+            # Strict budget filter
+            budget = preferences.get("budget")
+            if budget and prop.get("price", 0) > budget:
+                continue
+
             # Basic scoring logic for testing
             score = self._calculate_test_score(prop, preferences)
 

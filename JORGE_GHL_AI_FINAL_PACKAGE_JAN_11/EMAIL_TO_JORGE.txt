@@ -21,7 +21,7 @@ Market Value: $2,726/month (all included in your package)
 
 🚀 START NOW (5 MINUTES)
 
-Your dashboard is running at: http://localhost:8502
+Your dashboard is running at: http://localhost:8501
 
 First test:
 1. Open the link above
@@ -84,7 +84,7 @@ Next Week: Add document generation & advanced workflows
 Connected to:
 • Claude AI (for conversations & scoring)
 • Your GHL Lyrio account (REDACTED_LOCATION_ID)
-• Your email: realtorjorgesalas@gmail.com
+• Your email: realtorjorgesales@gmail.com
 
 Currently Active:
 • Lead qualification ✅
@@ -139,7 +139,7 @@ I'm available to help with:
 
 🎉 YOU'RE ALL SET
 
-Your AI is working right now. Open http://localhost:8502 and start qualifying leads.
+Your AI is working right now. Open http://localhost:8501 and start qualifying leads.
 
 The system works 24/7 - even while you sleep. Your leads are being qualified as we speak.
 

@@ -27,7 +27,7 @@ def render_ai_training_sandbox(ai_tone: str = "Natural"):
         
         # Dynamic prompt based on tone
         base_prompts = {
-            "Professional": "You are a senior real estate advisor representing Jorge Salas. Use formal language, emphasize market data and ROI, and maintain a polite, consultative approach. Always confirm details and provide comprehensive market insights.",
+            "Professional": "You are a senior real estate advisor representing Jorge Sales. Use formal language, emphasize market data and ROI, and maintain a polite, consultative approach. Always confirm details and provide comprehensive market insights.",
             "Natural": "You are a helpful assistant on Jorge's real estate team. Be friendly and approachable, use first names, and keep sentences concise but informative. Balance professionalism with warmth.",
             "Direct/Casual": "You are Jorge speaking directly. Be extremely direct and casual. Skip unnecessary pleasantries. Your goal is to get the budget and location ASAP so you don't waste anyone's time. Use short sentences."
         }

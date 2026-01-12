@@ -1,4 +1,4 @@
-# 🎯 Executive Summary - Jorge Salas GHL AI System
+# 🎯 Executive Summary - Jorge Sales GHL AI System
 
 **Delivery Date:** January 6, 2026  
 **Status:** ✅ LIVE & OPERATIONAL  
@@ -144,7 +144,7 @@
 ### **Connected Systems:**
 - ✅ Claude AI (Anthropic API)
 - ✅ GoHighLevel (Lyrio location: REDACTED_LOCATION_ID)
-- ✅ Contact: realtorjorgesalas@gmail.com
+- ✅ Contact: realtorjorgesales@gmail.com
 
 ### **Currently Active For:**
 - Lyrio sub-account only

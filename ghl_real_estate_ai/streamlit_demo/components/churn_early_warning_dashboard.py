@@ -130,8 +130,9 @@ st.markdown("""
 class ChurnEarlyWarningDashboard:
     """Main dashboard class for churn risk monitoring"""
 
-    def __init__(self):
+    def __init__(self, claude_assistant=None):
         self.refresh_interval = 300  # 5 minutes
+        self.claude = claude_assistant
         self.risk_thresholds = {
             'critical': 80.0,
             'high': 60.0,
@@ -537,7 +538,7 @@ class ChurnEarlyWarningDashboard:
                 """, unsafe_allow_html=True)
 
                 # Action buttons
-                col1, col2 = st.columns(2)
+                col1, col2, col3 = st.columns(3)
                 with col1:
                     if st.button(f"📞 Call", key=f"call_{lead['lead_id']}"):
                         st.success(f"Call initiated for {lead['lead_name']}")
@@ -545,6 +546,24 @@ class ChurnEarlyWarningDashboard:
                 with col2:
                     if st.button(f"✉️ Email", key=f"email_{lead['lead_id']}"):
                         st.success(f"Email sent to {lead['lead_name']}")
+
+                with col3:
+                    if st.button(f"🤖 AI Script", key=f"ai_script_{lead['lead_id']}"):
+                        if self.claude:
+                            script_data = self.claude.generate_retention_script(lead)
+                            st.session_state[f"script_{lead['lead_id']}"] = script_data
+                        else:
+                            st.error("Claude Assistant not available")
+
+                # Display AI Script if generated
+                if f"script_{lead['lead_id']}" in st.session_state:
+                    script_data = st.session_state[f"script_{lead['lead_id']}"]
+                    st.info(f"**Claude's {script_data['strategy']} Strategy:**\n\n{script_data['script']}")
+                    st.caption(f"**Reasoning:** {script_data['reasoning']}")
+                    st.caption(f"**Channel Recommendation:** {script_data['channel_recommendation']}")
+                    if st.button("Clear Script", key=f"clear_{lead['lead_id']}"):
+                        del st.session_state[f"script_{lead['lead_id']}"]
+                        st.rerun()
 
         if len(high_risk_leads) > 10:
             st.info(f"Showing top 10 of {len(high_risk_leads)} high-risk leads")

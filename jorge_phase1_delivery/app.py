@@ -87,7 +87,7 @@ def get_services(market="Austin"):
 
 # Page config
 st.set_page_config(
-    page_title="GHL Real Estate AI - Jorge Salas",
+    page_title="GHL Real Estate AI - Jorge Sales",
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -151,7 +151,7 @@ st.markdown("""
         </div>
         
         <p style='margin: 1.5rem 0; font-size: 1.05rem; opacity: 0.9; max-width: 800px;'>
-            Professional AI-powered lead qualification and automation system for <strong>Jorge Salas</strong>
+            Professional AI-powered lead qualification and automation system for <strong>Jorge Sales</strong>
         </p>
         
         <div style='margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;'>
@@ -1156,7 +1156,7 @@ st.markdown("""
         🚀 Production-Ready Multi-Tenant AI System
     </div>
     <div style='color: #6B7280; font-size: 0.9rem;'>
-        Built for Jorge Salas | Claude Sonnet 4.5 | GHL Integration Ready
+        Built for Jorge Sales | Claude Sonnet 4.5 | GHL Integration Ready
     </div>
     <div style='margin-top: 1rem; color: #6B7280; font-size: 0.85rem;'>
         Consolidated Hub Architecture | Path B Backend | 522+ Tests Passing

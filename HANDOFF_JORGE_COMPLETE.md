@@ -1,4 +1,4 @@
-# Session Handoff - Jorge Salas GHL AI Delivery
+# Session Handoff - Jorge Sales GHL AI Delivery
 
 **Date:** January 6, 2026  
 **Status:** COMPLETE - Dashboard Working, Ready to Send  
@@ -30,7 +30,7 @@ Fixed 6 import errors in `ghl_real_estate_ai/streamlit_demo/app.py`:
 ### System Configuration
 - Claude API Key: Configured and working
 - GHL Lyrio Account: Connected (REDACTED_LOCATION_ID)
-- Email: realtorjorgesalas@gmail.com
+- Email: realtorjorgesales@gmail.com
 - All 5 hubs: Operational
 - 31 AI services: Active
 
@@ -47,7 +47,7 @@ Files: 8 (5 for Jorge, 3 for you)
 
 **1. Send Email to Jorge**
 - Location: `~/Desktop/JORGE_FINAL/EMAIL_BODY.txt`
-- To: realtorjorgesalas@gmail.com
+- To: realtorjorgesales@gmail.com
 - Subject: Your GHL AI System - Quick Setup Note
 - Attach these 5 files:
   - 0_READ_FIRST.txt
@@ -71,7 +71,7 @@ Files: 8 (5 for Jorge, 3 for you)
 
 **2. Send Follow-up Email**
 - Location: `~/Desktop/JORGE_FINAL/EMAIL_TOMORROW_MORNING.txt`
-- To: realtorjorgesalas@gmail.com
+- To: realtorjorgesales@gmail.com
 - Subject: Your GHL AI System is Ready - Start Now!
 - No attachments needed
 
@@ -176,7 +176,7 @@ When Jorge is ready:
 - Claude API: Active
 - GHL Lyrio: Connected
 - Location ID: REDACTED_LOCATION_ID
-- Email: realtorjorgesalas@gmail.com
+- Email: realtorjorgesales@gmail.com
 
 **Services:**
 - Lead qualification: Active
@@ -232,8 +232,8 @@ Should return: HTTP Status: 200
 
 ## Contact Info
 
-**Client:** Jorge Salas  
-**Email:** realtorjorgesalas@gmail.com  
+**Client:** Jorge Sales  
+**Email:** realtorjorgesales@gmail.com  
 **GHL Location:** Lyrio (REDACTED_LOCATION_ID)  
 **System:** GHL Real Estate AI with 5 Hubs
 

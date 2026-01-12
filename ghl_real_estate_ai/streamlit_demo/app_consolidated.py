@@ -13,7 +13,7 @@ if str(project_root) not in sys.path:
 
 # Page config
 st.set_page_config(
-    page_title="GHL Real Estate AI - Jorge Salas",
+    page_title="GHL Real Estate AI - Jorge Sales",
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -36,7 +36,7 @@ st.markdown("""
         🏠 GHL Real Estate AI - Command Center
     </h1>
     <p style='margin: 0.5rem 0 0 0; font-size: 1.1rem; opacity: 0.95;'>
-        Professional AI-powered lead qualification and automation for Jorge Salas
+        Professional AI-powered lead qualification and automation for Jorge Sales
     </p>
     <div style='margin-top: 1rem; display: flex; gap: 2rem; font-size: 0.9rem;'>
         <span style='background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px;'>
@@ -301,7 +301,7 @@ st.markdown("""
         🚀 Production-Ready Multi-Tenant AI System
     </div>
     <div style='color: #6B7280; font-size: 0.9rem;'>
-        Built for Jorge Salas | Claude Sonnet 4.5 | GHL Integration Ready
+        Built for Jorge Sales | Claude Sonnet 4.5 | GHL Integration Ready
     </div>
     <div style='margin-top: 1rem; color: #6B7280; font-size: 0.85rem;'>
         Consolidated Hub Architecture | Path B Backend | 522+ Tests Passing

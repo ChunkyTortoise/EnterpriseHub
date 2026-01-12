@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI(
     title="GHL Real Estate AI Webhook Service",
-    description="AI-powered lead qualification for Jorge Salas",
+    description="AI-powered lead qualification for Jorge Sales",
     version="1.0.0",
 )
 
@@ -109,7 +109,7 @@ def get_ai_response(
     Professional, friendly, direct, and curious
     """
 
-    system_prompt = """You are an AI assistant for Jorge Salas, a professional real estate agent. 
+    system_prompt = """You are an AI assistant for Jorge Sales, a professional real estate agent. 
 Your communication style is:
 - Professional and friendly
 - Direct and to-the-point (SMS-optimized, under 160 characters)
@@ -228,7 +228,7 @@ async def root():
         "service": "GHL Real Estate AI Webhook",
         "status": "active",
         "version": "1.0.0",
-        "for": "Jorge Salas",
+        "for": "Jorge Sales",
     }
 
 

@@ -1,7 +1,7 @@
 # 🎯 Jorge's GHL Real Estate AI - Phase 1 Production System
 
 **Status**: ✅ LIVE & PRODUCTION READY
-**Client**: Jorge Salas (realtorjorgesalas@gmail.com)
+**Client**: Jorge Sales (realtorjorgesales@gmail.com)
 **Value**: $2,726/month AI Real Estate Suite
 
 ---
@@ -119,5 +119,5 @@ GHL_CALENDAR_ID=your_calendar_id_here
 **Expansion?** Ready to add more sub-accounts (2 min each)
 **Cloud Deploy?** Railway deployment available (10 min)
 
-**Contact**: realtorjorgesalas@gmail.com
+**Contact**: realtorjorgesales@gmail.com
 **System Status**: ✅ PRODUCTION READY

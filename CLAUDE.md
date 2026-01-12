@@ -254,6 +254,11 @@ def calculate_monthly_revenue(user_id: str, month: str) -> Decimal:
 - Use `dataclasses` or Pydantic models for structured data
 - `pytest` for testing with `>80%` coverage target
 
+**AI Integration Patterns**:
+- **Claude Assistant**: Use `services/claude_assistant.py` for persistent, context-aware UI intelligence.
+- **Deep Reasoning**: Methods like `explain_match_with_claude` should provide strategic/psychological narrative, not just raw stats.
+- **Prompt Lab**: Use the interactive lab pattern for safe prompt experimentation and version control.
+
 ### Formatting & Linting
 ```bash
 # Pre-commit checks (automate):

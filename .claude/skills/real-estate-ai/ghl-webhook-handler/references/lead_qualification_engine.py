@@ -1,6 +1,6 @@
 """
 Lead Qualification Engine
-Based on Jorge Salas' proven 7-question methodology
+Based on Jorge Sales' proven 7-question methodology
 
 Extracted from production real estate system with documented conversion rates.
 """

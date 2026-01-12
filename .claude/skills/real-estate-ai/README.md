@@ -208,7 +208,7 @@ real-estate-ai/
 
 ## Domain Expertise Captured
 
-### Jorge Salas' Methodology
+### Jorge Sales' Methodology
 - 7-question qualification framework with proven conversion rates
 - Natural conversation flow patterns that don't feel robotic
 - Hot/Warm/Cold classification with clear handoff criteria

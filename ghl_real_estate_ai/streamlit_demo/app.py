@@ -70,8 +70,11 @@ try:
     from services.property_matcher import PropertyMatcher
     from services.reengagement_engine import ReengagementEngine, ReengagementTrigger
     from services.churn_integration_service import ChurnIntegrationService
-
-    # Enhanced services imports (from parent directory)
+    from services.claude_assistant import ClaudeAssistant
+    
+    # Initialize Claude Assistant
+    claude = ClaudeAssistant()
+        # Enhanced services imports (from parent directory)
     try:
         from ghl_real_estate_ai.services.enhanced_lead_scorer import EnhancedLeadScorer
         ENHANCED_LEAD_SCORER_AVAILABLE = True
@@ -93,6 +96,7 @@ try:
         print("Churn Prediction Engine not available")
         CHURN_PREDICTION_ENGINE_AVAILABLE = False
     from streamlit_demo.components.churn_early_warning_dashboard import ChurnEarlyWarningDashboard
+    from streamlit_demo.components.property_valuation import render_property_valuation_engine
     from realtime_dashboard_integration import render_realtime_intelligence_dashboard
 
     SERVICES_LOADED = True
@@ -157,6 +161,44 @@ def get_services(market="Austin"):
         services_dict["churn_prediction"] = ChurnPredictionEngine()
 
     return services_dict
+
+# --- THE FINAL POLISH: GLOBAL UI UTILITIES ---
+def sparkline(data: list, color: str = "#2563eb", height: int = 40):
+    """Generates a minimal sparkline chart using Plotly."""
+    fig = go.Figure(go.Scatter(
+        y=data,
+        mode='lines',
+        fill='tozeroy',
+        line=dict(color=color, width=2),
+        fillcolor=f"{color}33"
+    ))
+    fig.update_layout(
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=height,
+        xaxis=dict(visible=False, fixedrange=True),
+        yaxis=dict(visible=False, fixedrange=True)
+    )
+    return fig
+
+# Initialize Global AI State (Zustand equivalent)
+if "ai_config" not in st.session_state:
+    st.session_state.ai_config = {
+        "market": "Austin, TX",
+        "voice_tone": 0.5,  # 0.0 = Professional, 1.0 = Natural
+        "response_speed": "Standard",
+        "last_sync": datetime.datetime.now().strftime("%H:%M:%S")
+    }
+
+# Initialize Prompt Versioning
+if "prompt_versions" not in st.session_state:
+    st.session_state.prompt_versions = [
+        {"version": "v1.0", "tag": "Baseline", "content": "You are a helpful assistant.", "timestamp": "2026-01-01"},
+        {"version": "v1.1", "tag": "Production", "content": "You are a professional real estate assistant.", "timestamp": "2026-01-05"},
+        {"version": "v1.2", "tag": "Elite v4.0", "content": "You are an elite Real Estate AI closer.", "timestamp": "2026-01-11"}
+    ]
 
 # Page config
 st.set_page_config(
@@ -573,7 +615,7 @@ st.markdown(f"""
             </div>
         </div>
         <p style='margin: 1.5rem 0; font-size: 1.05rem; opacity: 0.9; max-width: 800px; color: white !important;'>
-            Professional AI-powered lead qualification and automation system for <strong>Jorge Salas</strong>
+            Professional AI-powered lead qualification and automation system for <strong>Jorge Sales</strong>
         </p>
         <div style='margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;'>
             <div style='background: rgba(255,255,255,0.25); 
@@ -723,6 +765,31 @@ with st.sidebar:
     )
     
     st.markdown("---")
+
+    # NEW: Global AI State Sync (Zustand-style Control)
+    with st.expander("🤖 Global AI Configuration", expanded=True):
+        market = st.selectbox("Active Market", ["Austin, TX", "Miami, FL", "Los Angeles, CA"], index=0)
+        voice_tone = st.slider("AI Voice Tone", 0.0, 1.0, st.session_state.ai_config["voice_tone"], 
+                               help="0.0 = Professional, 1.0 = Natural")
+        
+        if market != st.session_state.ai_config["market"] or voice_tone != st.session_state.ai_config["voice_tone"]:
+            st.session_state.ai_config["market"] = market
+            st.session_state.ai_config["voice_tone"] = voice_tone
+            st.session_state.ai_config["last_sync"] = datetime.datetime.now().strftime("%H:%M:%S")
+            st.toast(f"AI State Synced: {market}", icon="🧠")
+            
+        st.caption(f"Last sync: {st.session_state.ai_config['last_sync']}")
+
+    # NEW: Portal URL Utility
+    with st.expander("🔗 Sub-Account Access", expanded=False):
+        st.markdown("""
+        **Location ID:** `REDACTED_ID`
+        **Sub-account:** Lyrio
+        """)
+        st.link_button("🌐 Open GHL Dashboard", "https://app.gohighlevel.com", use_container_width=True)
+        st.link_button("📨 Open Conversations", "https://app.gohighlevel.com/v2/location/REDACTED_ID/conversations", use_container_width=True)
+
+    st.markdown("---")
     
     # System status
     st.markdown("### 📊 System Status")
@@ -804,11 +871,38 @@ def render_revenue_funnel():
     fig = px.funnel(data, x='number', y='stage', color_discrete_sequence=['#2563eb'])
     st.plotly_chart(fig, use_container_width=True)
 
+def render_claude_assistant():
+    """Delegates to the centralized ClaudeAssistant service."""
+    leads = st.session_state.get('lead_options', {})
+    hub = st.session_state.current_hub
+    market = st.session_state.get('selected_market', 'Austin')
+    
+    claude.greet_user("Jorge")
+    claude.render_sidebar_panel(hub, market, leads)
+
 # Main content area
 @ui_error_boundary("Executive Command Center")
 def render_executive_hub():
     st.header("🏢 Executive Command Center")
     st.markdown("*High-level KPIs, revenue tracking, and system health*")
+
+    # NEW: Claude's Strategic Briefing Area
+    with st.container(border=True):
+        col_icon, col_text = st.columns([1, 6])
+        with col_icon:
+            st.markdown("<div style='font-size: 3.5rem; text-align: center; margin-top: 10px;'>🔮</div>", unsafe_allow_html=True)
+        with col_text:
+            st.markdown("### Claude's Strategy Briefing")
+            st.markdown("""
+            *I've analyzed your entire GHL environment for the last 24 hours. Here is your priority focus:*
+            - **🔥 Hot Cluster:** There is a surge of interest in Alta Loma. 3 leads just moved into the 'Ready' tier.
+            - **⚠️ Retention Risk:** 2 leads from the Facebook campaign have gone silent. I've prepared a re-engagement sequence.
+            - **💰 Revenue Path:** Converting Sarah Johnson this week will push your Austin pipeline past the monthly target.
+            """)
+            if st.button("🚀 Execute Strategic Re-engagement"):
+                st.toast("Triggering AI re-engagement for silent leads...", icon="⚡")
+    
+    st.markdown("---")
     
     # Tabs for sub-features
     tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "🎯 AI Insights", "📄 Reports"])
@@ -820,12 +914,16 @@ def render_executive_hub():
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("Total Pipeline", "$2.4M", "+15%")
+            st.plotly_chart(sparkline([1.8, 2.1, 1.9, 2.4, 2.2, 2.4], color="#2563eb", height=50), use_container_width=True, config={'displayModeBar': False})
         with col2:
             st.metric("Hot Leads", "23", "+8")
+            st.plotly_chart(sparkline([10, 15, 12, 25, 30, 23], color="#16a34a", height=50), use_container_width=True, config={'displayModeBar': False})
         with col3:
             st.metric("Conversion Rate", "34%", "+2%")
+            st.plotly_chart(sparkline([28, 30, 31, 32, 33, 34], color="#ea580c", height=50), use_container_width=True, config={'displayModeBar': False})
         with col4:
             st.metric("Avg Deal Size", "$385K", "+$12K")
+            st.plotly_chart(sparkline([350, 360, 370, 375, 380, 385], color="#7c3aed", height=50), use_container_width=True, config={'displayModeBar': False})
         
         st.markdown("---")
         
@@ -1060,6 +1158,17 @@ def render_lead_intelligence_hub():
             st.markdown("#### 🎯 Lead Analysis")
             st.markdown(f"**Analyzing:** {selected_lead_name}")
             
+            # Claude's Behavioral Deep Dive
+            with st.container(border=True):
+                st.markdown(f"**🤖 Claude's Behavioral Insight: {selected_lead_name}**")
+                if selected_lead_name == "Sarah Johnson":
+                    insight_text = "Highly motivated. She responded within 45 seconds to my last text. Sentiment: 92% Positive. Focus on: School District accuracy."
+                elif selected_lead_name == "Mike Chen":
+                    insight_text = "Cautious. He's asking about 'Value per SqFt' comparison. Sentiment: Neutral. Focus on: Investment ROI data."
+                else:
+                    insight_text = "Initial discovery phase. Engagement is low. Sentiment: Undetermined. Focus on: Qualifying location preferences."
+                st.info(insight_text)
+
             # Empty state when no lead selected
             if selected_lead_name == "-- Select a Lead --":
                 st.markdown("""
@@ -1184,7 +1293,7 @@ def render_lead_intelligence_hub():
             st.markdown("*Real-time monitoring and intervention orchestration for lead retention*")
 
             # Initialize and render the churn dashboard
-            churn_dashboard = ChurnEarlyWarningDashboard()
+            churn_dashboard = ChurnEarlyWarningDashboard(claude_assistant=claude)
             churn_dashboard.render_dashboard()
 
         except Exception as e:
@@ -1838,7 +1947,7 @@ def render_automation_studio():
     st.header("🤖 Automation Studio")
     st.markdown("*Visual switchboard to toggle AI features on/off*")
     
-    tab1, tab2, tab3 = st.tabs(["⚙️ Automations", "📧 Sequences", "🔄 Workflows"])
+    tab1, tab2, tab3, tab4 = st.tabs(["⚙️ Automations", "📧 Sequences", "🔄 Workflows", "🧠 Claude's Prompt Lab"])
     
     with tab1:
         st.subheader("AI Automation Control Panel")
@@ -2012,10 +2121,53 @@ def render_automation_studio():
                 if st.button(f"Install", key=f"inst_{t.id}", width="stretch"):
                     st.success(f"Installed {t.name}!")
 
+    with tab4:
+        st.subheader("🧠 Claude's Prompt Lab")
+        st.markdown("*Use Claude to analyze and optimize your AI's personality and instructions.*")
+        
+        col_p1, col_p2 = st.columns([2, 1])
+        
+        with col_p1:
+            current_p = st.text_area("Current System Prompt:", value="You are a helpful assistant on Jorge's team. Be friendly and keep it concise.", height=150)
+            
+            if st.button("🪄 Claude: Optimize My Prompt", type="primary"):
+                with st.spinner("Claude is rewriting for conversion..."):
+                    st.success("Claude has suggested an optimized version!")
+                    st.markdown("""
+                    **Recommended Rewrite:**
+                    > "You are Jorge's High-Intent Qualifier. Your goal is to move leads from discovery to 'Booked Tour' ASAP. Use a 'Natural' tone, prioritize budget extraction, and reference specific Austin/Rancho neighborhoods to build authority. If budget is >$800k, immediately offer a private luxury viewing."
+                    """)
+                    st.info("💡 **Claude's Logic:** This version adds specific triggers for high-value leads and builds neighborhood authority.")
+        
+        with col_p2:
+            st.markdown("#### AI Performance Audit")
+            st.metric("Tone Alignment", "94%", "+5%")
+            st.metric("Conversion Impact", "Medium", "Increasing")
+            
+            if st.button("🚀 Push to GHL Production"):
+                st.toast("Updated prompt synced to GHL Custom Fields!")
+
 @ui_error_boundary("Sales Copilot")
 def render_sales_copilot():
     st.header("💰 Sales Copilot")
     st.markdown("*Agent tools for active deals and client meetings*")
+
+    # Claude's Negotiation Briefing
+    with st.container(border=True):
+        col_n1, col_n2 = st.columns([1, 8])
+        with col_n1:
+            st.markdown("<div style='font-size: 3rem; text-align: center;'>💼</div>", unsafe_allow_html=True)
+        with col_n2:
+            st.markdown("### Claude's Negotiation Briefing")
+            st.markdown("""
+            *Ready to close for Jorge:*
+            - **🤝 The Closer:** You have 3 discovery calls this afternoon. I've analyzed their lead profiles and prepared high-converting 'Hook' scripts for each.
+            - **📜 Compliance Check:** New TX listing requirements are active. I've updated your Smart Document generator to ensure all contracts are 100% compliant.
+            """)
+            if st.button("📝 View Meeting Hooks"):
+                st.toast("Loading personalized talk tracks for today's calls...", icon="💬")
+    
+    st.markdown("---")
     
     tab1, tab2, tab3, tab4 = st.tabs([
         "💼 Deal Closer",
@@ -2180,11 +2332,12 @@ def render_ops_hub():
     st.header("📈 Ops & Optimization")
     st.markdown("*Manager-level analytics and team performance tracking*")
     
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "✅ Quality",
         "💰 Revenue",
         "🏆 Benchmarks",
-        "🎓 Coaching"
+        "🎓 Coaching",
+        "🛠️ Control"
     ])
     
     with tab1:
@@ -2235,6 +2388,53 @@ def render_ops_hub():
             with st.expander(f"💡 {rec['title']}"):
                 st.write(rec['description'])
                 st.info(f"**Impact:** {rec['expected_impact']}")
+
+    with tab5:
+        st.subheader("AI Control Panel")
+        
+        # Prompt Versioning
+        st.markdown("### 📝 Prompt Version Control")
+        selected_version = st.selectbox("Active Prompt Version", 
+                                       options=[v["version"] for v in st.session_state.prompt_versions],
+                                       index=len(st.session_state.prompt_versions)-1)
+        
+        version_data = next(v for v in st.session_state.prompt_versions if v["version"] == selected_version)
+        
+        st.info(f"**Tag:** {version_data['tag']} | **Deployed:** {version_data['timestamp']}")
+        new_prompt = st.text_area("Prompt Content", value=version_data["content"], height=150)
+        
+        col_v1, col_v2 = st.columns(2)
+        if col_v1.button("💾 Save as New Version", use_container_width=True):
+            new_v = f"v1.{len(st.session_state.prompt_versions)}"
+            st.session_state.prompt_versions.append({
+                "version": new_v,
+                "tag": "Custom",
+                "content": new_prompt,
+                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d")
+            })
+            st.success(f"Version {new_v} saved!")
+            st.rerun()
+            
+        if col_v2.button("🚀 Rollback to v1.1", use_container_width=True):
+            st.warning("Rolling back to Production Baseline...")
+            st.toast("Rollback initiated", icon="⏪")
+
+        st.markdown("---")
+        
+        # Model Retraining Loop
+        st.markdown("### 🔄 Model Retraining Loop")
+        st.write("Feedback captured from Lead Intelligence Hub is automatically used to fine-tune your local matching models.")
+        
+        col_r1, col_v2 = st.columns(2)
+        col_r1.metric("Captured Feedback", "128", "+12")
+        col_v2.metric("Model Drift", "0.02", "Low")
+        
+        if st.button("🛰️ Initiate Model Retraining", type="primary", use_container_width=True):
+            with st.spinner("Retraining Property Matcher ML..."):
+                import time
+                time.sleep(2)
+                st.success("Model successfully retrained! Accuracy improved by 3.2%")
+                st.balloons()
 
 # Buyer Component Functions
 def render_buyer_profile_builder():
@@ -3403,270 +3603,6 @@ def render_buyer_analytics():
             st.markdown("• Monitor response times and engagement levels")
 
 # Seller Component Functions
-def render_property_valuation_engine():
-    """AI-powered property valuation and CMA engine"""
-    st.subheader("📊 AI Property Valuation Engine")
-
-    # Property details input
-    st.markdown("#### 🏠 Property Information")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        property_address = st.text_input("Property Address", placeholder="1234 Main Street, Austin, TX 78704")
-        property_type = st.selectbox("Property Type", ["Single Family", "Townhome", "Condo", "Duplex", "Multi-Family"])
-        year_built = st.number_input("Year Built", value=1995, step=1)
-        lot_size = st.number_input("Lot Size (acres)", value=0.25, step=0.05)
-
-    with col2:
-        bedrooms = st.selectbox("Bedrooms", [1, 2, 3, 4, 5, 6, "7+"])
-        bathrooms = st.selectbox("Bathrooms", [1, 1.5, 2, 2.5, 3, 3.5, 4, "4.5+"])
-        square_footage = st.number_input("Square Footage", value=1856, step=50)
-        garage_spaces = st.selectbox("Garage Spaces", [0, 1, 2, 3, "4+"])
-
-    # Property features
-    st.markdown("#### ✨ Property Features & Condition")
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        features = st.multiselect("Special Features", [
-            "Swimming Pool", "Fireplace", "Hardwood Floors", "Granite Counters",
-            "Updated Kitchen", "Master Suite", "Office/Study", "Basement",
-            "Deck/Patio", "Fenced Yard", "Workshop/Storage"
-        ])
-
-    with col2:
-        condition = st.selectbox("Overall Condition", [
-            "Excellent - Move-in Ready",
-            "Good - Minor Updates Needed",
-            "Fair - Some Improvements Required",
-            "Needs Work - Major Renovations"
-        ])
-
-    with col3:
-        recent_updates = st.multiselect("Recent Updates (Last 5 Years)", [
-            "Roof Replacement", "HVAC System", "Windows", "Flooring",
-            "Kitchen Renovation", "Bathroom Remodel", "Paint Interior",
-            "Paint Exterior", "Appliances", "Landscaping"
-        ])
-
-    # Market analysis
-    if st.button("🔍 Generate Valuation Analysis", type="primary"):
-        with st.spinner("Analyzing property value..."):
-
-            # Main valuation results
-            st.markdown("#### 🎯 Valuation Results")
-
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.metric("🏠 Estimated Value", "$487,500", delta="$12,500 vs. last month")
-            with col2:
-                st.metric("📊 Value Range", "$465K - $510K", delta="95% confidence")
-            with col3:
-                st.metric("💰 $/Sq Ft", "$263", delta="$8 above market avg")
-            with col4:
-                st.metric("📈 Market Position", "Strong", delta="Good timing to sell")
-
-            # Valuation methodology tabs
-            tab1, tab2, tab3, tab4 = st.tabs([
-                "🏘️ Comparable Sales", "📊 Market Analysis", "🎯 Pricing Strategy", "📈 Value Drivers"
-            ])
-
-            with tab1:
-                st.markdown("##### Recent Comparable Sales")
-
-                comps = [
-                    {
-                        "address": "1245 Oak Street (0.2 mi)",
-                        "sold_price": "$495,000",
-                        "sold_date": "45 days ago",
-                        "beds": 3,
-                        "baths": 2,
-                        "sqft": 1920,
-                        "price_per_sqft": "$258",
-                        "adjustments": "+$7,500"
-                    },
-                    {
-                        "address": "1156 Pine Avenue (0.3 mi)",
-                        "sold_price": "$475,000",
-                        "sold_date": "62 days ago",
-                        "beds": 3,
-                        "baths": 2.5,
-                        "sqft": 1785,
-                        "price_per_sqft": "$266",
-                        "adjustments": "-$2,200"
-                    },
-                    {
-                        "address": "1289 Elm Drive (0.4 mi)",
-                        "sold_price": "$510,000",
-                        "sold_date": "28 days ago",
-                        "beds": 4,
-                        "baths": 2,
-                        "sqft": 1945,
-                        "price_per_sqft": "$262",
-                        "adjustments": "+$5,100"
-                    }
-                ]
-
-                for comp in comps:
-                    with st.container():
-                        col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
-
-                        with col1:
-                            st.markdown(f"**{comp['address']}**")
-                            st.markdown(f"💰 {comp['sold_price']} • Sold {comp['sold_date']}")
-                            st.markdown(f"🛏️ {comp['beds']} bed • 🛁 {comp['baths']} bath • 📐 {comp['sqft']} sqft")
-
-                        with col2:
-                            st.markdown(f"**{comp['price_per_sqft']}**/sqft")
-
-                        with col3:
-                            adjustment_color = "green" if "+" in comp['adjustments'] else "red"
-                            st.markdown(f"<span style='color: {adjustment_color};'>**{comp['adjustments']}**</span>", unsafe_allow_html=True)
-
-                        with col4:
-                            st.markdown(f"**Adjusted**: ${int(comp['sold_price'].replace('$', '').replace(',', '')) + int(comp['adjustments'].replace('$', '').replace(',', '').replace('+', '')):,}")
-
-                        st.markdown("---")
-
-            with tab2:
-                st.markdown("##### Market Conditions Analysis")
-
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    st.markdown("**Neighborhood Trends (Last 6 Months)**")
-                    st.markdown("• Average Days on Market: 8 days")
-                    st.markdown("• Price Appreciation: +12% YoY")
-                    st.markdown("• Inventory Level: Low (2.1 months)")
-                    st.markdown("• Market Type: Strong Seller's Market")
-
-                    st.markdown("**Seasonal Factors**")
-                    st.markdown("• Current Season: Peak selling season")
-                    st.markdown("• Interest Rates: 7.25% (stable)")
-                    st.markdown("• Economic Outlook: Positive")
-
-                with col2:
-                    # Market trends chart
-                    months = ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan"]
-                    median_prices = [425000, 435000, 448000, 455000, 465000, 475000]
-
-                    fig = px.line(x=months, y=median_prices, title="Neighborhood Median Prices")
-                    fig.update_layout(yaxis_title="Price ($)", xaxis_title="Month")
-                    st.plotly_chart(fig, use_container_width=True)
-
-                    st.markdown("**Price Per Square Foot Trends**")
-                    price_per_sqft = [245, 250, 255, 258, 260, 263]
-                    fig2 = px.bar(x=months, y=price_per_sqft, title="Price Per Sq Ft")
-                    st.plotly_chart(fig2, use_container_width=True)
-
-            with tab3:
-                st.markdown("##### Strategic Pricing Recommendations")
-
-                pricing_strategies = [
-                    {
-                        "strategy": "🎯 Competitive Pricing",
-                        "price": "$485,000",
-                        "pros": "Quick sale, multiple offers likely",
-                        "cons": "May leave money on table",
-                        "timeline": "5-10 days"
-                    },
-                    {
-                        "strategy": "💰 Market Value Pricing",
-                        "price": "$495,000",
-                        "pros": "Full market value, good negotiating room",
-                        "cons": "May take longer to sell",
-                        "timeline": "10-20 days"
-                    },
-                    {
-                        "strategy": "🚀 Aspirational Pricing",
-                        "price": "$510,000",
-                        "pros": "Maximum return if market supports",
-                        "cons": "Risk of sitting on market too long",
-                        "timeline": "20-45 days"
-                    }
-                ]
-
-                for strategy in pricing_strategies:
-                    with st.expander(f"{strategy['strategy']} - {strategy['price']}"):
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.markdown(f"**✅ Pros:** {strategy['pros']}")
-                            st.markdown(f"**⚠️ Cons:** {strategy['cons']}")
-                        with col2:
-                            st.markdown(f"**⏱️ Expected Timeline:** {strategy['timeline']}")
-
-                st.info("💡 **Recommendation:** Start with Market Value Pricing ($495,000) to maximize return while ensuring reasonable sale timeline.")
-
-            with tab4:
-                st.markdown("##### Value Enhancement Opportunities")
-
-                improvements = [
-                    {
-                        "improvement": "Fresh Interior Paint",
-                        "cost": "$2,500",
-                        "value_add": "$5,000",
-                        "roi": "100%",
-                        "priority": "High"
-                    },
-                    {
-                        "improvement": "Kitchen Counter Update",
-                        "cost": "$4,500",
-                        "value_add": "$7,500",
-                        "roi": "67%",
-                        "priority": "Medium"
-                    },
-                    {
-                        "improvement": "Landscape Enhancement",
-                        "cost": "$1,500",
-                        "value_add": "$3,500",
-                        "roi": "133%",
-                        "priority": "High"
-                    },
-                    {
-                        "improvement": "Master Bath Update",
-                        "cost": "$8,000",
-                        "value_add": "$10,000",
-                        "roi": "25%",
-                        "priority": "Low"
-                    }
-                ]
-
-                st.markdown("**Recommended Pre-Sale Improvements:**")
-
-                for improvement in improvements:
-                    priority_color = "green" if improvement['priority'] == "High" else "orange" if improvement['priority'] == "Medium" else "red"
-
-                    with st.container():
-                        col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 1])
-
-                        with col1:
-                            st.markdown(f"**{improvement['improvement']}**")
-                        with col2:
-                            st.markdown(f"Cost: {improvement['cost']}")
-                        with col3:
-                            st.markdown(f"Value: {improvement['value_add']}")
-                        with col4:
-                            st.markdown(f"ROI: {improvement['roi']}")
-                        with col5:
-                            st.markdown(f"<span style='color: {priority_color};'>**{improvement['priority']}**</span>", unsafe_allow_html=True)
-
-                st.markdown("**Total Investment:** $16,500 | **Total Value Add:** $26,000 | **Net Gain:** $9,500")
-
-    # Additional tools
-    st.markdown("#### 🛠️ Additional Valuation Tools")
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("📧 Email CMA Report"):
-            st.success("Comprehensive CMA report sent to your email!")
-
-    with col2:
-        if st.button("📊 Generate Listing Sheet"):
-            st.info("Professional listing sheet created!")
-
-    with col3:
-        if st.button("📱 Share with Client"):
-            st.info("Valuation summary shared with client!")
 
 def render_seller_prep_checklist():
     """Comprehensive seller preparation checklist"""
@@ -5035,6 +4971,21 @@ def render_buyer_journey_hub():
     st.title("🏠 Buyer Journey Hub")
     st.markdown("*Comprehensive buyer experience from search to closing*")
 
+    # Claude's Journey Counsel
+    with st.container(border=True):
+        col_c1, col_c2 = st.columns([1, 8])
+        with col_c1:
+            st.markdown("<div style='font-size: 3rem; text-align: center;'>🗺️</div>", unsafe_allow_html=True)
+        with col_c2:
+            st.markdown("### Claude's Buyer Journey Counsel")
+            st.markdown("""
+            *Monitoring your active buyers in Austin:*
+            - **🧭 Path Finder:** Sarah Johnson has reached the 'Viewing' stage. She's 40% more likely to close if we show her properties in the Avery Ranch district this weekend.
+            - **📉 Value Alert:** 2 listings in the $500k range just had price drops. I've flagged these for your 'Move-up Buyer' segment.
+            """)
+            if st.button("🚀 Alert All Matching Buyers"):
+                st.toast("Syncing price-drop alerts to GHL workflows...", icon="🔔")
+
     # Buyer navigation tabs
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "🔍 Property Search",
@@ -5065,9 +5016,24 @@ def render_buyer_journey_hub():
 
 # Seller Journey Hub Components
 def render_seller_journey_hub():
-    """Render the complete seller journey experience"""
+    """Render the complete seller experience from valuation to closing*"""
     st.title("🏡 Seller Journey Hub")
     st.markdown("*Complete seller experience from valuation to closing*")
+
+    # Claude's Journey Counsel
+    with st.container(border=True):
+        col_s1, col_s2 = st.columns([1, 8])
+        with col_s1:
+            st.markdown("<div style='font-size: 3rem; text-align: center;'>🏠</div>", unsafe_allow_html=True)
+        with col_s2:
+            st.markdown("### Claude's Seller Journey Counsel")
+            st.markdown("""
+            *Inventory optimization for Jorge:*
+            - **💎 Value Maximizer:** Your 'Alta Loma' listing is seeing 2x higher engagement than neighborhood comps. I recommend a 'Coming Soon' email blast to your luxury investor list.
+            - **⏱️ Velocity Check:** Current market days-on-market (DOM) is dropping. We should push for a contract execution within the next 72 hours to maintain momentum.
+            """)
+            if st.button("📊 Draft Market Update for Seller"):
+                st.toast("Claude is drafting a performance report for your seller...", icon="✍️")
 
     # Seller navigation tabs
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -5097,6 +5063,8 @@ def render_seller_journey_hub():
     with tab6:
         render_seller_analytics()
 
+render_claude_assistant()
+
 if selected_hub == "🏢 Executive Command Center":
     render_executive_hub()
 elif selected_hub == "🧠 Lead Intelligence Hub":
@@ -5122,7 +5090,7 @@ st.markdown("""
         🚀 Production-Ready Multi-Tenant AI System
     </div>
     <div style='color: #6B7280; font-size: 0.9rem;'>
-        Built for Jorge Salas | Claude Sonnet 4.5 | GHL Integration Ready
+        Built for Jorge Sales | Claude Sonnet 4.5 | GHL Integration Ready
     </div>
     <div style='margin-top: 1rem; color: #6B7280; font-size: 0.85rem;'>
         Consolidated Hub Architecture | Path B Backend | 522+ Tests Passing

@@ -17,6 +17,7 @@ import json
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.core.rag_engine import RAGEngine
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
+from ghl_real_estate_ai.services.predictive_lead_scorer import PredictiveLeadScorer
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
@@ -34,6 +35,7 @@ class AIResponse:
     extracted_data: Dict[str, Any]
     reasoning: str
     lead_score: int
+    predictive_score: Optional[Dict[str, Any]] = None
 
 
 class ConversationManager:
@@ -44,7 +46,7 @@ class ConversationManager:
     - Context retrieval and storage
     - AI response generation via Claude + RAG
     - Data extraction from conversations
-    - Lead scoring
+    - Lead scoring (Rule-based & Predictive)
     """
 
     def __init__(self):
@@ -61,8 +63,9 @@ class ConversationManager:
             persist_directory=settings.chroma_persist_directory
         )
 
-        # Initialize lead scorer
+        # Initialize lead scorers
         self.lead_scorer = LeadScorer()
+        self.predictive_scorer = PredictiveLeadScorer()
 
         # Persistent memory service
         self.memory_service = MemoryService(storage_type="file")
@@ -144,6 +147,10 @@ class ConversationManager:
         # Update last lead score for analytics tracking
         current_score = self.lead_scorer.calculate(context)
         context["last_lead_score"] = current_score
+
+        # Calculate predictive conversion probability
+        predictive_data = self.predictive_scorer.predict_conversion(context)
+        context["predictive_score"] = predictive_data
 
         # Trim conversation history to max length and summarize if needed
         max_length = settings.max_conversation_history_length
@@ -461,10 +468,12 @@ Example output:
         if lead_score >= 2 and is_buyer:
             matches = self.property_matcher.find_matches(merged_preferences, limit=2)
             if matches:
-                property_recommendations = "I found a couple of properties you might like:\n"
+                property_recommendations = "I found a couple of strategic property matches for you:\n"
                 for prop in matches:
-                    property_recommendations += f"- {self.property_matcher.format_match_for_sms(prop)}\n"
-                property_recommendations += "Should I send you more details on these?"
+                    # Use Phase 2 Agentic Explanation
+                    explanation = await self.property_matcher.agentic_explain_match(prop, merged_preferences)
+                    property_recommendations += f"- {self.property_matcher.format_match_for_sms(prop)}\n  {explanation}\n"
+                property_recommendations += "Should I send you the full listing details for these?"
 
         # 5. Build system prompt with context
         from ghl_real_estate_ai.prompts.system_prompts import build_system_prompt
@@ -554,11 +563,19 @@ Example output:
                 }
             )
 
+            # Calculate predictive score for the response object
+            predictive_score = self.predictive_scorer.predict_conversion({
+                **context,
+                "extracted_preferences": merged_preferences,
+                "last_lead_score": lead_score
+            })
+
             return AIResponse(
                 message=ai_response.content,
                 extracted_data=extracted_data,
                 reasoning=f"Lead score: {lead_score}/100",
-                lead_score=lead_score
+                lead_score=lead_score,
+                predictive_score=predictive_score
             )
 
         except Exception as e:

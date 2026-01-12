@@ -1,5 +1,5 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📦 JORGE SALAS - GHL AI DELIVERY PACKAGE
+📦 JORGE SALES - GHL AI DELIVERY PACKAGE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 👋 START HERE!
@@ -17,7 +17,7 @@ STEP 1: Read this file
 STEP 2: Send the email
 📧 Open: EMAIL_TO_JORGE.txt
 📎 Attach: 4 files (see SEND_INSTRUCTIONS.txt)
-📨 Send to: realtorjorgesalas@gmail.com
+📨 Send to: realtorjorgesales@gmail.com
 
 STEP 3: Wait for Jorge to reply
 ⏰ He can start using it immediately
@@ -74,7 +74,7 @@ See: WHAT_I_NEED_FROM_JORGE.md for details
 
 1. Open EMAIL_TO_JORGE.txt
 2. Copy the text
-3. Create new email to realtorjorgesalas@gmail.com
+3. Create new email to realtorjorgesales@gmail.com
 4. Paste the text
 5. Attach 4 files:
    - JORGE_START_HERE.md

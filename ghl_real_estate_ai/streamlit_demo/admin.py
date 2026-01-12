@@ -19,6 +19,10 @@ from ghl_real_estate_ai.services.tenant_service import TenantService
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.core.rag_engine import RAGEngine
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+
+# Initialize Claude Assistant
+claude = ClaudeAssistant()
 
 # Page config
 st.set_page_config(
@@ -40,6 +44,10 @@ def run_async(coro):
 
 # Sidebar navigation
 page = st.sidebar.selectbox("Navigation", ["Tenant Management", "Knowledge Base", "Analytics"])
+
+# Claude Intelligence Integration
+claude.greet_user("Jorge")
+claude.render_sidebar_panel(f"Admin: {page}", "Global", {})
 
 if page == "Tenant Management":
     st.header("🏢 Tenant Management")

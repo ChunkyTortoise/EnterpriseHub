@@ -5,7 +5,7 @@
     "buildCommand": "pip install -r requirements.txt"
   },
   "deploy": {
-    "startCommand": "streamlit run ghl_real_estate_ai/streamlit_demo/app.py --server.port $PORT --server.address 0.0.0.0",
+    "startCommand": "export PYTHONPATH=$PYTHONPATH:. && streamlit run ghl_real_estate_ai/streamlit_demo/app.py --server.port $PORT --server.address 0.0.0.0",
     "healthcheckPath": "/_stcore/health",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",

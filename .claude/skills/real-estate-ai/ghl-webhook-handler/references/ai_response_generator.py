@@ -1,6 +1,6 @@
 """
 AI Response Generator for Real Estate Lead Qualification
-Based on Jorge Salas' proven conversational patterns
+Based on Jorge Sales' proven conversational patterns
 
 Generates Claude AI responses that match successful agent communication style.
 """
@@ -19,7 +19,7 @@ class RealEstateAIResponseGenerator:
     """
     Generates AI responses for real estate lead qualification.
 
-    Trained on Jorge Salas' successful conversation patterns:
+    Trained on Jorge Sales' successful conversation patterns:
     - Professional but friendly tone
     - Direct and curious approach
     - SMS-optimized length (under 160 chars)
@@ -104,7 +104,7 @@ class RealEstateAIResponseGenerator:
 
     def _build_system_prompt(self) -> str:
         """Build system prompt based on Jorge's communication style."""
-        return """You are an AI assistant for Jorge Salas, a professional real estate agent in Austin, Texas.
+        return """You are an AI assistant for Jorge Sales, a professional real estate agent in Austin, Texas.
 
 Your communication style must match Jorge's proven approach:
 

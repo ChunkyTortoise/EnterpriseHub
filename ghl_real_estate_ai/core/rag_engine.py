@@ -82,10 +82,10 @@ class VectorStore:
         if not metadatas:
             metadatas = [{"source": "unknown"} for _ in texts]
             
-        # Add location_id to all metadatas if provided
-        if location_id:
-            for meta in metadatas:
-                meta["location_id"] = location_id
+        # Add location_id to all metadatas
+        loc = location_id or "global"
+        for meta in metadatas:
+            meta["location_id"] = loc
             
         try:
             # Generate embeddings
@@ -140,22 +140,19 @@ class VectorStore:
 
         try:
             # Build filter metadata
-            where_filter = filter_metadata or {}
+            where_filter = None
             
             # If location_id is provided, we want documents for this location OR global documents
             if location_id:
-                loc_filter = {
-                    "$or": [
-                        {"location_id": {"$eq": location_id}},
-                        {"location_id": {"$eq": "global"}}
-                    ]
+                where_filter = {
+                    "location_id": {"$in": [location_id, "global"]}
                 }
                 
-                if where_filter:
+                if filter_metadata:
                     # Combine with existing filter
-                    where_filter = {"$and": [loc_filter, where_filter]}
-                else:
-                    where_filter = loc_filter
+                    where_filter = {"$and": [where_filter, filter_metadata]}
+            elif filter_metadata:
+                where_filter = filter_metadata
             
             # 1. Semantic Search (Base)
             query_embedding = self.embedding_model.embed_query(query)

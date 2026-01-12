@@ -447,7 +447,7 @@ class GHLAPIClient:
 JORGE_CREDENTIALS = {
     "location_id": "REDACTED_LOCATION_ID",
     "api_key": "your_ghl_api_key_here",
-    "email": "realtorjorgesalas@gmail.com"
+    "email": "realtorjorgesales@gmail.com"
 }
 
 

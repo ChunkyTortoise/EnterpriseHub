@@ -1,7 +1,7 @@
 # 🚂 Railway Deployment Guide - EnterpriseHub for Jorge
 
 **Date**: January 5, 2026  
-**Client**: Jorge Salas (realtorjorgesalas@gmail.com)  
+**Client**: Jorge Sales (realtorjorgesales@gmail.com)  
 **Status**: Ready to Deploy
 
 ---
@@ -263,7 +263,7 @@ Once both services are deployed and tested:
    - Replace `[BACKEND_URL - pending Agent 2]` with actual backend URL
    - Replace `[FRONTEND_URL - pending Agent 3]` with actual frontend URL
 
-2. Send email to: **realtorjorgesalas@gmail.com**
+2. Send email to: **realtorjorgesales@gmail.com**
 
 3. Subject: **🚀 Your EnterpriseHub System is LIVE!**
 

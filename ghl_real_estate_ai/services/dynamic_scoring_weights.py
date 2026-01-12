@@ -845,6 +845,26 @@ class DynamicScoringOrchestrator:
 
         return score_result
 
+    def _convert_context_to_lead_data(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Helper to convert test context format to lead data format"""
+        prefs = context.get('extracted_preferences', {})
+        messages = context.get('conversation_history', [])
+        
+        return {
+            'budget': prefs.get('budget', 0),
+            'location': prefs.get('location', 'Austin, TX'),
+            'timeline': prefs.get('timeline', ''),
+            'intent': prefs.get('motivation', ''),
+            'messages': messages,
+            'email_opens': context.get('email_opens', 0),
+            'avg_response_time': context.get('avg_response_time', 24),
+            'page_views': context.get('page_views', 0),
+            'budget_match': context.get('budget_match', 0.5),
+            'property_matches': context.get('property_matches', 0),
+            'communication_quality': context.get('communication_quality', 0.5),
+            'source': prefs.get('source', 'unknown')
+        }
+
     def _detect_lead_segment(self, lead_data: Dict[str, Any]) -> LeadSegment:
         """Auto-detect lead segment from lead data"""
         # Check for explicit segment indicators

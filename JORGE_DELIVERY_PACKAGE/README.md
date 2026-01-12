@@ -1,4 +1,4 @@
-# 📦 Jorge Salas - GHL AI System Delivery Package
+# 📦 Jorge Sales - GHL AI System Delivery Package
 
 **Date:** January 6, 2026  
 **Status:** ✅ Complete & Ready to Send
@@ -23,7 +23,7 @@
 1. Open `EMAIL_TO_JORGE.txt`
 2. Copy the email content
 3. Attach all 4 .md files
-4. Send to: realtorjorgesalas@gmail.com
+4. Send to: realtorjorgesales@gmail.com
 
 ### Option 2: Zip & Send
 ```bash

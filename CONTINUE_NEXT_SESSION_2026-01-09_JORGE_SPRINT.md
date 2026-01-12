@@ -161,7 +161,7 @@ ghl_real_estate_ai/
 ## 🚨 **CRITICAL CONTEXT**
 
 ### **Jorge Background**
-- **Client**: Jorge Salas, Real Estate Professional
+- **Client**: Jorge Sales, Real Estate Professional
 - **Market**: Austin, TX
 - **Pain Points**: 85+ hours/month on manual qualification, missing hot leads
 - **Timeline**: Demo needs to be ready ASAP
