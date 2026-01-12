@@ -1,6 +1,6 @@
 # 🏗️ GHL Technical Blueprint: Conversion Engine Snapshot
 
-**Goal:** One-click deployment for new Jorge Salas clients.
+**Goal:** One-click deployment for new Jorge Sales clients.
 
 ### 1. Custom Fields (Data Collection)
 Add these fields to your GHL Settings to allow the AI to sync data:

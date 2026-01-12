@@ -110,6 +110,7 @@ try:
     )
     from streamlit_demo.components.ui_elements import render_action_card, render_insight_card
     from streamlit_demo.components.executive_hub import render_executive_hub
+    from streamlit_demo.components.lead_intelligence_hub import render_lead_intelligence_hub
     from streamlit_demo.components.calculators import render_roi_calculator, render_revenue_funnel
     from streamlit_demo.components.claude_panel import render_claude_assistant
     from streamlit_demo.components.swarm_visualizer import render_swarm_visualizer

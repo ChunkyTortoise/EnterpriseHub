@@ -31,7 +31,7 @@ We are set to demonstrate:
 
 🚀 IMMEDIATE ACTION ITEMS
 
-1. **Check the Dashboard:** http://localhost:8502
+1. **Check the Dashboard:** http://localhost:8501
 2. **Review the Handoff Package:** (Attached)
 
 The system is stable, multi-tenant ready, and responding in <2 seconds.

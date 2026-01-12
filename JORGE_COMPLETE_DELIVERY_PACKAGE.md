@@ -9,12 +9,12 @@
 ## 🚀 QUICK START (5 Minutes)
 
 ### Your Dashboard is LIVE Now:
-- **URL:** http://localhost:8502 (running on your machine)
+- **URL:** http://localhost:8501 (running on your machine)
 - **Login:** No login needed - ready to use
 - **Status:** ✅ Connected to Claude AI + GHL Lyrio sub-account
 
 ### First Test (Right Now):
-1. Open http://localhost:8502
+1. Open http://localhost:8501
 2. Click "Lead Intelligence Hub" in sidebar
 3. Add a test contact in GHL with tag "Needs Qualifying"
 4. Watch the AI qualify them automatically
@@ -275,7 +275,7 @@
 ## 🚀 GO LIVE CHECKLIST (DO THIS NOW)
 
 ### **Step 1: Test Lead Qualification (5 min)**
-1. Open http://localhost:8502
+1. Open http://localhost:8501
 2. Go to Lead Intelligence Hub
 3. Create test contact in GHL
 4. Tag with "Needs Qualifying"
@@ -345,7 +345,7 @@
 
 ---
 
-**Dashboard URL:** http://localhost:8502  
+**Dashboard URL:** http://localhost:8501  
 **Status:** ✅ LIVE  
 **Next Step:** Open dashboard and test lead qualification  
 

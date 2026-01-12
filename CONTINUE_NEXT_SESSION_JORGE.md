@@ -9,7 +9,7 @@
 ## CRITICAL ISSUE - DASHBOARD NOT LOADING
 
 ### Current Problem
-Dashboard at http://localhost:8502 has import errors preventing it from loading.
+Dashboard at http://localhost:8501 has import errors preventing it from loading.
 
 **Last Known Errors:**
 - Multiple class name mismatches in service imports
@@ -56,11 +56,11 @@ Dashboard at http://localhost:8502 has import errors preventing it from loading.
 **Test Command:**
 ```bash
 cd ghl_real_estate_ai/streamlit_demo
-python3 -m streamlit run app.py --server.port 8502
+python3 -m streamlit run app.py --server.port 8501
 ```
 
 **Success Criteria:**
-- Dashboard loads at http://localhost:8502
+- Dashboard loads at http://localhost:8501
 - Returns HTTP 200
 - No import errors in console
 - All 5 hubs visible
@@ -194,7 +194,7 @@ Files:
 ### Broken Dashboard
 Location: `ghl_real_estate_ai/streamlit_demo/app.py`
 Issue: Lines 40-82 (import section)
-Port: 8502
+Port: 8501
 Last PID: 37715 (probably stopped due to errors)
 
 ### Configuration
@@ -270,18 +270,18 @@ REALTOR_EMAIL=realtorjorgesales@gmail.com
 ### Start Dashboard
 ```bash
 cd ghl_real_estate_ai/streamlit_demo
-python3 -m streamlit run app.py --server.port 8502 &
+python3 -m streamlit run app.py --server.port 8501 &
 ```
 
 ### Check Dashboard
 ```bash
-curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:8502
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:8501
 ```
 
 ### View Import Errors
 ```bash
 cd ghl_real_estate_ai/streamlit_demo
-python3 -m streamlit run app.py --server.port 8502
+python3 -m streamlit run app.py --server.port 8501
 # Errors will show in console
 ```
 

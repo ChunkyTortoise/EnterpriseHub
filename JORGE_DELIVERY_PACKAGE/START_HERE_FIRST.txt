@@ -44,7 +44,7 @@ TO SEND JORGE:
 
 ✅ WHAT'S ALREADY DONE
 
-✅ Dashboard running (http://localhost:8502)
+✅ Dashboard running (http://localhost:8501)
 ✅ Claude AI connected
 ✅ GHL Lyrio connected
 ✅ All 5 hubs operational

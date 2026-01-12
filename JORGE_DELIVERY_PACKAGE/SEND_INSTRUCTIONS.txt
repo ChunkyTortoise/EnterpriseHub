@@ -63,7 +63,7 @@ AFTER YOU SEND
 
 ✅ System is already running for Jorge
 ✅ He can start using it immediately  
-✅ Dashboard: http://localhost:8502
+✅ Dashboard: http://localhost:8501
 ✅ Be ready to answer questions
 ✅ Optional: Help with cloud deployment (10 min)
 

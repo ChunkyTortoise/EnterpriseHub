@@ -73,19 +73,19 @@ def check_env_file():
 def start_dashboard():
     """Launch the Streamlit dashboard"""
     print("\n🚀 Starting Jorge's AI Dashboard...")
-    print("📊 Dashboard will open at: http://localhost:8502")
+    print("📊 Dashboard will open at: http://localhost:8501")
     print("🔄 Starting in 3 seconds...")
     time.sleep(3)
 
     try:
         # Launch Streamlit
         subprocess.run([sys.executable, "-m", "streamlit", "run", "app.py",
-                       "--server.port", "8502", "--server.headless", "true"])
+                       "--server.port", "8501", "--server.headless", "true"])
     except KeyboardInterrupt:
         print("\n🛑 Dashboard stopped by user")
     except Exception as e:
         print(f"❌ Error starting dashboard: {e}")
-        print("📋 Try running manually: streamlit run app.py --server.port 8502")
+        print("📋 Try running manually: streamlit run app.py --server.port 8501")
 
 def main():
     """Main startup sequence"""

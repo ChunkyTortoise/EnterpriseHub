@@ -1,7 +1,7 @@
 # 🎯 Quick Reference Card - Jorge Sales
 
 ## 🔗 Your Dashboard
-**URL:** http://localhost:8502  
+**URL:** http://localhost:8501  
 **Status:** ✅ Live & Running  
 **Email:** realtorjorgesales@gmail.com
 
@@ -44,7 +44,7 @@
 ```bash
 kill 26772
 cd ghl_real_estate_ai/streamlit_demo
-python3 -m streamlit run app.py --server.port 8502
+python3 -m streamlit run app.py --server.port 8501
 ```
 
 **Need help?**

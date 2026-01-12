@@ -163,7 +163,7 @@ def run_verification():
         print("✅ Jorge's AI system is ready to launch")
         print("\n📋 Next Steps:")
         print("1. Run: python start_dashboard.py")
-        print("2. Open: http://localhost:8502")
+        print("2. Open: http://localhost:8501")
         print("3. Test with a lead in GHL")
         print("4. Deploy to cloud: python deploy_to_railway.py")
     else:

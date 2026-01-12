@@ -22,7 +22,7 @@
 
 ## 📊 THE 5 STRATEGIC HUBS - ARCHITECTURAL OVERVIEW
 
-### 1. 🏢 **Executive Command Center**
+### 1. **🏢 Executive Command Center**
 **Architectural Role:** Centralized Governance & Business Intelligence
 **Proprietary Services:**
 - Multi-location Revenue Aggregation
@@ -34,7 +34,7 @@
 
 ---
 
-### 2. 🧠 **Lead Intelligence Hub**
+### 2. **🧠 Lead Intelligence Hub**
 **Architectural Role:** Proprietary Sentiment Analysis & Behavioral Scoring
 **Proprietary Services:**
 - **Agentic Lead Scorer** - Multi-factor intent analysis (0-100 scale).
@@ -46,7 +46,7 @@
 
 ---
 
-### 3. 🤖 **Automation Studio**
+### 3. **🤖 Automation Studio**
 **Architectural Role:** Autonomous Workflow Orchestration
 **Proprietary Services:**
 - **Agentic Workflow Engine** - Decoupled automation logic.
@@ -58,7 +58,7 @@
 
 ---
 
-### 4. 💰 **Sales Copilot**
+### 4. **💰 Sales Copilot**
 **Architectural Role:** On-Demand Architectural Asset Generation
 **Proprietary Services:**
 - **AI Asset Architect** - Generates high-authority listing descriptions and CMAs.
@@ -70,7 +70,7 @@
 
 ---
 
-### 5. 📈 **Ops & Optimization**
+### 5. **📈 Ops & Optimization**
 **Architectural Role:** Performance Hardening & Technical Governance
 **Proprietary Services:**
 - **Quality Assurance Middleware** - Automated scoring of all AI/Lead interactions.

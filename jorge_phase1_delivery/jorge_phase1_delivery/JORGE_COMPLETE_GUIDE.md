@@ -2,7 +2,7 @@
 
 **Your AI-Powered Real Estate Business System**
 **Status:** ✅ LIVE & OPERATIONAL
-**Dashboard:** http://localhost:8502
+**Dashboard:** http://localhost:8501
 **Owner:** Jorge Sales (realtorjorgesales@gmail.com)
 
 ---
@@ -26,7 +26,7 @@ python start_dashboard.py
 ```
 
 ### Step 2: Test Lead Qualification (3 minutes)
-1. Open browser: **http://localhost:8502**
+1. Open browser: **http://localhost:8501**
 2. Go to your GHL Lyrio sub-account
 3. Create test contact: "John Test" with phone number
 4. Add tag: **"Needs Qualifying"**
@@ -137,7 +137,7 @@ GHL_CALENDAR_ID=your_calendar_id_here
 ## 🎮 YOUR DAILY WORKFLOW
 
 ### **Morning (10 minutes):**
-1. Open: http://localhost:8502
+1. Open: http://localhost:8501
 2. Check Executive Command Center for overnight activity
 3. Review hot leads (80+) in Lead Intelligence Hub
 4. Read AI meeting briefs for today's appointments
@@ -228,7 +228,7 @@ python start_dashboard.py
 
 ## 📞 QUICK REFERENCE
 
-**Dashboard:** http://localhost:8502
+**Dashboard:** http://localhost:8501
 **Trigger Tag:** "Needs Qualifying"
 **Hot Lead Threshold:** Score 80+
 **Startup Command:** `python start_dashboard.py`
@@ -244,7 +244,7 @@ python start_dashboard.py
 - Scale to unlimited locations
 - Potentially resellable asset worth $500-$1000/month per agent
 
-**Your Next Step:** Open http://localhost:8502 and test your first lead!
+**Your Next Step:** Open http://localhost:8501 and test your first lead!
 
 **Welcome to AI-powered real estate success! 🚀🏠**
 
