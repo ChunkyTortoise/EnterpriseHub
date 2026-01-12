@@ -30,7 +30,7 @@ def render_property_swipe():
             "price": "$1,250,000",
             "specs": "3 bed | 3.5 bath | 3,200 sqft",
             "neighborhood": "West Lake Hills",
-            "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800",
+            "image": "https://images.unsplash.com/photo-1600585014340-be6161a56a0c?auto=format&fit=crop&q=80&w=800",
             "ai_tag": "Luxury Pick"
         },
         {

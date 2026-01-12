@@ -335,7 +335,7 @@ services:
     environment:
       - ENVIRONMENT=staging
     ports:
-      - "8502:8501"  # Different port
+      - "8501:8501"  # Different port
 
 # docker-compose.prod.yml
 services:

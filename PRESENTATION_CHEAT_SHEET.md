@@ -1,7 +1,7 @@
 # 🎤 JORGE SALES - PHASE 1 PRESENTATION CHEAT SHEET
 **Date:** Tonight  
 **Goal:** Demonstrate value & get approval for Phase 2  
-**URL:** http://localhost:8502  
+**URL:** http://localhost:8501  
 
 ---
 

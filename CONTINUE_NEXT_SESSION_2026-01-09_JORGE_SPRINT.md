@@ -169,7 +169,7 @@ ghl_real_estate_ai/
 ### **Current Platform Status**
 - **Phase 1**: COMPLETE - 5 hubs, 31 AI services, 522+ tests passing
 - **Integration**: All services working, no "dev module" issues (that was resolved)
-- **Demo**: Running on Streamlit, accessible via port 8502
+- **Demo**: Running on Streamlit, accessible via port 8501
 
 ### **Agent Work Completed**
 - **Agent a7fa7b6**: Phase 2 implementation blueprint

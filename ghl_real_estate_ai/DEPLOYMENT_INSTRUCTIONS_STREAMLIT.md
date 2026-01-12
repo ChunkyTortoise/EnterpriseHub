@@ -39,7 +39,7 @@ streamlit run streamlit_demo/app.py
 
 ### Custom Port
 ```bash
-streamlit run streamlit_demo/app.py --server.port 8502
+streamlit run streamlit_demo/app.py --server.port 8501
 ```
 
 ### Development Mode
@@ -437,7 +437,7 @@ az webapp up --name ghl-streamlit --resource-group ghl-rg
 **Problem:** Port already in use  
 **Solution:**
 ```bash
-streamlit run streamlit_demo/app.py --server.port 8502
+streamlit run streamlit_demo/app.py --server.port 8501
 ```
 
 ### Memory Issues

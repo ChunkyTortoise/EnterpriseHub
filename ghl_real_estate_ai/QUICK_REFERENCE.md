@@ -293,7 +293,7 @@ lsof -i :8501
 pkill -f streamlit
 
 # Restart with different port
-streamlit run streamlit_demo/app.py --server.port 8502
+streamlit run streamlit_demo/app.py --server.port 8501
 ```
 
 ### Database Connection Issues?

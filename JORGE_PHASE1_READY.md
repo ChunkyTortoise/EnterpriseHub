@@ -16,7 +16,7 @@ Phase 1 is **complete, tested, and ready** for Jorge's presentation tonight. All
 
 ### System Status
 ```
-✅ Dashboard:     RUNNING on http://localhost:8502 (PID: 11506)
+✅ Dashboard:     RUNNING on http://localhost:8501 
 ✅ Tests:         21/21 Jorge Requirements PASSING
 ✅ Total Tests:   522+ PASSING
 ✅ Services:      31 AI Services OPERATIONAL
@@ -112,7 +112,7 @@ Phase 1 is **complete, tested, and ready** for Jorge's presentation tonight. All
 ## 📋 PRE-DEMO CHECKLIST (Do This Now)
 
 ### 2 Minutes Before Jorge:
-- [ ] Open browser to http://localhost:8502
+- [ ] Open browser to http://localhost:8501
 - [ ] Open **START_HERE_TONIGHT.md** (your cheat sheet)
 - [ ] Test click through all 5 hubs (verify they load)
 - [ ] Close unnecessary tabs/windows
@@ -161,9 +161,9 @@ Phase 1 is **complete, tested, and ready** for Jorge's presentation tonight. All
 ### If Dashboard Won't Load:
 ```bash
 # Restart (takes 10 seconds):
-kill 11506
+pkill -f "streamlit run app.py"
 cd ghl_real_estate_ai/streamlit_demo
-streamlit run app.py --server.port 8502 &
+streamlit run app.py --server.port 8501 &
 ```
 
 ### If Hub Shows Error:
@@ -176,8 +176,8 @@ streamlit run app.py --server.port 8502 &
 ## ✅ VERIFICATION (All Checked)
 
 ### Technical:
-- [x] Dashboard running (verified at 5:51 PM)
-- [x] Port 8502 accessible
+- [x] Dashboard running (verified)
+- [x] Port 8501 accessible
 - [x] All 5 hubs load without errors
 - [x] Demo data present
 - [x] Tests passing (21/21)

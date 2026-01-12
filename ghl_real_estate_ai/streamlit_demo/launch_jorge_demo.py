@@ -38,7 +38,7 @@ def main():
         # Launch Streamlit with optimal settings for demo
         cmd = [
             "streamlit", "run", app_file,
-            "--server.port", "8502",
+            "--server.port", "8501",
             "--server.headless", "false",
             "--browser.serverAddress", "localhost",
             "--theme.base", "light"

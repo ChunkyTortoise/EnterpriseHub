@@ -125,7 +125,7 @@ python3 -m streamlit run app.py --server.port=8501
 ```bash
 # Use a different port
 cd enterprisehub
-python3 -m streamlit run app.py --server.port=8502
+python3 -m streamlit run app.py --server.port=8501
 ```
 
 ### Want to Stop the Dashboard?

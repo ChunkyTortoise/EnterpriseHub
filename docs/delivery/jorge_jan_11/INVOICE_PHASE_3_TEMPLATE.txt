@@ -3,7 +3,7 @@ INVOICE: GHL Real Estate AI - Phase 3
 =========================================
 Date: January 11, 2026
 Invoice #: GHL-AI-003
-Client: Jorge Salas
+Client: Jorge Sales
 From: Cayman Roden
 
 Project: GHL Real Estate AI Conversion Engine

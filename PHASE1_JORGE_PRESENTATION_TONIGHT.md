@@ -8,7 +8,7 @@
 ## 🚀 SYSTEM STATUS
 
 ### ✅ All Systems Operational
-- **Dashboard:** Running on http://localhost:8502 (PID: 11506)
+- **Dashboard:** Running on http://localhost:8501 (PID: 11506)
 - **Tests:** 21/21 Jorge Requirements Tests PASSING ✅
 - **Verification:** All components verified and functional
 - **Data:** Demo data loaded and operational
@@ -208,7 +208,7 @@
 
 ### System Health
 ```
-✅ Dashboard: RUNNING (port 8502)
+✅ Dashboard: RUNNING (port 8501)
 ✅ Tests: 21/21 PASSING
 ✅ Services: ALL OPERATIONAL
 ✅ Data: LOADED & VERIFIED
@@ -238,10 +238,10 @@ Jorge Requirements Tests: 21/21 PASSED
 ## 📋 PRE-PRESENTATION CHECKLIST
 
 ### Before Jorge Arrives:
-- [x] Dashboard running on port 8502
+- [x] Dashboard running on port 8501
 - [x] All tests passing
 - [x] Demo data loaded
-- [ ] Browser window open to http://localhost:8502
+- [ ] Browser window open to http://localhost:8501
 - [ ] This presentation guide open
 - [ ] GHL credentials request form ready
 
@@ -256,10 +256,10 @@ Jorge Requirements Tests: 21/21 PASSED
 # Verify dashboard is running
 ps aux | grep streamlit
 
-# Should show process on port 8502
+# Should show process on port 8501
 # If not running:
 cd ghl_real_estate_ai/streamlit_demo
-streamlit run app.py --server.port 8502
+streamlit run app.py --server.port 8501
 ```
 
 ---

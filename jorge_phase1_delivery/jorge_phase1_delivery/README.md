@@ -20,11 +20,11 @@ cp .env.example .env
 
 ### 2. Launch Dashboard
 ```bash
-python -m streamlit run app.py --server.port 8502
+python -m streamlit run app.py --server.port 8501
 ```
 
 ### 3. Open & Test
-- Dashboard: http://localhost:8502
+- Dashboard: http://localhost:8501
 - Test lead qualification in GHL Lyrio sub-account
 - Add tag "Needs Qualifying" to any contact
 

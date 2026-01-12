@@ -2,7 +2,7 @@
 
 **Date:** January 6, 2026  
 **Status:** COMPLETE - Dashboard Working, Ready to Send  
-**Dashboard:** http://localhost:8502 (PID: 37715)
+**Dashboard:** http://localhost:8501 (PID: 37715)
 
 ---
 
@@ -11,7 +11,7 @@
 **DO NOT CLOSE THIS TERMINAL OR STOP THE PROCESS**
 
 Dashboard Process ID: 37715  
-URL: http://localhost:8502  
+URL: http://localhost:8501  
 Status: HTTP 200 (Working perfectly)
 
 ---
@@ -65,7 +65,7 @@ Files: 8 (5 for Jorge, 3 for you)
 ### TOMORROW MORNING
 
 **1. Verify Dashboard**
-- Check: http://localhost:8502
+- Check: http://localhost:8501
 - Should show HTTP 200
 - If not running, restart (see commands below)
 
@@ -90,10 +90,10 @@ Restart command:
 ```bash
 kill 37715
 cd ghl_real_estate_ai/streamlit_demo
-python3 -m streamlit run app.py --server.port 8502 &
+python3 -m streamlit run app.py --server.port 8501 &
 ```
 
-Then verify: http://localhost:8502
+Then verify: http://localhost:8501
 
 ### If Imports Fail Again
 
@@ -167,7 +167,7 @@ When Jorge is ready:
 ## System Info
 
 **Dashboard:**
-- URL: http://localhost:8502
+- URL: http://localhost:8501
 - PID: 37715
 - Status: Running
 - HTTP: 200 (Healthy)
@@ -223,7 +223,7 @@ The service files use different class names than expected:
 ### Testing
 Always verify dashboard with:
 ```bash
-curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:8502
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:8501
 ```
 
 Should return: HTTP Status: 200

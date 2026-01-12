@@ -75,6 +75,6 @@ class VisionTagger:
 if __name__ == "__main__":
     # Test with a sample image
     tagger = VisionTagger()
-    sample_url = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+    sample_url = "https://images.unsplash.com/photo-1600585014340-be6161a56a0c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
     tags = tagger.analyze_property_image(sample_url)
     print(f"Sample Tags: {tags}")
