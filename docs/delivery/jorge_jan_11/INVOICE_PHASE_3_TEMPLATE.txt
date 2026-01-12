@@ -1,0 +1,26 @@
+=========================================
+INVOICE: GHL Real Estate AI - Phase 3
+=========================================
+Date: January 11, 2026
+Invoice #: GHL-AI-003
+Client: Jorge Salas
+From: Cayman Roden
+
+Project: GHL Real Estate AI Conversion Engine
+
+DESCRIPTION:
+Phase 3: The Buyer Portal & Mobile Experience
+- Branded, Mobile-First Buyer Portal (no download required)
+- AI Matchmaker Engine (Buyer criteria vs. Seller inventory)
+- Direct GHL Calendar Booking Integration
+- Live Mortgage Calculator & "Partner Share" Links
+
+AMOUNT DUE: $750.00
+DUE DATE: January 14, 2026 (Kickoff)
+
+PAYMENT METHODS:
+- [Your Stripe/PayPal Link Here]
+- [Your Bank Details Here]
+
+Thank you for your business! Let's get these buyers matched.
+=========================================
