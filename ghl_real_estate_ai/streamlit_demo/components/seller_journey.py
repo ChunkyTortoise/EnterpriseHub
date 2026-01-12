@@ -1074,7 +1074,7 @@ def render_transaction_timeline():
 
         metrics = [
             {"metric": "Time to First Offer", "value": "8 days", "benchmark": "< 14 days", "status": "🎯 Excellent"},
-            {"metric": "Offer Quality", "value": "Strong", "benchmark": "At/Above Asking", "status": "✅ Good"},
+            {"metric": "Offer Quality", "value": "Strong", "benchmark": "At/Asking or Above", "status": "✅ Good"},
             {"metric": "Marketing Reach", "value": "2,847 views", "benchmark": "> 1,000", "status": "🚀 Exceeding"},
             {"metric": "Showing Interest", "value": "18 showings", "benchmark": "> 10", "status": "✅ Strong"}
         ]
@@ -1363,3 +1363,51 @@ def render_seller_analytics():
         - Monitor competitor price changes and adjust strategy if needed
         - Current positioning should result in sale within 2-3 weeks at or near asking price
         """)
+
+def render_seller_journey_hub(render_property_valuation_engine, render_seller_prep_checklist, render_marketing_campaign_dashboard, render_seller_communication_portal, render_transaction_timeline, render_seller_analytics):
+    """Render the complete seller experience from valuation to closing*"""
+    st.title("🏡 Seller Journey Hub")
+    st.markdown("*Complete seller experience from valuation to closing*")
+
+    # Claude's Journey Counsel
+    with st.container(border=True):
+        col_s1, col_s2 = st.columns([1, 8])
+        with col_s1:
+            st.markdown("<div style='font-size: 3rem; text-align: center;'>🏠</div>", unsafe_allow_html=True)
+        with col_s2:
+            st.markdown("### Claude's Seller Journey Counsel")
+            st.markdown("""
+            *Inventory optimization for Jorge:*
+            - **💎 Value Maximizer:** Your 'Alta Loma' listing is seeing 2x higher engagement than neighborhood comps. I recommend a 'Coming Soon' email blast to your luxury investor list.
+            - **⏱️ Velocity Check:** Current market days-on-market (DOM) is dropping. We should push for a contract execution within the next 72 hours to maintain momentum.
+            """)
+            if st.button("📊 Draft Market Update for Seller"):
+                st.toast("Claude is drafting a performance report for your seller...", icon="✍️")
+
+    # Seller navigation tabs
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "📊 Property Valuation",
+        "📋 Seller Prep",
+        "📈 Marketing Campaign",
+        "💬 Communication",
+        "📅 Timeline & Offers",
+        "📊 Seller Analytics"
+    ])
+
+    with tab1:
+        render_property_valuation_engine()
+
+    with tab2:
+        render_seller_prep_checklist()
+
+    with tab3:
+        render_marketing_campaign_dashboard()
+
+    with tab4:
+        render_seller_communication_portal()
+
+    with tab5:
+        render_transaction_timeline()
+
+    with tab6:
+        render_seller_analytics()

@@ -283,6 +283,31 @@ def render_executive_dashboard(mock_data: bool = True):
             st.markdown("**Closings**")
             st.plotly_chart(sparkline([0, 1, 0, 2, 1, 0, 3], color="#8B5CF6"), use_container_width=True)
 
+    st.markdown("---")
+    st.markdown("### 🔮 Predictive Revenue Roadmap (Q1 2026)")
+    # Forecast data
+    months = ["Jan", "Feb", "Mar", "Apr"]
+    forecast = [2.4, 3.1, 4.2, 5.5]
+    confidence_upper = [2.5, 3.5, 4.8, 6.2]
+    confidence_lower = [2.3, 2.7, 3.6, 4.8]
+    
+    fig_forecast = go.Figure()
+    fig_forecast.add_trace(go.Scatter(x=months, y=forecast, mode='lines+markers', name='AI Projection', line=dict(color='#006AFF', width=4)))
+    fig_forecast.add_trace(go.Scatter(x=months, y=confidence_upper, mode='lines', line=dict(width=0), showlegend=False))
+    fig_forecast.add_trace(go.Scatter(x=months, y=confidence_lower, mode='lines', fill='tonexty', fillcolor='rgba(0, 106, 255, 0.1)', line=dict(width=0), name='Confidence Band'))
+    
+    fig_forecast.update_layout(
+        height=300,
+        margin=dict(l=0, r=0, t=20, b=0),
+        xaxis_title="Timeline",
+        yaxis_title="Pipeline Value ($M)",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        legend=dict(x=0.01, y=0.99)
+    )
+    st.plotly_chart(fig_forecast, use_container_width=True)
+    st.caption("Revenue projections based on current lead velocity and AI-driven conversion optimization.")
+
     with col_bottom_right:
         # Activity Feed
         st.markdown("### 📱 Recent Activity")
