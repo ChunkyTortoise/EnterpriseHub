@@ -28,8 +28,11 @@ st.set_page_config(
 telemetry = TelemetryService()
 state_mgr = DemoStateManager()
 matcher = PropertyMatcher()
+ghl_client = GHLAPIClient()
 
 # Mock Lead ID for Demo (In production, this is from the URL slug)
+# For demo purposes, we mapping michael_scott_789 to a real GHL contact if available
+contact_id = st.query_params.get("contact_id", "REDACTED_CONTACT_ID")
 lead_id = st.query_params.get("id", "michael_scott_789")
 lead_name = lead_id.split("_")[0].capitalize()
 
@@ -102,10 +105,27 @@ with st.expander("🛠️ Architectural Search Criteria"):
     location = st.text_input("Geography", "Austin, TX")
     
     if st.button("Synchronize with Lyrio Core", use_container_width=True):
-        # Telemetry
+        # 1. Telemetry
         telemetry.record_interaction(lead_id, "update_criteria", {"budget": budget, "beds": beds, "location": location})
-        st.success("Preferences Hardened & Synced to GHL!")
-        st.balloons()
+        
+        # 2. Bi-Directional GHL Sync (Phase 3)
+        try:
+            # Update GHL Custom Fields
+            # Note: In production, these field IDs would come from settings
+            ghl_client.update_custom_field(contact_id, "budget", budget)
+            ghl_client.update_custom_field(contact_id, "preferred_location", location)
+            
+            # Add 'Architectural Update' Tag
+            ghl_client.add_tag_to_contact(contact_id, "Portal-Activity")
+            ghl_client.add_tag_to_contact(contact_id, "Strategic-Update")
+            
+            st.success("Preferences Hardened & Synced to GHL!")
+            st.balloons()
+        except Exception as e:
+            # Fallback for demo mode
+            st.warning("Ecosystem Sync: Simulation Mode Active (Local Only)")
+            st.info("In production, this would update GHL Custom Fields via API.")
+            st.balloons()
 
 # Property Feed Logic
 st.markdown("#### 💎 Priority Matches")
