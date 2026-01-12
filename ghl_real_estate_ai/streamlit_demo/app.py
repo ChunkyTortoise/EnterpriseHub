@@ -97,6 +97,11 @@ try:
         CHURN_PREDICTION_ENGINE_AVAILABLE = False
     from streamlit_demo.components.churn_early_warning_dashboard import ChurnEarlyWarningDashboard
     from streamlit_demo.components.property_valuation import render_property_valuation_engine
+    from streamlit_demo.components.financing_calculator import render_financing_calculator
+    from streamlit_demo.components.neighborhood_intelligence import render_neighborhood_explorer
+    from streamlit_demo.components.buyer_journey import render_buyer_dashboard, render_buyer_analytics
+    from streamlit_demo.components.swarm_visualizer import render_swarm_visualizer
+    from streamlit_demo.components.seller_journey import render_seller_prep_checklist, render_marketing_campaign_dashboard, render_seller_communication_portal, render_transaction_timeline, render_seller_analytics
     from realtime_dashboard_integration import render_realtime_intelligence_dashboard
 
     SERVICES_LOADED = True
@@ -391,6 +396,70 @@ services = get_services(market=market_key)
 def get_lead_options(market_key):
     return {
         "-- Select a Lead --": None,
+        "Sarah Chen (Apple Engineer)": {
+            "lead_id": "tech_professional_sarah",
+            "extracted_preferences": {
+                "budget": 550000,
+                "location": "North Austin / Round Rock",
+                "timeline": "URGENT - 45 days",
+                "bedrooms": 3,
+                "bathrooms": 2,
+                "must_haves": ["Home office", "High-speed internet"],
+                "financing": "Pre-approved",
+                "motivation": "Relocating for Apple expansion",
+                "home_condition": "Modern / Move-in Ready",
+                "property_type": "Single Family Home"
+            },
+            "overall_score": 92,
+            "actions_completed": 4
+        },
+        "Mike & Jessica Rodriguez (Growing Family)": {
+            "lead_id": "growing_family_mike",
+            "extracted_preferences": {
+                "budget": 380000,
+                "location": "Pflugerville / Manor",
+                "timeline": "3-4 months",
+                "bedrooms": 3,
+                "bathrooms": 2,
+                "must_haves": ["Fenced yard", "Safe neighborhood"],
+                "financing": "Needs lender referral",
+                "motivation": "Outgrowing current apartment",
+                "home_condition": "Any",
+                "property_type": "Single Family Home"
+            },
+            "overall_score": 78,
+            "actions_completed": 2
+        },
+        "David Kim (Investor)": {
+            "lead_id": "investor_david",
+            "extracted_preferences": {
+                "budget": 350000,
+                "location": "Manor / Del Valle",
+                "timeline": "Immediate",
+                "must_haves": ["Positive cash flow", "Rental potential"],
+                "financing": "Cash Buyer",
+                "motivation": "Expanding Austin portfolio",
+                "property_type": "Single Family or Duplex"
+            },
+            "overall_score": 95,
+            "actions_completed": 5
+        },
+        "Robert & Linda Williams (Luxury Downsizer)": {
+            "lead_id": "luxury_downsizer_robert",
+            "extracted_preferences": {
+                "budget": 1200000,
+                "location": "Downtown / Clarksville",
+                "timeline": "Flexible",
+                "bedrooms": 2,
+                "bathrooms": 2.5,
+                "must_haves": ["Luxury finishes", "Walkable"],
+                "financing": "High equity / Cash",
+                "motivation": "Empty nesters downsizing from Steiner Ranch",
+                "property_type": "Luxury Condo / Townhome"
+            },
+            "overall_score": 88,
+            "actions_completed": 3
+        },
         "Sarah Johnson": {
             "extracted_preferences": {
                 "budget": 1300000 if market_key == "Rancho" else 800000,
@@ -398,7 +467,7 @@ def get_lead_options(market_key):
                 "timeline": "ASAP",
                 "bedrooms": 4,
                 "bathrooms": 3,
-                "must_haves": "Pool",
+                "must_haves": ["Pool"],
                 "financing": "Pre-approved",
                 "motivation": "Relocating for work",
                 "home_condition": "Excellent",
@@ -455,6 +524,26 @@ def render_action_card(title, description, icon, key_suffix=""):
 def get_meeting_briefing(lead_name):
     # Simulated briefing synthesis based on extracted preferences
     briefings = {
+        "Sarah Chen (Apple Engineer)": {
+            "hook": "Relocating from SF for Apple. Very urgent 45-day timeline.",
+            "objection": "Concerned about Austin market knowledge and internet reliability for remote work.",
+            "closer": "Round Rock has the tech community she wants. Under her $550k SF-adjusted budget."
+        },
+        "Mike & Jessica Rodriguez (Growing Family)": {
+            "hook": "First-time buyers outgrowing an apartment. Jessica works at Dell Seton.",
+            "objection": "Tight $380k budget for 3BR. Nervous about the buying process.",
+            "closer": "Pflugerville offers the safety and yard they need within their reach."
+        },
+        "David Kim (Investor)": {
+            "hook": "Seasoned Dallas investor expanding to Austin. 100% Cash buyer.",
+            "objection": "Only interested in properties with >$200/mo positive cash flow.",
+            "closer": "Manor/Del Valle hotspots provide the cap rates he requires. Show him off-market deals."
+        },
+        "Robert & Linda Williams (Luxury Downsizer)": {
+            "hook": "Empty nesters downsizing from 4,500sqft Steiner Ranch home.",
+            "objection": "Want to ensure they don't lose luxury amenities when moving to a condo.",
+            "closer": "Downtown 'Lock-and-leave' lifestyle allows them to travel. Highlight concierge services."
+        },
         "Sarah Johnson": {
             "hook": "Wants to move by March for school start. Focused on the Avery Ranch school district.",
             "objection": "Concerned about Austin property tax spikes and recent HOA changes in the area.",
@@ -569,8 +658,8 @@ st.markdown(f"""
 # Enhanced premium branding header with animations
 header_gradient = "linear-gradient(135deg, #006AFF 0%, #0047AB 100%)"
 header_icon = "🏠"
-header_title = "GHL Real Estate AI"
-header_subtitle = "Enterprise Command Center"
+header_title = "Lyrio.io AI Ecosystem"
+header_subtitle = "Enterprise Architectural Command Center"
 header_glow = "0 20px 40px rgba(0, 106, 255, 0.3)"
 
 # Dynamic Theme Logic
@@ -615,7 +704,7 @@ st.markdown(f"""
             </div>
         </div>
         <p style='margin: 1.5rem 0; font-size: 1.05rem; opacity: 0.9; max-width: 800px; color: white !important;'>
-            Professional AI-powered lead qualification and automation system for <strong>Jorge Sales</strong>
+            Proprietary AI-powered lead intelligence and autonomous workflow environment for <strong>Jorge Sales</strong>
         </p>
         <div style='margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;'>
             <div style='background: rgba(255,255,255,0.25); 
@@ -700,6 +789,7 @@ with st.sidebar:
     hub_options = [
         "🏢 Executive Command Center",
         "🧠 Lead Intelligence Hub",
+        "🐝 Swarm Intelligence",
         "⚡ Real-Time Intelligence",
         "🏠 Buyer Journey Hub",
         "🏡 Seller Journey Hub",
@@ -722,6 +812,62 @@ with st.sidebar:
     )
     
     st.session_state.current_hub = selected_hub
+    
+    # NEW: Global AI Pulse Indicator
+    st.markdown(f"""
+    <div style="
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: rgba(37, 99, 235, 0.1);
+        border-radius: 8px;
+        margin-top: 1rem;
+        border: 1px solid rgba(37, 99, 235, 0.2);
+    ">
+        <div class="live-indicator" style="width: 10px; height: 10px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981;"></div>
+        <div style="font-size: 0.8rem; color: #1e293b; font-weight: 600;">
+            Swarm Status: <span style="color: #10b981;">ACTIVE</span>
+        </div>
+        <div style="font-size: 0.7rem; color: #64748b; margin-left: auto;">
+            v4.2.0
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # NEW: Claude's Strategic Counsel (Contextual)
+    counsel_messages = {
+        "🏢 Executive Command Center": "Jorge, lead velocity is up 12% this week. Focus on the Downtown cluster for maximum ROI.",
+        "🧠 Lead Intelligence Hub": "Sarah Martinez is showing high engagement with luxury properties. Suggest a showing today.",
+        "🐝 Swarm Intelligence": "The analyst swarm is currently processing 142 leads. Token efficiency is at an all-time high.",
+        "⚡ Real-Time Intelligence": "Market conditions are shifting in East Austin. Update your valuation models.",
+        "🏠 Buyer Journey Hub": "We have 3 buyers ready for pre-approval. Syncing with financing partners now.",
+        "🏡 Seller Journey Hub": "The Maple Ave listing is hitting peak interest. I recommend an open house this Sunday.",
+        "🤖 Automation Studio": "3 new workflow templates are ready for deployment. Your time savings is currently 42h/week.",
+        "💰 Sales Copilot": "Preparing talking points for your 2pm call. Client prefers a direct, data-driven approach.",
+        "📈 Ops & Optimization": "System health is optimal. Recommend scaling to the Miami market next month."
+    }
+    
+    current_msg = counsel_messages.get(selected_hub, "AI Swarm is standing by for your next command.")
+    
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 15px;
+        border-radius: 12px;
+        border-left: 4px solid #8B5CF6;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    ">
+        <div style="font-size: 0.75rem; color: #8B5CF6; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">
+            🤖 Claude's Counsel
+        </div>
+        <div style="font-size: 0.85rem; color: #1e293b; font-style: italic; line-height: 1.4;">
+            "{current_msg}"
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -916,14 +1062,14 @@ def render_executive_hub():
             st.metric("Total Pipeline", "$2.4M", "+15%")
             st.plotly_chart(sparkline([1.8, 2.1, 1.9, 2.4, 2.2, 2.4], color="#2563eb", height=50), use_container_width=True, config={'displayModeBar': False})
         with col2:
-            st.metric("Hot Leads", "23", "+8")
-            st.plotly_chart(sparkline([10, 15, 12, 25, 30, 23], color="#16a34a", height=50), use_container_width=True, config={'displayModeBar': False})
+            st.metric("Commission Capture", "$136.7K", "+$42K")
+            st.plotly_chart(sparkline([80, 95, 110, 105, 120, 136], color="#16a34a", height=50), use_container_width=True, config={'displayModeBar': False})
         with col3:
             st.metric("Conversion Rate", "34%", "+2%")
             st.plotly_chart(sparkline([28, 30, 31, 32, 33, 34], color="#ea580c", height=50), use_container_width=True, config={'displayModeBar': False})
         with col4:
-            st.metric("Avg Deal Size", "$385K", "+$12K")
-            st.plotly_chart(sparkline([350, 360, 370, 375, 380, 385], color="#7c3aed", height=50), use_container_width=True, config={'displayModeBar': False})
+            st.metric("AI Lead Velocity", "4.2/day", "+1.1")
+            st.plotly_chart(sparkline([2.1, 2.5, 3.0, 3.8, 4.0, 4.2], color="#7c3aed", height=50), use_container_width=True, config={'displayModeBar': False})
         
         st.markdown("---")
         
@@ -1161,7 +1307,15 @@ def render_lead_intelligence_hub():
             # Claude's Behavioral Deep Dive
             with st.container(border=True):
                 st.markdown(f"**🤖 Claude's Behavioral Insight: {selected_lead_name}**")
-                if selected_lead_name == "Sarah Johnson":
+                if selected_lead_name == "Sarah Chen (Apple Engineer)":
+                    insight_text = "High-velocity lead. Apple engineers are data-driven; she responded to the 'Market Trend' link within 12 seconds. She's prioritizing commute efficiency over sqft. Focus on: Teravista connectivity."
+                elif selected_lead_name == "Mike & Jessica Rodriguez (Growing Family)":
+                    insight_text = "High-sentiment, low-confidence lead. They are checking 'First-time buyer' articles daily. Sentiment: 88% Positive but cautious. Focus on: Safety metrics and monthly payment breakdown."
+                elif selected_lead_name == "David Kim (Investor)":
+                    insight_text = "Analytical veteran. He's ignored the 'Lifestyle' highlights and went straight to the 'Cap Rate' tool. He has 3 tabs open on Manor area comps. Focus on: Off-market yield analysis."
+                elif selected_lead_name == "Robert & Linda Williams (Luxury Downsizer)":
+                    insight_text = "Relationship-focused. They've spent 4 minutes reading Jorge's 'About Me'. Sentiment: 95% Positive. They value trust over automation. Focus on: Personal concierge and exclusive downtown access."
+                elif selected_lead_name == "Sarah Johnson":
                     insight_text = "Highly motivated. She responded within 45 seconds to my last text. Sentiment: 92% Positive. Focus on: School District accuracy."
                 elif selected_lead_name == "Mike Chen":
                     insight_text = "Cautious. He's asking about 'Value per SqFt' comparison. Sentiment: Neutral. Focus on: Investment ROI data."
@@ -1368,103 +1522,103 @@ def render_lead_intelligence_hub():
             st.info("Property Matcher coming in Phase 2")
 
     with tab4:
-        st.subheader("🌐 Self-Service Buyer Portal")
-        st.markdown("*Phase 3: Give leads their own dashboard to update criteria*")
+        st.subheader("🌐 Self-Service Buyer Portal (Phase 3)")
+        st.markdown("*Real-time behavioral telemetry from the proprietary portal environment*")
         
         # Get current preferences for the selected lead
         if selected_lead_name != "-- Select a Lead --":
-            current_prefs = lead_options[selected_lead_name].get("extracted_preferences", {})
+            current_prefs = st.session_state.lead_options[selected_lead_name].get("extracted_preferences", {})
+            lead_key = selected_lead_name.lower().replace(" ", "_")
         else:
             current_prefs = {}
+            lead_key = "demo_lead"
         
-        portal_url = f"/portal?lead={selected_lead_name.lower().replace(' ', '-')}"
-        st.info(f"Unique URL: `https://portal.jorgesalas.ai/l/{selected_lead_name.lower().replace(' ', '-')}`")
+        portal_url = f"/portal?id={lead_key}"
+        st.info(f"Unique Architectural URL: `https://portal.lyrio.io/l/{lead_key}`")
         
-        st.markdown(f"""
-        <div style='background: white; padding: 2rem; border-radius: 15px; border: 1px solid #006AFF; text-align: center; margin-bottom: 2rem;'>
-            <h2 style='color: #006AFF; margin-top: 0;'>🚀 Live Portal Ready</h2>
-            <p>The standalone buyer portal is now active for this lead.</p>
-            <a href='{portal_url}' target='_blank' style='background-color: #006AFF; color: white; padding: 0.75rem 2rem; text-decoration: none; border-radius: 10px; font-weight: 700;'>Open Live Portal</a>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Preview of the portal
-        st.markdown("#### 📱 Portal Preview")
+        col_portal_left, col_portal_right = st.columns([1, 1])
         
-        # Center the mobile mockup
-        _, center_col, _ = st.columns([1, 1.5, 1])
-        
-        with center_col:
-            st.markdown("""
-            <div class='phone-mockup'>
-                <div class='phone-header'></div>
-                <div style='background: #f0f2f6; padding: 10px; text-align: center; border-bottom: 1px solid #ddd; font-size: 0.65rem; color: #666;'>
-                    🔒 portal.jorgesalas.ai
+        with col_portal_left:
+            st.markdown(f"""
+            <div style='background: white; padding: 1.5rem; border-radius: 15px; border: 1px solid #006AFF; text-align: center;'>
+                <h3 style='color: #006AFF; margin-top: 0;'>🚀 Live Portal Status</h3>
+                <p style='font-size: 0.9rem;'>The standalone architectural portal is active for <b>{selected_lead_name}</b>.</p>
+                <div style='background: #F0F7FF; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;'>
+                    <span style='font-size: 0.8rem; color: #64748B;'>PORTAL INTENT SCORE</span><br/>
+                    <span style='font-size: 2rem; font-weight: 800; color: #006AFF;'>{services.get("telemetry", telemetry).get_intent_score(lead_key)}/100</span>
                 </div>
-                <div style='padding: 15px;'>
+                <a href='{portal_url}' target='_blank' style='display: inline-block; background-color: #006AFF; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 10px; font-weight: 700; width: 100%;'>View as Lead</a>
+            </div>
             """, unsafe_allow_html=True)
             
-            st.markdown(f"<h3 style='text-align: center; margin-top: 0.5rem; font-size: 1.2rem;'>Hey {selected_lead_name}! 👋</h3>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align: center; font-size: 0.8rem; opacity: 0.8;'>I've filtered the best homes for you.</p>", unsafe_allow_html=True)
-            
-            # Callback for budget change notification with cross-tab sync
-            def notify_budget_change():
-                new_budget = st.session_state.portal_slider_preview
-                
-                # Cross-tab sync: Update live feed
-                try:
-                    fs = LiveFeedService()
-                    fs.add_activity("lead", selected_lead_name, f"Updated budget to ${new_budget:,}")
-                except:
-                    pass
-                
-                # Cross-tab sync: Update session state for other tabs
-                if 'lead_activities' not in st.session_state:
-                    st.session_state.lead_activities = []
-                
-                st.session_state.lead_activities.append({
-                    "timestamp": datetime.datetime.now(),
-                    "lead": selected_lead_name,
-                    "action": "Budget Update",
-                    "details": f"${new_budget:,}",
-                    "source": "Buyer Portal"
-                })
-                
-                st.toast(f"🚀 {selected_lead_name} updated budget to ${new_budget:,}!", icon="💰")
+            st.markdown("#### 📱 Portal Interface Preview")
+            st.image("https://via.placeholder.com/400x600?text=Portal+Mobile+Mockup", width=300)
 
-            st.slider("Max Budget", 500000, 2000000, current_prefs.get('budget', 1000000), step=50000, key="portal_slider_preview", on_change=notify_budget_change)
+        with col_portal_right:
+            st.markdown("#### 📡 Real-Time Telemetry Feed")
+            
+            history = services.get("telemetry", telemetry).get_lead_history(lead_key)
+            
+            if not history:
+                st.info("No portal interactions recorded for this lead yet.")
+                # Add some demo history if empty
+                if st.button("Simulate Portal Activity"):
+                    telemetry.record_interaction(lead_key, "view", {"prop_id": "prop_001"})
+                    telemetry.record_interaction(lead_key, "save", {"prop_id": "prop_002"})
+                    st.rerun()
+            else:
+                for event in reversed(history[-10:]):
+                    icon = "👀" if event["action"] == "view" else "💾" if event["action"] == "save" else "⚙️"
+                    dt = datetime.datetime.fromisoformat(event["timestamp"])
+                    time_str = dt.strftime("%H:%M:%S")
+                    
+                    st.markdown(f"""
+                    <div style='background: #f8fafc; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #3b82f6;'>
+                        <div style='display: flex; justify-content: space-between;'>
+                            <span>{icon} <b>{event['action'].upper()}</b></span>
+                            <span style='font-size: 0.7rem; color: #64748b;'>{time_str}</span>
+                        </div>
+                        <div style='font-size: 0.8rem; color: #475569;'>
+                            Metadata: {json.dumps(event['metadata'])}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            st.markdown("#### 🔄 Bi-Directional Sync Status")
+            st.success("✅ Portal preferences automatically synced to GHL Custom Fields")
+            st.success("✅ Intent Score Escalation trigger active")
+    
+    with tab5:
+        # PREMIUM FEATURE: Elite Segmentation & Actionable Intelligence
+        try:
+            from components.elite_refinements import render_elite_segmentation_tab, render_actionable_heatmap
+            
+            # 1. Professional Segment Cards
+            render_elite_segmentation_tab()
             
             st.markdown("---")
             
-            portal_matches = services["property_matcher"].find_matches({"budget": current_prefs.get('budget', 1000000), "location": current_prefs.get('location')}, limit=1)
-            for pm in portal_matches:
-                pm_title = pm.get('title') or f"{pm.get('bedrooms', 0)}BR {pm.get('property_type', 'Home')} in {pm.get('address', {}).get('neighborhood', 'Area')}"
-                pm_price = pm.get('price', 0)
-                pm_beds = pm.get('bedrooms', '?')
-                pm_baths = pm.get('bathrooms', '?')
-                pm_neighborhood = pm.get('address', {}).get('neighborhood', 'Unknown')
-                
-                st.markdown(f"""
-                <div style='background: white; padding: 0.75rem; border-radius: 10px; border: 1px solid #eee; margin-bottom: 1rem; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.05);'>
-                    <div style='font-weight: 700; color: #006AFF; font-size: 0.9rem;'>${pm_price:,}</div>
-                    <div style='font-size: 0.75rem; font-weight: 600;'>{pm_title}</div>
-                    <div style='font-size: 0.65rem; color: #666;'>{pm_beds} BR | {pm_baths} BA | {pm_neighborhood}</div>
-                </div>
-                """, unsafe_allow_html=True)
+            # 2. Actionable Activity Heatmap
+            # Generate mock temporal data for Jorge demo
+            import numpy as np
+            days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            heatmap_rows = []
+            for day in days:
+                for hour in range(24):
+                    # Higher activity during business hours and specific evenings
+                    base = 5
+                    if 9 <= hour <= 11 or 14 <= hour <= 16: base = 25
+                    if day in ['Tuesday', 'Thursday'] and 18 <= hour <= 20: base = 40
+                    activity = base + np.random.randint(0, 10)
+                    heatmap_rows.append({'day': day, 'hour': hour, 'activity_count': activity})
             
-            st.button("Update My Search", width="stretch", key="portal_btn_preview")
-            
-            st.markdown("</div></div>", unsafe_allow_html=True)
-    
-    with tab5:
-        # Use Elite Segmentation View with fixed HTML rendering
-        try:
-            from components.elite_refinements import render_elite_segmentation_tab
-            render_elite_segmentation_tab()
+            df_heatmap = pd.DataFrame(heatmap_rows)
+            render_actionable_heatmap(df_heatmap)
+
         except ImportError:
-            # Fallback to legacy implementation
             st.subheader("Smart Segmentation")
-            st.markdown("*AI-powered lead clustering with activity heatmaps*")
+            st.info("🚀 Elite Segmentation & Heatmaps available in premium version")
             
             # Prepare lead data from mock_data
             leads_for_segmentation = []
@@ -1628,7 +1782,8 @@ def render_lead_intelligence_hub():
                 st.button(f"View {rec['property_id']}", key=f"btn_{rec['property_id']}")
 
     with tab7:
-        st.subheader("Predictive Scoring")
+        st.subheader("🔮 Predictive Lead Intelligence")
+        st.markdown("*Advanced behavioral forecasting using Phase 2 Middleware*")
         
         # Sync Lead Selection with global state
         pred_lead_names = list(st.session_state.lead_options.keys())
@@ -1638,40 +1793,38 @@ def render_lead_intelligence_hub():
             default_pred_idx = 0
 
         selected_lead_pred = st.selectbox(
-            "Select Lead for Prediction:", 
+            "Select Lead for Behavioral Prediction:", 
             pred_lead_names, 
             index=default_pred_idx,
             key="pred_lead_selector",
             on_change=lambda: st.session_state.update({"selected_lead_name": st.session_state.pred_lead_selector})
         )
         
-        # Mock lead data for prediction
-        lead_data_pred = {
-            "id": "lead_123",
-            "email_opens": 8,
-            "email_clicks": 5,
-            "emails_sent": 10,
-            "response_times": [2.5, 1.8, 3.2],
-            "page_views": 12,
-            "budget": 500000,
-            "viewed_property_prices": [480000, 520000, 495000],
-            "timeline": "soon",
-            "property_matches": 7,
-            "messages": [{"content": "I'm interested in properties in downtown."}],
-            "source": "organic"
-        }
+        # Get actual lead context
+        lead_context = st.session_state.lead_options[selected_lead_pred]
         
-        pred_result = services["predictive_scorer"].score_lead("lead_123", lead_data_pred)
+        # Use Phase 2 Predictive Scorer
+        # Mock some history if not present for the demo wow factor
+        if not lead_context.get("conversation_history"):
+            lead_context["conversation_history"] = [
+                {"role": "user", "content": "I'm interested in buying", "timestamp": (datetime.datetime.now() - datetime.timedelta(hours=2)).isoformat()},
+                {"role": "assistant", "content": "Great, what is your budget?", "timestamp": (datetime.datetime.now() - datetime.timedelta(hours=1, minutes=55)).isoformat()},
+                {"role": "user", "content": f"My budget is around ${lead_context['extracted_preferences'].get('budget', 500000)}", "timestamp": (datetime.datetime.now() - datetime.timedelta(hours=1, minutes=54)).isoformat()}
+            ]
+        
+        pred_result_dict = services["predictive_scorer"].predict_conversion(lead_context)
         
         col_gauge, col_factors = st.columns([1, 1])
+        
+        prob = pred_result_dict["conversion_probability"]
         
         with col_gauge:
             # Conversion Probability Gauge
             fig_gauge = go.Figure(go.Indicator(
                 mode = "gauge+number",
-                value = pred_result.score,
+                value = prob,
                 domain = {'x': [0, 1], 'y': [0, 1]},
-                title = {'text': "Conversion Chance", 'font': {'size': 18, 'color': '#1e293b'}},
+                title = {'text': "Conversion Probability", 'font': {'size': 18, 'color': '#1e293b'}},
                 number = {'suffix': "%", 'font': {'size': 40, 'color': '#2563eb', 'weight': 'bold'}},
                 gauge = {
                     'axis': {'range': [None, 100], 'tickwidth': 1},
@@ -1693,17 +1846,16 @@ def render_lead_intelligence_hub():
             
             st.markdown(f"""
             <div style='text-align: center; margin-top: -20px;'>
-                <span class='badge' style='background: #f1f5f9; color: #475569;'>Tier: {pred_result.tier.upper()}</span>
-                <span class='badge' style='background: #f1f5f9; color: #475569; margin-left: 10px;'>Confidence: {pred_result.confidence*100:.0f}%</span>
+                <span class='badge' style='background: #f1f5f9; color: #475569;'>Confidence: {pred_result_dict['confidence'].upper()}</span>
+                <span class='badge' style='background: #f1f5f9; color: #475569; margin-left: 10px;'>Trajectory: {pred_result_dict['trajectory'].upper()}</span>
             </div>
             """, unsafe_allow_html=True)
         
         with col_factors:
             # Conversion Timeline Forecast
-            st.markdown("#### ⏱️ Conversion Timeline")
+            st.markdown("#### ⏱️ Predicted Velocity")
             
-            prob = pred_result.score
-            estimated_days = 45 if prob > 70 else 90 if prob > 40 else 120
+            estimated_days = 14 if prob > 80 else 30 if prob > 60 else 60 if prob > 40 else 90
             
             st.markdown(f"""
             <div style='background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
@@ -1714,172 +1866,43 @@ def render_lead_intelligence_hub():
             </div>
             """, unsafe_allow_html=True)
             
-            # Best contact time recommendations
-            # Enhanced Best Time to Contact with Urgency Badges
-            from components.contact_timing import render_contact_timing_badges
-            
-            best_times = [
-                {"day": "Tomorrow", "time": "2:00 PM - 4:00 PM", "urgency": "high", "probability": 87, "icon": "🔥"},
-                {"day": "Friday", "time": "10:00 AM - 12:00 PM", "urgency": "medium", "probability": 68, "icon": "⭐"}
-            ]
-            
-            render_contact_timing_badges(best_times)
+            st.info(f"**Similar Lead Pattern:** {pred_result_dict['similar_leads_converted']}")
         
         st.markdown("---")
-        st.markdown("#### 🔍 Contributing Factors")
+        st.markdown("#### 🧠 AI Reasoning & Behavioral Signals")
         
-        col_factors_left, col_factors_right = st.columns(2)
+        for reason in pred_result_dict["reasoning"]:
+            st.markdown(f"- {reason}")
+            
+        st.markdown("---")
+        st.markdown("#### 🔍 Feature Analysis")
         
-        with col_factors_left:
-            for factor in pred_result.factors[:len(pred_result.factors)//2]:
-                sentiment_color = "#10b981" if factor["sentiment"] == "positive" else "#f59e0b"
-                sentiment_icon = "📈" if factor["sentiment"] == "positive" else "⚠️"
-                
-                # Generate tooltip content based on factor name
-                tooltip_map = {
-                    "Response Time": "Avg response: 2.5 minutes to initial contact",
-                    "Engagement Score": "5 interactions in past 7 days",
-                    "Budget Alignment": "Property matches within 95% of stated budget",
-                    "Location Preference": "3 of 5 showings in target neighborhood"
-                }
-                tooltip = tooltip_map.get(factor['name'], f"Data-driven insight based on {factor['name'].lower()}")
-                
-                st.markdown(f"""
-                <div style='margin-bottom: 1rem; position: relative;' class='factor-bar' title='{tooltip}'>
-                    <div style='display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;'>
-                        <span>{sentiment_icon} <b>{factor['name']}</b></span>
-                        <span style='color: {sentiment_color}; font-weight: bold;'>{factor['impact']}% Impact</span>
-                    </div>
-                    <div style='background: #f1f5f9; height: 8px; border-radius: 4px; overflow: hidden; cursor: pointer;'>
-                        <div style='background: {sentiment_color}; width: {abs(factor['impact'])}%; height: 100%; transition: all 0.3s ease;'></div>
-                    </div>
-                    <div style='font-size: 0.75rem; color: #64748b; margin-top: 2px;'>{factor['value']}</div>
-                </div>
-                """, unsafe_allow_html=True)
+        f_cols = st.columns(3)
+        features = pred_result_dict["features"]
+        f_list = list(features.items())
         
-        with col_factors_right:
-            for factor in pred_result.factors[len(pred_result.factors)//2:]:
-                sentiment_color = "#10b981" if factor["sentiment"] == "positive" else "#f59e0b"
-                sentiment_icon = "📈" if factor["sentiment"] == "positive" else "⚠️"
-                
-                # Generate tooltip content based on factor name
-                tooltip_map = {
-                    "Response Time": "Avg response: 2.5 minutes to initial contact",
-                    "Engagement Score": "5 interactions in past 7 days",
-                    "Budget Alignment": "Property matches within 95% of stated budget",
-                    "Location Preference": "3 of 5 showings in target neighborhood"
-                }
-                tooltip = tooltip_map.get(factor['name'], f"Data-driven insight based on {factor['name'].lower()}")
-                
-                st.markdown(f"""
-                <div style='margin-bottom: 1rem; position: relative;' class='factor-bar' title='{tooltip}'>
-                    <div style='display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;'>
-                        <span>{sentiment_icon} <b>{factor['name']}</b></span>
-                        <span style='color: {sentiment_color}; font-weight: bold;'>{factor['impact']}% Impact</span>
-                    </div>
-                    <div style='background: #f1f5f9; height: 8px; border-radius: 4px; overflow: hidden; cursor: pointer;'>
-                        <div style='background: {sentiment_color}; width: {abs(factor['impact'])}%; height: 100%; transition: all 0.3s ease;'></div>
-                    </div>
-                    <div style='font-size: 0.75rem; color: #64748b; margin-top: 2px;'>{factor['value']}</div>
-                </div>
-                """, unsafe_allow_html=True)
+        for i in range(3):
+            with f_cols[i]:
+                for k, v in f_list[i*3:(i+1)*3]:
+                    st.write(f"**{k}:** {v}")
         
         st.markdown("---")
-        st.markdown("#### 🏃 Recommended Strategy with Predicted Lift")
+        st.markdown("#### 🏃 Recommended Strategic Actions")
         
-        # Descriptions and predicted lift for each action
-        action_details = {
-            "Schedule property viewing": {
-                "desc": "Automatically check Jorge's Google Calendar and SMS 3 available time slots to the lead.",
-                "lift": 2.5,
-                "reason": "Active engagement signals high intent"
-            },
-            "Send personalized listings": {
-                "desc": "Generate a PDF of the top 3 matches and email with a personalized video intro.",
-                "lift": 1.8,
-                "reason": "Visual content increases engagement"
-            },
-            "Trigger 'Hot Lead' re-engagement": {
-                "desc": "Escalate to priority SMS sequence with a 'New Opportunity' hook.",
-                "lift": 3.2,
-                "reason": "Urgency triggers drive immediate action"
-            },
-            "Request pre-approval update": {
-                "desc": "Check for updated proof of funds via SMS link.",
-                "lift": 1.2,
-                "reason": "Validates qualification status"
-            }
-        }
-
-        # Initialize conversion chance in session state if not exists
-        if 'conversion_chance' not in st.session_state:
-            st.session_state.conversion_chance = float(pred_result.conversion_probability)
-
-        for i, rec in enumerate(pred_result.recommendations):
-            action_data = action_details.get(rec, {
-                "desc": "AI-optimized next step based on lead behavioral patterns.",
-                "lift": 1.0,
-                "reason": "Standard optimization"
-            })
-            
-            detail = action_data["desc"]
-            lift = action_data["lift"]
-            reason = action_data["reason"]
-            icon = "📅" if "Schedule" in rec else "🏠" if "listings" in rec else "🔥" if "Hot" in rec else "💰"
-            
-            # Enhanced action card with lift indicator
+        for i, rec in enumerate(pred_result_dict["recommendations"]):
+            icon = "🔥" if rec["type"] == "priority" else "📅" if rec["type"] == "medium" else "📧"
             st.markdown(f"""
-                <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #2563eb; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #2563eb; background: white;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                         <span style="font-size: 1.25rem;">{icon}</span>
-                        <b style="color: #1e293b; font-size: 1rem;">{rec}</b>
-                        <div style="margin-left: auto; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 0.25rem;">
-                            <span>📈</span> +{lift}%
-                        </div>
+                        <b style="color: #1e293b; font-size: 1rem;">{rec['title']}</b>
                     </div>
-                    <p style="font-size: 13px; color: #64748b; margin: 8px 0; line-height: 1.4;">{detail}</p>
-                    <div style="background: #f0fdf4; border-left: 3px solid #10b981; padding: 0.5rem 0.75rem; border-radius: 6px; margin-top: 8px;">
-                        <div style="font-size: 0.75rem; color: #065f46; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;">
-                            <span>💡</span> Predicted Impact: {reason}
-                        </div>
-                        <div style="font-size: 0.7rem; color: #047857; margin-top: 2px;">
-                            Conversion probability: {st.session_state.conversion_chance:.1f}% → {st.session_state.conversion_chance + lift:.1f}%
-                        </div>
-                    </div>
+                    <p style="font-size: 13px; color: #64748b; margin: 8px 0; line-height: 1.4;">{rec['action']}</p>
                 </div>
             """, unsafe_allow_html=True)
             
-            col1, col2 = st.columns([3, 1])
-            with col2:
-                if st.button("🚀 Run Action", key=f"run_action_pred_{i}", use_container_width=True):
-                    with st.spinner("Executing GHL trigger..."):
-                        import time
-                        time.sleep(1)
-                        
-                        # Update conversion chance dynamically
-                        st.session_state.conversion_chance += lift
-                        
-                        # Cross-tab sync: Log to activity feed
-                        if 'lead_activities' not in st.session_state:
-                            st.session_state.lead_activities = []
-                        
-                        st.session_state.lead_activities.append({
-                            "timestamp": datetime.datetime.now(),
-                            "lead": selected_lead_pred,
-                            "action": rec,
-                            "details": f"+{lift}% conversion lift",
-                            "source": "Predictions AI"
-                        })
-                        
-                        # Update live feed
-                        try:
-                            fs = LiveFeedService()
-                            fs.add_activity("workflow", selected_lead_pred, f"Executed: {rec}")
-                        except:
-                            pass
-                        
-                        st.toast(f"✅ Success: {rec} triggered | Conversion chance +{lift}%", icon="⚡")
-                        st.rerun()
+            if st.button("🚀 Execute Strategy", key=f"exec_strat_{i}"):
+                st.toast(f"Triggering {rec['type']} workflow in GHL...", icon="⚡")
 
     with tab8:
         st.subheader("💬 Claude Chatbot Simulator")
@@ -3021,1081 +3044,7 @@ def render_enhanced_property_search():
 
                 st.markdown("---")
 
-def render_financing_calculator():
-    """Comprehensive financing calculator with multiple scenarios"""
-    st.subheader("💰 Financing Calculator & Pre-Qualification")
-
-    # Calculator inputs
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("#### 🏠 Loan Details")
-        home_price = st.number_input("Home Price", value=400000, step=5000)
-        down_payment_percent = st.slider("Down Payment %", 0, 50, 20)
-        loan_term = st.selectbox("Loan Term", [15, 20, 30])
-        interest_rate = st.number_input("Interest Rate %", value=7.25, step=0.125)
-
-    with col2:
-        st.markdown("#### 💳 Additional Costs")
-        property_tax_rate = st.number_input("Property Tax Rate %", value=2.1, step=0.1)
-        insurance_annual = st.number_input("Home Insurance (Annual)", value=1200, step=100)
-        hoa_monthly = st.number_input("HOA Fees (Monthly)", value=0, step=25)
-        pmi_rate = st.number_input("PMI Rate % (if < 20% down)", value=0.5, step=0.1)
-
-    # Calculate payments
-    down_payment = home_price * (down_payment_percent / 100)
-    loan_amount = home_price - down_payment
-
-    # Monthly payment calculation
-    monthly_rate = (interest_rate / 100) / 12
-    num_payments = loan_term * 12
-
-    if monthly_rate > 0:
-        monthly_principal_interest = loan_amount * (monthly_rate * (1 + monthly_rate)**num_payments) / ((1 + monthly_rate)**num_payments - 1)
-    else:
-        monthly_principal_interest = loan_amount / num_payments
-
-    monthly_tax = (home_price * (property_tax_rate / 100)) / 12
-    monthly_insurance = insurance_annual / 12
-    monthly_pmi = (loan_amount * (pmi_rate / 100)) / 12 if down_payment_percent < 20 else 0
-
-    total_monthly = monthly_principal_interest + monthly_tax + monthly_insurance + hoa_monthly + monthly_pmi
-
-    # Display results
-    st.markdown("#### 📊 Payment Breakdown")
-
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("💰 Total Monthly Payment", f"${total_monthly:,.0f}")
-    with col2:
-        st.metric("🏠 Principal & Interest", f"${monthly_principal_interest:,.0f}")
-    with col3:
-        st.metric("🏛️ Taxes & Insurance", f"${monthly_tax + monthly_insurance:,.0f}")
-    with col4:
-        st.metric("💵 Down Payment", f"${down_payment:,.0f}")
-
-    # Payment breakdown chart
-    payment_data = {
-        "Component": ["Principal & Interest", "Property Tax", "Insurance", "HOA", "PMI"],
-        "Amount": [monthly_principal_interest, monthly_tax, monthly_insurance, hoa_monthly, monthly_pmi]
-    }
-
-    df = pd.DataFrame(payment_data)
-    df = df[df["Amount"] > 0]  # Only show components with values
-
-    fig = px.pie(df, values="Amount", names="Component",
-                title="Monthly Payment Breakdown")
-    st.plotly_chart(fig, use_container_width=True)
-
-    # Affordability analysis
-    st.markdown("#### 🎯 Affordability Analysis")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        monthly_income = st.number_input("Gross Monthly Income", value=8000, step=500)
-        monthly_debts = st.number_input("Monthly Debt Payments", value=800, step=100)
-
-    debt_to_income = ((total_monthly + monthly_debts) / monthly_income) * 100
-
-    with col2:
-        st.metric("📈 Total DTI Ratio", f"{debt_to_income:.1f}%")
-
-        if debt_to_income <= 28:
-            st.success("✅ Excellent DTI - Strong approval likelihood")
-        elif debt_to_income <= 36:
-            st.warning("⚠️ Good DTI - Should qualify with good credit")
-        elif debt_to_income <= 43:
-            st.warning("⚠️ High DTI - May need stronger compensating factors")
-        else:
-            st.error("❌ Very High DTI - May have difficulty qualifying")
-
-    # Scenario comparison
-    st.markdown("#### 🔍 Scenario Comparison")
-
-    scenarios = []
-    for dp in [10, 15, 20, 25]:
-        scenario_down = home_price * (dp / 100)
-        scenario_loan = home_price - scenario_down
-        scenario_pmi = (scenario_loan * 0.005) / 12 if dp < 20 else 0
-        scenario_payment = scenario_loan * (monthly_rate * (1 + monthly_rate)**num_payments) / ((1 + monthly_rate)**num_payments - 1) + monthly_tax + monthly_insurance + hoa_monthly + scenario_pmi
-
-        scenarios.append({
-            "Down Payment %": f"{dp}%",
-            "Down Payment $": f"${scenario_down:,.0f}",
-            "Monthly Payment": f"${scenario_payment:,.0f}",
-            "PMI": f"${scenario_pmi:,.0f}" if scenario_pmi > 0 else "None"
-        })
-
-    scenario_df = pd.DataFrame(scenarios)
-    st.dataframe(scenario_df, use_container_width=True)
-
-def render_neighborhood_explorer():
-    """Comprehensive neighborhood analysis and exploration"""
-    st.subheader("🌍 Neighborhood Intelligence")
-
-    # Location input
-    col1, col2 = st.columns(2)
-    with col1:
-        target_address = st.text_input("Enter Address or Neighborhood",
-            placeholder="1234 Oak Street, Austin, TX or 'West Lake Hills'")
-    with col2:
-        analysis_radius = st.selectbox("Analysis Radius", ["0.5 miles", "1 mile", "2 miles", "5 miles"])
-
-    if st.button("🔍 Analyze Neighborhood", type="primary"):
-        with st.spinner("Analyzing neighborhood data..."):
-
-            # Neighborhood overview
-            st.markdown("#### 📊 Neighborhood Overview")
-
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.metric("🏫 School Rating", "9/10", delta="Excellent")
-            with col2:
-                st.metric("🚶 Walk Score", "75/100", delta="Very Walkable")
-            with col3:
-                st.metric("🛡️ Safety Score", "8.5/10", delta="Very Safe")
-            with col4:
-                st.metric("📈 Property Values", "+12%", delta="vs. last year")
-
-            # Detailed analysis tabs
-            tab1, tab2, tab3, tab4, tab5 = st.tabs([
-                "🏫 Schools", "🚗 Commute", "🛒 Amenities", "📊 Market Data", "🌐 Demographics"
-            ])
-
-            with tab1:
-                st.markdown("##### School Information")
-                schools_data = [
-                    {"School": "Westlake Elementary", "Rating": "10/10", "Distance": "0.3 mi", "Type": "Public"},
-                    {"School": "Hill Country Middle", "Rating": "9/10", "Distance": "0.7 mi", "Type": "Public"},
-                    {"School": "Westlake High School", "Rating": "10/10", "Distance": "1.2 mi", "Type": "Public"},
-                    {"School": "Austin Montessori", "Rating": "8/10", "Distance": "0.5 mi", "Type": "Private"}
-                ]
-                schools_df = pd.DataFrame(schools_data)
-                st.dataframe(schools_df, use_container_width=True)
-
-            with tab2:
-                st.markdown("##### Commute Analysis")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.markdown("**To Downtown Austin:**")
-                    st.markdown("• 🚗 Driving: 25-40 minutes")
-                    st.markdown("• 🚌 Public Transit: 45-60 minutes")
-                    st.markdown("• 🚴 Biking: Not recommended")
-
-                with col2:
-                    st.markdown("**To Austin Airport:**")
-                    st.markdown("• 🚗 Driving: 35-50 minutes")
-                    st.markdown("• 🚌 Public Transit: 60-75 minutes")
-                    st.markdown("• 🚕 Rideshare: $45-65")
-
-            with tab3:
-                st.markdown("##### Nearby Amenities")
-
-                amenities = {
-                    "🍕 Restaurants": ["The Oasis (0.5 mi)", "Hopdoddy Burger (1.2 mi)", "Torchy's Tacos (0.8 mi)"],
-                    "🛒 Shopping": ["Whole Foods (0.3 mi)", "Barton Creek Mall (2.1 mi)", "Hill Country Galleria (1.5 mi)"],
-                    "🏥 Healthcare": ["Austin Regional (2.3 mi)", "Urgent Care Plus (0.7 mi)", "CVS Pharmacy (0.4 mi)"],
-                    "🎯 Recreation": ["Zilker Park (3.2 mi)", "Austin Country Club (1.1 mi)", "Greenbelt Trail (0.5 mi)"]
-                }
-
-                for category, places in amenities.items():
-                    st.markdown(f"**{category}**")
-                    for place in places:
-                        st.markdown(f"• {place}")
-                    st.markdown("")
-
-            with tab4:
-                st.markdown("##### Market Trends")
-
-                # Mock market data
-                months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
-                avg_prices = [485000, 492000, 501000, 515000, 528000, 542000]
-                days_on_market = [18, 16, 12, 8, 6, 5]
-
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    fig_price = px.line(x=months, y=avg_prices, title="Average Home Prices")
-                    fig_price.update_layout(yaxis_title="Price ($)", xaxis_title="Month")
-                    st.plotly_chart(fig_price, use_container_width=True)
-
-                with col2:
-                    fig_dom = px.bar(x=months, y=days_on_market, title="Average Days on Market")
-                    fig_dom.update_layout(yaxis_title="Days", xaxis_title="Month")
-                    st.plotly_chart(fig_dom, use_container_width=True)
-
-            with tab5:
-                st.markdown("##### Demographics")
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    st.markdown("**Population Stats:**")
-                    st.markdown("• Total Population: 12,847")
-                    st.markdown("• Median Age: 42 years")
-                    st.markdown("• Households: 4,523")
-                    st.markdown("• Median Income: $125,000")
-
-                with col2:
-                    st.markdown("**Family Composition:**")
-                    st.markdown("• Married with Children: 45%")
-                    st.markdown("• Young Professionals: 25%")
-                    st.markdown("• Empty Nesters: 20%")
-                    st.markdown("• Retirees: 10%")
-
-def render_buyer_dashboard():
-    """Buyer's personal dashboard with saved properties and activity"""
-    st.subheader("📅 Your Property Dashboard")
-
-    # Dashboard summary
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("❤️ Saved Properties", "12")
-    with col2:
-        st.metric("📅 Scheduled Tours", "3")
-    with col3:
-        st.metric("📧 New Alerts", "5")
-    with col4:
-        st.metric("🔍 Searches Saved", "2")
-
-    # Main dashboard tabs
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "❤️ Saved Properties", "📅 Scheduled Tours", "🔔 Alerts & Updates", "📊 Search History"
-    ])
-
-    with tab1:
-        st.markdown("#### Saved Properties")
-
-        # Property list with action buttons
-        saved_properties = [
-            {
-                "address": "1234 Oak Street, Austin, TX 78704",
-                "price": "$485,000",
-                "beds": 3,
-                "baths": 2,
-                "saved_date": "2 days ago",
-                "status": "Active"
-            },
-            {
-                "address": "5678 Pine Avenue, Austin, TX 78745",
-                "price": "$425,000",
-                "beds": 3,
-                "baths": 2.5,
-                "saved_date": "1 week ago",
-                "status": "Under Contract"
-            },
-            {
-                "address": "9012 Elm Drive, Austin, TX 78758",
-                "price": "$399,000",
-                "beds": 4,
-                "baths": 2,
-                "saved_date": "3 days ago",
-                "status": "Active"
-            }
-        ]
-
-        for i, prop in enumerate(saved_properties):
-            with st.container():
-                col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
-
-                with col1:
-                    status_color = "green" if prop["status"] == "Active" else "red"
-                    st.markdown(f"**{prop['address']}**")
-                    st.markdown(f"{prop['price']} • {prop['beds']} bed • {prop['baths']} bath")
-                    st.markdown(f"<span style='color: {status_color};'>●</span> {prop['status']} • Saved {prop['saved_date']}", unsafe_allow_html=True)
-
-                with col2:
-                    if st.button("📱 Contact Agent", key=f"contact_{i}"):
-                        st.success("Agent contacted!")
-
-                with col3:
-                    if st.button("📅 Schedule Tour", key=f"schedule_{i}"):
-                        st.info("Tour scheduled!")
-
-                with col4:
-                    if st.button("🗑️ Remove", key=f"remove_{i}"):
-                        st.warning("Property removed from saved list")
-
-                st.markdown("---")
-
-    with tab2:
-        st.markdown("#### Upcoming Tours")
-
-        tours = [
-            {
-                "address": "1234 Oak Street",
-                "date": "Tomorrow",
-                "time": "2:00 PM",
-                "agent": "Sarah Johnson"
-            },
-            {
-                "address": "9012 Elm Drive",
-                "date": "Saturday",
-                "time": "10:00 AM",
-                "agent": "Mike Chen"
-            }
-        ]
-
-        for tour in tours:
-            with st.container():
-                col1, col2, col3 = st.columns([2, 1, 1])
-
-                with col1:
-                    st.markdown(f"**{tour['address']}**")
-                    st.markdown(f"📅 {tour['date']} at {tour['time']}")
-                    st.markdown(f"🏘️ Agent: {tour['agent']}")
-
-                with col2:
-                    if st.button("📞 Call Agent", key=f"call_{tour['address']}"):
-                        st.success("Calling agent...")
-
-                with col3:
-                    if st.button("✏️ Reschedule", key=f"reschedule_{tour['address']}"):
-                        st.info("Rescheduling options sent to email")
-
-                st.markdown("---")
-
-    with tab3:
-        st.markdown("#### Recent Alerts & Updates")
-
-        alerts = [
-            {
-                "type": "Price Drop",
-                "message": "1234 Oak Street reduced by $10,000",
-                "time": "2 hours ago",
-                "action": "View Property"
-            },
-            {
-                "type": "New Listing",
-                "message": "New property matches your criteria in West Lake Hills",
-                "time": "1 day ago",
-                "action": "View Listing"
-            },
-            {
-                "type": "Market Update",
-                "message": "Austin market report: Inventory up 5% this month",
-                "time": "3 days ago",
-                "action": "Read Report"
-            }
-        ]
-
-        for alert in alerts:
-            with st.container():
-                col1, col2 = st.columns([3, 1])
-
-                with col1:
-                    alert_emoji = "💰" if alert["type"] == "Price Drop" else "🏠" if alert["type"] == "New Listing" else "📊"
-                    st.markdown(f"**{alert_emoji} {alert['type']}**")
-                    st.markdown(alert["message"])
-                    st.markdown(f"🕒 {alert['time']}")
-
-                with col2:
-                    if st.button(alert["action"], key=f"action_{alert['message'][:10]}"):
-                        st.info(f"{alert['action']} clicked!")
-
-                st.markdown("---")
-
-    with tab4:
-        st.markdown("#### Search History")
-
-        st.markdown("**Recent Searches:**")
-        searches = [
-            "3+ bed homes under $500K in West Lake Hills",
-            "New construction in Austin ISD",
-            "Condos near downtown with parking"
-        ]
-
-        for i, search in enumerate(searches):
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.markdown(f"• {search}")
-            with col2:
-                if st.button("🔄 Repeat", key=f"repeat_{i}"):
-                    st.success("Search repeated!")
-
-def render_buyer_analytics():
-    """Enhanced analytics and insights for buyer journey with churn prediction"""
-    st.subheader("📊 Enhanced Buyer Journey Analytics with AI Insights")
-
-    # Get enhanced services for churn prediction
-    churn_risk_data = None
-    if SERVICES_LOADED:
-        try:
-            services = get_services()
-            churn_predictor = services.get("churn_prediction")
-            enhanced_scorer = services.get("enhanced_lead_scorer")
-
-            if churn_predictor:
-                # Simulated churn prediction analysis
-                churn_risk_data = {
-                    "churn_risk_score": 0.25,  # 25% churn risk
-                    "risk_tier": "Low",
-                    "engagement_trend": "Stable",
-                    "days_since_last_activity": 3,
-                    "activity_level": "High",
-                    "conversion_probability": 0.78
-                }
-                st.info("🧠 AI Churn Prediction & Retention Analytics Active")
-        except Exception as e:
-            st.warning(f"⚠️ Enhanced analytics temporarily unavailable: {str(e)}")
-
-    # Enhanced analytics overview with churn insights
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1:
-        st.metric("🔍 Properties Viewed", "47", delta="12 this week")
-    with col2:
-        st.metric("📅 Tours Completed", "8", delta="3 pending")
-    with col3:
-        st.metric("💰 Avg. Price Viewed", "$456K", delta="-$23K vs. budget")
-    with col4:
-        if churn_risk_data:
-            risk_score = churn_risk_data["churn_risk_score"]
-            risk_color = "green" if risk_score < 0.3 else "orange" if risk_score < 0.7 else "red"
-            st.markdown(f"<div style='text-align: center; color: {risk_color}; font-weight: bold;'>⚠️ Churn Risk<br>{risk_score:.1%}</div>", unsafe_allow_html=True)
-        else:
-            st.metric("📈 Market Position", "Competitive", delta="Good timing")
-    with col5:
-        if churn_risk_data:
-            conv_prob = churn_risk_data["conversion_probability"]
-            conv_color = "green" if conv_prob > 0.7 else "orange" if conv_prob > 0.5 else "red"
-            st.markdown(f"<div style='text-align: center; color: {conv_color}; font-weight: bold;'>📈 Conversion<br>{conv_prob:.1%}</div>", unsafe_allow_html=True)
-        else:
-            st.metric("📊 Engagement", "High", delta="Stable")
-
-    # Enhanced insights with churn prediction
-    if churn_risk_data:
-        # Churn Risk Alert Section
-        risk_score = churn_risk_data["churn_risk_score"]
-        risk_tier = churn_risk_data["risk_tier"]
-
-        if risk_score < 0.3:
-            st.success(f"✅ **Low Churn Risk ({risk_score:.1%})**: Buyer is highly engaged and likely to convert. Continue current engagement strategy.")
-        elif risk_score < 0.7:
-            st.warning(f"⚠️ **Medium Churn Risk ({risk_score:.1%})**: Monitor engagement closely. Consider increasing touchpoints and providing personalized market updates.")
-        else:
-            st.error(f"🚨 **High Churn Risk ({risk_score:.1%})**: Immediate intervention required! Schedule personal call, reassess needs, and provide high-value insights.")
-
-    # Enhanced charts and insights with AI analytics
-    tab1, tab2, tab3, tab4 = st.tabs(["📈 Activity & Engagement", "💰 Price Analysis", "🎯 AI Preference Learning", "⚠️ Retention Analytics"])
-
-    with tab1:
-        st.markdown("#### Enhanced Activity & Engagement Analytics")
-
-        # Mock activity data with engagement insights
-        days = list(range(1, 31))
-        properties_viewed = [2, 1, 4, 3, 5, 2, 1, 6, 4, 3, 7, 5, 2, 8, 6, 4, 3, 9, 7, 5, 4, 6, 8, 3, 5, 7, 9, 4, 6, 8]
-
-        # Enhanced visualization with engagement scoring
-        fig = px.line(x=days, y=properties_viewed, title="Daily Property Views & Engagement Score (Last 30 Days)")
-        fig.add_scatter(x=days, y=[p*0.8 + 2 for p in properties_viewed], mode='lines', name='Engagement Score', line=dict(color='orange', dash='dash'))
-        fig.update_layout(xaxis_title="Day", yaxis_title="Activity Level")
-        st.plotly_chart(fig, use_container_width=True)
-
-        # Engagement insights
-        if churn_risk_data:
-            st.markdown("##### 🔥 AI Engagement Insights")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"• **Activity Level**: {churn_risk_data['activity_level']}")
-                st.markdown(f"• **Engagement Trend**: {churn_risk_data['engagement_trend']}")
-                st.markdown(f"• **Days Since Last Activity**: {churn_risk_data['days_since_last_activity']}")
-            with col2:
-                st.markdown("• **Peak Activity Time**: Evenings & Weekends")
-                st.markdown("• **Response Rate**: 85% (Excellent)")
-                st.markdown("• **Tour-to-View Ratio**: 17% (Above Average)")
-
-    with tab2:
-        st.markdown("#### Enhanced Price Analysis with AI Insights")
-
-        price_ranges = ["$300-400K", "$400-500K", "$500-600K", "$600-700K", "$700K+"]
-        properties_in_range = [5, 15, 18, 7, 2]
-
-        fig = px.bar(x=price_ranges, y=properties_in_range, title="Properties Viewed by Price Range")
-        st.plotly_chart(fig, use_container_width=True)
-
-        # AI price insights
-        st.markdown("##### 🧠 AI Price Pattern Analysis")
-        st.markdown("• **Sweet Spot**: $500-600K (38% of activity)")
-        st.markdown("• **Budget Creep**: +5% average vs. initial budget")
-        st.markdown("• **Value Perception**: High value focus (avg. $/sqft viewed)")
-        if churn_risk_data and churn_risk_data["conversion_probability"] > 0.7:
-            st.success("💰 **Budget Confidence**: Strong indicators of realistic pricing expectations")
-
-    with tab3:
-        st.markdown("#### AI-Enhanced Preference Learning")
-
-        st.markdown("**🎯 AI-Discovered Top Features in Saved Properties:**")
-        st.markdown("• Updated Kitchen (75% of saved properties) - **High Priority**")
-        st.markdown("• 2+ Car Garage (67% of saved properties) - **Important**")
-        st.markdown("• Hardwood Floors (58% of saved properties) - **Preferred**")
-        st.markdown("• Large Yard (50% of saved properties) - **Desired**")
-
-        st.markdown("**📍 AI-Analyzed Location Preferences:**")
-        st.markdown("• West Lake Hills: 35% of searches - **Top Choice**")
-        st.markdown("• Central Austin: 25% of searches - **Secondary**")
-        st.markdown("• Cedar Park: 20% of searches - **Considering**")
-        st.markdown("• Round Rock: 20% of searches - **Backup Option**")
-
-        # AI learning insights
-        st.markdown("**🤖 AI Pattern Recognition:**")
-        st.markdown("• **Commute Factor**: Strong correlation with location preferences")
-        st.markdown("• **School Priority**: High importance detected (8/10 average)")
-        st.markdown("• **Move-in Timeline**: Flexible - can wait for right property")
-        st.markdown("• **Style Preference**: Transitional/Contemporary over Traditional")
-
-    with tab4:
-        st.markdown("#### 🚨 AI Retention & Churn Analytics")
-
-        if churn_risk_data:
-            # Churn risk breakdown
-            st.markdown("##### Risk Factor Analysis")
-
-            # Create risk factor visualization
-            risk_factors = [
-                "Activity Level", "Response Rate", "Tour Engagement",
-                "Budget Alignment", "Timeline Pressure", "Agent Relationship"
-            ]
-            risk_scores = [0.1, 0.15, 0.2, 0.25, 0.45, 0.1]  # Mock risk scores
-
-            fig = px.bar(
-                x=risk_factors,
-                y=risk_scores,
-                title="Individual Risk Factors Contributing to Churn",
-                color=risk_scores,
-                color_continuous_scale=["green", "orange", "red"]
-            )
-            fig.update_layout(showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-
-            # Detailed retention recommendations
-            st.markdown("##### 💡 AI Retention Recommendations")
-
-            risk_score = churn_risk_data["churn_risk_score"]
-            if risk_score < 0.3:
-                st.success("✅ **Continue Current Strategy**: Buyer is well-engaged. Maintain weekly check-ins and property alerts.")
-            elif risk_score < 0.7:
-                st.warning("⚠️ **Enhance Engagement**: Consider:")
-                st.markdown("• Increase communication frequency to bi-weekly")
-                st.markdown("• Provide market trend insights and exclusive listings")
-                st.markdown("• Schedule additional property tours this week")
-                st.markdown("• Send personalized neighborhood analysis")
-            else:
-                st.error("🚨 **Immediate Intervention Required**:")
-                st.markdown("• **Schedule urgent call within 24 hours**")
-                st.markdown("• **Reassess needs and preferences**")
-                st.markdown("• **Provide exclusive market opportunities**")
-                st.markdown("• **Consider incentive strategies**")
-
-            # Predictive insights
-            st.markdown("##### 🔮 AI Conversion Predictions")
-            st.markdown(f"• **7-Day Conversion Probability**: {churn_risk_data['conversion_probability']*0.3:.1%}")
-            st.markdown(f"• **30-Day Conversion Probability**: {churn_risk_data['conversion_probability']:.1%}")
-            st.markdown(f"• **90-Day Conversion Probability**: {min(churn_risk_data['conversion_probability']*1.2, 0.95):.1%}")
-
-        else:
-            st.info("🧠 Enhanced retention analytics available when AI services are loaded")
-
-            # Fallback engagement tips
-            st.markdown("##### General Retention Best Practices")
-            st.markdown("• Maintain regular communication every 3-5 days")
-            st.markdown("• Provide market updates and new listing alerts")
-            st.markdown("• Schedule property tours within 48 hours of interest")
-            st.markdown("• Send personalized neighborhood and school reports")
-            st.markdown("• Monitor response times and engagement levels")
-
 # Seller Component Functions
-
-def render_seller_prep_checklist():
-    """Comprehensive seller preparation checklist"""
-    st.subheader("📋 Seller Preparation Checklist")
-
-    # Progress overview
-    st.markdown("#### 📊 Preparation Progress")
-
-    # Mock completion data
-    total_tasks = 25
-    completed_tasks = 12
-    progress = completed_tasks / total_tasks
-
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("✅ Tasks Completed", f"{completed_tasks}/{total_tasks}")
-    with col2:
-        st.metric("📈 Progress", f"{progress*100:.0f}%")
-    with col3:
-        st.metric("🏠 Market Readiness", "Good")
-    with col4:
-        st.metric("⏱️ Time to Market", "2-3 weeks")
-
-    # Progress bar
-    st.progress(progress)
-
-    # Checklist categories
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🏠 Interior Prep", "🌿 Exterior Prep", "📄 Documentation", "📸 Marketing Prep", "🔧 Repairs & Updates"
-    ])
-
-    with tab1:
-        st.markdown("##### Interior Preparation")
-
-        interior_tasks = [
-            {"task": "Deep clean all rooms", "status": "✅", "priority": "High", "notes": "Professional cleaning scheduled"},
-            {"task": "Declutter and organize", "status": "✅", "priority": "High", "notes": "Completed last weekend"},
-            {"task": "Fresh paint (neutral colors)", "status": "⏳", "priority": "High", "notes": "Painter coming Monday"},
-            {"task": "Clean windows inside", "status": "✅", "priority": "Medium", "notes": "Done with deep cleaning"},
-            {"task": "Replace burnt-out bulbs", "status": "❌", "priority": "Medium", "notes": "Need LED bulbs"},
-            {"task": "Remove personal photos", "status": "✅", "priority": "Medium", "notes": "Stored in garage"},
-            {"task": "Stage furniture arrangement", "status": "❌", "priority": "Medium", "notes": "Stager coming Thursday"},
-            {"task": "Fix squeaky doors/hinges", "status": "❌", "priority": "Low", "notes": "Need WD-40"},
-        ]
-
-        for task in interior_tasks:
-            with st.container():
-                col1, col2, col3, col4 = st.columns([3, 1, 1, 2])
-
-                with col1:
-                    st.markdown(f"{task['status']} {task['task']}")
-                with col2:
-                    priority_color = "red" if task['priority'] == "High" else "orange" if task['priority'] == "Medium" else "green"
-                    st.markdown(f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True)
-                with col3:
-                    if task['status'] == "❌":
-                        if st.button("Mark Done", key=f"interior_{task['task'][:10]}"):
-                            st.success("Task completed!")
-                with col4:
-                    st.markdown(f"*{task['notes']}*")
-
-    with tab2:
-        st.markdown("##### Exterior & Curb Appeal")
-
-        exterior_tasks = [
-            {"task": "Mow and edge lawn", "status": "✅", "priority": "High", "notes": "Weekly maintenance"},
-            {"task": "Trim bushes and trees", "status": "✅", "priority": "High", "notes": "Landscaper completed"},
-            {"task": "Plant seasonal flowers", "status": "⏳", "priority": "Medium", "notes": "Scheduled for weekend"},
-            {"task": "Power wash driveway/walkways", "status": "❌", "priority": "High", "notes": "Rent pressure washer"},
-            {"task": "Clean exterior windows", "status": "❌", "priority": "Medium", "notes": "Include in window service"},
-            {"task": "Touch up exterior paint", "status": "❌", "priority": "Medium", "notes": "Minor spots identified"},
-            {"task": "Clean gutters", "status": "✅", "priority": "Low", "notes": "Done in fall"},
-            {"task": "Ensure adequate outdoor lighting", "status": "⏳", "priority": "Medium", "notes": "Adding pathway lights"},
-        ]
-
-        for task in exterior_tasks:
-            with st.container():
-                col1, col2, col3, col4 = st.columns([3, 1, 1, 2])
-
-                with col1:
-                    st.markdown(f"{task['status']} {task['task']}")
-                with col2:
-                    priority_color = "red" if task['priority'] == "High" else "orange" if task['priority'] == "Medium" else "green"
-                    st.markdown(f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True)
-                with col3:
-                    if task['status'] == "❌":
-                        if st.button("Mark Done", key=f"exterior_{task['task'][:10]}"):
-                            st.success("Task completed!")
-                with col4:
-                    st.markdown(f"*{task['notes']}*")
-
-    with tab3:
-        st.markdown("##### Required Documentation")
-
-        documents = [
-            {"doc": "Property deed", "status": "✅", "location": "File cabinet", "notes": "Original in safe"},
-            {"doc": "Previous property disclosures", "status": "✅", "location": "With agent", "notes": "From purchase"},
-            {"doc": "Recent utility bills", "status": "✅", "location": "Office desk", "notes": "Last 3 months"},
-            {"doc": "HOA documents (if applicable)", "status": "N/A", "location": "-", "notes": "No HOA"},
-            {"doc": "Survey/plat of property", "status": "⏳", "location": "Searching", "notes": "Request from title company"},
-            {"doc": "Warranty information", "status": "❌", "location": "Need to gather", "notes": "HVAC, appliances"},
-            {"doc": "Home inspection reports", "status": "✅", "location": "With agent", "notes": "From 2019 purchase"},
-            {"doc": "Property tax records", "status": "✅", "location": "Online access", "notes": "Current and paid"},
-        ]
-
-        for doc in documents:
-            with st.container():
-                col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
-
-                with col1:
-                    st.markdown(f"{doc['status']} {doc['doc']}")
-                with col2:
-                    st.markdown(doc['location'])
-                with col3:
-                    if doc['status'] == "❌":
-                        if st.button("Found", key=f"doc_{doc['doc'][:8]}"):
-                            st.success("Document located!")
-                with col4:
-                    st.markdown(f"*{doc['notes']}*")
-
-    with tab4:
-        st.markdown("##### Marketing Preparation")
-
-        marketing_tasks = [
-            {"task": "Professional photography", "status": "⏳", "priority": "High", "notes": "Scheduled for next Tuesday"},
-            {"task": "Drone/aerial photos", "status": "❌", "priority": "Medium", "notes": "Include with photography"},
-            {"task": "Virtual tour/3D scan", "status": "❌", "priority": "Medium", "notes": "Optional upgrade"},
-            {"task": "Write compelling listing description", "status": "⏳", "priority": "High", "notes": "Agent drafting"},
-            {"task": "Create property feature list", "status": "✅", "priority": "Medium", "notes": "Completed with agent"},
-            {"task": "Gather neighborhood amenities info", "status": "✅", "priority": "Low", "notes": "Schools, shopping, etc."},
-            {"task": "Plan open house logistics", "status": "❌", "priority": "Medium", "notes": "After photos complete"},
-        ]
-
-        for task in marketing_tasks:
-            with st.container():
-                col1, col2, col3, col4 = st.columns([3, 1, 1, 2])
-
-                with col1:
-                    st.markdown(f"{task['status']} {task['task']}")
-                with col2:
-                    priority_color = "red" if task['priority'] == "High" else "orange" if task['priority'] == "Medium" else "green"
-                    st.markdown(f"<span style='color: {priority_color};'>{task['priority']}</span>", unsafe_allow_html=True)
-                with col3:
-                    if task['status'] == "❌":
-                        if st.button("Complete", key=f"marketing_{task['task'][:10]}"):
-                            st.success("Task completed!")
-                with col4:
-                    st.markdown(f"*{task['notes']}*")
-
-    with tab5:
-        st.markdown("##### Repairs & Updates")
-
-        repairs = [
-            {"item": "Fix leaky kitchen faucet", "priority": "High", "cost": "$150", "status": "⏳", "notes": "Plumber scheduled"},
-            {"item": "Replace cracked outlet cover", "priority": "Medium", "cost": "$5", "status": "❌", "notes": "Hardware store trip"},
-            {"item": "Caulk around master bathtub", "priority": "Medium", "cost": "$20", "status": "❌", "notes": "DIY project"},
-            {"item": "Touch up paint in hallway", "priority": "Low", "cost": "$25", "status": "⏳", "notes": "With main painting"},
-            {"item": "Replace air filter", "priority": "Low", "cost": "$15", "status": "✅", "notes": "Done monthly"},
-        ]
-
-        total_repair_cost = sum([int(repair['cost'].replace('$', '')) for repair in repairs])
-
-        st.markdown(f"**Total Estimated Repair Cost:** ${total_repair_cost}")
-
-        for repair in repairs:
-            with st.container():
-                col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2])
-
-                with col1:
-                    st.markdown(f"{repair['status']} {repair['item']}")
-                with col2:
-                    priority_color = "red" if repair['priority'] == "High" else "orange" if repair['priority'] == "Medium" else "green"
-                    st.markdown(f"<span style='color: {priority_color};'>{repair['priority']}</span>", unsafe_allow_html=True)
-                with col3:
-                    st.markdown(repair['cost'])
-                with col4:
-                    if repair['status'] == "❌":
-                        if st.button("Fixed", key=f"repair_{repair['item'][:8]}"):
-                            st.success("Repair completed!")
-                with col5:
-                    st.markdown(f"*{repair['notes']}*")
-
-    # Action buttons
-    st.markdown("#### 🎯 Quick Actions")
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        if st.button("📧 Email Checklist"):
-            st.success("Checklist emailed to you!")
-
-    with col2:
-        if st.button("📱 Share with Agent"):
-            st.info("Checklist shared with your agent!")
-
-    with col3:
-        if st.button("📅 Schedule Services"):
-            st.info("Service scheduling portal opened!")
-
-    with col4:
-        if st.button("💰 Get Cost Estimates"):
-            st.info("Contractor quotes requested!")
-
-def render_marketing_campaign_dashboard():
-    """Marketing campaign performance and management dashboard"""
-    st.subheader("📈 Marketing Campaign Dashboard")
-
-    # Campaign overview
-    st.markdown("#### 📊 Campaign Performance Overview")
-
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("👀 Total Views", "2,847", delta="312 this week")
-    with col2:
-        st.metric("💕 Favorites", "89", delta="23 new")
-    with col3:
-        st.metric("📞 Inquiries", "47", delta="12 this week")
-    with col4:
-        st.metric("📅 Showings Scheduled", "18", delta="5 pending")
-
-    # Detailed analytics tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📊 Performance Analytics", "🌐 Online Listings", "📸 Marketing Materials", "📅 Showing Activity", "📈 Market Feedback"
-    ])
-
-    with tab1:
-        st.markdown("##### Performance Analytics")
-
-        # Views over time
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown("**Daily Views (Last 14 Days)**")
-            days = list(range(1, 15))
-            views = [45, 52, 38, 67, 89, 123, 145, 167, 89, 76, 98, 134, 156, 187]
-
-            fig_views = px.line(x=days, y=views, title="Daily Property Views")
-            fig_views.update_layout(xaxis_title="Days", yaxis_title="Views")
-            st.plotly_chart(fig_views, use_container_width=True)
-
-        with col2:
-            st.markdown("**Inquiry Sources**")
-            sources = ["Zillow", "Realtor.com", "MLS", "Company Website", "Social Media", "Referral"]
-            inquiries = [18, 15, 8, 4, 2, 0]
-
-            fig_sources = px.pie(values=inquiries, names=sources, title="Lead Sources")
-            st.plotly_chart(fig_sources, use_container_width=True)
-
-        # Performance metrics
-        st.markdown("**Key Performance Indicators**")
-        metrics_data = [
-            {"Metric": "View-to-Inquiry Rate", "Current": "1.65%", "Goal": "2.0%", "Status": "📈 Improving"},
-            {"Metric": "Inquiry-to-Showing Rate", "Current": "38.3%", "Goal": "35%", "Status": "✅ Exceeding"},
-            {"Metric": "Days on Market", "Current": "8 days", "Goal": "< 15 days", "Status": "🎯 On Target"},
-            {"Metric": "Price per Sq Ft", "Current": "$263", "Goal": "$255", "Status": "💰 Above Market"}
-        ]
-
-        metrics_df = pd.DataFrame(metrics_data)
-        st.dataframe(metrics_df, use_container_width=True)
-
-    with tab2:
-        st.markdown("##### Online Listing Status")
-
-        listings = [
-            {
-                "platform": "MLS",
-                "status": "🟢 Active",
-                "views": "1,247",
-                "leads": "23",
-                "last_updated": "Today",
-                "notes": "Primary listing source"
-            },
-            {
-                "platform": "Zillow",
-                "status": "🟢 Active",
-                "views": "892",
-                "leads": "18",
-                "last_updated": "2 days ago",
-                "notes": "High traffic source"
-            },
-            {
-                "platform": "Realtor.com",
-                "status": "🟢 Active",
-                "views": "654",
-                "leads": "15",
-                "last_updated": "Today",
-                "notes": "Good conversion rate"
-            },
-            {
-                "platform": "Company Website",
-                "status": "🟢 Active",
-                "views": "234",
-                "leads": "4",
-                "last_updated": "1 day ago",
-                "notes": "Brand awareness"
-            },
-            {
-                "platform": "Facebook Marketplace",
-                "status": "🟡 Pending",
-                "views": "0",
-                "leads": "0",
-                "last_updated": "N/A",
-                "notes": "Awaiting approval"
-            }
-        ]
-
-        for listing in listings:
-            with st.container():
-                col1, col2, col3, col4, col5, col6 = st.columns([1.5, 1, 1, 1, 1, 2])
-
-                with col1:
-                    st.markdown(f"**{listing['platform']}**")
-                with col2:
-                    st.markdown(listing['status'])
-                with col3:
-                    st.markdown(listing['views'])
-                with col4:
-                    st.markdown(listing['leads'])
-                with col5:
-                    st.markdown(listing['last_updated'])
-                with col6:
-                    st.markdown(f"*{listing['notes']}*")
-
-                st.markdown("---")
-
-    with tab3:
-        st.markdown("##### Marketing Materials")
-
-        # Photo performance
-        st.markdown("**Photo Performance Analysis**")
-
-        photos = [
-            {"photo": "Front Exterior", "views": "2,847", "saves": "89", "engagement": "3.1%"},
-            {"photo": "Living Room", "views": "2,203", "saves": "67", "engagement": "3.0%"},
-            {"photo": "Kitchen", "views": "2,156", "saves": "78", "engagement": "3.6%"},
-            {"photo": "Master Bedroom", "views": "1,834", "saves": "45", "engagement": "2.5%"},
-            {"photo": "Backyard", "views": "1,623", "saves": "52", "engagement": "3.2%"}
-        ]
-
-        for photo in photos:
-            with st.container():
-                col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
-
-                with col1:
-                    st.markdown(f"📸 **{photo['photo']}**")
-                with col2:
-                    st.markdown(f"👀 {photo['views']}")
-                with col3:
-                    st.markdown(f"💾 {photo['saves']}")
-                with col4:
-                    engagement_float = float(photo['engagement'].replace('%', ''))
-                    color = "green" if engagement_float >= 3.0 else "orange"
-                    st.markdown(f"<span style='color: {color};'>📈 {photo['engagement']}</span>", unsafe_allow_html=True)
-
-        # Marketing materials status
-        st.markdown("**Marketing Materials Checklist**")
-        materials = [
-            {"item": "Professional Photos (25 images)", "status": "✅ Complete"},
-            {"item": "Property Description", "status": "✅ Complete"},
-            {"item": "Feature Sheet/Flyer", "status": "✅ Complete"},
-            {"item": "Virtual Tour", "status": "⏳ In Progress"},
-            {"item": "Drone/Aerial Video", "status": "❌ Pending"},
-            {"item": "Social Media Posts", "status": "✅ Posted Daily"}
-        ]
-
-        for material in materials:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.markdown(f"• {material['item']}")
-            with col2:
-                st.markdown(material['status'])
-
-    with tab4:
-        st.markdown("##### Showing Activity")
-
-        # Upcoming showings
-        st.markdown("**Scheduled Showings**")
-
-        showings = [
-            {
-                "date": "Today",
-                "time": "2:00 PM",
-                "type": "Private Showing",
-                "agent": "Sarah Johnson (Buyer Agent)",
-                "notes": "Pre-approved buyer, serious interest"
-            },
-            {
-                "date": "Tomorrow",
-                "time": "10:00 AM",
-                "type": "Private Showing",
-                "agent": "Mike Chen (Buyer Agent)",
-                "notes": "First-time homebuyer"
-            },
-            {
-                "date": "Saturday",
-                "time": "1:00-4:00 PM",
-                "type": "Open House",
-                "agent": "Your Listing Agent",
-                "notes": "First open house event"
-            },
-            {
-                "date": "Sunday",
-                "time": "11:00 AM",
-                "type": "Private Showing",
-                "agent": "Lisa Rodriguez (Buyer Agent)",
-                "notes": "Investor client"
-            }
-        ]
-
-        for showing in showings:
-            with st.container():
-                col1, col2, col3, col4 = st.columns([1, 1, 2, 2])
-
-                with col1:
-                    st.markdown(f"**📅 {showing['date']}**")
-                with col2:
-                    st.markdown(f"🕐 {showing['time']}")
-                with col3:
-                    st.markdown(f"**{showing['type']}**")
-                    st.markdown(f"*{showing['agent']}*")
-                with col4:
-                    st.markdown(showing['notes'])
-
-                st.markdown("---")
-
-        # Showing statistics
-        st.markdown("**Showing Statistics (Last 30 Days)**")
-        col1, col2, col3, col4 = st.columns(4)
-
-        with col1:
-            st.metric("Total Showings", "18")
-        with col2:
-            st.metric("Private Showings", "14")
-        with col3:
-            st.metric("Open Houses", "2")
-        with col4:
-            st.metric("Avg per Week", "4.5")
-
-    with tab5:
-        st.markdown("##### Market Feedback & Insights")
-
-        # Feedback from showings
-        st.markdown("**Agent & Buyer Feedback**")
-
-        feedback = [
-            {
-                "source": "Sarah Johnson (Buyer Agent)",
-                "date": "2 days ago",
-                "rating": "⭐⭐⭐⭐⭐",
-                "comment": "Beautiful home, well-maintained. Buyers loved the kitchen updates.",
-                "concerns": "Slight concern about backyard size for their dogs."
-            },
-            {
-                "source": "Mike Chen (Buyer Agent)",
-                "date": "3 days ago",
-                "rating": "⭐⭐⭐⭐",
-                "comment": "Great location and condition. Competitive price point.",
-                "concerns": "Buyers prefer a larger master bathroom."
-            },
-            {
-                "source": "Lisa Rodriguez (Buyer Agent)",
-                "date": "1 week ago",
-                "rating": "⭐⭐⭐⭐⭐",
-                "comment": "Excellent investment opportunity. Cash buyer interested.",
-                "concerns": "None - ready to make offer."
-            }
-        ]
-
-        for fb in feedback:
-            with st.expander(f"{fb['source']} - {fb['rating']} ({fb['date']})"):
-                st.markdown(f"**Comment:** {fb['comment']}")
-                if fb['concerns']:
-                    st.markdown(f"**Concerns:** {fb['concerns']}")
-
-        # Market positioning analysis
-        st.markdown("**Competitive Market Analysis**")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown("**Strengths vs Competition:**")
-            st.markdown("• ✅ Superior kitchen updates")
-            st.markdown("• ✅ Better curb appeal")
-            st.markdown("• ✅ Competitive pricing")
-            st.markdown("• ✅ Excellent school district")
-
-        with col2:
-            st.markdown("**Areas for Improvement:**")
-            st.markdown("• 🔸 Smaller master bathroom")
-            st.markdown("• 🔸 Limited backyard space")
-            st.markdown("• 🔸 Single-car garage only")
-
-        # Recommendations
-        st.info("💡 **Agent Recommendations:** Continue current marketing strategy. Consider hosting second open house to capture weekend traffic. Price point is well-positioned for quick sale.")
 
 def render_seller_communication_portal():
     """Communication hub for seller-agent interaction"""
@@ -4978,11 +3927,34 @@ def render_buyer_journey_hub():
             st.markdown("<div style='font-size: 3rem; text-align: center;'>🗺️</div>", unsafe_allow_html=True)
         with col_c2:
             st.markdown("### Claude's Buyer Journey Counsel")
-            st.markdown("""
-            *Monitoring your active buyers in Austin:*
-            - **🧭 Path Finder:** Sarah Johnson has reached the 'Viewing' stage. She's 40% more likely to close if we show her properties in the Avery Ranch district this weekend.
-            - **📉 Value Alert:** 2 listings in the $500k range just had price drops. I've flagged these for your 'Move-up Buyer' segment.
-            """)
+            
+            # Dynamic journey insights
+            if selected_lead_name == "Sarah Chen (Apple Engineer)":
+                journey_text = """
+                *Monitoring Sarah's North Austin search:*
+                - **🧭 Path Finder:** Sarah has reached the 'Viewing' stage. She's 40% more likely to close if we show her the Teravista property this weekend.
+                - **📉 Value Alert:** New listing in Cedar Park just hit the market. It aligns with her 45-day relocation timeline perfectly.
+                """
+            elif selected_lead_name == "David Kim (Investor)":
+                journey_text = """
+                *Monitoring David's portfolio expansion:*
+                - **🧭 Path Finder:** David is in 'Evaluation' mode. He's analyzed 4 Manor properties. High probability of multi-unit offer if Cap Rate is > 5%.
+                - **📉 Value Alert:** An off-market duplex in Del Valle just became available. I've sent him the ROI breakdown.
+                """
+            elif selected_lead_name == "Mike & Jessica Rodriguez (Growing Family)":
+                journey_text = """
+                *Monitoring the Rodriguez family journey:*
+                - **🧭 Path Finder:** They are currently in 'Education' stage. Providing a 'First-Time Buyer' guide will increase their engagement by 60%.
+                - **📉 Value Alert:** Found a home in Pflugerville with a huge fenced yard - their top 'must-have'.
+                """
+            else:
+                journey_text = """
+                *Monitoring your active buyers in Austin:*
+                - **🧭 Path Finder:** Sarah Johnson has reached the 'Viewing' stage. She's 40% more likely to close if we show her properties in the Avery Ranch district this weekend.
+                - **📉 Value Alert:** 2 listings in the $500k range just had price drops. I've flagged these for your 'Move-up Buyer' segment.
+                """
+            st.markdown(journey_text)
+            
             if st.button("🚀 Alert All Matching Buyers"):
                 st.toast("Syncing price-drop alerts to GHL workflows...", icon="🔔")
 
@@ -5081,6 +4053,8 @@ elif selected_hub == "💰 Sales Copilot":
     render_sales_copilot()
 elif selected_hub == "📈 Ops & Optimization":
     render_ops_hub()
+elif selected_hub == "🐝 Swarm Intelligence":
+    render_swarm_visualizer()
 
 # Footer
 st.markdown("---")
