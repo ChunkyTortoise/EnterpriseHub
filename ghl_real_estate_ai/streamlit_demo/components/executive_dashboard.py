@@ -19,7 +19,7 @@ def render_executive_dashboard(mock_data: bool = True):
     st.markdown("---")
     
     # Top-level metrics row
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
         st.markdown("""
@@ -60,6 +60,35 @@ def render_executive_dashboard(mock_data: bool = True):
             <div style='font-size: 0.85rem; opacity: 0.8;'>AI response time</div>
         </div>
         """, unsafe_allow_html=True)
+
+    with col5:
+        # Market Velocity Gauge
+        velocity_score = 78
+        fig_gauge = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=velocity_score,
+            domain={'x': [0, 1], 'y': [0, 1]},
+            title={'text': "MARKET VELOCITY", 'font': {'size': 12, 'color': 'white'}},
+            gauge={
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "white"},
+                'bar': {'color': "#ffffff"},
+                'bgcolor': "rgba(0,0,0,0)",
+                'borderwidth': 2,
+                'bordercolor': "white",
+                'steps': [
+                    {'range': [0, 50], 'color': 'rgba(255,255,255,0.1)'},
+                    {'range': [50, 100], 'color': 'rgba(255,255,255,0.2)'}
+                ],
+            }
+        ))
+        fig_gauge.update_layout(
+            height=140, 
+            margin=dict(l=10, r=10, t=40, b=10),
+            paper_bgcolor='rgba(139, 92, 246, 0.9)',
+            font={'color': "white", 'family': "Arial"},
+            bordercolor="rgba(0,0,0,0)"
+        )
+        st.plotly_chart(fig_gauge, use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -204,30 +233,100 @@ def render_executive_dashboard(mock_data: bool = True):
         </div>
         """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    # Activity Feed and Market Intelligence
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_bottom_left, col_bottom_right = st.columns([1, 1])
     
-    # Activity Feed
-    st.markdown("### 📱 Recent Activity")
-    
-    activities = [
-        {"type": "hot", "icon": "🔥", "message": "Sarah Martinez became a HOT lead", "time": "12m ago"},
-        {"type": "message", "icon": "💬", "message": "AI sent follow-up to Mike Johnson", "time": "45m ago"},
-        {"type": "appointment", "icon": "📅", "message": "Showing scheduled for Jennifer Wu - Tomorrow 2pm", "time": "2h ago"},
-        {"type": "message", "icon": "💬", "message": "New lead: David Chen asking about Hyde Park", "time": "3h ago"},
-        {"type": "warm", "icon": "⚡", "message": "Emma Davis answered 2 questions - now WARM", "time": "4h ago"},
-    ]
-    
-    for activity in activities:
-        border_color = "#00A32A" if activity["type"] == "hot" else "#E5E7EB"
-        st.markdown(f"""
-        <div style='background: white; padding: 12px 16px; border-radius: 8px; 
-                    margin-bottom: 8px; border-left: 3px solid {border_color};
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-                    display: flex; justify-content: space-between; align-items: center;'>
-            <div>
-                <span style='font-size: 1.2rem; margin-right: 8px;'>{activity['icon']}</span>
-                <span style='color: #2A2A33; font-weight: 500;'>{activity['message']}</span>
+    with col_bottom_left:
+        st.markdown("### 🗺️ Market Intelligence Heatmap")
+        st.markdown("""
+        <div class="activity-heatmap">
+            <div class="activity-heatmap-title">Lead Density by Neighborhood (Last 24h)</div>
+            <div class="activity-heatmap-grid">
+                <!-- Row 1 -->
+                <div class="activity-cell activity-hot" title="Downtown: 42 leads"></div>
+                <div class="activity-cell activity-high" title="Domain: 28 leads"></div>
+                <div class="activity-cell activity-medium" title="Zilker: 15 leads"></div>
+                <div class="activity-cell activity-low" title="Mueller: 5 leads"></div>
+                <div class="activity-cell activity-high" title="East Austin: 31 leads"></div>
+                <div class="activity-cell activity-medium" title="Rainey: 12 leads"></div>
+                <div class="activity-cell activity-hot" title="Round Rock: 38 leads"></div>
+                <!-- Row 2 -->
+                <div class="activity-cell activity-medium" title="Pflugerville: 19 leads"></div>
+                <div class="activity-cell activity-low" title="Cedar Park: 8 leads"></div>
+                <div class="activity-cell activity-high" title="Lakeway: 24 leads"></div>
+                <div class="activity-cell activity-hot" title="South Lamar: 45 leads"></div>
+                <div class="activity-cell activity-medium" title="Barton Hills: 14 leads"></div>
+                <div class="activity-cell activity-low" title="Circle C: 6 leads"></div>
+                <div class="activity-cell activity-medium" title="Avery Ranch: 11 leads"></div>
             </div>
-            <div style='color: #6B7280; font-size: 0.85rem;'>{activity['time']}</div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.7rem; color: #64748b;">
+                <span>Low Activity</span>
+                <span>High Activity</span>
+            </div>
         </div>
         """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Lead Velocity Sparklines
+        st.markdown("### 📈 Lead Velocity (7d)")
+        
+        velocity_cols = st.columns(3)
+        with velocity_cols[0]:
+            st.markdown("**New Leads**")
+            st.plotly_chart(sparkline([10, 15, 8, 22, 18, 25, 30], color="#006AFF"), use_container_width=True)
+        with velocity_cols[1]:
+            st.markdown("**Hot Quals**")
+            st.plotly_chart(sparkline([2, 5, 3, 8, 6, 10, 12], color="#10B981"), use_container_width=True)
+        with velocity_cols[2]:
+            st.markdown("**Closings**")
+            st.plotly_chart(sparkline([0, 1, 0, 2, 1, 0, 3], color="#8B5CF6"), use_container_width=True)
+
+    with col_bottom_right:
+        # Activity Feed
+        st.markdown("### 📱 Recent Activity")
+        
+        activities = [
+            {"type": "hot", "icon": "🔥", "message": "Sarah Martinez became a HOT lead", "time": "12m ago"},
+            {"type": "message", "icon": "💬", "message": "AI sent follow-up to Mike Johnson", "time": "45m ago"},
+            {"type": "appointment", "icon": "📅", "message": "Showing scheduled for Jennifer Wu - Tomorrow 2pm", "time": "2h ago"},
+            {"type": "message", "icon": "💬", "message": "New lead: David Chen asking about Hyde Park", "time": "3h ago"},
+            {"type": "warm", "icon": "⚡", "message": "Emma Davis answered 2 questions - now WARM", "time": "4h ago"},
+        ]
+        
+        for activity in activities:
+            border_color = "#00A32A" if activity["type"] == "hot" else "#E5E7EB"
+            st.markdown(f"""
+            <div style='background: white; padding: 12px 16px; border-radius: 8px; 
+                        margin-bottom: 8px; border-left: 3px solid {border_color};
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+                        display: flex; justify-content: space-between; align-items: center;'>
+                <div>
+                    <span style='font-size: 1.2rem; margin-right: 8px;'>{activity['icon']}</span>
+                    <span style='color: #2A2A33; font-weight: 500;'>{activity['message']}</span>
+                </div>
+                <div style='color: #6B7280; font-size: 0.85rem;'>{activity['time']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+def sparkline(data: list, color: str = "#2563eb", height: int = 60):
+    """Generates a minimal sparkline chart using Plotly."""
+    import plotly.graph_objects as go
+    fig = go.Figure(go.Scatter(
+        y=data,
+        mode='lines',
+        fill='tozeroy',
+        line=dict(color=color, width=2),
+        fillcolor=f"{color}33"
+    ))
+    fig.update_layout(
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=height,
+        xaxis=dict(visible=False, fixedrange=True),
+        yaxis=dict(visible=False, fixedrange=True)
+    )
+    return fig

@@ -1,0 +1,15 @@
+{
+  "workflow_id": "4a7e2433-fb71-4056-bce9-48008de81a1a",
+  "name": "Ultimate Lead Nurturing",
+  "description": "A comprehensive workflow to nurture leads from cold to hot using AI-driven SMS and Email sequences.",
+  "trigger": {},
+  "actions": [],
+  "enabled": true,
+  "created_at": "2026-01-12T03:10:28.758913",
+  "updated_at": "2026-01-12T03:10:28.758915",
+  "created_by": "integration_test",
+  "template_id": "tpl_001",
+  "template_version": "1.0.0",
+  "execution_count": 0,
+  "success_count": 0
+}

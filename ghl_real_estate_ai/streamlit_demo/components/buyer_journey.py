@@ -339,3 +339,74 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
             st.markdown("• Schedule property tours within 48 hours of interest")
             st.markdown("• Send personalized neighborhood and school reports")
             st.markdown("• Monitor response times and engagement levels")
+
+def render_buyer_journey_hub(selected_lead_name, render_enhanced_property_search, render_buyer_profile_builder, render_financing_calculator, render_neighborhood_explorer):
+    """Render the complete buyer journey experience"""
+    st.title("🏠 Buyer Journey Hub")
+    st.markdown("*Comprehensive buyer experience from search to closing*")
+
+    # Claude's Journey Counsel
+    with st.container(border=True):
+        col_c1, col_c2 = st.columns([1, 8])
+        with col_c1:
+            st.markdown("<div style='font-size: 3rem; text-align: center;'>🗺️</div>", unsafe_allow_html=True)
+        with col_c2:
+            st.markdown("### Claude's Buyer Journey Counsel")
+            
+            # Dynamic journey insights
+            if selected_lead_name == "Sarah Chen (Apple Engineer)":
+                journey_text = """
+                *Monitoring Sarah's North Austin search:*
+                - **🧭 Path Finder:** Sarah has reached the 'Viewing' stage. She's 40% more likely to close if we show her the Teravista property this weekend.
+                - **📉 Value Alert:** New listing in Cedar Park just hit the market. It aligns with her 45-day relocation timeline perfectly.
+                """
+            elif selected_lead_name == "David Kim (Investor)":
+                journey_text = """
+                *Monitoring David's portfolio expansion:*
+                - **🧭 Path Finder:** David is in 'Evaluation' mode. He's analyzed 4 Manor properties. High probability of multi-unit offer if Cap Rate is > 5%.
+                - **📉 Value Alert:** An off-market duplex in Del Valle just became available. I've sent him the ROI breakdown.
+                """
+            elif selected_lead_name == "Mike & Jessica Rodriguez (Growing Family)":
+                journey_text = """
+                *Monitoring the Rodriguez family journey:*
+                - **🧭 Path Finder:** They are currently in 'Education' stage. Providing a 'First-Time Buyer' guide will increase their engagement by 60%.
+                - **📉 Value Alert:** Found a home in Pflugerville with a huge fenced yard - their top 'must-have'.
+                """
+            else:
+                journey_text = """
+                *Monitoring your active buyers in Austin:*
+                - **🧭 Path Finder:** Sarah Johnson has reached the 'Viewing' stage. She's 40% more likely to close if we show her properties in the Avery Ranch district this weekend.
+                - **📉 Value Alert:** 2 listings in the $500k range just had price drops. I've flagged these for your 'Move-up Buyer' segment.
+                """
+            st.markdown(journey_text)
+            
+            if st.button("🚀 Alert All Matching Buyers"):
+                st.toast("Syncing price-drop alerts to GHL workflows...", icon="🔔")
+
+    # Buyer navigation tabs
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "🔍 Property Search",
+        "👤 Buyer Profile",
+        "💰 Financing",
+        "🌍 Neighborhoods",
+        "📅 Saved & Scheduled",
+        "📊 Buyer Analytics"
+    ])
+
+    with tab1:
+        render_enhanced_property_search()
+
+    with tab2:
+        render_buyer_profile_builder()
+
+    with tab3:
+        render_financing_calculator()
+
+    with tab4:
+        render_neighborhood_explorer()
+
+    with tab5:
+        render_buyer_dashboard()
+
+    with tab6:
+        render_buyer_analytics()

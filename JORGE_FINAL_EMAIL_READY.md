@@ -30,7 +30,7 @@ We've added several high-value "Closing" tools to your Sales Copilot:
 
 🚀 HOW TO START (3 Minutes)
 
-1.  **Open your Dashboard**: http://localhost:8515
+1.  **Open your Dashboard**: http://localhost:8501
 2.  **Test Lead Flow**: Tag any contact in Lyrio with **"Needs Qualifying"**.
 3.  **Watch the Magic**: The AI will qualify the lead, score them, and update your dashboard instantly.
 

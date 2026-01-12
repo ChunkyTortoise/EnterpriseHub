@@ -4,3 +4,6 @@
 {"timestamp": "2026-01-11T17:45:58.664107", "type": "ValidationError", "message": "Invalid input", "context": {"field": "email"}, "stack_trace": null, "location_id": "test_errors"}
 {"timestamp": "2026-01-11T18:40:34.322612", "type": "ValidationError", "message": "Invalid input", "context": {"field": "email"}, "stack_trace": null, "location_id": "test_errors"}
 {"timestamp": "2026-01-11T18:42:23.160441", "type": "ValidationError", "message": "Invalid input", "context": {"field": "email"}, "stack_trace": null, "location_id": "test_errors"}
+{"timestamp": "2026-01-11T19:04:55.023236", "type": "ValidationError", "message": "Invalid input", "context": {"field": "email"}, "stack_trace": null, "location_id": "test_errors"}
+{"timestamp": "2026-01-11T19:08:24.115388", "type": "ValidationError", "message": "Invalid input", "context": {"field": "email"}, "stack_trace": null, "location_id": "test_errors"}
+{"timestamp": "2026-01-11T19:10:34.363470", "type": "ValidationError", "message": "Invalid input", "context": {"field": "email"}, "stack_trace": null, "location_id": "test_errors"}

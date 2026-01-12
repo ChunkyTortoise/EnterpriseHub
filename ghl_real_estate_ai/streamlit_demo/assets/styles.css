@@ -1263,3 +1263,72 @@ div[data-testid="stFormSubmitButton"] > button:hover {
     fill: #ef4444;
 }
 
+/* ==================== SWARM INTELLIGENCE VISUALIZATION ==================== */
+.swarm-node {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    box-shadow: 0 0 10px var(--primary-blue);
+    position: relative;
+    animation: pulse-node 2s infinite;
+}
+
+@keyframes pulse-node {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 106, 255, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(0, 106, 255, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 106, 255, 0); }
+}
+
+.swarm-link {
+    stroke: var(--primary-blue);
+    stroke-width: 1px;
+    opacity: 0.3;
+}
+
+.swarm-container {
+    background: #0f172a;
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.swarm-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.1) 0%, rgba(15, 23, 42, 0) 70%);
+    z-index: 0;
+}
+
+.agent-card {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    color: white;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+}
+
+.agent-card:hover {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
+    transform: translateY(-2px);
+}
+
+.agent-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.status-active { background: #10b981; box-shadow: 0 0 8px #10b981; }
+.status-thinking { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+.status-idle { background: #64748b; }

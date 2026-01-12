@@ -113,6 +113,172 @@
       "listing_url": "https://example.com/listing/15823-fontana-lake"
     },
     {
+      "id": "prop_sarah_001",
+      "status": "active",
+      "address": {
+        "street": "2847 Glenwood Trail",
+        "city": "Round Rock",
+        "state": "TX",
+        "zip": "78665",
+        "neighborhood": "Teravista"
+      },
+      "price": 525000,
+      "bedrooms": 3,
+      "bathrooms": 2.5,
+      "sqft": 2180,
+      "lot_size_sqft": 7500,
+      "year_built": 2020,
+      "property_type": "Single Family",
+      "features": [
+        "Home office with built-in desk",
+        "Gigabit fiber internet ready",
+        "15-minute drive to Apple campus",
+        "Open concept perfect for virtual meetings",
+        "Quiet neighborhood away from traffic",
+        "Brand new construction - no repair surprises",
+        "Move-in ready for 45-day timeline"
+      ],
+      "schools": [
+        {
+          "name": "Teravista Elementary",
+          "rating": 9,
+          "type": "Elementary"
+        },
+        {
+          "name": "Hopewell Middle School",
+          "rating": 8,
+          "type": "Middle"
+        },
+        {
+          "name": "Stony Point High School",
+          "rating": 8,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 110,
+      "property_tax_annual": 11025,
+      "days_on_market": 5,
+      "description": "This home was built for tech professionals! 2020 build featuring a dedicated home office, gigabit fiber, and a 12-minute reverse commute to the Apple campus. Under his $550k SF-adjusted budget.",
+      "highlights": [
+        "12-min commute to Apple",
+        "Gigabit fiber internet",
+        "Dedicated office space",
+        "Round Rock ISD (9/10)",
+        "Tech professional hub"
+      ],
+      "listing_url": "https://example.com/listing/2847-glenwood"
+    },
+    {
+      "id": "prop_mike_001",
+      "status": "active",
+      "address": {
+        "street": "1205 Settlers Valley Dr",
+        "city": "Pflugerville",
+        "state": "TX",
+        "zip": "78660",
+        "neighborhood": "Settlers Valley"
+      },
+      "price": 365000,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "sqft": 1890,
+      "lot_size_sqft": 8000,
+      "year_built": 2019,
+      "property_type": "Single Family",
+      "features": [
+        "Fenced backyard perfect for kids",
+        "Playground visible from kitchen window",
+        "Quiet cul-de-sac location",
+        "Open floor plan for family gatherings",
+        "Two-car garage with storage",
+        "Move-in ready, no fixing needed"
+      ],
+      "schools": [
+        {
+          "name": "Timmerman Elementary",
+          "rating": 8,
+          "type": "Elementary"
+        },
+        {
+          "name": "Dessau Middle School",
+          "rating": 8,
+          "type": "Middle"
+        },
+        {
+          "name": "Pflugerville High School",
+          "rating": 7,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 65,
+      "property_tax_annual": 7665,
+      "days_on_market": 12,
+      "description": "This is exactly what growing families choose! Features a huge fenced yard and visible playground from the kitchen. 18-minute commute to Dell Seton for Jessica.",
+      "highlights": [
+        "Safe cul-de-sac",
+        "Excellent school district",
+        "Huge fenced yard",
+        "18-min to Dell Seton",
+        "Move-in ready"
+      ],
+      "listing_url": "https://example.com/listing/1205-settlers-valley"
+    },
+    {
+      "id": "prop_david_001",
+      "status": "active",
+      "address": {
+        "street": "14821 Willow Ridge Dr",
+        "city": "Manor",
+        "state": "TX",
+        "zip": "78653",
+        "neighborhood": "Manor"
+      },
+      "price": 285000,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "sqft": 1420,
+      "lot_size_sqft": 6000,
+      "year_built": 2018,
+      "property_type": "Single Family",
+      "features": [
+        "Turnkey rental condition",
+        "Quality tenant already in place",
+        "Low maintenance exterior",
+        "Energy efficient construction",
+        "Property management friendly layout",
+        "Immediate positive cash flow of $270/month"
+      ],
+      "schools": [
+        {
+          "name": "Manor Elementary",
+          "rating": 6,
+          "type": "Elementary"
+        },
+        {
+          "name": "Manor Middle School",
+          "rating": 6,
+          "type": "Middle"
+        },
+        {
+          "name": "Manor High School",
+          "rating": 6,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 45,
+      "property_tax_annual": 5985,
+      "days_on_market": 18,
+      "description": "Smart money investment in Austin's growth corridor. Turnkey condition with tenant in place. High rental demand and projected rapid appreciation.",
+      "highlights": [
+        "$270/mo cash flow",
+        "Turnkey condition",
+        "95% area occupancy",
+        "Manor tech-corridor",
+        "Rapid appreciation"
+      ],
+      "listing_url": "https://example.com/listing/14821-willow-ridge"
+    },
+    {
       "id": "prop_003",
       "status": "active",
       "address": {
@@ -225,6 +391,61 @@
       "listing_url": "https://example.com/listing/3308-cavendish"
     },
     {
+      "id": "prop_robert_buy",
+      "status": "active",
+      "address": {
+        "street": "98 San Jacinto Blvd #1204",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78701",
+        "neighborhood": "Downtown"
+      },
+      "price": 975000,
+      "bedrooms": 2,
+      "bathrooms": 2.5,
+      "sqft": 1650,
+      "lot_size_sqft": 0,
+      "year_built": 2021,
+      "property_type": "Luxury Condo",
+      "features": [
+        "Floor-to-ceiling windows",
+        "Downtown skyline views",
+        "Balcony overlooking Lady Bird Lake",
+        "High-end appliances and finishes",
+        "Concierge and valet services",
+        "Rooftop pool and private wine storage"
+      ],
+      "schools": [
+        {
+          "name": "Mathews Elementary",
+          "rating": 9,
+          "type": "Elementary"
+        },
+        {
+          "name": "Lamar Middle School",
+          "rating": 8,
+          "type": "Middle"
+        },
+        {
+          "name": "Austin High School",
+          "rating": 8,
+          "type": "High"
+        }
+      ],
+      "hoa_fee": 850,
+      "property_tax_annual": 20475,
+      "days_on_market": 3,
+      "description": "Lock-and-leave luxury lifestyle steps from Town Lake trail and top restaurants. Full-service concierge and breathtaking views.",
+      "highlights": [
+        "Walker's Paradise",
+        "Concierge services",
+        "Skyline lake views",
+        "High-end amenities",
+        "Lock-and-leave"
+      ],
+      "listing_url": "https://example.com/listing/98-san-jacinto"
+    },
+    {
       "id": "prop_005",
       "status": "active",
       "address": {
@@ -281,118 +502,6 @@
       "listing_url": "https://example.com/listing/12805-marabou"
     },
     {
-      "id": "prop_006",
-      "status": "active",
-      "address": {
-        "street": "2105 Bluffstone Dr",
-        "city": "Round Rock",
-        "state": "TX",
-        "zip": "78665",
-        "neighborhood": "Teravista"
-      },
-      "price": 465000,
-      "bedrooms": 3,
-      "bathrooms": 2.5,
-      "sqft": 2150,
-      "lot_size_sqft": 7200,
-      "year_built": 2021,
-      "property_type": "Single Family",
-      "features": [
-        "New construction (2021)",
-        "Open-concept layout",
-        "Upgraded flooring throughout",
-        "Smart home technology",
-        "Covered patio",
-        "Energy-efficient appliances",
-        "Community amenities"
-      ],
-      "schools": [
-        {
-          "name": "Teravista Elementary",
-          "rating": 8,
-          "type": "Elementary"
-        },
-        {
-          "name": "Hernandez Middle School",
-          "rating": 8,
-          "type": "Middle"
-        },
-        {
-          "name": "Stony Point High School",
-          "rating": 8,
-          "type": "High"
-        }
-      ],
-      "hoa_fee": 110,
-      "property_tax_annual": 9765,
-      "days_on_market": 18,
-      "description": "Like-new home in Round Rock's premier Teravista community. Built in 2021, this 3-bedroom beauty features modern upgrades throughout. Open floor plan with luxury vinyl plank flooring. Kitchen boasts quartz counters and smart appliances. Primary suite includes dual sinks and walk-in shower. Smart home features include programmable thermostat and Ring doorbell. Covered patio perfect for Texas summers. Community offers pools, splash pad, fitness center, and golf course. Round Rock ISD schools. Easy access to major employers.",
-      "highlights": [
-        "Move-in ready (built 2021)",
-        "Energy-efficient (low utilities)",
-        "Top-rated Round Rock ISD",
-        "Golf course community",
-        "Builder warranty still valid"
-      ],
-      "listing_url": "https://example.com/listing/2105-bluffstone"
-    },
-    {
-      "id": "prop_007",
-      "status": "active",
-      "address": {
-        "street": "8801 Circle C Ranch Dr",
-        "city": "Austin",
-        "state": "TX",
-        "zip": "78749",
-        "neighborhood": "Circle C Ranch"
-      },
-      "price": 520000,
-      "bedrooms": 4,
-      "bathrooms": 2.5,
-      "sqft": 2450,
-      "lot_size_sqft": 8100,
-      "year_built": 2016,
-      "property_type": "Single Family",
-      "features": [
-        "Cul-de-sac location",
-        "Updated kitchen with granite",
-        "Large backyard with playset",
-        "Study/office downstairs",
-        "Game room upstairs",
-        "Tankless water heater",
-        "Community pool and parks"
-      ],
-      "schools": [
-        {
-          "name": "Clayton Elementary",
-          "rating": 9,
-          "type": "Elementary"
-        },
-        {
-          "name": "Bailey Middle School",
-          "rating": 8,
-          "type": "Middle"
-        },
-        {
-          "name": "Bowie High School",
-          "rating": 8,
-          "type": "High"
-        }
-      ],
-      "hoa_fee": 85,
-      "property_tax_annual": 10920,
-      "days_on_market": 14,
-      "description": "Perfect family home in Circle C Ranch. This well-maintained 4-bedroom sits on a quiet cul-de-sac. Open floor plan with study downstairs ideal for work-from-home. Updated kitchen with granite and breakfast bar. Upstairs game room provides extra living space. Large backyard with playset stays. Recent upgrades include tankless water heater and new carpet. Community features pools, splash pads, parks, and trails. Top-rated Austin ISD schools. Minutes to shopping and Y at Oak Hill.",
-      "highlights": [
-        "Family-friendly neighborhood",
-        "Excellent schools (9/10 elementary)",
-        "Quiet cul-de-sac",
-        "Pool-sized backyard",
-        "Home office space"
-      ],
-      "listing_url": "https://example.com/listing/8801-circle-c"
-    },
-    {
       "id": "prop_008",
       "status": "active",
       "address": {
@@ -447,127 +556,15 @@
         "Investment potential"
       ],
       "listing_url": "https://example.com/listing/710-w-23rd"
-    },
-    {
-      "id": "prop_009",
-      "status": "active",
-      "address": {
-        "street": "1512 Woodland Ave",
-        "city": "Austin",
-        "state": "TX",
-        "zip": "78741",
-        "neighborhood": "Travis Heights"
-      },
-      "price": 785000,
-      "bedrooms": 3,
-      "bathrooms": 2,
-      "sqft": 1580,
-      "lot_size_sqft": 7500,
-      "year_built": 1955,
-      "property_type": "Single Family",
-      "features": [
-        "Mid-century modern remodel",
-        "Original terrazzo floors",
-        "Floor-to-ceiling windows",
-        "Chef's kitchen with Bertazzoni range",
-        "Primary suite addition",
-        "Outdoor shower",
-        "Walkable to downtown"
-      ],
-      "schools": [
-        {
-          "name": "Travis Heights Elementary",
-          "rating": 7,
-          "type": "Elementary"
-        },
-        {
-          "name": "Fulmore Middle School",
-          "rating": 7,
-          "type": "Middle"
-        },
-        {
-          "name": "Travis High School",
-          "rating": 7,
-          "type": "High"
-        }
-      ],
-      "hoa_fee": 0,
-      "property_tax_annual": 16485,
-      "days_on_market": 9,
-      "description": "Stunning mid-century modern gem in historic Travis Heights. This meticulously renovated 1955 home honors original character while adding modern luxury. Original terrazzo floors gleam throughout. Walls of windows frame mature oak trees. Gourmet kitchen features Bertazzoni range and custom cabinetry. Primary suite addition offers spa-like retreat. Outdoor shower and covered patio create resort vibe. Walk to South Congress, coffee shops, and parks. Bike to downtown in 10 minutes. Rare find in coveted neighborhood.",
-      "highlights": [
-        "Architectural significance",
-        "High-end renovation",
-        "Walkable to SoCo",
-        "Original mid-century details",
-        "Mature landscaping"
-      ],
-      "listing_url": "https://example.com/listing/1512-woodland"
-    },
-    {
-      "id": "prop_010",
-      "status": "active",
-      "address": {
-        "street": "19121 Weiss Ln",
-        "city": "Pflugerville",
-        "state": "TX",
-        "zip": "78660",
-        "neighborhood": "Falcon Pointe"
-      },
-      "price": 325000,
-      "bedrooms": 3,
-      "bathrooms": 2,
-      "sqft": 1680,
-      "lot_size_sqft": 6200,
-      "year_built": 2017,
-      "property_type": "Single Family",
-      "features": [
-        "Open floor plan",
-        "Island kitchen",
-        "Primary suite with garden tub",
-        "Covered patio",
-        "Low-maintenance yard",
-        "Community pool",
-        "Energy-efficient"
-      ],
-      "schools": [
-        {
-          "name": "Rowe Lane Elementary",
-          "rating": 7,
-          "type": "Elementary"
-        },
-        {
-          "name": "Dessau Middle School",
-          "rating": 7,
-          "type": "Middle"
-        },
-        {
-          "name": "Weiss High School",
-          "rating": 7,
-          "type": "High"
-        }
-      ],
-      "hoa_fee": 65,
-      "property_tax_annual": 6825,
-      "days_on_market": 22,
-      "description": "Affordable starter home in Pflugerville's Falcon Pointe. This well-maintained 3-bedroom offers great value under $350k. Open layout perfect for modern living. Kitchen includes island, pantry, and stainless appliances. Primary bedroom features walk-in closet and garden tub. Covered patio overlooks low-maintenance yard. Community pool and playground. Pflugerville ISD schools. Minutes to shopping, dining, and major employers (Tesla, Samsung, Apple). Great opportunity for first-time buyers or investors.",
-      "highlights": [
-        "Best value (under $350k)",
-        "Low property taxes",
-        "Low HOA ($65/month)",
-        "Nearly new (2017)",
-        "First-time buyer friendly"
-      ],
-      "listing_url": "https://example.com/listing/19121-weiss"
     }
   ],
   "metadata": {
-    "version": "1.0",
+    "version": "1.1",
     "market": "Greater Austin, TX",
-    "price_range": "$325,000 - $895,000",
+    "price_range": "$285,000 - $1,150,000",
     "total_listings": 10,
-    "last_updated": "2025-01-02",
-    "average_price": 577500,
+    "last_updated": "2026-01-11",
+    "average_price": 610000,
     "neighborhoods_covered": [
       "Hyde Park",
       "Avery Ranch",
@@ -575,10 +572,10 @@
       "Pflugerville",
       "Steiner Ranch",
       "Round Rock",
-      "Circle C Ranch",
+      "Manor",
+      "Downtown",
       "West Campus",
-      "Travis Heights",
-      "Falcon Pointe"
+      "Teravista"
     ]
   }
 }

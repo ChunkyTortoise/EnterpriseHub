@@ -107,7 +107,7 @@ Click through each hub in the sidebar:
 ### Dashboard Won't Open?
 ```bash
 # Restart it:
-kill 40743
+kill 51430
 cd ghl_real_estate_ai/streamlit_demo
 python3 -m streamlit run app.py --server.port 8501
 ```
@@ -133,6 +133,6 @@ python3 -m streamlit run app.py --server.port 8501
 
 ---
 
-**Dashboard PID:** 40743 (to stop: `kill 40743`)  
+**Dashboard PID:** 51430 (to stop: `kill 51430`)  
 **Status:** ✅ RUNNING  
 **URL:** http://localhost:8501

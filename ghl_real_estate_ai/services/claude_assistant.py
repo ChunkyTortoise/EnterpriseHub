@@ -60,6 +60,13 @@ class ClaudeAssistant:
         elif "Lead Intelligence" in clean_hub:
             selected = st.session_state.get('selected_lead_name', '-- Select a Lead --')
             if selected != "-- Select a Lead --":
+                # Persona-specific Claude insights
+                if "Sarah Chen" in selected:
+                    return "Sarah is a data-driven Apple engineer with a hard 45-day deadline. She's prioritizing Teravista for its commute efficiency. High conversion probability if we tour this weekend."
+                elif "David Kim" in selected:
+                    return "David is a seasoned investor focused on cash-on-cash return. He's currently cross-referencing Manor vs Del Valle yield data. Recommend sending the off-market ROI brief."
+                elif "Rodriguez" in selected:
+                    return "The Rodriguez family is nervous about their first purchase. They've spent 15 minutes on the 'Safety & Schools' dashboard. Emphasize Pflugerville's 8/10 ratings."
                 return f"I've analyzed {selected}'s recent SMS sentiment. They are showing 85% positive engagement but haven't booked a tour yet."
             return "Select a lead to see my behavioral breakdown and conversion probability."
             

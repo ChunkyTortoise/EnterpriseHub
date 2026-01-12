@@ -867,6 +867,90 @@
       "started_at": null,
       "completed_at": null,
       "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260111_190439",
+      "location_id": "integration_test",
+      "operation_type": "tag",
+      "created_at": "2026-01-11T19:04:39.501173",
+      "created_by": "tester",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead1",
+        "lead2"
+      ],
+      "parameters": {
+        "tags": [
+          "integration_test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260111_190809",
+      "location_id": "integration_test",
+      "operation_type": "tag",
+      "created_at": "2026-01-11T19:08:09.188403",
+      "created_by": "tester",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead1",
+        "lead2"
+      ],
+      "parameters": {
+        "tags": [
+          "integration_test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260111_191016",
+      "location_id": "integration_test",
+      "operation_type": "tag",
+      "created_at": "2026-01-11T19:10:16.693404",
+      "created_by": "tester",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead1",
+        "lead2"
+      ],
+      "parameters": {
+        "tags": [
+          "integration_test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
     }
   ],
   "templates": {}

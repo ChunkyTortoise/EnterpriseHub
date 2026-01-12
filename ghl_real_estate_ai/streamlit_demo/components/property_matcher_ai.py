@@ -421,18 +421,104 @@ def _load_demo_properties() -> List[Dict]:
 def _get_fallback_properties(lead_context: Dict) -> List[Dict]:
     """
     Ultimate fallback to static demo data when Strategy Pattern is unavailable.
-
-    Maintains backward compatibility and ensures demo always works.
-
-    Args:
-        lead_context: Lead context for basic customization
-
-    Returns:
-        List of formatted property matches
+    Persona-aware for high-impact demo scenarios.
     """
+    lead_id = lead_context.get('lead_id', 'unknown')
     extracted = lead_context.get('extracted_preferences', {})
     budget = extracted.get('budget', 800000)
-    location = extracted.get('location', 'Downtown')
+    
+    # Sarah Chen (Apple Engineer) - North Austin/Round Rock focus
+    if lead_id == 'tech_professional_sarah':
+        return [
+            {
+                'address': '2847 Glenwood Trail',
+                'price': 525000,
+                'beds': 3,
+                'baths': 2.5,
+                'sqft': 2180,
+                'neighborhood': 'Teravista (Round Rock)',
+                'icon': '🏡',
+                'match_score': 95,
+                'budget_match': True,
+                'location_match': True,
+                'features_match': True,
+                'match_reasons': [
+                    "Under SF-adjusted budget ($550k)",
+                    "12-min commute to Apple campus",
+                    "Gigabit fiber internet ready",
+                    "Dedicated home office space",
+                    "Round Rock ISD (9/10 rating)"
+                ]
+            },
+            {
+                'address': '15823 Fontana Lake Dr',
+                'price': 585000,
+                'beds': 4,
+                'baths': 3,
+                'sqft': 2650,
+                'neighborhood': 'Avery Ranch',
+                'icon': '🏠',
+                'match_score': 88,
+                'budget_match': False,
+                'location_match': True,
+                'features_match': True,
+                'match_reasons': [
+                    "Premium location near Brushy Creek",
+                    "Modern open floor plan",
+                    "Large secondary office/flex space",
+                    "Walkable to local coffee shops",
+                    "High-speed networking installed"
+                ]
+            }
+        ]
+    
+    # David Kim (Investor) - Manor/Del Valle focus
+    elif lead_id == 'investor_david':
+        return [
+            {
+                'address': '14821 Willow Ridge Dr',
+                'price': 285000,
+                'beds': 3,
+                'baths': 2,
+                'sqft': 1420,
+                'neighborhood': 'Manor',
+                'icon': '💰',
+                'match_score': 98,
+                'budget_match': True,
+                'location_match': True,
+                'features_match': True,
+                'match_reasons': [
+                    "Projected $270/mo positive cash flow",
+                    "Turnkey condition (built 2018)",
+                    "High rental demand (95% area occupancy)",
+                    "Rapid appreciation forecast (12%+)",
+                    "Manor tech-corridor growth zone"
+                ]
+            },
+            {
+                'address': '101 Cedar Rd',
+                'price': 320000,
+                'beds': 2,
+                'baths': 1,
+                'sqft': 1100,
+                'neighborhood': 'Del Valle',
+                'icon': '🏬',
+                'match_score': 91,
+                'budget_match': True,
+                'location_match': True,
+                'features_match': True,
+                'match_reasons': [
+                    "Proximity to Tesla Giga Austin",
+                    "Low maintenance exterior",
+                    "Ideal entry-level rental",
+                    "Strategic land-value hold",
+                    "Near Austin Airport expansion"
+                ]
+            }
+        ]
+
+    # Default fallback
+    location = extracted.get('location', 'Austin')
     beds = extracted.get('bedrooms', 3)
 
     return [
@@ -450,90 +536,10 @@ def _get_fallback_properties(lead_context: Dict) -> List[Dict]:
             'features_match': True,
             'match_reasons': [
                 f"Within budget (${budget:,})",
-                f"Perfect location ({location})",
+                f"Location compatibility ({location})",
                 f"Exact bedroom count ({beds} beds)",
                 "Newly renovated kitchen",
                 "Walk to shops and restaurants"
-            ]
-        },
-        {
-            'address': '456 Maple Ave',
-            'price': 780000,
-            'beds': 3,
-            'baths': 2,
-            'sqft': 2300,
-            'neighborhood': 'Domain',
-            'icon': '🏠',
-            'match_score': 88,
-            'budget_match': True,
-            'location_match': False,
-            'features_match': True,
-            'match_reasons': [
-                f"Within budget (${budget:,})",
-                "Pool and covered patio",
-                f"{beds} bedrooms as requested",
-                "Top-rated school district",
-                "Adjacent to tech corridor"
-            ]
-        },
-        {
-            'address': '789 Cedar Lane',
-            'price': 725000,
-            'beds': 4,
-            'baths': 2.5,
-            'sqft': 2400,
-            'neighborhood': 'South Congress',
-            'icon': '🏘️',
-            'match_score': 85,
-            'budget_match': True,
-            'location_match': True,
-            'features_match': False,
-            'match_reasons': [
-                f"Great value (${budget - 725000:,} under budget)",
-                "Trendy neighborhood",
-                "Bonus 4th bedroom (home office?)",
-                "Large backyard",
-                "Recently listed"
-            ]
-        },
-        {
-            'address': '321 Pine Boulevard',
-            'price': 795000,
-            'beds': 3,
-            'baths': 3,
-            'sqft': 2500,
-            'neighborhood': 'Westlake',
-            'icon': '🏡',
-            'match_score': 82,
-            'budget_match': True,
-            'location_match': False,
-            'features_match': True,
-            'match_reasons': [
-                f"Just under budget (${budget:,})",
-                "Luxury finishes throughout",
-                f"{beds} bedrooms as requested",
-                "Private backyard with lake views",
-                "Gated community with amenities"
-            ]
-        },
-        {
-            'address': '555 Elm Drive',
-            'price': 680000,
-            'beds': 3,
-            'baths': 2,
-            'sqft': 1950,
-            'neighborhood': 'Mueller',
-            'icon': '🏠',
-            'match_score': 79,
-            'budget_match': True,
-            'location_match': True,
-            'features_match': True,
-            'match_reasons': [
-                f"Excellent value (${budget - 680000:,} under budget)",
-                "Walk to Mueller Lake Park",
-                f"Perfect {beds} bedroom layout",
-                "Energy-efficient smart home",
-                "Close to dining and shopping"
             ]
         }
     ]
