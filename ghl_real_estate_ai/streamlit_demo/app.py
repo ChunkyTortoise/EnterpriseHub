@@ -99,9 +99,26 @@ try:
     from streamlit_demo.components.property_valuation import render_property_valuation_engine
     from streamlit_demo.components.financing_calculator import render_financing_calculator
     from streamlit_demo.components.neighborhood_intelligence import render_neighborhood_explorer
-    from streamlit_demo.components.buyer_journey import render_buyer_dashboard, render_buyer_analytics
+    from streamlit_demo.components.buyer_journey import render_buyer_dashboard, render_buyer_analytics, render_buyer_journey_hub
+    from streamlit_demo.components.seller_journey import (
+        render_seller_prep_checklist, 
+        render_marketing_campaign_dashboard, 
+        render_seller_communication_portal, 
+        render_transaction_timeline, 
+        render_seller_analytics, 
+        render_seller_journey_hub
+    )
+    from streamlit_demo.components.ui_elements import render_action_card, render_insight_card
+    from streamlit_demo.components.executive_hub import render_executive_hub
+    from streamlit_demo.components.calculators import render_roi_calculator, render_revenue_funnel
+    from streamlit_demo.components.claude_panel import render_claude_assistant
     from streamlit_demo.components.swarm_visualizer import render_swarm_visualizer
     from streamlit_demo.components.ai_training_feedback import render_rlhf_loop
+    from streamlit_demo.components.voice_intelligence import render_voice_intelligence
+    from streamlit_demo.components.property_swipe import render_property_swipe
+    from streamlit_demo.components.workflow_designer import render_workflow_designer
+    from streamlit_demo.components.listing_architect import render_listing_architect
+    from streamlit_demo.components.security_governance import render_security_governance
     from realtime_dashboard_integration import render_realtime_intelligence_dashboard
 
     SERVICES_LOADED = True
@@ -413,6 +430,20 @@ def get_lead_options(market_key):
             "overall_score": 92,
             "actions_completed": 4
         },
+        "David Kim (Investor)": {
+            "lead_id": "investor_david",
+            "extracted_preferences": {
+                "budget": 350000,
+                "location": "Manor / Del Valle",
+                "timeline": "Immediate",
+                "must_haves": ["Positive cash flow", "Rental potential"],
+                "financing": "Cash Buyer",
+                "motivation": "Expanding Austin portfolio",
+                "property_type": "Single Family or Duplex"
+            },
+            "overall_score": 95,
+            "actions_completed": 5
+        },
         "Mike & Jessica Rodriguez (Growing Family)": {
             "lead_id": "growing_family_mike",
             "extracted_preferences": {
@@ -430,20 +461,6 @@ def get_lead_options(market_key):
             "overall_score": 78,
             "actions_completed": 2
         },
-        "David Kim (Investor)": {
-            "lead_id": "investor_david",
-            "extracted_preferences": {
-                "budget": 350000,
-                "location": "Manor / Del Valle",
-                "timeline": "Immediate",
-                "must_haves": ["Positive cash flow", "Rental potential"],
-                "financing": "Cash Buyer",
-                "motivation": "Expanding Austin portfolio",
-                "property_type": "Single Family or Duplex"
-            },
-            "overall_score": 95,
-            "actions_completed": 5
-        },
         "Robert & Linda Williams (Luxury Downsizer)": {
             "lead_id": "luxury_downsizer_robert",
             "extracted_preferences": {
@@ -459,34 +476,6 @@ def get_lead_options(market_key):
             },
             "overall_score": 88,
             "actions_completed": 3
-        },
-        "Sarah Johnson": {
-            "extracted_preferences": {
-                "budget": 1300000 if market_key == "Rancho" else 800000,
-                "location": "Alta Loma" if market_key == "Rancho" else "Downtown",
-                "timeline": "ASAP",
-                "bedrooms": 4,
-                "bathrooms": 3,
-                "must_haves": ["Pool"],
-                "financing": "Pre-approved",
-                "motivation": "Relocating for work",
-                "home_condition": "Excellent",
-                "property_type": "Single Family Home"
-            }
-        },
-        "Mike Chen": {
-            "extracted_preferences": {
-                "location": "Victoria Gardens" if market_key == "Rancho" else "Suburbs",
-                "timeline": "6 months",
-                "bedrooms": 2,
-                "budget": 700000 if market_key == "Rancho" else 450000,
-                "property_type": "Condo"
-            }
-        },
-        "Emily Davis": {
-            "extracted_preferences": {
-                "budget": 1000000 if market_key == "Rancho" else 300000
-            }
         }
     }
 
@@ -927,13 +916,14 @@ with st.sidebar:
         st.caption(f"Last sync: {st.session_state.ai_config['last_sync']}")
 
     # NEW: Portal URL Utility
-    with st.expander("🔗 Sub-Account Access", expanded=False):
+    with st.expander("🔗 GHL Architectural Sync", expanded=False):
         st.markdown("""
-        **Location ID:** `REDACTED_ID`
-        **Sub-account:** Lyrio
+        **Environment:** `Lyrio-Production-Main`
+        **Sync Status:** ✅ Operational
+        **Lead Buffer:** 128MB Persistent
         """)
-        st.link_button("🌐 Open GHL Dashboard", "https://app.gohighlevel.com", use_container_width=True)
-        st.link_button("📨 Open Conversations", "https://app.gohighlevel.com/v2/location/REDACTED_ID/conversations", use_container_width=True)
+        st.link_button("🌐 Open Lyrio Dashboard", "https://app.gohighlevel.com", use_container_width=True)
+        st.link_button("📨 AI Conversation Audit", "https://app.gohighlevel.com", use_container_width=True)
 
     st.markdown("---")
     
@@ -985,232 +975,10 @@ with st.sidebar:
             </div>
             """, unsafe_allow_html=True)
 
-# --- HELPER FUNCTIONS FOR UI COMPONENTS ---
-
-def render_roi_calculator(selected_lead):
-    st.subheader("💰 Deal Closer AI: Financial Modeler")
-    
-    # Dynamic Context from Lead Hub
-    budget = selected_lead.get('budget', 500000)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        price = st.number_input("Property Price ($)", value=budget)
-        down_payment = st.slider("Down Payment (%)", 0, 100, 20)
-        rate = st.number_input("Interest Rate (%)", value=6.5, step=0.1)
-    
-    # Mortgage Math
-    loan_amount = price * (1 - down_payment/100)
-    monthly_rate = (rate / 100) / 12
-    months = 30 * 12
-    payment = loan_amount * (monthly_rate * (1 + monthly_rate)**months) / ((1 + monthly_rate)**months - 1)
-    
-    with col2:
-        st.metric("Est. Monthly Payment", f"${payment:,.2f}")
-        st.write("**AI Recommendation:** Based on Sarah's income profile, a 15% down payment at 6.2% is the 'sweet spot' for her debt-to-income ratio.")
-
-def render_revenue_funnel():
-    data = dict(
-        number=[156, 47, 23, 12, 5],
-        stage=["Conversations", "Active Leads", "Hot Leads", "Tours", "Contracts"]
-    )
-    fig = px.funnel(data, x='number', y='stage', color_discrete_sequence=['#2563eb'])
-    st.plotly_chart(fig, use_container_width=True)
-
-def render_claude_assistant():
-    """Delegates to the centralized ClaudeAssistant service."""
-    leads = st.session_state.get('lead_options', {})
-    hub = st.session_state.current_hub
-    market = st.session_state.get('selected_market', 'Austin')
-    
-    claude.greet_user("Jorge")
-    claude.render_sidebar_panel(hub, market, leads)
-
 # Main content area
-@ui_error_boundary("Executive Command Center")
-def render_executive_hub():
-    st.header("🏢 Executive Command Center")
-    st.markdown("*High-level KPIs, revenue tracking, and system health*")
-
-    # NEW: Claude's Strategic Briefing Area
-    with st.container(border=True):
-        col_icon, col_text = st.columns([1, 6])
-        with col_icon:
-            st.markdown("<div style='font-size: 3.5rem; text-align: center; margin-top: 10px;'>🔮</div>", unsafe_allow_html=True)
-        with col_text:
-            st.markdown("### Claude's Strategy Briefing")
-            st.markdown("""
-            *I've analyzed your entire GHL environment for the last 24 hours. Here is your priority focus:*
-            - **🔥 Hot Cluster:** There is a surge of interest in Alta Loma. 3 leads just moved into the 'Ready' tier.
-            - **⚠️ Retention Risk:** 2 leads from the Facebook campaign have gone silent. I've prepared a re-engagement sequence.
-            - **💰 Revenue Path:** Converting Sarah Johnson this week will push your Austin pipeline past the monthly target.
-            """)
-            if st.button("🚀 Execute Strategic Re-engagement"):
-                st.toast("Triggering AI re-engagement for silent leads...", icon="⚡")
-    
-    st.markdown("---")
-    
-    # Tabs for sub-features
-    tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "🎯 AI Insights", "📄 Reports"])
-    
-    with tab1:
-        st.subheader("Executive Dashboard")
-        
-        # Key metrics
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Total Pipeline", "$2.4M", "+15%")
-            st.plotly_chart(sparkline([1.8, 2.1, 1.9, 2.4, 2.2, 2.4], color="#2563eb", height=50), use_container_width=True, config={'displayModeBar': False})
-        with col2:
-            st.metric("Commission Capture", "$136.7K", "+$42K")
-            st.plotly_chart(sparkline([80, 95, 110, 105, 120, 136], color="#16a34a", height=50), use_container_width=True, config={'displayModeBar': False})
-        with col3:
-            st.metric("Conversion Rate", "34%", "+2%")
-            st.plotly_chart(sparkline([28, 30, 31, 32, 33, 34], color="#ea580c", height=50), use_container_width=True, config={'displayModeBar': False})
-        with col4:
-            st.metric("AI Lead Velocity", "4.2/day", "+1.1")
-            st.plotly_chart(sparkline([2.1, 2.5, 3.0, 3.8, 4.0, 4.2], color="#7c3aed", height=50), use_container_width=True, config={'displayModeBar': False})
-        
-        st.markdown("---")
-        
-        # Enterprise Color Palette
-        COLORS = {
-            'primary': '#2563eb',
-            'secondary': '#64748b',
-            'success': '#22c55e',
-            'warning': '#f59e0b',
-            'danger': '#ef4444',
-            'text': '#1e293b',
-            'grid': '#e2e8f0'
-        }
-
-        # Mock data for revenue trends
-        dates = pd.date_range(end=pd.Timestamp.now(), periods=6, freq='ME')
-        revenue_data = {
-            'Month': dates.strftime('%b %Y'),
-            'Revenue': [180000, 210000, 195000, 240000, 225000, 280000],
-            'Target': [200000, 200000, 220000, 220000, 250000, 250000]
-        }
-        df_rev = pd.DataFrame(revenue_data)
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=df_rev['Month'], 
-            y=df_rev['Revenue'], 
-            name='Actual Revenue',
-            line=dict(color=COLORS['primary'], width=4),
-            marker=dict(size=8),
-            fill='tozeroy',
-            fillcolor='rgba(37, 99, 235, 0.1)'
-        ))
-        fig.add_trace(go.Scatter(
-            x=df_rev['Month'], 
-            y=df_rev['Target'], 
-            name='Target Revenue',
-            line=dict(color=COLORS['secondary'], width=2, dash='dash')
-        ))
-        
-        fig.update_layout(
-            title="<b>Revenue Performance vs Target</b>",
-            template="plotly_white",
-            margin=dict(l=20, r=20, t=60, b=20),
-            height=350,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color=COLORS['text']),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            xaxis=dict(gridcolor=COLORS['grid']),
-            yaxis=dict(gridcolor=COLORS['grid'])
-        )
-        st.plotly_chart(fig, width="stretch")
-        
-        # Add last updated timestamp
-        import datetime
-        last_updated = datetime.datetime.now().strftime("%b %d, %Y at %I:%M %p")
-        st.markdown(f"<div class='last-updated'>Last updated: {last_updated}</div>", unsafe_allow_html=True)
-        
-    with tab2:
-        st.subheader("AI System Insights")
-        
-        # Add AI Performance Metrics Dashboard
-        try:
-            from components.ai_performance_metrics import render_ai_metrics_dashboard
-            render_ai_metrics_dashboard()
-            st.markdown("---")
-        except ImportError:
-            pass
-        
-        # Get dynamic insights
-        summary = services["executive"].get_executive_summary("demo_location")
-        insights = summary.get("insights", [])
-        
-        if not insights:
-            insights = [
-                {"type": "success", "title": "Response Time Excellence", "value": "1.8 mins", "message": "Average response time beats target by 40%"},
-                {"type": "warning", "title": "Conversion Opportunity", "value": "20% Gap", "message": "12 leads are stalling at the 'Financing' stage. Focus required.", "action": "🎯 Fix Conversion Gap Now"},
-                {"type": "info", "title": "Lead Sentiment", "value": "Strong", "message": "85% of recent conversations show positive buying intent."}
-            ]
-
-        # Fix 0.0 mins edge case in logic (Simulated)
-        for insight in insights:
-            if "0.0" in str(insight.get("value", "")):
-                insight["value"] = "Evaluating..."
-                insight["message"] = "Initial data sync in progress."
-
-        for i, insight in enumerate(insights):
-            # Map 'opportunity' to 'warning' for visual consistency in the UI
-            insight_status = 'warning' if insight["type"] == "opportunity" else insight["type"]
-            
-            render_insight_card(
-                insight["title"], 
-                insight.get("value", "N/A"), 
-                insight["message"], 
-                status=insight_status,
-                action_label=insight.get("action"),
-                action_key=f"insight_btn_{i}"
-            )
-        
-        st.markdown("#### 📈 System Performance")
-        # Ensure mock_data is not None and handle missing keys safely
-        safe_data = mock_data if mock_data is not None else {}
-        health = safe_data.get("system_health", {})
-        
-        if health:
-            c1, c2, c3 = st.columns(3)
-            # Ensure no 0.0 metrics show up in performance cards either
-            resp_time = health.get('avg_response_time_ms', 0)
-            resp_display = f"{resp_time}ms" if resp_time > 0 else "Evaluating"
-            
-            c1.metric("API Uptime", f"{health.get('uptime_percentage', 100)}%")
-            c2.metric("Avg Latency", resp_display)
-            c3.metric("SMS Compliance", f"{int(health.get('sms_compliance_rate', 1) * 100)}%")
-
-    with tab3:
-        st.subheader("Actionable Executive Report")
-        
-        action_items = summary.get("action_items", [])
-        if not action_items:
-             action_items = [
-                {"priority": "high", "title": "5 Hot Leads Pending", "action": "Schedule showings for Downtown cluster", "impact": "Potential $2.5M Volume"},
-                {"priority": "medium", "title": "Review Weekend Staffing", "action": "Add on-call agent for Saturdays", "impact": "Improve conversion by ~5%"}
-            ]
-
-        st.dataframe(
-            pd.DataFrame(action_items),
-            column_config={
-                "priority": "Priority",
-                "title": "Opportunity",
-                "action": "Recommended Action",
-                "impact": "Estimated Impact"
-            },
-            hide_index=True,
-            width="stretch"
-        )
-        
-        if st.button("📧 Email Report to Jorge"):
-            st.toast("Report sent to jorge@example.com")
-
 @ui_error_boundary("Lead Intelligence Hub")
+
+
 def render_lead_intelligence_hub():
     st.header("🧠 Lead Intelligence Hub")
     st.markdown("*Deep dive into individual leads with AI-powered insights*")
@@ -1970,7 +1738,7 @@ def render_automation_studio():
     st.header("🤖 Automation Studio")
     st.markdown("*Visual switchboard to toggle AI features on/off*")
     
-    tab1, tab2, tab3, tab4 = st.tabs(["⚙️ Automations", "📧 Sequences", "🔄 Workflows", "🧠 Claude's Prompt Lab"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["⚙️ Automations", "📧 Sequences", "🔄 Workflows", "🧠 Claude's Prompt Lab", "🎨 Visual Designer"])
     
     with tab1:
         st.subheader("AI Automation Control Panel")
@@ -2170,6 +1938,9 @@ def render_automation_studio():
             if st.button("🚀 Push to GHL Production"):
                 st.toast("Updated prompt synced to GHL Custom Fields!")
 
+    with tab5:
+        render_workflow_designer()
+
 @ui_error_boundary("Sales Copilot")
 def render_sales_copilot():
     st.header("💰 Sales Copilot")
@@ -2192,11 +1963,12 @@ def render_sales_copilot():
     
     st.markdown("---")
     
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "💼 Deal Closer",
         "📄 Documents",
         "📋 Meeting Prep",
-        "💵 Calculator"
+        "💵 Calculator",
+        "🎙️ Live Call Intelligence"
     ])
     
     with tab1:
@@ -2247,6 +2019,9 @@ def render_sales_copilot():
                     st.markdown(response_content)
                 
                 st.session_state.messages.append({"role": "assistant", "content": response_content})
+
+    with tab5:
+        render_voice_intelligence()
         
     with tab2:
         st.subheader("Smart Document Generator")
@@ -2355,13 +2130,14 @@ def render_ops_hub():
     st.header("📈 Ops & Optimization")
     st.markdown("*Manager-level analytics and team performance tracking*")
     
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "✅ Quality",
         "💰 Revenue",
         "🏆 Benchmarks",
         "🎓 Coaching",
         "🛠️ Control",
-        "🧠 RLHF Loop"
+        "🧠 RLHF Loop",
+        "🛡️ Governance"
     ])
     
     with tab1:
@@ -2455,6 +2231,9 @@ def render_ops_hub():
         
     with tab6:
         render_rlhf_loop()
+        
+    with tab7:
+        render_security_governance()
         
         if st.button("🛰️ Initiate Model Retraining", type="primary", use_container_width=True):
             with st.spinner("Retraining Property Matcher ML..."):
@@ -3049,127 +2828,6 @@ def render_enhanced_property_search():
                 st.markdown("---")
 
 # Seller Component Functions
-
-# Buyer Journey Hub Components
-def render_buyer_journey_hub():
-    """Render the complete buyer journey experience"""
-    st.title("🏠 Buyer Journey Hub")
-    st.markdown("*Comprehensive buyer experience from search to closing*")
-
-    # Claude's Journey Counsel
-    with st.container(border=True):
-        col_c1, col_c2 = st.columns([1, 8])
-        with col_c1:
-            st.markdown("<div style='font-size: 3rem; text-align: center;'>🗺️</div>", unsafe_allow_html=True)
-        with col_c2:
-            st.markdown("### Claude's Buyer Journey Counsel")
-            
-            # Dynamic journey insights
-            if selected_lead_name == "Sarah Chen (Apple Engineer)":
-                journey_text = """
-                *Monitoring Sarah's North Austin search:*
-                - **🧭 Path Finder:** Sarah has reached the 'Viewing' stage. She's 40% more likely to close if we show her the Teravista property this weekend.
-                - **📉 Value Alert:** New listing in Cedar Park just hit the market. It aligns with her 45-day relocation timeline perfectly.
-                """
-            elif selected_lead_name == "David Kim (Investor)":
-                journey_text = """
-                *Monitoring David's portfolio expansion:*
-                - **🧭 Path Finder:** David is in 'Evaluation' mode. He's analyzed 4 Manor properties. High probability of multi-unit offer if Cap Rate is > 5%.
-                - **📉 Value Alert:** An off-market duplex in Del Valle just became available. I've sent him the ROI breakdown.
-                """
-            elif selected_lead_name == "Mike & Jessica Rodriguez (Growing Family)":
-                journey_text = """
-                *Monitoring the Rodriguez family journey:*
-                - **🧭 Path Finder:** They are currently in 'Education' stage. Providing a 'First-Time Buyer' guide will increase their engagement by 60%.
-                - **📉 Value Alert:** Found a home in Pflugerville with a huge fenced yard - their top 'must-have'.
-                """
-            else:
-                journey_text = """
-                *Monitoring your active buyers in Austin:*
-                - **🧭 Path Finder:** Sarah Johnson has reached the 'Viewing' stage. She's 40% more likely to close if we show her properties in the Avery Ranch district this weekend.
-                - **📉 Value Alert:** 2 listings in the $500k range just had price drops. I've flagged these for your 'Move-up Buyer' segment.
-                """
-            st.markdown(journey_text)
-            
-            if st.button("🚀 Alert All Matching Buyers"):
-                st.toast("Syncing price-drop alerts to GHL workflows...", icon="🔔")
-
-    # Buyer navigation tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "🔍 Property Search",
-        "👤 Buyer Profile",
-        "💰 Financing",
-        "🌍 Neighborhoods",
-        "📅 Saved & Scheduled",
-        "📊 Buyer Analytics"
-    ])
-
-    with tab1:
-        render_enhanced_property_search()
-
-    with tab2:
-        render_buyer_profile_builder()
-
-    with tab3:
-        render_financing_calculator()
-
-    with tab4:
-        render_neighborhood_explorer()
-
-    with tab5:
-        render_buyer_dashboard()
-
-    with tab6:
-        render_buyer_analytics()
-
-# Seller Journey Hub Components
-def render_seller_journey_hub():
-    """Render the complete seller experience from valuation to closing*"""
-    st.title("🏡 Seller Journey Hub")
-    st.markdown("*Complete seller experience from valuation to closing*")
-
-    # Claude's Journey Counsel
-    with st.container(border=True):
-        col_s1, col_s2 = st.columns([1, 8])
-        with col_s1:
-            st.markdown("<div style='font-size: 3rem; text-align: center;'>🏠</div>", unsafe_allow_html=True)
-        with col_s2:
-            st.markdown("### Claude's Seller Journey Counsel")
-            st.markdown("""
-            *Inventory optimization for Jorge:*
-            - **💎 Value Maximizer:** Your 'Alta Loma' listing is seeing 2x higher engagement than neighborhood comps. I recommend a 'Coming Soon' email blast to your luxury investor list.
-            - **⏱️ Velocity Check:** Current market days-on-market (DOM) is dropping. We should push for a contract execution within the next 72 hours to maintain momentum.
-            """)
-            if st.button("📊 Draft Market Update for Seller"):
-                st.toast("Claude is drafting a performance report for your seller...", icon="✍️")
-
-    # Seller navigation tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "📊 Property Valuation",
-        "📋 Seller Prep",
-        "📈 Marketing Campaign",
-        "💬 Communication",
-        "📅 Timeline & Offers",
-        "📊 Seller Analytics"
-    ])
-
-    with tab1:
-        render_property_valuation_engine()
-
-    with tab2:
-        render_seller_prep_checklist()
-
-    with tab3:
-        render_marketing_campaign_dashboard()
-
-    with tab4:
-        render_seller_communication_portal()
-
-    with tab5:
-        render_transaction_timeline()
-
-    with tab6:
-        render_seller_analytics()
 
 render_claude_assistant()
 
