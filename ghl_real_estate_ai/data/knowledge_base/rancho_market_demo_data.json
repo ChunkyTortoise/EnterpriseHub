@@ -1,0 +1,148 @@
+{
+  "rancho_market_data": {
+    "title": "Rancho Cucamonga Real Estate Market Data - Demo Scenarios",
+    "last_updated": "2026-01-12",
+    "market_context": "Data specifically curated for Jorge's Rancho market demo"
+  },
+
+  "rancho_buyer_personas": [
+    {
+      "persona_id": "rancho_tech_sarah",
+      "name": "Sarah Johnson",
+      "age": 34,
+      "occupation": "Tech Manager at Amazon",
+      "income": "$185k",
+      "location_current": "Irvine, CA",
+      "budget": 1250000,
+      "needs": ["Alta Loma area", "4+ Bedrooms", "Mountain views"],
+      "timeline": "60 days",
+      "churn_risk_score": 12,
+      "last_interaction_days": 2,
+      "last_interaction_type": "SMS",
+      "sentiment": 0.85
+    },
+    {
+      "persona_id": "rancho_investor_mike",
+      "name": "Mike Chen",
+      "age": 42,
+      "occupation": "Logistics Entrepreneur",
+      "income": "$250k+",
+      "location_current": "Rancho Cucamonga, CA",
+      "budget": 850000,
+      "needs": ["ADU potential", "91730 area", "Cash buyer"],
+      "timeline": "Immediate",
+      "churn_risk_score": 5,
+      "last_interaction_days": 1,
+      "last_interaction_type": "Call",
+      "sentiment": 0.92
+    }
+  ],
+
+  "hot_properties_by_persona": {
+    "rancho_tech_sarah": [
+      {
+        "id": "prop_rancho_sarah_001",
+        "address": "1245 Highland Way, Rancho Cucamonga, CA 91737",
+        "price": 1225000,
+        "bedrooms": 4,
+        "bathrooms": 3,
+        "sqft": 3100,
+        "year_built": 2015,
+        "features": [
+          "Panoramic Mountain Views",
+          "Chef's kitchen with island",
+          "Smart home automation",
+          "Alta Loma school district",
+          "Drought-tolerant landscaping"
+        ],
+        "why_perfect_for_sarah": [
+          "Top-rated Alta Loma schools",
+          "Modern executive layout for work-from-home",
+          "Minutes to Victoria Gardens",
+          "Safe, quiet foothills neighborhood",
+          "Under her $1.25M budget"
+        ],
+        "neighborhood": "Alta Loma",
+        "schools": "Alta Loma School District (9/10 rating)",
+        "commute_to_ontario": "15 minutes",
+        "demo_talking_points": [
+          "Best mountain views in the entire city",
+          "Executive lifestyle without OC prices",
+          "Alta Loma schools are the gold standard here",
+          "Gigabit fiber internet ready for your tech role"
+        ]
+      }
+    ],
+
+    "rancho_investor_mike": [
+      {
+        "id": "prop_rancho_mike_001",
+        "address": "8932 Foothill Blvd, Rancho Cucamonga, CA 91730",
+        "price": 785000,
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "sqft": 1650,
+        "year_built": 1978,
+        "features": [
+          "Large corner lot (10,000+ sqft)",
+          "Zoned for ADU addition",
+          "Close to Metrolink station",
+          "New roof and HVAC",
+          "Strong rental history"
+        ],
+        "investment_metrics": {
+          "purchase_price": 785000,
+          "current_rent": 3400,
+          "potential_rent_with_adu": 5800,
+          "expenses": {
+            "taxes": 9800,
+            "insurance": 1800,
+            "maintenance": 2400,
+            "total": 14000
+          },
+          "net_operating_income": 26800,
+          "cash_flow_monthly": 450,
+          "cap_rate": "4.1%",
+          "rental_yield": "6.5%"
+        },
+        "why_perfect_for_mike": [
+          "Massive ADU potential on corner lot",
+          "Logistics hub proximity (Ontario Airport)",
+          "Transit-oriented location for commuters",
+          "Value-add opportunity through light cosmetic updates",
+          "Strong 91730 rental demand"
+        ],
+        "market_context": {
+          "logistics_boom": "Rancho/Ontario logistics corridor expanding",
+          "rental_demand": "98% occupancy in 91730 area",
+          "appreciation_forecast": "6-9% annually next 2 years",
+          "exit_strategy": "High demand from first-time buyers"
+        },
+        "demo_talking_points": [
+          "This lot is big enough for two ADUs",
+          "Metrolink access is a massive rental draw",
+          "91730 is the sweet spot for rental yields",
+          "Logistics entrepreneurs are flocking to this pocket"
+        ]
+      }
+    ]
+  },
+
+  "market_intelligence": {
+    "logistics_corridor_data": {
+      "title": "Inland Empire Logistics Growth",
+      "key_hubs": [
+        "Ontario International Airport expansion",
+        "Amazon fulfillment centers (Ontario/Fontana)",
+        "UPS/FedEx regional hubs",
+        "QVC/FedEx massive warehouses"
+      ],
+      "housing_demand_areas": [
+        "Alta Loma - High-end management",
+        "Victoria Gardens - Mixed-use/Professional",
+        "South Rancho - Logistics workers",
+        "Ontario Ranch - New construction boom"
+      ]
+    }
+  }
+}
