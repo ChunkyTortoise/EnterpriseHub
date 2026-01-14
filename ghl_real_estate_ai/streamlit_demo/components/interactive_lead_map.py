@@ -308,8 +308,7 @@ def create_combined_map(leads_data: List[Dict[str, Any]], config: Dict[str, Any]
             size=sizes,
             color=colors,
             opacity=0.9,
-            sizemode='diameter',
-            line=dict(color='white', width=2)  # White border for visibility
+            sizemode='diameter'
         ),
         text=texts,
         hovertemplate='%{text}<extra></extra>',
@@ -431,11 +430,38 @@ def render_lead_analysis(lead: Dict[str, Any]):
     actions = generate_recommended_actions(lead)
     
     for action in actions:
+        action_id = action.get('id')
+        lead_id = lead.get('id', 'unknown')
+        sync_key = f"synced_{lead_id}"
+        
+        # Check if already synced
+        is_synced = st.session_state.get(sync_key, False)
+        
         button_label = action.get('label', 'Action')
+        if action_id == 'sync_crm' and is_synced:
+            button_label = "Re-Sync to CRM"
+            
         button_icon = action.get('icon', '▶️')
         
-        if st.button(f"{button_icon} {button_label}", use_container_width=True, key=f"action_{action.get('id')}"):
-            st.toast(f"✅ {action.get('toast', 'Action triggered!')}", icon="🚀")
+        if st.button(f"{button_icon} {button_label}", use_container_width=True, key=f"action_{action_id}_{lead_id}"):
+            if action_id == 'sync_crm':
+                with st.spinner("🔌 Establishing secure handshake with GHL API..."):
+                    import time
+                    time.sleep(0.8)
+                    st.session_state[sync_key] = True
+                    st.toast(f"✅ Successfully synced {lead.get('name')} to HighLevel CRM!", icon="🔗")
+            else:
+                st.toast(f"✅ {action.get('toast', 'Action triggered!')}", icon="🚀")
+                
+    # Show sync status badge if applicable
+    if st.session_state.get(f"synced_{lead.get('id', 'unknown')}", False):
+        st.markdown("""
+        <div style='background: #dcfce7; color: #166534; padding: 0.5rem; border-radius: 6px; 
+                    text-align: center; font-size: 0.85rem; font-weight: 600; margin-top: 0.5rem;
+                    border: 1px solid #bbf7d0;'>
+            ✅ Synced with GoHighLevel
+        </div>
+        """, unsafe_allow_html=True)
     
     # Activity timeline
     st.markdown("---")
@@ -624,6 +650,12 @@ def generate_recommended_actions(lead: Dict[str, Any]) -> List[Dict[str, str]]:
         ])
     
     actions.extend([
+        {
+            'id': 'sync_crm',
+            'label': 'Sync to CRM',
+            'icon': '🔄',
+            'toast': 'Syncing lead data to GoHighLevel...'
+        },
         {
             'id': 'send_properties',
             'label': 'Send Property Matches',

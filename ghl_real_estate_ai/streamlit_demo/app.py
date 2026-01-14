@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import warnings
+# Enterprise Real Estate AI Ecosystem
+# Triggering reload: 2026-01-12T19:10:45
 import streamlit as st
 # Suppress all warnings for professional demo presentation
 warnings.filterwarnings("ignore")
@@ -32,10 +34,23 @@ def ui_error_boundary(func_name="Component"):
         return wrapper
     return decorator
 
+# Mock Service for missing dependencies
+class MockService:
+    """Fallback mock service for demo purposes"""
+    def __init__(self, *args, **kwargs):
+        pass
+    def __getattr__(self, name):
+        def method(*args, **kwargs):
+            return {}
+        return method
+
 # Add project root to sys.path
 # This ensures ghl_real_estate_ai.services can be found
+current_dir = Path(__file__).parent
 project_root = Path(__file__).parent.parent
 parent_root = Path(__file__).parent.parent.parent
+if str(current_dir) not in sys.path:
+    sys.path.insert(0, str(current_dir))
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 if str(parent_root) not in sys.path:
@@ -51,7 +66,14 @@ try:
     if str(parent_services) not in sys.path:
         sys.path.insert(0, str(parent_services))
     
+    import importlib
+    import services.lead_scorer
+    import services.ai_predictive_lead_scoring
+    importlib.reload(services.lead_scorer)
+    importlib.reload(services.ai_predictive_lead_scoring)
     from services.lead_scorer import LeadScorer
+    from services.ai_predictive_lead_scoring import PredictiveLeadScorer
+    print(f"DEBUG: LeadScorer RELOADED from: {services.lead_scorer.__file__}")
     from services.ai_smart_segmentation import AISmartSegmentationService
     from services.deal_closer_ai import DealCloserAI
     from services.commission_calculator import CommissionCalculator, CommissionType, DealStage
@@ -76,21 +98,21 @@ try:
     claude = ClaudeAssistant()
         # Enhanced services imports (from parent directory)
     try:
-        from ghl_real_estate_ai.services.enhanced_lead_scorer import EnhancedLeadScorer
+        from services.enhanced_lead_scorer import EnhancedLeadScorer
         ENHANCED_LEAD_SCORER_AVAILABLE = True
     except ImportError:
         print("Enhanced Lead Scorer not available")
         ENHANCED_LEAD_SCORER_AVAILABLE = False
 
     try:
-        from ghl_real_estate_ai.services.enhanced_property_matcher import EnhancedPropertyMatcher
+        from services.enhanced_property_matcher import EnhancedPropertyMatcher
         ENHANCED_PROPERTY_MATCHER_AVAILABLE = True
     except ImportError:
         print("Enhanced Property Matcher not available")
         ENHANCED_PROPERTY_MATCHER_AVAILABLE = False
 
     try:
-        from ghl_real_estate_ai.services.churn_prediction_engine import ChurnPredictionEngine
+        from services.churn_prediction_engine import ChurnPredictionEngine
         CHURN_PREDICTION_ENGINE_AVAILABLE = True
     except ImportError:
         print("Churn Prediction Engine not available")
@@ -109,8 +131,12 @@ try:
         render_seller_journey_hub
     )
     from streamlit_demo.components.ui_elements import render_action_card, render_insight_card
+    from streamlit_demo.components.global_header import render_global_header
     from streamlit_demo.components.executive_hub import render_executive_hub
     from streamlit_demo.components.lead_intelligence_hub import render_lead_intelligence_hub
+    from streamlit_demo.components.automation_studio import AutomationStudioHub
+    from streamlit_demo.components.sales_copilot import SalesCopilotHub
+    from streamlit_demo.components.ops_optimization import OpsOptimizationHub
     from streamlit_demo.components.calculators import render_roi_calculator, render_revenue_funnel
     from streamlit_demo.components.claude_panel import render_claude_assistant
     from streamlit_demo.components.swarm_visualizer import render_swarm_visualizer
@@ -120,10 +146,12 @@ try:
     from streamlit_demo.components.workflow_designer import render_workflow_designer
     from streamlit_demo.components.listing_architect import render_listing_architect
     from streamlit_demo.components.security_governance import render_security_governance
+    from streamlit_demo.components.agent_os import render_agent_os_tab
     from realtime_dashboard_integration import render_realtime_intelligence_dashboard
 
     SERVICES_LOADED = True
 except ImportError as e:
+    print(f"DEBUG IMPORT ERROR: {e}")
     st.error(f"⚠️ Error importing services: {e}")
     st.error("Please ensure you're running from the correct directory")
     SERVICES_LOADED = False
@@ -141,11 +169,14 @@ def load_mock_data():
     return {}
 
 # Initialize services
-@st.cache_resource
+# @st.cache_resource
 def get_services(market="Austin"):
     listings_file = "property_listings.json" if market == "Austin" else "property_listings_rancho.json"
     listings_path = Path(__file__).parent.parent / "data" / "knowledge_base" / listings_file
     
+    from services.claude_orchestrator import get_claude_orchestrator
+    from services.claude_automation_engine import ClaudeAutomationEngine
+
     services_dict = {
         "lead_scorer": LeadScorer(),
         "segmentation": AISmartSegmentationService(),
@@ -163,6 +194,8 @@ def get_services(market="Austin"):
         "sequences": AutoFollowUpSequences(),
         "marketplace": WorkflowMarketplaceService(),
         "property_matcher": PropertyMatcher(listings_path=str(listings_path)),
+        "claude_orchestrator": get_claude_orchestrator(),
+        "claude_automation": ClaudeAutomationEngine(),
         "churn_service": ChurnIntegrationService(
             memory_service=None,  # Would be injected with actual services
             lifecycle_tracker=None,
@@ -175,25 +208,55 @@ def get_services(market="Austin"):
 
     # Add enhanced services if available
     if ENHANCED_LEAD_SCORER_AVAILABLE:
-        services_dict["enhanced_lead_scorer"] = EnhancedLeadScorer()
+        try:
+            services_dict["enhanced_lead_scorer"] = EnhancedLeadScorer()
+            st.success("✅ Enhanced Lead Scorer initialized successfully")
+        except Exception as e:
+            st.error(f"❌ Failed to initialize Enhanced Lead Scorer: {e}")
+            services_dict["enhanced_lead_scorer"] = MockService()  # Fallback
 
     if ENHANCED_PROPERTY_MATCHER_AVAILABLE:
-        services_dict["enhanced_property_matcher"] = EnhancedPropertyMatcher(listings_path=str(listings_path))
+        try:
+            services_dict["enhanced_property_matcher"] = EnhancedPropertyMatcher(listings_path=str(listings_path))
+            st.success("✅ Enhanced Property Matcher initialized successfully")
+        except Exception as e:
+            st.error(f"❌ Failed to initialize Enhanced Property Matcher: {e}")
+            services_dict["enhanced_property_matcher"] = MockService()  # Fallback
 
     if CHURN_PREDICTION_ENGINE_AVAILABLE:
-        services_dict["churn_prediction"] = ChurnPredictionEngine()
+        try:
+            # Initialize required services for ChurnPredictionEngine
+            memory_service = MockService()  # Mock service for demo
+            lifecycle_tracker = MockService()  # Mock service for demo
+            behavioral_engine = MockService()  # Mock service for demo
+
+            services_dict["churn_prediction"] = ChurnPredictionEngine(
+                memory_service=memory_service,
+                lifecycle_tracker=lifecycle_tracker,
+                behavioral_engine=behavioral_engine,
+                lead_scorer=services_dict["lead_scorer"]  # Use the actual lead scorer
+            )
+            st.success("✅ Churn Prediction Engine initialized successfully")
+        except Exception as e:
+            st.error(f"❌ Failed to initialize Churn Prediction Engine: {e}")
+            services_dict["churn_prediction"] = MockService()  # Fallback
 
     return services_dict
 
 # --- THE FINAL POLISH: GLOBAL UI UTILITIES ---
 def sparkline(data: list, color: str = "#2563eb", height: int = 40):
     """Generates a minimal sparkline chart using Plotly."""
+    # Convert hex color to rgba for Plotly compatibility (8-digit hex not supported)
+    hex_c = color.lstrip('#')
+    r, g, b = int(hex_c[0:2], 16), int(hex_c[2:4], 16), int(hex_c[4:6], 16)
+    fill_rgba = f"rgba({r}, {g}, {b}, 0.2)"
+
     fig = go.Figure(go.Scatter(
         y=data,
         mode='lines',
         fill='tozeroy',
         line=dict(color=color, width=2),
-        fillcolor=f"{color}33"
+        fillcolor=fill_rgba
     ))
     fig.update_layout(
         showlegend=False,
@@ -369,6 +432,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sidebar - Settings (Early for service init)
+def update_market():
+    m_key = "Austin" if "Austin" in st.session_state.market_selector else "Rancho"
+    st.session_state.lead_options = get_lead_options(m_key)
+    st.session_state.selected_lead_name = "-- Select a Lead --"
+    st.session_state.selected_market = st.session_state.market_selector
+
 with st.sidebar:
     st.markdown("### ⚙️ AI Configuration")
     
@@ -380,7 +449,8 @@ with st.sidebar:
         "Select Market:", 
         ["Austin, TX", "Rancho Cucamonga, CA"],
         index=["Austin, TX", "Rancho Cucamonga, CA"].index(st.session_state.selected_market),
-        key="market_selector"
+        key="market_selector",
+        on_change=update_market
     )
     st.session_state.selected_market = selected_market
     market_key = "Austin" if "Austin" in selected_market else "Rancho"
@@ -398,13 +468,20 @@ with st.sidebar:
     st.session_state.ai_tone = ai_tone
     
     st.markdown("---")
+
+    # NEW: Elite Mode Activation
+    if 'elite_mode' not in st.session_state:
+        st.session_state.elite_mode = False
+        
+    elite_mode = st.toggle(
+        "🚀 Activate Elite Phase Features", 
+        value=st.session_state.elite_mode,
+        help="Enables Semantic Memory, Adaptive Scoring, and Advanced Decision Logic."
+    )
+    st.session_state.elite_mode = elite_mode
     
-    # GHL Connection Status (Quick View)
-    try:
-        from components.ghl_status_panel import render_ghl_quick_stats
-        render_ghl_quick_stats()
-    except ImportError:
-        pass
+    if elite_mode:
+        st.success("✨ Elite Mode Active")
     
     st.markdown("---")
 
@@ -412,10 +489,68 @@ services = get_services(market=market_key)
 
 # Initialize lead options with multi-market logic (Global Scope)
 def get_lead_options(market_key):
+    if market_key == "Rancho":
+        return {
+            "-- Select a Lead --": None,
+            "Sarah Johnson": {
+                "lead_id": "sarah_johnson_rancho",
+                "occupation": "School Teacher",
+                "location": "Avery Ranch",
+                "extracted_preferences": {
+                    "budget": 850000,
+                    "location": "Avery Ranch",
+                    "timeline": "ASAP",
+                    "bedrooms": 4,
+                    "must_haves": ["Pool", "Good Schools"],
+                    "financing": "Pre-approved",
+                    "motivation": "School start deadline",
+                    "property_type": "Single Family Home"
+                },
+                "overall_score": 92,
+                "actions_completed": 4
+            },
+            "Mike Chen": {
+                "lead_id": "mike_chen_rancho",
+                "occupation": "Retired Executive",
+                "location": "Victoria Gardens",
+                "extracted_preferences": {
+                    "budget": 700000,
+                    "location": "Victoria Gardens",
+                    "timeline": "6 months",
+                    "bedrooms": 3,
+                    "must_haves": ["Condo", "Maintenance free"],
+                    "financing": "Cash",
+                    "motivation": "Downsizing",
+                    "property_type": "Luxury Condo"
+                },
+                "overall_score": 75,
+                "actions_completed": 3
+            },
+            "Emily Davis": {
+                "lead_id": "emily_davis_rancho",
+                "occupation": "Real Estate Investor",
+                "location": "Alta Loma",
+                "extracted_preferences": {
+                    "budget": 1000000,
+                    "location": "Alta Loma",
+                    "timeline": "Exploring",
+                    "bedrooms": 4,
+                    "must_haves": ["Investment potential", "Large lot"],
+                    "financing": "Conventional",
+                    "motivation": "Expanding portfolio",
+                    "property_type": "Single Family Home"
+                },
+                "overall_score": 60,
+                "actions_completed": 2
+            }
+        }
+    
     return {
         "-- Select a Lead --": None,
         "Sarah Chen (Apple Engineer)": {
             "lead_id": "tech_professional_sarah",
+            "occupation": "Apple Engineer",
+            "location": "North Austin / Round Rock",
             "extracted_preferences": {
                 "budget": 550000,
                 "location": "North Austin / Round Rock",
@@ -433,6 +568,8 @@ def get_lead_options(market_key):
         },
         "David Kim (Investor)": {
             "lead_id": "investor_david",
+            "occupation": "Portfolio Manager",
+            "location": "Manor / Del Valle",
             "extracted_preferences": {
                 "budget": 350000,
                 "location": "Manor / Del Valle",
@@ -447,6 +584,8 @@ def get_lead_options(market_key):
         },
         "Mike & Jessica Rodriguez (Growing Family)": {
             "lead_id": "growing_family_mike",
+            "occupation": "Healthcare Professionals",
+            "location": "Pflugerville / Manor",
             "extracted_preferences": {
                 "budget": 380000,
                 "location": "Pflugerville / Manor",
@@ -464,6 +603,8 @@ def get_lead_options(market_key):
         },
         "Robert & Linda Williams (Luxury Downsizer)": {
             "lead_id": "luxury_downsizer_robert",
+            "occupation": "Retired Business Owners",
+            "location": "Downtown / Clarksville",
             "extracted_preferences": {
                 "budget": 1200000,
                 "location": "Downtown / Clarksville",
@@ -490,26 +631,6 @@ if 'selected_lead_name' not in st.session_state:
 # Helper to sync selection across tabs
 def set_selected_lead(name):
     st.session_state.selected_lead_name = name
-
-# Helper to render high-contrast Action Cards
-def render_action_card(title, description, icon, key_suffix=""):
-    st.markdown(f"""
-        <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #2563eb; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.25rem;">{icon}</span>
-                <b style="color: #1e293b; font-size: 1rem;">{title}</b>
-            </div>
-            <p style="font-size: 13px; color: #64748b; margin-top: 8px; line-height: 1.4;">{description}</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns([3, 1])
-    with col2:
-        if st.button("🚀 Run Action", key=f"run_action_{key_suffix}", width="stretch"):
-            with st.spinner("Executing GHL trigger..."):
-                import time
-                time.sleep(1)
-                st.toast(f"✅ Success: {title} triggered", icon="⚡")
 
 def get_meeting_briefing(lead_name):
     # Simulated briefing synthesis based on extracted preferences
@@ -555,35 +676,6 @@ def get_meeting_briefing(lead_name):
         "objection": "Standard market volatility concerns.",
         "closer": "Needs value-add presentation to move to 'Hot' status."
     })
-
-def render_insight_card(title, value, description, status='info', action_label=None, action_key=None):
-    colors = {
-        'success': 'rgba(16, 185, 129, 0.1)', 
-        'warning': 'rgba(245, 158, 11, 0.1)', 
-        'info': 'rgba(59, 130, 246, 0.1)'
-    }
-    border_colors = {
-        'success': '#10B981', 
-        'warning': '#F59E0B', 
-        'info': '#3B82F6'
-    }
-    icon = '✅' if status == 'success' else '⚠️' if status == 'warning' else '💡'
-    
-    st.markdown(f"""
-        <div style="background-color: {colors[status]}; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; border-left: 5px solid {border_colors[status]};">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem;">
-                <span style="font-size: 1.5rem;">{icon}</span>
-                <b style="color: #1e293b; font-size: 1.1rem;">{title}</b>
-            </div>
-            <div style="font-size: 1.75rem; font-weight: 900; color: #1e3a8a; margin: 0.5rem 0;">{value}</div>
-            <p style="font-size: 0.95rem; color: #475569; margin: 0;">{description}</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    if action_label and action_key:
-        if st.button(action_label, key=action_key, use_container_width=True):
-            st.session_state.current_hub = "🧠 Lead Intelligence Hub"
-            st.rerun()
 
 # Environment detection and data loading
 import sys
@@ -646,110 +738,15 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # Enhanced premium branding header with animations
-header_gradient = "linear-gradient(135deg, #006AFF 0%, #0047AB 100%)"
-header_icon = "🏠"
-header_title = "Lyrio.io AI Ecosystem"
-header_subtitle = "Enterprise Architectural Command Center"
-header_glow = "0 20px 40px rgba(0, 106, 255, 0.3)"
-
-# Dynamic Theme Logic
+current_tenant = "GHL"
 if 'current_hub' in st.session_state:
     if "Ops" in st.session_state.current_hub:
-        header_gradient = "linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)"
-        header_icon = "🦅"
-        header_title = "ARETE Performance"
-        header_subtitle = "Ops & Optimization Hub"
-        header_glow = "0 20px 40px rgba(124, 58, 237, 0.3)"
+        current_tenant = "ARETE"
     elif "Sales" in st.session_state.current_hub:
-        header_gradient = "linear-gradient(135deg, #10B981 0%, #059669 100%)"
-        header_icon = "💰"
-        header_subtitle = "Sales Copilot Active"
-        header_glow = "0 20px 40px rgba(16, 185, 129, 0.3)"
+        current_tenant = "SALES"
 
-st.markdown(f"""
-<div style='background: {header_gradient}; 
-            padding: 3rem 2.5rem; 
-            border-radius: 20px; 
-            margin-bottom: 2.5rem; 
-            color: white;
-            box-shadow: {header_glow};
-            position: relative;
-            overflow: hidden;'>
-    <div style='position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
-                background-image: 
-                    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-                opacity: 0.6;'></div>
-    <div style='position: relative; z-index: 1;'>
-        <div style='display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem;'>
-            <div style='font-size: 4rem; line-height: 1;'>{header_icon}</div>
-            <div>
-                <h1 style='margin: 0; font-size: 2.75rem; font-weight: 800; color: white !important; 
-                           text-shadow: 0 2px 10px rgba(0,0,0,0.2);'>
-                    {header_title}
-                </h1>
-                <p style='margin: 0.25rem 0 0 0; font-size: 1.15rem; opacity: 0.95; font-weight: 500; color: white !important;'>
-                    {header_subtitle}
-                </p>
-            </div>
-        </div>
-        <p style='margin: 1.5rem 0; font-size: 1.05rem; opacity: 0.9; max-width: 800px; color: white !important;'>
-            Proprietary AI-powered lead intelligence and autonomous workflow environment for <strong>Jorge Sales</strong>
-        </p>
-        <div style='margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem;'>
-            <div style='background: rgba(255,255,255,0.25); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                        color: white !important;'>
-                <span style='font-size: 1.2rem;'>✅</span>
-                <span style='font-weight: 600;'>AI Mode: Active</span>
-            </div>
-            <div style='background: rgba(255,255,255,0.25); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                        color: white !important;'>
-                <span style='font-size: 1.2rem;'>🔗</span>
-                <span style='font-weight: 600;'>GHL Sync: Live</span>
-            </div>
-            <div style='background: rgba(255,255,255,0.25); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                        color: white !important;'>
-                <span style='font-size: 1.2rem;'>📊</span>
-                <span style='font-weight: 600;'>Multi-Tenant Ready</span>
-            </div>
-            <div style='background: rgba(16, 185, 129, 0.9); 
-                        padding: 0.75rem 1.25rem; 
-                        border-radius: 10px;
-                        backdrop-filter: blur(10px);
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                        animation: pulse 2s ease-in-out infinite;
-                        color: white !important;'>
-                <span style='font-size: 1.2rem;'>🚀</span>
-                <span style='font-weight: 700;'>5 Hubs Live</span>
-            </div>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+render_global_header(current_tenant)
+
 
 # Initialize session state for hub navigation
 if 'current_hub' not in st.session_state:
@@ -820,7 +817,7 @@ with st.sidebar:
             Swarm Status: <span style="color: #10b981;">ACTIVE</span>
         </div>
         <div style="font-size: 0.7rem; color: #64748b; margin-left: auto;">
-            v4.2.0
+            v4.0.0
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -977,1271 +974,6 @@ with st.sidebar:
             """, unsafe_allow_html=True)
 
 # Main content area
-@ui_error_boundary("Lead Intelligence Hub")
-
-
-def render_lead_intelligence_hub():
-    st.header("🧠 Lead Intelligence Hub")
-    st.markdown("*Deep dive into individual leads with AI-powered insights*")
-    
-    # Access global lead_options - ensure it exists
-    if 'lead_options' not in st.session_state:
-        st.error("Lead options not initialized. Please refresh the page.")
-        return
-    
-    lead_options = st.session_state.lead_options
-    
-    # Lead selector at the top for all tabs to use
-    st.markdown("### 🎯 Select a Lead")
-    lead_names = list(st.session_state.lead_options.keys())
-    try:
-        default_idx = lead_names.index(st.session_state.selected_lead_name)
-    except ValueError:
-        default_idx = 0
-
-    selected_lead_name = st.selectbox(
-        "Choose a lead to analyze:",
-        lead_names,
-        index=default_idx,
-        key="hub_lead_selector_top",
-        on_change=lambda: st.session_state.update({"selected_lead_name": st.session_state.hub_lead_selector_top})
-    )
-    
-    # Update session state
-    st.session_state.selected_lead_name = selected_lead_name
-    
-    st.markdown("---")
-    
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-        "🎯 Lead Scoring",
-        "🚨 Churn Early Warning",
-        "🏠 Property Matcher (Phase 2)",
-        "🌐 Buyer Portal (Phase 3)",
-        "📊 Segmentation",
-        "🎨 Personalization",
-        "🔮 Predictions",
-        "💬 Simulator"
-    ])
-    
-    with tab1:
-        st.subheader("AI Lead Scoring")
-        
-        # Create columns for all cases
-        col_map, col_details = st.columns([1, 1])
-        
-        with col_map:
-            # Try to use the enhanced interactive map component
-            try:
-                from components.interactive_lead_map import render_interactive_lead_map, generate_sample_lead_data
-                
-                # Load or generate lead data with geographic coordinates
-                lead_map_data_path = Path(__file__).parent / "data" / "lead_map_data.json"
-                if lead_map_data_path.exists():
-                    with open(lead_map_data_path) as f:
-                        all_lead_data = json.load(f)
-                        leads_with_geo = all_lead_data.get(market_key, [])
-                else:
-                    # Fallback to generating sample data
-                    leads_with_geo = generate_sample_lead_data(market_key)
-                
-                # Render the interactive map
-                render_interactive_lead_map(leads_with_geo, market=market_key)
-                
-            except ImportError:
-                # Fallback to legacy static map
-                st.markdown("#### 📍 Hot Lead Clusters")
-                # Generate mock map data
-                if market_key == "Rancho":
-                    map_data = pd.DataFrame({
-                        'lat': [34.1200, 34.1100, 34.1000, 34.1300, 34.1150],
-                        'lon': [-117.5700, -117.5800, -117.5600, -117.5900, -117.5750],
-                        'type': ['Hot', 'Hot', 'Warm', 'Cold', 'Hot'],
-                        'value': [100, 80, 50, 20, 90]
-                    })
-                else:
-                    map_data = pd.DataFrame({
-                        'lat': [30.2672, 30.2700, 30.2500, 30.2800, 30.2600],
-                        'lon': [-97.7431, -97.7500, -97.7300, -97.7600, -97.7400],
-                        'type': ['Hot', 'Hot', 'Warm', 'Cold', 'Hot'],
-                        'value': [100, 80, 50, 20, 90]
-                    })
-                
-                st.map(map_data, zoom=11, width="stretch")
-                st.caption(f"Real-time visualization of high-value lead activity in {selected_market}")
-
-        with col_details:
-            st.markdown("#### 🎯 Lead Analysis")
-            st.markdown(f"**Analyzing:** {selected_lead_name}")
-            
-            # Claude's Behavioral Deep Dive
-            with st.container(border=True):
-                st.markdown(f"**🤖 Claude's Behavioral Insight: {selected_lead_name}**")
-                if selected_lead_name == "Sarah Chen (Apple Engineer)":
-                    insight_text = "High-velocity lead. Apple engineers are data-driven; she responded to the 'Market Trend' link within 12 seconds. She's prioritizing commute efficiency over sqft. Focus on: Teravista connectivity."
-                elif selected_lead_name == "Mike & Jessica Rodriguez (Growing Family)":
-                    insight_text = "High-sentiment, low-confidence lead. They are checking 'First-time buyer' articles daily. Sentiment: 88% Positive but cautious. Focus on: Safety metrics and monthly payment breakdown."
-                elif selected_lead_name == "David Kim (Investor)":
-                    insight_text = "Analytical veteran. He's ignored the 'Lifestyle' highlights and went straight to the 'Cap Rate' tool. He has 3 tabs open on Manor area comps. Focus on: Off-market yield analysis."
-                elif selected_lead_name == "Robert & Linda Williams (Luxury Downsizer)":
-                    insight_text = "Relationship-focused. They've spent 4 minutes reading Jorge's 'About Me'. Sentiment: 95% Positive. They value trust over automation. Focus on: Personal concierge and exclusive downtown access."
-                elif selected_lead_name == "Sarah Johnson":
-                    insight_text = "Highly motivated. She responded within 45 seconds to my last text. Sentiment: 92% Positive. Focus on: School District accuracy."
-                elif selected_lead_name == "Mike Chen":
-                    insight_text = "Cautious. He's asking about 'Value per SqFt' comparison. Sentiment: Neutral. Focus on: Investment ROI data."
-                else:
-                    insight_text = "Initial discovery phase. Engagement is low. Sentiment: Undetermined. Focus on: Qualifying location preferences."
-                st.info(insight_text)
-
-            # Empty state when no lead selected
-            if selected_lead_name == "-- Select a Lead --":
-                st.markdown("""
-                <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
-                            padding: 3rem 2rem; 
-                            border-radius: 15px; 
-                            text-align: center;
-                            border: 2px dashed #0ea5e9;
-                            margin-top: 2rem;'>
-                    <div style='font-size: 4rem; margin-bottom: 1rem;'>🎯</div>
-                    <h3 style='color: #0369a1; margin: 0 0 0.5rem 0;'>Select a Lead to Begin Analysis</h3>
-                    <p style='color: #075985; font-size: 0.95rem; max-width: 400px; margin: 0 auto;'>
-                        Choose a lead from the dropdown above to view their AI-powered intelligence profile, 
-                        property matches, and predictive insights.
-                    </p>
-                    <div style='margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;'>
-                        <div style='background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
-                            <div style='font-size: 1.5rem;'>📊</div>
-                            <div style='font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;'>Lead Scoring</div>
-                        </div>
-                        <div style='background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
-                            <div style='font-size: 1.5rem;'>🏠</div>
-                            <div style='font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;'>Property Match</div>
-                        </div>
-                        <div style='background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
-                            <div style='font-size: 1.5rem;'>🔮</div>
-                            <div style='font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;'>AI Predictions</div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.stop()
-        
-        # Calculate Score using centralized service
-        lead_context = lead_options[selected_lead_name]
-        result = services["lead_scorer"].calculate_with_reasoning(lead_context)
-        
-        # Display Results
-        score = result["score"]
-        classification = result["classification"]
-        
-        if classification == "hot":
-            st.success(f"🔥 **Hot Lead** - Score: {score}/7 Questions Answered")
-        elif classification == "warm":
-            st.warning(f"⚠️ **Warm Lead** - Score: {score}/7 Questions Answered")
-        else:
-            st.info(f"❄️ **Cold Lead** - Score: {score}/7 Questions Answered")
-            
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Questions Answered", f"{score}/7", "")
-        with col2:
-            st.metric("Engagement Class", classification.title(), "")
-        with col3:
-            st.metric("Lead Intent", "Calculated", "")
-        
-        st.markdown("#### AI Analysis Breakdown")
-        st.info(f"**Qualifying Data Found:** {result['reasoning']}")
-        
-        # Quick Actions Toolbar
-        st.markdown("---")
-        st.markdown("#### ⚡ Quick Actions")
-        
-        col_act1, col_act2, col_act3, col_act4 = st.columns(4)
-        
-        with col_act1:
-            if st.button("📞 Call Now", use_container_width=True, type="primary"):
-                st.toast(f"Calling {selected_lead_name}...", icon="📞")
-                st.success("Call initiated via GHL")
-        
-        with col_act2:
-            if st.button("💬 Send SMS", use_container_width=True):
-                st.toast(f"Opening SMS composer for {selected_lead_name}", icon="💬")
-                st.info("SMS template loaded in GHL")
-        
-        with col_act3:
-            if st.button("📧 Send Email", use_container_width=True):
-                st.toast(f"Email draft created for {selected_lead_name}", icon="📧")
-                st.success("Email queued in GHL")
-        
-        with col_act4:
-            if st.button("📅 Schedule Tour", use_container_width=True):
-                st.toast("Opening calendar...", icon="📅")
-                st.success("Calendar integration ready")
-        
-        # Last Contact Info
-        st.caption("📊 Last Contact: 2 days ago via SMS | Next Follow-up: Tomorrow")
-        
-        st.markdown("---")
-        st.markdown("#### Recommended Actions")
-        for action in result["recommended_actions"]:
-            st.markdown(f"- {action}")
-
-        # PREMIUM FEATURE: AI Lead Insights Panel
-        st.markdown("---")
-        try:
-            from components.enhanced_services import render_ai_lead_insights
-
-            # Convert result to format expected by enhanced services
-            lead_data_enhanced = {
-                'lead_id': result.get('lead_id', 'demo_lead'),
-                'name': selected_lead_name,
-                'health_score': result.get('overall_score', 85),
-                'engagement_level': 'high' if result.get('overall_score', 85) > 80 else 'medium',
-                'last_contact': '2 days ago',
-                'communication_preference': result.get('communication_preference', 'text'),
-                'stage': 'qualification',
-                'urgency_indicators': result.get('urgency_indicators', []),
-                'extracted_preferences': result.get('extracted_preferences', {}),
-                'conversation_history': []  # Would be real conversation data
-            }
-
-            render_ai_lead_insights(lead_data_enhanced)
-
-        except ImportError:
-            st.info("🚀 Premium AI Insights available in enterprise version")
-
-    with tab2:
-        # Churn Early Warning Dashboard
-        try:
-            st.subheader("🚨 Churn Early Warning System")
-            st.markdown("*Real-time monitoring and intervention orchestration for lead retention*")
-
-            # Initialize and render the churn dashboard
-            churn_dashboard = ChurnEarlyWarningDashboard(claude_assistant=claude)
-            churn_dashboard.render_dashboard()
-
-        except Exception as e:
-            st.error("⚠️ Churn Dashboard Temporarily Unavailable")
-            st.info("This enterprise feature requires full system integration. Demo mode available.")
-
-            # Fallback demo content
-            st.markdown("### 📊 Sample Churn Risk Analytics")
-
-            # Demo metrics
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.metric("Total Leads", "147", "+12")
-            with col2:
-                st.metric("Critical Risk", "3", "+1", delta_color="inverse")
-            with col3:
-                st.metric("High Risk", "8", "-2")
-            with col4:
-                st.metric("Success Rate", "78.5%", "+2.1%")
-
-            st.info("💡 The full Churn Prediction Engine provides 26 behavioral features, multi-horizon risk scoring, and automated intervention orchestration.")
-
-    with tab3:
-        # Use the AI Property Matcher component
-        try:
-            from components.property_matcher_ai import render_property_matcher
-
-            # Check if a lead is selected
-            if selected_lead_name == "-- Select a Lead --":
-                st.info("👈 Please select a lead from Tab 1 to see AI-powered property matches")
-            else:
-                lead_context = lead_options[selected_lead_name]
-                render_property_matcher(lead_context)
-
-                # PREMIUM FEATURE: Dynamic Timeline & Feature Gap Analysis
-                st.markdown("---")
-                try:
-                    from components.elite_refinements import render_dynamic_timeline, render_feature_gap
-
-                    # Dynamic timeline based on lead activity
-                    lead_score = lead_context.get('overall_score', 85)
-                    actions_completed = lead_context.get('actions_completed', 2)
-                    render_dynamic_timeline(
-                        days_remaining=45,
-                        actions_completed=actions_completed,
-                        agent_name="Jorge"
-                    )
-
-                    # Feature gap analysis for property matching
-                    st.markdown("---")
-                    property_sample = {
-                        'features': ['3-car garage', 'swimming pool', 'granite countertops', 'hardwood floors'],
-                        'price': 650000,
-                        'bedrooms': 4,
-                        'bathrooms': 3
-                    }
-                    must_haves = lead_context.get('extracted_preferences', {}).get('must_haves',
-                        ['swimming pool', '3-car garage', 'updated kitchen', 'good schools'])
-
-                    if must_haves:
-                        render_feature_gap(
-                            property_data=property_sample,
-                            lead_must_haves=must_haves,
-                            match_score=87
-                        )
-
-                except ImportError:
-                    st.info("🚀 Premium Timeline & Gap Analysis available in enterprise version")
-
-        except ImportError as e:
-            st.error(f"Property Matcher component not available: {e}")
-            st.info("Property Matcher coming in Phase 2")
-
-    with tab4:
-        st.subheader("🌐 Self-Service Buyer Portal (Phase 3)")
-        st.markdown("*Real-time behavioral telemetry from the proprietary portal environment*")
-        
-        # Get current preferences for the selected lead
-        if selected_lead_name != "-- Select a Lead --":
-            current_prefs = st.session_state.lead_options[selected_lead_name].get("extracted_preferences", {})
-            lead_key = selected_lead_name.lower().replace(" ", "_")
-        else:
-            current_prefs = {}
-            lead_key = "demo_lead"
-        
-        portal_url = f"/portal?id={lead_key}"
-        st.info(f"Unique Architectural URL: `https://portal.lyrio.io/l/{lead_key}`")
-        
-        col_portal_left, col_portal_right = st.columns([1, 1])
-        
-        with col_portal_left:
-            st.markdown(f"""
-            <div style='background: white; padding: 1.5rem; border-radius: 15px; border: 1px solid #006AFF; text-align: center;'>
-                <h3 style='color: #006AFF; margin-top: 0;'>🚀 Live Portal Status</h3>
-                <p style='font-size: 0.9rem;'>The standalone architectural portal is active for <b>{selected_lead_name}</b>.</p>
-                <div style='background: #F0F7FF; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;'>
-                    <span style='font-size: 0.8rem; color: #64748B;'>PORTAL INTENT SCORE</span><br/>
-                    <span style='font-size: 2rem; font-weight: 800; color: #006AFF;'>{services.get("telemetry", telemetry).get_intent_score(lead_key)}/100</span>
-                </div>
-                <a href='{portal_url}' target='_blank' style='display: inline-block; background-color: #006AFF; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 10px; font-weight: 700; width: 100%;'>View as Lead</a>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("#### 📱 Portal Interface Preview")
-            st.image("https://via.placeholder.com/400x600?text=Portal+Mobile+Mockup", width=300)
-
-        with col_portal_right:
-            st.markdown("#### 📡 Real-Time Telemetry Feed")
-            
-            history = services.get("telemetry", telemetry).get_lead_history(lead_key)
-            
-            if not history:
-                st.info("No portal interactions recorded for this lead yet.")
-                # Add some demo history if empty
-                if st.button("Simulate Portal Activity"):
-                    telemetry.record_interaction(lead_key, "view", {"prop_id": "prop_001"})
-                    telemetry.record_interaction(lead_key, "save", {"prop_id": "prop_002"})
-                    st.rerun()
-            else:
-                for event in reversed(history[-10:]):
-                    icon = "👀" if event["action"] == "view" else "💾" if event["action"] == "save" else "⚙️"
-                    dt = datetime.datetime.fromisoformat(event["timestamp"])
-                    time_str = dt.strftime("%H:%M:%S")
-                    
-                    st.markdown(f"""
-                    <div style='background: #f8fafc; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #3b82f6;'>
-                        <div style='display: flex; justify-content: space-between;'>
-                            <span>{icon} <b>{event['action'].upper()}</b></span>
-                            <span style='font-size: 0.7rem; color: #64748b;'>{time_str}</span>
-                        </div>
-                        <div style='font-size: 0.8rem; color: #475569;'>
-                            Metadata: {json.dumps(event['metadata'])}
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-            
-            st.markdown("---")
-            st.markdown("#### 🔄 Bi-Directional Sync Status")
-            st.success("✅ Portal preferences automatically synced to GHL Custom Fields")
-            st.success("✅ Intent Score Escalation trigger active")
-    
-    with tab5:
-        # PREMIUM FEATURE: Elite Segmentation & Actionable Intelligence
-        try:
-            from components.elite_refinements import render_elite_segmentation_tab, render_actionable_heatmap
-            
-            # 1. Professional Segment Cards
-            render_elite_segmentation_tab()
-            
-            st.markdown("---")
-            
-            # 2. Actionable Activity Heatmap
-            # Generate mock temporal data for Jorge demo
-            import numpy as np
-            days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            heatmap_rows = []
-            for day in days:
-                for hour in range(24):
-                    # Higher activity during business hours and specific evenings
-                    base = 5
-                    if 9 <= hour <= 11 or 14 <= hour <= 16: base = 25
-                    if day in ['Tuesday', 'Thursday'] and 18 <= hour <= 20: base = 40
-                    activity = base + np.random.randint(0, 10)
-                    heatmap_rows.append({'day': day, 'hour': hour, 'activity_count': activity})
-            
-            df_heatmap = pd.DataFrame(heatmap_rows)
-            render_actionable_heatmap(df_heatmap)
-
-        except ImportError:
-            st.subheader("Smart Segmentation")
-            st.info("🚀 Elite Segmentation & Heatmaps available in premium version")
-            
-            # Prepare lead data from mock_data
-            leads_for_segmentation = []
-            if "conversations" in mock_data:
-                for conv in mock_data["conversations"]:
-                    leads_for_segmentation.append({
-                        "id": conv.get("contact_id"),
-                        "name": conv.get("contact_name"),
-                        "engagement_score": conv.get("message_count") * 10,
-                        "lead_score": conv.get("lead_score"),
-                        "budget": 500000 if conv.get("budget") == "unknown" else 1500000,
-                        "last_activity_days_ago": 2,
-                        "buyer_type": "luxury_buyer" if "lux" in conv.get("contact_id", "") else "standard",
-                        "interested_property_type": "single_family"
-                    })
-
-            if leads_for_segmentation:
-                import asyncio
-                result = asyncio.run(services["segmentation"].segment_leads(leads_for_segmentation, method="behavioral"))
-                
-                # Use the enhanced Segmentation Pulse component for the first/main segment
-                if result["segments"]:
-                    try:
-                        from components.segmentation_pulse import render_segmentation_pulse
-                        # Render the enhanced pulse dashboard for the most important segment
-                        main_segment = result["segments"][0]
-                        render_segmentation_pulse(main_segment)
-                        
-                        st.markdown("---")
-                        st.markdown("### 📋 All Segments Overview")
-                    except ImportError:
-                        st.warning("Enhanced segmentation pulse component not available, using legacy view")
-            
-            # All Segments Overview - FIXED: Proper HTML rendering with inline styles
-            st.markdown("### 📋 All Segments Overview")
-            
-            # Use flexbox layout instead of bento-grid CSS class
-            st.markdown('<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1rem;">', unsafe_allow_html=True)
-            
-            for seg in result["segments"]:
-                seg_name = seg["name"].replace("_", " ").title()
-                char = seg["characteristics"]
-                
-                # Build segment card with inline styles only (no CSS class dependencies)
-                segment_html = f"""
-                <div style="background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s ease;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h3 style="margin: 0; color: #1e293b; font-size: 1.25rem; font-weight: 700;">{seg_name}</h3>
-                        <div style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">{seg['size']} Leads</div>
-                    </div>
-                    
-                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; padding: 1rem; background: #f8fafc; border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span>📊</span>
-                            <span style="color: #475569; font-size: 0.875rem;">Engagement: <strong style="color: #1e293b;">{char['avg_engagement']}%</strong></span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span>⭐</span>
-                            <span style="color: #475569; font-size: 0.875rem;">Score: <strong style="color: #1e293b;">{char['avg_lead_score']}</strong></span>
-                        </div>
-                    </div>
-                    
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #2563eb; margin: 0.5rem 0;">${char['total_value']:,.0f}</div>
-                    
-                    <div style="margin: 1rem 0;">
-                        <strong style="font-size: 0.875rem; color: #6b7280;">Recommended Actions:</strong>
-                        <ul style="margin: 0.5rem 0; padding-left: 1.25rem; font-size: 0.875rem; color: #374151; line-height: 1.6;">
-                            {''.join(f'<li>{action}</li>' for action in seg['recommended_actions'][:2])}
-                        </ul>
-                    </div>
-                    
-                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                        <button style="flex: 1; padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.875rem;">View Leads</button>
-                        <button style="flex: 1; padding: 0.5rem 1rem; background: #f1f5f9; color: #475569; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.875rem;">📥 Export</button>
-                    </div>
-                </div>
-                """
-                
-                # CRITICAL FIX: Ensure unsafe_allow_html is TRUE
-                st.markdown(segment_html, unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            st.markdown("---")
-            
-            # PREMIUM FEATURE: Elite Segmentation with Actionable Heatmap
-            try:
-                from components.elite_refinements import render_elite_segmentation_tab, render_actionable_heatmap
-                import pandas as pd
-
-                # Replace basic segmentation with elite version
-                render_elite_segmentation_tab()
-
-                st.markdown("---")
-
-                # Generate sample activity data for actionable heatmap
-                activity_df = pd.DataFrame({
-                    'day': ['Monday'] * 24 + ['Tuesday'] * 24 + ['Wednesday'] * 24 + ['Thursday'] * 24 +
-                           ['Friday'] * 24 + ['Saturday'] * 24 + ['Sunday'] * 24,
-                    'hour': list(range(24)) * 7,
-                    'activity_count': [
-                        # Monday
-                        5, 3, 2, 1, 1, 2, 5, 12, 25, 35, 45, 55, 65, 70, 75, 65, 55, 45, 35, 25, 15, 10, 8, 6,
-                        # Tuesday
-                        4, 2, 1, 1, 2, 3, 7, 15, 28, 40, 50, 60, 70, 75, 80, 70, 60, 50, 40, 30, 18, 12, 9, 7,
-                        # Wednesday (peak day)
-                        6, 4, 2, 1, 2, 4, 8, 18, 32, 45, 60, 75, 85, 90, 95, 85, 75, 60, 45, 35, 22, 15, 12, 8,
-                        # Thursday
-                        5, 3, 2, 1, 2, 3, 7, 16, 30, 42, 55, 68, 78, 82, 85, 75, 65, 55, 42, 32, 20, 13, 10, 7,
-                        # Friday
-                        4, 3, 2, 1, 2, 4, 8, 14, 26, 38, 48, 58, 65, 68, 70, 60, 50, 40, 30, 22, 16, 12, 9, 6,
-                        # Saturday
-                        8, 6, 4, 3, 3, 4, 6, 8, 12, 18, 22, 28, 32, 35, 38, 40, 42, 38, 32, 25, 20, 15, 12, 10,
-                        # Sunday
-                        6, 4, 3, 2, 2, 3, 4, 6, 10, 15, 20, 25, 28, 30, 32, 30, 28, 25, 20, 16, 12, 10, 8, 7
-                    ]
-                })
-
-                # Render the premium actionable heatmap
-                render_actionable_heatmap(activity_df, enable_automation=True)
-
-            except ImportError:
-                st.info("🚀 Elite Segmentation & Actionable Heatmap available in enterprise version")
-        else:
-            st.info("No lead data available for segmentation.")
-        
-    with tab6:
-        st.subheader("Content Personalization")
-        
-        selected_lead_p = st.selectbox("Select Lead for Personalization:", list(lead_options.keys()), key="p_lead")
-        
-        import asyncio
-        # Mock lead data for personalization
-        lead_data_p = {
-            "name": selected_lead_p,
-            "budget": 650000,
-            "engagement_score": 78,
-            "last_activity_days_ago": 2,
-            "location": "Austin, TX",
-            "device": "mobile",
-            "source": "paid",
-            "preferences": {
-                "property_type": "single_family",
-                "bedrooms": 3,
-                "location": "suburban"
-            }
-        }
-        
-        p_result = asyncio.run(services["personalization"].personalize_content("lead_123", lead_data_p, content_type="full_suite"))
-        
-        st.write(f"**Strategy:** {p_result['personalization_suite']['overall_strategy']['focus']}")
-        
-        st.markdown("#### 🏠 Recommended Properties")
-        recs = p_result["personalization_suite"]["properties"]["recommendations"]
-        cols = st.columns(len(recs))
-        for i, rec in enumerate(recs):
-            with cols[i]:
-                st.write(f"**{rec['title']}**")
-                st.write(f"${rec['price']:,.0f}")
-                st.caption(rec['why_recommended'])
-                st.button(f"View {rec['property_id']}", key=f"btn_{rec['property_id']}")
-
-    with tab7:
-        st.subheader("🔮 Predictive Lead Intelligence")
-        st.markdown("*Advanced behavioral forecasting using Phase 2 Middleware*")
-        
-        # Sync Lead Selection with global state
-        pred_lead_names = list(st.session_state.lead_options.keys())
-        try:
-            default_pred_idx = pred_lead_names.index(st.session_state.selected_lead_name)
-        except ValueError:
-            default_pred_idx = 0
-
-        selected_lead_pred = st.selectbox(
-            "Select Lead for Behavioral Prediction:", 
-            pred_lead_names, 
-            index=default_pred_idx,
-            key="pred_lead_selector",
-            on_change=lambda: st.session_state.update({"selected_lead_name": st.session_state.pred_lead_selector})
-        )
-        
-        # Get actual lead context
-        lead_context = st.session_state.lead_options[selected_lead_pred]
-        
-        # Use Phase 2 Predictive Scorer
-        # Mock some history if not present for the demo wow factor
-        if not lead_context.get("conversation_history"):
-            lead_context["conversation_history"] = [
-                {"role": "user", "content": "I'm interested in buying", "timestamp": (datetime.datetime.now() - datetime.timedelta(hours=2)).isoformat()},
-                {"role": "assistant", "content": "Great, what is your budget?", "timestamp": (datetime.datetime.now() - datetime.timedelta(hours=1, minutes=55)).isoformat()},
-                {"role": "user", "content": f"My budget is around ${lead_context['extracted_preferences'].get('budget', 500000)}", "timestamp": (datetime.datetime.now() - datetime.timedelta(hours=1, minutes=54)).isoformat()}
-            ]
-        
-        pred_result_dict = services["predictive_scorer"].predict_conversion(lead_context)
-        
-        col_gauge, col_factors = st.columns([1, 1])
-        
-        prob = pred_result_dict["conversion_probability"]
-        
-        with col_gauge:
-            # Conversion Probability Gauge
-            fig_gauge = go.Figure(go.Indicator(
-                mode = "gauge+number",
-                value = prob,
-                domain = {'x': [0, 1], 'y': [0, 1]},
-                title = {'text': "Conversion Probability", 'font': {'size': 18, 'color': '#1e293b'}},
-                number = {'suffix': "%", 'font': {'size': 40, 'color': '#2563eb', 'weight': 'bold'}},
-                gauge = {
-                    'axis': {'range': [None, 100], 'tickwidth': 1},
-                    'bar': {'color': "#2563eb"},
-                    'bgcolor': "white",
-                    'steps': [
-                        {'range': [0, 40], 'color': '#fee2e2'},
-                        {'range': [40, 70], 'color': '#fef3c7'},
-                        {'range': [70, 100], 'color': '#dcfce7'}],
-                }))
-            
-            fig_gauge.update_layout(
-                height=280, 
-                margin=dict(l=30, r=30, t=50, b=20),
-                paper_bgcolor='rgba(0,0,0,0)',
-                font={'color': "#1e293b", 'family': "Inter"}
-            )
-            st.plotly_chart(fig_gauge, use_container_width=True)
-            
-            st.markdown(f"""
-            <div style='text-align: center; margin-top: -20px;'>
-                <span class='badge' style='background: #f1f5f9; color: #475569;'>Confidence: {pred_result_dict['confidence'].upper()}</span>
-                <span class='badge' style='background: #f1f5f9; color: #475569; margin-left: 10px;'>Trajectory: {pred_result_dict['trajectory'].upper()}</span>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col_factors:
-            # Conversion Timeline Forecast
-            st.markdown("#### ⏱️ Predicted Velocity")
-            
-            estimated_days = 14 if prob > 80 else 30 if prob > 60 else 60 if prob > 40 else 90
-            
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
-                        padding: 2rem; border-radius: 12px; color: white; text-align: center;
-                        margin-bottom: 1rem;'>
-                <div style='font-size: 3rem; font-weight: 900;'>{estimated_days}</div>
-                <div style='font-size: 1.1rem;'>Days to Expected Close</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.info(f"**Similar Lead Pattern:** {pred_result_dict['similar_leads_converted']}")
-        
-        st.markdown("---")
-        st.markdown("#### 🧠 AI Reasoning & Behavioral Signals")
-        
-        for reason in pred_result_dict["reasoning"]:
-            st.markdown(f"- {reason}")
-            
-        st.markdown("---")
-        st.markdown("#### 🔍 Feature Analysis")
-        
-        f_cols = st.columns(3)
-        features = pred_result_dict["features"]
-        f_list = list(features.items())
-        
-        for i in range(3):
-            with f_cols[i]:
-                for k, v in f_list[i*3:(i+1)*3]:
-                    st.write(f"**{k}:** {v}")
-        
-        st.markdown("---")
-        st.markdown("#### 🏃 Recommended Strategic Actions")
-        
-        for i, rec in enumerate(pred_result_dict["recommendations"]):
-            icon = "🔥" if rec["type"] == "priority" else "📅" if rec["type"] == "medium" else "📧"
-            st.markdown(f"""
-                <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #2563eb; background: white;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <span style="font-size: 1.25rem;">{icon}</span>
-                        <b style="color: #1e293b; font-size: 1rem;">{rec['title']}</b>
-                    </div>
-                    <p style="font-size: 13px; color: #64748b; margin: 8px 0; line-height: 1.4;">{rec['action']}</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("🚀 Execute Strategy", key=f"exec_strat_{i}"):
-                st.toast(f"Triggering {rec['type']} workflow in GHL...", icon="⚡")
-
-    with tab8:
-        st.subheader("💬 Claude Chatbot Simulator")
-        st.markdown("*Experience the AI lead qualification flow as a lead would*")
-        
-        # Scenario Selector
-        scenario = st.radio(
-            "Select Demo Persona:",
-            ["🏠 New Home Buyer (Standard)", "💰 Motivated Seller", "🏢 Luxury Investor"],
-            horizontal=True
-        )
-        
-        st.markdown("---")
-        
-        # Chat history for simulator
-        if 'sim_messages' not in st.session_state:
-            initial_msg = "Hi! I saw your inquiry about homes in the area. How can I help you today?"
-            if "Seller" in scenario:
-                initial_msg = "Hi! I'm the AI assistant for Jorge's team. I saw you're interested in selling your property. To get you an accurate valuation, may I ask about the condition of your home?"
-            
-            st.session_state.sim_messages = [{"role": "assistant", "content": initial_msg}]
-
-        # Display simulator messages
-        for msg in st.session_state.sim_messages:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
-
-        # Chat Input
-        if prompt := st.chat_input("Type your response as a lead..."):
-            st.session_state.sim_messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
-
-            # Generate AI Response (Simulated logic using LeadScorer concepts)
-            with st.chat_message("assistant"):
-                with st.spinner("Claude is thinking..."):
-                    # Simple simulated response logic based on keywords
-                    user_lower = prompt.lower()
-                    
-                    if any(word in user_lower for word in ["budget", "price", "worth", "dollars", "k", "$"]):
-                        response = "Got it. Knowing your budget helps me narrow down the search. Are there specific neighborhoods you're targeting?"
-                    elif any(word in user_lower for word in ["neighborhood", "area", "downtown", "location"]):
-                        response = "That's a great area! How soon were you looking to make a move? (e.g., next 30 days, 6 months?)"
-                    elif any(word in user_lower for word in ["asap", "month", "timeline", "now"]):
-                        response = "Speed is key in this market. Are you already pre-approved for financing, or would you like a recommendation for a local lender?"
-                    elif any(word in user_lower for word in ["pre-approved", "cash", "bank", "loan"]):
-                        response = "Excellent. Lastly, what are your 'must-haves'? (e.g., 4+ bedrooms, home office, pool?)"
-                    elif "sell" in scenario.lower():
-                        response = "Thank you for sharing that. I've noted the condition. What is your primary motivation for selling at this time?"
-                    else:
-                        response = "That's very helpful information. I'm extracting those details for Jorge's team now. Is there anything else you think we should know about your real estate goals?"
-                    
-                    st.session_state.sim_messages.append({"role": "assistant", "content": response})
-                    st.markdown(response)
-                    
-                    # Small visual feedback that data is being extracted
-                    st.toast("AI extracting criteria...", icon="🧠")
-
-        if st.button("🗑️ Reset Simulator", width="stretch"):
-            del st.session_state.sim_messages
-            st.rerun()
-
-@ui_error_boundary("Automation Studio")
-def render_automation_studio():
-    st.header("🤖 Automation Studio")
-    st.markdown("*Visual switchboard to toggle AI features on/off*")
-    
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["⚙️ Automations", "📧 Sequences", "🔄 Workflows", "🧠 Claude's Prompt Lab", "🎨 Visual Designer"])
-    
-    with tab1:
-        st.subheader("AI Automation Control Panel")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### 🤖 Core AI Agents")
-            
-            ai_assistant = st.toggle("AI Qualifier (Phase 1)", value=True)
-            if ai_assistant:
-                st.success("✅ Active - Extracting criteria via SMS")
-            
-            smart_matcher = st.toggle("Property Matcher (Phase 2)", value=True)
-            if smart_matcher:
-                st.success("✅ Active - Auto-suggesting listings")
-            
-            buyer_portal = st.toggle("Buyer Portal Sync (Phase 3)", value=True)
-            
-        with col2:
-            st.markdown("#### ⚡ Phase 4: Follow-Up Triggers")
-            
-            st.toggle("New Listing SMS Alerts", value=True, help="Texts lead when a match hits the market")
-            st.toggle("Price Drop Re-engagement", value=True, help="Follows up if a favorite home drops in price")
-            st.toggle("30-Day 'Cold Lead' Revive", value=False, help="Conversational check-in for dormant leads")
-            
-            st.markdown("---")
-            st.markdown("#### 🚀 Phase 4 Live Simulation")
-            if st.button("🔍 Scan for Silent Leads (24h+)", width="stretch"):
-                with st.spinner("Scanning GHL logs for silent leads..."):
-                    from services.reengagement_engine import ReengagementEngine, ReengagementTrigger
-                    engine = ReengagementEngine()
-                    
-                    # Simulated silent leads for the demo
-                    silent_leads = [
-                        {"name": "Mike Chen", "hours": 26, "last_msg": "I'll talk to my wife and get back to you."},
-                        {"name": "Emily Davis", "hours": 49, "last_msg": "Thanks for the list!"}
-                    ]
-                    
-                    for lead in silent_leads:
-                        with st.container(border=True):
-                            st.write(f"👤 **{lead['name']}** - Silent for {lead['hours']}h")
-                            st.caption(f"Last message: \"{lead['last_msg']}\"")
-                            trigger_level = "24h" if lead['hours'] < 48 else "48h"
-                            
-                            # Get real message template
-                            msg = engine.get_message_for_trigger(
-                                trigger=ReengagementTrigger.HOURS_24 if trigger_level == "24h" else ReengagementTrigger.HOURS_48,
-                                contact_name=lead['name'].split()[0],
-                                is_buyer=True
-                            )
-                            
-                            st.info(f"AI suggests {trigger_level} re-engagement:")
-                            st.code(msg)
-                            if st.button(f"Send to {lead['name']}", key=f"reengage_{lead['name']}"):
-                                st.success(f"SMS Sent to {lead['name']} via GHL!")
-        
-        # Use the enhanced AI Training Sandbox component
-        try:
-            from components.ai_training_sandbox import render_ai_training_sandbox
-            render_ai_training_sandbox(ai_tone)
-        except ImportError:
-            # Fallback to legacy simple version
-            st.subheader("🧪 AI Training Lab")
-            st.markdown("*Adjust how the AI 'sounds' to your leads*")
-            
-            # Dynamic prompt preview based on sidebar slider
-            base_prompt = ""
-            if ai_tone == "Professional":
-                base_prompt = "You are a senior real estate advisor. Use formal language, emphasize market data, and maintain a polite, service-oriented distance."
-            elif ai_tone == "Natural":
-                base_prompt = "You are a helpful assistant on Jorge's team. Be friendly, use first names, and keep sentences concise but helpful."
-            else: # Direct/Casual
-                base_prompt = "You are Jorge. Be extremely direct and casual. Skip the fluff. Get the budget and location ASAP so we don't waste time."
-                
-            st.text_area("Live System Prompt (What the AI is thinking):", value=base_prompt, height=100)
-            
-            st.markdown("#### 💬 Live Voice Simulator")
-        
-        # Animated Waveform
-        st.markdown("""
-        <div class="waveform-container">
-            <div class="waveform-bar" style="animation-delay: 0.0s"></div>
-            <div class="waveform-bar" style="animation-delay: 0.1s"></div>
-            <div class="waveform-bar" style="animation-delay: 0.2s"></div>
-            <div class="waveform-bar" style="animation-delay: 0.3s"></div>
-            <div class="waveform-bar" style="animation-delay: 0.4s"></div>
-            <div class="waveform-bar" style="animation-delay: 0.5s"></div>
-            <div class="waveform-bar" style="animation-delay: 0.6s"></div>
-            <div class="waveform-bar" style="animation-delay: 0.7s"></div>
-            <div class="waveform-bar" style="animation-delay: 0.8s"></div>
-            <div class="waveform-bar" style="animation-delay: 0.9s"></div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("*Type a message below to see how the AI responds in **" + ai_tone + "** mode:*")
-        
-        test_input = st.text_input("Test Lead Message:", placeholder="Ex: 'I'm looking for a 3-bed home in Rancho near Victoria Gardens'")
-        
-        if test_input:
-            with st.chat_message("assistant"):
-                if ai_tone == "Professional":
-                    st.write(f"Thank you for reaching out to Jorge's team. I have noted your interest in the {market_key} area. Based on current market trends, a 3-bedroom property in that specific neighborhood typically commands a premium. May I ask what your anticipated budget range is for this acquisition?")
-                elif ai_tone == "Natural":
-                    st.write(f"That sounds like a great area! Victoria Gardens is super popular right now. I'd love to help you find a 3-bed there. To narrow it down for Jorge, what's the budget range you're hoping to stay within?")
-                else: # Direct/Casual
-                    st.write(f"Got it. 3-beds in {market_key} are moving fast. What's your max budget? I'll see what we have in the inventory right now so we don't waste time.")
-            
-            st.caption(f"✨ This response is generated using the **{ai_tone}** persona profile.")
-        
-        st.markdown("---")
-        st.subheader("🔗 GoHighLevel Sync Log")
-        st.markdown("*Real-time data flowing between AI and your CRM*")
-        
-        log_events = [
-            {"time": "10:45 AM", "event": "Preference Extracted", "detail": "Budget: $1.3M (Sarah Johnson)", "field": "contact.budget", "status": "Synced"},
-            {"time": "10:46 AM", "event": "Custom Field Update", "detail": "Area: Alta Loma", "field": "contact.preferred_area", "status": "Synced"},
-            {"time": "11:02 AM", "event": "Phase 2 Match", "detail": "Sent 3 RC Listings via SMS", "field": "contact.tags", "status": "Synced"},
-            {"time": "11:15 AM", "event": "VAPI Connection", "detail": "Voice Call Initiated", "field": "contact.last_call", "status": "Active"},
-        ]
-        
-        for log in log_events:
-            status_color = "#10B981" if log["status"] == "Synced" else "#3B82F6"
-            st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 15px; padding: 12px; background: white; border-radius: 10px; margin-bottom: 8px; border: 1px solid #f1f5f9;">
-                <div style="font-size: 0.75rem; color: #64748b; min-width: 70px;">{log['time']}</div>
-                <div style="flex: 1;">
-                    <div style="font-weight: 600; font-size: 0.85rem; color: #1e293b;">{log['event']}</div>
-                    <div style="font-size: 0.75rem; color: #64748b;">{log['detail']}</div>
-                </div>
-                <div style="font-family: monospace; font-size: 0.7rem; background: #f8fafc; padding: 2px 6px; border-radius: 4px; color: #475569;">{log['field']}</div>
-                <div style="background: {status_color}; color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">{log['status']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    with tab2:
-        st.subheader("Auto Follow-Up Sequences")
-        
-        perf = services["sequences"].get_sequence_performance("demo_seq")
-        
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Conversion Rate", f"{perf['metrics']['conversion_rate']*100:.1f}%")
-        col2.metric("Email Open Rate", f"{perf['channel_performance']['email']['open_rate']*100:.0f}%")
-        col3.metric("SMS Response", f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%")
-
-        # Sequence Table
-        sequences_data = [
-            {"Name": "New Lead (Buyer) - 7 Day", "Status": "Active", "Enrolled": perf['metrics']['total_enrolled'], "Open Rate": f"{perf['channel_performance']['email']['open_rate']*100:.0f}%", "Reply Rate": f"{perf['channel_performance']['sms']['response_rate']*100:.0f}%"},
-            {"Name": "Seller Reactivation", "Status": "Active", "Enrolled": 12, "Open Rate": "75%", "Reply Rate": "35%"},
-            {"Name": "Cold Lead Win-back", "Status": "Paused", "Enrolled": 0, "Open Rate": "-", "Reply Rate": "-"},
-        ]
-        
-        st.dataframe(pd.DataFrame(sequences_data), width="stretch", hide_index=True)
-        
-        if st.button("➕ Create New Sequence"):
-            st.toast("Opening Sequence Builder...")
-        
-    with tab3:
-        st.subheader("Workflow Marketplace")
-        st.markdown("*Install pre-built real estate automations with one click*")
-        
-        # Browse marketplace
-        templates = services["marketplace"].get_featured_templates(6)
-        
-        # Display in a grid
-        cols = st.columns(3)
-        for i, t in enumerate(templates):
-            with cols[i % 3]:
-                st.markdown(f"### {t.icon} {t.name}")
-                st.write(t.description[:80] + "...")
-                st.caption(f"⭐ {t.rating} | 📥 {t.downloads_count:,} installs")
-                if st.button(f"Install", key=f"inst_{t.id}", width="stretch"):
-                    st.success(f"Installed {t.name}!")
-
-    with tab4:
-        st.subheader("🧠 Claude's Prompt Lab")
-        st.markdown("*Use Claude to analyze and optimize your AI's personality and instructions.*")
-        
-        col_p1, col_p2 = st.columns([2, 1])
-        
-        with col_p1:
-            current_p = st.text_area("Current System Prompt:", value="You are a helpful assistant on Jorge's team. Be friendly and keep it concise.", height=150)
-            
-            if st.button("🪄 Claude: Optimize My Prompt", type="primary"):
-                with st.spinner("Claude is rewriting for conversion..."):
-                    st.success("Claude has suggested an optimized version!")
-                    st.markdown("""
-                    **Recommended Rewrite:**
-                    > "You are Jorge's High-Intent Qualifier. Your goal is to move leads from discovery to 'Booked Tour' ASAP. Use a 'Natural' tone, prioritize budget extraction, and reference specific Austin/Rancho neighborhoods to build authority. If budget is >$800k, immediately offer a private luxury viewing."
-                    """)
-                    st.info("💡 **Claude's Logic:** This version adds specific triggers for high-value leads and builds neighborhood authority.")
-        
-        with col_p2:
-            st.markdown("#### AI Performance Audit")
-            st.metric("Tone Alignment", "94%", "+5%")
-            st.metric("Conversion Impact", "Medium", "Increasing")
-            
-            if st.button("🚀 Push to GHL Production"):
-                st.toast("Updated prompt synced to GHL Custom Fields!")
-
-    with tab5:
-        render_workflow_designer()
-
-@ui_error_boundary("Sales Copilot")
-def render_sales_copilot():
-    st.header("💰 Sales Copilot")
-    st.markdown("*Agent tools for active deals and client meetings*")
-
-    # Claude's Negotiation Briefing
-    with st.container(border=True):
-        col_n1, col_n2 = st.columns([1, 8])
-        with col_n1:
-            st.markdown("<div style='font-size: 3rem; text-align: center;'>💼</div>", unsafe_allow_html=True)
-        with col_n2:
-            st.markdown("### Claude's Negotiation Briefing")
-            st.markdown("""
-            *Ready to close for Jorge:*
-            - **🤝 The Closer:** You have 3 discovery calls this afternoon. I've analyzed their lead profiles and prepared high-converting 'Hook' scripts for each.
-            - **📜 Compliance Check:** New TX listing requirements are active. I've updated your Smart Document generator to ensure all contracts are 100% compliant.
-            """)
-            if st.button("📝 View Meeting Hooks"):
-                st.toast("Loading personalized talk tracks for today's calls...", icon="💬")
-    
-    st.markdown("---")
-    
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "💼 Deal Closer",
-        "📄 Documents",
-        "📋 Meeting Prep",
-        "💵 Calculator",
-        "🎙️ Live Call Intelligence"
-    ])
-    
-    with tab1:
-        st.subheader("Deal Closer AI")
-        st.markdown("*Your always-on negotiation coach. Ask how to handle objections, negotiate fees, or close deals.*")
-        
-        # Initialize chat history
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-            # Add initial welcome message
-            st.session_state.messages.append({"role": "assistant", "content": "I'm ready to help you close. Paste an objection or ask for negotiation advice."})
-
-        # Display chat messages from history on app rerun
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-        # React to user input
-        if prompt := st.chat_input("Ex: 'Client says 6% commission is too high'"):
-            # Display user message
-            st.chat_message("user").markdown(prompt)
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            
-            with st.spinner("Analyzing negotiation strategy..."):
-                lead_context = {
-                    "name": "Prospect",
-                    "stage": "objection_handling",
-                    "budget_min": 400000,
-                    "budget_max": 600000
-                }
-                
-                # Get AI response
-                result = services["deal_closer"].generate_response(prompt, lead_context)
-                
-                # Format the response nicely
-                response_content = f"""
-{result['response']}
-
----
-**💡 Key Talking Points:**
-{chr(10).join([f'- {p}' for p in result['talking_points']])}
-
-**🏃 Next Best Action:**
-{result['follow_up_actions'][0] if result['follow_up_actions'] else 'Schedule follow-up'}
-"""
-                # Display assistant response
-                with st.chat_message("assistant"):
-                    st.markdown(response_content)
-                
-                st.session_state.messages.append({"role": "assistant", "content": response_content})
-
-    with tab5:
-        render_voice_intelligence()
-        
-    with tab2:
-        st.subheader("Smart Document Generator")
-        from services.smart_document_generator import DocumentType
-        doc_type_str = st.selectbox(
-            "Document Type:",
-            [t.value.replace("_", " ").title() for t in DocumentType]
-        )
-        
-        # Mapping for enum
-        type_enum = next(t for t in DocumentType if t.value.replace("_", " ").title() == doc_type_str)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            party_name = st.text_input("Buyer/Client Name:", "John Doe")
-            address = st.text_input("Property Address:", "123 Main St, Austin, TX")
-            
-        with col2:
-            price_doc = st.number_input("Transaction Price ($):", value=450000)
-            jurisdiction = st.selectbox("Jurisdiction:", ["TX", "CA", "FL", "NY"])
-
-        if st.button("🚀 Generate & Prepare for Signature", width="stretch"):
-            with st.spinner("Generating professional document..."):
-                doc_data = {
-                    "property_address": address,
-                    "purchase_price": price_doc,
-                    "buyer_name": party_name,
-                    "jurisdiction": jurisdiction
-                }
-                doc = services["doc_gen"].generate_document(type_enum, f"template_{type_enum.value}", doc_data)
-                
-                st.success(f"✅ {doc_type_str} Generated (ID: {doc['id']})")
-                st.info(f"**Compliance Status:** {doc['legal_requirements']['compliance_status'].upper()}")
-                
-                # Signature status
-                st.markdown("#### ✍️ E-Signature Status")
-                sig_status = services["doc_gen"].check_signature_status("sig_123")
-                st.write(f"**Overall Status:** {sig_status['overall_status'].replace('_', ' ').title()}")
-                st.progress(sig_status['completion']['percentage'])
-                st.write(f"{sig_status['completion']['signed']} of {sig_status['completion']['total']} parties signed.")
-        
-    with tab3:
-        st.subheader("Meeting Prep Assistant")
-        st.markdown("*Generate a comprehensive briefing for your next client meeting*")
-        from services.meeting_prep_assistant import MeetingType
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            # Fix NameError: Use global session state
-            meeting_lead_options = list(st.session_state.lead_options.keys())
-            try:
-                default_mtg_idx = meeting_lead_options.index(st.session_state.selected_lead_name)
-            except ValueError:
-                default_mtg_idx = 0
-
-            meeting_lead = st.selectbox(
-                "Select Lead for Meeting:", 
-                meeting_lead_options, 
-                index=default_mtg_idx,
-                key="mtg_lead"
-            )
-            m_type = st.selectbox("Meeting Type:", [t.value.replace("_", " ").title() for t in MeetingType])
-        
-        if st.button("📄 Generate Briefing Doc", width="stretch"):
-            with st.spinner("Compiling data and generating brief..."):
-                # Convert back to enum
-                type_enum = next(t for t in MeetingType if t.value.replace("_", " ").title() == m_type)
-                
-                brief = services["meeting_prep"].prepare_meeting_brief(type_enum, "contact_123")
-                
-                st.markdown("---")
-                st.success(f"✅ Briefing for {meeting_lead} Generated")
-                
-                # AI Briefing Insights (FEAT-010)
-                m_brief = get_meeting_briefing(meeting_lead)
-                st.info(f"**🎯 The Hook:** {m_brief['hook']}")
-                st.warning(f"**⚠️ Watch Out:** {m_brief['objection']}")
-                st.success(f"**💰 The Close:** {m_brief['closer']}")
-                
-                tab_a, tab_b, tab_c = st.tabs(["📋 Agenda", "🗣️ Talking Points", "🗂️ Required Docs"])
-                
-                with tab_a:
-                    for item in brief["agenda"]:
-                        st.write(f"**{item['time']}**: {item['topic']}")
-                        
-                with tab_b:
-                    for point in brief["talking_points"]:
-                        st.write(f"- {point}")
-                        
-                with tab_c:
-                    for doc in brief["documents_to_bring"]:
-                        st.write(f"- {doc}")
-        
-    with tab4:
-        # FIX-016: Smart Financial Calculator Implementation
-        lead_name = st.session_state.get('selected_lead_name', '-- Select a Lead --')
-        if lead_name == '-- Select a Lead --' and list(st.session_state.lead_options.keys()):
-             # Default to first lead if none selected
-             lead_name = list(st.session_state.lead_options.keys())[1] # Skip the None option
-        
-        lead_data = st.session_state.lead_options.get(lead_name, {}).get('extracted_preferences', {})
-        render_roi_calculator(lead_data)
-
-@ui_error_boundary("Ops & Optimization")
-def render_ops_hub():
-    st.header("📈 Ops & Optimization")
-    st.markdown("*Manager-level analytics and team performance tracking*")
-    
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "✅ Quality",
-        "💰 Revenue",
-        "🏆 Benchmarks",
-        "🎓 Coaching",
-        "🛠️ Control",
-        "🧠 RLHF Loop",
-        "🛡️ Governance"
-    ])
-    
-    with tab1:
-        st.subheader("AI Quality Assurance")
-        qa_report = services["qa"].generate_qa_report("demo_location")
-        
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Overall Quality", f"{qa_report['overall_score']}%", "+2%")
-        col2.metric("Compliance Rate", f"{qa_report['compliance_rate']}%", "Stable")
-        col3.metric("Empathy Score", f"{qa_report['empathy_score']}/10", "+0.5")
-        
-        st.markdown("#### 🎯 Improvement Areas")
-        for area in qa_report["improvement_areas"]:
-            st.warning(f"**{area['topic']}**: {area['recommendation']}")
-            
-    with tab2:
-        st.subheader("Revenue Attribution")
-        attr_data = services["revenue"].get_attribution_data("demo_location")
-        
-        # Display attribution chart
-        df_attr = pd.DataFrame(attr_data["channels"])
-        fig = px.pie(df_attr, values='revenue', names='channel', title='Revenue by Lead Source',
-                     color_discrete_sequence=px.colors.sequential.RdBu)
-        st.plotly_chart(fig, width="stretch")
-        
-        st.write(f"**Total Attributed Revenue:** ${attr_data['total_revenue']:,.0f}")
-        
-        # UI-014: Funnel Velocity Chart
-        st.markdown("---")
-        st.subheader("🚀 Funnel Velocity")
-        render_revenue_funnel()
-        
-    with tab3:
-        st.subheader("Competitive Benchmarking")
-        bench = services["benchmarking"].get_benchmarks("demo_location")
-        
-        for metric, data in bench.items():
-            st.write(f"**{metric.replace('_', ' ').title()}**")
-            cols = st.columns([2, 1])
-            cols[0].progress(data["percentile"] / 100)
-            cols[1].write(f"{data['percentile']}th Percentile")
-            
-    with tab4:
-        st.subheader("AI Agent Coaching")
-        recommendations = services["coaching"].get_coaching_recommendations("demo_agent")
-        
-        for rec in recommendations:
-            with st.expander(f"💡 {rec['title']}"):
-                st.write(rec['description'])
-                st.info(f"**Impact:** {rec['expected_impact']}")
-
-    with tab5:
-        st.subheader("AI Control Panel")
-        
-        # Prompt Versioning
-        st.markdown("### 📝 Prompt Version Control")
-        selected_version = st.selectbox("Active Prompt Version", 
-                                       options=[v["version"] for v in st.session_state.prompt_versions],
-                                       index=len(st.session_state.prompt_versions)-1)
-        
-        version_data = next(v for v in st.session_state.prompt_versions if v["version"] == selected_version)
-        
-        st.info(f"**Tag:** {version_data['tag']} | **Deployed:** {version_data['timestamp']}")
-        new_prompt = st.text_area("Prompt Content", value=version_data["content"], height=150)
-        
-        col_v1, col_v2 = st.columns(2)
-        if col_v1.button("💾 Save as New Version", use_container_width=True):
-            new_v = f"v1.{len(st.session_state.prompt_versions)}"
-            st.session_state.prompt_versions.append({
-                "version": new_v,
-                "tag": "Custom",
-                "content": new_prompt,
-                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d")
-            })
-            st.success(f"Version {new_v} saved!")
-            st.rerun()
-            
-        if col_v2.button("🚀 Rollback to v1.1", use_container_width=True):
-            st.warning("Rolling back to Production Baseline...")
-            st.toast("Rollback initiated", icon="⏪")
-
-        st.markdown("---")
-        
-        # Model Retraining Loop
-        st.markdown("### 🔄 Model Retraining Loop")
-        st.write("Feedback captured from Lead Intelligence Hub is automatically used to fine-tune your local matching models.")
-        
-        col_r1, col_v2 = st.columns(2)
-        col_r1.metric("Captured Feedback", "128", "+12")
-        col_v2.metric("Model Drift", "0.02", "Low")
-        
-    with tab6:
-        render_rlhf_loop()
-        
-    with tab7:
-        render_security_governance()
-        
-        if st.button("🛰️ Initiate Model Retraining", type="primary", use_container_width=True):
-            with st.spinner("Retraining Property Matcher ML..."):
-                import time
-                time.sleep(2)
-                st.success("Model successfully retrained! Accuracy improved by 3.2%")
-                st.balloons()
 
 # Buyer Component Functions
 def render_buyer_profile_builder():
@@ -2830,24 +1562,40 @@ def render_enhanced_property_search():
 
 # Seller Component Functions
 
-render_claude_assistant()
+render_claude_assistant(claude)
 
 if selected_hub == "🏢 Executive Command Center":
-    render_executive_hub()
+    render_executive_hub(services, mock_data, sparkline, render_insight_card)
 elif selected_hub == "🧠 Lead Intelligence Hub":
-    render_lead_intelligence_hub()
+    render_lead_intelligence_hub(services, mock_data, claude, market_key, selected_market, elite_mode=st.session_state.get('elite_mode', False))
 elif selected_hub == "⚡ Real-Time Intelligence":
     render_realtime_intelligence_dashboard()
 elif selected_hub == "🏠 Buyer Journey Hub":
-    render_buyer_journey_hub()
+    render_buyer_journey_hub(
+        st.session_state.get('selected_lead_name', '-- Select a Lead --'),
+        render_enhanced_property_search,
+        render_buyer_profile_builder,
+        render_financing_calculator,
+        render_neighborhood_explorer
+    )
 elif selected_hub == "🏡 Seller Journey Hub":
-    render_seller_journey_hub()
+    render_seller_journey_hub(
+        render_property_valuation_engine,
+        render_seller_prep_checklist,
+        render_marketing_campaign_dashboard,
+        render_seller_communication_portal,
+        render_transaction_timeline,
+        render_seller_analytics
+    )
 elif selected_hub == "🤖 Automation Studio":
-    render_automation_studio()
+    studio_hub = AutomationStudioHub(services, claude)
+    studio_hub.render_hub()
 elif selected_hub == "💰 Sales Copilot":
-    render_sales_copilot()
+    copilot_hub = SalesCopilotHub(services, claude)
+    copilot_hub.render_hub()
 elif selected_hub == "📈 Ops & Optimization":
-    render_ops_hub()
+    ops_hub = OpsOptimizationHub(services, claude)
+    ops_hub.render_hub()
 elif selected_hub == "🐝 Swarm Intelligence":
     render_swarm_visualizer()
 

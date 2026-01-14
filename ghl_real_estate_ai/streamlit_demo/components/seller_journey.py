@@ -2,6 +2,15 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import asyncio
+import json
+
+# Import enhanced services
+try:
+    from services.claude_orchestrator import get_claude_orchestrator
+    CLAUDE_AVAILABLE = True
+except ImportError:
+    CLAUDE_AVAILABLE = False
 
 def render_seller_prep_checklist():
     """Comprehensive seller preparation checklist"""
@@ -1376,17 +1385,54 @@ def render_seller_journey_hub(render_property_valuation_engine, render_seller_pr
             st.markdown("<div style='font-size: 3rem; text-align: center;'>🏠</div>", unsafe_allow_html=True)
         with col_s2:
             st.markdown("### Claude's Seller Journey Counsel")
-            st.markdown("""
-            *Inventory optimization for Jorge:*
-            - **💎 Value Maximizer:** Your 'Alta Loma' listing is seeing 2x higher engagement than neighborhood comps. I recommend a 'Coming Soon' email blast to your luxury investor list.
-            - **⏱️ Velocity Check:** Current market days-on-market (DOM) is dropping. We should push for a contract execution within the next 72 hours to maintain momentum.
-            """)
+            
+            if CLAUDE_AVAILABLE:
+                orchestrator = get_claude_orchestrator()
+                
+                with st.spinner("Claude is optimizing the seller journey..."):
+                    try:
+                        try:
+                            loop = asyncio.get_event_loop()
+                        except RuntimeError:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                        
+                        # Build inventory context
+                        inventory_metrics = {
+                            "active_listings": 3,
+                            "avg_dom": 12,
+                            "market_trend": "rising",
+                            "market": st.session_state.get("selected_market", "Austin")
+                        }
+                        
+                        # Use chat_query for inventory advice
+                        inventory_result = loop.run_until_complete(
+                            orchestrator.chat_query(
+                                query="Provide strategic inventory optimization counsel. Analyze current market velocity and suggest 2 focus areas for listing maximization.",
+                                context={"metrics": inventory_metrics, "task": "inventory_counsel"}
+                            )
+                        )
+                        st.markdown(inventory_result.content)
+                    except Exception as e:
+                        st.error(f"Counsel Error: {str(e)}")
+                        st.markdown("""
+                        - **💎 Value Maximizer:** Active listings showing strong engagement.
+                        - **⏱️ Velocity Check:** Market DOM remains low; focus on quick contract execution.
+                        """)
+            else:
+                st.markdown("""
+                *Inventory optimization for Jorge:*
+                - **💎 Value Maximizer:** Your 'Alta Loma' listing is seeing 2x higher engagement than neighborhood comps. I recommend a 'Coming Soon' email blast to your luxury investor list.
+                - **⏱️ Velocity Check:** Current market days-on-market (DOM) is dropping. We should push for a contract execution within the next 72 hours to maintain momentum.
+                """)
+                
             if st.button("📊 Draft Market Update for Seller"):
                 st.toast("Claude is drafting a performance report for your seller...", icon="✍️")
 
     # Seller navigation tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "📊 Property Valuation",
+        "✍️ Listing Architect",
         "📋 Seller Prep",
         "📈 Marketing Campaign",
         "💬 Communication",
@@ -1398,16 +1444,23 @@ def render_seller_journey_hub(render_property_valuation_engine, render_seller_pr
         render_property_valuation_engine()
 
     with tab2:
-        render_seller_prep_checklist()
+        try:
+            from components.listing_architect import render_listing_architect
+            render_listing_architect()
+        except ImportError:
+            st.info("✍️ Listing Architect component coming soon")
 
     with tab3:
-        render_marketing_campaign_dashboard()
+        render_seller_prep_checklist()
 
     with tab4:
-        render_seller_communication_portal()
+        render_marketing_campaign_dashboard()
 
     with tab5:
-        render_transaction_timeline()
+        render_seller_communication_portal()
 
     with tab6:
+        render_transaction_timeline()
+
+    with tab7:
         render_seller_analytics()
