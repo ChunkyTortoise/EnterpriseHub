@@ -280,6 +280,36 @@ class AIContentPersonalizationService:
             "frequency": "3x per week" if engagement > 60 else "1x per week",
         }
 
+    def generate_personalized_content(self, lead_name: str, channel: str, tone: str, context: Dict) -> str:
+        """
+        Generate a personalized outreach message.
+        Expected by the Personalization Engine UI.
+        """
+        first_name = lead_name.split(' ')[0]
+        
+        # Simple template-based generation for demo (in production would call Claude)
+        if "SMS" in channel:
+            if tone == "Urgent":
+                return f"Hey {first_name}, it's [Agent]! I just saw a new property in [Market] that fits your exact criteria and it's going to go fast. Are you free for a quick call?"
+            elif tone == "Exclusive":
+                return f"Hi {first_name}, [Agent] here. I have an off-market opportunity in [Market] that isn't on Zillow yet. Given your interest in this area, I wanted you to see it first. Interested?"
+            else: # Consultative/Friendly
+                return f"Hi {first_name}, hope your week is going well! I was just reviewing the latest [Market] market data and thought of our conversation about your next move. I've got some new insights for you. Text me when you have a sec!"
+        
+        elif "Email" in channel:
+            subject = f"Market Update for {first_name}"
+            body = f"Hi {first_name},\n\nI hope this email finds you well. As we discussed, I've been keeping a close eye on the [Market] market for you.\n\n"
+            if context.get("market_data"):
+                body += "Current trends show a 4.2% increase in inventory, which gives us more leverage than we had last month. This is a great time to be looking.\n\n"
+            body += "I've shortlisted a few properties that I think you'll really like. When would be a good time to review them together?\n\nBest,\n[Agent]"
+            return f"Subject: {subject}\n\n{body}"
+            
+        elif "Video" in channel:
+            return f"Video Script for {first_name}:\n[0:00-0:05] 'Hey {first_name}, it's [Agent] from Lyrio!'\n[0:05-0:15] 'I'm standing here in [Market] where we're seeing some incredible new listings...'\n[0:15-0:30] 'Knowing you're looking for a {tone} approach, I wanted to personally show you this...'"
+            
+        else:
+            return f"Hi {first_name}, this is [Agent]. Based on your recent activity, I've prepared a personalized {channel} for you. Let's connect soon to discuss your goals in [Market]."
+
 
 # Demo/Test function
 async def demo_personalization():

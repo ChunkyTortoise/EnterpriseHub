@@ -5,13 +5,21 @@ Matches lead preferences to available property listings.
 """
 
 import json
+import asyncio
+import aiofiles
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from datetime import datetime
+from typing import Any, Dict, List, Optional, Type
+from datetime import datetime, timedelta
+import time
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.services.property_matching_strategy import (
+    PropertyMatchingStrategy,
+    BasicFilteringStrategy,
+    AISemanticSearchStrategy
+)
 
 logger = get_logger(__name__)
 
@@ -19,8 +27,14 @@ logger = get_logger(__name__)
 class PropertyMatcher:
     """
     Service to match leads with property listings based on preferences.
-    Upgraded to Agentic Reasoning in Phase 2.
+    Upgraded to Agentic Reasoning in Phase 2 with Performance Caching.
     """
+
+    # Class-level cache for property listings (shared across instances)
+    _listings_cache: Optional[List[Dict[str, Any]]] = None
+    _cache_timestamp: Optional[datetime] = None
+    _cache_ttl: timedelta = timedelta(minutes=30)  # Cache for 30 minutes
+    _loading_lock: asyncio.Lock = asyncio.Lock()
 
     def __init__(self, listings_path: Optional[str] = None):
         """
@@ -37,19 +51,99 @@ class PropertyMatcher:
             / "knowledge_base"
             / "property_listings.json"
         )
-        self.listings = self._load_listings()
+        # Initialize with cached listings for better performance
+        # Note: We no longer call create_task here as it fails in non-async threads (like Streamlit global scope)
         self.llm_client = LLMClient(
             provider="claude",
             model=settings.claude_model
         )
+        # Strategy Pattern Initialization
+        self.strategy: PropertyMatchingStrategy = BasicFilteringStrategy()
 
-    def _load_listings(self) -> List[Dict[str, Any]]:
-        """Load listings from JSON file."""
+    def set_strategy(self, strategy_type: str = "basic"):
+        """
+        Runtime switch for matching algorithm.
+        options: 'basic', 'ai'
+        """
+        if strategy_type == "ai":
+            self.strategy = AISemanticSearchStrategy()
+            logger.info("Switched PropertyMatcher to AI Semantic Search Strategy")
+        else:
+            self.strategy = BasicFilteringStrategy()
+            logger.info("Switched PropertyMatcher to Basic Filtering Strategy")
+
+    async def _ensure_listings_loaded(self) -> None:
+        """Ensure listings are loaded with intelligent caching."""
+        if self._is_cache_valid():
+            return
+
+        async with self._loading_lock:
+            # Double-check after acquiring lock
+            if self._is_cache_valid():
+                return
+
+            await self._load_listings_async()
+
+    def _is_cache_valid(self) -> bool:
+        """Check if cache is still valid."""
+        if self._listings_cache is None or self._cache_timestamp is None:
+            return False
+
+        return datetime.now() - self._cache_timestamp < self._cache_ttl
+
+    async def _load_listings_async(self) -> None:
+        """Load listings from JSON file asynchronously with caching."""
+        try:
+            if self.listings_path.exists():
+                async with aiofiles.open(self.listings_path, "r") as f:
+                    content = await f.read()
+                    data = json.loads(content)
+                    self._listings_cache = data.get("listings", [])
+                    self._cache_timestamp = datetime.now()
+                    logger.info(f"Loaded {len(self._listings_cache)} properties (cached for {self._cache_ttl})")
+            else:
+                logger.warning(f"Property listings file not found at {self.listings_path}")
+                self._listings_cache = []
+                self._cache_timestamp = datetime.now()
+        except Exception as e:
+            logger.error(f"Error loading property listings: {e}")
+            if self._listings_cache is None:
+                self._listings_cache = []
+                self._cache_timestamp = datetime.now()
+
+    @property
+    def listings(self) -> List[Dict[str, Any]]:
+        """Get cached listings with auto-refresh."""
+        if not self._is_cache_valid():
+            # For synchronous access, return cached data if available
+            # and trigger async refresh if loop is running
+            if self._listings_cache is not None:
+                try:
+                    loop = asyncio.get_running_loop()
+                    if loop.is_running():
+                        asyncio.create_task(self._ensure_listings_loaded())
+                except RuntimeError:
+                    # No running loop, skipping async refresh
+                    pass
+                return self._listings_cache
+            else:
+                # First time load - fallback to sync for compatibility
+                return self._load_listings_sync()
+
+        return self._listings_cache or []
+
+    def _load_listings_sync(self) -> List[Dict[str, Any]]:
+        """Synchronous fallback for initial load."""
         try:
             if self.listings_path.exists():
                 with open(self.listings_path, "r") as f:
                     data = json.load(f)
-                    return data.get("listings", [])
+                    fallback_listings = data.get("listings", [])
+                    # Update cache for future use
+                    self._listings_cache = fallback_listings
+                    self._cache_timestamp = datetime.now()
+                    logger.info(f"Sync loaded {len(fallback_listings)} properties")
+                    return fallback_listings
             else:
                 logger.warning(
                     f"Property listings file not found at {self.listings_path}"
@@ -63,94 +157,19 @@ class PropertyMatcher:
         self, preferences: Dict[str, Any], limit: int = 3, min_score: float = 0.5
     ) -> List[Dict[str, Any]]:
         """
-        Find property listings that match lead preferences.
-
-        Args:
-            preferences: Dict containing keys like 'budget', 'location', 'bedrooms', etc.
-            limit: Maximum number of matches to return.
-            min_score: Minimum match score (0.0 to 1.0) to include.
-
-        Returns:
-            List of matching listings with match scores.
+        Find property listings that match lead preferences using the active strategy.
         """
-        matches = []
-
-        for property in self.listings:
-            score = self._calculate_match_score(property, preferences)
-            if score >= min_score:
-                property_with_score = property.copy()
-                property_with_score["match_score"] = round(score, 2)
-                matches.append(property_with_score)
-
-        # Sort by score descending
-        matches.sort(key=lambda x: x["match_score"], reverse=True)
-
-        return matches[:limit]
+        # Delegate to the strategy
+        matches = self.strategy.find_matches(self.listings, preferences, limit)
+        
+        # Filter by min_score if the strategy didn't (strategies return sorted list)
+        return [m for m in matches if m.get('match_score', 0) >= min_score]
 
     def _calculate_match_score(
         self, property: Dict[str, Any], preferences: Dict[str, Any]
     ) -> float:
-        """Calculate a match score between 0.0 and 1.0 for a property."""
-        score = 0.0
-        weights = {
-            "budget": 0.4,
-            "location": 0.3,
-            "bedrooms": 0.2,
-            "property_type": 0.1,
-        }
-
-        # 1. Budget Match (40% weight)
-        budget = preferences.get("budget")
-        if budget:
-            prop_price = property.get("price", 0)
-            if prop_price <= budget:
-                score += weights["budget"]
-            elif prop_price <= budget * 1.1:  # 10% stretch
-                score += weights["budget"] * 0.5
-        else:
-            score += weights["budget"] * 0.5  # Neutral if not specified
-
-        # 2. Location Match (30% weight)
-        pref_location = preferences.get("location")
-        if pref_location:
-            prop_loc = property.get("address", {}).get("city", "").lower()
-            prop_neighborhood = (
-                property.get("address", {}).get("neighborhood", "").lower()
-            )
-
-            # Handle list or string
-            locations = (
-                [pref_location.lower()]
-                if isinstance(pref_location, str)
-                else [loc.lower() for loc in pref_location]
-            )
-
-            if any(loc in prop_loc or loc in prop_neighborhood for loc in locations):
-                score += weights["location"]
-        else:
-            score += weights["location"] * 0.5  # Neutral
-
-        # 3. Bedrooms Match (20% weight)
-        pref_beds = preferences.get("bedrooms")
-        if pref_beds:
-            prop_beds = property.get("bedrooms", 0)
-            if prop_beds >= pref_beds:
-                score += weights["bedrooms"]
-            elif prop_beds == pref_beds - 1:
-                score += weights["bedrooms"] * 0.5
-        else:
-            score += weights["bedrooms"] * 0.5  # Neutral
-
-        # 4. Property Type Match (10% weight)
-        pref_type = preferences.get("property_type")
-        if pref_type:
-            prop_type = property.get("property_type", "").lower()
-            if pref_type.lower() in prop_type:
-                score += weights["property_type"]
-        else:
-            score += weights["property_type"] * 0.5  # Neutral
-
-        return score
+        """Deprecated: Logic moved to BasicFilteringStrategy."""
+        return 0.0
 
     def generate_match_reasoning(self, property: Dict[str, Any], preferences: Dict[str, Any]) -> str:
         """

@@ -245,3 +245,33 @@ class PredictiveLeadScorer:
             score = "High" if v > 0.7 else "Medium" if v > 0.3 else "Low"
             formatted[k.replace("_", " ").title()] = f"{score} ({int(v * 100)}%)"
         return formatted
+    def predict_next_action(self, lead_id: str) -> Dict[str, Any]:
+        """
+        Calculate statistical predictions for next steps.
+        Expected by Lead Intelligence Hub UI.
+        """
+        # In a real app, we'd fetch the lead data. 
+        # For the demo, we use the lead_id to seed deterministic mock data.
+        import random
+        random.seed(lead_id)
+        
+        prob = random.randint(45, 92)
+        delta = random.randint(2, 8)
+        estimated_days = 45 if prob > 70 else 90 if prob > 40 else 120
+        
+        return {
+            "probability": prob,
+            "delta": delta,
+            "target_date": (datetime.now() + timedelta(days=estimated_days)).strftime("%b %d, %Y"),
+            "factors": {
+                "Engagement Frequency": random.randint(10, 25),
+                "Response Velocity": random.randint(5, 15),
+                "Budget Alignment": random.randint(15, 30),
+                "Intent Clarity": random.randint(5, 20)
+            },
+            "next_steps": [
+                "Schedule priority follow-up call",
+                "Send personalized property matching report",
+                "Invite to upcoming open house"
+            ]
+        }
