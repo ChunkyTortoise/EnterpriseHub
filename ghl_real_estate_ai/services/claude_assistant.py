@@ -4,17 +4,27 @@ Provides context-aware insights, action recommendations, and interactive support
 """
 import streamlit as st
 import pandas as pd
+import asyncio
 from datetime import datetime
 from typing import Dict, List, Any, Optional
+from services.memory_service import MemoryService
 
 class ClaudeAssistant:
     """
     The brain of the platform's UI. 
-    Maintains state and provides context-specific intelligence.
+    Maintains state and provides context-specific intelligence using Claude Orchestrator.
     """
     
     def __init__(self, context_type: str = "general"):
         self.context_type = context_type
+        # Import here to avoid circular dependencies
+        try:
+            from services.claude_orchestrator import get_claude_orchestrator
+            self.orchestrator = get_claude_orchestrator()
+        except ImportError:
+            self.orchestrator = None
+            
+        self.memory_service = MemoryService()
         self._initialize_state()
 
     def _initialize_state(self):
@@ -53,6 +63,10 @@ class ClaudeAssistant:
         """Generates a contextual insight based on current hub and data."""
         clean_hub = hub_name.split(' ', 1)[1] if ' ' in hub_name else hub_name
         
+        # If orchestrator is available, we could potentially do a quick async analysis
+        # But for UI responsiveness, we use pre-calculated or persona-based insights here
+        # or call a fast analysis method.
+        
         if "Executive" in clean_hub:
             hot_leads = sum(1 for l in leads.values() if l and l.get('classification') == 'hot')
             return f"Jorge, your pipeline has {hot_leads} leads ready for immediate closing. Most are focused on the Austin downtown cluster."
@@ -60,24 +74,43 @@ class ClaudeAssistant:
         elif "Lead Intelligence" in clean_hub:
             selected = st.session_state.get('selected_lead_name', '-- Select a Lead --')
             if selected != "-- Select a Lead --":
-                # Persona-specific Claude insights
+                # Attempt to get semantic memory from Graphiti
+                try:
+                    # Resolve lead_id from session state options if available
+                    lead_options = st.session_state.get('lead_options', {})
+                    lead_data = lead_options.get(selected, {})
+                    lead_id = lead_data.get('lead_id')
+                    
+                    extra_context = ""
+                    if lead_id:
+                        # Synchronous wrapper for async call
+                        try:
+                            loop = asyncio.get_event_loop()
+                        except RuntimeError:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                            
+                        context = loop.run_until_complete(self.memory_service.get_context(lead_id))
+                        if context.get("relevant_knowledge"):
+                            extra_context = f"\n\n**🧠 Graphiti Recall:** {context['relevant_knowledge']}"
+
+                except Exception as e:
+                    # Fail silently on memory fetch to keep UI responsive
+                    extra_context = ""
+
+                # Persona-specific Claude insights (enhanced with Graphiti)
                 if "Sarah Chen" in selected:
-                    return "Sarah is a data-driven Apple engineer with a hard 45-day deadline. She's prioritizing Teravista for its commute efficiency. High conversion probability if we tour this weekend."
+                    return f"Sarah is a data-driven Apple engineer with a hard 45-day deadline. She's prioritizing Teravista for its commute efficiency.{extra_context}"
                 elif "David Kim" in selected:
-                    return "David is a seasoned investor focused on cash-on-cash return. He's currently cross-referencing Manor vs Del Valle yield data. Recommend sending the off-market ROI brief."
-                elif "Rodriguez" in selected:
-                    return "The Rodriguez family is nervous about their first purchase. They've spent 15 minutes on the 'Safety & Schools' dashboard. Emphasize Pflugerville's 8/10 ratings."
-                return f"I've analyzed {selected}'s recent SMS sentiment. They are showing 85% positive engagement but haven't booked a tour yet."
+                    return f"David is a seasoned investor focused on cash-on-cash return. Recommend sending the off-market ROI brief.{extra_context}"
+                return f"I've analyzed {selected}'s recent activity. They are showing high engagement but haven't booked a tour yet.{extra_context}"
             return "Select a lead to see my behavioral breakdown and conversion probability."
             
         elif "Automation" in clean_hub:
-            return "All 12 GHL workflows are operational. I've detected a 15% increase in response rates since we switched to 'Natural' tone."
+            return "All GHL workflows are operational. I've detected a 15% increase in response rates since we switched to 'Natural' tone."
             
         elif "Sales" in clean_hub:
             return "Ready to generate contracts. I've updated the buyer agreement template with the latest TX compliance rules."
-            
-        elif "Admin" in clean_hub or "Tenant" in clean_hub:
-            return "Jorge, I'm monitoring sub-account health. All 5 connected GHL locations are currently syncing perfectly."
 
         return "I'm monitoring all data streams to ensure you have the ultimate competitive advantage."
 
@@ -89,17 +122,36 @@ class ClaudeAssistant:
                 self._handle_query(query, leads, market)
 
     def _handle_query(self, query: str, leads: Dict[str, Any], market: str):
-        """Processes user query and displays response."""
+        """Processes user query and displays response using Claude Orchestrator."""
         with st.spinner("Claude is thinking..."):
-            q_lower = query.lower()
-            if "draft" in q_lower or "text" in q_lower or "sms" in q_lower:
-                response = "I've drafted an SMS for Sarah: 'Hi Sarah! Jorge and I found a perfect 4BR match in Austin today. Want to see photos?' [Trigger SMS?]"
-            elif "risk" in q_lower:
-                response = "Risk assessment: 2 leads are reaching the 48h silence threshold. I recommend an automated re-engagement trigger."
-            elif "market" in q_lower:
-                response = f"The {market} market is showing high demand for 3-bed homes under $600k. Velocity is up 12%."
+            if self.orchestrator:
+                try:
+                    try:
+                        loop = asyncio.get_event_loop()
+                    except RuntimeError:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                    
+                    # Build context
+                    context = {
+                        "market": market,
+                        "current_hub": st.session_state.get('current_hub', 'Unknown'),
+                        "selected_lead": st.session_state.get('selected_lead_name', 'None')
+                    }
+                    
+                    response_obj = loop.run_until_complete(
+                        self.orchestrator.chat_query(query, context)
+                    )
+                    response = response_obj.content
+                except Exception as e:
+                    response = f"I encountered an error processing your request: {str(e)}"
             else:
-                response = "I'm cross-referencing your GHL data. This query looks like a request for pipeline optimization. Should I run a full diagnostic?"
+                # Fallback to legacy logic
+                q_lower = query.lower()
+                if "draft" in q_lower or "text" in q_lower or "sms" in q_lower:
+                    response = "I've drafted an SMS: 'Hi! Jorge and I found a perfect match. Want to see photos?'"
+                else:
+                    response = "I'm cross-referencing your GHL data. Should I run a diagnostic?"
 
             st.markdown(f"""
             <div style='background: #f3f4f6; padding: 10px; border-radius: 8px; border-left: 3px solid #6D28D9; margin-top: 10px;'>
@@ -107,9 +159,9 @@ class ClaudeAssistant:
             </div>
             """, unsafe_allow_html=True)
             
-            if "Trigger" in response:
-                if st.button("🚀 Execute Command"):
-                    st.toast("Command sent to GHL Workflow Engine!")
+            if "Draft" in response or "script" in response.lower():
+                if st.button("🚀 Push to GHL"):
+                    st.toast("Draft synced to GHL!")
 
     def greet_user(self, name: str = "Jorge"):
         """Shows the one-time greeting toast."""
@@ -117,59 +169,144 @@ class ClaudeAssistant:
             st.toast(f"Hello {name}! 👋 I'm Claude, your AI partner. I've indexed your GHL context and I'm ready to work.", icon="🤖")
             st.session_state.claude_greeted = True
 
-    def generate_automated_report(self, data: Dict[str, Any], report_type: str = "Weekly Performance") -> Dict[str, Any]:
+    async def generate_automated_report(self, data: Dict[str, Any], report_type: str = "Weekly Performance") -> Dict[str, Any]:
         """
-        🆕 WOW FEATURE: Claude-Driven Automated Reports
-        Analyzes raw metrics and returns a structured, narrative report.
+        🆕 Enhanced with Real Claude Intelligence
+        Generates comprehensive reports using the Claude Automation Engine
         """
-        st.toast(f"Claude is synthesizing your {report_type} report...", icon="✍️")
-        
-        # Simulated analysis logic
-        if "conversations" in data:
-            convs = data["conversations"]
-            hot_leads = sum(1 for c in convs if c.get("classification") == "hot")
-            avg_score = sum(c.get("lead_score", 0) for c in convs) / len(convs) if convs else 0
-            
+        try:
+            # Import here to avoid circular imports
+            from services.claude_automation_engine import ClaudeAutomationEngine, ReportType
+
+            # Map report type to enum
+            report_type_enum = ReportType.WEEKLY_SUMMARY
+            if "daily" in report_type.lower():
+                report_type_enum = ReportType.DAILY_BRIEF
+            elif "monthly" in report_type.lower():
+                report_type_enum = ReportType.MONTHLY_REVIEW
+            elif "pipeline" in report_type.lower():
+                report_type_enum = ReportType.PIPELINE_STATUS
+
+            # Initialize automation engine
+            automation_engine = ClaudeAutomationEngine()
+
+            # Generate report with Claude intelligence
+            automated_report = await automation_engine.generate_automated_report(
+                report_type=report_type_enum,
+                data=data,
+                market_context={"location": "Austin", "market_conditions": "stable"},
+                time_period="current_period"
+            )
+
+            # Convert to legacy format for backward compatibility
             return {
-                "title": f"Claude's {report_type} Intelligence",
-                "summary": f"Jorge, your pipeline is currently processing {len(convs)} active conversations. I've identified {hot_leads} leads with immediate conversion potential.",
-                "key_findings": [
-                    f"Average lead quality is scoring at {avg_score:.1f}/100, which is stable.",
-                    "SMS engagement peaks between 6 PM and 8 PM local time.",
-                    "The 'Luxury' segment has 2x higher retention than 'Starter' leads this period."
-                ],
-                "strategic_recommendation": "Shift 15% of the automation budget toward weekend re-engagement triggers to capture high-velocity buyer intent.",
-                "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "title": automated_report.title,
+                "summary": automated_report.executive_summary,
+                "key_findings": automated_report.key_findings,
+                "strategic_recommendation": automated_report.opportunities[0] if automated_report.opportunities else "Continue current strategy",
+                "generated_at": automated_report.generated_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "confidence_score": automated_report.confidence_score,
+                "action_items": automated_report.action_items,
+                "risk_assessment": automated_report.risk_assessment,
+                "generation_time_ms": automated_report.generation_time_ms
             }
-        
-        return {"error": "Insufficient data for full report synthesis."}
 
-    def generate_retention_script(self, lead_data: Dict[str, Any], risk_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        except Exception as e:
+            # Fallback to simulated analysis if Claude fails
+            if "conversations" in data:
+                convs = data["conversations"]
+                hot_leads = sum(1 for c in convs if c.get("classification") == "hot")
+                avg_score = sum(c.get("lead_score", 0) for c in convs) / len(convs) if convs else 0
+
+                return {
+                    "title": f"System-Generated {report_type}",
+                    "summary": f"Jorge, your pipeline is currently processing {len(convs)} active conversations. I've identified {hot_leads} leads with immediate conversion potential. (Note: Claude intelligence temporarily unavailable)",
+                    "key_findings": [
+                        f"Average lead quality is scoring at {avg_score:.1f}/100, which is stable.",
+                        "SMS engagement peaks between 6 PM and 8 PM local time.",
+                        "The 'Luxury' segment has 2x higher retention than 'Starter' leads this period."
+                    ],
+                    "strategic_recommendation": "Shift 15% of the automation budget toward weekend re-engagement triggers to capture high-velocity buyer intent.",
+                    "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "error": f"Claude service unavailable: {str(e)}"
+                }
+
+            return {"error": f"Report generation failed: {str(e)}"}
+
+    async def generate_retention_script(self, lead_data: Dict[str, Any], risk_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        🆕 WOW FEATURE: Personalized AI Retention Scripts
-        Generates a high-conversion outreach script based on specific churn risk factors.
+        🆕 Enhanced with Real Claude Intelligence
+        Generates personalized retention scripts using the Claude Automation Engine
         """
-        lead_name = lead_data.get('lead_name', 'Client')
-        risk_score = risk_data.get('risk_score', 0) if risk_data else lead_data.get('risk_score_14d', 0)
-        
-        # Determine the "Why" for the reasoning
-        last_interaction = lead_data.get('last_interaction_days', 5)
-        
-        reasoning = f"Lead {lead_name} has a {risk_score:.1f}% churn risk primarily due to {last_interaction} days of inactivity. "
-        reasoning += "Their previous interest in luxury properties suggests they need a high-value 'pattern interrupt'."
+        try:
+            # Import here to avoid circular imports
+            from services.claude_automation_engine import ClaudeAutomationEngine, ScriptType
 
-        if risk_score > 80:
-            script = f"Hi {lead_name}, it's Jorge. I was just reviewing the new off-market luxury listings in Austin and one specifically caught my eye that fits your criteria perfectly. I didn't want you to miss out - do you have 2 minutes for a quick update today?"
-            strategy = "Urgent Pattern Interrupt - High Value Offer"
-        else:
-            script = f"Hey {lead_name}, just checking in! I noticed some interesting price shifts in the neighborhoods we were looking at. Hope your week is going well - would you like a quick summary of the changes?"
-            strategy = "Nurture Re-engagement - Market Insight"
+            lead_name = lead_data.get('lead_name', 'Client')
+            lead_id = lead_data.get('lead_id', f"demo_{lead_name.lower().replace(' ', '_')}")
+            risk_score = risk_data.get('risk_score', 0) if risk_data else lead_data.get('risk_score_14d', 0)
 
-        return {
-            "lead_name": lead_name,
-            "risk_score": risk_score,
-            "script": script,
-            "strategy": strategy,
-            "reasoning": reasoning,
-            "channel_recommendation": "SMS (High Response Probability)" if risk_score > 60 else "Email"
-        }
+            # Initialize automation engine
+            automation_engine = ClaudeAutomationEngine()
+
+            # Determine script type based on risk level
+            script_type = ScriptType.RE_ENGAGEMENT
+            if risk_score > 80:
+                # High risk needs urgent intervention
+                channel = "sms"  # Immediate channel
+            else:
+                # Medium/low risk can use email
+                channel = "email"
+
+            # Generate script with Claude intelligence
+            automated_script = await automation_engine.generate_personalized_script(
+                script_type=script_type,
+                lead_id=lead_id,
+                channel=channel,
+                context_override={"churn_risk": risk_score, **lead_data},
+                variants=2  # Generate A/B variants
+            )
+
+            # Convert to legacy format for backward compatibility
+            return {
+                "lead_name": lead_name,
+                "risk_score": risk_score,
+                "script": automated_script.primary_script,
+                "strategy": f"Claude-Generated {automated_script.script_type.value.replace('_', ' ').title()}",
+                "reasoning": automated_script.personalization_notes,
+                "channel_recommendation": automated_script.channel.upper(),
+                "alternative_scripts": automated_script.alternative_scripts,
+                "objection_responses": automated_script.objection_responses,
+                "success_probability": automated_script.success_probability,
+                "expected_response_rate": automated_script.expected_response_rate,
+                "generation_time_ms": automated_script.generation_time_ms,
+                "a_b_variants": automated_script.a_b_testing_variants
+            }
+
+        except Exception as e:
+            # Fallback to original logic if Claude fails
+            lead_name = lead_data.get('lead_name', 'Client')
+            risk_score = risk_data.get('risk_score', 0) if risk_data else lead_data.get('risk_score_14d', 0)
+
+            # Determine the "Why" for the reasoning
+            last_interaction = lead_data.get('last_interaction_days', 5)
+
+            reasoning = f"Lead {lead_name} has a {risk_score:.1f}% churn risk primarily due to {last_interaction} days of inactivity. "
+            reasoning += "Their previous interest in luxury properties suggests they need a high-value 'pattern interrupt'."
+
+            if risk_score > 80:
+                script = f"Hi {lead_name}, it's Jorge. I was just reviewing the new off-market luxury listings in Austin and one specifically caught my eye that fits your criteria perfectly. I didn't want you to miss out - do you have 2 minutes for a quick update today?"
+                strategy = "Urgent Pattern Interrupt - High Value Offer"
+            else:
+                script = f"Hey {lead_name}, just checking in! I noticed some interesting price shifts in the neighborhoods we were looking at. Hope your week is going well - would you like a quick summary of the changes?"
+                strategy = "Nurture Re-engagement - Market Insight"
+
+            return {
+                "lead_name": lead_name,
+                "risk_score": risk_score,
+                "script": script,
+                "strategy": strategy,
+                "reasoning": reasoning,
+                "channel_recommendation": "SMS (High Response Probability)" if risk_score > 60 else "Email",
+                "error": f"Claude service unavailable: {str(e)}"
+            }
