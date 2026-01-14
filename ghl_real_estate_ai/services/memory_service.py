@@ -16,6 +16,7 @@ from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.agent_system.memory import memory_manager as graphiti_manager
 
 logger = get_logger(__name__)
 
@@ -51,36 +52,81 @@ class MemoryService:
         """Get file path for a contact's memory, scoped by location."""
         import re
 
-        # Sanitize contact_id and location_id (only allow alphanumeric, dash, underscore)
+        # Enhanced sanitization with security validation
+        RESERVED_NAMES = {
+            "con", "prn", "aux", "nul", "com1", "com2", "com3", "com4",
+            "lpt1", "lpt2", "passwd", "shadow", "windowssystem32", "system32"
+        }
+
         def sanitize(id_str: str) -> str:
             """
-            Execute sanitize operation.
+            Secure sanitization to prevent path traversal and reserved names.
 
             Args:
                 id_str: Unique identifier
 
             Returns:
-                Result of the operation
-            """
-            # Strip any path components and keep only the filename part
-            filename = os.path.basename(id_str)
-            # Remove any characters that aren't alphanumeric, dash, or underscore
-            return re.sub(r"[^a-zA-Z0-9_-]", "", filename)
+                Sanitized identifier
 
-        safe_contact_id = sanitize(contact_id)
-        if not safe_contact_id:
-            safe_contact_id = "default_contact"
+            Raises:
+                ValueError: If identifier is invalid or reserved
+            """
+            if not id_str or not isinstance(id_str, str):
+                raise ValueError("ID must be non-empty string")
+
+            # Remove path separators and traversal attempts first
+            cleaned = id_str.replace("/", "").replace("\\", "").replace("..", "")
+
+            # Strip any remaining path components
+            cleaned = os.path.basename(cleaned)
+
+            # Keep only safe characters
+            cleaned = re.sub(r"[^a-zA-Z0-9_-]", "", cleaned)
+
+            # Validate minimum length and reserved names
+            if not cleaned or len(cleaned) < 3:
+                raise ValueError("ID too short or empty after sanitization")
+
+            if cleaned.lower() in RESERVED_NAMES:
+                raise ValueError(f"Reserved name not allowed: {cleaned}")
+
+            # Limit maximum length
+            if len(cleaned) > 64:
+                raise ValueError("ID exceeds maximum length")
+
+            return cleaned
+
+        try:
+            safe_contact_id = sanitize(contact_id)
+        except ValueError as e:
+            logger.error(f"Invalid contact_id '{contact_id}': {e}")
+            safe_contact_id = f"sanitized_{hash(contact_id) % 100000}"
 
         if location_id:
-            safe_location_id = sanitize(location_id)
-            if not safe_location_id:
-                safe_location_id = "default_location"
+            try:
+                safe_location_id = sanitize(location_id)
+            except ValueError as e:
+                logger.error(f"Invalid location_id '{location_id}': {e}")
+                safe_location_id = f"sanitized_{hash(location_id) % 100000}"
 
             tenant_dir = self.memory_dir / safe_location_id
-            tenant_dir.mkdir(parents=True, exist_ok=True)
-            return tenant_dir / f"{safe_contact_id}.json"
 
-        return self.memory_dir / f"{safe_contact_id}.json"
+            # Verify final path is within memory_dir (defense in depth)
+            final_path = (tenant_dir / f"{safe_contact_id}.json").resolve()
+            if not str(final_path).startswith(str(self.memory_dir.resolve())):
+                logger.error("Path traversal attempt detected, using default path")
+                return self.memory_dir / f"{safe_contact_id}.json"
+
+            tenant_dir.mkdir(parents=True, exist_ok=True)
+            return final_path
+
+        # Verify default path as well
+        final_path = (self.memory_dir / f"{safe_contact_id}.json").resolve()
+        if not str(final_path).startswith(str(self.memory_dir.resolve())):
+            logger.error("Path traversal attempt detected in default path")
+            raise ValueError("Security violation: Invalid file path")
+
+        return final_path
 
     async def get_context(
         self, contact_id: str, location_id: Optional[str] = None
@@ -105,11 +151,55 @@ class MemoryService:
         if file_path.exists():
             try:
                 with open(file_path, "r") as f:
-                    return json.load(f)
+                    context = json.load(f)
+                    
+                    # Graphiti Integration: Inject Semantic Context
+                    if graphiti_manager.enabled:
+                        try:
+                            graphiti_context = await graphiti_manager.retrieve_context(contact_id)
+                            context["relevant_knowledge"] = graphiti_context
+                        except Exception as ge:
+                            logger.warning(f"Failed to retrieve Graphiti context for {contact_id}: {ge}")
+                            
+                    return context
             except Exception as e:
                 logger.error(f"Failed to read memory file for {contact_id}: {e}")
 
         return self._get_default_context(contact_id, location_id)
+
+    async def add_interaction(
+        self,
+        contact_id: str,
+        message: str,
+        role: str,
+        location_id: Optional[str] = None
+    ) -> None:
+        """
+        Record a new interaction to both file memory and Graphiti.
+        """
+        # 1. Update File Context
+        context = await self.get_context(contact_id, location_id)
+        
+        interaction = {
+            "role": role,
+            "content": message,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        if "conversation_history" not in context:
+            context["conversation_history"] = []
+            
+        context["conversation_history"].append(interaction)
+        context["last_interaction_at"] = interaction["timestamp"]
+        
+        await self.save_context(contact_id, context, location_id)
+        
+        # 2. Update Graphiti (Episodic Memory)
+        if graphiti_manager.enabled:
+            try:
+                await graphiti_manager.save_interaction(contact_id, message, role)
+            except Exception as e:
+                logger.warning(f"Failed to save interaction to Graphiti for {contact_id}: {e}")
 
     async def save_context(
         self,

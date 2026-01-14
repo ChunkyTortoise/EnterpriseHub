@@ -215,8 +215,14 @@ class LeadScorer:
             if prefs.get("bathrooms"):
                 prop_details.append(f"{prefs.get('bathrooms')} bath")
             if prefs.get("must_haves"):
-                prop_details.append(prefs.get("must_haves"))
-            questions_answered.append(f"Property: {', '.join(prop_details)}")
+                must_haves = prefs.get("must_haves")
+                if isinstance(must_haves, list):
+                    prop_details.append(", ".join(str(m) for m in must_haves))
+                else:
+                    prop_details.append(str(must_haves))
+            # Ensure all items in prop_details are strings
+            safe_prop_details = [str(p) for p in prop_details]
+            questions_answered.append(f"Property: {', '.join(safe_prop_details)}")
         if prefs.get("financing"):
             questions_answered.append(f"Financing: {prefs.get('financing')}")
         if prefs.get("motivation"):
@@ -225,7 +231,7 @@ class LeadScorer:
             questions_answered.append(f"Home Condition: {prefs.get('home_condition')}")
 
         reasoning = (
-            " | ".join(questions_answered)
+            " | ".join([str(q) for q in questions_answered])
             if questions_answered
             else "No qualifying questions answered yet"
         )

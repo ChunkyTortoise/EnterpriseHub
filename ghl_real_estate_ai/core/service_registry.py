@@ -193,6 +193,26 @@ class ServiceRegistry:
     def monitoring(self):
         """Get or create MonitoringService instance."""
         return self._get_service("monitoring", "monitoring", "MonitoringService")
+
+    @property
+    def claude_orchestrator(self):
+        """Get or create ClaudeOrchestrator instance."""
+        return self._get_service("claude_orchestrator", "claude_orchestrator", "ClaudeOrchestrator")
+
+    @property
+    def enhanced_lead_scorer(self):
+        """Get or create ClaudeEnhancedLeadScorer instance."""
+        return self._get_service("enhanced_lead_scorer", "claude_enhanced_lead_scorer", "ClaudeEnhancedLeadScorer")
+
+    @property
+    def claude_automation(self):
+        """Get or create ClaudeAutomationEngine instance."""
+        return self._get_service("claude_automation", "claude_automation_engine", "ClaudeAutomationEngine")
+
+    @property
+    def enhanced_lead_intelligence(self):
+        """Get or create EnhancedLeadIntelligence instance."""
+        return self._get_service("enhanced_lead_intelligence", "enhanced_lead_intelligence", "EnhancedLeadIntelligence")
     
     # ========================================================================
     # High-Level Convenience Methods (Frontend-Ready)
@@ -603,5 +623,7 @@ class ServiceRegistry:
             "tour_scheduler", "client_portal", "neighborhood_insights",
             "social_media", "multichannel", "listing_writer",
             "smart_automation", "workflow_builder", "reengagement",
-            "lead_lifecycle", "campaign_analytics", "memory", "monitoring"
+            "lead_lifecycle", "campaign_analytics", "memory", "monitoring",
+            "claude_orchestrator", "enhanced_lead_scorer", "claude_automation",
+            "enhanced_lead_intelligence"
         ]

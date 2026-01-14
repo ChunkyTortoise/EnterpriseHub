@@ -258,19 +258,32 @@ class ChurnFeatureExtractor:
 
     def _extract_engagement_features(self, memory_data: Dict, behavioral_data: Dict) -> Dict[str, float]:
         """Extract engagement-related features"""
-        now = datetime.now()
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
 
         # Days since last interaction
         last_interaction = memory_data.get('last_interaction', {})
         days_since_last = 999.0  # Default for no interaction
         if last_interaction and 'timestamp' in last_interaction:
-            last_time = datetime.fromisoformat(last_interaction['timestamp'])
+            ts_str = last_interaction['timestamp']
+            last_time = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            if last_time.tzinfo is None:
+                last_time = last_time.replace(tzinfo=timezone.utc)
             days_since_last = (now - last_time).days
 
         # Interaction frequencies
         events = behavioral_data.get('recent_events', [])
-        interactions_7d = sum(1 for event in events if (now - datetime.fromisoformat(event.get('timestamp', ''))).days <= 7)
-        interactions_14d = sum(1 for event in events if (now - datetime.fromisoformat(event.get('timestamp', ''))).days <= 14)
+        
+        def get_event_ts(event):
+            ts_str = event.get('timestamp', '')
+            if not ts_str: return datetime.min.replace(tzinfo=timezone.utc)
+            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            return ts
+
+        interactions_7d = sum(1 for event in events if (now - get_event_ts(event)).days <= 7)
+        interactions_14d = sum(1 for event in events if (now - get_event_ts(event)).days <= 14)
         interactions_30d = len(events)
 
         # Response rates
@@ -837,24 +850,28 @@ class ChurnPredictionEngine:
     to provide comprehensive churn risk assessment with actionable insights.
     """
 
-    def __init__(self, memory_service: MemoryService,
-                 lifecycle_tracker: LeadLifecycleTracker,
-                 behavioral_engine: BehavioralTriggerEngine,
-                 lead_scorer: LeadScorer,
+    def __init__(self, memory_service: Optional[MemoryService] = None,
+                 lifecycle_tracker: Optional[LeadLifecycleTracker] = None,
+                 behavioral_engine: Optional[BehavioralTriggerEngine] = None,
+                 lead_scorer: Optional[LeadScorer] = None,
                  model_path: Optional[str] = None):
 
         self.logger = logging.getLogger(__name__ + '.ChurnPredictionEngine')
 
-        # Initialize components
+        # Initialize components with optional dependencies
         self.feature_extractor = ChurnFeatureExtractor(
             memory_service, lifecycle_tracker, behavioral_engine, lead_scorer
-        )
+        ) if all([memory_service, lifecycle_tracker, behavioral_engine, lead_scorer]) else None
+        
         self.risk_predictor = ChurnRiskPredictor(model_path)
         self.risk_stratifier = ChurnRiskStratifier()
 
         # Cache for recent predictions (4-hour TTL)
         self._prediction_cache = {}
         self._cache_ttl = timedelta(hours=4)
+
+        if not self.feature_extractor:
+            self.logger.warning("ChurnPredictionEngine initialized with missing dependencies. Features will not be extracted.")
 
         self.logger.info("ChurnPredictionEngine initialized successfully")
 

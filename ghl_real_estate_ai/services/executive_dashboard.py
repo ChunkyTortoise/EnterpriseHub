@@ -60,6 +60,7 @@ class ExecutiveDashboardService:
 
     def _load_conversations(self, location_id: str, days: int) -> List[Dict]:
         """Load conversation data for analysis"""
+        from datetime import timezone
         # Load from analytics data
         analytics_file = self.data_dir / "mock_analytics.json"
 
@@ -75,13 +76,16 @@ class ExecutiveDashboardService:
         for c in data.get("conversations", []):
             ts_str = c.get("timestamp") or c.get("start_time")
             if ts_str:
-                # Handle Z or +00:00
-                ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-                # Ensure ts is offset-aware for comparison
-                if ts.tzinfo is None:
-                    ts = ts.replace(tzinfo=timezone.utc)
-                if ts >= cutoff:
-                    conversations.append(c)
+                try:
+                    # Handle Z or +00:00
+                    ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                    # Ensure ts is offset-aware for comparison
+                    if ts.tzinfo is None:
+                        ts = ts.replace(tzinfo=timezone.utc)
+                    if ts >= cutoff:
+                        conversations.append(c)
+                except ValueError:
+                    continue
 
         return conversations
 
@@ -279,6 +283,7 @@ class ExecutiveDashboardService:
         self, conversations: List[Dict], days: int
     ) -> Dict[str, List[Dict]]:
         """Calculate day-by-day trends"""
+        from datetime import timezone
         # Group conversations by day
         daily_data = {}
 
@@ -286,7 +291,12 @@ class ExecutiveDashboardService:
             ts_str = conv.get("timestamp") or conv.get("start_time")
             if not ts_str:
                 continue
-            date = datetime.fromisoformat(ts_str.replace("Z", "+00:00")).date()
+            # Handle Z or +00:00 and make it offset-aware
+            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            
+            date = ts.date()
             if date not in daily_data:
                 daily_data[date] = []
             daily_data[date].append(conv)
