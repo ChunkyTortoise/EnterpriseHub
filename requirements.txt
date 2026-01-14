@@ -8,6 +8,11 @@ streamlit>=1.41.1
 # ==============================================================================
 pandas>=2.1.3
 numpy>=1.26.2
+
+# ==============================================================================
+# Async I/O Performance
+# ==============================================================================
+aiofiles>=24.1.0
 scipy>=1.11.4  # Statistical functions for A/B testing
 scikit-learn>=1.3.2  # Machine Learning & Forecasting
 
@@ -55,4 +60,7 @@ streamlit-chat==0.1.1
 # ==============================================================================
 python-dotenv==1.0.0  # Environment variable management
 openpyxl==3.1.2  # Excel file support for data export
-PyGithub>=2.1.1 # GitHub API interactionsfastmcp
+PyGithub>=2.1.1 # GitHub API interactions
+qrcode[pil]>=7.4.2
+fastmcp
+graphiti-core>=0.5.0

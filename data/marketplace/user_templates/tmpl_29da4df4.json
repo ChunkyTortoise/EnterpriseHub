@@ -1,0 +1,56 @@
+{
+  "id": "tmpl_29da4df4",
+  "name": "Exported Template",
+  "description": "This is an exported template",
+  "category": "custom",
+  "author": "User",
+  "version": "1.0.0",
+  "icon": "\ud83d\udccb",
+  "tags": [
+    "test",
+    "export"
+  ],
+  "rating": 0.0,
+  "reviews_count": 0,
+  "downloads_count": 0,
+  "price": 0,
+  "is_premium": false,
+  "is_featured": false,
+  "trigger": "lead_created",
+  "steps_count": 1,
+  "estimated_time": "5 minutes",
+  "difficulty": "intermediate",
+  "variables": [
+    {
+      "name": "name",
+      "type": "string",
+      "default": "{{name}}",
+      "description": "Value for name",
+      "required": true
+    }
+  ],
+  "screenshots": [],
+  "documentation": "",
+  "workflow": {
+    "workflow_id": "export_test",
+    "name": "Export Test",
+    "description": "Test workflow for export",
+    "trigger": {
+      "trigger_type": "lead_created",
+      "conditions": {}
+    },
+    "actions": [
+      {
+        "action_id": "a1",
+        "action_type": "send_sms",
+        "config": {
+          "message": "Hello {{name}}!"
+        },
+        "conditions": [],
+        "delay_seconds": 0
+      }
+    ]
+  },
+  "created_at": "2026-01-12T21:27:30.184139+00:00Z",
+  "updated_at": "2026-01-12T21:27:30.184140+00:00Z"
+}

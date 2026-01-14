@@ -38,19 +38,21 @@
 Open in browser: http://localhost:8501
 ```
 
-### Step 2: Test Lead Qualification
-1. Go to your GHL (Lyrio account)
-2. Create a test contact
-3. Add tag: "Needs Qualifying"
-4. Watch AI qualify them automatically
+### Step 2: Test Lead Intelligence (The "Wow" Moment)
+1. In the sidebar, click **🧠 Lead Intelligence Hub**.
+2. Select **Sarah Chen (Software Engineer)** from the dropdown.
+3. Scroll down to see her **93% Score** and **AI Property Matches**.
+4. Click the **"🌐 Buyer Portal (Phase 3)"** tab.
+5. Try the **Property Swipe UI** - swipe right on a few homes.
+6. Click the **"🔔 Simulate GHL Alert"** button in the **Property Matcher** tab to see how you'll be notified.
 
 ### Step 3: Explore Your 5 Hubs
 Click through each hub in the sidebar:
-- 🏢 Executive Command Center
-- 🧠 Lead Intelligence Hub
-- 🤖 Automation Studio
-- 💰 Sales Copilot
-- 📈 Ops & Optimization
+- 🏢 **Executive Command Center** - See your $2.4M pipeline
+- 🧠 **Lead Intelligence Hub** - The behavioral prediction engine
+- 🤖 **Automation Studio** - Where the AI "Brain" is configured
+- 💰 **Sales Copilot** - Your AI closing coach & doc generator
+- 📈 **Ops & Optimization** - Team performance & quality scores
 
 ---
 
