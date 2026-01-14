@@ -20,8 +20,10 @@ logger = logging.getLogger(__name__)
 class Settings:
     """Mock settings for demo mode"""
     def __init__(self):
-        self.GHL_API_KEY = os.getenv("GHL_API_KEY", "")
-        self.GHL_API_URL = os.getenv("GHL_API_URL", "https://rest.gohighlevel.com")
+        self.ghl_api_key = os.getenv("GHL_API_KEY", "")
+        self.ghl_location_id = os.getenv("GHL_LOCATION_ID", "")
+        self.ghl_api_url = os.getenv("GHL_API_URL", "https://rest.gohighlevel.com")
+        self.test_mode = os.getenv("ENVIRONMENT", "demo") == "demo"
 
 settings = Settings()
 

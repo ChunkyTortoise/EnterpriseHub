@@ -97,18 +97,26 @@ st.markdown(f"""
 
 # Search Criteria (Linked to GHL Bi-Directional Sync)
 with st.expander("🛠️ Architectural Search Criteria"):
-    budget = st.slider("Target Cap", 300000, 2000000, 1200000, step=50000)
-    beds = st.number_input("Min Bedrooms", 1, 6, 3)
-    location = st.text_input("Geography", "Austin, TX")
-    
+    col_s1, col_s2 = st.columns(2)
+    with col_s1:
+        budget = st.slider("Target Cap", 300000, 2000000, 1200000, step=50000)
+        beds = st.number_input("Min Bedrooms", 1, 6, 3)
+    with col_s2:
+        location = st.text_input("Geography", "Austin, TX")
+        strategy = st.radio("Matching Engine", ["Basic Filter", "AI Semantic Search"], horizontal=True)
+        
     if st.button("Synchronize with Lyrio Core", use_container_width=True):
         # Telemetry
-        telemetry.record_interaction(lead_id, "update_criteria", {"budget": budget, "beds": beds, "location": location})
+        telemetry.record_interaction(lead_id, "update_criteria", {"budget": budget, "beds": beds, "location": location, "strategy": strategy})
         st.success("Preferences Hardened & Synced to GHL!")
         st.balloons()
 
 # Property Feed Logic
 st.markdown("#### 💎 Priority Matches")
+
+# Configure Matcher Strategy
+match_strat = "ai" if strategy == "AI Semantic Search" else "basic"
+matcher.set_strategy(match_strat)
 
 # Get standard matches
 criteria = {"budget": budget, "bedrooms": beds, "location": location}

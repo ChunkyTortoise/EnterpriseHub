@@ -1,337 +1,285 @@
 """
-Enhanced UI Components for GHL Real Estate AI.
-Renders the "Wow Factor" features: Lead Insights, Agent Coaching, and Smart Automation.
+Enhanced Services - AI Lead Intelligence Component
+
+Provides comprehensive behavioral insights and analytics for leads including:
+- Health score visualization
+- Engagement timeline tracking
+- Sentiment analysis
+- Property interest heatmap
+- Urgency indicators
 """
+
 import streamlit as st
-import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
+import plotly.express as px
+import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
-
-# Import the services
-try:
-    from ghl_real_estate_ai.services.ai_lead_insights import AILeadInsightsService
-    from ghl_real_estate_ai.services.agent_coaching import AgentCoachingService
-    from ghl_real_estate_ai.services.smart_automation import SmartAutomationEngine
-    SERVICES_AVAILABLE = True
-except ImportError:
-    SERVICES_AVAILABLE = False
-
-
-def card_metric(title: str, value: str, subtitle: str):
-    """Simple metric card component."""
-    st.markdown(f"""
-    <div style="
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    ">
-        <h4 style="margin: 0 0 0.5rem 0; color: #1e293b; font-size: 0.9rem; font-weight: 600;">
-            {title}
-        </h4>
-        <div style="font-size: 1.5rem; font-weight: 700; color: #059669; margin-bottom: 0.5rem;">
-            {value}
-        </div>
-        <p style="margin: 0; font-size: 0.8rem; color: #64748b;">
-            {subtitle}
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
 
 def render_ai_lead_insights(lead_data):
-    """Render the AI Lead Insights panel."""
-
+    """
+    Renders comprehensive AI-powered lead intelligence visualizations
+    
+    Args:
+        lead_data (dict): Lead information including:
+            - name, health_score, engagement_level
+            - last_contact, communication_preference
+            - urgency_indicators, extracted_preferences
+            - conversation_history
+    """
+    
     st.markdown("### 🧠 AI Lead Intelligence")
-
-    # Use mock data when services aren't available
-    if not SERVICES_AVAILABLE:
-        render_mock_ai_lead_insights(lead_data)
-        return
-
-    try:
-        service = AILeadInsightsService()
-
-        # Get health score with error handling
-        try:
-            health = service.get_lead_health_score(lead_data)
-            # If we get here, render the real service data
-            # (Implementation would go here for production)
-            st.info("Real AI service data would display here")
-        except Exception:
-            render_mock_ai_lead_insights(lead_data)
-            return
-    except Exception:
-        render_mock_ai_lead_insights(lead_data)
-        return
-
-
-def render_mock_ai_lead_insights(lead_data: Dict[str, Any]):
-    """Render mock AI Lead Insights when services unavailable."""
-
-    # Extract lead data with fallbacks
-    lead_health = lead_data.get('health_score', 87)
-    lead_name = lead_data.get('name', 'Demo Lead')
-    engagement_level = lead_data.get('engagement_level', 'high')
-
-    # Mock health data
-    health = {
-        'overall_health': lead_health,
-        'status': 'Hot Lead' if lead_health > 80 else 'Warm Lead',
-        'trend': 'Increasing' if engagement_level == 'high' else 'Stable',
-        'recommendation': 'Schedule immediate follow-up call' if lead_health > 80 else 'Continue nurturing sequence'
-    }
-
-    # Health Gauge
-    c1, c2, c3 = st.columns([1, 1, 2])
-    with c1:
+    st.markdown("*Deep behavioral analysis powered by Claude AI*")
+    
+    # Section 1: Health Score Overview
+    col1, col2 = st.columns([1, 1.5])
+    
+    with col1:
+        st.markdown("#### 💓 Lead Health Score")
+        
+        health_score = lead_data.get('health_score', 75)
+        
+        # Health Score Gauge
         fig = go.Figure(go.Indicator(
-            mode="gauge+number+delta",
-            value=health['overall_health'],
-            title={'text': "Lead Health"},
-            delta={'reference': 75, 'increasing': {'color': "green"}},
+            mode="gauge+number",
+            value=health_score,
+            domain={'x': [0, 1], 'y': [0, 1]},
+            title={'text': "Engagement Health", 'font': {'size': 14, 'color': '#1e293b'}},
+            number={'font': {'size': 36, 'color': '#1e293b'}},
             gauge={
-                'axis': {'range': [0, 100]},
-                'bar': {'color': _get_color(health['overall_health'])},
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#64748b", 'tickfont': {'color': '#475569'}},
+                'bar': {'color': "#10b981" if health_score >= 70 else "#f59e0b" if health_score >= 40 else "#ef4444"},
+                'bgcolor': "white",
+                'borderwidth': 2,
+                'bordercolor': "#e2e8f0",
                 'steps': [
-                    {'range': [0, 50], 'color': "#f1f5f9"},
-                    {'range': [50, 80], 'color': "#e2e8f0"}
-                ]
+                    {'range': [0, 40], 'color': '#fee2e2'},
+                    {'range': [40, 70], 'color': '#fef3c7'},
+                    {'range': [70, 100], 'color': '#d1fae5'}
+                ],
+                'threshold': {
+                    'line': {'color': "#10b981", 'width': 4},
+                    'thickness': 0.75,
+                    'value': 80
+                }
             }
         ))
-        fig.update_layout(height=180, margin=dict(l=10, r=10, t=30, b=10))
-        st.plotly_chart(fig, use_container_width=True)
-
-    with c2:
-        st.markdown(f"#### Status: {health['status']}")
-        st.markdown(f"**Trend:** {health['trend']}")
-        st.info(f"💡 {health['recommendation']}")
-
-    with c3:
-        # Mock next best action
-        action = {
-            'action': 'schedule_call',
-            'expected_impact': 'High',
-            'reason': 'Lead showing strong buying signals'
-        }
-
-        card_metric(
-            "🚀 Next Best Action",
-            action['action'].replace('_', ' ').title(),
-            f"Impact: {action['expected_impact']} | {action['reason']}"
+        
+        fig.update_layout(
+            height=240,
+            margin=dict(t=30, b=10, l=20, r=20),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font={'color': '#1e293b'}
         )
-        if st.button("Execute Action Now", key="exec_nba_mock"):
-            st.success(f"Initiated: {action['action']}")
-
-    st.divider()
-
-    # Mock detailed insights
-    insights = [
-        {
-            'insight_type': 'opportunity',
-            'title': 'High Engagement Window',
-            'description': f'{lead_name} has shown 3x higher response rates in afternoons',
-            'recommended_action': 'Schedule follow-up for 2-4pm window',
-            'confidence': 0.89
-        },
-        {
-            'insight_type': 'risk',
-            'title': 'Competitor Contact Detected',
-            'description': 'Lead mentioned speaking with another agent recently',
-            'recommended_action': 'Emphasize unique value propositions immediately',
-            'confidence': 0.76
-        },
-        {
-            'insight_type': 'action',
-            'title': 'Optimal Follow-Up Window',
-            'description': 'Based on response patterns, best time to reach this lead is Afternoon (2-4pm)',
-            'recommended_action': 'Schedule follow-up for Afternoon (2-4pm)',
-            'confidence': 0.92
-        }
-    ]
-
-    c_left, c_right = st.columns(2)
-
-    with c_left:
-        st.markdown("#### 🔥 Opportunities & Risks")
-        for i in insights:
-            if i['insight_type'] in ['opportunity', 'risk']:
-                icon = "🟢" if i['insight_type'] == 'opportunity' else "🔴"
-                with st.expander(f"{icon} {i['title']} ({int(i['confidence']*100)}%)", expanded=True):
-                    st.write(i['description'])
-                    st.caption(f"Recommendation: {i['recommended_action']}")
-
-    with c_right:
-        st.markdown("#### ⚡ Urgency & Timing")
-        for i in insights:
-            if i['insight_type'] == 'action':
-                with st.expander(f"⏰ {i['title']}", expanded=True):
-                    st.write(i['description'])
-                    st.caption(f"Recommendation: {i['recommended_action']}")
-
-
-def render_agent_coaching(conversation_history, context):
-    """Render the Agent Coaching panel."""
-    if not SERVICES_AVAILABLE:
-        return render_mock_agent_coaching(conversation_history, context)
-
-    try:
-        service = AgentCoachingService()
-        tips = service.analyze_conversation_live(conversation_history, context)
-    except Exception:
-        return render_mock_agent_coaching(conversation_history, context)
-
-
-def render_mock_agent_coaching(conversation_history, context):
-    """Render mock agent coaching when services unavailable."""
-
-    st.markdown("### 🎓 Real-Time Agent Coach")
-
-    # Mock coaching tips
-    tips = [
-        {
-            'title': 'Ask About Timeline',
-            'suggestion': 'The lead mentioned urgency but no specific timeline. Ask for clarification.',
-            'example': 'When would you ideally like to be settled in your new home?',
-            'why_it_works': 'Timeline questions help qualify urgency and show you\'re listening',
-            'urgency': 1
-        },
-        {
-            'title': 'Highlight Market Advantage',
-            'suggestion': 'Lead seems price-conscious. Emphasize current market opportunities.',
-            'example': 'With interest rates stabilizing, now is actually a great time to lock in a rate.',
-            'why_it_works': 'Creates urgency while addressing price concerns',
-            'urgency': 2
-        }
-    ]
-
-    if not tips:
-        st.info("Listening for coaching opportunities...")
-        return
-
-    for tip in tips:
-        # Color code based on urgency
-        border_color = "#ef4444" if tip['urgency'] == 1 else "#3b82f6"
-        bg_color = "#fef2f2" if tip['urgency'] == 1 else "#eff6ff"
-
-        st.markdown(
-            f"""
-            <div style="border-left: 4px solid {border_color}; background-color: {bg_color}; padding: 15px; border-radius: 5px; margin-bottom: 10px;">
-                <h4 style="margin:0; color: #1e293b;">{tip['title']}</h4>
-                <p style="margin:5px 0 10px 0; color: #475569;">{tip['suggestion']}</p>
-                <div style="background: white; padding: 10px; border-radius: 5px; border: 1px dashed #cbd5e1;">
-                    <strong>Try saying:</strong><br>
-                    <em>"{tip['example']}"</em>
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Key Metrics
+        engagement_level = lead_data.get('engagement_level', 'medium')
+        comm_pref = lead_data.get('communication_preference', 'text')
+        
+        st.markdown(f"""
+        <div style='background: white; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 1rem;'>
+            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem;'>
+                <div>
+                    <div style='color: #64748b; font-size: 0.7rem; text-transform: uppercase;'>Engagement</div>
+                    <div style='color: #1e293b; font-weight: 600; margin-top: 2px;'>{engagement_level.title()}</div>
                 </div>
-                <div style="margin-top: 5px; font-size: 0.8em; color: #64748b;">
-                    Why: {tip['why_it_works']}
+                <div>
+                    <div style='color: #64748b; font-size: 0.7rem; text-transform: uppercase;'>Preferred</div>
+                    <div style='color: #1e293b; font-weight: 600; margin-top: 2px;'>{comm_pref.upper()}</div>
+                </div>
+                <div>
+                    <div style='color: #64748b; font-size: 0.7rem; text-transform: uppercase;'>Last Contact</div>
+                    <div style='color: #1e293b; font-weight: 600; margin-top: 2px;'>{lead_data.get('last_contact', 'N/A')}</div>
+                </div>
+                <div>
+                    <div style='color: #64748b; font-size: 0.7rem; text-transform: uppercase;'>Stage</div>
+                    <div style='color: #1e293b; font-weight: 600; margin-top: 2px;'>{lead_data.get('stage', 'N/A').title()}</div>
                 </div>
             </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    # Mock closing techniques
-    st.markdown("#### 🎯 Closing Techniques")
-    score = context.get('score', 85)
-    if score > 80:
-        st.info("**Recommended: Assumptive Close**\n\nScript: \"I'll send you the listing details and we can schedule a showing for this weekend. Does Saturday or Sunday work better for you?\"")
-    else:
-        st.info("**Recommended: Trial Close**\n\nScript: \"If we found a property that met all your criteria, how quickly would you be ready to make an offer?\"")
-
-
-def render_smart_automation(lead_data):
-    """Render the Smart Automation panel."""
-    if not SERVICES_AVAILABLE:
-        return render_mock_smart_automation(lead_data)
-
-    try:
-        service = SmartAutomationEngine()
-        # Original service code would go here
-    except Exception:
-        return render_mock_smart_automation(lead_data)
-
-
-def render_mock_smart_automation(lead_data):
-    """Render mock smart automation when services unavailable."""
-
-    st.markdown("### 🤖 Smart Automation Engine")
-
-    tabs = st.tabs(["Scheduled Actions", "Optimization", "A/B Tests"])
-
-    with tabs[0]:
-        st.markdown("#### ⏰ Upcoming Automated Actions")
-
-        # Mock scheduled actions
-        actions = [
-            {
-                'action_type': 'SMS',
-                'message_template': 'Hi! Just wanted to follow up on the properties I sent...',
-                'trigger': 'No response after 24 hours',
-                'expected_outcome': 'Re-engage dormant lead',
-                'scheduled_time': datetime.now() + timedelta(hours=2),
-                'action_id': 'sms_001'
-            },
-            {
-                'action_type': 'EMAIL',
-                'message_template': 'Weekly market update for your area of interest...',
-                'trigger': 'Weekly nurture sequence',
-                'expected_outcome': 'Maintain engagement',
-                'scheduled_time': datetime.now() + timedelta(days=1),
-                'action_id': 'email_001'
-            }
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        # Section 2: Engagement Timeline
+        st.markdown("#### 📈 30-Day Engagement Timeline")
+        
+        # Generate sample timeline data
+        dates = pd.date_range(end=datetime.now(), periods=30, freq='D')
+        
+        # Simulate engagement activity
+        np.random.seed(42)
+        base_activity = np.random.poisson(3, 30)
+        activity_scores = np.maximum(0, base_activity + np.random.normal(0, 1, 30))
+        
+        timeline_df = pd.DataFrame({
+            'date': dates,
+            'activity': activity_scores,
+            'type': np.random.choice(['email', 'sms', 'property_view', 'form'], 30)
+        })
+        
+        # Create timeline chart
+        fig = go.Figure()
+        
+        fig.add_trace(go.Scatter(
+            x=timeline_df['date'],
+            y=timeline_df['activity'],
+            mode='lines+markers',
+            name='Activity Score',
+            line={'color': '#2563eb', 'width': 2, 'shape': 'spline'},
+            fill='tozeroy',
+            fillcolor='rgba(37, 99, 235, 0.1)',
+            marker={'size': 6, 'color': '#2563eb'}
+        ))
+        
+        # Add event markers
+        key_events = [
+            {'date': dates[5], 'y': activity_scores[5], 'text': '📧 Email Open'},
+            {'date': dates[15], 'y': activity_scores[15], 'text': '🏠 Property View'},
+            {'date': dates[25], 'y': activity_scores[25], 'text': '📝 Form Submit'}
         ]
-
-        if actions:
-            for action in actions:
-                with st.container():
-                    c1, c2 = st.columns([3, 1])
-                    with c1:
-                        st.markdown(f"**{action['action_type']}**: {action['message_template'][:60]}...")
-                        st.caption(f"Trigger: {action['trigger']} | Goal: {action['expected_outcome']}")
-                    with c2:
-                        st.markdown(f"**{action['scheduled_time'].strftime('%I:%M %p')}**")
-                        if st.button("Approve", key=f"app_{action['action_id']}"):
-                            st.toast("Action approved!")
-                    st.divider()
-        else:
-            st.success("✅ No pending actions needed.")
-
-    with tabs[1]:
-        st.markdown("#### 📊 Send Time Optimization")
-
-        # Mock optimization data
-        c1, c2 = st.columns(2)
-        with c1:
-            card_metric("Best Send Time", "2:30 PM", "Weekdays, based on response patterns")
-        with c2:
-            card_metric("Confidence", "89%", "Based on 45+ interactions")
-
-    with tabs[2]:
-        st.markdown("#### 🧪 A/B Test Results")
-
-        st.success("🏆 Winner: Variant B (+23% better response rate)")
-
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("**Variant A**")
-            st.write("Response Rate: 12.5%")
-            st.caption("Hey! Checking in about your home search...")
-        with c2:
-            st.markdown("**Variant B**")
-            st.write("Response Rate: 15.4%")
-            st.caption("Found 3 new listings that match your criteria 🏡")
-
-
-def _get_color(value):
-    """Get color based on value."""
-    if value >= 80:
-        return "#22c55e"
-    if value >= 60:
-        return "#eab308"
-    return "#ef4444"
-
+        
+        for event in key_events:
+            fig.add_annotation(
+                x=event['date'],
+                y=event['y'],
+                text=event['text'],
+                showarrow=True,
+                arrowhead=2,
+                arrowsize=1,
+                arrowwidth=2,
+                arrowcolor="#64748b",
+                font={'size': 10, 'color': '#1e293b'},
+                bgcolor="white",
+                bordercolor="#e2e8f0",
+                borderwidth=1
+            )
+        
+        fig.update_layout(
+            xaxis_title=None,
+            yaxis_title="Activity Level",
+            height=240,
+            margin=dict(l=0, r=0, t=10, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            showlegend=False,
+            hovermode='x unified'
+        )
+        fig.update_xaxes(showgrid=False)
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(0,0,0,0.05)')
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Section 3: Sentiment Analysis & Property Interest
+    st.markdown("---")
+    col3, col4 = st.columns([1, 1])
+    
+    with col3:
+        st.markdown("#### 😊 Sentiment Analysis")
+        
+        # Sample sentiment data
+        sentiments = {
+            'Positive': 72,
+            'Neutral': 20,
+            'Negative': 8
+        }
+        
+        sentiment_df = pd.DataFrame({
+            'sentiment': sentiments.keys(),
+            'percentage': sentiments.values()
+        })
+        
+        # Sentiment donut chart
+        colors = {'Positive': '#10b981', 'Neutral': '#64748b', 'Negative': '#ef4444'}
+        
+        fig = px.pie(
+            sentiment_df,
+            values='percentage',
+            names='sentiment',
+            hole=0.5,
+            color='sentiment',
+            color_discrete_map=colors
+        )
+        
+        fig.update_traces(textposition='outside', textinfo='label+percent')
+        fig.update_layout(
+            showlegend=False,
+            height=220,
+            margin=dict(l=0, r=0, t=0, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        
+        # Add center annotation
+        fig.add_annotation(
+            text=f"<b>{sentiments['Positive']}%</b>",
+            showarrow=False,
+            font={'size': 24, 'color': '#10b981'},
+            y=0.55
+        )
+        fig.add_annotation(
+            text="Positive",
+            showarrow=False,
+            font={'size': 12, 'color': '#64748b'},
+            y=0.45
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Recent conversation excerpt
+        st.markdown("""
+        <div style='background: #f8fafc; padding: 0.75rem; border-radius: 8px; border-left: 3px solid #10b981; font-size: 0.85rem; font-style: italic; color: #475569; margin-top: 0.5rem;'>
+            "We're really excited about the downtown area. The walkability is exactly what we're looking for!"
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown("#### 🏠 Property Interest Heatmap")
+        
+        # Sample property interest data
+        properties = [
+            {'name': 'Downtown Condo', 'views': 8, 'dwell': 12},
+            {'name': 'Clarksville Townhome', 'views': 5, 'dwell': 8},
+            {'name': 'Steiner Ranch House', 'views': 3, 'dwell': 5},
+            {'name': 'South Congress Loft', 'views': 2, 'dwell': 3}
+        ]
+        
+        for prop in properties:
+            interest_score = (prop['views'] * 2) + prop['dwell']
+            bar_width = min((interest_score / 35) * 100, 100)
+            
+            color = "#10b981" if interest_score >= 20 else "#f59e0b" if interest_score >= 10 else "#64748b"
+            
+            st.markdown(f"""
+            <div style='background: white; padding: 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 0.5rem;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;'>
+                    <div style='font-weight: 600; font-size: 0.85rem; color: #1e293b;'>{prop['name']}</div>
+                    <div style='font-size: 0.7rem; color: #64748b;'>{prop['views']} views · {prop['dwell']}min</div>
+                </div>
+                <div style='background: #f1f5f9; height: 6px; border-radius: 3px; overflow: hidden;'>
+                    <div style='background: {color}; width: {bar_width}%; height: 100%;'></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # Section 4: Urgency Indicators
+    urgency_indicators = lead_data.get('urgency_indicators', [])
+    
+    if urgency_indicators:
+        st.markdown("---")
+        st.markdown("#### ⚡ Urgency Indicators")
+        
+        for indicator in urgency_indicators[:3]:  # Show top 3
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%); 
+                        padding: 0.75rem; border-radius: 8px; border-left: 4px solid #f59e0b; 
+                        margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;'>
+                <span style='font-size: 1.2rem;'>⚠️</span>
+                <div>
+                    <div style='font-weight: 600; color: #78350f; font-size: 0.9rem;'>{indicator}</div>
+                    <div style='color: #92400e; font-size: 0.75rem;'>Immediate attention recommended</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)

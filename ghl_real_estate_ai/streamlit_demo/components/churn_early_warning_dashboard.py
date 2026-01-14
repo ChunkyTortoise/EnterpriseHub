@@ -37,92 +37,75 @@ if __name__ == "__main__":
         initial_sidebar_state="expanded"
     )
 
-# Custom CSS for enhanced styling
+# Custom CSS for enhanced styling - Glassmorphism Edition
 st.markdown("""
 <style>
-    .metric-container {
-        background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
-        color: white;
-        padding: 1rem;
-        border-radius: 10px;
-        margin: 0.5rem 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* Global Aesthetic */
+    .stApp {
+        background: #F8FAFC;
+    }
+    
+    /* Glassmorphism Cards */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.25rem;
+        transition: transform 0.2s;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
     }
 
-    .risk-critical {
-        background: linear-gradient(135deg, #ff4757, #ff3742);
-        color: white;
-        padding: 0.8rem;
-        border-radius: 8px;
-        border-left: 4px solid #c23616;
+    /* Risk Status Badges */
+    .risk-critical-badge {
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        border: 1px solid #fecaca;
+    }
+    
+    .risk-high-badge {
+        background: #fff7ed;
+        color: #ea580c;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        border: 1px solid #fed7aa;
     }
 
-    .risk-high {
-        background: linear-gradient(135deg, #ffa726, #ff9800);
-        color: white;
-        padding: 0.8rem;
-        border-radius: 8px;
-        border-left: 4px solid #e65100;
+    /* Progress Bars */
+    .risk-progress {
+        height: 6px;
+        width: 100%;
+        background: #f1f5f9;
+        border-radius: 3px;
+        overflow: hidden;
     }
-
-    .risk-medium {
-        background: linear-gradient(135deg, #66bb6a, #4caf50);
-        color: white;
-        padding: 0.8rem;
-        border-radius: 8px;
-        border-left: 4px solid #2e7d32;
+    .risk-bar {
+        height: 100%;
+        border-radius: 3px;
     }
-
-    .risk-low {
-        background: linear-gradient(135deg, #42a5f5, #2196f3);
-        color: white;
-        padding: 0.8rem;
-        border-radius: 8px;
-        border-left: 4px solid #0d47a1;
-    }
-
-    .alert-banner {
-        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-        color: white;
-        padding: 1rem;
-        border-radius: 10px;
-        margin: 1rem 0;
-        text-align: center;
-        font-weight: bold;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.7; }
-        100% { opacity: 1; }
-    }
-
-    .intervention-success {
-        background: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-        padding: 0.5rem;
-        border-radius: 5px;
-        margin: 0.2rem 0;
-    }
-
-    .intervention-pending {
-        background: #fff3cd;
-        border: 1px solid #ffeaa7;
-        color: #856404;
-        padding: 0.5rem;
-        border-radius: 5px;
-        margin: 0.2rem 0;
-    }
-
-    .intervention-failed {
-        background: #f8d7da;
-        border: 1px solid #f5c6cb;
-        color: #721c24;
-        padding: 0.5rem;
-        border-radius: 5px;
-        margin: 0.2rem 0;
+    
+    /* Typography */
+    h1, h2, h3 {
+        font-family: 'Inter', sans-serif;
+        letter-spacing: -0.025em;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -142,39 +125,166 @@ class ChurnEarlyWarningDashboard:
 
     def render_dashboard(self):
         """Render the complete early warning dashboard"""
-        st.title("🚨 Churn Early Warning Dashboard")
-        st.markdown("*Real-time monitoring of lead churn risk and intervention effectiveness*")
+        
+        # 1. TACTICAL TOP BAR
+        st.markdown("""
+            <div style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); padding: 1rem 2rem; border-radius: 9999px; border: 1px solid rgba(0, 0, 0, 0.05); margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); position: sticky; top: 1rem; z-index: 1000;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="background: #ef4444; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 0.8rem;">⚠️</div>
+                    <span style="font-weight: 700; color: #0f172a; letter-spacing: -0.5px; font-size: 1.1rem;">RETENTION COMMAND</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase;">System Status:</span>
+                    <span style='background: #ecfdf5; color: #059669; padding: 4px 12px; border-radius: 999px; font-size: 0.65rem; font-weight: 700; border: 1px solid #a7f3d0;'>ACTIVE MONITORING</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
 
-        # Auto-refresh mechanism
-        if st.button("🔄 Refresh Data", key="refresh_dashboard"):
-            st.rerun()
-
-        # Load dashboard data
-        with st.spinner("Loading churn risk data..."):
+        # 2. FILTERS & AUTO-REFRESH CONTROLS
+        self._render_filters_and_controls()
+        
+        # PRO-F1: Render Retention Wizard Config Overlay if active
+        if st.session_state.get('show_retention_wizard', False):
+            self._render_retention_wizard()
+        
+        # Load dashboard data with filters
+        with st.spinner("Processing behavioral telemetry..."):
             dashboard_data = self._load_dashboard_data()
+            
+        # Apply filters to data
+        dashboard_data = self._apply_filters(dashboard_data)
 
         # Main dashboard layout
         self._render_alert_banner(dashboard_data)
         self._render_key_metrics(dashboard_data)
 
-        # Create three columns for main content
-        col1, col2, col3 = st.columns([2, 2, 1])
+        # Glass Layout Grid
+        col1, col2 = st.columns([1.5, 1])
 
         with col1:
-            self._render_risk_distribution_chart(dashboard_data)
-            self._render_risk_trend_analysis(dashboard_data)
+             st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+             st.markdown("### 📉 Risk Velocity & Distribution")
+             c_a, c_b = st.columns(2)
+             with c_a:
+                self._render_risk_distribution_chart(dashboard_data)
+             with c_b:
+                self._render_risk_trend_analysis(dashboard_data)
+             st.markdown('</div>', unsafe_allow_html=True)
 
         with col2:
-            self._render_intervention_effectiveness(dashboard_data)
-            self._render_agent_workload_distribution(dashboard_data)
+             st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+             st.markdown("### 🛡️ Intervention Effectiveness")
+             self._render_intervention_effectiveness(dashboard_data)
+             st.markdown('</div>', unsafe_allow_html=True)
 
-        with col3:
-            self._render_high_risk_queue(dashboard_data)
+        # High Priority Queue Full Width
+        self._render_high_risk_queue(dashboard_data)
 
-        # Detailed sections
+        # Detailed Analytics
         st.markdown("---")
         self._render_detailed_analytics(dashboard_data)
         self._render_intervention_tracking(dashboard_data)
+    
+    def _render_filters_and_controls(self):
+        """Render interactive filters and auto-refresh controls"""
+        with st.expander("⚙️ Filters & Controls", expanded=False):
+            col1, col2, col3, col4, col5 = st.columns(5)
+            
+            with col1:
+                # Date range filter
+                date_options = ["Last 7 Days", "Last 14 Days", "Last 30 Days", "Last 90 Days"]
+                st.selectbox(
+                    "📅 Date Range",
+                    date_options,
+                    index=2,
+                    key="date_filter"
+                )
+            
+            with col2:
+                # Risk level filter
+                risk_options = ["All Leads", "Critical Only", "High+", "Medium+"]
+                st.selectbox(
+                    "🎯 Risk Level",
+                    risk_options,
+                    index=0,
+                    key="risk_filter"
+                )
+            
+            with col3:
+                # Agent filter
+                agents = ["All Agents", "Sarah Miller", "Mike Johnson", "Emma Davis", "Alex Chen"]
+                st.multiselect(
+                    "👤 Agents",
+                    agents[1:],
+                    default=None,
+                    key="agent_filter"
+                )
+            
+            with col4:
+                # Auto-refresh toggle
+                auto_refresh = st.checkbox(
+                    "🔄 Auto-Refresh",
+                    value=False,
+                    key="auto_refresh_toggle"
+                )
+                
+                if auto_refresh:
+                    refresh_options = ["30 seconds", "1 minute", "5 minutes", "15 minutes"]
+                    refresh_interval = st.selectbox(
+                        "Interval",
+                        refresh_options,
+                        index=1,
+                        key="refresh_interval",
+                        label_visibility="collapsed"
+                    )
+            
+            with col5:
+                # Manual refresh and last updated
+                if st.button("🔄 Refresh Now", use_container_width=True):
+                    st.rerun()
+                
+                last_updated = datetime.now().strftime("%H:%M:%S")
+                st.caption(f"Last: {last_updated}")
+            
+            # Row 2: Advanced Ops
+            if 'show_retention_wizard' not in st.session_state:
+                st.session_state.show_retention_wizard = False
+            
+            r2_c1, r2_c2 = st.columns([1, 1])
+            with r2_c1:
+                # Toggle Wizard
+                if st.button(
+                    f"{'❌ Close' if st.session_state.show_retention_wizard else '🧙 Strategy Wizard'}", 
+                    use_container_width=True,
+                    type="primary" if not st.session_state.show_retention_wizard else "secondary"
+                ):
+                    st.session_state.show_retention_wizard = not st.session_state.show_retention_wizard
+                    st.rerun()
+            with r2_c2:
+                 st.caption("ℹ️ Data exports available in Detailed Analytics below")
+    
+    def _apply_filters(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply user-selected filters to dashboard data"""
+        filtered_data = data.copy()
+        
+        # Apply risk level filter
+        if 'risk_filter' in st.session_state:
+            risk_filter = st.session_state.risk_filter
+            if risk_filter != "All Leads":
+                predictions = data['predictions']
+                if risk_filter == "Critical Only":
+                    predictions = [p for p in predictions if p['risk_score_14d'] >= 80]
+                elif risk_filter == "High+":
+                    predictions = [p for p in predictions if p['risk_score_14d'] >= 60]
+                elif risk_filter == "Medium+":
+                    predictions = [p for p in predictions if p['risk_score_14d'] >= 30]
+                
+                filtered_data['predictions'] = predictions
+                filtered_data['total_leads'] = len(predictions)
+                filtered_data['high_risk_count'] = len([p for p in predictions if p['risk_score_14d'] >= 60])
+                filtered_data['critical_alerts'] = len([p for p in predictions if p['risk_score_14d'] >= 80])
+        
+        return filtered_data
 
     def _load_dashboard_data(self) -> Dict[str, Any]:
         """Load and prepare dashboard data"""
@@ -251,11 +361,8 @@ class ChurnEarlyWarningDashboard:
             )
 
     def _render_key_metrics(self, data: Dict[str, Any]):
-        """Render key performance metrics"""
-        st.subheader("📊 Key Metrics Overview")
-
-        col1, col2, col3, col4, col5 = st.columns(5)
-
+        """Render key performance metrics with Premium Cards"""
+        
         predictions = data['predictions']
         interventions = data['interventions']
 
@@ -264,148 +371,133 @@ class ChurnEarlyWarningDashboard:
         critical_risk = len([p for p in predictions if p['risk_score_14d'] >= 80])
         high_risk = len([p for p in predictions if p['risk_score_14d'] >= 60])
         avg_risk_score = np.mean([p['risk_score_14d'] for p in predictions])
-
+        
         # Intervention metrics
         completed_interventions = len([i for i in interventions if i['status'] == 'completed'])
         intervention_success_rate = completed_interventions / len(interventions) * 100 if interventions else 0
 
-        with col1:
-            st.metric(
-                label="Total Leads",
-                value=f"{total_leads:,}",
-                delta=f"+{np.random.randint(1, 5)} today"
-            )
+        # Custom Metric Card Helper
+        def metric_card(label, value, delta, delta_color="text-green-500", icon="📊"):
+            delta_style = "color: #10b981;" if "green" in delta_color else "color: #ef4444;"
+            return f"""
+            <div class="metric-card">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 5px;">
+                    <span style="color: #64748b; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">{label}</span>
+                    <span style="font-size: 1.2rem;">{icon}</span>
+                </div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: #0f172a; line-height: 1.1;">{value}</div>
+                <div style="font-size: 0.8rem; margin-top: 5px; font-weight: 600; {delta_style}">
+                    {delta}
+                </div>
+            </div>
+            """
 
-        with col2:
-            st.metric(
-                label="Critical Risk",
-                value=f"{critical_risk}",
-                delta=f"{'+' if critical_risk > 2 else ''}{critical_risk - 2 if critical_risk > 2 else critical_risk - 2}",
-                delta_color="inverse"
-            )
-
-        with col3:
-            st.metric(
-                label="High Risk",
-                value=f"{high_risk}",
-                delta=f"{'+' if high_risk > 8 else ''}{high_risk - 8 if high_risk > 8 else high_risk - 8}",
-                delta_color="inverse"
-            )
-
-        with col4:
-            st.metric(
-                label="Avg Risk Score",
-                value=f"{avg_risk_score:.1f}%",
-                delta=f"{avg_risk_score - 35:.1f}%"
-            )
-
-        with col5:
-            st.metric(
-                label="Intervention Success",
-                value=f"{intervention_success_rate:.1f}%",
-                delta=f"+{intervention_success_rate - 65:.1f}%"
-            )
+        c1, c2, c3, c4, c5 = st.columns(5)
+        
+        with c1:
+            st.markdown(metric_card("Total Monitored", f"{total_leads:,}", "↑ 12 New Leads", "green", "👥"), unsafe_allow_html=True)
+        with c2:
+            st.markdown(metric_card("Critical Risk", f"{critical_risk}", "⚠️ Immediate Action", "red", "🔥"), unsafe_allow_html=True)
+        with c3:
+            st.markdown(metric_card("High Risk", f"{high_risk}", "↓ 2 vs Yesterday", "green", "📉"), unsafe_allow_html=True)
+        with c4:
+            st.markdown(metric_card("Avg Risk Score", f"{avg_risk_score:.1f}%", "stable", "green", "📊"), unsafe_allow_html=True)
+        with c5:
+            st.markdown(metric_card("Intervention Rate", f"{intervention_success_rate:.1f}%", "↑ 4.2%", "green", "🛡️"), unsafe_allow_html=True)
 
     def _render_risk_distribution_chart(self, data: Dict[str, Any]):
         """Render risk distribution visualization"""
-        st.subheader("📈 Risk Distribution Analysis")
+        st.markdown("##### 📊 Lead Distribution")
 
         predictions = data['predictions']
         risk_df = pd.DataFrame(predictions)
-
+        
         # Risk tier distribution
         risk_counts = risk_df['risk_tier'].value_counts()
-
+        
         fig = px.pie(
-            values=risk_counts.values,
+            values=risk_counts.values, 
             names=risk_counts.index,
-            title="Lead Distribution by Risk Tier",
             color_discrete_map={
-                'critical': '#ff4757',
-                'high': '#ffa726',
-                'medium': '#66bb6a',
-                'low': '#42a5f5'
-            }
+                'critical': '#ef4444', 
+                'high': '#f97316', 
+                'medium': '#84cc16', 
+                'low': '#3b82f6'
+            },
+            hole=0.6
         )
-
-        fig.update_traces(textposition='inside', textinfo='percent+label')
-        fig.update_layout(showlegend=True, height=400)
-
+        
+        fig.update_traces(textposition='outside', textinfo='label')
+        fig.update_layout(
+            showlegend=False, 
+            height=250, 
+            margin=dict(l=0, r=0, t=0, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        # Add center text
+        fig.add_annotation(text=f"{len(predictions)}", showarrow=False, font={'size': 24, 'color': '#1e293b'}, y=0.55)
+        fig.add_annotation(text="Leads", showarrow=False, font={'size': 12, 'color': '#64748b'}, y=0.45)
+        
         st.plotly_chart(fig, use_container_width=True)
-
-        # Risk score histogram
-        fig2 = px.histogram(
-            risk_df,
-            x='risk_score_14d',
-            nbins=20,
-            title="Risk Score Distribution",
-            color_discrete_sequence=['#3498db']
-        )
-
-        # Add risk threshold lines
-        fig2.add_vline(x=80, line_dash="dash", line_color="red", annotation_text="Critical (80%)")
-        fig2.add_vline(x=60, line_dash="dash", line_color="orange", annotation_text="High (60%)")
-        fig2.add_vline(x=30, line_dash="dash", line_color="green", annotation_text="Medium (30%)")
-
-        fig2.update_layout(
-            xaxis_title="14-Day Risk Score (%)",
-            yaxis_title="Number of Leads",
-            height=350
-        )
-
-        st.plotly_chart(fig2, use_container_width=True)
 
     def _render_risk_trend_analysis(self, data: Dict[str, Any]):
         """Render risk trend analysis"""
-        st.subheader("📉 Risk Trend Analysis")
+        st.markdown("##### 📈 Risk Velocity (30 Days)")
 
         # Generate sample trend data
         dates = pd.date_range(start=datetime.now() - timedelta(days=30), end=datetime.now(), freq='D')
-
-        # Simulate trend data
+        
+        # Simulate trend data 
         np.random.seed(42)  # For consistent demo data
         critical_trend = np.random.poisson(3, len(dates)) + np.sin(np.arange(len(dates)) * 0.2) * 2
         high_trend = np.random.poisson(8, len(dates)) + np.sin(np.arange(len(dates)) * 0.15) * 3
-
+        
         trend_df = pd.DataFrame({
-            'date': dates,
+            'date': dates, 
             'critical_risk': np.maximum(0, critical_trend),
-            'high_risk': np.maximum(0, high_trend),
-            'total_risk': np.maximum(0, critical_trend + high_trend)
+            'high_risk': np.maximum(0, high_trend)
         })
 
         fig = go.Figure()
 
         fig.add_trace(go.Scatter(
-            x=trend_df['date'],
+            x=trend_df['date'], 
             y=trend_df['critical_risk'],
-            mode='lines+markers',
-            name='Critical Risk',
-            line=dict(color='#ff4757', width=3),
-            fill='tonexty'
+            mode='lines',
+            name='Critical',
+            line=dict(color='#ef4444', width=3, shape='spline'),
+            fill='tozeroy',
+            fillcolor='rgba(239, 68, 68, 0.1)'
         ))
 
         fig.add_trace(go.Scatter(
-            x=trend_df['date'],
+            x=trend_df['date'], 
             y=trend_df['high_risk'],
-            mode='lines+markers',
+            mode='lines',
             name='High Risk',
-            line=dict(color='#ffa726', width=2)
+            line=dict(color='#f97316', width=3, shape='spline')
         ))
 
         fig.update_layout(
-            title="30-Day Risk Trend",
-            xaxis_title="Date",
-            yaxis_title="Number of High-Risk Leads",
-            height=350,
+            xaxis_title=None,
+            yaxis_title=None,
+            height=250,
+            margin=dict(l=0, r=0, t=20, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             hovermode='x unified'
         )
-
+        fig.update_xaxes(showgrid=False)
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(0,0,0,0.05)')
+        
         st.plotly_chart(fig, use_container_width=True)
 
     def _render_intervention_effectiveness(self, data: Dict[str, Any]):
         """Render intervention effectiveness metrics"""
-        st.subheader("🎯 Intervention Effectiveness")
+        st.markdown("##### 🎯 Intervention ROI")
 
         interventions = data['interventions']
         intervention_df = pd.DataFrame(interventions)
@@ -425,17 +517,22 @@ class ChurnEarlyWarningDashboard:
             success_df,
             x='type',
             y='success_rate',
-            title="Success Rate by Intervention Type",
+            # title="Success Rate by Intervention Type",
             color='success_rate',
             color_continuous_scale='RdYlGn'
         )
 
         fig.update_layout(
-            xaxis_title="Intervention Type",
-            yaxis_title="Success Rate (%)",
-            height=350,
-            xaxis_tickangle=45
+            xaxis_title=None,
+            yaxis_title="% Success",
+            height=200,
+            margin=dict(l=0, r=0, t=10, b=0),
+            xaxis_tickangle=45,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            showlegend=False
         )
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(0,0,0,0.05)')
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -446,21 +543,27 @@ class ChurnEarlyWarningDashboard:
         fig2 = px.line(
             x=daily_interventions.index,
             y=daily_interventions.values,
-            title="Daily Intervention Volume",
+            # title="Daily Intervention Volume",
             markers=True
         )
+        fig2.update_traces(line_color='#2563eb', line_width=2)
 
         fig2.update_layout(
-            xaxis_title="Date",
-            yaxis_title="Number of Interventions",
-            height=300
+            xaxis_title=None,
+            yaxis_title="Volume",
+            height=150,
+            margin=dict(l=0, r=0, t=10, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
         )
+        fig2.update_xaxes(showgrid=False)
+        fig2.update_yaxes(showgrid=True, gridcolor='rgba(0,0,0,0.05)')
 
         st.plotly_chart(fig2, use_container_width=True)
 
     def _render_agent_workload_distribution(self, data: Dict[str, Any]):
         """Render agent workload distribution"""
-        st.subheader("👥 Agent Workload Distribution")
+        st.markdown("##### 👥 Agent Load")
 
         # Simulate agent assignments
         agent_names = ['Sarah Miller', 'Mike Johnson', 'Emma Davis', 'Alex Chen', 'Lisa Rodriguez']
@@ -485,25 +588,29 @@ class ChurnEarlyWarningDashboard:
         fig = go.Figure()
 
         fig.add_trace(go.Bar(
-            name='Critical Leads',
+            name='Critical',
             x=workload_df['agent'],
             y=workload_df['critical_leads'],
-            marker_color='#ff4757'
+            marker_color='#ef4444'
         ))
 
         fig.add_trace(go.Bar(
-            name='High Risk Leads',
+            name='High Risk',
             x=workload_df['agent'],
             y=workload_df['high_risk_leads'],
-            marker_color='#ffa726'
+            marker_color='#f97316'
         ))
 
         fig.update_layout(
-            title="Agent Risk Lead Distribution",
             barmode='stack',
-            height=300,
-            xaxis_tickangle=45
+            height=250,
+            margin=dict(l=0, r=0, t=10, b=0),
+            xaxis_tickangle=45,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(0,0,0,0.05)')
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -515,62 +622,234 @@ class ChurnEarlyWarningDashboard:
 
     def _render_high_risk_queue(self, data: Dict[str, Any]):
         """Render high-risk leads priority queue"""
-        st.subheader("🚨 Priority Intervention Queue")
+        
+        st.markdown("""
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 1rem;">
+            <h3 style="margin: 0;">🚨 Immediate Attention Required</h3>
+            <span style="background: #fee2e2; color: #ef4444; font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 999px;">Top 10 Critical</span>
+        </div>
+        """, unsafe_allow_html=True)
 
         predictions = data['predictions']
-
-        # Filter and sort high-risk leads
         high_risk_leads = [p for p in predictions if p['risk_score_14d'] >= 60]
         high_risk_leads.sort(key=lambda x: x['risk_score_14d'], reverse=True)
 
-        # Display top 10 high-risk leads
         for i, lead in enumerate(high_risk_leads[:10]):
-            risk_class = f"risk-{lead['risk_tier']}"
-
             with st.container():
                 st.markdown(f"""
-                <div class="{risk_class}">
-                    <strong>{lead['lead_name']}</strong><br>
-                    Risk Score: {lead['risk_score_14d']:.1f}%<br>
-                    Last Contact: {lead['last_interaction_days']:.0f} days ago<br>
-                    Confidence: {lead['confidence']:.0%}
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 4px 6px -2px rgba(0,0,0,0.05);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                         <div style="font-weight: 700; color: #1e293b; font-size: 1.1rem;">{lead['lead_name']}</div>
+                         <div class="risk-critical-badge">{lead['risk_score_14d']:.1f}% Risk</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 1rem; font-size: 0.85rem; color: #64748b;">
+                        <div>🕒 Last Contact: <span style="color: #334155; font-weight: 600;">{lead['last_interaction_days']:.0f}d ago</span></div>
+                        <div>🤖 Conf: <span style="color: #334155; font-weight: 600;">{lead['confidence']:.0%}</span></div>
+                        <div>🔮 Churn: <span style="color: #ef4444; font-weight: 600;">{lead['predicted_churn_date'].strftime('%b %d')}</span></div>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
-
-                # Action buttons
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    if st.button(f"📞 Call", key=f"call_{lead['lead_id']}"):
-                        st.success(f"Call initiated for {lead['lead_name']}")
-
-                with col2:
-                    if st.button(f"✉️ Email", key=f"email_{lead['lead_id']}"):
-                        st.success(f"Email sent to {lead['lead_name']}")
-
-                with col3:
-                    if st.button(f"🤖 AI Script", key=f"ai_script_{lead['lead_id']}"):
-                        if self.claude:
+                
+                # Inline Action Grid
+                col_acts = st.columns([1, 1, 2])
+                with col_acts[0]:
+                    if st.button("📞 Call", key=f"call_{lead['lead_id']}", use_container_width=True):
+                         st.success("Bridging call...")
+                with col_acts[1]:
+                    if st.button("✉️ Email", key=f"email_{lead['lead_id']}", use_container_width=True):
+                         st.success("Draft created.")
+                with col_acts[2]:
+                    if st.button("🤖 Generate Retention Strategy", key=f"ai_gen_{lead['lead_id']}", use_container_width=True, type="primary"):
+                         if self.claude:
                             script_data = self.claude.generate_retention_script(lead)
                             st.session_state[f"script_{lead['lead_id']}"] = script_data
-                        else:
-                            st.error("Claude Assistant not available")
+                
+                # Drill-down details
+                self._render_lead_drill_down(lead)
 
-                # Display AI Script if generated
+                # Script Display
                 if f"script_{lead['lead_id']}" in st.session_state:
-                    script_data = st.session_state[f"script_{lead['lead_id']}"]
-                    st.info(f"**Claude's {script_data['strategy']} Strategy:**\n\n{script_data['script']}")
-                    st.caption(f"**Reasoning:** {script_data['reasoning']}")
-                    st.caption(f"**Channel Recommendation:** {script_data['channel_recommendation']}")
-                    if st.button("Clear Script", key=f"clear_{lead['lead_id']}"):
-                        del st.session_state[f"script_{lead['lead_id']}"]
-                        st.rerun()
+                    script = st.session_state[f"script_{lead['lead_id']}"]
+                    st.markdown(f"""
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1rem; margin-top: 10px; margin-bottom: 10px;">
+                        <div style="font-size: 0.8rem; color: #166534; font-weight: 700; margin-bottom: 4px;">CLAUDE'S STRATEGY: {script['strategy'].upper()}</div>
+                        <div style="font-style: italic; color: #14532d; font-size: 0.95rem;">"{script['script']}"</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-        if len(high_risk_leads) > 10:
-            st.info(f"Showing top 10 of {len(high_risk_leads)} high-risk leads")
+    def _render_lead_drill_down(self, lead):
+        """Render expandable drill-down view for a lead"""
+        expand_key = f"expand_{lead['lead_id']}"
+        if expand_key not in st.session_state:
+            st.session_state[expand_key] = False
+        
+        # Toggle button
+        if st.button(
+            f"{'▼ Hide' if st.session_state[expand_key] else '▶ Show'} Detailed Analysis",
+            key=f"toggle_{lead['lead_id']}",
+            use_container_width=True
+        ):
+            st.session_state[expand_key] = not st.session_state[expand_key]
+        
+        # Detailed view
+        if st.session_state[expand_key]:
+            st.markdown("""
+            <div style='background: #f8fafc; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #e2e8f0;'>
+            """, unsafe_allow_html=True)
+            
+            # 1. Risk Factors
+            st.markdown("**🎯 Risk Factor Contribution**")
+            for factor_name, impact in lead.get('top_risk_factors', []):
+                bar_width = min(impact * 300, 100)
+                color = "#ef4444" if impact > 0.2 else "#f59e0b"
+                st.markdown(f"""
+                <div style='margin-bottom: 5px;'>
+                    <div style='display: flex; justify-content: space-between; font-size: 0.8rem;'>
+                        <span>{factor_name.replace('_', ' ').title()}</span>
+                        <span style='color: {color}; font-weight: 600;'>{impact:.1%}</span>
+                    </div>
+                    <div style='background: #e2e8f0; height: 4px; border-radius: 2px;'>
+                        <div style='background: {color}; width: {bar_width}%; height: 100%; border-radius: 2px;'></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # 2. Timeline (Simulated for demo)
+            st.markdown("**📅 Recent Activity Timeline**")
+            timeline_events = [
+                {"date": "2d ago", "event": "📧 Email opened", "status": "positive"},
+                {"date": "5d ago", "event": "🏠 Property viewed", "status": "positive"},
+                {"date": "8d ago", "event": "❌ Missed call", "status": "negative"},
+                {"date": "12d ago", "event": "💬 SMS replied", "status": "positive"}
+            ]
+            
+            for event in timeline_events:
+                bg = "#d1fae5" if event['status'] == 'positive' else "#fee2e2"
+                text = "#065f46" if event['status'] == 'positive' else "#991b1b"
+                st.markdown(f"""
+                <div style='display: flex; gap: 10px; align-items: center; margin-bottom: 8px; font-size: 0.85rem;'>
+                    <div style='background: {bg}; color: {text}; padding: 2px 8px; border-radius: 4px; min-width: 60px; text-align: center; font-weight: 600;'>{event['date']}</div>
+                    <div>{event['event']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    def _render_retention_wizard(self):
+        """Render the Retention Strategy Wizard"""
+        st.markdown("""
+        <div style="background: white; border-radius: 16px; padding: 2rem; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 2rem;">🧙</div>
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.5rem; color: #0f172a;">Retention Strategy Wizard</h2>
+                        <div style="color: #64748b; font-size: 0.9rem;">AI-powered campaign generator for at-risk leads</div>
+                    </div>
+                </div>
+                <button style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94a3b8;" onclick="window.parent.postMessage({type: 'close_wizard'}, '*')">×</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+                <div style="border-right: 1px solid #e2e8f0; padding-right: 2rem;">
+                    <h4 style="color: #1e293b; margin-bottom: 1rem;">1. Target Audience</h4>
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <div style="font-weight: 600; color: #334155; margin-bottom: 0.5rem;">Risk Segment</div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid #fecaca;">Critical (3 leads)</span>
+                            <span style="background: #fff7ed; color: #9a3412; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid #fed7aa;">High (12 leads)</span>
+                        </div>
+                    </div>
+                    
+                    <h4 style="color: #1e293b; margin-bottom: 1rem; margin-top: 1.5rem;">2. Strategy Type</h4>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="padding: 10px; border: 2px solid #2563eb; background: #eff6ff; border-radius: 8px; cursor: pointer;">
+                            <div style="font-weight: 600; color: #1e40af;">❤️ Empathy & Check-in</div>
+                            <div style="font-size: 0.8rem; color: #3b82f6;">Soft approach focusing on needs</div>
+                        </div>
+                        <div style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; opacity: 0.7;">
+                            <div style="font-weight: 600; color: #475569;">🎁 Value & Offer</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">Incentive-based retention</div>
+                        </div>
+                        <div style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; opacity: 0.7;">
+                            <div style="font-weight: 600; color: #475569;">🏠 Listing Update</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">New properties matching criteria</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 1.5rem; height: 100%;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                            <div style="font-weight: 700; color: #166534; display: flex; align-items: center; gap: 8px;">
+                                <span>🤖 CLAUDE 3.5 SONNET</span>
+                                <span style="background: #166534; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">LIVE</span>
+                            </div>
+                            <div style="color: #15803d; font-size: 0.8rem;">Generating campaign content...</div>
+                        </div>
+                        
+                        <div style="font-family: monospace; color: #14532d; line-height: 1.6; white-space: pre-wrap;">
+Subject: Checking in on your home search, [Client Name]
+
+Hi [Client Name],
+
+I was just reviewing some new market updates and thinking about your search for a property in [Location]. 
+
+I know the process can sometimes feel overwhelming. I wanted to personally reach out and see how you're feeling about the options we've seen so far.
+
+Are there any adjustments we should make to our criteria? I'm here to ensure we find exactly what fits your needs, on your timeline.
+
+Best,
+[Agent Name]
+                        </div>
+                        
+                        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button style="background: white; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600;">Regenerate</button>
+                            <button style="background: #166534; border: none; color: white; padding: 0.5rem 1.5rem; border-radius: 6px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(22, 101, 52, 0.2);">🚀 Launch Campaign (15 Leads)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    def _generate_export_csv(self, data):
+        """Generate CSV string for export"""
+        df = pd.DataFrame(data['predictions'])
+        return df.to_csv(index=False).encode('utf-8')
+
+    def _generate_export_json(self, data):
+        """Generate JSON string for export"""
+        # Convert datetime objects to string
+        json_data = data.copy()
+        # Ensure comprehensive serialization handling would go here for production
+        return json.dumps(json_data['predictions'], default=str).encode('utf-8')
 
     def _render_detailed_analytics(self, data: Dict[str, Any]):
         """Render detailed analytics section"""
-        st.subheader("📊 Detailed Analytics")
+        col_head, col_exp1, col_exp2 = st.columns([4, 1, 1])
+        with col_head:
+            st.subheader("📊 Detailed Analytics")
+        
+        with col_exp1:
+            csv_data = self._generate_export_csv(data)
+            st.download_button(
+                label="📥 CSV",
+                data=csv_data,
+                file_name=f"churn_risk_data_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+            
+        with col_exp2:
+            json_data = self._generate_export_json(data)
+            st.download_button(
+                label="📥 JSON",
+                data=json_data,
+                file_name=f"churn_full_export_{datetime.now().strftime('%Y%m%d')}.json",
+                mime="application/json",
+                use_container_width=True
+            )
 
         tab1, tab2, tab3, tab4 = st.tabs([
             "Risk Factor Analysis",
@@ -815,7 +1094,7 @@ class ChurnEarlyWarningDashboard:
         with tab2:
             # Show interventions in progress (for demo, treating recent ones as active)
             recent_interventions = [i for i in interventions if i['status'] == 'completed' and
-                                  (datetime.now() - i['scheduled_time']).hours < 2]
+                                  (datetime.now() - i['scheduled_time']).total_seconds() / 3600 < 2]
 
             if recent_interventions:
                 st.write(f"**{len(recent_interventions)} interventions recently executed**")

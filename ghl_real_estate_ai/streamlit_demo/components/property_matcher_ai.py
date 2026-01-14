@@ -7,19 +7,21 @@ import streamlit as st
 from typing import Dict, List
 
 
-def render_property_matcher(lead_context: Dict):
+def render_property_matcher(lead_context: Dict, elite_mode: bool = False, analysis_result=None):
     """
     AI-powered property matching with reasoning
     
     Args:
         lead_context: Dictionary containing lead preferences and information
+        elite_mode: Whether to use elite phase features (Strategy Pattern)
+        analysis_result: UnifiedScoringResult from Claude (optional)
     """
     
     st.markdown("### 🏠 AI Property Matcher")
     st.markdown("*Showing properties matched to lead criteria*")
 
-    # Get matched properties (mock for demo)
-    matches = generate_property_matches(lead_context)
+    # Get matched properties using Strategy Pattern if in Elite Mode
+    matches = generate_property_matches(lead_context, elite_mode=elite_mode)
 
     # PREMIUM FEATURE: Use premium property cards grid layout
     try:
@@ -32,6 +34,60 @@ def render_property_matcher(lead_context: Dict):
 
     except ImportError:
         st.info("🚀 Premium property cards available in enterprise version")
+
+    # Initialize comparison state
+    if "compare_props" not in st.session_state:
+        st.session_state.compare_props = set()
+
+    # Compare Button
+    if len(st.session_state.compare_props) >= 2:
+        if st.button(f"⚖️ Compare Selected ({len(st.session_state.compare_props)})", type="primary", key="compare_btn_top"):
+            # Comparison View Implementation
+            st.markdown("### ⚖️ Property Comparison")
+            
+            # Filter matches for selected properties
+            selected_matches = [m for m in matches if m['address'] in st.session_state.compare_props]
+            
+            if len(selected_matches) < 2:
+                st.warning("Please select at least 2 properties to compare.")
+            else:
+                # Limit to first 2 for side-by-side simplicity (or 3 max)
+                compare_subset = selected_matches[:3]
+                cols = st.columns(len(compare_subset))
+                
+                for idx, col in enumerate(cols):
+                    prop = compare_subset[idx]
+                    with col:
+                        st.markdown(f"""
+                        <div style='background: white; padding: 1rem; border-radius: 10px; border: 1px solid #e2e8f0; height: 100%;'>
+                            <div style='font-size: 2rem; margin-bottom: 0.5rem;'>{prop['icon']}</div>
+                            <div style='font-weight: 700; color: #1e293b; height: 3rem;'>{prop['address']}</div>
+                            <div style='font-size: 1.25rem; color: #2563eb; font-weight: 800; margin: 0.5rem 0;'>${prop['price']:,}</div>
+                            
+                            <div style='background: #f8fafc; padding: 0.5rem; border-radius: 6px; margin-bottom: 0.5rem; font-size: 0.9rem;'>
+                                🛏️ <b>{prop['beds']}</b> bd | 🛁 <b>{prop['baths']}</b> ba | 📏 <b>{prop['sqft']:,}</b> sqft
+                            </div>
+                            
+                            <div style='margin-top: 1rem;'>
+                                <div style='font-size: 0.75rem; color: #64748b; text-transform: uppercase;'>Match Score</div>
+                                <div style='font-size: 1.5rem; font-weight: 800; color: #10b981;'>{prop['match_score']}%</div>
+                            </div>
+                            
+                            <hr style='margin: 1rem 0; border-top: 1px dashed #cbd5e1;'>
+                            
+                            <div style='font-size: 0.85rem;'>
+                                <div style='margin-bottom: 0.25rem;'>📍 Location: <b>{prop['neighborhood']}</b></div>
+                                <div style='margin-bottom: 0.25rem;'>💰 Budget: {"✅" if prop['budget_match'] else "⚠️"}</div>
+                                <div>⭐ Features: {"✅" if prop['features_match'] else "⚠️"}</div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                if st.button("❌ Close Comparison", use_container_width=True):
+                    # logic to close could be clearing selection or just toggling a view state
+                    # For now, we rely on the user unchecking or collapsing
+                    st.session_state.compare_props = set()
+                    st.rerun()
 
     # Display detailed analysis in expandable format for additional properties
     for idx, property in enumerate(matches[:3]):
@@ -52,13 +108,34 @@ def render_property_matcher(lead_context: Dict):
                     st.success(f"✅ {reason}")
                 
                 # Claude's Psychological Deep Dive
-                try:
-                    from services.property_matcher import PropertyMatcher
-                    pm = PropertyMatcher()
-                    deep_reasoning = pm.explain_match_with_claude(property, lead_context.get('extracted_preferences', {}))
-                    st.info(f"🤖 **Claude's Psychological Insight:** {deep_reasoning}")
-                except Exception:
-                    pass
+                if analysis_result:
+                    try:
+                        from services.enhanced_lead_intelligence import get_enhanced_lead_intelligence
+                        eli = get_enhanced_lead_intelligence()
+                        
+                        import asyncio
+                        # Handle Streamlit event loop
+                        try:
+                            loop = asyncio.get_event_loop()
+                        except RuntimeError:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                            
+                        deep_reasoning = loop.run_until_complete(
+                            eli.get_psychological_property_fit(property, analysis_result)
+                        )
+                        st.info(f"🤖 **Claude's Psychological Insight:** {deep_reasoning}")
+                    except Exception as e:
+                        st.error(f"AI Insight failed: {e}")
+                else:
+                    # Legacy fallback
+                    try:
+                        from services.property_matcher import PropertyMatcher
+                        pm = PropertyMatcher()
+                        deep_reasoning = pm.explain_match_with_claude(property, lead_context.get('extracted_preferences', {}))
+                        st.info(f"🤖 **Claude's Psychological Insight:** {deep_reasoning}")
+                    except Exception:
+                        pass
                 
                 # Score breakdown with Gap Analysis
                 st.markdown("#### 📊 Match Score Breakdown with Gap Analysis")
@@ -155,13 +232,23 @@ def render_property_matcher(lead_context: Dict):
                         """, unsafe_allow_html=True)
             
             with col_actions:
-                if st.button("📤 Send to Lead", key=f"send_{idx}", use_container_width=True):
+                # Compare Checkbox
+                lead_id = lead_context.get('lead_id', 'unknown')
+                is_selected = property['address'] in st.session_state.compare_props
+                if st.checkbox("Compare", key=f"compare_{lead_id}_{idx}", value=is_selected):
+                    st.session_state.compare_props.add(property['address'])
+                else:
+                    st.session_state.compare_props.discard(property['address'])
+                
+                st.markdown("---")
+
+                if st.button("📤 Send to Lead", key=f"send_{lead_id}_{idx}", use_container_width=True):
                     st.toast(f"Sent {property['address']} to lead!", icon="✅")
                 
-                if st.button("📅 Schedule Showing", key=f"schedule_{idx}", use_container_width=True):
+                if st.button("📅 Schedule Showing", key=f"schedule_{lead_id}_{idx}", use_container_width=True):
                     st.toast("Opening calendar...", icon="📅")
                 
-                if st.button("💾 Save for Later", key=f"save_{idx}", use_container_width=True):
+                if st.button("💾 Save for Later", key=f"save_{lead_id}_{idx}", use_container_width=True):
                     st.toast("Property saved!", icon="💾")
     
     # Batch actions
@@ -177,118 +264,51 @@ def render_property_matcher(lead_context: Dict):
             st.info("Searching MLS database...")
 
 
-def generate_property_matches(lead_context: Dict) -> List[Dict]:
+def generate_property_matches(lead_context: Dict, elite_mode: bool = False) -> List[Dict]:
     """
     Generate AI property matches using Strategy Pattern for flexible scoring algorithms.
-
-    Enterprise-grade property matching with configurable strategies:
-    1. Load property data from available sources
-    2. Apply configurable scoring strategy (Basic, Enhanced, ML)
-    3. Generate detailed reasoning and confidence scores
-    4. Return ranked properties with transparent AI decisions
-
-    Strategies automatically selected based on context:
-    - High-volume: Basic scorer (1000+ props/sec)
-    - Balanced: Enhanced scorer (200-500 props/sec)
-    - ML-powered: Advanced scorer with behavioral learning
-
-    Args:
-        lead_context: Dictionary containing lead preferences and context
-
-    Returns:
-        List of property dictionaries with strategy-based scoring and reasoning
     """
 
-    # Import the new Strategy Pattern implementation
+    # Use the unified PropertyMatcher service
     try:
-        import sys
-        from pathlib import Path
-        sys.path.append(str(Path(__file__).parent.parent.parent))
-
-        from services.scoring import (
-            create_property_matcher,
-            ScoringContext,
-            get_scoring_factory
-        )
-
+        from services.property_matcher import PropertyMatcher
+        pm = PropertyMatcher()
+        
+        # Set strategy based on elite_mode
+        pm.set_strategy("ai" if elite_mode else "basic")
+        
         # Extract lead preferences from context
         extracted = lead_context.get('extracted_preferences', {})
-
-        # Create scoring context for strategy selection
-        scoring_context = ScoringContext(
-            lead_id=lead_context.get('lead_id'),
-            agent_id=lead_context.get('agent_id'),
-            market_area='austin',
-            performance_priority='balanced',  # Use enhanced strategy
-            enable_learning=True,
-            min_confidence=60.0,
-            max_properties=10
-        )
-
-        # Create property matcher with strategy and fallback
-        matcher = create_property_matcher(
-            strategy_name="enhanced",      # Primary: Advanced 15-factor scoring
-            fallback_strategy="basic",     # Fallback: Fast rule-based scoring
-            enable_monitoring=True,        # Track performance metrics
-            enable_caching=False          # Disable for demo (would use Redis in prod)
-        )
-
-        # Load demo property data (in production, this would come from MLS/database)
-        demo_properties = _load_demo_properties()
-
-        # Enhanced preferences for strategy-based matching
-        lead_preferences = {
-            'budget': extracted.get('budget', 800000),
-            'location': extracted.get('location', 'Downtown'),
-            'bedrooms': extracted.get('bedrooms', 3),
-            'bathrooms': extracted.get('bathrooms', 2),
-            'property_type': extracted.get('property_type', 'Single Family'),
-            'must_haves': extracted.get('must_haves', ['garage']),
-            'nice_to_haves': extracted.get('nice_to_haves', ['pool', 'good_schools']),
-            'work_location': extracted.get('work_location', 'downtown'),
-            'has_children': extracted.get('has_children', False),
-            'min_sqft': extracted.get('min_sqft', 1800)
-        }
-
-        # Score properties using Strategy Pattern
-        scored_properties = matcher.score_multiple_properties(
-            properties=demo_properties,
-            lead_preferences=lead_preferences,
-            context=scoring_context,
-            max_workers=2  # Parallel processing for demo
-        )
-
-        # Convert strategy results to UI format
+        
+        # Find matches
+        raw_matches = pm.find_matches(extracted, limit=5)
+        
+        # Format for UI
         formatted_matches = []
-        for property_data in scored_properties[:5]:  # Top 5 matches
-            formatted_match = {
-                'address': property_data.get('address', 'Property Address'),
-                'price': property_data.get('price', 750000),
-                'beds': property_data.get('bedrooms', property_data.get('beds', 3)),
-                'baths': property_data.get('bathrooms', property_data.get('baths', 2.5)),
-                'sqft': property_data.get('sqft', property_data.get('square_feet', 2100)),
-                'neighborhood': property_data.get('neighborhood', 'Austin Area'),
-                'icon': _get_property_icon(property_data),
-                'match_score': int(property_data.get('overall_score', 75)),
-                'budget_match': property_data.get('budget_match', False),
-                'location_match': property_data.get('location_match', False),
-                'features_match': property_data.get('features_match', False),
-                'match_reasons': property_data.get('match_reasons', ['Property matched']),
-                'confidence_level': property_data.get('confidence_level', 'medium'),
-                'strategy_metadata': property_data.get('scoring_metadata', {})
-            }
-            formatted_matches.append(formatted_match)
+        for prop in raw_matches:
+            formatted_matches.append({
+                'id': prop.get('id', 'unknown'),
+                'address': f"{prop.get('address', {}).get('street', 'Address')}, {prop.get('address', {}).get('city', 'City')}",
+                'price': prop.get('price', 750000),
+                'beds': prop.get('bedrooms', 3),
+                'baths': prop.get('bathrooms', 2.5),
+                'sqft': prop.get('sqft', 2100),
+                'neighborhood': prop.get('address', {}).get('neighborhood', 'Area'),
+                'icon': _get_property_icon(prop),
+                'match_score': int(prop.get('match_score', 0) * 100),
+                'budget_match': prop.get('match_score', 0) > 0.7, # Simplified
+                'location_match': True, # Simplified
+                'features_match': True, # Simplified
+                'match_reasons': [pm.generate_match_reasoning(prop, extracted)],
+                'match_type': prop.get('match_type', 'Standard'),
+                'ai_reasoning': prop.get('ai_reasoning', '')
+            })
+            
+        if formatted_matches:
+            return formatted_matches
 
-        # Log performance metrics for monitoring
-        metrics = matcher.get_performance_metrics()
-        print(f"Strategy Pattern Performance: {metrics.get('average_time_per_score', 'N/A')}s per property")
-
-        return formatted_matches
-
-    except ImportError as e:
-        print(f"Strategy Pattern not available, using fallback: {e}")
     except Exception as e:
-        print(f"Strategy Pattern error, using fallback: {e}")
+        print(f"Error in dynamic property matching: {e}")
 
     # Ultimate fallback to static demo data
     return _get_fallback_properties(lead_context)

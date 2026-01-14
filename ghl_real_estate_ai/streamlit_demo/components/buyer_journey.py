@@ -1,6 +1,15 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import asyncio
+import json
+
+# Import enhanced services
+try:
+    from services.claude_orchestrator import get_claude_orchestrator
+    CLAUDE_AVAILABLE = True
+except ImportError:
+    CLAUDE_AVAILABLE = False
 
 def render_buyer_dashboard():
     """Buyer's personal dashboard with saved properties and activity"""
@@ -353,39 +362,61 @@ def render_buyer_journey_hub(selected_lead_name, render_enhanced_property_search
         with col_c2:
             st.markdown("### Claude's Buyer Journey Counsel")
             
-            # Dynamic journey insights
-            if selected_lead_name == "Sarah Chen (Apple Engineer)":
-                journey_text = """
-                *Monitoring Sarah's North Austin search:*
-                - **🧭 Path Finder:** Sarah has reached the 'Viewing' stage. She's 40% more likely to close if we show her the Teravista property this weekend.
-                - **📉 Value Alert:** New listing in Cedar Park just hit the market. It aligns with her 45-day relocation timeline perfectly.
-                """
-            elif selected_lead_name == "David Kim (Investor)":
-                journey_text = """
-                *Monitoring David's portfolio expansion:*
-                - **🧭 Path Finder:** David is in 'Evaluation' mode. He's analyzed 4 Manor properties. High probability of multi-unit offer if Cap Rate is > 5%.
-                - **📉 Value Alert:** An off-market duplex in Del Valle just became available. I've sent him the ROI breakdown.
-                """
-            elif selected_lead_name == "Mike & Jessica Rodriguez (Growing Family)":
-                journey_text = """
-                *Monitoring the Rodriguez family journey:*
-                - **🧭 Path Finder:** They are currently in 'Education' stage. Providing a 'First-Time Buyer' guide will increase their engagement by 60%.
-                - **📉 Value Alert:** Found a home in Pflugerville with a huge fenced yard - their top 'must-have'.
-                """
+            if CLAUDE_AVAILABLE and selected_lead_name != "-- Select a Lead --":
+                orchestrator = get_claude_orchestrator()
+                
+                with st.spinner("Claude is mapping the buyer journey..."):
+                    try:
+                        try:
+                            loop = asyncio.get_event_loop()
+                        except RuntimeError:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                        
+                        # Get lead context
+                        lead_options = st.session_state.get('lead_options', {})
+                        lead_data = lead_options.get(selected_lead_name, {})
+                        
+                        # Use chat_query for journey advice
+                        journey_result = loop.run_until_complete(
+                            orchestrator.chat_query(
+                                query="Provide strategic buyer journey counsel for this lead. Map their current stage and suggest 2 immediate next steps.",
+                                context={"lead_name": selected_lead_name, "lead_data": lead_data, "task": "journey_counsel"}
+                            )
+                        )
+                        st.markdown(journey_result.content)
+                    except Exception as e:
+                        st.error(f"Counsel Error: {str(e)}")
+                        st.markdown(f"Monitoring **{selected_lead_name}**. High probability of conversion if we maintain momentum.")
             else:
-                journey_text = """
-                *Monitoring your active buyers in Austin:*
-                - **🧭 Path Finder:** Sarah Johnson has reached the 'Viewing' stage. She's 40% more likely to close if we show her properties in the Avery Ranch district this weekend.
-                - **📉 Value Alert:** 2 listings in the $500k range just had price drops. I've flagged these for your 'Move-up Buyer' segment.
-                """
-            st.markdown(journey_text)
+                # Dynamic journey insights (Legacy/Fallback)
+                if selected_lead_name == "Sarah Chen (Apple Engineer)":
+                    journey_text = """
+                    *Monitoring Sarah's North Austin search:*
+                    - **🧭 Path Finder:** Sarah has reached the 'Viewing' stage. She's 40% more likely to close if we show her the Teravista property this weekend.
+                    - **📉 Value Alert:** New listing in Cedar Park just hit the market. It aligns with her 45-day relocation timeline perfectly.
+                    """
+                elif selected_lead_name == "David Kim (Investor)":
+                    journey_text = """
+                    *Monitoring David's portfolio expansion:*
+                    - **🧭 Path Finder:** David is in 'Evaluation' mode. He's analyzed 4 Manor properties. High probability of multi-unit offer if Cap Rate is > 5%.
+                    - **📉 Value Alert:** An off-market duplex in Del Valle just became available. I've sent him the ROI breakdown.
+                    """
+                else:
+                    journey_text = """
+                    *Monitoring your active buyers in Austin:*
+                    - **🧭 Path Finder:** General engagement is steady. Recommend personalized property alerts for the 'Warm' lead segment.
+                    - **📉 Value Alert:** Recent price drops in East Austin provide an opening for first-time buyers.
+                    """
+                st.markdown(journey_text)
             
             if st.button("🚀 Alert All Matching Buyers"):
-                st.toast("Syncing price-drop alerts to GHL workflows...", icon="🔔")
+                st.toast("Syncing alerts to GHL workflows...", icon="🔔")
 
     # Buyer navigation tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "🔍 Property Search",
+        "🔥 Smart Swipe",
         "👤 Buyer Profile",
         "💰 Financing",
         "🌍 Neighborhoods",
@@ -397,16 +428,23 @@ def render_buyer_journey_hub(selected_lead_name, render_enhanced_property_search
         render_enhanced_property_search()
 
     with tab2:
-        render_buyer_profile_builder()
+        try:
+            from components.property_swipe import render_property_swipe
+            render_property_swipe()
+        except ImportError:
+            st.info("🔥 Smart Swipe component coming soon")
 
     with tab3:
-        render_financing_calculator()
+        render_buyer_profile_builder()
 
     with tab4:
-        render_neighborhood_explorer()
+        render_financing_calculator()
 
     with tab5:
-        render_buyer_dashboard()
+        render_neighborhood_explorer()
 
     with tab6:
+        render_buyer_dashboard()
+
+    with tab7:
         render_buyer_analytics()

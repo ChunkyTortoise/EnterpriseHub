@@ -40,10 +40,17 @@ class RevenueAttributionEngine:
         Returns:
             Complete revenue attribution with channel breakdown
         """
+        from datetime import timezone
         if not start_date:
-            start_date = datetime.now() - timedelta(days=90)
+            start_date = datetime.now(timezone.utc) - timedelta(days=90)
         if not end_date:
-            end_date = datetime.now()
+            end_date = datetime.now(timezone.utc)
+            
+        # Ensure start_date and end_date are offset-aware for comparison
+        if start_date.tzinfo is None:
+            start_date = start_date.replace(tzinfo=timezone.utc)
+        if end_date.tzinfo is None:
+            end_date = end_date.replace(tzinfo=timezone.utc)
         
         # Load data
         conversations = self._load_conversations(location_id, start_date, end_date)
@@ -92,6 +99,7 @@ class RevenueAttributionEngine:
         end_date: datetime
     ) -> List[Dict]:
         """Load conversation data for period"""
+        from datetime import timezone
         analytics_file = self.data_dir / "mock_analytics.json"
         
         if not analytics_file.exists():
@@ -100,10 +108,17 @@ class RevenueAttributionEngine:
         with open(analytics_file) as f:
             data = json.load(f)
         
-        conversations = [
-            c for c in data.get("conversations", [])
-            if start_date <= datetime.fromisoformat(c.get("start_time", c.get("timestamp"))) <= end_date
-        ]
+        conversations = []
+        for c in data.get("conversations", []):
+            ts_str = c.get("start_time") or c.get("timestamp")
+            if ts_str:
+                # Handle Z or +00:00 and make it offset-aware
+                ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=timezone.utc)
+                
+                if start_date <= ts <= end_date:
+                    conversations.append(c)
         
         return conversations
     

@@ -87,7 +87,11 @@ def render_segmentation_pulse(segment_data: Dict[str, Any]):
     
     with col_a:
         if st.button("📧 Send Campaign to Segment", use_container_width=True):
-            st.success("Campaign queued for this segment!")
+            with st.spinner("Queueing campaign workflow..."):
+                import time
+                time.sleep(1.5)
+                st.toast("Campaign 'Luxury Outreach' started!", icon="🚀")
+                st.success("Campaign queued for this segment!")
     
     with col_b:
         if st.button("📊 View All Leads", use_container_width=True):

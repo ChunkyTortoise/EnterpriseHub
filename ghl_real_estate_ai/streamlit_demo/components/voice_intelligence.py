@@ -2,7 +2,16 @@
 import streamlit as st
 import random
 import time
+import asyncio
+import json
 import plotly.graph_objects as go
+
+# Import enhanced services
+try:
+    from services.claude_orchestrator import get_claude_orchestrator
+    CLAUDE_AVAILABLE = True
+except ImportError:
+    CLAUDE_AVAILABLE = False
 
 def render_voice_intelligence():
     """
@@ -12,6 +21,12 @@ def render_voice_intelligence():
     st.subheader("🎙️ Live Call Intelligence")
     st.markdown("*Real-time AI assistance for live calls and automated voice reception.*")
     
+    # Get current lead context for the call
+    selected_lead = st.session_state.get('selected_lead_name', 'Prospect')
+    lead_options = st.session_state.get('lead_options', {})
+    lead_context = lead_options.get(selected_lead, {})
+    lead_id = lead_context.get('lead_id', 'demo_lead')
+
     # Connection Status
     col_status1, col_status2, col_status3 = st.columns([1, 1, 1])
     with col_status1:
@@ -28,9 +43,9 @@ def render_voice_intelligence():
         </div>
         """, unsafe_allow_html=True)
     with col_status3:
-        st.markdown("""
+        st.markdown(f"""
         <div style="padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; font-size: 0.8rem; font-weight: 600; color: #64748b;">
-            Agent: <span style="color: #8B5CF6;">Elite Closer v4</span>
+            Lead: <span style="color: #8B5CF6;">{selected_lead}</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -66,46 +81,68 @@ def render_voice_intelligence():
         # Live Transcript
         st.markdown("#### 📜 Live Transcript")
         transcript_container = st.container(height=300, border=True)
+        
+        current_transcript = [
+            {"role": "AI", "time": "02:14", "text": f"Hello {selected_lead.split()[0]}, I'm calling from Jorge Sales' team regarding your interest in the Downtown properties. How are you today?"},
+            {"role": "Lead", "time": "02:18", "text": "Oh hi! I'm good. I was just looking at the pricing, it seems a bit higher than I expected for the area?"},
+            {"role": "AI", "time": "02:22", "text": "I understand. While the initial price point reflects the current demand, these units specifically feature superior appreciation rates due to the upcoming tech corridor expansion."},
+            {"role": "Lead", "time": "02:28", "text": "I didn't realize there was an expansion planned there. That does change the math. What about the financing options?"}
+        ]
+
         with transcript_container:
-            st.markdown("""
-            <div style="font-size: 0.9rem; color: #64748b; margin-bottom: 10px;">[02:14] <b>AI:</b> Hello Sarah, I'm calling from Jorge Sales' team regarding your interest in the Downtown condo. How are you today?</div>
-            <div style="font-size: 0.9rem; color: #1e293b; margin-bottom: 10px;">[02:18] <b>Sarah:</b> Oh hi! I'm good. I was just looking at the price, it seems a bit high for that square footage?</div>
-            <div style="font-size: 0.9rem; color: #64748b; margin-bottom: 10px;">[02:22] <b>AI:</b> I understand. While the price per foot is slightly higher than the average, this unit actually includes private roof access and two premium parking spots, which adds about $150k in equity value.</div>
-            <div style="font-size: 0.9rem; color: #1e293b; margin-bottom: 10px; background: rgba(59, 130, 246, 0.05); padding: 5px; border-radius: 4px;">[02:28] <b>Sarah:</b> <span style="color: #2563eb; font-weight: 600;">(Thinking)</span> I didn't realize it had roof access. That does change things. Is the HOA also high?</div>
-            <div style="font-size: 0.9rem; color: #10b981; font-weight: 700;">[NOW] <b>AI:</b> Analyzing HOA impact...</div>
-            """, unsafe_allow_html=True)
+            for entry in current_transcript:
+                role_color = "#64748b" if entry["role"] == "AI" else "#1e293b"
+                st.markdown(f'<div style="font-size: 0.9rem; color: {role_color}; margin-bottom: 10px;">[{entry["time"]}] <b>{entry["role"]}:</b> {entry["text"]}</div>', unsafe_allow_html=True)
+            
+            st.markdown(f'<div style="font-size: 0.9rem; color: #10b981; font-weight: 700;">[NOW] <b>AI:</b> Claude is analyzing financing response...</div>', unsafe_allow_html=True)
 
     with col_side:
-        # Sentiment Analysis
-        st.markdown("#### 🧠 Real-time Sentiment")
-        sentiment_score = 72
-        st.markdown(f"""
-        <div style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center;">
-            <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 700;">Lead Sentiment</div>
-            <div style="font-size: 2rem; font-weight: 800; color: #10b981;">{sentiment_score}%</div>
-            <div style="font-size: 0.75rem; color: #10b981; font-weight: 600;">Trending Up (Positive)</div>
-        </div>
-        """, unsafe_allow_html=True)
+        # Real-time Intelligence via Claude
+        st.markdown("#### 🧠 Live AI Coaching")
         
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # AI Battlecards
-        st.markdown("#### ⚔️ AI Battlecards")
-        st.markdown("""
-        <div style="background: #fdf2f2; padding: 12px; border-radius: 8px; border-left: 4px solid #ef4444; margin-bottom: 10px;">
-            <div style="font-size: 0.75rem; color: #991b1b; font-weight: 700;">OBJECTION DETECTED</div>
-            <div style="font-size: 0.85rem; color: #1e293b; font-weight: 600;">"Price is too high"</div>
-            <div style="font-size: 0.8rem; color: #4b5563; margin-top: 4px;">Action: Pivot to ROOFTOP ACCESS and APPRECIATION. Mention 8.4% annual growth.</div>
-        </div>
-        <div style="background: #f0fdf4; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
-            <div style="font-size: 0.75rem; color: #166534; font-weight: 700;">CLOSING OPPORTUNITY</div>
-            <div style="font-size: 0.85rem; color: #1e293b; font-weight: 600;">Interest confirmed</div>
-            <div style="font-size: 0.8rem; color: #4b5563; margin-top: 4px;">Action: Offer a VIP showing this Saturday at 10 AM.</div>
-        </div>
-        """, unsafe_allow_html=True)
+        if CLAUDE_AVAILABLE:
+            with st.spinner("Claude is listening..."):
+                try:
+                    orchestrator = get_claude_orchestrator()
+                    try:
+                        loop = asyncio.get_event_loop()
+                    except RuntimeError:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                    
+                    # Synthesize transcript for Claude
+                    transcript_text = "\n".join([f"{e['role']}: {e['text']}" for e in current_transcript])
+                    
+                    # Get coaching result
+                    coaching_result = loop.run_until_complete(
+                        orchestrator.chat_query(
+                            query="Provide 2 real-time battlecards and current lead sentiment based on this call transcript.",
+                            context={"transcript": transcript_text, "lead_name": selected_lead, "task": "live_call_coaching"},
+                            lead_id=lead_id
+                        )
+                    )
+                    
+                    st.markdown(f"""
+                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+                        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 10px;">Claude's Live Feed:</div>
+                        <div style="font-size: 0.9rem; line-height: 1.5;">{coaching_result.content}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                except Exception as e:
+                    st.error(f"Coaching Error: {e}")
+        else:
+            # Fallback
+            st.markdown("""
+            <div style="background: #fdf2f2; padding: 12px; border-radius: 8px; border-left: 4px solid #ef4444; margin-bottom: 10px;">
+                <div style="font-size: 0.75rem; color: #991b1b; font-weight: 700;">OBJECTION DETECTED</div>
+                <div style="font-size: 0.85rem; color: #1e293b; font-weight: 600;">"Pricing is too high"</div>
+                <div style="font-size: 0.8rem; color: #4b5563; margin-top: 4px;">Action: Pivot to TECH CORRIDOR EXPANSION. Mention 12% projected growth.</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         if st.button("🔴 Take Over Call", use_container_width=True, type="primary"):
-            st.toast("Human handoff initiated. Connecting Jorge...")
+            st.toast("Human handoff initiated. Connecting Jorge...", icon="📞")
 
     st.markdown("---")
     
@@ -113,8 +150,9 @@ def render_voice_intelligence():
     st.markdown("#### 📊 Call Performance Metrics")
     m_col1, m_col2, m_col3 = st.columns(3)
     with m_col1:
-        st.metric("Talk Ratio (AI/Lead)", "42% / 58%")
+        st.metric("Talk Ratio (AI/Lead)", "38% / 62%")
     with m_col2:
-        st.metric("Objections Handled", "2/2", "+100%")
+        st.metric("Signals Detected", "4 High-Intent", "+2")
     with m_col3:
-        st.metric("Probability of Close", "64%", "+15%")
+        st.metric("Probability of Close", "71%", "+7%")
+
