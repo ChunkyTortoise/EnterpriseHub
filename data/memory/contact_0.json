@@ -1,6 +1,0 @@
-{
-  "messages": [
-    "<script>alert('xss')</script>"
-  ],
-  "updated_at": "2026-01-12T03:10:48.993789"
-}

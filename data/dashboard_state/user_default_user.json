@@ -1,0 +1,98 @@
+{
+  "user_id": "default_user",
+  "preferences": {
+    "theme": "light",
+    "auto_refresh": true,
+    "refresh_interval": 2,
+    "notifications_enabled": true,
+    "sound_alerts": false,
+    "mobile_optimized": true,
+    "compact_view": false,
+    "show_animations": true,
+    "default_time_range": "24h",
+    "timezone": "UTC"
+  },
+  "saved_views": {
+    "overview": {
+      "id": "overview",
+      "name": "Executive Overview",
+      "description": "High-level KPIs and real-time metrics",
+      "config": {
+        "layout": "grid",
+        "components": [
+          "lead_scoreboard",
+          "alert_center",
+          "performance_summary"
+        ],
+        "time_range": "24h",
+        "auto_refresh": true
+      },
+      "created_at": "2026-01-12T13:09:29.150248",
+      "last_used": "2026-01-12T13:09:29.150250",
+      "is_default": true,
+      "tags": [
+        "executive",
+        "kpi",
+        "overview"
+      ]
+    },
+    "leads_focus": {
+      "id": "leads_focus",
+      "name": "Lead Management Focus",
+      "description": "Detailed lead scoring and pipeline view",
+      "config": {
+        "layout": "columns",
+        "components": [
+          "lead_scoreboard",
+          "lead_analytics",
+          "conversion_funnel"
+        ],
+        "time_range": "7d",
+        "filters": {
+          "status": [
+            "hot",
+            "warm"
+          ]
+        }
+      },
+      "created_at": "2026-01-12T13:09:29.150254",
+      "last_used": "2026-01-12T13:09:29.150254",
+      "is_default": false,
+      "tags": [
+        "leads",
+        "sales",
+        "pipeline"
+      ]
+    },
+    "analytics_deep": {
+      "id": "analytics_deep",
+      "name": "Analytics Deep Dive",
+      "description": "Comprehensive analytics with drill-down capability",
+      "config": {
+        "layout": "dashboard",
+        "components": [
+          "interactive_analytics",
+          "performance_trends",
+          "forecast"
+        ],
+        "time_range": "30d",
+        "chart_types": [
+          "line",
+          "bar",
+          "funnel"
+        ]
+      },
+      "created_at": "2026-01-12T13:09:29.150256",
+      "last_used": "2026-01-12T13:09:29.150256",
+      "is_default": false,
+      "tags": [
+        "analytics",
+        "reporting",
+        "trends"
+      ]
+    }
+  },
+  "current_view_id": "overview",
+  "active_filters": {},
+  "last_updated": "2026-01-12T13:09:29.150320"
+}

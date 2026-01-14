@@ -252,6 +252,144 @@
         "company_name": "TestValue"
       },
       "installed_at": "2026-01-12T03:10:28.759230"
+    },
+    {
+      "installation_id": "ff33e987-9492-4a8f-be22-466ac97d1d53",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "110b51bc-8406-4baa-8402-bc1d48392761",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-01-12T20:56:18.351600"
+    },
+    {
+      "installation_id": "f64cc04a-9dd3-4c70-9183-319d5f6ea83f",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "ecd253a4-5e65-4e3b-a731-35e012aa42fd",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-01-12T20:56:18.358815"
+    },
+    {
+      "installation_id": "1381d200-efca-46be-9931-356065715c94",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "00aac485-30d6-4b07-8a11-92d3fd1ec8e1",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-01-12T20:58:35.882102"
+    },
+    {
+      "installation_id": "5eabc400-221b-449b-982c-5a1d643519c7",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "b93f7e62-e0fc-4e70-859f-9d3dfdf58ce1",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-01-12T20:58:35.889910"
+    },
+    {
+      "installation_id": "7e2eb35f-59ca-4fbd-8f0b-ae31a7053ea5",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "ceebd565-5a8e-46ca-8482-9130f6b44ab7",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-01-12T21:20:00.620725+00:00"
+    },
+    {
+      "installation_id": "52118a7f-6b1a-4268-a29e-cd3ed5a89482",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "fe959a9a-bad6-45f1-882a-44534773a8ba",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-01-12T21:20:00.629466+00:00"
+    },
+    {
+      "installation_id": "69fe19c2-d6c8-466a-92c8-66f335ba65b1",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "b6342dd5-4d3b-4981-9bd9-b0fa9b17e86f",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-01-12T21:23:40.057188+00:00"
+    },
+    {
+      "installation_id": "eb51f577-ff9e-4773-86ef-3292c0668b92",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "29c7db19-6cae-47c9-a890-b9923c1fdaf6",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-01-12T21:23:40.066647+00:00"
+    },
+    {
+      "installation_id": "991f27e7-1962-4bb6-8888-f3161b5d9424",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "6ac72e7d-fe27-4174-adea-12e13f4d7edb",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-01-12T21:27:30.174308+00:00"
+    },
+    {
+      "installation_id": "e9dbad1b-1f95-4e40-b306-6a7bf2f7d5ee",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "ad334ae2-9104-499e-8881-e8f102814a94",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-01-12T21:27:30.181726+00:00"
+    },
+    {
+      "installation_id": "8f450d24-5e8d-4e4a-94dc-bf5018d7298f",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "d0b18994-f4b0-4bdc-8cbf-6e4f78bd36af",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-01-12T21:30:04.637582+00:00"
+    },
+    {
+      "installation_id": "f1bf2833-0c18-440d-870c-6e5ca212579f",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "a27b2d1b-5263-4b6e-8bb2-2afccabe1d40",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-01-12T21:30:04.644654+00:00"
     }
   ]
 }

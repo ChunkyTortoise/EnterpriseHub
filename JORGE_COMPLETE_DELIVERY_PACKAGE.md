@@ -24,33 +24,35 @@
 ## 📊 5 INTEGRATED HUBS - WHAT THEY DO
 
 ### 1. 🏢 **Executive Command Center**
-**What it does:** Real-time business overview
+**What it does:** Real-time business overview & multi-tenant control.
 **Services included:**
+- **$2.4M Active Pipeline Visualization** - Linked to demo personas
 - Revenue tracking across all deals
 - Lead conversion metrics
 - System health monitoring
-- Multi-location dashboard (when you add more sub-accounts)
+- Multi-location dashboard (ready for scale)
 
-**Why Jorge needs it:** See your entire business performance at a glance
+**Why Jorge needs it:** See your entire business performance at a glance and track the high-value Austin tech corridor relocations.
 
 ---
 
-### 2. 🧠 **Lead Intelligence Hub**
-**What it does:** AI-powered lead qualification & scoring
+### 2. 🧠 **Lead Intelligence Hub (PHASE 3 ACTIVE)**
+**What it does:** AI-powered lead qualification & behavioral forecasting.
 **Services included:**
-- **AI Lead Scorer** - Scores every lead 0-100 based on 7 factors
-- **Behavioral Analysis** - Tracks engagement patterns
-- **Hot Lead Detection** - Automatically flags ready-to-buy leads
-- **Smart Segmentation** - Groups leads by behavior
+- **Behavioral Prediction Engine** - Predicts conversion probability (0-100%)
+- **Architectural Buyer Portal** - Self-service environment for leads
+- **Property Swipe UI** - High-engagement Tinder-style matching
+- **Real-Time Telemetry** - Watch lead activity (views/saves) live
+- **AI Lead Scorer** - Scores every lead based on 7 factors
 
-**Why Jorge needs it:** Know which leads to call first, stop wasting time on tire-kickers
+**Why Jorge needs it:** Know exactly when a lead is "ready to buy" based on their portal behavior, not just what they say.
 
 **How it works:**
-1. Tag a contact in GHL with "Needs Qualifying"
-2. AI texts them automatically
-3. AI asks 7 questions (Budget, Timeline, Location, Property Type, Buying Motivation, First-time buyer?, Pre-approved?)
-4. AI scores them (Hot: 80+, Warm: 50-79, Cold: <50)
-5. AI tags them and notifies you
+1. AI qualifies the lead via SMS (Phase 1).
+2. AI sends a personalized link to their **Architectural Portal** (Phase 3).
+3. Lead "swipes" on properties they like.
+4. You see their activity live in your command center.
+5. AI triggers a **GHL Alert** when a high-intent match is detected.
 
 ---
 
@@ -185,6 +187,28 @@
 | CMA Generator | $197/mo | ✅ Included |
 | Meeting Prep AI | $147/mo | ✅ Included |
 | **TOTAL VALUE** | **$2,726/mo** | **YOUR PRICE: TBD** |
+
+---
+
+## 💎 ELITE PHASE UPGRADE (NEW)
+
+Your system has been upgraded with **Elite Phase** capabilities. These features can be activated via the sidebar toggle in your dashboard.
+
+### 🧠 **1. Graphiti Semantic Memory (The "Brain")**
+- **Standard:** AI remembers only the current chat session.
+- **Elite:** AI builds a permanent **Knowledge Graph** of every lead. It remembers that "Sarah hates HOAs" across multiple weeks and sessions, providing "Architectural Recall" in your sidebar.
+
+### ⚖️ **2. Strategy-Based Property Matcher**
+- **Standard:** Simple budget and bedroom filtering.
+- **Elite:** **AI Semantic Search** mode. The AI reads property descriptions and matching them to lead lifestyle factors (e.g., "gigabit fiber", "natural light", "investment yield") instead of just hard numbers.
+
+### 🎯 **3. Dynamic Scoring Weights**
+- **Standard:** Static lead scoring.
+- **Elite:** **Adaptive Scoring**. The system automatically adjusts weights based on the **Market Condition** (e.g., scoring urgency higher in a Seller's Market) and **Lead Segment** (investors vs. first-time buyers).
+
+### 🌲 **4. Advanced Decision Logic**
+- **Standard:** Linear automations.
+- **Elite:** **Intelligent Routing**. Uses complex decision trees to determine if a lead should go to a "Direct Call Bridge" (Hot) or a "Nurture Sequence" (Warm) based on real-time behavior.
 
 ---
 

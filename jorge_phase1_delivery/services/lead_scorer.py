@@ -18,20 +18,12 @@ Lead Classifications (Jorge's Criteria):
 - Warm Lead: 2 questions answered (follow up within 24 hours)
 - Cold Lead: 0-1 questions answered (nurture campaign)
 """
-from typing import Dict, Any, List
-from datetime import datetime
-import re
-from typing import Dict, Any, List
 
-try:
-    from ghl_real_estate_ai.ghl_utils.config import settings
-except ImportError:
-    # Fallback settings for standalone deployment
-    class Settings:
-        hot_lead_threshold = 3
-        warm_lead_threshold = 2
-        cold_lead_threshold = 1
-    settings = Settings()
+import re
+from datetime import datetime
+from typing import Any, Dict, List
+
+from ghl_real_estate_ai.ghl_utils.config import settings
 
 
 class LeadScorer:
@@ -45,9 +37,9 @@ class LeadScorer:
     def calculate(self, context: Dict[str, Any]) -> int:
         """
         Calculate lead score based on NUMBER OF QUESTIONS ANSWERED.
-        
+
         Jorge's Requirement: Count questions answered, not points.
-        
+
         Qualifying Questions:
         1. Budget: Did they provide a budget/price range?
         2. Location: Did they specify a location/area?
@@ -124,7 +116,7 @@ class LeadScorer:
             "this week",
             "next week",
             "soon",
-            "right away"
+            "right away",
         ]
 
         return any(keyword in timeline_lower for keyword in urgent_keywords)
@@ -132,7 +124,7 @@ class LeadScorer:
     def classify(self, score: int) -> str:
         """
         Classify lead based on number of questions answered.
-        
+
         Jorge's Rules:
         - Hot: 3+ questions answered
         - Warm: 2 questions answered
@@ -169,34 +161,26 @@ class LeadScorer:
                 "Notify agent via SMS immediately",
                 "Schedule showing within 24-48 hours",
                 "Prioritize in CRM dashboard",
-                "Send pre-approval checklist if not completed"
+                "Send pre-approval checklist if not completed",
             ]
         elif classification == "warm":
             return [
                 "Tag as 'Warm Lead'",
                 "Follow up within 24 hours",
                 "Send market update email",
-                "Add to weekly follow-up sequence"
+                "Add to weekly follow-up sequence",
             ]
         else:
             return [
                 "Tag as 'Cold Lead'",
                 "Add to nurture campaign",
                 "Send educational content",
-                "Follow up in 7 days"
+                "Follow up in 7 days",
             ]
 
     def calculate_with_reasoning(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """
         Calculate score with detailed reasoning breakdown.
-        
-        Returns question count (0-7) instead of points (0-100).
-
-        Args:
-            context: Conversation context
-
-        Returns:
-            Dict containing score, classification, reasoning, and recommended actions
         """
         score = self.calculate(context)
         classification = self.classify(score)
@@ -207,33 +191,55 @@ class LeadScorer:
         questions_answered = []
 
         if prefs.get("budget"):
-            questions_answered.append(f"Budget: ${prefs.get('budget'):,}" if isinstance(prefs.get('budget'), (int, float)) else f"Budget: {prefs.get('budget')}")
+            val = prefs.get("budget")
+            if isinstance(val, (int, float)):
+                questions_answered.append(f"Budget: ${val:,}")
+            else:
+                questions_answered.append(f"Budget: {str(val)}")
+
         if prefs.get("location"):
-            questions_answered.append(f"Location: {prefs.get('location')}")
+            loc = prefs.get("location")
+            loc_str = ", ".join(str(i) for i in loc) if isinstance(loc, list) else str(loc)
+            questions_answered.append(f"Location: {loc_str}")
+
         if prefs.get("timeline"):
-            questions_answered.append(f"Timeline: {prefs.get('timeline')}")
+            questions_answered.append(f"Timeline: {str(prefs.get('timeline'))}")
+
         if prefs.get("bedrooms") or prefs.get("bathrooms") or prefs.get("must_haves"):
             prop_details = []
             if prefs.get("bedrooms"):
-                prop_details.append(f"{prefs.get('bedrooms')} bed")
+                val = prefs.get("bedrooms")
+                val_str = ", ".join(str(i) for i in val) if isinstance(val, list) else str(val)
+                prop_details.append(f"{val_str} bed")
             if prefs.get("bathrooms"):
-                prop_details.append(f"{prefs.get('bathrooms')} bath")
+                val = prefs.get("bathrooms")
+                val_str = ", ".join(str(i) for i in val) if isinstance(val, list) else str(val)
+                prop_details.append(f"{val_str} bath")
             if prefs.get("must_haves"):
-                prop_details.append(prefs.get("must_haves"))
-            questions_answered.append(f"Property: {', '.join(prop_details)}")
-        if prefs.get("financing"):
-            questions_answered.append(f"Financing: {prefs.get('financing')}")
-        if prefs.get("motivation"):
-            questions_answered.append(f"Motivation: {prefs.get('motivation')}")
-        if prefs.get("home_condition"):
-            questions_answered.append(f"Home Condition: {prefs.get('home_condition')}")
+                val = prefs.get("must_haves")
+                val_str = ", ".join(str(i) for i in val) if isinstance(val, list) else str(val)
+                prop_details.append(val_str)
+            
+            if prop_details:
+                questions_answered.append(f"Property: {', '.join(str(d) for d in prop_details)}")
 
-        reasoning = " | ".join(questions_answered) if questions_answered else "No qualifying questions answered yet"
+        if prefs.get("financing"):
+            questions_answered.append(f"Financing: {str(prefs.get('financing'))}")
+        if prefs.get("motivation"):
+            questions_answered.append(f"Motivation: {str(prefs.get('motivation'))}")
+        if prefs.get("home_condition"):
+            questions_answered.append(f"Home Condition: {str(prefs.get('home_condition'))}")
+
+        reasoning = (
+            " | ".join(str(q) for q in questions_answered)
+            if questions_answered
+            else "No qualifying questions answered yet"
+        )
 
         return {
             "score": score,
-            "questions_answered": score,  # Make it explicit this is question count
+            "questions_answered": score,
             "classification": classification,
             "reasoning": reasoning,
-            "recommended_actions": actions
+            "recommended_actions": actions,
         }

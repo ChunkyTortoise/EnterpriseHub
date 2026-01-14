@@ -49,11 +49,13 @@ class ExecutiveDashboardService:
         # Identify action items
         action_items = self._identify_action_items(metrics, conversations)
         
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
         return {
             "period": {
                 "days": days,
-                "start_date": (datetime.now() - timedelta(days=days)).isoformat(),
-                "end_date": datetime.now().isoformat()
+                "start_date": (now - timedelta(days=days)).isoformat(),
+                "end_date": now.isoformat()
             },
             "metrics": metrics,
             "insights": insights,
@@ -63,6 +65,7 @@ class ExecutiveDashboardService:
     
     def _load_conversations(self, location_id: str, days: int) -> List[Dict]:
         """Load conversation data for analysis"""
+        from datetime import timezone
         # Load from analytics data
         analytics_file = self.data_dir / "mock_analytics.json"
         
@@ -73,11 +76,21 @@ class ExecutiveDashboardService:
             data = json.load(f)
             
         # Filter by date range
-        cutoff = datetime.now() - timedelta(days=days)
-        conversations = [
-            c for c in data.get("conversations", [])
-            if datetime.fromisoformat(c["timestamp"]) >= cutoff
-        ]
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        conversations = []
+        for c in data.get("conversations", []):
+            ts_str = c.get("timestamp") or c.get("start_time")
+            if ts_str:
+                try:
+                    # Handle Z or +00:00 and make it offset-aware
+                    ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                    if ts.tzinfo is None:
+                        ts = ts.replace(tzinfo=timezone.utc)
+                    
+                    if ts >= cutoff:
+                        conversations.append(c)
+                except ValueError:
+                    continue
         
         return conversations
     
@@ -242,14 +255,24 @@ class ExecutiveDashboardService:
     
     def _calculate_trends(self, conversations: List[Dict], days: int) -> Dict[str, List[Dict]]:
         """Calculate day-by-day trends"""
+        from datetime import timezone
         # Group conversations by day
         daily_data = {}
         
         for conv in conversations:
-            date = datetime.fromisoformat(conv["timestamp"]).date()
-            if date not in daily_data:
-                daily_data[date] = []
-            daily_data[date].append(conv)
+            ts_str = conv.get("timestamp") or conv.get("start_time")
+            if ts_str:
+                try:
+                    ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                    if ts.tzinfo is None:
+                        ts = ts.replace(tzinfo=timezone.utc)
+                    
+                    date = ts.date()
+                    if date not in daily_data:
+                        daily_data[date] = []
+                    daily_data[date].append(conv)
+                except ValueError:
+                    continue
         
         # Calculate daily metrics
         trend_data = []
