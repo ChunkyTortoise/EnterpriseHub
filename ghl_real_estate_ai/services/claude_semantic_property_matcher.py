@@ -233,18 +233,19 @@ class ClaudeSemanticPropertyMatcher:
             return self._get_fallback_property_match(property_data)
 
     def _build_lifestyle_analysis_prompt(self, lead_profile: Dict) -> str:
-        """Build prompt for lifestyle analysis."""
+        """Build prompt for enhanced 16+ lifestyle dimension analysis."""
         return f"""
-As a real estate psychology expert, analyze this lead profile to understand their lifestyle and hidden motivations.
+As a real estate psychology expert, analyze this lead profile to understand their lifestyle and hidden motivations using our enhanced 16+ dimensional lifestyle framework.
 
 Lead Profile:
 {json.dumps(lead_profile, indent=2)}
 
-Extract detailed lifestyle insights in JSON format:
+Extract detailed lifestyle insights in JSON format using our ENHANCED 16+ LIFESTYLE DIMENSIONS model:
 {{
-    "personality_type": "analytical|emotional|social|practical",
-    "life_stage": "young_professional|growing_family|established_family|empty_nester|retiree|first_time_buyer",
-    "priorities": {{
+    "personality_type": "analytical|emotional|social|practical|hybrid",
+    "life_stage": "young_professional|growing_family|established_family|empty_nester|retiree|first_time_buyer|transitioning",
+    "enhanced_lifestyle_priorities": {{
+        // Core Dimensions (Original 8)
         "status": float (0.0-1.0, importance of status and prestige),
         "convenience": float (0.0-1.0, importance of convenience and accessibility),
         "security": float (0.0-1.0, importance of safety and stability),
@@ -252,23 +253,79 @@ Extract detailed lifestyle insights in JSON format:
         "family": float (0.0-1.0, importance of family considerations),
         "career": float (0.0-1.0, importance of career proximity),
         "lifestyle": float (0.0-1.0, importance of lifestyle amenities),
-        "privacy": float (0.0-1.0, importance of privacy and space)
+        "privacy": float (0.0-1.0, importance of privacy and space),
+
+        // Enhanced Dimensions (8+ New)
+        "social_connectivity": float (0.0-1.0, importance of community and neighbors),
+        "cultural_fit": float (0.0-1.0, cultural and demographic alignment),
+        "commute_optimization": float (0.0-1.0, transportation and accessibility needs),
+        "future_family_planning": float (0.0-1.0, family growth considerations),
+        "aging_in_place": float (0.0-1.0, long-term living considerations),
+        "investment_mindset": float (0.0-1.0, investment vs personal use focus),
+        "environmental_values": float (0.0-1.0, sustainability and green living),
+        "technology_integration": float (0.0-1.0, smart home and tech preferences),
+        "health_wellness": float (0.0-1.0, health-conscious living priorities),
+        "work_life_balance": float (0.0-1.0, home as sanctuary vs productivity),
+        "aesthetic_appreciation": float (0.0-1.0, design and beauty importance),
+        "community_involvement": float (0.0-1.0, local engagement and activism),
+        "educational_priorities": float (0.0-1.0, learning and school district focus),
+        "entertainment_hosting": float (0.0-1.0, social gathering and hosting needs),
+        "outdoor_recreation": float (0.0-1.0, outdoor activities and nature access),
+        "cultural_access": float (0.0-1.0, arts, dining, and cultural amenities)
+    }},
+    "life_transition_indicators": {{
+        "career_stage": "entry|growth|peak|transition|retirement",
+        "relationship_status": "single|coupled|married|divorced|widowed",
+        "family_dynamics": "planning|expanding|stable|launching|empty",
+        "financial_trajectory": "building|accumulating|preserving|distributing",
+        "housing_evolution": "upgrading|rightsizing|downsizing|relocating",
+        "health_considerations": "none|planning|active|critical"
+    }},
+    "psychological_motivators": {{
+        "primary_driver": "achievement|security|belonging|autonomy|legacy",
+        "stress_factors": [list of current life stressors affecting housing decisions],
+        "aspiration_themes": [list of future-focused motivations],
+        "fear_factors": [list of concerns or anxieties about housing decisions],
+        "validation_needs": [what they need to feel confident in their choice]
+    }},
+    "investment_psychology_profile": {{
+        "investment_sophistication": "beginner|intermediate|advanced|expert",
+        "risk_appetite": "conservative|balanced|growth|aggressive",
+        "time_horizon": "short_term|medium_term|long_term|generational",
+        "portfolio_role": "primary_residence|investment_property|mixed_use|diversification",
+        "market_timing_beliefs": "timing_important|time_in_market|value_focused|opportunity_driven"
+    }},
+    "neighborhood_compatibility_factors": {{
+        "demographic_preferences": "diverse|similar_age|similar_income|similar_lifestyle",
+        "social_interaction_level": "private|selective|social|community_leader",
+        "political_alignment": "progressive|moderate|conservative|apolitical",
+        "lifestyle_pace": "urban_energy|suburban_balance|rural_tranquility",
+        "change_tolerance": "loves_new_development|accepts_growth|prefers_established|resists_change"
     }},
     "hidden_desires": [list of unstated wants and aspirations],
     "future_planning": {{
         "family_growth": "planning|stable|downsizing",
         "career_trajectory": "advancing|stable|retiring",
         "financial_goals": "wealth_building|stability|preservation",
-        "lifestyle_evolution": "upgrading|maintaining|simplifying"
+        "lifestyle_evolution": "upgrading|maintaining|simplifying",
+        "geographic_flexibility": "location_bound|willing_to_relocate|actively_seeking_change",
+        "housing_permanence": "temporary|medium_term|long_term|forever_home"
     }},
-    "decision_style": "thorough|quick|collaborative|delegated",
-    "communication_preferences": "data_driven|story_focused|visual|social_proof",
-    "risk_tolerance": "conservative|moderate|aggressive",
-    "timeline_flexibility": "rigid|moderate|flexible",
-    "budget_sensitivity": "price_focused|value_focused|luxury_focused"
+    "decision_style": "thorough|quick|collaborative|delegated|consensus_driven",
+    "communication_preferences": "data_driven|story_focused|visual|social_proof|experiential",
+    "risk_tolerance": "conservative|moderate|aggressive|calculated_risk_taker",
+    "timeline_flexibility": "rigid|moderate|flexible|opportunity_driven",
+    "budget_sensitivity": "price_focused|value_focused|luxury_focused|investment_focused"
 }}
 
-Look for psychological motivations, life stage indicators, and hidden needs beyond stated preferences.
+IMPORTANT: Analyze each lifestyle dimension carefully. Look for:
+- Explicit preferences and stated needs
+- Implicit psychological motivations and life stage indicators
+- Hidden needs beyond stated preferences
+- Life transition signals and future planning indicators
+- Investment vs personal use psychological separation
+- Neighborhood and community fit factors
+- Long-term lifestyle compatibility considerations
 """
 
     def _build_property_match_prompt(self, property_data: Dict, lead_profile: Dict, lifestyle_profile: LifestyleProfile) -> str:
@@ -485,18 +542,58 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
         return fallback_matches
 
     def _get_fallback_lifestyle_profile(self) -> LifestyleProfile:
-        """Get fallback lifestyle profile."""
+        """Get enhanced fallback lifestyle profile with 16+ dimensions."""
+        enhanced_priorities = {
+            # Core Dimensions (Original 8)
+            "status": 0.4,
+            "convenience": 0.7,
+            "security": 0.6,
+            "investment": 0.5,
+            "family": 0.5,
+            "career": 0.6,
+            "lifestyle": 0.5,
+            "privacy": 0.5,
+
+            # Enhanced Dimensions (16+ New)
+            "social_connectivity": 0.4,
+            "cultural_fit": 0.5,
+            "commute_optimization": 0.6,
+            "future_family_planning": 0.3,
+            "aging_in_place": 0.2,
+            "investment_mindset": 0.4,
+            "environmental_values": 0.3,
+            "technology_integration": 0.5,
+            "health_wellness": 0.4,
+            "work_life_balance": 0.6,
+            "aesthetic_appreciation": 0.4,
+            "community_involvement": 0.3,
+            "educational_priorities": 0.4,
+            "entertainment_hosting": 0.3,
+            "outdoor_recreation": 0.4,
+            "cultural_access": 0.4
+        }
+
+        enhanced_future_planning = {
+            "family_growth": "planning",
+            "career_trajectory": "advancing",
+            "financial_goals": "wealth_building",
+            "lifestyle_evolution": "upgrading",
+            "geographic_flexibility": "willing_to_relocate",
+            "housing_permanence": "medium_term"
+        }
+
         return LifestyleProfile(
             personality_type="analytical",
             life_stage="young_professional",
-            priorities={
-                "convenience": 0.7,
-                "value": 0.8,
-                "security": 0.6,
-                "status": 0.4
-            },
-            hidden_desires=["Status symbol", "Investment growth"],
-            future_planning={"family_growth": "planning", "career_trajectory": "advancing"},
+            priorities=enhanced_priorities,
+            hidden_desires=[
+                "Status symbol property",
+                "Investment growth potential",
+                "Professional image enhancement",
+                "Future family accommodation",
+                "Technology-enabled living"
+            ],
+            future_planning=enhanced_future_planning,
             decision_style="thorough"
         )
 

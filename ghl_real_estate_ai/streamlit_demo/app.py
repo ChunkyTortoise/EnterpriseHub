@@ -17,6 +17,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import datetime
+import asyncio
 from pathlib import Path
 
 # Error Boundary Decorator for production stability
@@ -94,8 +95,18 @@ try:
     from services.churn_integration_service import ChurnIntegrationService
     from services.claude_assistant import ClaudeAssistant
     
-    # Initialize Claude Assistant
+    # Initialize Claude Assistant and Platform Companion
     claude = ClaudeAssistant()
+
+    # Import Claude Platform Companion
+    try:
+        from services.claude_platform_companion import get_claude_platform_companion
+        claude_companion = get_claude_platform_companion()
+        CLAUDE_COMPANION_AVAILABLE = True
+    except ImportError as e:
+        print(f"Claude Platform Companion not available: {e}")
+        CLAUDE_COMPANION_AVAILABLE = False
+        claude_companion = None
         # Enhanced services imports (from parent directory)
     try:
         from services.enhanced_lead_scorer import EnhancedLeadScorer
@@ -747,6 +758,60 @@ if 'current_hub' in st.session_state:
 
 render_global_header(current_tenant)
 
+# 🧠 CLAUDE PLATFORM GREETING SYSTEM
+# Initialize Claude Platform Companion and provide personalized greeting
+if CLAUDE_COMPANION_AVAILABLE and claude_companion:
+    # Initialize session greeting state
+    if 'claude_greeting_shown' not in st.session_state:
+        st.session_state.claude_greeting_shown = False
+        st.session_state.claude_session_initialized = False
+
+    # Show greeting on first load or when explicitly requested
+    if not st.session_state.claude_greeting_shown or st.session_state.get('show_claude_greeting', False):
+        with st.spinner("🧠 Claude is personalizing your experience..."):
+            try:
+                # Determine current user and market context
+                user_name = "Jorge"  # Could be dynamic based on auth
+                current_market = st.session_state.get('selected_market', 'Austin')
+
+                # Initialize Claude session with personalized greeting
+                if not st.session_state.claude_session_initialized:
+                    # Use asyncio for Claude session initialization
+                    try:
+                        loop = asyncio.get_event_loop()
+                    except RuntimeError:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+
+                    greeting = loop.run_until_complete(
+                        claude_companion.initialize_session(user_name, current_market)
+                    )
+
+                    # Store greeting in session state
+                    st.session_state.claude_greeting = greeting
+                    st.session_state.claude_session_initialized = True
+                else:
+                    # Use cached greeting
+                    greeting = st.session_state.get('claude_greeting')
+
+                # Render Claude's personalized platform greeting
+                if greeting:
+                    claude_companion.render_platform_greeting(greeting)
+
+                # Mark greeting as shown
+                st.session_state.claude_greeting_shown = True
+                st.session_state.show_claude_greeting = False
+
+            except Exception as e:
+                st.error(f"Claude greeting temporarily unavailable: {str(e)}")
+                st.info("🚀 Welcome to your Enhanced Real Estate AI Platform! All systems ready.")
+
+    # Add Claude companion to sidebar
+    if 'show_claude_sidebar' not in st.session_state:
+        st.session_state.show_claude_sidebar = True
+
+    if st.session_state.show_claude_sidebar and st.session_state.claude_session_initialized:
+        claude_companion.render_contextual_sidebar()
 
 # Initialize session state for hub navigation
 if 'current_hub' not in st.session_state:
@@ -798,7 +863,41 @@ with st.sidebar:
         label_visibility="collapsed"
     )
     
-    st.session_state.current_hub = selected_hub
+    # Update session state and notify Claude of context change
+    if st.session_state.current_hub != selected_hub:
+        st.session_state.current_hub = selected_hub
+
+        # Update Claude's context awareness
+        if CLAUDE_COMPANION_AVAILABLE and claude_companion and st.session_state.get('claude_session_initialized', False):
+            try:
+                # Update Claude's context with new hub selection
+                hub_context = {
+                    "hub_name": selected_hub,
+                    "user_action": "navigation",
+                    "timestamp": datetime.datetime.now().isoformat()
+                }
+
+                # Run async context update
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+
+                # Update context and get any relevant insights
+                contextual_insight = loop.run_until_complete(
+                    claude_companion.update_context(selected_hub.lower().replace(" ", "_"), hub_context)
+                )
+
+                # Store any insights for display
+                if contextual_insight:
+                    st.session_state.claude_contextual_insight = contextual_insight
+
+            except Exception as e:
+                # Silently handle context update failures
+                pass
+    else:
+        st.session_state.current_hub = selected_hub
     
     # NEW: Global AI Pulse Indicator
     st.markdown(f"""
@@ -1561,6 +1660,69 @@ def render_enhanced_property_search():
                 st.markdown("---")
 
 # Seller Component Functions
+
+# Display Claude Contextual Insights if available
+if CLAUDE_COMPANION_AVAILABLE and 'claude_contextual_insight' in st.session_state:
+    insight = st.session_state.claude_contextual_insight
+    if insight:
+        insight_color = {
+            "opportunity": "success",
+            "warning": "warning",
+            "suggestion": "info",
+            "achievement": "success"
+        }.get(insight.insight_type, "info")
+
+        with st.container():
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                        padding: 1rem; border-radius: 10px; margin: 1rem 0;
+                        border-left: 4px solid #3b82f6;'>
+                <div style='display: flex; align-items: center; margin-bottom: 0.5rem;'>
+                    <span style='font-size: 1.2rem; margin-right: 0.5rem;'>🧠</span>
+                    <strong>{insight.title}</strong>
+                    <span style='margin-left: auto; font-size: 0.8rem; color: #6b7280;'>
+                        Claude • {insight.priority.upper()}
+                    </span>
+                </div>
+                <p style='margin: 0.5rem 0; color: #374151;'>{insight.description}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Show action items
+            if insight.action_items:
+                for action in insight.action_items[:2]:  # Show top 2 actions
+                    st.markdown(f"• {action}")
+
+        # Clear insight after displaying
+        del st.session_state.claude_contextual_insight
+
+# Add Claude Controls Section
+if CLAUDE_COMPANION_AVAILABLE:
+    with st.expander("🧠 Claude Platform Controls", expanded=False):
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            if st.button("🔄 Reset Claude Greeting", help="Show Claude's personalized greeting again"):
+                st.session_state.claude_greeting_shown = False
+                st.session_state.show_claude_greeting = True
+                st.rerun()
+
+        with col2:
+            sidebar_toggle = st.checkbox(
+                "Show Claude Sidebar",
+                value=st.session_state.get('show_claude_sidebar', True),
+                help="Toggle Claude's contextual sidebar companion"
+            )
+            st.session_state.show_claude_sidebar = sidebar_toggle
+
+        with col3:
+            if st.button("📊 Get Context Summary", help="Get Claude's analysis of current session"):
+                if st.session_state.get('claude_session_initialized', False):
+                    st.info("🧠 **Claude Context Summary:**\n\n" +
+                           f"• Current Hub: {st.session_state.current_hub}\n" +
+                           f"• Session Duration: {(datetime.datetime.now() - st.session_state.get('session_start', datetime.datetime.now())).seconds // 60} minutes\n" +
+                           f"• Active Market: {st.session_state.get('selected_market', 'Austin')}\n" +
+                           "• Claude is context-aware and ready to assist")
 
 render_claude_assistant(claude)
 
