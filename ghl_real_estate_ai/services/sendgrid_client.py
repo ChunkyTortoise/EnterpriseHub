@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
 from aiohttp import ClientTimeout
+from fastapi import HTTPException, Request
 from pydantic import BaseModel, validator
 import sendgrid
 from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment, FileContent, FileName, FileType
@@ -27,6 +28,7 @@ from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.database_service import DatabaseService, log_communication
+from ghl_real_estate_ai.services.security_framework import SecurityFramework
 
 logger = get_logger(__name__)
 
@@ -726,8 +728,18 @@ class SendGridClient:
     # Webhook Processing
     # ============================================================================
     
-    async def process_event_webhook(self, events: List[Dict[str, Any]]) -> bool:
-        """Process SendGrid event webhook."""
+    async def process_event_webhook(self, request: Request, events: List[Dict[str, Any]]) -> bool:
+        """Process SendGrid event webhook with signature verification."""
+        # Step 1: Verify webhook signature BEFORE processing
+        security = SecurityFramework()
+        try:
+            if not await security.verify_webhook_signature(request, "sendgrid"):
+                logger.error("Invalid SendGrid event webhook signature")
+                raise HTTPException(401, "Invalid signature")
+        finally:
+            await security.close_redis()
+
+        # Step 2: Continue with existing logic
         try:
             for event in events:
                 event_type = event.get("event")
@@ -816,7 +828,7 @@ class SendGridClient:
             
         except Exception as e:
             logger.error(f"Failed to process event webhook: {e}")
-            return False
+            raise  # Re-raise to propagate error to caller
     
     # ============================================================================
     # Analytics & Reporting

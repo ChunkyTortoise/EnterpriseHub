@@ -653,3 +653,9 @@ def get_available_providers() -> Dict[str, bool]:
     providers["claude"] = bool(settings.anthropic_api_key and settings.anthropic_api_key.startswith("sk-ant-"))
     providers["perplexity"] = bool(settings.perplexity_api_key)
     return providers
+
+
+def get_llm_client() -> LLMClient:
+    """Get a default LLM client instance."""
+    # TODO: Implement proper singleton or factory pattern
+    return LLMClient(provider=LLMProvider.CLAUDE)

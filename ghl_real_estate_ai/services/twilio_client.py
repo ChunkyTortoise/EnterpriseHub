@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
 from aiohttp import ClientTimeout, BasicAuth
+from fastapi import HTTPException, Request
 from pydantic import BaseModel, validator
 from twilio.rest import Client as TwilioSyncClient
 from twilio.base.exceptions import TwilioRestException
@@ -26,6 +27,7 @@ from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.database_service import DatabaseService, log_communication
+from ghl_real_estate_ai.services.security_framework import SecurityFramework
 
 logger = get_logger(__name__)
 
@@ -521,8 +523,18 @@ class TwilioClient:
     # Webhook Processing
     # ============================================================================
     
-    async def process_status_webhook(self, webhook_data: Dict[str, Any]) -> bool:
-        """Process Twilio status webhook."""
+    async def process_status_webhook(self, request: Request, webhook_data: Dict[str, Any]) -> bool:
+        """Process Twilio status webhook with signature verification."""
+        # Step 1: Verify webhook signature BEFORE processing
+        security = SecurityFramework()
+        try:
+            if not await security.verify_webhook_signature(request, "twilio"):
+                logger.error("Invalid Twilio status webhook signature")
+                raise HTTPException(401, "Invalid signature")
+        finally:
+            await security.close_redis()
+
+        # Step 2: Continue with existing logic
         try:
             message_sid = webhook_data.get("MessageSid")
             message_status = webhook_data.get("MessageStatus")
@@ -579,10 +591,20 @@ class TwilioClient:
             
         except Exception as e:
             logger.error(f"Failed to process status webhook: {e}")
-            return False
+            raise  # Re-raise to propagate error to caller
     
-    async def process_incoming_webhook(self, webhook_data: Dict[str, Any]) -> bool:
-        """Process incoming SMS webhook."""
+    async def process_incoming_webhook(self, request: Request, webhook_data: Dict[str, Any]) -> bool:
+        """Process incoming SMS webhook with signature verification."""
+        # Step 1: Verify webhook signature BEFORE processing
+        security = SecurityFramework()
+        try:
+            if not await security.verify_webhook_signature(request, "twilio"):
+                logger.error("Invalid Twilio incoming webhook signature")
+                raise HTTPException(401, "Invalid signature")
+        finally:
+            await security.close_redis()
+
+        # Step 2: Continue with existing logic
         try:
             from_number = webhook_data.get("From")
             to_number = webhook_data.get("To")

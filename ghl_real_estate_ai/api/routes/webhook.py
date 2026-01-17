@@ -14,7 +14,7 @@ Flow:
 8. Send response back to GHL
 """
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 
 from ghl_real_estate_ai.api.schemas.ghl import (
     ActionType,
@@ -29,6 +29,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
+from ghl_real_estate_ai.services.security_framework import verify_webhook
 from ghl_real_estate_ai.services.tenant_service import TenantService
 
 logger = get_logger(__name__)
@@ -43,7 +44,8 @@ analytics_service = AnalyticsService()
 
 
 @router.post("/webhook", response_model=GHLWebhookResponse)
-async def handle_ghl_webhook(event: GHLWebhookEvent, background_tasks: BackgroundTasks):
+@verify_webhook("ghl")
+async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, background_tasks: BackgroundTasks):
     """
     Handle incoming webhook from GoHighLevel.
 
@@ -232,12 +234,15 @@ async def handle_ghl_webhook(event: GHLWebhookEvent, background_tasks: Backgroun
             exc_info=True,
         )
 
-        # Return error response (but don't fail the webhook)
-        return GHLWebhookResponse(
-            success=False,
-            message="Sorry, I'm experiencing a technical issue. A team member will follow up with you shortly!",
-            actions=[],
-            error=str(e),
+        # Raise HTTP 500 to trigger GHL retry mechanism
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "message": "Sorry, I'm experiencing a technical issue. A team member will follow up with you shortly!",
+                "contact_id": contact_id,
+                "error": "Internal webhook processing error"
+            }
         )
 
 
