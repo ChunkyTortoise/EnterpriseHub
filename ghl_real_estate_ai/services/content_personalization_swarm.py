@@ -31,6 +31,7 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
+from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
 
@@ -860,31 +861,34 @@ class ContentPersonalizationSwarm:
             return recommendation.confidence * 100
 
     async def _get_lead_data(self, lead_id: str) -> Dict[str, Any]:
-        """Get lead data for personalization (placeholder implementation)."""
-        # TODO: Implement database query for lead data
-        return {
-            'demographics': {
-                'age_range': '30-45',
-                'income_level': 'middle',
-                'family_status': 'married_with_children',
-                'location_preference': 'suburban'
-            },
-            'behavioral_profile': {
-                'activity_level': 'high',
-                'preferred_contact_time': 'evening',
-                'engagement_style': 'detailed_oriented'
-            },
-            'sentiment_profile': {
-                'current_mood': 'optimistic',
-                'confidence': 'moderate',
-                'urgency_level': 'medium'
-            },
-            'interaction_history': [
-                {'type': 'email_open', 'timestamp': '2026-01-16T10:00:00'},
-                {'type': 'link_click', 'timestamp': '2026-01-16T10:05:00'},
-                {'type': 'property_view', 'timestamp': '2026-01-16T10:10:00'}
-            ]
-        }
+        """Get lead data for personalization from database."""
+        try:
+            db = await get_database()
+            return await db.get_personalization_lead_data(lead_id)
+        except Exception as e:
+            logger.error(f"Error getting lead data for personalization: {e}")
+            # Return fallback data if database fails
+            return {
+                'lead_profile': {
+                    'name': 'Unknown Lead',
+                    'email': '',
+                    'company': '',
+                    'preferences': {},
+                    'tags': []
+                },
+                'behavioral_data': {},
+                'intelligence_data': {},
+                'scores': {
+                    'overall': 0,
+                    'behavior': 0,
+                    'intent': 0,
+                    'engagement': 0
+                },
+                'recent_communications': [],
+                'source': 'unknown',
+                'status': 'new',
+                'temperature': 'cold'
+            }
 
     def _create_fallback_personalized_content(
         self,

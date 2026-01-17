@@ -19,6 +19,7 @@ import numpy as np
 
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
 
@@ -234,18 +235,12 @@ class BehavioralTriggerEngine:
         Returns:
             List of lead IDs sorted by likelihood (highest first)
         """
-        # In production, this would query the database for leads
-        # with cached scores above threshold
-        # For now, return placeholder implementation
-
-        # TODO: Implement database query
-        # Example query:
-        # SELECT lead_id FROM behavioral_scores
-        # WHERE likelihood_score >= min_likelihood
-        # ORDER BY likelihood_score DESC
-        # LIMIT limit
-
-        return []
+        try:
+            db = await get_database()
+            return await db.get_high_intent_leads(min_score=int(min_likelihood), limit=limit)
+        except Exception as e:
+            logger.error(f"Error getting high intent leads from database: {e}")
+            return []
 
     # Private helper methods
 
