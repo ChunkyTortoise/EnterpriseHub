@@ -298,32 +298,36 @@ class DatabaseConnectionManager:
         try:
             # Get columns from first record
             columns = list(records[0].keys())
-            
+
             # Validate column names (basic validation)
             for col in columns:
                 if not col.replace('_', '').isalnum():
                     raise ValueError(f"Invalid column name: {col}")
-            
+
             # Create placeholders for parameterized query
             placeholders = ', '.join([f'${i+1}' for i in range(len(columns))])
-            
+
             # Use safe identifier quoting
             import asyncpg
             quoted_table = asyncpg.utils._quote_ident(table_name)
             quoted_columns = ', '.join([asyncpg.utils._quote_ident(col) for col in columns])
-            
+
             sql = f"""
                 INSERT INTO {quoted_table} ({quoted_columns})
                 VALUES ({placeholders})
                 ON CONFLICT {conflict_resolution}
             """
-        
-        # Convert records to tuples
-        values = [tuple(record[col] for col in columns) for record in records]
-        
-        async with self.transaction() as conn:
-            result = await conn.executemany(sql, values)
-            return len(values)
+
+            # Convert records to tuples
+            values = [tuple(record[col] for col in columns) for record in records]
+
+            async with self.transaction() as conn:
+                result = await conn.executemany(sql, values)
+                return len(values)
+
+        except Exception as e:
+            logger.error(f"Failed to bulk insert into {table_name}: {e}")
+            raise
     
     async def health_check(self) -> Dict[str, Any]:
         """Comprehensive database health check"""
@@ -482,11 +486,11 @@ class DatabaseConnectionManager:
                 tables_to_optimize = ['leads', 'communication_logs', 'nurture_campaigns', 'lead_campaign_status']
                 
                 for table in tables_to_optimize:
-                try:
-                    # Use safe identifier quoting to prevent SQL injection
-                    import asyncpg
-                    quoted_table = asyncpg.utils._quote_ident(table)
-                    await conn.execute(f"VACUUM ANALYZE {quoted_table}")
+                    try:
+                        # Use safe identifier quoting to prevent SQL injection
+                        import asyncpg
+                        quoted_table = asyncpg.utils._quote_ident(table)
+                        await conn.execute(f"VACUUM ANALYZE {quoted_table}")
                         logger.info(f"Vacuumed and analyzed table: {table}")
                     except Exception as e:
                         logger.warning(f"Failed to optimize table {table}: {e}")
