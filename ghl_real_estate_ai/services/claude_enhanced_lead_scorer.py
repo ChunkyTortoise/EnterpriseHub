@@ -8,7 +8,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
 import json
 
-from services.memory_service import MemoryService
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
 
 @dataclass
@@ -71,12 +71,12 @@ class ClaudeEnhancedLeadScorer:
                  claude_orchestrator: Optional[Any] = None,
                  memory_service: Optional[MemoryService] = None):
         # Local imports to avoid circular dependencies
-        from services.claude_orchestrator import get_claude_orchestrator
-        from services.lead_scorer import LeadScorer
-        from services.predictive_lead_scorer import PredictiveLeadScorer
-        from services.churn_prediction_engine import ChurnPredictionEngine
-        from services.lead_lifecycle import LeadLifecycleTracker
-        from services.behavioral_triggers import BehavioralTriggerEngine
+        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+        from ghl_real_estate_ai.services.lead_scorer import LeadScorer
+        from ghl_real_estate_ai.services.predictive_lead_scorer import PredictiveLeadScorer
+        from ghl_real_estate_ai.services.churn_prediction_engine import ChurnPredictionEngine
+        from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
+        from ghl_real_estate_ai.services.behavioral_triggers import BehavioralTriggerEngine
 
         # Core services
         self.claude = claude_orchestrator or get_claude_orchestrator()
@@ -215,6 +215,9 @@ class ClaudeEnhancedLeadScorer:
             return result
 
         except Exception as e:
+            import traceback
+            error_msg = f"Analysis failed: {str(e)}\n{traceback.format_exc()}"
+            print(f"CRITICAL ERROR in Lead Analysis: {error_msg}")
             self._update_metrics(0, 0, success=False)
 
             # Return error result with minimal data
@@ -271,10 +274,8 @@ class ClaudeEnhancedLeadScorer:
     async def _run_churn_analysis(self, lead_id: str, lead_context: Dict[str, Any]) -> Dict[str, Any]:
         """Run churn risk analysis"""
         try:
-            # Note: This assumes churn predictor is async-compatible
-            result = await asyncio.to_thread(
-                self.churn_predictor.predict_churn_risk, lead_id
-            )
+            # predict_churn_risk is async def
+            result = await self.churn_predictor.predict_churn_risk(lead_id)
             return result
         except Exception as e:
             return {"risk_score_7d": 50, "risk_tier": "medium", "error": str(e)}

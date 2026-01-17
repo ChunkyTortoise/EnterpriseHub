@@ -1,0 +1,384 @@
+{
+  "meta": {
+    "instanceId": "lead-recovery-engine"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-capture",
+        "responseMode": "responseNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "webhook-receiver",
+      "name": "Lead Capture Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "lead-capture-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Lead validation and sanitization\nconst requiredFields = ['email', 'firstName', 'lastName'];\nconst lead = items[0].json;\n\n// Validate required fields\nfor (const field of requiredFields) {\n  if (!lead[field] || lead[field].trim() === '') {\n    throw new Error(`Required field missing: ${field}`);\n  }\n}\n\n// Sanitize and format data\nconst sanitizedLead = {\n  id: require('crypto').randomUUID(),\n  email: lead.email.toLowerCase().trim(),\n  firstName: lead.firstName.trim(),\n  lastName: lead.lastName.trim(),\n  phone: lead.phone ? lead.phone.replace(/\\D/g, '') : null,\n  company: lead.company ? lead.company.trim() : null,\n  source: lead.source || 'website',\n  leadScore: 0,\n  temperature: 'unknown',\n  createdAt: new Date().toISOString(),\n  lastActivity: new Date().toISOString(),\n  status: 'new'\n};\n\n// Basic email validation\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!emailRegex.test(sanitizedLead.email)) {\n  throw new Error('Invalid email format');\n}\n\n// Phone validation (if provided)\nif (sanitizedLead.phone && sanitizedLead.phone.length < 10) {\n  sanitizedLead.phone = null; // Invalid phone, remove it\n}\n\nreturn [{ json: sanitizedLead }];"
+      },
+      "id": "lead-validator",
+      "name": "Lead Validation & Sanitization",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM leads WHERE email = $1 AND created_at > NOW() - INTERVAL '24 hours'",
+        "additionalFields": {
+          "queryParameters": "={{ JSON.stringify([$json.email]) }}"
+        }
+      },
+      "id": "duplicate-check",
+      "name": "Duplicate Check",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [],
+          "dateTime": [],
+          "number": [
+            {
+              "value1": "={{ $json.length }}",
+              "operation": "equal",
+              "value2": 0
+            }
+          ],
+          "string": []
+        }
+      },
+      "id": "is-new-lead",
+      "name": "Is New Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO leads (id, email, first_name, last_name, phone, company, source, lead_score, temperature, created_at, last_activity, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id",
+        "additionalFields": {
+          "queryParameters": "={{ JSON.stringify([$('Lead Validation & Sanitization').item.json.id, $('Lead Validation & Sanitization').item.json.email, $('Lead Validation & Sanitization').item.json.firstName, $('Lead Validation & Sanitization').item.json.lastName, $('Lead Validation & Sanitization').item.json.phone, $('Lead Validation & Sanitization').item.json.company, $('Lead Validation & Sanitization').item.json.source, $('Lead Validation & Sanitization').item.json.leadScore, $('Lead Validation & Sanitization').item.json.temperature, $('Lead Validation & Sanitization').item.json.createdAt, $('Lead Validation & Sanitization').item.json.lastActivity, $('Lead Validation & Sanitization').item.json.status]) }}"
+        }
+      },
+      "id": "create-lead-record",
+      "name": "Create Lead Record",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fromNumber": "={{ $env.TWILIO_PHONE_NUMBER }}",
+        "toNumber": "={{ $('Lead Validation & Sanitization').item.json.phone }}",
+        "message": "Hi {{ $('Lead Validation & Sanitization').item.json.firstName }}! 👋 Thanks for your interest in {{ $env.COMPANY_NAME }}. We've received your information and will be in touch within 30 minutes with properties that match your needs. - Your Real Estate Team",
+        "additionalFields": {}
+      },
+      "id": "send-sms",
+      "name": "Send Welcome SMS",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.FROM_EMAIL }}",
+        "toEmail": "={{ $('Lead Validation & Sanitization').item.json.email }}",
+        "subject": "Welcome {{ $('Lead Validation & Sanitization').item.json.firstName }}! Your Property Search Starts Now 🏠",
+        "emailType": "html",
+        "message": "<!DOCTYPE html>\\n<html>\\n<head>\\n    <meta charset=\\\"utf-8\\\">\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\">\\n    <title>Welcome to {{ $env.COMPANY_NAME }}</title>\\n</head>\\n<body style=\\\"font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f4f4f4;\\\">\\n    <div style=\\\"max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);\\\">\\n        \\n        <div style=\\\"text-align: center; margin-bottom: 30px;\\\">\\n            <h1 style=\\\"color: #2c5aa0; margin-bottom: 10px;\\\">Welcome {{ $('Lead Validation & Sanitization').item.json.firstName }}!</h1>\\n            <p style=\\\"color: #666; font-size: 18px; margin: 0;\\\">Your property search starts now 🏠</p>\\n        </div>\\n        \\n        <div style=\\\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;\\\">\\n            <h3 style=\\\"color: #2c5aa0; margin-top: 0;\\\">What happens next?</h3>\\n            <ol style=\\\"color: #333; margin: 0;\\\">\\n                <li style=\\\"margin-bottom: 10px;\\\"><strong>Right now:</strong> We're researching properties that match your criteria</li>\\n                <li style=\\\"margin-bottom: 10px;\\\"><strong>Within 30 minutes:</strong> You'll receive a personalized property list</li>\\n                <li style=\\\"margin-bottom: 10px;\\\"><strong>Within 4 hours:</strong> One of our expert agents will call to discuss your needs</li>\\n            </ol>\\n        </div>\\n        \\n        <div style=\\\"text-align: center; margin: 30px 0;\\\">\\n            <a href=\\\"{{ $env.CALENDLY_BOOKING_URL }}\\\" style=\\\"background-color: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;\\\">\\n                📅 Schedule a Call Now\\n            </a>\\n            <p style=\\\"color: #666; font-size: 14px; margin-top: 10px;\\\">Or wait for us to call you - no pressure!</p>\\n        </div>\\n        \\n        <div style=\\\"border-top: 1px solid #eee; padding-top: 20px; text-align: center;\\\">\\n            <p style=\\\"color: #666; font-size: 14px; margin: 0;\\\">\\n                Questions? Reply to this email or call us at {{ $env.COMPANY_PHONE }}\\n            </p>\\n            <p style=\\\"color: #666; font-size: 12px; margin: 10px 0 0 0;\\\">\\n                {{ $env.COMPANY_NAME }} • {{ $env.COMPANY_ADDRESS }}\\n            </p>\\n        </div>\\n        \\n    </div>\\n</body>\\n</html>",
+        "additionalFields": {}
+      },
+      "id": "send-email",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.GHL_API_BASE_URL }}/contacts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghlApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.ghlApi.accessToken }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "firstName",
+              "value": "={{ $('Lead Validation & Sanitization').item.json.firstName }}"
+            },
+            {
+              "name": "lastName",
+              "value": "={{ $('Lead Validation & Sanitization').item.json.lastName }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $('Lead Validation & Sanitization').item.json.email }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $('Lead Validation & Sanitization').item.json.phone }}"
+            },
+            {
+              "name": "companyName",
+              "value": "={{ $('Lead Validation & Sanitization').item.json.company }}"
+            },
+            {
+              "name": "source",
+              "value": "={{ $('Lead Validation & Sanitization').item.json.source }}"
+            },
+            {
+              "name": "tags",
+              "value": "[\"new-lead\", \"automation-generated\"]"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "sync-to-ghl",
+      "name": "Sync to GoHighLevel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\\n  \"text\": \"🚨 New Lead Alert!\",\\n  \"blocks\": [\\n    {\\n      \"type\": \"section\",\\n      \"text\": {\\n        \"type\": \"mrkdwn\",\\n        \"text\": \"*New Lead Received* 🎯\\n\\n*Name:* {{ $('Lead Validation & Sanitization').item.json.firstName }} {{ $('Lead Validation & Sanitization').item.json.lastName }}\\n*Email:* {{ $('Lead Validation & Sanitization').item.json.email }}\\n*Phone:* {{ $('Lead Validation & Sanitization').item.json.phone || 'Not provided' }}\\n*Company:* {{ $('Lead Validation & Sanitization').item.json.company || 'Not provided' }}\\n*Source:* {{ $('Lead Validation & Sanitization').item.json.source }}\\n*Time:* {{ new Date().toLocaleString() }}\"\\n      }\\n    },\\n    {\\n      \"type\": \"actions\",\\n      \"elements\": [\\n        {\\n          \"type\": \"button\",\\n          \"text\": {\\n            \"type\": \"plain_text\",\\n            \"text\": \"View in CRM\"\\n          },\\n          \"url\": \"{{ $env.GHL_CONTACT_URL }}/{{ $('Sync to GoHighLevel').item.json.id }}\"\\n        }\\n      ]\\n    }\\n  ]\\n}",
+        "options": {}
+      },
+      "id": "slack-notification",
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.WEBHOOK_TRIGGER_URL }}/lead-intelligence",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Lead Validation & Sanitization').item.json) }}",
+        "options": {}
+      },
+      "id": "trigger-intelligence",
+      "name": "Trigger Lead Intelligence",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\\n  \"success\": true,\\n  \"leadId\": \"{{ $('Create Lead Record').item.json.id }}\",\\n  \"message\": \"Lead processed successfully\",\\n  \"responseTime\": \"{{ Date.now() - parseInt($('Lead Capture Webhook').item.json.timestamp) }}ms\",\\n  \"actions\": [\\n    \"SMS sent\",\\n    \"Email sent\", \\n    \"CRM updated\",\\n    \"Intelligence triggered\"\\n  ]\\n}"
+      },
+      "id": "webhook-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\\n  \"success\": false,\\n  \"message\": \"Duplicate lead detected\",\\n  \"leadId\": \"{{ $json[0].id }}\",\\n  \"note\": \"Lead already processed within 24 hours\"\\n}"
+      },
+      "id": "duplicate-response",
+      "name": "Duplicate Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Lead Capture Webhook": {
+      "main": [
+        [
+          {
+            "node": "Lead Validation & Sanitization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Validation & Sanitization": {
+      "main": [
+        [
+          {
+            "node": "Duplicate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate Check": {
+      "main": [
+        [
+          {
+            "node": "Is New Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is New Lead?": {
+      "main": [
+        [
+          {
+            "node": "Create Lead Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Duplicate Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Lead Record": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome SMS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Welcome Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sync to GoHighLevel",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync to GoHighLevel": {
+      "main": [
+        [
+          {
+            "node": "Trigger Lead Intelligence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Lead Intelligence": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-01-16T00:00:00.000Z",
+  "id": "instant-lead-response-workflow",
+  "name": "Instant Lead Response Engine",
+  "active": true,
+  "settings": {
+    "timezone": "America/Los_Angeles",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "error-handler-workflow"
+  },
+  "tags": [
+    {
+      "id": "service-6",
+      "name": "Service 6"
+    },
+    {
+      "id": "lead-automation",
+      "name": "Lead Automation"
+    },
+    {
+      "id": "instant-response",
+      "name": "Instant Response"
+    }
+  ],
+  "versionId": "1"
+}

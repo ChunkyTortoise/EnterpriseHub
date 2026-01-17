@@ -1,0 +1,84 @@
+{
+  "content": {
+    "timestamp": "2026-01-14T19:40:53.255783",
+    "factor_scores": {
+      "intent_level": 0.7,
+      "financial_readiness": 0.0,
+      "timeline_urgency": 0.5,
+      "emotional_investment": 0.5,
+      "decision_authority": 0.5,
+      "market_knowledge": 0.8200000000000001,
+      "property_urgency": 0.3,
+      "referral_likelihood": 0.7899999999999999,
+      "communication_preference": 0.8200000000000001,
+      "negotiation_style": 0.7899999999999999,
+      "research_depth": 0.8200000000000001,
+      "price_anchoring": 0.85,
+      "location_flexibility": 0.8200000000000001,
+      "financing_sophistication": 0.7899999999999999,
+      "renovation_readiness": 0.8200000000000001,
+      "investment_mindset": 0.8200000000000001,
+      "lifestyle_alignment": 0.0,
+      "trust_building": 0.7899999999999999,
+      "objection_handling": 1.0,
+      "follow_through": 0.8200000000000001,
+      "competitive_awareness": 0.85,
+      "social_influence": 0.6,
+      "stress_tolerance": 0.7899999999999999,
+      "technology_comfort": 0.8200000000000001,
+      "local_market_fit": 0.8200000000000001
+    },
+    "factor_weights": {
+      "intent_level": 0.11214953271028036,
+      "financial_readiness": 0.11214953271028036,
+      "timeline_urgency": 0.09345794392523364,
+      "emotional_investment": 0.07476635514018691,
+      "decision_authority": 0.07476635514018691,
+      "market_knowledge": 0.05607476635514018,
+      "property_urgency": 0.05607476635514018,
+      "referral_likelihood": 0.04672897196261682,
+      "communication_preference": 0.037383177570093455,
+      "negotiation_style": 0.037383177570093455,
+      "research_depth": 0.037383177570093455,
+      "price_anchoring": 0.02803738317757009,
+      "location_flexibility": 0.02803738317757009,
+      "financing_sophistication": 0.02803738317757009,
+      "renovation_readiness": 0.02803738317757009,
+      "investment_mindset": 0.018691588785046728,
+      "lifestyle_alignment": 0.018691588785046728,
+      "trust_building": 0.018691588785046728,
+      "objection_handling": 0.018691588785046728,
+      "follow_through": 0.018691588785046728,
+      "competitive_awareness": 0.018691588785046728,
+      "social_influence": 0.009345794392523364,
+      "stress_tolerance": 0.009345794392523364,
+      "technology_comfort": 0.009345794392523364,
+      "local_market_fit": 0.009345794392523364
+    },
+    "final_qualification_score": 0.5908411214953271,
+    "top_contributing_factors": [
+      [
+        "intent_level",
+        0.07850467289719625
+      ],
+      [
+        "timeline_urgency",
+        0.04672897196261682
+      ],
+      [
+        "market_knowledge",
+        0.04598130841121495
+      ],
+      [
+        "emotional_investment",
+        0.037383177570093455
+      ],
+      [
+        "decision_authority",
+        0.037383177570093455
+      ]
+    ]
+  },
+  "stored_at": "2026-01-15T03:40:53.256010",
+  "expires_at": "2026-01-22T03:40:53.256015"
+}

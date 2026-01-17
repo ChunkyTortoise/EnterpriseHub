@@ -35,6 +35,7 @@ ta==0.11.0
 # AI & NLP
 # ==============================================================================
 anthropic==0.18.1  # Claude API for content generation
+google-generativeai>=0.8.0  # Gemini AI Studio support
 textblob==0.17.1
 langgraph>=0.0.10
 langchain-core>=0.1.0
@@ -64,3 +65,12 @@ PyGithub>=2.1.1 # GitHub API interactions
 qrcode[pil]>=7.4.2
 fastmcp
 graphiti-core>=0.5.0
+redis>=5.0.0
+
+# ==============================================================================
+# Visual Regression Testing & Accessibility
+# ==============================================================================
+pytest-playwright>=0.4.4  # Playwright integration for pytest
+playwright>=1.40.0  # Browser automation for visual testing
+axe-playwright>=0.1.5  # Accessibility testing with axe-core
+pixelmatch>=0.3.0  # Pixel-level image comparison

@@ -10,8 +10,51 @@ import pandas as pd
 import json
 import time
 import plotly.express as px
+import plotly.graph_objects as go
 from datetime import datetime
 from typing import Dict, List, Any, Optional
+
+def sparkline(data: list, color: str = "#6366F1", height: int = 50):
+    """Generates a minimal high-fidelity sparkline chart with a neural glow effect."""
+    if not data:
+        data = [0, 0]
+    # Convert hex color to rgba for Plotly compatibility
+    hex_c = color.lstrip('#')
+    r, g, b = int(hex_c[0:2], 16), int(hex_c[2:4], 16), int(hex_c[4:6], 16)
+    fill_rgba = f"rgba({r}, {g}, {b}, 0.1)"
+    glow_rgba = f"rgba({r}, {g}, {b}, 0.4)"
+
+    fig = go.Figure()
+    
+    # Outer Glow
+    fig.add_trace(go.Scatter(
+        y=data,
+        mode='lines',
+        line=dict(color=glow_rgba, width=5),
+        hoverinfo='skip',
+        opacity=0.3
+    ))
+    
+    # Main Core Line
+    fig.add_trace(go.Scatter(
+        y=data,
+        mode='lines',
+        fill='tozeroy',
+        line=dict(color=color, width=2.5),
+        fillcolor=fill_rgba,
+        hoverinfo='skip'
+    ))
+    
+    fig.update_layout(
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=0, t=5, b=0),
+        height=height,
+        xaxis=dict(visible=False, fixedrange=True),
+        yaxis=dict(visible=False, fixedrange=True, range=[min(data)*0.9 if min(data) != 0 else -0.1, max(data)*1.1 if max(data) != 0 else 0.1])
+    )
+    return fig
 
 # Absolute imports
 try:
@@ -19,8 +62,11 @@ try:
     from ghl_real_estate_ai.streamlit_demo.components.ai_behavioral_tuning import render_behavioral_tuning_panel, get_behavior_config
     from ghl_real_estate_ai.services.workflow_marketplace import WorkflowMarketplaceService
     from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+    from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 except ImportError:
     st.error("🚨 Critical Error: Required services for Automation Studio not found.")
+
+analytics_service = AnalyticsService()
 
 class AutomationStudioHub:
     """Enterprise Automation & AI Lab Hub"""
@@ -35,15 +81,29 @@ class AutomationStudioHub:
         self.success_color = "#10b981"
 
     def render_hub(self):
-        """Render the complete Automation Studio interface"""
-        st.header("🤖 Automation Studio")
-        st.markdown("*Autonomous Workflow Switchboard & AI Persona Lab*")
+        """Render the overhauled complete Automation Studio interface - Obsidian Command Edition"""
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart, render_dossier_block
+        
+        st.markdown("""
+            <div style="background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(20px); padding: 1.5rem 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);">
+                <div>
+                    <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; margin: 0; color: #FFFFFF; letter-spacing: -0.04em; text-transform: uppercase;">🤖 AUTOMATION STUDIO</h1>
+                    <p style="font-family: 'Inter', sans-serif; font-size: 1rem; margin: 0.5rem 0 0 0; color: #8B949E; font-weight: 500; letter-spacing: 0.02em;">Autonomous Workflow Switchboard & AI Persona Lab</p>
+                </div>
+                <div style="text-align: right;">
+                    <div style="background: rgba(99, 102, 241, 0.1); color: #6366F1; padding: 10px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; border: 1px solid rgba(99, 102, 241, 0.3); letter-spacing: 0.1em; display: flex; align-items: center; gap: 10px;">
+                        <div class="status-pulse" style="width: 10px; height: 10px; background: #6366F1; border-radius: 50%;"></div>
+                        AI ENGINE: OPTIMIZED
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
 
         # Top Bar: Global Automation Stats
         self._render_automation_stats()
 
         tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "⚙️ Automation Control",
+            "🖥️ Automation Control",
             "🎭 Persona Lab",
             "🎨 Visual Designer", 
             "🧠 Neural Triggers",
@@ -66,13 +126,17 @@ class AutomationStudioHub:
             self._render_marketplace()
 
     def _render_automation_control(self):
-        """Core AI Automation toggles and GHL Sync Log"""
-        st.subheader("AI Automation Control Panel")
+        """Core AI Automation toggles and GHL Sync Log - Obsidian Edition"""
+        st.subheader("🖥️ AI COMMAND DECK")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### 🤖 Core AI Agents")
+            st.markdown("""
+                <div style="background: rgba(22, 27, 34, 0.6); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem;">
+                    <h4 style="margin: 0; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif; font-size: 1rem;">🤖 CORE AI AGENTS</h4>
+                </div>
+            """, unsafe_allow_html=True)
             
             ai_assistant = st.toggle("AI Qualifier (Phase 1)", value=True)
             if ai_assistant:
@@ -85,14 +149,18 @@ class AutomationStudioHub:
             buyer_portal = st.toggle("Buyer Portal Sync (Phase 3)", value=True)
             
         with col2:
-            st.markdown("#### ⚡ Follow-Up Triggers")
+            st.markdown("""
+                <div style="background: rgba(22, 27, 34, 0.6); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem;">
+                    <h4 style="margin: 0; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif; font-size: 1rem;">⚡ NEURAL TRIGGERS</h4>
+                </div>
+            """, unsafe_allow_html=True)
             
             st.toggle("New Listing SMS Alerts", value=True)
             st.toggle("Price Drop Re-engagement", value=True)
             st.toggle("30-Day 'Cold Lead' Revive", value=False)
             
             st.markdown("---")
-            if st.button("🔍 Scan for Silent Leads (24h+)", use_container_width=True):
+            if st.button("🔍 Scan for Silent Nodes (24h+)", use_container_width=True):
                 with st.spinner("Scanning GHL logs for silent leads..."):
                     time.sleep(1.0)
                     st.info("No silent leads requiring immediate intervention.")
@@ -108,33 +176,51 @@ class AutomationStudioHub:
         ]
         
         for log in log_events:
-            status_color = "#10B981" if log["status"] == "Synced" else "#3B82F6"
+            status_color = "#10B981" if log["status"] == "Synced" else "#6366F1"
             st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 15px; padding: 12px; background: white; border-radius: 10px; margin-bottom: 8px; border: 1px solid #f1f5f9;">
-                <div style="font-size: 0.75rem; color: #64748b; min-width: 70px;">{log['time']}</div>
+            <div style="display: flex; align-items: center; gap: 15px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 10px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s ease;">
+                <div style="font-size: 0.75rem; color: #8B949E; min-width: 75px; font-family: 'Space Grotesk', sans-serif; font-weight: 600;">{log['time']}</div>
                 <div style="flex: 1;">
-                    <div style="font-weight: 600; font-size: 0.85rem; color: #1e293b;">{log['event']}</div>
-                    <div style="font-size: 0.75rem; color: #64748b;">{log['detail']}</div>
+                    <div style="font-weight: 700; font-size: 0.9rem; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.02em;">{log['event'].upper()}</div>
+                    <div style="font-size: 0.8rem; color: #8B949E; font-family: 'Inter', sans-serif;">{log['detail']}</div>
                 </div>
-                <div style="font-family: monospace; font-size: 0.7rem; background: #f8fafc; padding: 2px 6px; border-radius: 4px; color: #475569;">{log['field']}</div>
-                <div style="background: {status_color}; color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">{log['status']}</div>
+                <div style="font-family: monospace; font-size: 0.7rem; background: rgba(99, 102, 241, 0.1); padding: 4px 8px; border-radius: 4px; color: #6366F1; border: 1px solid rgba(99, 102, 241, 0.2);">{log['field']}</div>
+                <div style="background: {status_color}20; color: {status_color}; padding: 4px 12px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; border: 1px solid {status_color}40; letter-spacing: 0.05em;">{log['status']}</div>
             </div>
             """, unsafe_allow_html=True)
 
     def _render_automation_stats(self):
-        """Render high-level automation health"""
+        """Render high-fidelity automation telemetry"""
+        # Fetch real ROI data
+        summary = run_async(analytics_service.get_daily_summary("demo_location"))
+        usage = summary.get("llm_usage", {})
+        saved_cost = usage.get("saved_cost", 0.0)
+        
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Active Workflows", "24", delta="+3")
+            st.metric("AI ROI (SAVED)", f"${saved_cost:.4f}", delta=f"{usage.get('cache_hits', 0)} hits")
+            st.plotly_chart(sparkline([0, 0.5, 0.8, 1.2, saved_cost, saved_cost], color="#6366F1", height=40), use_container_width=True, config={'displayModeBar': False})
         with col2:
-            st.metric("Total Events (24h)", "1,842", delta="12%")
+            st.metric("EVENTS (24H)", "1,842", delta="12%")
+            st.plotly_chart(sparkline([1400, 1550, 1620, 1780, 1800, 1842], color="#8B5CF6", height=40), use_container_width=True, config={'displayModeBar': False})
         with col3:
-            st.metric("Autonomy Level", "94%", delta="+2%")
+            st.metric("AUTONOMY RATE", "94%", delta="+2%")
+            st.plotly_chart(sparkline([88, 90, 91, 92, 93, 94], color="#10B981", height=40), use_container_width=True, config={'displayModeBar': False})
         with col4:
-            st.metric("Agent Time Saved", "156h", delta="24h")
+            st.metric("HUMAN TIME SAVED", "156h", delta="24h")
+            st.plotly_chart(sparkline([110, 125, 135, 142, 150, 156], color="#F59E0B", height=40), use_container_width=True, config={'displayModeBar': False})
             
         st.markdown("---")
+
+def run_async(coro):
+    import asyncio
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(coro)
 
     def _render_marketplace(self):
         """Elite Marketplace for pre-built workflows"""
@@ -181,16 +267,16 @@ class AutomationStudioHub:
         for i, t in enumerate(templates):
             with cols[i % 2]:
                 st.markdown(f"""
-                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; border-top: 4px solid {self.primary_color};">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 1.5rem;">{t['icon']}</span>
-                        <span style="background: #eff6ff; color: #3b82f6; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 700;">{t['category']}</span>
+                <div style="background: rgba(22, 27, 34, 0.7); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; border-top: 4px solid #6366F1; box-shadow: 0 8px 32px rgba(0,0,0,0.4); backdrop-filter: blur(12px);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                        <span style="font-size: 2rem; filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.3));">{t['icon']}</span>
+                        <span style="background: rgba(99, 102, 241, 0.15); color: #6366F1; font-size: 0.7rem; padding: 4px 12px; border-radius: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(99, 102, 241, 0.3); font-family: 'Space Grotesk', sans-serif;">{t['category']}</span>
                     </div>
-                    <h4 style="margin: 10px 0 5px 0;">{t['name']}</h4>
-                    <p style="font-size: 0.85rem; color: #64748b;">{t['desc']}</p>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-                        <span style="font-size: 0.8rem; font-weight: 700; color: {self.success_color};">{t['roi']}</span>
-                        <button style="background: {self.primary_color}; color: white; border: none; padding: 5px 15px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Deploy Now</button>
+                    <h4 style="margin: 0 0 8px 0; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em;">{t['name'].upper()}</h4>
+                    <p style="font-size: 0.9rem; color: #8B949E; line-height: 1.5; font-family: 'Inter', sans-serif; margin-bottom: 1.5rem;">{t['desc']}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <span style="font-size: 0.85rem; font-weight: 700; color: #10b981; font-family: 'Space Grotesk', sans-serif;">ROI: {t['roi']}</span>
+                        <div style="color: #6366F1; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">Command Ready</div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -249,20 +335,31 @@ class AutomationStudioHub:
                             "current_prompt": current_p
                         }
                         
-                        from services.claude_orchestrator import get_claude_orchestrator
+                        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeTaskType, ClaudeRequest
                         orchestrator = get_claude_orchestrator()
                         
                         # Use chat_query or a specialized method to optimize prompt
                         # Here we use chat_query with a specialized system prompt instruction
                         prompt = f"Optimize this real estate AI persona based on these parameters: {json.dumps(opt_context)}"
                         
-                        response = loop.run_until_complete(
-                            orchestrator.chat_query(
-                                query=prompt,
-                                context={"task": "persona_optimization"},
-                                lead_id="system_persona"
-                            )
+                        request = ClaudeRequest(
+                            task_type=ClaudeTaskType.PERSONA_OPTIMIZATION,
+                            context={"task": "persona_optimization"},
+                            prompt=prompt,
+                            temperature=0.7
                         )
+                        
+                        response = loop.run_until_complete(orchestrator.process_request(request))
+                        
+                        # Record usage
+                        loop.run_until_complete(analytics_service.track_llm_usage(
+                            location_id="demo_location",
+                            model=response.model or "claude-3-5-sonnet",
+                            provider=response.provider or "claude",
+                            input_tokens=response.input_tokens or 0,
+                            output_tokens=response.output_tokens or 0,
+                            cached=False
+                        ))
                         
                         st.session_state.optimized_persona = response.content
                         st.success("Claude has optimized your AI persona!")
@@ -282,17 +379,17 @@ class AutomationStudioHub:
                 st.info(st.session_state.optimized_persona)
             else:
                 st.markdown(f"""
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem;">
-                    <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 10px; text-transform: uppercase;">Simulated SMS Response:</div>
-                    <div style="font-size: 0.9rem; color: #1e293b; line-height: 1.5; font-style: italic;">
+                <div style="background: rgba(13, 17, 23, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.5rem;">
+                    <div style="font-size: 0.75rem; color: #8B949E; margin-bottom: 10px; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif;">Simulated SMS Response:</div>
+                    <div style="font-size: 0.95rem; color: #E6EDF3; line-height: 1.5; font-style: italic;">
                         "Hi Sarah! Based on my latest deep-dive into appreciation trends, the Teravista area is looking like a 9.2/10 for your specific goals. I've prepared a custom yield brief—would you like me to send it over or discuss it briefly?"
                     </div>
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                        <div style="font-size: 0.7rem; color: #64748b;">AI Traits Applied:</div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                        <div style="font-size: 0.7rem; color: #8B949E;">AI Traits Applied:</div>
                         <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px;">
-                            <span style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem;">CONSULTATIVE</span>
-                            <span style="background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem;">HIGH EMPATHY</span>
-                            <span style="background: #fff7ed; color: #9a3412; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem;">DATA-DRIVEN</span>
+                            <span style="background: rgba(99, 102, 241, 0.1); color: #6366F1; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; border: 1px solid rgba(99, 102, 241, 0.2);">CONSULTATIVE</span>
+                            <span style="background: rgba(16, 185, 129, 0.1); color: #10B981; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; border: 1px solid rgba(16, 185, 129, 0.2);">HIGH EMPATHY</span>
+                            <span style="background: rgba(245, 158, 11, 0.1); color: #F59E0B; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; border: 1px solid rgba(245, 158, 11, 0.2);">DATA-DRIVEN</span>
                         </div>
                     </div>
                 </div>

@@ -7,7 +7,8 @@ import pandas as pd
 import asyncio
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from services.memory_service import MemoryService
+from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
 class ClaudeAssistant:
     """
@@ -19,17 +20,18 @@ class ClaudeAssistant:
         self.context_type = context_type
         # Import here to avoid circular dependencies
         try:
-            from services.claude_orchestrator import get_claude_orchestrator
+            from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
             self.orchestrator = get_claude_orchestrator()
         except ImportError:
             self.orchestrator = None
             
         self.memory_service = MemoryService()
+        self.analytics = AnalyticsService()
         self._initialize_state()
 
     def _initialize_state(self):
-        if 'claude_greeted' not in st.session_state:
-            st.session_state.claude_greeted = False
+        if 'assistant_greeted' not in st.session_state:
+            st.session_state.assistant_greeted = False
         if 'claude_history' not in st.session_state:
             st.session_state.claude_history = []
 
@@ -142,6 +144,17 @@ class ClaudeAssistant:
                     response_obj = loop.run_until_complete(
                         self.orchestrator.chat_query(query, context)
                     )
+                    
+                    # Record usage
+                    loop.run_until_complete(self.analytics.track_llm_usage(
+                        location_id="demo_location", # Sidebar doesn't have easy location_id access
+                        model=response_obj.model or "claude-3-5-sonnet",
+                        provider=response_obj.provider or "claude",
+                        input_tokens=response_obj.input_tokens or 0,
+                        output_tokens=response_obj.output_tokens or 0,
+                        cached=False
+                    ))
+                    
                     response = response_obj.content
                 except Exception as e:
                     response = f"I encountered an error processing your request: {str(e)}"
@@ -165,9 +178,9 @@ class ClaudeAssistant:
 
     def greet_user(self, name: str = "Jorge"):
         """Shows the one-time greeting toast."""
-        if not st.session_state.claude_greeted:
+        if not st.session_state.assistant_greeted:
             st.toast(f"Hello {name}! 👋 I'm Claude, your AI partner. I've indexed your GHL context and I'm ready to work.", icon="🤖")
-            st.session_state.claude_greeted = True
+            st.session_state.assistant_greeted = True
 
     async def generate_automated_report(self, data: Dict[str, Any], report_type: str = "Weekly Performance") -> Dict[str, Any]:
         """
@@ -176,7 +189,7 @@ class ClaudeAssistant:
         """
         try:
             # Import here to avoid circular imports
-            from services.claude_automation_engine import ClaudeAutomationEngine, ReportType
+            from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine, ReportType
 
             # Map report type to enum
             report_type_enum = ReportType.WEEKLY_SUMMARY
@@ -240,7 +253,7 @@ class ClaudeAssistant:
         """
         try:
             # Import here to avoid circular imports
-            from services.claude_automation_engine import ClaudeAutomationEngine, ScriptType
+            from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine, ScriptType
 
             lead_name = lead_data.get('lead_name', 'Client')
             lead_id = lead_data.get('lead_id', f"demo_{lead_name.lower().replace(' ', '_')}")

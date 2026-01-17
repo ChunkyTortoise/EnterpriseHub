@@ -1,0 +1,14 @@
+# Metrics Directory
+#
+# This directory contains audit logs and metrics tracking for:
+# - tool-usage.log: JSONL log of all tool operations
+# - skill-usage.json: Aggregated skill/tool effectiveness metrics
+# - rate-limits.json: Rate limit tracking for cost control
+# - audit-log.jsonl: SOC2/HIPAA compliance audit trail
+# - bash-audit.jsonl: All bash command executions
+# - ghl-api-usage.jsonl: GoHighLevel API interaction tracking
+# - hook-performance.jsonl: Hook execution performance data
+#
+# Retention: 90 days (configurable in hooks.yaml)
+# Compression: After 30 days
+# Encryption: Enabled for compliance

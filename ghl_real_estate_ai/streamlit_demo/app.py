@@ -6,19 +6,66 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import warnings
-# Enterprise Real Estate AI Ecosystem
-# Triggering reload: 2026-01-12T19:10:45
-import streamlit as st
-# Suppress all warnings for professional demo presentation
-warnings.filterwarnings("ignore")
-
 import sys
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import datetime
 import asyncio
+import json
 from pathlib import Path
+
+# Enterprise Real Estate AI Ecosystem
+# Triggering reload: 2026-01-12T19:10:45
+import streamlit as st
+# Suppress all warnings for professional demo presentation
+warnings.filterwarnings("ignore")
+
+# Page config - MUST BE FIRST STREAMLIT COMMAND
+st.set_page_config(
+    page_title="Lyrio AI | Obsidian Command",
+    page_icon="https://raw.githubusercontent.com/ChunkyTortoise/EnterpriseHub/main/assets/favicon.png",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'About': "Lyrio AI - Obsidian Edition | Premium Real Estate Intelligence"
+    }
+)
+
+# Initialize session state for hub navigation EARLY
+if 'current_hub' not in st.session_state:
+    st.session_state.current_hub = "Executive Command Center"
+if 'selected_market' not in st.session_state:
+    st.session_state.selected_market = "Austin, TX"
+if 'ai_tone' not in st.session_state:
+    st.session_state.ai_tone = "Natural"
+if 'elite_mode' not in st.session_state:
+    st.session_state.elite_mode = False
+if 'claude_greeting_shown' not in st.session_state:
+    st.session_state.claude_greeting_shown = False
+if 'claude_session_initialized' not in st.session_state:
+    st.session_state.claude_session_initialized = False
+if 'show_claude_sidebar' not in st.session_state:
+    st.session_state.show_claude_sidebar = True
+if 'ghl_verified' not in st.session_state:
+    st.session_state.ghl_verified = False
+
+# Initialize Global AI State
+if "ai_config" not in st.session_state:
+    st.session_state.ai_config = {
+        "market": "Austin, TX",
+        "voice_tone": 0.5,  # 0.0 = Professional, 1.0 = Natural
+        "response_speed": "Standard",
+        "last_sync": datetime.datetime.now().strftime("%H:%M:%S")
+    }
+
+# Initialize Prompt Versioning
+if "prompt_versions" not in st.session_state:
+    st.session_state.prompt_versions = [
+        {"version": "v1.0", "tag": "Baseline", "content": "You are a helpful assistant.", "timestamp": "2026-01-01"},
+        {"version": "v1.1", "tag": "Production", "content": "You are a professional real estate assistant.", "timestamp": "2026-01-05"},
+        {"version": "v1.2", "tag": "Elite v4.0", "content": "You are an elite Real Estate AI closer.", "timestamp": "2026-01-11"}
+    ]
 
 # Error Boundary Decorator for production stability
 def ui_error_boundary(func_name="Component"):
@@ -45,95 +92,103 @@ class MockService:
             return {}
         return method
 
-# Add project root to sys.path
-# This ensures ghl_real_estate_ai.services can be found
-current_dir = Path(__file__).parent
-project_root = Path(__file__).parent.parent
-parent_root = Path(__file__).parent.parent.parent
-if str(current_dir) not in sys.path:
-    sys.path.insert(0, str(current_dir))
+# Add project root and ghl_real_estate_ai to sys.path
+# Add the project root (EnterpriseHub) to sys.path
+
+# Add the project root (EnterpriseHub) to sys.path
+project_root = Path(__file__).resolve().parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
-if str(parent_root) not in sys.path:
-    sys.path.insert(0, str(parent_root))
+
+# Add ghl_real_estate_ai directory to sys.path
+ghl_root = project_root / "ghl_real_estate_ai"
+if str(ghl_root) not in sys.path:
+    sys.path.insert(0, str(ghl_root))
+
+# Add streamlit_demo directory to sys.path for components/ imports
+demo_root = ghl_root / "streamlit_demo"
+if str(demo_root) not in sys.path:
+    sys.path.insert(0, str(demo_root))
 
 import json
-from pathlib import Path
 
-# Import services - using proper parent path
+# Import services - using proper absolute paths
 try:
-    # Ensure parent directory is in path for imports
-    parent_services = Path(__file__).parent.parent
-    if str(parent_services) not in sys.path:
-        sys.path.insert(0, str(parent_services))
-    
     import importlib
-    import services.lead_scorer
-    import services.ai_predictive_lead_scoring
-    importlib.reload(services.lead_scorer)
-    importlib.reload(services.ai_predictive_lead_scoring)
-    from services.lead_scorer import LeadScorer
-    from services.ai_predictive_lead_scoring import PredictiveLeadScorer
-    print(f"DEBUG: LeadScorer RELOADED from: {services.lead_scorer.__file__}")
-    from services.ai_smart_segmentation import AISmartSegmentationService
-    from services.deal_closer_ai import DealCloserAI
-    from services.commission_calculator import CommissionCalculator, CommissionType, DealStage
-    from services.meeting_prep_assistant import MeetingPrepAssistant, MeetingType
-    from services.executive_dashboard import ExecutiveDashboardService
-    from services.quality_assurance import QualityAssuranceEngine
-    from services.revenue_attribution import RevenueAttributionEngine
-    from services.competitive_benchmarking import BenchmarkingEngine
-    from services.agent_coaching import AgentCoachingService
-    from services.smart_document_generator import SmartDocumentGenerator, DocumentType
-    from services.ai_predictive_lead_scoring import PredictiveLeadScorer
-    from services.ai_content_personalization import AIContentPersonalizationService
-    from services.live_feed import LiveFeedService
-    from services.workflow_marketplace import WorkflowMarketplaceService
-    from services.auto_followup_sequences import AutoFollowUpSequences
-    from services.property_matcher import PropertyMatcher
-    from services.reengagement_engine import ReengagementEngine, ReengagementTrigger
-    from services.churn_integration_service import ChurnIntegrationService
-    from services.claude_assistant import ClaudeAssistant
+    import ghl_real_estate_ai.services.lead_scorer
+    import ghl_real_estate_ai.services.ai_predictive_lead_scoring
+    
+    # Reloading for development/demo purposes
+    importlib.reload(ghl_real_estate_ai.services.lead_scorer)
+    importlib.reload(ghl_real_estate_ai.services.ai_predictive_lead_scoring)
+    
+    from ghl_real_estate_ai.services.lead_scorer import LeadScorer
+    from ghl_real_estate_ai.services.ai_predictive_lead_scoring import PredictiveLeadScorer
+    print(f"DEBUG: LeadScorer RELOADED from: {ghl_real_estate_ai.services.lead_scorer.__file__}")
+    
+    from ghl_real_estate_ai.services.ai_smart_segmentation import AISmartSegmentationService
+    from ghl_real_estate_ai.services.deal_closer_ai import DealCloserAI
+    from ghl_real_estate_ai.services.commission_calculator import CommissionCalculator, CommissionType, DealStage
+    from ghl_real_estate_ai.services.meeting_prep_assistant import MeetingPrepAssistant, MeetingType
+    from ghl_real_estate_ai.services.executive_dashboard import ExecutiveDashboardService
+    from ghl_real_estate_ai.services.claude_executive_intelligence import get_executive_intelligence_service
+    from ghl_real_estate_ai.services.lead_swarm_service import get_lead_swarm_service
+    from ghl_real_estate_ai.services.quality_assurance import QualityAssuranceEngine
+    from ghl_real_estate_ai.services.revenue_attribution import RevenueAttributionEngine
+    from ghl_real_estate_ai.services.competitive_benchmarking import BenchmarkingEngine
+    from ghl_real_estate_ai.services.agent_coaching import AgentCoachingService
+    from ghl_real_estate_ai.services.smart_document_generator import SmartDocumentGenerator, DocumentType
+    from ghl_real_estate_ai.services.ai_content_personalization import AIContentPersonalizationService
+    from ghl_real_estate_ai.services.live_feed import LiveFeedService
+    from ghl_real_estate_ai.services.workflow_marketplace import WorkflowMarketplaceService
+    from ghl_real_estate_ai.services.auto_followup_sequences import AutoFollowUpSequences
+    from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
+    from ghl_real_estate_ai.services.reengagement_engine import ReengagementEngine, ReengagementTrigger
+    from ghl_real_estate_ai.services.churn_integration_service import ChurnIntegrationService
+    from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
     
     # Initialize Claude Assistant and Platform Companion
     claude = ClaudeAssistant()
 
     # Import Claude Platform Companion
     try:
-        from services.claude_platform_companion import get_claude_platform_companion
+        from ghl_real_estate_ai.services.claude_platform_companion import get_claude_platform_companion
         claude_companion = get_claude_platform_companion()
         CLAUDE_COMPANION_AVAILABLE = True
     except ImportError as e:
         print(f"Claude Platform Companion not available: {e}")
         CLAUDE_COMPANION_AVAILABLE = False
         claude_companion = None
-        # Enhanced services imports (from parent directory)
+        
+    # Enhanced services imports
     try:
-        from services.enhanced_lead_scorer import EnhancedLeadScorer
+        from ghl_real_estate_ai.services.enhanced_lead_scorer import EnhancedLeadScorer
         ENHANCED_LEAD_SCORER_AVAILABLE = True
     except ImportError:
         print("Enhanced Lead Scorer not available")
         ENHANCED_LEAD_SCORER_AVAILABLE = False
 
     try:
-        from services.enhanced_property_matcher import EnhancedPropertyMatcher
+        from ghl_real_estate_ai.services.enhanced_property_matcher import EnhancedPropertyMatcher
         ENHANCED_PROPERTY_MATCHER_AVAILABLE = True
     except ImportError:
         print("Enhanced Property Matcher not available")
         ENHANCED_PROPERTY_MATCHER_AVAILABLE = False
 
     try:
-        from services.churn_prediction_engine import ChurnPredictionEngine
+        from ghl_real_estate_ai.services.churn_prediction_engine import ChurnPredictionEngine
         CHURN_PREDICTION_ENGINE_AVAILABLE = True
     except ImportError:
         print("Churn Prediction Engine not available")
         CHURN_PREDICTION_ENGINE_AVAILABLE = False
-    from streamlit_demo.components.churn_early_warning_dashboard import ChurnEarlyWarningDashboard
-    from streamlit_demo.components.property_valuation import render_property_valuation_engine
-    from streamlit_demo.components.financing_calculator import render_financing_calculator
-    from streamlit_demo.components.neighborhood_intelligence import render_neighborhood_explorer
-    from streamlit_demo.components.buyer_journey import render_buyer_dashboard, render_buyer_analytics, render_buyer_journey_hub
-    from streamlit_demo.components.seller_journey import (
+
+    # Component Imports
+    from ghl_real_estate_ai.streamlit_demo.components.churn_early_warning_dashboard import ChurnEarlyWarningDashboard
+    from ghl_real_estate_ai.streamlit_demo.components.property_valuation import render_property_valuation_engine
+    from ghl_real_estate_ai.streamlit_demo.components.financing_calculator import render_financing_calculator
+    from ghl_real_estate_ai.streamlit_demo.components.neighborhood_intelligence import render_neighborhood_explorer
+    from ghl_real_estate_ai.streamlit_demo.components.buyer_journey import render_buyer_dashboard, render_buyer_analytics, render_buyer_journey_hub
+    from ghl_real_estate_ai.streamlit_demo.components.seller_journey import (
         render_seller_prep_checklist, 
         render_marketing_campaign_dashboard, 
         render_seller_communication_portal, 
@@ -141,24 +196,29 @@ try:
         render_seller_analytics, 
         render_seller_journey_hub
     )
-    from streamlit_demo.components.ui_elements import render_action_card, render_insight_card
-    from streamlit_demo.components.global_header import render_global_header
-    from streamlit_demo.components.executive_hub import render_executive_hub
-    from streamlit_demo.components.lead_intelligence_hub import render_lead_intelligence_hub
-    from streamlit_demo.components.automation_studio import AutomationStudioHub
-    from streamlit_demo.components.sales_copilot import SalesCopilotHub
-    from streamlit_demo.components.ops_optimization import OpsOptimizationHub
-    from streamlit_demo.components.calculators import render_roi_calculator, render_revenue_funnel
-    from streamlit_demo.components.claude_panel import render_claude_assistant
-    from streamlit_demo.components.swarm_visualizer import render_swarm_visualizer
-    from streamlit_demo.components.ai_training_feedback import render_rlhf_loop
-    from streamlit_demo.components.voice_intelligence import render_voice_intelligence
-    from streamlit_demo.components.property_swipe import render_property_swipe
-    from streamlit_demo.components.workflow_designer import render_workflow_designer
-    from streamlit_demo.components.listing_architect import render_listing_architect
-    from streamlit_demo.components.security_governance import render_security_governance
-    from streamlit_demo.components.agent_os import render_agent_os_tab
-    from realtime_dashboard_integration import render_realtime_intelligence_dashboard
+    from ghl_real_estate_ai.streamlit_demo.components.ui_elements import render_action_card, render_insight_card
+    from ghl_real_estate_ai.streamlit_demo.components.global_header import render_global_header
+    from ghl_real_estate_ai.streamlit_demo.components.executive_hub import render_executive_hub
+    from ghl_real_estate_ai.streamlit_demo.components.lead_intelligence_hub import render_lead_intelligence_hub
+    from ghl_real_estate_ai.streamlit_demo.components.automation_studio import AutomationStudioHub
+    from ghl_real_estate_ai.streamlit_demo.components.sales_copilot import SalesCopilotHub
+    from ghl_real_estate_ai.streamlit_demo.components.ops_optimization import OpsOptimizationHub
+    from ghl_real_estate_ai.streamlit_demo.components.calculators import render_roi_calculator, render_revenue_funnel
+    from ghl_real_estate_ai.streamlit_demo.components.claude_panel import render_claude_assistant
+    from ghl_real_estate_ai.streamlit_demo.components.voice_claude_interface import render_voice_claude_interface, render_voice_settings, add_voice_interface_css
+    from ghl_real_estate_ai.streamlit_demo.components.proactive_intelligence_dashboard import render_proactive_intelligence_dashboard, render_proactive_alerts_widget
+    from ghl_real_estate_ai.streamlit_demo.components.swarm_visualizer import render_swarm_visualizer
+    from ghl_real_estate_ai.streamlit_demo.components.ai_training_feedback import render_rlhf_loop
+    from ghl_real_estate_ai.streamlit_demo.components.voice_intelligence import render_voice_intelligence
+    from ghl_real_estate_ai.streamlit_demo.components.property_swipe import render_property_swipe
+    from ghl_real_estate_ai.streamlit_demo.components.workflow_designer import render_workflow_designer
+    from ghl_real_estate_ai.streamlit_demo.components.listing_architect import render_listing_architect
+    from ghl_real_estate_ai.streamlit_demo.components.security_governance import render_security_governance
+    from ghl_real_estate_ai.streamlit_demo.components.agent_os import render_agent_os_tab
+    from ghl_real_estate_ai.streamlit_demo.components.neural_uplink import render_neural_uplink
+    from ghl_real_estate_ai.streamlit_demo.realtime_dashboard_integration import render_realtime_intelligence_dashboard
+    from ghl_real_estate_ai.streamlit_demo.components.floating_claude import render_floating_claude
+    from ghl_real_estate_ai.streamlit_demo.components.project_copilot import render_project_copilot
 
     SERVICES_LOADED = True
 except ImportError as e:
@@ -185,8 +245,8 @@ def get_services(market="Austin"):
     listings_file = "property_listings.json" if market == "Austin" else "property_listings_rancho.json"
     listings_path = Path(__file__).parent.parent / "data" / "knowledge_base" / listings_file
     
-    from services.claude_orchestrator import get_claude_orchestrator
-    from services.claude_automation_engine import ClaudeAutomationEngine
+    from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+    from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine
 
     services_dict = {
         "lead_scorer": LeadScorer(),
@@ -255,190 +315,65 @@ def get_services(market="Austin"):
     return services_dict
 
 # --- THE FINAL POLISH: GLOBAL UI UTILITIES ---
-def sparkline(data: list, color: str = "#2563eb", height: int = 40):
-    """Generates a minimal sparkline chart using Plotly."""
-    # Convert hex color to rgba for Plotly compatibility (8-digit hex not supported)
+def sparkline(data: list, color: str = "#6366F1", height: int = 50):
+    """Generates a minimal high-fidelity sparkline chart with a neural glow effect."""
+    # Convert hex color to rgba for Plotly compatibility
     hex_c = color.lstrip('#')
     r, g, b = int(hex_c[0:2], 16), int(hex_c[2:4], 16), int(hex_c[4:6], 16)
-    fill_rgba = f"rgba({r}, {g}, {b}, 0.2)"
+    fill_rgba = f"rgba({r}, {g}, {b}, 0.1)"
+    glow_rgba = f"rgba({r}, {g}, {b}, 0.4)"
 
-    fig = go.Figure(go.Scatter(
+    fig = go.Figure()
+    
+    # Outer Glow
+    fig.add_trace(go.Scatter(
+        y=data,
+        mode='lines',
+        line=dict(color=glow_rgba, width=5),
+        hoverinfo='skip',
+        opacity=0.3
+    ))
+    
+    # Main Core Line
+    fig.add_trace(go.Scatter(
         y=data,
         mode='lines',
         fill='tozeroy',
-        line=dict(color=color, width=2),
-        fillcolor=fill_rgba
+        line=dict(color=color, width=2.5),
+        fillcolor=fill_rgba,
+        hoverinfo='skip'
     ))
+    
     fig.update_layout(
         showlegend=False,
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=0, r=0, t=0, b=0),
+        margin=dict(l=0, r=0, t=5, b=0),
         height=height,
         xaxis=dict(visible=False, fixedrange=True),
-        yaxis=dict(visible=False, fixedrange=True)
+        yaxis=dict(visible=False, fixedrange=True, range=[min(data)*0.9, max(data)*1.1])
     )
     return fig
 
-# Initialize Global AI State (Zustand equivalent)
-if "ai_config" not in st.session_state:
-    st.session_state.ai_config = {
-        "market": "Austin, TX",
-        "voice_tone": 0.5,  # 0.0 = Professional, 1.0 = Natural
-        "response_speed": "Standard",
-        "last_sync": datetime.datetime.now().strftime("%H:%M:%S")
-    }
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import inject_elite_css, style_obsidian_chart, render_dossier_block
 
-# Initialize Prompt Versioning
-if "prompt_versions" not in st.session_state:
-    st.session_state.prompt_versions = [
-        {"version": "v1.0", "tag": "Baseline", "content": "You are a helpful assistant.", "timestamp": "2026-01-01"},
-        {"version": "v1.1", "tag": "Production", "content": "You are a professional real estate assistant.", "timestamp": "2026-01-05"},
-        {"version": "v1.2", "tag": "Elite v4.0", "content": "You are an elite Real Estate AI closer.", "timestamp": "2026-01-11"}
-    ]
+# Inject Global Visual Overhaul
+inject_elite_css()
 
-# Page config
-st.set_page_config(
-    page_title="GHL Real Estate AI | Executive Command Center",
-    page_icon="🏠",
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'About': "AI-Powered Lead Qualification System for Real Estate Professionals"
-    }
-)
-
-# Hide Streamlit branding and debug elements
+# Hide Streamlit branding and debug elements (preserved minimal overrides)
 st.markdown("""
     <style>
-        /* Hide default Streamlit elements */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
-        
-        /* Remove top padding for cleaner look */
         .block-container {
-            padding-top: 2rem;
+            padding-top: 1.5rem;
             padding-bottom: 2rem;
+            max-width: 95rem;
         }
-        
-        /* Clean up development labels */
         [data-testid="stAppViewContainer"] > div:first-child {
             display: none;
         }
-        
-        /* Enhanced tooltips and hover effects for factor bars */
-        .factor-bar:hover {
-            transform: translateY(-2px);
-            transition: transform 0.2s ease;
-        }
-        
-        .factor-bar:hover .factor-bar-fill {
-            filter: brightness(1.1);
-        }
-        
-        /* Custom tooltip styling */
-        .factor-bar[title]:hover::after {
-            content: attr(title);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.95);
-            color: white;
-            padding: 0.5rem 0.75rem;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            z-index: 1000;
-            margin-bottom: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-        
-        .factor-bar[title]:hover::before {
-            content: '';
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 6px solid transparent;
-            border-top-color: rgba(15, 23, 42, 0.95);
-            margin-bottom: -0.25rem;
-        }
-
-        /* PREMIUM FEATURE: Enhanced global styling */
-
-        /* Premium card animations */
-        .element-container div[data-testid="stMarkdownContainer"] div {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        /* Enhanced button styling */
-        button[kind="primary"] {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-            border: none !important;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
-            transition: all 0.2s ease !important;
-        }
-
-        button[kind="primary"]:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
-        }
-
-        /* Enhanced tabs styling */
-        .stTabs > div > div > div {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
-            border-radius: 12px !important;
-            padding: 0.5rem !important;
-            margin-bottom: 1rem !important;
-        }
-
-        .stTabs > div > div > div > div {
-            background: white !important;
-            border-radius: 8px !important;
-            font-weight: 600 !important;
-            transition: all 0.2s ease !important;
-        }
-
-        .stTabs > div > div > div > div[aria-selected="true"] {
-            background: linear-gradient(135deg, #006AFF 0%, #0047AB 100%) !important;
-            color: white !important;
-            box-shadow: 0 4px 12px rgba(0, 106, 255, 0.3) !important;
-        }
-
-        /* Enhanced metric styling */
-        div[data-testid="metric-container"] {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 12px !important;
-            padding: 1.5rem !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-            transition: transform 0.2s ease !important;
-        }
-
-        div[data-testid="metric-container"]:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
-        }
-
-        /* Enhanced sidebar styling */
-        .css-1d391kg {
-            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
-        }
-
-        /* Premium loading animations */
-        @keyframes shimmer {
-            0% { background-position: -200px 0; }
-            100% { background-position: 200px 0; }
-        }
-
-        .shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200px 100%;
-            animation: shimmer 1.5s infinite;
-        }
-
     </style>
 """, unsafe_allow_html=True)
 
@@ -453,13 +388,10 @@ with st.sidebar:
     st.markdown("### ⚙️ AI Configuration")
     
     # Persist market selection
-    if 'selected_market' not in st.session_state:
-        st.session_state.selected_market = "Austin, TX"
-    
     selected_market = st.selectbox(
         "Select Market:", 
         ["Austin, TX", "Rancho Cucamonga, CA"],
-        index=["Austin, TX", "Rancho Cucamonga, CA"].index(st.session_state.selected_market),
+        index=["Austin, TX", "Rancho Cucamonga, CA"].index(st.session_state.get('selected_market', "Austin, TX")),
         key="market_selector",
         on_change=update_market
     )
@@ -467,13 +399,10 @@ with st.sidebar:
     market_key = "Austin" if "Austin" in selected_market else "Rancho"
     
     # Persist AI tone
-    if 'ai_tone' not in st.session_state:
-        st.session_state.ai_tone = "Natural"
-    
     ai_tone = st.select_slider(
         "AI Voice Tone:",
         options=["Professional", "Natural", "Direct/Casual"],
-        value=st.session_state.ai_tone,
+        value=st.session_state.get('ai_tone', "Natural"),
         key="tone_selector"
     )
     st.session_state.ai_tone = ai_tone
@@ -481,12 +410,9 @@ with st.sidebar:
     st.markdown("---")
 
     # NEW: Elite Mode Activation
-    if 'elite_mode' not in st.session_state:
-        st.session_state.elite_mode = False
-        
     elite_mode = st.toggle(
         "🚀 Activate Elite Phase Features", 
-        value=st.session_state.elite_mode,
+        value=st.session_state.get('elite_mode', False),
         help="Enables Semantic Memory, Adaptive Scoring, and Advanced Decision Logic."
     )
     st.session_state.elite_mode = elite_mode
@@ -689,16 +615,14 @@ def get_meeting_briefing(lead_name):
     })
 
 # Environment detection and data loading
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from ghl_utils.config import is_mock_mode, get_environment_display
+from ghl_real_estate_ai.ghl_utils.config import is_mock_mode, get_environment_display
 
 env_info = get_environment_display()
 
 # FEAT-011: Live Mode Authentication Bridge
 def verify_ghl_connection():
     try:
-        from services.ghl_client import GHLClient
+        from ghl_real_estate_ai.services.ghl_client import GHLClient
         ghl_client = GHLClient()
         response = ghl_client.check_health()
         
@@ -721,9 +645,6 @@ else:
     live_data = verify_ghl_connection()
     
     # Only show banner if there's an actual connection problem
-    if 'ghl_verified' not in st.session_state:
-        st.session_state.ghl_verified = False
-    
     if st.session_state.get('is_live', False) and live_data:
         st.session_state.ghl_verified = True
         mock_data = live_data
@@ -758,68 +679,106 @@ if 'current_hub' in st.session_state:
 
 render_global_header(current_tenant)
 
+# 🚀 CLAUDE'S WELCOME WALKTHROUGH (Elite Phase)
+from ghl_real_estate_ai.streamlit_demo.components.project_copilot import render_welcome_walkthrough
+render_welcome_walkthrough()
+
+# --- THE OBSIDIAN COMMAND v2.0: GLOBAL BACKGROUND ---
+st.markdown("""
+<div style='position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none;'>
+    <div style='position: absolute; width: 300px; height: 300px; background: rgba(99, 102, 241, 0.05); filter: blur(100px); border-radius: 50%; top: 10%; left: 10%;'></div>
+    <div style='position: absolute; width: 400px; height: 400px; background: rgba(139, 92, 246, 0.05); filter: blur(120px); border-radius: 50%; bottom: 10%; right: 10%;'></div>
+</div>
+""", unsafe_allow_html=True)
+
 # 🧠 CLAUDE PLATFORM GREETING SYSTEM
-# Initialize Claude Platform Companion and provide personalized greeting
+# Contextual sidebar and counsel are maintained; the main greeting is now in render_welcome_walkthrough()
 if CLAUDE_COMPANION_AVAILABLE and claude_companion:
-    # Initialize session greeting state
-    if 'claude_greeting_shown' not in st.session_state:
-        st.session_state.claude_greeting_shown = False
-        st.session_state.claude_session_initialized = False
-
-    # Show greeting on first load or when explicitly requested
-    if not st.session_state.claude_greeting_shown or st.session_state.get('show_claude_greeting', False):
-        with st.spinner("🧠 Claude is personalizing your experience..."):
+    if not st.session_state.get('claude_session_initialized', False):
+        try:
+            # Actually initialize the session with Claude
             try:
-                # Determine current user and market context
-                user_name = "Jorge"  # Could be dynamic based on auth
-                current_market = st.session_state.get('selected_market', 'Austin')
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+            with st.spinner("🧠 Claude is personalizing your experience..."):
+                greeting = loop.run_until_complete(
+                    claude_companion.initialize_session("Jorge", market_key)
+                )
+                st.session_state.claude_greeting = greeting
+                st.session_state.show_claude_greeting = True
+                
+            st.session_state.claude_session_initialized = True
+            st.session_state.session_start = datetime.datetime.now()
+        except Exception as e:
+            print(f"Claude Platform Companion initialization failed: {e}")
+            st.session_state.claude_session_initialized = True # Prevent repeated attempts
 
-                # Initialize Claude session with personalized greeting
-                if not st.session_state.claude_session_initialized:
-                    # Use asyncio for Claude session initialization
+    # Render platform greeting if requested
+    if st.session_state.get('show_claude_greeting', False) and 'claude_greeting' in st.session_state:
+        claude_companion.render_platform_greeting(st.session_state.claude_greeting)
+        if st.button("Close Greeting", key="close_claude_greeting"):
+            st.session_state.show_claude_greeting = False
+            st.rerun()
+
+    if st.session_state.get('show_claude_sidebar', True) and st.session_state.get('claude_session_initialized', False):
+        claude_companion.render_contextual_sidebar()
+
+    # 📖 CLAUDE'S PROJECT GUIDANCE
+    if CLAUDE_COMPANION_AVAILABLE and claude_companion and st.session_state.get('claude_session_initialized', False):
+        with st.expander(f"📖 Claude's Guide: {st.session_state.current_hub}", expanded=False):
+            if st.button("✨ Generate Hub Guide"):
+                with st.spinner("🧠 Claude is preparing your project walkthrough..."):
                     try:
                         loop = asyncio.get_event_loop()
                     except RuntimeError:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
-
-                    greeting = loop.run_until_complete(
-                        claude_companion.initialize_session(user_name, current_market)
+                    
+                    guidance = loop.run_until_complete(
+                        claude_companion.get_project_guidance(st.session_state.current_hub)
                     )
-
-                    # Store greeting in session state
-                    st.session_state.claude_greeting = greeting
-                    st.session_state.claude_session_initialized = True
-                else:
-                    # Use cached greeting
-                    greeting = st.session_state.get('claude_greeting')
-
-                # Render Claude's personalized platform greeting
-                if greeting:
-                    claude_companion.render_platform_greeting(greeting)
-
-                # Mark greeting as shown
-                st.session_state.claude_greeting_shown = True
-                st.session_state.show_claude_greeting = False
-
-            except Exception as e:
-                st.error(f"Claude greeting temporarily unavailable: {str(e)}")
-                st.info("🚀 Welcome to your Enhanced Real Estate AI Platform! All systems ready.")
-
-    # Add Claude companion to sidebar
-    if 'show_claude_sidebar' not in st.session_state:
-        st.session_state.show_claude_sidebar = True
-
-    if st.session_state.show_claude_sidebar and st.session_state.claude_session_initialized:
-        claude_companion.render_contextual_sidebar()
-
-# Initialize session state for hub navigation
-if 'current_hub' not in st.session_state:
-    st.session_state.current_hub = "Executive Command Center"
+                    st.session_state[f"guidance_{st.session_state.current_hub}"] = guidance
+            
+            guidance = st.session_state.get(f"guidance_{st.session_state.current_hub}")
+            if guidance:
+                # Use Dossier styling for guidance
+                guidance_content = f"""
+                <div style='margin-bottom: 1.5rem;'>
+                    <h3 style='color: #6366F1; margin-bottom: 0.5rem;'>🎯 Purpose</h3>
+                    <p>{guidance.purpose}</p>
+                </div>
+                <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;'>
+                    <div>
+                        <h4 style='color: #6366F1;'>✨ Key Features</h4>
+                        <ul style='list-style-type: none; padding-left: 0;'>
+                            {"".join(f"<li style='margin-bottom: 0.5rem;'>• {f}</li>" for f in guidance.key_features)}
+                        </ul>
+                        <h4 style='color: #6366F1; margin-top: 1.5rem;'>🚀 Recommended Workflow</h4>
+                        <ol style='list-style-type: none; padding-left: 0;'>
+                            {"".join(f"<li style='margin-bottom: 0.5rem;'>{i+1}. {w}</li>" for i, w in enumerate(guidance.recommended_workflow))}
+                        </ol>
+                    </div>
+                    <div>
+                        <h4 style='color: #6366F1;'>💡 Pro-Tips</h4>
+                        <div style='background: rgba(99, 102, 241, 0.05); padding: 1rem; border-radius: 8px; border-left: 3px solid #6366F1;'>
+                            {"".join(f"<p style='font-style: italic; margin-bottom: 0.5rem;'>\" {t} \"</p>" for t in guidance.pro_tips)}
+                        </div>
+                        <h4 style='color: #6366F1; margin-top: 1.5rem;'>🎯 Next Steps</h4>
+                        <ul style='list-style-type: none; padding-left: 0;'>
+                            {"".join(f"<li style='margin-bottom: 0.5rem;'>✅ {s}</li>" for s in guidance.next_steps)}
+                        </ul>
+                    </div>
+                </div>
+                """
+                render_dossier_block(guidance_content, title=f"SYSTEM WALKTHROUGH: {st.session_state.current_hub.upper()}")
+            else:
+                st.info("Click the button above to have Claude guide you through this section of the project.")
 
 # PREMIUM FEATURE: Enhanced sidebar with enterprise styling
 with st.sidebar:
-    # Premium navigation header
     st.markdown("""
     <div style="
         background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
@@ -838,18 +797,39 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    hub_options = [
-        "🏢 Executive Command Center",
-        "🧠 Lead Intelligence Hub",
-        "🐝 Swarm Intelligence",
-        "⚡ Real-Time Intelligence",
-        "🏠 Buyer Journey Hub",
-        "🏡 Seller Journey Hub",
-        "🤖 Automation Studio",
-        "💰 Sales Copilot",
-        "📈 Ops & Optimization"
+    # Sidebar Navigation with Sectioning
+    st.markdown("<div style='font-size: 0.7rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; font-weight: 700;'>Business Intelligence</div>", unsafe_allow_html=True)
+    bi_hubs = [
+        "Executive Command Center",
+        "Lead Intelligence Hub",
+        "Real-Time Intelligence",
+        "Ops & Optimization"
     ]
     
+    st.markdown("<div style='font-size: 0.7rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.15em; margin-top: 15px; margin-bottom: 8px; font-weight: 700;'>Autonomous Agents</div>", unsafe_allow_html=True)
+    agent_hubs = [
+        "Swarm Intelligence",
+        "Proactive Intelligence",
+        "Voice Claude",
+        "Sales Copilot",
+        "Deep Research"
+    ]
+    
+    st.markdown("<div style='font-size: 0.7rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.15em; margin-top: 15px; margin-bottom: 8px; font-weight: 700;'>Customer Journey</div>", unsafe_allow_html=True)
+    journey_hubs = [
+        "Buyer Journey Hub",
+        "Seller Journey Hub",
+        "Automation Studio"
+    ]
+    
+    hub_options = bi_hubs + agent_hubs + journey_hubs
+    
+    # Initialize Copilot (Greeting & Guidance)
+    try:
+        render_project_copilot()
+    except Exception as e:
+        st.sidebar.error(f"Copilot initialization failed: {e}")
+
     # Calculate index safely
     try:
         default_index = hub_options.index(st.session_state.current_hub)
@@ -885,13 +865,14 @@ with st.sidebar:
                     asyncio.set_event_loop(loop)
 
                 # Update context and get any relevant insights
-                contextual_insight = loop.run_until_complete(
+                context_update = loop.run_until_complete(
                     claude_companion.update_context(selected_hub.lower().replace(" ", "_"), hub_context)
                 )
 
                 # Store any insights for display
-                if contextual_insight:
-                    st.session_state.claude_contextual_insight = contextual_insight
+                if context_update:
+                    st.session_state.claude_contextual_insight = context_update.get("insight")
+                    st.session_state.dynamic_claude_counsel = context_update.get("counsel")
 
             except Exception as e:
                 # Silently handle context update failures
@@ -906,13 +887,13 @@ with st.sidebar:
         align-items: center;
         gap: 10px;
         padding: 10px;
-        background: rgba(37, 99, 235, 0.1);
+        background: rgba(99, 102, 241, 0.1);
         border-radius: 8px;
         margin-top: 1rem;
-        border: 1px solid rgba(37, 99, 235, 0.2);
+        border: 1px solid rgba(99, 102, 241, 0.2);
     ">
         <div class="live-indicator" style="width: 10px; height: 10px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981;"></div>
-        <div style="font-size: 0.8rem; color: #1e293b; font-weight: 600;">
+        <div style="font-size: 0.8rem; color: #E6EDF3; font-weight: 600; font-family: 'Space Grotesk', sans-serif;">
             Swarm Status: <span style="color: #10b981;">ACTIVE</span>
         </div>
         <div style="font-size: 0.7rem; color: #64748b; margin-left: auto;">
@@ -921,37 +902,58 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
+    # System Health Sparkline in Sidebar
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.plotly_chart(sparkline([98, 99, 97, 99, 100, 99], color="#10B981", height=30), use_container_width=True, config={'displayModeBar': False})
+    st.caption("SYSTEM STABILITY: 99.8% (NORMAL)")
+
+    st.markdown("---")
+    
+    # NEW: Neural Uplink Feed
+    render_neural_uplink()
+    
     st.markdown("---")
     
     # NEW: Claude's Strategic Counsel (Contextual)
     counsel_messages = {
-        "🏢 Executive Command Center": "Jorge, lead velocity is up 12% this week. Focus on the Downtown cluster for maximum ROI.",
-        "🧠 Lead Intelligence Hub": "Sarah Martinez is showing high engagement with luxury properties. Suggest a showing today.",
-        "🐝 Swarm Intelligence": "The analyst swarm is currently processing 142 leads. Token efficiency is at an all-time high.",
-        "⚡ Real-Time Intelligence": "Market conditions are shifting in East Austin. Update your valuation models.",
-        "🏠 Buyer Journey Hub": "We have 3 buyers ready for pre-approval. Syncing with financing partners now.",
-        "🏡 Seller Journey Hub": "The Maple Ave listing is hitting peak interest. I recommend an open house this Sunday.",
-        "🤖 Automation Studio": "3 new workflow templates are ready for deployment. Your time savings is currently 42h/week.",
-        "💰 Sales Copilot": "Preparing talking points for your 2pm call. Client prefers a direct, data-driven approach.",
-        "📈 Ops & Optimization": "System health is optimal. Recommend scaling to the Miami market next month."
+        "Executive Command Center": "Jorge, lead velocity is up 12% this week. Focus on the Downtown cluster for maximum ROI.",
+        "Lead Intelligence Hub": "Sarah Martinez is showing high engagement with luxury properties. Suggest a showing today.",
+        "Voice Claude": "Voice commands active. Try saying 'Hey Claude, show me my top leads' for hands-free assistance.",
+        "Proactive Intelligence": "2 high-priority alerts detected. Pipeline risk identified - take action now to stay on target.",
+        "Swarm Intelligence": "The analyst swarm is currently processing 142 leads. Token efficiency is at an all-time high.",
+        "Real-Time Intelligence": "Market conditions are shifting in East Austin. Update your valuation models.",
+        "Buyer Journey Hub": "We have 3 buyers ready for pre-approval. Syncing with financing partners now.",
+        "Seller Journey Hub": "The Maple Ave listing is hitting peak interest. I recommend an open house this Sunday.",
+        "Automation Studio": "3 new workflow templates are ready for deployment. Your time savings is currently 42h/week.",
+        "Sales Copilot": "Preparing talking points for your 2pm call. Client prefers a direct, data-driven approach.",
+        "Ops & Optimization": "System health is optimal. Recommend scaling to the Miami market next month.",
+        "Deep Research": "Perplexity-powered search is active. Ask me to research any market or property."
     }
     
-    current_msg = counsel_messages.get(selected_hub, "AI Swarm is standing by for your next command.")
+    current_msg = st.session_state.get('dynamic_claude_counsel')
+    if not current_msg:
+        current_msg = counsel_messages.get(selected_hub, "AI Swarm is standing by for your next command.")
     
     st.markdown(f"""
     <div style="
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
         padding: 15px;
         border-radius: 12px;
-        border-left: 4px solid #8B5CF6;
+        border: 1px solid rgba(139, 92, 246, 0.2);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
     ">
-        <div style="font-size: 0.75rem; color: #8B5CF6; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">
-            🤖 Claude's Counsel
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <div class="status-pulse"></div>
+            <div style="font-size: 0.75rem; color: #8B5CF6; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">
+                Claude's Strategic Counsel
+            </div>
         </div>
-        <div style="font-size: 0.85rem; color: #1e293b; font-style: italic; line-height: 1.4;">
+        <div style="font-size: 0.9rem; color: #E6EDF3; font-style: italic; line-height: 1.5; position: relative; z-index: 1;">
             "{current_msg}"
         </div>
+        <div style="position: absolute; right: -10px; bottom: -10px; font-size: 3rem; opacity: 0.05; transform: rotate(-15deg);">🧠</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -960,15 +962,17 @@ with st.sidebar:
     # PREMIUM FEATURE: Enhanced quick actions
     st.markdown("""
     <div style="
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
-        padding: 1rem;
-        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+        padding: 1.2rem;
+        border-radius: 12px;
         margin-bottom: 1rem;
-        color: white;
+        border: 1px solid rgba(99, 102, 241, 0.3);
         text-align: center;
-        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     ">
-        <h4 style="margin: 0; font-size: 1rem; font-weight: 600;">⚡ Quick Actions</h4>
+        <h4 style="margin: 0; font-size: 0.9rem; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 0.1em;">
+            ⚡ Command Matrix
+        </h4>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1025,49 +1029,45 @@ with st.sidebar:
     st.markdown("---")
     
     # System status
-    st.markdown("### 📊 System Status")
-    st.metric("Active Leads", "47", "+12")
-    st.metric("AI Conversations", "156", "+23")
+    st.markdown("<h4 style='color: #8B949E; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; margin-bottom: 15px;'>System Telemetry</h4>", unsafe_allow_html=True)
+    col_stat1, col_stat2 = st.columns(2)
+    with col_stat1:
+        st.metric("Active Leads", "47", "+12")
+    with col_stat2:
+        # Use a status indicator emoji with the delta spot for Swarm
+        st.metric("Neural Swarm", "Online", delta="Stable", delta_color="normal")
     
-    st.markdown("---")
-    st.markdown("### 📡 Live Feed")
+    st.markdown("<h4 style='color: #8B949E; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2rem;'>Neural Uplink</h4>", unsafe_allow_html=True)
     
-    # Enhanced Live Feed with "Pulse" animation
-    feed_items = [
-        {"icon": "📝", "text": "Creating contract for <b>John Doe</b>", "time": "Just now", "color": "#10B981"},
-        {"icon": "🔔", "text": "New lead: <b>Sarah Smith</b> (Downtown)", "time": "2 mins ago", "color": "#3B82F6"},
-        {"icon": "🤖", "text": "AI handled objection: <b>Mike Ross</b>", "time": "15 mins ago", "color": "#8B5CF6"},
-        {"icon": "📅", "text": "Tour scheduled: <b>123 Main St</b>", "time": "1 hour ago", "color": "#F59E0B"}
-    ]
-    
-    # Use new Live Feed Service with dynamic timestamps
+    # Enhanced Live Feed with v2.0 styling
     try:
-        sys.path.insert(0, str(Path(__file__).parent))
-        from services.live_feed import LiveFeedService
+        from ghl_real_estate_ai.services.live_feed import LiveFeedService
         feed_service = LiveFeedService()
         feed_html = feed_service.get_feed_html(limit=6)
-        st.markdown(feed_html, unsafe_allow_html=True)
-    except Exception as e:
-        # Fallback to static feed if service unavailable
+        # Apply Obsidian Command v2.0 wrapper to feed
+        st.markdown(f"""
+        <div style='background: rgba(13, 17, 23, 0.4); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 5px;'>
+            {feed_html}
+        </div>
+        """, unsafe_allow_html=True)
+    except Exception:
+        # Fallback items with v2.0 styling
         for item in feed_items:
             st.markdown(f"""
             <div style="
                 display: flex; 
-                gap: 10px; 
-                margin-bottom: 12px; 
-                padding: 10px; 
-                background: white; 
-                border-radius: 8px; 
-                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-                border-left: 3px solid {item['color']};
-                transition: transform 0.2s ease;">
-                <div style="font-size: 1.2rem;">{item['icon']}</div>
+                gap: 12px; 
+                margin-bottom: 8px; 
+                padding: 12px; 
+                background: rgba(22, 27, 34, 0.6); 
+                border-radius: 10px; 
+                border: 1px solid rgba(255,255,255,0.05);
+                border-left: 2px solid {item['color']};
+                transition: all 0.3s ease;">
+                <div style="font-size: 1.1rem; filter: drop-shadow(0 0 5px {item['color']}40);">{item['icon']}</div>
                 <div style="flex: 1;">
-                    <div style="font-size: 0.85rem; line-height: 1.3; color: #1f2937;">{item['text']}</div>
-                    <div style="font-size: 0.7rem; color: #6b7280; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-                        <span style="width: 6px; height: 6px; background-color: {item['color']}; border-radius: 50%; display: inline-block;"></span>
-                        {item['time']}
-                    </div>
+                    <div style="font-size: 0.8rem; line-height: 1.4; color: #E6EDF3;">{item['text']}</div>
+                    <div style="font-size: 0.65rem; color: #8B949E; margin-top: 4px;">{item['time']}</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1724,24 +1724,212 @@ if CLAUDE_COMPANION_AVAILABLE:
                            f"• Active Market: {st.session_state.get('selected_market', 'Austin')}\n" +
                            "• Claude is context-aware and ready to assist")
 
+# Voice Claude Hub Renderer
+@ui_error_boundary("Voice Claude Hub")
+def render_voice_claude_hub():
+    """Render the Voice-Activated Claude interface."""
+    try:
+        # Add voice interface CSS
+        add_voice_interface_css()
+
+        # Main voice interface
+        st.markdown("### 🎤 Voice-Activated Claude Assistant")
+        st.markdown("*Experience hands-free AI assistance with natural voice commands*")
+
+        # Create tabs for different voice features
+        voice_tab1, voice_tab2 = st.tabs(["🎙️ Voice Commands", "⚙️ Voice Settings"])
+
+        with voice_tab1:
+            render_voice_claude_interface()
+
+        with voice_tab2:
+            render_voice_settings()
+
+        # Voice Claude status in session state
+        if 'voice_claude_initialized' not in st.session_state:
+            st.session_state.voice_claude_initialized = False
+
+        if not st.session_state.voice_claude_initialized:
+            st.info("💡 **First time using Voice Claude?** Click 'Activate Voice' to enable hands-free commands!")
+
+    except Exception as e:
+        st.error("Voice Claude interface temporarily unavailable")
+        st.info("Please try refreshing the page or contact support")
+
+# Proactive Intelligence Hub Renderer
+@ui_error_boundary("Proactive Intelligence Hub")
+def render_proactive_intelligence_hub():
+    """Render the Proactive Intelligence dashboard."""
+    try:
+        # Main proactive intelligence interface
+        st.markdown("### 🔮 Proactive Intelligence Dashboard")
+        st.markdown("*AI-powered alerts, predictions, and coaching for optimal performance*")
+
+        # Proactive Intelligence dashboard
+        render_proactive_intelligence_dashboard()
+
+        # Proactive intelligence status in session state
+        if 'proactive_intelligence_initialized' not in st.session_state:
+            st.session_state.proactive_intelligence_initialized = False
+
+        if not st.session_state.proactive_intelligence_initialized:
+            st.info("💡 **First time using Proactive Intelligence?** Click 'Start Monitoring' to enable 24/7 AI analysis!")
+
+    except Exception as e:
+        st.error("Proactive Intelligence interface temporarily unavailable")
+        st.info("Please try refreshing the page or contact support")
+
 render_claude_assistant(claude)
 
-if selected_hub == "🏢 Executive Command Center":
+if selected_hub == "Executive Command Center":
+    # Executive Swarm Activation
+    with st.container():
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown("### Executive Swarm Intelligence")
+            st.markdown("*Deploy a swarm of specialized agents to analyze your entire business ecosystem*")
+        with col2:
+            if st.button("🚀 Deploy Executive Swarm", use_container_width=True):
+                st.session_state.deploy_executive_swarm = True
+    
+    if st.session_state.get('deploy_executive_swarm', False):
+        with st.status("🧠 Swarm Intelligence Online. Synchronizing Agents...", expanded=True) as status:
+            st.write("🕵️ Market Analyst: Initializing semantic scan of Austin real estate trends...")
+            time.sleep(0.8)
+            st.write("📈 Performance Analyst: Auditing GHL lead conversion pipelines and response velocity...")
+            time.sleep(0.8)
+            st.write("📊 Pipeline Analyst: Calculating multi-horizon revenue forecasts and leakage points...")
+            time.sleep(0.8)
+            st.write("🎯 Strategic Advisor: Synthesizing specialist findings into executive action plan...")
+            time.sleep(0.5)
+            
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            # Simulated business data for swarm
+            business_data = {
+                "market": st.session_state.get('selected_market', 'Austin, TX'),
+                "metrics": mock_data.get("executive_metrics", {}),
+                "pipeline": mock_data.get("pipeline_data", {})
+            }
+            
+            swarm_results = loop.run_until_complete(
+                claude_companion.run_executive_analysis(business_data)
+            )
+            status.update(label="✅ Swarm Intelligence Report Ready!", state="complete", expanded=False)
+            
+            # Display Swarm Results with Premium Styling
+            st.markdown("### Executive Intelligence Report")
+            advisor = swarm_results.get("strategic_advisor", {})
+            
+            # Synthesis Dossier
+            synthesis_html = f"""
+            <div style='margin-bottom: 1rem;'>
+                <p style='font-size: 1.1rem; line-height: 1.6;'>{advisor.get('executive_summary', 'N/A')}</p>
+            </div>
+            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;'>
+                <div>
+                    <h4 style='color: #6366F1; border-bottom: 1px solid rgba(99, 102, 241, 0.3); padding-bottom: 0.5rem;'>Strategic Actions</h4>
+                    {"".join(f"<div style='margin-bottom: 0.8rem; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 4px;'><b>{i+1}.</b> {item}</div>" for i, item in enumerate(advisor.get('top_3_action_items', [])))}
+                </div>
+                <div>
+                    <h4 style='color: #6366F1; border-bottom: 1px solid rgba(99, 102, 241, 0.3); padding-bottom: 0.5rem;'>12-Month Horizon</h4>
+                    <p style='font-style: italic; color: #cbd5e1;'>{advisor.get('strategic_horizon_view', 'N/A')}</p>
+                    <div style='margin-top: 1rem; display: flex; align-items: center; gap: 10px;'>
+                        <span style='font-size: 0.8rem; color: #94a3b8;'>Confidence Index:</span>
+                        <div style='flex-grow: 1; height: 8px; background: #161B22; border-radius: 4px; overflow: hidden;'>
+                            <div style='width: {int(advisor.get("confidence_in_strategy", 0.8)*100)}%; height: 100%; background: linear-gradient(90deg, #6366F1, #8B5CF6);'></div>
+                        </div>
+                        <span style='font-size: 0.8rem; color: #6366F1; font-weight: 700;'>{int(advisor.get("confidence_in_strategy", 0.8)*100)}%</span>
+                    </div>
+                </div>
+            </div>
+            """
+            render_dossier_block(synthesis_html, title="STRATEGIC SYNTHESIS: CHIEF STRATEGY OFFICER")
+            
+            st.markdown("#### Specialist Findings")
+            specialists = swarm_results.get("specialist_insights", {})
+            
+            # Specialist Cards Grid
+            spec_cols = st.columns(3)
+            spec_icons = {"Market Analysis": "🌍", "Performance Analysis": "📈", "Pipeline Analysis": "📊"}
+            
+            for i, (name, result) in enumerate(specialists.items()):
+                with spec_cols[i % 3]:
+                    icon = spec_icons.get(name, "🤖")
+                    
+                    # Custom Specialist Card with Hover Animation
+                    st.markdown(f"""
+                    <style>
+                        .specialist-card {{
+                            background: rgba(22, 27, 34, 0.6);
+                            border: 1px solid rgba(255,255,255,0.1);
+                            border-radius: 12px;
+                            padding: 1.5rem;
+                            height: 220px;
+                            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                            position: relative;
+                            overflow: hidden;
+                        }}
+                        .specialist-card:hover {{
+                            transform: translateY(-8px) scale(1.02);
+                            border-color: #6366F1;
+                            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.2);
+                            background: rgba(99, 102, 241, 0.05);
+                        }}
+                        .specialist-card::before {{
+                            content: "";
+                            position: absolute;
+                            top: 0; left: 0; width: 100%; height: 2px;
+                            background: linear-gradient(90deg, transparent, #6366F1, transparent);
+                            transform: translateX(-100%);
+                            transition: transform 0.6s ease;
+                        }}
+                        .specialist-card:hover::before {{
+                            transform: translateX(100%);
+                        }}
+                    </style>
+                    <div class="specialist-card">
+                        <div style='font-size: 1.8rem; margin-bottom: 0.8rem;'>{icon}</div>
+                        <h4 style='margin: 0; color: white; font-family: "Space Grotesk", sans-serif;'>{name}</h4>
+                        <div style='margin-top: 1rem; font-size: 0.85rem; color: #94a3b8; line-height: 1.4;'>
+                            {json.dumps(result, indent=2)[:150]}...
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    with st.expander("Expand Intelligence"):
+                        st.json(result)
+            
+            if st.button("Close Report", use_container_width=True):
+                st.session_state.deploy_executive_swarm = False
+                st.rerun()
+                
+    st.markdown("---")
     render_executive_hub(services, mock_data, sparkline, render_insight_card)
-elif selected_hub == "🧠 Lead Intelligence Hub":
+elif selected_hub == "Lead Intelligence Hub":
     render_lead_intelligence_hub(services, mock_data, claude, market_key, selected_market, elite_mode=st.session_state.get('elite_mode', False))
-elif selected_hub == "⚡ Real-Time Intelligence":
+elif selected_hub == "Voice Claude":
+    render_voice_claude_hub()
+elif selected_hub == "Proactive Intelligence":
+    render_proactive_intelligence_hub()
+elif selected_hub == "Real-Time Intelligence":
     render_realtime_intelligence_dashboard()
-elif selected_hub == "🏠 Buyer Journey Hub":
+elif selected_hub == "Buyer Journey Hub":
     render_buyer_journey_hub(
+        services,
         st.session_state.get('selected_lead_name', '-- Select a Lead --'),
         render_enhanced_property_search,
         render_buyer_profile_builder,
         render_financing_calculator,
         render_neighborhood_explorer
     )
-elif selected_hub == "🏡 Seller Journey Hub":
+elif selected_hub == "Seller Journey Hub":
     render_seller_journey_hub(
+        services,
         render_property_valuation_engine,
         render_seller_prep_checklist,
         render_marketing_campaign_dashboard,
@@ -1749,30 +1937,53 @@ elif selected_hub == "🏡 Seller Journey Hub":
         render_transaction_timeline,
         render_seller_analytics
     )
-elif selected_hub == "🤖 Automation Studio":
+elif selected_hub == "Automation Studio":
     studio_hub = AutomationStudioHub(services, claude)
     studio_hub.render_hub()
-elif selected_hub == "💰 Sales Copilot":
+elif selected_hub == "Sales Copilot":
     copilot_hub = SalesCopilotHub(services, claude)
     copilot_hub.render_hub()
-elif selected_hub == "📈 Ops & Optimization":
+elif selected_hub == "Ops & Optimization":
     ops_hub = OpsOptimizationHub(services, claude)
     ops_hub.render_hub()
-elif selected_hub == "🐝 Swarm Intelligence":
-    render_swarm_visualizer()
+elif selected_hub == "Swarm Intelligence":
+    lead_name = st.session_state.get('selected_lead_name', '-- Select a Lead --')
+    lead_data = st.session_state.get('lead_options', {}).get(lead_name)
+    render_swarm_visualizer(lead_name, lead_data)
+elif selected_hub == "Deep Research":
+    from ghl_real_estate_ai.streamlit_demo.components.deep_research import render_deep_research_hub
+    render_deep_research_hub()
+# Floating Claude Assistant
+render_floating_claude()
 
 # Footer
+
 st.markdown("---")
+
 st.markdown("""
-<div style='text-align: center; padding: 2rem; background: #F7F8FA; border-radius: 12px; margin-top: 3rem;'>
-    <div style='color: #2A2A33; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;'>
-        🚀 Production-Ready Multi-Tenant AI System
+
+<div style='text-align: center; padding: 2rem; background: rgba(13, 17, 23, 0.6); border-radius: 12px; margin-top: 3rem; border: 1px solid rgba(255,255,255,0.05);'>
+
+    <div style='color: #FFFFFF; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;'>
+
+        Production-Ready Multi-Tenant AI System
+
     </div>
-    <div style='color: #6B7280; font-size: 0.9rem;'>
+
+    <div style='color: #8B949E; font-size: 0.9rem;'>
+
         Built for Jorge Sales | Claude Sonnet 4.5 | GHL Integration Ready
+
     </div>
-    <div style='margin-top: 1rem; color: #6B7280; font-size: 0.85rem;'>
+
+    <div style='margin-top: 1rem; color: #8B949E; font-size: 0.85rem;'>
+
         Consolidated Hub Architecture | Path B Backend | 522+ Tests Passing
+
     </div>
+
 </div>
+
 """, unsafe_allow_html=True)
+
+

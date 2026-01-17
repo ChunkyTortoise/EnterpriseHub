@@ -1,0 +1,6 @@
+Pricing_Model,Monthly_Base_Fee_USD,Performance_Component,Annual_Value_Range_Low_USD,Annual_Value_Range_High_USD,Client_Financial_Risk,Vendor_Revenue_Predictability,Incentive_Alignment
+Pure Subscription,1997,None,23964,23964,High,Very High,None (fixed fee)
+Tiered Value-Based,997,Tier upgrades at milestone pipeline values,11964,35964,Medium,High,Scales with success
+Performance Hybrid (RECOMMENDED),797,2% of AI-influenced closed deals,9564,50000,Low,Medium-High,Strong alignment on deal performance
+Revenue Share,497,10% of attributed commission revenue,5964,100000,Very Low,Low,Maximum alignment (shared revenue)
+Cost-Plus Value,1497,10% of documented monthly time savings,17964,40000,Medium-Low,High,Aligned on efficiency gains

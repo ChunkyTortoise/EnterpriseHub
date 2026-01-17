@@ -29,8 +29,18 @@ class Settings(BaseSettings):
     temperature: float = 0.7
     max_tokens: int = 150
     default_llm_provider: str = "claude"
-    gemini_model: Optional[str] = None
+    gemini_model: str = "gemini-1.5-pro-latest"
     google_api_key: Optional[str] = None
+    perplexity_api_key: Optional[str] = None
+    perplexity_model: str = "sonar"
+
+    # LLM Costs (per 1M tokens)
+    claude_input_cost_per_1m: float = 3.00
+    claude_output_cost_per_1m: float = 15.00
+    gemini_input_cost_per_1m: float = 1.25
+    gemini_output_cost_per_1m: float = 3.75
+    perplexity_input_cost_per_1m: float = 1.00
+    perplexity_output_cost_per_1m: float = 1.00
 
     # Database Configuration
     database_url: Optional[str] = None  # PostgreSQL (Railway auto-provides)

@@ -10,9 +10,9 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from services.workflow_marketplace import WorkflowMarketplaceService, TemplateSortBy
-from services.template_installer import TemplateInstallerService
-from services.template_manager import TemplateManagerService
+from ghl_real_estate_ai.services.workflow_marketplace import WorkflowMarketplaceService, TemplateSortBy
+from ghl_real_estate_ai.services.template_installer import TemplateInstallerService
+from ghl_real_estate_ai.services.template_manager import TemplateManagerService
 
 
 class TestWorkflowMarketplace(unittest.TestCase):

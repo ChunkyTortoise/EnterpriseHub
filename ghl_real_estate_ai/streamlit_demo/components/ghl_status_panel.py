@@ -23,107 +23,111 @@ def render_ghl_status_panel():
     
     # Main status card
     if connection_status["connected"]:
-        st.success("✅ **Connected to GoHighLevel**")
+        st.markdown("""
+        <div style='background: rgba(16, 185, 129, 0.1); padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 2rem; display: flex; align-items: center; gap: 12px;'>
+            <div class="status-pulse" style="background: #10b981;"></div>
+            <div style="color: #10b981; font-weight: 700; font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.85rem;">Enterprise Node Online: GHL Sync Active</div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Status grid
+        # Status grid - Obsidian Edition
         col1, col2 = st.columns(2)
         
+        card_style = "background: rgba(22, 27, 34, 0.7); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1.25rem; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px);"
+        label_style = "font-size: 0.75rem; color: #8B949E; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;"
+        value_style = "font-size: 1.25rem; font-weight: 700; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif;"
+        
         with col1:
-            st.markdown("""
-            <div style='background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 1rem;'>
-                <div style='display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;'>
-                    <div style='font-size: 2rem;'>📊</div>
+            st.markdown(f"""
+            <div style='{card_style}'>
+                <div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;'>
+                    <div style='font-size: 2rem; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));'>📊</div>
                     <div>
-                        <div style='font-size: 0.875rem; color: #6b7280;'>Location ID</div>
-                        <div style='font-size: 1.1rem; font-weight: 700; color: #1e293b;'>{}</div>
+                        <div style='{label_style}'>Location ID</div>
+                        <div style='{value_style}'>{connection_status["location_id"]}</div>
                     </div>
                 </div>
-                <div style='font-size: 0.75rem; color: #10b981; font-weight: 600;'>
-                    ✓ API Key Valid
+                <div style='font-size: 0.7rem; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;'>
+                    ✓ AUTHENTICATION VERIFIED
                 </div>
             </div>
-            """.format(connection_status["location_id"]), unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
             
-            st.markdown("""
-            <div style='background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 1rem;'>
-                <div style='display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;'>
-                    <div style='font-size: 2rem;'>👥</div>
+            st.markdown(f"""
+            <div style='{card_style}'>
+                <div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;'>
+                    <div style='font-size: 2rem; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));'>👥</div>
                     <div>
-                        <div style='font-size: 0.875rem; color: #6b7280;'>Total Contacts</div>
-                        <div style='font-size: 1.1rem; font-weight: 700; color: #1e293b;'>{:,}</div>
+                        <div style='{label_style}'>Total Contacts</div>
+                        <div style='{value_style}'>{connection_status["total_contacts"]:,}</div>
                     </div>
                 </div>
-                <div style='font-size: 0.75rem; color: #6b7280;'>
-                    Last Sync: {} ago
+                <div style='font-size: 0.7rem; color: #8B949E; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;'>
+                    Last Sync: {connection_status["last_sync"]} ago
                 </div>
             </div>
-            """.format(connection_status["total_contacts"], connection_status["last_sync"]), unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
             
-            st.markdown("""
-            <div style='background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e5e7eb;'>
-                <div style='display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;'>
-                    <div style='font-size: 2rem;'>🔔</div>
+            st.markdown(f"""
+            <div style='{card_style}'>
+                <div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;'>
+                    <div style='font-size: 2rem; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));'>🔔</div>
                     <div>
-                        <div style='font-size: 0.875rem; color: #6b7280;'>Webhooks Active</div>
-                        <div style='font-size: 1.1rem; font-weight: 700; color: #1e293b;'>{} / 3</div>
+                        <div style='{label_style}'>Webhooks Active</div>
+                        <div style='{value_style}'>{connection_status["webhooks_active"]} / 3</div>
                     </div>
                 </div>
-                <div style='font-size: 0.75rem; color: #10b981; font-weight: 600;'>
-                    ✓ All Endpoints Configured
+                <div style='font-size: 0.7rem; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;'>
+                    ✓ ALL ENDPOINTS SECURE
                 </div>
             </div>
-            """.format(connection_status["webhooks_active"]), unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
         
         with col2:
-            st.markdown("""
-            <div style='background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 1rem;'>
-                <div style='display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;'>
-                    <div style='font-size: 2rem;'>💬</div>
+            st.markdown(f"""
+            <div style='{card_style}'>
+                <div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;'>
+                    <div style='font-size: 2rem; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));'>💬</div>
                     <div>
-                        <div style='font-size: 0.875rem; color: #6b7280;'>Active Conversations</div>
-                        <div style='font-size: 1.1rem; font-weight: 700; color: #1e293b;'>{}</div>
+                        <div style='{label_style}'>Active Conversations</div>
+                        <div style='{value_style}'>{connection_status["active_conversations"]}</div>
                     </div>
                 </div>
-                <div style='font-size: 0.75rem; color: #f59e0b; font-weight: 600;'>
-                    {} unread messages
+                <div style='font-size: 0.7rem; color: #f59e0b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;'>
+                    {connection_status["unread_messages"]} UNREAD SIGNALS
                 </div>
             </div>
-            """.format(connection_status["active_conversations"], connection_status["unread_messages"]), unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
             
-            st.markdown("""
-            <div style='background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 1rem;'>
-                <div style='display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;'>
-                    <div style='font-size: 2rem;'>🎤</div>
+            st.markdown(f"""
+            <div style='{card_style}'>
+                <div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;'>
+                    <div style='font-size: 2rem; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));'>🎤</div>
                     <div>
-                        <div style='font-size: 0.875rem; color: #6b7280;'>Voice AI (VAPI)</div>
-                        <div style='font-size: 1.1rem; font-weight: 700; color: #10b981;'>Connected</div>
+                        <div style='{label_style}'>Voice AI (VAPI)</div>
+                        <div style='{value_style}'>CONNECTED</div>
                     </div>
                 </div>
-                <div style='font-size: 0.75rem; color: #6b7280;'>
-                    {} calls today
+                <div style='font-size: 0.7rem; color: #8B949E; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;'>
+                    {connection_status["calls_today"]} transmissions today
                 </div>
             </div>
-            """.format(connection_status["calls_today"]), unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
             
-            st.markdown("""
-            <div style='background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e5e7eb;'>
-                <div style='display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;'>
-                    <div style='font-size: 2rem;'>📈</div>
+            st.markdown(f"""
+            <div style='{card_style}'>
+                <div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;'>
+                    <div style='font-size: 2rem; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));'>📈</div>
                     <div>
-                        <div style='font-size: 0.875rem; color: #6b7280;'>Today's Activity</div>
-                        <div style='font-size: 1.1rem; font-weight: 700; color: #1e293b;'>{} interactions</div>
+                        <div style='{label_style}'>Today's Activity</div>
+                        <div style='{value_style}'>{connection_status["total_interactions"]} interactions</div>
                     </div>
                 </div>
-                <div style='font-size: 0.75rem; color: #6b7280;'>
-                    {} SMS • {} Calls • {} Emails
+                <div style='font-size: 0.7rem; color: #8B949E; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;'>
+                    {connection_status["sms_today"]} SMS • {connection_status["calls_today"]} CALLS • {connection_status["emails_today"]} EMAIL
                 </div>
             </div>
-            """.format(
-                connection_status["total_interactions"],
-                connection_status["sms_today"],
-                connection_status["calls_today"],
-                connection_status["emails_today"]
-            ), unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
         
         # Test connection button
         st.markdown("---")
@@ -183,33 +187,33 @@ def check_ghl_connection() -> Dict[str, Any]:
 
 
 def render_ghl_quick_stats():
-    """Render a compact version for sidebar or header"""
+    """Render a compact version for sidebar or header - Obsidian Edition"""
     
     status = check_ghl_connection()
     
     if status["connected"]:
         st.markdown(f"""
-        <div style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-                    padding: 1rem; border-radius: 8px; color: white; margin-bottom: 1rem;'>
-            <div style='display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;'>
-                <div style='font-size: 1.25rem;'>✅</div>
-                <div style='font-weight: 700; font-size: 0.9rem;'>GHL Connected</div>
+        <div style='background: rgba(16, 185, 129, 0.1); 
+                    padding: 1.25rem; border-radius: 12px; color: #FFFFFF; margin-bottom: 1.5rem; border: 1px solid rgba(16, 185, 129, 0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.3);'>
+            <div style='display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem;'>
+                <div class="status-pulse" style="background: #10b981; width: 8px; height: 8px;"></div>
+                <div style='font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; font-family: "Space Grotesk", sans-serif; color: #10b981;'>GHL LINKED</div>
             </div>
-            <div style='font-size: 0.75rem; opacity: 0.9;'>
-                {status["total_contacts"]} contacts • {status["active_conversations"]} active conversations
+            <div style='font-size: 0.75rem; color: #8B949E; font-family: "Inter", sans-serif; font-weight: 500;'>
+                {status["total_contacts"]} nodes • {status["active_conversations"]} active streams
             </div>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <div style='background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
-                    padding: 1rem; border-radius: 8px; color: white; margin-bottom: 1rem;'>
-            <div style='display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;'>
-                <div style='font-size: 1.25rem;'>❌</div>
-                <div style='font-weight: 700; font-size: 0.9rem;'>GHL Disconnected</div>
+        <div style='background: rgba(239, 68, 68, 0.1); 
+                    padding: 1.25rem; border-radius: 12px; color: #FFFFFF; margin-bottom: 1.5rem; border: 1px solid rgba(239, 68, 68, 0.2);'>
+            <div style='display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem;'>
+                <div style='font-size: 1rem;'>❌</div>
+                <div style='font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; font-family: "Space Grotesk", sans-serif; color: #ef4444;'>GHL OFFLINE</div>
             </div>
-            <div style='font-size: 0.75rem; opacity: 0.9;'>
-                Configure API credentials in settings
+            <div style='font-size: 0.75rem; color: #8B949E; font-family: "Inter", sans-serif;'>
+                Authentication required in secure settings.
             </div>
         </div>
         """, unsafe_allow_html=True)

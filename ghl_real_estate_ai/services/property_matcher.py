@@ -15,6 +15,7 @@ import time
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.property_matching_strategy import (
     PropertyMatchingStrategy,
     BasicFilteringStrategy,
@@ -57,6 +58,7 @@ class PropertyMatcher:
             provider="claude",
             model=settings.claude_model
         )
+        self.analytics = AnalyticsService()
         # Strategy Pattern Initialization
         self.strategy: PropertyMatchingStrategy = BasicFilteringStrategy()
 
@@ -230,6 +232,18 @@ Example: "This South Lamar home is a strategic capture; it sits 5% below your bu
                 temperature=0.7,
                 max_tokens=200
             )
+            
+            # Record usage
+            location_id = preferences.get('location_id', 'unknown')
+            await self.analytics.track_llm_usage(
+                location_id=location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            )
+
             return response.content.strip()
         except Exception as e:
             logger.error(f"Agentic explanation failed: {e}")

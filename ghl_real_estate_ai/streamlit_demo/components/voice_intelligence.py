@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 
 # Import enhanced services
 try:
-    from services.claude_orchestrator import get_claude_orchestrator
+    from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
     CLAUDE_AVAILABLE = True
 except ImportError:
     CLAUDE_AVAILABLE = False
@@ -27,25 +27,25 @@ def render_voice_intelligence():
     lead_context = lead_options.get(selected_lead, {})
     lead_id = lead_context.get('lead_id', 'demo_lead')
 
-    # Connection Status
+    # Connection Status - Obsidian Edition
     col_status1, col_status2, col_status3 = st.columns([1, 1, 1])
     with col_status1:
         st.markdown("""
-        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
-            <div class="live-indicator" style="width: 10px; height: 10px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981;"></div>
-            <div style="font-size: 0.8rem; color: #065f46; font-weight: 700;">VAPI STREAM: ACTIVE</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            <div class="status-pulse" style="width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
+            <div style="font-size: 0.75rem; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">STREAM: ACTIVE</div>
         </div>
         """, unsafe_allow_html=True)
     with col_status2:
         st.markdown("""
-        <div style="padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; font-size: 0.8rem; font-weight: 600; color: #64748b;">
-            Latency: <span style="color: #3b82f6;">142ms</span>
+        <div style="padding: 12px; background: rgba(22, 27, 34, 0.6); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 0.75rem; font-weight: 700; color: #8B949E; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">
+            LATENCY: <span style="color: #6366F1;">142ms</span>
         </div>
         """, unsafe_allow_html=True)
     with col_status3:
         st.markdown(f"""
-        <div style="padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; font-size: 0.8rem; font-weight: 600; color: #64748b;">
-            Lead: <span style="color: #8B5CF6;">{selected_lead}</span>
+        <div style="padding: 12px; background: rgba(22, 27, 34, 0.6); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 0.75rem; font-weight: 700; color: #8B949E; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">
+            NODE: <span style="color: #6366F1;">{selected_lead.upper()}</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -54,32 +54,32 @@ def render_voice_intelligence():
     col_main, col_side = st.columns([2, 1])
 
     with col_main:
-        # Voice Waveform
-        st.markdown("#### 🌊 Audio Spectrum")
+        # Voice Waveform - Obsidian Edition
+        st.markdown("#### 🌊 AUDIO SPECTRUM")
         st.markdown("""
-        <div class="waveform-container" style="background: #0f172a; border-radius: 12px; height: 100px;">
-            <div class="waveform-bar" style="animation-delay: 0.1s; background: #3b82f6;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.3s; background: #60a5fa;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.2s; background: #93c5fd;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.5s; background: #3b82f6;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.4s; background: #60a5fa;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.1s; background: #93c5fd;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.3s; background: #3b82f6;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.2s; background: #60a5fa;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.5s; background: #93c5fd;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.4s; background: #3b82f6;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.1s; background: #60a5fa;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.3s; background: #93c5fd;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.2s; background: #3b82f6;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.5s; background: #60a5fa;"></div>
-            <div class="waveform-bar" style="animation-delay: 0.4s; background: #93c5fd;"></div>
+        <div class="waveform-container" style="background: rgba(5, 7, 10, 0.8); border-radius: 16px; height: 120px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+            <div class="waveform-bar" style="animation-delay: 0.1s; background: #6366F1;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.3s; background: #8b5cf6;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.2s; background: #6366F1;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.5s; background: #8b5cf6;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.4s; background: #6366F1;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.1s; background: #8b5cf6;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.3s; background: #6366F1;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.2s; background: #8b5cf6;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.5s; background: #6366F1;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.4s; background: #8b5cf6;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.1s; background: #6366F1;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.3s; background: #8b5cf6;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.2s; background: #6366F1;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.5s; background: #8b5cf6;"></div>
+            <div class="waveform-bar" style="animation-delay: 0.4s; background: #6366F1;"></div>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         
         # Live Transcript
-        st.markdown("#### 📜 Live Transcript")
+        st.markdown("#### 📜 LIVE COMMAND TRANSCRIPT")
         transcript_container = st.container(height=300, border=True)
         
         current_transcript = [
@@ -91,17 +91,17 @@ def render_voice_intelligence():
 
         with transcript_container:
             for entry in current_transcript:
-                role_color = "#64748b" if entry["role"] == "AI" else "#1e293b"
-                st.markdown(f'<div style="font-size: 0.9rem; color: {role_color}; margin-bottom: 10px;">[{entry["time"]}] <b>{entry["role"]}:</b> {entry["text"]}</div>', unsafe_allow_html=True)
+                role_color = "#8B949E" if entry["role"] == "AI" else "#E6EDF3"
+                st.markdown(f'<div style="font-size: 0.95rem; color: {role_color}; margin-bottom: 12px; font-family: \'Inter\', sans-serif;">[{entry["time"]}] <b style="color: #6366F1;">{entry["role"]}:</b> {entry["text"]}</div>', unsafe_allow_html=True)
             
-            st.markdown(f'<div style="font-size: 0.9rem; color: #10b981; font-weight: 700;">[NOW] <b>AI:</b> Claude is analyzing financing response...</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="font-size: 0.95rem; color: #10b981; font-weight: 700; font-family: \'Space Grotesk\', sans-serif;">[NOW] <b>AI:</b> CLAUDE SYNTHESIZING RESPONSE...</div>', unsafe_allow_html=True)
 
     with col_side:
         # Real-time Intelligence via Claude
-        st.markdown("#### 🧠 Live AI Coaching")
+        st.markdown("#### 🧠 LIVE AI COACHING")
         
         if CLAUDE_AVAILABLE:
-            with st.spinner("Claude is listening..."):
+            with st.spinner("Analyzing audio stream..."):
                 try:
                     orchestrator = get_claude_orchestrator()
                     try:
@@ -123,21 +123,21 @@ def render_voice_intelligence():
                     )
                     
                     st.markdown(f"""
-                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
-                        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 10px;">Claude's Live Feed:</div>
-                        <div style="font-size: 0.9rem; line-height: 1.5;">{coaching_result.content}</div>
+                    <div style="background: rgba(22, 27, 34, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 8px 32px rgba(0,0,0,0.4); backdrop-filter: blur(12px);">
+                        <div style="font-size: 0.75rem; color: #6366F1; text-transform: uppercase; font-weight: 800; margin-bottom: 12px; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.1em;">Claude's Live Intelligence:</div>
+                        <div style="font-size: 0.95rem; line-height: 1.6; color: #E6EDF3; font-family: 'Inter', sans-serif;">{coaching_result.content}</div>
                     </div>
                     """, unsafe_allow_html=True)
                     
                 except Exception as e:
                     st.error(f"Coaching Error: {e}")
         else:
-            # Fallback
+            # Fallback - Obsidian Command Style
             st.markdown("""
-            <div style="background: #fdf2f2; padding: 12px; border-radius: 8px; border-left: 4px solid #ef4444; margin-bottom: 10px;">
-                <div style="font-size: 0.75rem; color: #991b1b; font-weight: 700;">OBJECTION DETECTED</div>
-                <div style="font-size: 0.85rem; color: #1e293b; font-weight: 600;">"Pricing is too high"</div>
-                <div style="font-size: 0.8rem; color: #4b5563; margin-top: 4px;">Action: Pivot to TECH CORRIDOR EXPANSION. Mention 12% projected growth.</div>
+            <div style="background: rgba(239, 68, 68, 0.1); padding: 1.25rem; border-radius: 12px; border-left: 4px solid #ef4444; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); border-left: 4px solid #ef4444;">
+                <div style="font-size: 0.75rem; color: #ef4444; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">OBJECTION DETECTED</div>
+                <div style="font-size: 1rem; color: #FFFFFF; font-weight: 700; margin-top: 4px; font-family: 'Space Grotesk', sans-serif;">"Pricing is too high"</div>
+                <div style="font-size: 0.9rem; color: #8B949E; margin-top: 8px; line-height: 1.5; font-family: 'Inter', sans-serif;">Directive: Pivot to TECH CORRIDOR expansion. Highlight 12% projected appreciation.</div>
             </div>
             """, unsafe_allow_html=True)
         

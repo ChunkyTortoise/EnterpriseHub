@@ -23,7 +23,7 @@ async def test_strategy_pattern_direct():
     print("🎯 Testing Strategy Pattern directly...")
 
     try:
-        from services.scoring import (
+        from ghl_real_estate_ai.services.scoring import (
             create_property_matcher, quick_score_property
         )
 
@@ -74,7 +74,7 @@ async def test_basic_integration():
 
     try:
         # Import Strategy Pattern components
-        from services.scoring import create_property_matcher, ScoringContext
+        from ghl_real_estate_ai.services.scoring import create_property_matcher, ScoringContext
 
         # Create strategy matcher
         strategy_matcher = create_property_matcher("enhanced", fallback_strategy="basic")

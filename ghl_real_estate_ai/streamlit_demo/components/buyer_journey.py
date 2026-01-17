@@ -1,12 +1,14 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import asyncio
 import json
+import time
 
 # Import enhanced services
 try:
-    from services.claude_orchestrator import get_claude_orchestrator
+    from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
     CLAUDE_AVAILABLE = True
 except ImportError:
     CLAUDE_AVAILABLE = False
@@ -228,14 +230,15 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
 
     with tab1:
         st.markdown("#### Real-time Engagement Velocity")
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
         
         # Mock engagement data
         engagement_dates = pd.date_range(end=pd.Timestamp.now(), periods=10, freq='D')
         engagement_values = [5, 8, 12, 7, 15, 22, 18, 25, 30, 28]
         
         fig = px.area(x=engagement_dates, y=engagement_values, title="Activity Intensity (Last 10 Days)")
-        fig.update_layout(xaxis_title="Date", yaxis_title="Action Count")
-        st.plotly_chart(fig, use_container_width=True)
+        fig.update_traces(line_color='#6366F1', fillcolor='rgba(99, 102, 241, 0.1)')
+        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
 
         # Engagement insights
         if churn_risk_data:
@@ -291,6 +294,7 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
 
     with tab4:
         st.markdown("#### 🚨 AI Retention & Churn Analytics")
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         if churn_risk_data:
             # Churn risk breakdown
@@ -303,15 +307,27 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
             ]
             risk_scores = [0.1, 0.15, 0.2, 0.25, 0.45, 0.1]  # Mock risk scores
 
-            fig = px.bar(
+            fig = go.Figure(data=[go.Bar(
                 x=risk_factors,
                 y=risk_scores,
-                title="Individual Risk Factors Contributing to Churn",
-                color=risk_scores,
-                color_continuous_scale=["green", "orange", "red"]
-            )
-            fig.update_layout(showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+                marker_color=['#10b981', '#10b981', '#6366f1', '#f59e0b', '#ef4444', '#10b981']
+            )])
+            fig.update_layout(title="Individual Risk Factors Contributing to Churn")
+            st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
+            
+            # New Behavioral DNA for Retention
+            st.markdown("##### 🧬 Behavioral DNA Radar")
+            dna_cats = ['Urgency', 'Stability', 'Rapport', 'Tech-Savvy', 'Price Sens.', 'Authority']
+            dna_vals = [0.9, 0.4, 0.85, 0.7, 0.3, 0.6]
+            
+            fig_radar = go.Figure(data=go.Scatterpolar(
+                r=dna_vals,
+                theta=dna_cats,
+                fill='toself',
+                line_color='#8B5CF6'
+            ))
+            fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 1])))
+            st.plotly_chart(style_obsidian_chart(fig_radar), use_container_width=True)
 
             # Detailed retention recommendations
             st.markdown("##### 💡 AI Retention Recommendations")
@@ -349,69 +365,93 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
             st.markdown("• Send personalized neighborhood and school reports")
             st.markdown("• Monitor response times and engagement levels")
 
-def render_buyer_journey_hub(selected_lead_name, render_enhanced_property_search, render_buyer_profile_builder, render_financing_calculator, render_neighborhood_explorer):
-    """Render the complete buyer journey experience"""
-    st.title("🏠 Buyer Journey Hub")
-    st.markdown("*Comprehensive buyer experience from search to closing*")
+def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_property_search, render_buyer_profile_builder, render_financing_calculator, render_neighborhood_explorer):
+    """Render the complete buyer journey experience - Obsidian Command Edition"""
+    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart, render_dossier_block
+    
+    st.markdown("""
+        <div style="background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(20px); padding: 1.5rem 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);">
+            <div>
+                <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; margin: 0; color: #FFFFFF; letter-spacing: -0.04em; text-transform: uppercase;">🏠 BUYER JOURNEY HUB</h1>
+                <p style="font-family: 'Inter', sans-serif; font-size: 1rem; margin: 0.5rem 0 0 0; color: #8B949E; font-weight: 500; letter-spacing: 0.02em;">Comprehensive buyer experience from search to closing</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="background: rgba(99, 102, 241, 0.1); color: #6366F1; padding: 10px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; border: 1px solid rgba(99, 102, 241, 0.3); letter-spacing: 0.1em;">
+                    NODE: {selected_lead_name.upper() if selected_lead_name != '-- Select a Lead --' else 'READY'}
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
-    # Claude's Journey Counsel
-    with st.container(border=True):
-        col_c1, col_c2 = st.columns([1, 8])
-        with col_c1:
-            st.markdown("<div style='font-size: 3rem; text-align: center;'>🗺️</div>", unsafe_allow_html=True)
-        with col_c2:
-            st.markdown("### Claude's Buyer Journey Counsel")
-            
-            if CLAUDE_AVAILABLE and selected_lead_name != "-- Select a Lead --":
-                orchestrator = get_claude_orchestrator()
+    # Claude's Journey Counsel - Obsidian Glassmorphism
+    st.markdown("""
+        <div style='background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%); 
+                    border: 1px solid rgba(99, 102, 241, 0.2); 
+                    border-radius: 20px; 
+                    padding: 2.5rem; 
+                    margin-bottom: 3rem; 
+                    backdrop-filter: blur(10px);'>
+            <div style='display: flex; align-items: flex-start; gap: 2rem;'>
+                <div style='font-size: 4rem; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.4));'>🧭</div>
+                <div style='flex-grow: 1;'>
+                    <h3 style='margin: 0 0 1rem 0; color: white !important; font-family: "Space Grotesk", sans-serif; font-size: 1.75rem;'>Claude's Journey Counsel</h3>
+                    <div style='color: #f8fafc; font-size: 1.1rem; line-height: 1.6; font-weight: 500;'>
+    """, unsafe_allow_html=True)
+    
+    if CLAUDE_AVAILABLE and selected_lead_name != "-- Select a Lead --":
+        orchestrator = get_claude_orchestrator()
+        
+        with st.spinner("Claude is mapping the buyer journey..."):
+            try:
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
                 
-                with st.spinner("Claude is mapping the buyer journey..."):
-                    try:
-                        try:
-                            loop = asyncio.get_event_loop()
-                        except RuntimeError:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
-                        
-                        # Get lead context
-                        lead_options = st.session_state.get('lead_options', {})
-                        lead_data = lead_options.get(selected_lead_name, {})
-                        
-                        # Use chat_query for journey advice
-                        journey_result = loop.run_until_complete(
-                            orchestrator.chat_query(
-                                query="Provide strategic buyer journey counsel for this lead. Map their current stage and suggest 2 immediate next steps.",
-                                context={"lead_name": selected_lead_name, "lead_data": lead_data, "task": "journey_counsel"}
-                            )
-                        )
-                        st.markdown(journey_result.content)
-                    except Exception as e:
-                        st.error(f"Counsel Error: {str(e)}")
-                        st.markdown(f"Monitoring **{selected_lead_name}**. High probability of conversion if we maintain momentum.")
-            else:
-                # Dynamic journey insights (Legacy/Fallback)
-                if selected_lead_name == "Sarah Chen (Apple Engineer)":
-                    journey_text = """
-                    *Monitoring Sarah's North Austin search:*
-                    - **🧭 Path Finder:** Sarah has reached the 'Viewing' stage. She's 40% more likely to close if we show her the Teravista property this weekend.
-                    - **📉 Value Alert:** New listing in Cedar Park just hit the market. It aligns with her 45-day relocation timeline perfectly.
-                    """
-                elif selected_lead_name == "David Kim (Investor)":
-                    journey_text = """
-                    *Monitoring David's portfolio expansion:*
-                    - **🧭 Path Finder:** David is in 'Evaluation' mode. He's analyzed 4 Manor properties. High probability of multi-unit offer if Cap Rate is > 5%.
-                    - **📉 Value Alert:** An off-market duplex in Del Valle just became available. I've sent him the ROI breakdown.
-                    """
-                else:
-                    journey_text = """
-                    *Monitoring your active buyers in Austin:*
-                    - **🧭 Path Finder:** General engagement is steady. Recommend personalized property alerts for the 'Warm' lead segment.
-                    - **📉 Value Alert:** Recent price drops in East Austin provide an opening for first-time buyers.
-                    """
-                st.markdown(journey_text)
-            
-            if st.button("🚀 Alert All Matching Buyers"):
-                st.toast("Syncing alerts to GHL workflows...", icon="🔔")
+                # Get lead context
+                lead_options = st.session_state.get('lead_options', {})
+                lead_data = lead_options.get(selected_lead_name, {})
+                
+                # Use chat_query for journey advice
+                journey_result = loop.run_until_complete(
+                    orchestrator.chat_query(
+                        query="Provide strategic buyer journey counsel for this lead. Map their current stage and suggest 2 immediate next steps.",
+                        context={"lead_name": selected_lead_name, "lead_data": lead_data, "task": "journey_counsel"}
+                    )
+                )
+                st.markdown(journey_result.content)
+            except Exception as e:
+                st.markdown(f"Monitoring **{selected_lead_name}**. High probability of conversion if we maintain momentum.")
+    else:
+        # Dynamic journey insights (Legacy/Fallback)
+        if selected_lead_name == "Sarah Chen (Apple Engineer)":
+            journey_text = """
+            <ul style='margin: 0; padding-left: 1.5rem;'>
+                <li><strong>🧭 Path Finder:</strong> Sarah has reached the 'Viewing' stage. She's 40% more likely to close if we show her the Teravista property this weekend.</li>
+                <li><strong>📉 Value Alert:</strong> New listing in Cedar Park just hit the market. It aligns with her 45-day relocation timeline perfectly.</li>
+            </ul>
+            """
+        elif selected_lead_name == "David Kim (Investor)":
+            journey_text = """
+            <ul style='margin: 0; padding-left: 1.5rem;'>
+                <li><strong>🧭 Path Finder:</strong> David is in 'Evaluation' mode. He's analyzed 4 Manor properties. High probability of multi-unit offer if Cap Rate is > 5%.</li>
+                <li><strong>📉 Value Alert:</strong> An off-market duplex in Del Valle just became available. I've sent him the ROI breakdown.</li>
+            </ul>
+            """
+        else:
+            journey_text = """
+            <ul style='margin: 0; padding-left: 1.5rem;'>
+                <li><strong>🧭 Path Finder:</strong> General engagement is steady. Recommend personalized property alerts for the 'Warm' lead segment.</li>
+                <li><strong>📉 Value Alert:</strong> Recent price drops in East Austin provide an opening for first-time buyers.</li>
+            </ul>
+            """
+        st.markdown(journey_text, unsafe_allow_html=True)
+    
+    st.markdown("</div></div></div>", unsafe_allow_html=True)
+    
+    if st.button("🚀 Execute Strategic Engagement", use_container_width=True, type="primary"):
+        st.toast("Syncing alerts to GHL workflows...", icon="🔔")
 
     # Buyer navigation tabs
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
@@ -429,8 +469,8 @@ def render_buyer_journey_hub(selected_lead_name, render_enhanced_property_search
 
     with tab2:
         try:
-            from components.property_swipe import render_property_swipe
-            render_property_swipe()
+            from ghl_real_estate_ai.streamlit_demo.components.property_swipe import render_property_swipe
+            render_property_swipe(services, selected_lead_name)
         except ImportError:
             st.info("🔥 Smart Swipe component coming soon")
 
@@ -441,10 +481,12 @@ def render_buyer_journey_hub(selected_lead_name, render_enhanced_property_search
         render_financing_calculator()
 
     with tab5:
-        render_neighborhood_explorer()
+        lead_options = st.session_state.get('lead_options', {})
+        lead_data = lead_options.get(selected_lead_name)
+        render_neighborhood_explorer(lead_data)
 
     with tab6:
         render_buyer_dashboard()
 
     with tab7:
-        render_buyer_analytics()
+        render_buyer_analytics(SERVICES_LOADED=True, get_services=lambda: services)

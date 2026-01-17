@@ -6,7 +6,7 @@ Tracks leads through entire lifecycle and attributes revenue accurately
 
 import json
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -40,16 +40,19 @@ class RevenueAttributionEngine:
         Returns:
             Complete revenue attribution with channel breakdown
         """
-        from datetime import timezone
         if not start_date:
             start_date = datetime.now(timezone.utc) - timedelta(days=90)
         elif start_date.tzinfo is None:
             start_date = start_date.replace(tzinfo=timezone.utc)
+        else:
+            start_date = start_date.astimezone(timezone.utc)
 
         if not end_date:
             end_date = datetime.now(timezone.utc)
         elif end_date.tzinfo is None:
             end_date = end_date.replace(tzinfo=timezone.utc)
+        else:
+            end_date = end_date.astimezone(timezone.utc)
 
         # Load data
         conversations = self._load_conversations(location_id, start_date, end_date)
@@ -88,14 +91,13 @@ class RevenueAttributionEngine:
             "revenue_timeline": timeline,
             "roi_by_source": roi_by_source,
             "top_performers": self._identify_top_performers(attribution),
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
         }
 
     def _load_conversations(
         self, location_id: str, start_date: datetime, end_date: datetime
     ) -> List[Dict]:
         """Load conversation data for period"""
-        from datetime import timezone
         analytics_file = self.data_dir / "mock_analytics.json"
 
         if not analytics_file.exists():
@@ -110,9 +112,12 @@ class RevenueAttributionEngine:
             if ts_str:
                 try:
                     # Handle Z or +00:00 and make it offset-aware
+                    # Python 3.11+ handles Z, but we support replace for safety
                     ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
                     if ts.tzinfo is None:
                         ts = ts.replace(tzinfo=timezone.utc)
+                    else:
+                        ts = ts.astimezone(timezone.utc)
                     
                     if start_date <= ts <= end_date:
                         conversations.append(c)
@@ -283,7 +288,7 @@ class RevenueAttributionEngine:
         base_revenue = attribution["total_revenue"] / 3  # 3 month period
 
         for month in range(3):
-            month_date = datetime.now() - timedelta(days=90 - (month * 30))
+            month_date = datetime.now(timezone.utc) - timedelta(days=90 - (month * 30))
             growth_factor = 1 + (month * 0.42)  # 42% month-over-month growth
 
             timeline.append(

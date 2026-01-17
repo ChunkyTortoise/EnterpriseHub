@@ -2,9 +2,17 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-def render_neighborhood_explorer():
+def render_neighborhood_explorer(lead_profile: dict = None):
     """Comprehensive neighborhood analysis and exploration"""
     st.subheader("🌍 Neighborhood Intelligence")
+    
+    # Try to get Claude service
+    try:
+        from ghl_real_estate_ai.services.claude_semantic_property_matcher import get_semantic_property_matcher
+        semantic_matcher = get_semantic_property_matcher()
+        CLAUDE_AVAILABLE = True
+    except ImportError:
+        CLAUDE_AVAILABLE = False
 
     # Location input
     col1, col2 = st.columns(2)
@@ -114,3 +122,30 @@ def render_neighborhood_explorer():
                     st.markdown("• Young Professionals: 25%")
                     st.markdown("• Empty Nesters: 20%")
                     st.markdown("• Retirees: 10%")
+                
+                # ENHANCED: Claude's Social/Cultural Fit
+                if CLAUDE_AVAILABLE and lead_profile:
+                    st.markdown("---")
+                    st.markdown("#### 🧠 Claude's Social/Cultural Fit Analysis")
+                    with st.spinner("Analyzing social alignment..."):
+                        import asyncio
+                        try:
+                            loop = asyncio.get_event_loop()
+                        except RuntimeError:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                        
+                        neighborhood_data = {"name": target_address or "Selected Area"}
+                        compatibility = loop.run_until_complete(
+                            semantic_matcher.get_neighborhood_compatibility(lead_profile, neighborhood_data)
+                        )
+                        
+                        fit_col1, fit_col2 = st.columns([1, 2])
+                        with fit_col1:
+                            st.metric("Social Fit Score", f"{compatibility['compatibility_score']:.0%}")
+                        with fit_col2:
+                            st.success(f"**Cultural Alignment:** {compatibility['cultural_fit']}")
+                        
+                        st.info(f"**Social Resonance:** {compatibility['social_fit']}")
+                        st.write(f"**Lifestyle Alignment:** {compatibility['lifestyle_resonance']}")
+                        st.markdown(f"💡 **Agent Strategy:** {compatibility['strategic_tip']}")

@@ -60,7 +60,6 @@ class ExecutiveDashboardService:
 
     def _load_conversations(self, location_id: str, days: int) -> List[Dict]:
         """Load conversation data for analysis"""
-        from datetime import timezone
         # Load from analytics data
         analytics_file = self.data_dir / "mock_analytics.json"
 
@@ -115,6 +114,26 @@ class ExecutiveDashboardService:
         # Pipeline value (assuming $12,500 avg commission per hot lead)
         pipeline_value = len(hot_leads) * 12500
 
+        # NEW: Unit Economics
+        avg_cac = 450.0  # Average Cost Per Acquisition (Simulated)
+        ltv = 12500 * 0.34 # Lifetime Value based on conversion (Simulated)
+        ltv_cac_ratio = ltv / avg_cac if avg_cac > 0 else 0
+
+        # NEW: Market Performance (Simulated breakdown)
+        market_stats = {
+            "Austin": {"leads": int(total_convos * 0.45), "revenue": pipeline_value * 0.5},
+            "Miami": {"leads": int(total_convos * 0.35), "revenue": pipeline_value * 0.3},
+            "Other": {"leads": int(total_convos * 0.2), "revenue": pipeline_value * 0.2}
+        }
+
+        # NEW: Funnel Leakage (Simulated)
+        leakage = {
+            "Contact -> Qualified": 15.2,
+            "Qualified -> Hot": 22.4,
+            "Hot -> Appointment": 34.1,
+            "Appointment -> Closed": 45.8
+        }
+
         return {
             "conversations": {
                 "total": total_convos,
@@ -146,6 +165,13 @@ class ExecutiveDashboardService:
                 "currency": "USD",
                 "hot_lead_value": 12500,
             },
+            "economics": {
+                "ltv_cac_ratio": round(ltv_cac_ratio, 2),
+                "avg_cac": avg_cac,
+                "ltv": round(ltv, 2)
+            },
+            "market_performance": market_stats,
+            "leakage": leakage
         }
 
     def _calculate_change(self, current_value: int, days: int) -> float:
@@ -283,7 +309,6 @@ class ExecutiveDashboardService:
         self, conversations: List[Dict], days: int
     ) -> Dict[str, List[Dict]]:
         """Calculate day-by-day trends"""
-        from datetime import timezone
         # Group conversations by day
         daily_data = {}
 
@@ -295,6 +320,8 @@ class ExecutiveDashboardService:
             ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
             if ts.tzinfo is None:
                 ts = ts.replace(tzinfo=timezone.utc)
+            else:
+                ts = ts.astimezone(timezone.utc)
             
             date = ts.date()
             if date not in daily_data:

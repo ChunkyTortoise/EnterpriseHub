@@ -3,6 +3,7 @@ Verification script to test all demo components before deployment.
 """
 import os
 import sys
+from pathlib import Path
 
 # Mock environment variables before importing anything that uses Settings
 os.environ["ANTHROPIC_API_KEY"] = "mock_key"
@@ -11,9 +12,10 @@ os.environ["GHL_LOCATION_ID"] = "mock_id"
 
 # Add project root to path
 # __file__ is enterprisehub/ghl_real_estate_ai/streamlit_demo/verify_setup.py
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
+# We want to add 'enterprisehub' to sys.path
+root_dir = Path(__file__).resolve().parent.parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
 
 
 def verify_imports():
@@ -159,10 +161,11 @@ def verify_data_files():
     """Verify required data files exist."""
     print("\n📁 Verifying data files...")
 
-    base_dir = os.path.dirname(os.path.dirname(__file__))
-    property_file = os.path.join(base_dir, "data", "knowledge_base", "property_listings.json")
+    # .../streamlit_demo/verify_setup.py -> .../streamlit_demo -> .../ghl_real_estate_ai
+    base_dir = Path(__file__).resolve().parent.parent
+    property_file = base_dir / "data" / "knowledge_base" / "property_listings.json"
 
-    if os.path.exists(property_file):
+    if property_file.exists():
         print(f"  ✅ Property listings found")
 
         import json

@@ -8,10 +8,10 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 import streamlit as st
 
-from services.claude_orchestrator import get_claude_orchestrator, ClaudeOrchestrator
-from services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer, UnifiedScoringResult
-from services.claude_automation_engine import ClaudeAutomationEngine, ScriptType
-from services.memory_service import MemoryService
+from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeOrchestrator
+from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer, UnifiedScoringResult
+from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine, ScriptType
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
 
 class EnhancedLeadIntelligence:
@@ -26,6 +26,10 @@ class EnhancedLeadIntelligence:
     - Deep Cognitive Dossiers (Research)
     - Psychological Property Fit Analysis
     - Real-time Swipe Commentary
+    - Enterprise-grade performance optimization
+    - Event-driven processing
+    - Multi-layer caching
+    - Circuit breaker protection
     """
 
     def __init__(self):
@@ -34,7 +38,10 @@ class EnhancedLeadIntelligence:
         self.automation_engine = ClaudeAutomationEngine()
         self.memory = MemoryService()
 
-        # Performance tracking
+        # Enterprise performance services
+        self._initialize_performance_services()
+
+        # Legacy performance tracking (maintained for compatibility)
         self.analysis_cache = {}
         self.performance_metrics = {
             "analyses_completed": 0,
@@ -42,6 +49,64 @@ class EnhancedLeadIntelligence:
             "avg_analysis_time_ms": 0,
             "deep_dossiers_generated": 0
         }
+
+    def _initialize_performance_services(self):
+        """Initialize enterprise performance services"""
+        try:
+            # Initialize optimized cache service
+            from ghl_real_estate_ai.services.optimized_cache_service import get_optimized_cache_service
+            self.optimized_cache = get_optimized_cache_service()
+            
+            # Initialize CQRS service
+            from ghl_real_estate_ai.services.cqrs_service import get_cqrs_service
+            self.cqrs_service = get_cqrs_service()
+            
+            # Initialize performance tracker
+            from ghl_real_estate_ai.services.performance_tracker import get_performance_tracker
+            self.performance_tracker = get_performance_tracker()
+            
+            # Initialize circuit breaker manager
+            from ghl_real_estate_ai.services.circuit_breaker import get_circuit_manager
+            self.circuit_manager = get_circuit_manager()
+            
+            # Create circuit breakers for external services
+            self._setup_circuit_breakers()
+            
+            logger.info("Enterprise performance services initialized")
+            
+        except Exception as e:
+            logger.warning(f"Enterprise services initialization failed, using fallback: {e}")
+            self.optimized_cache = None
+            self.cqrs_service = None
+            self.performance_tracker = None
+            self.circuit_manager = None
+
+    def _setup_circuit_breakers(self):
+        """Setup circuit breakers for external dependencies"""
+        if not self.circuit_manager:
+            return
+            
+        from ghl_real_estate_ai.services.circuit_breaker import CircuitBreakerConfig, claude_fallback
+        
+        # Claude API circuit breaker
+        claude_config = CircuitBreakerConfig(
+            failure_threshold=3,
+            recovery_timeout=30.0,
+            success_threshold=2,
+            timeout=25.0,
+            fallback=claude_fallback
+        )
+        self.claude_breaker = self.circuit_manager.create_breaker("claude_api", claude_config)
+        
+        # Cache circuit breaker  
+        cache_config = CircuitBreakerConfig(
+            failure_threshold=5,
+            recovery_timeout=10.0,
+            success_threshold=3,
+            timeout=5.0,
+            fallback=None  # Cache failures should not block processing
+        )
+        self.cache_breaker = self.circuit_manager.create_breaker("cache_service", cache_config)
 
     async def get_cognitive_dossier(self, lead_name: str, lead_context: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -108,27 +173,29 @@ class EnhancedLeadIntelligence:
     def render_deep_intelligence_tab(self, lead_name: str, lead_context: Dict[str, Any], analysis_result: UnifiedScoringResult):
         """
         Renders the 'Deep Intelligence' UI component with interactive research options.
+        Enhanced with Competitive Landscape analysis.
         """
         st.subheader(f"🕵️ Deep Intelligence Dossier: {lead_name}")
         st.markdown("*Claude's comprehensive research and strategic profile*")
         
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         
         research_type = None
         with col1:
             if st.button("🧬 Behavioral Blueprint", use_container_width=True, help="Analyze cognitive biases and decision patterns"):
                 research_type = "behavioral_blueprint"
         with col2:
-            if st.button("📈 Inventory Match Analytics", use_container_width=True, help="Compare preferences against current market inventory"):
+            if st.button("📈 Inventory Match", use_container_width=True, help="Compare preferences against current market inventory"):
                 research_type = "inventory_match"
         with col3:
             if st.button("🎯 Conversion Roadmap", use_container_width=True, help="Step-by-step strategy to move lead to closing"):
                 research_type = "conversion_roadmap"
+        with col4:
+            if st.button("⚔️ Competitive Landscape", use_container_width=True, help="Analyze other agents and market competition"):
+                research_type = "competitive_analysis"
         
         if research_type:
             with st.spinner(f"Claude is generating {research_type.replace('_', ' ')}..."):
-                prompt = f"Perform deep research on {lead_name}. Focus specifically on: {research_type.replace('_', ' ')}. Data: {json.dumps(lead_context)}"
-                
                 try:
                     # Handle Streamlit event loop
                     try:
@@ -136,23 +203,42 @@ class EnhancedLeadIntelligence:
                     except RuntimeError:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
-                        
-                    response = loop.run_until_complete(
-                        self.claude.chat_query(
-                            query=prompt,
-                            context={"task": research_type, "lead_data": lead_context},
-                            lead_id=analysis_result.lead_id
-                        )
-                    )
                     
-                    st.markdown(f"""
-                    <div style='background: #f0f9ff; padding: 1.5rem; border-radius: 12px; border-left: 5px solid #0ea5e9; margin-top: 1rem;'>
-                        <div style='font-size: 0.75rem; color: #0ea5e9; font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem;'>
-                            {research_type.replace('_', ' ')} Generated
-                        </div>
-                        {response.content}
-                    </div>
-                    """, unsafe_allow_html=True)
+                    if research_type == "competitive_analysis":
+                        # Use the new qualification engine method
+                        from ghl_real_estate_ai.services.claude_lead_qualification import get_claude_qualification_engine
+                        qual_engine = get_claude_qualification_engine()
+                        # Simulate history for now
+                        history = [{"role": "user", "content": "I was talking to another agent about Manor properties."}]
+                        comp_analysis = loop.run_until_complete(qual_engine.analyze_competitive_landscape(history))
+                        
+                        st.markdown(f"#### ⚔️ Competitive Landscape for {lead_name}")
+                        st.write(f"**Competitive Pressure:** {comp_analysis['competitive_pressure']:.0%}")
+                        st.info(f"**Recommended Positioning:** {comp_analysis['recommended_positioning']}")
+                        
+                        col_c1, col_c2 = st.columns(2)
+                        with col_c1:
+                            st.markdown("**Competitors Detected:**")
+                            if not comp_analysis['competitors_mentioned']:
+                                st.write("None mentioned (Ghosting risk low)")
+                            else:
+                                for comp in comp_analysis['competitors_mentioned']:
+                                    st.markdown(f"- {comp}")
+                        with col_c2:
+                            st.markdown("**Differentiation Opportunities:**")
+                            for opp in comp_analysis['differentiation_opportunities']:
+                                st.markdown(f"• {opp}")
+                    else:
+                        prompt = f"Perform deep research on {lead_name}. Focus specifically on: {research_type.replace('_', ' ')}. Data: {json.dumps(lead_context)}"
+                        response = loop.run_until_complete(
+                            self.claude.chat_query(
+                                query=prompt,
+                                context={"task": research_type, "lead_data": lead_context},
+                                lead_id=analysis_result.lead_id
+                            )
+                        )
+                        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import render_dossier_block
+                        render_dossier_block(response.content, title=f"{research_type.replace('_', ' ').upper()} SYNTHESIZED")
                     
                     if st.button("💾 Save to GHL Notes", key=f"save_{research_type}"):
                         st.toast("Research saved to lead profile in GHL!", icon="✅")
@@ -163,6 +249,158 @@ class EnhancedLeadIntelligence:
         st.markdown("---")
         st.markdown("#### 🧠 Quick Strategic Take")
         st.info(analysis_result.strategic_summary)
+
+    def render_journey_orchestration_tab(self, lead_name: str, lead_context: Dict[str, Any], analysis_result: UnifiedScoringResult):
+        """
+        Renders the 'Journey Orchestration' tab with real autonomous journey management.
+        """
+        from ghl_real_estate_ai.streamlit_demo.components.journey_orchestrator_ui import render_journey_orchestrator
+        
+        lead_id = lead_context.get('lead_id', 'unknown')
+        render_journey_orchestrator(lead_id, lead_name, lead_context)
+
+    async def get_comprehensive_lead_analysis_enterprise(self,
+                                                      lead_name: str, 
+                                                      lead_context: Dict[str, Any],
+                                                      force_refresh: bool = False) -> UnifiedScoringResult:
+        """
+        Enterprise-grade comprehensive lead analysis with performance optimization
+        Features: Circuit breakers, multi-layer caching, performance tracking, CQRS
+        """
+        request_id = f"analysis_{lead_name}_{int(time.time() * 1000000)}"
+        
+        # Use performance tracker if available
+        if self.performance_tracker:
+            async with self.performance_tracker.track_request(request_id, "lead_analysis", lead_name):
+                return await self._execute_comprehensive_analysis(lead_name, lead_context, force_refresh)
+        else:
+            return await self._execute_comprehensive_analysis(lead_name, lead_context, force_refresh)
+
+    async def _execute_comprehensive_analysis(self,
+                                            lead_name: str,
+                                            lead_context: Dict[str, Any], 
+                                            force_refresh: bool = False) -> UnifiedScoringResult:
+        """Execute comprehensive analysis with enterprise optimizations"""
+        
+        # Try CQRS pattern if available
+        if self.cqrs_service and not force_refresh:
+            try:
+                from ghl_real_estate_ai.services.cqrs_service import GetLeadScoreQuery
+                
+                lead_id = lead_context.get('lead_id', f"demo_{lead_name.lower().replace(' ', '_')}")
+                query = GetLeadScoreQuery(lead_id=lead_id, include_reasoning=True)
+                
+                result = await self.cqrs_service.execute_query(query)
+                if result.success:
+                    # Convert CQRS result to UnifiedScoringResult format
+                    return self._convert_cqrs_to_unified_result(result, lead_name, lead_context)
+                    
+            except Exception as e:
+                logger.warning(f"CQRS query failed, falling back to direct analysis: {e}")
+
+        # Fall back to enhanced analysis with performance optimizations
+        return await self._enhanced_analysis_with_optimizations(lead_name, lead_context, force_refresh)
+
+    async def _enhanced_analysis_with_optimizations(self,
+                                                  lead_name: str,
+                                                  lead_context: Dict[str, Any],
+                                                  force_refresh: bool = False) -> UnifiedScoringResult:
+        """Enhanced analysis with multi-layer caching and circuit breakers"""
+        
+        # Check optimized cache first
+        cache_key = f"enhanced_analysis_{lead_name}_{hash(json.dumps(lead_context, sort_keys=True, default=str))}"
+        
+        if self.optimized_cache and not force_refresh:
+            try:
+                if self.cache_breaker:
+                    cached_result = await self.cache_breaker.call(self.optimized_cache.get, cache_key)
+                else:
+                    cached_result = await self.optimized_cache.get(cache_key)
+                    
+                if cached_result:
+                    self.performance_metrics["cache_hits"] += 1
+                    return cached_result
+                    
+            except Exception as e:
+                logger.warning(f"Optimized cache access failed: {e}")
+
+        # Perform enhanced analysis with circuit breaker protection
+        try:
+            start_time = datetime.now()
+            
+            # Generate lead_id
+            lead_id = lead_context.get('lead_id', f"demo_{lead_name.lower().replace(' ', '_').replace('(', '').replace(')', '')}")
+            
+            # Use circuit breaker for Claude API calls
+            if self.claude_breaker:
+                analysis_result = await self.claude_breaker.call(
+                    self.enhanced_scorer.analyze_lead_comprehensive,
+                    lead_id=lead_id,
+                    lead_context=lead_context
+                )
+            else:
+                analysis_result = await self.enhanced_scorer.analyze_lead_comprehensive(
+                    lead_id=lead_id,
+                    lead_context=lead_context
+                )
+            
+            analysis_time = (datetime.now() - start_time).total_seconds() * 1000
+            
+            # Cache the result in optimized cache
+            if self.optimized_cache:
+                try:
+                    if self.cache_breaker:
+                        await self.cache_breaker.call(
+                            self.optimized_cache.set,
+                            cache_key, analysis_result, 300  # 5 minute TTL
+                        )
+                    else:
+                        await self.optimized_cache.set(cache_key, analysis_result, ttl=300)
+                except Exception as e:
+                    logger.warning(f"Failed to cache analysis result: {e}")
+            
+            # Update performance metrics
+            self._update_metrics(analysis_time)
+            
+            return analysis_result
+            
+        except Exception as e:
+            logger.error(f"Enhanced analysis failed: {e}")
+            # Return fallback analysis
+            return self._create_fallback_analysis(lead_name, lead_context, str(e))
+
+    def _convert_cqrs_to_unified_result(self, cqrs_result, lead_name: str, lead_context: Dict[str, Any]) -> UnifiedScoringResult:
+        """Convert CQRS query result to UnifiedScoringResult format"""
+        data = cqrs_result.data
+        
+        from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import UnifiedScoringResult
+        
+        return UnifiedScoringResult(
+            lead_id=data.get('lead_id', 'unknown'),
+            lead_name=lead_name,
+            scored_at=datetime.now(),
+            final_score=data.get('score', 50.0),
+            confidence_score=data.get('confidence', 0.8),
+            classification=data.get('classification', 'warm'),
+            jorge_score=75,  # Default values
+            ml_conversion_score=70,
+            churn_risk_score=30,
+            engagement_score=80,
+            strategic_summary=f"CQRS-optimized analysis for {lead_name}",
+            behavioral_insights=data.get('reasoning', 'High-performance analysis via CQRS'),
+            reasoning=data.get('reasoning', 'Cached analysis result'),
+            risk_factors=['CQRS optimization active'],
+            opportunities=['Enhanced performance'],
+            recommended_actions=[{'action': 'Follow up', 'priority': 'medium'}],
+            next_best_action='Continue engagement',
+            expected_timeline='24-48 hours',
+            success_probability=75.0,
+            feature_breakdown={},
+            conversation_context=lead_context,
+            sources=['CQRS Cache'],
+            analysis_time_ms=cqrs_result.latency_ms,
+            claude_reasoning_time_ms=0
+        )
 
     async def get_comprehensive_lead_analysis(self,
                                             lead_name: str,
@@ -287,7 +525,7 @@ class EnhancedLeadIntelligence:
         score_colors = {
             "hot": "#ef4444",
             "warm": "#f59e0b",
-            "cold": "#3b82f6",
+            "cold": "#6366f1",
             "error": "#6b7280"
         }
 
@@ -308,31 +546,32 @@ class EnhancedLeadIntelligence:
         location = lead_context.get("extracted_preferences", {}).get("location", "Austin Area")
 
         st.markdown(f"""
-        <div style='background: linear-gradient(135deg, {score_color}10 0%, {score_color}05 100%);
-                    padding: 1.5rem; border-radius: 12px; border-left: 5px solid {score_color}; margin-bottom: 1.5rem;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);'>
+        <div style='background: rgba(30, 41, 59, 0.4);
+                    padding: 1.75rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); 
+                    border-left: 6px solid {score_color}; margin-bottom: 2rem;
+                    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25); backdrop-filter: blur(15px);'>
             <div style='display: flex; justify-content: space-between; align-items: center;'>
                 <div>
-                    <h2 style='margin: 0; color: #1e293b; font-size: 1.5rem;'>{lead_name}</h2>
-                    <div style='display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap;'>
-                        <span style='background: white; color: {score_color}; padding: 0.25rem 0.75rem;
-                                     border-radius: 999px; font-size: 0.75rem; font-weight: 700; border: 1px solid {score_color}30;'>
+                    <h2 style='margin: 0; color: white !important; font-size: 1.75rem; font-family: "Manrope", sans-serif; letter-spacing: -0.02em;'>{lead_name}</h2>
+                    <div style='display: flex; align-items: center; gap: 1rem; margin-top: 0.6rem; flex-wrap: wrap;'>
+                        <span style='background: {score_color}20; color: {score_color}; padding: 0.25rem 0.85rem;
+                                     border-radius: 999px; font-size: 0.75rem; font-weight: 800; border: 1px solid {score_color}40; text-transform: uppercase;'>
                             {score_label}
                         </span>
-                        <span style='color: #64748b; font-size: 0.85rem;'>• {occupation}</span>
-                        <span style='color: #64748b; font-size: 0.85rem;'>• {location}</span>
-                        <span style='color: #64748b; font-size: 0.85rem;'>• Confidence: {analysis_result.confidence_score:.0%}</span>
+                        <span style='color: #94a3b8; font-size: 0.95rem; font-weight: 500;'>• {occupation}</span>
+                        <span style='color: #94a3b8; font-size: 0.95rem; font-weight: 500;'>• {location}</span>
+                        <span style='color: #94a3b8; font-size: 0.95rem; font-weight: 500; background: rgba(99, 102, 241, 0.1); padding: 2px 8px; border-radius: 4px;'>Confidence: {analysis_result.confidence_score:.0%}</span>
                     </div>
                 </div>
                 <div style='text-align: right;'>
-                    <div style='font-size: 2rem; font-weight: 900; color: {score_color}; line-height: 1;'>
+                    <div style='font-size: 2.5rem; font-weight: 900; color: {score_color}; line-height: 1; font-family: "Manrope", sans-serif;'>
                         {analysis_result.final_score:.0f}%
                     </div>
-                    <div style='font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem;'>
+                    <div style='font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-top: 6px;'>
                         Match Score
                     </div>
-                    <div style='font-size: 0.65rem; color: #64748b; margin-top: 0.25rem;'>
-                        Analysis: {analysis_result.analysis_time_ms}ms
+                    <div style='font-size: 0.65rem; color: #64748b; margin-top: 6px; font-family: monospace;'>
+                        T-ANALYTICS: {analysis_result.analysis_time_ms}ms
                     </div>
                 </div>
             </div>
@@ -492,7 +731,7 @@ class EnhancedLeadIntelligence:
 
     def _create_fallback_analysis(self, lead_name: str, lead_context: Dict[str, Any], error: str) -> UnifiedScoringResult:
         """Create fallback analysis when Claude fails."""
-        from services.claude_enhanced_lead_scorer import UnifiedScoringResult
+        from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import UnifiedScoringResult
 
         return UnifiedScoringResult(
             lead_id=f"fallback_{lead_name.lower().replace(' ', '_')}",

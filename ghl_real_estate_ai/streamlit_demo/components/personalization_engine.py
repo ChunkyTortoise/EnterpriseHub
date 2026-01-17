@@ -121,32 +121,32 @@ def render_personalization_engine(services, selected_lead_name, analysis_result=
             merged_content = merged_content.replace("[Agent]", "Jorge")
             merged_content = merged_content.replace("[Market]", "Austin")
             
-            # Preview Container
+            # Preview Container - Obsidian Edition
             if device_view == "Mobile":
                 st.markdown(f"""
-                <div style='background: #333; padding: 12px; border-radius: 24px; max-width: 320px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2);'>
-                    <div style='background: white; border-radius: 16px; overflow: hidden; min-height: 400px;'>
-                        <div style='background: #f1f5f9; padding: 12px; text-align: center; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; font-weight: 600;'>
-                            Message Preview
+                <div style='background: #161B22; padding: 12px; border-radius: 36px; max-width: 320px; margin: 0 auto; box-shadow: 0 25px 60px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);'>
+                    <div style='background: #05070A; border-radius: 28px; overflow: hidden; min-height: 420px; border: 1px solid rgba(255,255,255,0.05);'>
+                        <div style='background: rgba(22, 27, 34, 0.8); padding: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.75rem; font-weight: 700; color: #8B949E; font-family: "Space Grotesk", sans-serif; letter-spacing: 0.1em;'>
+                            NEURAL PREVIEW // MOBILE
                         </div>
-                        <div style='padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 0.9rem; line-height: 1.5; color: #1e293b;'>
+                        <div style='padding: 20px; font-family: "Inter", sans-serif; font-size: 0.95rem; line-height: 1.6; color: #E6EDF3;'>
                             {merged_content}
                         </div>
-                        <div style='padding: 8px; text-align: center; color: #94a3b8; font-size: 0.7rem;'>
-                            {datetime.datetime.now().strftime("%I:%M %p")}
+                        <div style='padding: 12px; text-align: center; color: #6366F1; font-size: 0.7rem; font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: 0.05em;'>
+                            {datetime.datetime.now().strftime("%I:%M %p")} // SYNCED
                         </div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown(f"""
-                <div style='background: white; padding: 2rem; border-radius: 12px; border: 1px solid #e2e8f0; 
-                            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); font-family: sans-serif; color: #1e293b; line-height: 1.6; min-height: 300px;'>
-                    <div style='border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 1rem;'>
-                        <span style='background: #e0f2fe; color: #0284c7; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;'>{content_type}</span>
-                        <span style='background: #f1f5f9; color: #64748b; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 8px;'>Tone: {tone}</span>
+                <div style='background: rgba(22, 27, 34, 0.7); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); 
+                            box-shadow: 0 8px 32px rgba(0,0,0,0.6); font-family: "Inter", sans-serif; color: #E6EDF3; line-height: 1.7; min-height: 300px; backdrop-filter: blur(12px);'>
+                    <div style='border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.25rem; margin-bottom: 1.5rem; display: flex; gap: 12px;'>
+                        <span style='background: rgba(99, 102, 241, 0.15); color: #6366F1; padding: 6px 14px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; border: 1px solid rgba(99, 102, 241, 0.3);'>{content_type}</span>
+                        <span style='background: rgba(255,255,255,0.05); color: #8B949E; padding: 6px 14px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1);'>TONE: {tone}</span>
                     </div>
-                    {merged_content}
+                    <div style="opacity: 0.9;">{merged_content}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -173,9 +173,9 @@ def render_personalization_engine(services, selected_lead_name, analysis_result=
                     st.success("Ready for paste")
         else:
             st.markdown("""
-            <div style='background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 3rem 1rem; text-align: center; color: #64748b;'>
-                <div style='font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;'>🎨</div>
-                <div style='font-weight: 600;'>No Content Generated Yet</div>
-                <div style='font-size: 0.85rem;'>Configure the options on the left and click 'Generate' to see the AI magic.</div>
+            <div style='background: rgba(22, 27, 34, 0.6); border: 2px dashed rgba(255,255,255,0.1); border-radius: 16px; padding: 4rem 2rem; text-align: center; color: #8B949E; backdrop-filter: blur(10px);'>
+                <div style='font-size: 3.5rem; margin-bottom: 1.5rem; opacity: 0.5; filter: grayscale(1);'>🎨</div>
+                <div style='font-weight: 700; color: #FFFFFF; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.1em;'>Strategy Engine Idle</div>
+                <div style='font-size: 0.9rem; margin-top: 8px; font-family: "Inter", sans-serif;'>Configure synthesis parameters on the left to initialize personalized deployment.</div>
             </div>
             """, unsafe_allow_html=True)

@@ -11,9 +11,14 @@ Features:
 - Engagement tracking and auto-adjustment
 """
 
+import logging
+import json
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Optional, List, Dict, Any
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+
+logger = logging.getLogger(__name__)
 
 
 class Channel(Enum):
@@ -61,6 +66,7 @@ class AutoFollowUpSequences:
         """Initialize the Auto Follow-Up Sequences service"""
         self.ghl_api_key = ghl_api_key
         self.ghl_location_id = ghl_location_id
+        self.analytics = AnalyticsService()
 
     def create_sequence(
         self,
@@ -459,28 +465,78 @@ class AutoFollowUpSequences:
         contact_data: Dict[str, Any],
         custom_fields: Optional[Dict[str, Any]],
     ) -> Dict[str, Any]:
-        """Personalize content with contact data"""
-        personalized = content.copy()
+        """Personalize content with Claude-driven dynamic generation"""
+        
+        # Use Claude for true personalization if orchestrator is available
+        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeTaskType, ClaudeRequest
+        import asyncio
+        
+        orchestrator = get_claude_orchestrator()
+        
+        first_name = contact_data.get("first_name", "Friend")
+        market = custom_fields.get("market", "Austin") if custom_fields else "Austin"
+        
+        prompt = f"""
+        Generate a personalized real estate follow-up message for {first_name} in {market}.
+        
+        BASE CONTENT: {json.dumps(content)}
+        LEAD DATA: {json.dumps(contact_data)}
+        
+        REQUIREMENTS:
+        - Make it feel personal and high-value.
+        - Reference the context of their search if available.
+        - Maintain an elite, consultative tone.
+        """
 
-        # Replace merge tags
-        for key, value in personalized.items():
-            if isinstance(value, str):
-                value = value.replace(
-                    "{{first_name}}", contact_data.get("first_name", "")
-                )
-                value = value.replace(
-                    "{{last_name}}", contact_data.get("last_name", "")
-                )
-                value = value.replace("{{email}}", contact_data.get("email", ""))
+        try:
+            # Synchronous wrapper for Streamlit
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            request = ClaudeRequest(
+                task_type=ClaudeTaskType.SCRIPT_GENERATION,
+                context={"contact_id": contact_data.get("contact_id", "unknown")},
+                prompt=prompt,
+                temperature=0.7
+            )
+            
+            response = loop.run_until_complete(orchestrator.process_request(request))
+            
+            # Record usage
+            location_id = self.ghl_location_id or "unknown"
+            loop.run_until_complete(self.analytics.track_llm_usage(
+                location_id=location_id,
+                model=response.model or "claude-3-5-sonnet",
+                provider=response.provider or "claude",
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False,
+                contact_id=contact_data.get("contact_id")
+            ))
 
-                # Custom fields
-                if custom_fields:
-                    for cf_key, cf_value in custom_fields.items():
-                        value = value.replace(f"{{{{{cf_key}}}}}", str(cf_value))
-
-                personalized[key] = value
-
-        return personalized
+            # If Claude returns a subject/body pair, parse it
+            # For simplicity, we'll assume it returns the body or a structured response
+            if "body" in content:
+                content["body"] = response.content
+            elif "message" in content:
+                content["message"] = response.content
+            return content
+        except Exception:
+            # Fallback to standard merge tags
+            personalized = content.copy()
+            for key, value in personalized.items():
+                if isinstance(value, str):
+                    value = value.replace("{{first_name}}", first_name)
+                    value = value.replace("{{last_name}}", contact_data.get("last_name", ""))
+                    value = value.replace("{{email}}", contact_data.get("email", ""))
+                    if custom_fields:
+                        for cf_key, cf_value in custom_fields.items():
+                            value = value.replace(f"{{{{{cf_key}}}}}", str(cf_value))
+                    personalized[key] = value
+            return personalized
 
     def _get_sequence(self, sequence_id: str) -> Dict[str, Any]:
         """Get sequence configuration"""

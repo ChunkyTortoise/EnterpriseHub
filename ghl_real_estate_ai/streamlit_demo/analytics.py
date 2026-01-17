@@ -18,6 +18,9 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+# Import services
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+
 # Import campaign analytics
 try:
     from ghl_real_estate_ai.services.campaign_analytics import CampaignTracker
@@ -38,6 +41,19 @@ try:
     BULK_OPERATIONS_AVAILABLE = True
 except ImportError:
     BULK_OPERATIONS_AVAILABLE = False
+
+# Initialize Analytics Service
+analytics_service = AnalyticsService()
+
+def run_async(coro):
+    """Run an async coroutine in a synchronous context."""
+    import asyncio
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(coro)
 
 # UI Setup
 def setup_ui():
@@ -548,6 +564,18 @@ def main():
                 delta=f"{metrics['avg_response_time']:.1f}s response"
             )
     
+        # Add Token ROI card
+        location_id = "loc_123" # Default or selected
+        if selected_tenant != "All Tenants":
+            location_id = next((t["location_id"] for t in tenants if t["name"] == selected_tenant), "loc_123")
+        
+        summary = run_async(analytics_service.get_daily_summary(location_id))
+        usage = summary.get("llm_usage", {})
+        saved = usage.get('saved_cost', 0)
+        
+        if saved > 0:
+            st.info(f"🚀 **Efficiency Boost:** The AI caching layer has saved **${saved:.4f}** in API costs today for this tenant.")
+    
         st.divider()
     
         # Lead breakdown row
@@ -787,7 +815,31 @@ def main():
             with col3:
                 tokens = system_health.get('anthropic_tokens_used_24h', 0)
                 st.metric("AI Tokens (24h)", f"{tokens:,}")
-    
+
+            # REAL LLM Usage from Analytics Service
+            st.divider()
+            st.subheader("🧠 Claude AI Token Usage & ROI (Real-time)")
+            
+            # Fetch real data for current location
+            location_id = "loc_123" # Default or selected
+            if selected_tenant != "All Tenants":
+                location_id = next((t["location_id"] for t in tenants if t["name"] == selected_tenant), "loc_123")
+            
+            summary = run_async(analytics_service.get_daily_summary(location_id))
+            usage = summary.get("llm_usage", {})
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Actual Cost", f"${usage.get('total_cost', 0):.4f}")
+            with col2:
+                st.metric("Cost Saved (Cache)", f"${usage.get('saved_cost', 0):.4f}", delta=f"{usage.get('cache_hits', 0)} hits")
+            with col3:
+                st.metric("Total Tokens", f"{usage.get('total_tokens', 0):,}")
+            with col4:
+                hit_rate = (usage.get('cache_hits', 0) / usage.get('total_requests', 1)) * 100 if usage.get('total_requests', 0) > 0 else 0
+                st.metric("Cache Hit Rate", f"{hit_rate:.1f}%")
+
             # Health status indicator
             st.divider()
     

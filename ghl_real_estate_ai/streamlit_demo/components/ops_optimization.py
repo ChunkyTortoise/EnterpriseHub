@@ -29,18 +29,18 @@ class OpsOptimizationHub:
         
     def render_hub(self):
         """Render the complete Ops & Optimization interface"""
-        st.header("📈 Ops & Optimization")
+        st.header("Ops & Optimization")
         st.markdown("*Manager-level analytics and team performance tracking*")
         
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-            "✅ Quality",
-            "💰 Revenue",
-            "🏆 Benchmarks",
-            "🎓 Coaching",
-            "🛠️ Control",
-            "🧠 RLHF Loop",
-            "🛡️ Governance",
-            "🧬 Agentic OS"
+            "Quality",
+            "Revenue",
+            "Benchmarks",
+            "Coaching",
+            "Control",
+            "RLHF Loop",
+            "Governance",
+            "Agentic OS"
         ])
         
         with tab1:
@@ -86,15 +86,36 @@ class OpsOptimizationHub:
         
         # Display attribution chart
         df_attr = pd.DataFrame(attr_data["channels"])
-        fig = px.pie(df_attr, values='revenue', names='channel', title='Revenue by Lead Source',
-                     color_discrete_sequence=px.colors.sequential.RdBu)
-        st.plotly_chart(fig, use_container_width=True)
         
-        st.write(f"**Total Attributed Revenue:** ${attr_data['total_revenue']:,.0f}")
+        fig = go.Figure(data=[go.Pie(
+            labels=df_attr['channel'],
+            values=df_attr['revenue'],
+            hole=.5,
+            marker=dict(colors=['#6366F1', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444']),
+            textinfo='label+percent',
+            textposition='outside',
+            insidetextorientation='radial'
+        )])
+        
+        fig.update_layout(
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
+            margin=dict(t=40, b=40, l=40, r=40)
+        )
+        
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
+        
+        st.markdown(f"""
+            <div style='background: rgba(99, 102, 241, 0.1); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2); margin-top: 1rem;'>
+                <div style='color: #8B949E; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif;'>Total Attributed Revenue</div>
+                <div style='color: #FFFFFF; font-size: 2rem; font-weight: 700; font-family: "Space Grotesk", sans-serif;'>${attr_data['total_revenue']:,.0f}</div>
+            </div>
+        """, unsafe_allow_html=True)
         
         # UI-014: Funnel Velocity Chart
         st.markdown("---")
-        st.subheader("🚀 Funnel Velocity")
+        st.subheader("Funnel Velocity")
         render_revenue_funnel()
 
     def _render_benchmarking(self):
@@ -102,10 +123,20 @@ class OpsOptimizationHub:
         bench = self.services["benchmarking"].get_benchmarks("demo_location")
         
         for metric, data in bench.items():
-            st.write(f"**{metric.replace('_', ' ').title()}**")
-            cols = st.columns([2, 1])
-            cols[0].progress(data["percentile"] / 100)
-            cols[1].write(f"{data['percentile']}th Percentile")
+            percentile = data["percentile"]
+            color = "#10B981" if percentile >= 80 else "#6366F1" if percentile >= 50 else "#F59E0B"
+            
+            st.markdown(f"""
+                <div style='margin-bottom: 1.5rem;'>
+                    <div style='display: flex; justify-content: space-between; margin-bottom: 0.5rem;'>
+                        <span style='color: #FFFFFF; font-weight: 600; font-family: "Space Grotesk", sans-serif;'>{metric.replace('_', ' ').title()}</span>
+                        <span style='color: {color}; font-weight: 700;'>{percentile}th Percentile</span>
+                    </div>
+                    <div style='background: rgba(255, 255, 255, 0.05); height: 8px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.02);'>
+                        <div style='background: {color}; width: {percentile}%; height: 100%; box-shadow: 0 0 10px {color}40;'></div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
     def _render_coaching(self):
         st.subheader("AI Agent Coaching")

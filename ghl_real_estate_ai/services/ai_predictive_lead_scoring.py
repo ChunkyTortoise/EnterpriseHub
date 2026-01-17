@@ -94,8 +94,45 @@ class PredictiveLeadScorer:
         }
         # Dynamic Scoring Orchestrator
         self.dynamic_orchestrator = DynamicScoringOrchestrator() if HAS_DYNAMIC_SCORING else None
+        from ghl_real_estate_ai.services.claude_intent_detector import get_intent_detector
+        self.intent_detector = get_intent_detector()
 
-    async def score_lead_dynamic(self, lead_id: str, lead_data: Dict, tenant_id: str = "default_tenant") -> LeadScore:
+    async def score_lead_with_intent(self, lead_id: str, lead_data: Dict, conversation_history: List[Dict]) -> LeadScore:
+        """
+        Enhanced scoring that combines ML factors with Claude's intent detection.
+        """
+        # Step 1: Get standard ML score
+        base_score = self.score_lead(lead_id, lead_data)
+        
+        # Step 2: Get deep intent analysis
+        intent_analysis = await self.intent_detector.analyze_property_intent(conversation_history, lead_data)
+        
+        # Step 3: Synthesis
+        # We adjust the score based on psychological intent signals
+        # e.g., if financial_readiness is 0.9, we might boost the score
+        
+        financial = intent_analysis.get('financial_readiness', 0.5)
+        urgency = intent_analysis.get('timeline_urgency', 0.5)
+        
+        # Simple weighted adjustment
+        intent_bonus = (financial * 10) + (urgency * 10) - 10 # Range -10 to +10
+        new_score = min(100, max(0, base_score.score + intent_bonus))
+        
+        # Add intent factors to reasoning
+        intent_factors = [
+            {"name": "Psychological Intent", "impact": round(intent_bonus, 1), "value": intent_analysis.get('intent_summary', 'N/A'), "sentiment": "positive" if intent_bonus > 0 else "neutral"},
+            {"name": "Financial Readiness", "impact": round(financial * 5, 1), "value": f"{int(financial*100)}% Readiness", "sentiment": "positive"}
+        ]
+        
+        return LeadScore(
+            lead_id=lead_id,
+            score=new_score,
+            confidence=max(base_score.confidence, 0.9), # Claude increases confidence
+            tier=self._assign_tier(new_score, 0.9),
+            factors=base_score.factors + intent_factors,
+            recommendations=[intent_analysis.get('next_step_recommendation', 'Continue nurture')] + base_score.recommendations,
+            scored_at=datetime.now()
+        )
         """
         Score a lead using the Advanced Dynamic Scoring Weights system.
         """
@@ -297,21 +334,29 @@ class PredictiveLeadScorer:
     def _normalize_score(self, raw_score: float) -> float:
         """Normalize score to 0-100 range"""
         # Enhanced linear transformation that rewards high-scoring leads
-        # Raw scores typically range from 0.0 to 1.0
+        # Raw scores typically range from 0.0 to 1.25 (with bonus)
+        
+        # Cap raw_score at 1.0 for the base normalization logic
+        # Any bonus above 1.0 will naturally hit the 100 cap
+        base_score = min(raw_score, 1.0)
 
         # Apply progressive scaling
-        if raw_score >= 0.7:
+        if base_score >= 0.7:
             # Excellent leads: 70-100 range
-            normalized = 70 + (raw_score - 0.7) * 100
-        elif raw_score >= 0.5:
+            # Maps 0.7->70, 1.0->100
+            normalized = 70 + (base_score - 0.7) * 100
+        elif base_score >= 0.5:
             # Good leads: 50-70 range
-            normalized = 50 + (raw_score - 0.5) * 100
-        elif raw_score >= 0.3:
+            # Maps 0.5->50, 0.7->70
+            normalized = 50 + (base_score - 0.5) * 100
+        elif base_score >= 0.3:
             # Average leads: 25-50 range
-            normalized = 25 + (raw_score - 0.3) * 125
+            # Maps 0.3->25, 0.5->50
+            normalized = 25 + (base_score - 0.3) * 125
         else:
             # Poor leads: 0-25 range
-            normalized = raw_score * 83.33
+            # Maps 0.0->0, 0.3->25
+            normalized = base_score * 83.33
 
         return min(normalized, 100)
 

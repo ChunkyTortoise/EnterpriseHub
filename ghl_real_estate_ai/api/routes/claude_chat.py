@@ -10,9 +10,9 @@ import json
 import asyncio
 from datetime import datetime
 
-from services.claude_orchestrator import get_claude_orchestrator, ClaudeOrchestrator
-from services.memory_service import MemoryService
-from core.service_registry import get_service_registry
+from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeOrchestrator
+from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.core.service_registry import get_service_registry
 
 router = APIRouter(prefix="/claude", tags=["claude-chat"])
 

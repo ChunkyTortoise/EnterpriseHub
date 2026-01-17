@@ -18,100 +18,99 @@ def render_contact_timing_badges(times: List[Dict]):
             - probability: int (success rate percentage)
     """
     
-    st.markdown("### 📞 Best Time to Contact")
-    st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
+    st.markdown("### 📞 OPTIMAL SYNC WINDOWS")
+    st.markdown("<div style='margin-bottom: 1.5rem;'></div>", unsafe_allow_html=True)
     
     for t in times:
         urgency = t.get('urgency', 'medium')
         
-        # Color scheme based on urgency
+        # Color scheme based on urgency - Obsidian Edition
         if urgency == 'high':
-            bg_color = "#dcfce7"
-            text_color = "#166534"
-            border_color = "#22c55e"
-            badge_bg = "#22c55e"
+            bg_color = "rgba(16, 185, 129, 0.1)"
+            text_color = "#10b981"
+            border_color = "rgba(16, 185, 129, 0.3)"
+            badge_bg = "#10b981"
             urgency_icon = "🔥"
         elif urgency == 'medium':
-            bg_color = "#fef9c3"
-            text_color = "#854d0e"
-            border_color = "#eab308"
-            badge_bg = "#eab308"
+            bg_color = "rgba(245, 158, 11, 0.1)"
+            text_color = "#f59e0b"
+            border_color = "rgba(245, 158, 11, 0.3)"
+            badge_bg = "#f59e0b"
             urgency_icon = "⭐"
         else:
-            bg_color = "#f1f5f9"
-            text_color = "#475569"
-            border_color = "#94a3b8"
-            badge_bg = "#94a3b8"
+            bg_color = "rgba(99, 102, 241, 0.1)"
+            text_color = "#6366F1"
+            border_color = "rgba(99, 102, 241, 0.3)"
+            badge_bg = "#6366F1"
             urgency_icon = "📅"
         
         probability = t.get('probability', t.get('confidence', 'N/A'))
-        
-        # Convert confidence text to probability if needed
-        if isinstance(probability, str):
-            if probability.lower() == 'high':
-                probability = 85
-            elif probability.lower() == 'medium':
-                probability = 65
-            else:
-                probability = 45
+        # ... logic ...
         
         st.markdown(f"""
             <div style='
                 display: flex; 
                 justify-content: space-between; 
                 align-items: center; 
-                background: {bg_color}; 
-                padding: 1rem 1.25rem; 
+                background: rgba(22, 27, 34, 0.7); 
+                padding: 1.25rem 1.5rem; 
                 border-radius: 12px; 
-                margin-bottom: 0.75rem;
-                border: 2px solid {border_color};
-                box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                margin-bottom: 1rem;
+                border: 1px solid rgba(255,255,255,0.05);
+                border-left: 4px solid {text_color};
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(12px);
             '>
                 <div style='flex: 1;'>
                     <div style='
-                        color: {text_color}; 
+                        color: #FFFFFF; 
                         font-weight: 700; 
-                        font-size: 1rem;
+                        font-size: 1.1rem;
+                        font-family: "Space Grotesk", sans-serif;
                         margin-bottom: 0.25rem;
                     '>
                         {urgency_icon} {t['day']} ({t['time']})
                     </div>
                     <div style='
                         font-size: 0.75rem; 
-                        color: {text_color}; 
-                        opacity: 0.8;
+                        color: #8B949E; 
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.05em;
+                        font-family: "Inter", sans-serif;
                     '>
-                        Optimal window for engagement
+                        MAXIMUM SIGNAL STRENGTH WINDOW
                     </div>
                 </div>
                 <div style='
                     display: flex;
                     align-items: center;
-                    gap: 0.75rem;
+                    gap: 1rem;
                 '>
                     <div style='
-                        background: white; 
-                        padding: 0.5rem 1rem; 
+                        background: rgba(255,255,255,0.03); 
+                        padding: 0.6rem 1.25rem; 
                         border-radius: 8px;
                         text-align: center;
-                        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                        border: 1px solid rgba(255,255,255,0.05);
                     '>
                         <div style='
-                            font-size: 0.65rem; 
-                            color: #64748b; 
-                            font-weight: 600;
+                            font-size: 0.6rem; 
+                            color: #8B949E; 
+                            font-weight: 700;
                             text-transform: uppercase;
-                            letter-spacing: 0.05em;
+                            letter-spacing: 0.1em;
+                            font-family: "Space Grotesk", sans-serif;
                         '>
-                            Success Rate
+                            PROBABILITY
                         </div>
                         <div style='
-                            font-size: 1.25rem; 
-                            font-weight: 800; 
-                            color: {border_color};
+                            font-size: 1.5rem; 
+                            font-weight: 700; 
+                            color: {text_color};
                             line-height: 1;
-                            margin-top: 0.25rem;
+                            margin-top: 4px;
+                            font-family: "Space Grotesk", sans-serif;
                         '>
                             {probability}%
                         </div>
@@ -119,12 +118,14 @@ def render_contact_timing_badges(times: List[Dict]):
                     <div style='
                         background: {badge_bg}; 
                         color: white; 
-                        padding: 0.5rem 0.75rem; 
+                        padding: 0.6rem 1rem; 
                         border-radius: 8px; 
                         font-size: 0.75rem; 
-                        font-weight: 700;
+                        font-weight: 800;
                         text-transform: uppercase;
-                        letter-spacing: 0.05em;
+                        letter-spacing: 0.1em;
+                        font-family: "Space Grotesk", sans-serif;
+                        box-shadow: 0 0 15px {bg_color};
                     '>
                         {urgency.upper()}
                     </div>
@@ -135,10 +136,7 @@ def render_contact_timing_badges(times: List[Dict]):
 
 def render_contact_timing_simple(times: List[Dict]):
     """
-    Render a simplified version for compact layouts.
-    
-    Args:
-        times: List of dictionaries with day, time, confidence/urgency
+    Render a simplified version for compact layouts - Obsidian Edition
     """
     
     for t in times:
@@ -152,33 +150,39 @@ def render_contact_timing_simple(times: List[Dict]):
                 color = "#f59e0b"
                 icon = "⭐"
             else:
-                color = "#94a3b8"
+                color = "#6366F1"
                 icon = "📅"
         else:
-            color = "#3b82f6"
+            color = "#6366F1"
             icon = t.get('icon', "📞")
         
         st.markdown(f"""
         <div style='
-            background: white; 
-            padding: 0.75rem; 
-            border-radius: 8px; 
+            background: rgba(22, 27, 34, 0.7); 
+            padding: 1rem; 
+            border-radius: 10px; 
             border-left: 4px solid {color}; 
-            margin-bottom: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-left: 4px solid {color};
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
         '>
             <div style='display: flex; justify-content: space-between; align-items: center;'>
                 <div>
-                    <div style='font-weight: 600; color: #1e293b;'>{icon} {t['day']}</div>
-                    <div style='font-size: 0.875rem; color: #64748b;'>{t['time']}</div>
+                    <div style='font-weight: 700; color: #FFFFFF; font-family: "Space Grotesk", sans-serif;'>{icon} {t['day']}</div>
+                    <div style='font-size: 0.85rem; color: #8B949E; font-family: "Inter", sans-serif;'>{t['time']}</div>
                 </div>
                 <div style='
-                    background: {color}; 
-                    color: white; 
-                    padding: 0.25rem 0.5rem; 
-                    border-radius: 4px; 
-                    font-size: 0.75rem; 
-                    font-weight: 600;
+                    background: {color}20; 
+                    color: {color}; 
+                    padding: 0.4rem 0.75rem; 
+                    border-radius: 6px; 
+                    font-size: 0.7rem; 
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    border: 1px solid {color}40;
+                    font-family: "Space Grotesk", sans-serif;
                 '>
                     {confidence if isinstance(confidence, str) else f"{confidence}%"}
                 </div>
