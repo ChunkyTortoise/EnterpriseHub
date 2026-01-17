@@ -1,0 +1,308 @@
+# Quality Gates Configuration for EnterpriseHub
+# Defines thresholds and standards for automated quality checks
+# Used by CI/CD pipelines to enforce quality standards
+
+metadata:
+  version: "1.0.0"
+  updated: "2026-01-16"
+  description: "Quality gates and thresholds for automated validation"
+
+# Code Quality Thresholds
+code_quality:
+  # Test Coverage
+  test_coverage:
+    minimum_line_coverage: 80
+    minimum_branch_coverage: 80
+    minimum_function_coverage: 90
+    critical_paths_coverage: 100  # Auth, payment, security
+    new_code_coverage: 100  # All new code must have tests
+
+  # Type Coverage
+  type_coverage:
+    minimum_typed_functions: 90
+    strict_mode: true
+    allow_any: false  # Except for explicitly documented cases
+
+  # Security
+  security_issues:
+    critical: 0  # No critical security issues allowed
+    high: 0  # No high severity issues
+    medium: 0  # No medium severity issues
+    low: 5  # Max 5 low severity issues
+
+  # Code Complexity
+  complexity:
+    max_cyclomatic_complexity: 10
+    max_cognitive_complexity: 15
+    max_function_length: 50  # lines
+    max_file_length: 500  # lines
+    max_parameters: 5
+
+  # Code Duplication
+  duplication:
+    max_duplication_pct: 5
+    min_duplicate_lines: 6  # Flag duplicates >= 6 lines
+
+# Performance Thresholds
+performance:
+  # Hook Performance
+  hooks:
+    max_latency_ms: 500  # Max latency for any hook
+    avg_latency_ms: 100  # Average latency target
+    p95_latency_ms: 300  # 95th percentile latency
+    p99_latency_ms: 450  # 99th percentile latency
+
+  # Skill Loading
+  skills:
+    max_load_time_ms: 1000  # Max time to load a skill
+    max_load_tokens: 5000  # Max tokens per skill initial load
+    progressive_loading: true  # Must use progressive disclosure
+
+  # API Response Times
+  api:
+    max_response_time_ms: 2000  # API endpoints
+    avg_response_time_ms: 500
+    p95_response_time_ms: 1500
+
+  # Test Suite Performance
+  tests:
+    max_unit_test_time_ms: 100  # Per unit test
+    max_integration_test_time_s: 30  # Per integration test
+    max_full_suite_time_min: 10  # Full test suite
+
+# Cost Optimization Thresholds
+costs:
+  # Token Usage
+  tokens:
+    daily_budget: 1500000  # 1.5M tokens per day
+    monthly_budget: 45000000  # 45M tokens per month
+    session_budget: 150000  # 150k tokens per session avg
+
+  # MCP Overhead
+  mcp:
+    max_overhead_tokens: 5000  # Total MCP server overhead
+    max_servers_active: 3  # Max servers per profile
+    recommended_overhead_pct: 2.5  # % of total context
+
+  # Context Management
+  context:
+    max_context_files: 20  # Max files in priority paths
+    target_context_usage_pct: 50  # Target context usage
+    auto_compact_threshold: 32000  # Trigger for auto-compact
+
+  # Cost Targets
+  targets:
+    cost_per_feature_usd: 5  # Target cost per feature
+    monthly_budget_usd: 100  # Monthly API cost budget
+    cost_efficiency_improvement_pct: 10  # Quarterly improvement target
+
+# Skills Quality Standards
+skills:
+  # Structure Requirements
+  structure:
+    require_skill_md: true
+    require_frontmatter: true
+    require_description: true
+    min_description_length: 50
+    require_triggers: true
+    min_triggers: 3
+
+  # Documentation
+  documentation:
+    require_reference_docs: false  # Optional
+    require_examples: true
+    require_usage_section: true
+
+  # Testing
+  testing:
+    require_skill_tests: true
+    min_test_coverage: 80
+
+  # Performance
+  performance:
+    max_skill_load_tokens: 5000
+    max_skill_complexity: 8  # Complexity score
+
+# Hooks Quality Standards
+hooks:
+  # Syntax
+  syntax:
+    require_yaml_valid: true
+    require_shell_valid: true  # For .sh hooks
+    require_markdown_valid: true  # For .md hooks
+
+  # Security
+  security:
+    require_input_validation: true
+    require_error_handling: true
+    prohibit_destructive_ops: true
+
+  # Performance
+  performance:
+    max_execution_time_ms: 500
+    require_timeout: true
+    timeout_max_ms: 5000
+
+  # Testing
+  testing:
+    require_unit_tests: true
+    require_integration_tests: true
+
+# Plugin Quality Standards
+plugin:
+  # Manifest
+  manifest:
+    require_plugin_json: true
+    require_valid_semver: true
+    require_description: true
+    min_description_length: 100
+
+  # Components
+  components:
+    require_readme: true
+    require_license: true
+    require_contributing: true
+    require_structure_doc: true
+
+  # Skills
+  skills_requirements:
+    min_skills: 1
+    require_examples: true
+
+  # Quality
+  quality:
+    require_tests: true
+    min_test_coverage: 80
+    require_ci_cd: true
+
+# Security Standards
+security:
+  # Secrets Detection
+  secrets:
+    scan_all_commits: true
+    block_on_detection: true
+    require_baseline: true
+
+  # Dependency Security
+  dependencies:
+    max_vulnerability_age_days: 30
+    prohibit_unmaintained: true
+    require_regular_updates: true
+
+  # Code Security
+  code:
+    require_bandit_scan: true
+    require_input_validation: true
+    require_output_encoding: true
+    prohibit_sql_injection: true
+    prohibit_xss: true
+
+# Deployment Gates
+deployment:
+  # Pre-deployment Checks
+  required_checks:
+    - all_tests_pass
+    - coverage_threshold_met
+    - no_security_issues
+    - no_linting_errors
+    - no_type_errors
+    - documentation_updated
+
+  # Environments
+  staging:
+    require_manual_approval: false
+    require_smoke_tests: true
+
+  production:
+    require_manual_approval: true
+    require_full_test_suite: true
+    require_backup: true
+    require_rollback_plan: true
+
+# Monitoring & Alerting
+monitoring:
+  # Metrics Collection
+  metrics:
+    collect_token_usage: true
+    collect_performance_data: true
+    collect_error_rates: true
+    collect_cost_data: true
+
+  # Alert Thresholds
+  alerts:
+    error_rate_pct: 1  # Alert if error rate > 1%
+    response_time_ms: 3000  # Alert if P95 > 3s
+    daily_cost_usd: 10  # Alert if daily cost > $10
+
+# Documentation Requirements
+documentation:
+  # Required Files
+  required_files:
+    - README.md
+    - CLAUDE.md
+    - CONTRIBUTING.md
+    - LICENSE
+
+  # README Requirements
+  readme:
+    require_installation: true
+    require_usage: true
+    require_examples: true
+    require_contribution_guide: true
+
+  # Code Documentation
+  code:
+    require_docstrings: true
+    require_type_hints: true
+    require_examples_in_docs: true
+
+# Continuous Improvement
+continuous_improvement:
+  # Review Frequency
+  review:
+    quality_gates_review: "quarterly"
+    threshold_adjustment: "monthly"
+    metrics_analysis: "weekly"
+
+  # Improvement Targets
+  targets:
+    quarterly_coverage_increase: 5  # % points
+    quarterly_cost_reduction: 10  # %
+    quarterly_performance_improvement: 15  # %
+
+# Enforcement
+enforcement:
+  # CI/CD Integration
+  ci_cd:
+    block_merge_on_failure: true
+    require_all_checks: true
+    allow_override: false  # No override for quality gates
+
+  # Exceptions
+  exceptions:
+    require_justification: true
+    require_approval: true
+    require_remediation_plan: true
+    max_exception_duration_days: 30
+
+# Reporting
+reporting:
+  # Report Generation
+  generation:
+    daily_summary: true
+    weekly_detailed: true
+    monthly_executive: true
+
+  # Report Contents
+  contents:
+    include_trends: true
+    include_violations: true
+    include_improvements: true
+    include_cost_analysis: true
+    include_recommendations: true
+
+  # Distribution
+  distribution:
+    save_to_artifacts: true
+    post_to_github_summary: true
+    send_notifications: false  # Disable for now

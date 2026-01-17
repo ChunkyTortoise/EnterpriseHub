@@ -24,102 +24,201 @@ def render_chat_interface(api_base_url: str = "http://localhost:8000/api"):
     """
     st.markdown("### 💬 Claude Intelligence Chat")
 
-    # Enhanced CSS for production chat
-    st.markdown("""
-    <style>
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            padding: 1rem;
-            max-height: 600px;
-            overflow-y: auto;
-            background: rgba(248, 250, 252, 0.5);
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-        }
+        # Enhanced CSS for production chat - Obsidian Edition
 
-        .chat-bubble {
-            max-width: 85%;
-            padding: 1rem 1.25rem;
-            border-radius: 16px;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            position: relative;
-            animation: slideUp 0.3s ease-out;
-        }
+        st.markdown("""
 
-        .bubble-user {
-            align-self: flex-end;
-            background: var(--primary-gradient, linear-gradient(135deg, #006AFF 0%, #0049CC 100%));
-            color: white;
-            border-bottom-right-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 106, 255, 0.2);
-        }
+        <style>
 
-        .bubble-ai {
-            align-self: flex-start;
-            background: white;
-            color: #1e293b;
-            border-bottom-left-radius: 4px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
+            .chat-container {
 
-        .agent-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+                display: flex;
 
-        .agent-name-ai { color: #8B5CF6; }
-        .agent-name-user { color: #64748B; text-align: right; justify-content: flex-end; width: 100%; }
+                flex-direction: column;
 
-        .reasoning-section {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 0.75rem;
-            margin-top: 0.75rem;
-            font-size: 0.8rem;
-            color: #475569;
-            border-left: 3px solid #8B5CF6;
-        }
+                gap: 1.5rem;
 
-        .sources-section {
-            background: #f0f9ff;
-            border-radius: 8px;
-            padding: 0.75rem;
-            margin-top: 0.75rem;
-            font-size: 0.8rem;
-            color: #0369a1;
-            border-left: 3px solid #0ea5e9;
-        }
+                padding: 1.5rem;
 
-        .status-pill {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 0.7rem;
-            background: #dcfce7;
-            color: #166534;
-            margin-left: 8px;
-        }
+                max-height: 600px;
 
-        .error-message {
-            background: #fef2f2;
-            color: #dc2626;
-            padding: 0.75rem;
-            border-radius: 8px;
-            margin-top: 0.5rem;
-            border-left: 3px solid #dc2626;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+                overflow-y: auto;
+
+                background: rgba(5, 7, 10, 0.6);
+
+                border-radius: 16px;
+
+                border: 1px solid rgba(255, 255, 255, 0.05);
+
+                backdrop-filter: blur(10px);
+
+                box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+
+            }
+
+    
+
+            .chat-bubble {
+
+                max-width: 85%;
+
+                padding: 1.25rem 1.5rem;
+
+                border-radius: 12px;
+
+                font-size: 0.95rem;
+
+                line-height: 1.6;
+
+                position: relative;
+
+                animation: slideUp 0.3s ease-out;
+
+                font-family: 'Inter', sans-serif;
+
+            }
+
+    
+
+            .bubble-user {
+
+                align-self: flex-end;
+
+                background: rgba(99, 102, 241, 0.1);
+
+                color: #E6EDF3;
+
+                border: 1px solid rgba(99, 102, 241, 0.3);
+
+                border-bottom-right-radius: 4px;
+
+                box-shadow: 0 4px 15px rgba(99, 102, 241, 0.1);
+
+            }
+
+    
+
+            .bubble-ai {
+
+                align-self: flex-start;
+
+                background: rgba(22, 27, 34, 0.8);
+
+                color: #FFFFFF;
+
+                border-bottom-left-radius: 4px;
+
+                border: 1px solid rgba(255, 255, 255, 0.1);
+
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+            }
+
+    
+
+            .agent-info {
+
+                display: flex;
+
+                align-items: center;
+
+                gap: 8px;
+
+                margin-bottom: 8px;
+
+                font-size: 0.7rem;
+
+                font-weight: 700;
+
+                text-transform: uppercase;
+
+                letter-spacing: 0.1em;
+
+                font-family: 'Space Grotesk', sans-serif;
+
+            }
+
+    
+
+            .agent-name-ai { color: #6366F1; }
+
+            .agent-name-user { color: #8B949E; text-align: right; justify-content: flex-end; width: 100%; }
+
+    
+
+            .reasoning-section {
+
+                background: rgba(99, 102, 241, 0.05);
+
+                border-radius: 8px;
+
+                padding: 1rem;
+
+                margin-top: 1rem;
+
+                font-size: 0.85rem;
+
+                color: #E6EDF3;
+
+                border-left: 3px solid #6366F1;
+
+                border: 1px solid rgba(99, 102, 241, 0.1);
+
+                border-left: 3px solid #6366F1;
+
+            }
+
+    
+
+            .sources-section {
+
+                background: rgba(255, 255, 255, 0.02);
+
+                border-radius: 8px;
+
+                padding: 1rem;
+
+                margin-top: 1rem;
+
+                font-size: 0.85rem;
+
+                color: #8B949E;
+
+                border-left: 3px solid rgba(255, 255, 255, 0.2);
+
+            }
+
+    
+
+            .status-pill {
+
+                display: inline-block;
+
+                padding: 2px 8px;
+
+                border-radius: 4px;
+
+                font-size: 0.65rem;
+
+                background: rgba(16, 185, 129, 0.1);
+
+                color: #10b981;
+
+                margin-left: 8px;
+
+                font-weight: 700;
+
+                text-transform: uppercase;
+
+                border: 1px solid rgba(16, 185, 129, 0.2);
+
+            }
+
+        </style>
+
+        """, unsafe_allow_html=True)
+
+    
 
     # Initialize chat state
     if 'chat_messages' not in st.session_state:
@@ -133,18 +232,20 @@ def render_chat_interface(api_base_url: str = "http://localhost:8000/api"):
     selected_lead = st.session_state.get('selected_lead_name', 'No lead selected')
     market = st.session_state.get('current_market', 'Austin')
 
-    # Chat header with context
+    # Chat header with context - Obsidian Command Edition
     st.markdown(f"""
-    <div style='background: linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%);
-                padding: 1rem; border-radius: 12px; color: white; margin-bottom: 1rem;
-                display: flex; justify-content: space-between; align-items: center;'>
+    <div style='background: linear-gradient(135deg, #05070A 0%, #1E1B4B 100%);
+                padding: 1.25rem 1.5rem; border-radius: 12px; color: white; margin-bottom: 1.5rem;
+                display: flex; justify-content: space-between; align-items: center;
+                border: 1px solid rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.1);
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);'>
         <div>
-            <h4 style='margin: 0; color: white;'>🤖 Claude Intelligence</h4>
-            <p style='margin: 0; opacity: 0.9; font-size: 0.85rem;'>Lead: {selected_lead} | Market: {market}</p>
+            <h4 style='margin: 0; color: white; font-family: "Space Grotesk", sans-serif; letter-spacing: 0.05em; text-transform: uppercase;'>🤖 CLAUDE INTELLIGENCE</h4>
+            <p style='margin: 0.25rem 0 0 0; opacity: 0.7; font-size: 0.8rem; font-family: "Inter", sans-serif; font-weight: 500;'>NODE: {selected_lead.upper()} | SECTOR: {market.upper()}</p>
         </div>
         <div style='text-align: right;'>
-            <div style='font-size: 0.75rem; opacity: 0.8;'>Messages</div>
-            <div style='font-size: 1.5rem; font-weight: bold;'>{len(st.session_state.chat_messages)}</div>
+            <div style='font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif;'>Signals</div>
+            <div style='font-size: 1.5rem; font-weight: 700; color: #6366F1; font-family: "Space Grotesk", sans-serif;'>{len(st.session_state.chat_messages)}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -160,22 +261,22 @@ def render_chat_messages():
     """Render all chat messages with enhanced styling"""
 
     if not st.session_state.chat_messages:
-        # Show welcome message
+        # Show welcome message - Obsidian Edition
         st.markdown("""
-        <div style='text-align: center; padding: 2rem; color: #64748b;'>
-            <div style='font-size: 3rem; margin-bottom: 1rem;'>💬</div>
-            <h3 style='color: #475569; margin-bottom: 0.5rem;'>Chat with Claude</h3>
-            <p style='margin: 0;'>Ask questions about leads, generate scripts, or get strategic insights</p>
+        <div style='text-align: center; padding: 3rem 2rem; color: #8B949E;'>
+            <div style='font-size: 3.5rem; margin-bottom: 1.5rem; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.3));'>💬</div>
+            <h3 style='color: #FFFFFF; margin-bottom: 0.75rem; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.05em;'>Neural Command Link</h3>
+            <p style='margin: 0; font-family: "Inter", sans-serif; font-size: 1rem; opacity: 0.8;'>Initialize query for lead intelligence, script synthesis, or strategic modeling.</p>
 
-            <div style='margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;'>
-                <div style='background: white; padding: 0.75rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 0.8rem;'>
-                    💡 "Draft an SMS for Sarah"
+            <div style='margin-top: 2.5rem; display: flex; justify-content: center; gap: 1.25rem; flex-wrap: wrap;'>
+                <div style='background: rgba(22, 27, 34, 0.7); padding: 1rem 1.5rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 0.85rem; color: #E6EDF3; font-family: "Inter", sans-serif;'>
+                    <span style="color: #6366F1; font-weight: 700;">▷</span> "Draft an SMS for Sarah"
                 </div>
-                <div style='background: white; padding: 0.75rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 0.8rem;'>
-                    📊 "What's the pipeline status?"
+                <div style='background: rgba(22, 27, 34, 0.7); padding: 1rem 1.5rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 0.85rem; color: #E6EDF3; font-family: "Inter", sans-serif;'>
+                    <span style="color: #6366F1; font-weight: 700;">▷</span> "Analyze current pipeline velocity"
                 </div>
-                <div style='background: white; padding: 0.75rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 0.8rem;'>
-                    🏠 "Find properties for David"
+                <div style='background: rgba(22, 27, 34, 0.7); padding: 1rem 1.5rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 0.85rem; color: #E6EDF3; font-family: "Inter", sans-serif;'>
+                    <span style="color: #6366F1; font-weight: 700;">▷</span> "Synthesize property matches for David"
                 </div>
             </div>
         </div>
@@ -239,18 +340,20 @@ def render_sources_section(msg: Dict[str, Any]) -> str:
 
 
 def render_actions_section(msg: Dict[str, Any]) -> str:
-    """Render recommended actions section"""
+    """Render recommended actions section - Obsidian Style"""
     actions = msg.get('recommended_actions', [])
     if not actions:
         return ""
 
-    actions_html = "<br>".join([f"• {action.get('title', action) if isinstance(action, dict) else action}"
+    actions_html = "".join([f'<div style="margin: 6px 0; display: flex; align-items: center; gap: 8px;"><span style="color: #10b981; font-weight: bold;">✓</span> <span>{action.get("title", action) if isinstance(action, dict) else action}</span></div>'
                                for action in actions])
     return f"""
-    <div style="background: #f0fdf4; border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem;
-                font-size: 0.8rem; color: #166534; border-left: 3px solid #22c55e;">
-        <strong>🎯 Recommended Actions:</strong><br>
-        {actions_html}
+    <div style="background: rgba(16, 185, 129, 0.05); border-radius: 8px; padding: 1rem; margin-top: 1rem;
+                font-size: 0.85rem; color: #E6EDF3; border-left: 3px solid #10b981; border: 1px solid rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981;">
+        <strong style="color: #10b981; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">Recommended Directives:</strong><br>
+        <div style="margin-top: 8px; opacity: 0.9;">
+            {actions_html}
+        </div>
     </div>
     """
 

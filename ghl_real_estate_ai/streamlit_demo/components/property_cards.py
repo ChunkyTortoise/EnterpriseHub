@@ -86,21 +86,21 @@ def render_premium_property_card(property: Dict[str, Any], index: int = 0):
         </div>
         <div class="property-card-content">
             <div class="property-card-header">
-                <div class="property-title">{address}</div>
+                <div class="property-title" style="color: #FFFFFF; font-family: 'Space Grotesk', sans-serif;">{address.upper()}</div>
                 <div class="property-price-premium">${price:,}</div>
             </div>
             <div class="property-location">
-                <span>📍 {neighborhood}</span>
+                <span style="color: #8B949E; font-family: 'Inter', sans-serif; font-weight: 600;">📍 {neighborhood.upper()}</span>
             </div>
             
-            <div class="property-specs">
-                <div class="property-spec-item">🛏️ {beds} Beds</div>
-                <div class="property-spec-item">🚿 {baths} Baths</div>
-                <div class="property-spec-item">📐 {sqft:,} sqft</div>
+            <div class="property-specs" style="border-color: rgba(255,255,255,0.05);">
+                <div class="property-spec-item" style="color: #E6EDF3;">🛏️ {beds} BEDS</div>
+                <div class="property-spec-item" style="color: #E6EDF3;">🚿 {baths} BATHS</div>
+                <div class="property-spec-item" style="color: #E6EDF3;">📐 {sqft:,} SQFT</div>
             </div>
             
             <div class="ai-insight-box">
-                <div class="ai-insight-text">{ai_insight}</div>
+                <div class="ai-insight-text" style="color: #E6EDF3; font-family: 'Inter', sans-serif; opacity: 0.9;">{ai_insight}</div>
             </div>
         </div>
     </div>
@@ -137,42 +137,94 @@ def render_property_card(property: dict):
     sqft = property.get('sqft', 0)
     match_score = property.get('match_score', 0)
 
-    # Enhanced card styling
-    st.markdown(f"""
-    <div style='
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        padding: 20px;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        margin-bottom: 16px;
-        min-height: 220px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    '>
-        <h4 style='margin: 0 0 12px 0; color: #1e293b; font-size: 1.2rem; font-weight: 600;'>
-            📍 {neighborhood}
-        </h4>
+        # Enhanced card styling - Obsidian Edition
 
-        <div style='font-size: 1.5rem; color: #059669; font-weight: 700; margin-bottom: 12px;'>
-            ${price:,}
-        </div>
-
-        <div style='display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; color: #475569;'>
-            <span><strong>{bedrooms}</strong> BR</span>
-            <span><strong>{bathrooms}</strong> BA</span>
-            <span><strong>{sqft:,}</strong> sqft</span>
-        </div>
+        st.markdown(f"""
 
         <div style='
-            background: {"#dcfce7" if match_score >= 90 else "#dbeafe" if match_score >= 80 else "#fef3c7"};
-            color: {"#166534" if match_score >= 90 else "#1e40af" if match_score >= 80 else "#92400e"};
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 0.9rem;
+
+            background: rgba(22, 27, 34, 0.7);
+
+            padding: 1.5rem;
+
+            border: 1px solid rgba(255, 255, 255, 0.05);
+
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+            border-radius: 12px;
+
+            margin-bottom: 1.25rem;
+
+            min-height: 240px;
+
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+
+            backdrop-filter: blur(12px);
+
+            transition: transform 0.3s ease, border-color 0.3s ease;
+
         '>
-            🎯 Match: {match_score:.0f}%
+
+            <h4 style='margin: 0 0 1rem 0; color: #FFFFFF; font-size: 1.1rem; font-weight: 700; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.05em;'>
+
+                📍 {neighborhood.upper()}
+
+            </h4>
+
+    
+
+            <div style='font-size: 1.75rem; color: #6366F1; font-weight: 700; margin-bottom: 1rem; font-family: "Space Grotesk", sans-serif;'>
+
+                ${price:,}
+
+            </div>
+
+    
+
+            <div style='display: flex; justify-content: space-between; margin-bottom: 1.25rem; font-size: 0.85rem; color: #8B949E; font-family: "Inter", sans-serif; font-weight: 600;'>
+
+                <span><b style="color: #E6EDF3;">{bedrooms}</b> BR</span>
+
+                <span><b style="color: #E6EDF3;">{bathrooms}</b> BA</span>
+
+                <span><b style="color: #E6EDF3;">{sqft:,}</b> SQFT</span>
+
+            </div>
+
+    
+
+            <div style='
+
+                background: rgba(99, 102, 241, 0.1);
+
+                color: #6366F1;
+
+                padding: 10px 15px;
+
+                border-radius: 8px;
+
+                text-align: center;
+
+                font-weight: 700;
+
+                font-size: 0.8rem;
+
+                border: 1px solid rgba(99, 102, 241, 0.2);
+
+                font-family: "Space Grotesk", sans-serif;
+
+                text-transform: uppercase;
+
+                letter-spacing: 0.1em;
+
+            '>
+
+                SIGNAL MATCH: {match_score:.0f}%
+
+            </div>
+
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+
+        """, unsafe_allow_html=True)
+
+    

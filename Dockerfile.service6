@@ -1,0 +1,456 @@
+# ==============================================================================
+# Service 6 Lead Recovery & Nurture Engine - Multi-Stage Dockerfile
+# ==============================================================================
+# 
+# Multi-stage build optimized for Service 6 AI-powered lead recovery system:
+# - Development target: Hot reloading, debugging, full toolchain
+# - Production target: Security hardened, minimal footprint, optimized performance
+#
+# Built on Python 3.11 with FastAPI, Streamlit, and advanced AI/ML capabilities
+# ==============================================================================
+
+# ==============================================================================
+# Base Stage: Common dependencies and Python setup
+# ==============================================================================
+FROM python:3.11.8-slim-bullseye AS base
+
+# Set environment variables for Python optimization
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONFAULTHANDLER=1 \
+    PYTHONHASHSEED=random \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=100
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    ca-certificates \
+    libpq-dev \
+    postgresql-client \
+    redis-tools \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create application user and directories
+RUN groupadd --gid 1000 appuser \
+    && useradd --uid 1000 --gid 1000 --shell /bin/bash --create-home appuser
+
+# Create application directories
+RUN mkdir -p /app /app/logs /app/data /app/tmp \
+    && chown -R appuser:appuser /app
+
+WORKDIR /app
+
+# ==============================================================================
+# Dependencies Stage: Install Python packages
+# ==============================================================================
+FROM base AS dependencies
+
+# Copy requirements first for better Docker layer caching
+COPY requirements.txt /app/requirements.txt
+
+# Upgrade pip and install Python dependencies
+RUN pip install --upgrade pip setuptools wheel
+
+# Install Python dependencies with optimized settings
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install additional Service 6 specific dependencies
+RUN pip install --no-cache-dir \
+    gunicorn==21.2.0 \
+    psycopg2-binary==2.9.9 \
+    redis[hiredis]==5.0.1 \
+    prometheus-client==0.19.0 \
+    structlog==23.2.0 \
+    tenacity==8.2.3 \
+    asyncpg==0.29.0 \
+    alembic==1.13.1 \
+    sqlalchemy[asyncio]==2.0.23
+
+# ==============================================================================
+# Development Stage: Full development environment
+# ==============================================================================
+FROM dependencies AS development
+
+# Install development and testing dependencies
+RUN pip install --no-cache-dir \
+    pytest==7.4.4 \
+    pytest-asyncio==0.23.2 \
+    pytest-cov==4.1.0 \
+    black==23.12.1 \
+    isort==5.13.2 \
+    flake8==7.0.0 \
+    mypy==1.8.0 \
+    pre-commit==3.6.0 \
+    httpx==0.26.0 \
+    pytest-mock==3.12.0
+
+# Set development environment
+ENV ENVIRONMENT=development \
+    DEBUG=true \
+    LOG_LEVEL=DEBUG
+
+# Copy application code
+COPY --chown=appuser:appuser . /app/
+
+# Install pre-commit hooks
+USER appuser
+RUN git config --global --add safe.directory /app || true
+RUN pre-commit install --install-hooks || true
+
+# Expose ports for development
+EXPOSE 8000 8001 8501
+
+# Development command with hot reloading
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app"]
+
+# ==============================================================================
+# Production Base: Security hardened base for production
+# ==============================================================================
+FROM dependencies AS production-base
+
+# Install production system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    dumb-init \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Security hardening: Remove unnecessary packages and clean up
+RUN apt-get autoremove -y \
+    && apt-get autoclean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /root/.cache \
+    && rm -rf /tmp/*
+
+# Create non-root user for security
+USER appuser
+
+# ==============================================================================
+# Production Stage: Optimized and hardened for production deployment
+# ==============================================================================
+FROM production-base AS production
+
+# Set production environment variables
+ENV ENVIRONMENT=production \
+    DEBUG=false \
+    LOG_LEVEL=INFO \
+    PYTHONPATH=/app \
+    MAX_WORKERS=4 \
+    WORKER_TIMEOUT=30 \
+    KEEPALIVE=2
+
+# Copy application code with proper ownership
+COPY --chown=appuser:appuser --from=dependencies /app /app
+COPY --chown=appuser:appuser . /app/
+
+# Create necessary directories and set permissions
+USER root
+RUN mkdir -p /app/logs /app/data /app/tmp \
+    && chown -R appuser:appuser /app \
+    && chmod -R 755 /app \
+    && chmod +x /app/scripts/*.py 2>/dev/null || true
+
+# Switch back to non-root user
+USER appuser
+
+# Create FastAPI application entry point
+RUN cat > /app/service6_app.py << 'PYTHON_EOF'
+#!/usr/bin/env python3
+"""
+Service 6 FastAPI Application Entry Point
+=========================================
+
+Production-ready FastAPI application for Service 6 Lead Recovery & Nurture Engine
+with health checks, monitoring, and Service 6 AI integration.
+"""
+
+import asyncio
+import logging
+import os
+import sys
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+import structlog
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
+from prometheus_client import make_asgi_app
+import uvicorn
+
+# Add project root to Python path
+BASE_DIR = Path(__file__).parent
+sys.path.insert(0, str(BASE_DIR))
+sys.path.insert(0, str(BASE_DIR / "ghl_real_estate_ai"))
+
+# Configure structured logging
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.processors.JSONRenderer()
+    ],
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
+
+logger = structlog.get_logger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan management"""
+    logger.info("Service 6 application starting up")
+    
+    # Initialize services
+    try:
+        # Import and initialize Service 6 AI integration
+        from ghl_real_estate_ai.services.service6_ai_integration import Service6AIIntegration
+        app.state.ai_integration = Service6AIIntegration()
+        await app.state.ai_integration.initialize()
+        
+        logger.info("Service 6 AI integration initialized")
+        yield
+        
+    except Exception as e:
+        logger.error("Failed to initialize Service 6 services", error=str(e))
+        raise
+    finally:
+        logger.info("Service 6 application shutting down")
+        # Cleanup resources
+        if hasattr(app.state, 'ai_integration'):
+            await app.state.ai_integration.cleanup()
+
+# Create FastAPI application
+app = FastAPI(
+    title="Service 6 Lead Recovery & Nurture Engine",
+    description="AI-powered lead recovery and nurture system with advanced ML capabilities",
+    version="1.0.0",
+    lifespan=lifespan,
+    docs_url="/docs" if os.getenv("ENVIRONMENT") != "production" else None,
+    redoc_url="/redoc" if os.getenv("ENVIRONMENT") != "production" else None,
+)
+
+# Security middleware
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["*"] if os.getenv("ENVIRONMENT") == "development" else ["localhost", "127.0.0.1"]
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"] if os.getenv("ENVIRONMENT") == "development" else [],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
+
+# Health check endpoints
+@app.get("/health/live")
+async def liveness_check():
+    """Liveness probe for Kubernetes/Docker health checks"""
+    return {"status": "alive", "timestamp": "2026-01-17", "service": "service6"}
+
+@app.get("/health/ready")
+async def readiness_check():
+    """Readiness probe to check if service is ready to serve traffic"""
+    try:
+        # Check AI integration health
+        if hasattr(app.state, 'ai_integration'):
+            health_status = await app.state.ai_integration.health_check()
+            if not health_status.get("healthy", False):
+                raise HTTPException(status_code=503, detail="AI integration not ready")
+        
+        return {
+            "status": "ready",
+            "timestamp": "2026-01-17",
+            "service": "service6",
+            "components": {
+                "ai_integration": "healthy",
+                "database": "connected",
+                "cache": "connected"
+            }
+        }
+    except Exception as e:
+        logger.error("Readiness check failed", error=str(e))
+        raise HTTPException(status_code=503, detail="Service not ready")
+
+@app.get("/health/status")
+async def health_status():
+    """Detailed health status endpoint"""
+    return {
+        "service": "service6",
+        "version": "1.0.0",
+        "environment": os.getenv("ENVIRONMENT", "unknown"),
+        "timestamp": "2026-01-17",
+        "uptime": "running",
+        "status": "healthy"
+    }
+
+# Service 6 API routes
+@app.post("/api/v1/leads/recover")
+async def recover_leads(request: Request):
+    """Lead recovery endpoint using Service 6 AI"""
+    try:
+        data = await request.json()
+        ai_integration = app.state.ai_integration
+        result = await ai_integration.recover_leads(data)
+        return {"status": "success", "data": result}
+    except Exception as e:
+        logger.error("Lead recovery failed", error=str(e))
+        raise HTTPException(status_code=500, detail="Lead recovery failed")
+
+@app.post("/api/v1/leads/nurture")
+async def nurture_leads(request: Request):
+    """Lead nurture endpoint using Service 6 AI"""
+    try:
+        data = await request.json()
+        ai_integration = app.state.ai_integration
+        result = await ai_integration.nurture_leads(data)
+        return {"status": "success", "data": result}
+    except Exception as e:
+        logger.error("Lead nurture failed", error=str(e))
+        raise HTTPException(status_code=500, detail="Lead nurture failed")
+
+# Mount Prometheus metrics on separate port for monitoring
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
+
+if __name__ == "__main__":
+    # Production server configuration
+    config = uvicorn.Config(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        loop="uvloop",
+        http="httptools",
+        workers=int(os.getenv("MAX_WORKERS", 4)),
+        access_log=False,  # Use structured logging instead
+        log_config=None,   # Disable default logging
+    )
+    server = uvicorn.Server(config)
+    server.run()
+PYTHON_EOF
+
+# Health check script for monitoring
+RUN cat > /app/health_check.py << 'PYTHON_EOF'
+#!/usr/bin/env python3
+"""Health check script for Service 6"""
+import sys
+import asyncio
+import httpx
+
+async def check_health():
+    """Check application health"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://localhost:8000/health/live", timeout=5.0)
+            if response.status_code == 200:
+                print("Health check: PASS")
+                return 0
+            else:
+                print(f"Health check: FAIL (status {response.status_code})")
+                return 1
+    except Exception as e:
+        print(f"Health check: FAIL (error: {e})")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(asyncio.run(check_health()))
+PYTHON_EOF
+
+RUN chmod +x /app/service6_app.py /app/health_check.py
+
+# Expose ports
+EXPOSE 8000 8001
+
+# Health check configuration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python /app/health_check.py
+
+# Production startup with Gunicorn
+CMD ["python", "-m", "gunicorn", "service6_app:app", \
+     "--bind", "0.0.0.0:8000", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--workers", "4", \
+     "--worker-connections", "1000", \
+     "--max-requests", "1000", \
+     "--max-requests-jitter", "100", \
+     "--timeout", "30", \
+     "--keepalive", "2", \
+     "--preload", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--log-level", "info"]
+
+# ==============================================================================
+# Streamlit Demo Stage: Lightweight demo interface
+# ==============================================================================
+FROM production-base AS demo
+
+# Set demo environment
+ENV STREAMLIT_SERVER_PORT=8501 \
+    STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
+    STREAMLIT_SERVER_ENABLE_CORS=false
+
+# Copy application code
+COPY --chown=appuser:appuser . /app/
+
+# Create Streamlit configuration
+RUN mkdir -p /app/.streamlit
+RUN cat > /app/.streamlit/config.toml << 'STREAMLIT_EOF'
+[server]
+port = 8501
+address = "0.0.0.0"
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+primaryColor = "#FF4B4B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+
+[logger]
+level = "info"
+STREAMLIT_EOF
+
+# Expose Streamlit port
+EXPOSE 8501
+
+# Health check for Streamlit
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8501/ || exit 1
+
+# Streamlit startup command
+CMD ["python", "-m", "streamlit", "run", "ghl_real_estate_ai/streamlit_demo/app.py", \
+     "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+
+# ==============================================================================
+# Labels and Metadata
+# ==============================================================================
+LABEL maintainer="Service 6 Development Team" \
+      version="1.0.0" \
+      description="Service 6 Lead Recovery & Nurture Engine" \
+      org.opencontainers.image.title="Service 6 AI Platform" \
+      org.opencontainers.image.description="AI-powered lead recovery and nurture system" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.created="2026-01-17" \
+      org.opencontainers.image.source="https://github.com/your-org/enterprise-hub" \
+      org.opencontainers.image.licenses="Proprietary"

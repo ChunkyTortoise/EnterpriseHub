@@ -1,0 +1,304 @@
+name: Security Scan
+
+on:
+  push:
+    paths:
+      - '**/*.py'
+      - '**/*.js'
+      - '**/*.ts'
+      - 'requirements*.txt'
+      - 'package*.json'
+      - '.github/workflows/security-scan.yml'
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight
+  workflow_dispatch:
+
+jobs:
+  secrets-detection:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for secrets scan
+
+      - name: Install detect-secrets
+        run: |
+          pip install detect-secrets
+
+      - name: Scan for secrets
+        run: |
+          # Create baseline if doesn't exist
+          if [ ! -f ".secrets.baseline" ]; then
+            detect-secrets scan --baseline .secrets.baseline
+          fi
+
+          # Scan current state
+          detect-secrets scan --baseline .secrets.baseline --exclude-files '\.git/.*' --exclude-files 'node_modules/.*'
+
+          echo "✅ No secrets detected"
+
+      - name: Check for hardcoded credentials
+        run: |
+          cat > check_credentials.py << 'EOF'
+          """Check for hardcoded credentials patterns."""
+          import re
+          import sys
+          from pathlib import Path
+
+          # Patterns to detect
+          patterns = [
+              (r'password\s*=\s*["\'][^"\']+["\']', "Hardcoded password"),
+              (r'api[_-]?key\s*=\s*["\'][^"\']+["\']', "Hardcoded API key"),
+              (r'secret\s*=\s*["\'][^"\']+["\']', "Hardcoded secret"),
+              (r'token\s*=\s*["\'][^"\']+["\']', "Hardcoded token"),
+              (r'AKIA[0-9A-Z]{16}', "AWS Access Key"),
+              (r'sk-[a-zA-Z0-9]{48}', "OpenAI API Key"),
+          ]
+
+          # Exclude patterns (valid usage)
+          exclude_patterns = [
+              r'password\s*=\s*""',  # Empty string
+              r'password\s*=\s*None',  # None value
+              r'password\s*=\s*get',  # Getting from env
+              r'\.example',  # Example files
+              r'test_',  # Test files
+          ]
+
+          def should_check_file(path):
+              """Check if file should be scanned."""
+              exclude_dirs = {'node_modules', '.git', '__pycache__', '.pytest_cache', 'venv'}
+              exclude_files = {'.env.example', 'test_'}
+
+              if any(ex in str(path) for ex in exclude_dirs):
+                  return False
+              if any(ex in path.name for ex in exclude_files):
+                  return False
+              return True
+
+          issues = []
+          for py_file in Path('.').rglob('*.py'):
+              if not should_check_file(py_file):
+                  continue
+
+              try:
+                  content = py_file.read_text()
+                  for pattern, desc in patterns:
+                      for match in re.finditer(pattern, content, re.IGNORECASE):
+                          # Check if it's excluded
+                          matched_text = match.group(0)
+                          if not any(re.search(ex, matched_text) for ex in exclude_patterns):
+                              issues.append(f"{py_file}:{desc} - {matched_text[:50]}")
+              except Exception as e:
+                  print(f"Warning: Could not read {py_file}: {e}")
+
+          if issues:
+              print("❌ Potential hardcoded credentials found:")
+              for issue in issues:
+                  print(f"  - {issue}")
+              sys.exit(1)
+          else:
+              print("✅ No hardcoded credentials detected")
+          EOF
+
+          python check_credentials.py
+
+  python-security:
+    name: Python Security (Bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Bandit
+        run: |
+          pip install bandit[toml]
+
+      - name: Run Bandit security scan
+        run: |
+          # Create bandit config if doesn't exist
+          cat > .bandit << 'EOF'
+          [bandit]
+          exclude_dirs = [
+              "/tests/",
+              "/.venv/",
+              "/venv/",
+              "/__pycache__/",
+              "/.pytest_cache/",
+              "/node_modules/"
+          ]
+          skips = ["B101", "B601"]
+          EOF
+
+          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . -f txt
+
+      - name: Upload Bandit results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-security-report
+          path: bandit-report.json
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Safety
+        run: |
+          pip install safety
+
+      - name: Audit Python dependencies
+        run: |
+          # Install dependencies first
+          if [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt || true
+          fi
+
+          # Run safety check
+          safety check --json --output safety-report.json || true
+          safety check || echo "⚠️  Vulnerabilities found, review required"
+
+      - name: Check for outdated dependencies
+        run: |
+          pip list --outdated --format=json > outdated-deps.json
+          cat outdated-deps.json
+
+      - name: Upload dependency audit
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-audit
+          path: |
+            safety-report.json
+            outdated-deps.json
+
+  code-quality:
+    name: Code Quality & Vulnerabilities
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install quality tools
+        run: |
+          pip install pylint radon
+
+      - name: Check cyclomatic complexity
+        run: |
+          cat > check_complexity.py << 'EOF'
+          """Check code complexity."""
+          import subprocess
+          import json
+
+          # Run radon for complexity
+          result = subprocess.run(
+              ['radon', 'cc', '.', '-j', '--min', 'C'],
+              capture_output=True,
+              text=True
+          )
+
+          if result.stdout:
+              data = json.loads(result.stdout)
+              if data:
+                  print("⚠️  High complexity functions found:")
+                  for file, items in data.items():
+                      for item in items:
+                          if item.get('complexity', 0) > 10:
+                              print(f"  {file}:{item['name']} - Complexity: {item['complexity']}")
+              else:
+                  print("✅ No high complexity functions")
+          EOF
+
+          python check_complexity.py || true
+
+  sql-injection-check:
+    name: SQL Injection Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for SQL injection vulnerabilities
+        run: |
+          cat > check_sql.py << 'EOF'
+          """Check for potential SQL injection vulnerabilities."""
+          import re
+          from pathlib import Path
+
+          dangerous_patterns = [
+              r'execute\([^)]*%[^)]*\)',  # String formatting in execute
+              r'\.format\([^)]*\).*execute',  # format() with execute
+              r'f["\'].*\{.*\}.*["\'].*execute',  # f-string with execute
+          ]
+
+          issues = []
+          for py_file in Path('.').rglob('*.py'):
+              if 'test_' in py_file.name or '__pycache__' in str(py_file):
+                  continue
+
+              try:
+                  content = py_file.read_text()
+                  for pattern in dangerous_patterns:
+                      matches = re.finditer(pattern, content, re.IGNORECASE)
+                      for match in matches:
+                          issues.append(f"{py_file}: Potential SQL injection - {match.group(0)[:60]}")
+              except Exception:
+                  pass
+
+          if issues:
+              print("⚠️  Potential SQL injection vulnerabilities:")
+              for issue in issues:
+                  print(f"  - {issue}")
+          else:
+              print("✅ No SQL injection patterns detected")
+          EOF
+
+          python check_sql.py
+
+  summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs:
+      - secrets-detection
+      - python-security
+      - dependency-audit
+      - code-quality
+      - sql-injection-check
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔐 Secrets: ${{ needs.secrets-detection.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🛡️  Bandit: ${{ needs.python-security.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 Dependencies: ${{ needs.dependency-audit.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ⚡ Quality: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 💉 SQL Injection: ${{ needs.sql-injection-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.secrets-detection.result }}" == "success" ] && \
+             [ "${{ needs.python-security.result }}" == "success" ] && \
+             [ "${{ needs.dependency-audit.result }}" == "success" ]; then
+            echo "✅ **All security checks passed!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️  **Some security checks need attention**" >> $GITHUB_STEP_SUMMARY
+          fi

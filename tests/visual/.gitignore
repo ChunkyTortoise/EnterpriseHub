@@ -1,0 +1,54 @@
+# Visual Testing Artifacts
+# ==============================================================================
+# This file excludes test artifacts from version control while keeping
+# baseline screenshots that are essential for visual regression testing.
+
+# Test results and temporary files
+test-results/
+playwright-report/
+*.pyc
+__pycache__/
+.pytest_cache/
+
+# Playwright traces (only keep on failure, upload as CI artifacts)
+trace*.zip
+*-trace/
+
+# Actual/diff screenshots (generated during test failures)
+# Keep these local for review, but don't commit
+*-actual.png
+*-diff.png
+*-previous.png
+
+# Video recordings (if enabled)
+videos/
+*.webm
+
+# Playwright state
+.auth/
+storage-state.json
+
+# Temporary files
+*.tmp
+*.log
+.DS_Store
+
+# Local configuration
+.env.local
+pytest.local.ini
+
+# Keep baselines in version control
+# These are essential for visual regression testing
+!snapshots/
+!snapshots/*.png
+!snapshots/**/*.png
+
+# Keep README and documentation
+!README.md
+!QUICK_REFERENCE.md
+!pytest.ini
+
+# Keep test files
+!test_*.py
+!conftest.py
+!*.sh

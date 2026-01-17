@@ -9,86 +9,77 @@ import random
 
 def render_executive_dashboard(mock_data: bool = True):
     """
-    Render the Executive Command Center dashboard.
-    
-    Args:
-        mock_data: If True, use mock data for demo purposes
+    Render the Executive Command Center dashboard - Obsidian Command Edition.
     """
-    st.markdown("# 🎯 Executive Command Center")
-    st.markdown("**Real-time intelligence for your real estate business**")
+    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+    
+    st.markdown("# 🎯 EXECUTIVE COMMAND")
+    st.markdown("**Real-time tactical intelligence across the enterprise**")
     st.markdown("---")
     
-    # Top-level metrics row
+    # Top-level metrics row - Obsidian Edition
     col1, col2, col3, col4, col5 = st.columns(5)
     
+    metric_card_style = "padding: 20px; border-radius: 12px; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px);"
+    
     with col1:
-        st.markdown("""
-        <div style='background: linear-gradient(135deg, #00A32A 0%, #00C853 100%); 
-                    padding: 20px; border-radius: 12px; color: white;'>
-            <div style='font-size: 0.9rem; opacity: 0.9;'>🔥 HOT LEADS</div>
-            <div style='font-size: 2.5rem; font-weight: 700; margin: 8px 0;'>3</div>
-            <div style='font-size: 0.85rem; opacity: 0.8;'>+2 from yesterday</div>
+        st.markdown(f"""
+        <div style='background: rgba(16, 185, 129, 0.1); {metric_card_style} border-left: 4px solid #10b981;'>
+            <div style='font-size: 0.75rem; opacity: 0.8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif; color: #10b981;'>🔥 HOT LEADS</div>
+            <div style='font-size: 2.75rem; font-weight: 700; margin: 8px 0; font-family: "Space Grotesk", sans-serif;'>3</div>
+            <div style='font-size: 0.8rem; opacity: 0.7; font-weight: 600;'>+2 SINCE BASELINE</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
-        st.markdown("""
-        <div style='background: linear-gradient(135deg, #F59E0B 0%, #F97316 100%); 
-                    padding: 20px; border-radius: 12px; color: white;'>
-            <div style='font-size: 0.9rem; opacity: 0.9;'>⚡ WARM LEADS</div>
-            <div style='font-size: 2.5rem; font-weight: 700; margin: 8px 0;'>8</div>
-            <div style='font-size: 0.85rem; opacity: 0.8;'>Follow up today</div>
+        st.markdown(f"""
+        <div style='background: rgba(245, 158, 11, 0.1); {metric_card_style} border-left: 4px solid #f59e0b;'>
+            <div style='font-size: 0.75rem; opacity: 0.8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif; color: #f59e0b;'>⚡ WARM LEADS</div>
+            <div style='font-size: 2.75rem; font-weight: 700; margin: 8px 0; font-family: "Space Grotesk", sans-serif;'>8</div>
+            <div style='font-size: 0.8rem; opacity: 0.7; font-weight: 600;'>READY FOR SYNC</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
-        st.markdown("""
-        <div style='background: linear-gradient(135deg, #006AFF 0%, #0052CC 100%); 
-                    padding: 20px; border-radius: 12px; color: white;'>
-            <div style='font-size: 0.9rem; opacity: 0.9;'>💰 PIPELINE</div>
-            <div style='font-size: 2.5rem; font-weight: 700; margin: 8px 0;'>$2.4M</div>
-            <div style='font-size: 0.85rem; opacity: 0.8;'>Projected closings</div>
+        st.markdown(f"""
+        <div style='background: rgba(99, 102, 241, 0.1); {metric_card_style} border-left: 4px solid #6366F1;'>
+            <div style='font-size: 0.75rem; opacity: 0.8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif; color: #6366F1;'>💰 PIPELINE</div>
+            <div style='font-size: 2.75rem; font-weight: 700; margin: 8px 0; font-family: "Space Grotesk", sans-serif;'>$2.4M</div>
+            <div style='font-size: 0.8rem; opacity: 0.7; font-weight: 600;'>PROJECTED YIELD</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col4:
-        st.markdown("""
-        <div style='background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); 
-                    padding: 20px; border-radius: 12px; color: white;'>
-            <div style='font-size: 0.9rem; opacity: 0.9;'>⏱️ AVG RESPONSE</div>
-            <div style='font-size: 2.5rem; font-weight: 700; margin: 8px 0;'>2.3m</div>
-            <div style='font-size: 0.85rem; opacity: 0.8;'>AI response time</div>
+        st.markdown(f"""
+        <div style='background: rgba(139, 92, 246, 0.1); {metric_card_style} border-left: 4px solid #8b5cf6;'>
+            <div style='font-size: 0.75rem; opacity: 0.8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif; color: #8b5cf6;'>⏱️ LATENCY</div>
+            <div style='font-size: 2.75rem; font-weight: 700; margin: 8px 0; font-family: "Space Grotesk", sans-serif;'>2.3m</div>
+            <div style='font-size: 0.8rem; opacity: 0.7; font-weight: 600;'>AI RESPONSE TIME</div>
         </div>
         """, unsafe_allow_html=True)
 
     with col5:
-        # Market Velocity Gauge
+        # Market Velocity Gauge - Obsidian Style
         velocity_score = 78
+        import plotly.graph_objects as go
         fig_gauge = go.Figure(go.Indicator(
             mode="gauge+number",
             value=velocity_score,
             domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': "MARKET VELOCITY", 'font': {'size': 12, 'color': 'white'}},
+            title={'text': "MARKET VELOCITY", 'font': {'size': 12, 'color': '#8B949E', 'family': 'Space Grotesk'}},
             gauge={
-                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "white"},
-                'bar': {'color': "#ffffff"},
-                'bgcolor': "rgba(0,0,0,0)",
-                'borderwidth': 2,
-                'bordercolor': "white",
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#8B949E"},
+                'bar': {'color': "#6366F1"},
+                'bgcolor': "rgba(255,255,255,0.05)",
+                'borderwidth': 1,
+                'bordercolor': "rgba(255,255,255,0.1)",
                 'steps': [
-                    {'range': [0, 50], 'color': 'rgba(255,255,255,0.1)'},
-                    {'range': [50, 100], 'color': 'rgba(255,255,255,0.2)'}
+                    {'range': [0, 50], 'color': 'rgba(239, 68, 68, 0.1)'},
+                    {'range': [50, 100], 'color': 'rgba(16, 185, 129, 0.1)'}
                 ],
             }
         ))
-        fig_gauge.update_layout(
-            height=140, 
-            margin=dict(l=10, r=10, t=40, b=10),
-            paper_bgcolor='rgba(139, 92, 246, 0.9)',
-            font={'color': "white", 'family': "Arial"},
-            bordercolor="rgba(0,0,0,0)"
-        )
-        st.plotly_chart(fig_gauge, use_container_width=True)
+        st.plotly_chart(style_obsidian_chart(fig_gauge), use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -96,9 +87,9 @@ def render_executive_dashboard(mock_data: bool = True):
     col_left, col_right = st.columns([2, 1])
     
     with col_left:
-        st.markdown("### 🔥 Today's Hot Leads")
+        st.markdown("### 🔥 PRIORITY HOT LEADS")
         
-        # Hot lead cards
+        # Hot lead cards - Obsidian Edition
         hot_leads = [
             {
                 "name": "Sarah Martinez",
@@ -131,78 +122,70 @@ def render_executive_dashboard(mock_data: bool = True):
         
         for lead in hot_leads:
             st.markdown(f"""
-            <div style='background: white; padding: 16px; border-radius: 12px; 
-                        margin-bottom: 12px; border-left: 4px solid #00A32A;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
+            <div style='background: rgba(22, 27, 34, 0.7); padding: 1.5rem; border-radius: 12px; 
+                        margin-bottom: 1rem; border-left: 4px solid #10b981;
+                        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); border-left: 4px solid #10b981; backdrop-filter: blur(10px);'>
                 <div style='display: flex; justify-content: space-between; align-items: center;'>
                     <div>
-                        <div style='font-size: 1.1rem; font-weight: 700; color: #2A2A33;'>
+                        <div style='font-size: 1.25rem; font-weight: 700; color: #FFFFFF; font-family: "Space Grotesk", sans-serif;'>
                             {lead['name']}
-                            <span style='background: #DCFCE7; color: #166534; 
-                                        padding: 2px 8px; border-radius: 12px; 
-                                        font-size: 0.75rem; margin-left: 8px;'>
-                                {lead['score']} questions answered
+                            <span style='background: rgba(16, 185, 129, 0.15); color: #10b981; 
+                                        padding: 4px 12px; border-radius: 6px; 
+                                        font-size: 0.7rem; margin-left: 12px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.3);'>
+                                {lead['score']} SIGNALS DETECTED
                             </span>
                         </div>
-                        <div style='color: #6B7280; font-size: 0.9rem; margin-top: 4px;'>
+                        <div style='color: #8B949E; font-size: 0.9rem; margin-top: 8px; font-family: "Inter", sans-serif;'>
                             💰 {lead['budget']} | 📍 {lead['location']} | ⏰ {lead['timeline']}
                         </div>
-                        <div style='color: #2A2A33; font-size: 0.95rem; margin-top: 8px; 
-                                    font-style: italic;'>
+                        <div style='color: #E6EDF3; font-size: 1rem; margin-top: 12px; 
+                                    font-style: italic; opacity: 0.9;'>
                             "{lead['last_message']}"
                         </div>
                     </div>
                     <div style='text-align: right;'>
-                        <div style='color: #6B7280; font-size: 0.85rem;'>
-                            {lead['minutes_ago']}m ago
+                        <div style='color: #6366F1; font-size: 0.8rem; font-weight: 700; font-family: "Space Grotesk", sans-serif;'>
+                            {lead['minutes_ago']}M AGO
                         </div>
                     </div>
                 </div>
-                <div style='margin-top: 12px; display: flex; gap: 8px;'>
-                    <button style='background: #006AFF; color: white; border: none; 
-                                   padding: 8px 16px; border-radius: 6px; cursor: pointer;
-                                   font-weight: 600; font-size: 0.9rem;'>
-                        📞 Call Now
-                    </button>
-                    <button style='background: #F3F4F6; color: #2A2A33; border: none; 
-                                   padding: 8px 16px; border-radius: 6px; cursor: pointer;
-                                   font-weight: 600; font-size: 0.9rem;'>
-                        📅 Schedule
-                    </button>
-                    <button style='background: #F3F4F6; color: #2A2A33; border: none; 
-                                   padding: 8px 16px; border-radius: 6px; cursor: pointer;
-                                   font-weight: 600; font-size: 0.9rem;'>
-                        💬 Send SMS
-                    </button>
-                </div>
             </div>
             """, unsafe_allow_html=True)
+            
+            # Action Row - Buttons are automatically styled by inject_elite_css
+            act_c1, act_c2, act_c3 = st.columns(3)
+            with act_c1:
+                st.button("📞 CALL NODE", key=f"call_ex_{lead['name']}", use_container_width=True)
+            with act_c2:
+                st.button("📅 SYNC CALENDAR", key=f"sch_ex_{lead['name']}", use_container_width=True)
+            with act_c3:
+                st.button("💬 SEND SIGNAL", key=f"sms_ex_{lead['name']}", use_container_width=True)
+            st.markdown("<div style='margin-bottom: 1.5rem;'></div>", unsafe_allow_html=True)
     
     with col_right:
-        # AI Performance Scorecard
-        st.markdown("### 📊 AI Performance")
-        st.markdown("""
-        <div style='background: white; padding: 16px; border-radius: 12px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
-            <div style='margin-bottom: 16px;'>
-                <div style='color: #6B7280; font-size: 0.85rem;'>Response Rate</div>
-                <div style='font-size: 1.8rem; font-weight: 700; color: #00A32A;'>94%</div>
-                <div style='background: #E5E7EB; height: 8px; border-radius: 4px; margin-top: 8px;'>
-                    <div style='background: #00A32A; width: 94%; height: 100%; border-radius: 4px;'></div>
+        # AI Performance Scorecard - Obsidian Edition
+        st.markdown("### 📊 AI PERFORMANCE")
+        st.markdown(f"""
+        <div style='background: rgba(22, 27, 34, 0.7); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px);'>
+            <div style='margin-bottom: 20px;'>
+                <div style='color: #8B949E; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif;'>Response Rate</div>
+                <div style='font-size: 2rem; font-weight: 700; color: #10b981; font-family: "Space Grotesk", sans-serif;'>94%</div>
+                <div style='background: rgba(255,255,255,0.05); height: 6px; border-radius: 3px; margin-top: 10px; overflow: hidden;'>
+                    <div style='background: #10b981; width: 94%; height: 100%; box-shadow: 0 0 10px #10b981;'></div>
                 </div>
             </div>
-            <div style='margin-bottom: 16px;'>
-                <div style='color: #6B7280; font-size: 0.85rem;'>Qualification Accuracy</div>
-                <div style='font-size: 1.8rem; font-weight: 700; color: #006AFF;'>88%</div>
-                <div style='background: #E5E7EB; height: 8px; border-radius: 4px; margin-top: 8px;'>
-                    <div style='background: #006AFF; width: 88%; height: 100%; border-radius: 4px;'></div>
+            <div style='margin-bottom: 20px;'>
+                <div style='color: #8B949E; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif;'>Qualification Accuracy</div>
+                <div style='font-size: 2rem; font-weight: 700; color: #6366F1; font-family: "Space Grotesk", sans-serif;'>88%</div>
+                <div style='background: rgba(255,255,255,0.05); height: 6px; border-radius: 3px; margin-top: 10px; overflow: hidden;'>
+                    <div style='background: #6366F1; width: 88%; height: 100%; box-shadow: 0 0 10px #6366F1;'></div>
                 </div>
             </div>
             <div>
-                <div style='color: #6B7280; font-size: 0.85rem;'>Conversion to Hot</div>
-                <div style='font-size: 1.8rem; font-weight: 700; color: #F59E0B;'>27%</div>
-                <div style='background: #E5E7EB; height: 8px; border-radius: 4px; margin-top: 8px;'>
-                    <div style='background: #F59E0B; width: 27%; height: 100%; border-radius: 4px;'></div>
+                <div style='color: #8B949E; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif;'>Conversion to Hot</div>
+                <div style='font-size: 2rem; font-weight: 700; color: #f59e0b; font-family: "Space Grotesk", sans-serif;'>27%</div>
+                <div style='background: rgba(255,255,255,0.05); height: 6px; border-radius: 3px; margin-top: 10px; overflow: hidden;'>
+                    <div style='background: #f59e0b; width: 27%; height: 100%; box-shadow: 0 0 10px #f59e0b;'></div>
                 </div>
             </div>
         </div>
@@ -210,26 +193,15 @@ def render_executive_dashboard(mock_data: bool = True):
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Quick Actions
-        st.markdown("### ⚡ Quick Actions")
-        st.markdown("""
-        <div style='background: white; padding: 16px; border-radius: 12px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
-            <button style='width: 100%; background: #006AFF; color: white; border: none; 
-                           padding: 12px; border-radius: 8px; cursor: pointer;
-                           font-weight: 600; margin-bottom: 8px;'>
-                📨 Blast Hot Leads
-            </button>
-            <button style='width: 100%; background: #F3F4F6; color: #2A2A33; border: none; 
-                           padding: 12px; border-radius: 8px; cursor: pointer;
-                           font-weight: 600; margin-bottom: 8px;'>
-                📊 Export Report
-            </button>
-            <button style='width: 100%; background: #F3F4F6; color: #2A2A33; border: none; 
-                           padding: 12px; border-radius: 8px; cursor: pointer;
-                           font-weight: 600;'>
-                ⚙️ AI Settings
-            </button>
+        # Quick Actions - Obsidian Edition
+        st.markdown("### ⚡ COMMAND ACTIONS")
+        st.markdown(f"""
+        <div style='background: rgba(22, 27, 34, 0.7); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px);'>
+            <div style='display: flex; flex-direction: column; gap: 12px;'>
+                <button style='width: 100%; background: #6366F1; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 700; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.1em; box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);'>📨 BLAST HOT LEADS</button>
+                <button style='width: 100%; background: transparent; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.2); padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.1em;'>📊 EXPORT INTEL REPORT</button>
+                <button style='width: 100%; background: transparent; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.2); padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.1em;'>⚙️ NEURAL SETTINGS</button>
+            </div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -238,100 +210,91 @@ def render_executive_dashboard(mock_data: bool = True):
     col_bottom_left, col_bottom_right = st.columns([1, 1])
     
     with col_bottom_left:
-        st.markdown("### 🗺️ Market Intelligence Heatmap")
+        st.markdown("### 🗺️ MARKET INTELLIGENCE HEATMAP")
         st.markdown("""
-        <div class="activity-heatmap">
-            <div class="activity-heatmap-title">Lead Density by Neighborhood (Last 24h)</div>
-            <div class="activity-heatmap-grid">
+        <div style="background: rgba(22, 27, 34, 0.7); padding: 2rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px);">
+            <div style="font-family: 'Space Grotesk', sans-serif; color: #8B949E; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem;">Lead Density by Neighborhood (Last 24h)</div>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
                 <!-- Row 1 -->
-                <div class="activity-cell activity-hot" title="Downtown: 42 leads"></div>
-                <div class="activity-cell activity-high" title="Domain: 28 leads"></div>
-                <div class="activity-cell activity-medium" title="Zilker: 15 leads"></div>
-                <div class="activity-cell activity-low" title="Mueller: 5 leads"></div>
-                <div class="activity-cell activity-high" title="East Austin: 31 leads"></div>
-                <div class="activity-cell activity-medium" title="Rainey: 12 leads"></div>
-                <div class="activity-cell activity-hot" title="Round Rock: 38 leads"></div>
+                <div style="aspect-ratio: 1; background: #ef4444; border-radius: 4px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);" title="Downtown: 42 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.8;" title="Domain: 28 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.5;" title="Zilker: 15 leads"></div>
+                <div style="aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 4px;" title="Mueller: 5 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.9;" title="East Austin: 31 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.4;" title="Rainey: 12 leads"></div>
+                <div style="aspect-ratio: 1; background: #ef4444; border-radius: 4px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);" title="Round Rock: 38 leads"></div>
                 <!-- Row 2 -->
-                <div class="activity-cell activity-medium" title="Pflugerville: 19 leads"></div>
-                <div class="activity-cell activity-low" title="Cedar Park: 8 leads"></div>
-                <div class="activity-cell activity-high" title="Lakeway: 24 leads"></div>
-                <div class="activity-cell activity-hot" title="South Lamar: 45 leads"></div>
-                <div class="activity-cell activity-medium" title="Barton Hills: 14 leads"></div>
-                <div class="activity-cell activity-low" title="Circle C: 6 leads"></div>
-                <div class="activity-cell activity-medium" title="Avery Ranch: 11 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.6;" title="Pflugerville: 19 leads"></div>
+                <div style="aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 4px;" title="Cedar Park: 8 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.7;" title="Lakeway: 24 leads"></div>
+                <div style="aspect-ratio: 1; background: #ef4444; border-radius: 4px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);" title="South Lamar: 45 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.4;" title="Barton Hills: 14 leads"></div>
+                <div style="aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 4px;" title="Circle C: 6 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.3;" title="Avery Ranch: 11 leads"></div>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.7rem; color: #64748b;">
-                <span>Low Activity</span>
-                <span>High Activity</span>
+            <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 0.7rem; color: #8B949E; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                <span>Low Intensity</span>
+                <span>Max Intensity</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Lead Velocity Sparklines
-        st.markdown("### 📈 Lead Velocity (7d)")
+        # Lead Velocity Sparklines - Obsidian Style
+        st.markdown("### 📈 TELEMETRY VELOCITY (7D)")
         
         velocity_cols = st.columns(3)
         with velocity_cols[0]:
-            st.markdown("**New Leads**")
-            st.plotly_chart(sparkline([10, 15, 8, 22, 18, 25, 30], color="#006AFF"), use_container_width=True)
+            st.markdown("<div style='font-size: 0.75rem; color: #8B949E; font-weight: 700; text-transform: uppercase;'>New Nodes</div>", unsafe_allow_html=True)
+            st.plotly_chart(sparkline([10, 15, 8, 22, 18, 25, 30], color="#6366F1"), use_container_width=True)
         with velocity_cols[1]:
-            st.markdown("**Hot Quals**")
+            st.markdown("<div style='font-size: 0.75rem; color: #8B949E; font-weight: 700; text-transform: uppercase;'>Hot Signals</div>", unsafe_allow_html=True)
             st.plotly_chart(sparkline([2, 5, 3, 8, 6, 10, 12], color="#10B981"), use_container_width=True)
         with velocity_cols[2]:
-            st.markdown("**Closings**")
-            st.plotly_chart(sparkline([0, 1, 0, 2, 1, 0, 3], color="#8B5CF6"), use_container_width=True)
+            st.markdown("<div style='font-size: 0.75rem; color: #8B949E; font-weight: 700; text-transform: uppercase;'>Closings</div>", unsafe_allow_html=True)
+            st.plotly_chart(sparkline([0, 1, 0, 2, 1, 0, 3], color="#8b5cf6"), use_container_width=True)
 
     st.markdown("---")
-    st.markdown("### 🔮 Predictive Revenue Roadmap (Q1 2026)")
-    # Forecast data
+    st.markdown("### 🔮 PREDICTIVE REVENUE ROADMAP (Q1 2026)")
+    # Forecast data - Obsidian Style
     months = ["Jan", "Feb", "Mar", "Apr"]
     forecast = [2.4, 3.1, 4.2, 5.5]
     confidence_upper = [2.5, 3.5, 4.8, 6.2]
     confidence_lower = [2.3, 2.7, 3.6, 4.8]
     
     fig_forecast = go.Figure()
-    fig_forecast.add_trace(go.Scatter(x=months, y=forecast, mode='lines+markers', name='AI Projection', line=dict(color='#006AFF', width=4)))
+    fig_forecast.add_trace(go.Scatter(x=months, y=forecast, mode='lines+markers', name='AI Projection', line=dict(color='#6366F1', width=4)))
     fig_forecast.add_trace(go.Scatter(x=months, y=confidence_upper, mode='lines', line=dict(width=0), showlegend=False))
-    fig_forecast.add_trace(go.Scatter(x=months, y=confidence_lower, mode='lines', fill='tonexty', fillcolor='rgba(0, 106, 255, 0.1)', line=dict(width=0), name='Confidence Band'))
+    fig_forecast.add_trace(go.Scatter(x=months, y=confidence_lower, mode='lines', fill='tonexty', fillcolor='rgba(99, 102, 241, 0.1)', line=dict(width=0), name='Confidence Band'))
     
-    fig_forecast.update_layout(
-        height=300,
-        margin=dict(l=0, r=0, t=20, b=0),
-        xaxis_title="Timeline",
-        yaxis_title="Pipeline Value ($M)",
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        legend=dict(x=0.01, y=0.99)
-    )
-    st.plotly_chart(fig_forecast, use_container_width=True)
+    st.plotly_chart(style_obsidian_chart(fig_forecast), use_container_width=True)
     st.caption("Revenue projections based on current lead velocity and AI-driven conversion optimization.")
 
     with col_bottom_right:
-        # Activity Feed
-        st.markdown("### 📱 Recent Activity")
+        # Activity Feed - Obsidian Style
+        st.markdown("### 📱 REAL-TIME SIGNAL LOG")
         
         activities = [
-            {"type": "hot", "icon": "🔥", "message": "Sarah Martinez became a HOT lead", "time": "12m ago"},
-            {"type": "message", "icon": "💬", "message": "AI sent follow-up to Mike Johnson", "time": "45m ago"},
-            {"type": "appointment", "icon": "📅", "message": "Showing scheduled for Jennifer Wu - Tomorrow 2pm", "time": "2h ago"},
-            {"type": "message", "icon": "💬", "message": "New lead: David Chen asking about Hyde Park", "time": "3h ago"},
-            {"type": "warm", "icon": "⚡", "message": "Emma Davis answered 2 questions - now WARM", "time": "4h ago"},
+            {"type": "hot", "icon": "🔥", "message": "Sarah Martinez scaled to HOT status", "time": "12m ago"},
+            {"type": "message", "icon": "💬", "message": "AI dispatched follow-up to Mike Johnson", "time": "45m ago"},
+            {"type": "appointment", "icon": "📅", "message": "Sync scheduled for Jennifer Wu - Tomorrow 2pm", "time": "2h ago"},
+            {"type": "message", "icon": "💬", "message": "Inbound signal: David Chen querying Hyde Park", "time": "3h ago"},
+            {"type": "warm", "icon": "⚡", "message": "Emma Davis synchronized - status WARM", "time": "4h ago"},
         ]
         
         for activity in activities:
-            border_color = "#00A32A" if activity["type"] == "hot" else "#E5E7EB"
+            border_color = "#10b981" if activity["type"] == "hot" else "rgba(255,255,255,0.1)"
             st.markdown(f"""
-            <div style='background: white; padding: 12px 16px; border-radius: 8px; 
+            <div style='background: rgba(22, 27, 34, 0.6); padding: 12px 16px; border-radius: 8px; 
                         margin-bottom: 8px; border-left: 3px solid {border_color};
-                        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-                        display: flex; justify-content: space-between; align-items: center;'>
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                        display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); border-left: 3px solid {border_color};'>
                 <div>
-                    <span style='font-size: 1.2rem; margin-right: 8px;'>{activity['icon']}</span>
-                    <span style='color: #2A2A33; font-weight: 500;'>{activity['message']}</span>
+                    <span style='font-size: 1.2rem; margin-right: 12px;'>{activity['icon']}</span>
+                    <span style='color: #E6EDF3; font-weight: 500; font-family: "Inter", sans-serif; font-size: 0.9rem;'>{activity['message']}</span>
                 </div>
-                <div style='color: #6B7280; font-size: 0.85rem;'>{activity['time']}</div>
+                <div style='color: #6366F1; font-size: 0.75rem; font-weight: 700; font-family: "Space Grotesk", sans-serif;'>{activity['time'].upper()}</div>
             </div>
             """, unsafe_allow_html=True)
 

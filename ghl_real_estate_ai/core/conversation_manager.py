@@ -20,6 +20,7 @@ from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.predictive_lead_scorer import PredictiveLeadScorer
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.prompts.reengagement_templates import REENGAGEMENT_TEMPLATES
 from ghl_real_estate_ai.ghl_utils.config import settings
@@ -36,6 +37,8 @@ class AIResponse:
     reasoning: str
     lead_score: int
     predictive_score: Optional[Dict[str, Any]] = None
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
 
 
 class ConversationManager:
@@ -72,6 +75,9 @@ class ConversationManager:
 
         # Analytics engine for metrics collection
         self.analytics_engine = AnalyticsEngine()
+        
+        # New Analytics Service for token tracking
+        self.analytics = AnalyticsService()
 
         # Property matcher for listing recommendations
         self.property_matcher = PropertyMatcher()
@@ -250,6 +256,17 @@ Example output:
                 system_prompt="You are a data extraction specialist. Return only valid JSON.",
                 temperature=0,
                 max_tokens=500
+            )
+            
+            # Record usage
+            location_id = tenant_config.get("location_id", "unknown") if tenant_config else "unknown"
+            await self.analytics.track_llm_usage(
+                location_id=location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
             )
 
             extracted = json.loads(response.content)
@@ -518,6 +535,18 @@ Example output:
                 history=history,
                 temperature=settings.temperature,
                 max_tokens=settings.max_tokens
+            )
+            
+            # Record usage
+            location_id = tenant_config.get("location_id", "unknown") if tenant_config else "unknown"
+            await self.analytics.track_llm_usage(
+                location_id=location_id,
+                model=ai_response.model,
+                provider=ai_response.provider.value,
+                input_tokens=ai_response.input_tokens or 0,
+                output_tokens=ai_response.output_tokens or 0,
+                cached=False,
+                contact_id=contact_info.get("id")
             )
 
             # SMS 160-character hard limit enforcement

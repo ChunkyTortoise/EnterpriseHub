@@ -4,9 +4,11 @@ Unified LLM Client - Multi-provider support for Gemini and Claude.
 Provides a consistent interface for interacting with different LLM providers,
 including direct SDK access and LangChain compatibility.
 """
+import asyncio
+import httpx
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Generator, Optional, Union, AsyncGenerator, TYPE_CHECKING
+from typing import Any, Dict, Generator, Optional, Union, AsyncGenerator, List, TYPE_CHECKING
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -22,6 +24,7 @@ class LLMProvider(Enum):
     """Supported LLM providers."""
     GEMINI = "gemini"
     CLAUDE = "claude"
+    PERPLEXITY = "perplexity"
 
 
 @dataclass
@@ -30,7 +33,9 @@ class LLMResponse:
     content: str
     provider: LLMProvider
     model: str
-    tokens_used: Optional[int] = None
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
+    tokens_used: Optional[int] = None  # Legacy support (sum of in + out)
     finish_reason: Optional[str] = None
 
 
@@ -64,6 +69,8 @@ class LLMClient:
             self.model = model
         elif self.provider == LLMProvider.GEMINI:
             self.model = settings.gemini_model
+        elif self.provider == LLMProvider.PERPLEXITY:
+            self.model = settings.perplexity_model
         else:
             self.model = settings.claude_model
 
@@ -78,6 +85,8 @@ class LLMClient:
 
         if self.provider == LLMProvider.GEMINI:
             self._init_gemini()
+        elif self.provider == LLMProvider.PERPLEXITY:
+            self._init_perplexity()
         else:
             self._init_claude()
 
@@ -93,6 +102,9 @@ class LLMClient:
         elif self.provider == LLMProvider.GEMINI:
             # Gemini's main client handles async via generate_content_async
             self._init_gemini()
+            self._async_client = self._client
+        elif self.provider == LLMProvider.PERPLEXITY:
+            self._init_perplexity()
             self._async_client = self._client
 
     def _init_gemini(self) -> None:
@@ -128,6 +140,24 @@ class LLMClient:
         except Exception as e:
             logger.error(f"Failed to initialize Claude: {e}")
 
+    def _init_perplexity(self) -> None:
+        """Initialize Perplexity (OpenAI-compatible) client."""
+        api_key = self.api_key or settings.perplexity_api_key
+        if not api_key:
+            logger.warning("PERPLEXITY_API_KEY not set")
+            return
+
+        try:
+            # Perplexity uses OpenAI-compatible API
+            self._client = httpx.Client(
+                base_url="https://api.perplexity.ai",
+                headers={"Authorization": f"Bearer {api_key}"},
+                timeout=30.0
+            )
+            logger.info(f"Perplexity client initialized with model: {self.model}")
+        except Exception as e:
+            logger.error(f"Failed to initialize Perplexity: {e}")
+
     def is_available(self) -> bool:
         """Check if the client is properly initialized."""
         self._init_client()
@@ -162,6 +192,50 @@ class LLMClient:
             )
         raise ValueError(f"Unsupported provider: {self.provider}")
 
+    def chat_sync(
+        self,
+        messages: list[dict[str, str]],
+        max_tokens: int = 2048,
+        temperature: float = 0.7,
+        system: Optional[str] = None,
+        **kwargs
+    ) -> LLMResponse:
+        """
+        Chat-style synchronous generation.
+        """
+        prompt = messages[-1]["content"]
+        history = messages[:-1]
+        return self.generate(
+            prompt=prompt,
+            system_prompt=system,
+            history=history,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            **kwargs
+        )
+
+    async def chat(
+        self,
+        messages: list[dict[str, str]],
+        max_tokens: int = 2048,
+        temperature: float = 0.7,
+        system: Optional[str] = None,
+        **kwargs
+    ) -> LLMResponse:
+        """
+        Chat-style asynchronous generation.
+        """
+        prompt = messages[-1]["content"]
+        history = messages[:-1]
+        return await self.agenerate(
+            prompt=prompt,
+            system_prompt=system,
+            history=history,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            **kwargs
+        )
+
     def generate(
         self,
         prompt: str,
@@ -169,6 +243,9 @@ class LLMClient:
         history: Optional[list[dict[str, str]]] = None,
         max_tokens: int = 2048,
         temperature: float = 0.7,
+        response_schema: Optional[Any] = None,
+        cached_content: Optional[str] = None,
+        tools: Optional[List[Any]] = None,
         **kwargs
     ) -> LLMResponse:
         """Generate a response from the LLM (Synchronous)."""
@@ -176,7 +253,13 @@ class LLMClient:
             raise RuntimeError(f"{self.provider.value} client not initialized")
 
         if self.provider == LLMProvider.GEMINI:
-            return self._generate_gemini(prompt, system_prompt, history, max_tokens, temperature)
+            return self._generate_gemini(
+                prompt, system_prompt, history, max_tokens, temperature, 
+                response_schema=response_schema, cached_content=cached_content, 
+                tools=tools, **kwargs
+            )
+        elif self.provider == LLMProvider.PERPLEXITY:
+            return self._generate_perplexity(prompt, system_prompt, history, max_tokens, temperature)
         else:
             return self._generate_claude(prompt, system_prompt, history, max_tokens, temperature)
 
@@ -187,6 +270,9 @@ class LLMClient:
         history: Optional[list[dict[str, str]]] = None,
         max_tokens: int = 2048,
         temperature: float = 0.7,
+        response_schema: Optional[Any] = None,
+        cached_content: Optional[str] = None,
+        tools: Optional[List[Any]] = None,
         **kwargs
     ) -> LLMResponse:
         """Generate a response from the LLM (Asynchronous)."""
@@ -202,16 +288,44 @@ class LLMClient:
                     full_prompt += f"{msg['role']}: {msg['content']}\n"
             full_prompt += f"user: {prompt}"
             
-            response = await self._async_client.generate_content_async(
-                full_prompt,
-                generation_config={"max_output_tokens": max_tokens, "temperature": temperature}
-            )
+            gen_config = {"max_output_tokens": max_tokens, "temperature": temperature}
+            
+            if response_schema:
+                gen_config["response_mime_type"] = "application/json"
+                gen_config["response_schema"] = response_schema
+
+            # Create model instance with tools if provided
+            import google.generativeai as genai
+            model = genai.GenerativeModel(model=self.model, tools=tools)
+            
+            if cached_content:
+                from google.generativeai import caching
+                cache = caching.CachedContent.get(cached_content)
+                response = await model.generate_content_async(
+                    full_prompt,
+                    generation_config=gen_config,
+                    cached_content=cache
+                )
+            else:
+                response = await model.generate_content_async(
+                    full_prompt,
+                    generation_config=gen_config
+                )
+            
+            input_tokens = getattr(response.usage_metadata, 'prompt_token_count', None) if hasattr(response, 'usage_metadata') else None
+            output_tokens = getattr(response.usage_metadata, 'candidates_token_count', None) if hasattr(response, 'usage_metadata') else None
+            
             return LLMResponse(
                 content=response.text,
                 provider=self.provider,
                 model=self.model,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
                 finish_reason=response.candidates[0].finish_reason.name if response.candidates else None
             )
+        elif self.provider == LLMProvider.PERPLEXITY:
+            return await self._agenerate_perplexity(prompt, system_prompt, history, max_tokens, temperature)
         else:
             messages = history.copy() if history else []
             messages.append({"role": "user", "content": prompt})
@@ -223,11 +337,17 @@ class LLMClient:
                 system=system_prompt or "You are a helpful AI assistant.",
                 messages=messages
             )
+            
+            input_tokens = response.usage.input_tokens if hasattr(response, 'usage') else None
+            output_tokens = response.usage.output_tokens if hasattr(response, 'usage') else None
+            
             return LLMResponse(
                 content=response.content[0].text,
                 provider=self.provider,
                 model=self.model,
-                tokens_used=response.usage.output_tokens if hasattr(response, 'usage') else None,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
                 finish_reason=response.stop_reason
             )
 
@@ -266,7 +386,11 @@ class LLMClient:
         system_prompt: Optional[str],
         history: Optional[list[dict[str, str]]],
         max_tokens: int,
-        temperature: float
+        temperature: float,
+        response_schema: Optional[Any] = None,
+        cached_content: Optional[str] = None,
+        tools: Optional[List[Any]] = None,
+        **kwargs
     ) -> LLMResponse:
         """Generate response using Gemini."""
         full_prompt = f"{system_prompt}\n\n" if system_prompt else ""
@@ -275,20 +399,85 @@ class LLMClient:
                 full_prompt += f"{msg['role']}: {msg['content']}\n"
         full_prompt += f"user: {prompt}"
 
-        response = self._client.generate_content(
-            full_prompt,
-            generation_config={
-                "max_output_tokens": max_tokens,
-                "temperature": temperature
-            }
-        )
+        gen_config = {
+            "max_output_tokens": max_tokens,
+            "temperature": temperature
+        }
+        
+        if response_schema:
+            gen_config["response_mime_type"] = "application/json"
+            gen_config["response_schema"] = response_schema
+
+        import google.generativeai as genai
+        model = genai.GenerativeModel(model=self.model, tools=tools)
+        
+        if cached_content:
+            from google.generativeai import caching
+            cache = caching.CachedContent.get(cached_content)
+            response = model.generate_content(
+                full_prompt,
+                generation_config=gen_config,
+                cached_content=cache
+            )
+        else:
+            response = model.generate_content(
+                full_prompt,
+                generation_config=gen_config
+            )
+
+        input_tokens = getattr(response.usage_metadata, 'prompt_token_count', None) if hasattr(response, 'usage_metadata') else None
+        output_tokens = getattr(response.usage_metadata, 'candidates_token_count', None) if hasattr(response, 'usage_metadata') else None
 
         return LLMResponse(
             content=response.text,
             provider=self.provider,
             model=self.model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
             finish_reason=response.candidates[0].finish_reason.name if response.candidates else None
         )
+
+    def create_context_cache(
+        self,
+        content: str,
+        display_name: str,
+        ttl_minutes: int = 60,
+        system_instruction: Optional[str] = None
+    ) -> str:
+        """
+        Create a Gemini context cache for large datasets.
+        
+        Args:
+            content: The text content to cache.
+            display_name: Human-readable name for the cache.
+            ttl_minutes: Time-to-live in minutes.
+            system_instruction: Optional system instruction to bake into the cache.
+            
+        Returns:
+            The name of the created cache (e.g., 'cachedContents/xyz').
+        """
+        if self.provider != LLMProvider.GEMINI:
+            raise ValueError("Context caching is only supported for Gemini")
+            
+        import google.generativeai as genai
+        from google.generativeai import caching
+        import datetime
+        
+        # Ensure genai is configured
+        api_key = self.api_key or settings.google_api_key
+        genai.configure(api_key=api_key)
+        
+        cache = caching.CachedContent.create(
+            model=self.model,
+            display_name=display_name,
+            system_instruction=system_instruction,
+            contents=[content],
+            ttl=datetime.timedelta(minutes=ttl_minutes),
+        )
+        
+        logger.info(f"Created Gemini context cache: {cache.name} ({display_name})")
+        return cache.name
 
     def _generate_claude(
         self,
@@ -310,12 +499,107 @@ class LLMClient:
             messages=messages
         )
 
+        input_tokens = response.usage.input_tokens if hasattr(response, 'usage') else None
+        output_tokens = response.usage.output_tokens if hasattr(response, 'usage') else None
+
         return LLMResponse(
             content=response.content[0].text,
             provider=self.provider,
             model=self.model,
-            tokens_used=response.usage.output_tokens if hasattr(response, 'usage') else None,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
             finish_reason=response.stop_reason
+        )
+
+    def _generate_perplexity(
+        self,
+        prompt: str,
+        system_prompt: Optional[str],
+        history: Optional[list[dict[str, str]]],
+        max_tokens: int,
+        temperature: float
+    ) -> LLMResponse:
+        """Generate response using Perplexity (OpenAI-compatible)."""
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        if history:
+            messages.extend(history)
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature
+        }
+
+        response = self._client.post("/chat/completions", json=payload)
+        response.raise_for_status()
+        data = response.json()
+
+        content = data["choices"][0]["message"]["content"]
+        usage = data.get("usage", {})
+        input_tokens = usage.get("prompt_tokens")
+        output_tokens = usage.get("completion_tokens")
+
+        return LLMResponse(
+            content=content,
+            provider=self.provider,
+            model=self.model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
+            finish_reason=data["choices"][0].get("finish_reason")
+        )
+
+    async def _agenerate_perplexity(
+        self,
+        prompt: str,
+        system_prompt: Optional[str],
+        history: Optional[list[dict[str, str]]],
+        max_tokens: int,
+        temperature: float
+    ) -> LLMResponse:
+        """Generate response using Perplexity asynchronously."""
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        if history:
+            messages.extend(history)
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature
+        }
+
+        api_key = self.api_key or settings.perplexity_api_key
+        async with httpx.AsyncClient(
+            base_url="https://api.perplexity.ai",
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=30.0
+        ) as client:
+            response = await client.post("/chat/completions", json=payload)
+            response.raise_for_status()
+            data = response.json()
+
+        content = data["choices"][0]["message"]["content"]
+        usage = data.get("usage", {})
+        input_tokens = usage.get("prompt_tokens")
+        output_tokens = usage.get("completion_tokens")
+
+        return LLMResponse(
+            content=content,
+            provider=self.provider,
+            model=self.model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
+            finish_reason=data["choices"][0].get("finish_reason")
         )
 
     def stream(
@@ -367,4 +651,5 @@ def get_available_providers() -> Dict[str, bool]:
     providers = {}
     providers["gemini"] = bool(settings.google_api_key)
     providers["claude"] = bool(settings.anthropic_api_key and settings.anthropic_api_key.startswith("sk-ant-"))
+    providers["perplexity"] = bool(settings.perplexity_api_key)
     return providers

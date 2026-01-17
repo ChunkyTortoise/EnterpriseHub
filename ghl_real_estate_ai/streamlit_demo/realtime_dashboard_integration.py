@@ -2,13 +2,14 @@ import streamlit as st
 import pandas as pd
 import asyncio
 import json
+import random
 from datetime import datetime
 import traceback
 
 # Import enhanced services
 try:
-    from services.claude_orchestrator import get_claude_orchestrator
-    from core.service_registry import ServiceRegistry
+    from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+    from ghl_real_estate_ai.core.service_registry import ServiceRegistry
     CLAUDE_ORCHESTRATOR_AVAILABLE = True
 except ImportError:
     CLAUDE_ORCHESTRATOR_AVAILABLE = False
@@ -23,30 +24,45 @@ def get_dashboard_status():
     }
 
 def render_realtime_intelligence_dashboard():
-    """Render the Real-Time Intelligence Dashboard with all components"""
+    """Render the Real-Time Intelligence Dashboard with all components - Obsidian Edition"""
+    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart, render_dossier_block
 
-    # Dashboard header with status indicator
-    col1, col2 = st.columns([4, 1])
-
-    with col1:
-        st.header("⚡ Real-Time Intelligence Dashboard")
-        st.markdown("*Live monitoring, analytics, and actionable insights in real-time*")
-
-    with col2:
-        status = get_dashboard_status()
-        st.markdown(f"""
-        <div style="text-align: center; padding: 1rem; background: linear-gradient(45deg, #2ecc71, #27ae60);
-                    border-radius: 10px; color: white; margin: 1rem 0;">
-            <div style="font-size: 1.2rem; font-weight: bold;">🟢 LIVE</div>
-            <div style="font-size: 0.8rem; opacity: 0.9;">Real-Time Active</div>
+    # Dashboard header with status indicator - Obsidian Style
+    st.markdown("""
+        <div style="background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(20px); padding: 1.5rem 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);">
+            <div>
+                <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; margin: 0; color: #FFFFFF; letter-spacing: -0.04em; text-transform: uppercase;">⚡ REAL-TIME INTELLIGENCE</h1>
+                <p style="font-family: 'Inter', sans-serif; font-size: 1rem; margin: 0.5rem 0 0 0; color: #8B949E; font-weight: 500; letter-spacing: 0.02em;">Live monitoring, cognitive telemetry, and autonomous intervention</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 10px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.3); letter-spacing: 0.1em; display: flex; align-items: center; gap: 10px;">
+                    <div class="status-pulse" style="width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
+                    STREAM ACTIVE
+                </div>
+            </div>
         </div>
-        """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+    # NEW: Market Pulse Scrolling Ticker
+    st.markdown("""
+        <div style="background: rgba(13, 17, 23, 0.9); padding: 10px 0; overflow: hidden; white-space: nowrap; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 2rem;">
+            <div style="display: inline-block; animation: marquee 30s linear infinite; color: #6366F1; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.05em;">
+                <span style="color: #10b981;">[LIVE]</span> Sarah Martinez just qualified for 78704 Luxury cluster ... <span style="color: #f59e0b;">[WEBHOOK]</span> Inbound SMS from Node #9921 processed in 12ms ... <span style="color: #6366F1;">[SWARM]</span> Analyst Agent #4 identifying price-drop opportunities in West Lake ... <span style="color: #10b981;">[DEAL]</span> Emma Wilson win probability increased to 92% ... <span style="color: #ef4444;">[ALERT]</span> High-velocity lead David Kim requires manual handoff ... <span style="color: #6366F1;">[SYSTEM]</span> All 12 Austin Edge nodes operational ... 
+            </div>
+        </div>
+        <style>
+            @keyframes marquee {
+                0% { transform: translateX(100%); }
+                100% { transform: translateX(-100%); }
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
     # Import and initialize services with error handling
     try:
         # Import components
-        from services.realtime_data_service import get_realtime_service
-        from services.dashboard_state_manager import get_dashboard_state_manager, dashboard_sidebar_controls
+        from ghl_real_estate_ai.services.realtime_data_service import get_realtime_service
+        from ghl_real_estate_ai.services.dashboard_state_manager import get_dashboard_state_manager, dashboard_sidebar_controls
         from components.mobile_responsive_layout import get_layout_manager
         from components.live_lead_scoreboard import render_live_lead_scoreboard
         from components.alert_center import render_alert_center
@@ -173,7 +189,12 @@ def render_realtime_intelligence_dashboard():
     except ImportError as e:
         render_fallback_dashboard(f"Component import error: {str(e)}")
     except Exception as e:
-        render_fallback_dashboard(f"Dashboard initialization error: {str(e)}")
+        import traceback
+        import sys
+        error_details = traceback.format_exc()
+        print(f"DEBUG DASHBOARD ERROR: {str(e)}")
+        print(error_details)
+        render_fallback_dashboard(f"Dashboard initialization error: {str(e)}\n\nTraceback:\n{error_details}")
 
 
 def render_overview_dashboard(realtime_service, state_manager, layout_manager):
@@ -185,8 +206,47 @@ def render_overview_dashboard(realtime_service, state_manager, layout_manager):
         metrics = realtime_service.get_metrics()
 
         # Key metrics at the top
-        st.subheader("📊 System Performance")
+        st.subheader("📊 System Performance Telemetry")
 
+        # NEW: System Heartbeat Visualization
+        heart_col1, heart_col2 = st.columns([2, 1])
+        
+        with heart_col1:
+            st.markdown("#### 💓 System Heartbeat")
+            # Generate heartbeat data
+            times = pd.date_range(end=datetime.now(), periods=50, freq='10s')
+            # Simulated pulse: higher when events happen
+            pulse = [random.uniform(20, 40) + (100 if i % 12 == 0 else 0) for i in range(50)]
+            
+            fig_heart = go.Figure()
+            fig_heart.add_trace(go.Scatter(
+                x=times, y=pulse,
+                mode='lines',
+                line=dict(color='#6366F1', width=2),
+                fill='tozeroy',
+                fillcolor='rgba(99, 102, 241, 0.05)'
+            ))
+            fig_heart.update_layout(
+                height=150,
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 150]),
+                margin=dict(l=0, r=0, t=0, b=0)
+            )
+            from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+            st.plotly_chart(style_obsidian_chart(fig_heart), use_container_width=True, config={'displayModeBar': False})
+            
+        with heart_col2:
+            st.markdown("#### 📡 Intelligence Feed")
+            activity_log = [
+                "🕵️ Lead 'Sarah C.' qualified",
+                "🐝 Swarm Agent #4 delegated",
+                "💰 Deal probability sync: 82%",
+                "⚡ GHL Webhook processed (14ms)"
+            ]
+            for log in activity_log:
+                st.markdown(f"<div style='font-size: 0.8rem; color: #8B949E; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03);'>{log}</div>", unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:

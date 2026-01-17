@@ -1,0 +1,139 @@
+{
+  "name": "streamlit-dev",
+  "description": "MCP server configuration for Streamlit frontend development",
+  "mcpServers": {
+    "playwright": {
+      "enabled": true,
+      "config": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-playwright"
+        ],
+        "env": {
+          "PLAYWRIGHT_BROWSER": "chromium",
+          "PLAYWRIGHT_HEADLESS": "true"
+        }
+      },
+      "tools": [
+        "browser_navigate",
+        "browser_snapshot",
+        "browser_click",
+        "browser_fill_form",
+        "browser_take_screenshot"
+      ],
+      "use_cases": [
+        "Test Streamlit UI components",
+        "Validate responsive design",
+        "Screenshot component states",
+        "Debug UI interactions",
+        "E2E testing of property matcher UI"
+      ]
+    },
+    "serena": {
+      "enabled": true,
+      "config": {
+        "command": "uvx",
+        "args": ["serena-mcp"]
+      },
+      "tools": [
+        "read_file",
+        "find_symbol",
+        "find_referencing_symbols",
+        "search_for_pattern",
+        "get_symbols_overview",
+        "replace_content",
+        "execute_shell_command"
+      ],
+      "use_cases": [
+        "Navigate large Python codebase",
+        "Find Streamlit component definitions",
+        "Trace service dependencies",
+        "Refactor across multiple files",
+        "Analyze component relationships"
+      ]
+    },
+    "figma": {
+      "enabled": true,
+      "config": {
+        "transport": "http",
+        "url": "https://mcp.figma.com/mcp"
+      },
+      "tools": [
+        "implement-design",
+        "code-connect-components",
+        "create-design-system-rules"
+      ],
+      "use_cases": [
+        "Import Figma designs as Streamlit components",
+        "Generate production-ready code from designs",
+        "Maintain design-code consistency",
+        "Extract design tokens from Figma",
+        "Create component variants from Figma frames"
+      ]
+    }
+  },
+  "permissions": {
+    "allowedPaths": [
+      "ghl_real_estate_ai/streamlit_demo/**/*.py",
+      "ghl_real_estate_ai/streamlit_demo/components/**/*.py",
+      "ghl_real_estate_ai/streamlit_demo/assets/**/*",
+      "ghl_real_estate_ai/.streamlit/**/*",
+      "tests/streamlit/**/*.py"
+    ],
+    "deniedPaths": [
+      "ghl_real_estate_ai/services/**/*.py",
+      ".env*",
+      "secrets/**",
+      "data/analytics/**"
+    ],
+    "allowedTools": [
+      "Read",
+      "Write(ghl_real_estate_ai/streamlit_demo/**)",
+      "Edit",
+      "Grep",
+      "Glob",
+      "Bash(streamlit run:*)",
+      "Bash(pytest tests/streamlit:*)",
+      "mcp__plugin_playwright_playwright__*",
+      "mcp__plugin_serena_serena__read_file",
+      "mcp__plugin_serena_serena__find_symbol",
+      "mcp__plugin_serena_serena__search_for_pattern",
+      "mcp__plugin_figma_figma__implement-design",
+      "mcp__plugin_figma_figma__code-connect-components",
+      "mcp__plugin_figma_figma__create-design-system-rules"
+    ]
+  },
+  "context": {
+    "focus_areas": [
+      "Streamlit component development",
+      "UI/UX consistency",
+      "Component reusability",
+      "Session state management",
+      "Caching strategies",
+      "Responsive design"
+    ],
+    "key_files": [
+      "ghl_real_estate_ai/streamlit_demo/app.py",
+      "ghl_real_estate_ai/streamlit_demo/components/ui_elements.py",
+      "ghl_real_estate_ai/streamlit_demo/assets/styles.css",
+      "ghl_real_estate_ai/.streamlit/config.toml"
+    ],
+    "patterns": [
+      "Use st.cache_data for expensive computations",
+      "Initialize session state at component start",
+      "Component functions should be pure and reusable",
+      "Handle errors gracefully with st.error()",
+      "Use st.spinner() for async operations"
+    ]
+  },
+  "skills_to_use": [
+    "frontend-design",
+    "web-artifacts-builder",
+    "theme-factory",
+    "figma-to-component",
+    "testing-anti-patterns",
+    "condition-based-waiting"
+  ],
+  "notes": "Use this profile when working on Streamlit UI components, dashboards, or frontend logic. Backend service integration should use backend-services profile."
+}

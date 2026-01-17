@@ -7,7 +7,7 @@ import json
 
 # Import enhanced services
 try:
-    from services.claude_orchestrator import get_claude_orchestrator
+    from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
     CLAUDE_AVAILABLE = True
 except ImportError:
     CLAUDE_AVAILABLE = False
@@ -1121,6 +1121,7 @@ def render_seller_analytics():
 
     with tab1:
         st.markdown("##### Financial Projection")
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         # Net proceeds calculation
         col1, col2 = st.columns(2)
@@ -1136,79 +1137,57 @@ def render_seller_analytics():
             staging = 1200
             other_costs = 800
 
-            financial_data = [
-                {"Item": "Gross Sale Price", "Amount": f"${sale_price:,}"},
-                {"Item": "Real Estate Commission (6%)", "Amount": f"-${commission:,.0f}"},
-                {"Item": "Closing Costs (~1.5%)", "Amount": f"-${closing_costs:,.0f}"},
-                {"Item": "Pre-Sale Repairs", "Amount": f"-${repairs:,}"},
-                {"Item": "Staging Costs", "Amount": f"-${staging:,}"},
-                {"Item": "Other Selling Costs", "Amount": f"-${other_costs:,}"},
-                {"Item": "**Net Proceeds**", "Amount": f"**${sale_price - commission - closing_costs - repairs - staging - other_costs:,.0f}**"}
-            ]
+            net_proceeds = sale_price - commission - closing_costs - repairs - staging - other_costs
 
-            for item in financial_data:
-                col_a, col_b = st.columns([2, 1])
-                with col_a:
-                    if item["Item"].startswith("**"):
-                        st.markdown(item["Item"])
-                    else:
-                        st.markdown(f"• {item['Item']}")
-                with col_b:
-                    st.markdown(item["Amount"])
+            st.markdown(f"""
+            <div style='background: rgba(22, 27, 34, 0.7); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);'>
+                <div style='font-size: 0.75rem; color: #8B949E; font-weight: 700; text-transform: uppercase;'>Net Proceeds</div>
+                <div style='font-size: 2.5rem; font-weight: 700; color: #10b981; margin: 10px 0;'>${net_proceeds:,.0f}</div>
+                <div style='font-size: 0.85rem; color: #8B949E;'>Projected based on $492k contract value</div>
+            </div>
+            """, unsafe_allow_html=True)
 
         with col2:
             # Visual breakdown
             costs = ["Commission", "Closing Costs", "Repairs", "Other", "Net Proceeds"]
-            amounts = [commission, closing_costs, repairs, staging + other_costs, sale_price - commission - closing_costs - repairs - staging - other_costs]
+            amounts = [commission, closing_costs, repairs, staging + other_costs, net_proceeds]
 
-            fig = px.pie(values=amounts, names=costs, title="Sale Proceeds Breakdown")
-            st.plotly_chart(fig, use_container_width=True)
-
-        # ROI Analysis
-        st.markdown("**🏠 Return on Investment Analysis**")
-
-        original_purchase = 385000
-        improvements = 15000
-        total_investment = original_purchase + improvements
-        total_return = sale_price - commission - closing_costs - repairs - staging - other_costs
-        roi = ((total_return - total_investment) / total_investment) * 100
-
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Original Purchase", f"${original_purchase:,}")
-        with col2:
-            st.metric("Total Improvements", f"${improvements:,}")
-        with col3:
-            st.metric("Total Investment", f"${total_investment:,}")
-        with col4:
-            st.metric("ROI", f"{roi:.1f}%", delta="Excellent return")
+            fig = go.Figure(data=[go.Pie(
+                labels=costs,
+                values=amounts,
+                hole=.5,
+                marker=dict(colors=['#6366F1', '#8b5cf6', '#ef4444', '#f59e0b', '#10b981'])
+            )])
+            st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
 
     with tab2:
         st.markdown("##### Market Performance Analysis")
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         # Comparison metrics
         col1, col2 = st.columns(2)
 
         with col1:
             st.markdown("**📊 Your Property vs. Market Average**")
-
-            comparison_data = [
-                {"Metric": "Days on Market", "Your Property": "8 days", "Market Average": "22 days", "Performance": "🟢 64% Faster"},
-                {"Metric": "List-to-Sale Price", "Your Property": "99.4%", "Market Average": "96.8%", "Performance": "🟢 2.6% Better"},
-                {"Metric": "Showings per Week", "Your Property": "9", "Market Average": "4.5", "Performance": "🟢 2x More"},
-                {"Metric": "Inquiry Rate", "Your Property": "1.65%", "Market Average": "1.2%", "Performance": "🟢 38% Higher"}
-            ]
-
-            for data in comparison_data:
-                st.markdown(f"**{data['Metric']}:**")
-                col_a, col_b, col_c = st.columns([1, 1, 1])
-                with col_a:
-                    st.markdown(f"You: {data['Your Property']}")
-                with col_b:
-                    st.markdown(f"Market: {data['Market Average']}")
-                with col_c:
-                    st.markdown(data['Performance'])
-                st.markdown("---")
+            
+            # Using custom dossier style for comparison
+            dossier_html = """
+            <div style='display: grid; gap: 1rem;'>
+                <div style='display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;'>
+                    <span>Days on Market</span>
+                    <span style='color: #10b981; font-weight: 700;'>8 (vs 22)</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;'>
+                    <span>List-to-Sale Price</span>
+                    <span style='color: #10b981; font-weight: 700;'>99.4% (vs 96.8%)</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;'>
+                    <span>Showings/Week</span>
+                    <span style='color: #6366F1; font-weight: 700;'>9 (vs 4.5)</span>
+                </div>
+            </div>
+            """
+            render_dossier_block(dossier_html, title="MARKET COMPARATIVE ANALYSIS")
 
         with col2:
             # Performance trends
@@ -1219,16 +1198,13 @@ def render_seller_analytics():
             inquiries = [28, 19]
 
             fig_performance = go.Figure()
-            fig_performance.add_trace(go.Scatter(x=weeks, y=views, mode='lines+markers', name='Views', yaxis='y'))
-            fig_performance.add_trace(go.Scatter(x=weeks, y=inquiries, mode='lines+markers', name='Inquiries', yaxis='y2'))
+            fig_performance.add_trace(go.Scatter(x=weeks, y=views, mode='lines+markers', name='Views', line=dict(color='#6366F1')))
+            fig_performance.add_trace(go.Scatter(x=weeks, y=inquiries, mode='lines+markers', name='Inquiries', line=dict(color='#10b981'), yaxis='y2'))
 
             fig_performance.update_layout(
-                title="Weekly Performance Trends",
-                yaxis=dict(title="Views", side="left"),
-                yaxis2=dict(title="Inquiries", side="right", overlaying="y"),
-                legend=dict(x=0.7, y=1)
+                yaxis2=dict(overlaying='y', side='right')
             )
-            st.plotly_chart(fig_performance, use_container_width=True)
+            st.plotly_chart(style_obsidian_chart(fig_performance), use_container_width=True)
 
         # Market conditions impact
         st.markdown("**🌍 Market Conditions Analysis**")
@@ -1373,94 +1349,165 @@ def render_seller_analytics():
         - Current positioning should result in sale within 2-3 weeks at or near asking price
         """)
 
-def render_seller_journey_hub(render_property_valuation_engine, render_seller_prep_checklist, render_marketing_campaign_dashboard, render_seller_communication_portal, render_transaction_timeline, render_seller_analytics):
-    """Render the complete seller experience from valuation to closing*"""
-    st.title("🏡 Seller Journey Hub")
-    st.markdown("*Complete seller experience from valuation to closing*")
+def render_seller_journey_hub(services, render_property_valuation_engine, render_seller_prep_checklist, render_marketing_campaign_dashboard, render_seller_communication_portal, render_transaction_timeline, render_seller_analytics):
+    """Render the complete seller experience - Obsidian Command Edition"""
+    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart, render_dossier_block
+    
+    st.markdown("""
+        <div style="background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(20px); padding: 1.5rem 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);">
+            <div>
+                <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; margin: 0; color: #FFFFFF; letter-spacing: -0.04em; text-transform: uppercase;">🏡 SELLER JOURNEY HUB</h1>
+                <p style="font-family: 'Inter', sans-serif; font-size: 1rem; margin: 0.5rem 0 0 0; color: #8B949E; font-weight: 500; letter-spacing: 0.02em;">Complete seller experience from valuation to closing</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 10px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.3); letter-spacing: 0.1em;">
+                    MARKET: {st.session_state.get('selected_market', 'AUSTIN').upper()}
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
-    # Claude's Journey Counsel
-    with st.container(border=True):
-        col_s1, col_s2 = st.columns([1, 8])
-        with col_s1:
-            st.markdown("<div style='font-size: 3rem; text-align: center;'>🏠</div>", unsafe_allow_html=True)
-        with col_s2:
-            st.markdown("### Claude's Seller Journey Counsel")
-            
-            if CLAUDE_AVAILABLE:
-                orchestrator = get_claude_orchestrator()
+    # Claude's Seller Journey Counsel - Obsidian Glassmorphism
+    st.markdown("""
+        <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(20, 184, 166, 0.05) 100%); 
+                    border: 1px solid rgba(16, 185, 129, 0.2); 
+                    border-radius: 20px; 
+                    padding: 2.5rem; 
+                    margin-bottom: 3rem; 
+                    backdrop-filter: blur(10px);'>
+            <div style='display: flex; align-items: flex-start; gap: 2rem;'>
+                <div style='font-size: 4rem; filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4));'>🏠</div>
+                <div style='flex-grow: 1;'>
+                    <h3 style='margin: 0 0 1rem 0; color: white !important; font-family: "Space Grotesk", sans-serif; font-size: 1.75rem;'>Claude's Seller Counsel</h3>
+                    <div style='color: #f8fafc; font-size: 1.1rem; line-height: 1.6; font-weight: 500;'>
+    """, unsafe_allow_html=True)
+    
+    if CLAUDE_AVAILABLE:
+        orchestrator = get_claude_orchestrator()
+        
+        with st.spinner("Claude is optimizing the seller journey..."):
+            try:
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
                 
-                with st.spinner("Claude is optimizing the seller journey..."):
-                    try:
-                        try:
-                            loop = asyncio.get_event_loop()
-                        except RuntimeError:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
-                        
-                        # Build inventory context
-                        inventory_metrics = {
-                            "active_listings": 3,
-                            "avg_dom": 12,
-                            "market_trend": "rising",
-                            "market": st.session_state.get("selected_market", "Austin")
-                        }
-                        
-                        # Use chat_query for inventory advice
-                        inventory_result = loop.run_until_complete(
-                            orchestrator.chat_query(
-                                query="Provide strategic inventory optimization counsel. Analyze current market velocity and suggest 2 focus areas for listing maximization.",
-                                context={"metrics": inventory_metrics, "task": "inventory_counsel"}
-                            )
-                        )
-                        st.markdown(inventory_result.content)
-                    except Exception as e:
-                        st.error(f"Counsel Error: {str(e)}")
-                        st.markdown("""
-                        - **💎 Value Maximizer:** Active listings showing strong engagement.
-                        - **⏱️ Velocity Check:** Market DOM remains low; focus on quick contract execution.
-                        """)
-            else:
+                # Build inventory context
+                inventory_metrics = {
+                    "active_listings": 3,
+                    "avg_dom": 12,
+                    "market_trend": "rising",
+                    "market": st.session_state.get("selected_market", "Austin")
+                }
+                
+                # Use chat_query for inventory advice
+                inventory_result = loop.run_until_complete(
+                    orchestrator.chat_query(
+                        query="Provide strategic inventory optimization counsel. Analyze current market velocity and suggest 2 focus areas for listing maximization.",
+                        context={"metrics": inventory_metrics, "task": "inventory_counsel"}
+                    )
+                )
+                st.markdown(inventory_result.content)
+            except Exception as e:
                 st.markdown("""
-                *Inventory optimization for Jorge:*
-                - **💎 Value Maximizer:** Your 'Alta Loma' listing is seeing 2x higher engagement than neighborhood comps. I recommend a 'Coming Soon' email blast to your luxury investor list.
-                - **⏱️ Velocity Check:** Current market days-on-market (DOM) is dropping. We should push for a contract execution within the next 72 hours to maintain momentum.
-                """)
-                
-            if st.button("📊 Draft Market Update for Seller"):
-                st.toast("Claude is drafting a performance report for your seller...", icon="✍️")
+                <ul style='margin: 0; padding-left: 1.5rem;'>
+                    <li><strong>💎 Value Maximizer:</strong> Active listings showing strong engagement.</li>
+                    <li><strong>⏱️ Velocity Check:</strong> Market DOM remains low; focus on quick contract execution.</li>
+                </ul>
+                """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <ul style='margin: 0; padding-left: 1.5rem;'>
+            <li><strong>💎 Value Maximizer:</strong> Your 'Alta Loma' listing is seeing 2x higher engagement than neighborhood comps. I recommend a 'Coming Soon' email blast to your luxury investor list.</li>
+            <li><strong>⏱️ Velocity Check:</strong> Current market days-on-market (DOM) is dropping. We should push for a contract execution within the next 72 hours to maintain momentum.</li>
+        </ul>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("</div></div></div>", unsafe_allow_html=True)
+    
+    if st.button("📊 Draft Strategic Market Update", use_container_width=True, type="primary"):
+        st.toast("Claude is drafting a performance report for your seller...", icon="✍️")
 
-    # Seller navigation tabs
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "📊 Property Valuation",
-        "✍️ Listing Architect",
-        "📋 Seller Prep",
-        "📈 Marketing Campaign",
-        "💬 Communication",
-        "📅 Timeline & Offers",
-        "📊 Seller Analytics"
-    ])
+        # Seller navigation tabs
 
-    with tab1:
-        render_property_valuation_engine()
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
 
-    with tab2:
-        try:
-            from components.listing_architect import render_listing_architect
-            render_listing_architect()
-        except ImportError:
-            st.info("✍️ Listing Architect component coming soon")
+            "📊 Property Valuation",
 
-    with tab3:
-        render_seller_prep_checklist()
+            "✍️ Listing Architect",
 
-    with tab4:
-        render_marketing_campaign_dashboard()
+            "📋 Seller Prep",
 
-    with tab5:
-        render_seller_communication_portal()
+            "📈 Marketing Campaign",
 
-    with tab6:
-        render_transaction_timeline()
+            "🌐 Seller Portal",
 
-    with tab7:
-        render_seller_analytics()
+            "💬 Communication",
+
+            "📅 Timeline & Offers",
+
+            "📊 Seller Analytics"
+
+        ])
+
+    
+
+        with tab1:
+
+            render_property_valuation_engine()
+
+    
+
+        with tab2:
+            try:
+                from ghl_real_estate_ai.streamlit_demo.components.listing_architect import render_listing_architect
+                render_listing_architect()
+            except ImportError:
+                st.info("✍️ Listing Architect component coming soon")
+
+    
+
+        with tab3:
+
+            render_seller_prep_checklist()
+
+    
+
+        with tab4:
+
+            render_marketing_campaign_dashboard()
+
+    
+
+        with tab5:
+
+            try:
+
+                from ghl_real_estate_ai.streamlit_demo.components.seller_portal_manager import render_seller_portal_manager
+
+                render_seller_portal_manager()
+
+            except ImportError:
+
+                st.info("🌐 Seller Portal Manager loading...")
+
+    
+
+        with tab6:
+
+            render_seller_communication_portal()
+
+    
+
+        with tab7:
+
+            render_transaction_timeline()
+
+    
+
+        with tab8:
+
+            render_seller_analytics()
+
+    

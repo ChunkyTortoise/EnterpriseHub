@@ -4,7 +4,7 @@ import asyncio
 from typing import Dict, Any, Optional
 
 try:
-    from services.claude_orchestrator import get_claude_orchestrator
+    from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
     CLAUDE_AVAILABLE = True
 except ImportError:
     CLAUDE_AVAILABLE = False

@@ -1,0 +1,632 @@
+# Unified Configuration Management for Service 6 Enhanced Platform
+# Coordinated across all 4 parallel development phases
+
+version: "2.0.0"
+config_format: "service6_enhanced"
+
+# Environment-specific configurations
+environments:
+  # Development Environment
+  development:
+    phase_1_security:
+      database:
+        host: "localhost"
+        port: 5432
+        name: "enterprisehub_dev"
+        username: "${DB_USER:-postgres}"
+        password: "${DB_PASSWORD:-devpass}"
+        pool_size: 10
+        pool_timeout: 30
+        ssl_mode: "disable"
+        schema: "public"
+      
+      redis:
+        host: "localhost"
+        port: 6379
+        db: 0
+        password: null
+        ttl_default: 3600
+        max_connections: 20
+        cluster_enabled: false
+      
+      authentication:
+        jwt_secret: "${JWT_SECRET:-dev-secret-key}"
+        jwt_algorithm: "HS256"
+        access_token_expire_minutes: 60
+        refresh_token_expire_days: 30
+        password_min_length: 8
+        max_login_attempts: 5
+        lockout_duration_minutes: 15
+      
+      security:
+        cors_origins: ["http://localhost:3000", "http://localhost:8080"]
+        csrf_protection: false
+        rate_limiting:
+          requests_per_minute: 100
+          burst_limit: 120
+        session_timeout_minutes: 480
+    
+    phase_2_ai:
+      claude_api:
+        endpoint: "https://api.anthropic.com/v1"
+        api_key: "${CLAUDE_API_KEY}"
+        model: "claude-3-5-sonnet-20241022"
+        max_tokens: 4096
+        temperature: 0.3
+        timeout_seconds: 30
+      
+      ai_models:
+        lead_scoring:
+          enabled: true
+          max_requests_per_minute: 100
+          cache_ttl_seconds: 1800
+          fallback_enabled: true
+          confidence_threshold: 0.7
+        
+        voice_analysis:
+          enabled: true
+          max_file_size_mb: 100
+          supported_formats: ["mp3", "wav", "m4a"]
+          processing_timeout_minutes: 5
+        
+        predictive_analytics:
+          enabled: true
+          batch_size: 50
+          update_frequency_hours: 6
+          retention_days: 90
+      
+      caching:
+        ai_responses_ttl: 3600
+        feature_vectors_ttl: 7200
+        model_outputs_ttl: 1800
+        max_cache_size_mb: 512
+    
+    phase_3_frontend:
+      streamlit:
+        host: "localhost"
+        port: 8501
+        debug: true
+        theme: "light"
+        max_upload_size: 200
+        enable_cors: true
+      
+      websocket:
+        endpoint: "ws://localhost:8080/ws"
+        ping_interval: 30
+        ping_timeout: 10
+        max_connections: 100
+        message_queue_size: 1000
+      
+      dashboard:
+        refresh_interval_seconds: 5
+        auto_refresh: true
+        cache_dashboard_data: true
+        cache_ttl_seconds: 300
+        max_concurrent_users: 50
+        
+        role_permissions:
+          admin: ["read:all", "write:all", "delete:all", "export:all"]
+          executive: ["read:analytics", "export:reports", "view:team"]
+          agent: ["read:my_data", "write:my_data", "view:properties"]
+          viewer: ["read:basic"]
+      
+      ui_components:
+        lazy_loading: true
+        progressive_enhancement: true
+        offline_support: false
+        service_worker: false
+    
+    phase_4_scaling:
+      deployment:
+        platform: "docker-compose"
+        replicas: 1
+        auto_scaling: false
+        health_check_interval: 30
+        health_check_timeout: 10
+        restart_policy: "on-failure"
+      
+      performance:
+        max_workers: 4
+        worker_timeout: 30
+        keep_alive: 2
+        max_requests: 1000
+        max_requests_jitter: 50
+      
+      monitoring:
+        metrics_enabled: true
+        logging_level: "INFO"
+        structured_logging: true
+        error_tracking: false
+        performance_monitoring: true
+
+  # Staging Environment
+  staging:
+    phase_1_security:
+      database:
+        host: "${DB_HOST}"
+        port: "${DB_PORT:-5432}"
+        name: "${DB_NAME}"
+        username: "${DB_USER}"
+        password: "${DB_PASSWORD}"
+        pool_size: 20
+        pool_timeout: 60
+        ssl_mode: "require"
+        schema: "public"
+        backup_enabled: true
+      
+      redis:
+        cluster_enabled: true
+        nodes: "${REDIS_CLUSTER_NODES}"
+        password: "${REDIS_PASSWORD}"
+        ttl_default: 1800
+        max_connections: 50
+        sentinel_enabled: false
+      
+      authentication:
+        jwt_secret: "${JWT_SECRET}"
+        jwt_algorithm: "HS256"
+        access_token_expire_minutes: 30
+        refresh_token_expire_days: 7
+        password_min_length: 10
+        max_login_attempts: 3
+        lockout_duration_minutes: 30
+        mfa_required: false
+      
+      security:
+        cors_origins: ["https://staging.enterprisehub.com"]
+        csrf_protection: true
+        rate_limiting:
+          requests_per_minute: 200
+          burst_limit: 250
+        session_timeout_minutes: 240
+        ip_whitelist_enabled: false
+    
+    phase_2_ai:
+      claude_api:
+        endpoint: "${CLAUDE_API_ENDPOINT}"
+        api_key: "${CLAUDE_API_KEY}"
+        model: "claude-3-5-sonnet-20241022"
+        max_tokens: 4096
+        temperature: 0.2
+        timeout_seconds: 45
+        retry_attempts: 3
+      
+      ai_models:
+        lead_scoring:
+          enabled: true
+          max_requests_per_minute: 500
+          cache_ttl_seconds: 3600
+          fallback_enabled: true
+          confidence_threshold: 0.75
+          model_version_tracking: true
+        
+        voice_analysis:
+          enabled: true
+          max_file_size_mb: 200
+          supported_formats: ["mp3", "wav", "m4a", "flac"]
+          processing_timeout_minutes: 10
+          queue_enabled: true
+        
+        predictive_analytics:
+          enabled: true
+          batch_size: 100
+          update_frequency_hours: 4
+          retention_days: 180
+          model_retraining: true
+      
+      caching:
+        ai_responses_ttl: 7200
+        feature_vectors_ttl: 14400
+        model_outputs_ttl: 3600
+        max_cache_size_mb: 1024
+        distributed_cache: true
+    
+    phase_3_frontend:
+      streamlit:
+        host: "0.0.0.0"
+        port: 8501
+        debug: false
+        theme: "auto"
+        max_upload_size: 500
+        enable_cors: false
+        custom_theme: true
+      
+      websocket:
+        endpoint: "${WEBSOCKET_ENDPOINT}"
+        ping_interval: 60
+        ping_timeout: 20
+        max_connections: 500
+        message_queue_size: 5000
+        authentication_required: true
+      
+      dashboard:
+        refresh_interval_seconds: 10
+        auto_refresh: true
+        cache_dashboard_data: true
+        cache_ttl_seconds: 600
+        max_concurrent_users: 200
+        performance_monitoring: true
+      
+      ui_components:
+        lazy_loading: true
+        progressive_enhancement: true
+        offline_support: true
+        service_worker: true
+        cdn_enabled: true
+    
+    phase_4_scaling:
+      deployment:
+        platform: "kubernetes"
+        replicas: 3
+        auto_scaling: true
+        health_check_interval: 60
+        health_check_timeout: 30
+        restart_policy: "always"
+        rolling_update: true
+      
+      auto_scaling:
+        enabled: true
+        min_replicas: 2
+        max_replicas: 10
+        target_cpu_percent: 70
+        target_memory_percent: 80
+        scale_up_threshold: 75
+        scale_down_threshold: 40
+        cooldown_period_seconds: 300
+      
+      performance:
+        max_workers: 8
+        worker_timeout: 60
+        keep_alive: 5
+        max_requests: 2000
+        max_requests_jitter: 100
+      
+      monitoring:
+        metrics_enabled: true
+        logging_level: "INFO"
+        structured_logging: true
+        error_tracking: true
+        performance_monitoring: true
+        alerting_enabled: true
+
+  # Production Environment
+  production:
+    phase_1_security:
+      database:
+        host: "${DB_HOST}"
+        port: "${DB_PORT:-5432}"
+        name: "${DB_NAME}"
+        username: "${DB_USER}"
+        password: "${DB_PASSWORD}"
+        pool_size: 50
+        pool_timeout: 120
+        ssl_mode: "require"
+        ssl_cert: "${DB_SSL_CERT}"
+        schema: "public"
+        backup_enabled: true
+        read_replicas: 2
+        connection_encryption: true
+      
+      redis:
+        cluster_enabled: true
+        nodes: "${REDIS_CLUSTER_NODES}"
+        password: "${REDIS_PASSWORD}"
+        ttl_default: 3600
+        max_connections: 100
+        sentinel_enabled: true
+        ssl_enabled: true
+        persistence_enabled: true
+      
+      authentication:
+        jwt_secret: "${JWT_SECRET}"
+        jwt_algorithm: "RS256"
+        private_key: "${JWT_PRIVATE_KEY}"
+        public_key: "${JWT_PUBLIC_KEY}"
+        access_token_expire_minutes: 15
+        refresh_token_expire_days: 3
+        password_min_length: 12
+        max_login_attempts: 3
+        lockout_duration_minutes: 60
+        mfa_required: true
+        session_encryption: true
+      
+      security:
+        cors_origins: ["https://app.enterprisehub.com"]
+        csrf_protection: true
+        xss_protection: true
+        content_security_policy: true
+        hsts_enabled: true
+        rate_limiting:
+          requests_per_minute: 1000
+          burst_limit: 1200
+        session_timeout_minutes: 120
+        ip_whitelist_enabled: true
+        audit_logging: true
+    
+    phase_2_ai:
+      claude_api:
+        endpoint: "${CLAUDE_API_ENDPOINT}"
+        api_key: "${CLAUDE_API_KEY}"
+        model: "claude-3-5-sonnet-20241022"
+        max_tokens: 4096
+        temperature: 0.1
+        timeout_seconds: 60
+        retry_attempts: 5
+        circuit_breaker_enabled: true
+      
+      ai_models:
+        lead_scoring:
+          enabled: true
+          max_requests_per_minute: 2000
+          cache_ttl_seconds: 7200
+          fallback_enabled: true
+          confidence_threshold: 0.8
+          model_version_tracking: true
+          a_b_testing: true
+        
+        voice_analysis:
+          enabled: true
+          max_file_size_mb: 500
+          supported_formats: ["mp3", "wav", "m4a", "flac", "ogg"]
+          processing_timeout_minutes: 15
+          queue_enabled: true
+          priority_processing: true
+        
+        predictive_analytics:
+          enabled: true
+          batch_size: 200
+          update_frequency_hours: 2
+          retention_days: 365
+          model_retraining: true
+          automated_deployment: true
+      
+      caching:
+        ai_responses_ttl: 14400
+        feature_vectors_ttl: 28800
+        model_outputs_ttl: 7200
+        max_cache_size_mb: 4096
+        distributed_cache: true
+        cache_warming: true
+    
+    phase_3_frontend:
+      streamlit:
+        host: "0.0.0.0"
+        port: 8501
+        debug: false
+        theme: "corporate"
+        max_upload_size: 1000
+        enable_cors: false
+        custom_theme: true
+        ssl_enabled: true
+      
+      websocket:
+        endpoint: "${WEBSOCKET_ENDPOINT}"
+        ping_interval: 120
+        ping_timeout: 30
+        max_connections: 2000
+        message_queue_size: 10000
+        authentication_required: true
+        ssl_enabled: true
+        compression_enabled: true
+      
+      dashboard:
+        refresh_interval_seconds: 30
+        auto_refresh: true
+        cache_dashboard_data: true
+        cache_ttl_seconds: 1200
+        max_concurrent_users: 1000
+        performance_monitoring: true
+        real_time_analytics: true
+      
+      ui_components:
+        lazy_loading: true
+        progressive_enhancement: true
+        offline_support: true
+        service_worker: true
+        cdn_enabled: true
+        image_optimization: true
+        asset_compression: true
+    
+    phase_4_scaling:
+      deployment:
+        platform: "kubernetes"
+        replicas: 10
+        auto_scaling: true
+        health_check_interval: 30
+        health_check_timeout: 15
+        restart_policy: "always"
+        rolling_update: true
+        blue_green_deployment: true
+      
+      auto_scaling:
+        enabled: true
+        min_replicas: 5
+        max_replicas: 50
+        target_cpu_percent: 60
+        target_memory_percent: 70
+        scale_up_threshold: 65
+        scale_down_threshold: 30
+        cooldown_period_seconds: 180
+        predictive_scaling: true
+      
+      performance:
+        max_workers: 16
+        worker_timeout: 120
+        keep_alive: 10
+        max_requests: 5000
+        max_requests_jitter: 200
+        preforking: true
+      
+      monitoring:
+        metrics_enabled: true
+        logging_level: "WARN"
+        structured_logging: true
+        error_tracking: true
+        performance_monitoring: true
+        alerting_enabled: true
+        distributed_tracing: true
+        custom_metrics: true
+
+# Cross-Phase Integration Settings
+integration:
+  event_streaming:
+    enabled: true
+    broker: "redis"  # or "kafka" for production
+    topics:
+      - "user_events"
+      - "lead_events" 
+      - "ai_events"
+      - "dashboard_events"
+      - "system_events"
+    
+  api_versioning:
+    current_version: "v2"
+    supported_versions: ["v1", "v2"]
+    deprecation_policy: "6_months"
+    backward_compatibility: true
+    
+  data_consistency:
+    eventual_consistency: true
+    conflict_resolution: "last_writer_wins"
+    synchronization_interval: 60
+    cross_service_transactions: false
+    
+  error_handling:
+    circuit_breaker:
+      enabled: true
+      failure_threshold: 5
+      reset_timeout: 60
+      half_open_max_calls: 3
+    
+    retry_policy:
+      max_attempts: 3
+      backoff_strategy: "exponential"
+      initial_delay: 100
+      max_delay: 5000
+      jitter: true
+    
+    fallback_strategies:
+      ai_scoring: "cached_results"
+      dashboard_data: "stale_cache"
+      real_time_updates: "polling"
+
+# Feature Flags
+feature_flags:
+  # Phase 1 Features
+  enhanced_authentication: true
+  multi_factor_auth: "${ENABLE_MFA:-false}"
+  audit_logging: "${ENABLE_AUDIT_LOG:-true}"
+  
+  # Phase 2 Features
+  ai_batch_processing: true
+  voice_analysis_v2: "${ENABLE_VOICE_V2:-false}"
+  predictive_lead_scoring: true
+  claude_fallback: true
+  
+  # Phase 3 Features
+  real_time_dashboard: true
+  mobile_responsive: true
+  dark_mode: "${ENABLE_DARK_MODE:-true}"
+  offline_mode: "${ENABLE_OFFLINE:-false}"
+  
+  # Phase 4 Features
+  auto_scaling: "${ENABLE_AUTO_SCALING:-true}"
+  performance_optimization: true
+  distributed_caching: "${ENABLE_DISTRIBUTED_CACHE:-false}"
+  
+  # Experimental Features
+  ai_explanation_engine: "${ENABLE_AI_EXPLANATIONS:-false}"
+  advanced_analytics: "${ENABLE_ADVANCED_ANALYTICS:-false}"
+  predictive_scaling: "${ENABLE_PREDICTIVE_SCALING:-false}"
+
+# Deployment Configuration
+deployment:
+  docker:
+    base_image: "python:3.11-slim"
+    multi_stage_build: true
+    security_scanning: true
+    
+  kubernetes:
+    namespace: "enterprisehub"
+    ingress_class: "nginx"
+    tls_enabled: true
+    resource_limits:
+      cpu: "2000m"
+      memory: "4Gi"
+    resource_requests:
+      cpu: "500m" 
+      memory: "1Gi"
+      
+  ci_cd:
+    pipeline_trigger: "push_to_main"
+    automated_testing: true
+    security_scanning: true
+    performance_testing: true
+    deployment_approval: "production"
+
+# Monitoring & Observability
+observability:
+  metrics:
+    provider: "prometheus"
+    retention: "30d"
+    scrape_interval: "15s"
+    
+  logging:
+    provider: "elasticsearch"
+    retention: "90d"
+    log_level: "${LOG_LEVEL:-INFO}"
+    
+  tracing:
+    provider: "jaeger"
+    sampling_rate: 0.1
+    retention: "7d"
+    
+  alerting:
+    provider: "alertmanager"
+    notification_channels: ["email", "slack"]
+    escalation_policy: true
+
+# Security Configuration  
+security:
+  encryption:
+    at_rest: true
+    in_transit: true
+    key_rotation_days: 90
+    
+  compliance:
+    gdpr_enabled: true
+    data_retention_days: 2555  # 7 years
+    anonymization: true
+    
+  vulnerability_scanning:
+    enabled: true
+    schedule: "daily"
+    auto_remediation: false
+
+# Backup & Recovery
+backup:
+  database:
+    enabled: true
+    frequency: "daily"
+    retention_days: 30
+    encryption: true
+    cross_region: true
+    
+  redis:
+    enabled: true
+    frequency: "hourly"
+    retention_hours: 168  # 1 week
+    
+  application_data:
+    enabled: true
+    frequency: "weekly"
+    retention_weeks: 12
+
+# Version and Metadata
+metadata:
+  version: "2.0.0"
+  last_updated: "2026-01-16"
+  config_schema_version: "1.0"
+  phases_included: [1, 2, 3, 4]
+  coordination_framework: "service6_enhanced"
+  generated_by: "coordination_framework"

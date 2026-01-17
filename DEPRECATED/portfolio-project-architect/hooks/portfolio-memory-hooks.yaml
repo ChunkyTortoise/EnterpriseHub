@@ -1,0 +1,106 @@
+# Portfolio Project Memory Hooks
+# Automatic memory management for portfolio development workflow
+
+hooks:
+  # Session initialization - load project memory if available
+  SessionStart:
+    - name: auto-load-portfolio-memory
+      description: "Automatically load portfolio project memory if context suggests continuing work"
+      script: |
+        #!/bin/bash
+        # Check if user message contains portfolio project references
+        if echo "$USER_MESSAGE" | grep -qi "continue\|resume\|load.*portfolio\|project.*memory"; then
+          # Extract project name if mentioned
+          PROJECT_NAME=$(echo "$USER_MESSAGE" | grep -oE "project\s+\w+|portfolio\s+\w+" | awk '{print $2}' | head -1)
+          if [ -n "$PROJECT_NAME" ] && [ -d ".claude/memory/portfolio-projects/$PROJECT_NAME" ]; then
+            echo "🧠 Auto-loading portfolio project memory: $PROJECT_NAME"
+            ./.claude/skills/portfolio-project-architect/scripts/load_project_memory.sh "$PROJECT_NAME"
+          fi
+        fi
+
+  # Tool usage tracking for portfolio projects
+  PostToolUse:
+    - name: portfolio-progress-tracker
+      description: "Track portfolio project progress and update memory"
+      condition: |
+        # Trigger when portfolio architect skill is used or memory scripts are run
+        echo "$TOOL_NAME$TOOL_PARAMS" | grep -qi "portfolio.*architect\|initialize.*memory\|portfolio.*project"
+      script: |
+        #!/bin/bash
+        # Extract project context from tool usage
+        if echo "$TOOL_PARAMS" | grep -qi "portfolio.*project"; then
+          # Log activity in most recent portfolio project
+          LATEST_PROJECT=$(find .claude/memory/portfolio-projects -name "progress.json" -type f -exec stat -f "%m %N" {} \; 2>/dev/null | sort -nr | head -1 | cut -d' ' -f2- | xargs dirname | xargs basename)
+          if [ -n "$LATEST_PROJECT" ]; then
+            ./.claude/skills/portfolio-project-architect/scripts/update_project_memory.sh "$LATEST_PROJECT" session "Tool used: $TOOL_NAME"
+          fi
+        fi
+
+  # Agent completion tracking
+  SubagentStop:
+    - name: portfolio-agent-synthesis
+      description: "Synthesize agent findings for portfolio projects"
+      condition: |
+        # Trigger when agents complete work related to portfolio projects
+        echo "$AGENT_OUTPUT" | grep -qi "portfolio\|optimization\|workflow\|enhancement"
+      script: |
+        #!/bin/bash
+        # Create agent findings summary
+        TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        FINDINGS_DIR=".claude/memory/agent-findings"
+        mkdir -p "$FINDINGS_DIR"
+
+        echo "# Agent Findings - $TIMESTAMP" > "$FINDINGS_DIR/latest-synthesis.md"
+        echo "" >> "$FINDINGS_DIR/latest-synthesis.md"
+        echo "**Agent Type**: $AGENT_TYPE" >> "$FINDINGS_DIR/latest-synthesis.md"
+        echo "**Task**: $AGENT_TASK" >> "$FINDINGS_DIR/latest-synthesis.md"
+        echo "" >> "$FINDINGS_DIR/latest-synthesis.md"
+        echo "## Key Findings" >> "$FINDINGS_DIR/latest-synthesis.md"
+        echo "$AGENT_OUTPUT" | head -50 >> "$FINDINGS_DIR/latest-synthesis.md"
+
+        echo "🤖 Agent findings captured for synthesis"
+
+  # Session end - auto-save portfolio state
+  SessionEnd:
+    - name: portfolio-state-preservation
+      description: "Preserve portfolio project state at session end"
+      script: |
+        #!/bin/bash
+        # Save current conversation context to active portfolio projects
+        if [ -d ".claude/memory/portfolio-projects" ]; then
+          for project_dir in .claude/memory/portfolio-projects/*/; do
+            if [ -d "$project_dir" ]; then
+              project_name=$(basename "$project_dir")
+              # Update session log with session end
+              echo "" >> "$project_dir/session-log.md"
+              echo "## Session End - $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$project_dir/session-log.md"
+              echo "**Status**: Session completed and state preserved" >> "$project_dir/session-log.md"
+            fi
+          done
+        fi
+
+  # Pre-tool validation for portfolio quality
+  PreToolUse:
+    - name: portfolio-quality-gate
+      description: "Ensure portfolio-grade standards for development actions"
+      condition: |
+        # Trigger for file creation/modification in portfolio projects
+        echo "$TOOL_NAME" | grep -qi "write\|edit" && echo "$TOOL_PARAMS" | grep -qi "portfolio\|demo\|client"
+      script: |
+        #!/bin/bash
+        # Validate portfolio quality standards
+        if echo "$TOOL_PARAMS" | grep -qi "\.md$"; then
+          echo "📋 Portfolio documentation quality check enabled"
+        elif echo "$TOOL_PARAMS" | grep -qi "\.(js|ts|py|html|css)$"; then
+          echo "🔍 Portfolio code quality gate activated"
+          echo "  ✓ Ensure production-grade code standards"
+          echo "  ✓ Include comprehensive error handling"
+          echo "  ✓ Add client-appropriate documentation"
+        fi
+
+# Hook Configuration
+config:
+  auto_enable: true
+  memory_persistence: true
+  quality_enforcement: true
+  agent_coordination: true

@@ -5,8 +5,13 @@ Delivers personalized content and property recommendations based on AI analysis
 """
 
 import json
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+
+logger = logging.getLogger(__name__)
 
 
 class AIContentPersonalizationService:
@@ -24,6 +29,7 @@ class AIContentPersonalizationService:
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key
         self.personalization_cache = {}
+        self.analytics = AnalyticsService()
 
     async def personalize_content(
         self,
@@ -282,33 +288,68 @@ class AIContentPersonalizationService:
 
     def generate_personalized_content(self, lead_name: str, channel: str, tone: str, context: Dict) -> str:
         """
-        Generate a personalized outreach message.
-        Expected by the Personalization Engine UI.
+        Generate a personalized outreach message using Claude AI.
         """
+        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeTaskType, ClaudeRequest
+        import asyncio
+        
+        orchestrator = get_claude_orchestrator()
+        location_id = context.get('location_id', 'unknown')
+        
+        prompt = f"""
+        Generate a highly personalized real estate outreach message for {lead_name}.
+        
+        CHANNEL: {channel}
+        TONE: {tone}
+        CONTEXT: {json.dumps(context, indent=2)}
+        
+        REQUIREMENTS:
+        - Reference the lead's behavioral insights and strategic goals if provided.
+        - Include placeholders like [Agent], [Market], [Property Address] where appropriate.
+        - Ensure the message feels authentic, non-robotic, and professionally elite.
+        - For SMS, keep it under 160 characters if possible, or very punchy.
+        - For Email, include a compelling subject line.
+        """
+
+        try:
+            # Synchronous wrapper for async call in Streamlit context
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            request = ClaudeRequest(
+                task_type=ClaudeTaskType.SCRIPT_GENERATION,
+                context={"lead_name": lead_name, "channel": channel},
+                prompt=prompt,
+                temperature=0.7
+            )
+            
+            response = loop.run_until_complete(orchestrator.process_request(request))
+            
+            # Record usage
+            loop.run_until_complete(self.analytics.track_llm_usage(
+                location_id=location_id,
+                model=response.model or "claude-3-5-sonnet",
+                provider=response.provider or "claude",
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            ))
+
+            return response.content
+        except Exception as e:
+            logger.error(f"Error generating personalized content: {e}")
+            # Fallback to legacy template-based generation
+            return self._generate_fallback_content(lead_name, channel, tone, context)
+
+    def _generate_fallback_content(self, lead_name: str, channel: str, tone: str, context: Dict) -> str:
+        """Legacy template-based content generation for fallback cases."""
         first_name = lead_name.split(' ')[0]
-        
-        # Simple template-based generation for demo (in production would call Claude)
         if "SMS" in channel:
-            if tone == "Urgent":
-                return f"Hey {first_name}, it's [Agent]! I just saw a new property in [Market] that fits your exact criteria and it's going to go fast. Are you free for a quick call?"
-            elif tone == "Exclusive":
-                return f"Hi {first_name}, [Agent] here. I have an off-market opportunity in [Market] that isn't on Zillow yet. Given your interest in this area, I wanted you to see it first. Interested?"
-            else: # Consultative/Friendly
-                return f"Hi {first_name}, hope your week is going well! I was just reviewing the latest [Market] market data and thought of our conversation about your next move. I've got some new insights for you. Text me when you have a sec!"
-        
-        elif "Email" in channel:
-            subject = f"Market Update for {first_name}"
-            body = f"Hi {first_name},\n\nI hope this email finds you well. As we discussed, I've been keeping a close eye on the [Market] market for you.\n\n"
-            if context.get("market_data"):
-                body += "Current trends show a 4.2% increase in inventory, which gives us more leverage than we had last month. This is a great time to be looking.\n\n"
-            body += "I've shortlisted a few properties that I think you'll really like. When would be a good time to review them together?\n\nBest,\n[Agent]"
-            return f"Subject: {subject}\n\n{body}"
-            
-        elif "Video" in channel:
-            return f"Video Script for {first_name}:\n[0:00-0:05] 'Hey {first_name}, it's [Agent] from Lyrio!'\n[0:05-0:15] 'I'm standing here in [Market] where we're seeing some incredible new listings...'\n[0:15-0:30] 'Knowing you're looking for a {tone} approach, I wanted to personally show you this...'"
-            
-        else:
-            return f"Hi {first_name}, this is [Agent]. Based on your recent activity, I've prepared a personalized {channel} for you. Let's connect soon to discuss your goals in [Market]."
+            return f"Hi {first_name}, it's [Agent]. I've got some new [Market] updates for you. Text me when free!"
+        return f"Hello {first_name}, I'm following up on your property search in [Market]..."
 
 
 # Demo/Test function

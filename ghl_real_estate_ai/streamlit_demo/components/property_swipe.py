@@ -1,9 +1,9 @@
 
 import streamlit as st
 import time
-from services.enhanced_property_matcher import EnhancedPropertyMatcher
+from ghl_real_estate_ai.services.enhanced_property_matcher import EnhancedPropertyMatcher
 
-def render_property_swipe(lead_name: str = "Client"):
+def render_property_swipe(services, lead_name: str = "Client"):
     """
     Elite "Property Swipe" Interface (Tinder for Real Estate).
     A high-engagement mobile-first component for buyers.
@@ -23,10 +23,11 @@ def render_property_swipe(lead_name: str = "Client"):
         st.warning("Please select a lead in the Lead Scoring tab to begin discovery.")
         return
 
-    lead_context = st.session_state.lead_options.get(selected_lead, {})
+    lead_options = st.session_state.get('lead_options', {})
+    lead_context = lead_options.get(selected_lead, {})
     
     # Get real properties from matcher
-    matcher = EnhancedPropertyMatcher()
+    matcher = services.get("enhanced_property_matcher", EnhancedPropertyMatcher())
     matches = matcher.find_enhanced_matches(lead_context.get('extracted_preferences', {}), limit=10)
     
     properties = []
@@ -51,7 +52,7 @@ def render_property_swipe(lead_name: str = "Client"):
         
         # Claude's Real-time Commentary
         try:
-            from services.enhanced_lead_intelligence import get_enhanced_lead_intelligence
+            from ghl_real_estate_ai.services.enhanced_lead_intelligence import get_enhanced_lead_intelligence
             eli = get_enhanced_lead_intelligence()
             import asyncio
             try:
@@ -64,38 +65,38 @@ def render_property_swipe(lead_name: str = "Client"):
         except Exception:
             commentary = f"A stunning find in {prop['neighborhood']}!"
 
-        # Phone Mockup Container
+        # Phone Mockup Container - Obsidian Command Edition
         st.markdown(f"""
-        <div class="phone-mockup" style="max-width: 360px; margin: 0 auto; border: 8px solid #1e293b; border-radius: 36px; overflow: hidden; background: white; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
-            <div class="phone-header" style="height: 25px; background: #1e293b; width: 120px; margin: 0 auto; border-radius: 0 0 15px 15px;"></div>
-            <div style="position: relative; height: 400px;">
+        <div class="phone-mockup" style="max-width: 360px; margin: 0 auto; border: 10px solid #161B22; border-radius: 40px; overflow: hidden; background: #05070A; box-shadow: 0 25px 60px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);">
+            <div class="phone-header" style="height: 25px; background: #161B22; width: 140px; margin: 0 auto; border-radius: 0 0 20px 20px;"></div>
+            <div style="position: relative; height: 420px;">
                 <img src="{prop['image']}" style="width: 100%; height: 100%; object-fit: cover;">
-                <div style="position: absolute; top: 15px; right: 15px; background: rgba(37, 99, 235, 0.9); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
+                <div style="position: absolute; top: 15px; right: 15px; background: rgba(99, 102, 241, 0.9); color: white; padding: 6px 14px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(255,255,255,0.2);">
                     {prop['ai_tag']}
                 </div>
-                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 20px; color: white;">
-                    <div style="font-size: 1.25rem; font-weight: 800;">{prop['price']}</div>
-                    <div style="font-size: 0.9rem; font-weight: 600;">{prop['address']}</div>
-                    <div style="font-size: 0.75rem; opacity: 0.8;">{prop['specs']} • {prop['neighborhood']}</div>
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(5,7,10,0.95), transparent); padding: 25px 20px; color: white;">
+                    <div style="font-size: 1.5rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif; color: #FFFFFF;">{prop['price']}</div>
+                    <div style="font-size: 0.95rem; font-weight: 600; font-family: 'Inter', sans-serif; color: #E6EDF3;">{prop['address']}</div>
+                    <div style="font-size: 0.75rem; opacity: 0.7; color: #8B949E; margin-top: 4px;">{prop['specs']} • {prop['neighborhood'].upper()}</div>
                 </div>
             </div>
-            <div style="padding: 15px; background: #eff6ff; border-top: 1px solid #dbeafe; border-bottom: 1px solid #dbeafe;">
-                <div style="font-size: 0.75rem; font-weight: 800; color: #2563eb; text-transform: uppercase; margin-bottom: 4px;">🤖 Claude's Take:</div>
-                <div style="font-size: 0.85rem; color: #1e40af; font-style: italic; line-height: 1.4;">
+            <div style="padding: 1.5rem; background: rgba(99, 102, 241, 0.05); border-top: 1px solid rgba(99, 102, 241, 0.2); border-bottom: 1px solid rgba(99, 102, 241, 0.2);">
+                <div style="font-size: 0.75rem; font-weight: 800; color: #6366F1; text-transform: uppercase; margin-bottom: 6px; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.1em;">🤖 CLAUDE'S SYNTHESIS:</div>
+                <div style="font-size: 0.9rem; color: #E6EDF3; font-style: italic; line-height: 1.5; font-family: 'Inter', sans-serif; opacity: 0.9;">
                     "{commentary}"
                 </div>
             </div>
-            <div style="padding: 10px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                <details style="font-size: 0.75rem; color: #64748b; cursor: pointer;">
-                    <summary>🧠 View Neural Reasoning</summary>
-                    <div style="padding-top: 8px;">
-                        Claude analyzed 15 behavioral factors including location preference, budget velocity, and feature importance to rank this property. Confidence: 94%.
+            <div style="padding: 12px 20px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <details style="font-size: 0.75rem; color: #8B949E; cursor: pointer; font-family: 'Inter', sans-serif;">
+                    <summary style="font-weight: 600;">🧠 VIEW NEURAL REASONING</summary>
+                    <div style="padding-top: 10px; line-height: 1.4; opacity: 0.8;">
+                        Claude analyzed 15 behavioral signals including architectural preference, fiscal velocity, and neighborhood compatibility. Match Score: 94%.
                     </div>
                 </details>
             </div>
-            <div style="padding: 20px; display: flex; justify-content: space-around; background: #f8fafc;">
-                <div style="width: 60px; height: 60px; border-radius: 50%; border: 4px solid #ef4444; display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 1.5rem; cursor: pointer;">✕</div>
-                <div style="width: 60px; height: 60px; border-radius: 50%; border: 4px solid #10b981; display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 1.5rem; cursor: pointer;">❤</div>
+            <div style="padding: 20px; display: flex; justify-content: space-around; background: rgba(5,7,10,0.5); backdrop-filter: blur(10px);">
+                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 1.2rem; cursor: pointer; background: rgba(239, 68, 68, 0.05);">✕</div>
+                <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid rgba(16, 185, 129, 0.3); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 1.2rem; cursor: pointer; background: rgba(16, 185, 129, 0.05);">❤</div>
             </div>
         </div>
         """, unsafe_allow_html=True)

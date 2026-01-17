@@ -10,7 +10,7 @@ Currently supports:
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -358,3 +358,29 @@ class MemoryService:
                 file_path.unlink()
             except Exception as e:
                 logger.error(f"Failed to delete memory file for {contact_id}: {e}")
+
+    async def store_conversation_memory(
+        self,
+        conversation_id: str,
+        content: Dict[str, Any],
+        ttl_hours: Optional[int] = None
+    ) -> None:
+        """
+        Store a specialized conversation memory (e.g., for analytics).
+        """
+        # For now, we store it as a regular file in a sub-directory
+        memory_path = self.memory_dir / "specialized"
+        memory_path.mkdir(parents=True, exist_ok=True)
+        
+        file_path = memory_path / f"{conversation_id}.json"
+        
+        try:
+            with open(file_path, "w") as f:
+                json.dump({
+                    "content": content,
+                    "stored_at": datetime.utcnow().isoformat(),
+                    "expires_at": (datetime.utcnow() + timedelta(hours=ttl_hours)).isoformat() if ttl_hours else None
+                }, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to store conversation memory {conversation_id}: {e}")
+

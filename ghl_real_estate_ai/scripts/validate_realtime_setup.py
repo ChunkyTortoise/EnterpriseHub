@@ -23,7 +23,7 @@ from typing import Dict, Any
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
-    from services.realtime_config import (
+    from ghl_real_estate_ai.services.realtime_config import (
         get_config_manager,
         validate_realtime_setup,
         REDIS_AVAILABLE,

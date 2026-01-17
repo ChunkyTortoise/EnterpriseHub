@@ -10,8 +10,8 @@ from typing import Dict, List, Any, Optional, Union
 from dataclasses import dataclass, asdict
 from enum import Enum
 
-from core.llm_client import LLMClient, LLMProvider
-from services.memory_service import MemoryService
+from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
 
 class ClaudeTaskType(Enum):
@@ -21,6 +21,11 @@ class ClaudeTaskType(Enum):
     SCRIPT_GENERATION = "script_generation"
     INTERVENTION_STRATEGY = "intervention_strategy"
     BEHAVIORAL_INSIGHT = "behavioral_insight"
+    OMNIPOTENT_ASSISTANT = "omnipotent_assistant"
+    PERSONA_OPTIMIZATION = "persona_optimization"
+    EXECUTIVE_BRIEFING = "executive_briefing"
+    REVENUE_PROJECTION = "revenue_projection"
+    RESEARCH_QUERY = "research_query"
 
 
 @dataclass
@@ -46,6 +51,10 @@ class ClaudeResponse:
     recommended_actions: List[Dict[str, Any]] = None
     metadata: Dict[str, Any] = None
     response_time_ms: int = 0
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
+    model: Optional[str] = None
+    provider: Optional[str] = None
 
     def __post_init__(self):
         if self.sources is None:
@@ -73,15 +82,17 @@ class ClaudeOrchestrator:
                  llm_client: Optional[LLMClient] = None,
                  memory_service: Optional[MemoryService] = None):
         # Local imports to avoid circular dependencies
-        from services.lead_scorer import LeadScorer
-        from services.predictive_lead_scorer import PredictiveLeadScorer
-        from services.churn_prediction_engine import ChurnPredictionEngine
-        from services.lead_lifecycle import LeadLifecycleTracker
-        from services.behavioral_triggers import BehavioralTriggerEngine
+        from ghl_real_estate_ai.services.lead_scorer import LeadScorer
+        from ghl_real_estate_ai.services.predictive_lead_scorer import PredictiveLeadScorer
+        from ghl_real_estate_ai.services.churn_prediction_engine import ChurnPredictionEngine
+        from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
+        from ghl_real_estate_ai.services.behavioral_triggers import BehavioralTriggerEngine
+        from ghl_real_estate_ai.services.perplexity_researcher import PerplexityResearcher
 
         # Core services
         self.llm = llm_client or LLMClient(provider=LLMProvider.CLAUDE)
         self.memory = memory_service or MemoryService()
+        self.researcher = PerplexityResearcher()
 
         # Scoring services
         self.jorge_scorer = LeadScorer()
@@ -170,7 +181,36 @@ class ClaudeOrchestrator:
             - Personalized to the specific lead
             - Objection-aware with preemptive handling
             - Channel-appropriate (SMS, email, call)
-            - A/B testable with variants"""
+            - A/B testable with variants""",
+
+            "omnipotent_assistant": """You are the Omnipotent Claude Assistant for EnterpriseHub v6.0 and GHL Real Estate AI (Elite v4.0).
+            You have complete, expert-level knowledge of:
+            - System Architecture: Modular monolith, Streamlit frontend, multi-tenant backend.
+            - AI Engines: 15-factor lead scoring, 16+ lifestyle matching, Swarm Intelligence.
+            - Business Goals: Maximize conversion for Jorge Sales (Lyrio.io), automate 85+ hours/month.
+            - GHL Integration: Bi-directional sync, custom workflows, and behavioral telemetry.
+
+            Always provide strategic, elite-level advice. Guide the user through the platform with confidence and clarity.""",
+
+            "persona_optimizer": """You are an AI Behavioral Psychologist and Prompt Engineer.
+            Your task is to optimize real estate AI personas by tuning their 'Neural Weights' (tone, empathy, persistence).
+            
+            Provide:
+            1. Optimized system prompt instructions.
+            2. A brief analysis of how this persona will likely impact lead engagement.
+            3. Specific behavioral adjustments based on the requested parameters.
+            
+            Focus on creating high-conversion, authentic-feeling digital identities.""",
+
+            "researcher_assistant": """You are a real estate research specialist. Your goal is to synthesize real-time market data and property information into actionable intelligence.
+            
+            Focus on:
+            - Current market trends and statistics
+            - Neighborhood-specific analysis (amenities, schools, vibes)
+            - Property value drivers and risks
+            - Competitive positioning
+            
+            Provide clear, data-backed reports with citations where possible."""
         }
 
     async def process_request(self, request: ClaudeRequest) -> ClaudeResponse:
@@ -193,7 +233,7 @@ class ClaudeOrchestrator:
             full_prompt = self._build_prompt(request.prompt, enhanced_context)
 
             # Make Claude API call
-            response_content = await self._call_claude(
+            llm_response = await self._call_claude(
                 system_prompt=system_prompt,
                 user_prompt=full_prompt,
                 model=request.model,
@@ -203,7 +243,13 @@ class ClaudeOrchestrator:
             )
 
             # Parse and structure response
-            structured_response = self._parse_response(response_content, request.task_type)
+            structured_response = self._parse_response(llm_response.content, request.task_type)
+            
+            # Populate token usage and model info
+            structured_response.input_tokens = llm_response.input_tokens
+            structured_response.output_tokens = llm_response.output_tokens
+            structured_response.model = llm_response.model
+            structured_response.provider = llm_response.provider.value
 
             # Calculate response time
             response_time = int((time.time() - start_time) * 1000)
@@ -216,10 +262,34 @@ class ClaudeOrchestrator:
 
         except Exception as e:
             self._update_metrics(0, success=False)
+            error_str = str(e)
+            
+            # Special handling for demo mode / invalid API key
+            if "401" in error_str or "authentication_error" in error_str or "invalid x-api-key" in error_str:
+                return self._get_demo_fallback_response(request.task_type)
+                
             return ClaudeResponse(
-                content=f"Error processing request: {str(e)}",
+                content=f"Error processing request: {error_str}",
                 metadata={"error": True, "error_type": type(e).__name__}
             )
+
+    def _get_demo_fallback_response(self, task_type: ClaudeTaskType) -> ClaudeResponse:
+        """Provide realistic mock responses when API key is invalid (Demo Mode)"""
+        fallbacks = {
+            ClaudeTaskType.CHAT_QUERY: "I'm currently in **Simulated Intelligence Mode** because a valid API key was not detected. Based on your pipeline, I recommend focusing on the Austin Alta Loma cluster where engagement is peaking.",
+            ClaudeTaskType.LEAD_ANALYSIS: "Strategic Analysis (Simulated): This lead shows high data-driven intent. Recommend prioritizing neighborhood stats and commute efficiency metrics in your next outreach.",
+            ClaudeTaskType.REPORT_SYNTHESIS: "Executive Summary (Simulated): Your Austin market is performing at 115% of target. Conversion velocity has increased by 12% since activating the Swarm Intelligence layer.",
+            ClaudeTaskType.SCRIPT_GENERATION: "Simulated SMS: 'Hi! I noticed you were looking at the Zilker listings. I've prepared a custom market update for that area—would you like me to send it over?'"
+        }
+        
+        return ClaudeResponse(
+            content=fallbacks.get(task_type, "Simulated intelligence active. System is functioning in offline demo mode."),
+            metadata={"demo_mode": True, "reason": "auth_failure"},
+            input_tokens=0,
+            output_tokens=0,
+            model="simulated-model",
+            provider="simulated"
+        )
 
     async def chat_query(self,
                         query: str,
@@ -401,6 +471,38 @@ class ClaudeOrchestrator:
 
         return await self.process_request(request)
 
+    async def perform_research(self,
+                               topic: str,
+                               context: Optional[Dict[str, Any]] = None) -> ClaudeResponse:
+        """Perform deep research using Perplexity and synthesize with Claude"""
+        
+        # 1. Get raw research from Perplexity
+        raw_research = await self.researcher.research_topic(topic, json.dumps(context) if context else None)
+        
+        # 2. Synthesize with Claude for strategic depth
+        prompt = f"""Synthesize this research data for Jorge:
+        
+        Topic: {topic}
+        
+        Raw Research Data:
+        {raw_research}
+        
+        Provide:
+        1. Strategic Summary (The 'So What?')
+        2. Top 3 Actionable Takeaways
+        3. Local Market Impact Analysis
+        4. Risk/Opportunity Assessment
+        """
+        
+        request = ClaudeRequest(
+            task_type=ClaudeTaskType.RESEARCH_QUERY,
+            context=context or {},
+            prompt=prompt,
+            max_tokens=4000
+        )
+        
+        return await self.process_request(request)
+
     # Private helper methods
 
     def _get_system_prompt(self, task_type: ClaudeTaskType) -> str:
@@ -410,14 +512,18 @@ class ClaudeOrchestrator:
             ClaudeTaskType.LEAD_ANALYSIS: "lead_analyzer",
             ClaudeTaskType.REPORT_SYNTHESIS: "report_synthesizer",
             ClaudeTaskType.SCRIPT_GENERATION: "script_generator",
-            ClaudeTaskType.INTERVENTION_STRATEGY: "script_generator",  # Same as script gen
-            ClaudeTaskType.BEHAVIORAL_INSIGHT: "lead_analyzer"
+            ClaudeTaskType.INTERVENTION_STRATEGY: "script_generator",
+            ClaudeTaskType.BEHAVIORAL_INSIGHT: "lead_analyzer",
+            ClaudeTaskType.OMNIPOTENT_ASSISTANT: "omnipotent_assistant",
+            ClaudeTaskType.PERSONA_OPTIMIZATION: "persona_optimizer",
+            ClaudeTaskType.EXECUTIVE_BRIEFING: "report_synthesizer",
+            ClaudeTaskType.REVENUE_PROJECTION: "report_synthesizer",
+            ClaudeTaskType.RESEARCH_QUERY: "researcher_assistant"
         }
 
-        return self.system_prompts.get(
-            prompt_mapping.get(task_type, "chat_assistant"),
-            self.system_prompts["chat_assistant"]
-        )
+        # Check if the mapped prompt exists, fallback to chat_assistant
+        prompt_key = prompt_mapping.get(task_type, "chat_assistant")
+        return self.system_prompts.get(prompt_key, self.system_prompts.get("chat_assistant", ""))
 
     async def _enhance_context(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """Enhance request context with memory and historical data"""
@@ -452,33 +558,30 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                           model: str,
                           max_tokens: int,
                           temperature: float,
-                          streaming: bool = False) -> str:
+                          streaming: bool = False) -> Any:
         """Make actual Claude API call"""
 
         if streaming:
-            # Handle streaming response
-            response = await self.llm.stream_chat(
-                messages=[{"role": "user", "content": user_prompt}],
-                system=system_prompt,
-                model=model,
-                max_tokens=max_tokens,
-                temperature=temperature
-            )
-            # Collect streaming response
+            # Handle streaming response using astream
             content = ""
-            async for chunk in response:
+            async for chunk in self.llm.astream(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                max_tokens=max_tokens,
+                temperature=temperature
+            ):
                 content += chunk
-            return content
+            # Note: streaming doesn't return usage info in current LLMClient implementation
+            from ghl_real_estate_ai.core.llm_client import LLMResponse, LLMProvider
+            return LLMResponse(content=content, provider=LLMProvider.CLAUDE, model=model)
         else:
-            # Standard response
-            response = await self.llm.chat(
-                messages=[{"role": "user", "content": user_prompt}],
-                system=system_prompt,
-                model=model,
+            # Standard response using agenerate
+            return await self.llm.agenerate(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
                 max_tokens=max_tokens,
                 temperature=temperature
             )
-            return response.content
 
     def _parse_response(self, content: str, task_type: ClaudeTaskType) -> ClaudeResponse:
         """Parse and structure Claude response"""
@@ -527,7 +630,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
             # Get lead scoring if requested
             if include_scoring:
                 jorge_result = self.jorge_scorer.calculate_with_reasoning(memory_data)
-                ml_result = await self.ml_scorer.calculate_score(memory_data)
+                # predict_conversion is synchronous in predictive_lead_scorer.py
+                ml_result = self.ml_scorer.predict_conversion(memory_data)
 
                 context["scoring"] = {
                     "jorge_score": jorge_result,

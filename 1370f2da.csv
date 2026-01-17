@@ -1,0 +1,20 @@
+Contract_Element,Recommended_Terms,Protects,Criticality
+Initial Term Length,12 months from pilot completion,Both,High
+Pilot Period,"90 days at $497/month, performance metrics tracked",Jorge,High
+Auto-Renewal Terms,Annual auto-renew unless 60 days written notice,Both,Medium
+Termination Notice Period,60 days written notice by either party,Both,High
+Data Ownership,Jorge owns all client and property data,Jorge,Critical
+Data Export Post-Termination,60-day window to export all data in standard formats,Jorge,Critical
+Data Deletion Deadline,Vendor deletes all data 30 days after export window,Jorge,Critical
+Training & Support Included,"Monthly optimization sessions, annual strategic review",Jorge,Medium
+Performance Guarantees,"95% uptime, <5 min lead response, 85%+ accuracy",Jorge,High
+Annual Price Increase Cap,"CPI + 2%, maximum 5% per year",Both,Medium
+Liability Cap,"Greater of $25,000 or 12 months fees",Both,High
+Uptime Commitment,99.5% monthly (5% credit per 0.5% below target),Jorge,High
+Response Time (Critical Issues),"< 2 hours for system down, 8 hours for degraded",Jorge,High
+Support Hours,Business hours 7am-9pm Central + 24/7 escalation,Both,Medium
+Indemnification (Vendor),"IP infringement, data breaches, privacy violations",Jorge,High
+Indemnification (Jorge),"Misuse of system, inaccurate training data",Vendor,High
+Confidentiality Duration,3 years after termination,Both,Medium
+IP Ownership (Platform),"Vendor retains platform, algorithms, infrastructure",Vendor,Medium
+IP Ownership (Customizations),Jorge retains all customizations and configurations,Jorge,Medium

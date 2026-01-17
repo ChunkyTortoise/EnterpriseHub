@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.config import settings
 
 logger = get_logger(__name__)
 
@@ -72,6 +73,56 @@ class AnalyticsService:
         except Exception as e:
             logger.error(f"Failed to track event {event_type} for {location_id}: {e}")
 
+    async def track_llm_usage(
+        self,
+        location_id: str,
+        model: str,
+        provider: str,
+        input_tokens: int,
+        output_tokens: int,
+        cached: bool = False,
+        contact_id: Optional[str] = None,
+    ) -> None:
+        """
+        Track LLM token usage and calculate costs.
+        """
+        cost = 0.0
+        if not cached:
+            if provider == "claude":
+                cost = (input_tokens / 1_000_000 * settings.claude_input_cost_per_1m) + \
+                       (output_tokens / 1_000_000 * settings.claude_output_cost_per_1m)
+            elif provider == "gemini":
+                cost = (input_tokens / 1_000_000 * settings.gemini_input_cost_per_1m) + \
+                       (output_tokens / 1_000_000 * settings.gemini_output_cost_per_1m)
+        
+        # Calculate saved cost if cached
+        saved_cost = 0.0
+        if cached:
+            if provider == "claude":
+                saved_cost = (input_tokens / 1_000_000 * settings.claude_input_cost_per_1m) + \
+                             (output_tokens / 1_000_000 * settings.claude_output_cost_per_1m)
+            elif provider == "gemini":
+                saved_cost = (input_tokens / 1_000_000 * settings.gemini_input_cost_per_1m) + \
+                             (output_tokens / 1_000_000 * settings.gemini_output_cost_per_1m)
+
+        usage_data = {
+            "model": model,
+            "provider": provider,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": input_tokens + output_tokens,
+            "cost": cost,
+            "saved_cost": saved_cost,
+            "cached": cached
+        }
+
+        await self.track_event(
+            event_type="llm_usage",
+            location_id=location_id,
+            contact_id=contact_id,
+            data=usage_data
+        )
+
     async def get_events(
         self,
         location_id: str,
@@ -124,6 +175,15 @@ class AnalyticsService:
             "hot_leads": 0,
             "avg_lead_score": 0,
             "active_contacts": set(),
+            "llm_usage": {
+                "total_tokens": 0,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_cost": 0.0,
+                "saved_cost": 0.0,
+                "cache_hits": 0,
+                "total_requests": 0
+            }
         }
 
         total_score = 0
@@ -149,6 +209,16 @@ class AnalyticsService:
                 scored_count += 1
                 if score >= 70:  # Standard hot lead threshold
                     summary["hot_leads"] += 1
+            elif etype == "llm_usage":
+                usage = summary["llm_usage"]
+                usage["total_requests"] += 1
+                usage["input_tokens"] += data.get("input_tokens", 0)
+                usage["output_tokens"] += data.get("output_tokens", 0)
+                usage["total_tokens"] += data.get("total_tokens", 0)
+                usage["total_cost"] += data.get("cost", 0.0)
+                usage["saved_cost"] += data.get("saved_cost", 0.0)
+                if data.get("cached"):
+                    usage["cache_hits"] += 1
 
         summary["active_contacts_count"] = len(summary["active_contacts"])
         del summary["active_contacts"]  # Don't return the set

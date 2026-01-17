@@ -1,0 +1,77 @@
+{
+  "name": "Perplexity Pro Search",
+  "description": "Real-time web search and research using Perplexity AI",
+  "version": "1.0.0",
+  "author": "EnterpriseHub",
+  "mcp_version": "0.9.0",
+  "capabilities": [
+    "Real-time web search with citations",
+    "Academic and technical research",
+    "Current events and news lookup",
+    "Comparative analysis of approaches/technologies"
+  ],
+  "configuration": {
+    "required_env_vars": [
+      "PERPLEXITY_API_KEY"
+    ],
+    "optional_env_vars": [],
+    "models_available": [
+      "llama-3.1-sonar-large-128k-online",
+      "llama-3.1-sonar-small-128k-online",
+      "llama-3.1-sonar-huge-128k-online"
+    ]
+  },
+  "tools": [
+    {
+      "name": "perplexity_search",
+      "description": "Search the web with real-time access",
+      "use_cases": [
+        "Current technical documentation",
+        "Latest API changes and features",
+        "Real-time market research",
+        "Technology comparisons"
+      ]
+    },
+    {
+      "name": "perplexity_research",
+      "description": "Deep research with structured output",
+      "use_cases": [
+        "Comprehensive topic analysis",
+        "Technology deep-dives",
+        "Best practices research",
+        "Architecture decisions"
+      ]
+    },
+    {
+      "name": "perplexity_news",
+      "description": "Latest news and updates",
+      "use_cases": [
+        "Technology announcements",
+        "Framework updates",
+        "Industry trends",
+        "Breaking changes"
+      ]
+    },
+    {
+      "name": "perplexity_compare",
+      "description": "Compare approaches/technologies",
+      "use_cases": [
+        "Technology selection",
+        "Architecture decisions",
+        "Tool evaluation",
+        "Best practice analysis"
+      ]
+    }
+  ],
+  "integration": {
+    "works_well_with": [
+      "context7 (for official docs)",
+      "serena (for codebase search)",
+      "greptile (for code intelligence)"
+    ],
+    "optimal_profiles": [
+      "research",
+      "backend-services"
+    ]
+  }
+}

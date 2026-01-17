@@ -1,0 +1,355 @@
+{
+  "meta": {
+    "instanceId": "lead-recovery-engine"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intelligence",
+        "responseMode": "responseNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "intelligence-webhook",
+      "name": "Lead Intelligence Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "lead-intelligence-webhook"
+    },
+    {
+      "parameters": {
+        "url": "https://api.apollo.io/v1/people/match",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apolloApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cache-Control",
+              "value": "no-cache"
+            },
+            {
+              "name": "X-Api-Key",
+              "value": "={{ $credentials.apolloApi.apiKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "first_name",
+              "value": "={{ $json.firstName }}"
+            },
+            {
+              "name": "last_name",
+              "value": "={{ $json.lastName }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "organization_name",
+              "value": "={{ $json.company }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "enabled": true,
+            "maxAttempts": 3
+          }
+        }
+      },
+      "id": "apollo-enrichment",
+      "name": "Apollo Data Enrichment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Advanced lead scoring algorithm\n// Inputs: Original lead data + Apollo enrichment data\nconst originalLead = $('Lead Intelligence Trigger').item.json;\nconst apolloData = $json.person || {};\nconst organizationData = apolloData.organization || {};\n\nlet score = 0;\nlet scoreFactors = [];\nlet temperature = 'cold';\n\n// 1. Contact Completeness Score (20 points max)\nlet completenessScore = 0;\nif (originalLead.email) completenessScore += 5;\nif (originalLead.phone) completenessScore += 5;\nif (originalLead.firstName && originalLead.lastName) completenessScore += 3;\nif (originalLead.company) completenessScore += 2;\nif (apolloData.linkedin_url) completenessScore += 3;\nif (apolloData.title) completenessScore += 2;\n\nscore += completenessScore;\nscoreFactors.push(`Contact completeness: ${completenessScore}/20`);\n\n// 2. Professional Profile Score (25 points max)\nlet professionalScore = 0;\nconst title = apolloData.title || '';\nconst seniority = apolloData.seniority || '';\n\n// Title-based scoring\nif (title.toLowerCase().includes('ceo') || title.toLowerCase().includes('founder') || title.toLowerCase().includes('owner')) {\n  professionalScore += 15;\n  scoreFactors.push('Decision maker role (+15)');\n} else if (title.toLowerCase().includes('vp') || title.toLowerCase().includes('director') || title.toLowerCase().includes('manager')) {\n  professionalScore += 10;\n  scoreFactors.push('Management role (+10)');\n} else if (title.toLowerCase().includes('agent') || title.toLowerCase().includes('realtor') || title.toLowerCase().includes('broker')) {\n  professionalScore += 8;\n  scoreFactors.push('Real estate professional (+8)');\n} else if (title) {\n  professionalScore += 3;\n  scoreFactors.push('Professional title (+3)');\n}\n\n// Seniority scoring\nif (seniority === 'executive') {\n  professionalScore += 10;\n} else if (seniority === 'senior' || seniority === 'director') {\n  professionalScore += 7;\n} else if (seniority === 'manager') {\n  professionalScore += 5;\n}\n\nscore += professionalScore;\nscoreFactors.push(`Professional profile: ${professionalScore}/25`);\n\n// 3. Company Profile Score (25 points max)\nlet companyScore = 0;\nconst employeeCount = organizationData.estimated_num_employees || 0;\nconst industry = organizationData.industry || '';\n\n// Employee count scoring (indicates budget/need)\nif (employeeCount >= 100) {\n  companyScore += 15;\n  scoreFactors.push('Large company (100+ employees) (+15)');\n} else if (employeeCount >= 50) {\n  companyScore += 12;\n  scoreFactors.push('Medium company (50-100 employees) (+12)');\n} else if (employeeCount >= 10) {\n  companyScore += 8;\n  scoreFactors.push('Small company (10-50 employees) (+8)');\n} else if (employeeCount >= 5) {\n  companyScore += 5;\n  scoreFactors.push('Startup company (5-10 employees) (+5)');\n}\n\n// Industry relevance\nconst targetIndustries = ['real estate', 'insurance', 'financial', 'sales', 'marketing'];\nif (targetIndustries.some(ind => industry.toLowerCase().includes(ind))) {\n  companyScore += 10;\n  scoreFactors.push('Target industry match (+10)');\n}\n\nscore += companyScore;\nscoreFactors.push(`Company profile: ${companyScore}/25`);\n\n// 4. Intent Signals Score (30 points max)\nlet intentScore = 0;\nconst source = originalLead.source || '';\nconst timeOfDay = new Date().getHours();\n\n// Source quality scoring\nif (source === 'organic_search') {\n  intentScore += 15;\n  scoreFactors.push('Organic search traffic (+15)');\n} else if (source === 'referral') {\n  intentScore += 20;\n  scoreFactors.push('Referral source (+20)');\n} else if (source === 'direct') {\n  intentScore += 10;\n  scoreFactors.push('Direct website visit (+10)');\n} else if (source === 'social') {\n  intentScore += 8;\n  scoreFactors.push('Social media source (+8)');\n} else if (source.includes('paid')) {\n  intentScore += 5;\n  scoreFactors.push('Paid advertising source (+5)');\n}\n\n// Timing signals (business hours indicate higher intent)\nif (timeOfDay >= 9 && timeOfDay <= 17) {\n  intentScore += 5;\n  scoreFactors.push('Business hours submission (+5)');\n}\n\n// Lead form completeness (more fields = higher intent)\nconst filledFields = Object.values(originalLead).filter(val => val && val.toString().trim() !== '').length;\nif (filledFields >= 6) {\n  intentScore += 10;\n  scoreFactors.push('Complete form submission (+10)');\n} else if (filledFields >= 4) {\n  intentScore += 5;\n  scoreFactors.push('Partial form submission (+5)');\n}\n\nscore += intentScore;\nscoreFactors.push(`Intent signals: ${intentScore}/30`);\n\n// Determine temperature based on score\nif (score >= 80) {\n  temperature = 'hot';\n} else if (score >= 50) {\n  temperature = 'warm';\n} else {\n  temperature = 'cold';\n}\n\n// Create enriched lead profile\nconst enrichedLead = {\n  ...originalLead,\n  \n  // Enrichment data\n  apolloId: apolloData.id,\n  linkedinUrl: apolloData.linkedin_url,\n  jobTitle: apolloData.title,\n  seniority: apolloData.seniority,\n  employmentHistory: apolloData.employment_history?.slice(0, 3) || [],\n  \n  // Company data\n  companyLinkedin: organizationData.linkedin_url,\n  companyIndustry: organizationData.industry,\n  companySize: organizationData.estimated_num_employees,\n  companyRevenue: organizationData.estimated_annual_revenue,\n  companyWebsite: organizationData.website_url,\n  \n  // Scoring results\n  leadScore: Math.min(score, 100), // Cap at 100\n  temperature: temperature,\n  scoreFactors: scoreFactors,\n  scoringReasoning: `Lead scored ${score}/100 based on: ${scoreFactors.join(', ')}`,\n  \n  // Metadata\n  enrichedAt: new Date().toISOString(),\n  enrichmentSource: 'apollo',\n  dataQuality: apolloData.id ? 'enriched' : 'basic'\n};\n\nreturn [{ json: enrichedLead }];"
+      },
+      "id": "lead-scoring",
+      "name": "Advanced Lead Scoring",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE leads SET lead_score = $1, temperature = $2, apollo_id = $3, job_title = $4, linkedin_url = $5, company_industry = $6, company_size = $7, scoring_reasoning = $8, enriched_at = $9, data_quality = $10 WHERE id = $11",
+        "additionalFields": {
+          "queryParameters": "={{ JSON.stringify([$json.leadScore, $json.temperature, $json.apolloId, $json.jobTitle, $json.linkedinUrl, $json.companyIndustry, $json.companySize, $json.scoringReasoning, $json.enrichedAt, $json.dataQuality, $json.id]) }}"
+        }
+      },
+      "id": "update-lead-score",
+      "name": "Update Lead Score",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO lead_intelligence (id, lead_id, apollo_data, behavior_score, temperature, reasoning, enriched_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        "additionalFields": {
+          "queryParameters": "={{ JSON.stringify([require('crypto').randomUUID(), $json.id, JSON.stringify({apollo: $('Apollo Data Enrichment').item.json, scoring: $json.scoreFactors}), $json.leadScore, $json.temperature, $json.scoringReasoning, $json.enrichedAt]) }}"
+        }
+      },
+      "id": "save-intelligence",
+      "name": "Save Intelligence Data",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.WEBHOOK_TRIGGER_URL }}/smart-routing",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "trigger-routing",
+      "name": "Trigger Smart Routing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [],
+          "dateTime": [],
+          "number": [
+            {
+              "value1": "={{ $json.leadScore }}",
+              "operation": "largerEqual",
+              "value2": 80
+            }
+          ],
+          "string": []
+        }
+      },
+      "id": "is-hot-lead",
+      "name": "Is Hot Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\\n  \"text\": \"🔥 HOT LEAD ALERT!\",\\n  \"blocks\": [\\n    {\\n      \"type\": \"section\",\\n      \"text\": {\\n        \"type\": \"mrkdwn\",\\n        \"text\": \"*🔥 HOT LEAD DETECTED* (Score: {{ $json.leadScore }}/100)\\n\\n*Name:* {{ $json.firstName }} {{ $json.lastName }}\\n*Email:* {{ $json.email }}\\n*Title:* {{ $json.jobTitle || 'Unknown' }}\\n*Company:* {{ $json.company || 'Unknown' }} ({{ $json.companySize || 0 }} employees)\\n*Industry:* {{ $json.companyIndustry || 'Unknown' }}\\n\\n*Why it's hot:*\\n{{ $json.scoreFactors?.slice(0,3).join('\\\\n') || 'High engagement signals' }}\"\\n      }\\n    },\\n    {\\n      \"type\": \"actions\",\\n      \"elements\": [\\n        {\\n          \"type\": \"button\",\\n          \"text\": {\\n            \"type\": \"plain_text\",\\n            \"text\": \"🏃‍♂️ Call Now\"\\n          },\\n          \"style\": \"danger\",\\n          \"url\": \"tel:{{ $json.phone }}\"\\n        },\\n        {\\n          \"type\": \"button\",\\n          \"text\": {\\n            \"type\": \"plain_text\",\\n            \"text\": \"📋 View LinkedIn\"\\n          },\\n          \"url\": \"{{ $json.linkedinUrl || 'https://linkedin.com/search/results/people/?keywords=' + $json.firstName + ' ' + $json.lastName }}\"\\n        }\\n      ]\\n    }\\n  ]\\n}",
+        "options": {}
+      },
+      "id": "hot-lead-alert",
+      "name": "Hot Lead Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\\n  \"success\": true,\\n  \"leadId\": \"{{ $json.id }}\",\\n  \"leadScore\": {{ $json.leadScore }},\\n  \"temperature\": \"{{ $json.temperature }}\",\\n  \"dataQuality\": \"{{ $json.dataQuality }}\",\\n  \"enrichmentSource\": \"{{ $json.enrichmentSource }}\",\\n  \"scoring\": {\\n    \"reasoning\": \"{{ $json.scoringReasoning }}\",\\n    \"factors\": {{ JSON.stringify($json.scoreFactors || []) }}\\n  },\\n  \"nextActions\": [\\n    \"Smart routing triggered\",\\n    \"Nurture sequence enrollment\"\\n  ]\\n}"
+      },
+      "id": "intelligence-response",
+      "name": "Intelligence Complete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Graceful fallback when Apollo enrichment fails\nconst originalLead = $('Lead Intelligence Trigger').item.json;\n\n// Basic scoring without enrichment data\nlet score = 20; // Base score for any lead\nlet scoreFactors = ['Base lead score (+20)'];\n\n// Score based on available data\nif (originalLead.phone) {\n  score += 15;\n  scoreFactors.push('Phone provided (+15)');\n}\n\nif (originalLead.company) {\n  score += 10;\n  scoreFactors.push('Company provided (+10)');\n}\n\n// Time-based scoring\nconst timeOfDay = new Date().getHours();\nif (timeOfDay >= 9 && timeOfDay <= 17) {\n  score += 5;\n  scoreFactors.push('Business hours (+5)');\n}\n\n// Source scoring\nconst source = originalLead.source || '';\nif (source === 'referral') {\n  score += 15;\n  scoreFactors.push('Referral source (+15)');\n} else if (source === 'organic_search') {\n  score += 10;\n  scoreFactors.push('Organic search (+10)');\n}\n\nconst temperature = score >= 60 ? 'warm' : 'cold';\n\nconst fallbackLead = {\n  ...originalLead,\n  leadScore: score,\n  temperature: temperature,\n  scoreFactors: scoreFactors,\n  scoringReasoning: `Fallback scoring: ${score}/100. ${scoreFactors.join(', ')}`,\n  enrichedAt: new Date().toISOString(),\n  enrichmentSource: 'fallback',\n  dataQuality: 'basic'\n};\n\nreturn [{ json: fallbackLead }];"
+      },
+      "id": "fallback-scoring",
+      "name": "Fallback Scoring (No Enrichment)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Lead Intelligence Trigger": {
+      "main": [
+        [
+          {
+            "node": "Apollo Data Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apollo Data Enrichment": {
+      "main": [
+        [
+          {
+            "node": "Advanced Lead Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Advanced Lead Scoring": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Score",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Hot Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Score": {
+      "main": [
+        [
+          {
+            "node": "Save Intelligence Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Intelligence Data": {
+      "main": [
+        [
+          {
+            "node": "Trigger Smart Routing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Smart Routing": {
+      "main": [
+        [
+          {
+            "node": "Intelligence Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Hot Lead?": {
+      "main": [
+        [
+          {
+            "node": "Hot Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Fallback Scoring (No Enrichment)": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Score",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Hot Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "errorWorkflows": [
+    {
+      "conditions": [
+        {
+          "type": "condition",
+          "value": "apollo-enrichment"
+        }
+      ],
+      "workflow": "fallback-scoring"
+    }
+  ],
+  "createdAt": "2026-01-16T00:00:00.000Z",
+  "id": "lead-intelligence-engine",
+  "name": "Lead Intelligence Engine",
+  "active": true,
+  "settings": {
+    "timezone": "America/Los_Angeles",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    {
+      "id": "service-6",
+      "name": "Service 6"
+    },
+    {
+      "id": "lead-automation",
+      "name": "Lead Automation"
+    },
+    {
+      "id": "intelligence",
+      "name": "Intelligence"
+    },
+    {
+      "id": "scoring",
+      "name": "Scoring"
+    }
+  ],
+  "versionId": "1"
+}

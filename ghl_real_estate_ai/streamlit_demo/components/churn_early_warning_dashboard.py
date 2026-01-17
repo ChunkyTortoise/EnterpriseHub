@@ -37,75 +37,92 @@ if __name__ == "__main__":
         initial_sidebar_state="expanded"
     )
 
-# Custom CSS for enhanced styling - Glassmorphism Edition
+# Custom CSS for enhanced styling - Obsidian Command Edition
 st.markdown("""
 <style>
-    /* Global Aesthetic */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap');
+
+    /* Global Aesthetic Overrides */
     .stApp {
-        background: #F8FAFC;
+        background: #05070A;
     }
     
-    /* Glassmorphism Cards */
+    /* Obsidian Glass Cards */
     .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        border-radius: 24px;
+        background: rgba(22, 27, 34, 0.7) !important;
+        backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 16px !important;
         padding: 1.5rem;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8) !important;
         margin-bottom: 1.5rem;
+        color: #E6EDF3;
     }
     
     .metric-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
+        background: rgba(22, 27, 34, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
         padding: 1.25rem;
-        transition: transform 0.2s;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
     .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(99, 102, 241, 0.2);
+        border-color: rgba(99, 102, 241, 0.4);
     }
 
-    /* Risk Status Badges */
+    /* Risk Status Badges - Obsidian Edition */
     .risk-critical-badge {
-        background: #fef2f2;
-        color: #dc2626;
-        padding: 4px 12px;
+        background: rgba(220, 38, 38, 0.15);
+        color: #ef4444;
+        padding: 4px 14px;
         border-radius: 999px;
         font-weight: 700;
-        font-size: 0.75rem;
-        border: 1px solid #fecaca;
+        font-size: 0.7rem;
+        border: 1px solid rgba(220, 38, 38, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
     
     .risk-high-badge {
-        background: #fff7ed;
-        color: #ea580c;
-        padding: 4px 12px;
+        background: rgba(234, 88, 12, 0.15);
+        color: #f97316;
+        padding: 4px 14px;
         border-radius: 999px;
         font-weight: 700;
-        font-size: 0.75rem;
-        border: 1px solid #fed7aa;
+        font-size: 0.7rem;
+        border: 1px solid rgba(234, 88, 12, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
-    /* Progress Bars */
-    .risk-progress {
-        height: 6px;
-        width: 100%;
-        background: #f1f5f9;
-        border-radius: 3px;
-        overflow: hidden;
-    }
-    .risk-bar {
-        height: 100%;
-        border-radius: 3px;
+    /* Typography */
+    h1, h2, h3, .space-font {
+        font-family: 'Space Grotesk', sans-serif !important;
+        letter-spacing: -0.03em !important;
+        font-weight: 700 !important;
     }
     
-    /* Typography */
-    h1, h2, h3 {
+    body, p, div {
         font-family: 'Inter', sans-serif;
-        letter-spacing: -0.025em;
+    }
+
+    /* Alert Banner Overlay */
+    .alert-banner {
+        background: linear-gradient(90deg, #ef4444 0%, #991b1b 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 12px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 2rem;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        font-family: 'Space Grotesk', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -126,16 +143,16 @@ class ChurnEarlyWarningDashboard:
     def render_dashboard(self):
         """Render the complete early warning dashboard"""
         
-        # 1. TACTICAL TOP BAR
+        # 1. TACTICAL TOP BAR - Obsidian Edition
         st.markdown("""
-            <div style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); padding: 1rem 2rem; border-radius: 9999px; border: 1px solid rgba(0, 0, 0, 0.05); margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); position: sticky; top: 1rem; z-index: 1000;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="background: #ef4444; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 0.8rem;">⚠️</div>
-                    <span style="font-weight: 700; color: #0f172a; letter-spacing: -0.5px; font-size: 1.1rem;">RETENTION COMMAND</span>
+            <div style="background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(20px); padding: 1.25rem 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); position: sticky; top: 1rem; z-index: 1000;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="background: #6366F1; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 1.2rem; box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);">⚠️</div>
+                    <span style="font-weight: 700; color: #FFFFFF; letter-spacing: 0.1em; font-size: 1.25rem; font-family: 'Space Grotesk', sans-serif;">RETENTION COMMAND</span>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <span style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase;">System Status:</span>
-                    <span style='background: #ecfdf5; color: #059669; padding: 4px 12px; border-radius: 999px; font-size: 0.65rem; font-weight: 700; border: 1px solid #a7f3d0;'>ACTIVE MONITORING</span>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #8B949E; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">Status:</span>
+                    <span style='background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 6px 16px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3); letter-spacing: 0.05em;'>LIVE TELEMETRY</span>
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -376,17 +393,22 @@ class ChurnEarlyWarningDashboard:
         completed_interventions = len([i for i in interventions if i['status'] == 'completed'])
         intervention_success_rate = completed_interventions / len(interventions) * 100 if interventions else 0
 
-        # Custom Metric Card Helper
+        # Custom Metric Card Helper - Obsidian Edition
         def metric_card(label, value, delta, delta_color="text-green-500", icon="📊"):
-            delta_style = "color: #10b981;" if "green" in delta_color else "color: #ef4444;"
+            is_positive = "green" in delta_color
+            delta_color_val = "#10b981" if is_positive else "#ef4444"
+            glow_color = "rgba(16, 185, 129, 0.2)" if is_positive else "rgba(239, 68, 68, 0.2)"
+            
             return f"""
             <div class="metric-card">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 5px;">
-                    <span style="color: #64748b; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">{label}</span>
-                    <span style="font-size: 1.2rem;">{icon}</span>
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                    <span style="color: #8B949E; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">{label}</span>
+                    <div style="background: {glow_color}; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <span style="font-size: 1.25rem;">{icon}</span>
+                    </div>
                 </div>
-                <div style="font-size: 1.75rem; font-weight: 800; color: #0f172a; line-height: 1.1;">{value}</div>
-                <div style="font-size: 0.8rem; margin-top: 5px; font-weight: 600; {delta_style}">
+                <div style="font-size: 2.25rem; font-weight: 700; color: #FFFFFF; line-height: 1; font-family: 'Space Grotesk', sans-serif; text-shadow: 0 0 10px rgba(255,255,255,0.1);">{value}</div>
+                <div style="font-size: 0.8rem; margin-top: 10px; font-weight: 700; color: {delta_color_val}; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 4px;">
                     {delta}
                 </div>
             </div>
@@ -395,19 +417,20 @@ class ChurnEarlyWarningDashboard:
         c1, c2, c3, c4, c5 = st.columns(5)
         
         with c1:
-            st.markdown(metric_card("Total Monitored", f"{total_leads:,}", "↑ 12 New Leads", "green", "👥"), unsafe_allow_html=True)
+            st.markdown(metric_card("Telemetry Feed", f"{total_leads:,}", "↑ 12 Signals", "green", "📡"), unsafe_allow_html=True)
         with c2:
-            st.markdown(metric_card("Critical Risk", f"{critical_risk}", "⚠️ Immediate Action", "red", "🔥"), unsafe_allow_html=True)
+            st.markdown(metric_card("Critical Nodes", f"{critical_risk}", "🚨 System Alert", "red", "☢️"), unsafe_allow_html=True)
         with c3:
-            st.markdown(metric_card("High Risk", f"{high_risk}", "↓ 2 vs Yesterday", "green", "📉"), unsafe_allow_html=True)
+            st.markdown(metric_card("High Risk", f"{high_risk}", "↓ 2 vs Baseline", "green", "📉"), unsafe_allow_html=True)
         with c4:
-            st.markdown(metric_card("Avg Risk Score", f"{avg_risk_score:.1f}%", "stable", "green", "📊"), unsafe_allow_html=True)
+            st.markdown(metric_card("System Variance", f"{avg_risk_score:.1f}%", "STABLE", "green", "📊"), unsafe_allow_html=True)
         with c5:
-            st.markdown(metric_card("Intervention Rate", f"{intervention_success_rate:.1f}%", "↑ 4.2%", "green", "🛡️"), unsafe_allow_html=True)
+            st.markdown(metric_card("Deflection Rate", f"{intervention_success_rate:.1f}%", "↑ 4.2%", "green", "🛡️"), unsafe_allow_html=True)
 
     def _render_risk_distribution_chart(self, data: Dict[str, Any]):
         """Render risk distribution visualization"""
-        st.markdown("##### 📊 Lead Distribution")
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+        st.markdown("##### 📊 Network Distribution")
 
         predictions = data['predictions']
         risk_df = pd.DataFrame(predictions)
@@ -422,27 +445,21 @@ class ChurnEarlyWarningDashboard:
                 'critical': '#ef4444', 
                 'high': '#f97316', 
                 'medium': '#84cc16', 
-                'low': '#3b82f6'
+                'low': '#6366F1'
             },
             hole=0.6
         )
         
         fig.update_traces(textposition='outside', textinfo='label')
-        fig.update_layout(
-            showlegend=False, 
-            height=250, 
-            margin=dict(l=0, r=0, t=0, b=0),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
-        )
         # Add center text
-        fig.add_annotation(text=f"{len(predictions)}", showarrow=False, font={'size': 24, 'color': '#1e293b'}, y=0.55)
-        fig.add_annotation(text="Leads", showarrow=False, font={'size': 12, 'color': '#64748b'}, y=0.45)
+        fig.add_annotation(text=f"{len(predictions)}", showarrow=False, font={'size': 28, 'color': '#FFFFFF', 'family': 'Space Grotesk'}, y=0.55)
+        fig.add_annotation(text="Leads", showarrow=False, font={'size': 12, 'color': '#8B949E', 'family': 'Inter'}, y=0.42)
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
 
     def _render_risk_trend_analysis(self, data: Dict[str, Any]):
         """Render risk trend analysis"""
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
         st.markdown("##### 📈 Risk Velocity (30 Days)")
 
         # Generate sample trend data
@@ -478,26 +495,13 @@ class ChurnEarlyWarningDashboard:
             name='High Risk',
             line=dict(color='#f97316', width=3, shape='spline')
         ))
-
-        fig.update_layout(
-            xaxis_title=None,
-            yaxis_title=None,
-            height=250,
-            margin=dict(l=0, r=0, t=20, b=0),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            hovermode='x unified'
-        )
-        fig.update_xaxes(showgrid=False)
-        fig.update_yaxes(showgrid=True, gridcolor='rgba(0,0,0,0.05)')
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
 
     def _render_intervention_effectiveness(self, data: Dict[str, Any]):
         """Render intervention effectiveness metrics"""
-        st.markdown("##### 🎯 Intervention ROI")
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+        st.markdown("##### 🎯 Deflection ROI")
 
         interventions = data['interventions']
         intervention_df = pd.DataFrame(interventions)
@@ -519,22 +523,10 @@ class ChurnEarlyWarningDashboard:
             y='success_rate',
             # title="Success Rate by Intervention Type",
             color='success_rate',
-            color_continuous_scale='RdYlGn'
+            color_continuous_scale='Purples'
         )
 
-        fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="% Success",
-            height=200,
-            margin=dict(l=0, r=0, t=10, b=0),
-            xaxis_tickangle=45,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            showlegend=False
-        )
-        fig.update_yaxes(showgrid=True, gridcolor='rgba(0,0,0,0.05)')
-
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
 
         # Intervention timeline
         intervention_df['scheduled_time'] = pd.to_datetime(intervention_df['scheduled_time'])
@@ -637,15 +629,15 @@ class ChurnEarlyWarningDashboard:
         for i, lead in enumerate(high_risk_leads[:10]):
             with st.container():
                 st.markdown(f"""
-                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 4px 6px -2px rgba(0,0,0,0.05);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                         <div style="font-weight: 700; color: #1e293b; font-size: 1.1rem;">{lead['lead_name']}</div>
+                <div class="glass-card" style="padding: 1.25rem; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                         <div style="font-weight: 700; color: #FFFFFF; font-size: 1.25rem; font-family: 'Space Grotesk', sans-serif;">{lead['lead_name']}</div>
                          <div class="risk-critical-badge">{lead['risk_score_14d']:.1f}% Risk</div>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 1rem; font-size: 0.85rem; color: #64748b;">
-                        <div>🕒 Last Contact: <span style="color: #334155; font-weight: 600;">{lead['last_interaction_days']:.0f}d ago</span></div>
-                        <div>🤖 Conf: <span style="color: #334155; font-weight: 600;">{lead['confidence']:.0%}</span></div>
-                        <div>🔮 Churn: <span style="color: #ef4444; font-weight: 600;">{lead['predicted_churn_date'].strftime('%b %d')}</span></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 1rem; font-size: 0.85rem; color: #8B949E; font-family: 'Inter', sans-serif;">
+                        <div>📡 Telemetry: <span style="color: #6366F1; font-weight: 600;">{lead['last_interaction_days']:.0f}d Active</span></div>
+                        <div>🧠 Confidence: <span style="color: #FFFFFF; font-weight: 600;">{lead['confidence']:.0%}</span></div>
+                        <div>🔮 Prediction: <span style="color: #ef4444; font-weight: 600;">{lead['predicted_churn_date'].strftime('%b %d')}</span></div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -736,59 +728,55 @@ class ChurnEarlyWarningDashboard:
             st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_retention_wizard(self):
-        """Render the Retention Strategy Wizard"""
+        """Render the Retention Strategy Wizard - Obsidian Edition"""
         st.markdown("""
-        <div style="background: white; border-radius: 16px; padding: 2rem; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); margin-bottom: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="font-size: 2rem;">🧙</div>
+        <div class="glass-card" style="padding: 2.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="font-size: 2.5rem; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.4));">🧙</div>
                     <div>
-                        <h2 style="margin: 0; font-size: 1.5rem; color: #0f172a;">Retention Strategy Wizard</h2>
-                        <div style="color: #64748b; font-size: 0.9rem;">AI-powered campaign generator for at-risk leads</div>
+                        <h2 style="margin: 0; font-size: 1.75rem; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif;">RETENTION STRATEGY WIZARD</h2>
+                        <div style="color: #6366F1; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;">AI-Powered Deflection Engine</div>
                     </div>
                 </div>
-                <button style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94a3b8;" onclick="window.parent.postMessage({type: 'close_wizard'}, '*')">×</button>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
-                <div style="border-right: 1px solid #e2e8f0; padding-right: 2rem;">
-                    <h4 style="color: #1e293b; margin-bottom: 1rem;">1. Target Audience</h4>
-                    <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <div style="font-weight: 600; color: #334155; margin-bottom: 0.5rem;">Risk Segment</div>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid #fecaca;">Critical (3 leads)</span>
-                            <span style="background: #fff7ed; color: #9a3412; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid #fed7aa;">High (12 leads)</span>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2.5rem;">
+                <div style="border-right: 1px solid rgba(255,255,255,0.05); padding-right: 2.5rem;">
+                    <h4 style="color: #FFFFFF; margin-bottom: 1.5rem; font-family: 'Space Grotesk', sans-serif;">1. TARGET PARAMETERS</h4>
+                    <div style="background: rgba(99, 102, 241, 0.05); padding: 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(99, 102, 241, 0.1);">
+                        <div style="font-weight: 700; color: #E6EDF3; margin-bottom: 0.75rem; font-size: 0.8rem; text-transform: uppercase;">Risk Segment</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <span class="risk-critical-badge">Critical (3)</span>
+                            <span class="risk-high-badge">High (12)</span>
                         </div>
                     </div>
                     
-                    <h4 style="color: #1e293b; margin-bottom: 1rem; margin-top: 1.5rem;">2. Strategy Type</h4>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <div style="padding: 10px; border: 2px solid #2563eb; background: #eff6ff; border-radius: 8px; cursor: pointer;">
-                            <div style="font-weight: 600; color: #1e40af;">❤️ Empathy & Check-in</div>
-                            <div style="font-size: 0.8rem; color: #3b82f6;">Soft approach focusing on needs</div>
+                    <h4 style="color: #FFFFFF; margin-bottom: 1.5rem; margin-top: 2rem; font-family: 'Space Grotesk', sans-serif;">2. DEPLOYMENT TYPE</h4>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 12px; border: 2px solid #6366F1; background: rgba(99, 102, 241, 0.1); border-radius: 10px; cursor: pointer; box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);">
+                            <div style="font-weight: 700; color: #FFFFFF;">❤️ Empathy & Check-in</div>
+                            <div style="font-size: 0.8rem; color: #8B949E;">Soft approach focusing on needs</div>
                         </div>
-                        <div style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; opacity: 0.7;">
-                            <div style="font-weight: 600; color: #475569;">🎁 Value & Offer</div>
-                            <div style="font-size: 0.8rem; color: #64748b;">Incentive-based retention</div>
-                        </div>
-                        <div style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; opacity: 0.7;">
-                            <div style="font-weight: 600; color: #475569;">🏠 Listing Update</div>
-                            <div style="font-size: 0.8rem; color: #64748b;">New properties matching criteria</div>
+                        <div style="padding: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 10px; cursor: pointer; opacity: 0.6;">
+                            <div style="font-weight: 700; color: #E6EDF3;">🎁 Value & Offer</div>
+                            <div style="font-size: 0.8rem; color: #8B949E;">Incentive-based retention</div>
                         </div>
                     </div>
                 </div>
                 
                 <div>
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 1.5rem; height: 100%;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                            <div style="font-weight: 700; color: #166534; display: flex; align-items: center; gap: 8px;">
-                                <span>🤖 CLAUDE 3.5 SONNET</span>
-                                <span style="background: #166534; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">LIVE</span>
+                    <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 16px; padding: 2rem; height: 100%; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #10b981; box-shadow: 0 0 10px #10b981;"></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                            <div style="font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 10px; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.05em;">
+                                <span class="status-pulse"></span>
+                                <span>CLAUDE 3.5 INTELLIGENCE</span>
                             </div>
-                            <div style="color: #15803d; font-size: 0.8rem;">Generating campaign content...</div>
+                            <div style="color: #8B949E; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Synthesizing...</div>
                         </div>
                         
-                        <div style="font-family: monospace; color: #14532d; line-height: 1.6; white-space: pre-wrap;">
+                        <div style="font-family: monospace; color: #E6EDF3; line-height: 1.7; white-space: pre-wrap; font-size: 0.95rem; opacity: 0.9;">
 Subject: Checking in on your home search, [Client Name]
 
 Hi [Client Name],
@@ -803,9 +791,9 @@ Best,
 [Agent Name]
                         </div>
                         
-                        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
-                            <button style="background: white; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600;">Regenerate</button>
-                            <button style="background: #166534; border: none; color: white; padding: 0.5rem 1.5rem; border-radius: 6px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(22, 101, 52, 0.2);">🚀 Launch Campaign (15 Leads)</button>
+                        <div style="margin-top: 2.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #E6EDF3; padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 600; font-family: 'Space Grotesk', sans-serif; cursor: pointer; transition: all 0.2s;">REGENERATE</button>
+                            <button style="background: #10b981; border: none; color: white; padding: 0.6rem 1.75rem; border-radius: 8px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); cursor: pointer;">🚀 LAUNCH CAMPAIGN</button>
                         </div>
                     </div>
                 </div>

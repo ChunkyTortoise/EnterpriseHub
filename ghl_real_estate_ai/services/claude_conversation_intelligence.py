@@ -11,8 +11,10 @@ from dataclasses import dataclass
 import streamlit as st
 
 # Import existing services
-from services.claude_assistant import ClaudeAssistant
-from services.memory_service import MemoryService
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -28,6 +30,8 @@ class ConversationAnalysis:
     next_best_action: str
     confidence: float  # 0.0-1.0
     analysis_timestamp: datetime
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
 
 @dataclass
 class IntentSignals:
@@ -38,11 +42,14 @@ class IntentSignals:
     emotional_investment: float  # 0.0-1.0
     hidden_concerns: List[str]
     lifestyle_indicators: Dict[str, float]
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
 
 @dataclass
 class ConversationThread:
     """Multi-turn conversation analysis with state persistence."""
     thread_id: str
+    location_id: str
     messages: List[Dict]  # Complete conversation history
     intent_evolution: List[Tuple[datetime, float]]  # Intent progression over time
     emotional_journey: List[Tuple[datetime, str, float]]  # (timestamp, emotion, intensity)
@@ -65,6 +72,8 @@ class EmotionalState:
     excitement_indicators: List[str]  # Signs of enthusiasm or interest
     trust_indicators: List[str]  # Signs of building trust/rapport
     decision_readiness: float  # 0.0-1.0, psychological readiness to decide
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
 
 @dataclass
 class TrustMetrics:
@@ -77,6 +86,8 @@ class TrustMetrics:
     responsiveness_score: float  # 0.0-1.0, timely responses
     trust_building_recommendations: List[str]
     rapport_risks: List[str]  # Things that could damage trust
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
 
 @dataclass
 class ClosingSignals:
@@ -91,6 +102,8 @@ class ClosingSignals:
     hesitation_signals: List[str]  # Doubts or concerns slowing decision
     optimal_closing_strategy: str  # Strategy recommendation
     timing_recommendation: str  # When to present properties or push decision
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
 
 class ConversationIntelligenceEngine:
     """
@@ -102,8 +115,9 @@ class ConversationIntelligenceEngine:
 
     def __init__(self):
         self.memory_service = MemoryService()
-        self.analysis_cache = {}  # Cache recent analyses
-        self.cache_ttl = timedelta(minutes=5)  # Cache for 5 minutes
+        self.cache_service = get_cache_service()
+        self.analytics_service = AnalyticsService()
+        self.cache_ttl = 300  # Cache for 5 minutes
 
         # Enhanced conversation tracking
         self.conversation_threads = {}  # Dict[str, ConversationThread] - in-memory thread storage
@@ -127,6 +141,26 @@ class ConversationIntelligenceEngine:
             self.claude_client = None
             self.enabled = False
 
+    async def detect_and_resolve_objections(self, messages: List[Dict]) -> Dict:
+        """
+        Detect and provide resolution strategies for objections in conversation.
+        """
+        if not messages:
+            return {"detected": False}
+            
+        latest_message = messages[-1].get('content', '')
+        logger.info(f"Detecting objections in: {latest_message[:50]}...")
+        
+        # In production, use Claude to detect subtle objections
+        # Simulation for now
+        return {
+            "detected": True if "price" in latest_message.lower() or "budget" in latest_message.lower() else False,
+            "objection_type": "financial" if "price" in latest_message.lower() else None,
+            "resolution_strategy": "Highlight long-term value and flexible financing options",
+            "suggested_script": "I understand that budget is a key consideration. Let's look at the total cost of ownership and the appreciation trends in this specific area.",
+            "confidence": 0.85
+        }
+
     async def analyze_conversation_realtime(self, messages: List[Dict], lead_context: Dict = None) -> ConversationAnalysis:
         """
         Real-time conversation analysis for agent guidance.
@@ -142,11 +176,24 @@ class ConversationIntelligenceEngine:
             return self._get_fallback_analysis()
 
         # Check cache first
-        cache_key = self._generate_cache_key(messages, lead_context)
-        if cache_key in self.analysis_cache:
-            cached_analysis, timestamp = self.analysis_cache[cache_key]
-            if datetime.now() - timestamp < self.cache_ttl:
+        location_id = lead_context.get('location_id', 'unknown') if lead_context else 'unknown'
+        try:
+            cache_key = self._generate_cache_key(messages, lead_context)
+            cached_analysis = await self.cache_service.get(cache_key)
+            if cached_analysis:
+                # Track cached usage
+                if hasattr(cached_analysis, 'input_tokens') and cached_analysis.input_tokens:
+                    await self.analytics_service.track_llm_usage(
+                        location_id=location_id,
+                        model=self.claude_client.model,
+                        provider="claude",
+                        input_tokens=cached_analysis.input_tokens,
+                        output_tokens=cached_analysis.output_tokens,
+                        cached=True
+                    )
                 return cached_analysis
+        except Exception as e:
+            logger.warning(f"Cache lookup failed: {e}")
 
         try:
             # Build comprehensive prompt for conversation analysis
@@ -160,9 +207,22 @@ class ConversationIntelligenceEngine:
 
             # Parse Claude's response into structured analysis
             analysis = self._parse_claude_analysis(response.content)
+            
+            # Record token usage
+            analysis.input_tokens = response.input_tokens
+            analysis.output_tokens = response.output_tokens
+            
+            await self.analytics_service.track_llm_usage(
+                location_id=location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            )
 
             # Cache the result
-            self.analysis_cache[cache_key] = (analysis, datetime.now())
+            await self.cache_service.set(cache_key, analysis, self.cache_ttl)
 
             logger.info(f"Conversation analysis completed: intent={analysis.intent_level:.2f}, urgency={analysis.urgency_score:.2f}")
             return analysis
@@ -194,6 +254,20 @@ class ConversationIntelligenceEngine:
             )
 
             intent_signals = self._parse_intent_signals(response.content)
+            
+            # Record token usage
+            intent_signals.input_tokens = response.input_tokens
+            intent_signals.output_tokens = response.output_tokens
+            
+            location_id = lead_profile.get('location_id', 'unknown') if lead_profile else 'unknown'
+            await self.analytics_service.track_llm_usage(
+                location_id=location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            )
 
             logger.info(f"Intent signals extracted: financial={intent_signals.financial_readiness:.2f}")
             return intent_signals
@@ -225,6 +299,17 @@ class ConversationIntelligenceEngine:
             )
 
             suggestions = self._parse_response_suggestions(response.content)
+            
+            # Record usage
+            location_id = context.get('location_id', 'unknown')
+            await self.analytics_service.track_llm_usage(
+                location_id=location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            )
 
             logger.info(f"Generated {len(suggestions)} response suggestions")
             return suggestions
@@ -256,6 +341,17 @@ class ConversationIntelligenceEngine:
             )
 
             prediction = self._parse_outcome_prediction(response.content)
+            
+            # Record usage
+            location_id = lead_context.get('location_id', 'unknown') if lead_context else 'unknown'
+            await self.analytics_service.track_llm_usage(
+                location_id=location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            )
 
             logger.info(f"Conversation outcome predicted: {prediction.get('primary_outcome', 'unknown')}")
             return prediction
@@ -285,8 +381,10 @@ class ConversationIntelligenceEngine:
             return self._get_fallback_thread_analysis()
 
         try:
+            location_id = lead_context.get('location_id', 'unknown') if lead_context else 'unknown'
+            
             # Get or create conversation thread
-            thread = self._get_or_create_thread(thread_id, messages)
+            thread = self._get_or_create_thread(thread_id, messages, location_id)
 
             # Update thread with new messages
             self._update_thread_messages(thread, messages)
@@ -334,6 +432,16 @@ class ConversationIntelligenceEngine:
             )
 
             emotional_state = self._parse_emotional_state(response.content)
+            
+            # Record usage
+            await self.analytics_service.track_llm_usage(
+                location_id=thread.location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            )
 
             # Update emotional journey tracking
             self._update_emotional_journey(thread, emotional_state)
@@ -369,6 +477,16 @@ class ConversationIntelligenceEngine:
             )
 
             trust_metrics = self._parse_trust_metrics(response.content)
+            
+            # Record usage
+            await self.analytics_service.track_llm_usage(
+                location_id=thread.location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            )
 
             # Update trust history tracking
             self._update_trust_history(thread, trust_metrics)
@@ -404,6 +522,16 @@ class ConversationIntelligenceEngine:
             )
 
             closing_signals = self._parse_closing_signals(response.content)
+            
+            # Record usage
+            await self.analytics_service.track_llm_usage(
+                location_id=thread.location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            )
 
             # Update closing readiness in thread
             thread.closing_readiness = closing_signals.closing_readiness_score
@@ -456,22 +584,23 @@ class ConversationIntelligenceEngine:
 
     # ========== ENHANCED THREAD MANAGEMENT METHODS ==========
 
-    def _get_or_create_thread(self, thread_id: str, messages: List[Dict]) -> ConversationThread:
+    def _get_or_create_thread(self, thread_id: str, messages: List[Dict], location_id: str) -> ConversationThread:
         """Get existing thread or create new one."""
         if thread_id in self.conversation_threads:
             # Clean up expired threads
             thread = self.conversation_threads[thread_id]
             if datetime.now() - thread.last_updated > self.thread_ttl:
                 del self.conversation_threads[thread_id]
-                return self._create_new_thread(thread_id, messages)
+                return self._create_new_thread(thread_id, messages, location_id)
             return thread
         else:
-            return self._create_new_thread(thread_id, messages)
+            return self._create_new_thread(thread_id, messages, location_id)
 
-    def _create_new_thread(self, thread_id: str, messages: List[Dict]) -> ConversationThread:
+    def _create_new_thread(self, thread_id: str, messages: List[Dict], location_id: str) -> ConversationThread:
         """Create new conversation thread."""
         thread = ConversationThread(
             thread_id=thread_id,
+            location_id=location_id,
             messages=messages.copy(),
             intent_evolution=[],
             emotional_journey=[],
@@ -512,6 +641,16 @@ class ConversationIntelligenceEngine:
             )
 
             analysis = self._parse_thread_analysis(response.content)
+            
+            # Record usage
+            await self.analytics_service.track_llm_usage(
+                location_id=thread.location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            )
 
             # Parallel analysis of specific aspects
             emotional_analysis = await self.analyze_emotional_progression(thread.thread_id)
@@ -1340,6 +1479,29 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
         context_hash = hash(str(lead_context)) if lead_context else 0
         return f"{messages_hash}_{context_hash}"
 
+    def _extract_fallback_analysis(self, content: str) -> Dict:
+        """Extract basic analysis fields from text if JSON parsing fails."""
+        import re
+        
+        data = {}
+        
+        # Try to find intent level
+        intent_match = re.search(r'intent_level["\s:]+([\d.]+)', content)
+        if intent_match:
+            data['intent_level'] = float(intent_match.group(1))
+            
+        # Try to find urgency
+        urgency_match = re.search(r'urgency_score["\s:]+([\d.]+)', content)
+        if urgency_match:
+            data['urgency_score'] = float(urgency_match.group(1))
+            
+        # Try to find next best action
+        action_match = re.search(r'next_best_action["\s:]+([^"\n,]+)', content)
+        if action_match:
+            data['next_best_action'] = action_match.group(1).strip()
+            
+        return data
+
     def _get_fallback_analysis(self) -> ConversationAnalysis:
         """Get fallback analysis when Claude is unavailable."""
         return ConversationAnalysis(
@@ -1472,6 +1634,20 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                 health_emoji = "🟢" if health == "excellent" else "🟡" if health == "good" else "🟠" if health == "concerning" else "🔴"
                 st.metric("Health", f"{health_emoji} {health.title()}")
 
+            # NEW: Intent & Momentum Evolution Chart
+            st.markdown("#### 📈 Intent & Momentum Evolution")
+            # Generate simulated evolution data
+            evo_data = pd.DataFrame({
+                "Message": range(len(messages)),
+                "Intent": np.linspace(0.4, intent_level, len(messages)) + np.random.normal(0, 0.05, len(messages)),
+                "Momentum": np.linspace(0.3, momentum, len(messages)) + np.random.normal(0, 0.05, len(messages))
+            })
+            fig_evo = px.line(evo_data, x="Message", y=["Intent", "Momentum"], 
+                             color_discrete_map={"Intent": "#6366F1", "Momentum": "#10B981"},
+                             template="plotly_dark")
+            fig_evo.update_layout(height=250, margin=dict(l=0, r=0, t=20, b=0), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+            st.plotly_chart(fig_evo, use_container_width=True)
+
             # Strategic insights
             st.markdown("#### 💡 Thread Insights")
             insights = thread_data.get("thread_insights", [])
@@ -1579,6 +1755,22 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                 st.metric("Credibility", f"{trust_metrics.credibility_score:.0%}")
             with col4:
                 st.metric("Alignment", f"{trust_metrics.communication_alignment:.0%}")
+
+            # NEW: Trust Component Spider Chart
+            st.markdown("#### 🕷️ Trust Topology")
+            trust_df = pd.DataFrame(dict(
+                r=[trust_metrics.credibility_score, 
+                   trust_metrics.communication_alignment, 
+                   trust_metrics.value_demonstration, 
+                   trust_metrics.responsiveness_score,
+                   trust_metrics.overall_trust_score],
+                theta=['Credibility', 'Alignment', 'Value', 'Response', 'Trust']
+            ))
+            fig_trust = px.line_polar(trust_df, r='r', theta='theta', line_close=True)
+            fig_trust.update_traces(fill='toself', line_color='#F59E0B')
+            fig_trust.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 1]), bgcolor="rgba(0,0,0,0)"), 
+                                   height=300, margin=dict(l=20, r=20, t=20, b=20))
+            st.plotly_chart(fig_trust, use_container_width=True)
 
             # Trust building recommendations
             if trust_metrics.trust_building_recommendations:

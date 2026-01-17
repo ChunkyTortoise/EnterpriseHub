@@ -1,0 +1,204 @@
+{
+  "name": "backend-services",
+  "description": "MCP server configuration for Python backend service development",
+  "mcpServers": {
+    "serena": {
+      "enabled": true,
+      "config": {
+        "command": "uvx",
+        "args": ["serena-mcp"]
+      },
+      "tools": [
+        "read_file",
+        "find_symbol",
+        "find_referencing_symbols",
+        "search_for_pattern",
+        "get_symbols_overview",
+        "replace_symbol_body",
+        "insert_after_symbol",
+        "insert_before_symbol",
+        "rename_symbol",
+        "replace_content",
+        "execute_shell_command"
+      ],
+      "use_cases": [
+        "Navigate 173+ service files",
+        "Trace service dependencies",
+        "Refactor service methods",
+        "Find GHL API integrations",
+        "Analyze Claude service usage",
+        "Track Redis caching patterns"
+      ]
+    },
+    "context7": {
+      "enabled": true,
+      "config": {
+        "command": "npx",
+        "args": ["-y", "@context7/mcp-server"]
+      },
+      "tools": [
+        "resolve-library-id",
+        "query-docs"
+      ],
+      "use_cases": [
+        "FastAPI documentation lookup",
+        "Anthropic Claude API reference",
+        "Redis Python client docs",
+        "Pydantic model patterns",
+        "LangGraph documentation"
+      ]
+    },
+    "greptile": {
+      "enabled": true,
+      "config": {
+        "command": "npx",
+        "args": ["-y", "@greptile/mcp-server"]
+      },
+      "tools": [
+        "search_custom_context",
+        "list_code_reviews",
+        "get_merge_request"
+      ],
+      "use_cases": [
+        "Search service patterns",
+        "Review PR changes",
+        "Track code quality",
+        "Find integration examples"
+      ]
+    },
+    "ghl": {
+      "enabled": true,
+      "config": {
+        "command": "python3",
+        "args": ["/Users/cave/Documents/GitHub/EnterpriseHub/.claude/mcp-servers/ghl/server.py"]
+      },
+      "tools": [
+        "create_ghl_contact",
+        "get_ghl_contact",
+        "search_ghl_contacts",
+        "update_lead_score",
+        "trigger_ghl_workflow",
+        "send_ghl_sms",
+        "create_ghl_opportunity"
+      ],
+      "use_cases": [
+        "Natural language GHL contact creation",
+        "AI-driven lead scoring and intelligence",
+        "Workflow automation triggers",
+        "SMS communication",
+        "Pipeline opportunity management",
+        "Integration with predictive_lead_scorer.py",
+        "Integration with claude_enhanced_lead_scorer.py"
+      ]
+    }
+  },
+  "permissions": {
+    "allowedPaths": [
+      "ghl_real_estate_ai/services/**/*.py",
+      "ghl_real_estate_ai/api/**/*.py",
+      "ghl_real_estate_ai/core/**/*.py",
+      "ghl_real_estate_ai/ghl_utils/**/*.py",
+      "tests/**/*.py",
+      "app.py",
+      "requirements*.txt"
+    ],
+    "deniedPaths": [
+      ".env",
+      ".env.local",
+      "secrets/**",
+      "data/analytics/**",
+      "*.csv"
+    ],
+    "allowedTools": [
+      "Read",
+      "Write(ghl_real_estate_ai/**)",
+      "Write(tests/**)",
+      "Edit",
+      "Grep",
+      "Glob",
+      "Bash(python3 -m pytest:*)",
+      "Bash(python3 -m py_compile:*)",
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)",
+      "Bash(mypy:*)",
+      "mcp__plugin_serena_serena__*",
+      "mcp__plugin_context7_context7__*",
+      "mcp__plugin_greptile_greptile__search_custom_context"
+    ]
+  },
+  "context": {
+    "focus_areas": [
+      "Service layer architecture",
+      "GHL API integration",
+      "Claude AI service integration",
+      "Redis caching strategies",
+      "Async/await patterns",
+      "Error handling and logging",
+      "Type safety with Pydantic",
+      "Multi-agent orchestration"
+    ],
+    "key_files": [
+      "ghl_real_estate_ai/services/claude_assistant.py",
+      "ghl_real_estate_ai/services/ghl_sync_service.py",
+      "ghl_real_estate_ai/services/cache_service.py",
+      "ghl_real_estate_ai/services/lead_swarm_service.py",
+      "ghl_real_estate_ai/core/llm_client.py",
+      "ghl_real_estate_ai/api/routes/claude_chat.py"
+    ],
+    "patterns": [
+      "Use async/await consistently in services",
+      "All services should have error handling",
+      "Cache expensive operations with cache_service",
+      "Use Pydantic models for data validation",
+      "Log important events with structured logging",
+      "Test each service with pytest",
+      "Mock external APIs in tests",
+      "Use type hints on all functions"
+    ],
+    "critical_integrations": [
+      {
+        "name": "GHL API",
+        "auth": "API key + location ID",
+        "rate_limits": "Check GHL documentation",
+        "error_handling": "Retry with exponential backoff"
+      },
+      {
+        "name": "Claude API",
+        "auth": "Anthropic API key",
+        "features": "Streaming, caching, multi-turn",
+        "error_handling": "Handle rate limits and context length"
+      },
+      {
+        "name": "Redis",
+        "connection": "Redis URL from environment",
+        "patterns": "TTL-based caching, pub/sub for events",
+        "error_handling": "Fallback to no-cache on connection failure"
+      }
+    ]
+  },
+  "skills_to_use": [
+    "test-driven-development",
+    "systematic-debugging",
+    "defense-in-depth",
+    "verification-before-completion",
+    "condition-based-waiting"
+  ],
+  "testing_requirements": {
+    "coverage_threshold": 80,
+    "required_tests": [
+      "Unit tests for each service method",
+      "Integration tests for external APIs",
+      "Mock tests for GHL/Claude APIs",
+      "Async operation tests",
+      "Error handling tests"
+    ],
+    "test_patterns": [
+      "Use pytest fixtures for common setup",
+      "Mock external services with pytest-mock",
+      "Test async functions with pytest-asyncio",
+      "Use freezegun for time-dependent tests",
+      "Test caching behavior with fakeredis"
+    ]
+  },
+  "notes": "Use this profile when working on backend services, API integrations, or business logic. Frontend Streamlit work should use streamlit-dev profile."
+}

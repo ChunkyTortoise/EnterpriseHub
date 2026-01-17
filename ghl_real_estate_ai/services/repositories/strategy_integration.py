@@ -16,8 +16,8 @@ services_dir = current_dir.parent
 sys.path.insert(0, str(services_dir))
 
 try:
-    # Import from services.scoring module
-    from services.scoring import (
+    # Import from ghl_real_estate_ai.services.scoring module
+    from ghl_real_estate_ai.services.scoring import (
         PropertyMatcherContext, ScoringContext, ScoringResult,
         create_property_matcher, get_scoring_factory
     )

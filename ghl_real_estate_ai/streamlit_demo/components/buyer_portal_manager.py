@@ -88,22 +88,22 @@ def render_buyer_portal_manager(lead_name: str):
         )
         st.line_chart(chart_data, height=150)
 
-        # Mock portal preview
+        # Mock portal preview - Obsidian Edition
         st.markdown(f"""
-        <div style='background: {primary_color}; padding: 1rem; border-radius: 8px 8px 0 0; text-align: center; margin-top: 1rem;'>
-            <div style='color: white; font-size: 1rem; font-weight: 700;'>{lead_name}'s Private Collection</div>
+        <div style='background: linear-gradient(135deg, {primary_color} 0%, #05070A 100%); padding: 1.25rem; border-radius: 12px 12px 0 0; text-align: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.1);'>
+            <div style='color: white; font-size: 0.9rem; font-weight: 700; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.1em;'>{lead_name}'S PRIVATE PORTAL</div>
         </div>
-        <div style='background: white; border: 1px solid #e5e7eb; padding: 1.5rem; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);'>
-            <div style='display: flex; gap: 1rem; margin-bottom: 1rem;'>
-                <div style='width: 80px; height: 60px; background: #f1f5f9; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;'>🏡</div>
+        <div style='background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 0 0 12px 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); backdrop-filter: blur(10px);'>
+            <div style='display: flex; gap: 1rem; margin-bottom: 1.5rem;'>
+                <div style='width: 80px; height: 60px; background: rgba(255,255,255,0.03); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.05);'>🏡</div>
                 <div>
-                    <div style='font-weight: 700; color: #1e293b;'>2847 Glenwood Trail</div>
-                    <div style='font-size: 0.8rem; color: #64748b;'>$525,000 • 3 bed, 2.5 bath</div>
+                    <div style='font-weight: 700; color: #FFFFFF; font-family: "Space Grotesk", sans-serif;'>2847 GLENWOOD TRAIL</div>
+                    <div style='font-size: 0.8rem; color: #8B949E; font-family: "Inter", sans-serif; margin-top: 2px;'>$525,000 • 3 BED, 2.5 BATH</div>
                 </div>
             </div>
-            <div style='display: flex; gap: 0.5rem;'>
-                <button style='flex: 1; padding: 0.6rem; background: {primary_color}; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 0.8rem;'>View Details</button>
-                <button style='flex: 1; padding: 0.6rem; background: white; border: 1px solid {primary_color}; color: {primary_color}; border-radius: 6px; font-weight: 600; font-size: 0.8rem;'>Schedule Tour</button>
+            <div style='display: flex; gap: 0.75rem;'>
+                <button style='flex: 1; padding: 0.75rem; background: {primary_color}; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.75rem; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;'>VIEW NODE</button>
+                <button style='flex: 1; padding: 0.75rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #FFFFFF; border-radius: 8px; font-weight: 600; font-size: 0.75rem; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;'>SYNC CALENDAR</button>
             </div>
         </div>
         """, unsafe_allow_html=True)

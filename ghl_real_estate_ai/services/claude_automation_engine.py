@@ -9,9 +9,10 @@ from typing import Dict, List, Any, Optional, Union
 from dataclasses import dataclass, asdict
 from enum import Enum
 
-from services.claude_orchestrator import get_claude_orchestrator, ClaudeOrchestrator, ClaudeTaskType
-from services.memory_service import MemoryService
-from services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
+from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeOrchestrator, ClaudeTaskType
+from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
 
 class ReportType(Enum):
@@ -91,11 +92,12 @@ class ClaudeAutomationEngine:
                  memory_service: Optional[MemoryService] = None,
                  enhanced_scorer: Optional[ClaudeEnhancedLeadScorer] = None):
         # Local imports to avoid circular dependencies
-        from services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
-        from services.claude_orchestrator import get_claude_orchestrator
+        from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
+        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
 
         self.claude = claude_orchestrator or get_claude_orchestrator()
         self.memory = memory_service or MemoryService()
+        self.analytics = AnalyticsService()
         
         try:
             self.scorer = enhanced_scorer or ClaudeEnhancedLeadScorer()
@@ -146,6 +148,17 @@ class ClaudeAutomationEngine:
                 metrics=data,
                 report_type=report_type.value,
                 market_context=market_context
+            )
+            
+            # Record usage
+            location_id = data.get('location_id', 'unknown')
+            await self.analytics.track_llm_usage(
+                location_id=location_id,
+                model=claude_response.model or "claude-3-5-sonnet",
+                provider=claude_response.provider or "claude",
+                input_tokens=claude_response.input_tokens or 0,
+                output_tokens=claude_response.output_tokens or 0,
+                cached=False
             )
 
             # Step 3: Parse and structure the response
@@ -217,6 +230,18 @@ class ClaudeAutomationEngine:
                 channel=channel,
                 variants=1  # Generate primary first
             )
+            
+            # Record usage
+            location_id = lead_context.get('preferences', {}).get('location_id', 'unknown')
+            await self.analytics.track_llm_usage(
+                location_id=location_id,
+                model=claude_response.model or "claude-3-5-sonnet",
+                provider=claude_response.provider or "claude",
+                input_tokens=claude_response.input_tokens or 0,
+                output_tokens=claude_response.output_tokens or 0,
+                cached=False,
+                contact_id=lead_id
+            )
 
             # Step 3: Generate A/B testing variants
             variants_response = None
@@ -226,6 +251,17 @@ class ClaudeAutomationEngine:
                     script_type=script_type.value,
                     channel=channel,
                     variants=variants - 1
+                )
+                
+                # Record variants usage
+                await self.analytics.track_llm_usage(
+                    location_id=location_id,
+                    model=variants_response.model or "claude-3-5-sonnet",
+                    provider=variants_response.provider or "claude",
+                    input_tokens=variants_response.input_tokens or 0,
+                    output_tokens=variants_response.output_tokens or 0,
+                    cached=False,
+                    contact_id=lead_id
                 )
 
             # Step 4: Parse and structure scripts
@@ -285,6 +321,18 @@ class ClaudeAutomationEngine:
             claude_response = await self.claude.orchestrate_intervention(
                 lead_id=lead_id,
                 churn_prediction=churn_prediction
+            )
+            
+            # Record usage
+            location_id = lead_context.get('preferences', {}).get('location_id', 'unknown')
+            await self.analytics.track_llm_usage(
+                location_id=location_id,
+                model=claude_response.model or "claude-3-5-sonnet",
+                provider=claude_response.provider or "claude",
+                input_tokens=claude_response.input_tokens or 0,
+                output_tokens=claude_response.output_tokens or 0,
+                cached=False,
+                contact_id=lead_id
             )
 
             return {

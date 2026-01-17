@@ -195,7 +195,7 @@ def get_quick_start_examples():
     return {
         "track_property_view": """
 # Track when a lead views a property
-from services.learning import create_behavioral_event, EventType
+from ghl_real_estate_ai.services.learning import create_behavioral_event, EventType
 
 event = create_behavioral_event(
     EventType.PROPERTY_VIEW,
@@ -207,7 +207,7 @@ event = create_behavioral_event(
 
         "create_feature_vector": """
 # Create feature vector for machine learning
-from services.learning import FeatureVector
+from ghl_real_estate_ai.services.learning import FeatureVector
 
 features = FeatureVector(
     entity_id="lead_123",
@@ -222,7 +222,7 @@ features = FeatureVector(
 
         "setup_learning_context": """
 # Setup context for personalized recommendations
-from services.learning import create_learning_context
+from ghl_real_estate_ai.services.learning import create_learning_context
 
 context = create_learning_context(
     session_id="session_abc",

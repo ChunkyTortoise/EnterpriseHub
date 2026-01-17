@@ -1,0 +1,47 @@
+{
+  "name": "Minimal Context Profile",
+  "description": "Optimized profile with only essential Serena code navigation. Saves ~8K tokens (4% context). Use for routine development tasks.",
+  "token_savings": {
+    "estimated_overhead_reduction": "8000 tokens",
+    "context_reclaimed": "4%",
+    "recommended_for": [
+      "Code refactoring",
+      "Bug fixes",
+      "Simple feature implementation",
+      "Code navigation and exploration"
+    ]
+  },
+  "mcp_servers": {
+    "serena": {
+      "enabled": true,
+      "command": "npx",
+      "args": ["-y", "serena-mcp"],
+      "description": "Essential code search and semantic analysis",
+      "token_overhead": "~4000 tokens",
+      "justification": "Critical for code navigation, symbol search, and refactoring"
+    },
+    "context7": {
+      "enabled": false,
+      "reason": "Disable for routine dev work; use 'research' profile when docs needed"
+    },
+    "playwright": {
+      "enabled": false,
+      "reason": "Disable unless doing E2E testing; use 'testing-qa' profile"
+    },
+    "greptile": {
+      "enabled": false,
+      "reason": "Disable unless doing PR review; use 'testing-qa' profile"
+    }
+  },
+  "context_limits": {
+    "max_context_files": 15,
+    "priority_loading": true,
+    "aggressive_exclusions": true
+  },
+  "performance_notes": [
+    "Fastest profile startup time",
+    "Lowest token overhead",
+    "Best for focused development sessions",
+    "Switch to specific profile when specialized tools needed"
+  ]
+}

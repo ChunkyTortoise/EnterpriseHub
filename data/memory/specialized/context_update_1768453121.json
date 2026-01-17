@@ -1,0 +1,14 @@
+{
+  "content": {
+    "page": "automation_studio",
+    "activity_data": {
+      "hub_name": "Automation Studio",
+      "user_action": "navigation",
+      "timestamp": "2026-01-14T20:58:41.571809"
+    },
+    "timestamp": "2026-01-14T20:58:41.571910",
+    "session_duration": 2981.616855
+  },
+  "stored_at": "2026-01-15T04:58:41.572744",
+  "expires_at": "2026-01-16T04:58:41.572755"
+}

@@ -131,7 +131,7 @@ async def test_import_paths():
 
     try:
         # Test direct Strategy Pattern imports
-        from services.scoring import (
+        from ghl_real_estate_ai.services.scoring import (
             PropertyMatcherContext, ScoringContext, ScoringResult,
             create_property_matcher, get_scoring_factory
         )

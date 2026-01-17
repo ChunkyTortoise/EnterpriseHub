@@ -1,34 +1,29 @@
-# Technical Governance: IP Security & Middleware Strategy
+# Technical Strategy: How to License Your Code (Safely)
 
-To maximize the valuation of Lyrio and protect your intellectual property, we must implement a **Proprietary Middleware Architecture**. This ensures that the "Intelligence" of the platform is not tied to a specific CRM or low-code tool.
+To ensure the "SaaS License" model works, you must build the code as a **Middle-Tier Service**, not a script that Jorge hosts on his own servers.
 
-## 1. The Decoupled Architecture
-*   **Edge Layer (GHL):** Acts as the ingestion point. It triggers webhooks or Custom Menu Links to send raw data to our secure environment.
-*   **Middleware Brain (Proprietary):** A high-performance FastAPI or Node.js environment (hosted on Railway/Render) that contains the custom prompt engineering, agent orchestration logic, and MLS data connectors.
-*   **Action Layer (GHL API):** The Middleware pushes structured intelligence back into GHL, updating custom fields, tags, and conversation notes.
+## 1. The Architecture
+*   **Jorge's Side (GHL):** Uses a "Webhook" or "Custom Menu Link" to send data to your server.
+*   **Your Side:** A FastAPI or Node.js server (hosted on Railway, Render, or Heroku).
+*   **The Logic:** Your server processes the AI request, calls OpenAI/MLS, and then pushes the result back into GHL via their API.
 
-## 2. IP Protection & Access Control
-By hosting the core logic in a "Middle-Tier," you maintain 100% control over the IP. We implement a **License Validation Layer** in the middleware:
+## 2. The "License Key" Check
+In your code, implement a simple middleware check:
 ```python
 @app.middleware("http")
-async def technical_governance_check(request: Request, call_next):
-    client_auth_key = request.headers.get("X-Lyrio-Auth")
-    if not validate_account_status(client_auth_key):
-        return JSONResponse(
-            status_code=402, 
-            content={"detail": "Architectural License Required"}
-        )
+async def check_license(request: Request, call_next):
+    client_id = request.headers.get("X-Lyrio-ID")
+    if not is_account_active(client_id):
+        return JSONResponse(status_code=402, content={"detail": "License Expired"})
     return await call_next(request)
 ```
-*   **Benefit:** You can manage access across different client tiers (e.g., Basic vs. Premium AI) without modifying GHL workflows.
-*   **Security:** API keys for OpenAI, MLS, and GHL are encrypted and stored in your secure environment, never exposed to client-side scripts.
+*   This allows you to disable the feature instantly if a payment is missed, without needing to "log in" to his system.
 
-## 3. Revenue Integrity Tracking
-*   We implement **Telemetry Tags** (e.g., `lyrio_ai_processed`).
-*   The Middleware logs every successful transaction, providing you with a "Single Source of Truth" for usage-based billing or revenue-share audits.
-*   This data becomes a core asset if Lyrio ever seeks investment or acquisition, as it proves the volume and value of your proprietary AI logic.
+## 3. Revenue Share Tracking
+*   Ask Jorge to create a specific **Tag** in GHL (e.g., `lyrio_ai_premium`).
+*   Your API should check for this tag before processing a request.
+*   Once a month, you run a simple script (or ask for a screenshot) of the "Total Contacts with Tag: `lyrio_ai_premium`" to verify your revenue share payout.
 
-## 4. Strategic Advantages for Lyrio
-*   **Platform Independence:** If GHL changes their pricing or features, your core intelligence is portable.
-*   **Zero-Downtime Updates:** We can refine AI prompts or logic in the middleware instantly, without disrupting users' active workflows in GHL.
-*   **Reduced Latency:** Offloading complex logic to a dedicated server ensures the CRM remains responsive even during high-volume periods.
+## 4. Why this is better for Jorge
+*   **No Deployment Stress:** He doesn't have to worry about Python environments, API keys, or server maintenance.
+*   **Faster Speed:** You can update the AI prompt or logic on your end instantly without him needing to update anything.

@@ -30,15 +30,15 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from services.enhanced_lead_scorer import EnhancedLeadScorer, ScoringMode
-from services.dynamic_scoring_weights import (
+from ghl_real_estate_ai.services.enhanced_lead_scorer import EnhancedLeadScorer, ScoringMode
+from ghl_real_estate_ai.services.dynamic_scoring_weights import (
     DynamicScoringOrchestrator,
     LeadSegment,
     MarketCondition,
     ScoringWeights,
     ABTestConfig
 )
-from services.scoring_config import ScoringConfigManager, ScoringEnvironment
+from ghl_real_estate_ai.services.scoring_config import ScoringConfigManager, ScoringEnvironment
 
 
 class TestDynamicScoringIntegration:

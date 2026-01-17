@@ -55,6 +55,18 @@ class WorkflowDesignerComponent:
                 "fields": ["message", "priority"],
                 "icon": "🔔",
                 "color": "#FF5722"
+            },
+            "🧠 AI Analyze": {
+                "action": "ai_analyze",
+                "fields": ["analysis_type", "depth"],
+                "icon": "🧠",
+                "color": "#6366F1"
+            },
+            "💰 AI Offer": {
+                "action": "ai_offer",
+                "fields": ["max_range", "strategy"],
+                "icon": "💰",
+                "color": "#10B981"
             }
         }
     
@@ -148,9 +160,15 @@ class WorkflowDesignerComponent:
                 
                 with col2:
                     st.markdown(
-                        f"<div style='background-color: {step['color']}; "
-                        f"padding: 10px; border-radius: 5px; color: white;'>"
-                        f"{step['icon']} <b>{step['action'].replace('_', ' ').title()}</b>"
+                        f"<div style='background: rgba(22, 27, 34, 0.7); "
+                        f"padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); "
+                        f"border-left: 5px solid {step['color']}; box-shadow: 0 10px 30px rgba(0,0,0,0.4); "
+                        f"backdrop-filter: blur(10px); display: flex; align-items: center; gap: 15px;'>"
+                        f"<span style='font-size: 1.5rem;'>{step['icon']}</span>"
+                        f"<div>"
+                        f"<div style='font-family: \"Space Grotesk\", sans-serif; font-weight: 700; color: white; letter-spacing: 0.05em;'>{step['action'].replace('_', ' ').upper()}</div>"
+                        f"<div style='font-size: 0.75rem; color: #8B949E;'>Delay: {step['delay_minutes']}m</div>"
+                        f"</div>"
                         f"</div>",
                         unsafe_allow_html=True
                     )
@@ -241,6 +259,18 @@ class WorkflowDesignerComponent:
             )
             step["data"]["message"] = message
             step["data"]["priority"] = priority
+            
+        elif action == "ai_analyze":
+            a_type = st.selectbox("Analysis Type", ["Lifestyle Alignment", "Investment Yield", "Churn Risk", "Sentiment"], key=f"atype_{idx}")
+            depth = st.select_slider("Analysis Depth", options=["Standard", "Deep", "Quantum"], key=f"adepth_{idx}")
+            step["data"]["analysis_type"] = a_type
+            step["data"]["depth"] = depth
+            
+        elif action == "ai_offer":
+            strategy = st.selectbox("Offer Strategy", ["Aggressive", "Balanced", "Conservative"], key=f"ostrat_{idx}")
+            max_range = st.number_input("Max Range (%)", value=10, key=f"orange_{idx}")
+            step["data"]["strategy"] = strategy
+            step["data"]["max_range"] = max_range
     
     def _build_workflow(self, name: str, trigger: str) -> Dict[str, Any]:
         """Build workflow from steps"""

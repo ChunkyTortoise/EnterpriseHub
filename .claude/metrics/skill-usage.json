@@ -1,0 +1,47 @@
+{
+  "last_updated": "2026-01-16T08:36:53.450639",
+  "tools": {
+    "Write": {
+      "total_calls": 1,
+      "successful_calls": 1,
+      "failed_calls": 0,
+      "total_duration_ms": 320,
+      "avg_duration_ms": 320.0,
+      "first_used": "2026-01-16T08:36:53.295820",
+      "last_used": "2026-01-16T08:36:53.295829"
+    },
+    "Read": {
+      "total_calls": 1,
+      "successful_calls": 1,
+      "failed_calls": 0,
+      "total_duration_ms": 180,
+      "avg_duration_ms": 180.0,
+      "first_used": "2026-01-16T08:36:53.450607",
+      "last_used": "2026-01-16T08:36:53.450620"
+    }
+  },
+  "daily_summary": {
+    "2026-01-16": {
+      "total_operations": 2,
+      "successful_operations": 2,
+      "tools_used": [
+        "Write",
+        "Read"
+      ]
+    }
+  },
+  "skill_effectiveness": {
+    "Write": {
+      "success_rate": 100.0,
+      "avg_duration_ms": 320.0,
+      "reliability": "high",
+      "performance": "fast"
+    },
+    "Read": {
+      "success_rate": 100.0,
+      "avg_duration_ms": 180.0,
+      "reliability": "high",
+      "performance": "fast"
+    }
+  }
+}

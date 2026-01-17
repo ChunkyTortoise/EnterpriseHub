@@ -5,17 +5,22 @@ Provides personalized greetings, context awareness, and cross-platform intellige
 import asyncio
 import json
 import time
+import re
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
 import streamlit as st
 
 # Import existing services
-from services.claude_assistant import ClaudeAssistant
-from services.memory_service import MemoryService
-from services.claude_conversation_intelligence import get_conversation_intelligence
-from services.claude_lead_qualification import get_claude_qualification_engine
-from services.claude_semantic_property_matcher import get_semantic_property_matcher
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.services.claude_conversation_intelligence import get_conversation_intelligence
+from ghl_real_estate_ai.services.claude_lead_qualification import get_claude_qualification_engine
+from ghl_real_estate_ai.services.claude_semantic_property_matcher import get_semantic_property_matcher
+from ghl_real_estate_ai.services.voice_service import VoiceService
+from ghl_real_estate_ai.services.proactive_intelligence_engine import get_proactive_intelligence_engine
+from ghl_real_estate_ai.services.claude_executive_intelligence import get_executive_intelligence_service
+from ghl_real_estate_ai.services.lead_swarm_service import get_lead_swarm_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -54,6 +59,34 @@ class ContextualInsight:
     confidence: float  # 0.0-1.0
     priority: str  # "high", "medium", "low"
 
+@dataclass
+class ProjectGuidance:
+    """Claude's guidance for the current project section."""
+    hub_name: str
+    purpose: str
+    key_features: List[str]
+    recommended_workflow: List[str]
+    pro_tips: List[str]
+    next_steps: List[str]
+
+@dataclass
+class VoiceCommand:
+    """Voice command from user."""
+    command_text: str
+    timestamp: datetime
+    confidence: float
+    intent: str  # "navigation", "query", "action", "general"
+    parameters: Dict[str, Any]
+
+@dataclass
+class VoiceResponse:
+    """Claude's voice response."""
+    response_text: str
+    audio_data: Optional[bytes]
+    action_taken: Optional[str]
+    follow_up_needed: bool
+    context_updated: bool
+
 class ClaudePlatformCompanion:
     """
     Claude as an intelligent platform companion with full context awareness.
@@ -64,14 +97,23 @@ class ClaudePlatformCompanion:
     - Real-time intelligent suggestions based on current activity
     - Performance tracking and business intelligence
     - Proactive alerts and opportunities identification
+    - Omnipresent project guidance and walkthroughs
     """
 
     def __init__(self):
+        # Import orchestrator here to avoid circular dependencies
+        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+        self.orchestrator = get_claude_orchestrator()
+        
         self.claude_assistant = ClaudeAssistant()
         self.memory_service = MemoryService()
         self.conversation_intelligence = get_conversation_intelligence()
         self.qualification_engine = get_claude_qualification_engine()
         self.property_matcher = get_semantic_property_matcher()
+        self.voice_service = VoiceService()
+        self.proactive_intelligence = get_proactive_intelligence_engine()
+        self.executive_intelligence = get_executive_intelligence_service()
+        self.lead_swarm = get_lead_swarm_service()
 
         # Platform context tracking
         self.current_context = None
@@ -83,7 +125,13 @@ class ClaudePlatformCompanion:
         self.last_activity = datetime.now()
         self.activity_log = []
 
-        logger.info("Claude Platform Companion initialized")
+        # Voice activation state
+        self.voice_enabled = False
+        self.wake_word_active = False
+        self.voice_command_history = []
+        self.voice_response_style = "professional"  # "professional", "friendly", "enthusiastic"
+
+        logger.info("Claude Platform Companion initialized with voice capabilities")
 
     async def initialize_session(self, user_name: str = "Jorge", market: str = "Austin") -> ClaudeGreeting:
         """
@@ -140,20 +188,20 @@ class ClaudePlatformCompanion:
             logger.error(f"Error initializing Claude session: {e}")
             return self._get_fallback_greeting(user_name, market)
 
-    async def update_context(self, page: str, activity_data: Dict = None) -> Optional[ContextualInsight]:
+    async def update_context(self, page: str, activity_data: Dict = None) -> Dict[str, Any]:
         """
-        Update Claude's context awareness when user navigates or takes actions.
+        Update Claude's context awareness and get real-time guidance.
 
         Args:
             page: Current page/section
             activity_data: Additional context about current activity
 
         Returns:
-            Contextual insight if relevant to current activity
+            Dictionary containing insight and counsel message
         """
         try:
             if not self.current_context:
-                return None
+                return {"insight": None, "counsel": "AI Swarm is standing by."}
 
             # Update current context
             self.current_context.current_page = page
@@ -170,15 +218,33 @@ class ClaudePlatformCompanion:
 
             # Generate contextual insight if relevant
             insight = await self._generate_contextual_insight(page, activity_data)
+            
+            # Generate dynamic counsel message
+            counsel = await self._generate_dynamic_counsel(page, activity_data)
 
             # Store updated context
             await self._store_context_update(page, activity_data)
 
-            return insight
+            return {
+                "insight": insight,
+                "counsel": counsel
+            }
 
         except Exception as e:
             logger.error(f"Error updating Claude context: {e}")
-            return None
+            return {"insight": None, "counsel": "AI Swarm is standing by."}
+
+    async def _generate_dynamic_counsel(self, page: str, activity_data: Dict) -> str:
+        """Generate a short, punchy counsel message for the sidebar."""
+        try:
+            prompt = f"""
+            As the Elite Real Estate AI Companion, provide a one-sentence strategic advice for the user who just navigated to the "{page}" hub.
+            Keep it professional, proactive, and punchy.
+            """
+            response = await self.claude_assistant.get_response(prompt)
+            return response.get("content", "Ready to assist in this hub.").strip().strip('"')
+        except:
+            return "Ready to assist in this hub."
 
     async def get_intelligent_suggestions(self, current_activity: Dict) -> List[ContextualInsight]:
         """
@@ -260,6 +326,58 @@ class ClaudePlatformCompanion:
         except Exception as e:
             logger.error(f"Error providing real-time guidance: {e}")
             return self._get_fallback_guidance()
+
+    async def get_project_guidance(self, hub_name: str) -> ProjectGuidance:
+        """
+        Provide detailed guidance for a specific platform hub.
+        """
+        try:
+            prompt = f"""
+            As the Elite Real Estate AI Companion, provide detailed guidance for the "{hub_name}" hub.
+            Explain its purpose, key features, recommended workflow, pro-tips, and next steps for the user.
+            
+            Return a JSON object matching the ProjectGuidance dataclass structure.
+            """
+            
+            response = await self.claude_assistant.get_response(prompt)
+            data = response.get("content", "{}")
+            
+            # Extract JSON from markdown if needed
+            if "```json" in data:
+                data = data.split("```json")[1].split("```")[0].strip()
+            elif "```" in data:
+                data = data.split("```")[1].split("```")[0].strip()
+                
+            guidance_dict = json.loads(data)
+            
+            return ProjectGuidance(
+                hub_name=hub_name,
+                purpose=guidance_dict.get("purpose", ""),
+                key_features=guidance_dict.get("key_features", []),
+                recommended_workflow=guidance_dict.get("recommended_workflow", []),
+                pro_tips=guidance_dict.get("pro_tips", []),
+                next_steps=guidance_dict.get("next_steps", [])
+            )
+        except Exception as e:
+            logger.error(f"Error getting project guidance: {e}")
+            return self._get_fallback_guidance_for_hub(hub_name)
+
+    async def run_executive_analysis(self, business_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Run a full executive swarm analysis through the companion.
+        """
+        return await self.executive_intelligence.run_executive_swarm(business_data)
+
+    def _get_fallback_guidance_for_hub(self, hub_name: str) -> ProjectGuidance:
+        """Fallback guidance when AI generation fails."""
+        return ProjectGuidance(
+            hub_name=hub_name,
+            purpose=f"The {hub_name} is designed to streamline your real estate operations.",
+            key_features=["Intelligent Dashboard", "Data-Driven Insights", "AI Assistance"],
+            recommended_workflow=["Review metrics", "Identify opportunities", "Take action"],
+            pro_tips=["Use Claude's suggestions for faster results", "Keep your data updated"],
+            next_steps=["Explore the dashboard", "Run your first analysis"]
+        )
 
     def render_platform_greeting(self, greeting: ClaudeGreeting) -> None:
         """
@@ -528,6 +646,529 @@ class ClaudePlatformCompanion:
                 priority="medium"
             )
         ]
+
+    # =======================
+    # PROACTIVE INTELLIGENCE METHODS
+    # =======================
+
+    async def enable_proactive_intelligence(self) -> bool:
+        """
+        Enable proactive intelligence monitoring and alerts.
+
+        Returns:
+            bool: True if proactive intelligence enabled successfully
+        """
+        try:
+            success = await self.proactive_intelligence.start_background_monitoring()
+            if success:
+                logger.info("Proactive intelligence enabled for Claude companion")
+                await self._log_activity("proactive_intelligence_enabled", {
+                    "timestamp": datetime.now().isoformat(),
+                    "monitoring_active": True
+                })
+            return success
+        except Exception as e:
+            logger.error(f"Failed to enable proactive intelligence: {e}")
+            return False
+
+    async def get_proactive_insights(self, context_data: Dict = None) -> Dict[str, Any]:
+        """
+        Get comprehensive proactive insights including alerts, predictions, and coaching.
+
+        Args:
+            context_data: Optional context data override
+
+        Returns:
+            Dictionary containing all proactive intelligence insights
+        """
+        try:
+            # Use current context if no override provided
+            if context_data is None and self.current_context:
+                context_data = self._build_intelligence_context()
+
+            # Get smart alerts
+            alerts = await self.proactive_intelligence.generate_smart_notifications(context_data or {})
+            active_alerts = await self.proactive_intelligence.get_active_alerts()
+
+            # Get predictive insights
+            predictions = await self.proactive_intelligence.get_predictive_insights()
+
+            # Get performance coaching
+            performance_data = await self._extract_performance_data()
+            coaching_tips = await self.proactive_intelligence.get_performance_coaching(performance_data)
+
+            insights = {
+                "new_alerts": alerts,
+                "active_alerts": active_alerts,
+                "predictions": predictions,
+                "coaching_tips": coaching_tips,
+                "monitoring_status": self.proactive_intelligence.monitoring_active,
+                "timestamp": datetime.now().isoformat()
+            }
+
+            logger.info(f"Generated proactive insights: {len(alerts)} alerts, {len(predictions)} predictions, {len(coaching_tips)} tips")
+            return insights
+
+        except Exception as e:
+            logger.error(f"Error getting proactive insights: {e}")
+            return {
+                "new_alerts": [],
+                "active_alerts": [],
+                "predictions": [],
+                "coaching_tips": [],
+                "monitoring_status": False,
+                "error": str(e)
+            }
+
+    async def get_intelligent_summary(self) -> str:
+        """
+        Get intelligent summary of current status with proactive recommendations.
+
+        Returns:
+            Natural language summary with proactive insights
+        """
+        try:
+            insights = await self.get_proactive_insights()
+
+            # Build intelligent summary
+            summary_parts = []
+
+            # Alert summary
+            active_alerts = insights.get("active_alerts", [])
+            if active_alerts:
+                high_priority_count = len([a for a in active_alerts if a.priority.value in ["critical", "high"]])
+                if high_priority_count > 0:
+                    summary_parts.append(f"🚨 {high_priority_count} high-priority alerts need your attention")
+                else:
+                    summary_parts.append(f"📋 {len(active_alerts)} alerts monitoring your business")
+
+            # Prediction summary
+            predictions = insights.get("predictions", [])
+            if predictions:
+                best_prediction = max(predictions, key=lambda p: p.confidence)
+                summary_parts.append(f"🔮 Key insight: {best_prediction.insight_type.replace('_', ' ')} - {best_prediction.reasoning[:60]}...")
+
+            # Coaching summary
+            coaching_tips = insights.get("coaching_tips", [])
+            if coaching_tips:
+                high_impact_tips = [tip for tip in coaching_tips if tip.impact_level == "high"]
+                if high_impact_tips:
+                    summary_parts.append(f"💡 {len(high_impact_tips)} high-impact coaching recommendations available")
+
+            # Monitoring status
+            if insights.get("monitoring_status"):
+                summary_parts.append("📡 Proactive monitoring active and analyzing your business 24/7")
+
+            if summary_parts:
+                summary = "Claude's Intelligence Summary: " + " • ".join(summary_parts)
+            else:
+                summary = "🎯 Your business is running smoothly! All systems optimal with proactive monitoring active."
+
+            return summary
+
+        except Exception as e:
+            logger.error(f"Error generating intelligent summary: {e}")
+            return "Claude's intelligence systems are currently analyzing your business performance."
+
+    async def process_proactive_action(self, alert_id: str, action_type: str) -> Dict[str, Any]:
+        """
+        Process proactive intelligence actions (mark seen, take action, etc.).
+
+        Args:
+            alert_id: Alert identifier
+            action_type: Type of action ("seen", "acted_upon", "dismissed")
+
+        Returns:
+            Result of the action
+        """
+        try:
+            if action_type == "seen":
+                success = await self.proactive_intelligence.mark_alert_seen(alert_id)
+            elif action_type == "acted_upon":
+                success = await self.proactive_intelligence.mark_alert_acted_upon(alert_id)
+            else:
+                success = False
+
+            if success:
+                await self._log_activity("proactive_action_taken", {
+                    "alert_id": alert_id,
+                    "action_type": action_type,
+                    "timestamp": datetime.now().isoformat()
+                })
+
+            return {
+                "success": success,
+                "action_type": action_type,
+                "alert_id": alert_id
+            }
+
+        except Exception as e:
+            logger.error(f"Error processing proactive action: {e}")
+            return {"success": False, "error": str(e)}
+
+    def _build_intelligence_context(self) -> Dict[str, Any]:
+        """Build context data for proactive intelligence analysis."""
+        if not self.current_context:
+            return {}
+
+        return {
+            "leads": [
+                {
+                    "id": f"lead_{i+1}",
+                    "name": lead,
+                    "last_contact_hours": 24 + (i * 12),
+                    "engagement_score": 0.7 + (i * 0.1)
+                }
+                for i, lead in enumerate(self.current_context.active_leads[:3])
+            ],
+            "performance": {
+                "conversion_rate": self.current_context.agent_performance.get("conversion_rate", 0.15),
+                "avg_response_time_hours": 3.2,
+                "closing_rate": 0.16,
+                "followup_completion_rate": 0.75
+            },
+            "market": {
+                "interest_rate_trend": "stable",
+                "buyer_activity": "moderate"
+            },
+            "pipeline_value": self.current_context.business_metrics.get("pipeline_value", 85000),
+            "monthly_target": self.current_context.business_metrics.get("monthly_target", 150000),
+            "current_page": self.current_context.current_page,
+            "session_duration_minutes": (datetime.now() - self.current_context.session_start_time).total_seconds() / 60
+        }
+
+    async def _extract_performance_data(self) -> Dict[str, Any]:
+        """Extract performance data for coaching analysis."""
+        if not self.current_context:
+            return {
+                "avg_response_time_hours": 3.2,
+                "closing_rate": 0.16,
+                "followup_completion_rate": 0.73,
+                "calls_per_day": 8,
+                "meetings_scheduled": 3
+            }
+
+        return {
+            "avg_response_time_hours": self.current_context.agent_performance.get("avg_response_time_hours", 3.2),
+            "closing_rate": self.current_context.agent_performance.get("closing_rate", 0.16),
+            "followup_completion_rate": self.current_context.agent_performance.get("followup_rate", 0.73),
+            "calls_per_day": self.current_context.agent_performance.get("calls_per_day", 8),
+            "meetings_scheduled": self.current_context.agent_performance.get("meetings_scheduled", 3),
+            "lead_count": len(self.current_context.active_leads),
+            "session_activities": len(self.activity_log)
+        }
+
+    # =======================
+    # END PROACTIVE INTELLIGENCE METHODS
+    # =======================
+
+    # =======================
+    # VOICE ACTIVATION METHODS
+    # =======================
+
+    async def generate_project_greeting(self, user_name: str = "Jorge") -> str:
+        """Generates a high-level executive greeting and walkthrough when the project is opened."""
+        prompt = f"""
+        You are Claude, the Elite AI Orchestrator for Jorge Salas's GHL Real Estate AI Platform (Elite v4.0).
+        Jorge has just opened the project. This is the "Obsidian Command" interface.
+        
+        Greet Jorge with a professional, sharp, and proactive tone.
+        Provide a very brief 5-hub walkthrough (one phrase each):
+        1. Executive Hub (KPIs & Pipeline)
+        2. Lead Intelligence (Behavioral DNA)
+        3. Automation Studio (AI Brain)
+        4. Sales Copilot (Live Coaching)
+        5. Ops Hub (System Governance)
+        
+        Mention that the "Neural Swarm" is active and ready for his command.
+        Keep the total length under 4 sentences.
+        """
+        response = await self.orchestrator.chat_query(prompt, context={"task": "greeting"})
+        return response.content
+
+    async def get_hub_guidance(self, hub_name: str) -> str:
+        """Provides specific guidance for a given hub."""
+        hub_descriptions = {
+            "Executive Hub": "High-level KPIs and Multi-Market Expansion logic.",
+            "Lead Intelligence Hub": "25+ Factor scoring and Swarm Intelligence analysis.",
+            "Voice Claude": "Live call coaching and Real-time DNA Radar.",
+            "Ops & Optimization": "Model retraining and system governance."
+        }
+        desc = hub_descriptions.get(hub_name, "this section of the platform.")
+        
+        prompt = f"Explain the strategic value of the {hub_name} to Jorge. It focuses on {desc}. Keep it brief and actionable."
+        response = await self.orchestrator.chat_query(prompt, context={"task": "guidance"})
+        return response.content
+
+
+    async def process_voice_command(self, audio_input: str) -> VoiceResponse:
+        """
+        Process natural language voice commands and generate appropriate responses.
+
+        Args:
+            audio_input: Transcribed voice command text
+
+        Returns:
+            VoiceResponse with text, audio, and action details
+        """
+        try:
+            # Parse command intent and parameters
+            command = await self._parse_voice_command(audio_input)
+
+            # Generate appropriate response based on command
+            response_text = await self._generate_voice_response(command)
+
+            # Convert to speech
+            audio_data = await self.voice_service.synthesize_speech(
+                response_text,
+                voice_id="jorge"
+            )
+
+            # Take any required actions
+            action_taken = await self._execute_voice_action(command)
+
+            # Create response
+            voice_response = VoiceResponse(
+                response_text=response_text,
+                audio_data=audio_data,
+                action_taken=action_taken,
+                follow_up_needed=command.intent in ["query", "general"],
+                context_updated=action_taken is not None
+            )
+
+            # Store in history
+            self.voice_command_history.append({
+                "command": command,
+                "response": voice_response,
+                "timestamp": datetime.now()
+            })
+
+            # Update activity
+            await self._log_activity("voice_command_processed", {
+                "intent": command.intent,
+                "confidence": command.confidence,
+                "action_taken": action_taken
+            })
+
+            return voice_response
+
+        except Exception as e:
+            logger.error(f"Error processing voice command: {e}")
+            return await self._get_fallback_voice_response()
+
+    async def generate_spoken_response(self, text: str, voice_style: str = None) -> bytes:
+        """
+        Generate spoken response with appropriate voice style.
+
+        Args:
+            text: Text to convert to speech
+            voice_style: Voice style override ("professional", "friendly", "enthusiastic")
+
+        Returns:
+            Audio data as bytes
+        """
+        try:
+            style = voice_style or self.voice_response_style
+
+            # Add style-specific tone markers
+            if style == "enthusiastic":
+                text = f"*With energy* {text}"
+            elif style == "friendly":
+                text = f"*Warmly* {text}"
+            # "professional" uses text as-is
+
+            return await self.voice_service.synthesize_speech(text, voice_id="jorge")
+
+        except Exception as e:
+            logger.error(f"Error generating spoken response: {e}")
+            return b""
+
+    def set_voice_response_style(self, style: str) -> bool:
+        """
+        Set the voice response style for Claude.
+
+        Args:
+            style: "professional", "friendly", or "enthusiastic"
+
+        Returns:
+            bool: True if style was set successfully
+        """
+        if style in ["professional", "friendly", "enthusiastic"]:
+            self.voice_response_style = style
+            logger.info(f"Voice response style set to: {style}")
+            return True
+        else:
+            logger.warning(f"Invalid voice style: {style}")
+            return False
+
+    def get_voice_status(self) -> Dict[str, Any]:
+        """
+        Get current voice system status.
+
+        Returns:
+            Dict with voice system status information
+        """
+        return {
+            "voice_enabled": self.voice_enabled,
+            "wake_word_active": self.wake_word_active,
+            "response_style": self.voice_response_style,
+            "commands_processed": len(self.voice_command_history),
+            "last_command": self.voice_command_history[-1] if self.voice_command_history else None
+        }
+
+    async def _parse_voice_command(self, audio_input: str) -> VoiceCommand:
+        """Parse voice command to extract intent and parameters."""
+        try:
+            # Clean input
+            command_text = audio_input.lower().strip()
+
+            # Determine intent
+            intent = "general"
+            parameters = {}
+            confidence = 0.8
+
+            # Navigation commands
+            if any(word in command_text for word in ["go to", "navigate", "show me", "open"]):
+                intent = "navigation"
+                if "leads" in command_text:
+                    parameters["target"] = "leads"
+                elif "properties" in command_text:
+                    parameters["target"] = "properties"
+                elif "dashboard" in command_text:
+                    parameters["target"] = "dashboard"
+                elif "calendar" in command_text:
+                    parameters["target"] = "calendar"
+
+            # Query commands
+            elif any(word in command_text for word in ["what", "how", "tell me", "show status"]):
+                intent = "query"
+                if "leads" in command_text:
+                    parameters["subject"] = "leads"
+                elif "performance" in command_text:
+                    parameters["subject"] = "performance"
+                elif "today" in command_text:
+                    parameters["timeframe"] = "today"
+                elif "week" in command_text:
+                    parameters["timeframe"] = "week"
+
+            # Action commands
+            elif any(word in command_text for word in ["call", "email", "schedule", "create", "update"]):
+                intent = "action"
+                if "lead" in command_text:
+                    parameters["action_type"] = "lead_contact"
+                elif "appointment" in command_text or "meeting" in command_text:
+                    parameters["action_type"] = "schedule"
+
+            return VoiceCommand(
+                command_text=command_text,
+                timestamp=datetime.now(),
+                confidence=confidence,
+                intent=intent,
+                parameters=parameters
+            )
+
+        except Exception as e:
+            logger.error(f"Error parsing voice command: {e}")
+            return VoiceCommand(
+                command_text=audio_input,
+                timestamp=datetime.now(),
+                confidence=0.3,
+                intent="general",
+                parameters={}
+            )
+
+    async def _generate_voice_response(self, command: VoiceCommand) -> str:
+        """Generate appropriate text response for voice command."""
+        try:
+            if command.intent == "navigation":
+                target = command.parameters.get("target", "dashboard")
+                return f"Taking you to the {target} section now. I'm updating your view."
+
+            elif command.intent == "query":
+                subject = command.parameters.get("subject", "status")
+                timeframe = command.parameters.get("timeframe", "current")
+
+                if subject == "leads":
+                    if self.current_context and self.current_context.active_leads:
+                        count = len(self.current_context.active_leads)
+                        return f"You have {count} active leads. The most promising ones need your attention today."
+                    return "Let me check your current leads status."
+
+                elif subject == "performance":
+                    return f"Your {timeframe} performance is looking strong. You're ahead of your targets with several high-value opportunities in the pipeline."
+
+                else:
+                    return "I'm analyzing your current status. Let me gather the most relevant insights for you."
+
+            elif command.intent == "action":
+                action_type = command.parameters.get("action_type", "general")
+                if action_type == "lead_contact":
+                    return "I'll help you prioritize which leads to contact first based on their engagement scores and timing."
+                elif action_type == "schedule":
+                    return "I can help you schedule that. What type of meeting are you planning?"
+                else:
+                    return "I'm ready to help with that action. What would you like me to do?"
+
+            else:  # general
+                # Use Claude for general conversational responses
+                context_text = ""
+                if self.current_context:
+                    context_text = f"Current page: {self.current_context.current_page}, Active leads: {len(self.current_context.active_leads)}"
+
+                claude_response = await self.claude_assistant.get_response(
+                    f"User said: '{command.command_text}'. Current context: {context_text}. "
+                    f"Provide a helpful, conversational response as their AI real estate assistant."
+                )
+
+                return claude_response.get("content", "I'm here to help! How can I assist you today?")
+
+        except Exception as e:
+            logger.error(f"Error generating voice response: {e}")
+            return "I'm here to help. How can I assist you with your real estate business today?"
+
+    async def _execute_voice_action(self, command: VoiceCommand) -> Optional[str]:
+        """Execute actions based on voice commands."""
+        try:
+            if command.intent == "navigation":
+                target = command.parameters.get("target")
+                if target:
+                    # This would trigger navigation in the UI
+                    await self.update_context(target, {"triggered_by": "voice_command"})
+                    return f"navigated_to_{target}"
+
+            elif command.intent == "action":
+                action_type = command.parameters.get("action_type")
+                if action_type == "lead_contact":
+                    return "lead_prioritization_displayed"
+                elif action_type == "schedule":
+                    return "scheduling_interface_opened"
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Error executing voice action: {e}")
+            return None
+
+    async def _get_fallback_voice_response(self) -> VoiceResponse:
+        """Get fallback response when voice processing fails."""
+        fallback_text = "I'm having trouble understanding that command. Could you try again or ask me something else?"
+
+        try:
+            audio_data = await self.voice_service.synthesize_speech(fallback_text, voice_id="jorge")
+        except:
+            audio_data = b""
+
+        return VoiceResponse(
+            response_text=fallback_text,
+            audio_data=audio_data,
+            action_taken=None,
+            follow_up_needed=True,
+            context_updated=False
+        )
+
+    # =======================
+    # END VOICE METHODS
+    # =======================
 
     async def _log_activity(self, activity_type: str, data: Dict) -> None:
         """Log activity for analytics."""

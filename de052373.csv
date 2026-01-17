@@ -1,0 +1,8 @@
+Spending_Category,Percent_of_Agents,Segment_Type,Average_Annual_Spend_USD,Target_Agent_Profile
+Under $50/month,23,All spending,360,"Solo agents, part-time"
+$50-250/month,34,All spending,1680,Established solo agents
+$251-500/month,20,All spending,4260,"High performers, small teams"
+Over $500/month (Total Tech),24,All spending,7200,"Top performers, team leaders"
+Lead Generation: Over $500/month,19,Lead gen focus,7200,Top performers (lead-focused)
+Lead Generation: $251-500/month,15,Lead gen focus,3660,Established professionals
+Lead Generation: $50-250/month,27,Lead gen focus,1680,Growth-oriented agents

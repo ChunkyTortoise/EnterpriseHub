@@ -1,0 +1,103 @@
+{
+  "name": "ghl",
+  "description": "GoHighLevel MCP Server - Natural language interface for GHL CRM operations",
+  "version": "1.0.0",
+  "command": "python3",
+  "args": [
+    "/Users/cave/Documents/GitHub/EnterpriseHub/.claude/mcp-servers/ghl/server.py"
+  ],
+  "env": {
+    "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
+    "GHL_API_KEY": "${GHL_API_KEY}",
+    "GHL_LOCATION_ID": "${GHL_LOCATION_ID}",
+    "GHL_AGENCY_API_KEY": "${GHL_AGENCY_API_KEY}",
+    "GHL_AGENCY_ID": "${GHL_AGENCY_ID}",
+    "PYTHONPATH": "/Users/cave/Documents/GitHub/EnterpriseHub"
+  },
+  "dependencies": [
+    "anthropic-mcp>=0.1.0",
+    "httpx>=0.24.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0"
+  ],
+  "tools": [
+    {
+      "name": "create_ghl_contact",
+      "description": "Create new contact with tags and custom fields",
+      "category": "contact_management"
+    },
+    {
+      "name": "get_ghl_contact",
+      "description": "Retrieve contact details by ID",
+      "category": "contact_management"
+    },
+    {
+      "name": "search_ghl_contacts",
+      "description": "Search contacts by query and tags",
+      "category": "contact_management"
+    },
+    {
+      "name": "update_lead_score",
+      "description": "Update lead score with AI-driven intelligence",
+      "category": "lead_intelligence",
+      "integrations": [
+        "services/predictive_lead_scorer.py",
+        "services/claude_enhanced_lead_scorer.py"
+      ]
+    },
+    {
+      "name": "trigger_ghl_workflow",
+      "description": "Trigger automation workflow for contact",
+      "category": "workflow_automation"
+    },
+    {
+      "name": "send_ghl_sms",
+      "description": "Send SMS message to contact",
+      "category": "workflow_automation"
+    },
+    {
+      "name": "create_ghl_opportunity",
+      "description": "Create pipeline opportunity",
+      "category": "opportunity_management"
+    }
+  ],
+  "profiles": {
+    "backend-services": {
+      "enabled": true,
+      "description": "Enable for backend development and service integration"
+    },
+    "streamlit-dev": {
+      "enabled": false,
+      "description": "Disabled for frontend-only work"
+    },
+    "testing-qa": {
+      "enabled": true,
+      "description": "Enable for integration testing"
+    }
+  },
+  "security": {
+    "require_api_key": true,
+    "rate_limit": {
+      "requests_per_minute": 60,
+      "burst": 10
+    },
+    "allowed_operations": [
+      "create",
+      "read",
+      "update"
+    ],
+    "forbidden_operations": [
+      "delete"
+    ]
+  },
+  "performance": {
+    "timeout_seconds": 10,
+    "retry_attempts": 3,
+    "cache_ttl_seconds": 300
+  },
+  "monitoring": {
+    "log_level": "INFO",
+    "track_metrics": true,
+    "alert_on_errors": true
+  }
+}

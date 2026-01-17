@@ -1,0 +1,63 @@
+{
+  "name": "Research & Documentation Profile",
+  "description": "Optimized for library research and documentation lookup. Only Context7 enabled. Use when learning new APIs or exploring patterns.",
+  "token_savings": {
+    "estimated_overhead_reduction": "8000 tokens",
+    "context_reclaimed": "4%",
+    "recommended_for": [
+      "API documentation research",
+      "Learning new libraries",
+      "Exploring design patterns",
+      "Code example discovery",
+      "Real-time technology research",
+      "Current events and updates"
+    ]
+  },
+  "mcp_servers": {
+    "context7": {
+      "enabled": true,
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"],
+      "description": "Library docs and up-to-date code examples",
+      "token_overhead": "~3000 tokens",
+      "justification": "Essential for documentation and example lookup"
+    },
+    "perplexity": {
+      "enabled": true,
+      "command": "/Users/cave/Documents/GitHub/EnterpriseHub/.venv/bin/python",
+      "args": ["/Users/cave/Documents/GitHub/EnterpriseHub/.claude/mcp-servers/perplexity/server.py"],
+      "description": "Real-time web search and research with Perplexity Pro",
+      "token_overhead": "~2000 tokens",
+      "justification": "Real-time information, current events, and comparative research"
+    },
+    "serena": {
+      "enabled": false,
+      "reason": "Not needed for documentation research"
+    },
+    "playwright": {
+      "enabled": false,
+      "reason": "Not needed for documentation research"
+    },
+    "greptile": {
+      "enabled": false,
+      "reason": "Not needed for documentation research"
+    }
+  },
+  "context_limits": {
+    "max_context_files": 10,
+    "priority_loading": false,
+    "aggressive_exclusions": true
+  },
+  "usage_workflow": [
+    "1. Activate this profile when you need to research libraries or APIs",
+    "2. Use Context7 to resolve library IDs and query documentation",
+    "3. Switch back to minimal-context or backend-services when implementing",
+    "4. Avoids loading code navigation tools when not needed"
+  ],
+  "performance_notes": [
+    "Specialized for documentation lookup only",
+    "Minimal token overhead",
+    "Fast queries for API patterns and examples",
+    "Best used in dedicated research sessions"
+  ]
+}

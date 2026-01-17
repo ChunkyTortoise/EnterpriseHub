@@ -35,6 +35,7 @@ from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
 logger = get_logger(__name__)
 
@@ -73,6 +74,7 @@ class ReengagementEngine:
             provider="claude",
             model=settings.claude_model
         )
+        self.analytics = AnalyticsService()
 
     async def detect_trigger(
         self, context: Dict[str, Any]
@@ -177,6 +179,19 @@ Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $50
                 temperature=0.7,
                 max_tokens=150
             )
+            
+            # Record usage
+            location_id = context.get('location_id', 'unknown')
+            await self.analytics.track_llm_usage(
+                location_id=location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False,
+                contact_id=context.get('contact_id')
+            )
+
             return response.content.strip()
         except Exception as e:
             logger.error(f"Agentic re-engagement failed: {e}")
