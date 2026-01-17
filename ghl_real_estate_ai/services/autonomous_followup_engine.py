@@ -30,6 +30,7 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
+from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
 
@@ -850,9 +851,8 @@ class AutonomousFollowUpEngine:
     async def _get_follow_up_history(self, lead_id: str) -> List[Dict[str, Any]]:
         """Get follow-up history for lead."""
         try:
-            # TODO: Implement database query for follow-up history
-            # For now, return mock data
-            return []
+            db = await get_database()
+            return await db.get_lead_follow_up_history(lead_id, limit=50)
         except Exception as e:
             logger.error(f"Error getting follow-up history for {lead_id}: {e}")
             return []
@@ -860,31 +860,31 @@ class AutonomousFollowUpEngine:
     async def _get_response_data(self, lead_id: str) -> Dict[str, Any]:
         """Get response data for lead."""
         try:
-            # TODO: Implement database query for response tracking
-            # For now, return mock data
+            db = await get_database()
+            return await db.get_lead_response_data(lead_id)
+        except Exception as e:
+            logger.error(f"Error getting response data for {lead_id}: {e}")
             return {
                 'responses': [],
                 'negative_sentiment': False,
-                'last_response_time': None
+                'last_response_time': None,
+                'total_responses': 0,
+                'avg_sentiment': 0
             }
-        except Exception as e:
-            logger.error(f"Error getting response data for {lead_id}: {e}")
-            return {}
 
     async def _get_lead_profile(self, lead_id: str) -> Dict[str, Any]:
         """Get lead profile data."""
         try:
-            # TODO: Implement database query for lead profile
-            # For now, return mock data
+            db = await get_database()
+            return await db.get_lead_profile_data(lead_id)
+        except Exception as e:
+            logger.error(f"Error getting lead profile for {lead_id}: {e}")
             return {
                 'name': 'Unknown Lead',
                 'contacts': [],
                 'preferences': {},
                 'demographics': {}
             }
-        except Exception as e:
-            logger.error(f"Error getting lead profile for {lead_id}: {e}")
-            return {}
 
     async def _generate_contextual_followup(
         self,
@@ -953,24 +953,25 @@ Generate the message:"""
         """
         Get lead activity data for analysis.
 
-        In production, this would query the database for:
+        Queries the database for:
         - Email interactions
         - Website visits
-        - Property searches
-        - Pricing tool usage
+        - Communication history
+        - Behavioral metrics
         - etc.
         """
-        # Placeholder implementation
-        # TODO: Implement real database query
-
-        # For demo purposes, return mock data
-        return {
-            "property_searches": [],
-            "email_interactions": [],
-            "website_visits": [],
-            "pricing_tool_uses": [],
-            "agent_inquiries": [],
-        }
+        try:
+            db = await get_database()
+            return await db.get_lead_activity_data(lead_id)
+        except Exception as e:
+            logger.error(f"Error getting lead activity for {lead_id}: {e}")
+            return {
+                "property_searches": [],
+                "email_interactions": [],
+                "website_visits": [],
+                "pricing_tool_uses": [],
+                "agent_inquiries": [],
+            }
 
     async def _calculate_send_time(
         self, optimal_window: tuple[int, int]
@@ -1010,34 +1011,28 @@ Generate the message:"""
         return priority_map.get(intent_level, 1)
 
     async def _send_sms(self, contact_id: str, message: str) -> bool:
-        """Send SMS via GHL."""
-        try:
-            # TODO: Implement GHL SMS API call
-            logger.info(f"📱 SMS sent to {contact_id}: {message[:50]}...")
-            return True
-        except Exception as e:
-            logger.error(f"Error sending SMS: {e}")
-            return False
+        """Send SMS via Twilio integration."""
+        raise NotImplementedError(
+            "SMS communication not yet implemented. "
+            "This method must integrate with TwilioClient before production use. "
+            f"Attempted to send SMS to {contact_id}: {message[:50]}..."
+        )
 
     async def _send_email(self, contact_id: str, message: str) -> bool:
-        """Send email via GHL."""
-        try:
-            # TODO: Implement GHL email API call
-            logger.info(f"📧 Email sent to {contact_id}")
-            return True
-        except Exception as e:
-            logger.error(f"Error sending email: {e}")
-            return False
+        """Send email via SendGrid integration."""
+        raise NotImplementedError(
+            "Email communication not yet implemented. "
+            "This method must integrate with SendGridClient before production use. "
+            f"Attempted to send email to {contact_id}"
+        )
 
     async def _initiate_call(self, contact_id: str) -> bool:
-        """Initiate call via GHL."""
-        try:
-            # TODO: Implement GHL call API
-            logger.info(f"📞 Call initiated for {contact_id}")
-            return True
-        except Exception as e:
-            logger.error(f"Error initiating call: {e}")
-            return False
+        """Initiate call via Twilio Voice API integration."""
+        raise NotImplementedError(
+            "Voice call communication not yet implemented. "
+            "This method must integrate with TwilioClient Voice API before production use. "
+            f"Attempted to initiate call for {contact_id}"
+        )
 
     def get_task_stats(self) -> Dict[str, Any]:
         """Get comprehensive statistics on follow-up tasks and agent performance."""

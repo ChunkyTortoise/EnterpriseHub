@@ -28,6 +28,7 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
+from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
 
@@ -810,47 +811,71 @@ class PredictiveLeadRouter:
             return []
 
     async def _get_available_agents(self) -> List[Agent]:
-        """Get available agents for routing (placeholder implementation)."""
-        # TODO: Implement database query for available agents
-        # For demo purposes, return mock agents
-        return [
-            Agent(
-                agent_id="agent_001",
-                name="Sarah Johnson",
-                email="sarah@example.com",
-                phone="+1234567890",
-                specialties=[AgentSpecialty.FIRST_TIME_BUYERS, AgentSpecialty.LUXURY_PROPERTIES],
-                availability=AgentAvailability.AVAILABLE,
-                current_load=3,
-                max_capacity=15,
-                success_rate=0.85,
-                avg_response_time=30
-            ),
-            Agent(
-                agent_id="agent_002",
-                name="Mike Chen",
-                email="mike@example.com",
-                phone="+1234567891",
-                specialties=[AgentSpecialty.INVESTMENT_PROPERTIES, AgentSpecialty.COMMERCIAL_REAL_ESTATE],
-                availability=AgentAvailability.AVAILABLE,
-                current_load=5,
-                max_capacity=12,
-                success_rate=0.92,
-                avg_response_time=45
-            ),
-            Agent(
-                agent_id="agent_003",
-                name="Emily Rodriguez",
-                email="emily@example.com",
-                phone="+1234567892",
-                specialties=[AgentSpecialty.RELOCATION_SERVICES, AgentSpecialty.SENIOR_HOUSING],
-                availability=AgentAvailability.BUSY,
-                current_load=8,
-                max_capacity=10,
-                success_rate=0.88,
-                avg_response_time=60
-            )
-        ]
+        """Get available agents for routing from database."""
+        try:
+            db = await get_database()
+            agent_records = await db.get_available_agents(limit=50, include_unavailable=True)
+
+            agents = []
+            for record in agent_records:
+                # Parse specializations from JSON
+                specializations_data = record.get('specializations', [])
+                specialties = []
+                if isinstance(specializations_data, list):
+                    for spec_str in specializations_data:
+                        try:
+                            specialties.append(AgentSpecialty(spec_str))
+                        except ValueError:
+                            # Skip unknown specialties
+                            continue
+
+                # Map availability
+                availability = AgentAvailability.AVAILABLE
+                if not record.get('is_available', True):
+                    availability = AgentAvailability.BUSY
+
+                # Create Agent object
+                agent = Agent(
+                    agent_id=str(record['id']),
+                    name=f"{record.get('first_name', '')} {record.get('last_name', '')}".strip(),
+                    email=record.get('email', ''),
+                    phone=record.get('phone', ''),
+                    specialties=specialties,
+                    availability=availability,
+                    current_load=record.get('current_load', 0),
+                    max_capacity=record.get('capacity', 15),
+                    success_rate=record.get('conversion_rate', 0.0) / 100.0 if record.get('conversion_rate') else 0.0,
+                    avg_response_time=record.get('avg_response_time_minutes', 60),
+                    last_activity=datetime.now(),  # TODO: Add last_activity to database schema
+                    metadata={
+                        'role': record.get('role'),
+                        'customer_satisfaction': record.get('customer_satisfaction'),
+                        'total_leads_handled': record.get('total_leads_handled', 0),
+                        'timezone': record.get('timezone', 'America/Los_Angeles')
+                    }
+                )
+                agents.append(agent)
+
+            logger.info(f"Retrieved {len(agents)} agents from database for routing")
+            return agents
+
+        except Exception as e:
+            logger.error(f"Error getting available agents from database: {e}")
+            # Return fallback mock agents if database fails
+            return [
+                Agent(
+                    agent_id="fallback_001",
+                    name="System Agent",
+                    email="system@example.com",
+                    phone="+1000000000",
+                    specialties=[AgentSpecialty.FIRST_TIME_BUYERS],
+                    availability=AgentAvailability.AVAILABLE,
+                    current_load=0,
+                    max_capacity=100,
+                    success_rate=0.75,
+                    avg_response_time=60
+                )
+            ]
 
 
 # Global singleton

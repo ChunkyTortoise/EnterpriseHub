@@ -1,0 +1,52 @@
+# ==============================================================================
+# Testing Framework & Core Dependencies
+# ==============================================================================
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-mock>=3.12.0
+pytest-cov>=4.1.0
+
+# ==============================================================================
+# Testing Utilities & Fixtures
+# ==============================================================================
+pytest-xdist>=3.5.0  # Parallel test execution
+pytest-timeout>=2.3.2  # Test timeout handling
+pytest-clarity>=1.0.1  # Better test failure messages
+pytest-sugar>=0.9.7  # Enhanced test output
+pytest-benchmark>=4.0.0  # Performance benchmarking
+
+# ==============================================================================
+# Mocking & Test Doubles
+# ==============================================================================
+responses>=0.24.0  # HTTP request mocking
+freezegun>=1.4.0  # Time/date mocking
+factory-boy>=3.3.0  # Test data generation
+faker>=22.0.0  # Fake data generation
+
+# ==============================================================================
+# Async Testing Support
+# ==============================================================================
+pytest-aiohttp>=1.0.5  # For aiohttp-based tests
+aioresponses>=0.7.6  # Mock aiohttp responses
+
+# ==============================================================================
+# Database Testing
+# ==============================================================================
+pytest-postgresql>=5.0.0  # PostgreSQL test fixtures
+testcontainers>=3.7.0  # Docker containers for tests
+
+# ==============================================================================
+# Security Testing
+# ==============================================================================
+cryptography>=41.0.0  # For webhook signature testing
+pynacl>=1.5.0  # Cryptographic utilities
+
+# ==============================================================================
+# Load Testing & Performance
+# ==============================================================================
+locust>=2.18.0  # Load testing framework
+
+# ==============================================================================
+# Test Data & Validation
+# ==============================================================================
+jsonschema>=4.20.0  # JSON schema validation for API tests

@@ -1,0 +1,79 @@
+# Coverage.py configuration for Service 6 testing
+# Ensures comprehensive test coverage measurement and reporting
+
+[run]
+# Source code to measure
+source = ghl_real_estate_ai
+
+# Include all Python files in the source tree  
+include = ghl_real_estate_ai/*
+
+# Exclude test files and generated code from coverage measurement
+omit = 
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */migrations/*
+    */venv/*
+    */virtualenv/*
+    */.tox/*
+    */site-packages/*
+    */dist-packages/*
+    setup.py
+    conftest.py
+
+# Enable branch coverage (recommended for thorough testing)
+branch = True
+
+# Enable coverage of multiprocessing code
+concurrency = multiprocessing
+
+# Store coverage data in .coverage file
+data_file = .coverage
+
+[report]
+# Minimum acceptable coverage percentage
+fail_under = 80
+
+# Display missing line numbers in terminal output
+show_missing = True
+
+# Sort coverage report by coverage percentage (lowest first)
+sort = Cover
+
+# Exclude lines matching these patterns from coverage calculation
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+
+# Precision for coverage percentages
+precision = 1
+
+[html]
+# HTML coverage report directory
+directory = htmlcov
+
+# Show all files (including 100% covered)
+show_contexts = True
+
+[xml]
+# XML coverage report filename
+output = coverage.xml
+
+[json]
+# JSON coverage report filename  
+output = coverage.json
+
+# Include pretty-printed output
+pretty_print = True
+
+# Include additional metadata
+show_contexts = True
