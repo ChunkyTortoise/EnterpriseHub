@@ -19,13 +19,13 @@ services:
     environment:
       POSTGRES_DB: service6_leads
       POSTGRES_USER: service6_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-service6_secure_password_change_me}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d:ro
-    ports:
-      - "5432:5432"
+    # SECURITY: Ports removed from production - use internal network only
+    # For development access, use docker-compose.dev.yml override
     command:
       - "postgres"
       - "-c"
@@ -83,6 +83,8 @@ services:
     restart: unless-stopped
     command:
       - "redis-server"
+      - "--requirepass"
+      - "${REDIS_PASSWORD:?REDIS_PASSWORD is required}"
       - "--appendonly"
       - "yes"
       - "--appendfsync"
@@ -107,10 +109,10 @@ services:
       - "60 10000"
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
+    # SECURITY: Ports removed from production - use internal network only
+    # For development access, use docker-compose.dev.yml override
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -141,44 +143,44 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       
       # Database Configuration
-      DATABASE_URL: postgresql://service6_user:${DB_PASSWORD:-service6_secure_password_change_me}@postgres:5432/service6_leads
-      
+      DATABASE_URL: postgresql://service6_user:${DB_PASSWORD}@postgres:5432/service6_leads
+
       # Redis Configuration
-      REDIS_URL: redis://redis:6379/0
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
       
       # Security Configuration
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-generate_a_secure_jwt_secret_key_32_chars_min}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required - minimum 32 characters}
       API_RATE_LIMIT: ${API_RATE_LIMIT:-100}
-      
+
       # Claude AI Configuration
-      CLAUDE_API_KEY: ${CLAUDE_API_KEY:-your_claude_api_key_here}
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY:?CLAUDE_API_KEY is required}
       CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-3-sonnet-20240229}
-      
+
       # External Service Integrations
-      APOLLO_API_KEY: ${APOLLO_API_KEY:-your_apollo_api_key_here}
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-your_twilio_account_sid_here}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-your_twilio_auth_token_here}
-      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-+1234567890}
-      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-your_sendgrid_api_key_here}
-      SENDGRID_SENDER_EMAIL: ${SENDGRID_SENDER_EMAIL:-noreply@yourcompany.com}
+      APOLLO_API_KEY: ${APOLLO_API_KEY:?APOLLO_API_KEY is required}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:?TWILIO_ACCOUNT_SID is required}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:?TWILIO_AUTH_TOKEN is required}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:?TWILIO_PHONE_NUMBER is required}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:?SENDGRID_API_KEY is required}
+      SENDGRID_SENDER_EMAIL: ${SENDGRID_SENDER_EMAIL:?SENDGRID_SENDER_EMAIL is required}
       SENDGRID_SENDER_NAME: ${SENDGRID_SENDER_NAME:-Service 6 Lead Engine}
-      
+
       # GoHighLevel Configuration
-      GHL_API_KEY: ${GHL_API_KEY:-your_ghl_api_key_here}
-      GHL_LOCATION_ID: ${GHL_LOCATION_ID:-your_ghl_location_id_here}
+      GHL_API_KEY: ${GHL_API_KEY:?GHL_API_KEY is required}
+      GHL_LOCATION_ID: ${GHL_LOCATION_ID:?GHL_LOCATION_ID is required}
       
       # Webhook Configuration
       WEBHOOK_BASE_URL: ${WEBHOOK_BASE_URL:-https://your-domain.com}
       WEBHOOK_TIMEOUT_SECONDS: ${WEBHOOK_TIMEOUT_SECONDS:-30}
       
       # Webhook Signing Secrets
-      GHL_WEBHOOK_SECRET: ${GHL_WEBHOOK_SECRET:-your_ghl_webhook_secret}
-      APOLLO_WEBHOOK_SECRET: ${APOLLO_WEBHOOK_SECRET:-your_apollo_webhook_secret}
-      TWILIO_WEBHOOK_SECRET: ${TWILIO_WEBHOOK_SECRET:-your_twilio_auth_token}
-      SENDGRID_WEBHOOK_SECRET: ${SENDGRID_WEBHOOK_SECRET:-your_sendgrid_webhook_secret}
+      GHL_WEBHOOK_SECRET: ${GHL_WEBHOOK_SECRET:?GHL_WEBHOOK_SECRET is required}
+      APOLLO_WEBHOOK_SECRET: ${APOLLO_WEBHOOK_SECRET:?APOLLO_WEBHOOK_SECRET is required}
+      TWILIO_WEBHOOK_SECRET: ${TWILIO_WEBHOOK_SECRET:?TWILIO_WEBHOOK_SECRET is required}
+      SENDGRID_WEBHOOK_SECRET: ${SENDGRID_WEBHOOK_SECRET:?SENDGRID_WEBHOOK_SECRET is required}
       
       # Monitoring and Alerting
-      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-your_slack_webhook_url_for_alerts}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
       ENABLE_MONITORING: ${ENABLE_MONITORING:-true}
       HEALTH_CHECK_INTERVAL: ${HEALTH_CHECK_INTERVAL:-60}
       
@@ -293,7 +295,7 @@ services:
     container_name: service6-grafana
     restart: unless-stopped
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?GRAFANA_PASSWORD is required}
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/dashboards:/var/lib/grafana/dashboards:ro

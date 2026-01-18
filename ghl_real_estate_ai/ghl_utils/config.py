@@ -4,9 +4,11 @@ Configuration module for GHL Real Estate AI.
 Manages environment variables and application settings using Pydantic.
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, validator
 from typing import Optional
 from enum import Enum
 import os
+import sys
 
 
 class Settings(BaseSettings):
@@ -102,6 +104,10 @@ class Settings(BaseSettings):
     warm_lead_threshold: int = 2  # 2 questions answered
     cold_lead_threshold: int = 1  # 0-1 questions answered
 
+    # Jorge's Auto-Deactivation Threshold
+    # When lead score reaches this percentage, AI deactivates and hands off to human
+    auto_deactivate_threshold: int = 70  # 70+ percentage triggers AI deactivation
+
     # Activation & Trigger Settings
     activation_tags: list[str] = ["Hit List", "Need to Qualify", "Needs Qualifying"]
     deactivation_tags: list[str] = ["AI-Off", "Qualified", "Stop-Bot"]
@@ -112,10 +118,42 @@ class Settings(BaseSettings):
     # GHL Workflow & Custom Field Mapping
     notify_agent_workflow_id: Optional[str] = None
     ghl_calendar_id: Optional[str] = None
+    jorge_user_id: Optional[str] = None  # Jorge's GHL user ID for appointment assignment
+    manual_scheduling_workflow_id: Optional[str] = None  # Workflow for manual scheduling fallback
     custom_field_lead_score: Optional[str] = None
     custom_field_budget: Optional[str] = None
     custom_field_location: Optional[str] = None
     custom_field_timeline: Optional[str] = None
+    custom_field_appointment_time: Optional[str] = None  # Store scheduled appointment time
+    custom_field_appointment_type: Optional[str] = None  # Store appointment type
+
+    # Calendar & Appointment Settings (Jorge's Austin Business)
+    appointment_auto_booking_enabled: bool = True
+    appointment_booking_threshold: int = 5  # Lead score threshold for auto-booking (70%)
+    appointment_buffer_minutes: int = 15  # Buffer time between appointments
+    appointment_default_duration: int = 60  # Default appointment duration in minutes
+    appointment_max_days_ahead: int = 14  # Maximum days ahead to show availability
+    appointment_timezone: str = "America/Chicago"  # Jorge's Austin timezone
+
+    # Jorge's Business Hours (Austin Time)
+    business_hours_monday_start: str = "09:00"
+    business_hours_monday_end: str = "18:00"
+    business_hours_tuesday_start: str = "09:00"
+    business_hours_tuesday_end: str = "18:00"
+    business_hours_wednesday_start: str = "09:00"
+    business_hours_wednesday_end: str = "18:00"
+    business_hours_thursday_start: str = "09:00"
+    business_hours_thursday_end: str = "18:00"
+    business_hours_friday_start: str = "09:00"
+    business_hours_friday_end: str = "18:00"
+    business_hours_saturday_start: str = "10:00"
+    business_hours_saturday_end: str = "16:00"
+    business_hours_sunday_start: str = "closed"
+    business_hours_sunday_end: str = "closed"
+
+    # SMS Confirmation Settings
+    sms_confirmation_enabled: bool = True
+    sms_confirmation_template: str = "Hi {name}! Your {appointment_type} with Jorge is confirmed for {time}. Jorge will call you to discuss your property goals. Reply RESCHEDULE if needed."
 
     # Performance Settings
     webhook_timeout_seconds: int = 3
@@ -125,9 +163,49 @@ class Settings(BaseSettings):
 
     # Security
     ghl_webhook_secret: Optional[str] = None  # For signature verification
+    jwt_secret_key: str = Field(default="development-jwt-secret-key-for-testing-only-not-for-production-use")  # JWT signing secret
+    apollo_webhook_secret: Optional[str] = None
+    twilio_webhook_secret: Optional[str] = None
+    sendgrid_webhook_secret: Optional[str] = None
 
     # Testing
     test_mode: bool = False
+
+    @validator('jwt_secret_key')
+    def validate_jwt_secret(cls, v, values):
+        """SECURITY FIX: Validate JWT secret in production."""
+        environment = values.get('environment', 'development')
+        if environment == 'production' and len(v) < 32:
+            print("❌ SECURITY ERROR: JWT_SECRET_KEY must be at least 32 characters in production")
+            print("   Generate with: openssl rand -hex 32")
+            sys.exit(1)
+        return v
+
+    @validator('ghl_webhook_secret')
+    def validate_webhook_secret(cls, v, values):
+        """SECURITY FIX: Validate webhook secret in production."""
+        environment = values.get('environment', 'development')
+        if environment == 'production' and not v:
+            print("❌ SECURITY ERROR: GHL_WEBHOOK_SECRET is required in production")
+            print("   Generate with: openssl rand -hex 32")
+            sys.exit(1)
+        if v and len(v) < 32:
+            print("⚠️  WARNING: Webhook secret should be at least 32 characters")
+        return v
+
+    @validator('anthropic_api_key')
+    def validate_anthropic_key(cls, v):
+        """Validate Anthropic API key format."""
+        if v and not v.startswith('sk-ant-'):
+            print("⚠️  WARNING: Anthropic API key should start with 'sk-ant-'")
+        return v
+
+    @validator('ghl_api_key')
+    def validate_ghl_key(cls, v, values):
+        """Validate GHL API key format."""
+        if v and not v.startswith('eyJ'):
+            print("⚠️  WARNING: GHL API key should be JWT format (starts with 'eyJ')")
+        return v
 
     model_config = SettingsConfigDict(
         env_file=".env",

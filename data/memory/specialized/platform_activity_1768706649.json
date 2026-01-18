@@ -1,0 +1,14 @@
+{
+  "content": {
+    "type": "session_start",
+    "data": {
+      "user": "Jorge",
+      "market": "Austin",
+      "greeting_insights": 3,
+      "priority_alerts": 0
+    },
+    "timestamp": "2026-01-17T19:24:09.727586"
+  },
+  "stored_at": "2026-01-18T03:24:09.727998",
+  "expires_at": "2026-01-25T03:24:09.728004"
+}

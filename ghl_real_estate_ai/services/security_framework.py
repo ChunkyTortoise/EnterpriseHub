@@ -320,20 +320,70 @@ class SecurityFramework:
         """Verify GoHighLevel webhook signature."""
         signature = request.headers.get("X-GHL-Signature")
         if not signature:
-            return False
-        
+            logger.error(
+                "GHL webhook signature missing - potential unauthorized access attempt",
+                extra={
+                    "client_ip": self._get_client_ip(request),
+                    "error_id": "WEBHOOK_SIGNATURE_MISSING"
+                }
+            )
+            # SECURITY FIX: Raise exception instead of returning False to prevent bypass
+            raise HTTPException(
+                status_code=401,
+                detail="Webhook signature required"
+            )
+
         secret = self.config.webhook_signing_secrets.get("ghl")
         if not secret:
-            logger.error("GHL webhook secret not configured")
-            return False
-        
-        expected_signature = hmac.new(
-            secret.encode(),
-            body,
-            hashlib.sha256
-        ).hexdigest()
-        
-        return hmac.compare_digest(signature, expected_signature)
+            logger.error(
+                "CRITICAL: GHL webhook secret not configured in production",
+                extra={
+                    "error_id": "WEBHOOK_SECRET_MISSING",
+                    "environment": getattr(settings, 'environment', 'unknown')
+                }
+            )
+            # SECURITY FIX: Configuration errors should prevent execution
+            raise HTTPException(
+                status_code=500,
+                detail="Webhook authentication not configured"
+            )
+
+        try:
+            expected_signature = hmac.new(
+                secret.encode(),
+                body,
+                hashlib.sha256
+            ).hexdigest()
+
+            # SECURITY FIX: Use constant-time comparison
+            is_valid = hmac.compare_digest(signature, expected_signature)
+
+            if not is_valid:
+                logger.warning(
+                    "GHL webhook signature verification failed",
+                    extra={
+                        "client_ip": self._get_client_ip(request),
+                        "error_id": "WEBHOOK_SIGNATURE_INVALID",
+                        "signature_provided": signature[:10] + "..." if len(signature) > 10 else signature
+                    }
+                )
+
+            return is_valid
+
+        except Exception as e:
+            logger.error(
+                f"Webhook signature verification error: {type(e).__name__}: {e}",
+                extra={
+                    "error_id": "WEBHOOK_SIGNATURE_ERROR",
+                    "client_ip": self._get_client_ip(request)
+                },
+                exc_info=True
+            )
+            # SECURITY FIX: Unexpected errors should reject the webhook
+            raise HTTPException(
+                status_code=500,
+                detail="Webhook verification failed"
+            )
     
     def _verify_apollo_signature(self, request: Request, body: bytes) -> bool:
         """Verify Apollo.io webhook signature."""

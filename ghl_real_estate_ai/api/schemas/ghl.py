@@ -73,6 +73,8 @@ class ActionType(str, Enum):
     UPDATE_CUSTOM_FIELD = "update_custom_field"
     TRIGGER_WORKFLOW = "trigger_workflow"
     CREATE_TASK = "create_task"
+    CREATE_APPOINTMENT = "create_appointment"
+    UPDATE_APPOINTMENT = "update_appointment"
 
 
 class GHLAction(BaseModel):
@@ -86,6 +88,15 @@ class GHLAction(BaseModel):
     message: Optional[str] = None  # For send_message
     channel: Optional[MessageType] = None  # For send_message
 
+    # Appointment-specific fields
+    calendar_id: Optional[str] = None  # For create_appointment
+    appointment_id: Optional[str] = None  # For update_appointment
+    start_time: Optional[str] = None  # ISO format datetime
+    end_time: Optional[str] = None  # ISO format datetime
+    appointment_title: Optional[str] = None
+    appointment_type: Optional[str] = None  # buyer_consultation, listing_appointment, etc.
+    assigned_user_id: Optional[str] = None  # Jorge's user ID
+
 
 class GHLWebhookResponse(BaseModel):
     """
@@ -98,6 +109,76 @@ class GHLWebhookResponse(BaseModel):
     success: bool
     message: str  # AI-generated response
     actions: List[GHLAction] = Field(default_factory=list)
+
+
+class AppointmentStatus(str, Enum):
+    """Appointment status values for GHL calendar."""
+
+    CONFIRMED = "confirmed"
+    PENDING = "pending"
+    CANCELLED = "cancelled"
+    COMPLETED = "completed"
+    NO_SHOW = "noShow"
+
+
+class GHLCalendarEvent(BaseModel):
+    """Calendar event from GHL API."""
+
+    id: Optional[str] = None
+    title: str
+    start_time: datetime = Field(..., alias="startTime")
+    end_time: datetime = Field(..., alias="endTime")
+    calendar_id: str = Field(..., alias="calendarId")
+    location_id: str = Field(..., alias="locationId")
+    contact_id: Optional[str] = Field(None, alias="contactId")
+    assigned_user_id: Optional[str] = Field(None, alias="assignedUserId")
+    status: AppointmentStatus = AppointmentStatus.CONFIRMED
+    notes: Optional[str] = None
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class GHLTimeSlot(BaseModel):
+    """Available time slot from GHL calendar API."""
+
+    start_time: datetime = Field(..., alias="startTime")
+    end_time: datetime = Field(..., alias="endTime")
+    available: bool = True
+    calendar_id: str = Field(..., alias="calendarId")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class CreateAppointmentRequest(BaseModel):
+    """Request schema for creating appointments in GHL."""
+
+    calendar_id: str = Field(..., alias="calendarId")
+    location_id: str = Field(..., alias="locationId")
+    contact_id: str = Field(..., alias="contactId")
+    start_time: str = Field(..., alias="startTime")  # ISO format
+    end_time: Optional[str] = Field(None, alias="endTime")  # ISO format
+    title: str
+    status: AppointmentStatus = AppointmentStatus.CONFIRMED
+    assigned_user_id: Optional[str] = Field(None, alias="assignedUserId")
+    notes: Optional[str] = None
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class AppointmentBookingEvent(BaseModel):
+    """Event data for appointment booking analytics."""
+
+    contact_id: str
+    appointment_type: str  # buyer_consultation, listing_appointment, etc.
+    booking_method: str  # auto_booked, manual_scheduled, fallback
+    lead_score: int
+    appointment_time: datetime
+    timezone: str = "America/Chicago"
+    confirmation_sent: bool = False
+    booking_duration_seconds: Optional[int] = None  # Time to book from qualification
+
+    class Config:
+        arbitrary_types_allowed = True
     error: Optional[str] = None
 
 

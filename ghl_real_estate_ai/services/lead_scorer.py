@@ -91,6 +91,40 @@ class LeadScorer:
 
         return questions_answered
 
+    def get_percentage_score(self, question_count: int) -> int:
+        """
+        Convert Jorge's question count (0-7) to percentage score (0-100).
+
+        This mapping ensures Jorge's 70+ threshold triggers at 5+ questions answered.
+
+        Mapping:
+        - 7 questions = 100% (all qualifying info collected)
+        - 6 questions = 85% (nearly complete)
+        - 5 questions = 75% (above Jorge's 70% threshold - triggers handoff)
+        - 4 questions = 65% (strong engagement)
+        - 3 questions = 50% (Hot lead threshold)
+        - 2 questions = 30% (Warm lead threshold)
+        - 1 question = 15% (minimal engagement)
+        - 0 questions = 5% (no engagement)
+
+        Args:
+            question_count: Number of questions answered (0-7)
+
+        Returns:
+            Percentage score (0-100)
+        """
+        score_mapping = {
+            7: 100,  # All questions answered
+            6: 85,   # 6 questions
+            5: 75,   # 5 questions (above Jorge's 70 threshold)
+            4: 65,   # 4 questions
+            3: 50,   # 3 questions (Hot lead)
+            2: 30,   # 2 questions (Warm lead)
+            1: 15,   # 1 question (Cold lead)
+            0: 5     # No questions answered
+        }
+        return score_mapping.get(question_count, 0)
+
     def _is_urgent_timeline(self, timeline: str) -> bool:
         """
         Determine if timeline indicates urgency.

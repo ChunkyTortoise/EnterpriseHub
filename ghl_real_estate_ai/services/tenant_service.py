@@ -34,36 +34,52 @@ class TenantService:
     async def get_tenant_config(self, location_id: str) -> Dict[str, Any]:
         """
         Retrieve configuration for a tenant.
-        Fallbacks: Specific File -> Default Settings -> Agency Master Key.
+        SECURITY: NO LONGER exposes primary account keys via webhook access.
         """
         file_path = self._get_file_path(location_id)
 
-        # 1. Check for specific tenant file
+        # 1. Check for specific tenant file (explicit registration required)
         if file_path.exists():
             try:
                 with open(file_path, "r") as f:
-                    return json.load(f)
+                    config = json.load(f)
+                    logger.info(
+                        f"Loaded tenant config for location {location_id}",
+                        extra={
+                            "has_api_keys": "anthropic_api_key" in config,
+                            "is_registered": True
+                        }
+                    )
+                    return config
+            except json.JSONDecodeError as e:
+                logger.error(
+                    f"Tenant config file corrupted for {location_id}: {e}",
+                    extra={"error_id": "TENANT_CONFIG_CORRUPT"}
+                )
+                raise ValueError(f"Invalid tenant configuration for {location_id}")
             except Exception as e:
-                logger.error(f"Failed to read tenant file for {location_id}: {e}")
+                logger.error(
+                    f"Failed to read tenant config for {location_id}: {e}",
+                    extra={"error_id": "TENANT_CONFIG_READ_ERROR"}
+                )
+                raise ValueError(f"Cannot load tenant configuration")
 
-        # 2. Fallback to default credentials from settings if this is the primary account
-        if location_id == settings.ghl_location_id:
-            return {
-                "location_id": settings.ghl_location_id,
-                "anthropic_api_key": settings.anthropic_api_key,
-                "ghl_api_key": settings.ghl_api_key,
-            }
+        # SECURITY FIX: Never fall back to primary account credentials via webhook
+        # This prevents attackers from using Jorge's location_id to steal his API keys
+        # If this is truly Jorge's primary location calling via webhook, it should
+        # have an explicit tenant config file created during setup
 
-        # 3. Fallback to Agency Master Key (Jorge's Requirement)
-        if settings.ghl_agency_api_key:
-            logger.info(f"Using Agency Master Key for location {location_id}")
-            return {
+        logger.warning(
+            f"No tenant config found for location {location_id} - rejecting request",
+            extra={
+                "error_id": "TENANT_NOT_REGISTERED",
                 "location_id": location_id,
-                "anthropic_api_key": settings.anthropic_api_key,
-                "ghl_api_key": settings.ghl_agency_api_key,
-                "is_agency_scoped": True,
+                "primary_location": settings.ghl_location_id
             }
+        )
 
+        # SECURITY: Return empty config instead of exposing credentials
+        # This forces explicit tenant registration for all sub-accounts
         return {}
 
     async def save_tenant_config(
