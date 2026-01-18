@@ -13,12 +13,16 @@ from contextlib import asynccontextmanager
 
 from ghl_real_estate_ai.api.routes import (
     analytics,
+    attribution_reports,
     bulk_operations,
     claude_chat,
     crm,
+    golden_lead_detection,
     health,
     lead_lifecycle,
     portal,
+    predictive_analytics,
+    pricing_optimization,
     properties,
     team,
     voice,
@@ -125,6 +129,10 @@ app.include_router(team.router, prefix="/api")
 app.include_router(crm.router, prefix="/api")
 app.include_router(voice.router, prefix="/api")
 app.include_router(lead_intelligence.router, prefix="/api")
+app.include_router(predictive_analytics.router)  # Predictive Analytics ML endpoints
+app.include_router(pricing_optimization.router)  # Pricing & ROI endpoints
+app.include_router(golden_lead_detection.router)  # Golden Lead Detection endpoints
+app.include_router(attribution_reports.router, prefix="/api")  # Attribution Reports endpoints
 
 
 # Root endpoint

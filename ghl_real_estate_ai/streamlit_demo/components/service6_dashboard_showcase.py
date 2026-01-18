@@ -13,6 +13,9 @@ from .interactive_lead_management import render_interactive_lead_management
 from .enterprise_intelligence_hub import render_enterprise_intelligence_hub
 from .voice_ai_accessibility_interface import render_voice_ai_accessibility_interface
 
+# Import security framework for input sanitization
+from ghl_real_estate_ai.services.security_framework import SecurityFramework
+
 
 class Service6DashboardShowcase:
     """
@@ -123,6 +126,12 @@ class Service6DashboardShowcase:
                     color: #E6EDF3;
                 """
                 
+                # SECURITY: Sanitize user inputs to prevent XSS attacks
+                security = SecurityFramework()
+                safe_icon = security.sanitize_input(dashboard_info["icon"])
+                safe_title = security.sanitize_input(dashboard_info["title"])
+                safe_description = security.sanitize_input(dashboard_info["description"])
+
                 st.markdown(f"""
                 <div style='
                     {card_style}
@@ -135,13 +144,13 @@ class Service6DashboardShowcase:
                     backdrop-filter: blur(10px);
                 '>
                     <div style='font-size: 2rem; margin-bottom: 0.5rem;'>
-                        {dashboard_info["icon"]}
+                        {safe_icon}
                     </div>
                     <h4 style='margin: 0 0 0.5rem 0; font-weight: 700;'>
-                        {dashboard_info["title"]}
+                        {safe_title}
                     </h4>
                     <p style='margin: 0; font-size: 0.85rem; opacity: 0.9; line-height: 1.3;'>
-                        {dashboard_info["description"]}
+                        {safe_description}
                     </p>
                 </div>
                 """, unsafe_allow_html=True)

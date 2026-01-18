@@ -1,0 +1,90 @@
+{
+  "deployment_time": "2026-01-17T19:31:23.014105",
+  "duration_seconds": 4.226516,
+  "phases_passed": 3,
+  "total_phases": 6,
+  "results": {
+    "preparation": {
+      "status": "passed",
+      "details": {
+        "directories_created": [
+          "logs"
+        ],
+        "service_files_found": 3,
+        "service_files_missing": 0,
+        "migrations_available": 2,
+        "existing_services": [
+          "Tiered Cache Service (tiered_cache_service.py)",
+          "Template Library Service (template_library_service.py)",
+          "Behavioral Intelligence Network (realtime_behavioral_network.py)"
+        ]
+      }
+    },
+    "dependencies": {
+      "status": "failed",
+      "details": {
+        "python_version": "3.12.12",
+        "python_compatible": true,
+        "virtual_environment": true,
+        "packages_installed": 5,
+        "packages_missing": 1,
+        "missing_list": [
+          "psycopg2-binary"
+        ]
+      }
+    },
+    "services": {
+      "status": "partial",
+      "details": {
+        "importable_services": 1,
+        "total_services": 3,
+        "database_accessible": true,
+        "import_errors": [
+          "Template Service: `regex` is removed. use `pattern` instead\n\nFor further information visit https://errors.pydantic.dev",
+          "Behavioral Network: No module named 'aiohttp'"
+        ],
+        "working_services": [
+          "Cache Service"
+        ]
+      }
+    },
+    "integration_tests": {
+      "status": "passed",
+      "details": {
+        "tests_passed": 4,
+        "total_tests": 4,
+        "pass_rate": 100.0,
+        "database_schema": true,
+        "service_instantiation": true,
+        "cross_service_communication": true,
+        "configuration": true
+      }
+    },
+    "performance_tests": {
+      "status": "passed",
+      "details": {
+        "database_performance": 100,
+        "cache_performance": 85.0,
+        "template_performance": 90.0,
+        "memory_usage": 80,
+        "average_score": 88.8,
+        "target_threshold": 75
+      }
+    },
+    "production_readiness": {
+      "status": "failed",
+      "details": {
+        "checks_passed": 0,
+        "total_checks": 5,
+        "readiness_score": 0.0,
+        "check_results": {
+          "environment_setup": false,
+          "security_configuration": false,
+          "monitoring_ready": false,
+          "backup_procedures": false,
+          "documentation": false
+        }
+      }
+    }
+  }
+}

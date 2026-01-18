@@ -2,7 +2,7 @@
 JWT Authentication Middleware
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -10,14 +10,27 @@ from jose import JWTError, jwt
 import bcrypt
 import os
 
-# Configuration
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+# Configuration - CRITICAL SECURITY FIX
+# No weak fallback secrets allowed - this was a major security vulnerability
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 if not SECRET_KEY:
-    if os.getenv("ENVIRONMENT") == "production":
-        raise ValueError("JWT_SECRET_KEY environment variable must be set in production")
-    SECRET_KEY = "dev-secret-key-do-not-use-in-production"
+    # CRITICAL: Never allow weak fallback secrets in any environment
+    error_msg = "JWT_SECRET_KEY environment variable must be set for security. No fallback allowed."
+    print(f"SECURITY ERROR: {error_msg}")
+    raise ValueError(error_msg)
+# Security configuration - enforce strong settings
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Security validation for JWT secret
+if len(SECRET_KEY) < 32:
+    error_msg = f"JWT_SECRET_KEY must be at least 32 characters for security. Current length: {len(SECRET_KEY)}"
+    print(f"SECURITY ERROR: {error_msg}")
+    raise ValueError(error_msg)
 
 security = HTTPBearer()
 
@@ -29,18 +42,76 @@ class JWTAuth:
     def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         """Create a new JWT token."""
         to_encode = data.copy()
-        expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
     
     @staticmethod
     def verify_token(token: str) -> dict:
-        """Verify and decode JWT token."""
+        """
+        Verify and decode JWT token.
+        
+        CRITICAL SECURITY FIX: Enhanced validation and security logging.
+        
+        Args:
+            token: JWT token string to verify
+            
+        Returns:
+            Decoded token payload
+            
+        Raises:
+            HTTPException: If token is invalid, expired, or malformed
+        """
+        if not token or not isinstance(token, str):
+            logger.error("Invalid token format provided", extra={"security_event": "jwt_verification_failed", "error_id": "JWT_001"})
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token format",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            
+            # Validate required fields
+            if "sub" not in payload:
+                logger.error("Token missing required subject field", extra={"security_event": "jwt_verification_failed", "error_id": "JWT_002"})
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token structure",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            
+            # Check if token is expired (additional validation beyond jwt.decode)
+            exp = payload.get("exp")
+            if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
+                logger.warning("Expired token presented", extra={"security_event": "jwt_token_expired", "error_id": "JWT_003"})
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token has expired",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            
+            logger.info("JWT token successfully verified", extra={"security_event": "jwt_verification_success", "user_id": payload.get("sub")})
             return payload
-        except JWTError:
+            
+        except jwt.ExpiredSignatureError:
+            logger.warning("Expired JWT token presented", extra={"security_event": "jwt_token_expired", "error_id": "JWT_004"})
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has expired",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        except jwt.InvalidTokenError as e:
+            logger.error(f"Invalid JWT token: {str(e)}", extra={"security_event": "jwt_verification_failed", "error_id": "JWT_005"})
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        except JWTError as e:
+            logger.error(f"JWT processing error: {str(e)}", extra={"security_event": "jwt_processing_error", "error_id": "JWT_006"})
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",

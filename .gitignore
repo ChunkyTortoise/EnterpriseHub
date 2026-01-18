@@ -152,3 +152,16 @@ ghl-real-estate-ai/
 # Archives and Cleanup
 _archive/
 scripts/gemini_cleanup.py
+# Service6 Production Environment Files
+.env.service6
+.env.local
+.env.production
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Sensitive Configuration
+config/production/*.yml
+config/production/*.json

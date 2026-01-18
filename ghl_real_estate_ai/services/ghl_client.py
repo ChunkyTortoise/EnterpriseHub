@@ -70,8 +70,30 @@ class GHLClient:
             return ErrorResponse()
 
     def get_conversations(self, limit: int = 20) -> List[Dict[str, Any]]:
-        """Fetch recent conversations from GHL."""
+        """
+        Fetch recent conversations from GHL.
+        
+        CRITICAL SECURITY FIX: No longer silently returns empty list on API failures.
+        Silent failures can hide important system issues and compromise monitoring.
+        
+        Args:
+            limit: Maximum number of conversations to fetch
+            
+        Returns:
+            List of conversation dictionaries
+            
+        Raises:
+            ValueError: If limit is invalid
+            httpx.HTTPError: If API request fails
+            ConnectionError: If GHL API is unreachable
+        """
+        if limit <= 0:
+            error_msg = f"Invalid conversation limit: {limit}. Must be positive integer."
+            logger.error(error_msg, extra={"security_event": "fetch_conversations_failed", "error_id": "GHL_005"})
+            raise ValueError(error_msg)
+            
         if settings.test_mode or self.api_key == "dummy":
+            logger.info(f"[TEST MODE] Would fetch {limit} conversations", extra={"test_mode": True})
             return []
             
         endpoint = f"{self.base_url}/conversations/search"
@@ -79,16 +101,69 @@ class GHLClient:
         
         try:
             with httpx.Client() as client:
-                response = client.get(endpoint, params=params, headers=self.headers)
+                response = client.get(endpoint, params=params, headers=self.headers, timeout=30.0)
                 response.raise_for_status()
-                return response.json().get("conversations", [])
+                
+                data = response.json()
+                conversations = data.get("conversations", [])
+                
+                logger.info(
+                    f"Successfully fetched {len(conversations)} conversations",
+                    extra={"security_event": "fetch_conversations_success", "count": len(conversations)}
+                )
+                
+                return conversations
+                
+        except httpx.TimeoutException as e:
+            error_msg = f"Timeout fetching conversations after 30s: {str(e)}"
+            logger.error(
+                error_msg,
+                extra={"security_event": "fetch_conversations_timeout", "error_id": "GHL_006", "limit": limit}
+            )
+            raise ConnectionError(error_msg) from e
+            
+        except httpx.HTTPStatusError as e:
+            error_msg = f"HTTP {e.response.status_code} error fetching conversations: {str(e)}"
+            logger.error(
+                error_msg,
+                extra={
+                    "security_event": "fetch_conversations_http_error", 
+                    "error_id": "GHL_007",
+                    "status_code": e.response.status_code,
+                    "limit": limit
+                }
+            )
+            raise
+            
         except Exception as e:
-            logger.error(f"Failed to fetch conversations: {e}")
-            return []
+            error_msg = f"Unexpected error fetching conversations: {str(e)}"
+            logger.error(
+                error_msg,
+                extra={
+                    "security_event": "fetch_conversations_critical_failure",
+                    "error_id": "GHL_008", 
+                    "limit": limit,
+                    "error_type": type(e).__name__
+                }
+            )
+            raise
 
     def get_opportunities(self) -> List[Dict[str, Any]]:
-        """Fetch opportunities (pipeline) from GHL."""
+        """
+        Fetch opportunities (pipeline) from GHL.
+        
+        CRITICAL SECURITY FIX: No longer silently returns empty list on API failures.
+        Silent failures can hide revenue pipeline issues and compromise business monitoring.
+        
+        Returns:
+            List of opportunity dictionaries
+            
+        Raises:
+            httpx.HTTPError: If API request fails
+            ConnectionError: If GHL API is unreachable
+        """
         if settings.test_mode or self.api_key == "dummy":
+            logger.info("[TEST MODE] Would fetch opportunities", extra={"test_mode": True})
             return []
             
         endpoint = f"{self.base_url}/opportunities/search"
@@ -96,12 +171,59 @@ class GHLClient:
         
         try:
             with httpx.Client() as client:
-                response = client.get(endpoint, params=params, headers=self.headers)
+                response = client.get(endpoint, params=params, headers=self.headers, timeout=30.0)
                 response.raise_for_status()
-                return response.json().get("opportunities", [])
+                
+                data = response.json()
+                opportunities = data.get("opportunities", [])
+                
+                # Calculate revenue for logging
+                total_pipeline = sum(
+                    float(opp.get("monetary_value", 0) or 0) for opp in opportunities
+                )
+                
+                logger.info(
+                    f"Successfully fetched {len(opportunities)} opportunities, total pipeline: ${total_pipeline:,.2f}",
+                    extra={
+                        "security_event": "fetch_opportunities_success", 
+                        "count": len(opportunities),
+                        "pipeline_value": total_pipeline
+                    }
+                )
+                
+                return opportunities
+                
+        except httpx.TimeoutException as e:
+            error_msg = f"Timeout fetching opportunities after 30s: {str(e)}"
+            logger.error(
+                error_msg,
+                extra={"security_event": "fetch_opportunities_timeout", "error_id": "GHL_009"}
+            )
+            raise ConnectionError(error_msg) from e
+            
+        except httpx.HTTPStatusError as e:
+            error_msg = f"HTTP {e.response.status_code} error fetching opportunities: {str(e)}"
+            logger.error(
+                error_msg,
+                extra={
+                    "security_event": "fetch_opportunities_http_error", 
+                    "error_id": "GHL_010",
+                    "status_code": e.response.status_code
+                }
+            )
+            raise
+            
         except Exception as e:
-            logger.error(f"Failed to fetch opportunities: {e}")
-            return []
+            error_msg = f"Unexpected error fetching opportunities: {str(e)}"
+            logger.error(
+                error_msg,
+                extra={
+                    "security_event": "fetch_opportunities_critical_failure",
+                    "error_id": "GHL_011",
+                    "error_type": type(e).__name__
+                }
+            )
+            raise
 
     async def send_message(
         self, contact_id: str, message: str, channel: MessageType = MessageType.SMS
@@ -204,27 +326,121 @@ class GHLClient:
         """
         Remove tags from a contact.
 
+        CRITICAL SECURITY FIX: This method now properly removes tags instead of just logging.
+        Silent failures in tag removal can bypass security policies.
+
         Args:
             contact_id: GHL contact ID
             tags: List of tag names to remove
 
         Returns:
             API response dict
+
+        Raises:
+            ValueError: If contact_id or tags are invalid
+            httpx.HTTPError: If API request fails
         """
-        # GHL API doesn't have a dedicated remove tags endpoint
-        # We need to fetch current tags, remove specified ones, and update
-        logger.warning(
-            "Tag removal requires fetching current tags first",
-            extra={"contact_id": contact_id},
-        )
+        if not contact_id:
+            error_msg = "Contact ID is required for tag removal"
+            logger.error(error_msg, extra={"security_event": "tag_removal_failed", "error_id": "GHL_001"})
+            raise ValueError(error_msg)
+            
+        if not tags or not isinstance(tags, list):
+            error_msg = f"Valid tags list is required for removal from contact {contact_id}"
+            logger.error(error_msg, extra={"contact_id": contact_id, "security_event": "tag_removal_failed", "error_id": "GHL_002"})
+            raise ValueError(error_msg)
 
-        # For now, log the intent - implement full logic when needed
-        logger.info(
-            f"Would remove tags from contact {contact_id}: {tags}",
-            extra={"contact_id": contact_id, "tags": tags},
-        )
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] Would remove tags from contact {contact_id}: {tags}",
+                extra={"contact_id": contact_id, "tags": tags, "test_mode": True},
+            )
+            return {"status": "mocked", "removed_tags": tags}
 
-        return {"message": "Tag removal logged (not implemented)"}
+        try:
+            # Step 1: Fetch current contact data to get existing tags
+            contact_endpoint = f"{self.base_url}/contacts/{contact_id}"
+            
+            async with httpx.AsyncClient() as client:
+                # Get current contact data
+                response = await client.get(
+                    contact_endpoint,
+                    headers=self.headers,
+                    timeout=settings.webhook_timeout_seconds,
+                )
+                response.raise_for_status()
+                
+                contact_data = response.json()
+                current_tags = contact_data.get("tags", [])
+                
+                # Step 2: Remove specified tags from current tags
+                if not current_tags:
+                    logger.warning(
+                        f"Contact {contact_id} has no tags to remove",
+                        extra={"contact_id": contact_id, "requested_tags": tags}
+                    )
+                    return {"message": "No tags to remove", "current_tags": []}
+                
+                # Remove the specified tags (case-insensitive)
+                tags_to_remove_lower = [tag.lower() for tag in tags]
+                updated_tags = [tag for tag in current_tags if tag.lower() not in tags_to_remove_lower]
+                
+                # Step 3: Update contact with new tags list
+                payload = {"tags": updated_tags}
+                
+                update_response = await client.put(
+                    contact_endpoint,
+                    json=payload,
+                    headers=self.headers,
+                    timeout=settings.webhook_timeout_seconds,
+                )
+                update_response.raise_for_status()
+
+                # Log successful removal with security context
+                removed_tags = [tag for tag in current_tags if tag.lower() in tags_to_remove_lower]
+                logger.info(
+                    f"Successfully removed tags from contact {contact_id}: {removed_tags}",
+                    extra={
+                        "contact_id": contact_id, 
+                        "removed_tags": removed_tags,
+                        "remaining_tags": updated_tags,
+                        "security_event": "tag_removal_success"
+                    },
+                )
+
+                return {
+                    "status": "success",
+                    "removed_tags": removed_tags,
+                    "remaining_tags": updated_tags,
+                    "contact_id": contact_id
+                }
+
+        except httpx.HTTPError as e:
+            error_msg = f"Failed to remove tags from contact {contact_id}: {str(e)}"
+            logger.error(
+                error_msg,
+                extra={
+                    "contact_id": contact_id, 
+                    "error": str(e),
+                    "security_event": "tag_removal_failed",
+                    "error_id": "GHL_003",
+                    "requested_tags": tags
+                },
+            )
+            raise
+        except Exception as e:
+            error_msg = f"Unexpected error removing tags from contact {contact_id}: {str(e)}"
+            logger.error(
+                error_msg,
+                extra={
+                    "contact_id": contact_id,
+                    "error": str(e),
+                    "security_event": "tag_removal_critical_failure", 
+                    "error_id": "GHL_004",
+                    "requested_tags": tags
+                },
+            )
+            raise
 
     async def update_custom_field(
         self, contact_id: str, field_id: str, value: Any
@@ -464,6 +680,9 @@ class GHLClient:
     ) -> List[Dict[str, Any]]:
         """
         Apply multiple actions to a contact.
+        
+        CRITICAL SECURITY FIX: Enhanced error handling and escalation for critical failures.
+        Some action failures should stop processing entirely to prevent inconsistent state.
 
         Args:
             contact_id: GHL contact ID
@@ -471,10 +690,30 @@ class GHLClient:
 
         Returns:
             List of API response dicts
-        """
-        results = []
 
-        for action in actions:
+        Raises:
+            ValueError: If contact_id or actions are invalid
+            RuntimeError: If critical security-related actions fail
+        """
+        if not contact_id:
+            error_msg = "Contact ID is required for action application"
+            logger.error(error_msg, extra={"security_event": "apply_actions_failed", "error_id": "GHL_012"})
+            raise ValueError(error_msg)
+            
+        if not actions:
+            error_msg = "Actions list cannot be empty"
+            logger.error(error_msg, extra={"contact_id": contact_id, "security_event": "apply_actions_failed", "error_id": "GHL_013"})
+            raise ValueError(error_msg)
+
+        results = []
+        critical_failures = []
+        
+        logger.info(
+            f"Starting to apply {len(actions)} actions to contact {contact_id}",
+            extra={"contact_id": contact_id, "action_count": len(actions)}
+        )
+
+        for i, action in enumerate(actions):
             try:
                 if (
                     action.type == ActionType.SEND_MESSAGE
@@ -491,8 +730,29 @@ class GHLClient:
                     results.append(result)
 
                 elif action.type == ActionType.REMOVE_TAG and action.tag:
-                    result = await self.remove_tags(contact_id, [action.tag])
-                    results.append(result)
+                    # Tag removal is CRITICAL for security policies - must not fail silently
+                    try:
+                        result = await self.remove_tags(contact_id, [action.tag])
+                        results.append(result)
+                    except Exception as e:
+                        critical_failures.append({
+                            "action": action.type,
+                            "error": str(e),
+                            "action_index": i,
+                            "tag": action.tag
+                        })
+                        logger.error(
+                            f"CRITICAL: Tag removal failed for contact {contact_id}, tag: {action.tag}",
+                            extra={
+                                "contact_id": contact_id,
+                                "action_type": action.type,
+                                "error": str(e),
+                                "security_event": "critical_tag_removal_failure",
+                                "error_id": "GHL_014",
+                                "tag": action.tag
+                            }
+                        )
+                        raise RuntimeError(f"Critical security action failed: {action.type}") from e
 
                 elif (
                     action.type == ActionType.UPDATE_CUSTOM_FIELD
@@ -508,17 +768,58 @@ class GHLClient:
                     result = await self.trigger_workflow(contact_id, action.workflow_id)
                     results.append(result)
 
+                else:
+                    # Invalid action configuration
+                    error_msg = f"Invalid action configuration: {action.type}"
+                    logger.warning(
+                        error_msg,
+                        extra={
+                            "contact_id": contact_id,
+                            "action_type": action.type,
+                            "action_index": i
+                        }
+                    )
+                    results.append({"error": error_msg, "action": action.type})
+
+            except RuntimeError:
+                # Critical failures should stop processing immediately
+                raise
+                
             except Exception as e:
+                error_msg = f"Failed to apply action {action.type}: {str(e)}"
                 logger.error(
-                    f"Failed to apply action {action.type}: {str(e)}",
+                    error_msg,
                     extra={
                         "contact_id": contact_id,
                         "action_type": action.type,
                         "error": str(e),
+                        "action_index": i,
+                        "security_event": "action_application_failure",
+                        "error_id": "GHL_015"
                     },
                 )
-                # Continue with other actions even if one fails
-                results.append({"error": str(e), "action": action.type})
+                
+                # For non-critical actions, log error and continue
+                results.append({
+                    "error": str(e), 
+                    "action": action.type,
+                    "action_index": i,
+                    "status": "failed"
+                })
+
+        # Log final summary
+        successful_actions = len([r for r in results if "error" not in r])
+        failed_actions = len(results) - successful_actions
+        
+        logger.info(
+            f"Action application complete: {successful_actions} successful, {failed_actions} failed",
+            extra={
+                "contact_id": contact_id,
+                "successful_count": successful_actions,
+                "failed_count": failed_actions,
+                "critical_failures": len(critical_failures)
+            }
+        )
 
         return results
 
@@ -620,26 +921,19 @@ class GHLClient:
             }
             
         except Exception as e:
-            logger.error(f"Failed to fetch dashboard data: {e}")
-            # Return minimal structure to prevent crashes
-            return {
-                "conversations": [],
-                "opportunities": [],
-                "metrics": {
-                    "total_pipeline": 0,
-                    "total_revenue": 0,
-                    "conversion_rate": 0,
-                    "active_leads": 0,
-                    "qualified_leads": 0,
-                    "won_deals": 0
-                },
-                "activity_feed": [],
-                "system_health": {
-                    "status": "error",
-                    "api_connected": False,
-                    "error": str(e)
+            # CRITICAL SECURITY FIX: Dashboard failures should not be silently masked
+            error_msg = f"CRITICAL: Dashboard data fetch failed - this indicates serious system problems: {str(e)}"
+            logger.error(
+                error_msg,
+                extra={
+                    "security_event": "dashboard_fetch_critical_failure",
+                    "error_id": "GHL_016",
+                    "error_type": type(e).__name__,
+                    "api_key_status": "configured" if self.api_key else "missing"
                 }
-            }
+            )
+            # Dashboard failures indicate critical system problems - don't hide them
+            raise RuntimeError(error_msg) from e
     
     def _get_current_timestamp(self) -> str:
         """Get current timestamp in ISO format"""
