@@ -219,6 +219,7 @@ try:
     from ghl_real_estate_ai.streamlit_demo.realtime_dashboard_integration import render_realtime_intelligence_dashboard
     from ghl_real_estate_ai.streamlit_demo.components.floating_claude import render_floating_claude
     from ghl_real_estate_ai.streamlit_demo.components.project_copilot import render_project_copilot
+    from ghl_real_estate_ai.streamlit_demo.components.billing_dashboard import show as render_billing_dashboard
 
     SERVICES_LOADED = True
 except ImportError as e:
@@ -803,6 +804,7 @@ with st.sidebar:
         "Executive Command Center",
         "Lead Intelligence Hub",
         "Real-Time Intelligence",
+        "Billing Analytics",
         "Ops & Optimization"
     ]
     
@@ -922,6 +924,7 @@ with st.sidebar:
         "Proactive Intelligence": "2 high-priority alerts detected. Pipeline risk identified - take action now to stay on target.",
         "Swarm Intelligence": "The analyst swarm is currently processing 142 leads. Token efficiency is at an all-time high.",
         "Real-Time Intelligence": "Market conditions are shifting in East Austin. Update your valuation models.",
+        "Billing Analytics": "ARR is tracking at $187K - 23% monthly growth puts us on target for $240K. 23 customers in overage generating strong usage revenue.",
         "Buyer Journey Hub": "We have 3 buyers ready for pre-approval. Syncing with financing partners now.",
         "Seller Journey Hub": "The Maple Ave listing is hitting peak interest. I recommend an open house this Sunday.",
         "Automation Studio": "3 new workflow templates are ready for deployment. Your time savings is currently 42h/week.",
@@ -1943,6 +1946,13 @@ elif selected_hub == "Automation Studio":
 elif selected_hub == "Sales Copilot":
     copilot_hub = SalesCopilotHub(services, claude)
     copilot_hub.render_hub()
+elif selected_hub == "Billing Analytics":
+    try:
+        render_billing_dashboard()
+    except Exception as e:
+        st.error("⚠️ Billing Analytics Temporarily Unavailable")
+        st.info("Billing system integration is being optimized. Please try again shortly.")
+        print(f"BILLING DASHBOARD ERROR: {str(e)}")
 elif selected_hub == "Ops & Optimization":
     ops_hub = OpsOptimizationHub(services, claude)
     ops_hub.render_hub()

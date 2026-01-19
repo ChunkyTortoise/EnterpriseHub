@@ -1,0 +1,182 @@
+{
+  "timestamp": "2026-01-18T17:36:31.775043",
+  "overall_status": "FAIL",
+  "checks": {
+    "Market Registry": {
+      "status": "ERROR",
+      "error": "cannot import name 'get_market_service' from 'ghl_real_estate_ai.markets.registry' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/markets/registry.py)"
+    },
+    "Market Configurations": {
+      "status": "PASS",
+      "validated_configs": [
+        "austin.yaml",
+        "dallas.yaml",
+        "houston.yaml",
+        "san_antonio.yaml",
+        "rancho_cucamonga.yaml"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    "Churn Prediction Engine": {
+      "status": "PASS",
+      "features": {
+        "predictor": false,
+        "stratifier": false,
+        "event_tracker": true
+      },
+      "risk_tiers": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "event_types": [
+        "detected",
+        "confirmed",
+        "recovered",
+        "permanent"
+      ],
+      "prediction_test": "PASS"
+    },
+    "API Routes": {
+      "status": "PASS",
+      "route_files": [
+        "market_intelligence_v2.py",
+        "jorge_advanced.py",
+        "revenue_optimization.py"
+      ],
+      "errors": []
+    },
+    "Database Migrations": {
+      "status": "PASS",
+      "migration_files": [
+        "012_enterprise_analytics.sql",
+        "001_initial_migration.sql",
+        "011_ai_revenue_optimization.sql",
+        "007_create_message_templates.sql",
+        "002_sample_data_migration.sql",
+        "009_performance_optimization_indexes.sql",
+        "008_billing_integration.sql",
+        "010_white_label_infrastructure.sql",
+        "006_performance_critical_indexes.sql"
+      ],
+      "errors": []
+    },
+    "Service Dependencies": {
+      "status": "FAIL",
+      "validated_services": [
+        "austin_market_service.py",
+        "rancho_cucamonga_market_service.py"
+      ],
+      "errors": [
+        "Import error in churn_prediction_engine.py: attempted relative import with no known parent package",
+        "Import error in market_prediction_engine.py: cannot import name 'get_market_service' from 'ghl_real_estate_ai.markets.registry' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/markets/registry.py)"
+      ]
+    },
+    "Backward Compatibility": {
+      "status": "PASS",
+      "compatibility_checks": [
+        "AustinMarketService - PASS",
+        "ContactData schema - PASS"
+      ],
+      "warnings": []
+    },
+    "Security Validation": {
+      "status": "WARNING",
+      "security_checks": [
+        "dallas.yaml - Clean",
+        "austin.yaml - Clean",
+        "san_antonio.yaml - Clean",
+        "rancho_cucamonga.yaml - Clean",
+        "houston.yaml - Clean"
+      ],
+      "warnings": [
+        "Potential sensitive data in realtime_environments.yaml"
+      ]
+    },
+    "Performance Readiness": {
+      "status": "PASS",
+      "performance_checks": [
+        "Cache service available",
+        "Async patterns found in 115 service files"
+      ],
+      "recommendations": []
+    }
+  },
+  "warnings": [
+    "Potential sensitive data in realtime_environments.yaml"
+  ],
+  "errors": [
+    "Import error in churn_prediction_engine.py: attempted relative import with no known parent package",
+    "Import error in market_prediction_engine.py: cannot import name 'get_market_service' from 'ghl_real_estate_ai.markets.registry' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/markets/registry.py)"
+  ],
+  "market_configs": {
+    "austin": {
+      "neighborhoods": 8,
+      "employers": 6,
+      "demographics": [
+        "population",
+        "median_age",
+        "median_household_income",
+        "college_education_rate",
+        "employment_rate",
+        "population_growth_rate",
+        "diversity_index"
+      ]
+    },
+    "dallas": {
+      "neighborhoods": 8,
+      "employers": 6,
+      "demographics": [
+        "population",
+        "median_age",
+        "median_household_income",
+        "college_education_rate",
+        "employment_rate",
+        "population_growth_rate",
+        "diversity_index"
+      ]
+    },
+    "houston": {
+      "neighborhoods": 8,
+      "employers": 6,
+      "demographics": [
+        "population",
+        "median_age",
+        "median_household_income",
+        "college_education_rate",
+        "employment_rate",
+        "population_growth_rate",
+        "diversity_index"
+      ]
+    },
+    "san_antonio": {
+      "neighborhoods": 8,
+      "employers": 6,
+      "demographics": [
+        "population",
+        "median_age",
+        "median_household_income",
+        "college_education_rate",
+        "employment_rate",
+        "population_growth_rate",
+        "diversity_index"
+      ]
+    },
+    "rancho_cucamonga": {
+      "neighborhoods": 8,
+      "employers": 6,
+      "demographics": [
+        "population",
+        "median_age",
+        "median_household_income",
+        "college_education_rate",
+        "employment_rate",
+        "population_growth_rate",
+        "diversity_index"
+      ]
+    }
+  },
+  "deployment_readiness": false
+}

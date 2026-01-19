@@ -46,7 +46,7 @@ class MockGHLClient:
         self.appointments_created = []
         self.messages_sent = []
 
-    async def get_available_slots(self, calendar_id: str, start_date: str, end_date: str, timezone: str = "America/Chicago"):
+    async def get_available_slots(self, calendar_id: str, start_date: str, end_date: str, timezone: str = "America/Los_Angeles"):
         """Mock calendar availability."""
         # Generate some realistic available slots
         now = datetime.now(AUSTIN_TZ)

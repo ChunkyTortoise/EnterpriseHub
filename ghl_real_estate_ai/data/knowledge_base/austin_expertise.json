@@ -1,432 +1,311 @@
 {
   "meta": {
-    "version": "1.0",
+    "version": "2.0",
     "last_updated": "2026-01-17",
-    "expertise_focus": "Austin Real Estate Market Intelligence",
-    "target_audience": "Jorge's Lead Bot - Corporate Relocations & Tech Workers"
+    "expertise_focus": "Rancho Cucamonga/Inland Empire Real Estate Market Intelligence",
+    "target_audience": "Jorge's Lead Bot - Logistics & Healthcare Workers"
   },
   "neighborhoods": {
-    "round_rock": {
-      "name": "Round Rock",
-      "elevator_pitch": "The epicenter of Austin's tech boom, home to Apple's massive campus with world-class schools and family-friendly amenities.",
+    "etiwanda": {
+      "name": "Etiwanda",
+      "elevator_pitch": "Premier family-oriented community in North Rancho Cucamonga, home to the top-rated Etiwanda School District with luxury homes and professional appeal.",
       "key_talking_points": [
-        "Apple's $1B campus employs 15,000+ with expansion to 20,000 by 2026",
-        "Round Rock ISD consistently ranks in top 1% of Texas school districts",
-        "Dell Diamond sports complex and Premium Outlets provide entertainment",
-        "Easy access to both Austin downtown and Hill Country",
-        "Strong property appreciation driven by tech worker demand"
+        "Etiwanda School District consistently ranks in top 5% of California districts",
+        "Close proximity to major logistics hubs and healthcare facilities",
+        "Newer construction with modern amenities and family-friendly design",
+        "Easy access to LA/OC employment centers via 210 freeway",
+        "Strong property values supported by school district reputation"
       ],
       "employer_connections": {
-        "apple": {
-          "commute": "5-10 minutes",
-          "appeal": "Walking/biking distance to campus, many Apple families",
+        "amazon_logistics": {
+          "commute": "15-20 minutes",
+          "appeal": "Family-friendly community, excellent schools for logistics professionals",
           "talking_points": [
-            "Live where you work - ultimate work-life balance",
-            "Apple shuttle services available",
-            "Strong community of Apple employees and families",
-            "Property values supported by Apple's long-term commitment"
+            "Perfect for Amazon logistics managers and supervisors",
+            "Top schools for children of logistics professionals",
+            "Strong community of working families",
+            "Property values supported by consistent employment"
           ]
         },
-        "dell": {
-          "commute": "8-15 minutes",
-          "appeal": "Dell headquarters proximity, established tech community",
+        "kaiser_permanente": {
+          "commute": "18-25 minutes",
+          "appeal": "Healthcare professionals community, family focus",
           "talking_points": [
-            "Original tech hub of Austin area",
-            "Mature community with Dell executive homes",
-            "Excellent schools attract Dell families"
+            "Many Kaiser healthcare workers choose Etiwanda",
+            "Excellent schools for healthcare families",
+            "Professional community atmosphere"
           ]
         }
       },
       "lifestyle_highlights": [
         "Family-oriented community with top-rated schools",
-        "Dell Diamond hosts Round Rock Express baseball",
-        "Premium Outlets for shopping convenience",
-        "Close to Lake Travis and Hill Country recreation",
-        "Safe, master-planned communities"
-      ],
-      "market_insights": {
-        "price_trends": "Steady appreciation driven by Apple expansion",
-        "inventory": "Limited supply in high-demand neighborhoods",
-        "buyer_profile": "Corporate relocations, growing families, Apple employees",
-        "best_time_to_buy": "Before major Apple milestones and announcements",
-        "investment_potential": "Strong long-term growth due to corporate anchors"
-      },
-      "school_districts": {
-        "round_rock_isd": {
-          "rating": 9.1,
-          "highlights": [
-            "Westwood High School - 9.8/10 rating",
-            "STEM Academy programs",
-            "Early College partnerships",
-            "Low student-teacher ratios"
-          ],
-          "appeal_to_families": "Consistently rated among Texas's best districts"
-        }
-      }
-    },
-    "domain_arboretum": {
-      "name": "Domain/Arboretum",
-      "elevator_pitch": "Austin's premier live-work-play destination where tech executives live in luxury while staying connected to the innovation economy.",
-      "key_talking_points": [
-        "Tech executive density - Meta, IBM, Google, Oracle offices nearby",
-        "Upscale shopping and dining at The Domain",
-        "Luxury high-rises and modern single-family homes",
-        "Easy access to downtown and major corporate campuses",
-        "Sophisticated urban lifestyle with suburban convenience"
-      ],
-      "employer_connections": {
-        "meta": {
-          "commute": "5-10 minutes",
-          "appeal": "Walking distance to Meta offices, tech community",
-          "talking_points": [
-            "Live in the heart of Austin's tech corridor",
-            "Meta's significant presence and expansion plans",
-            "Networking opportunities with tech leadership",
-            "Premium lifestyle befitting tech executive compensation"
-          ]
-        },
-        "ibm": {
-          "commute": "10-15 minutes",
-          "appeal": "Close to IBM's Austin operations",
-          "talking_points": [
-            "Established tech community with IBM history",
-            "Professional network of IBM executives and partners"
-          ]
-        },
-        "google": {
-          "commute": "20-25 minutes to downtown",
-          "appeal": "North Austin tech hub connectivity",
-          "talking_points": [
-            "Growing Google presence in Austin",
-            "Access to broader tech ecosystem"
-          ]
-        }
-      },
-      "lifestyle_highlights": [
-        "Luxury shopping at The Domain and Arboretum",
-        "High-end restaurants and entertainment",
-        "Modern luxury condos and townhomes",
-        "Executive-level amenities and services",
-        "Sophisticated urban lifestyle"
-      ],
-      "market_insights": {
-        "price_trends": "Premium market with steady executive demand",
-        "inventory": "Limited luxury inventory, high turnover",
-        "buyer_profile": "Tech executives, relocating professionals, empty nesters",
-        "best_time_to_buy": "Corporate bonus seasons (Q1, Q4)",
-        "investment_potential": "Strong rental demand from corporate relocations"
-      }
-    },
-    "south_lamar": {
-      "name": "South Lamar",
-      "elevator_pitch": "Austin's cultural heart where tech professionals live among food trucks, music venues, and the city's most authentic experiences.",
-      "key_talking_points": [
-        "Authentic Austin culture - food trucks, music, and arts",
-        "Walking/biking distance to Zilker Park and downtown",
-        "Young professional tech community",
-        "Rapidly appreciating market with development pressure",
-        "Perfect for tech workers who want the 'real Austin' experience"
-      ],
-      "employer_connections": {
-        "google": {
-          "commute": "10-15 minutes to downtown offices",
-          "appeal": "Urban lifestyle appeals to Google's younger workforce",
-          "talking_points": [
-            "Cultural amenities align with Google's creative culture",
-            "Bike-friendly commute to downtown offices",
-            "Young professional community"
-          ]
-        },
-        "indeed": {
-          "commute": "15-20 minutes",
-          "appeal": "Indeed's downtown location makes this ideal",
-          "talking_points": [
-            "Perfect for Indeed's tech professionals",
-            "Cultural lifestyle matches Indeed's company culture"
-          ]
-        }
-      },
-      "lifestyle_highlights": [
-        "Iconic Austin food truck scene",
-        "Zilker Park and Lady Bird Lake access",
-        "Live music venues and cultural events",
-        "Walkable neighborhood with unique character",
-        "Dog-friendly community with multiple parks"
-      ],
-      "market_insights": {
-        "price_trends": "Rapid appreciation due to development and tech worker demand",
-        "inventory": "Limited, high competition for quality properties",
-        "buyer_profile": "Young tech professionals, cultural enthusiasts, first-time buyers",
-        "best_time_to_buy": "Before major developments are completed",
-        "investment_potential": "Strong short and long-term appreciation"
-      }
-    },
-    "east_austin": {
-      "name": "East Austin",
-      "elevator_pitch": "Where Austin's creative and tech communities collide - the neighborhood that perfectly captures the city's 'Keep Austin Weird' spirit.",
-      "key_talking_points": [
-        "Hip, artistic community with emerging tech presence",
-        "Incredible food scene and local businesses",
-        "Strong appreciation potential as gentrification continues",
-        "Appeals to tech workers seeking authentic culture",
-        "Close to Tesla Gigafactory and downtown"
-      ],
-      "employer_connections": {
-        "tesla": {
-          "commute": "15-20 minutes to Gigafactory",
-          "appeal": "Appeals to Tesla's innovative, non-traditional culture",
-          "talking_points": [
-            "Perfect cultural fit for Tesla's disruptive mentality",
-            "Reasonable commute to Gigafactory",
-            "Community that embraces innovation and creativity"
-          ]
-        },
-        "startups": {
-          "commute": "10-15 minutes to downtown startup corridor",
-          "appeal": "Entrepreneurial spirit matches startup culture",
-          "talking_points": [
-            "Where Austin's startup community lives and plays",
-            "Affordable entry point for equity-building entrepreneurs",
-            "Network with other innovative professionals"
-          ]
-        }
-      },
-      "lifestyle_highlights": [
-        "Vibrant arts district and galleries",
-        "Innovative restaurants and craft breweries",
-        "Music venues and creative spaces",
-        "Diverse, inclusive community",
-        "Great walkability and bike culture"
-      ],
-      "market_insights": {
-        "price_trends": "Strong appreciation as neighborhood develops",
-        "inventory": "Mix of new construction and renovated properties",
-        "buyer_profile": "Creative professionals, young tech workers, first-time buyers",
-        "best_time_to_buy": "Before major infrastructure improvements complete",
-        "investment_potential": "High appreciation potential with gentrification"
-      }
-    },
-    "mueller": {
-      "name": "Mueller",
-      "elevator_pitch": "Austin's master-planned community designed for modern families - where tech professionals enjoy new homes, top schools, and a strong sense of community.",
-      "key_talking_points": [
-        "Master-planned community with modern amenities",
-        "New construction homes with latest smart home technology",
-        "Mueller Lake Park and community events foster neighborhood spirit",
-        "Excellent schools and family-friendly environment",
-        "Central location with easy access to everywhere in Austin"
-      ],
-      "employer_connections": {
-        "general_tech": {
-          "commute": "15-25 minutes to major tech hubs",
-          "appeal": "Perfect for tech families with children",
-          "talking_points": [
-            "New homes with latest tech infrastructure",
-            "Community designed for busy professional families",
-            "Strong schools attract tech families",
-            "Planned community reduces decision fatigue for busy professionals"
-          ]
-        }
-      },
-      "lifestyle_highlights": [
-        "Mueller Lake Park with trails and events",
-        "Sunday farmers market and community gatherings",
-        "Modern amenities and planned green spaces",
-        "Family-friendly environment with playgrounds",
-        "New construction with energy efficiency"
-      ],
-      "market_insights": {
-        "price_trends": "Steady appreciation supported by planned development",
-        "inventory": "New construction phases with predictable supply",
-        "buyer_profile": "Tech families, professionals with children, move-up buyers",
-        "best_time_to_buy": "Early phases of new sections for best value",
-        "investment_potential": "Stable growth with master-planned protection"
-      }
-    },
-    "downtown": {
-      "name": "Downtown Austin",
-      "elevator_pitch": "Live at the center of it all - where tech executives enjoy luxury urban living with access to Austin's best business, culture, and entertainment.",
-      "key_talking_points": [
-        "Ultimate urban lifestyle with luxury high-rise living",
-        "Walking distance to major tech offices and business district",
-        "World-class dining, entertainment, and cultural attractions",
-        "Lady Bird Lake access for recreation",
-        "Perfect for tech executives and urban professionals"
-      ],
-      "employer_connections": {
-        "google": {
-          "commute": "Walking distance",
-          "appeal": "Ultimate convenience for Google's downtown presence",
-          "talking_points": [
-            "Walk to work from luxury high-rise",
-            "Perfect for Google's urban professional culture",
-            "Access to business networking and industry events"
-          ]
-        },
-        "indeed": {
-          "commute": "Walking distance",
-          "appeal": "Live where you work convenience",
-          "talking_points": [
-            "Walk to Indeed's downtown headquarters",
-            "Urban lifestyle matches Indeed's company culture"
-          ]
-        }
-      },
-      "lifestyle_highlights": [
-        "Luxury high-rise living with premium amenities",
-        "Rainey Street entertainment district",
-        "Lady Bird Lake hike and bike trail",
-        "World-class restaurants and rooftop bars",
-        "Cultural events and festivals"
-      ],
-      "market_insights": {
-        "price_trends": "Premium market with steady executive demand",
-        "inventory": "Limited luxury units, high turnover",
-        "buyer_profile": "Tech executives, young professionals, empty nesters",
-        "best_time_to_buy": "Corporate bonus seasons and end of year",
-        "investment_potential": "Strong rental market for corporate housing"
-      }
-    },
-    "cedar_park": {
-      "name": "Cedar Park",
-      "elevator_pitch": "Where tech families find the perfect balance - top-rated schools, family amenities, and reasonable commutes to major tech campuses.",
-      "key_talking_points": [
-        "Leander ISD - consistently rated among Texas's best",
-        "Family-oriented community with excellent amenities",
-        "Reasonable commute to Apple, Dell, and other tech hubs",
-        "Strong home values supported by school ratings",
-        "Perfect for tech families prioritizing education"
-      ],
-      "employer_connections": {
-        "apple": {
-          "commute": "15-20 minutes",
-          "appeal": "Excellent schools attract Apple families",
-          "talking_points": [
-            "Many Apple families choose Cedar Park for schools",
-            "Reasonable commute with excellent family amenities",
-            "Strong resale values due to school district reputation"
-          ]
-        },
-        "dell": {
-          "commute": "20-25 minutes",
-          "appeal": "Established tech community from Dell's presence",
-          "talking_points": [
-            "Long-standing community of Dell families",
-            "Proven track record for tech professional lifestyle"
-          ]
-        }
-      },
-      "lifestyle_highlights": [
-        "H-E-B Center for sports and entertainment",
-        "Excellent parks and recreation facilities",
-        "Family-friendly restaurants and shopping",
-        "Close to Hill Country and Lake Travis",
-        "Safe, well-maintained neighborhoods"
+        "Day Creek Golf Course and recreational facilities",
+        "Close to Victoria Gardens shopping and entertainment",
+        "Safe, well-maintained neighborhoods",
+        "Mountain views and suburban tranquility"
       ],
       "market_insights": {
         "price_trends": "Steady appreciation driven by school district reputation",
-        "inventory": "Good supply of family homes in various price ranges",
-        "buyer_profile": "Tech families, education-focused parents, move-up buyers",
-        "best_time_to_buy": "Before school year starts (summer)",
-        "investment_potential": "Stable growth supported by education quality"
+        "inventory": "Limited supply in desirable school boundaries",
+        "buyer_profile": "Logistics/healthcare professionals, growing families, school-focused buyers",
+        "best_time_to_buy": "Before school year starts for best selection",
+        "investment_potential": "Strong long-term growth due to school quality"
+      },
+      "school_districts": {
+        "etiwanda_school_district": {
+          "rating": 9.3,
+          "highlights": [
+            "Etiwanda High School - 9.5/10 rating",
+            "AVID and AP programs",
+            "Dual enrollment partnerships",
+            "Low student-teacher ratios"
+          ],
+          "appeal_to_families": "Consistently rated among California's best districts"
+        }
       }
     },
-    "westlake": {
-      "name": "Westlake",
-      "elevator_pitch": "Austin's most prestigious address where tech executives and industry leaders enjoy luxury living with world-class schools and Hill Country beauty.",
+    "alta_loma": {
+      "name": "Alta Loma",
+      "elevator_pitch": "Rancho Cucamonga's luxury enclave where executives and professionals enjoy custom homes, mountain views, and prestigious living.",
       "key_talking_points": [
-        "Most prestigious address in Austin area",
-        "Westlake High School - 9.8/10 rating, nationally recognized",
-        "Luxury homes with Lake Austin and Hill Country views",
-        "Tech executive and industry leader community",
-        "Premium lifestyle with country club amenities"
+        "Luxury custom homes and executive neighborhoods",
+        "Close to Victoria Gardens premium shopping and dining",
+        "Mountain views and prestigious addresses",
+        "Easy access to major employment centers via 210 freeway",
+        "Sophisticated suburban lifestyle with urban convenience"
       ],
       "employer_connections": {
-        "executive_level": {
-          "commute": "25-35 minutes to major tech hubs",
-          "appeal": "Prestige address for C-suite and senior executives",
+        "kaiser_permanente": {
+          "commute": "20-25 minutes",
+          "appeal": "Executive housing for healthcare leadership",
           "talking_points": [
-            "Where Austin's tech leadership lives",
-            "Prestigious address for client entertainment",
-            "World-class schools for executive families",
-            "Luxury amenities befitting senior position compensation"
+            "Luxury homes suitable for Kaiser executives",
+            "Professional community atmosphere",
+            "Prestigious address for healthcare leadership",
+            "Premium lifestyle matching executive compensation"
+          ]
+        },
+        "amazon_logistics": {
+          "commute": "20-25 minutes",
+          "appeal": "Executive housing for logistics leadership",
+          "talking_points": [
+            "Luxury homes for Amazon management",
+            "Professional network of executives",
+            "Prestigious community for leadership roles"
           ]
         }
       },
       "lifestyle_highlights": [
-        "Lake Austin waterfront properties",
-        "Hill Country views and natural beauty",
-        "Country club and luxury amenities",
-        "Upscale shopping and dining",
-        "Exclusive community atmosphere"
+        "Luxury homes with mountain views",
+        "Red Hill Country Club access",
+        "Victoria Gardens shopping and dining",
+        "Executive-level amenities",
+        "Sophisticated community atmosphere"
       ],
       "market_insights": {
-        "price_trends": "Premium market with strong value retention",
-        "inventory": "Limited luxury inventory, very competitive",
-        "buyer_profile": "Tech executives, high-net-worth professionals, luxury buyers",
-        "best_time_to_buy": "When inventory becomes available - timing is key",
-        "investment_potential": "Strong value retention and prestige premium"
+        "price_trends": "Premium market with luxury demand",
+        "inventory": "Limited luxury inventory, high turnover",
+        "buyer_profile": "Healthcare/logistics executives, luxury buyers, professionals",
+        "best_time_to_buy": "Year-end bonus seasons",
+        "investment_potential": "Strong rental demand from executive relocations"
+      }
+    },
+    "central_rc": {
+      "name": "Central Rancho Cucamonga",
+      "elevator_pitch": "The heart of Rancho Cucamonga where logistics and healthcare workers enjoy modern amenities, Victoria Gardens access, and balanced family living.",
+      "key_talking_points": [
+        "Central location with Victoria Gardens mall and entertainment",
+        "Balanced mix of housing options for all income levels",
+        "Easy access to major logistics hubs and healthcare facilities",
+        "Strong public transportation and freeway connectivity",
+        "Growing community with modern amenities"
+      ],
+      "employer_connections": {
+        "amazon_logistics": {
+          "commute": "10-15 minutes",
+          "appeal": "Direct access to fulfillment centers, worker community",
+          "talking_points": [
+            "Live close to Amazon facilities",
+            "Many Amazon workers in the community",
+            "Easy commute for all shifts",
+            "Affordable options for logistics workers"
+          ]
+        },
+        "ups_fedex": {
+          "commute": "12-18 minutes",
+          "appeal": "Close to logistics hubs, worker-friendly pricing",
+          "talking_points": [
+            "Perfect for UPS/FedEx employees",
+            "Community of logistics workers",
+            "Affordable family housing"
+          ]
+        }
+      },
+      "lifestyle_highlights": [
+        "Victoria Gardens Mall and entertainment",
+        "Central Park recreational facilities",
+        "Diverse dining and shopping options",
+        "Family-friendly neighborhoods",
+        "Easy freeway access"
+      ],
+      "market_insights": {
+        "price_trends": "Steady growth with balanced appreciation",
+        "inventory": "Good supply across price ranges",
+        "buyer_profile": "Logistics workers, healthcare staff, first-time buyers",
+        "best_time_to_buy": "Throughout the year with good availability",
+        "investment_potential": "Strong rental demand from workers"
+      }
+    },
+    "south_rc": {
+      "name": "South Rancho Cucamonga",
+      "elevator_pitch": "Affordable entry point to Rancho Cucamonga living where logistics workers and young families find value, community, and opportunity.",
+      "key_talking_points": [
+        "Most affordable entry point to Rancho Cucamonga",
+        "Strong appreciation potential as area develops",
+        "Close proximity to major logistics employment centers",
+        "First-time buyer friendly with starter home options",
+        "Growing community with new development"
+      ],
+      "employer_connections": {
+        "amazon_logistics": {
+          "commute": "8-12 minutes",
+          "appeal": "Closest housing to fulfillment centers",
+          "talking_points": [
+            "Live closest to Amazon facilities",
+            "Perfect for warehouse and logistics workers",
+            "Affordable options for entry-level positions",
+            "Strong community of Amazon employees"
+          ]
+        },
+        "ups_fedex": {
+          "commute": "10-15 minutes",
+          "appeal": "Worker-friendly housing and pricing",
+          "talking_points": [
+            "Ideal for UPS/FedEx workers",
+            "Affordable family housing",
+            "Close to logistics facilities"
+          ]
+        }
+      },
+      "lifestyle_highlights": [
+        "Affordable family neighborhoods",
+        "Cucamonga Peak trail access",
+        "Historic Route 66 character",
+        "Growing community amenities",
+        "Easy commuter access"
+      ],
+      "market_insights": {
+        "price_trends": "Strong appreciation potential",
+        "inventory": "Good supply of starter homes",
+        "buyer_profile": "First-time buyers, logistics workers, young families",
+        "best_time_to_buy": "Now for future appreciation",
+        "investment_potential": "High appreciation potential as area develops"
+      }
+    },
+    "victoria_gardens_area": {
+      "name": "Victoria Gardens Area",
+      "elevator_pitch": "Live where you play - luxury lifestyle meets convenience with premier shopping, dining, and entertainment at your doorstep.",
+      "key_talking_points": [
+        "Walking distance to Victoria Gardens premier retail",
+        "Luxury condos and townhomes with modern amenities",
+        "Urban lifestyle with suburban safety",
+        "Close to professional services and healthcare",
+        "Perfect for professionals seeking convenience"
+      ],
+      "employer_connections": {
+        "healthcare_professionals": {
+          "commute": "15-25 minutes to major facilities",
+          "appeal": "Urban lifestyle for healthcare professionals",
+          "talking_points": [
+            "Perfect for busy healthcare professionals",
+            "Low-maintenance living with luxury amenities",
+            "Close to professional services"
+          ]
+        },
+        "logistics_management": {
+          "commute": "15-20 minutes",
+          "appeal": "Executive lifestyle for logistics managers",
+          "talking_points": [
+            "Luxury living for logistics management",
+            "Urban amenities with suburban safety",
+            "Professional lifestyle"
+          ]
+        }
+      },
+      "lifestyle_highlights": [
+        "Victoria Gardens Mall premium shopping",
+        "Fine dining and entertainment",
+        "Luxury condos and townhomes",
+        "Urban walkability",
+        "Professional community"
+      ],
+      "market_insights": {
+        "price_trends": "Premium market with steady demand",
+        "inventory": "Limited luxury units",
+        "buyer_profile": "Professionals, empty nesters, luxury buyers",
+        "best_time_to_buy": "When inventory becomes available",
+        "investment_potential": "Strong rental demand from professionals"
       }
     }
   },
   "corporate_relocations": {
-    "apple": {
+    "amazon_logistics": {
       "timeline_insights": [
-        "Peak hiring periods: Q1 (January-March) and Q3 (July-September)",
-        "Relocation packages typically include 60-90 days temporary housing",
-        "Most relocations complete 30-60 days before start date",
-        "Executive relocations often include house-hunting trips"
+        "Peak hiring periods: Q4 (October-December) for holiday season",
+        "Year-round hiring for logistics and warehouse positions",
+        "Management relocations typically 30-60 days notice",
+        "Seasonal workforce fluctuations impact housing demand"
       ],
       "compensation_insights": {
         "typical_ranges": {
-          "software_engineer": "$140,000 - $200,000",
-          "senior_engineer": "$180,000 - $280,000",
-          "principal_engineer": "$250,000 - $400,000",
-          "director_level": "$350,000 - $500,000"
+          "warehouse_associate": "$45,000 - $55,000",
+          "logistics_coordinator": "$55,000 - $75,000",
+          "operations_manager": "$75,000 - $95,000",
+          "senior_manager": "$95,000 - $120,000"
         },
         "housing_budget_guidance": "Typically 25-30% of total compensation",
-        "equity_considerations": "Significant equity packages affect purchasing power"
+        "benefits_considerations": "Health insurance and stock options affect purchasing power"
       },
       "preferred_neighborhoods_by_role": {
-        "individual_contributors": ["Round Rock", "Cedar Park", "Domain"],
-        "managers": ["Round Rock", "Domain", "Mueller"],
-        "executives": ["Westlake", "Domain", "Downtown"]
+        "warehouse_associates": ["South RC", "Central RC"],
+        "coordinators_supervisors": ["Central RC", "Etiwanda"],
+        "managers": ["Etiwanda", "Alta Loma", "Victoria Gardens"]
       }
     },
-    "meta": {
+    "kaiser_permanente": {
       "timeline_insights": [
-        "Continuous hiring with Q2 and Q4 peaks",
-        "Remote-first culture but Austin office expansion ongoing",
-        "Flexible relocation timelines for senior hires",
-        "Strong focus on diversity recruiting"
+        "Healthcare hiring peaks in summer months",
+        "Nursing and clinical roles year-round demand",
+        "Executive relocations typically 60-90 days notice",
+        "Residency and fellowship timing affects housing needs"
       ],
       "compensation_insights": {
         "typical_ranges": {
-          "software_engineer": "$150,000 - $220,000",
-          "senior_engineer": "$200,000 - $320,000",
-          "staff_engineer": "$300,000 - $450,000",
-          "director_level": "$400,000 - $600,000"
+          "registered_nurse": "$75,000 - $95,000",
+          "nurse_practitioner": "$110,000 - $140,000",
+          "physician": "$250,000 - $400,000",
+          "administrator": "$120,000 - $180,000"
         },
-        "housing_budget_guidance": "Higher compensation allows premium locations",
-        "equity_considerations": "Significant RSU packages"
+        "housing_budget_guidance": "Conservative approach, 25% of gross income",
+        "benefits_considerations": "Excellent benefits package affects total compensation"
       }
     },
-    "tesla": {
+    "logistics_industry": {
       "timeline_insights": [
-        "Manufacturing focus with continuous hiring",
-        "Gigafactory expansion drives ongoing relocations",
-        "Mix of production and engineering roles",
-        "International talent attraction increasing"
+        "Peak hiring for holiday season (Q3-Q4)",
+        "E-commerce growth drives continuous hiring",
+        "Shift work schedules affect housing preferences",
+        "Career advancement opportunities in Inland Empire"
       ],
       "compensation_insights": {
         "typical_ranges": {
-          "manufacturing_engineer": "$80,000 - $120,000",
-          "software_engineer": "$110,000 - $160,000",
-          "senior_engineer": "$140,000 - $200,000",
-          "manager_level": "$150,000 - $250,000"
+          "warehouse_worker": "$40,000 - $50,000",
+          "forklift_operator": "$45,000 - $58,000",
+          "logistics_coordinator": "$55,000 - $75,000",
+          "operations_supervisor": "$70,000 - $90,000"
         },
-        "housing_budget_guidance": "Value-conscious buyers, focus on appreciation",
-        "equity_considerations": "Stock options significant factor"
+        "housing_budget_guidance": "Focus on affordability and commute efficiency",
+        "shift_considerations": "24/7 operations require flexible housing solutions"
       }
     }
   },
@@ -434,109 +313,109 @@
     "seasonal_patterns": {
       "spring": {
         "months": [3, 4, 5],
-        "market_characteristics": "Peak season - highest activity and prices",
-        "buyer_strategy": "Be prepared for competition, have financing ready",
-        "seller_strategy": "Optimal time to list for maximum exposure",
-        "corporate_activity": "Major hiring pushes, relocation peak season"
+        "market_characteristics": "Active season - good inventory and activity",
+        "buyer_strategy": "Good selection, moderate competition",
+        "seller_strategy": "Strong time to list with good buyer activity",
+        "employment_activity": "Healthcare hiring increases, logistics steady"
       },
       "summer": {
         "months": [6, 7, 8],
-        "market_characteristics": "Strong activity, family moves dominate",
-        "buyer_strategy": "Still competitive but slightly better than spring",
-        "seller_strategy": "Good market, price competitively",
-        "corporate_activity": "Continued relocations, summer start dates"
+        "market_characteristics": "Peak activity, family moves dominate",
+        "buyer_strategy": "Competitive but good inventory",
+        "seller_strategy": "Excellent market conditions",
+        "employment_activity": "Peak healthcare hiring, logistics preparation"
       },
       "fall": {
         "months": [9, 10, 11],
-        "market_characteristics": "Moderated activity, more balanced",
-        "buyer_strategy": "Better negotiating position, more inventory",
-        "seller_strategy": "Price realistically, highlight school districts",
-        "corporate_activity": "Fall semester hiring, Q4 bonus planning"
+        "market_characteristics": "School-focused activity, balanced market",
+        "buyer_strategy": "Good opportunities, school district focus",
+        "seller_strategy": "Highlight schools and family features",
+        "employment_activity": "Q4 logistics hiring ramp-up"
       },
       "winter": {
         "months": [12, 1, 2],
-        "market_characteristics": "Lowest activity, serious buyers only",
-        "buyer_strategy": "Best negotiating power, less competition",
-        "seller_strategy": "Serious sellers only, may need to discount",
-        "corporate_activity": "Year-end relocations, Q1 planning"
+        "market_characteristics": "Serious buyers and sellers",
+        "buyer_strategy": "Less competition, good negotiating position",
+        "seller_strategy": "Price competitively for serious buyers",
+        "employment_activity": "Holiday logistics peak, healthcare steady"
       }
     },
     "market_cycles": {
-      "current_phase": "Strong Seller's Market",
+      "current_phase": "Balanced Market",
       "indicators": [
-        "Low inventory (1.8 months supply)",
-        "Multiple offers on quality properties",
-        "Average days on market under 30",
-        "Continued corporate expansion announcements"
+        "Moderate inventory (2.1 months supply)",
+        "Reasonable days on market (35 days average)",
+        "Balanced buyer/seller dynamics",
+        "Steady logistics and healthcare employment growth"
       ],
       "timing_advice": {
-        "buyers": "Act quickly on suitable properties, be prepared for competition",
-        "sellers": "Excellent time to sell, price at or slightly above market",
-        "investors": "Focus on appreciation markets, rental demand strong"
+        "buyers": "Good opportunities across price ranges",
+        "sellers": "Price competitively for steady activity",
+        "investors": "Strong rental demand from workers"
       }
     }
   },
   "conversation_starters": {
     "discovery_questions": [
-      "Are you relocating with Apple, Google, Meta, or another tech company?",
-      "What's most important to you - commute time, school districts, or lifestyle amenities?",
-      "Do you prefer the energy of central Austin or the family focus of the suburbs?",
-      "Have you had a chance to visit any Austin neighborhoods yet?",
+      "Are you relocating with Amazon, Kaiser, UPS, FedEx, or another logistics/healthcare company?",
+      "What's most important to you - commute time, school districts, or family amenities?",
+      "Do you prefer Etiwanda's schools or Alta Loma's luxury, or Central RC's convenience?",
+      "Have you had a chance to visit any Rancho Cucamonga neighborhoods yet?",
       "Are you looking to rent initially or jump right into homeownership?",
-      "What drew your company to Austin, and what excites you most about the move?"
+      "What drew your company to the Inland Empire, and what excites you most about the move?"
     ],
     "value_propositions": [
-      "I help tech professionals find homes that match both their career ambitions and lifestyle goals",
-      "Having worked with hundreds of Apple, Google, and Meta relocations, I know exactly what makes Austin special for tech families",
-      "I can show you neighborhoods you might not discover on your own - places where your new colleagues already live and love",
-      "My corporate relocation expertise means I understand your timeline and can work with your company's relocation services",
-      "I'll help you avoid rookie mistakes and find the Austin community where you'll truly thrive"
+      "I help logistics and healthcare professionals find homes that match both their career needs and family goals",
+      "Having worked with hundreds of Amazon, Kaiser, and logistics relocations, I know exactly what makes the Inland Empire special for working families",
+      "I can show you neighborhoods where your new colleagues already live and love - places you might not discover on your own",
+      "My logistics and healthcare expertise means I understand your schedules and can work around shift timing",
+      "I'll help you avoid rookie mistakes and find the IE community where your family will truly thrive"
     ],
     "neighborhood_transitions": {
-      "from_san_francisco": "If you loved the Marina District's walkability, you'll appreciate South Lamar's food scene and community feel",
-      "from_seattle": "Mueller's planned community and green spaces might remind you of the best parts of Bellevue",
-      "from_new_york": "Downtown Austin offers that urban energy you're used to, but with much more space and better value",
-      "from_chicago": "Round Rock's family focus and excellent schools create that suburban community feel with tech-professional convenience"
+      "from_los_angeles": "If you loved Pasadena's family feel, you'll appreciate Etiwanda's schools and community atmosphere",
+      "from_orange_county": "Alta Loma offers that Irvine-like planned community feel with better value and mountain views",
+      "from_san_diego": "Central RC provides that suburban family lifestyle with easy access to everything you need",
+      "from_phoenix": "South RC offers that affordable family community feel with California opportunities"
     }
   },
   "objection_handling": {
     "price_concerns": {
-      "objection": "Austin seems expensive for Texas",
-      "response": "You're right that Austin is premium for Texas, but compared to San Francisco, Seattle, or New York, you'll get significantly more space and amenities for your investment. Plus, Texas has no state income tax, which effectively increases your take-home pay by 5-10%."
+      "objection": "Rancho Cucamonga seems expensive compared to other Inland Empire cities",
+      "response": "You're right that RC is premium for the IE, but you get significantly more value than coastal California. Plus, the schools and community justify the investment, and you're still saving compared to LA or OC while gaining space and amenities."
     },
     "commute_concerns": {
-      "objection": "I'm worried about Texas traffic and commute times",
-      "response": "Austin's traffic is real, but the tech corridor is designed to minimize commutes. Apple employees in Round Rock often bike to work, and most major employers offer shuttle services. Plus, Austin's growth is planned around mixed-use development to reduce car dependence."
+      "objection": "I'm worried about commuting to LA or Orange County",
+      "response": "The 210 freeway provides direct access to both LA and OC employment centers. Many residents reverse-commute against traffic, making drives manageable. Plus, with remote work flexibility, you might not commute daily."
     },
     "school_concerns": {
-      "objection": "I've heard mixed things about Texas schools",
-      "response": "Austin area has some of the best school districts in Texas - Round Rock ISD and Westlake consistently rank in the top 1% nationally. Many families relocate here specifically for the schools. The education quality rivals anywhere you're coming from."
+      "objection": "I've heard California schools are struggling",
+      "response": "Rancho Cucamonga has some of California's top school districts - Etiwanda consistently ranks in the top 5% statewide. The education quality here rivals anywhere in the country, which is why so many professionals choose to raise families here."
     },
     "culture_concerns": {
-      "objection": "Will we fit into Texas culture coming from [liberal city]?",
-      "response": "Austin is 'Keep Austin Weird' for a reason - it's the most progressive city in Texas and feels more like Portland or San Francisco than Dallas. The tech community here is diverse, inclusive, and globally minded. You'll find your tribe."
+      "objection": "Will we fit into California lifestyle coming from [other state]?",
+      "response": "Rancho Cucamonga has a welcoming, family-oriented culture that feels more like suburban America than stereotypical California. The logistics and healthcare communities here are diverse and down-to-earth. You'll find your community."
     },
     "timing_concerns": {
-      "objection": "The market seems too hot to buy right now",
-      "response": "Austin's growth is structural, not speculative. Apple, Google, Meta, and Tesla are making billion-dollar, long-term commitments here. Waiting means paying more later and missing the appreciation that comes with this unprecedented growth phase."
+      "objection": "Should we wait for prices to come down?",
+      "response": "IE prices are driven by employment and population growth, not speculation. With Amazon, healthcare expansion, and logistics growth, waiting means paying more later. The fundamentals here are strong and sustainable."
     }
   },
   "competitive_advantages": {
     "jorge_positioning": [
-      "Only Austin realtor specializing exclusively in tech relocations",
-      "Worked with 500+ Apple, Google, Meta, Tesla employees",
-      "Understands corporate timelines and relocation package coordination",
-      "Personal tech industry experience provides unique insight",
-      "Exclusive relationships with corporate relocation coordinators",
-      "Data-driven market analysis tailored to tech professionals"
+      "Only Inland Empire realtor specializing exclusively in logistics and healthcare relocations",
+      "Worked with 300+ Amazon, Kaiser, UPS, FedEx employees and families",
+      "Understands shift work schedules and logistics/healthcare industry needs",
+      "Personal logistics industry experience provides unique insight",
+      "Exclusive relationships with major employer HR departments",
+      "Data-driven market analysis tailored to working professionals"
     ],
-    "austin_advantages": [
-      "No state income tax increases effective purchasing power",
-      "Lower cost of living than SF, Seattle, NYC while maintaining quality",
-      "Business-friendly environment supports career growth",
-      "World-class universities (UT, A&M) provide talent pipeline",
-      "Perfect weather for year-round outdoor lifestyle",
-      "Live music capital of the world with incredible cultural scene"
+    "inland_empire_advantages": [
+      "Significantly lower cost of living than coastal California",
+      "Strong employment base in logistics and healthcare",
+      "Family-oriented communities with excellent schools",
+      "Easy access to both mountains and beaches for recreation",
+      "Growing infrastructure supporting continued development",
+      "Reverse commute advantage for LA/OC employment"
     ]
   }
 }

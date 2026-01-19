@@ -1,0 +1,382 @@
+# Rancho Cucamonga/Inland Empire Market Configuration
+# Multi-Market Geographic Expansion - Configuration-driven market data
+# Extracted from hardcoded austin_market_service.py data
+
+# Basic Market Identification
+market_id: rancho_cucamonga
+market_name: "Rancho Cucamonga/Inland Empire"
+market_type: logistics_hub  # Primary market type
+state: CA
+region: Southern California
+timezone: America/Los_Angeles
+mls_provider: "San Bernardino County MLS"
+
+# Geographic Center
+coordinates: [34.106389, -117.593056]
+
+# Market Economic Indicators
+median_home_price: 825000
+price_appreciation_1y: 8.5
+inventory_days: 35
+
+# Market Specialization Configuration
+specializations:
+  primary_specialization: "Logistics and Healthcare Worker Relocation"
+  secondary_specializations:
+    - "Distribution Center Proximity Expertise"
+    - "Amazon/FedEx/UPS Employee Relocation"
+    - "Healthcare Professional Housing"
+    - "Investment Property Analysis"
+
+  unique_advantages:
+    - "Deep Inland Empire logistics industry knowledge"
+    - "Corporate relocation partnerships"
+    - "Healthcare facility proximity expertise"
+    - "Distribution center commute optimization"
+
+  target_client_types:
+    - "Logistics workers (Amazon, FedEx, UPS)"
+    - "Healthcare professionals"
+    - "Corporate relocations"
+    - "Investment property buyers"
+
+  expertise_tags:
+    - "logistics_expertise"
+    - "healthcare_relocation"
+    - "distribution_center_access"
+    - "inland_empire_specialist"
+    - "corporate_partnerships"
+
+  knowledge_base_path: "data/knowledge_base/rancho_cucamonga_expertise.json"
+
+# Neighborhood Configurations
+neighborhoods:
+  - name: "Alta Loma"
+    zone: "North"
+    median_price: 1100000
+    price_trend_3m: 3.2
+    school_rating: 8.9
+    walkability_score: 45
+    coordinates: [34.122222, -117.594444]
+    appeal_scores:
+      logistics_appeal: 75
+      healthcare_appeal: 85
+      family_appeal: 90
+      luxury_appeal: 95
+    amenities:
+      - "Luxury Neighborhoods"
+      - "Mountain Views"
+      - "Top-Rated Schools"
+      - "Gated Communities"
+      - "Alta Loma Park"
+    demographics:
+      age_median: 42
+      income_median: 135000
+      logistics_healthcare: 0.25
+    corporate_proximity:
+      amazon_logistics: 15
+      kaiser_permanente: 18
+      fedex: 12
+      ups: 20
+
+  - name: "Etiwanda"
+    zone: "Northwest"
+    median_price: 950000
+    price_trend_3m: 2.8
+    school_rating: 9.2
+    walkability_score: 50
+    coordinates: [34.140833, -117.565278]
+    appeal_scores:
+      logistics_appeal: 80
+      healthcare_appeal: 88
+      family_appeal: 95
+      luxury_appeal: 85
+    amenities:
+      - "Top School Districts"
+      - "Family-Oriented"
+      - "New Construction"
+      - "Safe Neighborhoods"
+      - "Parks and Recreation"
+    demographics:
+      age_median: 38
+      income_median: 125000
+      logistics_healthcare: 0.30
+    corporate_proximity:
+      amazon_logistics: 12
+      kaiser_permanente: 15
+      fedex: 10
+      ups: 18
+
+  - name: "Central Rancho Cucamonga"
+    zone: "Central"
+    median_price: 750000
+    price_trend_3m: 2.5
+    school_rating: 8.1
+    walkability_score: 65
+    coordinates: [34.106389, -117.593056]
+    appeal_scores:
+      logistics_appeal: 85
+      healthcare_appeal: 80
+      family_appeal: 85
+      luxury_appeal: 70
+    amenities:
+      - "Victoria Gardens Mall"
+      - "Central Park"
+      - "Restaurants"
+      - "Shopping Centers"
+      - "Transit Access"
+    demographics:
+      age_median: 35
+      income_median: 95000
+      logistics_healthcare: 0.30
+    corporate_proximity:
+      amazon_logistics: 8
+      kaiser_permanente: 12
+      fedex: 6
+      ups: 10
+
+  - name: "North Rancho Cucamonga"
+    zone: "North"
+    median_price: 850000
+    price_trend_3m: 3.0
+    school_rating: 8.7
+    walkability_score: 50
+    coordinates: [34.125000, -117.593056]
+    appeal_scores:
+      logistics_appeal: 80
+      healthcare_appeal: 82
+      family_appeal: 90
+      luxury_appeal: 80
+    amenities:
+      - "Lewis Family Playfields"
+      - "New Construction"
+      - "Commuter Friendly"
+      - "Family Oriented"
+      - "Mountain Proximity"
+    demographics:
+      age_median: 36
+      income_median: 105000
+      logistics_healthcare: 0.28
+    corporate_proximity:
+      amazon_logistics: 10
+      kaiser_permanente: 15
+      fedex: 8
+      ups: 12
+
+  - name: "South Rancho Cucamonga"
+    zone: "South"
+    median_price: 680000
+    price_trend_3m: 2.2
+    school_rating: 7.8
+    walkability_score: 60
+    coordinates: [34.085000, -117.593056]
+    appeal_scores:
+      logistics_appeal: 88
+      healthcare_appeal: 75
+      family_appeal: 80
+      luxury_appeal: 60
+    amenities:
+      - "Cucamonga Peak Trail"
+      - "Historic Route 66"
+      - "Starter Homes"
+      - "Commuter Access"
+      - "Affordable Options"
+    demographics:
+      age_median: 32
+      income_median: 85000
+      logistics_healthcare: 0.40
+    corporate_proximity:
+      amazon_logistics: 5
+      kaiser_permanente: 8
+      fedex: 4
+      ups: 6
+
+  - name: "Victoria Gardens Area"
+    zone: "Central"
+    median_price: 820000
+    price_trend_3m: 2.7
+    school_rating: 8.5
+    walkability_score: 75
+    coordinates: [34.106111, -117.593333]
+    appeal_scores:
+      logistics_appeal: 82
+      healthcare_appeal: 85
+      family_appeal: 88
+      luxury_appeal: 85
+    amenities:
+      - "Victoria Gardens Mall"
+      - "Dining"
+      - "Entertainment"
+      - "Shopping"
+      - "Walkable Lifestyle"
+    demographics:
+      age_median: 34
+      income_median: 98000
+      logistics_healthcare: 0.32
+    corporate_proximity:
+      amazon_logistics: 8
+      kaiser_permanente: 10
+      fedex: 6
+      ups: 8
+
+  - name: "Terra Vista"
+    zone: "West"
+    median_price: 1050000
+    price_trend_3m: 3.5
+    school_rating: 9.1
+    walkability_score: 40
+    coordinates: [34.110000, -117.610000]
+    appeal_scores:
+      logistics_appeal: 70
+      healthcare_appeal: 85
+      family_appeal: 95
+      luxury_appeal: 100
+    amenities:
+      - "Luxury Homes"
+      - "Golf Course Views"
+      - "Gated Communities"
+      - "Mountain Views"
+      - "Premium Schools"
+    demographics:
+      age_median: 45
+      income_median: 165000
+      logistics_healthcare: 0.20
+    corporate_proximity:
+      amazon_logistics: 18
+      kaiser_permanente: 12
+      fedex: 15
+      ups: 20
+
+  - name: "Day Creek"
+    zone: "East"
+    median_price: 780000
+    price_trend_3m: 2.6
+    school_rating: 8.3
+    walkability_score: 55
+    coordinates: [34.110000, -117.575000]
+    appeal_scores:
+      logistics_appeal: 85
+      healthcare_appeal: 80
+      family_appeal: 90
+      luxury_appeal: 75
+    amenities:
+      - "Day Creek Golf Course"
+      - "Family Neighborhoods"
+      - "Parks"
+      - "Schools"
+      - "Recreation"
+    demographics:
+      age_median: 37
+      income_median: 108000
+      logistics_healthcare: 0.30
+    corporate_proximity:
+      amazon_logistics: 10
+      kaiser_permanente: 15
+      fedex: 8
+      ups: 12
+
+# Major Employer Configurations
+employers:
+  - employer_id: "amazon_logistics"
+    name: "Amazon Fulfillment Centers"
+    industry: "E-commerce & Logistics"
+    location: "Rancho Cucamonga/Ontario"
+    coordinates: [34.106389, -117.593056]
+    employee_count: 12000
+    preferred_neighborhoods:
+      - "South Rancho Cucamonga"
+      - "Central Rancho Cucamonga"
+      - "Etiwanda"
+      - "North Rancho Cucamonga"
+    average_salary_range: [65000, 105000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q4"]
+
+  - employer_id: "kaiser_permanente"
+    name: "Kaiser Permanente"
+    industry: "Healthcare"
+    location: "Ontario/Fontana"
+    coordinates: [34.063611, -117.650833]
+    employee_count: 8500
+    preferred_neighborhoods:
+      - "Central Rancho Cucamonga"
+      - "Etiwanda"
+      - "Alta Loma"
+      - "Victoria Gardens Area"
+    average_salary_range: [75000, 135000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "fedex"
+    name: "FedEx Ground"
+    industry: "Logistics & Shipping"
+    location: "Rancho Cucamonga"
+    coordinates: [34.101389, -117.583056]
+    employee_count: 5000
+    preferred_neighborhoods:
+      - "South Rancho Cucamonga"
+      - "Central Rancho Cucamonga"
+      - "North Rancho Cucamonga"
+      - "Day Creek"
+    average_salary_range: [55000, 95000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2", "Q4"]
+
+  - employer_id: "ups"
+    name: "UPS Logistics"
+    industry: "Logistics & Distribution"
+    location: "Ontario"
+    coordinates: [34.058889, -117.640556]
+    employee_count: 4500
+    preferred_neighborhoods:
+      - "Central Rancho Cucamonga"
+      - "South Rancho Cucamonga"
+      - "Victoria Gardens Area"
+      - "Day Creek"
+    average_salary_range: [58000, 98000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q2", "Q4"]
+
+  - employer_id: "san_antonio_regional"
+    name: "San Antonio Regional Hospital"
+    industry: "Healthcare"
+    location: "Upland"
+    coordinates: [34.113333, -117.648889]
+    employee_count: 3500
+    preferred_neighborhoods:
+      - "Etiwanda"
+      - "Alta Loma"
+      - "Central Rancho Cucamonga"
+      - "Terra Vista"
+    average_salary_range: [65000, 125000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "chino_valley_medical"
+    name: "Chino Valley Medical Center"
+    industry: "Healthcare"
+    location: "Chino"
+    coordinates: [34.025556, -117.688889]
+    employee_count: 2800
+    preferred_neighborhoods:
+      - "Chino Hills"
+      - "South Rancho Cucamonga"
+      - "Central Rancho Cucamonga"
+      - "Day Creek"
+    average_salary_range: [70000, 130000]
+    relocation_frequency: "low"
+    hiring_seasons: ["Q1", "Q2"]
+
+# Configuration Metadata
+config_version: "1.0"
+last_updated: "2026-01-19T10:00:00Z"
+active: true
+# Demographics Data
+demographics:
+  population: 177751
+  median_age: 39.1  
+  median_household_income: 82506
+  college_education_rate: 0.38
+  employment_rate: 0.96
+  population_growth_rate: 0.008
+  diversity_index: 0.69

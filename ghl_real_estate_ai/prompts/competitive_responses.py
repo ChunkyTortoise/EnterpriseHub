@@ -56,13 +56,13 @@ class CompetitiveResponseSystem:
     - Professional competitive positioning without disparaging competitors
     - Value proposition reinforcement with Jorge's unique advantages
     - Urgency creation and differentiation tactics
-    - Austin market-specific positioning
+    - Rancho Cucamonga/Inland Empire market-specific positioning
     """
 
     def __init__(self):
         self.response_templates = self._load_response_templates()
         self.jorge_value_props = self._load_jorge_value_propositions()
-        self.austin_advantages = self._load_austin_market_advantages()
+        self.rc_advantages = self._load_rc_market_advantages()
         self.success_stories = self._load_success_stories()
 
     def _load_response_templates(self) -> Dict[RiskLevel, Dict[ResponseType, List[ResponseTemplate]]]:
@@ -93,13 +93,13 @@ class CompetitiveResponseSystem:
                 ],
                 ResponseType.VALUE_PROP: [
                     ResponseTemplate(
-                        message="What sets me apart is my AI-powered market analysis combined with deep Austin knowledge. I provide insights others simply can't access, helping clients make faster, smarter decisions.",
+                        message="What sets me apart is my AI-powered market analysis combined with deep Inland Empire knowledge. I provide insights others simply can't access, helping clients make faster, smarter decisions.",
                         response_type=ResponseType.VALUE_PROP,
                         risk_level=RiskLevel.LOW,
                         lead_profile=None,
                         urgency_level=2,
                         follow_up_required=False,
-                        tags=["ai_technology", "market_insights", "austin_expertise"],
+                        tags=["ai_technology", "market_insights", "rc_expertise"],
                         success_rate=0.78
                     )
                 ]
@@ -140,19 +140,19 @@ class CompetitiveResponseSystem:
                         success_rate=0.71
                     ),
                     ResponseTemplate(
-                        message="What makes me unique in Austin is my specialization in Apple relocations and tech worker needs. I understand the timeline pressures and housing preferences better than traditional agents.",
+                        message="What makes me unique in Rancho Cucamonga is my specialization in Amazon logistics and healthcare worker relocations. I understand the timeline pressures and housing preferences better than traditional agents.",
                         response_type=ResponseType.DIFFERENTIATION,
                         risk_level=RiskLevel.MEDIUM,
                         lead_profile=LeadProfile.RELOCATING,
                         urgency_level=4,
                         follow_up_required=True,
-                        tags=["apple_relocations", "tech_workers", "timeline_pressure"],
+                        tags=["amazon_relocations", "healthcare_workers", "timeline_pressure"],
                         success_rate=0.74
                     )
                 ],
                 ResponseType.URGENCY: [
                     ResponseTemplate(
-                        message="Austin's market is moving incredibly fast right now. The properties I found for clients last week are already under contract. Want me to set up alerts for your criteria so you don't miss opportunities?",
+                        message="Rancho Cucamonga's market is moving incredibly fast right now. The properties I found for clients last week are already under contract. Want me to set up alerts for your criteria so you don't miss opportunities?",
                         response_type=ResponseType.URGENCY,
                         risk_level=RiskLevel.MEDIUM,
                         lead_profile=None,
@@ -201,7 +201,7 @@ class CompetitiveResponseSystem:
                 ],
                 ResponseType.NURTURE: [
                     ResponseTemplate(
-                        message="I understand you're committed to your current agent. Would it be helpful if I sent you weekly Austin market insights? I share data that benefits all buyers, regardless of who represents them.",
+                        message="I understand you're committed to your current agent. Would it be helpful if I sent you weekly Inland Empire market insights? I share data that benefits all buyers, regardless of who represents them.",
                         response_type=ResponseType.NURTURE,
                         risk_level=RiskLevel.HIGH,
                         lead_profile=None,
@@ -216,7 +216,7 @@ class CompetitiveResponseSystem:
             RiskLevel.CRITICAL: {
                 ResponseType.RECOVERY: [
                     ResponseTemplate(
-                        message="I completely understand and respect your commitment. I'm here if anything changes or if you need Austin market insights down the road. Wishing you the best with your search!",
+                        message="I completely understand and respect your commitment. I'm here if anything changes or if you need Inland Empire market insights down the road. Wishing you the best with your search!",
                         response_type=ResponseType.RECOVERY,
                         risk_level=RiskLevel.CRITICAL,
                         lead_profile=None,
@@ -228,7 +228,7 @@ class CompetitiveResponseSystem:
                 ],
                 ResponseType.NURTURE: [
                     ResponseTemplate(
-                        message="No problem at all! Would you be open to me staying in touch with quarterly Austin market updates? I share insights that benefit all property owners in the area.",
+                        message="No problem at all! Would you be open to me staying in touch with quarterly Inland Empire market updates? I share insights that benefit all property owners in the area.",
                         response_type=ResponseType.NURTURE,
                         risk_level=RiskLevel.CRITICAL,
                         lead_profile=None,
@@ -255,8 +255,8 @@ class CompetitiveResponseSystem:
                 ],
                 "competitor_advantage": "While others rely on outdated MLS data, I provide live market intelligence"
             },
-            "austin_expertise": {
-                "headline": "Native Austin Market Knowledge",
+            "rc_expertise": {
+                "headline": "Native Inland Empire Market Knowledge",
                 "description": "Born and raised understanding of local markets and trends",
                 "proof_points": [
                     "Neighborhood micro-trend analysis",
@@ -264,18 +264,18 @@ class CompetitiveResponseSystem:
                     "Development pipeline insights",
                     "Local business impact on values"
                 ],
-                "competitor_advantage": "Transplant agents learn Austin - I live and breathe it"
+                "competitor_advantage": "Transplant agents learn Inland Empire - I live and breathe it"
             },
-            "apple_specialization": {
-                "headline": "Apple Relocation Specialist",
-                "description": "Expert in tech worker relocations and timeline pressures",
+            "amazon_specialization": {
+                "headline": "Amazon Logistics Specialist",
+                "description": "Expert in logistics and healthcare worker relocations",
                 "proof_points": [
-                    "Apple campus proximity analysis",
-                    "Remote work-friendly home features",
+                    "Amazon fulfillment center proximity analysis",
+                    "Shift worker-friendly neighborhoods",
                     "Timeline-compressed searches",
-                    "Stock option timing strategies"
+                    "Healthcare benefit timing strategies"
                 ],
-                "competitor_advantage": "Traditional agents don't understand tech industry nuances"
+                "competitor_advantage": "Traditional agents don't understand logistics/healthcare industry nuances"
             },
             "investor_focus": {
                 "headline": "Investment Property Expert",
@@ -301,8 +301,8 @@ class CompetitiveResponseSystem:
             }
         }
 
-    def _load_austin_market_advantages(self) -> Dict[str, Any]:
-        """Load Austin-specific market advantages and positioning"""
+    def _load_rc_market_advantages(self) -> Dict[str, Any]:
+        """Load Rancho Cucamonga/Inland Empire-specific market advantages and positioning"""
         return {
             "market_timing": {
                 "current_conditions": "Inventory increasing, buyer opportunity window",
@@ -311,11 +311,11 @@ class CompetitiveResponseSystem:
             },
             "neighborhood_expertise": {
                 "specialties": [
-                    "Domain/Arboretum luxury market",
-                    "East Austin investment opportunities",
-                    "Cedar Park/Leander family homes",
-                    "Downtown condo market",
-                    "Lake Travis luxury properties"
+                    "Alta Loma luxury market",
+                    "Etiwanda investment opportunities",
+                    "North Rancho Cucamonga family homes",
+                    "Town Center area condos",
+                    "Victoria Gardens district properties"
                 ],
                 "unique_knowledge": "Micro-market trends that MLS data doesn't capture"
             },
@@ -323,8 +323,8 @@ class CompetitiveResponseSystem:
                 "insight": "Upcoming development impact on property values",
                 "advantage": "Early knowledge of infrastructure changes affecting values",
                 "examples": [
-                    "Light rail expansion effects",
-                    "New corporate campus announcements",
+                    "Metrolink expansion effects",
+                    "New logistics hub announcements",
                     "School district boundary changes"
                 ]
             },
@@ -346,7 +346,7 @@ class CompetitiveResponseSystem:
                     "timeframe": "3 weeks vs 3 months of searching"
                 },
                 {
-                    "situation": "Apple employee needed to close before stock option deadline",
+                    "situation": "Amazon logistics employee needed to close before benefit enrollment deadline",
                     "jorge_solution": "Leveraged technology for instant property analysis and same-day showings",
                     "outcome": "Found perfect home and closed in 14 days",
                     "timeframe": "2 weeks vs typical 30-45 days"
@@ -490,15 +490,15 @@ class CompetitiveResponseSystem:
         if lead_profile == LeadProfile.INVESTOR:
             return self.jorge_value_props["investor_focus"]
         elif lead_profile == LeadProfile.RELOCATING:
-            return self.jorge_value_props["apple_specialization"]
+            return self.jorge_value_props["amazon_specialization"]
 
         # Competitor-based value props
         for mention in competitor_mentions:
             if mention.competitor_name in ["keller_williams", "remax", "coldwell_banker"]:
                 return self.jorge_value_props["ai_technology"]
 
-        # Default to Austin expertise
-        return self.jorge_value_props["austin_expertise"]
+        # Default to RC expertise
+        return self.jorge_value_props["rc_expertise"]
 
     def _generate_follow_up_strategy(self, template: ResponseTemplate, competitor_mentions: List[CompetitorMention]) -> List[str]:
         """Generate follow-up strategy based on competitive situation"""
@@ -554,11 +554,11 @@ class CompetitiveResponseSystem:
 
     def get_urgency_creator(self, market_context: str = "general") -> Dict[str, str]:
         """Get market-based urgency creators"""
-        austin_urgency = self.austin_advantages["market_timing"]
+        rc_urgency = self.rc_advantages["market_timing"]
 
         urgency_messages = {
-            "inventory": f"Austin inventory is {austin_urgency['current_conditions']}. This is {austin_urgency['jorge_insight']}.",
-            "rates": austin_urgency['urgency_creator'],
+            "inventory": f"Rancho Cucamonga inventory is {rc_urgency['current_conditions']}. This is {rc_urgency['jorge_insight']}.",
+            "rates": rc_urgency['urgency_creator'],
             "competition": "Three other buyers are looking at similar properties in this price range this week.",
             "seasonal": "Spring buying season is starting - best selection is available now before the rush."
         }
@@ -570,10 +570,10 @@ class CompetitiveResponseSystem:
 
         base_differentiators = [
             "AI-powered market analysis provides insights others can't access",
-            "24/7 availability in fast-moving Austin market",
-            "Specialization in tech worker and investor needs",
+            "24/7 availability in fast-moving Inland Empire market",
+            "Specialization in logistics/healthcare worker and investor needs",
             "Real-time off-market opportunity access",
-            "Native Austin knowledge with data-driven approach"
+            "Native Inland Empire knowledge with data-driven approach"
         ]
 
         if competitor_name:

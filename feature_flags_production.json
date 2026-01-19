@@ -1,0 +1,30 @@
+{
+  "multi_market_expansion": {
+    "enabled": true,
+    "markets": [
+      "austin",
+      "dallas",
+      "houston",
+      "san_antonio",
+      "rancho_cucamonga"
+    ],
+    "rollout_percentage": 100
+  },
+  "advanced_churn_recovery": {
+    "enabled": true,
+    "risk_thresholds": {
+      "high": 0.7,
+      "medium": 0.4,
+      "low": 0.2
+    },
+    "recovery_campaigns": true
+  },
+  "revenue_optimization": {
+    "enabled": true,
+    "features": [
+      "market_intelligence_v2",
+      "predictive_pricing",
+      "lead_scoring"
+    ]
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "timestamp": "2026-01-18T17:35:00.860954",
+  "overall_status": "FAIL",
+  "checks": {
+    "Market Registry": {
+      "status": "FAIL",
+      "available_markets": [
+        "dallas",
+        "austin",
+        "san_antonio",
+        "rancho_cucamonga",
+        "houston"
+      ],
+      "expected_markets": [
+        "austin",
+        "dallas",
+        "houston",
+        "san_antonio",
+        "rancho_cucamonga"
+      ],
+      "missing_markets": [],
+      "errors": [
+        "Failed to create service for dallas: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'",
+        "Failed to create service for austin: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'",
+        "Failed to create service for san_antonio: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'",
+        "Failed to create service for rancho_cucamonga: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'",
+        "Failed to create service for houston: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'"
+      ]
+    },
+    "Market Configurations": {
+      "status": "FAIL",
+      "validated_configs": [],
+      "errors": [
+        "austin.yaml missing sections: ['demographics']",
+        "dallas.yaml missing sections: ['demographics']",
+        "houston.yaml missing sections: ['demographics']",
+        "san_antonio.yaml missing sections: ['demographics']",
+        "rancho_cucamonga.yaml missing sections: ['demographics']"
+      ],
+      "warnings": []
+    },
+    "Churn Prediction Engine": {
+      "status": "PASS",
+      "features": {
+        "predictor": false,
+        "stratifier": false,
+        "event_tracker": true
+      },
+      "risk_tiers": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "event_types": [
+        "detected",
+        "confirmed",
+        "recovered",
+        "permanent"
+      ],
+      "prediction_test": "PASS"
+    },
+    "API Routes": {
+      "status": "PASS",
+      "route_files": [
+        "market_intelligence_v2.py",
+        "jorge_advanced.py",
+        "revenue_optimization.py"
+      ],
+      "errors": []
+    },
+    "Database Migrations": {
+      "status": "PASS",
+      "migration_files": [
+        "012_enterprise_analytics.sql",
+        "001_initial_migration.sql",
+        "011_ai_revenue_optimization.sql",
+        "007_create_message_templates.sql",
+        "002_sample_data_migration.sql",
+        "009_performance_optimization_indexes.sql",
+        "008_billing_integration.sql",
+        "010_white_label_infrastructure.sql",
+        "006_performance_critical_indexes.sql"
+      ],
+      "errors": []
+    },
+    "Service Dependencies": {
+      "status": "FAIL",
+      "validated_services": [
+        "austin_market_service.py",
+        "rancho_cucamonga_market_service.py",
+        "market_prediction_engine.py"
+      ],
+      "errors": [
+        "Import error in churn_prediction_engine.py: attempted relative import with no known parent package"
+      ]
+    },
+    "Backward Compatibility": {
+      "status": "WARNING",
+      "compatibility_checks": [],
+      "warnings": [
+        "AustinMarketService compatibility issue: cannot import name 'AustinMarketService' from 'ghl_real_estate_ai.services.austin_market_service' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/services/austin_market_service.py)",
+        "Schema compatibility issue: cannot import name 'ContactData' from 'ghl_real_estate_ai.api.schemas.ghl' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/api/schemas/ghl.py)"
+      ]
+    },
+    "Security Validation": {
+      "status": "WARNING",
+      "security_checks": [
+        "dallas.yaml - Clean",
+        "austin.yaml - Clean",
+        "san_antonio.yaml - Clean",
+        "rancho_cucamonga.yaml - Clean",
+        "houston.yaml - Clean"
+      ],
+      "warnings": [
+        "Potential sensitive data in realtime_environments.yaml"
+      ]
+    },
+    "Performance Readiness": {
+      "status": "PASS",
+      "performance_checks": [
+        "Cache service available",
+        "Async patterns found in 115 service files"
+      ],
+      "recommendations": []
+    }
+  },
+  "warnings": [
+    "AustinMarketService compatibility issue: cannot import name 'AustinMarketService' from 'ghl_real_estate_ai.services.austin_market_service' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/services/austin_market_service.py)",
+    "Schema compatibility issue: cannot import name 'ContactData' from 'ghl_real_estate_ai.api.schemas.ghl' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/api/schemas/ghl.py)",
+    "Potential sensitive data in realtime_environments.yaml"
+  ],
+  "errors": [
+    "Failed to create service for dallas: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'",
+    "Failed to create service for austin: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'",
+    "Failed to create service for san_antonio: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'",
+    "Failed to create service for rancho_cucamonga: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'",
+    "Failed to create service for houston: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'",
+    "austin.yaml missing sections: ['demographics']",
+    "dallas.yaml missing sections: ['demographics']",
+    "houston.yaml missing sections: ['demographics']",
+    "san_antonio.yaml missing sections: ['demographics']",
+    "rancho_cucamonga.yaml missing sections: ['demographics']",
+    "Import error in churn_prediction_engine.py: attempted relative import with no known parent package"
+  ],
+  "market_configs": {},
+  "deployment_readiness": false
+}

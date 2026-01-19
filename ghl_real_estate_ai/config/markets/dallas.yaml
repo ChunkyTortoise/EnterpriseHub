@@ -1,0 +1,383 @@
+# Dallas Finance & Energy Hub Market Configuration
+# Multi-Market Geographic Expansion - Configuration-driven market data
+# Major finance and energy hub with corporate headquarters
+
+# Basic Market Identification
+market_id: dallas
+market_name: "Dallas-Fort Worth Metroplex"
+market_type: finance_hub  # Primary market type
+state: TX
+region: North Texas
+timezone: America/Chicago
+mls_provider: "Dallas Area MLS"
+
+# Geographic Center
+coordinates: [32.7767, -96.7970]
+
+# Market Economic Indicators
+median_home_price: 485000
+price_appreciation_1y: 9.8
+inventory_days: 28
+
+# Market Specialization Configuration
+specializations:
+  primary_specialization: "Finance and Energy Professional Relocation"
+  secondary_specializations:
+    - "Corporate Headquarters Employee Relocation"
+    - "Banking and Finance Professional Housing"
+    - "Energy Sector Executive Services"
+    - "DFW Airport Area Corporate Housing"
+
+  unique_advantages:
+    - "Deep DFW corporate ecosystem knowledge"
+    - "Finance and energy industry expertise"
+    - "Airport proximity specialization"
+    - "Executive housing and luxury market focus"
+
+  target_client_types:
+    - "Finance professionals (Bank of America, JPMorgan, Wells Fargo)"
+    - "Energy executives (ExxonMobil, AT&T, Southwest Airlines)"
+    - "Corporate relocations"
+    - "Executive and luxury home buyers"
+
+  expertise_tags:
+    - "finance_expertise"
+    - "energy_sector"
+    - "corporate_relocation"
+    - "executive_housing"
+    - "dfw_specialist"
+    - "luxury_market"
+
+  knowledge_base_path: "data/knowledge_base/dallas_expertise.json"
+
+# Neighborhood Configurations
+neighborhoods:
+  - name: "Uptown Dallas"
+    zone: "Central"
+    median_price: 650000
+    price_trend_3m: 4.5
+    school_rating: 7.8
+    walkability_score: 85
+    coordinates: [32.8081, -96.8017]
+    appeal_scores:
+      finance_appeal: 95
+      lifestyle_appeal: 90
+      luxury_appeal: 85
+      commute_appeal: 95
+    amenities:
+      - "Downtown Proximity"
+      - "Upscale Dining"
+      - "High-Rise Living"
+      - "Nightlife"
+      - "Walkable"
+    demographics:
+      age_median: 32
+      income_median: 115000
+      finance_professionals: 0.55
+    corporate_proximity:
+      bank_of_america: 5
+      jpmorgan: 8
+      exxonmobil: 15
+      att: 10
+
+  - name: "Plano"
+    zone: "North"
+    median_price: 525000
+    price_trend_3m: 6.2
+    school_rating: 9.4
+    walkability_score: 55
+    coordinates: [33.0198, -96.6989]
+    appeal_scores:
+      finance_appeal: 85
+      family_appeal: 95
+      tech_appeal: 90
+      commute_appeal: 80
+    amenities:
+      - "Top-Rated Schools"
+      - "Corporate Headquarters"
+      - "Family-Friendly"
+      - "Legacy West"
+      - "Shopping Centers"
+    demographics:
+      age_median: 38
+      income_median: 125000
+      finance_professionals: 0.45
+    corporate_proximity:
+      bank_of_america: 15
+      jpmorgan: 12
+      exxonmobil: 25
+      att: 20
+
+  - name: "Highland Park"
+    zone: "Central"
+    median_price: 1850000
+    price_trend_3m: 2.8
+    school_rating: 9.8
+    walkability_score: 45
+    coordinates: [32.8334, -96.7897]
+    appeal_scores:
+      finance_appeal: 90
+      luxury_appeal: 100
+      executive_appeal: 100
+      commute_appeal: 85
+    amenities:
+      - "Luxury Estates"
+      - "Country Clubs"
+      - "Exclusive Schools"
+      - "Historic District"
+      - "Executive Neighborhoods"
+    demographics:
+      age_median: 48
+      income_median: 350000
+      finance_professionals: 0.35
+    corporate_proximity:
+      bank_of_america: 8
+      jpmorgan: 6
+      exxonmobil: 12
+      att: 10
+
+  - name: "Frisco"
+    zone: "North"
+    median_price: 615000
+    price_trend_3m: 8.1
+    school_rating: 9.2
+    walkability_score: 50
+    coordinates: [33.1507, -96.8236]
+    appeal_scores:
+      finance_appeal: 80
+      family_appeal: 95
+      sports_appeal: 90
+      commute_appeal: 75
+    amenities:
+      - "Dallas Cowboys Practice Facility"
+      - "Excellent Schools"
+      - "Sports Complexes"
+      - "New Development"
+      - "Corporate Campuses"
+    demographics:
+      age_median: 36
+      income_median: 135000
+      finance_professionals: 0.40
+    corporate_proximity:
+      bank_of_america: 25
+      jpmorgan: 22
+      exxonmobil: 30
+      att: 25
+
+  - name: "Las Colinas"
+    zone: "West"
+    median_price: 425000
+    price_trend_3m: 5.8
+    school_rating: 8.1
+    walkability_score: 60
+    coordinates: [32.8776, -96.9442]
+    appeal_scores:
+      finance_appeal: 85
+      business_appeal: 95
+      convenience_appeal: 90
+      commute_appeal: 90
+    amenities:
+      - "Business District"
+      - "DFW Airport Proximity"
+      - "Corporate Housing"
+      - "Golf Courses"
+      - "Canal District"
+    demographics:
+      age_median: 35
+      income_median: 95000
+      finance_professionals: 0.50
+    corporate_proximity:
+      bank_of_america: 12
+      jpmorgan: 15
+      exxonmobil: 8
+      att: 10
+
+  - name: "Southlake"
+    zone: "Northwest"
+    median_price: 1250000
+    price_trend_3m: 3.2
+    school_rating: 9.7
+    walkability_score: 35
+    coordinates: [32.9412, -97.1339]
+    appeal_scores:
+      finance_appeal: 88
+      luxury_appeal: 95
+      family_appeal: 100
+      executive_appeal: 95
+    amenities:
+      - "Top Schools in Texas"
+      - "Executive Homes"
+      - "Town Square"
+      - "Country Clubs"
+      - "Corporate Executives"
+    demographics:
+      age_median: 44
+      income_median: 275000
+      finance_professionals: 0.40
+    corporate_proximity:
+      bank_of_america: 20
+      jpmorgan: 18
+      exxonmobil: 15
+      att: 12
+
+  - name: "Deep Ellum"
+    zone: "Central East"
+    median_price: 385000
+    price_trend_3m: 12.5
+    school_rating: 6.8
+    walkability_score: 80
+    coordinates: [32.7767, -96.7836]
+    appeal_scores:
+      finance_appeal: 70
+      arts_appeal: 100
+      lifestyle_appeal: 95
+      startup_appeal: 85
+    amenities:
+      - "Arts District"
+      - "Live Music"
+      - "Trendy Restaurants"
+      - "Galleries"
+      - "Urban Living"
+    demographics:
+      age_median: 28
+      income_median: 65000
+      finance_professionals: 0.25
+    corporate_proximity:
+      bank_of_america: 8
+      jpmorgan: 6
+      exxonmobil: 18
+      att: 12
+
+  - name: "Richardson"
+    zone: "North"
+    median_price: 435000
+    price_trend_3m: 7.2
+    school_rating: 8.8
+    walkability_score: 55
+    coordinates: [32.9483, -96.7297]
+    appeal_scores:
+      finance_appeal: 80
+      tech_appeal: 85
+      family_appeal: 85
+      commute_appeal: 85
+    amenities:
+      - "Tech Corridor"
+      - "University Area"
+      - "Family Communities"
+      - "Good Schools"
+      - "Diverse Housing"
+    demographics:
+      age_median: 36
+      income_median: 85000
+      finance_professionals: 0.35
+    corporate_proximity:
+      bank_of_america: 18
+      jpmorgan: 15
+      exxonmobil: 22
+      att: 15
+
+# Major Employer Configurations
+employers:
+  - employer_id: "bank_of_america"
+    name: "Bank of America"
+    industry: "Financial Services"
+    location: "Downtown Dallas"
+    coordinates: [32.7767, -96.7970]
+    employee_count: 18000
+    preferred_neighborhoods:
+      - "Uptown Dallas"
+      - "Highland Park"
+      - "Las Colinas"
+      - "Plano"
+    average_salary_range: [85000, 185000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "jpmorgan"
+    name: "JPMorgan Chase"
+    industry: "Financial Services"
+    location: "Downtown Dallas"
+    coordinates: [32.7767, -96.7970]
+    employee_count: 15000
+    preferred_neighborhoods:
+      - "Uptown Dallas"
+      - "Plano"
+      - "Highland Park"
+      - "Frisco"
+    average_salary_range: [90000, 195000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2"]
+
+  - employer_id: "exxonmobil"
+    name: "ExxonMobil"
+    industry: "Energy"
+    location: "Las Colinas"
+    coordinates: [32.8776, -96.9442]
+    employee_count: 12000
+    preferred_neighborhoods:
+      - "Las Colinas"
+      - "Southlake"
+      - "Highland Park"
+      - "Frisco"
+    average_salary_range: [95000, 220000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q2", "Q3"]
+
+  - employer_id: "att"
+    name: "AT&T"
+    industry: "Telecommunications"
+    location: "Downtown Dallas"
+    coordinates: [32.7767, -96.7970]
+    employee_count: 20000
+    preferred_neighborhoods:
+      - "Plano"
+      - "Richardson"
+      - "Uptown Dallas"
+      - "Las Colinas"
+    average_salary_range: [75000, 155000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2", "Q4"]
+
+  - employer_id: "southwest_airlines"
+    name: "Southwest Airlines"
+    industry: "Airlines"
+    location: "Dallas Love Field"
+    coordinates: [32.8473, -96.8518]
+    employee_count: 25000
+    preferred_neighborhoods:
+      - "Las Colinas"
+      - "Richardson"
+      - "Uptown Dallas"
+      - "Plano"
+    average_salary_range: [65000, 145000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q2", "Q3"]
+
+  - employer_id: "american_airlines"
+    name: "American Airlines"
+    industry: "Airlines"
+    location: "DFW Airport"
+    coordinates: [32.8998, -97.0403]
+    employee_count: 30000
+    preferred_neighborhoods:
+      - "Las Colinas"
+      - "Southlake"
+      - "Richardson"
+      - "Frisco"
+    average_salary_range: [70000, 165000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q2", "Q3"]
+
+# Configuration Metadata
+config_version: "1.0"
+last_updated: "2026-01-19T10:00:00Z"
+active: true
+# Demographics Data  
+demographics:
+  population: 7694138
+  median_age: 35.8
+  median_household_income: 68386
+  college_education_rate: 0.35
+  employment_rate: 0.94
+  population_growth_rate: 0.031
+  diversity_index: 0.74

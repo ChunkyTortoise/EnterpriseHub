@@ -1,0 +1,131 @@
+{
+  "timestamp": "2026-01-18T04:24:11.018849",
+  "project": "Jorge's Revenue Acceleration Platform",
+  "validation_summary": {
+    "total_checks": 29,
+    "passed_checks": 17,
+    "failed_checks": 12,
+    "pass_rate": "58.6%"
+  },
+  "findings_summary": {
+    "critical": 3,
+    "high": 1,
+    "medium": 3,
+    "low": 0,
+    "info": 2,
+    "total": 9
+  },
+  "risk_score": 100,
+  "status": "CRITICAL - Immediate Action Required",
+  "findings": {
+    "critical": [
+      {
+        "category": "Authentication",
+        "title": "Missing JWT Secret Key",
+        "description": "JWT_SECRET_KEY environment variable is not configured",
+        "remediation": "Set a cryptographically secure JWT secret (minimum 64 characters)",
+        "compliance_impact": [
+          "OWASP A02:2021",
+          "SOC2 CC6.1"
+        ],
+        "timestamp": "2026-01-18T04:24:10.019133"
+      },
+      {
+        "category": "API Security",
+        "title": "Missing Webhook Signature Verification",
+        "description": "Webhooks may not verify signatures from external providers",
+        "remediation": "Implement HMAC signature verification for all webhooks",
+        "compliance_impact": [
+          "OWASP API2:2023"
+        ],
+        "timestamp": "2026-01-18T04:24:10.391884"
+      },
+      {
+        "category": "Infrastructure Security",
+        "title": "Secrets in Repository",
+        "description": "Found 3 .env files that may contain secrets",
+        "remediation": "Remove .env files from repository and add to .gitignore",
+        "compliance_impact": [
+          "OWASP A02:2021",
+          "PCI DSS 6.3.1"
+        ],
+        "timestamp": "2026-01-18T04:24:10.394341"
+      }
+    ],
+    "high": [
+      {
+        "category": "Data Protection",
+        "title": "Database Connection Encryption Missing",
+        "description": "Database connections may not be using SSL/TLS",
+        "remediation": "Add ?sslmode=require to DATABASE_URL",
+        "compliance_impact": [
+          "GDPR Article 32",
+          "HIPAA 164.312(e)(1)"
+        ],
+        "timestamp": "2026-01-18T04:24:10.020023"
+      }
+    ],
+    "medium": [
+      {
+        "category": "Data Protection",
+        "title": "PII in Logs Risk",
+        "description": "No PII masking detected in logging configuration",
+        "remediation": "Implement log masking for sensitive fields (email, phone, etc.)",
+        "compliance_impact": [
+          "GDPR Article 25",
+          "CCPA"
+        ],
+        "timestamp": "2026-01-18T04:24:10.020676"
+      },
+      {
+        "category": "API Security",
+        "title": "Permissive CORS Configuration",
+        "description": "CORS may allow localhost or overly permissive origins",
+        "remediation": "Restrict CORS origins to production domains only",
+        "compliance_impact": [
+          "OWASP A05:2021"
+        ],
+        "timestamp": "2026-01-18T04:24:10.391453"
+      },
+      {
+        "category": "Infrastructure Security",
+        "title": "Docker Running as Root",
+        "description": "Dockerfile may not configure non-root user",
+        "remediation": "Add USER directive to run container as non-root",
+        "compliance_impact": [
+          "CIS Docker Benchmark"
+        ],
+        "timestamp": "2026-01-18T04:24:10.398627"
+      }
+    ],
+    "low": [],
+    "info": [
+      {
+        "category": "Data Protection",
+        "title": "Verify Backup Encryption",
+        "description": "Manual verification needed for backup encryption",
+        "remediation": "Ensure all backups are encrypted at rest and in transit",
+        "compliance_impact": [],
+        "timestamp": "2026-01-18T04:24:10.020679"
+      },
+      {
+        "category": "Compliance",
+        "title": "Verify Data Retention Policies",
+        "description": "Manual verification needed for data retention policies",
+        "remediation": "Document and implement data retention policies per compliance requirements",
+        "compliance_impact": [],
+        "timestamp": "2026-01-18T04:24:10.398724"
+      }
+    ]
+  },
+  "compliance_assessment": {
+    "OWASP Top 10": "4 issues found",
+    "GDPR": "2 gaps identified",
+    "PCI DSS": "1 requirements not met",
+    "SOC2": "1 controls needed"
+  },
+  "recommendations": [
+    "URGENT: Address 3 critical security issues immediately",
+    "HIGH PRIORITY: Resolve 1 high-risk vulnerabilities"
+  ]
+}

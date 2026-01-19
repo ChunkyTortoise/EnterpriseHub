@@ -1,0 +1,383 @@
+# San Antonio Mixed Economy Market Configuration
+# Multi-Market Geographic Expansion - Configuration-driven market data
+# Military, healthcare, and tourism hub with growing tech sector
+
+# Basic Market Identification
+market_id: san_antonio
+market_name: "San Antonio Metropolitan Area"
+market_type: mixed_economy  # Primary market type
+state: TX
+region: South Central Texas
+timezone: America/Chicago
+mls_provider: "San Antonio Board of Realtors MLS"
+
+# Geographic Center
+coordinates: [29.4241, -98.4936]
+
+# Market Economic Indicators
+median_home_price: 295000
+price_appreciation_1y: 11.2
+inventory_days: 26
+
+# Market Specialization Configuration
+specializations:
+  primary_specialization: "Military and Healthcare Professional Services"
+  secondary_specializations:
+    - "Military Base Employee Relocation"
+    - "Healthcare Professional Housing (SAMMC, Methodist)"
+    - "Tech Sector Growth (Cybersecurity, Fintech)"
+    - "Tourism and Hospitality Professional Services"
+
+  unique_advantages:
+    - "Military relocation expertise"
+    - "Healthcare system knowledge"
+    - "Historic and cultural market understanding"
+    - "Growing tech sector specialization"
+
+  target_client_types:
+    - "Military personnel and contractors"
+    - "Healthcare professionals"
+    - "Tech workers and cybersecurity experts"
+    - "Tourism industry professionals"
+
+  expertise_tags:
+    - "military_relocation"
+    - "healthcare_expertise"
+    - "cybersecurity_tech"
+    - "historic_neighborhoods"
+    - "san_antonio_specialist"
+    - "military_contractor_housing"
+
+  knowledge_base_path: "data/knowledge_base/san_antonio_expertise.json"
+
+# Neighborhood Configurations
+neighborhoods:
+  - name: "Alamo Heights"
+    zone: "North Central"
+    median_price: 785000
+    price_trend_3m: 3.8
+    school_rating: 9.4
+    walkability_score: 60
+    coordinates: [29.4888, -98.4661]
+    appeal_scores:
+      military_appeal: 85
+      healthcare_appeal: 90
+      luxury_appeal: 95
+      family_appeal: 100
+    amenities:
+      - "Top-Rated Schools"
+      - "Historic District"
+      - "Upscale Shopping"
+      - "Central Location"
+      - "Family-Oriented"
+    demographics:
+      age_median: 45
+      income_median: 185000
+      military_healthcare: 0.35
+    corporate_proximity:
+      fort_sam_houston: 8
+      sammc: 6
+      usaa: 10
+      rackspace: 15
+
+  - name: "Stone Oak"
+    zone: "North"
+    median_price: 485000
+    price_trend_3m: 6.2
+    school_rating: 9.1
+    walkability_score: 45
+    coordinates: [29.6266, -98.4781]
+    appeal_scores:
+      military_appeal: 90
+      healthcare_appeal: 85
+      family_appeal: 95
+      tech_appeal: 80
+    amenities:
+      - "Master-Planned Community"
+      - "Excellent Schools"
+      - "Golf Courses"
+      - "Shopping Centers"
+      - "Family Recreation"
+    demographics:
+      age_median: 38
+      income_median: 125000
+      military_healthcare: 0.45
+    corporate_proximity:
+      fort_sam_houston: 15
+      sammc: 18
+      usaa: 12
+      rackspace: 10
+
+  - name: "Medical Center"
+    zone: "Northwest"
+    median_price: 325000
+    price_trend_3m: 8.5
+    school_rating: 8.2
+    walkability_score: 65
+    coordinates: [29.5149, -98.5791]
+    appeal_scores:
+      healthcare_appeal: 100
+      convenience_appeal: 95
+      military_appeal: 80
+      commute_appeal: 100
+    amenities:
+      - "South Texas Medical Center"
+      - "Hospital Proximity"
+      - "Medical Professional Housing"
+      - "University Health System"
+      - "Healthcare Services"
+    demographics:
+      age_median: 34
+      income_median: 85000
+      healthcare_professionals: 0.65
+    corporate_proximity:
+      fort_sam_houston: 12
+      sammc: 5
+      usaa: 18
+      rackspace: 20
+
+  - name: "Schertz"
+    zone: "Northeast"
+    median_price: 365000
+    price_trend_3m: 9.8
+    school_rating: 8.9
+    walkability_score: 40
+    coordinates: [29.5541, -98.2687]
+    appeal_scores:
+      military_appeal: 100
+      family_appeal: 90
+      value_appeal: 85
+      commute_appeal: 85
+    amenities:
+      - "Randolph AFB Proximity"
+      - "Family Communities"
+      - "Military-Friendly"
+      - "Good Schools"
+      - "Suburban Living"
+    demographics:
+      age_median: 33
+      income_median: 95000
+      military_personnel: 0.60
+    corporate_proximity:
+      randolph_afb: 5
+      fort_sam_houston: 20
+      sammc: 25
+      usaa: 25
+
+  - name: "Downtown San Antonio"
+    zone: "Central"
+    median_price: 285000
+    price_trend_3m: 12.5
+    school_rating: 6.8
+    walkability_score: 85
+    coordinates: [29.4241, -98.4936]
+    appeal_scores:
+      tourism_appeal: 100
+      lifestyle_appeal: 90
+      tech_appeal: 85
+      culture_appeal: 100
+    amenities:
+      - "River Walk"
+      - "Alamo"
+      - "Historic Market Square"
+      - "Pearl District"
+      - "Entertainment District"
+    demographics:
+      age_median: 30
+      income_median: 65000
+      tourism_tech: 0.45
+    corporate_proximity:
+      fort_sam_houston: 8
+      sammc: 12
+      usaa: 6
+      rackspace: 8
+
+  - name: "Northwest Side"
+    zone: "Northwest"
+    median_price: 255000
+    price_trend_3m: 11.8
+    school_rating: 8.0
+    walkability_score: 50
+    coordinates: [29.5216, -98.6199]
+    appeal_scores:
+      military_appeal: 85
+      value_appeal: 95
+      family_appeal: 85
+      growth_appeal: 90
+    amenities:
+      - "Affordable Housing"
+      - "Growing Area"
+      - "Family Neighborhoods"
+      - "Shopping Centers"
+      - "Military Access"
+    demographics:
+      age_median: 32
+      income_median: 75000
+      military_healthcare: 0.40
+    corporate_proximity:
+      fort_sam_houston: 15
+      sammc: 10
+      usaa: 20
+      rackspace: 25
+
+  - name: "Southtown"
+    zone: "South"
+    median_price: 195000
+    price_trend_3m: 15.2
+    school_rating: 7.1
+    walkability_score: 75
+    coordinates: [29.4085, -98.4936]
+    appeal_scores:
+      arts_appeal: 95
+      lifestyle_appeal: 85
+      value_appeal: 100
+      tech_appeal: 80
+    amenities:
+      - "Arts District"
+      - "Historic Neighborhoods"
+      - "Breweries"
+      - "Food Scene"
+      - "Affordable Living"
+    demographics:
+      age_median: 28
+      income_median: 55000
+      creative_tech: 0.35
+    corporate_proximity:
+      fort_sam_houston: 12
+      sammc: 15
+      usaa: 10
+      rackspace: 12
+
+  - name: "Leon Valley"
+    zone: "Northwest"
+    median_price: 315000
+    price_trend_3m: 7.2
+    school_rating: 8.4
+    walkability_score: 45
+    coordinates: [29.4952, -98.5756]
+    appeal_scores:
+      military_appeal: 88
+      healthcare_appeal: 85
+      family_appeal: 90
+      convenience_appeal: 85
+    amenities:
+      - "Central Location"
+      - "Military Proximity"
+      - "Family-Friendly"
+      - "Good Schools"
+      - "Convenient Access"
+    demographics:
+      age_median: 36
+      income_median: 88000
+      military_healthcare: 0.50
+    corporate_proximity:
+      fort_sam_houston: 10
+      sammc: 8
+      usaa: 12
+      rackspace: 18
+
+# Major Employer Configurations
+employers:
+  - employer_id: "fort_sam_houston"
+    name: "Fort Sam Houston"
+    industry: "Military"
+    location: "Northeast San Antonio"
+    coordinates: [29.4538, -98.4347]
+    employee_count: 45000
+    preferred_neighborhoods:
+      - "Schertz"
+      - "Alamo Heights"
+      - "Stone Oak"
+      - "Leon Valley"
+    average_salary_range: [45000, 125000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q2", "Q3", "Q4"]
+
+  - employer_id: "sammc"
+    name: "San Antonio Military Medical Center"
+    industry: "Military Healthcare"
+    location: "Fort Sam Houston"
+    coordinates: [29.4538, -98.4347]
+    employee_count: 25000
+    preferred_neighborhoods:
+      - "Medical Center"
+      - "Alamo Heights"
+      - "Stone Oak"
+      - "Leon Valley"
+    average_salary_range: [65000, 165000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "usaa"
+    name: "USAA"
+    industry: "Financial Services"
+    location: "Northwest San Antonio"
+    coordinates: [29.5216, -98.6199]
+    employee_count: 35000
+    preferred_neighborhoods:
+      - "Stone Oak"
+      - "Alamo Heights"
+      - "Northwest Side"
+      - "Downtown San Antonio"
+    average_salary_range: [65000, 155000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2"]
+
+  - employer_id: "rackspace"
+    name: "Rackspace Technology"
+    industry: "Cloud Technology"
+    location: "Downtown San Antonio"
+    coordinates: [29.4241, -98.4936]
+    employee_count: 8000
+    preferred_neighborhoods:
+      - "Downtown San Antonio"
+      - "Stone Oak"
+      - "Southtown"
+      - "Alamo Heights"
+    average_salary_range: [75000, 145000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "randolph_afb"
+    name: "Randolph Air Force Base"
+    industry: "Military/Aerospace"
+    location: "Northeast San Antonio"
+    coordinates: [29.5297, -98.2789]
+    employee_count: 12000
+    preferred_neighborhoods:
+      - "Schertz"
+      - "Live Oak"
+      - "Universal City"
+      - "Stone Oak"
+    average_salary_range: [50000, 135000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q2", "Q4"]
+
+  - employer_id: "southwest_research"
+    name: "Southwest Research Institute"
+    industry: "Research & Development"
+    location: "Southwest San Antonio"
+    coordinates: [29.3844, -98.6328]
+    employee_count: 3500
+    preferred_neighborhoods:
+      - "Leon Valley"
+      - "Medical Center"
+      - "Alamo Heights"
+      - "Stone Oak"
+    average_salary_range: [70000, 155000]
+    relocation_frequency: "low"
+    hiring_seasons: ["Q2", "Q3"]
+
+# Configuration Metadata
+config_version: "1.0"
+last_updated: "2026-01-19T10:00:00Z"
+active: true
+# Demographics Data
+demographics:
+  population: 2650212
+  median_age: 34.8
+  median_household_income: 54716
+  college_education_rate: 0.28
+  employment_rate: 0.92
+  population_growth_rate: 0.022
+  diversity_index: 0.72

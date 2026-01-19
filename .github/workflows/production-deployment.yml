@@ -1,0 +1,511 @@
+name: Production Deployment Pipeline
+# Automated CI/CD pipeline for Jorge's Revenue Acceleration Platform
+# Implements zero-downtime deployments with comprehensive testing and monitoring
+# Version: 1.0.0
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ghl_real_estate_ai/**'
+      - 'infrastructure/**'
+      - 'requirements*.txt'
+      - 'Dockerfile*'
+      - '.github/workflows/production-deployment.yml'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  PYTHON_VERSION: '3.11'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/revenue-platform
+
+jobs:
+  # ============================================
+  # PHASE 1: Code Quality & Security
+  # ============================================
+  code-quality:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install ruff mypy pytest pytest-asyncio pytest-cov
+
+      - name: Run Ruff linting
+        run: ruff check ghl_real_estate_ai/
+
+      - name: Run Ruff formatting check
+        run: ruff format --check ghl_real_estate_ai/
+
+      - name: Type checking with mypy
+        run: mypy ghl_real_estate_ai/ --ignore-missing-imports
+
+      - name: Check for secrets
+        run: |
+          if grep -r "sk-ant-" . --exclude-dir={.git,venv,node_modules}; then
+            echo "ERROR: Anthropic API key found in code!"
+            exit 1
+          fi
+          if grep -r "ghl_api_key" . --exclude-dir={.git,venv,node_modules} | grep -v "\.template\|\.example\|\.md"; then
+            echo "WARNING: Possible GHL API key found"
+          fi
+
+  # ============================================
+  # PHASE 2: Comprehensive Testing
+  # ============================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: code-quality
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Run unit tests
+        run: |
+          pytest tests/services/ tests/unit/ \
+            --cov=ghl_real_estate_ai \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-report=term \
+            --junit-xml=test-results/junit.xml \
+            -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results/
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: code-quality
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: jorge_revenue_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/jorge_revenue_test
+        run: |
+          alembic upgrade head
+
+      - name: Run integration tests
+        env:
+          REDIS_URL: redis://localhost:6379/0
+          DATABASE_URL: postgresql://test:test@localhost:5432/jorge_revenue_test
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_TEST }}
+        run: |
+          pytest tests/integration/ \
+            --junit-xml=test-results/integration-junit.xml \
+            -v
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: test-results/
+
+  # ============================================
+  # PHASE 3: Security Scanning
+  # ============================================
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: code-quality
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Python dependency security check
+        run: |
+          pip install safety
+          safety check --json || true
+
+      - name: SAST with Bandit
+        run: |
+          pip install bandit
+          bandit -r ghl_real_estate_ai/ -f json -o bandit-report.json || true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            trivy-results.sarif
+            bandit-report.json
+
+  # ============================================
+  # PHASE 4: Docker Build & Push
+  # ============================================
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [unit-tests, integration-tests, security-scan]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.meta.outputs.version }}
+
+      - name: Run Trivy on Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Docker scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+
+  # ============================================
+  # PHASE 5: Deploy to Staging
+  # ============================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging-api.jorge-revenue.example.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=./kubeconfig
+
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/jorge-revenue-api \
+            api=${{ needs.build-and-push.outputs.image-tag }} \
+            -n jorge-revenue-platform-staging
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/jorge-revenue-api \
+            -n jorge-revenue-platform-staging \
+            --timeout=5m
+
+      - name: Run smoke tests
+        run: |
+          ./scripts/smoke-tests.sh staging
+
+      - name: Notify deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Staging deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # ============================================
+  # PHASE 6: Load Testing (Staging)
+  # ============================================
+  load-testing:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: deploy-staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run k6 load tests
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: tests/performance/load-test.js
+          flags: --out json=load-test-results.json
+        env:
+          K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+          BASE_URL: https://staging-api.jorge-revenue.example.com
+
+      - name: Upload load test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: load-test-results
+          path: load-test-results.json
+
+      - name: Validate performance SLAs
+        run: |
+          python scripts/validate_performance_slas.py load-test-results.json
+
+  # ============================================
+  # PHASE 7: Deploy to Production
+  # ============================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [deploy-staging, load-testing]
+    if: github.ref == 'refs/heads/main' && github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: https://api.jorge-revenue.example.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          export KUBECONFIG=./kubeconfig
+
+      - name: Create deployment backup
+        run: |
+          kubectl get deployment jorge-revenue-api -n jorge-revenue-platform -o yaml > backup-deployment.yaml
+
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/jorge-revenue-api \
+            api=${{ needs.build-and-push.outputs.image-tag }} \
+            -n jorge-revenue-platform
+
+      - name: Wait for rollout (zero downtime)
+        run: |
+          kubectl rollout status deployment/jorge-revenue-api \
+            -n jorge-revenue-platform \
+            --timeout=10m
+
+      - name: Run production smoke tests
+        run: |
+          ./scripts/smoke-tests.sh production
+
+      - name: Monitor error rate
+        run: |
+          python scripts/monitor_error_rate.py --duration=300 --threshold=0.01
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          kubectl rollout undo deployment/jorge-revenue-api -n jorge-revenue-platform
+          kubectl rollout status deployment/jorge-revenue-api -n jorge-revenue-platform
+
+      - name: Notify production deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_CRITICAL }}
+
+      - name: Create GitHub release
+        if: success()
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          body: |
+            Automated production deployment
+            Commit: ${{ github.sha }}
+            Image: ${{ needs.build-and-push.outputs.image-tag }}
+          draft: false
+          prerelease: false
+
+  # ============================================
+  # PHASE 8: Post-Deployment Monitoring
+  # ============================================
+  post-deployment-monitoring:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: deploy-production
+    if: success()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Monitor metrics for 15 minutes
+        run: |
+          python scripts/post_deployment_monitor.py \
+            --duration=900 \
+            --metrics=error_rate,response_time,throughput \
+            --alert-threshold=5
+
+      - name: Validate business metrics
+        run: |
+          python scripts/validate_business_metrics.py \
+            --check=revenue_tracking,pricing_accuracy,roi_calculations
+
+      - name: Generate deployment report
+        run: |
+          python scripts/generate_deployment_report.py \
+            --output=deployment-report-${{ github.run_number }}.json
+
+      - name: Upload deployment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-report
+          path: deployment-report-*.json
+
+      - name: Update status page
+        run: |
+          curl -X POST ${{ secrets.STATUS_PAGE_WEBHOOK }} \
+            -H "Content-Type: application/json" \
+            -d '{"status": "operational", "message": "Deployment completed successfully"}'
