@@ -15,13 +15,30 @@ from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 from enum import Enum
 from datetime import datetime, timedelta
-import spacy
-from spacy.matcher import Matcher
-from textblob import TextBlob
+# Temporarily disable spacy due to Python 3.14 compatibility issues
+# try:
+#     import spacy
+#     from spacy.matcher import Matcher
+#     HAS_SPACY = True
+# except ImportError:
+#     HAS_SPACY = False
+#     spacy = None
+#     Matcher = None
+
+HAS_SPACY = False
+spacy = None
+Matcher = None
+
+try:
+    from textblob import TextBlob
+    HAS_TEXTBLOB = True
+except ImportError:
+    HAS_TEXTBLOB = False
+    TextBlob = None
 import pandas as pd
 
 from ghl_real_estate_ai.services.cache_service import CacheService
-from ghl_real_estate_ai.core.config import get_settings
+# from ghl_real_estate_ai.ghl_utils.config import get_config_manager  # Not available
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +93,8 @@ class CompetitorIntelligenceService:
 
     def __init__(self, cache_service: Optional[CacheService] = None):
         self.cache = cache_service or CacheService()
-        self.settings = get_settings()
+        # self.settings = get_config_manager()  # Disabled for now
+        self.settings = None
 
         # Initialize NLP models
         self._nlp = None
@@ -85,11 +103,17 @@ class CompetitorIntelligenceService:
 
         # Competitor patterns and data
         self.competitor_patterns = self._load_competitor_patterns()
-        self.austin_competitors = self._load_austin_competitors()
+        self.rc_competitors = self._load_rc_competitors()
         self.risk_indicators = self._load_risk_indicators()
 
     def _initialize_nlp(self):
         """Initialize spaCy NLP model and matcher"""
+        if not HAS_SPACY:
+            logger.warning("spaCy not available. Using basic pattern matching.")
+            self._nlp = None
+            self._matcher = None
+            return
+
         try:
             self._nlp = spacy.load("en_core_web_sm")
             self._matcher = Matcher(self._nlp.vocab)
@@ -97,6 +121,10 @@ class CompetitorIntelligenceService:
         except OSError:
             logger.error("spaCy model not found. Install with: python -m spacy download en_core_web_sm")
             # Fallback to basic pattern matching
+            self._nlp = None
+            self._matcher = None
+        except Exception as e:
+            logger.error(f"Error initializing spaCy: {e}. Using basic pattern matching.")
             self._nlp = None
             self._matcher = None
 
@@ -180,7 +208,7 @@ class CompetitorIntelligenceService:
             ]
         }
 
-    def _load_austin_competitors(self) -> Dict[str, Dict]:
+    def _load_rc_competitors(self) -> Dict[str, Dict]:
         """Load Austin-specific competitor intelligence"""
         return {
             "major_brokerages": {
@@ -196,7 +224,7 @@ class CompetitorIntelligenceService:
                     "market_share": 0.18,
                     "strengths": ["global brand", "marketing support"],
                     "weaknesses": ["franchise fees", "less local focus"],
-                    "jorge_advantages": ["austin native knowledge", "tech integration", "apple relocations"]
+                    "jorge_advantages": ["inland empire native knowledge", "ai integration", "logistics relocations"]
                 },
                 "coldwell_banker": {
                     "names": ["coldwell banker", "coldwell", "banker"],
@@ -385,7 +413,7 @@ class CompetitorIntelligenceService:
         mentions = []
         text_lower = text.lower()
 
-        for category, competitors in self.austin_competitors.items():
+        for category, competitors in self.rc_competitors.items():
             if category == "major_brokerages":
                 for comp_key, comp_data in competitors.items():
                     for name in comp_data["names"]:
@@ -578,7 +606,7 @@ class CompetitorIntelligenceService:
         insights = {}
 
         # Find competitor in Austin data
-        for category, competitors in self.austin_competitors.items():
+        for category, competitors in self.rc_competitors.items():
             if category == "major_brokerages":
                 for comp_key, comp_data in competitors.items():
                     if competitor_name.lower() in [name.lower() for name in comp_data["names"]]:

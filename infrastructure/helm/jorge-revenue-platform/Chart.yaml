@@ -1,0 +1,19 @@
+apiVersion: v2
+name: jorge-revenue-platform
+description: Helm chart for Jorge's Revenue Acceleration Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - ghl
+  - real-estate
+  - ai
+  - revenue
+  - pricing
+maintainers:
+  - name: Jorge Salas
+    email: jorge@example.com
+home: https://github.com/jorge-salas/revenue-platform
+sources:
+  - https://github.com/jorge-salas/revenue-platform
+icon: https://example.com/icon.png

@@ -1,0 +1,335 @@
+# Prometheus Alert Rules for Jorge's Revenue Platform
+# Application, infrastructure, and business metric alerts
+# Version: 1.0.0
+
+groups:
+  # ============================================
+  # Application Health Alerts
+  # ============================================
+  - name: application_health
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          team: engineering
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 1%)"
+          runbook: "https://runbooks.jorge-revenue.com/high-error-rate"
+
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s (threshold: 1s)"
+          runbook: "https://runbooks.jorge-revenue.com/high-response-time"
+
+      - alert: ServiceDown
+        expr: up{job="jorge-revenue-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: engineering
+        annotations:
+          summary: "Service is down"
+          description: "Jorge Revenue API service {{ $labels.instance }} is down"
+          runbook: "https://runbooks.jorge-revenue.com/service-down"
+
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            container_memory_working_set_bytes{pod=~"jorge-revenue-api.*"}
+            /
+            container_spec_memory_limit_bytes{pod=~"jorge-revenue-api.*"}
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "High memory usage"
+          description: "Pod {{ $labels.pod }} memory usage is {{ $value | humanizePercentage }}"
+          runbook: "https://runbooks.jorge-revenue.com/high-memory"
+
+      - alert: HighCPUUsage
+        expr: |
+          (
+            rate(container_cpu_usage_seconds_total{pod=~"jorge-revenue-api.*"}[5m])
+            /
+            container_spec_cpu_quota{pod=~"jorge-revenue-api.*"}
+          ) > 0.80
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "High CPU usage"
+          description: "Pod {{ $labels.pod }} CPU usage is {{ $value | humanizePercentage }}"
+          runbook: "https://runbooks.jorge-revenue.com/high-cpu"
+
+  # ============================================
+  # Business Metrics Alerts
+  # ============================================
+  - name: business_metrics
+    interval: 60s
+    rules:
+      - alert: LowPricingCalculationRate
+        expr: |
+          rate(pricing_calculations_total[5m]) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "Low pricing calculation rate"
+          description: "Pricing calculations rate is {{ $value }}/s (threshold: 0.1/s)"
+          impact: "May indicate integration issues or low customer usage"
+
+      - alert: HighPricingErrorRate
+        expr: |
+          (
+            rate(pricing_calculation_errors_total[5m])
+            /
+            rate(pricing_calculations_total[5m])
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: product
+        annotations:
+          summary: "High pricing calculation error rate"
+          description: "Pricing error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          impact: "Customers unable to get pricing, revenue impact"
+
+      - alert: ROICalculationFailures
+        expr: |
+          increase(roi_calculation_failures_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "Multiple ROI calculation failures"
+          description: "{{ $value }} ROI calculation failures in last 5 minutes"
+          impact: "Customers unable to see ROI reports"
+
+      - alert: LowConversionRate
+        expr: |
+          (
+            sum(increase(leads_converted_total[1h]))
+            /
+            sum(increase(leads_created_total[1h]))
+          ) < 0.05
+        for: 1h
+        labels:
+          severity: info
+          team: product
+        annotations:
+          summary: "Low lead conversion rate"
+          description: "Conversion rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          impact: "May indicate lead quality or pricing issues"
+
+      - alert: AbnormalARPU
+        expr: |
+          abs(
+            avg_over_time(average_revenue_per_user[1h])
+            -
+            avg_over_time(average_revenue_per_user[24h])
+          ) / avg_over_time(average_revenue_per_user[24h]) > 0.30
+        for: 30m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "Abnormal ARPU detected"
+          description: "ARPU deviation is {{ $value | humanizePercentage }}"
+          impact: "Significant change in revenue per user"
+
+  # ============================================
+  # Infrastructure Alerts
+  # ============================================
+  - name: infrastructure
+    interval: 30s
+    rules:
+      - alert: DatabaseConnectionPoolExhausted
+        expr: |
+          (
+            database_connections_active
+            /
+            database_connections_max
+          ) > 0.90
+        for: 5m
+        labels:
+          severity: critical
+          team: engineering
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Pool usage is {{ $value | humanizePercentage }}"
+          runbook: "https://runbooks.jorge-revenue.com/db-pool"
+
+      - alert: RedisHighMemoryUsage
+        expr: |
+          (
+            redis_memory_used_bytes
+            /
+            redis_memory_max_bytes
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is {{ $value | humanizePercentage }}"
+          runbook: "https://runbooks.jorge-revenue.com/redis-memory"
+
+      - alert: RedisConnectionFailures
+        expr: |
+          increase(redis_connection_errors_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: critical
+          team: engineering
+        annotations:
+          summary: "Redis connection failures"
+          description: "{{ $value }} Redis connection errors in last 5 minutes"
+          runbook: "https://runbooks.jorge-revenue.com/redis-connection"
+
+      - alert: PodCrashLooping
+        expr: |
+          rate(kube_pod_container_status_restarts_total{pod=~"jorge-revenue-api.*"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          team: engineering
+        annotations:
+          summary: "Pod crash looping"
+          description: "Pod {{ $labels.pod }} is crash looping"
+          runbook: "https://runbooks.jorge-revenue.com/crash-loop"
+
+      - alert: PersistentVolumeSpaceLow
+        expr: |
+          (
+            kubelet_volume_stats_available_bytes
+            /
+            kubelet_volume_stats_capacity_bytes
+          ) < 0.15
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "Persistent volume space running low"
+          description: "PV {{ $labels.persistentvolumeclaim }} has {{ $value | humanizePercentage }} free space"
+          runbook: "https://runbooks.jorge-revenue.com/pv-space"
+
+  # ============================================
+  # API Rate Limiting Alerts
+  # ============================================
+  - name: rate_limiting
+    interval: 30s
+    rules:
+      - alert: HighRateLimitHits
+        expr: |
+          rate(rate_limit_exceeded_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "High rate limit hits"
+          description: "{{ $value }} rate limit hits per second"
+          impact: "Clients being throttled, may need capacity increase"
+
+      - alert: GHLAPIRateLimitNearLimit
+        expr: |
+          ghl_api_rate_limit_remaining < 100
+        for: 1m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "GHL API rate limit near exhaustion"
+          description: "Only {{ $value }} GHL API calls remaining"
+          runbook: "https://runbooks.jorge-revenue.com/ghl-rate-limit"
+
+  # ============================================
+  # Security Alerts
+  # ============================================
+  - name: security
+    interval: 60s
+    rules:
+      - alert: UnauthorizedAccessAttempts
+        expr: |
+          increase(http_requests_total{status="401"}[5m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Multiple unauthorized access attempts"
+          description: "{{ $value }} unauthorized attempts in last 5 minutes"
+          runbook: "https://runbooks.jorge-revenue.com/security-breach"
+
+      - alert: SuspiciousActivityPattern
+        expr: |
+          increase(http_requests_total{status="403"}[5m]) > 20
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Suspicious activity pattern detected"
+          description: "{{ $value }} forbidden requests in last 5 minutes"
+          runbook: "https://runbooks.jorge-revenue.com/suspicious-activity"
+
+  # ============================================
+  # SLA Compliance Alerts
+  # ============================================
+  - name: sla_compliance
+    interval: 60s
+    rules:
+      - alert: SLAViolation99_9Uptime
+        expr: |
+          (
+            sum(rate(http_requests_total{status!~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) < 0.999
+        for: 15m
+        labels:
+          severity: critical
+          team: engineering
+        annotations:
+          summary: "99.9% uptime SLA violation"
+          description: "Uptime is {{ $value | humanizePercentage }} (SLA: 99.9%)"
+          impact: "SLA breach, customer impact"
+
+      - alert: SLAViolationResponseTime
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 2
+        for: 15m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "Response time SLA at risk"
+          description: "99th percentile response time is {{ $value }}s (SLA: <2s)"
+          impact: "Customer experience degradation"

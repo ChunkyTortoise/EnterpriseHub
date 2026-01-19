@@ -36,6 +36,8 @@ from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSourceTracker, LeadSource
 from ghl_real_estate_ai.services.security_framework import verify_webhook
 from ghl_real_estate_ai.services.tenant_service import TenantService
+from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
+from ghl_real_estate_ai.api.schemas.billing import UsageRecordRequest
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/ghl", tags=["ghl"])
@@ -50,6 +52,7 @@ pricing_optimizer = DynamicPricingOptimizer()
 calendar_scheduler = CalendarScheduler()
 lead_source_tracker = LeadSourceTracker()
 attribution_analytics = AttributionAnalytics()
+subscription_manager = SubscriptionManager()
 
 
 @router.post("/webhook", response_model=GHLWebhookResponse)
@@ -303,6 +306,16 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "extracted_data": ai_response.extracted_data,
                 "classification": lead_scorer.classify(ai_response.lead_score)
             }
+        )
+
+        # Step 2.5: Handle Billing Usage Tracking (Jorge's $240K ARR Foundation)
+        background_tasks.add_task(
+            _handle_billing_usage,
+            contact_id=contact_id,
+            location_id=location_id,
+            lead_score=ai_response.lead_score,
+            extracted_data=ai_response.extracted_data,
+            classification=lead_scorer.classify(ai_response.lead_score)
         )
 
         # Step 3: Update conversation context
@@ -714,7 +727,7 @@ async def _calculate_lead_pricing(contact_id: str, location_id: str, context: di
                 "agent_recommendation": pricing_result.agent_recommendation
             }
         )
-        
+
     except Exception as e:
         logger.error(
             f"Failed to calculate pricing for contact {contact_id}",
@@ -722,6 +735,207 @@ async def _calculate_lead_pricing(contact_id: str, location_id: str, context: di
                 "contact_id": contact_id,
                 "location_id": location_id,
                 "error": str(e)
+            },
+            exc_info=True
+        )
+
+
+async def _handle_billing_usage(contact_id: str, location_id: str, lead_score: int,
+                              extracted_data: dict, classification: str) -> None:
+    """
+    Background task to handle billing usage tracking for lead processing.
+
+    Implements Jorge's $240K ARR foundation by tracking subscription usage
+    and recording billable events for overage calculation.
+
+    Args:
+        contact_id: GHL contact ID
+        location_id: GHL location ID
+        lead_score: AI-generated lead score (0-7)
+        extracted_data: Extracted lead preferences and data
+        classification: Lead classification (hot/warm/cold)
+    """
+    try:
+        # Get active subscription for this location
+        active_subscription = await subscription_manager.get_active_subscription(location_id)
+
+        if not active_subscription:
+            logger.info(
+                f"No active subscription found for location {location_id} - skipping usage billing",
+                extra={
+                    "contact_id": contact_id,
+                    "location_id": location_id,
+                    "classification": classification,
+                    "billing_status": "no_subscription"
+                }
+            )
+            return
+
+        # Calculate lead price using dynamic pricing
+        pricing_result = await pricing_optimizer.calculate_lead_price(
+            contact_id=contact_id,
+            location_id=location_id,
+            context={
+                "questions_answered": lead_score,
+                "extracted_data": extracted_data,
+                "classification": classification
+            }
+        )
+
+        # Check if this lead exceeds the subscription allowance
+        current_usage = active_subscription.usage_current + 1  # Including this lead
+
+        if current_usage > active_subscription.usage_allowance:
+            # This is an overage lead - bill usage to Stripe
+            try:
+                # Create usage record request
+                usage_request = UsageRecordRequest(
+                    subscription_id=active_subscription.id,
+                    lead_id=f"lead_{contact_id}_{datetime.now().isoformat()}",
+                    contact_id=contact_id,
+                    amount=pricing_result.final_price,
+                    tier=classification,
+                    pricing_multiplier=pricing_result.multiplier,
+                    billing_period_start=active_subscription.current_period_start,
+                    billing_period_end=active_subscription.current_period_end
+                )
+
+                # Record overage usage with subscription manager
+                billing_result = await subscription_manager.bill_usage_overage(
+                    subscription_id=active_subscription.id,
+                    lead_id=usage_request.lead_id,
+                    contact_id=contact_id,
+                    lead_price=pricing_result.final_price,
+                    tier=classification
+                )
+
+                if billing_result["success"]:
+                    logger.info(
+                        f"Successfully billed overage usage for contact {contact_id}",
+                        extra={
+                            "contact_id": contact_id,
+                            "location_id": location_id,
+                            "subscription_id": active_subscription.id,
+                            "amount_billed": float(pricing_result.final_price),
+                            "tier": classification,
+                            "overage_lead_number": current_usage - active_subscription.usage_allowance,
+                            "stripe_usage_record_id": billing_result.get("stripe_usage_record_id"),
+                            "billing_period": billing_result.get("billing_period"),
+                            "jorge_feature": "usage_based_billing"
+                        }
+                    )
+
+                    # Track overage billing event
+                    await analytics_service.track_event(
+                        event_type="usage_overage_billed",
+                        location_id=location_id,
+                        contact_id=contact_id,
+                        data={
+                            "subscription_id": active_subscription.id,
+                            "amount": float(pricing_result.final_price),
+                            "tier": classification,
+                            "lead_score": lead_score,
+                            "overage_number": current_usage - active_subscription.usage_allowance,
+                            "subscription_tier": active_subscription.tier.value,
+                            "expected_roi": pricing_result.expected_roi,
+                            "arr_impact": float(pricing_result.final_price) * 12  # Annualized impact
+                        }
+                    )
+
+                else:
+                    logger.error(
+                        f"Failed to bill overage usage for contact {contact_id}",
+                        extra={
+                            "contact_id": contact_id,
+                            "location_id": location_id,
+                            "subscription_id": active_subscription.id,
+                            "error": billing_result.get("error"),
+                            "recoverable": billing_result.get("recoverable", True)
+                        }
+                    )
+
+            except Exception as overage_error:
+                logger.error(
+                    f"Error processing usage overage billing for contact {contact_id}: {overage_error}",
+                    extra={
+                        "contact_id": contact_id,
+                        "location_id": location_id,
+                        "subscription_id": active_subscription.id,
+                        "error": str(overage_error),
+                        "error_type": type(overage_error).__name__
+                    },
+                    exc_info=True
+                )
+
+        else:
+            # Within allowance - just track usage
+            logger.info(
+                f"Lead processing within subscription allowance for contact {contact_id}",
+                extra={
+                    "contact_id": contact_id,
+                    "location_id": location_id,
+                    "subscription_id": active_subscription.id,
+                    "current_usage": current_usage,
+                    "usage_allowance": active_subscription.usage_allowance,
+                    "usage_percentage": round((current_usage / active_subscription.usage_allowance) * 100, 2),
+                    "tier": classification,
+                    "estimated_value": float(pricing_result.final_price),
+                    "billing_status": "within_allowance"
+                }
+            )
+
+            # Track usage within allowance for analytics
+            await analytics_service.track_event(
+                event_type="usage_within_allowance",
+                location_id=location_id,
+                contact_id=contact_id,
+                data={
+                    "subscription_id": active_subscription.id,
+                    "current_usage": current_usage,
+                    "usage_allowance": active_subscription.usage_allowance,
+                    "tier": classification,
+                    "lead_score": lead_score,
+                    "estimated_value": float(pricing_result.final_price)
+                }
+            )
+
+        # Check for usage threshold notifications
+        threshold_result = await subscription_manager.handle_usage_threshold(
+            location_id=location_id,
+            current_usage=current_usage,
+            period_usage_allowance=active_subscription.usage_allowance
+        )
+
+        if threshold_result.get("actions_taken"):
+            logger.info(
+                f"Usage threshold actions triggered for location {location_id}",
+                extra={
+                    "location_id": location_id,
+                    "usage_percentage": threshold_result.get("usage_percentage"),
+                    "threshold_level": threshold_result.get("threshold_level"),
+                    "actions_taken": threshold_result.get("actions_taken"),
+                    "overage_billing_active": threshold_result.get("overage_billing_active")
+                }
+            )
+
+            # Track threshold events for customer success
+            await analytics_service.track_event(
+                event_type="usage_threshold_reached",
+                location_id=location_id,
+                contact_id=contact_id,
+                data=threshold_result
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Failed to process billing usage for contact {contact_id}",
+            extra={
+                "contact_id": contact_id,
+                "location_id": location_id,
+                "classification": classification,
+                "lead_score": lead_score,
+                "error": str(e),
+                "error_type": type(e).__name__
             },
             exc_info=True
         )

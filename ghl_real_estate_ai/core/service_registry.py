@@ -627,3 +627,42 @@ class ServiceRegistry:
             "claude_orchestrator", "enhanced_lead_scorer", "claude_automation",
             "enhanced_lead_intelligence"
         ]
+
+
+# ======================================================================
+# Global ServiceRegistry Factory Function
+# ======================================================================
+
+# Instance cache for singleton pattern
+_service_registry_instance = None
+
+
+def get_service_registry(
+    location_id: Optional[str] = None,
+    demo_mode: Optional[bool] = None,
+    api_key: Optional[str] = None,
+    force_new: bool = False
+) -> ServiceRegistry:
+    """
+    Get or create a ServiceRegistry instance (singleton pattern).
+
+    Args:
+        location_id: GHL location ID
+        demo_mode: Force demo mode (None = auto-detect)
+        api_key: GHL API key (None = auto-detect)
+        force_new: Force creation of new instance
+
+    Returns:
+        ServiceRegistry instance
+    """
+    global _service_registry_instance
+
+    if force_new or _service_registry_instance is None:
+        _service_registry_instance = ServiceRegistry(
+            location_id=location_id,
+            demo_mode=demo_mode if demo_mode is not None else False,
+            api_key=api_key
+        )
+        logger.info("Created new ServiceRegistry instance")
+
+    return _service_registry_instance

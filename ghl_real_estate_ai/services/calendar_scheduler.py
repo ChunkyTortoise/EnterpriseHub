@@ -39,8 +39,10 @@ from ghl_real_estate_ai.services.ghl_client import GHLClient
 
 logger = get_logger(__name__)
 
-# Austin timezone for Jorge's business
-AUSTIN_TZ = pytz.timezone("America/Chicago")
+# Rancho Cucamonga timezone for Jorge's business
+RC_TZ = pytz.timezone("America/Los_Angeles")
+# Backward compatibility
+AUSTIN_TZ = RC_TZ
 UTC_TZ = pytz.UTC
 
 
@@ -71,7 +73,7 @@ class TimeSlot(BaseModel):
     end_time: datetime
     duration_minutes: int
     appointment_type: AppointmentType
-    timezone: str = "America/Chicago"
+    timezone: str = "America/Los_Angeles"
     is_available: bool = True
 
     @validator('start_time', 'end_time')
@@ -412,7 +414,7 @@ class CalendarScheduler:
                 calendar_id=self.calendar_id,
                 start_date=start_date.isoformat(),
                 end_date=end_date.isoformat(),
-                timezone="America/Chicago"
+                timezone="America/Los_Angeles"
             )
 
             # Process and filter slots
@@ -449,7 +451,7 @@ class CalendarScheduler:
                         end_time=end_time,
                         duration_minutes=duration,
                         appointment_type=appointment_type,
-                        timezone="America/Chicago"
+                        timezone="America/Los_Angeles"
                     )
 
                     available_slots.append(time_slot)

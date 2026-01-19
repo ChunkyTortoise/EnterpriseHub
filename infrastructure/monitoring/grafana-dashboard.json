@@ -1,0 +1,329 @@
+{
+  "dashboard": {
+    "title": "Jorge's Revenue Platform - Business & Operations Dashboard",
+    "tags": ["jorge", "revenue", "business", "operations"],
+    "timezone": "browser",
+    "editable": true,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Revenue Metrics Overview",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Total Revenue (24h)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 1},
+        "targets": [
+          {
+            "expr": "sum(increase(revenue_total_dollars[24h]))",
+            "legendFormat": "Revenue"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1000, "color": "yellow"},
+                {"value": 5000, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Average Revenue Per User (ARPU)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 1},
+        "targets": [
+          {
+            "expr": "avg_over_time(average_revenue_per_user[1h])",
+            "legendFormat": "ARPU"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 200, "color": "yellow"},
+                {"value": 400, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Lead Conversion Rate",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 1},
+        "targets": [
+          {
+            "expr": "(sum(increase(leads_converted_total[1h])) / sum(increase(leads_created_total[1h]))) * 100",
+            "legendFormat": "Conversion %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Active Clients",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 1},
+        "targets": [
+          {
+            "expr": "count(count by (location_id) (pricing_calculations_total))",
+            "legendFormat": "Active Clients"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Pricing Performance",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5}
+      },
+      {
+        "id": 7,
+        "title": "Pricing Calculations Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+        "targets": [
+          {
+            "expr": "rate(pricing_calculations_total[5m])",
+            "legendFormat": "Calculations/sec"
+          }
+        ],
+        "yaxes": [
+          {"format": "ops", "label": "Operations/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Pricing by Tier Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+        "targets": [
+          {
+            "expr": "sum by (tier) (increase(pricing_calculations_total[1h]))",
+            "legendFormat": "{{tier}}"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "API Performance",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 14}
+      },
+      {
+        "id": 10,
+        "title": "Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 15},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{method}} {{endpoint}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Response Time (P95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 15},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+            "legendFormat": "{{endpoint}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Response Time"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [1], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "60s",
+          "handler": 1,
+          "name": "High Response Time",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 12,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 15},
+        "targets": [
+          {
+            "expr": "(sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))) * 100",
+            "legendFormat": "Error Rate %"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Error %"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [1], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "60s",
+          "handler": 1,
+          "name": "High Error Rate",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 13,
+        "title": "Infrastructure Health",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 23}
+      },
+      {
+        "id": 14,
+        "title": "Pod Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "sum by (pod) (container_memory_working_set_bytes{pod=~\"jorge-revenue-api.*\"}) / 1024 / 1024",
+            "legendFormat": "{{pod}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "mbytes", "label": "Memory"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Pod CPU Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{pod=~\"jorge-revenue-api.*\"}[5m])) * 100",
+            "legendFormat": "{{pod}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "CPU %"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Database & Cache",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 32}
+      },
+      {
+        "id": 17,
+        "title": "Database Connection Pool",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 33},
+        "targets": [
+          {
+            "expr": "database_connections_active",
+            "legendFormat": "Active Connections"
+          },
+          {
+            "expr": "database_connections_max",
+            "legendFormat": "Max Connections"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Connections"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Redis Cache Hit Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 33},
+        "targets": [
+          {
+            "expr": "(sum(rate(redis_cache_hits_total[5m])) / (sum(rate(redis_cache_hits_total[5m])) + sum(rate(redis_cache_misses_total[5m])))) * 100",
+            "legendFormat": "Cache Hit Rate %"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Hit Rate %"},
+          {"format": "short"}
+        ]
+      }
+    ]
+  }
+}

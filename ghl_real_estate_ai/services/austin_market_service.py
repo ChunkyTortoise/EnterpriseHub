@@ -1,11 +1,11 @@
 """
-Austin Market Data Service - Real-time MLS integration and market intelligence.
+Rancho Cucamonga Market Data Service - Real-time MLS integration and market intelligence.
 
-Provides comprehensive Austin real estate market data including:
+Provides comprehensive Austin Metropolitan Area real estate market data including:
 - MLS property listings and market trends
-- School district ratings and boundary mapping
+- School district ratings and boundary mapping (Etiwanda, Central Elementary)
 - Neighborhood analytics and demographics
-- Corporate relocation data for tech workers
+- Corporate relocation data for logistics/healthcare workers
 - Market timing and inventory analysis
 """
 
@@ -39,16 +39,16 @@ class MarketCondition(Enum):
 
 
 @dataclass
-class AustinNeighborhood:
-    """Austin neighborhood with comprehensive market data."""
+class RanchoCucamongaNeighborhood:
+    """Rancho Cucamonga neighborhood with comprehensive market data."""
     name: str
-    zone: str  # Central, North, South, East, West
+    zone: str  # Central RC, Alta Loma, Etiwanda, North RC, South RC
     median_price: float
     price_trend_3m: float  # Percentage change
     inventory_days: int
     school_rating: float
     walkability_score: int
-    tech_worker_appeal: float  # 0-100 score
+    logistics_healthcare_appeal: float  # 0-100 score for logistics/healthcare workers
     corporate_proximity: Dict[str, float]  # Company name -> commute minutes
     amenities: List[str]
     demographics: Dict[str, Any]
@@ -57,7 +57,7 @@ class AustinNeighborhood:
 
 @dataclass
 class PropertyListing:
-    """Austin MLS property listing."""
+    """Austin Metropolitan Area MLS property listing."""
     mls_id: str
     address: str
     price: float
@@ -82,7 +82,7 @@ class PropertyListing:
 
 @dataclass
 class MarketMetrics:
-    """Austin market performance metrics."""
+    """Austin Metropolitan Area market performance metrics."""
     median_price: float
     average_days_on_market: int
     inventory_count: int
@@ -99,10 +99,10 @@ class MarketMetrics:
 
 class AustinMarketService:
     """
-    Comprehensive Austin real estate market intelligence service.
+    Comprehensive Austin Metropolitan Area real estate market intelligence service.
 
     Integrates with MLS data, school ratings, corporate data,
-    and provides real-time market analysis.
+    and provides real-time market analysis for the Austin Tech Hub.
     """
 
     def __init__(self):
@@ -116,7 +116,7 @@ class AustinMarketService:
         property_type: Optional[PropertyType] = None,
         price_range: Optional[Tuple[float, float]] = None
     ) -> MarketMetrics:
-        """Get real-time Austin market metrics with optional filtering."""
+        """Get real-time Austin Metropolitan Area market metrics with optional filtering."""
         cache_key = f"market_metrics:{neighborhood}:{property_type}:{price_range}"
 
         # Try cache first (5-minute TTL for market data)
@@ -130,7 +130,7 @@ class AustinMarketService:
 
         # Cache for 5 minutes
         await self.cache.set(cache_key, metrics.__dict__, ttl=300)
-        logger.info(f"Fetched fresh market metrics for {neighborhood or 'Austin'}")
+        logger.info(f"Fetched fresh market metrics for {neighborhood or 'Rancho Cucamonga'}")
 
         return metrics
 
@@ -140,7 +140,7 @@ class AustinMarketService:
         limit: int = 50
     ) -> List[PropertyListing]:
         """
-        Search Austin MLS properties with comprehensive criteria.
+        Search Austin Metropolitan Area MLS properties with comprehensive criteria.
 
         Args:
             criteria: Search criteria including price, beds, baths, neighborhood, etc.
@@ -163,7 +163,7 @@ class AustinMarketService:
 
         return properties
 
-    async def get_neighborhood_analysis(self, neighborhood: str) -> Optional[AustinNeighborhood]:
+    async def get_neighborhood_analysis(self, neighborhood: str) -> Optional[RanchoCucamongaNeighborhood]:
         """Get comprehensive neighborhood analysis."""
         cache_key = f"neighborhood_analysis:{neighborhood.lower()}"
 
@@ -171,7 +171,7 @@ class AustinMarketService:
         cached = await self.cache.get(cache_key)
         if cached:
             logger.debug(f"Cache hit for neighborhood: {neighborhood}")
-            return AustinNeighborhood(**cached)
+            return RanchoCucamongaNeighborhood(**cached)
 
         # Get neighborhood data
         neighborhood_data = self.neighborhoods.get(neighborhood.lower())
@@ -210,9 +210,9 @@ class AustinMarketService:
         position_level: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Get insights for corporate relocations to Austin.
+        Get insights for corporate relocations to Austin Metropolitan Area.
 
-        Focuses on Apple, Google, Meta, Tesla, and other major employers.
+        Focuses on Amazon, Kaiser Permanente, FedEx, UPS, and other major employers.
         """
         cache_key = f"corporate_insights:{employer}:{position_level}"
 
@@ -252,7 +252,7 @@ class AustinMarketService:
         property_type: PropertyType,
         neighborhood: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Get market timing recommendations for Austin market."""
+        """Get market timing recommendations for Austin Metropolitan Area market."""
         current_metrics = await self.get_market_metrics(neighborhood, property_type)
 
         advice = {
@@ -272,146 +272,146 @@ class AustinMarketService:
         return advice
 
     def _load_neighborhood_data(self) -> Dict[str, Dict[str, Any]]:
-        """Load Austin neighborhood base data."""
+        """Load Rancho Cucamonga neighborhood base data."""
         return {
-            "downtown": {
-                "name": "Downtown Austin",
+            "alta_loma": {
+                "name": "Alta Loma",
                 "zone": "Central",
-                "median_price": 850000,
-                "school_rating": 7.2,
-                "walkability_score": 95,
-                "tech_worker_appeal": 90,
-                "amenities": ["Rainey Street", "Lady Bird Lake", "Convention Center", "Nightlife"],
-                "demographics": {"age_median": 32, "income_median": 95000, "tech_workers": 0.35}
-            },
-            "south_lamar": {
-                "name": "South Lamar",
-                "zone": "Central",
-                "median_price": 725000,
-                "school_rating": 8.1,
-                "walkability_score": 88,
-                "tech_worker_appeal": 85,
-                "amenities": ["Food Trucks", "Zilker Park", "South Lamar District", "Restaurants"],
-                "demographics": {"age_median": 31, "income_median": 88000, "tech_workers": 0.32}
-            },
-            "mueller": {
-                "name": "Mueller",
-                "zone": "East",
-                "median_price": 650000,
-                "school_rating": 8.7,
-                "walkability_score": 78,
-                "tech_worker_appeal": 88,
-                "amenities": ["Mueller Lake Park", "Dell Children's Hospital", "Town Center", "Farmers Market"],
-                "demographics": {"age_median": 35, "income_median": 92000, "tech_workers": 0.28}
-            },
-            "round_rock": {
-                "name": "Round Rock",
-                "zone": "North",
-                "median_price": 485000,
-                "school_rating": 9.1,
+                "median_price": 1100000,
+                "school_rating": 8.9,
                 "walkability_score": 45,
-                "tech_worker_appeal": 95,  # High due to Apple campus
-                "amenities": ["Dell Diamond", "Round Rock Premium Outlets", "Apple Campus", "Family Friendly"],
-                "demographics": {"age_median": 38, "income_median": 105000, "tech_workers": 0.42}
+                "logistics_healthcare_appeal": 75,
+                "amenities": ["Victoria Gardens", "Alta Loma Community Center", "Red Hill Country Club", "Luxury Homes"],
+                "demographics": {"age_median": 42, "income_median": 125000, "logistics_healthcare": 0.25}
             },
-            "cedar_park": {
-                "name": "Cedar Park",
-                "zone": "Northwest",
-                "median_price": 465000,
+            "etiwanda": {
+                "name": "Etiwanda",
+                "zone": "North",
+                "median_price": 950000,
                 "school_rating": 9.3,
-                "walkability_score": 35,
-                "tech_worker_appeal": 80,
-                "amenities": ["H-E-B Center", "Sculpture Falls", "Good Schools", "Family Community"],
-                "demographics": {"age_median": 41, "income_median": 98000, "tech_workers": 0.25}
+                "walkability_score": 55,
+                "logistics_healthcare_appeal": 90,
+                "amenities": ["Etiwanda Creek Park", "Top Schools", "Family Communities", "Day Creek Golf Course"],
+                "demographics": {"age_median": 38, "income_median": 115000, "logistics_healthcare": 0.35}
             },
-            "east_austin": {
-                "name": "East Austin",
-                "zone": "East",
-                "median_price": 580000,
-                "school_rating": 6.8,
-                "walkability_score": 72,
-                "tech_worker_appeal": 75,
-                "amenities": ["Food Scene", "Art District", "Music Venues", "Hip Culture"],
-                "demographics": {"age_median": 29, "income_median": 72000, "tech_workers": 0.22}
-            },
-            "westlake": {
-                "name": "Westlake",
-                "zone": "West",
-                "median_price": 1200000,
-                "school_rating": 9.8,
-                "walkability_score": 25,
-                "tech_worker_appeal": 70,
-                "amenities": ["Lake Austin", "Luxury Shopping", "Top Schools", "Hill Country"],
-                "demographics": {"age_median": 45, "income_median": 185000, "tech_workers": 0.18}
-            },
-            "domain": {
-                "name": "Domain/Arboretum",
-                "zone": "Northwest",
-                "median_price": 575000,
-                "school_rating": 8.5,
+            "central_rc": {
+                "name": "Central Rancho Cucamonga",
+                "zone": "Central",
+                "median_price": 750000,
+                "school_rating": 8.1,
                 "walkability_score": 65,
-                "tech_worker_appeal": 92,
-                "amenities": ["The Domain", "Shopping", "Tech Offices", "Urban Living"],
-                "demographics": {"age_median": 33, "income_median": 102000, "tech_workers": 0.38}
+                "logistics_healthcare_appeal": 85,
+                "amenities": ["Victoria Gardens Mall", "Central Park", "Restaurants", "Shopping Centers"],
+                "demographics": {"age_median": 35, "income_median": 95000, "logistics_healthcare": 0.30}
+            },
+            "north_rc": {
+                "name": "North Rancho Cucamonga",
+                "zone": "North",
+                "median_price": 850000,
+                "school_rating": 8.7,
+                "walkability_score": 50,
+                "logistics_healthcare_appeal": 80,
+                "amenities": ["Lewis Family Playfields", "New Construction", "Commuter Friendly", "Family Oriented"],
+                "demographics": {"age_median": 36, "income_median": 105000, "logistics_healthcare": 0.28}
+            },
+            "south_rc": {
+                "name": "South Rancho Cucamonga",
+                "zone": "South",
+                "median_price": 680000,
+                "school_rating": 7.8,
+                "walkability_score": 60,
+                "logistics_healthcare_appeal": 88,
+                "amenities": ["Cucamonga Peak Trail", "Historic Route 66", "Starter Homes", "Commuter Access"],
+                "demographics": {"age_median": 32, "income_median": 85000, "logistics_healthcare": 0.40}
+            },
+            "victoria_gardens": {
+                "name": "Victoria Gardens Area",
+                "zone": "Central",
+                "median_price": 820000,
+                "school_rating": 8.5,
+                "walkability_score": 75,
+                "logistics_healthcare_appeal": 82,
+                "amenities": ["Victoria Gardens Mall", "Dining", "Entertainment", "Shopping"],
+                "demographics": {"age_median": 34, "income_median": 98000, "logistics_healthcare": 0.32}
+            },
+            "terra_vista": {
+                "name": "Terra Vista",
+                "zone": "West",
+                "median_price": 1050000,
+                "school_rating": 9.1,
+                "walkability_score": 40,
+                "logistics_healthcare_appeal": 70,
+                "amenities": ["Luxury Homes", "Golf Course Views", "Gated Communities", "Mountain Views"],
+                "demographics": {"age_median": 45, "income_median": 165000, "logistics_healthcare": 0.20}
+            },
+            "day_creek": {
+                "name": "Day Creek",
+                "zone": "East",
+                "median_price": 780000,
+                "school_rating": 8.3,
+                "walkability_score": 55,
+                "logistics_healthcare_appeal": 85,
+                "amenities": ["Day Creek Golf Course", "Family Neighborhoods", "Parks", "Schools"],
+                "demographics": {"age_median": 37, "income_median": 108000, "logistics_healthcare": 0.30}
             }
         }
 
     def _load_corporate_headquarters(self) -> Dict[str, Dict[str, Any]]:
-        """Load major corporate headquarters and campuses in Austin."""
+        """Load major corporate headquarters and employers in Austin Metropolitan Area."""
         return {
-            "apple": {
-                "name": "Apple",
-                "location": "Round Rock",
-                "coordinates": (30.389444, -97.708333),
-                "employees": 15000,
-                "expansion_plans": "Up to 20,000 by 2026",
-                "avg_salary": 145000,
-                "preferred_neighborhoods": ["Round Rock", "Cedar Park", "Domain", "Mueller"]
-            },
-            "google": {
-                "name": "Google",
-                "location": "Downtown Austin",
-                "coordinates": (30.268889, -97.745556),
-                "employees": 2500,
-                "expansion_plans": "Steady growth",
-                "avg_salary": 155000,
-                "preferred_neighborhoods": ["Downtown", "South Lamar", "East Austin", "Mueller"]
-            },
-            "meta": {
-                "name": "Meta",
-                "location": "Domain",
-                "coordinates": (30.384444, -97.727778),
-                "employees": 3000,
-                "expansion_plans": "Significant expansion planned",
-                "avg_salary": 165000,
-                "preferred_neighborhoods": ["Domain", "Round Rock", "Cedar Park", "Downtown"]
-            },
-            "tesla": {
-                "name": "Tesla",
-                "location": "East Austin (Gigafactory)",
-                "coordinates": (30.230556, -97.610556),
-                "employees": 20000,
-                "expansion_plans": "Major manufacturing hub",
-                "avg_salary": 95000,
-                "preferred_neighborhoods": ["East Austin", "Mueller", "Manor", "Pflugerville"]
-            },
-            "dell": {
-                "name": "Dell Technologies",
-                "location": "Round Rock",
-                "coordinates": (30.388889, -97.678889),
+            "amazon_logistics": {
+                "name": "Amazon Fulfillment Centers",
+                "location": "Rancho Cucamonga/Ontario",
+                "coordinates": (34.106389, -117.593056),
                 "employees": 12000,
-                "expansion_plans": "Stable workforce",
-                "avg_salary": 125000,
-                "preferred_neighborhoods": ["Round Rock", "Cedar Park", "Leander", "Georgetown"]
+                "expansion_plans": "Continued logistics expansion",
+                "avg_salary": 85000,
+                "preferred_neighborhoods": ["South RC", "Central RC", "Etiwanda", "North RC"]
             },
-            "ibm": {
-                "name": "IBM",
-                "location": "North Austin",
-                "coordinates": (30.395556, -97.727222),
-                "employees": 6000,
-                "expansion_plans": "Moderate growth",
-                "avg_salary": 135000,
-                "preferred_neighborhoods": ["Domain", "Round Rock", "Cedar Park", "North Austin"]
+            "kaiser_permanente": {
+                "name": "Kaiser Permanente",
+                "location": "Ontario/Fontana",
+                "coordinates": (34.063611, -117.650833),
+                "employees": 8500,
+                "expansion_plans": "Healthcare expansion across IE",
+                "avg_salary": 95000,
+                "preferred_neighborhoods": ["Central RC", "Etiwanda", "Alta Loma", "Victoria Gardens"]
+            },
+            "fedex": {
+                "name": "FedEx Ground",
+                "location": "Rancho Cucamonga",
+                "coordinates": (34.101389, -117.583056),
+                "employees": 5000,
+                "expansion_plans": "Logistics hub expansion",
+                "avg_salary": 75000,
+                "preferred_neighborhoods": ["South RC", "Central RC", "North RC", "Day Creek"]
+            },
+            "ups": {
+                "name": "UPS Logistics",
+                "location": "Ontario",
+                "coordinates": (34.058889, -117.640556),
+                "employees": 4500,
+                "expansion_plans": "Distribution center growth",
+                "avg_salary": 78000,
+                "preferred_neighborhoods": ["Central RC", "South RC", "Victoria Gardens", "Day Creek"]
+            },
+            "san_antonio_regional": {
+                "name": "San Antonio Regional Hospital",
+                "location": "Upland",
+                "coordinates": (34.113333, -117.648889),
+                "employees": 3500,
+                "expansion_plans": "Healthcare services expansion",
+                "avg_salary": 85000,
+                "preferred_neighborhoods": ["Etiwanda", "Alta Loma", "Central RC", "Terra Vista"]
+            },
+            "chino_valley_medical": {
+                "name": "Chino Valley Medical Center",
+                "location": "Chino",
+                "coordinates": (34.025556, -117.688889),
+                "employees": 2800,
+                "expansion_plans": "Regional healthcare expansion",
+                "avg_salary": 90000,
+                "preferred_neighborhoods": ["Chino Hills", "South RC", "Central RC", "Day Creek"]
             }
         }
 
@@ -423,28 +423,28 @@ class AustinMarketService:
     ) -> MarketMetrics:
         """Fetch real-time market metrics from MLS and market data sources."""
         # Simulate MLS API call - in production, integrate with actual MLS
-        # This would connect to Austin Board of Realtors MLS or similar
+        # This would connect to Austin Tech Hub MLS or San Bernardino County MLS
 
         base_metrics = {
-            "median_price": 625000,
-            "average_days_on_market": 28,
-            "inventory_count": 2150,
-            "months_supply": 1.8,
-            "price_trend_1m": 0.8,
-            "price_trend_3m": 3.2,
-            "price_trend_1y": 12.5,
-            "new_listings_7d": 285,
-            "closed_sales_30d": 1156,
-            "pending_sales": 892,
-            "absorption_rate": 85.2,
-            "market_condition": MarketCondition.STRONG_SELLERS
+            "median_price": 825000,
+            "average_days_on_market": 35,
+            "inventory_count": 1850,
+            "months_supply": 2.1,
+            "price_trend_1m": 0.5,
+            "price_trend_3m": 2.8,
+            "price_trend_1y": 8.5,
+            "new_listings_7d": 220,
+            "closed_sales_30d": 975,
+            "pending_sales": 750,
+            "absorption_rate": 82.3,
+            "market_condition": MarketCondition.BALANCED
         }
 
         # Adjust based on neighborhood
         if neighborhood:
             neighborhood_data = self.neighborhoods.get(neighborhood.lower(), {})
             if neighborhood_data:
-                price_multiplier = neighborhood_data.get("median_price", 625000) / 625000
+                price_multiplier = neighborhood_data.get("median_price", 825000) / 825000
                 base_metrics["median_price"] = int(base_metrics["median_price"] * price_multiplier)
 
         # Adjust based on property type
@@ -470,29 +470,29 @@ class AustinMarketService:
     ) -> List[PropertyListing]:
         """Search MLS properties - integrate with actual MLS API in production."""
         # Simulate MLS search results
-        # In production, this would connect to Austin MLS API
+        # In production, this would connect to Austin Tech Hub MLS API
 
         sample_properties = [
             {
-                "mls_id": "ATX2024001",
-                "address": "123 South Lamar Blvd, Austin, TX 78704",
-                "price": 725000,
-                "beds": 3,
-                "baths": 2.5,
-                "sqft": 2100,
-                "lot_size": 0.18,
-                "year_built": 2019,
+                "mls_id": "IE2024001",
+                "address": "12345 Haven Avenue, Rancho Cucamonga, CA 91739",
+                "price": 950000,
+                "beds": 4,
+                "baths": 3.0,
+                "sqft": 2800,
+                "lot_size": 0.25,
+                "year_built": 2018,
                 "property_type": PropertyType.SINGLE_FAMILY,
-                "neighborhood": "South Lamar",
-                "school_district": "Austin ISD",
-                "days_on_market": 12,
-                "price_per_sqft": 345,
+                "neighborhood": "Etiwanda",
+                "school_district": "Etiwanda School District",
+                "days_on_market": 22,
+                "price_per_sqft": 339,
                 "price_changes": [],
-                "features": ["Open Floor Plan", "Modern Kitchen", "Walkable", "Food Trucks"],
-                "coordinates": (30.252222, -97.763889),
+                "features": ["Open Floor Plan", "Modern Kitchen", "Family Friendly", "Top Schools"],
+                "coordinates": (34.140833, -117.565278),
                 "photos": ["photo1.jpg", "photo2.jpg"],
-                "description": "Modern home in vibrant South Lamar district",
-                "listing_agent": {"name": "Jorge Martinez", "phone": "(512) 555-0123"},
+                "description": "Beautiful family home in prestigious Etiwanda area",
+                "listing_agent": {"name": "Jorge Martinez", "phone": "(909) 555-0123"},
                 "last_updated": datetime.now()
             }
         ]
@@ -514,7 +514,7 @@ class AustinMarketService:
 
         return filtered_properties
 
-    async def _enhance_neighborhood_data(self, base_data: Dict[str, Any]) -> AustinNeighborhood:
+    async def _enhance_neighborhood_data(self, base_data: Dict[str, Any]) -> RanchoCucamongaNeighborhood:
         """Enhance neighborhood data with real-time market information."""
         # Get current market metrics for the neighborhood
         metrics = await self.get_market_metrics(base_data["name"])
@@ -526,7 +526,7 @@ class AustinMarketService:
             distance_minutes = 25  # Placeholder
             corporate_proximity[corp_data["name"]] = distance_minutes
 
-        return AustinNeighborhood(
+        return RanchoCucamongaNeighborhood(
             name=base_data["name"],
             zone=base_data["zone"],
             median_price=metrics.median_price,
@@ -534,7 +534,7 @@ class AustinMarketService:
             inventory_days=metrics.average_days_on_market,
             school_rating=base_data["school_rating"],
             walkability_score=base_data["walkability_score"],
-            tech_worker_appeal=base_data["tech_worker_appeal"],
+            logistics_healthcare_appeal=base_data["logistics_healthcare_appeal"],
             corporate_proximity=corporate_proximity,
             amenities=base_data["amenities"],
             demographics=base_data["demographics"],
@@ -543,37 +543,37 @@ class AustinMarketService:
 
     async def _fetch_school_district_data(self, district_name: str) -> Dict[str, Any]:
         """Fetch comprehensive school district information."""
-        # In production, integrate with Texas Education Agency API
+        # In production, integrate with California Department of Education API
         districts = {
-            "austin isd": {
-                "name": "Austin Independent School District",
-                "rating": 7.8,
-                "enrollment": 75000,
-                "student_teacher_ratio": 14.2,
-                "graduation_rate": 89.5,
-                "college_readiness": 78.2,
+            "etiwanda school district": {
+                "name": "Etiwanda School District",
+                "rating": 9.3,
+                "enrollment": 22000,
+                "student_teacher_ratio": 21.5,
+                "graduation_rate": 96.8,
+                "college_readiness": 88.4,
                 "top_schools": [
-                    {"name": "Liberal Arts and Science Academy", "rating": 10.0, "type": "High School"},
-                    {"name": "Anderson High School", "rating": 9.2, "type": "High School"},
-                    {"name": "Bowie High School", "rating": 8.8, "type": "High School"}
+                    {"name": "Etiwanda High School", "rating": 9.5, "type": "High School"},
+                    {"name": "George Washington High School", "rating": 9.2, "type": "High School"},
+                    {"name": "Eleanor Roosevelt High School", "rating": 9.0, "type": "High School"}
                 ],
-                "special_programs": ["Dual Language", "STEM", "Fine Arts", "International Baccalaureate"],
-                "boundaries": "Central Austin, South Austin, East Austin"
+                "special_programs": ["AVID", "AP", "STEM", "Dual Enrollment"],
+                "boundaries": "North Rancho Cucamonga, Etiwanda area"
             },
-            "round rock isd": {
-                "name": "Round Rock Independent School District",
-                "rating": 9.1,
-                "enrollment": 48000,
-                "student_teacher_ratio": 15.1,
-                "graduation_rate": 94.2,
-                "college_readiness": 85.7,
+            "central elementary school district": {
+                "name": "Central Elementary School District",
+                "rating": 8.1,
+                "enrollment": 8500,
+                "student_teacher_ratio": 22.8,
+                "graduation_rate": 92.3,
+                "college_readiness": 79.2,
                 "top_schools": [
-                    {"name": "Westwood High School", "rating": 9.8, "type": "High School"},
-                    {"name": "Round Rock High School", "rating": 9.5, "type": "High School"},
-                    {"name": "Cedar Ridge High School", "rating": 9.3, "type": "High School"}
+                    {"name": "Rancho Cucamonga High School", "rating": 8.8, "type": "High School"},
+                    {"name": "Los Osos High School", "rating": 8.5, "type": "High School"},
+                    {"name": "Alta Loma High School", "rating": 8.9, "type": "High School"}
                 ],
-                "special_programs": ["STEM Academy", "Early College", "Career and Technical Education"],
-                "boundaries": "Round Rock, Pflugerville, Cedar Park (partial)"
+                "special_programs": ["IB Programme", "Career Technical Education", "GATE"],
+                "boundaries": "Central Rancho Cucamonga, Alta Loma"
             }
         }
 
@@ -587,10 +587,10 @@ class AustinMarketService:
         """Generate insights for corporate relocations."""
         insights = {
             "market_overview": {
-                "total_tech_workers": 85000,
-                "growth_rate_annual": 15.2,
-                "median_salary": 125000,
-                "housing_demand": "Very High"
+                "total_logistics_healthcare_workers": 45000,
+                "growth_rate_annual": 8.5,
+                "median_salary": 85000,
+                "housing_demand": "High"
             },
             "top_employers": list(self.corporate_hqs.values()),
             "recommended_neighborhoods": [],
@@ -598,21 +598,21 @@ class AustinMarketService:
             "timing_advice": {}
         }
 
-        if employer and employer.lower() in self.corporate_hqs:
-            corp_data = self.corporate_hqs[employer.lower()]
+        if employer and employer.lower().replace(" ", "_") in self.corporate_hqs:
+            corp_data = self.corporate_hqs[employer.lower().replace(" ", "_")]
 
             # Recommend neighborhoods based on employer location
-            if employer.lower() == "apple":
+            if employer.lower() == "amazon_logistics" or "amazon" in employer.lower():
                 insights["recommended_neighborhoods"] = [
-                    {"name": "Round Rock", "commute": "5 mins", "appeal": "Direct access to campus"},
-                    {"name": "Cedar Park", "commute": "15 mins", "appeal": "Excellent schools, family-friendly"},
-                    {"name": "Domain", "commute": "20 mins", "appeal": "Urban amenities, tech community"}
+                    {"name": "South RC", "commute": "10 mins", "appeal": "Direct access to fulfillment centers"},
+                    {"name": "Central RC", "commute": "15 mins", "appeal": "Family-friendly, good schools"},
+                    {"name": "Etiwanda", "commute": "20 mins", "appeal": "Top schools, family community"}
                 ]
-            elif employer.lower() == "google":
+            elif employer.lower() == "kaiser_permanente" or "kaiser" in employer.lower():
                 insights["recommended_neighborhoods"] = [
-                    {"name": "Downtown", "commute": "Walking", "appeal": "Urban lifestyle, entertainment"},
-                    {"name": "South Lamar", "commute": "10 mins", "appeal": "Food scene, cultural activities"},
-                    {"name": "East Austin", "commute": "15 mins", "appeal": "Trendy, artistic community"}
+                    {"name": "Central RC", "commute": "15 mins", "appeal": "Healthcare community, amenities"},
+                    {"name": "Etiwanda", "commute": "20 mins", "appeal": "Excellent schools for healthcare families"},
+                    {"name": "Alta Loma", "commute": "25 mins", "appeal": "Luxury community, professional appeal"}
                 ]
 
             # Budget guidance based on salary
@@ -747,7 +747,7 @@ class AustinMarketService:
         }
 
     def _get_seasonal_factors(self) -> Dict[str, Any]:
-        """Get Austin seasonal market factors."""
+        """Get Austin Metropolitan Area seasonal market factors."""
         month = datetime.now().month
 
         seasonal_data = {
@@ -791,21 +791,21 @@ class AustinMarketService:
         return {
             "current_season": current_season,
             "seasonal_data": seasonal_data[current_season],
-            "austin_specific_factors": [
-                "SXSW (March) increases spring activity",
-                "UT academic calendar affects rental market",
-                "Corporate relocations peak in summer",
-                "Holiday season slowdown is brief due to mild weather"
+            "inland_empire_specific_factors": [
+                "Logistics hiring peaks in Q4 for holiday season",
+                "Healthcare hiring increases in summer months",
+                "Family moves align with school calendar",
+                "Weather allows year-round showing activity"
             ]
         }
 
 
 # Global service instance
-_austin_market_service = None
+_rancho_cucamonga_market_service = None
 
-def get_austin_market_service() -> AustinMarketService:
-    """Get singleton instance of Austin Market Service."""
-    global _austin_market_service
-    if _austin_market_service is None:
-        _austin_market_service = AustinMarketService()
-    return _austin_market_service
+def get_rancho_cucamonga_market_service() -> RanchoCucamongaMarketService:
+    """Get singleton instance of Rancho Cucamonga Market Service."""
+    global _rancho_cucamonga_market_service
+    if _rancho_cucamonga_market_service is None:
+        _rancho_cucamonga_market_service = RanchoCucamongaMarketService()
+    return _rancho_cucamonga_market_service

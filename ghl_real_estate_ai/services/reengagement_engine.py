@@ -1,23 +1,37 @@
 """
-Re-engagement Engine for Silent Leads.
+Enhanced Re-engagement Engine for Silent Leads & Churn Recovery.
 
-Automatically detects and re-engages leads who go silent after initial contact.
+ENHANCED: Now includes comprehensive churn recovery campaigns with CLV modeling.
 
 Features:
-- Time-based trigger detection (24h, 48h, 72h)
+- Time-based trigger detection (24h, 48h, 72h) for silent leads
+- ENHANCED: Churn recovery campaign templates for confirmed churned leads
+- ENHANCED: Customer Lifetime Value (CLV) based campaign selection
 - SMS-compliant message templates (Jorge's direct tone)
 - Integration with GHL client for sending
 - Memory service integration for tracking
+- ENHANCED: ChurnEventTracker integration for recovery workflow
 - Prevents duplicate re-engagement attempts
 
 Usage:
     engine = ReengagementEngine()
+
+    # Traditional silent lead re-engagement
     silent_leads = await engine.scan_for_silent_leads()
     for lead in silent_leads:
         await engine.send_reengagement_message(
             contact_id=lead["contact_id"],
             contact_name=lead["contact_name"],
             context=lead["context"]
+        )
+
+    # ENHANCED: Churn recovery campaigns
+    recovery_leads = await engine.scan_for_recovery_eligible_leads()
+    for lead in recovery_leads:
+        await engine.send_recovery_campaign(
+            contact_id=lead["contact_id"],
+            churn_reason=lead["churn_reason"],
+            clv_estimate=lead["clv_estimate"]
         )
 """
 
@@ -26,7 +40,8 @@ import json
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
 
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -37,6 +52,14 @@ from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
+# ENHANCED: Import ChurnEventTracker for recovery workflow integration
+from ghl_real_estate_ai.services.churn_prediction_engine import (
+    ChurnEventTracker,
+    ChurnReason,
+    ChurnEventType,
+    RecoveryEligibility
+)
+
 logger = get_logger(__name__)
 
 
@@ -46,6 +69,73 @@ class ReengagementTrigger(Enum):
     HOURS_24 = "24h"
     HOURS_48 = "48h"
     HOURS_72 = "72h"
+
+
+# ============================================================================
+# ENHANCED: Recovery Campaign System for Churned Leads
+# ============================================================================
+
+class RecoveryCampaignType(Enum):
+    """Recovery campaign types for churned leads based on churn reason and CLV."""
+
+    WIN_BACK_AGGRESSIVE = "win_back_aggressive"    # High CLV, recoverable reasons
+    WIN_BACK_NURTURE = "win_back_nurture"         # Medium CLV, timing/budget issues
+    MARKET_COMEBACK = "market_comeback"           # Market condition related churn
+    VALUE_PROPOSITION = "value_proposition"       # Competition/service related churn
+    FINAL_ATTEMPT = "final_attempt"              # Last attempt before permanent churn
+
+class CLVTier(Enum):
+    """Customer Lifetime Value tiers for campaign prioritization."""
+
+    HIGH_VALUE = "high_value"      # $50K+ potential commission value
+    MEDIUM_VALUE = "medium_value"  # $20K-50K potential commission value
+    LOW_VALUE = "low_value"        # <$20K potential commission value
+
+@dataclass
+class RecoveryCampaignTemplate:
+    """Recovery campaign template with CLV-based messaging."""
+
+    campaign_type: RecoveryCampaignType
+    target_clv_tier: CLVTier
+    target_reasons: List[ChurnReason]
+
+    # Message templates by channel
+    sms_template: str
+    email_subject: str
+    email_template: str
+
+    # Campaign timing
+    delay_hours: int  # Hours after churn event
+    max_attempts: int
+
+    # Success metrics
+    expected_recovery_rate: float
+    roi_threshold: float
+
+@dataclass
+class CLVEstimate:
+    """Customer Lifetime Value estimate for recovery decision making."""
+
+    lead_id: str
+    estimated_transaction_value: float
+    commission_rate: float = 0.03  # 3% typical real estate commission
+    probability_multiplier: float = 1.0  # Probability of conversion
+
+    @property
+    def estimated_clv(self) -> float:
+        """Calculate estimated CLV."""
+        return self.estimated_transaction_value * self.commission_rate * self.probability_multiplier
+
+    @property
+    def clv_tier(self) -> CLVTier:
+        """Determine CLV tier for campaign selection."""
+        clv = self.estimated_clv
+        if clv >= 50000:
+            return CLVTier.HIGH_VALUE
+        elif clv >= 20000:
+            return CLVTier.MEDIUM_VALUE
+        else:
+            return CLVTier.LOW_VALUE
 
 
 class ReengagementEngine:
@@ -60,13 +150,15 @@ class ReengagementEngine:
         self,
         ghl_client: Optional[GHLClient] = None,
         memory_service: Optional[MemoryService] = None,
+        churn_event_tracker: Optional[ChurnEventTracker] = None,
     ):
         """
-        Initialize re-engagement engine.
+        Initialize enhanced re-engagement engine with recovery capabilities.
 
         Args:
             ghl_client: GHL API client (creates new if not provided)
             memory_service: Memory service for tracking conversations
+            churn_event_tracker: ENHANCED: ChurnEventTracker for recovery workflow
         """
         self.ghl_client = ghl_client or GHLClient()
         self.memory_service = memory_service or MemoryService(storage_type="file")
@@ -75,6 +167,12 @@ class ReengagementEngine:
             model=settings.claude_model
         )
         self.analytics = AnalyticsService()
+
+        # ENHANCED: Initialize ChurnEventTracker for recovery campaigns
+        self.churn_tracker = churn_event_tracker or ChurnEventTracker(self.memory_service)
+
+        # ENHANCED: Load recovery campaign templates
+        self.recovery_templates = self._load_recovery_campaign_templates()
 
     async def detect_trigger(
         self, context: Dict[str, Any]
@@ -493,6 +591,485 @@ Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $50
         logger.info(
             f"Re-engagement batch complete: {summary['messages_sent']} sent, {summary['errors']} errors",
             extra=summary,
+        )
+
+        return summary
+
+    # ============================================================================
+    # ENHANCED: Recovery Campaign Methods for Churned Leads
+    # ============================================================================
+
+    def _load_recovery_campaign_templates(self) -> List[RecoveryCampaignTemplate]:
+        """Load recovery campaign templates based on churn reason and CLV."""
+        return [
+            # High-value aggressive win-back campaigns
+            RecoveryCampaignTemplate(
+                campaign_type=RecoveryCampaignType.WIN_BACK_AGGRESSIVE,
+                target_clv_tier=CLVTier.HIGH_VALUE,
+                target_reasons=[ChurnReason.TIMING, ChurnReason.BUDGET],
+                sms_template="Hi {name}, Jorge here. I know the timing wasn't right before, but I just found an exclusive property that fits your {budget} budget perfectly. Worth a quick look? 📱 {phone}",
+                email_subject="Exclusive {location} property just hit the market - Perfect for your budget",
+                email_template="""Hi {name},
+
+I've been keeping an eye on the market for you since we last spoke.
+
+A stunning {bedrooms}-bedroom home just became available in {preferred_area} for ${price_formatted} - right in your target range.
+
+Given what you mentioned about wanting to move when the timing was right, this might be exactly what you've been waiting for.
+
+I can get you a private showing today before it hits the general market.
+
+What do you think?
+
+Best regards,
+Jorge's Team""",
+                delay_hours=48,  # 2 days after churn
+                max_attempts=3,
+                expected_recovery_rate=0.35,
+                roi_threshold=5000.0
+            ),
+
+            RecoveryCampaignTemplate(
+                campaign_type=RecoveryCampaignType.WIN_BACK_NURTURE,
+                target_clv_tier=CLVTier.MEDIUM_VALUE,
+                target_reasons=[ChurnReason.BUDGET, ChurnReason.MARKET_CONDITIONS],
+                sms_template="Hi {name}, market conditions have shifted in your favor! New programs available that could save you $15K+. Quick call? - Jorge",
+                email_subject="Market update: New opportunities in {location}",
+                email_template="""Hi {name},
+
+You mentioned concerns about the market when we last spoke.
+
+Good news: Things have shifted significantly in buyers' favor over the past month:
+
+• Interest rates dropped 0.3%
+• New first-time buyer programs launched
+• {location} inventory increased 15%
+
+These changes could save you thousands on the property you wanted.
+
+Would you like me to run the new numbers for you?
+
+No pressure - just thought you'd want to know.
+
+Jorge's Team""",
+                delay_hours=168,  # 1 week after churn
+                max_attempts=2,
+                expected_recovery_rate=0.25,
+                roi_threshold=3000.0
+            ),
+
+            RecoveryCampaignTemplate(
+                campaign_type=RecoveryCampaignType.MARKET_COMEBACK,
+                target_clv_tier=CLVTier.HIGH_VALUE,
+                target_reasons=[ChurnReason.MARKET_CONDITIONS, ChurnReason.PROPERTY_MISMATCH],
+                sms_template="{name}, that property you loved in {neighborhood}? Similar one just listed at $30K less. Interested? - Jorge",
+                email_subject="The {neighborhood} opportunity you've been waiting for",
+                email_template="""Hi {name},
+
+Remember that {property_type} in {neighborhood} you were interested in before market conditions changed?
+
+A virtually identical property just came on the market at ${price_formatted} - that's $30,000 less than what we were looking at before.
+
+Same school district, same floor plan, even better lot.
+
+If you're still interested in the area, this could be the perfect opportunity.
+
+Let me know if you'd like the details.
+
+Jorge's Team""",
+                delay_hours=72,  # 3 days after churn
+                max_attempts=2,
+                expected_recovery_rate=0.40,
+                roi_threshold=8000.0
+            ),
+
+            RecoveryCampaignTemplate(
+                campaign_type=RecoveryCampaignType.VALUE_PROPOSITION,
+                target_clv_tier=CLVTier.HIGH_VALUE,
+                target_reasons=[ChurnReason.COMPETITOR, ChurnReason.COMMUNICATION],
+                sms_template="Hi {name}, I hear you went with another agent. No hard feelings! If anything changes, you know where to find me. Good luck! - Jorge",
+                email_subject="Thank you and good luck with your home search",
+                email_template="""Hi {name},
+
+I heard you decided to work with another agent for your home search.
+
+No hard feelings at all - finding the right agent fit is important, and I respect your decision.
+
+If anything changes or you need a second opinion on anything real estate related, you know where to find me.
+
+Wishing you the best with your home search!
+
+Jorge's Team
+
+P.S. - I'll keep an eye out for any exceptional properties in {preferred_area}, just in case.""",
+                delay_hours=336,  # 2 weeks after churn
+                max_attempts=1,
+                expected_recovery_rate=0.15,
+                roi_threshold=1000.0
+            ),
+
+            RecoveryCampaignTemplate(
+                campaign_type=RecoveryCampaignType.FINAL_ATTEMPT,
+                target_clv_tier=CLVTier.MEDIUM_VALUE,
+                target_reasons=[ChurnReason.UNRESPONSIVE, ChurnReason.OTHER],
+                sms_template="Hi {name}, checking if you're still looking for a home in {location}? If not, I'll remove you from my updates. Just reply YES/NO. Thanks! - Jorge",
+                email_subject="Final check: Still searching for a home?",
+                email_template="""Hi {name},
+
+I wanted to check one last time if you're still looking for a home in the {location} area.
+
+If you are, I'd love to help find the right property for you.
+
+If your plans have changed, just let me know and I'll remove you from my property updates.
+
+Either way is totally fine - I just want to respect your time and inbox.
+
+Thanks!
+Jorge's Team""",
+                delay_hours=720,  # 30 days after churn
+                max_attempts=1,
+                expected_recovery_rate=0.10,
+                roi_threshold=500.0
+            )
+        ]
+
+    async def calculate_clv_estimate(self, contact_id: str, context: Dict[str, Any]) -> CLVEstimate:
+        """
+        Calculate Customer Lifetime Value estimate for recovery campaign selection.
+
+        Args:
+            contact_id: Lead identifier
+            context: Conversation context with preferences
+
+        Returns:
+            CLVEstimate with calculated CLV and tier
+        """
+        try:
+            preferences = context.get("extracted_preferences", {})
+
+            # Extract budget/price range from preferences
+            budget_str = preferences.get("budget", "").lower()
+            estimated_transaction_value = 500000  # Default
+
+            # Parse budget range
+            if "k" in budget_str or "$" in budget_str:
+                import re
+                numbers = re.findall(r'\d+', budget_str)
+                if numbers:
+                    # Take the higher number if range, single number if just one
+                    budget_value = int(numbers[-1])
+                    if "k" in budget_str:
+                        budget_value *= 1000
+                    estimated_transaction_value = budget_value
+
+            # Adjust probability based on engagement level
+            engagement_history = context.get("conversation_history", [])
+            engagement_count = len(engagement_history)
+
+            # More engagement = higher probability
+            if engagement_count >= 10:
+                probability_multiplier = 1.2
+            elif engagement_count >= 5:
+                probability_multiplier = 1.0
+            else:
+                probability_multiplier = 0.8
+
+            return CLVEstimate(
+                lead_id=contact_id,
+                estimated_transaction_value=estimated_transaction_value,
+                probability_multiplier=probability_multiplier
+            )
+
+        except Exception as e:
+            logger.error(f"Error calculating CLV for {contact_id}: {str(e)}")
+            # Return conservative estimate
+            return CLVEstimate(
+                lead_id=contact_id,
+                estimated_transaction_value=400000,
+                probability_multiplier=0.8
+            )
+
+    def select_recovery_campaign(self, churn_reason: ChurnReason, clv_estimate: CLVEstimate) -> Optional[RecoveryCampaignTemplate]:
+        """
+        Select appropriate recovery campaign template based on churn reason and CLV.
+
+        Args:
+            churn_reason: Reason for churn
+            clv_estimate: CLV estimate for campaign selection
+
+        Returns:
+            Best matching recovery campaign template
+        """
+        # Filter templates by CLV tier and churn reason compatibility
+        compatible_templates = []
+
+        for template in self.recovery_templates:
+            # Check if CLV tier matches or is compatible
+            clv_compatible = (
+                template.target_clv_tier == clv_estimate.clv_tier or
+                (template.target_clv_tier == CLVTier.HIGH_VALUE and clv_estimate.clv_tier == CLVTier.MEDIUM_VALUE)
+            )
+
+            # Check if churn reason matches
+            reason_compatible = churn_reason in template.target_reasons
+
+            # Check if ROI threshold makes sense
+            roi_compatible = clv_estimate.estimated_clv >= template.roi_threshold
+
+            if clv_compatible and reason_compatible and roi_compatible:
+                compatible_templates.append(template)
+
+        if not compatible_templates:
+            # Fallback to final attempt if no perfect match
+            fallback_templates = [t for t in self.recovery_templates
+                                if t.campaign_type == RecoveryCampaignType.FINAL_ATTEMPT]
+            return fallback_templates[0] if fallback_templates else None
+
+        # Select the template with highest expected recovery rate
+        return max(compatible_templates, key=lambda t: t.expected_recovery_rate)
+
+    async def scan_for_recovery_eligible_leads(self) -> List[Dict[str, Any]]:
+        """
+        Scan for leads eligible for recovery campaigns.
+
+        Returns:
+            List of recovery-eligible leads with churn data and CLV estimates
+        """
+        try:
+            recovery_leads = []
+
+            # Get all churn events from tracker
+            for contact_id in self.churn_tracker._events_cache.keys():
+                events = await self.churn_tracker.get_churn_events(contact_id)
+
+                for event in events:
+                    # Check eligibility for recovery
+                    is_eligible, eligibility_status, attempts_remaining = await self.churn_tracker.check_recovery_eligibility(contact_id)
+
+                    if is_eligible and attempts_remaining > 0:
+                        # Get context for CLV calculation
+                        try:
+                            context = await self.memory_service.get_context(contact_id)
+                        except:
+                            context = {}
+
+                        # Calculate CLV estimate
+                        clv_estimate = await self.calculate_clv_estimate(contact_id, context)
+
+                        # Select appropriate campaign
+                        campaign_template = self.select_recovery_campaign(event.churn_reason or ChurnReason.OTHER, clv_estimate)
+
+                        if campaign_template:
+                            recovery_leads.append({
+                                "contact_id": contact_id,
+                                "contact_name": self._extract_contact_name(context),
+                                "churn_event": event,
+                                "churn_reason": event.churn_reason,
+                                "clv_estimate": clv_estimate,
+                                "campaign_template": campaign_template,
+                                "attempts_remaining": attempts_remaining,
+                                "context": context
+                            })
+
+            logger.info(f"Found {len(recovery_leads)} recovery-eligible leads")
+            return recovery_leads
+
+        except Exception as e:
+            logger.error(f"Error scanning for recovery eligible leads: {str(e)}")
+            return []
+
+    async def send_recovery_campaign(self, contact_id: str, churn_reason: ChurnReason, clv_estimate: CLVEstimate, context: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+        """
+        Send recovery campaign to a churned lead.
+
+        Args:
+            contact_id: Lead identifier
+            churn_reason: Reason for churn
+            clv_estimate: CLV estimate
+            context: Optional conversation context
+
+        Returns:
+            Send result or None if failed
+        """
+        try:
+            if context is None:
+                context = await self.memory_service.get_context(contact_id)
+
+            # Select campaign template
+            campaign_template = self.select_recovery_campaign(churn_reason, clv_estimate)
+            if not campaign_template:
+                logger.warning(f"No suitable recovery campaign template for {contact_id}")
+                return None
+
+            # Generate campaign ID
+            campaign_id = f"recovery_{contact_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+            # Record recovery attempt with churn tracker
+            attempt_recorded = await self.churn_tracker.record_recovery_attempt(contact_id, campaign_id)
+            if not attempt_recorded:
+                logger.warning(f"Recovery attempt could not be recorded for {contact_id} - not eligible or exhausted")
+                return None
+
+            # Extract personalization data from context
+            preferences = context.get("extracted_preferences", {})
+            contact_name = self._extract_contact_name(context)
+
+            # Personalize message
+            message = self._personalize_recovery_message(
+                campaign_template.sms_template,
+                contact_name,
+                preferences
+            )
+
+            # Send via GHL
+            result = await self.ghl_client.send_message(
+                contact_id=contact_id,
+                message=message,
+                channel=MessageType.SMS
+            )
+
+            # Update context
+            context["last_recovery_campaign"] = {
+                "campaign_id": campaign_id,
+                "campaign_type": campaign_template.campaign_type.value,
+                "sent_at": datetime.utcnow().isoformat(),
+                "clv_tier": clv_estimate.clv_tier.value,
+                "estimated_clv": clv_estimate.estimated_clv
+            }
+
+            await self.memory_service.save_context(
+                contact_id=contact_id,
+                context=context,
+                location_id=context.get("location_id"),
+            )
+
+            logger.info(
+                f"Recovery campaign {campaign_template.campaign_type.value} sent to {contact_id}",
+                extra={
+                    "contact_id": contact_id,
+                    "campaign_id": campaign_id,
+                    "campaign_type": campaign_template.campaign_type.value,
+                    "clv_tier": clv_estimate.clv_tier.value,
+                    "estimated_clv": clv_estimate.estimated_clv
+                }
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Failed to send recovery campaign to {contact_id}: {str(e)}")
+            return None
+
+    def _personalize_recovery_message(self, template: str, contact_name: str, preferences: Dict[str, Any]) -> str:
+        """
+        Personalize recovery message template with lead preferences.
+
+        Args:
+            template: Message template
+            contact_name: Lead name
+            preferences: Extracted preferences
+
+        Returns:
+            Personalized message
+        """
+        # Basic personalization mapping
+        personalization = {
+            "name": contact_name,
+            "budget": preferences.get("budget", "your budget"),
+            "location": preferences.get("location", "your area"),
+            "preferred_area": preferences.get("preferred_area", "your preferred area"),
+            "neighborhood": preferences.get("neighborhood", "your neighborhood"),
+            "bedrooms": preferences.get("bedrooms", "3"),
+            "property_type": preferences.get("property_type", "home"),
+            "phone": settings.jorge_phone if hasattr(settings, 'jorge_phone') else "(555) 123-4567",
+            "price_formatted": "TBD"  # Would be filled with actual property price
+        }
+
+        # Replace placeholders
+        try:
+            return template.format(**personalization)
+        except KeyError as e:
+            logger.warning(f"Missing personalization key: {e}")
+            # Return template with basic substitutions
+            return template.replace("{name}", contact_name)
+
+    async def process_all_recovery_campaigns(self, dry_run: bool = False) -> Dict[str, Any]:
+        """
+        Process all recovery-eligible leads and send campaigns.
+
+        Args:
+            dry_run: If True, only detect but don't send campaigns
+
+        Returns:
+            Summary dict with counts and results
+        """
+        recovery_leads = await self.scan_for_recovery_eligible_leads()
+
+        summary = {
+            "total_scanned": len(recovery_leads),
+            "campaigns_sent": 0,
+            "errors": 0,
+            "dry_run": dry_run,
+            "clv_breakdown": {"high": 0, "medium": 0, "low": 0},
+            "campaign_types": {},
+            "results": []
+        }
+
+        for lead in recovery_leads:
+            contact_id = lead["contact_id"]
+            clv_estimate = lead["clv_estimate"]
+            campaign_template = lead["campaign_template"]
+            context = lead["context"]
+
+            # Update CLV breakdown
+            summary["clv_breakdown"][clv_estimate.clv_tier.value.replace("_value", "")] += 1
+
+            # Update campaign type breakdown
+            campaign_type = campaign_template.campaign_type.value
+            summary["campaign_types"][campaign_type] = summary["campaign_types"].get(campaign_type, 0) + 1
+
+            if dry_run:
+                logger.info(
+                    f"[DRY RUN] Would send {campaign_type} recovery to {contact_id} (CLV: ${clv_estimate.estimated_clv:,.0f})"
+                )
+                summary["results"].append({
+                    "contact_id": contact_id,
+                    "campaign_type": campaign_type,
+                    "clv_tier": clv_estimate.clv_tier.value,
+                    "estimated_clv": clv_estimate.estimated_clv,
+                    "status": "dry_run"
+                })
+            else:
+                result = await self.send_recovery_campaign(
+                    contact_id=contact_id,
+                    churn_reason=lead["churn_reason"] or ChurnReason.OTHER,
+                    clv_estimate=clv_estimate,
+                    context=context
+                )
+
+                if result:
+                    summary["campaigns_sent"] += 1
+                    summary["results"].append({
+                        "contact_id": contact_id,
+                        "campaign_type": campaign_type,
+                        "clv_tier": clv_estimate.clv_tier.value,
+                        "estimated_clv": clv_estimate.estimated_clv,
+                        "status": "sent",
+                        "message_id": result.get("messageId")
+                    })
+                else:
+                    summary["errors"] += 1
+                    summary["results"].append({
+                        "contact_id": contact_id,
+                        "campaign_type": campaign_type,
+                        "clv_tier": clv_estimate.clv_tier.value,
+                        "estimated_clv": clv_estimate.estimated_clv,
+                        "status": "error"
+                    })
+
+        logger.info(
+            f"Recovery campaign batch complete: {summary['campaigns_sent']} sent, {summary['errors']} errors",
+            extra=summary
         )
 
         return summary

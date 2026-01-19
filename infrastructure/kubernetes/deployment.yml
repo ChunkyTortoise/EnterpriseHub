@@ -1,0 +1,391 @@
+---
+# Jorge's Revenue Acceleration Platform - Production Kubernetes Deployment
+# Zero-downtime deployment with auto-scaling and health monitoring
+# Version: 1.0.0
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jorge-revenue-platform
+  labels:
+    app: jorge-revenue-platform
+    environment: production
+    managed-by: kubernetes
+
+---
+# ConfigMap for non-sensitive configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jorge-app-config
+  namespace: jorge-revenue-platform
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  CLAUDE_MODEL: "claude-sonnet-4-20250514"
+  TEMPERATURE: "0.7"
+  MAX_TOKENS: "150"
+  AUTO_DEACTIVATE_THRESHOLD: "70"
+  HOT_LEAD_THRESHOLD: "3"
+  WARM_LEAD_THRESHOLD: "2"
+  ACTIVATION_TAGS: '["Needs Qualifying"]'
+  DEACTIVATION_TAGS: '["AI-Off","Qualified","Stop-Bot","AI-Qualified"]'
+
+  # Performance settings
+  WORKER_COUNT: "4"
+  MAX_CONNECTIONS: "100"
+  TIMEOUT: "60"
+
+  # Cache settings
+  CACHE_TTL_PRICING: "3600"
+  CACHE_TTL_ANALYTICS: "900"
+  CACHE_TTL_ROI: "1800"
+
+  # Business settings
+  BASE_PRICE_PER_LEAD: "1.00"
+  AVERAGE_COMMISSION: "12500.0"
+  TARGET_ARPU: "400.0"
+
+---
+# Secret placeholder (actual secrets managed via External Secrets Operator)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jorge-app-secrets
+  namespace: jorge-revenue-platform
+type: Opaque
+data:
+  # Base64 encoded secrets (use External Secrets in production)
+  # GHL_API_KEY: <base64-encoded-value>
+  # GHL_LOCATION_ID: <base64-encoded-value>
+  # ANTHROPIC_API_KEY: <base64-encoded-value>
+  # GHL_WEBHOOK_SECRET: <base64-encoded-value>
+  # DATABASE_URL: <base64-encoded-value>
+  # REDIS_URL: <base64-encoded-value>
+
+---
+# Persistent Volume Claim for logs and analytics data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jorge-data-pvc
+  namespace: jorge-revenue-platform
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+
+---
+# Main Application Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jorge-revenue-api
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-revenue-api
+    tier: backend
+    version: v1
+spec:
+  replicas: 3  # High availability
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # Zero downtime
+  selector:
+    matchLabels:
+      app: jorge-revenue-api
+  template:
+    metadata:
+      labels:
+        app: jorge-revenue-api
+        tier: backend
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - jorge-revenue-api
+              topologyKey: kubernetes.io/hostname
+
+      initContainers:
+      - name: db-migration
+        image: ghcr.io/jorge-salas/revenue-platform:latest
+        command: ['sh', '-c', 'alembic upgrade head']
+        envFrom:
+        - configMapRef:
+            name: jorge-app-config
+        - secretRef:
+            name: jorge-app-secrets
+
+      containers:
+      - name: api
+        image: ghcr.io/jorge-salas/revenue-platform:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+
+        env:
+        - name: PORT
+          value: "8000"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+
+        envFrom:
+        - configMapRef:
+            name: jorge-app-config
+        - secretRef:
+            name: jorge-app-secrets
+
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 30
+
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        - name: cache
+          mountPath: /tmp
+
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: jorge-data-pvc
+      - name: cache
+        emptyDir: {}
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+---
+# Horizontal Pod Autoscaler for auto-scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: jorge-revenue-api-hpa
+  namespace: jorge-revenue-platform
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: jorge-revenue-api
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 4
+        periodSeconds: 30
+      selectPolicy: Max
+
+---
+# Service for internal load balancing
+apiVersion: v1
+kind: Service
+metadata:
+  name: jorge-revenue-api-svc
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-revenue-api
+spec:
+  type: ClusterIP
+  selector:
+    app: jorge-revenue-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: metrics
+    protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600
+
+---
+# Ingress for external access with SSL
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jorge-revenue-api-ingress
+  namespace: jorge-revenue-platform
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://jorge-dashboard.example.com"
+spec:
+  tls:
+  - hosts:
+    - api.jorge-revenue.example.com
+    secretName: jorge-revenue-api-tls
+  rules:
+  - host: api.jorge-revenue.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jorge-revenue-api-svc
+            port:
+              number: 80
+
+---
+# Pod Disruption Budget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: jorge-revenue-api-pdb
+  namespace: jorge-revenue-platform
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: jorge-revenue-api
+
+---
+# Network Policy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: jorge-revenue-api-netpol
+  namespace: jorge-revenue-platform
+spec:
+  podSelector:
+    matchLabels:
+      app: jorge-revenue-api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432  # PostgreSQL
+    - protocol: TCP
+      port: 6379  # Redis
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443   # External APIs (GHL, Anthropic)
+    - protocol: TCP
+      port: 53    # DNS
+    - protocol: UDP
+      port: 53    # DNS

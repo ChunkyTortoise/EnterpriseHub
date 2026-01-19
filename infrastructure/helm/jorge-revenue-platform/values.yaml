@@ -1,0 +1,212 @@
+# Default values for Jorge's Revenue Platform Helm Chart
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+global:
+  environment: production
+  imageRegistry: ghcr.io
+  imagePullSecrets:
+    - name: ghcr-secret
+
+# Application image
+image:
+  repository: jorge-salas/revenue-platform
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+# Replica count
+replicaCount: 3
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+    prometheus.io/path: "/metrics"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+  hosts:
+    - host: api.jorge-revenue.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: jorge-revenue-tls
+      hosts:
+        - api.jorge-revenue.example.com
+
+# Resource limits
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /health/startup
+    port: 8000
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  failureThreshold: 30
+
+# Environment variables from ConfigMap
+configMap:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  CLAUDE_MODEL: "claude-sonnet-4-20250514"
+  TEMPERATURE: "0.7"
+  MAX_TOKENS: "150"
+  AUTO_DEACTIVATE_THRESHOLD: "70"
+  HOT_LEAD_THRESHOLD: "3"
+  WARM_LEAD_THRESHOLD: "2"
+  WORKER_COUNT: "4"
+  MAX_CONNECTIONS: "100"
+  CACHE_TTL_PRICING: "3600"
+  CACHE_TTL_ANALYTICS: "900"
+  BASE_PRICE_PER_LEAD: "1.00"
+  AVERAGE_COMMISSION: "12500.0"
+  TARGET_ARPU: "400.0"
+
+# Secrets (reference existing secret)
+secrets:
+  name: jorge-app-secrets
+  keys:
+    - GHL_API_KEY
+    - GHL_LOCATION_ID
+    - ANTHROPIC_API_KEY
+    - GHL_WEBHOOK_SECRET
+    - DATABASE_URL
+    - REDIS_URL
+
+# Persistence
+persistence:
+  enabled: true
+  storageClass: fast-ssd
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# PostgreSQL dependency
+postgresql:
+  enabled: false  # Use external RDS
+  external:
+    host: postgres.jorge-revenue-platform.svc.cluster.local
+    port: 5432
+    database: jorge_revenue
+    existingSecret: jorge-app-secrets
+    userKey: POSTGRES_USER
+    passwordKey: POSTGRES_PASSWORD
+
+# Redis dependency
+redis:
+  enabled: false  # Use external ElastiCache
+  external:
+    host: redis.jorge-revenue-platform.svc.cluster.local
+    port: 6379
+    existingSecret: jorge-app-secrets
+    passwordKey: REDIS_PASSWORD
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+  grafana:
+    enabled: true
+    dashboards:
+      enabled: true
+
+# Security
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Network policy
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Affinity and tolerations
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - jorge-revenue-api
+          topologyKey: kubernetes.io/hostname
+
+tolerations: []
+
+nodeSelector: {}
+
+# Service account
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/jorge-revenue-service-account
+  name: jorge-revenue-sa

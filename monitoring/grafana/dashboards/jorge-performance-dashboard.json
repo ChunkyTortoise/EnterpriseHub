@@ -1,0 +1,236 @@
+{
+  "dashboard": {
+    "title": "Jorge's Revenue Platform - Performance Dashboard",
+    "description": "Real-time performance monitoring for API response times, cache efficiency, and system resources",
+    "tags": ["performance", "jorge", "revenue-platform"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Response Times (P95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95 Response Time",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ms",
+            "label": "Response Time",
+            "show": true
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [100],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "name": "High API Response Time Alert",
+          "message": "API P95 response time exceeded 100ms threshold"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Cache Hit Rate",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "(redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)) * 100",
+            "legendFormat": "Cache Hit Rate %",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 70, "color": "orange"},
+                {"value": 90, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Requests Per Second",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[1m])",
+            "legendFormat": "Requests/sec",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Database Query Performance",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(postgres_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95 Query Time",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ms",
+            "label": "Query Time"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes / 1024 / 1024",
+            "legendFormat": "Memory MB",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "decmbytes",
+            "label": "Memory"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total[1m]) * 100",
+            "legendFormat": "CPU %",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percent",
+            "label": "CPU %"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Golden Lead Detection Latency",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(golden_lead_detection_duration_seconds_bucket[5m]))",
+            "legendFormat": "Detection Latency P95",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ms",
+            "label": "Latency",
+            "max": 100
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [50],
+                "type": "gt"
+              }
+            }
+          ],
+          "name": "High Golden Lead Detection Latency",
+          "message": "Golden lead detection exceeded 50ms target"
+        }
+      },
+      {
+        "id": 8,
+        "title": "Active Connections",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "postgres_active_connections",
+            "legendFormat": "Active DB Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_connected_clients",
+            "legendFormat": "Active Redis Clients",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m])",
+            "legendFormat": "5xx Errors",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(http_requests_total{status=~\"4..\"}[5m])",
+            "legendFormat": "4xx Errors",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Concurrent Request Distribution",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "http_requests_in_flight",
+            "legendFormat": "Concurrent Requests",
+            "refId": "A"
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": true,
+  "folderId": 0,
+  "folderUid": ""
+}

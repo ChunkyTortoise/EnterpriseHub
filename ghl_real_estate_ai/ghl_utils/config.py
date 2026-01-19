@@ -127,15 +127,15 @@ class Settings(BaseSettings):
     custom_field_appointment_time: Optional[str] = None  # Store scheduled appointment time
     custom_field_appointment_type: Optional[str] = None  # Store appointment type
 
-    # Calendar & Appointment Settings (Jorge's Austin Business)
+    # Calendar & Appointment Settings (Jorge's Rancho Cucamonga Business)
     appointment_auto_booking_enabled: bool = True
     appointment_booking_threshold: int = 5  # Lead score threshold for auto-booking (70%)
     appointment_buffer_minutes: int = 15  # Buffer time between appointments
     appointment_default_duration: int = 60  # Default appointment duration in minutes
     appointment_max_days_ahead: int = 14  # Maximum days ahead to show availability
-    appointment_timezone: str = "America/Chicago"  # Jorge's Austin timezone
+    appointment_timezone: str = "America/Los_Angeles"  # Jorge's Rancho Cucamonga timezone
 
-    # Jorge's Business Hours (Austin Time)
+    # Jorge's Business Hours (Pacific Time)
     business_hours_monday_start: str = "09:00"
     business_hours_monday_end: str = "18:00"
     business_hours_tuesday_start: str = "09:00"

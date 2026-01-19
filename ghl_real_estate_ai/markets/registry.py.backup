@@ -1,0 +1,333 @@
+"""
+Market Registry - Factory Pattern for Dynamic Market Selection
+
+This module provides a centralized registry for market services, enabling
+dynamic market selection and service instantiation based on configuration.
+
+Key Features:
+- Dynamic market service instantiation
+- Configuration-driven market loading
+- Singleton pattern per market
+- Thread-safe market management
+- Market validation and health checking
+
+Author: EnterpriseHub AI
+Created: 2026-01-19
+"""
+
+import os
+import yaml
+import json
+import logging
+from typing import Dict, Optional, List, Type, Any
+from threading import Lock
+from pathlib import Path
+from dataclasses import dataclass
+
+from .config_schemas import MarketConfig, MarketValidationError, validate_market_config
+from ..ghl_utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+@dataclass
+class MarketRegistration:
+    """Market registration record"""
+    market_id: str
+    market_config: MarketConfig
+    service_instance: Optional[Any] = None  # BaseMarketService instance
+    last_health_check: Optional[float] = None
+    health_status: str = "unknown"  # healthy, degraded, unhealthy
+
+
+class MarketRegistry:
+    """
+    Centralized registry for market services with factory pattern
+
+    Manages market configurations, service instantiation, and health monitoring.
+    Thread-safe singleton pattern ensures consistent market service management.
+    """
+
+    _instance: Optional['MarketRegistry'] = None
+    _lock = Lock()
+
+    def __new__(cls) -> 'MarketRegistry':
+        """Singleton pattern implementation"""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._initialized = False
+        return cls._instance
+
+    def __init__(self):
+        """Initialize market registry"""
+        if getattr(self, '_initialized', False):
+            return
+
+        self._markets: Dict[str, MarketRegistration] = {}
+        self._service_classes: Dict[str, Type] = {}
+        self._config_cache: Dict[str, MarketConfig] = {}
+        self._lock = Lock()
+        self._initialized = True
+
+        # Load market configurations
+        self._load_market_configurations()
+
+        logger.info(f"MarketRegistry initialized with {len(self._markets)} markets")
+
+    def _load_market_configurations(self) -> None:
+        """Load all market configurations from config directory"""
+        config_dir = Path(__file__).parent.parent / "config" / "markets"
+
+        if not config_dir.exists():
+            logger.warning(f"Market config directory not found: {config_dir}")
+            return
+
+        for config_file in config_dir.glob("*.yaml"):
+            try:
+                market_id = config_file.stem
+                config = self._load_market_config(config_file)
+
+                if config:
+                    self._register_market_config(market_id, config)
+                    logger.info(f"Loaded market configuration: {market_id}")
+
+            except Exception as e:
+                logger.error(f"Failed to load market config {config_file}: {e}")
+
+    def _load_market_config(self, config_path: Path) -> Optional[MarketConfig]:
+        """Load and validate a single market configuration file"""
+        try:
+            with open(config_path, 'r') as f:
+                config_data = yaml.safe_load(f)
+
+            # Create MarketConfig from YAML data
+            config = MarketConfig(**config_data)
+
+            # Validate configuration
+            warnings = validate_market_config(config)
+            if warnings:
+                logger.warning(f"Market config warnings for {config.market_id}: {warnings}")
+
+            return config
+
+        except Exception as e:
+            logger.error(f"Failed to parse market config {config_path}: {e}")
+            return None
+
+    def _register_market_config(self, market_id: str, config: MarketConfig) -> None:
+        """Register a market configuration"""
+        with self._lock:
+            registration = MarketRegistration(
+                market_id=market_id,
+                market_config=config
+            )
+            self._markets[market_id] = registration
+            self._config_cache[market_id] = config
+
+    def register_service_class(self, market_type: str, service_class: Type) -> None:
+        """
+        Register a market service class for a market type
+
+        Args:
+            market_type: Market type identifier (e.g., "tech_hub", "energy_hub")
+            service_class: Market service class to register
+        """
+        self._service_classes[market_type] = service_class
+        logger.info(f"Registered service class for market type: {market_type}")
+
+    def get_market_service(self, market_id: str):
+        """
+        Get or create market service instance for the specified market
+
+        Args:
+            market_id: Market identifier (e.g., "austin", "dallas")
+
+        Returns:
+            Market service instance
+
+        Raises:
+            ValueError: If market not found or service class not registered
+        """
+        if market_id not in self._markets:
+            raise ValueError(f"Market not found: {market_id}")
+
+        registration = self._markets[market_id]
+
+        # Return existing instance if available
+        if registration.service_instance is not None:
+            return registration.service_instance
+
+        with self._lock:
+            # Double-check after acquiring lock
+            if registration.service_instance is not None:
+                return registration.service_instance
+
+            # Create new service instance
+            config = registration.market_config
+            market_type = config.market_type.value
+
+            if market_type not in self._service_classes:
+                # Default to base market service
+                from .base_market_service import BaseMarketService
+                service_class = BaseMarketService
+            else:
+                service_class = self._service_classes[market_type]
+
+            try:
+                # Instantiate service with market configuration
+                service_instance = service_class(config)
+                registration.service_instance = service_instance
+                registration.health_status = "healthy"
+
+                logger.info(f"Created market service instance for {market_id}")
+                return service_instance
+
+            except Exception as e:
+                logger.error(f"Failed to create market service for {market_id}: {e}")
+                registration.health_status = "unhealthy"
+                raise
+
+    def get_market_config(self, market_id: str) -> Optional[MarketConfig]:
+        """Get market configuration by ID"""
+        return self._config_cache.get(market_id)
+
+    def list_markets(self) -> List[str]:
+        """Get list of all registered market IDs"""
+        return list(self._markets.keys())
+
+    def list_active_markets(self) -> List[str]:
+        """Get list of active market IDs"""
+        return [
+            market_id for market_id, registration in self._markets.items()
+            if registration.market_config.active
+        ]
+
+    def get_markets_by_type(self, market_type: str) -> List[str]:
+        """Get market IDs by market type"""
+        return [
+            market_id for market_id, registration in self._markets.items()
+            if registration.market_config.market_type.value == market_type
+        ]
+
+    def get_markets_by_state(self, state: str) -> List[str]:
+        """Get market IDs by state"""
+        return [
+            market_id for market_id, registration in self._markets.items()
+            if registration.market_config.state.upper() == state.upper()
+        ]
+
+    def health_check(self, market_id: str) -> Dict[str, Any]:
+        """
+        Perform health check on market service
+
+        Returns:
+            Health check result with status and metrics
+        """
+        if market_id not in self._markets:
+            return {"status": "not_found", "message": f"Market {market_id} not registered"}
+
+        registration = self._markets[market_id]
+
+        try:
+            if registration.service_instance is not None:
+                # Call health check on service instance if available
+                health_result = registration.service_instance.health_check()
+                registration.health_status = health_result.get("status", "unknown")
+                return health_result
+            else:
+                return {
+                    "status": "not_initialized",
+                    "message": f"Service for market {market_id} not yet initialized"
+                }
+        except Exception as e:
+            registration.health_status = "unhealthy"
+            return {
+                "status": "unhealthy",
+                "message": str(e)
+            }
+
+    def get_registry_status(self) -> Dict[str, Any]:
+        """Get overall registry status and statistics"""
+        total_markets = len(self._markets)
+        active_markets = len(self.list_active_markets())
+        initialized_services = sum(
+            1 for reg in self._markets.values()
+            if reg.service_instance is not None
+        )
+
+        return {
+            "total_markets": total_markets,
+            "active_markets": active_markets,
+            "initialized_services": initialized_services,
+            "service_classes_registered": len(self._service_classes),
+            "markets": {
+                market_id: {
+                    "active": reg.market_config.active,
+                    "market_type": reg.market_config.market_type.value,
+                    "state": reg.market_config.state,
+                    "initialized": reg.service_instance is not None,
+                    "health_status": reg.health_status
+                }
+                for market_id, reg in self._markets.items()
+            }
+        }
+
+    def refresh_market_config(self, market_id: str) -> bool:
+        """
+        Refresh market configuration from file
+
+        Args:
+            market_id: Market to refresh
+
+        Returns:
+            True if successfully refreshed, False otherwise
+        """
+        config_path = Path(__file__).parent.parent / "config" / "markets" / f"{market_id}.yaml"
+
+        if not config_path.exists():
+            logger.error(f"Config file not found for market {market_id}: {config_path}")
+            return False
+
+        try:
+            new_config = self._load_market_config(config_path)
+            if new_config:
+                with self._lock:
+                    if market_id in self._markets:
+                        registration = self._markets[market_id]
+                        registration.market_config = new_config
+                        # Clear service instance to force recreation with new config
+                        registration.service_instance = None
+                        self._config_cache[market_id] = new_config
+                        logger.info(f"Refreshed market config for {market_id}")
+                        return True
+
+        except Exception as e:
+            logger.error(f"Failed to refresh market config for {market_id}: {e}")
+
+        return False
+
+
+# Global registry instance
+_market_registry: Optional[MarketRegistry] = None
+
+
+def get_market_registry() -> MarketRegistry:
+    """Get global market registry instance"""
+    global _market_registry
+    if _market_registry is None:
+        _market_registry = MarketRegistry()
+    return _market_registry
+
+
+def get_market_service(market_id: str):
+    """Convenience function to get market service"""
+    registry = get_market_registry()
+    return registry.get_market_service(market_id)
+
+
+def register_market_service_class(market_type: str, service_class: Type):
+    """Convenience function to register market service class"""
+    registry = get_market_registry()
+    registry.register_service_class(market_type, service_class)

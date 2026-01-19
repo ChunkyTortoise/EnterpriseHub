@@ -173,7 +173,7 @@ class AppointmentBookingEvent(BaseModel):
     booking_method: str  # auto_booked, manual_scheduled, fallback
     lead_score: int
     appointment_time: datetime
-    timezone: str = "America/Chicago"
+    timezone: str = "America/Los_Angeles"
     confirmation_sent: bool = False
     booking_duration_seconds: Optional[int] = None  # Time to book from qualification
 
@@ -194,3 +194,6 @@ class ConversationContext(BaseModel):
     qualified: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Backward compatibility alias
+ContactData = GHLContact

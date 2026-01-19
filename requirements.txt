@@ -15,6 +15,7 @@ numpy>=1.26.2
 aiofiles>=24.1.0
 scipy>=1.11.4  # Statistical functions for A/B testing
 scikit-learn>=1.3.2  # Machine Learning & Forecasting
+joblib>=1.3.2  # Model serialization for ML persistence
 
 # ==============================================================================
 # Data Visualization
@@ -68,9 +69,16 @@ graphiti-core>=0.5.0
 redis>=5.0.0
 
 # ==============================================================================
+# Database & Service6 Production Dependencies
+# ==============================================================================
+psycopg2-binary>=2.9.0  # PostgreSQL adapter for Python
+aiohttp>=3.8.0          # Async HTTP client/server for Service6 networking
+
+# ==============================================================================
 # Visual Regression Testing & Accessibility
 # ==============================================================================
 pytest-playwright>=0.4.4  # Playwright integration for pytest
 playwright>=1.40.0  # Browser automation for visual testing
 axe-playwright>=0.1.5  # Accessibility testing with axe-core
 pixelmatch>=0.3.0  # Pixel-level image comparison
+stripe>=8.0.0  # Stripe Python SDK for billing integration

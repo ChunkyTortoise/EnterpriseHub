@@ -19,6 +19,7 @@ from ghl_real_estate_ai.api.routes import (
     crm,
     golden_lead_detection,
     health,
+    jorge_advanced,
     lead_lifecycle,
     portal,
     predictive_analytics,
@@ -133,6 +134,7 @@ app.include_router(predictive_analytics.router)  # Predictive Analytics ML endpo
 app.include_router(pricing_optimization.router)  # Pricing & ROI endpoints
 app.include_router(golden_lead_detection.router)  # Golden Lead Detection endpoints
 app.include_router(attribution_reports.router, prefix="/api")  # Attribution Reports endpoints
+app.include_router(jorge_advanced.router, prefix="/api")  # Jorge's Advanced Features endpoints
 
 
 # Root endpoint

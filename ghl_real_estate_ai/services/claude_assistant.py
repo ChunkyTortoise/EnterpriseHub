@@ -1,6 +1,8 @@
 """
 Claude Assistant Service - Centralized AI Intelligence for the GHL Platform
 Provides context-aware insights, action recommendations, and interactive support.
+
+ENHANCED: Now includes multi-market awareness and churn recovery integration.
 """
 import streamlit as st
 import pandas as pd
@@ -10,23 +12,51 @@ from typing import Dict, List, Any, Optional
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
+# ENHANCED: Import multi-market and churn recovery systems
+from ghl_real_estate_ai.markets.registry import get_market_service, MarketRegistry
+from ghl_real_estate_ai.markets.config_schemas import MarketConfig
+from ghl_real_estate_ai.services.reengagement_engine import (
+    ReengagementEngine,
+    CLVEstimate,
+    CLVTier,
+    RecoveryCampaignType,
+)
+from ghl_real_estate_ai.services.churn_prediction_engine import (
+    ChurnEventTracker,
+    ChurnReason,
+    ChurnEventType,
+)
+
 class ClaudeAssistant:
     """
-    The brain of the platform's UI. 
+    The brain of the platform's UI.
     Maintains state and provides context-specific intelligence using Claude Orchestrator.
+
+    ENHANCED: Now includes multi-market awareness and churn recovery integration.
     """
-    
-    def __init__(self, context_type: str = "general"):
+
+    def __init__(self, context_type: str = "general", market_id: Optional[str] = None):
         self.context_type = context_type
+        self.market_id = market_id
+
         # Import here to avoid circular dependencies
         try:
             from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
             self.orchestrator = get_claude_orchestrator()
         except ImportError:
             self.orchestrator = None
-            
+
         self.memory_service = MemoryService()
         self.analytics = AnalyticsService()
+
+        # ENHANCED: Initialize market-aware components
+        self.market_registry = MarketRegistry()
+        self.reengagement_engine = ReengagementEngine()
+        self.churn_tracker = ChurnEventTracker(self.memory_service)
+
+        # ENHANCED: Market context cache
+        self._market_context_cache = {}
+
         self._initialize_state()
 
     def _initialize_state(self):
@@ -34,6 +64,101 @@ class ClaudeAssistant:
             st.session_state.assistant_greeted = False
         if 'claude_history' not in st.session_state:
             st.session_state.claude_history = []
+
+    # ============================================================================
+    # ENHANCED: Market-Aware Intelligence Methods
+    # ============================================================================
+
+    async def get_market_context(self, market_id: Optional[str] = None) -> Dict[str, Any]:
+        """Get comprehensive market context for intelligent messaging."""
+        target_market_id = market_id or self.market_id or "austin"  # Default to austin
+
+        # Check cache first
+        if target_market_id in self._market_context_cache:
+            return self._market_context_cache[target_market_id]
+
+        try:
+            # Get market service and configuration
+            market_service = get_market_service(target_market_id)
+            market_config = market_service.config
+
+            # Build comprehensive market context
+            context = {
+                "market_id": target_market_id,
+                "market_name": market_config.market_name,
+                "market_type": market_config.market_type.value,
+                "specializations": {
+                    "primary": market_config.specializations.primary_specialization,
+                    "secondary": market_config.specializations.secondary_specializations,
+                    "unique_advantages": market_config.specializations.unique_advantages,
+                    "target_clients": market_config.specializations.target_client_types,
+                    "expertise_tags": market_config.specializations.expertise_tags,
+                },
+                "top_neighborhoods": [
+                    {
+                        "name": n.name,
+                        "zone": n.zone,
+                        "median_price": n.median_price,
+                        "appeal_scores": n.appeal_scores,
+                        "demographics": n.demographics,
+                    }
+                    for n in market_config.neighborhoods[:5]  # Top 5 neighborhoods
+                ],
+                "major_employers": [
+                    {
+                        "name": e.name,
+                        "industry": e.industry,
+                        "employee_count": e.employee_count,
+                        "avg_salary_range": e.average_salary_range,
+                        "preferred_neighborhoods": e.preferred_neighborhoods,
+                    }
+                    for e in market_config.employers[:5]  # Top 5 employers
+                ],
+                "market_indicators": {
+                    "median_home_price": market_config.median_home_price,
+                    "price_appreciation_1y": market_config.price_appreciation_1y,
+                    "inventory_days": market_config.inventory_days,
+                },
+            }
+
+            # Cache for performance
+            self._market_context_cache[target_market_id] = context
+            return context
+
+        except Exception as e:
+            # Fallback to basic context
+            return {
+                "market_id": target_market_id,
+                "market_name": f"{target_market_id.title()} Metropolitan Area",
+                "error": f"Could not load full market context: {str(e)}",
+            }
+
+    def _format_market_context_for_messaging(self, market_context: Dict[str, Any]) -> str:
+        """Format market context for Claude messaging."""
+        market_name = market_context.get("market_name", "the local market")
+        market_type = market_context.get("market_type", "mixed")
+
+        # Get market-specific selling points
+        specializations = market_context.get("specializations", {})
+        primary_spec = specializations.get("primary", "professional relocation")
+
+        # Format key neighborhoods
+        neighborhoods = market_context.get("top_neighborhoods", [])
+        if neighborhoods:
+            top_areas = ", ".join([n["name"] for n in neighborhoods[:3]])
+            neighborhood_context = f"Popular areas include {top_areas}"
+        else:
+            neighborhood_context = "several desirable neighborhoods"
+
+        # Format key employers
+        employers = market_context.get("major_employers", [])
+        if employers:
+            major_employers = ", ".join([e["name"] for e in employers[:3]])
+            employer_context = f"Major employers like {major_employers}"
+        else:
+            employer_context = "major local employers"
+
+        return f"{market_name} is a {market_type} market specializing in {primary_spec}. {neighborhood_context} are seeing strong activity. {employer_context} are driving relocation demand."
 
     def render_sidebar_panel(self, hub_name: str, market: str, leads: Dict[str, Any]):
         """Renders the persistent sidebar intelligence panel."""
@@ -133,12 +258,21 @@ class ClaudeAssistant:
                     except RuntimeError:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
-                    
-                    # Build context
+
+                    # ENHANCED: Get market context for intelligent responses
+                    market_context = loop.run_until_complete(self.get_market_context(market))
+
+                    # Build enhanced context with market intelligence
                     context = {
                         "market": market,
+                        "market_context": market_context,
                         "current_hub": st.session_state.get('current_hub', 'Unknown'),
-                        "selected_lead": st.session_state.get('selected_lead_name', 'None')
+                        "selected_lead": st.session_state.get('selected_lead_name', 'None'),
+                        # Add market-specific context
+                        "market_specializations": market_context.get("specializations", {}),
+                        "top_neighborhoods": [n["name"] for n in market_context.get("top_neighborhoods", [])[:3]],
+                        "major_employers": [e["name"] for e in market_context.get("major_employers", [])[:3]],
+                        "market_indicators": market_context.get("market_indicators", {}),
                     }
                     
                     response_obj = loop.run_until_complete(
@@ -246,12 +380,42 @@ class ClaudeAssistant:
 
             return {"error": f"Report generation failed: {str(e)}"}
 
-    async def generate_retention_script(self, lead_data: Dict[str, Any], risk_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def generate_market_aware_retention_script(
+        self,
+        lead_data: Dict[str, Any],
+        risk_data: Optional[Dict[str, Any]] = None,
+        market_id: Optional[str] = None,
+        churn_reason: Optional[ChurnReason] = None
+    ) -> Dict[str, Any]:
         """
-        🆕 Enhanced with Real Claude Intelligence
-        Generates personalized retention scripts using the Claude Automation Engine
+        🆕 ENHANCED: Market-Aware Retention Script Generation
+        Generates personalized retention scripts with market-specific context and churn recovery intelligence
         """
         try:
+            # Get market context for intelligent messaging
+            market_context = await self.get_market_context(market_id)
+            market_narrative = self._format_market_context_for_messaging(market_context)
+
+            # Calculate CLV for recovery decision making
+            estimated_transaction = lead_data.get('estimated_property_value', 500000)
+            clv_estimate = CLVEstimate(
+                lead_id=lead_data.get('lead_id', 'demo_lead'),
+                estimated_transaction_value=estimated_transaction,
+                commission_rate=0.03,
+                probability_multiplier=lead_data.get('conversion_probability', 0.7)
+            )
+
+            # Determine churn reason if not provided
+            if not churn_reason:
+                last_interaction_days = lead_data.get('last_interaction_days', 7)
+                if last_interaction_days > 14:
+                    churn_reason = ChurnReason.TIMING
+                else:
+                    churn_reason = ChurnReason.COMMUNICATION
+
+            # Get appropriate recovery campaign template
+            recovery_template = self._get_recovery_template(clv_estimate.clv_tier, churn_reason)
+
             # Import here to avoid circular imports
             from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine, ScriptType
 
@@ -262,64 +426,121 @@ class ClaudeAssistant:
             # Initialize automation engine
             automation_engine = ClaudeAutomationEngine()
 
-            # Determine script type based on risk level
-            script_type = ScriptType.RE_ENGAGEMENT
-            if risk_score > 80:
-                # High risk needs urgent intervention
-                channel = "sms"  # Immediate channel
-            else:
-                # Medium/low risk can use email
-                channel = "email"
+            # Build enhanced context with market intelligence
+            enhanced_context = {
+                "churn_risk": risk_score,
+                "market_context": market_narrative,
+                "recovery_campaign_type": recovery_template["campaign_type"] if recovery_template else "nurture",
+                "clv_tier": clv_estimate.clv_tier.value,
+                "estimated_commission": f"${clv_estimate.estimated_clv:,.0f}",
+                "market_neighborhoods": [n["name"] for n in market_context.get("top_neighborhoods", [])[:3]],
+                "market_employers": [e["name"] for e in market_context.get("major_employers", [])[:3]],
+                "churn_reason": churn_reason.value if churn_reason else "timing",
+                **lead_data
+            }
 
-            # Generate script with Claude intelligence
+            # Determine script type and channel based on risk and CLV
+            script_type = ScriptType.RE_ENGAGEMENT
+            if risk_score > 80 and clv_estimate.clv_tier == CLVTier.HIGH_VALUE:
+                channel = "sms"  # Urgent, high-value intervention
+            elif clv_estimate.clv_tier == CLVTier.HIGH_VALUE:
+                channel = "sms"  # High-value gets priority channel
+            else:
+                channel = "email"  # Standard follow-up
+
+            # Generate market-aware script with Claude intelligence
             automated_script = await automation_engine.generate_personalized_script(
                 script_type=script_type,
                 lead_id=lead_id,
                 channel=channel,
-                context_override={"churn_risk": risk_score, **lead_data},
+                context_override=enhanced_context,
                 variants=2  # Generate A/B variants
             )
 
-            # Convert to legacy format for backward compatibility
+            # Build comprehensive response with market context
             return {
                 "lead_name": lead_name,
                 "risk_score": risk_score,
+                "market_context": market_context,
                 "script": automated_script.primary_script,
-                "strategy": f"Claude-Generated {automated_script.script_type.value.replace('_', ' ').title()}",
-                "reasoning": automated_script.personalization_notes,
+                "strategy": f"Market-Aware {recovery_template['campaign_type'].replace('_', ' ').title()}" if recovery_template else "Market-Aware Re-engagement",
+                "reasoning": f"{automated_script.personalization_notes}\n\nMarket Context: {market_narrative}",
                 "channel_recommendation": automated_script.channel.upper(),
                 "alternative_scripts": automated_script.alternative_scripts,
                 "objection_responses": automated_script.objection_responses,
                 "success_probability": automated_script.success_probability,
                 "expected_response_rate": automated_script.expected_response_rate,
                 "generation_time_ms": automated_script.generation_time_ms,
-                "a_b_variants": automated_script.a_b_testing_variants
+                "a_b_variants": automated_script.a_b_testing_variants,
+                "clv_estimate": clv_estimate.estimated_clv,
+                "clv_tier": clv_estimate.clv_tier.value,
+                "recovery_template_used": recovery_template["campaign_type"] if recovery_template else None,
+                "market_advantages": market_context.get("specializations", {}).get("unique_advantages", [])
             }
 
         except Exception as e:
-            # Fallback to original logic if Claude fails
+            # Enhanced fallback with market context
+            market_context = await self.get_market_context(market_id)
+            market_name = market_context.get("market_name", "the local market")
+
             lead_name = lead_data.get('lead_name', 'Client')
             risk_score = risk_data.get('risk_score', 0) if risk_data else lead_data.get('risk_score_14d', 0)
 
-            # Determine the "Why" for the reasoning
+            # Market-aware fallback script
             last_interaction = lead_data.get('last_interaction_days', 5)
 
-            reasoning = f"Lead {lead_name} has a {risk_score:.1f}% churn risk primarily due to {last_interaction} days of inactivity. "
-            reasoning += "Their previous interest in luxury properties suggests they need a high-value 'pattern interrupt'."
+            reasoning = f"Lead {lead_name} has a {risk_score:.1f}% churn risk in the {market_name} market. "
+            reasoning += f"After {last_interaction} days of inactivity, they need market-specific re-engagement highlighting current opportunities."
 
             if risk_score > 80:
-                script = f"Hi {lead_name}, it's Jorge. I was just reviewing the new off-market luxury listings in Austin and one specifically caught my eye that fits your criteria perfectly. I didn't want you to miss out - do you have 2 minutes for a quick update today?"
-                strategy = "Urgent Pattern Interrupt - High Value Offer"
+                # Get market-specific urgent message
+                top_areas = market_context.get("top_neighborhoods", [])
+                area_mention = f" in {top_areas[0]['name']}" if top_areas else ""
+
+                script = f"Hi {lead_name}, it's Jorge. I just had an exclusive property become available{area_mention} that matches exactly what we discussed. Given the current {market_name} market conditions, this won't last long. Can we schedule a quick call today?"
+                strategy = f"Urgent Market-Specific Intervention - {market_name}"
             else:
-                script = f"Hey {lead_name}, just checking in! I noticed some interesting price shifts in the neighborhoods we were looking at. Hope your week is going well - would you like a quick summary of the changes?"
-                strategy = "Nurture Re-engagement - Market Insight"
+                # Market-aware nurture message
+                market_type = market_context.get("market_type", "mixed")
+                script = f"Hey {lead_name}, hope you're doing well! I wanted to share some interesting developments in the {market_name} {market_type} market that might interest you. The timing might be perfect for your move. Worth a quick chat?"
+                strategy = f"Market-Aware Nurture - {market_name} Focus"
 
             return {
                 "lead_name": lead_name,
                 "risk_score": risk_score,
+                "market_context": market_context,
                 "script": script,
                 "strategy": strategy,
                 "reasoning": reasoning,
                 "channel_recommendation": "SMS (High Response Probability)" if risk_score > 60 else "Email",
-                "error": f"Claude service unavailable: {str(e)}"
+                "error": f"Claude service unavailable, using market-aware fallback: {str(e)}"
             }
+
+    def _get_recovery_template(self, clv_tier: CLVTier, churn_reason: ChurnReason) -> Optional[Dict[str, Any]]:
+        """Get appropriate recovery campaign template based on CLV and churn reason."""
+        # High-value leads get aggressive recovery campaigns
+        if clv_tier == CLVTier.HIGH_VALUE:
+            if churn_reason in [ChurnReason.TIMING, ChurnReason.BUDGET]:
+                return {"campaign_type": "win_back_aggressive"}
+            else:
+                return {"campaign_type": "value_proposition"}
+
+        # Medium-value leads get nurture campaigns
+        elif clv_tier == CLVTier.MEDIUM_VALUE:
+            return {"campaign_type": "win_back_nurture"}
+
+        # Low-value leads get basic re-engagement
+        else:
+            return {"campaign_type": "market_comeback"}
+
+    async def generate_retention_script(self, lead_data: Dict[str, Any], risk_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        🆕 Enhanced with Real Claude Intelligence (Legacy Wrapper)
+        ENHANCED: Now delegates to market-aware retention script generation
+        """
+        # Delegate to the enhanced market-aware method
+        return await self.generate_market_aware_retention_script(
+            lead_data=lead_data,
+            risk_data=risk_data,
+            market_id=self.market_id  # Use the assistant's market context
+        )

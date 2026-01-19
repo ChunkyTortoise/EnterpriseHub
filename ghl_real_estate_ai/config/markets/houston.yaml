@@ -1,0 +1,383 @@
+# Houston Energy Hub Market Configuration
+# Multi-Market Geographic Expansion - Configuration-driven market data
+# Major energy capital with medical center and aerospace
+
+# Basic Market Identification
+market_id: houston
+market_name: "Houston Metropolitan Area"
+market_type: energy_hub  # Primary market type
+state: TX
+region: Southeast Texas
+timezone: America/Chicago
+mls_provider: "Houston Association of Realtors MLS"
+
+# Geographic Center
+coordinates: [29.7604, -95.3698]
+
+# Market Economic Indicators
+median_home_price: 375000
+price_appreciation_1y: 7.8
+inventory_days: 32
+
+# Market Specialization Configuration
+specializations:
+  primary_specialization: "Energy and Healthcare Professional Relocation"
+  secondary_specializations:
+    - "Oil & Gas Executive Services"
+    - "Texas Medical Center Professional Housing"
+    - "NASA/Aerospace Employee Relocation"
+    - "International Corporate Assignments"
+
+  unique_advantages:
+    - "Energy industry capital expertise"
+    - "Texas Medical Center proximity knowledge"
+    - "International relocation services"
+    - "Petrochemical industry specialization"
+
+  target_client_types:
+    - "Energy executives (ExxonMobil, Chevron, Shell)"
+    - "Medical professionals (Texas Medical Center)"
+    - "Aerospace engineers (NASA, Boeing)"
+    - "International relocations"
+
+  expertise_tags:
+    - "energy_capital"
+    - "medical_center"
+    - "aerospace_expertise"
+    - "international_relocation"
+    - "houston_specialist"
+    - "petrochemical_industry"
+
+  knowledge_base_path: "data/knowledge_base/houston_expertise.json"
+
+# Neighborhood Configurations
+neighborhoods:
+  - name: "River Oaks"
+    zone: "Central West"
+    median_price: 2250000
+    price_trend_3m: 2.5
+    school_rating: 9.5
+    walkability_score: 40
+    coordinates: [29.7604, -95.4252]
+    appeal_scores:
+      energy_appeal: 95
+      luxury_appeal: 100
+      executive_appeal: 100
+      medical_appeal: 85
+    amenities:
+      - "Luxury Estates"
+      - "Country Clubs"
+      - "Executive Neighborhoods"
+      - "Museum District Access"
+      - "Elite Schools"
+    demographics:
+      age_median: 52
+      income_median: 450000
+      energy_professionals: 0.45
+    corporate_proximity:
+      exxonmobil_houston: 12
+      chevron: 10
+      shell: 15
+      tmc: 8
+
+  - name: "Bellaire"
+    zone: "Southwest"
+    median_price: 825000
+    price_trend_3m: 4.2
+    school_rating: 9.2
+    walkability_score: 55
+    coordinates: [29.7058, -95.4585]
+    appeal_scores:
+      energy_appeal: 85
+      family_appeal: 95
+      medical_appeal: 90
+      commute_appeal: 85
+    amenities:
+      - "Excellent Schools"
+      - "Family-Oriented"
+      - "Medical Center Access"
+      - "Diverse Community"
+      - "Central Location"
+    demographics:
+      age_median: 42
+      income_median: 165000
+      energy_professionals: 0.40
+    corporate_proximity:
+      exxonmobil_houston: 15
+      chevron: 12
+      shell: 18
+      tmc: 5
+
+  - name: "Memorial"
+    zone: "West"
+    median_price: 1150000
+    price_trend_3m: 3.8
+    school_rating: 9.0
+    walkability_score: 45
+    coordinates: [29.7752, -95.5591]
+    appeal_scores:
+      energy_appeal: 90
+      luxury_appeal: 90
+      family_appeal: 85
+      commute_appeal: 80
+    amenities:
+      - "Memorial Park"
+      - "Upscale Shopping"
+      - "Golf Courses"
+      - "Energy Corridor Access"
+      - "Top Schools"
+    demographics:
+      age_median: 45
+      income_median: 195000
+      energy_professionals: 0.55
+    corporate_proximity:
+      exxonmobil_houston: 8
+      chevron: 6
+      shell: 10
+      tmc: 15
+
+  - name: "Katy"
+    zone: "West"
+    median_price: 485000
+    price_trend_3m: 6.8
+    school_rating: 9.1
+    walkability_score: 35
+    coordinates: [29.7858, -95.8244]
+    appeal_scores:
+      energy_appeal: 85
+      family_appeal: 100
+      value_appeal: 90
+      commute_appeal: 75
+    amenities:
+      - "Top School Districts"
+      - "Master-Planned Communities"
+      - "Family Recreation"
+      - "Suburban Lifestyle"
+      - "New Construction"
+    demographics:
+      age_median: 38
+      income_median: 125000
+      energy_professionals: 0.45
+    corporate_proximity:
+      exxonmobil_houston: 20
+      chevron: 15
+      shell: 18
+      tmc: 25
+
+  - name: "Sugar Land"
+    zone: "Southwest"
+    median_price: 565000
+    price_trend_3m: 5.5
+    school_rating: 9.3
+    walkability_score: 40
+    coordinates: [29.6196, -95.6349]
+    appeal_scores:
+      energy_appeal: 90
+      family_appeal: 95
+      tech_appeal: 80
+      commute_appeal: 80
+    amenities:
+      - "Master-Planned Communities"
+      - "Town Center"
+      - "Excellent Schools"
+      - "Corporate Campuses"
+      - "Family-Friendly"
+    demographics:
+      age_median: 40
+      income_median: 145000
+      energy_professionals: 0.50
+    corporate_proximity:
+      exxonmobil_houston: 18
+      chevron: 20
+      shell: 22
+      tmc: 20
+
+  - name: "The Woodlands"
+    zone: "North"
+    median_price: 625000
+    price_trend_3m: 4.8
+    school_rating: 8.9
+    walkability_score: 50
+    coordinates: [30.1588, -95.4613]
+    appeal_scores:
+      energy_appeal: 95
+      family_appeal: 90
+      lifestyle_appeal: 95
+      commute_appeal: 70
+    amenities:
+      - "Master-Planned Community"
+      - "ExxonMobil Campus"
+      - "Corporate Headquarters"
+      - "Recreation Centers"
+      - "Golf Courses"
+    demographics:
+      age_median: 41
+      income_median: 155000
+      energy_professionals: 0.60
+    corporate_proximity:
+      exxonmobil_houston: 5
+      chevron: 25
+      shell: 30
+      tmc: 35
+
+  - name: "Medical Center"
+    zone: "South Central"
+    median_price: 425000
+    price_trend_3m: 8.2
+    school_rating: 7.5
+    walkability_score: 70
+    coordinates: [29.7073, -95.3968]
+    appeal_scores:
+      medical_appeal: 100
+      convenience_appeal: 90
+      commute_appeal: 100
+      energy_appeal: 70
+    amenities:
+      - "Texas Medical Center"
+      - "World's Largest Medical Complex"
+      - "NRG Stadium"
+      - "Museums"
+      - "Light Rail Access"
+    demographics:
+      age_median: 33
+      income_median: 85000
+      medical_professionals: 0.70
+    corporate_proximity:
+      exxonmobil_houston: 18
+      chevron: 20
+      shell: 25
+      tmc: 0
+
+  - name: "Montrose"
+    zone: "Central"
+    median_price: 685000
+    price_trend_3m: 9.5
+    school_rating: 7.2
+    walkability_score: 85
+    coordinates: [29.7390, -95.3827]
+    appeal_scores:
+      lifestyle_appeal: 100
+      arts_appeal: 95
+      energy_appeal: 75
+      medical_appeal: 85
+    amenities:
+      - "Arts District"
+      - "Galleries"
+      - "Restaurants"
+      - "Museums"
+      - "Walkable"
+    demographics:
+      age_median: 35
+      income_median: 95000
+      energy_professionals: 0.30
+    corporate_proximity:
+      exxonmobil_houston: 15
+      chevron: 18
+      shell: 20
+      tmc: 5
+
+# Major Employer Configurations
+employers:
+  - employer_id: "exxonmobil_houston"
+    name: "ExxonMobil"
+    industry: "Oil & Gas"
+    location: "The Woodlands"
+    coordinates: [30.1588, -95.4613]
+    employee_count: 25000
+    preferred_neighborhoods:
+      - "The Woodlands"
+      - "Memorial"
+      - "River Oaks"
+      - "Sugar Land"
+    average_salary_range: [95000, 275000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q2", "Q3"]
+
+  - employer_id: "chevron"
+    name: "Chevron Corporation"
+    industry: "Oil & Gas"
+    location: "Downtown Houston"
+    coordinates: [29.7604, -95.3698]
+    employee_count: 18000
+    preferred_neighborhoods:
+      - "Memorial"
+      - "River Oaks"
+      - "Bellaire"
+      - "Sugar Land"
+    average_salary_range: [90000, 250000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "shell"
+    name: "Shell Oil Company"
+    industry: "Oil & Gas"
+    location: "Downtown Houston"
+    coordinates: [29.7604, -95.3698]
+    employee_count: 15000
+    preferred_neighborhoods:
+      - "Memorial"
+      - "River Oaks"
+      - "The Woodlands"
+      - "Katy"
+    average_salary_range: [85000, 235000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q2", "Q3"]
+
+  - employer_id: "tmc"
+    name: "Texas Medical Center"
+    industry: "Healthcare"
+    location: "Medical Center"
+    coordinates: [29.7073, -95.3968]
+    employee_count: 120000
+    preferred_neighborhoods:
+      - "Medical Center"
+      - "Bellaire"
+      - "Montrose"
+      - "River Oaks"
+    average_salary_range: [65000, 185000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2", "Q3"]
+
+  - employer_id: "nasa_jsc"
+    name: "NASA Johnson Space Center"
+    industry: "Aerospace"
+    location: "Clear Lake"
+    coordinates: [29.5586, -95.0890]
+    employee_count: 15000
+    preferred_neighborhoods:
+      - "Clear Lake"
+      - "Webster"
+      - "Friendswood"
+      - "League City"
+    average_salary_range: [75000, 155000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "halliburton"
+    name: "Halliburton"
+    industry: "Oilfield Services"
+    location: "Downtown Houston"
+    coordinates: [29.7604, -95.3698]
+    employee_count: 12000
+    preferred_neighborhoods:
+      - "The Woodlands"
+      - "Memorial"
+      - "Sugar Land"
+      - "Katy"
+    average_salary_range: [80000, 195000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q2", "Q4"]
+
+# Configuration Metadata
+config_version: "1.0"
+last_updated: "2026-01-19T10:00:00Z"
+active: true
+# Demographics Data
+demographics:
+  population: 7122240
+  median_age: 33.4
+  median_household_income: 63087
+  college_education_rate: 0.33
+  employment_rate: 0.93
+  population_growth_rate: 0.025
+  diversity_index: 0.78

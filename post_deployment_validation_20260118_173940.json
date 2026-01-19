@@ -1,0 +1,86 @@
+{
+  "timestamp": "2026-01-18T17:39:38.688327",
+  "overall_status": "OPERATIONAL",
+  "feature_tests": {
+    "Market Configuration Access": {
+      "status": "PASS",
+      "markets_loaded": 5,
+      "markets": {
+        "dallas": {
+          "market_name": "Dallas-Fort Worth Metroplex",
+          "neighborhoods": 8,
+          "employers": 6,
+          "has_demographics": true
+        },
+        "austin": {
+          "market_name": "Austin Metropolitan Area",
+          "neighborhoods": 8,
+          "employers": 6,
+          "has_demographics": true
+        },
+        "san_antonio": {
+          "market_name": "San Antonio Metropolitan Area",
+          "neighborhoods": 8,
+          "employers": 6,
+          "has_demographics": true
+        },
+        "rancho_cucamonga": {
+          "market_name": "Rancho Cucamonga/Inland Empire",
+          "neighborhoods": 8,
+          "employers": 6,
+          "has_demographics": true
+        },
+        "houston": {
+          "market_name": "Houston Metropolitan Area",
+          "neighborhoods": 8,
+          "employers": 6,
+          "has_demographics": true
+        }
+      }
+    },
+    "Churn Recovery Engine": {
+      "status": "PASS",
+      "engine_loaded": true,
+      "risk_tiers": 4,
+      "features": {
+        "predictor": false,
+        "stratifier": false,
+        "event_tracker": true
+      },
+      "prediction_test": "SUCCESS"
+    },
+    "API Routes Availability": {
+      "status": "PASS",
+      "available_routes": [
+        "market_intelligence_v2.py",
+        "jorge_advanced.py",
+        "revenue_optimization.py"
+      ],
+      "expected_routes": [
+        "market_intelligence_v2.py",
+        "jorge_advanced.py",
+        "revenue_optimization.py"
+      ]
+    },
+    "Feature Flags": {
+      "status": "PASS",
+      "enabled_flags": [
+        "multi_market_expansion",
+        "advanced_churn_recovery",
+        "revenue_optimization"
+      ],
+      "total_flags": 3
+    },
+    "Backward Compatibility": {
+      "status": "PASS",
+      "tested_components": [
+        "ClaudeAssistant",
+        "GHLContact",
+        "ContactData"
+      ],
+      "compatibility": "Full backward compatibility maintained"
+    }
+  },
+  "performance_metrics": {},
+  "recommendations": []
+}
