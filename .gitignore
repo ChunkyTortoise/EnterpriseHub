@@ -44,10 +44,18 @@ venv.bak/
 # PyCharm
 .idea/
 
-# Environment Variables
+# Environment Variables (NEVER commit)
 .env
 .env.local
 .env.*.local
+.env.service6
+.env.service6.production
+*.env.backup*
+ghl_real_estate_ai/.env
+
+# Keep templates only
+!.env*.template
+!.env*.example
 
 # Streamlit
 .streamlit/secrets.toml
