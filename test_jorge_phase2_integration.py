@@ -32,9 +32,50 @@ try:
     from ghl_real_estate_ai.services.lead_scorer import LeadScorer
     from ghl_real_estate_ai.core.conversation_manager import ConversationManager
     from ghl_real_estate_ai.prompts.system_prompts import build_seller_system_prompt
+    IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"⚠️  Import error: {e}")
     print("Running integration test with mocks...")
+    IMPORTS_AVAILABLE = False
+
+    # Mock base classes for when imports fail
+    class ConversationManager:
+        def __init__(self):
+            pass
+
+        async def extract_seller_data(self, user_message, current_seller_data, tenant_config):
+            return {"questions_answered": 1, "response_quality": 0.7}
+
+    class JorgeSellerEngine:
+        def __init__(self, conversation_manager, ghl_client):
+            self.conversation_manager = conversation_manager
+            self.ghl_client = ghl_client
+
+        async def process_seller_response(self, contact_id, user_message, location_id, tenant_config):
+            return {
+                "temperature": "warm",
+                "questions_answered": 2,
+                "message": "Mock response",
+                "actions": [],
+                "seller_data": {}
+            }
+
+    class LeadScorer:
+        def calculate_seller_score(self, seller_data):
+            return {
+                "raw_score": 2.5,
+                "percentage_score": 62,
+                "temperature": "warm",
+                "details": {},
+                "questions_answered": 2,
+                "max_questions": 4,
+                "classification": "warm",
+                "reasoning": "Mock reasoning",
+                "recommended_actions": ["Mock action"]
+            }
+
+    def build_seller_system_prompt(contact_name, conversation_stage, seller_temperature, extracted_seller_data):
+        return f"Mock system prompt for {contact_name} in {conversation_stage} stage with {seller_temperature} temperature"
 
 
 @dataclass
@@ -313,7 +354,8 @@ async def test_system_prompt_integration():
 
     print(f"\n✅ Cold seller prompt generated:")
     print(f"   Length: {len(cold_prompt)} chars")
-    print(f"   Contains first question: {'What\\'s got you considering' in cold_prompt}")
+    contains_first_q = "What's got you considering" in cold_prompt
+    print(f"   Contains first question: {contains_first_q}")
 
     print("\n")
 

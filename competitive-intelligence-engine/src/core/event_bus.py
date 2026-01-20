@@ -70,6 +70,14 @@ class EventType(Enum):
     MA_ACQUISITION_APPROACH_PREDICTED = auto()
     MA_STRATEGIC_ALTERNATIVE_ACTIVATED = auto()
     MA_REGULATORY_ASSESSMENT_COMPLETED = auto()
+
+    # Supply Chain Intelligence Events (Ultra-High-Value Enhancement)
+    SUPPLY_CHAIN_DISRUPTION_PREDICTED = auto()
+    SUPPLIER_VULNERABILITY_DETECTED = auto()
+    PROCUREMENT_OPPORTUNITY_IDENTIFIED = auto()
+    SUPPLY_CHAIN_RESPONSE_COORDINATED = auto()
+    COMPETITIVE_SUPPLY_INSIGHT_GENERATED = auto()
+    SUPPLY_CHAIN_THREAT_DETECTED = auto()
     
     # Enhancement Engine Coordination Events
     AUTONOMOUS_STRATEGY_EXECUTED = auto()
