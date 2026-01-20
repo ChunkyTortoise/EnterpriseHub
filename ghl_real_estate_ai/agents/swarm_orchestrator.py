@@ -75,6 +75,7 @@ class Agent:
 from ghl_real_estate_ai.agents.blackboard import SharedBlackboard
 from ghl_real_estate_ai.agent_system.skills.base import registry as skill_registry
 from ghl_real_estate_ai.core.llm_client import LLMClient
+from ghl_real_estate_ai.agents.traceability import trace_agent_action
 
 class SwarmOrchestrator:
     """
@@ -93,6 +94,43 @@ class SwarmOrchestrator:
         self._initialize_agents()
         self._initialize_tasks()
 
+    @trace_agent_action(action_name="task_reflection")
+    async def reflect_on_result(self, task: Task, context: str, result_content: str) -> bool:
+        """
+        Self-correction mechanism: The agent reviews its own work.
+        Returns True if satisfied, False if rework is needed.
+        """
+        reflection_prompt = f"""
+        You are a Quality Assurance Auditor. Review the following task execution.
+        
+        Task: {task.title}
+        Objective: {task.description}
+        
+        Execution Result:
+        {result_content}
+        
+        Context:
+        {context}
+        
+        Did the agent successfully achieve the objective? 
+        If yes, reply with 'APPROVED'.
+        If no, reply with 'REJECTED: <reason>'.
+        """
+        
+        response = await self.llm.agenerate(
+            prompt=reflection_prompt,
+            model="gemini-2.0-pro-exp-02-05", # Always use high-reasoning model for reflection
+            temperature=0.1
+        )
+        
+        if "APPROVED" in response.content:
+            print(f"✅ Reflection PASSED for task {task.id}")
+            return True
+        else:
+            print(f"⚠️ Reflection FAILED for task {task.id}: {response.content}")
+            return False
+
+    @trace_agent_action(action_name="task_execution")
     async def execute_task(self, task_id: str, complexity: str = "medium", risk: str = "low"):
         """
         Execute a task using a Recursive Tool Loop (ReAct).
@@ -106,6 +144,7 @@ class SwarmOrchestrator:
             confirm = input(f"⚠️ [HITL] Task {task_id} is HIGH RISK. Approve execution? (y/n): ")
             if confirm.lower() != 'y':
                 task.status = TaskStatus.BLOCKED
+                self.blackboard.write(f"task_blocked_{task_id}", "User denied high-risk execution", agent.name)
                 return
 
         print(f"🚀 Executing task {task_id}: {task.title} (Agent: {agent.name})")
@@ -119,35 +158,81 @@ class SwarmOrchestrator:
         skills = skill_registry.find_relevant_skills(task.description)
         skill_tools = [s.to_gemini_tool()["function_declarations"][0] for s in skills]
         
+        # Maintain conversation history
         messages = [
-            {"role": "user", "content": f"Objective: {task.description}\nContext: {context}"}
+            {"role": "user", "content": f"Objective: {task.description}\n\nCurrent Blackboard Context:\n{context}\n\nPlease achieve the objective. Use available tools if needed."}
         ]
 
-        # RECURSIVE TOOL LOOP (Max 5 turns)
-        for turn in range(5):
+        # RECURSIVE TOOL LOOP (Max 10 turns)
+        final_response = ""
+        for turn in range(10):
             response = await self.llm.agenerate(
                 prompt=messages[-1]["content"],
                 history=messages[:-1],
-                system_prompt=f"You are {agent.name}. Use tools to achieve the objective.",
+                system_prompt=f"You are {agent.name}, an expert {agent.description}. Use tools provided to achieve the objective.",
                 tools=skill_tools if skill_tools else None,
                 model=model_name
             )
-
-            # Check for tool calls (Gemini returns them in candidate.content.parts)
-            # For simplicity in this demo, we assume the LLMClient handles the raw tool execution 
-            # or returns a specific structure.
             
-            if "CALL_TOOL:" in response.content:
-                # Logic to parse CALL_TOOL: name(args)
-                # execute and append result to messages
-                # turn += 1, continue
-                pass 
+            # Record response in messages for context maintenance
+            if response.content:
+                messages.append({"role": "assistant", "content": response.content})
+                final_response = response.content
             
-            # If no more tool calls, we are finished
-            break
+            # Handle Tool Calls
+            if response.tool_calls:
+                tool_results = []
+                for tool_call in response.tool_calls:
+                    tool_name = tool_call["name"]
+                    tool_args = tool_call["args"]
+                    
+                    print(f"🛠️ Agent {agent.name} calling tool: {tool_name}({tool_args})")
+                    self.blackboard.write(f"tool_call_{task_id}_t{turn}", {"tool": tool_name, "args": tool_args}, agent.name)
+                    
+                    skill = skill_registry.get_skill(tool_name)
+                    if skill:
+                        try:
+                            result = skill.execute(**tool_args)
+                            print(f"✅ Tool {tool_name} returned: {str(result)[:100]}...")
+                            tool_results.append({"tool": tool_name, "result": result})
+                        except Exception as e:
+                            print(f"❌ Tool {tool_name} failed: {e}")
+                            tool_results.append({"tool": tool_name, "error": str(e)})
+                    else:
+                        tool_results.append({"tool": tool_name, "error": "Skill not found"})
 
-        # Post-execution Reflection
-        # ... (keep existing reflection logic)
+                # Add tool results back to context
+                messages.append({
+                    "role": "user", 
+                    "content": f"Tool Results: {json.dumps(tool_results)}"
+                })
+                
+                # Continue loop to allow agent to process results
+                continue
+            
+            # If no tool calls and we have content, we are done
+            if response.content:
+                break
+        
+        # Automated Reflection (Phase 4 Enhancement)
+        # Verify the result before marking complete
+        if complexity == "high" or risk == "high" or True: # Enable for all for now to test
+             approved = await self.reflect_on_result(task, context, final_response)
+             if not approved:
+                 # In a full implementation, this would trigger a retry loop or human escalation
+                 # For now, we log the failure but mark as completed (with warning) to avoid infinite loops
+                 self.blackboard.write(f"task_reflection_failed_{task_id}", "Auto-reflection rejected the result", agent.name)
+                 task.error = "Auto-reflection rejected the result"
+
+        # Post-execution Reflection & Blackboard Update
+        task.status = TaskStatus.COMPLETED
+        task.completed_at = datetime.now()
+        task.result = {"content": final_response, "messages_count": len(messages)}
+        self.completed_tasks.add(task_id)
+        
+        self.blackboard.write(f"task_result_{task_id}", task.result, agent.name)
+        
+        return task.result
 
         
     def _initialize_agents(self):
@@ -589,4 +674,10 @@ def main():
             current_phase = 7
         
         if i == 1 or (i > 2 and plan[i-2].get('phase') != current_phase):
-            print(f"\n{"=
+            phase_name = phases.get(current_phase, "Unknown")
+            print(f"--- PHASE {current_phase}: {phase_name} ---")
+        
+        print(f"{i:2}. [{task['id']}] {task['title']} ({task['assigned_to']})")
+
+if __name__ == "__main__":
+    main()

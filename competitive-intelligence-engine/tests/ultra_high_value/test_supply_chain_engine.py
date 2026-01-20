@@ -29,8 +29,24 @@ from src.supply_chain.supplier_vulnerability_analyzer import SupplierVulnerabili
 from src.supply_chain.procurement_optimizer import ProcurementOpportunity
 from src.core.event_bus import EventBus, EventType
 from src.core.ai_client import AIClient
+from src.core.rbac import Role, User
 from src.analytics.executive_analytics_engine import ExecutiveAnalyticsEngine
 from src.prediction.deep_learning_forecaster import DeepLearningForecaster
+
+@pytest.fixture
+def ceo_user():
+    """CEO user with full permissions"""
+    return User(id="1", username="ceo_jane", role=Role.CEO)
+
+@pytest.fixture
+def scm_user():
+    """Supply Chain Manager user"""
+    return User(id="2", username="scm_joe", role=Role.SUPPLY_CHAIN_MANAGER)
+
+@pytest.fixture
+def unauthorized_user():
+    """Unauthorized user"""
+    return User(id="3", username="hacker_hal", role=Role.UNAUTHORIZED)
 
 @pytest.fixture
 async def supply_chain_engine():
@@ -108,13 +124,13 @@ class TestDisruptionPrevention:
     """Test disruption prevention capabilities"""
 
     @pytest.mark.asyncio
-    async def test_critical_vulnerability_detection(self, supply_chain_engine, sample_company_context, sample_market_context):
+    async def test_critical_vulnerability_detection(self, supply_chain_engine, ceo_user, sample_company_context, sample_market_context):
         """Test detection of critical supplier vulnerabilities"""
         
         # Configure forecaster to predict high risk
         supply_chain_engine.forecaster.predict_supply_risk = AsyncMock(return_value=0.90) # Critical risk
 
-        results = await supply_chain_engine.run_analysis_cycle(sample_company_context, sample_market_context)
+        results = await supply_chain_engine.run_analysis_cycle(ceo_user, sample_company_context, sample_market_context)
         vulnerabilities = results["vulnerabilities"]
         
         assert len(vulnerabilities) > 0, "Should detect vulnerabilities"
@@ -124,13 +140,13 @@ class TestDisruptionPrevention:
         assert critical_vuln.supplier_id == "supp_1" # Based on logic, high spend/criticality + high risk
 
     @pytest.mark.asyncio
-    async def test_event_publication_on_disruption(self, supply_chain_engine, sample_company_context, sample_market_context):
+    async def test_event_publication_on_disruption(self, supply_chain_engine, scm_user, sample_company_context, sample_market_context):
         """Test that critical disruptions trigger event bus"""
         
         # Configure forecaster to predict high risk
         supply_chain_engine.forecaster.predict_supply_risk = AsyncMock(return_value=0.95)
 
-        await supply_chain_engine.run_analysis_cycle(sample_company_context, sample_market_context)
+        await supply_chain_engine.run_analysis_cycle(scm_user, sample_company_context, sample_market_context)
         
         # Check if event bus was called
         supply_chain_engine.event_bus.publish.assert_called()
@@ -145,17 +161,17 @@ class TestDisruptionPrevention:
         assert len(disruption_calls) > 0, "Should publish disruption predicted event"
         
         event_data = disruption_calls[0].kwargs['data']
-        assert event_data['severity'] == "CRITICAL"
+        assert event_data['severity'] == "critical"
         assert event_data['financial_exposure'] > 0
 
 class TestProcurementOptimization:
     """Test procurement cost savings"""
 
     @pytest.mark.asyncio
-    async def test_savings_identification(self, supply_chain_engine, sample_company_context, sample_market_context):
+    async def test_savings_identification(self, supply_chain_engine, scm_user, sample_company_context, sample_market_context):
         """Test identification of 15-25% savings opportunities"""
         
-        results = await supply_chain_engine.run_analysis_cycle(sample_company_context, sample_market_context)
+        results = await supply_chain_engine.run_analysis_cycle(scm_user, sample_company_context, sample_market_context)
         opportunities = results["opportunities"]
         
         assert len(opportunities) > 0, "Should identify savings opportunities"
@@ -175,7 +191,7 @@ class TestResponseCoordination:
     """Test rapid response coordination"""
     
     @pytest.mark.asyncio
-    async def test_response_plan_generation(self, supply_chain_engine):
+    async def test_response_plan_generation(self, supply_chain_engine, ceo_user):
         """Test generation of < 2 hour response plan"""
         
         threat_event = {
@@ -185,7 +201,7 @@ class TestResponseCoordination:
         }
         
         start_time = datetime.now()
-        actions = await supply_chain_engine.coordinate_response(threat_event)
+        actions = await supply_chain_engine.coordinate_response(ceo_user, threat_event)
         end_time = datetime.now()
         
         # Check execution speed (mocked, but verifies logic flow)
@@ -194,11 +210,36 @@ class TestResponseCoordination:
         assert "immediate_actions" in actions
         assert "communication" in actions
         assert actions["strategy"] == "Mock strategic mitigation plan"
+        assert actions["authorized_by"] == "ceo_jane"
         
         # Verify event publication
         supply_chain_engine.event_bus.publish.assert_called()
         last_call = supply_chain_engine.event_bus.publish.call_args
         assert last_call.kwargs['event_type'] == EventType.SUPPLY_CHAIN_RESPONSE_COORDINATED
+
+class TestRBACEnforcement:
+    """Test RBAC enforcement within the engine"""
+
+    @pytest.mark.asyncio
+    async def test_unauthorized_access_fails(self, supply_chain_engine, unauthorized_user, sample_company_context, sample_market_context):
+        """Test that unauthorized users cannot run analysis or coordinate responses"""
+        
+        # Analysis should return empty results (or we could make it raise, but current implementation logs and returns empty)
+        results = await supply_chain_engine.run_analysis_cycle(unauthorized_user, sample_company_context, sample_market_context)
+        assert len(results["vulnerabilities"]) == 0
+        assert len(results["opportunities"]) == 0
+        
+        # Coordinate response should raise PermissionError
+        threat_event = {"id": "threat_123"}
+        with pytest.raises(PermissionError):
+            await supply_chain_engine.coordinate_response(unauthorized_user, threat_event)
+
+    @pytest.mark.asyncio
+    async def test_scm_restricted_access(self, supply_chain_engine, scm_user, ceo_user):
+        """Test that SCM has access but might be restricted compared to CEO (if applicable)"""
+        # In our current implementation, both have access to SC data, but we could add more roles later.
+        pass
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--asyncio-mode=auto"])

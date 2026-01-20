@@ -13,7 +13,7 @@ from .service_registry import ServiceRegistry
 # Optional imports - don't fail if not available
 try:
     from .rag_engine import RAGEngine
-except ImportError:
+except (ImportError, Exception):
     RAGEngine = None
 
 try:

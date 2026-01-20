@@ -31,14 +31,14 @@ Based on comprehensive research into modern AI agent patterns and Gemini 2.0 cap
 
 ## 3. Implementation Roadmap
 
-1.  **Phase 1: Core Client Upgrade:** Update `LLMClient` to support `response_schema` and `context_caching`.
-2.  **Phase 2: MCP Skills Layer:** Implement `SkillRegistry` and migrate core tools to MCP.
-3.  **Phase 3: Swarm Refinement:** Update `SwarmOrchestrator` to support shared context and traceability.
-4.  **Phase 4: Elite Enhancements:**
-    *   **Semantic Skill Routing:** Only passing relevant tools to the context window.
-    *   **Automated Reflection:** Adding a "Quality Guardian" agent for self-correction.
-    *   **Shared Blackboard:** Centralized context store for agent swarms.
-5.  **Phase 5: Verification:** Run end-to-end tests with the new optimized workflow.
+1.  **Phase 1: Core Client Upgrade:** [COMPLETE] Update `LLMClient` to support `response_schema` and `context_caching`.
+2.  **Phase 2: MCP Skills Layer:** [COMPLETE] Implement `SkillRegistry` and migrate core tools to MCP.
+3.  **Phase 3: Swarm Refinement:** [COMPLETE] Update `SwarmOrchestrator` to support shared context and traceability.
+4.  **Phase 4: Elite Enhancements:** [COMPLETE]
+    *   **Semantic Skill Routing:** Implemented in `SkillRegistry` with ChromaDB (and robust fallback).
+    *   **Automated Reflection:** Added self-correction mechanism to `SwarmOrchestrator`.
+    *   **Shared Blackboard:** Centralized context store integrated.
+5.  **Phase 5: Verification:** [NEXT] Run end-to-end tests with the new optimized workflow.
 
 ## 4. Future Vision: Model Context Protocol (MCP) Server
 In the next stage, we will expose the SkillRegistry as a live MCP server, allowing external agents (e.g., in a developer's IDE) to leverage our specialized Real Estate AI skills directly.

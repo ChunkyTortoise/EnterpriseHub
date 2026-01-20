@@ -78,7 +78,27 @@ class SkillRegistry:
             cls._instance = super(SkillRegistry, cls).__new__(cls)
             cls._instance.skills = {}
             cls._instance.mcp = FastMCP("EnterpriseHub")
+            cls._instance._chroma_client = None
+            cls._instance._collection = None
+            cls._instance._init_vector_db()
         return cls._instance
+
+    def _init_vector_db(self):
+        """Initialize ChromaDB for semantic skill search."""
+        try:
+            import chromadb
+            # Use a persistent path or ephemeral for now
+            self._chroma_client = chromadb.Client()
+            self._collection = self._chroma_client.get_or_create_collection(
+                name="skill_registry",
+                metadata={"hnsw:space": "cosine"}
+            )
+        except (ImportError, Exception) as e:
+            # Chromadb might fail due to onnxruntime on some platforms
+            # We will gracefully fall back to keyword search
+            self._chroma_client = None
+            self._collection = None
+            print(f"⚠️ ChromaDB Semantic Search unavailable ({str(e)}). Using keyword fallback.")
 
     def register(self, name: Optional[str] = None, tags: List[str] = None):
         """Decorator to register a function as a skill."""
@@ -86,8 +106,17 @@ class SkillRegistry:
             skill = Skill(func, name=name, tags=tags)
             self.skills[skill.name] = skill
             
-            # Also register with FastMCP
+            # Register with FastMCP
             self.mcp.tool()(func)
+            
+            # Register with Vector DB
+            if self._collection:
+                text = f"{skill.name}: {skill.description} {' '.join(skill.tags)}"
+                self._collection.upsert(
+                    documents=[text],
+                    ids=[skill.name],
+                    metadatas=[{"name": skill.name, "tags": ",".join(skill.tags)}]
+                )
             
             return func
         return decorator
@@ -97,9 +126,24 @@ class SkillRegistry:
 
     def find_relevant_skills(self, query: str, limit: int = 5) -> List[Skill]:
         """
-        Simple keyword-based skill discovery. 
-        Note: In a full implementation, this would use ChromaDB embeddings.
+        Find relevant skills using Semantic Search (ChromaDB) with keyword fallback.
         """
+        # 1. Try Semantic Search
+        if self._collection:
+            try:
+                results = self._collection.query(
+                    query_texts=[query],
+                    n_results=min(limit, len(self.skills))
+                )
+                if results['ids'] and results['ids'][0]:
+                    found_skills = [self.skills[name] for name in results['ids'][0] if name in self.skills]
+                    if found_skills:
+                        return found_skills
+            except Exception as e:
+                # Log error and fall back
+                print(f"Vector search failed: {e}")
+
+        # 2. Fallback to Keyword Search
         relevant = []
         query_words = set(query.lower().split())
         
@@ -108,7 +152,6 @@ class SkillRegistry:
             if any(word in skill_text for word in query_words):
                 relevant.append(skill)
         
-        # Fallback to all if few found, or return limited set
         return relevant[:limit] if relevant else list(self.skills.values())[:limit]
 
     def get_all_gemini_tools(self) -> List[Dict[str, Any]]:

@@ -12,6 +12,7 @@ from typing import Any, Dict, Generator, Optional, Union, AsyncGenerator, List, 
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.core.hooks import hooks, HookEvent, HookContext
 
 # Import LangChain models only for type checking
 if TYPE_CHECKING:
@@ -37,6 +38,7 @@ class LLMResponse:
     output_tokens: Optional[int] = None
     tokens_used: Optional[int] = None  # Legacy support (sum of in + out)
     finish_reason: Optional[str] = None
+    tool_calls: Optional[List[Dict[str, Any]]] = None
 
 
 class LLMClient:
@@ -252,16 +254,36 @@ class LLMClient:
         if not self.is_available():
             raise RuntimeError(f"{self.provider.value} client not initialized")
 
+        # Hook: Pre-Generation
+        hooks.trigger(HookEvent.PRE_GENERATION, HookContext(
+            event=HookEvent.PRE_GENERATION,
+            agent_name="LLMClient",
+            input_data={"prompt": prompt, "system": system_prompt},
+            metadata={"model": self.model, "provider": self.provider.value}
+        ))
+
+        response = None
         if self.provider == LLMProvider.GEMINI:
-            return self._generate_gemini(
+            response = self._generate_gemini(
                 prompt, system_prompt, history, max_tokens, temperature, 
                 response_schema=response_schema, cached_content=cached_content, 
                 tools=tools, **kwargs
             )
         elif self.provider == LLMProvider.PERPLEXITY:
-            return self._generate_perplexity(prompt, system_prompt, history, max_tokens, temperature)
+            response = self._generate_perplexity(prompt, system_prompt, history, max_tokens, temperature)
         else:
-            return self._generate_claude(prompt, system_prompt, history, max_tokens, temperature)
+            response = self._generate_claude(prompt, system_prompt, history, max_tokens, temperature)
+
+        # Hook: Post-Generation
+        hooks.trigger(HookEvent.POST_GENERATION, HookContext(
+            event=HookEvent.POST_GENERATION,
+            agent_name="LLMClient",
+            input_data={"prompt": prompt},
+            output_data=response,
+            metadata={"tokens_used": response.tokens_used}
+        ))
+        
+        return response
 
     async def agenerate(
         self,
@@ -315,14 +337,31 @@ class LLMClient:
             input_tokens = getattr(response.usage_metadata, 'prompt_token_count', None) if hasattr(response, 'usage_metadata') else None
             output_tokens = getattr(response.usage_metadata, 'candidates_token_count', None) if hasattr(response, 'usage_metadata') else None
             
+            # Extract tool calls if they exist
+            tool_calls = []
+            if response.candidates and response.candidates[0].content.parts:
+                for part in response.candidates[0].content.parts:
+                    if part.function_call:
+                        tool_calls.append({
+                            "name": part.function_call.name,
+                            "args": dict(part.function_call.args)
+                        })
+
+            # Try to get text content, handle case where it might be empty (tool call only)
+            try:
+                content = response.text
+            except ValueError:
+                content = ""
+
             return LLMResponse(
-                content=response.text,
+                content=content,
                 provider=self.provider,
                 model=self.model,
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
                 tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
-                finish_reason=response.candidates[0].finish_reason.name if response.candidates else None
+                finish_reason=response.candidates[0].finish_reason.name if response.candidates else None,
+                tool_calls=tool_calls if tool_calls else None
             )
         elif self.provider == LLMProvider.PERPLEXITY:
             return await self._agenerate_perplexity(prompt, system_prompt, history, max_tokens, temperature)

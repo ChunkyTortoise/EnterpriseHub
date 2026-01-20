@@ -351,6 +351,39 @@ class LLMClient:
                 finish_reason=response.stop_reason
             )
 
+    async def generate_strategic_response(self, prompt: str, context: Optional[Dict] = None) -> str:
+        """
+        Generate a high-level strategic response using Claude 3.5 Sonnet.
+        Tailored for CEO and Executive decision support.
+        """
+        system_prompt = """
+        You are the Strategic Intelligence AI for a Global Fortune 500 company.
+        Your goal is to provide high-stakes, actionable strategic advice based on competitive intelligence.
+        Focus on:
+        - ROI Impact
+        - Risk Mitigation
+        - Long-term competitive advantage
+        - Regulatory compliance
+        
+        Keep responses concise, executive-focused, and ready for immediate implementation.
+        """
+        
+        # Ensure we use Claude 3.5 Sonnet for strategic tasks if available
+        original_model = self.model
+        if self.provider == LLMProvider.CLAUDE:
+            self.model = "claude-3-5-sonnet-20241022"
+            
+        try:
+            response = await self.agenerate(
+                prompt=prompt,
+                system_prompt=system_prompt,
+                temperature=0.2, # Low temperature for consistent strategic advice
+                max_tokens=1024
+            )
+            return response.content
+        finally:
+            self.model = original_model
+
     async def astream(
         self,
         prompt: str,
@@ -659,3 +692,6 @@ def get_llm_client() -> LLMClient:
     """Get a default LLM client instance."""
     # TODO: Implement proper singleton or factory pattern
     return LLMClient(provider=LLMProvider.CLAUDE)
+# Backward compatibility alias
+AIClient = LLMClient
+

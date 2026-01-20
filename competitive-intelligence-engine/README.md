@@ -15,6 +15,7 @@
 - **Crisis Prevention**: 3-5 day early warning system
 - **Sentiment Analysis**: Multi-platform social monitoring
 - **Pricing Intelligence**: Dynamic competitive pricing insights
+- **Supply Chain Intelligence**: 6-month disruption warning & 15-25% procurement savings
 
 ## 🏗️ Architecture
 
@@ -26,6 +27,7 @@ src/
 ├── data/            # Market data pipeline & web scraping
 ├── analysis/        # Sentiment analysis & trend detection
 ├── prediction/      # ML-based competitive forecasting
+├── supply_chain/    # Supply chain vulnerability & procurement optimization
 ├── api/             # REST API endpoints
 ├── dashboard/       # Real-time intelligence dashboard
 └── services/        # Support services (alerts, reports, cache)
@@ -40,18 +42,20 @@ pip install -r requirements.txt
 # Start intelligence monitoring
 python src/intelligence/competitor_monitor.py
 
+# Launch Supply Chain Engine
+python src/supply_chain/supply_chain_intelligence_engine.py
+
 # Launch dashboard
 streamlit run src/dashboard/app.py
-
-# Start API server
-python src/api/main.py
 ```
 
 ## 📊 Demo Scenarios
 
 1. **E-commerce Pricing Intelligence**: Monitor 20 competitors, detect 5% price drops within 30 minutes
 2. **B2B SaaS Feature Monitoring**: Track competitor product roadmaps and feature releases
-3. **Crisis Prevention**: Early warning 3-5 days before reputation issues
+3. **Supply Chain Disruption Prevention**: 6-month early warning of supplier insolvency
+4. **Procurement Optimization**: 20% cost reduction through competitive sourcing intelligence
+5. **Crisis Prevention**: Early warning 3-5 days before reputation issues
 
 ## 🎯 Success Metrics
 

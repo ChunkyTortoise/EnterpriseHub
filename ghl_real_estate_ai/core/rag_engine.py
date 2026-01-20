@@ -12,13 +12,19 @@ from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
 import uuid
 
-import chromadb
-from chromadb.config import Settings
-
 from ghl_real_estate_ai.core.embeddings import EmbeddingModel
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+try:
+    import chromadb
+    from chromadb.config import Settings
+    CHROMA_AVAILABLE = True
+except (ImportError, Exception) as e:
+    logger.warning(f"ChromaDB not available: {e}. Using dummy vector store.")
+    CHROMA_AVAILABLE = False
+    chromadb = None
 
 
 @dataclass
@@ -54,17 +60,27 @@ class VectorStore:
         self.collection_name = collection_name
         self.embedding_model = embedding_model or EmbeddingModel()
         
-        # Initialize Client
-        self._client = chromadb.PersistentClient(path=persist_directory)
-        
-        # Get or Create Collection
-        # Note: Chroma handles the embedding function adapter, but we'll manage embeddings explicitly 
-        # to simplify swapping providers in our clean architecture.
-        self._collection = self._client.get_or_create_collection(
-            name=collection_name,
-            metadata={"hnsw:space": "cosine"}
-        )
-        logger.info(f"VectorStore initialized at {persist_directory}, Collection: {collection_name}")
+        if CHROMA_AVAILABLE:
+            # Initialize Client
+            try:
+                self._client = chromadb.PersistentClient(path=persist_directory)
+                
+                # Get or Create Collection
+                # Note: Chroma handles the embedding function adapter, but we'll manage embeddings explicitly 
+                # to simplify swapping providers in our clean architecture.
+                self._collection = self._client.get_or_create_collection(
+                    name=collection_name,
+                    metadata={"hnsw:space": "cosine"}
+                )
+                logger.info(f"VectorStore initialized at {persist_directory}, Collection: {collection_name}")
+            except Exception as e:
+                logger.error(f"Failed to initialize ChromaDB client: {e}")
+                self._client = None
+                self._collection = None
+        else:
+            self._client = None
+            self._collection = None
+            logger.warning("VectorStore initialized in DUMMY mode (ChromaDB unavailable)")
 
     def add_texts(
         self,
@@ -76,6 +92,10 @@ class VectorStore:
         """
         Add texts to the vector store.
         """
+        if not self._collection:
+            logger.warning("VectorStore: add_texts called but no collection available.")
+            return []
+
         if not ids:
             ids = [str(uuid.uuid4()) for _ in texts]
             
@@ -126,6 +146,8 @@ class VectorStore:
         Search for relevant documents.
         Supports 'semantic' (default), 'keyword' (exact match boost), or 'hybrid'.
         """
+        if not self._collection:
+            return []
 
         # ALGORITHM: RAG-based Semantic Search
         # 1. Generate embedding for query using sentence-transformers
@@ -203,6 +225,9 @@ class VectorStore:
 
     def clear(self) -> None:
         """Clear all documents from the collection."""
+        if not self._client:
+            return
+            
         try:
             self._client.delete_collection(self.collection_name)
             self._collection = self._client.get_or_create_collection(
