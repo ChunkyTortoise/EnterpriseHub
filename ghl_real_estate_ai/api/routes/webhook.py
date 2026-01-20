@@ -144,6 +144,101 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             actions=[],
         )
 
+    # Step -0.5: Check for Jorge's Seller Mode (Needs Qualifying tag + JORGE_SELLER_MODE)
+    from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
+
+    jorge_seller_mode = (
+        "Needs Qualifying" in tags and
+        jorge_settings.JORGE_SELLER_MODE and
+        not should_deactivate
+    )
+
+    if jorge_seller_mode:
+        logger.info(f"Jorge seller mode activated for contact {contact_id}")
+        try:
+            # Route to Jorge's seller engine
+            from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
+
+            # Get tenant configuration first
+            tenant_config = await tenant_service.get_tenant_config(location_id)
+
+            # Initialize GHL client
+            current_ghl_client = ghl_client_default
+            if tenant_config and tenant_config.get("ghl_api_key"):
+                current_ghl_client = GHLClient(
+                    api_key=tenant_config["ghl_api_key"], location_id=location_id
+                )
+
+            # Initialize Jorge's seller engine
+            jorge_engine = JorgeSellerEngine(conversation_manager, current_ghl_client)
+
+            # Process seller response
+            seller_result = await jorge_engine.process_seller_response(
+                contact_id=contact_id,
+                user_message=user_message,
+                location_id=location_id,
+                tenant_config=tenant_config
+            )
+
+            # Apply Jorge's seller actions (tags, workflows)
+            actions = []
+            if seller_result.get("actions"):
+                for action_data in seller_result["actions"]:
+                    if action_data["type"] == "add_tag":
+                        actions.append(GHLAction(
+                            type=ActionType.ADD_TAG,
+                            tag=action_data["tag"]
+                        ))
+                    elif action_data["type"] == "remove_tag":
+                        actions.append(GHLAction(
+                            type=ActionType.REMOVE_TAG,
+                            tag=action_data["tag"]
+                        ))
+                    elif action_data["type"] == "trigger_workflow":
+                        actions.append(GHLAction(
+                            type=ActionType.TRIGGER_WORKFLOW,
+                            workflow_id=action_data["workflow_id"]
+                        ))
+                    elif action_data["type"] == "update_custom_field":
+                        actions.append(GHLAction(
+                            type=ActionType.UPDATE_CUSTOM_FIELD,
+                            field_id=action_data["field"],
+                            value=action_data["value"]
+                        ))
+
+            # Track Jorge seller analytics
+            background_tasks.add_task(
+                analytics_service.track_event,
+                event_type="jorge_seller_interaction",
+                location_id=location_id,
+                contact_id=contact_id,
+                data={
+                    "temperature": seller_result["temperature"],
+                    "questions_answered": seller_result.get("questions_answered", 0),
+                    "message_length": len(seller_result["message"])
+                }
+            )
+
+            logger.info(
+                f"Jorge seller processing completed for {contact_id}",
+                extra={
+                    "contact_id": contact_id,
+                    "temperature": seller_result["temperature"],
+                    "questions_answered": seller_result.get("questions_answered", 0),
+                    "actions_count": len(actions)
+                }
+            )
+
+            return GHLWebhookResponse(
+                success=True,
+                message=seller_result["message"],
+                actions=actions,
+            )
+
+        except Exception as e:
+            logger.error(f"Jorge seller mode processing failed: {str(e)}", exc_info=True)
+            # Fall back to normal processing if Jorge mode fails
+
     try:
         # Step 0: Get tenant configuration
         tenant_config = await tenant_service.get_tenant_config(location_id)

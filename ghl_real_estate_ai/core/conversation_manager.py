@@ -117,7 +117,8 @@ class ConversationManager:
         user_message: str,
         ai_response: str,
         extracted_data: Optional[Dict[str, Any]] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        seller_temperature: Optional[str] = None
     ) -> None:
         """
         Update conversation context with new messages and data.
@@ -126,8 +127,9 @@ class ConversationManager:
             contact_id: GHL contact ID
             user_message: User's message
             ai_response: AI's response
-            extracted_data: Newly extracted data from conversation
+            extracted_data: Newly extracted data from conversation (buyer or seller)
             location_id: Optional location ID for isolation
+            seller_temperature: Seller temperature classification (for Jorge's seller bot)
         """
         context = await self.get_context(contact_id, location_id=location_id)
 
@@ -148,7 +150,19 @@ class ConversationManager:
 
         # Merge extracted data (new data overrides old)
         if extracted_data:
-            context["extracted_preferences"].update(extracted_data)
+            # Check if this is seller data (Jorge's seller bot)
+            if seller_temperature or any(key in extracted_data for key in ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]):
+                # Handle seller data
+                if "seller_preferences" not in context:
+                    context["seller_preferences"] = {}
+                context["seller_preferences"].update(extracted_data)
+
+                # Set seller temperature if provided
+                if seller_temperature:
+                    context["seller_temperature"] = seller_temperature
+            else:
+                # Handle buyer data (existing logic)
+                context["extracted_preferences"].update(extracted_data)
 
         # Update last lead score for analytics tracking
         current_score = self.lead_scorer.calculate(context)
@@ -289,6 +303,166 @@ Example output:
                 extra={"error": str(e), "user_message": user_message}
             )
             return {}
+
+    async def extract_seller_data(
+        self,
+        user_message: str,
+        current_seller_data: Dict[str, Any],
+        tenant_config: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Extract seller-specific data from user message using Claude.
+
+        Designed for Jorge's 4-question seller qualification process:
+        1. Motivation & Relocation destination
+        2. Timeline acceptance (30-45 days)
+        3. Property condition
+        4. Price expectations
+
+        Args:
+            user_message: User's latest message
+            current_seller_data: Previously extracted seller data
+            tenant_config: Optional tenant-specific API keys
+
+        Returns:
+            Dict of extracted seller preferences
+        """
+        extraction_prompt = f"""Extract seller qualification data from this message: "{user_message}"
+
+Current seller data: {json.dumps(current_seller_data, indent=2)}
+
+Extract the following fields (only if clearly mentioned):
+
+MOTIVATION & RELOCATION:
+- motivation: Why they want to sell (relocation, downsizing, financial, divorce, inherited, other)
+- relocation_destination: Where they plan to move (city, state, or general area)
+
+TIMELINE:
+- timeline_acceptable: Boolean - would 30-45 days be okay? (true/false/null)
+- timeline_urgency: "urgent" (30-45 days), "flexible", "long-term", or "unknown"
+
+PROPERTY CONDITION:
+- property_condition: "move-in ready", "needs work", "major repairs", or "unknown"
+- repair_estimate: Any mentioned repair needs or costs
+
+PRICE EXPECTATIONS:
+- price_expectation: Numeric price they mentioned (dollars)
+- price_flexibility: "firm", "negotiable", or "unknown"
+
+RESPONSE QUALITY METRICS:
+- response_quality: 0.0-1.0 based on completeness and specificity
+- responsiveness: 0.0-1.0 based on engagement level
+
+Return ONLY JSON with extracted fields. If no new info, return existing data.
+Count questions_answered based on how many of the 4 main categories have data.
+
+Example response:
+{{
+    "motivation": "relocation",
+    "relocation_destination": "Austin, TX",
+    "timeline_acceptable": true,
+    "timeline_urgency": "urgent",
+    "property_condition": "move-in ready",
+    "price_expectation": 450000,
+    "price_flexibility": "negotiable",
+    "response_quality": 0.85,
+    "responsiveness": 0.90,
+    "questions_answered": 4
+}}
+"""
+
+        try:
+            # Use tenant-specific LLM client if config provided
+            llm_client = self.llm_client
+            if tenant_config and tenant_config.get("anthropic_api_key"):
+                llm_client = LLMClient(
+                    provider="claude",
+                    model=settings.claude_model,
+                    api_key=tenant_config["anthropic_api_key"]
+                )
+
+            # Use Claude to extract seller data
+            response = await llm_client.agenerate(
+                prompt=extraction_prompt,
+                system_prompt="You are a seller data extraction specialist for real estate. Return only valid JSON.",
+                temperature=0,
+                max_tokens=500
+            )
+
+            # Record usage
+            location_id = tenant_config.get("location_id", "unknown") if tenant_config else "unknown"
+            await self.analytics.track_llm_usage(
+                location_id=location_id,
+                model=response.model,
+                provider=response.provider.value,
+                input_tokens=response.input_tokens or 0,
+                output_tokens=response.output_tokens or 0,
+                cached=False
+            )
+
+            extracted_data = json.loads(response.content)
+
+            # Merge with existing seller data
+            merged_data = {**current_seller_data, **extracted_data}
+
+            # Ensure questions_answered count is accurate
+            question_fields = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
+            questions_answered = sum(1 for field in question_fields if merged_data.get(field) is not None)
+            merged_data["questions_answered"] = questions_answered
+
+            # Auto-assess response quality if not provided by Claude
+            if "response_quality" not in extracted_data:
+                merged_data["response_quality"] = self._assess_seller_response_quality(user_message)
+
+            logger.info(
+                "Extracted seller data from message",
+                extra={
+                    "extracted": merged_data,
+                    "questions_answered": questions_answered
+                }
+            )
+
+            return merged_data
+
+        except (json.JSONDecodeError, Exception) as e:
+            logger.error(
+                f"Failed to extract seller data: {str(e)}",
+                extra={"error": str(e), "user_message": user_message}
+            )
+            return current_seller_data
+
+    def _assess_seller_response_quality(self, user_message: str) -> float:
+        """
+        Assess quality of seller response for Jorge's confrontational tone adjustment.
+
+        Args:
+            user_message: User's message text
+
+        Returns:
+            Quality score (0.0-1.0)
+        """
+        message = user_message.strip().lower()
+
+        # Very short/evasive responses
+        if len(message) < 10:
+            return 0.2
+
+        # Vague responses
+        vague_indicators = ["maybe", "not sure", "idk", "i don't know", "thinking about it", "unsure"]
+        if any(indicator in message for indicator in vague_indicators):
+            return 0.4
+
+        # Good quality indicators
+        specific_indicators = ["definitely", "yes", "no", "exactly", "specifically", "$", "days", "weeks", "months"]
+        if any(indicator in message for indicator in specific_indicators):
+            return 0.8
+
+        # Decent responses with some specifics
+        if len(message) > 20:
+            return 0.7
+
+        # Default quality
+        return 0.6
 
     def detect_intent_pathway(self, message: str) -> str:
         """
