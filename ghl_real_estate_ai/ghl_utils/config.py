@@ -27,7 +27,9 @@ class Settings(BaseSettings):
     ghl_agency_id: Optional[str] = None
 
     # LLM Configuration
-    claude_model: str = "claude-sonnet-4-20250514"
+    claude_model: str = "claude-3-5-sonnet-20240620"
+    claude_sonnet_model: str = "claude-3-5-sonnet-20240620"
+    claude_haiku_model: str = "claude-3-haiku-20240307"
     temperature: float = 0.7
     max_tokens: int = 150
     default_llm_provider: str = "claude"

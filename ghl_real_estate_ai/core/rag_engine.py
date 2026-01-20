@@ -11,6 +11,7 @@ import shutil
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
 import uuid
+from datetime import datetime
 
 from ghl_real_estate_ai.core.embeddings import EmbeddingModel
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -139,48 +140,57 @@ class VectorStore:
         query: str,
         n_results: int = 4,
         location_id: Optional[str] = None,
+        neighborhood: Optional[str] = None,
         filter_metadata: Optional[Dict[str, Any]] = None,
         mode: str = "semantic" # semantic, keyword, hybrid
     ) -> List[SearchResult]:
         """
         Search for relevant documents.
         Supports 'semantic' (default), 'keyword' (exact match boost), or 'hybrid'.
+        
+        Args:
+            query: The search query
+            n_results: Number of results to return
+            location_id: Scope results to this location
+            neighborhood: Bias results toward this neighborhood (Neighborhood Persona)
+            filter_metadata: Additional metadata filters
+            mode: Search mode
         """
         if not self._collection:
             return []
 
-        # ALGORITHM: RAG-based Semantic Search
-        # 1. Generate embedding for query using sentence-transformers
-        # 2. Search vector database (ChromaDB) for similar embeddings
-        # 3. Retrieve top-k most relevant documents
-        # 4. Apply metadata filters (tenant_id, document_type)
-        # 5. Re-rank results by relevance score
-        # 6. Return formatted results with context
-        
-        # Performance: Typical query takes 50-100ms for 10K documents
-        # Accuracy: ~85% semantic match rate in testing
-
         try:
             # Build filter metadata
-            where_filter = None
+            where_filter = {}
             
             # If location_id is provided, we want documents for this location OR global documents
-            if location_id:
-                where_filter = {
-                    "location_id": {"$in": [location_id, "global"]}
-                }
+            loc_filter = {"location_id": {"$in": [location_id or "global", "global"]}}
+            
+            filters = [loc_filter]
+            
+            if neighborhood:
+                # If neighborhood is provided, we can either filter strictly or bias
+                # For "Neighborhood Persona", we'll try to find neighborhood-specific docs
+                neighborhood_filter = {"neighborhood": {"$in": [neighborhood, "all"]}}
+                filters.append(neighborhood_filter)
                 
-                if filter_metadata:
-                    # Combine with existing filter
-                    where_filter = {"$and": [where_filter, filter_metadata]}
-            elif filter_metadata:
-                where_filter = filter_metadata
+            if filter_metadata:
+                filters.append(filter_metadata)
+                
+            if len(filters) > 1:
+                where_filter = {"$and": filters}
+            else:
+                where_filter = filters[0]
             
             # 1. Semantic Search (Base)
             query_embedding = self.embedding_model.embed_query(query)
             
+            # Biasing: If neighborhood is specified, boost the query with neighborhood name
+            biased_query = f"{neighborhood} {query}" if neighborhood else query
+            biased_embedding = self.embedding_model.embed_query(biased_query) if neighborhood else query_embedding
+            
             results = self._collection.query(
-                query_embeddings=[query_embedding],
+                query_embeddings=[biased_embedding],
                 n_results=n_results * 2 if mode == "hybrid" else n_results,
                 where=where_filter if where_filter else None
             )
@@ -237,6 +247,48 @@ class VectorStore:
             logger.info("Vector store cleared")
         except Exception as e:
             logger.error(f"Error clearing vector store: {e}")
+
+    def ingest_neighborhood_data(
+        self,
+        neighborhood: str,
+        data_type: str,
+        content: str,
+        metadata: Optional[Dict[str, Any]] = None,
+        location_id: Optional[str] = None
+    ) -> str:
+        """
+        Ingest hyper-local neighborhood data (zoning, schools, stats).
+        
+        Args:
+            neighborhood: Name of the neighborhood
+            data_type: Type of data (e.g., 'zoning', 'schools', 'market_stats')
+            content: Text content to ingest
+            metadata: Additional metadata
+            location_id: Scope to this location
+            
+        Returns:
+            ID of the ingested document
+        """
+        doc_id = f"local_{neighborhood}_{data_type}_{uuid.uuid4().hex[:8]}"
+        
+        final_metadata = {
+            "neighborhood": neighborhood,
+            "data_type": data_type,
+            "source": f"local_{data_type}",
+            "ingested_at": datetime.now().isoformat()
+        }
+        if metadata:
+            final_metadata.update(metadata)
+            
+        self.add_texts(
+            texts=[content],
+            metadatas=[final_metadata],
+            ids=[doc_id],
+            location_id=location_id
+        )
+        
+        logger.info(f"Ingested {data_type} data for neighborhood: {neighborhood}")
+        return doc_id
 
 # Alias for backward compatibility and internal consistency
 RAGEngine = VectorStore

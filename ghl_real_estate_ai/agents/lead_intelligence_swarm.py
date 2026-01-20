@@ -49,6 +49,7 @@ class AgentType(Enum):
     TIMING_PREDICTOR = "timing_predictor"
     RISK_EVALUATOR = "risk_evaluator"
     OPPORTUNITY_IDENTIFIER = "opportunity_identifier"
+    MARKET_ANALYST = "market_analyst"
 
 
 class AgentStatus(Enum):
@@ -187,6 +188,20 @@ class LeadIntelligenceAgent:
                     "low_risk": 0.9,
                     "moderate_risk": 0.7,
                     "high_risk": 0.4
+                }
+            })
+
+        elif self.agent_type == AgentType.MARKET_ANALYST:
+            base_knowledge.update({
+                "market_monitoring": {
+                    "mls_feed_sync": True,
+                    "price_drop_threshold": 0.03,  # 3% drop triggers alert
+                    "competitor_analysis": True
+                },
+                "predator_mode": {
+                    "enabled": True,
+                    "alert_synergy": True,
+                    "defensive_drafting": True
                 }
             })
 
@@ -813,6 +828,110 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
             return "passive"
 
 
+class MarketAnalystAgent(LeadIntelligenceAgent):
+    """
+    Specialized agent for real-time market monitoring and "Predator Mode".
+    
+    Features:
+    - External MLS/Listing feed monitoring
+    - "Alert Synergy": Price drop detection for swiped properties
+    - Automatic defensive comparison drafting
+    """
+
+    def __init__(self):
+        super().__init__(AgentType.MARKET_ANALYST, {
+            "monitoring_active": True,
+            "predator_mode": True
+        })
+
+    async def _perform_specialized_analysis(self, lead_data: Dict[str, Any]) -> AgentInsight:
+        """Monitor market changes relative to lead's swiped list"""
+        await asyncio.sleep(0.2)  # Simulate external feed check
+
+        swiped_list = lead_data.get("swiped_list", [])
+        market_changes = await self._check_mls_for_changes(swiped_list)
+        
+        alerts = []
+        recommendations = []
+        defensive_drafts = []
+        opportunity_score = 50.0
+
+        for change in market_changes:
+            if change["type"] == "price_drop":
+                alerts.append(f"PREDATOR ALERT: Property {change['property_id']} dropped in price by {change['amount']}%")
+                
+                # Implement Alert Synergy
+                draft = await self._draft_defensive_comparison(change, lead_data)
+                defensive_drafts.append(draft)
+                recommendations.append(f"Send defensive comparison for {change['property_id']}")
+                opportunity_score = max(opportunity_score, 85.0)
+
+        primary_finding = f"Market Analyst: Found {len(alerts)} critical price updates for lead's interest list" if alerts else "No critical market changes detected for lead's interest list"
+
+        return AgentInsight(
+            agent_type=self.agent_type,
+            confidence=0.92,
+            primary_finding=primary_finding,
+            supporting_evidence=alerts,
+            recommendations=recommendations,
+            risk_factors=["Competitive market pressure" if alerts else "None"],
+            opportunity_score=opportunity_score,
+            urgency_level="high" if alerts else "low",
+            processing_time_ms=200.0,
+            data_sources=["mls_feed", "swiped_list", "market_analytics"],
+            metadata={
+                "market_alerts": alerts,
+                "defensive_drafts": defensive_drafts
+            }
+        )
+
+    async def _check_mls_for_changes(self, swiped_list: List[str]) -> List[Dict[str, Any]]:
+        """Mock check for MLS changes"""
+        # In production, this would hit an MLS API
+        changes = []
+        if swiped_list and "PROP_001" in swiped_list:
+            changes.append({
+                "type": "price_drop",
+                "property_id": "PROP_001",
+                "amount": 5.0,
+                "new_price": 725000,
+                "old_price": 765000
+            })
+        return changes
+
+    async def _draft_defensive_comparison(self, change: Dict[str, Any], lead_data: Dict[str, Any]) -> str:
+        """Draft a defensive comparison message for the human agent to send"""
+        # Use Claude via Orchestrator if possible, otherwise mock
+        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeTaskType, ClaudeRequest
+        orchestrator = get_claude_orchestrator()
+        
+        prompt = f"""
+        PREDATOR MODE: DEFENSIVE COMPARISON DRAFT
+        
+        Property {change['property_id']} just dropped in price from ${change['old_price']} to ${change['new_price']}.
+        This property is in the lead's "Swiped List" (highly interested).
+        
+        Lead Name: {lead_data.get('first_name', 'Client')}
+        
+        Draft a "Defensive Comparison" SMS/Email for the human agent to send.
+        Goal: Acknowledge the price drop, but highlight WHY our recommended properties are still a better value, 
+        or explain how this price drop creates a negotiation opening for US.
+        
+        Tone: Professional, expert, strategic.
+        """
+        
+        try:
+            request = ClaudeRequest(
+                task_type=ClaudeTaskType.SCRIPT_GENERATION,
+                context={"task": "defensive_draft"},
+                prompt=prompt
+            )
+            response = await orchestrator.process_request(request)
+            return response.content
+        except:
+            return f"Hi {lead_data.get('first_name', 'there')}, I noticed a price drop on {change['property_id']}. Let's discuss how this affects our strategy."
+
+
 class LeadIntelligenceSwarm:
     """Multi-agent orchestration system for comprehensive lead intelligence"""
 
@@ -837,6 +956,7 @@ class LeadIntelligenceSwarm:
         self.agents[AgentType.DEMOGRAPHIC_ANALYZER] = DemographicAnalyzerAgent()
         self.agents[AgentType.BEHAVIORAL_PROFILER] = BehavioralProfilerAgent()
         self.agents[AgentType.INTENT_DETECTOR] = IntentDetectorAgent()
+        self.agents[AgentType.MARKET_ANALYST] = MarketAnalystAgent()
 
         # Additional agents would be initialized here:
         # self.agents[AgentType.FINANCIAL_ASSESSOR] = FinancialAssessorAgent()
