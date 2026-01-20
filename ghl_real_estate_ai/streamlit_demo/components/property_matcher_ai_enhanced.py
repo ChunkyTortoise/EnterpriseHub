@@ -81,10 +81,12 @@ def render_enhanced_property_matcher(lead_context: Dict):
         if st.button('📊 Show ML Analytics', use_container_width=True):
             st.info('Opening advanced property analytics dashboard...')
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=1800)  # PERFORMANCE: Increased from 300s to 1800s (30 min) for optimal demo responsiveness
 def generate_enhanced_property_matches(lead_context: Dict) -> List[Dict]:
     """
     Generate enhanced property matches using ML-powered confidence scoring
+
+    PERFORMANCE OPTIMIZED: Aggressive 30-minute caching for instant client demos
 
     Args:
         lead_context: Dictionary containing lead preferences
