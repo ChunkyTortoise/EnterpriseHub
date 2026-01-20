@@ -61,6 +61,29 @@ class EventType(Enum):
     THREAT_LEVEL_CHANGED = auto()
     OPPORTUNITY_IDENTIFIED = auto()
     ALERT_TRIGGERED = auto()
+    
+    # M&A Intelligence Events (Ultra-High-Value Enhancement)
+    MA_THREAT_DETECTED = auto()
+    MA_DEFENSE_EXECUTED = auto()
+    MA_OPPORTUNITY_IDENTIFIED = auto()
+    MA_VALUATION_ANALYSIS_COMPLETED = auto()
+    MA_ACQUISITION_APPROACH_PREDICTED = auto()
+    MA_STRATEGIC_ALTERNATIVE_ACTIVATED = auto()
+    MA_REGULATORY_ASSESSMENT_COMPLETED = auto()
+    
+    # Enhancement Engine Coordination Events
+    AUTONOMOUS_STRATEGY_EXECUTED = auto()
+    REGULATORY_VIOLATION_PREVENTED = auto()
+    CUSTOMER_DEFECTION_PREVENTED = auto()
+    
+    # Cross-Enhancement Integration Events
+    MULTI_ENGINE_COORDINATION_REQUIRED = auto()
+    ENTERPRISE_RESPONSE_COORDINATED = auto()
+    ULTRA_HIGH_VALUE_EVENT = auto()
+    
+    # CRM Data Events (needed for coordination)
+    CRM_CONTACT_UPDATED = auto()
+    CRM_OPPORTUNITY_UPDATED = auto()
 
 
 class EventPriority(Enum):
@@ -543,6 +566,77 @@ async def publish_alert_event(
     )
 
 
+# M&A Intelligence Event Publishers (Ultra-High-Value)
+
+async def publish_ma_threat_event(
+    threat_data: Dict[str, Any],
+    source_system: str,
+    priority: EventPriority = EventPriority.CRITICAL,
+    correlation_id: Optional[str] = None
+) -> str:
+    """Publish an M&A threat detection event."""
+    event_bus = get_event_bus()
+    return await event_bus.publish(
+        event_type=EventType.MA_THREAT_DETECTED,
+        data=threat_data,
+        source_system=source_system,
+        priority=priority,
+        correlation_id=correlation_id,
+        ttl_seconds=7200  # M&A threats expire after 2 hours
+    )
+
+
+async def publish_ma_defense_event(
+    defense_data: Dict[str, Any],
+    source_system: str,
+    priority: EventPriority = EventPriority.CRITICAL,
+    correlation_id: Optional[str] = None
+) -> str:
+    """Publish an M&A defense execution event."""
+    event_bus = get_event_bus()
+    return await event_bus.publish(
+        event_type=EventType.MA_DEFENSE_EXECUTED,
+        data=defense_data,
+        source_system=source_system,
+        priority=priority,
+        correlation_id=correlation_id
+    )
+
+
+async def publish_ma_opportunity_event(
+    opportunity_data: Dict[str, Any],
+    source_system: str,
+    priority: EventPriority = EventPriority.HIGH,
+    correlation_id: Optional[str] = None
+) -> str:
+    """Publish an M&A opportunity identification event."""
+    event_bus = get_event_bus()
+    return await event_bus.publish(
+        event_type=EventType.MA_OPPORTUNITY_IDENTIFIED,
+        data=opportunity_data,
+        source_system=source_system,
+        priority=priority,
+        correlation_id=correlation_id
+    )
+
+
+async def publish_enterprise_coordination_event(
+    coordination_data: Dict[str, Any],
+    source_system: str,
+    priority: EventPriority = EventPriority.HIGH,
+    correlation_id: Optional[str] = None
+) -> str:
+    """Publish enterprise-wide response coordination event."""
+    event_bus = get_event_bus()
+    return await event_bus.publish(
+        event_type=EventType.ENTERPRISE_RESPONSE_COORDINATED,
+        data=coordination_data,
+        source_system=source_system,
+        priority=priority,
+        correlation_id=correlation_id
+    )
+
+
 # Export public API
 __all__ = [
     "EventType",
@@ -554,5 +648,9 @@ __all__ = [
     "publish_prediction_event",
     "publish_intelligence_insight",
     "publish_crm_sync_event",
-    "publish_alert_event"
+    "publish_alert_event",
+    "publish_ma_threat_event",
+    "publish_ma_defense_event", 
+    "publish_ma_opportunity_event",
+    "publish_enterprise_coordination_event"
 ]
