@@ -277,3 +277,232 @@ class LeadScorer:
             "reasoning": reasoning,
             "recommended_actions": actions,
         }
+
+    # ==============================================================================
+    # JORGE'S SELLER SCORING (4 QUESTIONS)
+    # ==============================================================================
+
+    def calculate_seller_score(self, seller_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Calculate seller lead score based on Jorge's 4 questions.
+
+        Jorge's Seller Questions:
+        1. Motivation & Relocation destination
+        2. Timeline acceptance (30-45 days)
+        3. Property condition
+        4. Price expectation
+
+        Args:
+            seller_data: Dict containing seller qualification data
+
+        Returns:
+            Dict with score (0-4), temperature classification, and details
+        """
+        score = 0
+        details = {}
+
+        # Question 1: Motivation (25% weight)
+        if seller_data.get("motivation") and seller_data.get("relocation_destination"):
+            score += 1
+            details["motivation_score"] = 1
+        elif seller_data.get("motivation"):
+            score += 0.5  # Partial answer
+            details["motivation_score"] = 0.5
+
+        # Question 2: Timeline (35% weight - most important for Jorge)
+        timeline_score = 0
+        if seller_data.get("timeline_acceptable") is True:
+            timeline_score = 1
+        elif seller_data.get("timeline_acceptable") is False:
+            timeline_score = 0.5  # Still answered, but not ideal
+        elif seller_data.get("timeline_urgency"):
+            timeline_score = 0.3  # Some timeline info but no 30-45 day answer
+
+        score += timeline_score
+        details["timeline_score"] = timeline_score
+
+        # Question 3: Property Condition (20% weight)
+        if seller_data.get("property_condition"):
+            score += 1
+            details["condition_score"] = 1
+
+        # Question 4: Price Expectation (20% weight)
+        if seller_data.get("price_expectation"):
+            score += 1
+            details["price_score"] = 1
+
+        # Calculate temperature based on Jorge's rules
+        temperature = self._classify_seller_temperature(
+            score=score,
+            seller_data=seller_data,
+            response_quality=seller_data.get("response_quality", 0.5),
+            responsiveness=seller_data.get("responsiveness", 0.5)
+        )
+
+        # Convert to percentage for consistency with existing system
+        percentage_score = int((score / 4) * 100)
+
+        return {
+            "raw_score": score,
+            "percentage_score": percentage_score,
+            "temperature": temperature,
+            "details": details,
+            "questions_answered": int(score),  # Count of questions essentially answered
+            "max_questions": 4,
+            "classification": temperature,  # For consistency with existing interface
+            "reasoning": self._build_seller_reasoning(seller_data, details),
+            "recommended_actions": self._get_seller_actions(temperature, seller_data)
+        }
+
+    def _classify_seller_temperature(
+        self,
+        score: float,
+        seller_data: Dict[str, Any],
+        response_quality: float,
+        responsiveness: float
+    ) -> str:
+        """Jorge's seller temperature classification logic"""
+
+        # Hot seller criteria (Jorge's exact requirements)
+        if (score >= 3.8 and  # Nearly all questions answered (allow for partial scores)
+            seller_data.get("timeline_acceptable") is True and  # 30-45 days acceptable
+            response_quality > 0.7 and  # High quality responses
+            responsiveness > 0.7):  # Responsive to messages
+            return "hot"
+
+        # Warm seller criteria
+        elif (score >= 2.5 and  # Most questions answered
+              response_quality > 0.5):  # Decent responses
+            return "warm"
+
+        # Cold seller (default)
+        else:
+            return "cold"
+
+    def _build_seller_reasoning(self, seller_data: Dict[str, Any], details: Dict[str, Any]) -> str:
+        """Build reasoning text for seller scoring"""
+        reasoning_parts = []
+
+        if seller_data.get("motivation"):
+            reason = f"Motivation: {seller_data['motivation']}"
+            if seller_data.get("relocation_destination"):
+                reason += f" (to {seller_data['relocation_destination']})"
+            reasoning_parts.append(reason)
+
+        if seller_data.get("timeline_acceptable") is not None:
+            timeline_text = "30-45 days acceptable" if seller_data["timeline_acceptable"] else "Timeline too fast"
+            if seller_data.get("timeline_urgency"):
+                timeline_text += f" ({seller_data['timeline_urgency']})"
+            reasoning_parts.append(f"Timeline: {timeline_text}")
+
+        if seller_data.get("property_condition"):
+            reasoning_parts.append(f"Condition: {seller_data['property_condition']}")
+
+        if seller_data.get("price_expectation"):
+            price = seller_data["price_expectation"]
+            price_text = f"${price:,}" if isinstance(price, (int, float)) else str(price)
+            reasoning_parts.append(f"Price: {price_text}")
+
+        return " | ".join(reasoning_parts) if reasoning_parts else "No seller data collected yet"
+
+    def _get_seller_actions(self, temperature: str, seller_data: Dict[str, Any]) -> List[str]:
+        """Get recommended actions for seller based on temperature"""
+
+        if temperature == "hot":
+            return [
+                f"Tag as 'Hot-Seller'",
+                "Remove 'Needs Qualifying' tag",
+                "Trigger agent notification workflow immediately",
+                "Schedule valuation appointment within 24 hours",
+                "Priority follow-up if no response",
+                "Add 'Seller-Qualified' tag"
+            ]
+        elif temperature == "warm":
+            return [
+                f"Tag as 'Warm-Seller'",
+                "Send market analysis and recent sales",
+                "Follow up within 48 hours",
+                "Continue qualification process",
+                "Provide educational content about selling process"
+            ]
+        else:  # cold
+            return [
+                f"Tag as 'Cold-Seller'",
+                "Add to seller nurture sequence",
+                "Send quarterly market updates",
+                "Follow up in 2-3 days with additional questions",
+                "Provide home valuation resources"
+            ]
+
+    def calculate_seller_with_reasoning(self, seller_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Calculate seller score with detailed reasoning - Jorge's 4-question version.
+
+        Args:
+            seller_data: Seller qualification data
+
+        Returns:
+            Complete seller scoring analysis
+        """
+        return self.calculate_seller_score(seller_data)
+
+    # ==============================================================================
+    # UPDATED MAIN METHODS TO HANDLE SELLER MODE
+    # ==============================================================================
+
+    def calculate(self, context: Dict[str, Any]) -> int:
+        """
+        Calculate lead score - now handles both buyer and seller modes.
+
+        Args:
+            context: Conversation context containing:
+                - extracted_preferences: Dict of user preferences
+                - seller_preferences: Dict of seller data (Jorge's bot)
+                - conversation_history: List of messages
+                - seller_temperature: Seller classification (if seller mode)
+
+        Returns:
+            Number of questions answered (0-7 for buyers, 0-4 for sellers)
+        """
+
+        # Check if this is seller mode (Jorge's bot)
+        if (context.get("seller_preferences") or
+            context.get("seller_temperature") or
+            "seller" in context.get("conversation_type", "").lower()):
+
+            seller_result = self.calculate_seller_score(context.get("seller_preferences", {}))
+            return seller_result["questions_answered"]
+
+        # Continue with existing buyer scoring logic...
+        questions_answered = 0
+        prefs = context.get("extracted_preferences", {})
+
+        # Question 1: Budget/Price Range
+        if prefs.get("budget"):
+            questions_answered += 1
+
+        # Question 2: Location Preference
+        if prefs.get("location"):
+            questions_answered += 1
+
+        # Question 3: Timeline
+        if prefs.get("timeline"):
+            questions_answered += 1
+
+        # Question 4: Property Requirements (beds/baths/must-haves)
+        if prefs.get("bedrooms") or prefs.get("bathrooms") or prefs.get("must_haves"):
+            questions_answered += 1
+
+        # Question 5: Financing Status
+        if prefs.get("financing"):
+            questions_answered += 1
+
+        # Question 6: Motivation (why buying/selling now)
+        if prefs.get("motivation"):
+            questions_answered += 1
+
+        # Question 7: Home Condition (sellers only)
+        if prefs.get("home_condition"):
+            questions_answered += 1
+
+        return questions_answered

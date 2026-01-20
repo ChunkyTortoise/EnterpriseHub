@@ -1,0 +1,249 @@
+# =========================================================================
+# Enterprise Performance Optimized Dockerfile
+# =========================================================================
+# Purpose: Production-ready container optimized for 500+ concurrent users
+# Features: Multi-stage build, performance tuning, security hardening
+# Author: Claude Code Enterprise Optimization Team
+# Created: January 2026
+# =========================================================================
+
+# =========================================================================
+# Build Stage - Performance Optimized
+# =========================================================================
+FROM python:3.11-slim AS builder
+
+# Build arguments
+ARG ENVIRONMENT=production
+ARG OPTIMIZATION_LEVEL=enterprise
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install build dependencies and system optimization tools
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    libpq-dev \
+    gcc \
+    g++ \
+    pkg-config \
+    libffi-dev \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create application user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements first for better Docker layer caching
+COPY requirements.txt requirements-prod.txt ./
+
+# Install Python dependencies with optimizations
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Install production dependencies with performance optimizations
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements-prod.txt && \
+    # Install additional enterprise performance packages
+    pip install --no-cache-dir \
+    gunicorn[gevent]==21.2.0 \
+    gevent==23.9.1 \
+    psycopg2-binary==2.9.9 \
+    redis[hiredis]==5.0.1 \
+    uvloop==0.19.0 \
+    orjson==3.9.10 \
+    cython==3.0.5 \
+    numpy==1.25.2 \
+    pandas==2.1.3 \
+    asyncpg==0.29.0 \
+    aioredis==2.0.1 \
+    aiodns==3.1.1 \
+    cchardet==2.1.7
+
+# =========================================================================
+# Production Stage - Security & Performance Optimized
+# =========================================================================
+FROM python:3.11-slim AS production
+
+# Build arguments
+ARG ENVIRONMENT=production
+ARG OPTIMIZATION_LEVEL=enterprise
+
+# Security and performance environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONHASHSEED=random
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Performance optimizations
+ENV MALLOC_ARENA_MAX=4
+ENV PYTHONMALLOC=malloc
+ENV PYTHONASYNCIODEBUG=0
+
+# Application environment
+ENV APP_HOME=/app
+ENV APP_USER=appuser
+ENV ENVIRONMENT=${ENVIRONMENT}
+ENV OPTIMIZATION_LEVEL=${OPTIMIZATION_LEVEL}
+
+# Install runtime dependencies and security updates
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    libssl3 \
+    libffi8 \
+    curl \
+    htop \
+    procps \
+    dumb-init \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create application user and directories
+RUN groupadd -r ${APP_USER} && \
+    useradd -r -g ${APP_USER} -d ${APP_HOME} -s /bin/bash ${APP_USER} && \
+    mkdir -p ${APP_HOME} && \
+    chown -R ${APP_USER}:${APP_USER} ${APP_HOME}
+
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Set working directory
+WORKDIR ${APP_HOME}
+
+# Copy application code with proper ownership
+COPY --chown=${APP_USER}:${APP_USER} . .
+
+# Create necessary directories and set permissions
+RUN mkdir -p logs tmp cache .streamlit && \
+    chown -R ${APP_USER}:${APP_USER} logs tmp cache .streamlit && \
+    chmod -R 755 logs tmp cache .streamlit
+
+# Copy enterprise configuration files
+COPY --chown=${APP_USER}:${APP_USER} config/streamlit-enterprise.toml .streamlit/config.toml
+COPY --chown=${APP_USER}:${APP_USER} config/gunicorn-enterprise.conf.py gunicorn.conf.py
+
+# Install additional performance monitoring tools
+USER root
+RUN pip install --no-cache-dir \
+    py-spy==0.3.14 \
+    memory-profiler==0.61.0 \
+    line-profiler==4.1.1 \
+    psutil==5.9.6
+
+# Switch to application user for security
+USER ${APP_USER}
+
+# Enterprise health check script
+COPY --chown=${APP_USER}:${APP_USER} scripts/health-check-enterprise.sh /usr/local/bin/health-check
+RUN chmod +x /usr/local/bin/health-check
+
+# Performance monitoring script
+COPY --chown=${APP_USER}:${APP_USER} scripts/performance-monitor.sh /usr/local/bin/performance-monitor
+RUN chmod +x /usr/local/bin/performance-monitor
+
+# Create startup script with performance optimizations
+RUN cat > startup.sh << 'EOF'
+#!/bin/bash
+set -e
+
+# Performance optimizations
+export MALLOC_ARENA_MAX=4
+export PYTHONMALLOC=malloc
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+
+# Set CPU affinity for performance (if running on dedicated hardware)
+if [ "${OPTIMIZATION_LEVEL}" = "enterprise" ]; then
+    # Optimize for enterprise workloads
+    export GUNICORN_WORKER_CLASS=gevent
+    export GUNICORN_WORKER_CONNECTIONS=2000
+    export GUNICORN_MAX_REQUESTS=10000
+    export GUNICORN_MAX_REQUESTS_JITTER=1000
+    export GUNICORN_PRELOAD_APP=true
+    export GUNICORN_KEEPALIVE=5
+fi
+
+# Initialize performance monitoring
+if [ "${ENABLE_PERFORMANCE_MONITORING}" = "true" ]; then
+    /usr/local/bin/performance-monitor &
+fi
+
+# Database migration and initialization
+if [ "${INSTANCE_TIER}" = "primary" ] && [ "${INSTANCE_ID}" = "api-primary-1" ]; then
+    echo "Running database migrations..."
+    python -m alembic upgrade head
+fi
+
+# Start the application based on service type
+if [ "${SERVICE_TYPE}" = "streamlit" ]; then
+    echo "Starting Streamlit with enterprise optimizations..."
+    exec streamlit run ghl_real_estate_ai/streamlit_demo/app.py \
+        --server.port=8501 \
+        --server.address=0.0.0.0 \
+        --server.headless=true \
+        --server.enableCORS=false \
+        --server.enableXsrfProtection=true \
+        --server.maxUploadSize=200 \
+        --global.developmentMode=false \
+        --global.logLevel=info \
+        --runner.magicEnabled=false \
+        --runner.installTracer=false \
+        --runner.fixMatplotlib=false
+else
+    echo "Starting FastAPI with enterprise optimizations..."
+    
+    # Calculate optimal number of workers based on CPU and memory
+    WORKERS=${WORKER_PROCESSES:-$(python -c "import os; print(min(int(os.cpu_count() * 2 + 1), 8))")}
+    
+    exec gunicorn ghl_real_estate_ai.api.main:app \
+        --bind 0.0.0.0:8000 \
+        --workers ${WORKERS} \
+        --worker-class gevent \
+        --worker-connections ${WORKER_CONNECTIONS:-2000} \
+        --max-requests ${GUNICORN_MAX_REQUESTS:-10000} \
+        --max-requests-jitter ${GUNICORN_MAX_REQUESTS_JITTER:-1000} \
+        --timeout 60 \
+        --keepalive 5 \
+        --preload \
+        --access-logfile - \
+        --error-logfile - \
+        --log-level info \
+        --capture-output \
+        --enable-stdio-inheritance
+fi
+EOF
+
+RUN chmod +x startup.sh
+
+# Expose application ports
+EXPOSE 8000 8501
+
+# Health check with enterprise optimizations
+HEALTHCHECK --interval=10s --timeout=5s --start-period=45s --retries=3 \
+    CMD /usr/local/bin/health-check
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["./startup.sh"]
+
+# =========================================================================
+# Production Metadata
+# =========================================================================
+LABEL maintainer="Claude Code Enterprise Team"
+LABEL version="1.0.0"
+LABEL description="Customer Intelligence Platform - Enterprise Performance Optimized"
+LABEL environment="${ENVIRONMENT}"
+LABEL optimization-level="${OPTIMIZATION_LEVEL}"
+LABEL build-date="2026-01-19"

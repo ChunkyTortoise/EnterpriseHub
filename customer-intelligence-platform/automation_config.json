@@ -1,0 +1,34 @@
+{
+  "email_sequences": {
+    "demo_confirmation": {
+      "enabled": true,
+      "delay_hours": 1
+    },
+    "post_demo_followup": {
+      "enabled": true,
+      "delay_hours": 24
+    },
+    "nurturing_campaign": {
+      "enabled": true,
+      "delay_days": 3
+    },
+    "re_engagement": {
+      "enabled": true,
+      "delay_days": 14
+    }
+  },
+  "roi_calculation": {
+    "auto_update": true,
+    "recalc_interval_hours": 24
+  },
+  "lead_scoring": {
+    "auto_scoring": true,
+    "model_refresh_days": 7
+  },
+  "performance_tracking": {
+    "enabled": true,
+    "alert_thresholds": {
+      "low_engagement": 0.5
+    }
+  }
+}
