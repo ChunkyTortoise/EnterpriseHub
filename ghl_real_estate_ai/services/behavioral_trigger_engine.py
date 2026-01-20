@@ -25,18 +25,63 @@ logger = get_logger(__name__)
 
 
 class BehavioralSignal(Enum):
-    """Types of behavioral signals for prediction."""
+    """Types of behavioral signals for prediction - 25+ signals for comprehensive analysis."""
 
+    # Property Research Signals
     PROPERTY_SEARCH = "property_search"
     NEIGHBORHOOD_RESEARCH = "neighborhood_research"
     PRICING_TOOL_USAGE = "pricing_tool_usage"
-    AGENT_INQUIRY = "agent_inquiry"
-    MARKET_REPORT_ENGAGEMENT = "market_report_engagement"
-    EMAIL_OPENS = "email_opens"
-    SMS_RESPONSES = "sms_responses"
-    WEBSITE_VISITS = "website_visits"
     LISTING_VIEWS = "listing_views"
     VIRTUAL_TOUR_VIEWS = "virtual_tour_views"
+    PROPERTY_DETAIL_DOWNLOADS = "property_detail_downloads"
+    MAP_INTERACTIONS = "map_interactions"
+    SCHOOL_DISTRICT_RESEARCH = "school_district_research"
+    COMMUTE_TIME_CHECKS = "commute_time_checks"
+    PROPERTY_COMPARISON_USAGE = "property_comparison_usage"
+
+    # Communication Signals
+    AGENT_INQUIRY = "agent_inquiry"
+    EMAIL_OPENS = "email_opens"
+    SMS_RESPONSES = "sms_responses"
+    PHONE_CALL_DURATION = "phone_call_duration"
+    CALLBACK_REQUESTS = "callback_requests"
+    FORM_SUBMISSIONS = "form_submissions"
+    CHAT_INTERACTIONS = "chat_interactions"
+    SOCIAL_MEDIA_ENGAGEMENT = "social_media_engagement"
+
+    # Engagement Signals
+    WEBSITE_VISITS = "website_visits"
+    MARKET_REPORT_ENGAGEMENT = "market_report_engagement"
+    NEWSLETTER_ENGAGEMENT = "newsletter_engagement"
+    VIDEO_CONSUMPTION = "video_consumption"
+    WEBINAR_ATTENDANCE = "webinar_attendance"
+    BLOG_POST_ENGAGEMENT = "blog_post_engagement"
+    TESTIMONIAL_VIEWS = "testimonial_views"
+
+    # Intent Signals
+    MORTGAGE_CALCULATOR_USAGE = "mortgage_calculator_usage"
+    PRE_APPROVAL_INQUIRY = "pre_approval_inquiry"
+    HOME_VALUATION_REQUESTS = "home_valuation_requests"
+    CLOSING_COST_CALCULATOR = "closing_cost_calculator"
+    RENT_VS_BUY_CALCULATOR = "rent_vs_buy_calculator"
+    INSPECTION_SERVICE_INQUIRY = "inspection_service_inquiry"
+    INSURANCE_QUOTE_REQUESTS = "insurance_quote_requests"
+
+    # Behavioral Patterns
+    REPEAT_VISITOR = "repeat_visitor"
+    SESSION_DURATION_LONG = "session_duration_long"
+    MOBILE_USAGE_PATTERN = "mobile_usage_pattern"
+    WEEKEND_BROWSING = "weekend_browsing"
+    EVENING_ACTIVITY = "evening_activity"
+    MULTIPLE_DEVICE_ACCESS = "multiple_device_access"
+
+    # Advanced Signals
+    DOCUMENT_UPLOADS = "document_uploads"
+    CALENDAR_SCHEDULING = "calendar_scheduling"
+    REFERRAL_ACTIVITY = "referral_activity"
+    REVIEW_SUBMISSION = "review_submission"
+    SAVED_SEARCHES = "saved_searches"
+    PRICE_ALERT_SUBSCRIPTIONS = "price_alert_subscriptions"
 
 
 class IntentLevel(Enum):
@@ -91,17 +136,61 @@ class BehavioralTriggerEngine:
     def __init__(self):
         self.cache = get_cache_service()
 
-        # Signal weights (calibrated for real estate leads)
+        # Signal weights (calibrated for real estate leads - comprehensive scoring)
         self.signal_weights = {
+            # High Intent Signals (15-30%)
+            BehavioralSignal.PRE_APPROVAL_INQUIRY: 0.30,
             BehavioralSignal.PRICING_TOOL_USAGE: 0.25,
-            BehavioralSignal.AGENT_INQUIRY: 0.20,
+            BehavioralSignal.AGENT_INQUIRY: 0.25,
+            BehavioralSignal.HOME_VALUATION_REQUESTS: 0.20,
+            BehavioralSignal.CALLBACK_REQUESTS: 0.20,
+            BehavioralSignal.MORTGAGE_CALCULATOR_USAGE: 0.18,
+            BehavioralSignal.CALENDAR_SCHEDULING: 0.18,
+            BehavioralSignal.DOCUMENT_UPLOADS: 0.15,
+
+            # Medium Intent Signals (8-15%)
             BehavioralSignal.NEIGHBORHOOD_RESEARCH: 0.15,
             BehavioralSignal.MARKET_REPORT_ENGAGEMENT: 0.15,
+            BehavioralSignal.CLOSING_COST_CALCULATOR: 0.12,
+            BehavioralSignal.RENT_VS_BUY_CALCULATOR: 0.12,
+            BehavioralSignal.VIRTUAL_TOUR_VIEWS: 0.12,
+            BehavioralSignal.FORM_SUBMISSIONS: 0.10,
             BehavioralSignal.PROPERTY_SEARCH: 0.10,
+            BehavioralSignal.PROPERTY_COMPARISON_USAGE: 0.10,
+            BehavioralSignal.CHAT_INTERACTIONS: 0.10,
+            BehavioralSignal.PHONE_CALL_DURATION: 0.10,
+            BehavioralSignal.INSPECTION_SERVICE_INQUIRY: 0.08,
+            BehavioralSignal.INSURANCE_QUOTE_REQUESTS: 0.08,
+
+            # Engagement Signals (4-8%)
+            BehavioralSignal.PROPERTY_DETAIL_DOWNLOADS: 0.08,
+            BehavioralSignal.SCHOOL_DISTRICT_RESEARCH: 0.07,
+            BehavioralSignal.MAP_INTERACTIONS: 0.07,
+            BehavioralSignal.COMMUTE_TIME_CHECKS: 0.07,
+            BehavioralSignal.SAVED_SEARCHES: 0.06,
+            BehavioralSignal.PRICE_ALERT_SUBSCRIPTIONS: 0.06,
+            BehavioralSignal.WEBINAR_ATTENDANCE: 0.06,
+            BehavioralSignal.VIDEO_CONSUMPTION: 0.05,
             BehavioralSignal.LISTING_VIEWS: 0.05,
             BehavioralSignal.EMAIL_OPENS: 0.05,
+            BehavioralSignal.NEWSLETTER_ENGAGEMENT: 0.04,
+            BehavioralSignal.BLOG_POST_ENGAGEMENT: 0.04,
+
+            # Behavioral Pattern Signals (2-5%)
+            BehavioralSignal.SESSION_DURATION_LONG: 0.05,
+            BehavioralSignal.REPEAT_VISITOR: 0.04,
+            BehavioralSignal.WEEKEND_BROWSING: 0.04,
+            BehavioralSignal.EVENING_ACTIVITY: 0.04,
+            BehavioralSignal.MULTIPLE_DEVICE_ACCESS: 0.03,
+            BehavioralSignal.MOBILE_USAGE_PATTERN: 0.03,
+            BehavioralSignal.SMS_RESPONSES: 0.03,
             BehavioralSignal.WEBSITE_VISITS: 0.03,
-            BehavioralSignal.SMS_RESPONSES: 0.02,
+
+            # Community Signals (2-4%)
+            BehavioralSignal.SOCIAL_MEDIA_ENGAGEMENT: 0.04,
+            BehavioralSignal.TESTIMONIAL_VIEWS: 0.03,
+            BehavioralSignal.REFERRAL_ACTIVITY: 0.03,
+            BehavioralSignal.REVIEW_SUBMISSION: 0.02,
         }
 
         # Recency decay factor (hours)
@@ -437,11 +526,48 @@ class BehavioralTriggerEngine:
             dominant_pattern = max(patterns, key=lambda p: p.score_impact)
 
             message_templates = {
+                # High Intent Signals
+                BehavioralSignal.PRE_APPROVAL_INQUIRY: "🏠 I see you're exploring pre-approval options! I work with top lenders who can fast-track your application. Ready to get started?",
                 BehavioralSignal.PRICING_TOOL_USAGE: "I noticed you've been researching property values in your area. I'd love to provide you with a complimentary market analysis - would that be helpful?",
                 BehavioralSignal.AGENT_INQUIRY: "Thanks for your interest in connecting! I'm available to discuss your real estate needs. What's the best time for a quick chat?",
+                BehavioralSignal.HOME_VALUATION_REQUESTS: "💰 I see you're curious about your home's value! I can provide a detailed CMA with recent sales data. Interested?",
+                BehavioralSignal.CALLBACK_REQUESTS: "📞 Thanks for requesting a callback! I'm ready to discuss your real estate goals. What time works best today?",
+                BehavioralSignal.MORTGAGE_CALCULATOR_USAGE: "🧮 I noticed you're running mortgage calculations! I can connect you with lenders offering great rates. Want to explore your options?",
+                BehavioralSignal.CALENDAR_SCHEDULING: "📅 I see you're looking to schedule time! I have openings this week to discuss your property needs. Shall we set something up?",
+                BehavioralSignal.DOCUMENT_UPLOADS: "📄 Thank you for uploading documents! I'm reviewing everything and will have insights ready for our next conversation.",
+
+                # Medium Intent Signals
                 BehavioralSignal.NEIGHBORHOOD_RESEARCH: "I see you've been exploring neighborhoods. I have deep market knowledge in this area and would be happy to share insights. When works for you?",
                 BehavioralSignal.MARKET_REPORT_ENGAGEMENT: "Great to see you're staying informed on the market! I can provide exclusive insights on current trends. Interested in learning more?",
+                BehavioralSignal.CLOSING_COST_CALCULATOR: "💸 I noticed you're calculating closing costs. I can break down all the numbers and fees for you. Want a detailed estimate?",
+                BehavioralSignal.RENT_VS_BUY_CALCULATOR: "🏡 Weighing rent vs. buy? Smart move! I can show you scenarios specific to your situation. Ready to crunch the real numbers?",
+                BehavioralSignal.VIRTUAL_TOUR_VIEWS: "🎥 I saw you took virtual tours! Nothing beats seeing properties in person. Want to schedule some showings this weekend?",
+                BehavioralSignal.FORM_SUBMISSIONS: "✅ Thanks for reaching out! I've received your information and have some great properties that match your criteria.",
                 BehavioralSignal.PROPERTY_SEARCH: "I noticed you've been looking at properties. I can help you navigate the current market and find exactly what you're looking for. Let's connect!",
+                BehavioralSignal.PROPERTY_COMPARISON_USAGE: "📊 Great to see you comparing properties! I can provide insights on each and help you make the best choice.",
+                BehavioralSignal.CHAT_INTERACTIONS: "💬 Enjoyed our chat! I'm here whenever you have more questions about the market or specific properties.",
+                BehavioralSignal.PHONE_CALL_DURATION: "📱 Thanks for taking time to chat! Following up on our conversation - do you have any other questions?",
+
+                # Engagement Signals
+                BehavioralSignal.PROPERTY_DETAIL_DOWNLOADS: "📋 I see you downloaded property details! I have additional market insights that could be valuable. Want to see them?",
+                BehavioralSignal.SCHOOL_DISTRICT_RESEARCH: "🎓 Researching schools shows great planning! I know the best family-friendly neighborhoods. Want the inside scoop?",
+                BehavioralSignal.MAP_INTERACTIONS: "🗺️ I noticed you're exploring the area on maps! I can share insider tips about different neighborhoods. Interested?",
+                BehavioralSignal.COMMUTE_TIME_CHECKS: "⏰ Smart to check commute times! I know properties with the best access to major routes. Want to see options?",
+                BehavioralSignal.SAVED_SEARCHES: "🔍 I see you saved some searches! I get notified of new listings daily and can share matches. Sound good?",
+                BehavioralSignal.PRICE_ALERT_SUBSCRIPTIONS: "🔔 Great job setting up price alerts! I can also watch for off-market opportunities. Want me to keep an eye out?",
+                BehavioralSignal.WEBINAR_ATTENDANCE: "🎯 Thanks for joining the webinar! I have additional resources that dive deeper into the topics we covered.",
+                BehavioralSignal.VIDEO_CONSUMPTION: "🎬 Glad you found our video content helpful! I have more insider tips to share. Coffee chat soon?",
+
+                # Behavioral Patterns
+                BehavioralSignal.SESSION_DURATION_LONG: "⏱️ I can see you're seriously researching! Your dedication shows you're ready to make a move. Let's talk strategy.",
+                BehavioralSignal.REPEAT_VISITOR: "👋 Welcome back! I love that you keep checking in. Ready to take the next step in your property search?",
+                BehavioralSignal.WEEKEND_BROWSING: "🌅 I notice you browse on weekends! Perfect time for property tours too. Want to see some this Saturday?",
+                BehavioralSignal.EVENING_ACTIVITY: "🌙 I see you research in the evenings! I'm available for after-hours calls if that works better for your schedule.",
+
+                # Community Signals
+                BehavioralSignal.SOCIAL_MEDIA_ENGAGEMENT: "📱 Thanks for following on social! I share exclusive market insights there. Seen anything interesting lately?",
+                BehavioralSignal.REFERRAL_ACTIVITY: "🤝 Thank you for the referral! I'm committed to providing the same excellent service to everyone you send my way.",
+                BehavioralSignal.REVIEW_SUBMISSION: "⭐ Thank you for the review! It means the world to me. I'm here for any future real estate needs.",
             }
 
             base_message = message_templates.get(

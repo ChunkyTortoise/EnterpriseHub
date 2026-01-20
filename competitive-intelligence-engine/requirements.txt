@@ -1,0 +1,93 @@
+# Competitive Intelligence Engine - Production Dependencies
+# Based on EnterpriseHub GHL Real Estate AI Platform
+# Compatible with Python 3.10, 3.11, 3.12, 3.14
+
+# FastAPI + ASGI Server
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+pydantic==2.6.1
+pydantic-settings==2.1.0
+
+# AI & LLM Integration
+anthropic==0.18.1
+
+# Vector Database & Embeddings
+chromadb==0.4.24
+sentence-transformers==2.3.1
+onnxruntime==1.16.3; sys_platform == 'linux' or (sys_platform == 'darwin' and platform_machine == 'x86_64')
+onnxruntime-silicon==1.16.3; sys_platform == 'darwin' and platform_machine == 'arm64'
+
+# HTTP Clients & API Integration
+httpx==0.26.0
+requests==2.31.0
+
+# Web Scraping & Data Collection
+beautifulsoup4==4.12.3
+selenium==4.16.0
+scrapy==2.11.0
+playwright==1.40.0
+
+# Social Media & News Monitoring
+tweepy==4.14.0
+praw==7.7.1  # Reddit API
+python-twitter==3.5
+feedparser==6.0.10  # RSS feeds
+newspaper3k==0.2.8  # News articles
+
+# Utilities & Configuration
+python-dotenv==1.0.1
+python-multipart==0.0.6
+configparser==5.3.0
+
+# Data Processing & Analytics
+numpy==1.26.3
+pandas==2.1.4
+scipy==1.11.4
+
+# Security Dependencies
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Dashboard & Visualization
+streamlit==1.30.0
+plotly==5.18.0
+matplotlib==3.8.2
+
+# Machine Learning & NLP
+scikit-learn==1.4.0
+tokenizers==0.15.1
+spacy==3.7.2
+textblob==0.17.1
+vaderSentiment==3.3.2
+en-core-web-sm>=3.7.0,<3.8.0
+
+# Real-time Features & Caching
+redis==5.0.1
+websockets==12.0
+websocket-client==1.6.4
+aioredis==2.0.1
+
+# Async Support & Task Management
+asyncio-mqtt==0.13.0
+celery==5.3.4
+kombu==5.3.4
+
+# Time & Location
+pytz==2023.4
+
+# Database Support
+sqlalchemy==2.0.25
+asyncpg==0.29.0
+alembic==1.13.1
+
+# Testing & Quality
+pytest==7.4.4
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+coverage==7.4.0
+
+# Development Tools
+black==23.12.1
+isort==5.13.2
+flake8==7.0.0
+mypy==1.8.0

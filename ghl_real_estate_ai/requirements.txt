@@ -52,3 +52,9 @@ aioredis==2.0.1
 
 # Async Support
 asyncio-mqtt==0.13.0
+
+# Statistical Analysis for A/B Testing
+scipy==1.11.4
+
+# Advanced Analytics and Data Processing
+matplotlib==3.8.2

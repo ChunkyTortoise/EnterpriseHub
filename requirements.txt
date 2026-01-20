@@ -67,6 +67,7 @@ qrcode[pil]>=7.4.2
 fastmcp
 graphiti-core>=0.5.0
 redis>=5.0.0
+PyYAML>=6.0  # YAML file processing for configuration
 
 # ==============================================================================
 # Database & Service6 Production Dependencies

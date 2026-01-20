@@ -151,18 +151,21 @@ class FileCache(AbstractCache):
 class RedisCache(AbstractCache):
     """Redis-based cache for production with connection pooling."""
 
-    def __init__(self, redis_url: str, max_connections: int = 50, min_connections: int = 10):
+    def __init__(self, redis_url: str, max_connections: int = 25, min_connections: int = 5):
         try:
             import redis.asyncio as redis
             from redis.asyncio.connection import ConnectionPool
 
-            # Create connection pool for better performance
+            # PERFORMANCE: Optimized connection pool for production
             self.connection_pool = ConnectionPool.from_url(
                 redis_url,
                 max_connections=max_connections,
-                socket_timeout=5,
-                socket_connect_timeout=5,
-                decode_responses=False,  # We handle encoding with pickle
+                socket_timeout=3,           # Reduced from 5 for faster timeouts
+                socket_connect_timeout=3,   # Reduced from 5
+                socket_keepalive=True,      # Keep connections alive
+                socket_keepalive_options={},
+                health_check_interval=60,   # Health check every minute
+                decode_responses=False,     # We handle encoding with pickle
             )
 
             self.redis = redis.Redis(connection_pool=self.connection_pool)
@@ -305,6 +308,51 @@ class CacheService:
     async def clear(self) -> bool:
         """Clear all cache."""
         return await self.backend.clear()
+    
+    # PERFORMANCE OPTIMIZATION: Batch operations for high-throughput scenarios
+    async def get_many(self, keys: list[str]) -> dict[str, Any]:
+        """Batch get multiple keys for improved performance."""
+        if hasattr(self.backend, 'get_many'):
+            return await self.backend.get_many(keys)
+        
+        # Fallback: sequential gets for backends without batch support
+        results = {}
+        for key in keys:
+            value = await self.get(key)
+            if value is not None:
+                results[key] = value
+        return results
+    
+    async def set_many(self, items: dict[str, Any], ttl: int = 300) -> bool:
+        """Batch set multiple items for improved performance."""
+        if hasattr(self.backend, 'set_many'):
+            return await self.backend.set_many(items, ttl)
+        
+        # Fallback: sequential sets for backends without batch support
+        success_count = 0
+        for key, value in items.items():
+            if await self.set(key, value, ttl):
+                success_count += 1
+        
+        return success_count == len(items)
+    
+    async def cached_computation(self, key: str, computation_func, ttl: int = 300, *args, **kwargs) -> Any:
+        """Cache the result of a computation with automatic key management."""
+        # Check cache first
+        cached_result = await self.get(key)
+        if cached_result is not None:
+            logger.debug(f"Cache hit for computation key: {key}")
+            return cached_result
+        
+        # Compute and cache result
+        logger.debug(f"Cache miss for computation key: {key}, computing...")
+        if asyncio.iscoroutinefunction(computation_func):
+            result = await computation_func(*args, **kwargs)
+        else:
+            result = computation_func(*args, **kwargs)
+        
+        await self.set(key, result, ttl)
+        return result
 
 # Global accessor
 def get_cache_service() -> CacheService:

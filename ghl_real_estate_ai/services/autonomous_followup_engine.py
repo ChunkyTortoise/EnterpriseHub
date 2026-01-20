@@ -76,13 +76,20 @@ class FollowUpTask:
 
 
 class AgentType(Enum):
-    """Specialized follow-up agent types."""
+    """Specialized follow-up agent types - 10 autonomous agents."""
 
     TIMING_OPTIMIZER = "timing_optimizer"
     CONTENT_PERSONALIZER = "content_personalizer"
     CHANNEL_STRATEGIST = "channel_strategist"
     RESPONSE_ANALYZER = "response_analyzer"
     ESCALATION_MANAGER = "escalation_manager"
+
+    # New specialized agents
+    SENTIMENT_ANALYST = "sentiment_analyst"
+    OBJECTION_HANDLER = "objection_handler"
+    CONVERSION_OPTIMIZER = "conversion_optimizer"
+    MARKET_CONTEXT_AGENT = "market_context_agent"
+    PERFORMANCE_TRACKER = "performance_tracker"
 
 
 @dataclass
@@ -402,6 +409,453 @@ class EscalationManagerAgent(FollowUpAgent):
             )
 
 
+class SentimentAnalystAgent(FollowUpAgent):
+    """Analyzes emotional tone and sentiment for appropriate follow-up approach."""
+
+    def __init__(self, llm_client):
+        super().__init__(AgentType.SENTIMENT_ANALYST, llm_client)
+
+    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+        """Analyze sentiment to guide follow-up approach."""
+        try:
+            response_data = context.get('response_data', {})
+            conversation_history = context.get('conversation_history', [])
+
+            # Analyze recent messages for sentiment
+            recent_messages = []
+            if response_data.get('responses'):
+                recent_messages = response_data['responses'][-3:]  # Last 3 messages
+
+            if not recent_messages and conversation_history:
+                recent_messages = [msg.get('content', '') for msg in conversation_history[-3:]]
+
+            # Use Claude for sentiment analysis
+            prompt = f"""
+            Analyze the sentiment and emotional tone of these recent messages from a real estate lead.
+
+            Recent Messages: {recent_messages}
+            Lead Context: {context.get('lead_profile', {})}
+
+            Determine:
+            1. Overall sentiment (positive, neutral, negative, frustrated)
+            2. Emotional state (excited, confused, worried, angry, interested)
+            3. Engagement level (high, medium, low, disengaged)
+            4. Recommended approach for next follow-up
+
+            Consider real estate context and buying/selling emotions.
+            Provide recommendations for tone, timing, and approach.
+            """
+
+            response = await self.llm_client.generate(
+                prompt=prompt, max_tokens=300, temperature=0.3
+            )
+
+            sentiment_analysis = response.content if response.content else "neutral sentiment detected"
+
+            # Determine recommended approach based on sentiment
+            if "negative" in sentiment_analysis.lower() or "frustrated" in sentiment_analysis.lower():
+                recommended_action = "Use empathetic, supportive approach"
+                confidence = 0.9
+            elif "excited" in sentiment_analysis.lower() or "positive" in sentiment_analysis.lower():
+                recommended_action = "Capitalize on positive momentum"
+                confidence = 0.85
+            elif "confused" in sentiment_analysis.lower() or "worried" in sentiment_analysis.lower():
+                recommended_action = "Provide educational, reassuring content"
+                confidence = 0.8
+            else:
+                recommended_action = "Use balanced, professional approach"
+                confidence = 0.7
+
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=confidence,
+                recommended_action=recommended_action,
+                reasoning=sentiment_analysis,
+                metadata={
+                    'sentiment_analysis': sentiment_analysis,
+                    'messages_analyzed': len(recent_messages)
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Error in sentiment analyst: {e}")
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=0.5,
+                recommended_action="Use neutral, professional approach",
+                reasoning="Error in sentiment analysis, using safe approach"
+            )
+
+
+class ObjectionHandlerAgent(FollowUpAgent):
+    """Detects objections and recommends appropriate handling strategies."""
+
+    def __init__(self, llm_client):
+        super().__init__(AgentType.OBJECTION_HANDLER, llm_client)
+
+    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+        """Detect objections and recommend handling approach."""
+        try:
+            response_data = context.get('response_data', {})
+            conversation_history = context.get('conversation_history', [])
+
+            # Look for objection signals in recent responses
+            recent_responses = response_data.get('responses', [])
+            if not recent_responses and conversation_history:
+                recent_responses = [msg.get('content', '') for msg in conversation_history[-5:]]
+
+            objection_detected = False
+            objection_type = None
+            confidence = 0.6
+
+            # Simple objection detection (would integrate with autonomous_objection_handler.py)
+            objection_keywords = {
+                'price': ['expensive', 'cost', 'afford', 'budget', 'price'],
+                'timing': ['not ready', 'timing', 'later', 'wait'],
+                'trust': ['trust', 'experience', 'reviews', 'references'],
+                'location': ['location', 'area', 'neighborhood', 'commute'],
+                'process': ['complicated', 'paperwork', 'process', 'confusing']
+            }
+
+            for response_text in recent_responses:
+                if isinstance(response_text, str):
+                    response_lower = response_text.lower()
+                    for obj_type, keywords in objection_keywords.items():
+                        if any(keyword in response_lower for keyword in keywords):
+                            objection_detected = True
+                            objection_type = obj_type
+                            confidence = 0.8
+                            break
+
+            if objection_detected:
+                recommended_action = f"Address {objection_type} objection with targeted response"
+                reasoning = f"Detected {objection_type} objection in recent communications"
+
+                # Suggest specific objection handling strategy
+                objection_strategies = {
+                    'price': "Emphasize value and financing options",
+                    'timing': "Acknowledge timeline and maintain nurturing sequence",
+                    'trust': "Provide credentials and testimonials",
+                    'location': "Share market insights and alternative options",
+                    'process': "Simplify and guide through next steps"
+                }
+
+                strategy = objection_strategies.get(objection_type, "Address concern directly")
+                recommended_action = f"{recommended_action}: {strategy}"
+
+            else:
+                recommended_action = "No objections detected, proceed with standard approach"
+                reasoning = "No objection signals found in recent communications"
+                confidence = 0.7
+
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=confidence,
+                recommended_action=recommended_action,
+                reasoning=reasoning,
+                metadata={
+                    'objection_detected': objection_detected,
+                    'objection_type': objection_type,
+                    'responses_analyzed': len(recent_responses)
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Error in objection handler: {e}")
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=0.5,
+                recommended_action="Monitor for objections",
+                reasoning="Error in objection detection, using standard monitoring"
+            )
+
+
+class ConversionOptimizerAgent(FollowUpAgent):
+    """Optimizes follow-up strategy for maximum conversion probability."""
+
+    def __init__(self, llm_client):
+        super().__init__(AgentType.CONVERSION_OPTIMIZER, llm_client)
+
+    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+        """Optimize approach for maximum conversion probability."""
+        try:
+            behavioral_score = context.get('behavioral_score')
+            follow_up_history = context.get('follow_up_history', [])
+            response_data = context.get('response_data', {})
+
+            # Calculate conversion probability factors
+            conversion_factors = {}
+
+            # Intent level factor
+            if behavioral_score:
+                intent_scores = {
+                    IntentLevel.URGENT: 0.9,
+                    IntentLevel.HOT: 0.7,
+                    IntentLevel.WARM: 0.5,
+                    IntentLevel.COLD: 0.2
+                }
+                conversion_factors['intent_score'] = intent_scores.get(
+                    behavioral_score.intent_level, 0.3
+                )
+
+            # Response rate factor
+            total_sent = len(follow_up_history)
+            responses_received = len(response_data.get('responses', []))
+            response_rate = responses_received / total_sent if total_sent > 0 else 0
+            conversion_factors['response_rate'] = min(response_rate * 2, 1.0)  # Cap at 1.0
+
+            # Engagement recency factor
+            last_response_time = response_data.get('last_response_time')
+            if last_response_time:
+                if isinstance(last_response_time, str):
+                    last_response_time = datetime.fromisoformat(last_response_time)
+                hours_since = (datetime.now() - last_response_time).total_seconds() / 3600
+                recency_factor = max(0.1, 1.0 - (hours_since / 168))  # Decay over 1 week
+            else:
+                recency_factor = 0.3
+
+            conversion_factors['recency_factor'] = recency_factor
+
+            # Calculate overall conversion probability
+            overall_probability = (
+                conversion_factors.get('intent_score', 0.3) * 0.4 +
+                conversion_factors.get('response_rate', 0.2) * 0.3 +
+                recency_factor * 0.3
+            )
+
+            # Recommend optimization strategy
+            if overall_probability > 0.7:
+                recommended_action = "High conversion probability: Use direct ask for meeting/showing"
+                urgency = "high"
+            elif overall_probability > 0.5:
+                recommended_action = "Medium conversion probability: Provide value and soft CTA"
+                urgency = "medium"
+            elif overall_probability > 0.3:
+                recommended_action = "Low-medium probability: Focus on nurturing and education"
+                urgency = "low"
+            else:
+                recommended_action = "Low probability: Long-term nurturing sequence"
+                urgency = "low"
+
+            confidence = 0.8 if len(follow_up_history) >= 3 else 0.6
+
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=confidence,
+                recommended_action=recommended_action,
+                reasoning=f"Conversion probability: {overall_probability:.2f} based on multiple factors",
+                metadata={
+                    'conversion_probability': overall_probability,
+                    'conversion_factors': conversion_factors,
+                    'urgency_level': urgency,
+                    'optimization_strategy': 'probability_based'
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Error in conversion optimizer: {e}")
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=0.4,
+                recommended_action="Use standard conversion approach",
+                reasoning="Error in optimization analysis, using standard approach"
+            )
+
+
+class MarketContextAgent(FollowUpAgent):
+    """Incorporates market conditions and timing into follow-up strategy."""
+
+    def __init__(self, llm_client):
+        super().__init__(AgentType.MARKET_CONTEXT_AGENT, llm_client)
+
+    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+        """Incorporate market context into follow-up recommendations."""
+        try:
+            behavioral_score = context.get('behavioral_score')
+            lead_profile = context.get('lead_profile', {})
+
+            # Get market context
+            market_context = {}
+            if behavioral_score and hasattr(behavioral_score, 'market_context'):
+                market_context = behavioral_score.market_context
+
+            # Default market conditions if not available
+            current_market = market_context.get('market_trend', 'balanced_market')
+            inventory_level = market_context.get('inventory_level', 'normal')
+            price_trend = market_context.get('median_price_trend', 'stable')
+
+            # Determine market-appropriate messaging
+            market_urgency = False
+            market_messaging = ""
+
+            if current_market == 'sellers_market':
+                if inventory_level == 'low':
+                    market_urgency = True
+                    market_messaging = "Limited inventory in seller's market - act quickly on properties of interest"
+                else:
+                    market_messaging = "Strong seller's market provides good opportunities for competitive offers"
+
+            elif current_market == 'buyers_market':
+                market_messaging = "Buyer's market provides negotiation opportunities and selection"
+
+            else:  # balanced_market
+                market_messaging = "Balanced market conditions allow for strategic decision-making"
+
+            # Incorporate price trends
+            if price_trend == 'increasing':
+                market_messaging += ". Prices trending upward - good time to secure property"
+            elif price_trend == 'decreasing':
+                market_messaging += ". Market adjustments may provide opportunities"
+
+            # Determine recommended action based on market context
+            if market_urgency:
+                recommended_action = "Emphasize market urgency and encourage prompt action"
+                confidence = 0.85
+            elif current_market == 'buyers_market':
+                recommended_action = "Highlight market advantages and selection opportunities"
+                confidence = 0.8
+            else:
+                recommended_action = "Provide balanced market perspective and guidance"
+                confidence = 0.75
+
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=confidence,
+                recommended_action=recommended_action,
+                reasoning=market_messaging,
+                metadata={
+                    'market_trend': current_market,
+                    'inventory_level': inventory_level,
+                    'price_trend': price_trend,
+                    'market_urgency': market_urgency,
+                    'market_messaging': market_messaging
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Error in market context agent: {e}")
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=0.6,
+                recommended_action="Provide general market insights",
+                reasoning="Error in market analysis, using general market guidance"
+            )
+
+
+class PerformanceTrackerAgent(FollowUpAgent):
+    """Tracks and optimizes follow-up performance based on historical data."""
+
+    def __init__(self, llm_client):
+        super().__init__(AgentType.PERFORMANCE_TRACKER, llm_client)
+
+    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+        """Analyze historical performance to optimize future follow-ups."""
+        try:
+            follow_up_history = context.get('follow_up_history', [])
+            response_data = context.get('response_data', {})
+            behavioral_score = context.get('behavioral_score')
+
+            # Calculate performance metrics
+            performance_metrics = {}
+
+            if follow_up_history:
+                # Response rate analysis
+                total_sent = len(follow_up_history)
+                responses = len(response_data.get('responses', []))
+                performance_metrics['response_rate'] = responses / total_sent if total_sent > 0 else 0
+
+                # Channel performance analysis
+                channel_performance = {}
+                for followup in follow_up_history:
+                    channel = followup.get('channel', 'unknown')
+                    if channel not in channel_performance:
+                        channel_performance[channel] = {'sent': 0, 'responded': 0}
+
+                    channel_performance[channel]['sent'] += 1
+
+                    # Check if this follow-up got a response (simplified)
+                    followup_time = followup.get('sent_at')
+                    if followup_time and response_data.get('responses'):
+                        for response in response_data['responses']:
+                            response_time = response.get('timestamp')
+                            if response_time and followup_time:
+                                # If response came after this follow-up (simplified logic)
+                                channel_performance[channel]['responded'] += 1
+                                break
+
+                # Find best performing channel
+                best_channel = None
+                best_rate = 0
+                for channel, data in channel_performance.items():
+                    if data['sent'] > 0:
+                        rate = data['responded'] / data['sent']
+                        if rate > best_rate:
+                            best_rate = rate
+                            best_channel = channel
+
+                performance_metrics['best_channel'] = best_channel
+                performance_metrics['best_channel_rate'] = best_rate
+                performance_metrics['channel_performance'] = channel_performance
+
+                # Timing analysis
+                response_times = []
+                for followup in follow_up_history:
+                    sent_time = followup.get('sent_at')
+                    if sent_time and isinstance(sent_time, str):
+                        try:
+                            sent_dt = datetime.fromisoformat(sent_time)
+                            response_times.append(sent_dt.hour)
+                        except:
+                            pass
+
+                if response_times:
+                    optimal_hour = max(set(response_times), key=response_times.count)
+                    performance_metrics['optimal_send_hour'] = optimal_hour
+
+            # Generate recommendations based on performance data
+            if performance_metrics.get('response_rate', 0) > 0.3:
+                recommended_action = "Performance is strong - continue current approach"
+                confidence = 0.9
+            elif performance_metrics.get('response_rate', 0) > 0.15:
+                recommended_action = "Moderate performance - optimize timing and channel"
+                confidence = 0.8
+            elif len(follow_up_history) >= 5:
+                recommended_action = "Low performance - consider strategy change or escalation"
+                confidence = 0.85
+            else:
+                recommended_action = "Insufficient data - continue monitoring and collecting metrics"
+                confidence = 0.6
+
+            # Include specific optimization suggestions
+            optimization_suggestions = []
+            if best_channel := performance_metrics.get('best_channel'):
+                optimization_suggestions.append(f"Use {best_channel} channel (best performance)")
+
+            if optimal_hour := performance_metrics.get('optimal_send_hour'):
+                optimization_suggestions.append(f"Send at {optimal_hour}:00 (optimal time)")
+
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=confidence,
+                recommended_action=recommended_action,
+                reasoning=f"Performance analysis based on {len(follow_up_history)} follow-ups",
+                metadata={
+                    'performance_metrics': performance_metrics,
+                    'optimization_suggestions': optimization_suggestions,
+                    'data_quality': 'high' if len(follow_up_history) >= 5 else 'medium' if len(follow_up_history) >= 2 else 'low'
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Error in performance tracker: {e}")
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=0.5,
+                recommended_action="Continue standard tracking and monitoring",
+                reasoning="Error in performance analysis, using baseline approach"
+            )
+
+
 class AutonomousFollowUpEngine:
     """
     Continuously monitors leads and autonomously executes follow-ups.
@@ -420,12 +874,19 @@ class AutonomousFollowUpEngine:
         self.llm_client = get_llm_client()
         self.lead_intelligence_swarm = get_lead_intelligence_swarm()
 
-        # Agent swarm for follow-up orchestration
+        # Agent swarm for follow-up orchestration - 10 specialized agents
         self.timing_optimizer = TimingOptimizerAgent(self.llm_client)
         self.content_personalizer = ContentPersonalizerAgent(self.llm_client)
         self.channel_strategist = ChannelStrategistAgent(self.llm_client)
         self.response_analyzer = ResponseAnalyzerAgent(self.llm_client)
         self.escalation_manager = EscalationManagerAgent(self.llm_client)
+
+        # New specialized agents
+        self.sentiment_analyst = SentimentAnalystAgent(self.llm_client)
+        self.objection_handler = ObjectionHandlerAgent(self.llm_client)
+        self.conversion_optimizer = ConversionOptimizerAgent(self.llm_client)
+        self.market_context_agent = MarketContextAgent(self.llm_client)
+        self.performance_tracker = PerformanceTrackerAgent(self.llm_client)
 
         # Task queue
         self.pending_tasks: List[FollowUpTask] = []
@@ -605,14 +1066,21 @@ class AutonomousFollowUpEngine:
                 'behavioral_score': swarm_analysis.primary_insight.metadata.get('behavioral_score')
             }
 
-            # Deploy specialized follow-up agents in parallel
-            logger.debug(f"🚀 Deploying follow-up agent swarm for {lead_id}")
+            # Deploy specialized follow-up agents in parallel - 10 agent swarm
+            logger.debug(f"🚀 Deploying comprehensive 10-agent follow-up swarm for {lead_id}")
             agent_tasks = [
                 self.timing_optimizer.analyze(lead_id, agent_context),
                 self.content_personalizer.analyze(lead_id, agent_context),
                 self.channel_strategist.analyze(lead_id, agent_context),
                 self.response_analyzer.analyze(lead_id, agent_context),
                 self.escalation_manager.analyze(lead_id, agent_context),
+
+                # New specialized agents
+                self.sentiment_analyst.analyze(lead_id, agent_context),
+                self.objection_handler.analyze(lead_id, agent_context),
+                self.conversion_optimizer.analyze(lead_id, agent_context),
+                self.market_context_agent.analyze(lead_id, agent_context),
+                self.performance_tracker.analyze(lead_id, agent_context),
             ]
 
             # Execute all agents concurrently
@@ -675,7 +1143,7 @@ class AutonomousFollowUpEngine:
             logger.info(
                 f"📝 Created AI-orchestrated follow-up task for lead {lead_id}: "
                 f"{consensus['channel'].value} at {consensus['timing'].strftime('%H:%M')} "
-                f"(agent consensus: {consensus['confidence']:.2f}, agents: {len(valid_recommendations)})"
+                f"(10-agent consensus: {consensus['confidence']:.2f}, participating: {len(valid_recommendations)})"
             )
 
             # Update cache

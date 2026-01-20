@@ -229,7 +229,9 @@ class DatabaseService:
                 ("002_create_communication_logs", self._migration_002_create_communication_logs),
                 ("003_create_nurture_campaigns", self._migration_003_create_nurture_campaigns),
                 ("004_create_lead_campaign_status", self._migration_004_create_lead_campaign_status),
-                ("005_add_audit_fields", self._migration_005_add_audit_fields)
+                ("005_add_audit_fields", self._migration_005_add_audit_fields),
+                ("006_create_clv_predictions", self._migration_006_create_clv_predictions),
+                ("007_create_behavioral_signals", self._migration_007_create_behavioral_signals)
             ]
             
             # Check and apply migrations
@@ -345,6 +347,251 @@ class DatabaseService:
             ALTER TABLE nurture_campaigns 
             ADD COLUMN IF NOT EXISTS created_by UUID,
             ADD COLUMN IF NOT EXISTS updated_by UUID
+        """)
+    
+    async def _migration_006_create_clv_predictions(self, conn: Connection) -> None:
+        """Create CLV prediction tables for Predictive CLV Engine."""
+        
+        # CLV predictions main table
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS lead_clv_predictions (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                lead_id VARCHAR(255) NOT NULL,
+                prediction_id VARCHAR(255) UNIQUE NOT NULL,
+                
+                -- Core predictions
+                predicted_clv_12_month DECIMAL(12,2) NOT NULL,
+                predicted_clv_lifetime DECIMAL(12,2) NOT NULL,
+                confidence_interval_lower DECIMAL(12,2) NOT NULL,
+                confidence_interval_upper DECIMAL(12,2) NOT NULL,
+                prediction_confidence DECIMAL(4,3) NOT NULL CHECK (prediction_confidence >= 0 AND prediction_confidence <= 1),
+                
+                -- Risk assessment
+                risk_level VARCHAR(20) NOT NULL CHECK (risk_level IN ('low', 'medium', 'high', 'critical')),
+                volatility_score DECIMAL(8,2) DEFAULT 0.0,
+                uncertainty_factors TEXT[], -- Array of uncertainty factor strings
+                
+                -- Revenue breakdown
+                monthly_revenue_forecast DECIMAL(12,2)[] NOT NULL, -- 12-month forecast array
+                probability_of_conversion DECIMAL(4,3) NOT NULL CHECK (probability_of_conversion >= 0 AND probability_of_conversion <= 1),
+                expected_transaction_value DECIMAL(12,2) NOT NULL,
+                expected_commission DECIMAL(12,2) NOT NULL,
+                
+                -- Behavioral insights
+                engagement_trend VARCHAR(20) DEFAULT 'stable' CHECK (engagement_trend IN ('increasing', 'stable', 'declining')),
+                buying_readiness_score DECIMAL(5,2) NOT NULL CHECK (buying_readiness_score >= 0 AND buying_readiness_score <= 100),
+                
+                -- Model metadata
+                models_used TEXT[] NOT NULL,
+                feature_count INTEGER NOT NULL,
+                training_data_size INTEGER DEFAULT 0,
+                model_last_updated TIMESTAMP NOT NULL,
+                
+                -- Benchmarking
+                percentile_rank DECIMAL(5,2) NOT NULL CHECK (percentile_rank >= 0 AND percentile_rank <= 100),
+                similar_lead_comparison TEXT,
+                
+                -- Audit fields
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                created_by UUID,
+                updated_by UUID
+            )
+        """)
+        
+        # Behavioral signals table
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS behavioral_signals (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                lead_id VARCHAR(255) NOT NULL,
+                prediction_id VARCHAR(255) NOT NULL REFERENCES lead_clv_predictions(prediction_id) ON DELETE CASCADE,
+                
+                -- Signal data
+                signal_name VARCHAR(100) NOT NULL,
+                signal_value DECIMAL(5,2) NOT NULL CHECK (signal_value >= 0 AND signal_value <= 100),
+                raw_value TEXT, -- Store original value as text for flexibility
+                category VARCHAR(50) NOT NULL CHECK (category IN ('engagement', 'communication', 'property_interaction', 'financial', 'behavioral_patterns', 'market_context')),
+                
+                -- Quality metrics
+                importance_score DECIMAL(4,3) NOT NULL CHECK (importance_score >= 0 AND importance_score <= 1),
+                confidence DECIMAL(4,3) NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
+                strength VARCHAR(20) NOT NULL CHECK (strength IN ('weak', 'moderate', 'strong', 'critical')),
+                
+                -- Temporal data
+                signal_timestamp TIMESTAMP NOT NULL,
+                trend_direction VARCHAR(20) CHECK (trend_direction IN ('declining', 'stable', 'increasing', 'volatile')),
+                trend_velocity DECIMAL(6,3), -- Rate of change
+                
+                -- Context
+                description TEXT NOT NULL,
+                extraction_method VARCHAR(100) NOT NULL,
+                data_source VARCHAR(100) NOT NULL,
+                sample_size INTEGER DEFAULT 1,
+                
+                -- Anomaly detection
+                is_anomaly BOOLEAN DEFAULT FALSE,
+                anomaly_score DECIMAL(6,3),
+                baseline_comparison DECIMAL(8,2),
+                
+                -- Audit fields
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        
+        # Revenue opportunities table
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS revenue_opportunities (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                opportunity_id VARCHAR(255) UNIQUE NOT NULL,
+                lead_id VARCHAR(255) NOT NULL,
+                prediction_id VARCHAR(255) REFERENCES lead_clv_predictions(prediction_id) ON DELETE CASCADE,
+                
+                -- Opportunity details
+                opportunity_type VARCHAR(30) NOT NULL CHECK (opportunity_type IN ('upsell', 'cross_sell', 'retention', 'acceleration', 'referral', 'repeat_business', 'portfolio_expansion')),
+                opportunity_score DECIMAL(5,2) NOT NULL CHECK (opportunity_score >= 0 AND opportunity_score <= 100),
+                estimated_value DECIMAL(12,2) NOT NULL,
+                confidence DECIMAL(4,3) NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
+                
+                -- Urgency and timing
+                urgency_level VARCHAR(20) NOT NULL CHECK (urgency_level IN ('low', 'medium', 'high', 'critical')),
+                recommended_action TEXT NOT NULL,
+                optimal_timing TEXT NOT NULL,
+                expiration_date TIMESTAMP,
+                
+                -- Supporting data
+                supporting_evidence TEXT[] NOT NULL,
+                
+                -- Status tracking
+                status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'pursued', 'completed', 'expired', 'cancelled')),
+                pursued_at TIMESTAMP,
+                completed_at TIMESTAMP,
+                actual_value DECIMAL(12,2), -- Actual value if opportunity was realized
+                
+                -- Audit fields
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                created_by UUID,
+                updated_by UUID
+            )
+        """)
+        
+        # Signal baselines table for anomaly detection
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS signal_baselines (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                signal_name VARCHAR(100) NOT NULL,
+                
+                -- Statistical baselines
+                median_value DECIMAL(8,2) NOT NULL,
+                mean_value DECIMAL(8,2) NOT NULL,
+                std_deviation DECIMAL(8,2) NOT NULL,
+                min_value DECIMAL(8,2) NOT NULL,
+                max_value DECIMAL(8,2) NOT NULL,
+                
+                -- Percentiles
+                percentile_25 DECIMAL(8,2) NOT NULL,
+                percentile_75 DECIMAL(8,2) NOT NULL,
+                percentile_95 DECIMAL(8,2) NOT NULL,
+                
+                -- Sample info
+                sample_size INTEGER NOT NULL,
+                last_updated TIMESTAMP DEFAULT NOW(),
+                
+                UNIQUE(signal_name)
+            )
+        """)
+    
+    async def _migration_007_create_behavioral_signals(self, conn: Connection) -> None:
+        """Create additional behavioral signal tracking tables."""
+        
+        # Signal extraction results table
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS signal_extraction_results (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                extraction_id VARCHAR(255) UNIQUE NOT NULL,
+                lead_id VARCHAR(255) NOT NULL,
+                
+                -- Summary statistics
+                total_signals INTEGER NOT NULL,
+                strong_signals_count INTEGER NOT NULL,
+                average_confidence DECIMAL(4,3) NOT NULL CHECK (average_confidence >= 0 AND average_confidence <= 1),
+                extraction_time_ms DECIMAL(10,2) NOT NULL,
+                
+                -- Quality indicators
+                data_completeness_score DECIMAL(5,2) NOT NULL CHECK (data_completeness_score >= 0 AND data_completeness_score <= 100),
+                signal_reliability_score DECIMAL(4,3) NOT NULL CHECK (signal_reliability_score >= 0 AND signal_reliability_score <= 1),
+                anomalies_detected INTEGER DEFAULT 0,
+                
+                -- Analysis results
+                signal_correlations JSONB, -- Store correlation analysis as JSON
+                dominant_trends TEXT[], -- Array of dominant trend directions
+                behavioral_profile_summary TEXT NOT NULL,
+                
+                -- Audit fields
+                extraction_timestamp TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        
+        # Signal correlations table for cross-signal analysis
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS signal_correlations (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                lead_id VARCHAR(255) NOT NULL,
+                signal_1_name VARCHAR(100) NOT NULL,
+                signal_2_name VARCHAR(100) NOT NULL,
+                correlation_coefficient DECIMAL(6,3) NOT NULL CHECK (correlation_coefficient >= -1 AND correlation_coefficient <= 1),
+                correlation_strength VARCHAR(20) NOT NULL CHECK (correlation_strength IN ('weak', 'moderate', 'strong')),
+                significance_level DECIMAL(4,3) NOT NULL,
+                sample_size INTEGER NOT NULL,
+                analysis_date TIMESTAMP DEFAULT NOW(),
+                
+                UNIQUE(lead_id, signal_1_name, signal_2_name)
+            )
+        """)
+        
+        # Add indexes for CLV prediction tables
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_clv_predictions_lead_id ON lead_clv_predictions(lead_id);
+            CREATE INDEX IF NOT EXISTS idx_clv_predictions_confidence ON lead_clv_predictions(prediction_confidence DESC);
+            CREATE INDEX IF NOT EXISTS idx_clv_predictions_value ON lead_clv_predictions(predicted_clv_12_month DESC);
+            CREATE INDEX IF NOT EXISTS idx_clv_predictions_risk ON lead_clv_predictions(risk_level);
+            CREATE INDEX IF NOT EXISTS idx_clv_predictions_created ON lead_clv_predictions(created_at DESC);
+        """)
+        
+        # Behavioral signals indexes
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_behavioral_signals_lead_id ON behavioral_signals(lead_id);
+            CREATE INDEX IF NOT EXISTS idx_behavioral_signals_prediction_id ON behavioral_signals(prediction_id);
+            CREATE INDEX IF NOT EXISTS idx_behavioral_signals_category ON behavioral_signals(category);
+            CREATE INDEX IF NOT EXISTS idx_behavioral_signals_strength ON behavioral_signals(strength);
+            CREATE INDEX IF NOT EXISTS idx_behavioral_signals_anomaly ON behavioral_signals(is_anomaly) WHERE is_anomaly = TRUE;
+            CREATE INDEX IF NOT EXISTS idx_behavioral_signals_timestamp ON behavioral_signals(signal_timestamp DESC);
+        """)
+        
+        # Revenue opportunities indexes  
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_revenue_opportunities_lead_id ON revenue_opportunities(lead_id);
+            CREATE INDEX IF NOT EXISTS idx_revenue_opportunities_type ON revenue_opportunities(opportunity_type);
+            CREATE INDEX IF NOT EXISTS idx_revenue_opportunities_score ON revenue_opportunities(opportunity_score DESC);
+            CREATE INDEX IF NOT EXISTS idx_revenue_opportunities_urgency ON revenue_opportunities(urgency_level);
+            CREATE INDEX IF NOT EXISTS idx_revenue_opportunities_status ON revenue_opportunities(status);
+            CREATE INDEX IF NOT EXISTS idx_revenue_opportunities_expiration ON revenue_opportunities(expiration_date) WHERE expiration_date IS NOT NULL;
+        """)
+        
+        # Signal extraction results indexes
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_signal_extraction_lead_id ON signal_extraction_results(lead_id);
+            CREATE INDEX IF NOT EXISTS idx_signal_extraction_timestamp ON signal_extraction_results(extraction_timestamp DESC);
+            CREATE INDEX IF NOT EXISTS idx_signal_extraction_quality ON signal_extraction_results(signal_reliability_score DESC);
+        """)
+        
+        # Signal correlations indexes
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_signal_correlations_lead_id ON signal_correlations(lead_id);
+            CREATE INDEX IF NOT EXISTS idx_signal_correlations_signals ON signal_correlations(signal_1_name, signal_2_name);
+            CREATE INDEX IF NOT EXISTS idx_signal_correlations_strength ON signal_correlations(correlation_strength);
         """)
     
     async def _create_indexes(self) -> None:
@@ -786,7 +1033,7 @@ class DatabaseService:
             except Exception as e:
                 # Fallback query without sentiment_score if column doesn't exist
                 if "sentiment_score" in str(e).lower() or "column" in str(e).lower():
-                    self.logger.warning(f"sentiment_score column not found, using fallback query: {e}")
+                    logger.warning(f"sentiment_score column not found, using fallback query: {e}")
                     responses = await conn.fetch("""
                         SELECT
                             id, channel, content, sent_at as response_time,

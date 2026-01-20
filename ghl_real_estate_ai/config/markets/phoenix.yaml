@@ -1,0 +1,415 @@
+# Phoenix Corporate Headquarters & Luxury Market Configuration
+# Multi-Market Geographic Expansion - Configuration-driven market data
+# Major corporate headquarters hub with luxury retirement and golf communities
+
+# Basic Market Identification
+market_id: phoenix
+market_name: "Phoenix Metropolitan Area"
+market_type: corporate_hub  # Primary market type
+state: AZ
+region: Southwest Desert
+timezone: America/Phoenix
+mls_provider: "Arizona Regional MLS (ARMLS)"
+
+# Geographic Center
+coordinates: [33.4484, -112.0740]
+
+# Market Economic Indicators
+median_home_price: 485000
+price_appreciation_1y: 12.8
+inventory_days: 28
+
+# Market Specialization Configuration
+specializations:
+  primary_specialization: "Corporate Headquarters and Luxury Retirement Services"
+  secondary_specializations:
+    - "Fortune 500 Corporate Relocations (Honeywell, PNC Bank)"
+    - "Luxury Golf Community Expertise"
+    - "Executive Retirement and Second Home Markets"
+    - "Tech Sector Growth Areas (Intel, Microsoft, Google)"
+
+  unique_advantages:
+    - "Corporate headquarters ecosystem specialization"
+    - "Luxury resort and golf community expertise"
+    - "Retirement and second home market knowledge"
+    - "Year-round outdoor lifestyle optimization"
+
+  target_client_types:
+    - "Corporate executives and Fortune 500 relocations"
+    - "Luxury retirement and second home buyers"
+    - "Tech professionals from established companies"
+    - "Golf community and resort living enthusiasts"
+
+  expertise_tags:
+    - "corporate_headquarters"
+    - "luxury_market"
+    - "retirement_specialist"
+    - "golf_communities"
+    - "phoenix_specialist"
+    - "executive_housing"
+
+  knowledge_base_path: "data/knowledge_base/phoenix_expertise.json"
+
+# Neighborhood Configurations
+neighborhoods:
+  - name: "Scottsdale (North)"
+    zone: "Northeast"
+    median_price: 1850000
+    price_trend_3m: 4.2
+    school_rating: 9.1
+    walkability_score: 45
+    coordinates: [33.6092, -111.8315]
+    appeal_scores:
+      luxury_appeal: 100
+      executive_appeal: 95
+      golf_appeal: 100
+      lifestyle_appeal: 95
+      retirement_appeal: 90
+    amenities:
+      - "World-Class Golf Courses"
+      - "Luxury Resorts"
+      - "High-End Shopping"
+      - "Fine Dining"
+      - "Executive Estates"
+    demographics:
+      age_median: 52
+      income_median: 385000
+      retirees: 0.35
+      corporate_executives: 0.40
+    corporate_proximity:
+      honeywell: 25
+      pnc_bank: 30
+      intel_chandler: 35
+      microsoft_tempe: 25
+
+  - name: "Paradise Valley"
+    zone: "Central"
+    median_price: 3250000
+    price_trend_3m: 2.8
+    school_rating: 9.3
+    walkability_score: 25
+    coordinates: [33.5387, -111.9581]
+    appeal_scores:
+      luxury_appeal: 100
+      executive_appeal: 100
+      privacy_appeal: 100
+      lifestyle_appeal: 95
+      retirement_appeal: 85
+    amenities:
+      - "Ultra-Luxury Estates"
+      - "Celebrity Enclave"
+      - "Mountain Views"
+      - "Private Golf Clubs"
+      - "Exclusive Community"
+    demographics:
+      age_median: 58
+      income_median: 650000
+      retirees: 0.40
+      high_net_worth: 0.80
+    corporate_proximity:
+      honeywell: 20
+      pnc_bank: 25
+      intel_chandler: 40
+      microsoft_tempe: 30
+
+  - name: "Tempe"
+    zone: "East Central"
+    median_price: 525000
+    price_trend_3m: 8.5
+    school_rating: 8.2
+    walkability_score: 75
+    coordinates: [33.4255, -111.9400]
+    appeal_scores:
+      tech_appeal: 90
+      university_appeal: 95
+      startup_appeal: 85
+      lifestyle_appeal: 85
+      commute_appeal: 90
+    amenities:
+      - "Arizona State University"
+      - "Tech Corridor"
+      - "Mill Avenue District"
+      - "Light Rail Access"
+      - "Startup Hub"
+    demographics:
+      age_median: 32
+      income_median: 85000
+      tech_professionals: 0.50
+      university_affiliated: 0.30
+    corporate_proximity:
+      honeywell: 15
+      pnc_bank: 20
+      intel_chandler: 15
+      microsoft_tempe: 5
+
+  - name: "Chandler"
+    zone: "Southeast"
+    median_price: 615000
+    price_trend_3m: 6.8
+    school_rating: 9.0
+    walkability_score: 55
+    coordinates: [33.3062, -111.8413]
+    appeal_scores:
+      tech_appeal: 95
+      family_appeal: 90
+      corporate_appeal: 90
+      commute_appeal: 85
+      value_appeal: 80
+    amenities:
+      - "Intel Campus"
+      - "Tech Corridor"
+      - "Master-Planned Communities"
+      - "Excellent Schools"
+      - "Corporate Campuses"
+    demographics:
+      age_median: 38
+      income_median: 125000
+      tech_professionals: 0.60
+      young_families: 0.45
+    corporate_proximity:
+      honeywell: 25
+      pnc_bank: 30
+      intel_chandler: 5
+      microsoft_tempe: 10
+
+  - name: "Ahwatukee"
+    zone: "South Central"
+    median_price: 565000
+    price_trend_3m: 7.2
+    school_rating: 8.8
+    walkability_score: 40
+    coordinates: [33.3499, -112.0479]
+    appeal_scores:
+      family_appeal: 95
+      corporate_appeal: 85
+      value_appeal: 85
+      commute_appeal: 80
+      lifestyle_appeal: 85
+    amenities:
+      - "Family-Oriented"
+      - "Master-Planned Communities"
+      - "Good Schools"
+      - "Mountain Preserve"
+      - "Corporate Proximity"
+    demographics:
+      age_median: 42
+      income_median: 145000
+      corporate_professionals: 0.50
+      young_families: 0.40
+    corporate_proximity:
+      honeywell: 15
+      pnc_bank: 20
+      intel_chandler: 20
+      microsoft_tempe: 15
+
+  - name: "Carefree"
+    zone: "North"
+    median_price: 1450000
+    price_trend_3m: 3.5
+    school_rating: 8.5
+    walkability_score: 30
+    coordinates: [33.8186, -111.9176]
+    appeal_scores:
+      luxury_appeal: 95
+      retirement_appeal: 100
+      golf_appeal: 95
+      lifestyle_appeal: 100
+      privacy_appeal: 95
+    amenities:
+      - "Desert Luxury Homes"
+      - "Golf Communities"
+      - "Resort Living"
+      - "Mountain Views"
+      - "Quiet Retreat"
+    demographics:
+      age_median: 64
+      income_median: 285000
+      retirees: 0.70
+      second_home_owners: 0.40
+    corporate_proximity:
+      honeywell: 35
+      pnc_bank: 40
+      intel_chandler: 50
+      microsoft_tempe: 45
+
+  - name: "Fountain Hills"
+    zone: "Northeast"
+    median_price: 785000
+    price_trend_3m: 5.8
+    school_rating: 8.7
+    walkability_score: 35
+    coordinates: [33.6092, -111.7218]
+    appeal_scores:
+      luxury_appeal: 85
+      retirement_appeal: 90
+      lifestyle_appeal: 90
+      golf_appeal: 85
+      commute_appeal: 70
+    amenities:
+      - "Fountain Park"
+      - "Golf Courses"
+      - "Luxury Homes"
+      - "Mountain Views"
+      - "Resort Community"
+    demographics:
+      age_median: 58
+      income_median: 185000
+      retirees: 0.55
+      empty_nesters: 0.30
+    corporate_proximity:
+      honeywell: 30
+      pnc_bank: 35
+      intel_chandler: 40
+      microsoft_tempe: 35
+
+  - name: "Central Phoenix"
+    zone: "Central"
+    median_price: 385000
+    price_trend_3m: 12.5
+    school_rating: 6.8
+    walkability_score: 85
+    coordinates: [33.4484, -112.0740]
+    appeal_scores:
+      urban_appeal: 90
+      arts_appeal: 95
+      startup_appeal: 80
+      convenience_appeal: 95
+      culture_appeal: 85
+    amenities:
+      - "Downtown Phoenix"
+      - "Arts District"
+      - "Chase Field"
+      - "Light Rail"
+      - "Urban Living"
+    demographics:
+      age_median: 34
+      income_median: 75000
+      young_professionals: 0.45
+      urban_lifestyle: 0.60
+    corporate_proximity:
+      honeywell: 10
+      pnc_bank: 8
+      intel_chandler: 25
+      microsoft_tempe: 20
+
+# Major Employer Configurations
+employers:
+  - employer_id: "honeywell"
+    name: "Honeywell International"
+    industry: "Industrial Conglomerate"
+    location: "Phoenix"
+    coordinates: [33.4484, -112.0740]
+    employee_count: 12000
+    preferred_neighborhoods:
+      - "Paradise Valley"
+      - "Scottsdale (North)"
+      - "Ahwatukee"
+      - "Central Phoenix"
+    average_salary_range: [95000, 225000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "pnc_bank"
+    name: "PNC Financial Services"
+    industry: "Financial Services"
+    location: "Tempe"
+    coordinates: [33.4255, -111.9400]
+    employee_count: 8500
+    preferred_neighborhoods:
+      - "Tempe"
+      - "Scottsdale (North)"
+      - "Ahwatukee"
+      - "Paradise Valley"
+    average_salary_range: [75000, 185000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2"]
+
+  - employer_id: "intel_chandler"
+    name: "Intel Corporation"
+    industry: "Semiconductors"
+    location: "Chandler"
+    coordinates: [33.3062, -111.8413]
+    employee_count: 15000
+    preferred_neighborhoods:
+      - "Chandler"
+      - "Tempe"
+      - "Ahwatukee"
+      - "Fountain Hills"
+    average_salary_range: [105000, 245000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q2", "Q3"]
+
+  - employer_id: "microsoft_tempe"
+    name: "Microsoft Corporation"
+    industry: "Technology"
+    location: "Tempe"
+    coordinates: [33.4255, -111.9400]
+    employee_count: 3200
+    preferred_neighborhoods:
+      - "Tempe"
+      - "Chandler"
+      - "Scottsdale (North)"
+      - "Central Phoenix"
+    average_salary_range: [125000, 265000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "wells_fargo_phoenix"
+    name: "Wells Fargo"
+    industry: "Financial Services"
+    location: "Chandler"
+    coordinates: [33.3062, -111.8413]
+    employee_count: 6500
+    preferred_neighborhoods:
+      - "Chandler"
+      - "Tempe"
+      - "Ahwatukee"
+      - "Scottsdale (North)"
+    average_salary_range: [65000, 155000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2"]
+
+  - employer_id: "american_express"
+    name: "American Express"
+    industry: "Financial Services"
+    location: "Phoenix"
+    coordinates: [33.4484, -112.0740]
+    employee_count: 7200
+    preferred_neighborhoods:
+      - "Central Phoenix"
+      - "Paradise Valley"
+      - "Scottsdale (North)"
+      - "Ahwatukee"
+    average_salary_range: [80000, 175000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q2", "Q4"]
+
+  - employer_id: "general_dynamics"
+    name: "General Dynamics"
+    industry: "Aerospace & Defense"
+    location: "Scottsdale"
+    coordinates: [33.6092, -111.8315]
+    employee_count: 4500
+    preferred_neighborhoods:
+      - "Scottsdale (North)"
+      - "Paradise Valley"
+      - "Fountain Hills"
+      - "Carefree"
+    average_salary_range: [90000, 195000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q3"]
+
+# Configuration Metadata
+config_version: "1.0"
+last_updated: "2026-01-18T10:00:00Z"
+active: true
+
+# Demographics Data
+demographics:
+  population: 4845832
+  median_age: 37.9
+  median_household_income: 65816
+  college_education_rate: 0.32
+  employment_rate: 0.93
+  population_growth_rate: 0.035
+  diversity_index: 0.61

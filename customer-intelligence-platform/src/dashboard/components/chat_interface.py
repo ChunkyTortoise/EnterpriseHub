@@ -1,0 +1,401 @@
+"""
+Enhanced Chat Interface for Customer Intelligence Platform
+Connects to the AI-powered conversation API for intelligent customer insights
+"""
+import streamlit as st
+import requests
+import time
+import json
+from datetime import datetime
+from typing import Dict, List, Any, Optional
+
+
+def render_chat_interface(api_base_url: str = "http://localhost:8000/api/v1"):
+    """
+    Production Chat Interface with AI Integration for Customer Intelligence
+
+    Features:
+    - Real AI integration via conversation API
+    - Memory persistence and conversation history
+    - Customer context integration
+    - Knowledge base search and citations
+    - Streaming response support
+    """
+    st.markdown("### 💬 Customer Intelligence Chat")
+
+    # Enhanced CSS for production chat - Business Intelligence Edition
+    st.markdown("""
+        <style>
+            .chat-container {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+                padding: 1.5rem;
+                max-height: 600px;
+                overflow-y: auto;
+                background: rgba(5, 7, 10, 0.6);
+                border-radius: 16px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(10px);
+                box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            }
+    
+            .chat-bubble {
+                max-width: 85%;
+                padding: 1.25rem 1.5rem;
+                border-radius: 12px;
+                font-size: 0.95rem;
+                line-height: 1.6;
+                position: relative;
+                animation: slideUp 0.3s ease-out;
+                font-family: 'Inter', sans-serif;
+            }
+    
+            .bubble-user {
+                align-self: flex-end;
+                background: rgba(59, 130, 246, 0.1);
+                color: #E6EDF3;
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                border-bottom-right-radius: 4px;
+                box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+            }
+    
+            .bubble-ai {
+                align-self: flex-start;
+                background: rgba(22, 27, 34, 0.8);
+                color: #FFFFFF;
+                border-bottom-left-radius: 4px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            }
+    
+            .agent-info {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 8px;
+                font-size: 0.7rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                font-family: 'Space Grotesk', sans-serif;
+            }
+    
+            .agent-name-ai { color: #3B82F6; }
+            .agent-name-user { color: #8B949E; text-align: right; justify-content: flex-end; width: 100%; }
+    
+            .reasoning-section {
+                background: rgba(59, 130, 246, 0.05);
+                border-radius: 8px;
+                padding: 1rem;
+                margin-top: 1rem;
+                font-size: 0.85rem;
+                color: #E6EDF3;
+                border-left: 3px solid #3B82F6;
+                border: 1px solid rgba(59, 130, 246, 0.1);
+                border-left: 3px solid #3B82F6;
+            }
+    
+            .sources-section {
+                background: rgba(255, 255, 255, 0.02);
+                border-radius: 8px;
+                padding: 1rem;
+                margin-top: 1rem;
+                font-size: 0.85rem;
+                color: #8B949E;
+                border-left: 3px solid rgba(255, 255, 255, 0.2);
+            }
+    
+            .status-pill {
+                display: inline-block;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.65rem;
+                background: rgba(16, 185, 129, 0.1);
+                color: #10b981;
+                margin-left: 8px;
+                font-weight: 700;
+                text-transform: uppercase;
+                border: 1px solid rgba(16, 185, 129, 0.2);
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+    # Initialize chat state
+    if 'chat_messages' not in st.session_state:
+        st.session_state.chat_messages = []
+
+    if 'conversation_id' not in st.session_state:
+        st.session_state.conversation_id = f"customer_{int(time.time())}"
+
+    # Get current customer context
+    customer_id = st.session_state.conversation_id
+    selected_customer = st.session_state.get('selected_customer_name', 'No customer selected')
+    department = st.session_state.get('current_department', 'Sales')
+
+    # Chat header with context - Business Intelligence Edition
+    st.markdown(f"""
+    <div style='background: linear-gradient(135deg, #05070A 0%, #1E3A8A 100%);
+                padding: 1.25rem 1.5rem; border-radius: 12px; color: white; margin-bottom: 1.5rem;
+                display: flex; justify-content: space-between; align-items: center;
+                border: 1px solid rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.1);
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);'>
+        <div>
+            <h4 style='margin: 0; color: white; font-family: "Space Grotesk", sans-serif; letter-spacing: 0.05em; text-transform: uppercase;'>🤖 CUSTOMER INTELLIGENCE</h4>
+            <p style='margin: 0.25rem 0 0 0; opacity: 0.7; font-size: 0.8rem; font-family: "Inter", sans-serif; font-weight: 500;'>CUSTOMER: {selected_customer.upper()} | DEPT: {department.upper()}</p>
+        </div>
+        <div style='text-align: right;'>
+            <div style='font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif;'>Messages</div>
+            <div style='font-size: 1.5rem; font-weight: 700; color: #3B82F6; font-family: "Space Grotesk", sans-serif;'>{len(st.session_state.chat_messages)}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Render chat messages
+    render_chat_messages()
+
+    # Chat input
+    handle_chat_input(api_base_url, customer_id, selected_customer)
+
+
+def render_chat_messages():
+    """Render all chat messages with enhanced styling"""
+
+    if not st.session_state.chat_messages:
+        # Show welcome message - Business Intelligence Edition
+        st.markdown("""
+        <div style='text-align: center; padding: 3rem 2rem; color: #8B949E;'>
+            <div style='font-size: 3.5rem; margin-bottom: 1.5rem; filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.3));'>💬</div>
+            <h3 style='color: #FFFFFF; margin-bottom: 0.75rem; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.05em;'>Intelligence Command Interface</h3>
+            <p style='margin: 0; font-family: "Inter", sans-serif; font-size: 1rem; opacity: 0.8;'>Ask about customer insights, engagement patterns, or predictive analytics.</p>
+
+            <div style='margin-top: 2.5rem; display: flex; justify-content: center; gap: 1.25rem; flex-wrap: wrap;'>
+                <div style='background: rgba(22, 27, 34, 0.7); padding: 1rem 1.5rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 0.85rem; color: #E6EDF3; font-family: "Inter", sans-serif;'>
+                    <span style="color: #3B82F6; font-weight: 700;">▷</span> "What's the lead score for John?"
+                </div>
+                <div style='background: rgba(22, 27, 34, 0.7); padding: 1rem 1.5rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 0.85rem; color: #E6EDF3; font-family: "Inter", sans-serif;'>
+                    <span style="color: #3B82F6; font-weight: 700;">▷</span> "Analyze customer engagement trends"
+                </div>
+                <div style='background: rgba(22, 27, 34, 0.7); padding: 1rem 1.5rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 0.85rem; color: #E6EDF3; font-family: "Inter", sans-serif;'>
+                    <span style="color: #3B82F6; font-weight: 700;">▷</span> "Generate outreach strategy"
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        return
+
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+
+    for i, msg in enumerate(st.session_state.chat_messages):
+        is_ai = msg['role'] == 'assistant'
+        bubble_class = "bubble-ai" if is_ai else "bubble-user"
+        agent_name = 'AI Assistant' if is_ai else 'User'
+
+        st.markdown(f"""
+        <div style="display: flex; flex-direction: column; width: 100%; margin-bottom: 1rem;">
+            <div class="agent-info {'agent-name-ai' if is_ai else 'agent-name-user'}">
+                {f'🤖 {agent_name}' if is_ai else f'{agent_name} 👤'}
+                <span style='font-size: 0.7rem; opacity: 0.7; margin-left: 8px;'>
+                    {msg.get('timestamp', datetime.now().strftime('%H:%M'))}
+                </span>
+            </div>
+            <div class="chat-bubble {bubble_class}">
+                {msg['content']}
+
+                {render_reasoning_section(msg) if is_ai and msg.get('reasoning') else ''}
+                {render_sources_section(msg) if is_ai and msg.get('sources') else ''}
+                {render_actions_section(msg) if is_ai and msg.get('recommended_actions') else ''}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+def render_reasoning_section(msg: Dict[str, Any]) -> str:
+    """Render AI's reasoning section"""
+    if not msg.get('reasoning'):
+        return ""
+
+    return f"""
+    <div class="reasoning-section">
+        <strong>🧠 AI Reasoning:</strong><br>
+        {msg['reasoning']}
+    </div>
+    """
+
+
+def render_sources_section(msg: Dict[str, Any]) -> str:
+    """Render sources section"""
+    sources = msg.get('sources', [])
+    if not sources:
+        return ""
+
+    sources_html = "<br>".join([f"• {source}" for source in sources])
+    return f"""
+    <div class="sources-section">
+        <strong>📚 Knowledge Sources:</strong><br>
+        {sources_html}
+    </div>
+    """
+
+
+def render_actions_section(msg: Dict[str, Any]) -> str:
+    """Render recommended actions section"""
+    actions = msg.get('recommended_actions', [])
+    if not actions:
+        return ""
+
+    actions_html = "".join([f'<div style="margin: 6px 0; display: flex; align-items: center; gap: 8px;"><span style="color: #10b981; font-weight: bold;">✓</span> <span>{action.get("title", action) if isinstance(action, dict) else action}</span></div>'
+                               for action in actions])
+    return f"""
+    <div style="background: rgba(16, 185, 129, 0.05); border-radius: 8px; padding: 1rem; margin-top: 1rem;
+                font-size: 0.85rem; color: #E6EDF3; border-left: 3px solid #10b981; border: 1px solid rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981;">
+        <strong style="color: #10b981; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">Recommended Actions:</strong><br>
+        <div style="margin-top: 8px; opacity: 0.9;">
+            {actions_html}
+        </div>
+    </div>
+    """
+
+
+def handle_chat_input(api_base_url: str, customer_id: str, selected_customer: str):
+    """Handle chat input and API communication"""
+
+    # Input area - Tab-safe Form Implementation
+    with st.form(key="customer_chat_input_form", clear_on_submit=True):
+        col_in, col_btn = st.columns([4, 1])
+        with col_in:
+            user_input = st.text_input("Ask about customer insights, engagement patterns, or analytics...", 
+                                     placeholder="Ask about customer insights, engagement patterns, or analytics...", 
+                                     label_visibility="collapsed")
+        with col_btn:
+            submit = st.form_submit_button("Ask ✨", use_container_width=True)
+
+    if submit and user_input:
+        # Add user message immediately
+        user_msg = {
+            "role": "user",
+            "content": user_input,
+            "timestamp": datetime.now().strftime("%H:%M")
+        }
+        st.session_state.chat_messages.append(user_msg)
+
+        # Show thinking indicator
+        with st.spinner("🧠 AI is analyzing..."):
+            try:
+                # Call Customer Intelligence API
+                response = call_intelligence_api(
+                    api_base_url=api_base_url,
+                    message=user_input,
+                    customer_id=customer_id,
+                    selected_customer=selected_customer
+                )
+
+                if response and response.get('success'):
+                    # Add AI response
+                    ai_msg = {
+                        "role": "assistant",
+                        "content": response.get('message', 'No response received'),
+                        "reasoning": response.get('reasoning'),
+                        "sources": response.get('sources', []),
+                        "recommended_actions": response.get('recommended_actions', []),
+                        "timestamp": datetime.now().strftime("%H:%M"),
+                        "response_time_ms": response.get('response_time_ms', 0)
+                    }
+                    st.session_state.chat_messages.append(ai_msg)
+
+                    # Show success toast
+                    st.toast(f"✅ AI responded in {response.get('response_time_ms', 0)}ms")
+
+                else:
+                    # Handle API error
+                    error_msg = {
+                        "role": "assistant",
+                        "content": f"⚠️ Sorry, I encountered an issue: {response.get('detail', 'Unknown error')}",
+                        "timestamp": datetime.now().strftime("%H:%M")
+                    }
+                    st.session_state.chat_messages.append(error_msg)
+                    st.error("Failed to get response from AI")
+
+            except Exception as e:
+                # Handle connection error
+                error_msg = {
+                    "role": "assistant",
+                    "content": f"🔌 Connection error: {str(e)}. Make sure the API server is running on {api_base_url}",
+                    "timestamp": datetime.now().strftime("%H:%M")
+                }
+                st.session_state.chat_messages.append(error_msg)
+                st.error(f"Connection failed: {str(e)}")
+
+        # Rerun to show new messages
+        st.rerun()
+
+
+def call_intelligence_api(api_base_url: str, message: str, customer_id: str, selected_customer: str) -> Optional[Dict[str, Any]]:
+    """Make API call to Customer Intelligence chat endpoint"""
+
+    payload = {
+        "message": message,
+        "customer_id": customer_id,
+        "selected_customer_name": selected_customer if selected_customer != "-- Select a Customer --" else None,
+        "conversation_mode": "chat",
+        "include_context": True,
+        "stream": False
+    }
+
+    try:
+        response = requests.post(
+            f"{api_base_url}/chat/message",
+            json=payload,
+            timeout=30,  # 30 second timeout
+            headers={"Content-Type": "application/json"}
+        )
+
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        print(f"API request failed: {e}")
+        return {"success": False, "detail": str(e)}
+    except json.JSONDecodeError as e:
+        print(f"Failed to decode API response: {e}")
+        return {"success": False, "detail": "Invalid response format"}
+
+
+def search_knowledge_base(query: str, api_base_url: str) -> List[str]:
+    """Search the knowledge base for relevant information"""
+    try:
+        response = requests.get(
+            f"{api_base_url}/chat/knowledge/search",
+            params={"query": query, "limit": 5},
+            timeout=10,
+            headers={"Content-Type": "application/json"}
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            return [result.get('content', '') for result in data.get('results', [])]
+        return []
+        
+    except Exception as e:
+        print(f"Knowledge search failed: {e}")
+        return []
+
+
+# Legacy functions for backward compatibility
+def render_chat_interface_legacy():
+    """Legacy mock chat interface"""
+    render_chat_interface()
+
+
+def simulate_typing():
+    """Simulates a typing effect for better demo experience"""
+    with st.empty():
+        for i in range(3):
+            st.markdown(f"AI is thinking{'.' * (i+1)}")
+            time.sleep(0.5)
+
+
+# Export main function
+__all__ = ['render_chat_interface', 'simulate_typing', 'search_knowledge_base']

@@ -1,6 +1,13 @@
 """
 Competitive Intelligence Tracker - Wow Factor Feature #5
 Tracks market competition and provides strategic insights
+
+⚠️ DEPRECATION WARNING ⚠️
+This service is being consolidated into CompetitiveIntelligenceHub.
+Please migrate to: ghl_real_estate_ai.services.competitive_intelligence_hub
+
+Migration Guide: See COMPETITIVE_INTELLIGENCE_CONSOLIDATION_MIGRATION_GUIDE.md
+Target Removal: 2026-02-15
 """
 
 from dataclasses import asdict, dataclass
@@ -39,6 +46,16 @@ class CompetitiveIntelligenceService:
     """
 
     def __init__(self):
+        import warnings
+        warnings.warn(
+            "CompetitiveIntelligenceService is deprecated and will be removed in v3.0. "
+            "Please migrate to CompetitiveIntelligenceHub from "
+            "ghl_real_estate_ai.services.competitive_intelligence_hub. "
+            "See COMPETITIVE_INTELLIGENCE_CONSOLIDATION_MIGRATION_GUIDE.md for details.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
         self.known_competitors = self._load_competitor_database()
         self.win_loss_data = {}
 

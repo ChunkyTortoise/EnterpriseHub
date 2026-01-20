@@ -1,0 +1,415 @@
+# Denver Tech Hub & Corporate Relocation Market Configuration
+# Multi-Market Geographic Expansion - Configuration-driven market data
+# Major tech hub with aerospace, energy, and Fortune 500 headquarters
+
+# Basic Market Identification
+market_id: denver
+market_name: "Denver Metropolitan Area"
+market_type: tech_hub  # Primary market type
+state: CO
+region: Rocky Mountain West
+timezone: America/Denver
+mls_provider: "REColorado MLS"
+
+# Geographic Center
+coordinates: [39.7392, -104.9903]
+
+# Market Economic Indicators
+median_home_price: 565000
+price_appreciation_1y: 8.5
+inventory_days: 35
+
+# Market Specialization Configuration
+specializations:
+  primary_specialization: "Tech Hub and Corporate Relocation Excellence"
+  secondary_specializations:
+    - "Fortune 500 Executive Relocations (Comcast, Arrow Electronics)"
+    - "Tech Professional Services (Google, Amazon, Microsoft)"
+    - "Aerospace Industry Expertise (Lockheed Martin, Boeing)"
+    - "Energy Sector Corporate Moves (Antero Resources, DCP Midstream)"
+
+  unique_advantages:
+    - "Tech hub specialization with major corporate headquarters"
+    - "Aerospace industry corridor knowledge"
+    - "Mountain lifestyle and outdoor recreation expertise"
+    - "Corporate relocation program management"
+
+  target_client_types:
+    - "Tech executives and software engineers"
+    - "Fortune 500 corporate relocations"
+    - "Aerospace engineers and contractors"
+    - "Energy sector professionals"
+
+  expertise_tags:
+    - "tech_hub_specialist"
+    - "corporate_relocation"
+    - "aerospace_expertise"
+    - "energy_sector"
+    - "denver_specialist"
+    - "fortune_500_moves"
+
+  knowledge_base_path: "data/knowledge_base/denver_expertise.json"
+
+# Neighborhood Configurations
+neighborhoods:
+  - name: "Cherry Creek"
+    zone: "Central"
+    median_price: 1250000
+    price_trend_3m: 3.2
+    school_rating: 9.1
+    walkability_score: 75
+    coordinates: [39.7178, -104.9561]
+    appeal_scores:
+      luxury_appeal: 100
+      executive_appeal: 95
+      tech_appeal: 85
+      convenience_appeal: 90
+      lifestyle_appeal: 95
+    amenities:
+      - "Luxury Shopping District"
+      - "High-End Restaurants"
+      - "Executive Condos"
+      - "Art Galleries"
+      - "Cherry Creek Mall"
+    demographics:
+      age_median: 48
+      income_median: 285000
+      tech_professionals: 0.25
+      corporate_executives: 0.45
+    corporate_proximity:
+      google_boulder: 35
+      lockheed_martin: 25
+      comcast: 15
+      arrow_electronics: 20
+
+  - name: "LoDo (Lower Downtown)"
+    zone: "Downtown"
+    median_price: 675000
+    price_trend_3m: 5.8
+    school_rating: 7.2
+    walkability_score: 95
+    coordinates: [39.7539, -104.9999]
+    appeal_scores:
+      tech_appeal: 100
+      lifestyle_appeal: 95
+      startup_appeal: 90
+      convenience_appeal: 100
+      culture_appeal: 90
+    amenities:
+      - "Union Station"
+      - "Tech Startup Hub"
+      - "Coors Field"
+      - "Craft Breweries"
+      - "Light Rail Access"
+    demographics:
+      age_median: 32
+      income_median: 125000
+      tech_professionals: 0.65
+      startup_employees: 0.30
+    corporate_proximity:
+      google_boulder: 40
+      lockheed_martin: 30
+      comcast: 10
+      arrow_electronics: 25
+
+  - name: "Boulder"
+    zone: "Northwest"
+    median_price: 825000
+    price_trend_3m: 6.5
+    school_rating: 9.3
+    walkability_score: 65
+    coordinates: [40.0150, -105.2705]
+    appeal_scores:
+      tech_appeal: 100
+      lifestyle_appeal: 100
+      family_appeal: 90
+      sustainability_appeal: 95
+      startup_appeal: 85
+    amenities:
+      - "University of Colorado"
+      - "Google Campus"
+      - "Pearl Street Mall"
+      - "Outdoor Recreation"
+      - "Tech Startup Scene"
+    demographics:
+      age_median: 35
+      income_median: 155000
+      tech_professionals: 0.70
+      university_affiliated: 0.25
+    corporate_proximity:
+      google_boulder: 5
+      lockheed_martin: 45
+      comcast: 35
+      arrow_electronics: 40
+
+  - name: "Highlands Ranch"
+    zone: "South"
+    median_price: 625000
+    price_trend_3m: 4.8
+    school_rating: 9.5
+    walkability_score: 40
+    coordinates: [39.5547, -104.9697]
+    appeal_scores:
+      family_appeal: 100
+      executive_appeal: 90
+      tech_appeal: 80
+      value_appeal: 85
+      commute_appeal: 75
+    amenities:
+      - "Master-Planned Community"
+      - "Top-Rated Schools"
+      - "Golf Courses"
+      - "Recreation Centers"
+      - "Family-Oriented"
+    demographics:
+      age_median: 42
+      income_median: 165000
+      tech_professionals: 0.40
+      corporate_executives: 0.35
+    corporate_proximity:
+      google_boulder: 50
+      lockheed_martin: 15
+      comcast: 25
+      arrow_electronics: 20
+
+  - name: "Westminster"
+    zone: "Northwest"
+    median_price: 485000
+    price_trend_3m: 7.2
+    school_rating: 8.4
+    walkability_score: 55
+    coordinates: [39.8367, -105.0372]
+    appeal_scores:
+      tech_appeal: 85
+      family_appeal: 85
+      value_appeal: 90
+      commute_appeal: 80
+      growth_appeal: 85
+    amenities:
+      - "Growing Tech Corridor"
+      - "Good Schools"
+      - "Family Neighborhoods"
+      - "Transit Access"
+      - "Outdoor Access"
+    demographics:
+      age_median: 38
+      income_median: 95000
+      tech_professionals: 0.50
+      young_families: 0.40
+    corporate_proximity:
+      google_boulder: 25
+      lockheed_martin: 30
+      comcast: 20
+      arrow_electronics: 25
+
+  - name: "RiNo (River North Art District)"
+    zone: "Northeast"
+    median_price: 525000
+    price_trend_3m: 8.8
+    school_rating: 6.8
+    walkability_score: 80
+    coordinates: [39.7736, -104.9825]
+    appeal_scores:
+      tech_appeal: 90
+      arts_appeal: 100
+      startup_appeal: 95
+      lifestyle_appeal: 90
+      culture_appeal: 95
+    amenities:
+      - "Arts District"
+      - "Street Art & Murals"
+      - "Tech Startups"
+      - "Breweries & Restaurants"
+      - "Creative Community"
+    demographics:
+      age_median: 31
+      income_median: 85000
+      tech_professionals: 0.55
+      creative_professionals: 0.40
+    corporate_proximity:
+      google_boulder: 38
+      lockheed_martin: 35
+      comcast: 15
+      arrow_electronics: 30
+
+  - name: "Stapleton"
+    zone: "Northeast"
+    median_price: 585000
+    price_trend_3m: 5.5
+    school_rating: 8.7
+    walkability_score: 60
+    coordinates: [39.7719, -104.8897]
+    appeal_scores:
+      family_appeal: 95
+      tech_appeal: 80
+      sustainability_appeal: 90
+      convenience_appeal: 85
+      growth_appeal: 90
+    amenities:
+      - "Master-Planned Community"
+      - "Central Park"
+      - "Light Rail Station"
+      - "Mixed-Use Development"
+      - "Sustainable Design"
+    demographics:
+      age_median: 36
+      income_median: 125000
+      tech_professionals: 0.45
+      young_families: 0.50
+    corporate_proximity:
+      google_boulder: 42
+      lockheed_martin: 25
+      comcast: 20
+      arrow_electronics: 15
+
+  - name: "Golden"
+    zone: "West"
+    median_price: 745000
+    price_trend_3m: 4.2
+    school_rating: 8.9
+    walkability_score: 70
+    coordinates: [39.7555, -105.2211]
+    appeal_scores:
+      lifestyle_appeal: 100
+      family_appeal: 90
+      tech_appeal: 75
+      sustainability_appeal: 95
+      outdoor_appeal: 100
+    amenities:
+      - "Colorado School of Mines"
+      - "Historic Downtown"
+      - "Outdoor Recreation Hub"
+      - "Coors Brewery"
+      - "Mountain Access"
+    demographics:
+      age_median: 39
+      income_median: 135000
+      tech_professionals: 0.35
+      outdoor_enthusiasts: 0.60
+    corporate_proximity:
+      google_boulder: 30
+      lockheed_martin: 20
+      comcast: 25
+      arrow_electronics: 30
+
+# Major Employer Configurations
+employers:
+  - employer_id: "google_boulder"
+    name: "Google (Boulder Campus)"
+    industry: "Technology"
+    location: "Boulder"
+    coordinates: [40.0150, -105.2705]
+    employee_count: 3500
+    preferred_neighborhoods:
+      - "Boulder"
+      - "Westminster"
+      - "Golden"
+      - "LoDo (Lower Downtown)"
+    average_salary_range: [125000, 285000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q2", "Q3"]
+
+  - employer_id: "lockheed_martin"
+    name: "Lockheed Martin"
+    industry: "Aerospace & Defense"
+    location: "Littleton"
+    coordinates: [39.6133, -105.0178]
+    employee_count: 8500
+    preferred_neighborhoods:
+      - "Highlands Ranch"
+      - "Cherry Creek"
+      - "Stapleton"
+      - "Golden"
+    average_salary_range: [95000, 205000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "comcast"
+    name: "Comcast Corporation"
+    industry: "Telecommunications/Media"
+    location: "Denver Tech Center"
+    coordinates: [39.5890, -104.8755]
+    employee_count: 4200
+    preferred_neighborhoods:
+      - "Cherry Creek"
+      - "Highlands Ranch"
+      - "LoDo (Lower Downtown)"
+      - "Stapleton"
+    average_salary_range: [85000, 185000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2"]
+
+  - employer_id: "arrow_electronics"
+    name: "Arrow Electronics"
+    industry: "Technology Distribution"
+    location: "Centennial"
+    coordinates: [39.5807, -104.8756]
+    employee_count: 3000
+    preferred_neighborhoods:
+      - "Highlands Ranch"
+      - "Cherry Creek"
+      - "Stapleton"
+      - "Westminster"
+    average_salary_range: [75000, 165000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q2", "Q4"]
+
+  - employer_id: "amazon_denver"
+    name: "Amazon (Denver Hub)"
+    industry: "Technology/E-commerce"
+    location: "Denver Tech Center"
+    coordinates: [39.5890, -104.8755]
+    employee_count: 2800
+    preferred_neighborhoods:
+      - "LoDo (Lower Downtown)"
+      - "RiNo (River North Art District)"
+      - "Cherry Creek"
+      - "Boulder"
+    average_salary_range: [115000, 225000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q2", "Q3"]
+
+  - employer_id: "microsoft_denver"
+    name: "Microsoft Corporation"
+    industry: "Technology"
+    location: "Westminster"
+    coordinates: [39.8367, -105.0372]
+    employee_count: 1800
+    preferred_neighborhoods:
+      - "Westminster"
+      - "Boulder"
+      - "LoDo (Lower Downtown)"
+      - "RiNo (River North Art District)"
+    average_salary_range: [135000, 245000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "boeing_denver"
+    name: "Boeing Company"
+    industry: "Aerospace"
+    location: "Aurora"
+    coordinates: [39.7294, -104.8319]
+    employee_count: 2200
+    preferred_neighborhoods:
+      - "Stapleton"
+      - "Cherry Creek"
+      - "Highlands Ranch"
+      - "Golden"
+    average_salary_range: [90000, 195000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2"]
+
+# Configuration Metadata
+config_version: "1.0"
+last_updated: "2026-01-18T10:00:00Z"
+active: true
+
+# Demographics Data
+demographics:
+  population: 2963821
+  median_age: 36.1
+  median_household_income: 78285
+  college_education_rate: 0.45
+  employment_rate: 0.95
+  population_growth_rate: 0.028
+  diversity_index: 0.68
