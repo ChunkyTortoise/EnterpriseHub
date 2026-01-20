@@ -1,0 +1,430 @@
+# Seattle Tech Giants & Aerospace Market Configuration
+# Multi-Market Geographic Expansion - Configuration-driven market data
+# Major tech hub with Amazon, Microsoft headquarters and Boeing aerospace
+
+# Basic Market Identification
+market_id: seattle
+market_name: "Seattle Metropolitan Area"
+market_type: tech_headquarters  # Primary market type
+state: WA
+region: Pacific Northwest
+timezone: America/Los_Angeles
+mls_provider: "Northwest MLS"
+
+# Geographic Center
+coordinates: [47.6062, -122.3321]
+
+# Market Economic Indicators
+median_home_price: 825000
+price_appreciation_1y: 6.2
+inventory_days: 42
+
+# Market Specialization Configuration
+specializations:
+  primary_specialization: "Tech Giants and Aerospace Industry Excellence"
+  secondary_specializations:
+    - "Amazon and Microsoft Executive Relocations"
+    - "Boeing Aerospace Professional Services"
+    - "Tech Startup and Venture Capital Ecosystem"
+    - "International Corporate Transfers"
+
+  unique_advantages:
+    - "Deep tech ecosystem expertise (Amazon, Microsoft headquarters)"
+    - "Aerospace industry specialization (Boeing)"
+    - "International business and relocation services"
+    - "Pacific Rim corporate connections"
+
+  target_client_types:
+    - "Tech executives and software engineers (FAANG companies)"
+    - "Aerospace engineers and Boeing employees"
+    - "Startup founders and venture capital professionals"
+    - "International corporate transfers"
+
+  expertise_tags:
+    - "tech_headquarters"
+    - "aerospace_expertise"
+    - "amazon_specialist"
+    - "microsoft_specialist"
+    - "seattle_specialist"
+    - "international_relocation"
+
+  knowledge_base_path: "data/knowledge_base/seattle_expertise.json"
+
+# Neighborhood Configurations
+neighborhoods:
+  - name: "Bellevue"
+    zone: "Eastside"
+    median_price: 1350000
+    price_trend_3m: 3.8
+    school_rating: 9.6
+    walkability_score: 60
+    coordinates: [47.6101, -122.2015]
+    appeal_scores:
+      tech_appeal: 100
+      executive_appeal: 95
+      family_appeal: 95
+      luxury_appeal: 90
+      commute_appeal: 90
+    amenities:
+      - "Microsoft Headquarters Proximity"
+      - "Top-Rated Schools"
+      - "Bellevue Square"
+      - "Executive Housing"
+      - "Tech Corridor"
+    demographics:
+      age_median: 42
+      income_median: 195000
+      tech_professionals: 0.65
+      international_residents: 0.30
+    corporate_proximity:
+      microsoft_redmond: 10
+      amazon_seattle: 20
+      boeing_everett: 45
+      google_kirkland: 8
+
+  - name: "Redmond"
+    zone: "Eastside"
+    median_price: 1150000
+    price_trend_3m: 4.5
+    school_rating: 9.4
+    walkability_score: 45
+    coordinates: [47.6740, -122.1215]
+    appeal_scores:
+      tech_appeal: 100
+      family_appeal: 100
+      executive_appeal: 90
+      commute_appeal: 100
+      value_appeal: 80
+    amenities:
+      - "Microsoft Campus"
+      - "Nintendo America"
+      - "Excellent Schools"
+      - "Family Communities"
+      - "Tech Hub"
+    demographics:
+      age_median: 38
+      income_median: 165000
+      tech_professionals: 0.75
+      microsoft_employees: 0.40
+    corporate_proximity:
+      microsoft_redmond: 5
+      amazon_seattle: 25
+      boeing_everett: 50
+      google_kirkland: 15
+
+  - name: "Kirkland"
+    zone: "Eastside"
+    median_price: 985000
+    price_trend_3m: 5.2
+    school_rating: 9.1
+    walkability_score: 55
+    coordinates: [47.6769, -122.2069]
+    appeal_scores:
+      tech_appeal: 95
+      family_appeal: 90
+      lifestyle_appeal: 90
+      commute_appeal: 85
+      value_appeal: 85
+    amenities:
+      - "Google Campus"
+      - "Lake Washington Waterfront"
+      - "Good Schools"
+      - "Tech Companies"
+      - "Marina District"
+    demographics:
+      age_median: 40
+      income_median: 145000
+      tech_professionals: 0.70
+      google_employees: 0.25
+    corporate_proximity:
+      microsoft_redmond: 15
+      amazon_seattle: 22
+      boeing_everett: 48
+      google_kirkland: 5
+
+  - name: "Capitol Hill"
+    zone: "Central Seattle"
+    median_price: 685000
+    price_trend_3m: 7.8
+    school_rating: 7.5
+    walkability_score: 95
+    coordinates: [47.6205, -122.3212]
+    appeal_scores:
+      tech_appeal: 85
+      lifestyle_appeal: 100
+      arts_appeal: 100
+      startup_appeal: 95
+      culture_appeal: 100
+    amenities:
+      - "Vibrant Arts Scene"
+      - "Tech Startups"
+      - "Walkable Neighborhood"
+      - "Restaurants & Bars"
+      - "Urban Living"
+    demographics:
+      age_median: 32
+      income_median: 95000
+      tech_professionals: 0.55
+      creative_professionals: 0.35
+    corporate_proximity:
+      microsoft_redmond: 25
+      amazon_seattle: 8
+      boeing_everett: 45
+      google_kirkland: 30
+
+  - name: "South Lake Union"
+    zone: "Central Seattle"
+    median_price: 775000
+    price_trend_3m: 6.5
+    school_rating: 7.2
+    walkability_score: 90
+    coordinates: [47.6205, -122.3370]
+    appeal_scores:
+      tech_appeal: 100
+      startup_appeal: 100
+      convenience_appeal: 95
+      lifestyle_appeal: 85
+      commute_appeal: 100
+    amenities:
+      - "Amazon Campus"
+      - "Tech Hub"
+      - "High-Rise Living"
+      - "Streetcar Access"
+      - "New Development"
+    demographics:
+      age_median: 30
+      income_median: 135000
+      tech_professionals: 0.80
+      amazon_employees: 0.50
+    corporate_proximity:
+      microsoft_redmond: 30
+      amazon_seattle: 5
+      boeing_everett: 50
+      google_kirkland: 35
+
+  - name: "Mercer Island"
+    zone: "Eastside"
+    median_price: 1850000
+    price_trend_3m: 2.5
+    school_rating: 9.8
+    walkability_score: 40
+    coordinates: [47.5707, -122.2221]
+    appeal_scores:
+      executive_appeal: 100
+      luxury_appeal: 100
+      family_appeal: 95
+      privacy_appeal: 95
+      commute_appeal: 80
+    amenities:
+      - "Luxury Island Community"
+      - "Top Schools in State"
+      - "Executive Homes"
+      - "Private Beaches"
+      - "Exclusive Community"
+    demographics:
+      age_median: 48
+      income_median: 385000
+      tech_executives: 0.45
+      high_net_worth: 0.70
+    corporate_proximity:
+      microsoft_redmond: 20
+      amazon_seattle: 15
+      boeing_everett: 55
+      google_kirkland: 25
+
+  - name: "Ballard"
+    zone: "Northwest Seattle"
+    median_price: 625000
+    price_trend_3m: 8.8
+    school_rating: 8.2
+    walkability_score: 85
+    coordinates: [47.6722, -122.3838]
+    appeal_scores:
+      tech_appeal: 80
+      lifestyle_appeal: 95
+      arts_appeal: 90
+      startup_appeal: 85
+      maritime_appeal: 100
+    amenities:
+      - "Maritime Heritage"
+      - "Craft Breweries"
+      - "Farmers Market"
+      - "Waterfront Access"
+      - "Tech Workers Hub"
+    demographics:
+      age_median: 35
+      income_median: 115000
+      tech_professionals: 0.60
+      maritime_workers: 0.15
+    corporate_proximity:
+      microsoft_redmond: 35
+      amazon_seattle: 15
+      boeing_everett: 35
+      google_kirkland: 40
+
+  - name: "Fremont"
+    zone: "North Seattle"
+    median_price: 565000
+    price_trend_3m: 9.2
+    school_rating: 8.0
+    walkability_score: 80
+    coordinates: [47.6517, -122.3493]
+    appeal_scores:
+      tech_appeal: 75
+      arts_appeal: 95
+      startup_appeal: 80
+      community_appeal: 90
+      value_appeal: 85
+    amenities:
+      - "Artistic Community"
+      - "Fremont Troll"
+      - "Sunday Market"
+      - "Unique Character"
+      - "Adobe Systems Nearby"
+    demographics:
+      age_median: 37
+      income_median: 95000
+      tech_professionals: 0.50
+      artists_creatives: 0.30
+    corporate_proximity:
+      microsoft_redmond: 40
+      amazon_seattle: 20
+      boeing_everett: 40
+      google_kirkland: 45
+
+# Major Employer Configurations
+employers:
+  - employer_id: "amazon_seattle"
+    name: "Amazon"
+    industry: "Technology/E-commerce"
+    location: "South Lake Union, Seattle"
+    coordinates: [47.6205, -122.3370]
+    employee_count: 75000
+    preferred_neighborhoods:
+      - "South Lake Union"
+      - "Bellevue"
+      - "Capitol Hill"
+      - "Mercer Island"
+    average_salary_range: [145000, 485000]
+    relocation_frequency: "very_high"
+    hiring_seasons: ["Q1", "Q2", "Q3", "Q4"]
+
+  - employer_id: "microsoft_redmond"
+    name: "Microsoft Corporation"
+    industry: "Technology"
+    location: "Redmond"
+    coordinates: [47.6740, -122.1215]
+    employee_count: 55000
+    preferred_neighborhoods:
+      - "Redmond"
+      - "Bellevue"
+      - "Kirkland"
+      - "Mercer Island"
+    average_salary_range: [135000, 425000]
+    relocation_frequency: "very_high"
+    hiring_seasons: ["Q1", "Q2", "Q3"]
+
+  - employer_id: "boeing_everett"
+    name: "Boeing Company"
+    industry: "Aerospace"
+    location: "Everett"
+    coordinates: [47.9790, -122.2021]
+    employee_count: 32000
+    preferred_neighborhoods:
+      - "Bellevue"
+      - "Redmond"
+      - "Kirkland"
+      - "Mercer Island"
+    average_salary_range: [95000, 225000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2"]
+
+  - employer_id: "google_kirkland"
+    name: "Google (Kirkland Campus)"
+    industry: "Technology"
+    location: "Kirkland"
+    coordinates: [47.6769, -122.2069]
+    employee_count: 4500
+    preferred_neighborhoods:
+      - "Kirkland"
+      - "Bellevue"
+      - "Redmond"
+      - "Capitol Hill"
+    average_salary_range: [155000, 385000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "facebook_seattle"
+    name: "Meta (Facebook)"
+    industry: "Technology"
+    location: "South Lake Union, Seattle"
+    coordinates: [47.6205, -122.3370]
+    employee_count: 8000
+    preferred_neighborhoods:
+      - "South Lake Union"
+      - "Capitol Hill"
+      - "Bellevue"
+      - "Ballard"
+    average_salary_range: [165000, 395000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q2", "Q3"]
+
+  - employer_id: "salesforce_seattle"
+    name: "Salesforce"
+    industry: "Technology/CRM"
+    location: "Bellevue"
+    coordinates: [47.6101, -122.2015]
+    employee_count: 3200
+    preferred_neighborhoods:
+      - "Bellevue"
+      - "South Lake Union"
+      - "Kirkland"
+      - "Capitol Hill"
+    average_salary_range: [125000, 285000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "uber_seattle"
+    name: "Uber Technologies"
+    industry: "Technology/Transportation"
+    location: "South Lake Union, Seattle"
+    coordinates: [47.6205, -122.3370]
+    employee_count: 2800
+    preferred_neighborhoods:
+      - "South Lake Union"
+      - "Capitol Hill"
+      - "Ballard"
+      - "Fremont"
+    average_salary_range: [135000, 325000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q2", "Q4"]
+
+  - employer_id: "expedia_bellevue"
+    name: "Expedia Group"
+    industry: "Technology/Travel"
+    location: "Bellevue"
+    coordinates: [47.6101, -122.2015]
+    employee_count: 6500
+    preferred_neighborhoods:
+      - "Bellevue"
+      - "Redmond"
+      - "Kirkland"
+      - "South Lake Union"
+    average_salary_range: [115000, 245000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q2"]
+
+# Configuration Metadata
+config_version: "1.0"
+last_updated: "2026-01-18T10:00:00Z"
+active: true
+
+# Demographics Data
+demographics:
+  population: 3979845
+  median_age: 37.3
+  median_household_income: 84665
+  college_education_rate: 0.48
+  employment_rate: 0.94
+  population_growth_rate: 0.022
+  diversity_index: 0.65

@@ -55,14 +55,20 @@ cache = get_cache_service()
 
 class ModelType(Enum):
     """Types of ML models in the revenue optimization system."""
-    
+
     LEAD_SCORING = "lead_scoring"
-    PRICE_ELASTICITY = "price_elasticity"  
+    PRICE_ELASTICITY = "price_elasticity"
     DEMAND_FORECASTING = "demand_forecasting"
     CUSTOMER_LTV = "customer_ltv"
     CHURN_PREDICTION = "churn_prediction"
     UPSELL_PREDICTION = "upsell_prediction"
     CONVERSION_OPTIMIZATION = "conversion_optimization"
+    # Neural Property Matching components
+    NEURAL_PROPERTY_MATCHER = "neural_property_matcher"
+    NEURAL_FEATURE_ENGINEER = "neural_feature_engineer"
+    NEURAL_INFERENCE_ENGINE = "neural_inference_engine"
+    PRIVACY_PRESERVING_ML = "privacy_preserving_ml"
+    VR_AR_ANALYTICS = "vr_ar_analytics"
 
 
 class ModelStatus(Enum):
@@ -460,16 +466,19 @@ class FeatureEngineer:
 
 class MLPipelineOrchestrator:
     """Main ML pipeline orchestrator for automated model training and deployment."""
-    
+
     def __init__(self):
         self.model_registry = ModelRegistry()
         self.feature_engineer = FeatureEngineer()
         self.active_training_jobs: Dict[str, TrainingJob] = {}
         self.cache = cache
-        
+
         # Default model configurations
         self.default_configs = self._initialize_default_configs()
-        
+
+        # Neural ML integration (lazy loaded)
+        self._neural_integrator = None
+
         logger.info("MLPipelineOrchestrator initialized")
     
     def _initialize_default_configs(self) -> Dict[ModelType, ModelConfig]:
@@ -667,6 +676,83 @@ class MLPipelineOrchestrator:
                         model_metrics.next_retrain_scheduled = datetime.now() + timedelta(
                             days=config.retrain_frequency_days
                         )
+
+    @property
+    def neural_integrator(self):
+        """Lazy-loaded neural ML integrator."""
+        if self._neural_integrator is None:
+            try:
+                from ghl_real_estate_ai.ml.neural_ml_integration import create_neural_ml_integrator
+                self._neural_integrator = create_neural_ml_integrator(self)
+                logger.info("Neural ML integrator loaded successfully")
+            except ImportError as e:
+                logger.warning(f"Neural ML integration not available: {e}")
+                self._neural_integrator = None
+        return self._neural_integrator
+
+    def supports_neural_models(self) -> bool:
+        """Check if neural models are supported."""
+        return self.neural_integrator is not None
+
+    async def train_neural_model(
+        self,
+        neural_model_type: str,
+        training_data: Dict[str, Any],
+        custom_config: Optional[Any] = None,
+        location_id: str = ""
+    ) -> Optional[TrainingJob]:
+        """Train neural models using the neural integrator."""
+
+        if not self.supports_neural_models():
+            logger.error("Neural models not supported - missing dependencies")
+            return None
+
+        try:
+            from ghl_real_estate_ai.ml.neural_ml_integration import NeuralModelType
+
+            # Convert string to NeuralModelType enum
+            neural_type = None
+            for nt in NeuralModelType:
+                if nt.value == neural_model_type:
+                    neural_type = nt
+                    break
+
+            if not neural_type:
+                logger.error(f"Unsupported neural model type: {neural_model_type}")
+                return None
+
+            return await self.neural_integrator.train_neural_model(
+                neural_type, training_data, custom_config, location_id
+            )
+        except Exception as e:
+            logger.error(f"Failed to train neural model: {e}")
+            return None
+
+    async def get_neural_inference_engine(self):
+        """Get neural inference engine for real-time predictions."""
+        if not self.supports_neural_models():
+            return None
+        return await self.neural_integrator.get_neural_inference_engine()
+
+    async def get_vr_ar_analytics_engine(self):
+        """Get VR/AR analytics engine for spatial interaction tracking."""
+        if not self.supports_neural_models():
+            return None
+        return await self.neural_integrator.get_vr_ar_analytics_engine()
+
+    def supports_model_type(self, model_type: str) -> bool:
+        """Check if a model type is supported (including neural models)."""
+
+        # Check standard model types
+        standard_types = [mt.value for mt in ModelType]
+        if model_type in standard_types:
+            return True
+
+        # Check neural model types
+        if self.supports_neural_models():
+            return self.neural_integrator.supports_neural_model_type(model_type)
+
+        return False
 
 
 # Factory function

@@ -1,0 +1,558 @@
+"""
+Enhanced Competitive Intelligence Engine - Event Bus Foundation
+
+This module implements the central event coordination system for the Enhanced 
+Competitive Intelligence Engine, enabling seamless communication between:
+- AI/ML Enhancement Pipeline
+- Advanced Analytics Pipeline  
+- Integration Distribution Pipeline
+
+Author: Claude
+Date: January 2026
+"""
+
+import asyncio
+import json
+import logging
+from dataclasses import dataclass, asdict
+from datetime import datetime, timezone
+from enum import Enum, auto
+from typing import Any, Callable, Dict, List, Optional, Set, Union
+from uuid import uuid4
+
+import redis.asyncio as redis
+from pydantic import BaseModel
+
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+
+class EventType(Enum):
+    """Event types for the competitive intelligence system."""
+    
+    # AI/ML Enhancement Events
+    PREDICTION_GENERATED = auto()
+    DEEP_LEARNING_PREDICTION = auto() 
+    COMPUTER_VISION_DETECTED = auto()
+    NLG_REPORT_GENERATED = auto()
+    RL_RESPONSE_OPTIMIZED = auto()
+    ANOMALY_DETECTED = auto()
+    
+    # Advanced Analytics Events
+    EXECUTIVE_SUMMARY_CREATED = auto()
+    LANDSCAPE_MAPPED = auto()
+    MARKET_SHARE_CALCULATED = auto()
+    STRATEGIC_PATTERN_IDENTIFIED = auto()
+    DASHBOARD_UPDATED = auto()
+    REALTIME_STREAM_EVENT = auto()
+    
+    # Integration Ecosystem Events  
+    CRM_SYNC_REQUESTED = auto()
+    CRM_SYNC_COMPLETED = auto()
+    WEBHOOK_TRIGGERED = auto()
+    SLACK_NOTIFICATION_SENT = auto()
+    OAUTH_TOKEN_REFRESHED = auto()
+    INTEGRATION_ERROR = auto()
+    
+    # Core Intelligence Events
+    COMPETITOR_ACTIVITY_DETECTED = auto()
+    INTELLIGENCE_INSIGHT_CREATED = auto()
+    THREAT_LEVEL_CHANGED = auto()
+    OPPORTUNITY_IDENTIFIED = auto()
+    ALERT_TRIGGERED = auto()
+
+
+class EventPriority(Enum):
+    """Priority levels for event processing."""
+    CRITICAL = "critical"
+    HIGH = "high" 
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+@dataclass
+class Event:
+    """Core event structure for the competitive intelligence system."""
+    
+    id: str
+    type: EventType
+    priority: EventPriority
+    timestamp: datetime
+    source_system: str
+    data: Dict[str, Any]
+    correlation_id: Optional[str] = None
+    ttl_seconds: Optional[int] = None
+    retry_count: int = 0
+    max_retries: int = 3
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert event to dictionary for serialization."""
+        return {
+            "id": self.id,
+            "type": self.type.name,
+            "priority": self.priority.value, 
+            "timestamp": self.timestamp.isoformat(),
+            "source_system": self.source_system,
+            "data": self.data,
+            "correlation_id": self.correlation_id,
+            "ttl_seconds": self.ttl_seconds,
+            "retry_count": self.retry_count,
+            "max_retries": self.max_retries
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Event":
+        """Create event from dictionary."""
+        return cls(
+            id=data["id"],
+            type=EventType[data["type"]],
+            priority=EventPriority(data["priority"]),
+            timestamp=datetime.fromisoformat(data["timestamp"]),
+            source_system=data["source_system"],
+            data=data["data"],
+            correlation_id=data.get("correlation_id"),
+            ttl_seconds=data.get("ttl_seconds"),
+            retry_count=data.get("retry_count", 0),
+            max_retries=data.get("max_retries", 3)
+        )
+
+
+class EventHandler:
+    """Base class for event handlers."""
+    
+    def __init__(self, name: str, event_types: List[EventType]):
+        self.name = name
+        self.event_types = set(event_types)
+        self.is_running = False
+    
+    async def handle(self, event: Event) -> bool:
+        """
+        Handle an event. Return True if successful, False otherwise.
+        
+        Args:
+            event: The event to handle
+            
+        Returns:
+            bool: True if handled successfully, False otherwise
+        """
+        raise NotImplementedError
+    
+    async def start(self):
+        """Start the event handler."""
+        self.is_running = True
+        logger.info(f"Event handler {self.name} started")
+    
+    async def stop(self):
+        """Stop the event handler."""
+        self.is_running = False
+        logger.info(f"Event handler {self.name} stopped")
+
+
+class EventBus:
+    """
+    Central event bus for the Enhanced Competitive Intelligence Engine.
+    
+    Provides:
+    - Redis-backed event distribution
+    - Priority-based event processing
+    - Retry logic for failed events
+    - Correlation tracking for distributed operations
+    - Real-time streaming capabilities
+    """
+    
+    def __init__(
+        self,
+        redis_url: str = "redis://localhost:6379",
+        event_channel: str = "competitive_intelligence_events",
+        retry_channel: str = "competitive_intelligence_retries"
+    ):
+        self.redis_url = redis_url
+        self.event_channel = event_channel
+        self.retry_channel = retry_channel
+        
+        # Event handlers registry
+        self.handlers: Dict[str, EventHandler] = {}
+        self.event_type_handlers: Dict[EventType, Set[str]] = {}
+        
+        # Redis connections
+        self.redis_client: Optional[redis.Redis] = None
+        self.pubsub: Optional[redis.client.PubSub] = None
+        
+        # Processing state
+        self.is_running = False
+        self.processing_tasks: Set[asyncio.Task] = set()
+        
+        # Metrics
+        self.events_published = 0
+        self.events_processed = 0
+        self.events_failed = 0
+        self.events_retried = 0
+        
+        logger.info("EventBus initialized")
+    
+    async def start(self):
+        """Start the event bus."""
+        if self.is_running:
+            logger.warning("EventBus is already running")
+            return
+        
+        try:
+            # Initialize Redis connections
+            self.redis_client = redis.from_url(self.redis_url)
+            await self.redis_client.ping()
+            
+            self.pubsub = self.redis_client.pubsub()
+            await self.pubsub.subscribe(self.event_channel, self.retry_channel)
+            
+            # Start event handlers
+            for handler in self.handlers.values():
+                await handler.start()
+            
+            # Start event processing
+            self.is_running = True
+            processing_task = asyncio.create_task(self._process_events())
+            self.processing_tasks.add(processing_task)
+            
+            logger.info("EventBus started successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to start EventBus: {e}")
+            await self.stop()
+            raise
+    
+    async def stop(self):
+        """Stop the event bus."""
+        self.is_running = False
+        
+        # Stop processing tasks
+        for task in self.processing_tasks:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+        self.processing_tasks.clear()
+        
+        # Stop event handlers
+        for handler in self.handlers.values():
+            try:
+                await handler.stop()
+            except Exception as e:
+                logger.error(f"Error stopping handler {handler.name}: {e}")
+        
+        # Close Redis connections
+        if self.pubsub:
+            await self.pubsub.unsubscribe()
+            await self.pubsub.close()
+        
+        if self.redis_client:
+            await self.redis_client.close()
+        
+        logger.info("EventBus stopped")
+    
+    def register_handler(self, handler: EventHandler):
+        """Register an event handler."""
+        if handler.name in self.handlers:
+            raise ValueError(f"Handler {handler.name} is already registered")
+        
+        self.handlers[handler.name] = handler
+        
+        # Update event type mapping
+        for event_type in handler.event_types:
+            if event_type not in self.event_type_handlers:
+                self.event_type_handlers[event_type] = set()
+            self.event_type_handlers[event_type].add(handler.name)
+        
+        logger.info(f"Registered event handler: {handler.name}")
+    
+    def unregister_handler(self, handler_name: str):
+        """Unregister an event handler."""
+        if handler_name not in self.handlers:
+            logger.warning(f"Handler {handler_name} is not registered")
+            return
+        
+        handler = self.handlers.pop(handler_name)
+        
+        # Remove from event type mapping
+        for event_type in handler.event_types:
+            if event_type in self.event_type_handlers:
+                self.event_type_handlers[event_type].discard(handler_name)
+                if not self.event_type_handlers[event_type]:
+                    del self.event_type_handlers[event_type]
+        
+        logger.info(f"Unregistered event handler: {handler_name}")
+    
+    async def publish(
+        self,
+        event_type: EventType,
+        data: Dict[str, Any],
+        source_system: str,
+        priority: EventPriority = EventPriority.MEDIUM,
+        correlation_id: Optional[str] = None,
+        ttl_seconds: Optional[int] = None
+    ) -> str:
+        """
+        Publish an event to the event bus.
+        
+        Args:
+            event_type: Type of event
+            data: Event data
+            source_system: System publishing the event
+            priority: Event priority
+            correlation_id: Correlation ID for tracking related events
+            ttl_seconds: Time-to-live in seconds
+            
+        Returns:
+            str: Event ID
+        """
+        if not self.redis_client:
+            raise RuntimeError("EventBus is not started")
+        
+        event = Event(
+            id=str(uuid4()),
+            type=event_type,
+            priority=priority,
+            timestamp=datetime.now(timezone.utc),
+            source_system=source_system,
+            data=data,
+            correlation_id=correlation_id,
+            ttl_seconds=ttl_seconds
+        )
+        
+        try:
+            # Serialize and publish event
+            event_data = json.dumps(event.to_dict())
+            await self.redis_client.publish(self.event_channel, event_data)
+            
+            self.events_published += 1
+            
+            logger.debug(
+                f"Published event {event.id} of type {event_type.name} "
+                f"from {source_system}"
+            )
+            
+            return event.id
+            
+        except Exception as e:
+            logger.error(f"Failed to publish event: {e}")
+            raise
+    
+    async def _process_events(self):
+        """Process events from Redis pub/sub."""
+        try:
+            async for message in self.pubsub.listen():
+                if not self.is_running:
+                    break
+                
+                if message["type"] != "message":
+                    continue
+                
+                try:
+                    # Parse event
+                    event_data = json.loads(message["data"])
+                    event = Event.from_dict(event_data)
+                    
+                    # Check TTL
+                    if event.ttl_seconds:
+                        age_seconds = (
+                            datetime.now(timezone.utc) - event.timestamp
+                        ).total_seconds()
+                        
+                        if age_seconds > event.ttl_seconds:
+                            logger.debug(f"Event {event.id} expired, skipping")
+                            continue
+                    
+                    # Process event
+                    await self._handle_event(event)
+                    
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse event data: {e}")
+                except Exception as e:
+                    logger.error(f"Error processing event: {e}")
+                    
+        except asyncio.CancelledError:
+            logger.info("Event processing cancelled")
+        except Exception as e:
+            logger.error(f"Event processing error: {e}")
+    
+    async def _handle_event(self, event: Event):
+        """Handle an individual event."""
+        # Get handlers for this event type
+        handler_names = self.event_type_handlers.get(event.type, set())
+        
+        if not handler_names:
+            logger.debug(f"No handlers for event type {event.type.name}")
+            return
+        
+        # Process handlers in parallel
+        tasks = []
+        for handler_name in handler_names:
+            handler = self.handlers.get(handler_name)
+            if handler and handler.is_running:
+                task = asyncio.create_task(
+                    self._handle_event_with_retry(event, handler)
+                )
+                tasks.append(task)
+        
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+    
+    async def _handle_event_with_retry(self, event: Event, handler: EventHandler):
+        """Handle an event with retry logic."""
+        try:
+            success = await handler.handle(event)
+            
+            if success:
+                self.events_processed += 1
+                logger.debug(
+                    f"Event {event.id} handled successfully by {handler.name}"
+                )
+            else:
+                await self._schedule_retry(event, handler)
+                
+        except Exception as e:
+            logger.error(
+                f"Handler {handler.name} failed to process event {event.id}: {e}"
+            )
+            await self._schedule_retry(event, handler)
+    
+    async def _schedule_retry(self, event: Event, handler: EventHandler):
+        """Schedule an event for retry."""
+        if event.retry_count >= event.max_retries:
+            self.events_failed += 1
+            logger.error(
+                f"Event {event.id} failed permanently after "
+                f"{event.max_retries} retries"
+            )
+            return
+        
+        # Increment retry count
+        event.retry_count += 1
+        self.events_retried += 1
+        
+        # Calculate exponential backoff delay
+        delay_seconds = min(300, 2 ** event.retry_count)  # Max 5 minutes
+        
+        # Schedule retry
+        await asyncio.sleep(delay_seconds)
+        
+        try:
+            event_data = json.dumps(event.to_dict())
+            await self.redis_client.publish(self.retry_channel, event_data)
+            
+            logger.info(
+                f"Scheduled retry {event.retry_count} for event {event.id} "
+                f"in {delay_seconds} seconds"
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to schedule retry for event {event.id}: {e}")
+    
+    def get_metrics(self) -> Dict[str, Any]:
+        """Get event bus metrics."""
+        return {
+            "events_published": self.events_published,
+            "events_processed": self.events_processed,
+            "events_failed": self.events_failed,
+            "events_retried": self.events_retried,
+            "active_handlers": len([h for h in self.handlers.values() if h.is_running]),
+            "registered_handlers": len(self.handlers),
+            "is_running": self.is_running
+        }
+
+
+# Global event bus instance
+_event_bus: Optional[EventBus] = None
+
+
+def get_event_bus() -> EventBus:
+    """Get the global event bus instance."""
+    global _event_bus
+    if _event_bus is None:
+        _event_bus = EventBus()
+    return _event_bus
+
+
+# Convenience functions for common event types
+
+async def publish_prediction_event(
+    prediction_data: Dict[str, Any],
+    source_system: str,
+    correlation_id: Optional[str] = None
+) -> str:
+    """Publish a prediction generated event."""
+    event_bus = get_event_bus()
+    return await event_bus.publish(
+        event_type=EventType.PREDICTION_GENERATED,
+        data=prediction_data,
+        source_system=source_system,
+        priority=EventPriority.HIGH,
+        correlation_id=correlation_id
+    )
+
+
+async def publish_intelligence_insight(
+    insight_data: Dict[str, Any],
+    source_system: str,
+    priority: EventPriority = EventPriority.HIGH,
+    correlation_id: Optional[str] = None
+) -> str:
+    """Publish an intelligence insight event."""
+    event_bus = get_event_bus()
+    return await event_bus.publish(
+        event_type=EventType.INTELLIGENCE_INSIGHT_CREATED,
+        data=insight_data,
+        source_system=source_system,
+        priority=priority,
+        correlation_id=correlation_id
+    )
+
+
+async def publish_crm_sync_event(
+    sync_data: Dict[str, Any],
+    source_system: str,
+    correlation_id: Optional[str] = None
+) -> str:
+    """Publish a CRM sync event."""
+    event_bus = get_event_bus()
+    return await event_bus.publish(
+        event_type=EventType.CRM_SYNC_REQUESTED,
+        data=sync_data,
+        source_system=source_system,
+        priority=EventPriority.MEDIUM,
+        correlation_id=correlation_id
+    )
+
+
+async def publish_alert_event(
+    alert_data: Dict[str, Any],
+    source_system: str,
+    priority: EventPriority = EventPriority.CRITICAL,
+    correlation_id: Optional[str] = None
+) -> str:
+    """Publish an alert event."""
+    event_bus = get_event_bus()
+    return await event_bus.publish(
+        event_type=EventType.ALERT_TRIGGERED,
+        data=alert_data,
+        source_system=source_system,
+        priority=priority,
+        correlation_id=correlation_id,
+        ttl_seconds=3600  # Alerts expire after 1 hour
+    )
+
+
+# Export public API
+__all__ = [
+    "EventType",
+    "EventPriority", 
+    "Event",
+    "EventHandler",
+    "EventBus",
+    "get_event_bus",
+    "publish_prediction_event",
+    "publish_intelligence_insight",
+    "publish_crm_sync_event",
+    "publish_alert_event"
+]

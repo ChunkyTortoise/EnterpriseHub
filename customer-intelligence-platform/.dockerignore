@@ -1,0 +1,103 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+.ENV/
+
+# Environment variables (keep example files)
+.env
+*.env
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Cache and temporary files
+.cache/
+*.tmp
+*.temp
+
+# Data files (will be mounted)
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Node modules (if any)
+node_modules/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Testing
+.pytest_cache/
+.coverage
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Local configuration overrides
+local_config.py
+local_settings.py

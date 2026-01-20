@@ -799,13 +799,273 @@ class AustinMarketService:
             ]
         }
 
+    async def get_pricing_analytics(
+        self,
+        neighborhood: Optional[str] = None,
+        property_type: Optional[PropertyType] = None,
+        price_range: Optional[Tuple[float, float]] = None,
+        days_back: int = 90
+    ) -> Dict[str, Any]:
+        """
+        Get comprehensive pricing analytics for Dynamic Pricing Intelligence integration.
+
+        Returns detailed market pricing data for valuation and investment analysis.
+        """
+        cache_key = f"pricing_analytics:{neighborhood}:{property_type}:{price_range}:{days_back}"
+
+        # Try cache first (15-minute TTL for pricing data)
+        cached = await self.cache.get(cache_key)
+        if cached:
+            logger.debug(f"Cache hit for pricing analytics: {neighborhood}")
+            return cached
+
+        # Get base market metrics
+        market_metrics = await self.get_market_metrics(neighborhood, property_type, price_range)
+
+        # Calculate price distribution data
+        price_distribution = self._calculate_price_distribution(neighborhood, property_type)
+
+        # Get appreciation trends
+        appreciation_trends = self._calculate_appreciation_trends(neighborhood, days_back)
+
+        # Calculate investment metrics
+        investment_metrics = self._calculate_investment_metrics(neighborhood)
+
+        # Get competitive pricing data
+        competitive_data = await self._get_competitive_pricing_data(neighborhood)
+
+        pricing_analytics = {
+            "market_metrics": {
+                "median_price": market_metrics.median_price,
+                "average_days_on_market": market_metrics.average_days_on_market,
+                "price_trend_1m": market_metrics.price_trend_1m,
+                "price_trend_3m": market_metrics.price_trend_3m,
+                "price_trend_1y": market_metrics.price_trend_1y,
+                "market_condition": market_metrics.market_condition.value,
+                "absorption_rate": market_metrics.absorption_rate
+            },
+            "price_distribution": price_distribution,
+            "appreciation_trends": appreciation_trends,
+            "investment_metrics": investment_metrics,
+            "competitive_analysis": competitive_data,
+            "pricing_recommendations": self._generate_pricing_recommendations(
+                market_metrics, price_distribution, appreciation_trends
+            ),
+            "last_updated": datetime.now().isoformat()
+        }
+
+        # Cache for 15 minutes
+        await self.cache.set(cache_key, pricing_analytics, ttl=900)
+        logger.info(f"Generated pricing analytics for {neighborhood or 'Rancho Cucamonga'}")
+
+        return pricing_analytics
+
+    def _calculate_price_distribution(
+        self,
+        neighborhood: Optional[str],
+        property_type: Optional[PropertyType]
+    ) -> Dict[str, Any]:
+        """Calculate price distribution statistics for the market."""
+        # Simulated price distribution data
+        # In production, would analyze actual MLS data
+
+        base_median = self.neighborhoods.get(
+            neighborhood.lower() if neighborhood else "central_rc", {}
+        ).get("median_price", 825000)
+
+        return {
+            "percentiles": {
+                "p10": int(base_median * 0.6),
+                "p25": int(base_median * 0.8),
+                "p50": int(base_median),
+                "p75": int(base_median * 1.3),
+                "p90": int(base_median * 1.7)
+            },
+            "price_per_sqft": {
+                "min": 220,
+                "median": 295,
+                "max": 450,
+                "average": 310
+            },
+            "active_listings_by_price": {
+                "under_500k": 45,
+                "500k_750k": 125,
+                "750k_1m": 85,
+                "1m_1_5m": 35,
+                "over_1_5m": 15
+            }
+        }
+
+    def _calculate_appreciation_trends(
+        self,
+        neighborhood: Optional[str],
+        days_back: int
+    ) -> Dict[str, Any]:
+        """Calculate historical appreciation trends."""
+        # Simulated appreciation data
+        # In production, would analyze historical sales data
+
+        # Base appreciation for Rancho Cucamonga market
+        base_appreciation = 8.5  # Annual percentage
+
+        # Neighborhood adjustments
+        neighborhood_multiplier = 1.0
+        if neighborhood:
+            neighborhood_data = self.neighborhoods.get(neighborhood.lower(), {})
+            # Higher-end neighborhoods typically appreciate faster
+            if neighborhood_data.get("median_price", 825000) > 1000000:
+                neighborhood_multiplier = 1.2
+            elif neighborhood_data.get("median_price", 825000) < 600000:
+                neighborhood_multiplier = 0.9
+
+        actual_appreciation = base_appreciation * neighborhood_multiplier
+
+        return {
+            "annual_appreciation": round(actual_appreciation, 2),
+            "quarterly_trends": [
+                {"quarter": "Q1_2024", "appreciation": round(actual_appreciation * 0.25, 2)},
+                {"quarter": "Q2_2024", "appreciation": round(actual_appreciation * 0.28, 2)},
+                {"quarter": "Q3_2024", "appreciation": round(actual_appreciation * 0.23, 2)},
+                {"quarter": "Q4_2024", "appreciation": round(actual_appreciation * 0.24, 2)}
+            ],
+            "5_year_projection": round(actual_appreciation * 5, 1),
+            "appreciation_vs_county": "+2.3%",  # Outperforming San Bernardino County
+            "appreciation_vs_state": "+0.8%"   # Slightly outperforming California
+        }
+
+    def _calculate_investment_metrics(self, neighborhood: Optional[str]) -> Dict[str, Any]:
+        """Calculate investment-specific metrics for the market."""
+        neighborhood_data = self.neighborhoods.get(
+            neighborhood.lower() if neighborhood else "central_rc", {}
+        )
+
+        median_price = neighborhood_data.get("median_price", 825000)
+
+        # Estimate rental yields (would use actual rental data in production)
+        monthly_rent = median_price * 0.007  # 0.7% rule for IE market
+        annual_rent = monthly_rent * 12
+        gross_yield = (annual_rent / median_price) * 100
+
+        return {
+            "rental_yield": {
+                "gross_yield": round(gross_yield, 2),
+                "estimated_net_yield": round(gross_yield * 0.65, 2),  # After expenses
+                "monthly_rent_estimate": int(monthly_rent),
+                "rent_to_price_ratio": round((monthly_rent / median_price) * 100, 3)
+            },
+            "investment_scores": {
+                "cash_flow_potential": 75,  # 0-100 scale
+                "appreciation_potential": 85,
+                "liquidity_score": neighborhood_data.get("logistics_healthcare_appeal", 80),
+                "overall_investment_grade": "B+"
+            },
+            "market_fundamentals": {
+                "job_growth_rate": 3.2,  # Annual percentage
+                "population_growth_rate": 2.8,
+                "new_construction_permits": 145,  # Monthly average
+                "corporate_expansion_activity": "High"  # Amazon, healthcare growth
+            }
+        }
+
+    async def _get_competitive_pricing_data(
+        self,
+        neighborhood: Optional[str]
+    ) -> Dict[str, Any]:
+        """Get competitive pricing analysis data."""
+        # Simulated competitive analysis
+        # In production, would analyze actual listing and sales data
+
+        return {
+            "price_positioning": {
+                "below_market_listings": 25,  # Count
+                "at_market_listings": 45,
+                "above_market_listings": 30,
+                "overpriced_listings": 15
+            },
+            "days_on_market_by_pricing": {
+                "aggressively_priced": 18,  # Days
+                "competitively_priced": 28,
+                "strategically_priced": 35,
+                "overpriced": 65
+            },
+            "price_reduction_analysis": {
+                "listings_with_reductions": 35,  # Percentage
+                "average_reduction_amount": 25000,
+                "average_days_before_reduction": 45,
+                "success_rate_after_reduction": 78
+            },
+            "seasonal_pricing_patterns": {
+                "spring_premium": 3.5,  # Percentage above annual average
+                "summer_premium": 1.8,
+                "fall_discount": -1.2,
+                "winter_discount": -2.8
+            }
+        }
+
+    def _generate_pricing_recommendations(
+        self,
+        market_metrics: MarketMetrics,
+        price_distribution: Dict[str, Any],
+        appreciation_trends: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Generate intelligent pricing recommendations."""
+        recommendations = {
+            "current_market_strategy": "",
+            "pricing_guidance": [],
+            "timing_recommendations": [],
+            "risk_factors": []
+        }
+
+        # Determine market strategy based on conditions
+        if market_metrics.market_condition == MarketCondition.STRONG_SELLERS:
+            recommendations["current_market_strategy"] = "aggressive_pricing"
+            recommendations["pricing_guidance"].append(
+                "Market supports premium pricing - consider 2-5% above comparable sales"
+            )
+        elif market_metrics.market_condition == MarketCondition.STRONG_BUYERS:
+            recommendations["current_market_strategy"] = "competitive_pricing"
+            recommendations["pricing_guidance"].append(
+                "Buyer's market requires competitive pricing - stay within 2% of market value"
+            )
+        else:
+            recommendations["current_market_strategy"] = "balanced_approach"
+            recommendations["pricing_guidance"].append(
+                "Balanced market allows strategic pricing based on property positioning"
+            )
+
+        # Appreciation-based recommendations
+        annual_appreciation = appreciation_trends.get("annual_appreciation", 0)
+        if annual_appreciation > 7:
+            recommendations["timing_recommendations"].append(
+                "Strong appreciation trend supports holding strategy for sellers"
+            )
+        elif annual_appreciation < 3:
+            recommendations["risk_factors"].append(
+                "Slower appreciation may limit investment upside"
+            )
+
+        # Market velocity recommendations
+        if market_metrics.average_days_on_market < 25:
+            recommendations["timing_recommendations"].append(
+                "Fast-moving market - price competitively for quick sale"
+            )
+        elif market_metrics.average_days_on_market > 45:
+            recommendations["pricing_guidance"].append(
+                "Slower market - consider strategic pricing 3-5% below market for attraction"
+            )
+
+        return recommendations
+
 
 # Global service instance
 _rancho_cucamonga_market_service = None
 
-def get_rancho_cucamonga_market_service() -> RanchoCucamongaMarketService:
+def get_rancho_cucamonga_market_service() -> AustinMarketService:
     """Get singleton instance of Rancho Cucamonga Market Service."""
     global _rancho_cucamonga_market_service
     if _rancho_cucamonga_market_service is None:
-        _rancho_cucamonga_market_service = RanchoCucamongaMarketService()
+        _rancho_cucamonga_market_service = AustinMarketService()
     return _rancho_cucamonga_market_service
+
+# Alias for backward compatibility with Austin naming - keep existing class name
+RanchoCucamongaMarketService = AustinMarketService

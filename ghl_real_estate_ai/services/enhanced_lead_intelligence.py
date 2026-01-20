@@ -4,14 +4,19 @@ Integrates Claude Orchestrator with Lead Intelligence Hub for comprehensive anal
 """
 import asyncio
 import json
+import time
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 import streamlit as st
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeOrchestrator
 from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer, UnifiedScoringResult
 from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine, ScriptType
 from ghl_real_estate_ai.services.memory_service import MemoryService
+
+# Initialize logger
+logger = get_logger(__name__)
 
 
 class EnhancedLeadIntelligence:

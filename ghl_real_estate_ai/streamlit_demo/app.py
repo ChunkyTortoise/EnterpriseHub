@@ -149,6 +149,10 @@ try:
     
     # Initialize Claude Assistant and Platform Companion
     claude = ClaudeAssistant()
+    
+    # PERFORMANCE OPTIMIZATION: Initialize cache warming service
+    from ghl_real_estate_ai.services.performance_optimization_service import get_performance_service
+    performance_service = get_performance_service()
 
     # Import Claude Platform Companion
     try:
@@ -424,6 +428,9 @@ with st.sidebar:
     st.markdown("---")
 
 services = get_services(market=market_key)
+
+# PERFORMANCE OPTIMIZATION: Cache Warming for Instant Dashboard Loading
+performance_service.warm_cache_on_startup(agent_id="demo_agent", market=market_key)
 
 # Initialize lead options with multi-market logic (Global Scope)
 def get_lead_options(market_key):
