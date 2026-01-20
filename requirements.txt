@@ -35,9 +35,9 @@ ta==0.11.0
 # ==============================================================================
 # AI & NLP
 # ==============================================================================
-anthropic==0.18.1  # Claude API for content generation
+anthropic==0.76.0  # Claude API for content generation
 google-generativeai>=0.8.0  # Gemini AI Studio support
-textblob==0.17.1
+textblob==0.19.0
 langgraph>=0.0.10
 langchain-core>=0.1.0
 langchain-anthropic>=0.1.0
@@ -60,8 +60,8 @@ streamlit-chat==0.1.1
 # ==============================================================================
 # Utilities
 # ==============================================================================
-python-dotenv==1.0.0  # Environment variable management
-openpyxl==3.1.2  # Excel file support for data export
+python-dotenv==1.2.1  # Environment variable management
+openpyxl==3.1.5  # Excel file support for data export
 PyGithub>=2.1.1 # GitHub API interactions
 qrcode[pil]>=7.4.2
 fastmcp
