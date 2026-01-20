@@ -4,7 +4,7 @@ Data structures for business intelligence and forecasting
 """
 
 from datetime import datetime, date
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any, Union, Tuple
 from dataclasses import dataclass
 from enum import Enum
 from pydantic import BaseModel, Field, validator

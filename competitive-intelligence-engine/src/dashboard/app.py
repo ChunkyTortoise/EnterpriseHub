@@ -27,6 +27,16 @@ from datetime import datetime, timedelta
 import asyncio
 import json
 import time
+import sys
+import os
+
+# Add the project root to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from components.executive_analytics_dashboard import ExecutiveAnalyticsDashboard
+except ImportError:
+    ExecutiveAnalyticsDashboard = None
 
 # Set page config
 st.set_page_config(
@@ -91,6 +101,7 @@ def main():
         "Select Dashboard",
         [
             "Executive Overview",
+            "Executive Analytics",
             "Demo: E-commerce Pricing Intelligence",
             "Demo: B2B SaaS Feature Monitoring",
             "Demo: Crisis Prevention System",
@@ -104,6 +115,8 @@ def main():
     # Dashboard routing
     if page == "Executive Overview":
         show_executive_overview()
+    elif page == "Executive Analytics":
+        show_executive_analytics()
     elif page == "Demo: E-commerce Pricing Intelligence":
         show_ecommerce_demo()
     elif page == "Demo: B2B SaaS Feature Monitoring":
@@ -118,6 +131,39 @@ def main():
         show_sentiment_analysis()
     elif page == "Configuration":
         show_configuration()
+
+def show_executive_analytics():
+    """Executive analytics dashboard using AI-powered components."""
+    
+    if ExecutiveAnalyticsDashboard is None:
+        st.error("🚨 Executive Analytics Dashboard not available. Please check the component import.")
+        st.info("This component requires the analytics modules to be properly installed.")
+        return
+    
+    try:
+        # Initialize and render the executive analytics dashboard
+        dashboard = ExecutiveAnalyticsDashboard()
+        dashboard.render_dashboard()
+        
+    except Exception as e:
+        st.error(f"🚨 Error loading Executive Analytics Dashboard: {str(e)}")
+        st.info("Please check the analytics engine configuration and dependencies.")
+        
+        # Show fallback content
+        st.markdown("""
+        ### 🎯 Executive Analytics (Demo Mode)
+        
+        The full Executive Analytics Engine is currently initializing. 
+        Key features include:
+        
+        - **AI-Powered Executive Summaries** with Claude 3.5 Sonnet
+        - **Strategic Pattern Analysis** with ML-driven insights  
+        - **Competitive Landscape Mapping** with positioning matrices
+        - **Market Share Forecasting** with time series models
+        - **ROI Impact Analysis** with business metrics
+        
+        Please try again in a few moments or contact your system administrator.
+        """)
 
 def show_executive_overview():
     """Executive summary dashboard."""
