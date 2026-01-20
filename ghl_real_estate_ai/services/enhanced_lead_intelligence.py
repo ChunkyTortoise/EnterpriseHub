@@ -38,13 +38,23 @@ class EnhancedLeadIntelligence:
     """
 
     def __init__(self):
+        # Initialize core services synchronously
         self.claude = get_claude_orchestrator()
         self.enhanced_scorer = ClaudeEnhancedLeadScorer()
         self.automation_engine = ClaudeAutomationEngine()
         self.memory = MemoryService()
 
-        # Enterprise performance services
-        self._initialize_performance_services()
+        # Initialize enterprise services to None - will be lazy loaded
+        self.optimized_cache = None
+        self.cqrs_service = None
+        self.performance_tracker = None
+        self.circuit_manager = None
+        self.claude_breaker = None
+        self.cache_breaker = None
+
+        # Track initialization state
+        self._initialized = False
+        self._initialization_lock = asyncio.Lock()
 
         # Legacy performance tracking (maintained for compatibility)
         self.analysis_cache = {}
@@ -55,63 +65,102 @@ class EnhancedLeadIntelligence:
             "deep_dossiers_generated": 0
         }
 
+    async def initialize(self):
+        """
+        Async initialization of enterprise services with proper connection handling.
+        This method should be called before using any enterprise features.
+        """
+        async with self._initialization_lock:
+            if self._initialized:
+                return
+
+            logger.info("Initializing Enhanced Lead Intelligence enterprise services...")
+            await self._initialize_performance_services_async()
+            self._initialized = True
+            logger.info("Enhanced Lead Intelligence enterprise services initialized successfully")
+
+    async def _ensure_initialized(self):
+        """Ensure the service is initialized before use"""
+        if not self._initialized:
+            await self.initialize()
+
     def _initialize_performance_services(self):
-        """Initialize enterprise performance services"""
+        """Legacy synchronous initialization (deprecated - use async version)"""
+        logger.warning("Using deprecated synchronous initialization. Consider calling initialize() async method.")
+        # Set all enterprise services to None - they will be lazy loaded
+        self.optimized_cache = None
+        self.cqrs_service = None
+        self.performance_tracker = None
+        self.circuit_manager = None
+
+    async def _initialize_performance_services_async(self):
+        """Initialize enterprise performance services asynchronously"""
         try:
             # Initialize optimized cache service
             from ghl_real_estate_ai.services.optimized_cache_service import get_optimized_cache_service
             self.optimized_cache = get_optimized_cache_service()
-            
+
             # Initialize CQRS service
             from ghl_real_estate_ai.services.cqrs_service import get_cqrs_service
             self.cqrs_service = get_cqrs_service()
-            
+
             # Initialize performance tracker
             from ghl_real_estate_ai.services.performance_tracker import get_performance_tracker
             self.performance_tracker = get_performance_tracker()
-            
+
             # Initialize circuit breaker manager
             from ghl_real_estate_ai.services.circuit_breaker import get_circuit_manager
             self.circuit_manager = get_circuit_manager()
-            
+
             # Create circuit breakers for external services
-            self._setup_circuit_breakers()
-            
-            logger.info("Enterprise performance services initialized")
-            
+            await self._setup_circuit_breakers_async()
+
+            logger.info("Enterprise performance services initialized successfully")
+
         except Exception as e:
             logger.warning(f"Enterprise services initialization failed, using fallback: {e}")
-            self.optimized_cache = None
-            self.cqrs_service = None
-            self.performance_tracker = None
-            self.circuit_manager = None
+            # Keep services as None for graceful fallback
+            pass
 
     def _setup_circuit_breakers(self):
-        """Setup circuit breakers for external dependencies"""
+        """Legacy synchronous setup (deprecated - use async version)"""
+        logger.warning("Using deprecated synchronous circuit breaker setup.")
+        return
+
+    async def _setup_circuit_breakers_async(self):
+        """Setup circuit breakers for external dependencies asynchronously"""
         if not self.circuit_manager:
             return
-            
-        from ghl_real_estate_ai.services.circuit_breaker import CircuitBreakerConfig, claude_fallback
-        
-        # Claude API circuit breaker
-        claude_config = CircuitBreakerConfig(
-            failure_threshold=3,
-            recovery_timeout=30.0,
-            success_threshold=2,
-            timeout=25.0,
-            fallback=claude_fallback
-        )
-        self.claude_breaker = self.circuit_manager.create_breaker("claude_api", claude_config)
-        
-        # Cache circuit breaker  
-        cache_config = CircuitBreakerConfig(
-            failure_threshold=5,
-            recovery_timeout=10.0,
-            success_threshold=3,
-            timeout=5.0,
-            fallback=None  # Cache failures should not block processing
-        )
-        self.cache_breaker = self.circuit_manager.create_breaker("cache_service", cache_config)
+
+        try:
+            from ghl_real_estate_ai.services.circuit_breaker import CircuitBreakerConfig, claude_fallback
+
+            # Claude API circuit breaker
+            claude_config = CircuitBreakerConfig(
+                failure_threshold=3,
+                recovery_timeout=30.0,
+                success_threshold=2,
+                timeout=25.0,
+                fallback=claude_fallback
+            )
+            self.claude_breaker = self.circuit_manager.create_breaker("claude_api", claude_config)
+
+            # Cache circuit breaker
+            cache_config = CircuitBreakerConfig(
+                failure_threshold=5,
+                recovery_timeout=10.0,
+                success_threshold=3,
+                timeout=5.0,
+                fallback=None  # Cache failures should not block processing
+            )
+            self.cache_breaker = self.circuit_manager.create_breaker("cache_service", cache_config)
+
+            logger.info("Circuit breakers configured successfully")
+
+        except Exception as e:
+            logger.warning(f"Circuit breaker setup failed: {e}")
+            self.claude_breaker = None
+            self.cache_breaker = None
 
     async def get_cognitive_dossier(self, lead_name: str, lead_context: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -265,15 +314,18 @@ class EnhancedLeadIntelligence:
         render_journey_orchestrator(lead_id, lead_name, lead_context)
 
     async def get_comprehensive_lead_analysis_enterprise(self,
-                                                      lead_name: str, 
+                                                      lead_name: str,
                                                       lead_context: Dict[str, Any],
                                                       force_refresh: bool = False) -> UnifiedScoringResult:
         """
         Enterprise-grade comprehensive lead analysis with performance optimization
         Features: Circuit breakers, multi-layer caching, performance tracking, CQRS
         """
+        # Ensure enterprise services are initialized
+        await self._ensure_initialized()
+
         request_id = f"analysis_{lead_name}_{int(time.time() * 1000000)}"
-        
+
         # Use performance tracker if available
         if self.performance_tracker:
             async with self.performance_tracker.track_request(request_id, "lead_analysis", lead_name):
@@ -799,4 +851,14 @@ def get_enhanced_lead_intelligence() -> EnhancedLeadIntelligence:
     global _enhanced_lead_intelligence
     if _enhanced_lead_intelligence is None:
         _enhanced_lead_intelligence = EnhancedLeadIntelligence()
+    return _enhanced_lead_intelligence
+
+async def get_enhanced_lead_intelligence_async() -> EnhancedLeadIntelligence:
+    """Get singleton instance of Enhanced Lead Intelligence with async initialization."""
+    global _enhanced_lead_intelligence
+    if _enhanced_lead_intelligence is None:
+        _enhanced_lead_intelligence = EnhancedLeadIntelligence()
+
+    # Ensure it's initialized
+    await _enhanced_lead_intelligence.initialize()
     return _enhanced_lead_intelligence
