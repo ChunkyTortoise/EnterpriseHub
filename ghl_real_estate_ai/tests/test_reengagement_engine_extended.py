@@ -5,13 +5,21 @@ Target: 80%+ coverage
 """
 
 import pytest
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
+import json
+import asyncio
+from unittest.mock import Mock, patch, AsyncMock, MagicMock, call
 from datetime import datetime, timedelta
 from pathlib import Path
-import json
 
-# Import the module to test
-from ghl_real_estate_ai.services.reengagement_engine import *
+from ghl_real_estate_ai.services.reengagement_engine import (
+    ReengagementEngine,
+    ReengagementTrigger,
+    RecoveryCampaignType,
+    CLVTier,
+    CLVEstimate,
+    ChurnReason
+)
+from ghl_real_estate_ai.api.schemas.ghl import MessageType
 
 
 class TestReengagementEngine:
@@ -20,123 +28,330 @@ class TestReengagementEngine:
     @pytest.fixture
     def mock_dependencies(self):
         """Mock common dependencies."""
+        ghl_client = MagicMock()
+        ghl_client.send_message = AsyncMock(return_value={"messageId": "msg_123"})
+        
+        memory_service = MagicMock()
+        memory_service.save_context = AsyncMock()
+        memory_service.get_context = AsyncMock(return_value={})
+        
+        llm_client_mock = MagicMock()
+        llm_client_mock.agenerate = AsyncMock(return_value=MagicMock(
+            content="Agentic re-engagement message",
+            model="claude-3-sonnet",
+            provider=MagicMock(value="claude"),
+            input_tokens=10,
+            output_tokens=10
+        ))
+        
+        churn_tracker = MagicMock()
+        churn_tracker.get_churn_events = AsyncMock(return_value=[])
+        churn_tracker.check_recovery_eligibility = AsyncMock(return_value=(False, "not_eligible", 0))
+        churn_tracker.record_recovery_attempt = AsyncMock(return_value=True)
+        churn_tracker._events_cache = {}
+
+        analytics = MagicMock()
+        analytics.track_llm_usage = AsyncMock()
+        
         return {
-            "logger": Mock(),
-            "config": Mock(),
-            "client": Mock()
+            "ghl_client": ghl_client,
+            "memory_service": memory_service,
+            "llm_client": llm_client_mock,
+            "churn_tracker": churn_tracker,
+            "analytics": analytics
         }
 
-    # Function Tests
-
-    def test___init___success(self, mock_dependencies):
-        """Test __init__ with valid inputs."""
-        assert True  # Basic test implementation
-        # This is a template - replace with real test
-        assert True  # Basic assertion
-    
-    def test___init___error_handling(self, mock_dependencies):
-        """Test __init__ error handling."""
-        # Placeholder
-        assert True
-    
-    def test_get_message_for_trigger_error_handling(self, mock_dependencies):
-        """Test get_message_for_trigger error handling."""
-        # Placeholder
-        assert True
-    
-    def test__determine_lead_goal_error_handling(self, mock_dependencies):
-        """Test _determine_lead_goal error handling."""
-        # Placeholder
-        assert True
-    
-    def test__extract_contact_name_error_handling(self, mock_dependencies):
-        """Test _extract_contact_name error handling."""
-        # Placeholder
-        assert True
-    
-    def test__calculate_hours_since_error_handling(self, mock_dependencies):
-        """Test _calculate_hours_since error handling."""
-        # Placeholder
-        assert True
-
-
-class TestReengagementTriggerInstance:
-    """Tests for ReengagementTrigger class instance."""
-    
     @pytest.fixture
-    def instance(self):
-        """Create instance for testing."""
-        # Create proper instance
-        return ReengagementEngine()
-    
-    def test_initialization(self, instance):
-        """Test ReengagementTrigger initialization."""
-        # Test object creation
-        assert hasattr(instance, '__dict__')
-        assert instance is not None
-        assert True  # Basic assertion
+    def engine(self, mock_dependencies):
+        """Create ReengagementEngine instance with mocks."""
+        with (
+            patch("ghl_real_estate_ai.services.reengagement_engine.LLMClient", return_value=mock_dependencies["llm_client"]),
+            patch("ghl_real_estate_ai.services.reengagement_engine.AnalyticsService", return_value=mock_dependencies["analytics"])
+        ):
+            
+            engine = ReengagementEngine(
+                ghl_client=mock_dependencies["ghl_client"],
+                memory_service=mock_dependencies["memory_service"],
+                churn_event_tracker=mock_dependencies["churn_tracker"]
+            )
+            return engine
 
+    # --- Trigger Detection Tests ---
 
-class TestReengagementEngineInstance:
-    """Tests for ReengagementEngine class instance."""
-    
-    @pytest.fixture
-    def instance(self):
-        """Create instance for testing."""
-        # Create proper instance
-        return ReengagementEngine()
-    
-    def test_initialization(self, instance):
-        """Test ReengagementEngine initialization."""
-        # Test object creation
-        assert hasattr(instance, '__dict__')
-        assert instance is not None
-        assert True  # Basic assertion
+    @pytest.mark.asyncio
+    async def test_detect_trigger_24h(self, engine):
+        """Test detection of 24h trigger."""
+        now = datetime.utcnow()
+        last_interaction = now - timedelta(hours=25)
+        
+        context = {
+            "contact_id": "contact_123",
+            "last_interaction_at": last_interaction.isoformat(),
+            "last_reengagement_trigger": None
+        }
+        
+        trigger = await engine.detect_trigger(context)
+        assert trigger == ReengagementTrigger.HOURS_24
 
-    def test_get_message_for_trigger(self, instance):
-        """Test get_message_for_trigger method."""
-        assert True  # Method test implementation
-        assert True  # Basic assertion
+    @pytest.mark.asyncio
+    async def test_detect_trigger_48h(self, engine):
+        """Test detection of 48h trigger."""
+        now = datetime.utcnow()
+        last_interaction = now - timedelta(hours=49)
+        
+        context = {
+            "contact_id": "contact_123",
+            "last_interaction_at": last_interaction.isoformat(),
+            "last_reengagement_trigger": ReengagementTrigger.HOURS_24.value
+        }
+        
+        trigger = await engine.detect_trigger(context)
+        assert trigger == ReengagementTrigger.HOURS_48
 
+    @pytest.mark.asyncio
+    async def test_detect_trigger_72h(self, engine):
+        """Test detection of 72h trigger."""
+        now = datetime.utcnow()
+        last_interaction = now - timedelta(hours=73)
+        
+        context = {
+            "contact_id": "contact_123",
+            "last_interaction_at": last_interaction.isoformat(),
+            "last_reengagement_trigger": ReengagementTrigger.HOURS_48.value
+        }
+        
+        trigger = await engine.detect_trigger(context)
+        assert trigger == ReengagementTrigger.HOURS_72
 
-# Integration Tests
-class TestIntegration:
-    """Integration tests for module interactions."""
-    
-    def test_end_to_end_workflow(self):
-        """Test complete workflow."""
-        # Integration test implementation
-        # Verify service integration
-        assert True  # Placeholder for integration test
-        assert True  # Basic assertion
+    @pytest.mark.asyncio
+    async def test_detect_trigger_no_duplicate(self, engine):
+        """Test that duplicate triggers are prevented."""
+        now = datetime.utcnow()
+        last_interaction = now - timedelta(hours=25)
+        
+        context = {
+            "contact_id": "contact_123",
+            "last_interaction_at": last_interaction.isoformat(),
+            "last_reengagement_trigger": ReengagementTrigger.HOURS_24.value
+        }
+        
+        trigger = await engine.detect_trigger(context)
+        assert trigger is None
 
+    @pytest.mark.asyncio
+    async def test_detect_trigger_invalid_timestamp(self, engine):
+        """Test trigger detection with invalid timestamp."""
+        context = {
+            "contact_id": "contact_123",
+            "last_interaction_at": "invalid-date"
+        }
+        trigger = await engine.detect_trigger(context)
+        assert trigger is None
 
-# Edge Cases
-class TestEdgeCases:
-    """Test edge cases and boundary conditions."""
-    
-    def test_empty_inputs(self):
-        """Test with empty inputs."""
-        assert True  # Basic assertion
-    
-    def test_large_inputs(self):
-        """Test with large data sets."""
-        assert True  # Basic assertion
-    
-    def test_invalid_types(self):
-        """Test with invalid data types."""
-        assert True  # Basic assertion
+    # --- Agentic Re-engagement Tests ---
 
+    @pytest.mark.asyncio
+    async def test_agentic_reengagement_success(self, engine, mock_dependencies):
+        """Test successful agentic re-engagement generation."""
+        context = {
+            "contact_id": "contact_123",
+            "conversation_history": [{"role": "user", "content": "hi"}],
+            "extracted_preferences": {"budget": "500k"}
+        }
+        
+        message = await engine.agentic_reengagement("John", context)
+        
+        assert message == "Agentic re-engagement message"
+        mock_dependencies["llm_client"].agenerate.assert_called_once()
+        mock_dependencies["analytics"].track_llm_usage.assert_called_once()
 
-# Performance Tests
-@pytest.mark.slow
-class TestPerformance:
-    """Performance and load tests."""
-    
-    def test_response_time(self):
-        """Test response time under load."""
-        assert True  # Basic assertion
+    @pytest.mark.asyncio
+    async def test_agentic_reengagement_failure(self, engine, mock_dependencies):
+        """Test fallback when agentic re-engagement fails."""
+        mock_dependencies["llm_client"].agenerate.side_effect = Exception("LLM Error")
+        
+        message = await engine.agentic_reengagement("John", {})
+        assert message == ""  # Should return empty string on failure
 
+    # --- Lead Goal Determination Tests ---
+
+    def test_determine_lead_goal_explicit(self, engine):
+        """Test determination when goal is explicit in preferences."""
+        context = {"extracted_preferences": {"goal": "buy house"}}
+        action, is_buyer, is_seller = engine._determine_lead_goal(context)
+        assert action == "buy"
+        assert is_buyer is True
+        assert is_seller is False
+
+        context = {"extracted_preferences": {"goal": "sell my home"}}
+        action, is_buyer, is_seller = engine._determine_lead_goal(context)
+        assert action == "sell"
+        assert is_buyer is False
+        assert is_seller is True
+
+    def test_determine_lead_goal_inferred(self, engine):
+        """Test determination inferred from conversation history."""
+        context = {
+            "extracted_preferences": {},
+            "conversation_history": [
+                {"role": "user", "content": "I am looking to purchase a property"}
+            ]
+        }
+        action, is_buyer, is_seller = engine._determine_lead_goal(context)
+        assert action == "buy"
+        assert is_buyer is True
+
+    # --- Sending Re-engagement Tests ---
+
+    @pytest.mark.asyncio
+    async def test_send_reengagement_message_success(self, engine, mock_dependencies):
+        """Test sending a re-engagement message."""
+        now = datetime.utcnow()
+        last_interaction = now - timedelta(hours=25)
+        context = {
+            "contact_id": "contact_123",
+            "last_interaction_at": last_interaction.isoformat(),
+            "last_reengagement_trigger": None,
+            "extracted_preferences": {"goal": "buy"},
+            "conversation_history": []
+        }
+        
+        result = await engine.send_reengagement_message("contact_123", "John", context)
+        
+        assert result == {"messageId": "msg_123"}
+        mock_dependencies["ghl_client"].send_message.assert_called_once()
+        mock_dependencies["memory_service"].save_context.assert_called_once()
+        
+        # Verify context update
+        call_args = mock_dependencies["memory_service"].save_context.call_args[1]
+        assert call_args["context"]["last_reengagement_trigger"] == "24h"
+
+    @pytest.mark.asyncio
+    async def test_send_reengagement_no_trigger(self, engine):
+        """Test sending when no trigger condition is met."""
+        context = {
+            "contact_id": "contact_123",
+            "last_interaction_at": datetime.utcnow().isoformat()
+        }
+        result = await engine.send_reengagement_message("contact_123", "John", context)
+        assert result is None
+
+    # --- Silent Lead Scanning Tests ---
+
+    @pytest.mark.asyncio
+    async def test_scan_for_silent_leads(self, engine):
+        """Test scanning directory for silent leads."""
+        with patch("ghl_real_estate_ai.services.reengagement_engine.Path") as MockPath:
+            # Setup mock file system
+            mock_dir = MagicMock()
+            MockPath.return_value = mock_dir
+            mock_dir.exists.return_value = True
+            
+            mock_file = MagicMock()
+            mock_dir.glob.return_value = [mock_file]
+            
+            # Mock file content
+            now = datetime.utcnow()
+            last_interaction = now - timedelta(hours=25)
+            file_content = json.dumps({
+                "contact_id": "contact_123",
+                "last_interaction_at": last_interaction.isoformat(),
+                "extracted_preferences": {"name": "John"}
+            })
+            
+            # Mock open
+            with patch("builtins.open", new_callable=MagicMock) as mock_open:
+                mock_open.return_value.__enter__.return_value.read.return_value = file_content
+                # Fix for json.load to read from mock
+                mock_open.return_value.__enter__.return_value = MagicMock()
+                mock_open.return_value.__enter__.return_value.read.return_value = file_content
+                
+                # Since json.load reads from file object, we need to mock it properly or patch json.load
+                with patch("json.load", return_value=json.loads(file_content)):
+                    silent_leads = await engine.scan_for_silent_leads()
+            
+            assert len(silent_leads) == 1
+            assert silent_leads[0]["contact_id"] == "contact_123"
+            assert silent_leads[0]["contact_name"] == "John"
+            assert silent_leads[0]["trigger"] == ReengagementTrigger.HOURS_24
+
+    # --- CLV & Recovery Tests ---
+
+    @pytest.mark.asyncio
+    async def test_calculate_clv_estimate(self, engine):
+        """Test CLV calculation logic."""
+        context = {
+            "extracted_preferences": {"budget": "500k"},
+            "conversation_history": [1, 2, 3, 4, 5] # 5 messages
+        }
+        
+        clv = await engine.calculate_clv_estimate("contact_123", context)
+        
+        # 500k * 0.03 (comm) * 1.0 (prob for 5 msgs) = 15000
+        assert clv.estimated_transaction_value == 500000
+        assert clv.probability_multiplier == 1.0
+        assert clv.estimated_clv == 15000.0
+        assert clv.clv_tier == CLVTier.LOW_VALUE # < 20k
+
+    @pytest.mark.asyncio
+    async def test_select_recovery_campaign(self, engine):
+        """Test recovery campaign selection."""
+        clv = CLVEstimate("id", 600000, 0.03, 1.2) # 21600 CLV -> Medium Value
+        
+        # Win Back Nurture targets Medium Value + Budget
+        template = engine.select_recovery_campaign(ChurnReason.BUDGET, clv)
+        
+        assert template is not None
+        assert template.campaign_type == RecoveryCampaignType.WIN_BACK_NURTURE
+
+    @pytest.mark.asyncio
+    async def test_scan_for_recovery_eligible_leads(self, engine, mock_dependencies):
+        """Test scanning for recovery eligible leads."""
+        # Setup churn tracker mocks
+        mock_event = MagicMock()
+        mock_event.churn_reason = ChurnReason.BUDGET
+        
+        mock_dependencies["churn_tracker"]._events_cache = {"contact_123": []}
+        mock_dependencies["churn_tracker"].get_churn_events.return_value = [mock_event]
+        mock_dependencies["churn_tracker"].check_recovery_eligibility.return_value = (True, "eligible", 1)
+        
+        # Mock memory service to return context for CLV
+        mock_dependencies["memory_service"].get_context.return_value = {
+            "extracted_preferences": {"budget": "500k"},
+            "conversation_history": [1]*10 # High engagement
+        }
+        
+        leads = await engine.scan_for_recovery_eligible_leads()
+        
+        assert len(leads) == 1
+        assert leads[0]["contact_id"] == "contact_123"
+        assert leads[0]["churn_reason"] == ChurnReason.BUDGET
+        assert leads[0]["campaign_template"].campaign_type == RecoveryCampaignType.WIN_BACK_AGGRESSIVE # High value due to 1.2 prob
+
+    @pytest.mark.asyncio
+    async def test_send_recovery_campaign_success(self, engine, mock_dependencies):
+        """Test sending a recovery campaign."""
+        clv = CLVEstimate("id", 1000000, 0.03, 1.0) # 30k CLV -> Medium/High
+        context = {
+            "extracted_preferences": {"budget": "1M", "location": "Austin"},
+            "conversation_history": []
+        }
+        
+        result = await engine.send_recovery_campaign(
+            "contact_123", 
+            ChurnReason.TIMING, 
+            clv, 
+            context
+        )
+        
+        assert result == {"messageId": "msg_123"}
+        mock_dependencies["ghl_client"].send_message.assert_called_once()
+        mock_dependencies["churn_tracker"].record_recovery_attempt.assert_called_once()
+        
+        # Verify context updated with campaign info
+        call_args = mock_dependencies["memory_service"].save_context.call_args[1]
+        assert "last_recovery_campaign" in call_args["context"]
+        assert call_args["context"]["last_recovery_campaign"]["campaign_type"] == RecoveryCampaignType.WIN_BACK_AGGRESSIVE.value
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--cov"])
+    pytest.main([__file__, "-v", "--cov=ghl_real_estate_ai.services.reengagement_engine"])
