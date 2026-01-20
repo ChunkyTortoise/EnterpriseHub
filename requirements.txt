@@ -13,6 +13,7 @@ numpy>=1.26.2
 # Async I/O Performance
 # ==============================================================================
 aiofiles>=24.1.0
+nest-asyncio>=1.5.8  # Event loop reuse for Streamlit (PERFORMANCE OPTIMIZATION)
 scipy>=1.11.4  # Statistical functions for A/B testing
 scikit-learn>=1.3.2  # Machine Learning & Forecasting
 joblib>=1.3.2  # Model serialization for ML persistence
@@ -51,7 +52,7 @@ pydantic>=2.5.0
 pydantic-settings>=2.1.0
 chromadb>=0.4.22
 sentence-transformers>=2.3.0
-httpx>=0.26.0
+httpx[http2]>=0.26.0  # HTTP/2 support for connection pooling (PERFORMANCE OPTIMIZATION)
 python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 python-multipart>=0.0.6
@@ -76,10 +77,22 @@ psycopg2-binary>=2.9.0  # PostgreSQL adapter for Python
 aiohttp>=3.8.0          # Async HTTP client/server for Service6 networking
 
 # ==============================================================================
-# Visual Regression Testing & Accessibility
+# Testing & Quality Assurance
 # ==============================================================================
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
 pytest-playwright>=0.4.4  # Playwright integration for pytest
 playwright>=1.40.0  # Browser automation for visual testing
 axe-playwright>=0.1.5  # Accessibility testing with axe-core
 pixelmatch>=0.3.0  # Pixel-level image comparison
+
+# ==============================================================================
+# Real-time Communication & System Monitoring
+# ==============================================================================
+websockets>=12.0
+psutil>=5.9.0  # System monitoring and performance optimization
+
+# ==============================================================================
+# Billing Integration
+# ==============================================================================
 stripe>=8.0.0  # Stripe Python SDK for billing integration

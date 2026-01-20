@@ -24,7 +24,9 @@ You qualify leads by determining if they want:
 1. **WHOLESALE**: Quick cash offer, sell as-is (mention: "as-is", "fast sale", "cash offer")
 2. **LISTING**: Top dollar, list on MLS (mention: "best price", "what's it worth", "top dollar")
 
-## QUALIFYING QUESTIONS TO ASK (Jorge's 7 Questions)
+## QUALIFYING QUESTIONS TO ASK (Jorge's Questions)
+
+### BUYER QUESTIONS (Jorge's 7 Questions)
 Ask these conversationally, NOT like a form:
 1. **Budget/price range**: "What's your budget?"
 2. **Location**: "What area are you interested in?"
@@ -33,6 +35,13 @@ Ask these conversationally, NOT like a form:
 5. **Financing**: "Are you pre-approved, or still working on that?"
 6. **Motivation**: "What's prompting the move?" (Why NOW?)
 7. **Home condition** (SELLERS ONLY): "Is it move-in ready, needs some work, or a fixer-upper?"
+
+### SELLER QUESTIONS (Jorge's 4 Questions - CONFRONTATIONAL STYLE)
+Ask these one at a time, be direct and confrontational:
+1. **Motivation & Destination**: "What's got you considering wanting to sell, where would you move to?"
+2. **Timeline Urgency**: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?"
+3. **Property Condition**: "How would you describe your home, would you say it's move-in ready or would it need some work?"
+4. **Price Expectations**: "What price would incentivize you to sell?"
 
 **IMPORTANT**: After 3+ questions answered, the lead is HOT → offer to schedule a call/showing.
 
@@ -248,6 +257,194 @@ After each response, count how many qualifying questions have been answered (Add
 
 [Continue gathering: motivation → timeline → condition → price expectations]
 """
+
+# ==============================================================================
+# JORGE'S SELLER BOT - CONFRONTATIONAL STYLE
+# ==============================================================================
+
+JORGE_SELLER_SYSTEM_PROMPT = """You are Jorge's AI seller qualification bot. You communicate via SMS with a DIRECT, CONFRONTATIONAL approach.
+
+## JORGE'S EXACT PERSONALITY FOR SELLERS
+- **Direct and almost confrontational** - Jorge's exact words
+- **Straightforward, no-nonsense approach**
+- **NO emojis, NO hyphens, NO robotic phrasing**
+- **Keep ALL responses under 160 characters (SMS limit)**
+- **Ask tough questions, don't be overly polite**
+- **If they give vague answers, escalate: "Are you actually serious about selling or just wasting our time?"**
+
+## YOUR MISSION: QUALIFY SELLERS WITH JORGE'S 4 QUESTIONS
+Ask these questions ONE AT A TIME, in this exact order:
+
+### 1. MOTIVATION & RELOCATION
+**Question**: "What's got you considering wanting to sell, where would you move to?"
+**What you're looking for**:
+- Specific motivation (relocation, downsizing, financial, divorce, inherited, etc.)
+- Actual destination if relocating
+- Urgency level in their explanation
+
+### 2. TIMELINE URGENCY (CRITICAL)
+**Question**: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?"
+**What you're looking for**:
+- Can they close in 30-45 days? (Jorge's target timeline)
+- Are they flexible or do they NEED that timeline?
+- Any specific deadlines or constraints
+
+### 3. PROPERTY CONDITION
+**Question**: "How would you describe your home, would you say it's move-in ready or would it need some work?"
+**What you're looking for**:
+- Move-in ready vs needs repairs
+- Level of work required (cosmetic vs major)
+- Their realistic assessment of condition
+
+### 4. PRICE EXPECTATIONS
+**Question**: "What price would incentivize you to sell?"
+**What you're looking for**:
+- Specific dollar amount
+- How realistic their expectations are
+- Price flexibility
+
+## CONFRONTATIONAL TONE ESCALATION
+- **Normal flow**: Ask questions directly
+- **If vague/evasive** (<10 chars or "maybe", "not sure"): "Let me be direct: {question}"
+- **If very evasive** (multiple vague answers): "Are you actually serious about selling or just wasting our time?"
+- **Re-engagement**: "Should we close your file or are you still interested?"
+
+## TEMPERATURE CLASSIFICATION (Jorge's Criteria)
+**HOT SELLER** (All 4 questions + 30-45 day timeline + high quality responses):
+- Response: "Based on your answers, you're exactly who we help. Let me get you scheduled with our team to discuss your options. When works better for you, morning or afternoon?"
+
+**WARM SELLER** (3+ questions answered):
+- Response: "Thanks for the info. Let me have our team review your situation and get back to you with next steps."
+
+**COLD SELLER** (<3 questions or poor responses):
+- Response: "I'll keep your info on file. Reach out if your timeline or situation changes."
+
+## SMS COMPLIANCE (CRITICAL)
+- NEVER exceed 160 characters
+- NO emojis (Jorge requirement)
+- NO hyphens (Jorge requirement)
+- NO "I'm here to help" or robotic language
+- Direct and conversational like texting a friend
+
+## CURRENT CONTEXT
+**Contact Name:** {contact_name}
+**Questions Answered:** {questions_answered}/4
+**Seller Temperature:** {seller_temperature}
+
+**Current Seller Data:**
+{seller_preferences}
+
+## RESPONSE INSTRUCTIONS
+1. Ask the next question in Jorge's sequence (if not all 4 answered)
+2. Use confrontational tone if they're being vague
+3. After all 4 questions, classify as Hot/Warm/Cold and respond accordingly
+4. Keep response under 160 characters ALWAYS
+5. Be direct, almost confrontational - this is Jorge's style
+"""
+
+def build_seller_system_prompt(
+    contact_name: str,
+    conversation_stage: str,
+    seller_temperature: str,
+    extracted_seller_data: dict,
+    relevant_knowledge: str = "",
+    is_returning_seller: bool = False,
+    hours_since: float = 0,
+    **kwargs
+) -> str:
+    """
+    Build Jorge's seller system prompt with confrontational tone.
+
+    Args:
+        contact_name: Seller's first name
+        conversation_stage: Current stage of qualification
+        seller_temperature: hot, warm, or cold
+        extracted_seller_data: Seller data from Jorge's 4 questions
+        relevant_knowledge: Additional context
+        is_returning_seller: Whether this is a returning seller
+        hours_since: Hours since last interaction
+
+    Returns:
+        Complete Jorge seller system prompt
+    """
+
+    # Count questions answered
+    question_fields = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
+    questions_answered = sum(1 for field in question_fields if extracted_seller_data.get(field))
+
+    # Format seller data
+    if extracted_seller_data:
+        seller_prefs_text = "\n".join([
+            f"- {key.replace('_', ' ').title()}: {value}"
+            for key, value in extracted_seller_data.items()
+            if value is not None
+        ])
+    else:
+        seller_prefs_text = "No seller data collected yet"
+
+    # Jorge's hot seller detection
+    if (questions_answered == 4 and
+        extracted_seller_data.get("timeline_acceptable") and
+        seller_temperature == "hot"):
+
+        # Hot seller handoff prompt
+        handoff_prompt = f"""
+        {contact_name} has answered all 4 questions and is a HOT SELLER.
+
+        Respond with: "Based on your answers, you're exactly who we help. Let me get you scheduled with our team to discuss your options. When works better for you, morning or afternoon?"
+
+        This will trigger agent handoff automatically.
+        """
+        return handoff_prompt
+
+    # Re-engagement for returning sellers
+    if is_returning_seller and hours_since > 24:
+        if hours_since <= 48:
+            re_engage_prompt = f"""
+            {contact_name} went silent after {hours_since:.1f} hours. Be confrontational:
+
+            "Hey {contact_name}, just checking in, is it still a priority of yours to sell or have you given up?"
+            """
+        else:
+            re_engage_prompt = f"""
+            {contact_name} has been silent for {hours_since:.1f} hours. Final attempt:
+
+            "Hey, are you actually still looking to sell or should we close your file?"
+            """
+        return re_engage_prompt
+
+    # Determine next question
+    next_question = _get_next_seller_question(extracted_seller_data)
+
+    # Build main prompt
+    system_prompt = JORGE_SELLER_SYSTEM_PROMPT.format(
+        contact_name=contact_name,
+        questions_answered=questions_answered,
+        seller_temperature=seller_temperature,
+        seller_preferences=seller_prefs_text
+    )
+
+    # Add next question context
+    if next_question:
+        system_prompt += f"\n\nNEXT QUESTION TO ASK: {next_question}"
+        system_prompt += f"\nRemember: Be direct and confrontational. Keep under 160 characters."
+
+    return system_prompt
+
+
+def _get_next_seller_question(seller_data: dict) -> str:
+    """Get the next unanswered question in Jorge's sequence"""
+    questions = [
+        ("motivation", "What's got you considering wanting to sell, where would you move to?"),
+        ("timeline_acceptable", "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?"),
+        ("property_condition", "How would you describe your home, would you say it's move-in ready or would it need some work?"),
+        ("price_expectation", "What price would incentivize you to sell?")
+    ]
+
+    for field, question in questions:
+        if not seller_data.get(field):
+            return question
+    return None  # All questions answered
 
 # ==============================================================================
 # OBJECTION HANDLING PROMPTS
@@ -519,7 +716,9 @@ def build_system_prompt(
     lead_score: int = 0,
     extracted_preferences: dict = None,
     relevant_knowledge: str = "",
-    is_buyer: bool = True,
+    is_buyer: bool = True,  # Add this parameter
+    is_seller: bool = False,  # Add this parameter
+    seller_temperature: str = "cold",  # Add this parameter
     available_slots: str = "",
     appointment_status: str = "",
     property_recommendations: str = "",
@@ -533,9 +732,11 @@ def build_system_prompt(
         contact_name: Lead's first name
         conversation_stage: "initial_contact", "qualifying", "objection", "closing"
         lead_score: 0-7 score (Jorge's count)
-        extracted_preferences: Dict of budget, location, timeline, etc.
+        extracted_preferences: Dict of budget, location, timeline, etc. OR seller data
         relevant_knowledge: RAG-retrieved context
         is_buyer: True for buyers, False for sellers
+        is_seller: True for sellers (Jorge's seller bot), False for buyers
+        seller_temperature: hot, warm, cold (for Jorge's seller classification)
         available_slots: Formatted string of available time slots
         appointment_status: Status of a recently booked appointment
         property_recommendations: Formatted string of matching properties
@@ -546,6 +747,19 @@ def build_system_prompt(
         Complete system prompt string
     """
 
+    # Route to Jorge's seller prompt if seller mode
+    if is_seller or not is_buyer:
+        return build_seller_system_prompt(
+            contact_name=contact_name,
+            conversation_stage=conversation_stage,
+            seller_temperature=seller_temperature,
+            extracted_seller_data=extracted_preferences or {},
+            relevant_knowledge=relevant_knowledge,
+            is_returning_seller=is_returning_lead,
+            hours_since=hours_since
+        )
+
+    # Continue with existing buyer logic...
     # Format extracted preferences
     if extracted_preferences:
         prefs_text = "\n".join([
