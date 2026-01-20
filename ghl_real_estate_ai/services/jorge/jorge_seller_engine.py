@@ -16,6 +16,8 @@ import json
 import logging
 from datetime import datetime
 
+from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine, MessageType
+
 logger = logging.getLogger(__name__)
 
 
@@ -102,6 +104,7 @@ class JorgeSellerEngine:
         """Initialize with existing conversation manager and GHL client"""
         self.conversation_manager = conversation_manager
         self.ghl_client = ghl_client
+        self.tone_engine = JorgeToneEngine()
         self.logger = logging.getLogger(__name__)
 
     async def process_seller_response(
@@ -221,6 +224,9 @@ class JorgeSellerEngine:
 
             # Calculate response quality based on message content
             extracted_data["response_quality"] = self._assess_response_quality(user_message)
+            
+            # Store current user message for follow-up handling
+            extracted_data["last_user_message"] = user_message
 
             return extracted_data
 
@@ -270,36 +276,54 @@ class JorgeSellerEngine:
         contact_id: str,
         location_id: str
     ) -> Dict:
-        """Generate Jorge's confrontational seller response"""
+        """Generate Jorge's confrontational seller response using tone engine"""
         questions_answered = seller_data.get("questions_answered", 0)
+        current_question_number = SellerQuestions.get_question_number(seller_data)
 
-        # Hot seller - trigger handoff
+        # Hot seller - trigger handoff using tone engine
         if temperature == "hot":
-            message = self._create_handoff_message(seller_data)
+            message = self.tone_engine.generate_hot_seller_handoff(
+                seller_name=seller_data.get("contact_name"),
+                agent_name="our team"
+            )
             response_type = "handoff"
 
-        # Continue qualification
-        elif questions_answered < 4:
-            next_question = SellerQuestions.get_next_question(seller_data)
-            if next_question:
-                message = self._apply_confrontational_tone(next_question, seller_data)
-                response_type = "qualification"
+        # Continue qualification with confrontational tone
+        elif questions_answered < 4 and current_question_number <= 4:
+            # Check for inadequate previous response
+            last_response = seller_data.get("last_user_message", "")
+            response_quality = seller_data.get("response_quality", 1.0)
+
+            if response_quality < 0.5 and last_response:
+                # Generate confrontational follow-up for poor response
+                message = self.tone_engine.generate_follow_up_message(
+                    last_response=last_response,
+                    question_number=current_question_number - 1,
+                    seller_name=seller_data.get("contact_name")
+                )
             else:
-                message = "Let me review your information and get back to you."
-                response_type = "review"
+                # Generate next qualification question
+                message = self.tone_engine.generate_qualification_message(
+                    question_number=current_question_number,
+                    seller_name=seller_data.get("contact_name"),
+                    context=seller_data
+                )
+            response_type = "qualification"
 
         # All questions answered but not hot - nurture
         else:
             message = self._create_nurture_message(seller_data, temperature)
             response_type = "nurture"
 
-        # Ensure SMS compliance (160 chars, no emojis, no hyphens)
-        message = self._sanitize_for_sms(message)
+        # Validate message compliance using tone engine
+        compliance_result = self.tone_engine.validate_message_compliance(message)
 
         return {
             "message": message,
             "response_type": response_type,
-            "character_count": len(message)
+            "character_count": len(message),
+            "compliance": compliance_result,
+            "directness_score": compliance_result.get("directness_score", 0.0)
         }
 
     async def _create_seller_actions(
@@ -366,28 +390,15 @@ class JorgeSellerEngine:
 
         return actions
 
-    def _create_handoff_message(self, seller_data: Dict) -> str:
-        """Create Jorge's hot seller handoff message"""
-        return "Based on your answers, you're exactly who we help. Let me get you scheduled with our team to discuss your options. When works better for you, morning or afternoon?"
-
     def _create_nurture_message(self, seller_data: Dict, temperature: str) -> str:
         """Create nurture message for qualified but not hot sellers"""
         if temperature == "warm":
-            return "Thanks for the info. Let me have our team review your situation and get back to you with next steps."
+            base_message = "Thanks for the info. Let me have our team review your situation and get back to you with next steps."
         else:  # cold
-            return "I'll keep your info on file. Reach out if your timeline or situation changes."
-
-    def _apply_confrontational_tone(self, question: str, seller_data: Dict) -> str:
-        """Apply Jorge's confrontational tone to questions"""
-        # Check for evasive previous responses
-        response_quality = seller_data.get("response_quality", 1.0)
-
-        if response_quality < 0.3:  # Very evasive
-            return "Are you actually serious about selling or just wasting our time?"
-        elif response_quality < 0.6:  # Somewhat evasive
-            return f"Let me be direct: {question}"
-        else:  # Normal flow
-            return question
+            base_message = "I'll keep your info on file. Reach out if your timeline or situation changes."
+        
+        # Use tone engine to ensure SMS compliance
+        return self.tone_engine._ensure_sms_compliance(base_message)
 
     def _assess_response_quality(self, user_message: str) -> float:
         """Assess quality of user response for confrontational tone adjustment"""
@@ -408,22 +419,6 @@ class JorgeSellerEngine:
 
         # Good quality responses
         return 0.8
-
-    def _sanitize_for_sms(self, message: str) -> str:
-        """Ensure message meets Jorge's SMS requirements"""
-        import re
-
-        # Remove emojis (Jorge's requirement)
-        message = re.sub(r'[^\w\s,.!?]', '', message)
-
-        # Remove hyphens (Jorge's requirement)
-        message = message.replace('-', ' ')
-
-        # Ensure under 160 characters (SMS limit)
-        if len(message) > 160:
-            message = message[:157] + "..."
-
-        return message.strip()
 
     async def _track_seller_interaction(
         self,

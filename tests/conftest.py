@@ -423,16 +423,7 @@ def event_loop_policy():
     return asyncio.DefaultEventLoopPolicy()
 
 
-# Test report generation
-def pytest_html_report_title(report):
-    """Customize HTML report title"""
-    report.title = "Service 6 Test Report"
-
-
-def pytest_html_results_summary(prefix, summary, postfix):
-    """Customize HTML report summary"""
-    prefix.extend([f"Service 6 Testing Framework - {len(summary)} tests"])
-
+# Test report generation hooks removed to avoid dependency on pytest-html
 
 if __name__ == "__main__":
     # This file is imported, not executed directly

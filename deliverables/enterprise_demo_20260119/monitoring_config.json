@@ -1,0 +1,72 @@
+{
+  "dashboard_name": "EnterpriseHub Operations Center",
+  "refresh_rate": "5s",
+  "data_sources": [
+    "PostgreSQL",
+    "Redis",
+    "Application Logs",
+    "Voice AI Stream"
+  ],
+  "panels": [
+    {
+      "title": "System Health",
+      "type": "gauge",
+      "metrics": [
+        "cpu_usage",
+        "memory_usage",
+        "uptime"
+      ]
+    },
+    {
+      "title": "Database Performance",
+      "type": "timeseries",
+      "metrics": [
+        "query_latency_p95",
+        "active_connections",
+        "cache_hit_ratio"
+      ]
+    },
+    {
+      "title": "Voice AI Throughput",
+      "type": "heatmap",
+      "metrics": [
+        "concurrent_calls",
+        "processing_latency",
+        "error_rate"
+      ]
+    },
+    {
+      "title": "Business Logic",
+      "type": "stat",
+      "metrics": [
+        "leads_processed",
+        "appointments_booked",
+        "conversion_rate"
+      ]
+    }
+  ],
+  "alerting": {
+    "channels": [
+      "slack",
+      "email",
+      "pagerduty"
+    ],
+    "rules": [
+      {
+        "metric": "query_latency_p95",
+        "threshold": ">50ms",
+        "severity": "warning"
+      },
+      {
+        "metric": "error_rate",
+        "threshold": ">1%",
+        "severity": "critical"
+      },
+      {
+        "metric": "uptime",
+        "threshold": "<99.9%",
+        "severity": "critical"
+      }
+    ]
+  }
+}
