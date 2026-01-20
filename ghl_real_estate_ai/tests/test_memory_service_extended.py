@@ -5,109 +5,268 @@ Target: 80%+ coverage
 """
 
 import pytest
+import json
+import os
 from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from datetime import datetime, timedelta
 from pathlib import Path
-import json
 
-# Import the module to test
-from ghl_real_estate_ai.services.memory_service import *
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
-
+@pytest.mark.asyncio
 class TestMemoryService:
-    """Comprehensive test suite for memory_service."""
+    """Comprehensive test suite for MemoryService."""
     
     @pytest.fixture
-    def mock_dependencies(self):
-        """Mock common dependencies."""
-        return {
-            "logger": Mock(),
-            "config": Mock(),
-            "client": Mock()
+    def mock_graphiti(self):
+        """Mock Graphiti memory manager."""
+        with patch("ghl_real_estate_ai.services.memory_service.graphiti_manager") as mock:
+            mock.enabled = False
+            mock.retrieve_context = AsyncMock(return_value="Mocked Graphiti Context")
+            mock.save_interaction = AsyncMock()
+            yield mock
+
+    @pytest.fixture
+    def memory_service(self, tmp_path):
+        """Create MemoryService instance using temporary directory."""
+        # Patch the hardcoded 'data/memory' path in __init__ to use tmp_path
+        with patch("pathlib.Path") as mock_path:
+            # We only want to patch the initial Path("data/memory") call
+            # But patching Path globally is tricky.
+            # Instead, let's instantiate and then override the directory.
+            service = MemoryService(storage_type="file")
+            service.memory_dir = tmp_path / "data" / "memory"
+            service.memory_dir.mkdir(parents=True, exist_ok=True)
+            return service
+
+    @pytest.fixture
+    def in_memory_service(self):
+        """Create in-memory MemoryService instance."""
+        return MemoryService(storage_type="memory")
+
+    # --- Initialization Tests ---
+
+    def test_init_file_storage(self, tmp_path):
+        """Test initialization with file storage."""
+        with patch("ghl_real_estate_ai.services.memory_service.Path") as MockPath:
+            mock_dir = MagicMock()
+            MockPath.return_value = mock_dir
+            
+            service = MemoryService(storage_type="file")
+            
+            assert service.storage_type == "file"
+            mock_dir.mkdir.assert_called_with(parents=True, exist_ok=True)
+
+    def test_init_memory_storage(self):
+        """Test initialization with in-memory storage."""
+        service = MemoryService(storage_type="memory")
+        assert service.storage_type == "memory"
+        assert service._memory_cache == {}
+
+    # --- Path Sanitization Tests ---
+
+    def test_get_file_path_basic(self, memory_service):
+        """Test basic file path generation."""
+        path = memory_service._get_file_path("contact_123")
+        assert path.name == "contact_123.json"
+        assert str(path).startswith(str(memory_service.memory_dir))
+
+    def test_get_file_path_with_location(self, memory_service):
+        """Test file path with location scoping."""
+        path = memory_service._get_file_path("contact_123", location_id="loc_456")
+        assert path.name == "contact_123.json"
+        assert "loc_456" in str(path)
+        assert str(path).startswith(str(memory_service.memory_dir))
+
+    def test_get_file_path_sanitization(self, memory_service):
+        """Test that dangerous characters are stripped."""
+        unsafe_id = "../../../etc/passwd"
+        path = memory_service._get_file_path(unsafe_id)
+        
+        # Should strip .. and /
+        assert "passwd" in path.name
+        assert "etc" in path.name
+        assert ".." not in str(path)
+        assert str(path).startswith(str(memory_service.memory_dir))
+
+    def test_get_file_path_reserved_names(self, memory_service):
+        """Test handling of reserved filenames."""
+        # The sanitization logic raises ValueError for valid reserved names
+        # But _get_file_path catches it and uses a hash fallback
+        
+        path = memory_service._get_file_path("CON")
+        assert "sanitized_" in path.name
+        assert path.suffix == ".json"
+
+    # --- Context Retrieval Tests ---
+
+    async def test_get_context_default(self, memory_service):
+        """Test retrieving context for new contact."""
+        context = await memory_service.get_context("new_contact")
+        
+        assert context["contact_id"] == "new_contact"
+        assert context["conversation_history"] == []
+        assert "lead_intelligence" in context
+
+    async def test_get_context_existing_file(self, memory_service):
+        """Test retrieving context from existing file."""
+        contact_id = "existing_contact"
+        data = {
+            "contact_id": contact_id,
+            "some_key": "some_value"
         }
+        
+        # Create the file
+        path = memory_service._get_file_path(contact_id)
+        with open(path, "w") as f:
+            json.dump(data, f)
+            
+        context = await memory_service.get_context(contact_id)
+        assert context["some_key"] == "some_value"
 
-    # Function Tests
+    async def test_get_context_in_memory(self, in_memory_service):
+        """Test retrieving context from memory cache."""
+        contact_id = "mem_contact"
+        data = {"contact_id": contact_id, "cached": True}
+        
+        in_memory_service._memory_cache[contact_id] = data
+        
+        context = await in_memory_service.get_context(contact_id)
+        assert context["cached"] is True
 
-    def test___init___success(self, mock_dependencies):
-        """Test __init__ with valid inputs."""
-        assert True  # Basic test implementation
-        # This is a template - replace with real test
-        assert True  # Basic assertion
-    
-    def test___init___error_handling(self, mock_dependencies):
-        """Test __init__ error handling."""
-        # Placeholder
-        assert True
-    
-    def test__get_file_path_error_handling(self, mock_dependencies):
-        """Test _get_file_path error handling."""
-        # Placeholder
-        assert True
-    
-    def test__get_default_context_error_handling(self, mock_dependencies):
-        """Test _get_default_context error handling."""
-        # Placeholder
-        assert True
-    
-    def test_sanitize_error_handling(self, mock_dependencies):
-        """Test sanitize error handling."""
-        # Placeholder
-        assert True
+    async def test_get_context_graphiti_integration(self, memory_service, mock_graphiti):
+        """Test context retrieval with Graphiti enabled."""
+        mock_graphiti.enabled = True
+        
+        # Setup file
+        contact_id = "graphiti_contact"
+        path = memory_service._get_file_path(contact_id)
+        with open(path, "w") as f:
+            json.dump({"contact_id": contact_id}, f)
+            
+        context = await memory_service.get_context(contact_id)
+        
+        assert context["relevant_knowledge"] == "Mocked Graphiti Context"
+        mock_graphiti.retrieve_context.assert_called_once_with(contact_id)
 
+    # --- Context Saving Tests ---
 
-class TestMemoryServiceInstance:
-    """Tests for MemoryService class instance."""
+    async def test_save_context_file(self, memory_service):
+        """Test saving context to file."""
+        contact_id = "save_contact"
+        context = {"contact_id": contact_id, "test_val": 123}
+        
+        await memory_service.save_context(contact_id, context)
+        
+        path = memory_service._get_file_path(contact_id)
+        assert path.exists()
+        
+        with open(path, "r") as f:
+            saved = json.load(f)
+            assert saved["test_val"] == 123
+            assert "updated_at" in saved
+
+    async def test_save_context_memory(self, in_memory_service):
+        """Test saving context to memory."""
+        contact_id = "save_mem_contact"
+        context = {"contact_id": contact_id, "val": 456}
+        
+        await in_memory_service.save_context(contact_id, context)
+        
+        assert contact_id in in_memory_service._memory_cache
+        assert in_memory_service._memory_cache[contact_id]["val"] == 456
+
+    # --- Interaction logging ---
+
+    async def test_add_interaction(self, memory_service, mock_graphiti):
+        """Test adding a new interaction."""
+        contact_id = "interact_contact"
+        message = "Hello world"
+        role = "user"
+        
+        await memory_service.add_interaction(contact_id, message, role)
+        
+        context = await memory_service.get_context(contact_id)
+        history = context["conversation_history"]
+        
+        assert len(history) == 1
+        assert history[0]["role"] == role
+        assert history[0]["content"] == message
+        assert "timestamp" in history[0]
+        
+        # Verify Graphiti call
+        # Mock is disabled by default in fixture, enable it here if we want to test calls
+        # But add_interaction calls it if enabled.
+        # Let's verify it didn't call if disabled
+        mock_graphiti.save_interaction.assert_not_called()
+
+    # --- Lead Intelligence Tests ---
+
+    async def test_update_lead_intelligence(self, memory_service):
+        """Test updating lead intelligence data."""
+        contact_id = "intel_contact"
+        intel_data = {
+            "churn_risk": {"risk_score": 0.8},
+            "new_category": {"value": 1}
+        }
+        
+        await memory_service.update_lead_intelligence(contact_id, intel_data)
+        
+        context = await memory_service.get_context(contact_id)
+        stored_intel = context["lead_intelligence"]
+        
+        assert stored_intel["churn_risk"]["risk_score"] == 0.8
+        # Should preserve defaults
+        assert stored_intel["churn_risk"]["risk_level"] == "low" 
+        assert stored_intel["new_category"]["value"] == 1
+
+    async def test_get_lead_intelligence(self, memory_service):
+        """Test getting lead intelligence."""
+        contact_id = "get_intel_contact"
+        intel_data = {"behavioral_features": {"click_count": 5}}
+        
+        await memory_service.update_lead_intelligence(contact_id, intel_data)
+        
+        result = await memory_service.get_lead_intelligence(contact_id)
+        assert result["behavioral_features"]["click_count"] == 5
+
+    # --- Cleanup Tests ---
+
+    async def test_clear_context_file(self, memory_service):
+        """Test clearing context file."""
+        contact_id = "clear_contact"
+        await memory_service.save_context(contact_id, {"data": 1})
+        
+        path = memory_service._get_file_path(contact_id)
+        assert path.exists()
+        
+        await memory_service.clear_context(contact_id)
+        assert not path.exists()
+
+    async def test_clear_context_memory(self, in_memory_service):
+        """Test clearing context memory."""
+        contact_id = "clear_mem"
+        in_memory_service._memory_cache[contact_id] = {}
+        
+        await in_memory_service.clear_context(contact_id)
+        assert contact_id not in in_memory_service._memory_cache
+
+    # --- Specialized Memory ---
     
-    @pytest.fixture
-    def instance(self):
-        """Create instance for testing."""
-        # Create proper instance
-        return MemoryService()
-    
-    def test_initialization(self, instance):
-        """Test MemoryService initialization."""
-        # Test object creation
-        assert hasattr(instance, '__dict__')
-        assert True  # Basic assertion
-
-
-# Integration Tests
-class TestIntegration:
-    """Integration tests for module interactions."""
-    
-    def test_end_to_end_workflow(self):
-        """Test complete workflow."""
-        # Integration test
-        assert True  # Integration test placeholder
-        assert True  # Basic assertion
-
-
-# Edge Cases
-class TestEdgeCases:
-    """Test edge cases and boundary conditions."""
-    
-    def test_empty_inputs(self):
-        """Test with empty inputs."""
-        assert True  # Basic assertion
-    
-    def test_large_inputs(self):
-        """Test with large data sets."""
-        assert True  # Basic assertion
-    
-    def test_invalid_types(self):
-        """Test with invalid data types."""
-        assert True  # Basic assertion
-
-
-# Performance Tests
-@pytest.mark.slow
-class TestPerformance:
-    """Performance and load tests."""
-    
-    def test_response_time(self):
-        """Test response time under load."""
-        assert True  # Basic assertion
-
+    async def test_store_conversation_memory(self, memory_service):
+        """Test storing specialized memory."""
+        conv_id = "special_conv"
+        content = {"summary": "test"}
+        
+        await memory_service.store_conversation_memory(conv_id, content, ttl_hours=1)
+        
+        special_path = memory_service.memory_dir / "specialized" / f"{conv_id}.json"
+        assert special_path.exists()
+        
+        with open(special_path, "r") as f:
+            data = json.load(f)
+            assert data["content"] == content
+            assert data["expires_at"] is not None
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--cov"])
+    pytest.main([__file__, "-v"])

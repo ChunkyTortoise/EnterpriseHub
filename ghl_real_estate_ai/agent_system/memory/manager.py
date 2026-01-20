@@ -32,12 +32,60 @@ except ImportError:
     DEFAULT_DRIVER_CLASS = None
     logging.warning("graphiti_core not found. Memory features will be disabled.")
 
+class LocalMemoryManager:
+    """Fallback memory manager using local JSON storage."""
+    def __init__(self, storage_path: str = "data/agent_memory.json"):
+        self.storage_path = Path(storage_path)
+        self.storage_path.parent.mkdir(parents=True, exist_ok=True)
+        self.memory = self._load()
+
+    def _load(self) -> Dict[str, Any]:
+        if self.storage_path.exists():
+            try:
+                with open(self.storage_path, 'r') as f:
+                    return json.load(f)
+            except Exception:
+                return {}
+        return {}
+
+    def _save(self):
+        try:
+            with open(self.storage_path, 'w') as f:
+                json.dump(self.memory, f, indent=2)
+        except Exception as e:
+            logging.error(f"Failed to save local memory: {e}")
+
+    async def save_interaction(self, lead_id: str, text: str, role: str = "user"):
+        if lead_id not in self.memory:
+            self.memory[lead_id] = []
+        self.memory[lead_id].append({
+            "role": role,
+            "text": text,
+            "timestamp": time.time()
+        })
+        self._save()
+
+    async def retrieve_context(self, lead_id: str) -> str:
+        interactions = self.memory.get(lead_id, [])
+        if not interactions:
+            return ""
+        
+        # Return last 5 interactions as context
+        recent = interactions[-5:]
+        formatted = "\n".join([f"- {i['role']}: {i['text']}" for i in recent])
+        return f"## Recent Interactions (Local Memory)\n{formatted}"
+
+import time
+from pathlib import Path
+
 class GraphitiMemoryManager:
     def __init__(self):
         self.enabled = False
         self.client = None
+        self.fallback = LocalMemoryManager()
         
         if Graphiti is None:
+            logging.warning("graphiti_core not found. Using LocalMemoryManager fallback.")
             return
 
         # Configuration from Env
@@ -74,6 +122,7 @@ class GraphitiMemoryManager:
         Graphiti will extract facts based on the schema.
         """
         if not self.enabled or not self.client:
+            await self.fallback.save_interaction(lead_id, text, role)
             return
 
         # Define the source/subject of the memory
@@ -90,6 +139,7 @@ class GraphitiMemoryManager:
             logging.info(f"Saved interaction for lead {lead_id} to Graphiti.")
         except Exception as e:
             logging.error(f"Error saving to Graphiti: {e}")
+            await self.fallback.save_interaction(lead_id, text, role)
 
     async def retrieve_context(self, lead_id: str) -> str:
         """
@@ -99,7 +149,7 @@ class GraphitiMemoryManager:
         3. Format for Injection
         """
         if not self.enabled or not self.client:
-            return ""
+            return await self.fallback.retrieve_context(lead_id)
 
         context_str = ""
         try:
@@ -123,8 +173,13 @@ class GraphitiMemoryManager:
                 
                 context_str = "## Relevant Knowledge (Graphiti Memory)\n" + "\n".join(formatted_facts)
             
+            # If graph context is empty, try fallback
+            if not context_str:
+                context_str = await self.fallback.retrieve_context(lead_id)
+            
         except Exception as e:
             logging.error(f"Error retrieving context from Graphiti: {e}")
+            context_str = await self.fallback.retrieve_context(lead_id)
 
         return context_str
 

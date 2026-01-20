@@ -10,7 +10,7 @@ from typing import Dict, List, Any, Optional, Union
 from dataclasses import dataclass, asdict
 from enum import Enum
 
-from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider
+from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
 
@@ -221,6 +221,9 @@ class ClaudeOrchestrator:
         start_time = time.time()
 
         try:
+            # Determine complexity for intelligent routing
+            complexity = self._get_complexity_for_task(request.task_type)
+
             # Get system prompt for task type
             system_prompt = self._get_system_prompt(request.task_type)
             if request.system_prompt:
@@ -239,7 +242,8 @@ class ClaudeOrchestrator:
                 model=request.model,
                 max_tokens=request.max_tokens,
                 temperature=request.temperature,
-                streaming=request.streaming
+                streaming=request.streaming,
+                complexity=complexity
             )
 
             # Parse and structure response
@@ -272,6 +276,28 @@ class ClaudeOrchestrator:
                 content=f"Error processing request: {error_str}",
                 metadata={"error": True, "error_type": type(e).__name__}
             )
+
+    def _get_complexity_for_task(self, task_type: ClaudeTaskType) -> TaskComplexity:
+        """Maps ClaudeTaskType to TaskComplexity for intelligent routing"""
+        routine_tasks = [
+            ClaudeTaskType.BEHAVIORAL_INSIGHT,
+            ClaudeTaskType.LEAD_ANALYSIS,
+            ClaudeTaskType.PERSONA_OPTIMIZATION,
+            ClaudeTaskType.CHAT_QUERY
+        ]
+        
+        high_stakes_tasks = [
+            ClaudeTaskType.INTERVENTION_STRATEGY,
+            ClaudeTaskType.REVENUE_PROJECTION,
+            ClaudeTaskType.EXECUTIVE_BRIEFING
+        ]
+        
+        if task_type in routine_tasks:
+            return TaskComplexity.ROUTINE
+        elif task_type in high_stakes_tasks:
+            return TaskComplexity.HIGH_STAKES
+        else:
+            return TaskComplexity.COMPLEX
 
     def _get_demo_fallback_response(self, task_type: ClaudeTaskType) -> ClaudeResponse:
         """Provide realistic mock responses when API key is invalid (Demo Mode)"""
@@ -558,7 +584,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                           model: str,
                           max_tokens: int,
                           temperature: float,
-                          streaming: bool = False) -> Any:
+                          streaming: bool = False,
+                          complexity: Optional[TaskComplexity] = None) -> Any:
         """Make actual Claude API call"""
 
         if streaming:
@@ -568,7 +595,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 prompt=user_prompt,
                 system_prompt=system_prompt,
                 max_tokens=max_tokens,
-                temperature=temperature
+                temperature=temperature,
+                complexity=complexity
             ):
                 content += chunk
             # Note: streaming doesn't return usage info in current LLMClient implementation
@@ -580,7 +608,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 prompt=user_prompt,
                 system_prompt=system_prompt,
                 max_tokens=max_tokens,
-                temperature=temperature
+                temperature=temperature,
+                complexity=complexity
             )
 
     def _parse_response(self, content: str, task_type: ClaudeTaskType) -> ClaudeResponse:

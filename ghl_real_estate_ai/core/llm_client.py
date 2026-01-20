@@ -28,6 +28,13 @@ class LLMProvider(Enum):
     PERPLEXITY = "perplexity"
 
 
+class TaskComplexity(Enum):
+    """Task complexity for intelligent routing."""
+    ROUTINE = "routine"      # Categorization, status updates, basic RAG
+    COMPLEX = "complex"      # Negotiation, strategic planning, deep analysis
+    HIGH_STAKES = "high_stakes" # High-value seller negotiation
+
+
 @dataclass
 class LLMResponse:
     """Standardized LLM response."""
@@ -165,6 +172,24 @@ class LLMClient:
         self._init_client()
         return self._client is not None
 
+    def _get_routed_model(self, complexity: Optional[TaskComplexity] = None) -> str:
+        """
+        Determines the best model based on task complexity and provider.
+        
+        Protects API budget by routing routine tasks to cheaper models (Haiku)
+        while keeping high-stakes tasks on premium models (Sonnet).
+        """
+        if not complexity:
+            return self.model
+            
+        if self.provider == LLMProvider.CLAUDE:
+            if complexity == TaskComplexity.ROUTINE:
+                return settings.claude_haiku_model
+            return settings.claude_sonnet_model
+        
+        # Default to the initialized model for other providers
+        return self.model
+
     def get_langchain_model(self, **kwargs) -> "BaseChatModel":
         """
         Returns a LangChain-compatible chat model instance.
@@ -248,18 +273,22 @@ class LLMClient:
         response_schema: Optional[Any] = None,
         cached_content: Optional[str] = None,
         tools: Optional[List[Any]] = None,
+        complexity: Optional[TaskComplexity] = None,
         **kwargs
     ) -> LLMResponse:
         """Generate a response from the LLM (Synchronous)."""
         if not self.is_available():
             raise RuntimeError(f"{self.provider.value} client not initialized")
 
+        # Determine which model to use based on complexity
+        target_model = self._get_routed_model(complexity)
+
         # Hook: Pre-Generation
         hooks.trigger(HookEvent.PRE_GENERATION, HookContext(
             event=HookEvent.PRE_GENERATION,
             agent_name="LLMClient",
             input_data={"prompt": prompt, "system": system_prompt},
-            metadata={"model": self.model, "provider": self.provider.value}
+            metadata={"model": target_model, "provider": self.provider.value, "complexity": complexity.value if complexity else None}
         ))
 
         response = None
@@ -267,12 +296,12 @@ class LLMClient:
             response = self._generate_gemini(
                 prompt, system_prompt, history, max_tokens, temperature, 
                 response_schema=response_schema, cached_content=cached_content, 
-                tools=tools, **kwargs
+                tools=tools, model_override=target_model, **kwargs
             )
         elif self.provider == LLMProvider.PERPLEXITY:
-            response = self._generate_perplexity(prompt, system_prompt, history, max_tokens, temperature)
+            response = self._generate_perplexity(prompt, system_prompt, history, max_tokens, temperature, model_override=target_model)
         else:
-            response = self._generate_claude(prompt, system_prompt, history, max_tokens, temperature)
+            response = self._generate_claude(prompt, system_prompt, history, max_tokens, temperature, model_override=target_model)
 
         # Hook: Post-Generation
         hooks.trigger(HookEvent.POST_GENERATION, HookContext(
@@ -280,7 +309,7 @@ class LLMClient:
             agent_name="LLMClient",
             input_data={"prompt": prompt},
             output_data=response,
-            metadata={"tokens_used": response.tokens_used}
+            metadata={"tokens_used": response.tokens_used, "model": target_model}
         ))
         
         return response
@@ -295,12 +324,16 @@ class LLMClient:
         response_schema: Optional[Any] = None,
         cached_content: Optional[str] = None,
         tools: Optional[List[Any]] = None,
+        complexity: Optional[TaskComplexity] = None,
         **kwargs
     ) -> LLMResponse:
         """Generate a response from the LLM (Asynchronous)."""
         self._init_async_client()
         if not self._async_client:
             raise RuntimeError(f"{self.provider.value} async client not initialized")
+
+        # Determine which model to use based on complexity
+        target_model = self._get_routed_model(complexity)
 
         if self.provider == LLMProvider.GEMINI:
             # Gemini history handling
@@ -318,7 +351,7 @@ class LLMClient:
 
             # Create model instance with tools if provided
             import google.generativeai as genai
-            model = genai.GenerativeModel(model=self.model, tools=tools)
+            model = genai.GenerativeModel(model=target_model, tools=tools)
             
             if cached_content:
                 from google.generativeai import caching
@@ -356,7 +389,7 @@ class LLMClient:
             return LLMResponse(
                 content=content,
                 provider=self.provider,
-                model=self.model,
+                model=target_model,
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
                 tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
@@ -364,13 +397,13 @@ class LLMClient:
                 tool_calls=tool_calls if tool_calls else None
             )
         elif self.provider == LLMProvider.PERPLEXITY:
-            return await self._agenerate_perplexity(prompt, system_prompt, history, max_tokens, temperature)
+            return await self._agenerate_perplexity(prompt, system_prompt, history, max_tokens, temperature, model_override=target_model)
         else:
             messages = history.copy() if history else []
             messages.append({"role": "user", "content": prompt})
             
             response = await self._async_client.messages.create(
-                model=self.model,
+                model=target_model,
                 max_tokens=max_tokens,
                 temperature=temperature,
                 system=system_prompt or "You are a helpful AI assistant.",
@@ -383,7 +416,7 @@ class LLMClient:
             return LLMResponse(
                 content=response.content[0].text,
                 provider=self.provider,
-                model=self.model,
+                model=target_model,
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
                 tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
@@ -394,6 +427,7 @@ class LLMClient:
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
+        complexity: Optional[TaskComplexity] = None,
         **kwargs
     ) -> AsyncGenerator[str, None]:
         """
@@ -403,6 +437,8 @@ class LLMClient:
         if not self._async_client:
             raise RuntimeError(f"{self.provider.value} async client not initialized")
             
+        target_model = self._get_routed_model(complexity)
+
         if self.provider == LLMProvider.GEMINI:
              full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
              response = await self._async_client.generate_content_async(full_prompt, stream=True)
@@ -411,7 +447,7 @@ class LLMClient:
                      yield chunk.text
         else:
             async with self._async_client.messages.stream(
-                model=self.model,
+                model=target_model,
                 max_tokens=2048,
                 system=system_prompt or "You are a helpful AI assistant.",
                 messages=[{"role": "user", "content": prompt}]
@@ -429,6 +465,7 @@ class LLMClient:
         response_schema: Optional[Any] = None,
         cached_content: Optional[str] = None,
         tools: Optional[List[Any]] = None,
+        model_override: Optional[str] = None,
         **kwargs
     ) -> LLMResponse:
         """Generate response using Gemini."""
@@ -447,8 +484,9 @@ class LLMClient:
             gen_config["response_mime_type"] = "application/json"
             gen_config["response_schema"] = response_schema
 
+        target_model = model_override or self.model
         import google.generativeai as genai
-        model = genai.GenerativeModel(model=self.model, tools=tools)
+        model = genai.GenerativeModel(model=target_model, tools=tools)
         
         if cached_content:
             from google.generativeai import caching
@@ -470,7 +508,7 @@ class LLMClient:
         return LLMResponse(
             content=response.text,
             provider=self.provider,
-            model=self.model,
+            model=target_model,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
@@ -524,14 +562,16 @@ class LLMClient:
         system_prompt: Optional[str],
         history: Optional[list[dict[str, str]]],
         max_tokens: int,
-        temperature: float
+        temperature: float,
+        model_override: Optional[str] = None
     ) -> LLMResponse:
         """Generate response using Claude."""
         messages = history.copy() if history else []
         messages.append({"role": "user", "content": prompt})
 
+        target_model = model_override or self.model
         response = self._client.messages.create(
-            model=self.model,
+            model=target_model,
             max_tokens=max_tokens,
             temperature=temperature,
             system=system_prompt or "You are a helpful AI assistant.",
@@ -544,7 +584,7 @@ class LLMClient:
         return LLMResponse(
             content=response.content[0].text,
             provider=self.provider,
-            model=self.model,
+            model=target_model,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
@@ -557,7 +597,8 @@ class LLMClient:
         system_prompt: Optional[str],
         history: Optional[list[dict[str, str]]],
         max_tokens: int,
-        temperature: float
+        temperature: float,
+        model_override: Optional[str] = None
     ) -> LLMResponse:
         """Generate response using Perplexity (OpenAI-compatible)."""
         messages = []
@@ -567,8 +608,9 @@ class LLMClient:
             messages.extend(history)
         messages.append({"role": "user", "content": prompt})
 
+        target_model = model_override or self.model
         payload = {
-            "model": self.model,
+            "model": target_model,
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature
@@ -586,7 +628,7 @@ class LLMClient:
         return LLMResponse(
             content=content,
             provider=self.provider,
-            model=self.model,
+            model=target_model,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
@@ -599,7 +641,8 @@ class LLMClient:
         system_prompt: Optional[str],
         history: Optional[list[dict[str, str]]],
         max_tokens: int,
-        temperature: float
+        temperature: float,
+        model_override: Optional[str] = None
     ) -> LLMResponse:
         """Generate response using Perplexity asynchronously."""
         messages = []
@@ -609,8 +652,9 @@ class LLMClient:
             messages.extend(history)
         messages.append({"role": "user", "content": prompt})
 
+        target_model = model_override or self.model
         payload = {
-            "model": self.model,
+            "model": target_model,
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature
@@ -634,7 +678,7 @@ class LLMClient:
         return LLMResponse(
             content=content,
             provider=self.provider,
-            model=self.model,
+            model=target_model,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
@@ -645,25 +689,33 @@ class LLMClient:
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
+        complexity: Optional[TaskComplexity] = None,
         **kwargs
     ) -> Generator[str, None, None]:
         """Stream response chunks from the LLM."""
         if not self.is_available():
             raise RuntimeError(f"{self.provider.value} client not initialized")
 
+        target_model = self._get_routed_model(complexity)
+
         if self.provider == LLMProvider.GEMINI:
-            yield from self._stream_gemini(prompt, system_prompt)
+            yield from self._stream_gemini(prompt, system_prompt, target_model)
         else:
-            yield from self._stream_claude(prompt, system_prompt)
+            yield from self._stream_claude(prompt, system_prompt, target_model)
 
     def _stream_gemini(
         self,
         prompt: str,
-        system_prompt: Optional[str]
+        system_prompt: Optional[str],
+        model_override: Optional[str] = None
     ) -> Generator[str, None, None]:
         """Stream response from Gemini."""
         full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
-        response = self._client.generate_content(full_prompt, stream=True)
+        
+        import google.generativeai as genai
+        target_model = model_override or self.model
+        model = genai.GenerativeModel(target_model)
+        response = model.generate_content(full_prompt, stream=True)
 
         for chunk in response:
             if chunk.text:
@@ -672,11 +724,13 @@ class LLMClient:
     def _stream_claude(
         self,
         prompt: str,
-        system_prompt: Optional[str]
+        system_prompt: Optional[str],
+        model_override: Optional[str] = None
     ) -> Generator[str, None, None]:
         """Stream response from Claude."""
+        target_model = model_override or self.model
         with self._client.messages.stream(
-            model=self.model,
+            model=target_model,
             max_tokens=2048,
             system=system_prompt or "You are a helpful AI assistant.",
             messages=[{"role": "user", "content": prompt}]

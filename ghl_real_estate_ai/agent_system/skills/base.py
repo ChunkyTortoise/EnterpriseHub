@@ -161,6 +161,26 @@ class SkillRegistry:
 # Global registry instance
 registry = SkillRegistry()
 
+@registry.register(name="discover_skills", tags=["system", "meta"])
+def discover_skills(query: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    Lists all available skills or searches for relevant ones if a query is provided.
+    Useful for agents to understand their own capabilities.
+    """
+    if query:
+        skills = registry.find_relevant_skills(query)
+    else:
+        skills = list(registry.skills.values())
+        
+    return [
+        {
+            "name": s.name,
+            "description": s.description,
+            "tags": s.tags
+        }
+        for s in skills
+    ]
+
 def skill(name: Optional[str] = None, tags: List[str] = None):
     """Convenience decorator for registering skills."""
     return registry.register(name=name, tags=tags)

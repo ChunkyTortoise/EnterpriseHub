@@ -314,6 +314,48 @@ async def score_lead_v2(
             )
 
 
+@router.post("/swarm-analysis", response_model=Dict[str, Any])
+async def get_swarm_analysis(
+    lead_id: str,
+    lead_data: Dict[str, Any],
+    current_user: dict = Depends(verify_jwt_token)
+) -> Dict[str, Any]:
+    """
+    Perform deep multi-agent swarm analysis on a lead.
+    
+    Provides collaborative intelligence from multiple specialized agents:
+    - Demographic Analyzer
+    - Behavioral Profiler
+    - Intent Detector
+    - Market Analyst (Predator Mode)
+    """
+    from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
+    
+    consensus = await lead_intelligence_swarm.analyze_lead_comprehensive(lead_id, lead_data)
+    
+    # Format consensus for Next.js frontend
+    return {
+        "lead_id": consensus.lead_id,
+        "overall_score": consensus.overall_score,
+        "consensus_level": consensus.consensus_level.value,
+        "confidence": consensus.confidence,
+        "priority": consensus.action_priority,
+        "recommendation": consensus.primary_recommendation,
+        "rationale": consensus.consensus_rationale,
+        "insights": [
+            {
+                "agent": insight.agent_type.value,
+                "finding": insight.primary_finding,
+                "confidence": insight.confidence,
+                "urgency": insight.urgency_level,
+                "metadata": insight.metadata
+            }
+            for insight in consensus.agent_insights
+        ],
+        "processing_time_ms": consensus.processing_time_ms
+    }
+
+
 @router.post("/score-batch", response_model=BatchScoringResponse)
 async def score_leads_batch(
     request: BatchScoringRequest,

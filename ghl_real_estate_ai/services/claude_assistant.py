@@ -16,6 +16,7 @@ from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.claude_orchestrator import ClaudeTaskType, ClaudeRequest
 
 logger = get_logger(__name__)
 
@@ -326,6 +327,50 @@ class ClaudeAssistant:
         if not st.session_state.assistant_greeted:
             st.toast(f"Hello {name}! 👋 I'm Claude, your AI partner. I've indexed your GHL context and I'm ready to work.", icon="🤖")
             st.session_state.assistant_greeted = True
+
+    async def generate_response(self, prompt: str, context: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Generate a response from Claude using the orchestrator.
+        Provides a standard interface for non-chat operations.
+        """
+        if not self.orchestrator:
+            return "Claude service temporarily unavailable."
+            
+        request = ClaudeRequest(
+            task_type=ClaudeTaskType.LEAD_ANALYSIS,
+            context=context or {},
+            prompt=prompt
+        )
+        
+        response = await self.orchestrator.process_request(request)
+        return response.content
+
+    async def analyze_with_context(self, prompt: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Perform deep analysis with context using Claude.
+        Returns a dictionary of insights.
+        """
+        if not self.orchestrator:
+            return {"error": "Claude service temporarily unavailable"}
+            
+        request = ClaudeRequest(
+            task_type=ClaudeTaskType.LEAD_ANALYSIS,
+            context=context or {},
+            prompt=prompt + "\n\nReturn response in JSON format."
+        )
+        
+        response = await self.orchestrator.process_request(request)
+        
+        # Try to parse JSON from content
+        try:
+            import re
+            json_match = re.search(r'\{.*\}', response.content, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+        except Exception:
+            pass
+            
+        return {"content": response.content}
 
     async def generate_automated_report(self, data: Dict[str, Any], report_type: str = "Weekly Performance") -> Dict[str, Any]:
         """

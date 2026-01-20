@@ -7,6 +7,10 @@ Usage:
 """
 import asyncio
 from ghl_real_estate_ai.agent_system.skills.base import registry
+# Import skill modules to trigger @skill registration
+import ghl_real_estate_ai.agent_system.skills.codebase
+import ghl_real_estate_ai.agent_system.skills.real_estate
+import ghl_real_estate_ai.agent_system.skills.monitoring
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
