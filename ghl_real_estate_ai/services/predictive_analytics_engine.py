@@ -161,19 +161,33 @@ class ContentPersonalization:
     content_metadata: Dict[str, Any]
     
     # Personalization factors
-    behavioral_triggers: List[str]
-    preference_alignment: Dict[str, float]
-    timing_optimization: Dict[str, Any]
-    channel_optimization: str
+    relevance_score: float = 0.0
+    personalization_factors: List[Dict[str, Any]] = None
+    behavioral_triggers: List[str] = None
+    preference_alignment: Dict[str, float] = None
+    timing_optimization: Dict[str, Any] = None
+    channel_optimization: str = 'email'
     
     # Predicted impact
-    engagement_probability: float
-    conversion_lift_estimate: float
-    optimal_send_time: datetime
+    engagement_probability: float = 0.0
+    conversion_lift_estimate: float = 0.0
+    optimal_send_time: datetime = None
     
     # A/B testing
-    test_variation: Optional[str]
-    control_content: Optional[str]
+    test_variation: Optional[str] = None
+    control_content: Optional[str] = None
+
+    def __post_init__(self):
+        if self.personalization_factors is None:
+            self.personalization_factors = []
+        if self.behavioral_triggers is None:
+            self.behavioral_triggers = []
+        if self.preference_alignment is None:
+            self.preference_alignment = {}
+        if self.timing_optimization is None:
+            self.timing_optimization = {}
+        if self.optimal_send_time is None:
+            self.optimal_send_time = datetime.now()
 
     @property
     def personalized_content(self) -> str:
@@ -184,30 +198,66 @@ class ContentPersonalization:
 class MarketTimingAnalysis:
     """Market timing optimization analysis"""
     
-    analysis_date: datetime
-    market_segment: str  # 'luxury', 'first_time', 'investment', etc.
+    lead_id: str = "unknown"
+    market_role: str = "buyer"  # 'buyer' or 'seller'
+    analysis_date: datetime = None
+    market_segment: str = 'general'  # 'luxury', 'first_time', 'investment', etc.
     
     # Market conditions
-    market_temperature: float  # 0-1 (cold to hot)
-    inventory_levels: Dict[str, float]  # price_range -> months_of_supply
-    demand_indicators: Dict[str, float]
-    seasonal_factors: Dict[str, float]
+    timing_score: float = 0.5
+    optimal_action_window: datetime = None
+    market_temperature: float = 0.5  # 0-1 (cold to hot)
+    inventory_levels: Dict[str, float] = None
+    demand_indicators: Dict[str, float] = None
+    seasonal_factors: Dict[str, float] = None
+    market_indicators: Dict[str, Any] = None
     
     # Timing recommendations
-    optimal_listing_timing: List[str]
-    optimal_buyer_timing: List[str]
-    urgency_indicators: List[str]
-    caution_indicators: List[str]
+    recommendations: List[str] = None
+    optimal_listing_timing: List[str] = None
+    optimal_buyer_timing: List[str] = None
+    urgency_indicators: List[str] = None
+    caution_indicators: List[str] = None
     
     # Predictions
-    price_trend_3month: float  # % change prediction
-    price_trend_6month: float
-    volume_trend: float
+    price_trend_3month: float = 0.0  # % change prediction
+    price_trend_6month: float = 0.0
+    volume_trend: float = 0.0
     
     # Strategic insights
-    buyer_strategies: List[str]
-    seller_strategies: List[str]
-    investment_opportunities: List[str]
+    buyer_strategies: List[str] = None
+    seller_strategies: List[str] = None
+    investment_opportunities: List[str] = None
+
+    def __post_init__(self):
+        if self.analysis_date is None:
+            self.analysis_date = datetime.now()
+        if self.optimal_action_window is None:
+            self.optimal_action_window = datetime.now() + timedelta(days=30)
+        if self.inventory_levels is None:
+            self.inventory_levels = {}
+        if self.demand_indicators is None:
+            self.demand_indicators = {}
+        if self.seasonal_factors is None:
+            self.seasonal_factors = {}
+        if self.market_indicators is None:
+            self.market_indicators = {}
+        if self.recommendations is None:
+            self.recommendations = []
+        if self.optimal_listing_timing is None:
+            self.optimal_listing_timing = []
+        if self.optimal_buyer_timing is None:
+            self.optimal_buyer_timing = []
+        if self.urgency_indicators is None:
+            self.urgency_indicators = []
+        if self.caution_indicators is None:
+            self.caution_indicators = []
+        if self.buyer_strategies is None:
+            self.buyer_strategies = []
+        if self.seller_strategies is None:
+            self.seller_strategies = []
+        if self.investment_opportunities is None:
+            self.investment_opportunities = []
 
 class BehavioralPatternDiscovery:
     """Discovers patterns in lead behavior and conversions"""

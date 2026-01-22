@@ -106,6 +106,11 @@ class MLFeatureVector:
     data_completeness: float  # How much data we have
     recency_weight: float  # How recent the data is
 
+    @property
+    def financing_readiness(self) -> float:
+        """Alias for financial_readiness to match legacy tests."""
+        return self.financial_readiness
+
 @dataclass 
 class MLScoringResult:
     """Comprehensive ML scoring output"""
@@ -158,6 +163,15 @@ class BaseMLModel(ABC):
     async def update_model(self, training_data: pd.DataFrame) -> bool:
         """Update model with new training data"""
         pass
+
+    async def _alert_ml_failure(self, component: str, error: str):
+        """Alert on ML component failure"""
+        logger.critical(f"ML FAILURE: {component} - {error}")
+        # In production, this would send to PagerDuty/Slack/etc.
+
+    async def _alert_ml_degradation(self, model_id: str, metric: str, value: float):
+        """Alert on ML performance degradation"""
+        logger.warning(f"ML DEGRADATION: {model_id} - {metric}: {value}")
 
 class XGBoostConversionModel(BaseMLModel):
     """XGBoost model for conversion prediction"""
@@ -1360,14 +1374,16 @@ Immediate action required. Lead scoring system compromised.
         return results
 
 # Factory function
-def create_advanced_ml_scoring_engine() -> AdvancedMLLeadScoringEngine:
+async def create_advanced_ml_scoring_engine() -> AdvancedMLLeadScoringEngine:
     """Create advanced ML scoring engine instance"""
-    return AdvancedMLLeadScoringEngine()
+    engine = AdvancedMLLeadScoringEngine()
+    # If any async initialization is needed in the future, it can be added here
+    return engine
 
 # Convenience function for backward compatibility
 async def score_lead_with_advanced_ml(lead_id: str, lead_data: Dict[str, Any]) -> MLScoringResult:
     """Score lead using advanced ML engine"""
-    engine = create_advanced_ml_scoring_engine()
+    engine = await create_advanced_ml_scoring_engine()
     return await engine.score_lead_comprehensive(lead_id, lead_data)
 
 if __name__ == "__main__":
