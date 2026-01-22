@@ -90,6 +90,7 @@ class SubscriptionManager:
                 "usage_current": 0,
                 "overage_rate": tier_config.overage_rate,
                 "base_price": tier_config.price_monthly,
+                "currency": request.currency,
                 "trial_end": datetime.fromtimestamp(
                     stripe_subscription.trial_end, tz=timezone.utc
                 ) if stripe_subscription.trial_end else None,
@@ -106,15 +107,16 @@ class SubscriptionManager:
                         location_id, stripe_subscription_id, stripe_customer_id,
                         tier, status, current_period_start, current_period_end,
                         usage_allowance, usage_current, overage_rate, base_price,
-                        trial_end, cancel_at_period_end
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                        currency, trial_end, cancel_at_period_end
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
                     ON CONFLICT (location_id) DO UPDATE SET
                         stripe_subscription_id = EXCLUDED.stripe_subscription_id,
                         status = EXCLUDED.status,
                         current_period_start = EXCLUDED.current_period_start,
                         current_period_end = EXCLUDED.current_period_end,
                         tier = EXCLUDED.tier,
-                        usage_allowance = EXCLUDED.usage_allowance
+                        usage_allowance = EXCLUDED.usage_allowance,
+                        currency = EXCLUDED.currency
                 """, 
                     subscription_data["location_id"],
                     subscription_data["stripe_subscription_id"],
@@ -127,6 +129,7 @@ class SubscriptionManager:
                     subscription_data["usage_current"],
                     subscription_data["overage_rate"],
                     subscription_data["base_price"],
+                    subscription_data["currency"],
                     subscription_data["trial_end"],
                     subscription_data["cancel_at_period_end"]
                 )
@@ -236,7 +239,10 @@ class SubscriptionManager:
             new_tier_config = SUBSCRIPTION_TIERS[new_tier]
 
             # Modify subscription in Stripe
-            modify_request = ModifySubscriptionRequest(tier=new_tier)
+            modify_request = ModifySubscriptionRequest(
+                tier=new_tier,
+                currency=current_sub.get('currency', 'usd')
+            )
             stripe_subscription = await self.billing_service.modify_subscription(
                 current_sub['stripe_subscription_id'],
                 modify_request
@@ -248,6 +254,7 @@ class SubscriptionManager:
                 "usage_allowance": new_tier_config.usage_allowance,
                 "overage_rate": new_tier_config.overage_rate,
                 "base_price": new_tier_config.price_monthly,
+                "currency": current_sub.get('currency', 'usd'),
                 "current_period_start": datetime.fromtimestamp(stripe_subscription.current_period_start, tz=timezone.utc),
                 "current_period_end": datetime.fromtimestamp(stripe_subscription.current_period_end, tz=timezone.utc),
                 "status": stripe_subscription.status
@@ -259,8 +266,8 @@ class SubscriptionManager:
                     UPDATE subscriptions SET
                         tier = $1, usage_allowance = $2, overage_rate = $3,
                         base_price = $4, current_period_start = $5, current_period_end = $6,
-                        status = $7, updated_at = NOW()
-                    WHERE id = $8
+                        status = $7, currency = $8, updated_at = NOW()
+                    WHERE id = $9
                 """, 
                     usage_reset_data["tier"],
                     usage_reset_data["usage_allowance"],
@@ -269,6 +276,7 @@ class SubscriptionManager:
                     usage_reset_data["current_period_start"],
                     usage_reset_data["current_period_end"],
                     usage_reset_data["status"],
+                    usage_reset_data["currency"],
                     subscription_id
                 )
 
@@ -281,6 +289,7 @@ class SubscriptionManager:
                 stripe_customer_id=stripe_subscription.customer,
                 tier=new_tier,
                 status=SubscriptionStatus(stripe_subscription.status),
+                currency=usage_reset_data["currency"],
                 current_period_start=usage_reset_data["current_period_start"],
                 current_period_end=usage_reset_data["current_period_end"],
                 **usage_reset_data,

@@ -1,0 +1,146 @@
+# Singapore APAC Market Configuration
+# Multi-Market Geographic Expansion - Configuration-driven market data
+# APAC regional hub for finance and tech
+
+# Basic Market Identification
+market_id: singapore
+market_name: "Singapore"
+market_type: tech_hub
+state: "Singapore"
+region: "APAC"
+currency: sgd
+timezone: "Asia/Singapore"
+mls_provider: "CEA / SRX Data"
+
+# Geographic Center
+coordinates: [1.3521, 103.8198]
+
+# Market Economic Indicators
+median_home_price: 1500000
+price_appreciation_1y: 6.2
+inventory_days: 60
+
+# Market Specialization Configuration
+specializations:
+  primary_specialization: "APAC Regional Headquarters and Tech Talent Relocation"
+  secondary_specializations:
+    - "Marina Bay Financial District Housing"
+    - "One-North Tech Corridor Expertise"
+    - "Luxury Sentosa Cove Properties"
+    - "HDB Resale Market Analytics"
+
+  unique_advantages:
+    - "Bilingual market expertise (English/Mandarin)"
+    - "Deep understanding of ABSD and local property cooling measures"
+    - "APAC regional network for cross-border transfers"
+    - "HDB to Condo transition specialization"
+
+  target_client_types:
+    - "Tech professionals (Sea, Grab, Google APAC)"
+    - "Finance executives (DBS, UOB, Goldman Sachs)"
+    - "High-net-worth individuals"
+    - "Regional relocation programs"
+
+  expertise_tags:
+    - "singapore_specialist"
+    - "apac_hub"
+    - "cross_border_relocation"
+    - "luxury_singapore"
+    - "absd_expert"
+
+  knowledge_base_path: "data/knowledge_base/singapore_expertise.json"
+
+# Neighborhood Configurations
+neighborhoods:
+  - name: "Marina Bay"
+    zone: "Central Business District"
+    median_price: 2200000
+    price_trend_3m: 1.8
+    school_rating: 9.0
+    walkability_score: 98
+    coordinates: [1.2867, 103.8545]
+    appeal_scores:
+      finance_appeal: 100
+      executive_appeal: 98
+      luxury_appeal: 95
+      convenience_appeal: 95
+    amenities:
+      - "Financial District"
+      - "Iconic Skyline"
+      - "Gardens by the Bay"
+      - "Luxury Shopping"
+    demographics:
+      age_median: 34
+      income_median: 120000
+      tech_workers: 0.30
+    corporate_proximity:
+      dbs_bank: 2
+      grab_hq: 15
+      google_apac: 10
+
+  - name: "Tiong Bahru"
+    zone: "Central"
+    median_price: 1100000
+    price_trend_3m: 4.5
+    school_rating: 8.2
+    walkability_score: 90
+    coordinates: [1.2865, 103.8322]
+    appeal_scores:
+      lifestyle_appeal: 98
+      culture_appeal: 95
+      arts_appeal: 90
+      tech_appeal: 85
+    amenities:
+      - "Heritage Architecture"
+      - "Artisan Cafes"
+      - "Wet Market"
+      - "Central Location"
+    demographics:
+      age_median: 31
+      income_median: 95000
+      tech_workers: 0.50
+    corporate_proximity:
+      sea_ltd: 12
+      dbs_bank: 8
+
+# Major Employer Configurations
+employers:
+  - employer_id: "dbs_bank"
+    name: "DBS Bank"
+    industry: "Banking/Finance"
+    location: "Marina Bay Financial Centre"
+    coordinates: [1.2800, 103.8550]
+    employee_count: 33000
+    preferred_neighborhoods:
+      - "Marina Bay"
+      - "Tanjong Pagar"
+      - "River Valley"
+    average_salary_range: [70000, 400000]
+    relocation_frequency: "medium"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "sea_ltd"
+    name: "Sea Limited (Shopee/Garena)"
+    industry: "Technology/E-commerce"
+    location: "Galaxis (One-North)"
+    coordinates: [1.2995, 103.7885]
+    employee_count: 60000
+    preferred_neighborhoods:
+      - "Tiong Bahru"
+      - "Buona Vista"
+      - "Queenstown"
+    average_salary_range: [85000, 250000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q2", "Q4"]
+
+# Configuration Metadata
+config_version: "1.0"
+last_updated: "2026-01-22T10:00:00Z"
+active: true
+demographics:
+  population: 5637000
+  median_age: 42.2
+  median_household_income: 120000
+  college_education_rate: 0.58
+  employment_rate: 0.96
+  population_growth_rate: 0.005

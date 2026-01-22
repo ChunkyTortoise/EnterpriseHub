@@ -32,6 +32,11 @@ PERSONAS = {
         "initial_query": "I don't care what your 'data' says about the kitchen. We've lived here 20 years and it's perfectly fine. I'm not taking a $30,000 hit just because some algorithm thinks it's 'outdated'. My price is firm.",
         "goal": "Equity Protection & Market Reality Education",
         "behavior": "Emotionally attached, dismissive of repair costs, refuses to acknowledge depreciation."
+    },
+    "The International Regulatory Skeptic": {
+        "initial_query": "I'm looking to list my property in Singapore, but I'm worried about these new ABSD (Additional Buyer's Stamp Duty) regulations and the data privacy rules. How can your bot handle my data under Singapore law? Also, what are the disclosure requirements for foreign buyers?",
+        "goal": "International Compliance (GDPR/ABSD/CEA)",
+        "behavior": "Cautious, focuses on local regulations and data privacy, tests for local knowledge."
     }
 }
 

@@ -57,6 +57,11 @@ class CampaignStatus(Enum):
     CANCELLED = "cancelled"
 
 
+class DatabaseConnectionError(Exception):
+    """Raised when database connection fails."""
+    pass
+
+
 # ============================================================================
 # Database Models
 # ============================================================================
@@ -239,7 +244,10 @@ class DatabaseService:
                 ("012_create_users_table", self._migration_012_create_users_table),
                 ("013_create_follow_up_tasks", self._migration_013_create_follow_up_tasks),
                 ("014_create_market_intelligence_tables", self._migration_014_create_market_intelligence_tables),
-                ("015_create_agents_table", self._migration_015_create_agents_table)
+                ("015_create_agents_table", self._migration_015_create_agents_table),
+                ("016_create_notifications_table", self._migration_016_create_notifications_table),
+                ("017_create_sessions_table", self._migration_017_create_sessions_table),
+                ("018_add_currency_to_subscriptions", self._migration_018_add_currency_to_subscriptions)
             ]
             
             # Check and apply migrations
@@ -251,6 +259,51 @@ class DatabaseService:
                     logger.info(f"Applying migration: {version}")
                     await migration_func(conn)
                     await conn.execute("INSERT INTO migrations (version) VALUES ($1)", version)
+
+    async def _migration_016_create_notifications_table(self, conn: Connection) -> None:
+        """Create table for notifications."""
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id UUID NOT NULL,
+                location_id VARCHAR(100) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                type VARCHAR(50) DEFAULT 'info',
+                is_read BOOLEAN DEFAULT FALSE,
+                metadata JSONB DEFAULT '{}',
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                read_at TIMESTAMP WITH TIME ZONE
+            )
+        """)
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read) WHERE is_read = FALSE")
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_notifications_location ON notifications(location_id)")
+
+    async def _migration_017_create_sessions_table(self, conn: Connection) -> None:
+        """Create table for persistent sessions (Implementation 11)."""
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS sessions (
+                session_id VARCHAR(255) PRIMARY KEY,
+                user_id UUID NOT NULL,
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                status VARCHAR(20) DEFAULT 'active',
+                risk_score DECIMAL(3, 2) DEFAULT 0.0,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                last_active TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                metadata JSONB DEFAULT '{}'
+            )
+        """)
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)")
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)")
+
+    async def _migration_018_add_currency_to_subscriptions(self, conn: Connection) -> None:
+        """Add currency column to subscriptions table (Phase 7)."""
+        await conn.execute("""
+            ALTER TABLE subscriptions 
+            ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'usd'
+        """)
 
     async def _migration_011_create_model_outcomes(self, conn: Connection) -> None:
         """Create table for feedback loop retraining data."""
@@ -908,7 +961,12 @@ class DatabaseService:
                     await conn.execute(index_sql)
                     logger.debug(f"✅ Critical index created: {index_sql.split(' ON ')[1].split('(')[0] if ' ON ' in index_sql else 'index'}")
                 except Exception as e:
-                    logger.warning(f"⚠️ Critical index creation failed (may already exist): {e}")
+                    # Only catch "already exists" errors, raise everything else
+                    if "already exists" in str(e).lower():
+                        logger.debug(f"ℹ️ Critical index already exists: {index_sql.split(' ON ')[1].split('(')[0] if ' ON ' in index_sql else 'index'}")
+                    else:
+                        logger.error(f"❌ Failed to create critical index: {e}")
+                        raise
 
             # Apply standard indexes
             logger.info("📊 Applying standard performance indexes...")
@@ -916,7 +974,12 @@ class DatabaseService:
                 try:
                     await conn.execute(index_sql)
                 except Exception as e:
-                    logger.warning(f"⚠️ Standard index creation failed (may already exist): {e}")
+                    # Only catch "already exists" errors, raise everything else
+                    if "already exists" in str(e).lower():
+                        continue
+                    else:
+                        logger.error(f"❌ Failed to create standard index: {e}")
+                        raise
 
             # Update statistics for query optimizer
             logger.info("📈 Updating database statistics for optimal query planning...")
@@ -927,7 +990,8 @@ class DatabaseService:
                 await conn.execute("ANALYZE lead_campaign_status")
                 logger.info("✅ Database statistics updated for Service 6 performance optimization")
             except Exception as e:
-                logger.warning(f"⚠️ Statistics update failed: {e}")
+                logger.error(f"❌ Statistics update failed: {e}")
+                raise
 
             logger.info("🎯 Service 6 performance optimization complete - expecting 90%+ query improvement")
     
@@ -1295,6 +1359,7 @@ class DatabaseService:
                     """, lead_id)
                 else:
                     # Re-raise if it's not a schema issue
+                    logger.error(f"Failed to get lead response data: {e}")
                     raise e
 
             # Calculate response metrics
@@ -1752,13 +1817,16 @@ class DatabaseService:
     # ============================================================================
     
     async def health_check(self) -> Dict[str, Any]:
-        """Perform database health check."""
+        """Perform database health check. Raises DatabaseConnectionError on critical failure."""
         try:
             start_time = datetime.utcnow()
             
             async with self.get_connection() as conn:
                 # Test basic connectivity
                 result = await conn.fetchval("SELECT 1")
+                
+                if result != 1:
+                    raise DatabaseConnectionError("Database connectivity test failed")
                 
                 # Check table counts
                 leads_count = await conn.fetchval("SELECT COUNT(*) FROM leads")
@@ -1776,7 +1844,7 @@ class DatabaseService:
                 return {
                     "status": "healthy",
                     "response_time_seconds": response_time,
-                    "database_connected": result == 1,
+                    "database_connected": True,
                     "stats": {
                         "total_leads": leads_count,
                         "total_communications": comms_count,
@@ -1791,11 +1859,8 @@ class DatabaseService:
                 
         except Exception as e:
             logger.error(f"Database health check failed: {e}")
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "response_time_seconds": None
-            }
+            # Re-raise to ensure calling layer knows about the failure
+            raise e
     
     async def get_performance_metrics(self) -> Dict[str, Any]:
         """Get comprehensive database performance metrics via enterprise connection manager."""

@@ -289,18 +289,34 @@ class BillingService:
 
             update_data = {}
 
+            # Determine currency (use new one from request or keep existing)
+            currency = request.currency or current_subscription.metadata.get("currency", "usd")
+
             # Handle tier change
             if request.tier:
                 tier_config = SUBSCRIPTION_TIERS[request.tier]
                 update_data["items"] = [{
                     "id": current_subscription["items"]["data"][0]["id"],
-                    "price": tier_config.stripe_price_id
+                    "price": self._get_price_id(request.tier, currency)
                 }]
                 update_data["metadata"] = {
                     **current_subscription.metadata,
                     "tier": request.tier.value,
                     "usage_allowance": str(tier_config.usage_allowance),
-                    "overage_rate": str(tier_config.overage_rate)
+                    "overage_rate": str(tier_config.overage_rate),
+                    "currency": currency
+                }
+                update_data["proration_behavior"] = "create_prorations"
+            elif request.currency and request.currency != current_subscription.metadata.get("currency"):
+                # Handle only currency change (unlikely without tier change but supported)
+                tier = SubscriptionTier(current_subscription.metadata.get("tier"))
+                update_data["items"] = [{
+                    "id": current_subscription["items"]["data"][0]["id"],
+                    "price": self._get_price_id(tier, request.currency)
+                }]
+                update_data["metadata"] = {
+                    **current_subscription.metadata,
+                    "currency": request.currency
                 }
                 update_data["proration_behavior"] = "create_prorations"
 
