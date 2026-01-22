@@ -102,13 +102,22 @@ class JorgeSellerEngine:
     Handles the 4-question sequence with confrontational tone.
     """
 
-    def __init__(self, conversation_manager, ghl_client):
-        """Initialize with existing conversation manager and GHL client"""
+    def __init__(self, conversation_manager, ghl_client, config: Optional[JorgeSellerConfig] = None):
+        """Initialize with existing conversation manager and GHL client
+
+        Args:
+            conversation_manager: ConversationManager instance
+            ghl_client: GHL API client
+            config: Optional JorgeSellerConfig instance for configuration overrides
+        """
         self.conversation_manager = conversation_manager
         self.ghl_client = ghl_client
         self.tone_engine = JorgeToneEngine()
         self.logger = logging.getLogger(__name__)
-        
+
+        # Store config for threshold access
+        self.config = config or JorgeSellerConfig()
+
         # Initialize Analytics Service
         from ghl_real_estate_ai.services.analytics_service import AnalyticsService
         self.analytics_service = AnalyticsService()
@@ -287,21 +296,31 @@ class JorgeSellerEngine:
             return current_seller_data
 
     async def _calculate_seller_temperature(self, seller_data: Dict) -> Dict:
-        """Calculate Jorge's seller temperature classification"""
+        """Calculate Jorge's seller temperature classification
+
+        Uses configurable thresholds from self.config to enable A/B testing
+        and tuning without code deployment.
+        """
         questions_answered = seller_data.get("questions_answered", 0)
         response_quality = seller_data.get("response_quality", 0.0)
         timeline_acceptable = seller_data.get("timeline_acceptable")
 
+        # Get configurable thresholds
+        hot_questions = self.config.HOT_QUESTIONS_REQUIRED
+        hot_quality = self.config.HOT_QUALITY_THRESHOLD
+        warm_questions = self.config.WARM_QUESTIONS_REQUIRED
+        warm_quality = self.config.WARM_QUALITY_THRESHOLD
+
         # Jorge's Hot seller criteria (strictest)
-        if (questions_answered == 4 and
+        if (questions_answered >= hot_questions and
             timeline_acceptable is True and  # Must accept 30-45 day timeline
-            response_quality >= 0.7):
+            response_quality >= hot_quality):
             temperature = "hot"
             confidence = 0.95
 
         # Jorge's Warm seller criteria
-        elif (questions_answered >= 3 and
-              response_quality > 0.5):
+        elif (questions_answered >= warm_questions and
+              response_quality >= warm_quality):
             temperature = "warm"
             confidence = 0.75
 
@@ -317,7 +336,13 @@ class JorgeSellerEngine:
                 "questions_answered": questions_answered,
                 "response_quality": response_quality,
                 "timeline_acceptable": timeline_acceptable,
-                "classification_logic": f"{questions_answered}/4 questions, {response_quality:.2f} quality"
+                "classification_logic": f"{questions_answered}/{hot_questions} questions, {response_quality:.2f} quality",
+                "thresholds_used": {
+                    "hot_questions": hot_questions,
+                    "hot_quality": hot_quality,
+                    "warm_questions": warm_questions,
+                    "warm_quality": warm_quality
+                }
             }
         }
 

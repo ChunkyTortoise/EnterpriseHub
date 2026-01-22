@@ -39,6 +39,20 @@ try:
 except ImportError:
     retraining_service = None
 
+# Phase 7: Global Compliance Enforcer
+from ghl_real_estate_ai.compliance_platform.engine.policy_enforcer import PolicyEnforcer
+from ghl_real_estate_ai.services.agent_state_sync import sync_service
+
+# Phase 7: Lead Bot V2 Intelligence
+from ghl_real_estate_ai.services.autonomous_objection_handler import get_autonomous_objection_handler
+from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
+from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
+
+compliance_enforcer = PolicyEnforcer()
+objection_handler = get_autonomous_objection_handler()
+calendar_scheduler = get_smart_scheduler()
+market_engine = MarketTimingOpportunityEngine()
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -192,6 +206,30 @@ Keep responses SHORT (1-2 sentences max). This is SMS, not email.
         return question
 
 
+async def safe_send_sms(contact_id: str, location_id: str, message: str, agent_name: str = "AI Assistant"):
+    """
+    Checks message for compliance and sends via GHL if allowed.
+    Logs activity to the dashboard live feed.
+    """
+    # 1. Compliance Check (FHA)
+    compliance = await compliance_enforcer.intercept_message(message)
+    if not compliance["allowed"]:
+        logger.warning(f"🚫 BLOCKED non-compliant message for {contact_id}: {compliance['violations']}")
+        # Log to dashboard
+        await sync_service.record_agent_thought(
+            "ComplianceBot", 
+            f"BLOCKED: FHA violation for {contact_id}. Suggestion: {compliance['suggestion']}", 
+            "Error"
+        )
+        return
+
+    # 2. Log successful delivery attempt to dashboard
+    await sync_service.record_agent_thought(agent_name, f"Sending message to {contact_id}: {message[:50]}...")
+
+    # 3. Send via GHL
+    await send_sms_via_ghl(contact_id, location_id, message)
+
+
 async def send_sms_via_ghl(contact_id: str, location_id: str, message: str):
     """Send SMS message via GHL API"""
     import httpx
@@ -343,16 +381,76 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
                 # In strict mode, we might block the message here. 
                 # For now, we log and proceed with Jorge's approval.
 
-            background_tasks.add_task(send_sms_via_ghl, contact_id, location_id, ai_message)
+            background_tasks.add_task(safe_send_sms, contact_id, location_id, ai_message, "Orchestrator")
             return JSONResponse({"status": "responded_to_objection", "message": ai_message})
 
-    # Get or create qualification state
+    # Phase 7: Lead Bot V2 Intelligence Flow
+    lead_message = payload.get("message", {}).get("body", "")
+    lead_name = payload.get("contact", {}).get("firstName", "there")
+    custom_fields = payload.get("customFields", {})
+    
+    # 1. Autonomous Objection Resolution
+    if lead_message:
+        obj_response = await objection_handler.handle_objection_flow(
+            contact_id, lead_message, {"name": lead_name, "custom_fields": custom_fields}
+        )
+        if obj_response and obj_response.confidence_score > 0.8:
+            logger.info(f"✅ Auto-resolved objection for {contact_id}: {obj_response.analysis.category}")
+            background_tasks.add_task(safe_send_sms, contact_id, location_id, obj_response.generated_message, "ObjectionBot")
+            return JSONResponse({"status": "objection_resolved", "message": obj_response.generated_message})
+
+    # 2. Get or create qualification state
     if contact_id not in qualification_states:
         qualification_states[contact_id] = LeadQualificationState(contact_id=contact_id)
 
     state = qualification_states[contact_id]
 
-    # Check if we should disengage (score >= 70)
+    # 3. Proactive Scheduling for Hot Leads
+    if state.score >= 70 or "Hot Lead" in tags:
+        contact_info = {
+            "contact_id": contact_id,
+            "first_name": lead_name,
+            "phone": payload.get("contact", {}).get("phone"),
+            "email": payload.get("contact", {}).get("email")
+        }
+        extracted_data = {
+            "budget": custom_fields.get("budget"),
+            "location": custom_fields.get("location"),
+            "motivation": custom_fields.get("motivation"),
+            "timeline": custom_fields.get("timeline")
+        }
+        
+        booked, booking_msg, booking_actions = await calendar_scheduler.handle_appointment_request(
+            contact_id, contact_info, state.score // 10, extracted_data, lead_message
+        )
+        
+        if booked:
+            logger.info(f"📅 Proactive scheduling triggered for {contact_id}")
+            background_tasks.add_task(safe_send_sms, contact_id, location_id, booking_msg, "SchedulerBot")
+            # Apply GHL actions (tags, etc.) if any
+            if booking_actions:
+                from ghl_real_estate_ai.services.ghl_client import GHLClient
+                ghl = GHLClient()
+                background_tasks.add_task(ghl.apply_actions, contact_id, booking_actions)
+            
+            return JSONResponse({"status": "appointment_offered", "message": booking_msg})
+
+    # 4. Investor "Prime Arbitrage" Pitch
+    if "investor" in str(tags).lower() or "investor" in str(custom_fields.get("motivation")).lower():
+        market_area = custom_fields.get("region", "austin").lower()
+        opportunities = await market_engine.identify_investment_opportunities(
+            client_budget=float(custom_fields.get("budget", 500000)),
+            risk_tolerance="medium",
+            investment_goals=["appreciation", "arbitrage"],
+            time_horizon="1_year"
+        )
+        if opportunities:
+            best_opp = opportunities[0]
+            pitch = f"Hey {lead_name}, I just analyzed the {market_area} market and found a {best_opp.opportunity_type.value} opportunity with a projected {best_opp.roi_estimate}% ROI. Are you interested in the details?"
+            background_tasks.add_task(safe_send_sms, contact_id, location_id, pitch, "MarketBot")
+            return JSONResponse({"status": "investor_pitch_sent", "message": pitch})
+
+    # Check if we should disengage (score >= 70) - Original logic fallback
     if state.score >= 70:
         logger.info(
             f"Lead {contact_id} is HOT (score: {state.score}) - handing off to human"
@@ -371,7 +469,7 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
         # Send handoff message
         handoff_msg = "Thanks for all the info! A team member will reach out shortly to help you. 🎉"
         background_tasks.add_task(
-            send_sms_via_ghl, contact_id, location_id, handoff_msg
+            safe_send_sms, contact_id, location_id, handoff_msg, "System"
         )
 
         return JSONResponse(
@@ -384,7 +482,7 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
     ai_message = get_ai_response(payload, conversation_history, state.current_question)
 
     # Send SMS via GHL
-    background_tasks.add_task(send_sms_via_ghl, contact_id, location_id, ai_message)
+    background_tasks.add_task(safe_send_sms, contact_id, location_id, ai_message, "SalesBot")
 
     # Update state
     state.message_count += 1

@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     temperature: float = 0.7
     max_tokens: int = 150
     default_llm_provider: str = "claude"
-    gemini_model: str = "gemini-1.5-pro-latest"
+    gemini_model: str = Field("gemini-2.0-flash-lite", env="GEMINI_MODEL")
     google_api_key: Optional[str] = None
     perplexity_api_key: Optional[str] = None
     perplexity_model: str = "sonar"

@@ -5,6 +5,8 @@ Reduces input token count for large documents/code.
 
 from fastmcp import FastMCP
 import re
+from typing import List, Dict, Any
+from datetime import datetime
 
 # Initialize FastMCP server
 mcp = FastMCP("Gemini Context Compressor")
@@ -94,6 +96,43 @@ async def estimate_tokens(content: str) -> dict:
         "estimated_tokens": estimated_tokens,
         "estimated_cost_flash_usd": (estimated_tokens * 0.0000375) / 1_000_000,
         "estimated_cost_pro_usd": (estimated_tokens * 0.0015) / 1_000_000,
+    }
+
+@mcp.tool()
+async def discover_services() -> Dict[str, Any]:
+    """
+    Service Discovery (2026 Pattern): Returns a catalog of available services,
+    their owners, and resource locations in the EnterpriseHub ecosystem.
+    """
+    return {
+        "services": [
+            {
+                "name": "Property Valuation (AVM)",
+                "endpoint": "ghl_real_estate_ai.services.property_matcher",
+                "capabilities": ["valuation", "comparables", "market_analysis"],
+                "owner": "Real Estate AI Team"
+            },
+            {
+                "name": "Lead Intelligence",
+                "endpoint": "ghl_real_estate_ai.services.enhanced_lead_intelligence",
+                "capabilities": ["scoring", "sentiment", "psychographics"],
+                "owner": "Core Intelligence Team"
+            },
+            {
+                "name": "Churn Prediction",
+                "endpoint": "ghl_real_estate_ai.services.churn_prediction_engine",
+                "capabilities": ["churn_risk", "retention_strategy"],
+                "owner": "Customer Success Team"
+            },
+            {
+                "name": "Market Context",
+                "endpoint": "ghl_real_estate_ai.services.market_context_injector",
+                "capabilities": ["neighborhood_stats", "local_trends"],
+                "owner": "Market Data Team"
+            }
+        ],
+        "discovery_timestamp": datetime.now().isoformat(),
+        "registry_version": "1.2.0"
     }
 
 if __name__ == "__main__":

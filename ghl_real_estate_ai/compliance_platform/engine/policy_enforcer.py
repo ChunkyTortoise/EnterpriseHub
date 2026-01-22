@@ -152,6 +152,84 @@ class PolicyEnforcer:
         # GDPR Policies
         self._register_gdpr_policies()
 
+        # Fair Housing Act (FHA) Policies
+        self._register_fha_policies()
+
+    def _register_fha_policies(self):
+        """Register Fair Housing Act compliance policies for Real Estate AI."""
+
+        policies = [
+            CompliancePolicy(
+                policy_id="FHA-001",
+                name="Protected Class Discrimination",
+                description="Prohibits discrimination based on race, color, religion, sex, handicap, familial status, or national origin.",
+                regulation=RegulationType.EU_AI_ACT, # Using as placeholder if FHA not in Enum
+                policy_type=PolicyType.MANDATORY,
+                scope=PolicyScope.GLOBAL,
+                severity_if_violated=ViolationSeverity.CRITICAL,
+                prohibited_conditions=[
+                    "discriminatory_steering", 
+                    "protected_class_reference",
+                    "exclusionary_language"
+                ],
+                remediation_guidance="Remove any references to protected classes or steering language. Use neutral, property-focused descriptions.",
+                remediation_deadline_days=0,
+            ),
+            CompliancePolicy(
+                policy_id="FHA-002",
+                name="Advertising Compliance",
+                description="Ensures all real estate advertising is inclusive and non-discriminatory.",
+                regulation=RegulationType.EU_AI_ACT,
+                policy_type=PolicyType.MANDATORY,
+                scope=PolicyScope.GLOBAL,
+                severity_if_violated=ViolationSeverity.HIGH,
+                required_conditions=["equal_housing_opportunity_disclosure"],
+                remediation_guidance="Include Equal Housing Opportunity disclaimer in all advertising materials.",
+                remediation_deadline_days=1,
+            )
+        ]
+
+        for policy in policies:
+            self._policies[policy.policy_id] = policy
+
+    async def intercept_message(self, message_text: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Intercepts and analyzes a message for real-time compliance.
+        
+        Returns:
+            Dict containing 'allowed' (bool), 'violations' (list), and 'suggestion' (str).
+        """
+        violations = []
+        
+        # Simple pattern-based detection for FHA (in production, use LLM-based analysis)
+        fha_keywords = [
+            r"\b(white|black|asian|hispanic)\s+(neighborhood|area|people)\b",
+            r"\b(christian|jewish|muslim|catholic)\b",
+            r"\b(no\s+kids|adults\s+only|no\s+families)\b",
+            r"\b(perfect\s+for\s+singles|man\s+cave|bachelor\s+pad)\b",
+            r"\b(restricted|exclusive|private)\s+community\b"
+        ]
+        
+        for pattern in fha_keywords:
+            if re.search(pattern, message_text, re.IGNORECASE):
+                violations.append({
+                    "policy_id": "FHA-001",
+                    "severity": "CRITICAL",
+                    "message": f"Potential FHA violation detected: {pattern}"
+                })
+        
+        if not violations:
+            return {"allowed": True, "violations": [], "suggestion": None}
+            
+        # If violations found, provide a suggestion (placeholder)
+        suggestion = "This property is open to everyone. It features [Property Features] and is located in [Location]."
+        
+        return {
+            "allowed": False,
+            "violations": violations,
+            "suggestion": suggestion
+        }
+
     def _register_eu_ai_act_policies(self):
         """Register EU AI Act compliance policies"""
 

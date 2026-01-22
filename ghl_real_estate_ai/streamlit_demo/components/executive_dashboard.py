@@ -12,6 +12,7 @@ def render_executive_dashboard(mock_data: bool = True):
     Render the Executive Command Center dashboard - Obsidian Command Edition.
     """
     from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+    from ghl_real_estate_ai.streamlit_demo.components.primitives import render_obsidian_card, CardConfig, icon, ICONS
     
     st.markdown("# 🎯 EXECUTIVE COMMAND")
     st.markdown("**Real-time tactical intelligence across the enterprise**")
@@ -23,40 +24,48 @@ def render_executive_dashboard(mock_data: bool = True):
     metric_card_style = "padding: 20px; border-radius: 12px; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px);"
     
     with col1:
-        st.markdown(f"""
-        <div style='background: rgba(16, 185, 129, 0.1); {metric_card_style} border-left: 4px solid #10b981;'>
-            <div style='font-size: 0.75rem; opacity: 0.8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif; color: #10b981;'>🔥 HOT LEADS</div>
+        render_obsidian_card(
+            title="HOT LEADS",
+            content="""
             <div style='font-size: 2.75rem; font-weight: 700; margin: 8px 0; font-family: "Space Grotesk", sans-serif;'>3</div>
             <div style='font-size: 0.8rem; opacity: 0.7; font-weight: 600;'>+2 SINCE BASELINE</div>
-        </div>
-        """, unsafe_allow_html=True)
+            """,
+            config=CardConfig(variant='alert', glow_color='#10b981', padding='20px'),
+            icon='fire'
+        )
     
     with col2:
-        st.markdown(f"""
-        <div style='background: rgba(245, 158, 11, 0.1); {metric_card_style} border-left: 4px solid #f59e0b;'>
-            <div style='font-size: 0.75rem; opacity: 0.8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif; color: #f59e0b;'>⚡ WARM LEADS</div>
+        render_obsidian_card(
+            title="WARM LEADS",
+            content="""
             <div style='font-size: 2.75rem; font-weight: 700; margin: 8px 0; font-family: "Space Grotesk", sans-serif;'>8</div>
             <div style='font-size: 0.8rem; opacity: 0.7; font-weight: 600;'>READY FOR SYNC</div>
-        </div>
-        """, unsafe_allow_html=True)
+            """,
+            config=CardConfig(variant='alert', glow_color='#f59e0b', padding='20px'),
+            icon='bolt'
+        )
     
     with col3:
-        st.markdown(f"""
-        <div style='background: rgba(99, 102, 241, 0.1); {metric_card_style} border-left: 4px solid #6366F1;'>
-            <div style='font-size: 0.75rem; opacity: 0.8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif; color: #6366F1;'>💰 PIPELINE</div>
+        render_obsidian_card(
+            title="PIPELINE",
+            content="""
             <div style='font-size: 2.75rem; font-weight: 700; margin: 8px 0; font-family: "Space Grotesk", sans-serif;'>$2.4M</div>
             <div style='font-size: 0.8rem; opacity: 0.7; font-weight: 600;'>PROJECTED YIELD</div>
-        </div>
-        """, unsafe_allow_html=True)
+            """,
+            config=CardConfig(variant='premium', padding='20px'),
+            icon='dollar-sign'
+        )
     
     with col4:
-        st.markdown(f"""
-        <div style='background: rgba(139, 92, 246, 0.1); {metric_card_style} border-left: 4px solid #8b5cf6;'>
-            <div style='font-size: 0.75rem; opacity: 0.8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif; color: #8b5cf6;'>⏱️ LATENCY</div>
+        render_obsidian_card(
+            title="LATENCY",
+            content="""
             <div style='font-size: 2.75rem; font-weight: 700; margin: 8px 0; font-family: "Space Grotesk", sans-serif;'>2.3m</div>
             <div style='font-size: 0.8rem; opacity: 0.7; font-weight: 600;'>AI RESPONSE TIME</div>
-        </div>
-        """, unsafe_allow_html=True)
+            """,
+            config=CardConfig(variant='alert', glow_color='#8b5cf6', padding='20px'),
+            icon='clock'
+        )
 
     with col5:
         # Market Velocity Gauge - Obsidian Style
@@ -121,10 +130,9 @@ def render_executive_dashboard(mock_data: bool = True):
         ]
         
         for lead in hot_leads:
-            st.markdown(f"""
-            <div style='background: rgba(22, 27, 34, 0.7); padding: 1.5rem; border-radius: 12px; 
-                        margin-bottom: 1rem; border-left: 4px solid #10b981;
-                        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); border-left: 4px solid #10b981; backdrop-filter: blur(10px);'>
+            render_obsidian_card(
+                title="",
+                content=f"""
                 <div style='display: flex; justify-content: space-between; align-items: center;'>
                     <div>
                         <div style='font-size: 1.25rem; font-weight: 700; color: #FFFFFF; font-family: "Space Grotesk", sans-serif;'>
@@ -149,8 +157,10 @@ def render_executive_dashboard(mock_data: bool = True):
                         </div>
                     </div>
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """,
+                config=CardConfig(variant='glass', padding='1.5rem'),
+                icon='fire'
+            )
             
             # Action Row - Buttons are automatically styled by inject_elite_css
             act_c1, act_c2, act_c3 = st.columns(3)
@@ -301,12 +311,21 @@ def render_executive_dashboard(mock_data: bool = True):
 def sparkline(data: list, color: str = "#2563eb", height: int = 60):
     """Generates a minimal sparkline chart using Plotly."""
     import plotly.graph_objects as go
+    
+    # Convert hex to rgba for fill
+    if color.startswith('#'):
+        hex_color = color.lstrip('#')
+        r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        fill_color = f"rgba({r}, {g}, {b}, 0.2)"
+    else:
+        fill_color = color
+
     fig = go.Figure(go.Scatter(
         y=data,
         mode='lines',
         fill='tozeroy',
         line=dict(color=color, width=2),
-        fillcolor=f"{color}33"
+        fillcolor=fill_color
     ))
     fig.update_layout(
         showlegend=False,

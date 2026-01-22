@@ -29,7 +29,12 @@ class PropertyMatcher:
     """
     Service to match leads with property listings based on preferences.
     Upgraded to Agentic Reasoning in Phase 2 with Performance Caching.
+    Refactored in 2026 for Multi-Tenant Resource Pooling.
     """
+
+    # SHARED RESOURCE POOL: Static instances shared across all tenant-specific Matchers
+    _shared_valuation_engine = None
+    _service_registry = {}
 
     # Class-level cache for property listings (shared across instances)
     _listings_cache: Optional[List[Dict[str, Any]]] = None
@@ -40,9 +45,6 @@ class PropertyMatcher:
     def __init__(self, listings_path: Optional[str] = None):
         """
         Initialize the Property Matcher.
-
-        Args:
-            listings_path: Path to the property listings JSON file.
         """
         self.listings_path = (
             Path(listings_path)
@@ -52,15 +54,51 @@ class PropertyMatcher:
             / "knowledge_base"
             / "property_listings.json"
         )
-        # Initialize with cached listings for better performance
-        # Note: We no longer call create_task here as it fails in non-async threads (like Streamlit global scope)
         self.llm_client = LLMClient(
             provider="claude",
             model=settings.claude_model
         )
         self.analytics = AnalyticsService()
-        # Strategy Pattern Initialization
         self.strategy: PropertyMatchingStrategy = BasicFilteringStrategy()
+        
+        # Initialize Shared Resource Pool
+        self._init_shared_resources()
+
+    def _init_shared_resources(self):
+        """
+        Implements Service Discovery pattern to locate centralized compute resources.
+        Reduces per-tenant overhead by sharing AVM compute logic.
+        """
+        if PropertyMatcher._shared_valuation_engine is not None:
+            return
+
+        try:
+            # 2026 Pattern: Discover services via MCP Registry
+            from ghl_real_estate_ai.core.mcp_servers.context_compressor import discover_services
+            # Simulate service discovery
+            # In a real 2026 environment, this would call the MCP tool
+            # registry = asyncio.run(discover_services()) 
+            
+            # For now, we perform dynamic discovery/import
+            from ghl_real_estate_ai.services.dynamic_valuation_engine import get_dynamic_valuation_engine
+            PropertyMatcher._shared_valuation_engine = get_dynamic_valuation_engine()
+            logger.info("PropertyMatcher: Centralized AVM Service Linked to Shared Pool")
+        except Exception as e:
+            logger.error(f"Failed to discover shared AVM service: {e}")
+
+    async def get_property_valuation(self, property_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Centralized AVM call using the shared resource pool.
+        """
+        if PropertyMatcher._shared_valuation_engine:
+            result = await PropertyMatcher._shared_valuation_engine.generate_comprehensive_valuation(property_data)
+            return {
+                "estimated_value": result.estimated_value,
+                "confidence": result.confidence_level.value,
+                "valuation_date": result.valuation_date.isoformat(),
+                "audit_trail_id": f"AVM-{result.property_id}"
+            }
+        return {"error": "Valuation service unavailable"}
 
     def set_strategy(self, strategy_type: str = "basic"):
         """

@@ -10,9 +10,9 @@ This module integrates the four advanced modules with Jorge's existing Rancho Cu
 Provides unified interface and orchestration for the complete AI-powered real estate platform.
 """
 
-import asyncio
-import json
 import logging
+import asyncio
+import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Union
 from dataclasses import dataclass, asdict

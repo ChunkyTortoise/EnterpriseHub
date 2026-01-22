@@ -5,6 +5,9 @@ AI-powered property matching with reasoning and scoring breakdown
 import streamlit as st
 from typing import Dict, List
 
+# Import Primitive Components
+from ghl_real_estate_ai.streamlit_demo.components.primitives import render_obsidian_card, CardConfig, icon
+
 def render_property_matcher(lead_context: Dict, elite_mode: bool=False, analysis_result=None):
     """
     AI-powered property matching with reasoning
@@ -39,7 +42,31 @@ def render_property_matcher(lead_context: Dict, elite_mode: bool=False, analysis
                 for idx, col in enumerate(cols):
                     prop = compare_subset[idx]
                     with col:
-                        st.markdown(f"""\n                        <div style='background: rgba(22, 27, 34, 0.7); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); height: 100%; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px);'>\n                            <div style='font-size: 2rem; margin-bottom: 0.75rem; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));'>{prop['icon']}</div>\n                            <div style='font-weight: 700; color: #FFFFFF; height: 3rem; font-family: "Space Grotesk", sans-serif; letter-spacing: -0.02em;'>{prop['address'].upper()}</div>\n                            <div style='font-size: 1.5rem; color: #6366F1; font-weight: 700; margin: 0.75rem 0; font-family: "Space Grotesk", sans-serif;'>${prop['price']:,}</div>\n                            \n                            <div style='background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; color: #E6EDF3; font-family: "Inter", sans-serif; border: 1px solid rgba(255,255,255,0.05);'>\n                                🛏️ <b>{prop['beds']}</b> bd | 🛁 <b>{prop['baths']}</b> ba | 📏 <b>{prop['sqft']:,}</b> sqft\n                            </div>\n                            \n                            <div style='margin-top: 1.25rem;'>\n                                <div style='font-size: 0.7rem; color: #8B949E; text-transform: uppercase; font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: 0.1em;'>Alignment Score</div>\n                                <div style='font-size: 1.75rem; font-weight: 700; color: #10b981; font-family: "Space Grotesk", sans-serif;'>{prop['match_score']}%</div>\n                            </div>\n                            \n                            <hr style='margin: 1.5rem 0; border-top: 1px dashed rgba(255,255,255,0.1);'>\n                            \n                            <div style='font-size: 0.85rem; color: #8B949E; font-family: "Inter", sans-serif;'>\n                                <div style='margin-bottom: 0.5rem;'>📍 Sector: <b style="color: #FFFFFF;">{prop['neighborhood']}</b></div>\n                                <div style='margin-bottom: 0.5rem;'>💰 Fiscal: {('✅' if prop['budget_match'] else '⚠️')}</div>\n                                <div>⭐ Signal: {('✅' if prop['features_match'] else '⚠️')}</div>\n                            </div>\n                        </div>\n                        """, unsafe_allow_html=True)
+                        render_obsidian_card(
+                            title=prop['address'].upper(),
+                            content=f"""
+                            <div style='font-size: 2rem; margin-bottom: 0.75rem; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));'>{prop['icon']}</div>
+                            <div style='font-size: 1.5rem; color: #6366F1; font-weight: 700; margin: 0.75rem 0; font-family: "Space Grotesk", sans-serif;'>${prop['price']:,}</div>
+                            
+                            <div style='background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; color: #E6EDF3; font-family: "Inter", sans-serif; border: 1px solid rgba(255,255,255,0.05);'>
+                                🛏️ <b>{prop['beds']}</b> bd | 🛁 <b>{prop['baths']}</b> ba | 📏 <b>{prop['sqft']:,}</b> sqft
+                            </div>
+                            
+                            <div style='margin-top: 1.25rem;'>
+                                <div style='font-size: 0.7rem; color: #8B949E; text-transform: uppercase; font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: 0.1em;'>Alignment Score</div>
+                                <div style='font-size: 1.75rem; font-weight: 700; color: #10b981; font-family: "Space Grotesk", sans-serif;'>{prop['match_score']}%</div>
+                            </div>
+                            
+                            <hr style='margin: 1.5rem 0; border-top: 1px dashed rgba(255,255,255,0.1);'>
+                            
+                            <div style='font-size: 0.85rem; color: #8B949E; font-family: "Inter", sans-serif;'>
+                                <div style='margin-bottom: 0.5rem;'>📍 Sector: <b style="color: #FFFFFF;">{prop['neighborhood']}</b></div>
+                                <div style='margin-bottom: 0.5rem;'>💰 Fiscal: {('✅' if prop['budget_match'] else '⚠️')}</div>
+                                <div>⭐ Signal: {('✅' if prop['features_match'] else '⚠️')}</div>
+                            </div>
+                            """,
+                            config=CardConfig(variant='glass', padding='1.5rem')
+                        )
                 if st.button('❌ Close Comparison', use_container_width=True):
                     st.session_state.compare_props = set()
                     st.rerun()
@@ -82,17 +109,47 @@ def render_property_matcher(lead_context: Dict, elite_mode: bool=False, analysis
                 st.markdown('**💰 Budget Analysis**')
                 col_pref, col_vs, col_actual = st.columns([2, 1, 2])
                 with col_pref:
-                    st.markdown(f"""\n                    <div style="text-align: center; padding: 1rem; background: rgba(99, 102, 241, 0.05); border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.1);">\n                        <div style="font-size: 0.7rem; color: #6366F1; font-weight: 700; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif;">NODE PREFERENCE</div>\n                        <div style="font-size: 1.25rem; font-weight: 700; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif;">${lead_budget:,}</div>\n                    </div>\n                    """, unsafe_allow_html=True)
+                    render_obsidian_card(
+                        title="",
+                        content=f"""
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: #6366F1; font-weight: 700; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif;">NODE PREFERENCE</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif;">${lead_budget:,}</div>
+                        </div>
+                        """,
+                        config=CardConfig(variant='glass', padding='1rem')
+                    )
                 with col_vs:
                     st.markdown("<div style='text-align: center; padding-top: 1rem; font-size: 1.5rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));'>⚖️</div>", unsafe_allow_html=True)
                 with col_actual:
-                    st.markdown(f"""\n                    <div style="text-align: center; padding: 1rem; background: rgba(16, 185, 129, 0.05); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.1);">\n                        <div style="font-size: 0.7rem; color: #10b981; font-weight: 700; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif;">NODE LISTING</div>\n                        <div style="font-size: 1.25rem; font-weight: 700; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif;">${property_price:,}</div>\n                    </div>\n                    """, unsafe_allow_html=True)
+                    render_obsidian_card(
+                        title="",
+                        content=f"""
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: #10b981; font-weight: 700; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif;">NODE LISTING</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif;">${property_price:,}</div>
+                        </div>
+                        """,
+                        config=CardConfig(variant='glass', padding='1rem')
+                    )
                 if budget_diff > 0:
-                    st.markdown(f"""\n                    <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; border: 1px solid rgba(245, 158, 11, 0.2);">\n                        <span style="color: #f59e0b; font-size: 0.85rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif;">⚠️ ${abs(budget_diff):,} ABOVE PREFERRED THRESHOLD (+{budget_pct - 100:.1f}%)</span>\n                    </div>\n                    """, unsafe_allow_html=True)
+                    render_obsidian_card(
+                        title="",
+                        content=f"""<span style="color: #f59e0b; font-size: 0.85rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif;">⚠️ ${abs(budget_diff):,} ABOVE PREFERRED THRESHOLD (+{budget_pct - 100:.1f}%)</span>""",
+                        config=CardConfig(variant='alert', glow_color='#f59e0b', padding='0.75rem 1rem')
+                    )
                 elif budget_diff < -50000:
-                    st.markdown(f"""\n                    <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; border: 1px solid rgba(16, 185, 129, 0.2);">\n                        <span style="color: #10b981; font-size: 0.85rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif;">✅ ${abs(budget_diff):,} BELOW THRESHOLD - OPTIMAL VALUE</span>\n                    </div>\n                    """, unsafe_allow_html=True)
+                    render_obsidian_card(
+                        title="",
+                        content=f"""<span style="color: #10b981; font-size: 0.85rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif;">✅ ${abs(budget_diff):,} BELOW THRESHOLD - OPTIMAL VALUE</span>""",
+                        config=CardConfig(variant='alert', glow_color='#10b981', padding='0.75rem 1rem')
+                    )
                 else:
-                    st.markdown(f"""\n                    <div style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366F1; padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; border: 1px solid rgba(99, 102, 241, 0.2);">\n                        <span style="color: #6366F1; font-size: 0.85rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif;">✅ NODE ALIGNED WITHIN RANGE</span>\n                    </div>\n                    """, unsafe_allow_html=True)
+                    render_obsidian_card(
+                        title="",
+                        content="""<span style="color: #6366F1; font-size: 0.85rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif;">✅ NODE ALIGNED WITHIN RANGE</span>""",
+                        config=CardConfig(variant='alert', glow_color='#6366F1', padding='0.75rem 1rem')
+                    )
                 st.markdown('<br>', unsafe_allow_html=True)
                 st.markdown('**📍 SECTOR & SIGNAL ALIGNMENT**')
                 

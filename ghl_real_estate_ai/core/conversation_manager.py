@@ -586,10 +586,9 @@ Count questions_answered based on how many of the 4 main categories have data.
             n_results=settings.rag_top_k_results,
             location_id=location_id
         )
-        
-        # Run Lead Score calculation (sync but fast, wrapped for parallel flow consistency)
-        score_task = asyncio.to_thread(
-            self.lead_scorer.calculate,
+
+        # Run Lead Score calculation
+        score_task = self.lead_scorer.calculate(
             {
                 "extracted_preferences": merged_preferences,
                 "conversation_history": context.get("conversation_history", []),
@@ -605,7 +604,6 @@ Count questions_answered based on how many of the 4 main categories have data.
             get_matches_task(),
             return_exceptions=True
         )
-
         # Unpack results with safety
         relevant_docs = results[0] if not isinstance(results[0], Exception) else []
         lead_score = results[1] if not isinstance(results[1], Exception) else 0

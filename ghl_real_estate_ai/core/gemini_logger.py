@@ -17,17 +17,29 @@ def init_logging():
             with open(CSV_FILE, "w", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=[
                     "timestamp", "model", "provider", "task_type", "input_tokens", 
-                    "output_tokens", "total_tokens", "cost_usd", "accuracy_score", "tenant_id", "is_failover"
+                    "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens",
+                    "total_tokens", "cost_usd", "accuracy_score", "tenant_id", "is_failover"
                 ])
                 writer.writeheader()
             logger.info(f"Initialized metrics log: {CSV_FILE}")
         except Exception as e:
             logger.error(f"Failed to initialize metrics log: {e}")
 
-def calculate_cost(provider: str, model: str, input_tokens: int, output_tokens: int) -> float:
+def calculate_cost(
+    provider: str, 
+    model: str, 
+    input_tokens: int, 
+    output_tokens: int,
+    cache_creation_tokens: int = 0,
+    cache_read_tokens: int = 0
+) -> float:
     """
     Calculate cost based on provider, model, and token counts.
     Rates updated as of Jan 2026.
+    Includes Anthropic Prompt Caching rates:
+    - Standard Input: $3.00 / MTok
+    - Cache Write (Creation): $3.75 / MTok (1.25x)
+    - Cache Read (Hit): $0.30 / MTok (0.10x)
     """
     # Default rates (can be moved to config/settings)
     rates = {
@@ -40,9 +52,9 @@ def calculate_cost(provider: str, model: str, input_tokens: int, output_tokens: 
             "default": {"input": 0.125 / 1_000_000, "output": 0.375 / 1_000_000}
         },
         "claude": {
-            "claude-3-5-sonnet-20241022": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000},
-            "claude-3-5-sonnet-latest": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000},
-            "claude-3-5-haiku-latest": {"input": 0.80 / 1_000_000, "output": 4.00 / 1_000_000},
+            "claude-3-5-sonnet-20241022": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000, "cache_write": 3.75 / 1_000_000, "cache_read": 0.30 / 1_000_000},
+            "claude-3-5-sonnet-latest": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000, "cache_write": 3.75 / 1_000_000, "cache_read": 0.30 / 1_000_000},
+            "claude-3-5-haiku-latest": {"input": 0.80 / 1_000_000, "output": 4.00 / 1_000_000, "cache_write": 1.00 / 1_000_000, "cache_read": 0.08 / 1_000_000},
             "claude-3-haiku-20240307": {"input": 0.25 / 1_000_000, "output": 1.25 / 1_000_000},
             "default": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000}
         }
@@ -51,8 +63,19 @@ def calculate_cost(provider: str, model: str, input_tokens: int, output_tokens: 
     provider_rates = rates.get(provider.lower(), rates["gemini"])
     model_rate = provider_rates.get(model, provider_rates.get("default"))
     
-    # Cost per million tokens usually, but we handle per token here
-    cost = (input_tokens * model_rate["input"] + output_tokens * model_rate["output"])
+    # Base input (excluding tokens that were cached or creating cache)
+    base_input_tokens = max(0, input_tokens - cache_creation_tokens - cache_read_tokens)
+    
+    cost = (base_input_tokens * model_rate.get("input", 0))
+    cost += (output_tokens * model_rate.get("output", 0))
+    
+    # Add caching costs if available for the model
+    if cache_creation_tokens > 0:
+        cost += (cache_creation_tokens * model_rate.get("cache_write", model_rate.get("input", 0) * 1.25))
+    
+    if cache_read_tokens > 0:
+        cost += (cache_read_tokens * model_rate.get("cache_read", model_rate.get("input", 0) * 0.10))
+        
     return cost
 
 def log_metrics(
@@ -63,7 +86,9 @@ def log_metrics(
     task_type: str = "general",
     accuracy_score: Optional[float] = None,
     tenant_id: Optional[str] = None,
-    is_failover: bool = False
+    is_failover: bool = False,
+    cache_creation_input_tokens: int = 0,
+    cache_read_input_tokens: int = 0
 ):
     """
     Log metrics for an LLM API call.
@@ -72,7 +97,11 @@ def log_metrics(
     output_tokens = output_tokens or 0
     total_tokens = input_tokens + output_tokens
     
-    cost = calculate_cost(provider, model, input_tokens, output_tokens)
+    cost = calculate_cost(
+        provider, model, input_tokens, output_tokens, 
+        cache_creation_tokens=cache_creation_input_tokens,
+        cache_read_tokens=cache_read_input_tokens
+    )
     
     entry = {
         "timestamp": datetime.now().isoformat(),
@@ -81,6 +110,8 @@ def log_metrics(
         "task_type": task_type,
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
+        "cache_creation_input_tokens": cache_creation_input_tokens,
+        "cache_read_input_tokens": cache_read_input_tokens,
         "total_tokens": total_tokens,
         "cost_usd": round(cost, 6),
         "accuracy_score": accuracy_score if accuracy_score is not None else "N/A",
@@ -91,7 +122,11 @@ def log_metrics(
     try:
         init_logging()
         with open(CSV_FILE, "a", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=entry.keys())
+            writer = csv.DictWriter(f, fieldnames=[
+                "timestamp", "model", "provider", "task_type", "input_tokens", 
+                "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens",
+                "total_tokens", "cost_usd", "accuracy_score", "tenant_id", "is_failover"
+            ])
             writer.writerow(entry)
     except Exception as e:
         logger.error(f"Failed to log metrics: {e}")
@@ -108,8 +143,8 @@ def get_metrics_summary():
         with open(CSV_FILE, "r") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                cost = float(row["cost_usd"])
-                task = row["task_type"]
+                cost = float(row.get("cost_usd", 0))
+                task = row.get("task_type", "general")
                 total_cost += cost
                 task_breakdown[task] = task_breakdown.get(task, 0) + cost
     except Exception as e:
@@ -133,7 +168,9 @@ try:
                 input_tokens=res.input_tokens,
                 output_tokens=res.output_tokens,
                 tenant_id=ctx.metadata.get("tenant_id") if ctx.metadata else None,
-                is_failover=ctx.metadata.get("is_failover", False) if ctx.metadata else False
+                is_failover=ctx.metadata.get("is_failover", False) if ctx.metadata else False,
+                cache_creation_input_tokens=getattr(res, "cache_creation_input_tokens", 0) or 0,
+                cache_read_input_tokens=getattr(res, "cache_read_input_tokens", 0) or 0
             )
 
     hooks.register(HookEvent.POST_GENERATION, on_generation_complete)

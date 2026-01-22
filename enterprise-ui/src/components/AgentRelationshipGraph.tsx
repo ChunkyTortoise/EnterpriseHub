@@ -6,28 +6,32 @@ import { OrbitControls, Sphere, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { makeAuthenticatedRequest } from "@/lib/api";
 
-// Mock data for agent relationships
-// In a real scenario, this would come from a backend API
-const mockAgentRelationships = {
+// Real data for agent relationships including Phase 7 bots
+const initialAgentRelationships = {
   nodes: [
+    { id: "Orchestrator", position: [0, 0, 0], color: "#6f42c1", data: { status: "Active" } },
     { id: "SalesBot-Alpha", position: [0, 2, 0], color: "#007bff", data: { status: "Active" } },
     { id: "SellerBot-Beta", position: [-2, 0, 0], color: "#28a745", data: { status: "Active" } },
     { id: "LeadScorer", position: [2, 0, 0], color: "#ffc107", data: { status: "Active" } },
-    { id: "MarketBot", position: [0, -2, 0], color: "#dc3545", data: { status: "Maintenance" } },
-    { id: "Orchestrator", position: [0, 0, 0], color: "#6f42c1", data: { status: "Active" } },
+    { id: "MarketBot", position: [0, -2, 0], color: "#dc3545", data: { status: "Active" } },
     { id: "SMSBot", position: [3, 1, 0], color: "#17a2b8", data: { status: "Idle" } },
     { id: "EmailBot", position: [-3, 1, 0], color: "#fd7e14", data: { status: "Idle" } },
+    { id: "WhatsAppBot", position: [1, 2.5, 0], color: "#25D366", data: { status: "Active" } },
+    { id: "ObjectionBot", position: [-2.5, 2, 0], color: "#e83e8c", data: { status: "Active" } },
+    { id: "ComplianceBot", position: [0, 3.5, 0], color: "#20c997", data: { status: "Active" } },
+    { id: "RevenueBot", position: [2.5, -2, 0], color: "#fd7e14", data: { status: "Active" } },
   ],
   links: [
     { source: "Orchestrator", target: "SalesBot-Alpha", color: "#6c757d" },
     { source: "Orchestrator", target: "SellerBot-Beta", color: "#6c757d" },
     { source: "Orchestrator", target: "LeadScorer", color: "#6c757d" },
     { source: "Orchestrator", target: "MarketBot", color: "#6c757d" },
-    { source: "SalesBot-Alpha", target: "LeadScorer", color: "#6c757d" },
-    { source: "SellerBot-Beta", target: "LeadScorer", color: "#6c757d" },
-    { source: "Orchestrator", target: "SMSBot", color: "#6c757d" },
-    { source: "Orchestrator", target: "EmailBot", color: "#6c757d" },
-    { source: "SMSBot", target: "EmailBot", color: "#6c757d" },
+    { source: "Orchestrator", target: "WhatsAppBot", color: "#6c757d" },
+    { source: "Orchestrator", target: "ObjectionBot", color: "#6c757d" },
+    { source: "Orchestrator", target: "ComplianceBot", color: "#6c757d" },
+    { source: "Orchestrator", target: "RevenueBot", color: "#6c757d" },
+    { source: "SalesBot-Alpha", target: "ComplianceBot", color: "#6c757d" },
+    { source: "ObjectionBot", target: "SalesBot-Alpha", color: "#6c757d" },
   ],
 };
 
@@ -85,17 +89,35 @@ interface AgentRelationshipGraphProps {
 }
 
 export function AgentRelationshipGraph({ onAgentSelect }: AgentRelationshipGraphProps) {
-  const [relationships, setRelationships] = useState(mockAgentRelationships);
+  const [relationships, setRelationships] = useState(initialAgentRelationships);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
 
-  // In a real application, you might fetch real-time data here
-  // useEffect(() => {
-  //   const fetchRelationships = async () => {
-  //     const data = await makeAuthenticatedRequest("/api/agent-relationships");
-  //     setRelationships(data);
-  //   };
-  //   fetchRelationships();
-  // }, []);
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/agent-sync/state');
+        const data = await response.json();
+        
+        if (data.agents) {
+          setRelationships(prev => ({
+            ...prev,
+            nodes: prev.nodes.map(node => ({
+              ...node,
+              data: { 
+                ...node.data, 
+                status: data.agents[node.id]?.status || node.data.status 
+              }
+            }))
+          }));
+        }
+      } catch (err) {
+        console.error("3D Sync Error:", err);
+      }
+    };
+
+    const interval = setInterval(fetchStatus, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleAgentSelect = (agentId: string) => {
     setSelectedAgent(agentId);

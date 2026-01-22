@@ -28,6 +28,7 @@ from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.services.behavioral_trigger_engine import get_behavioral_trigger_engine
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.database_service import get_database
+from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
 
 logger = get_logger(__name__)
 
@@ -146,6 +147,7 @@ class AutonomousObjectionHandler:
         self.cache = get_cache_service()
         self.llm_client = get_llm_client()
         self.behavioral_engine = get_behavioral_trigger_engine()
+        self.market_engine = MarketTimingOpportunityEngine()
 
         # Objection detection patterns (machine learning enhanced)
         self.objection_patterns = self._initialize_objection_patterns()
@@ -693,12 +695,42 @@ class AutonomousObjectionHandler:
         conversation_history: List[Dict[str, Any]],
         behavioral_context: Dict[str, Any]
     ) -> str:
-        """Generate personalized response using Claude."""
+        """Generate personalized response using Claude with Market Intelligence."""
         try:
+            # Fetch Market Intelligence if objection is market-related
+            market_intel = ""
+            market_related_categories = [
+                ObjectionCategory.MARKET_UNCERTAINTY, 
+                ObjectionCategory.INTEREST_RATE_CONCERNS, 
+                ObjectionCategory.ECONOMIC_UNCERTAINTY,
+                ObjectionCategory.PRICE_TOO_HIGH,
+                ObjectionCategory.WAITING_FOR_MARKET
+            ]
+            
+            if analysis.category in market_related_categories:
+                try:
+                    market_area = lead_profile.get("preferred_neighborhood", "austin").lower()
+                    dashboard = await self.market_engine.get_opportunity_dashboard(market_area)
+                    market_overview = dashboard.get('market_overview', {})
+                    timing_insights = dashboard.get('timing_insights', {})
+                    recommendations = dashboard.get('recommendations', {})
+                    
+                    market_intel = (
+                        f"\n[MARKET INTELLIGENCE FOR {market_area.upper()}]\n"
+                        f"- Current Phase: {market_overview.get('current_phase', 'Stable')}\n"
+                        f"- Market Momentum: {timing_insights.get('market_momentum', 'Neutral')}\n"
+                        f"- Key Advice: {', '.join(recommendations.get('key_actions', [])[:2])}"
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to fetch market intel: {e}")
+
             # Build context for Claude
             context_summary = self._build_context_summary(
                 lead_profile, conversation_history, behavioral_context
             )
+            
+            if market_intel:
+                context_summary += market_intel
 
             prompt = f"""
             Generate a personalized response to this real estate objection.
@@ -716,11 +748,12 @@ class AutonomousObjectionHandler:
             Guidelines:
             1. Be empathetic and understanding
             2. Address the specific concern directly
-            3. Provide value and insights
-            4. Keep response under 200 characters for SMS
-            5. Include a soft call-to-action
-            6. Match the lead's communication tone
-            7. Reference their specific situation when possible
+            3. Use the provided Market Intelligence data if available to build authority
+            4. Provide value and insights
+            5. Keep response under 200 characters for SMS
+            6. Include a soft call-to-action
+            7. Match the lead's communication tone
+            8. Reference their specific situation when possible
 
             Generate a response that follows the {strategy.value} strategy:
             """

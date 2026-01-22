@@ -38,6 +38,16 @@ class JorgeSellerConfig:
     WARM_SELLER_MIN_RESPONSE_QUALITY = 0.5  # Decent responses required
     TIMELINE_URGENCY_WEIGHT = 0.35  # 35% weight for timeline in scoring
 
+    # ========== TEMPERATURE CLASSIFICATION THRESHOLDS (Configurable) ==========
+    # Hot seller criteria (strictest)
+    HOT_QUESTIONS_REQUIRED = 4  # Must answer all 4 questions
+    HOT_QUALITY_THRESHOLD = 0.7  # Minimum response quality for hot
+    HOT_TIMELINE_REQUIRED = True  # Must accept 30-45 day timeline
+
+    # Warm seller criteria
+    WARM_QUESTIONS_REQUIRED = 3  # Must answer at least 3 questions
+    WARM_QUALITY_THRESHOLD = 0.5  # Minimum response quality for warm
+
     # ========== FOLLOW-UP SETTINGS ==========
     # Active follow-up phase (first 30 days)
     ACTIVE_FOLLOWUP_DAYS = 30
@@ -162,6 +172,11 @@ class JorgeSellerConfig:
             "longterm_followup_interval": int(os.getenv("LONGTERM_FOLLOWUP_INTERVAL", "14")),
             "hot_seller_workflow_id": os.getenv("HOT_SELLER_WORKFLOW_ID"),
             "warm_seller_workflow_id": os.getenv("WARM_SELLER_WORKFLOW_ID"),
+            # Temperature classification thresholds (configurable via environment)
+            "hot_questions_required": int(os.getenv("HOT_QUESTIONS_REQUIRED", str(cls.HOT_QUESTIONS_REQUIRED))),
+            "hot_quality_threshold": float(os.getenv("HOT_QUALITY_THRESHOLD", str(cls.HOT_QUALITY_THRESHOLD))),
+            "warm_questions_required": int(os.getenv("WARM_QUESTIONS_REQUIRED", str(cls.WARM_QUESTIONS_REQUIRED))),
+            "warm_quality_threshold": float(os.getenv("WARM_QUALITY_THRESHOLD", str(cls.WARM_QUALITY_THRESHOLD))),
         }
 
     # ========== VALIDATION RULES ==========
@@ -314,6 +329,12 @@ class JorgeEnvironmentSettings:
         # Thresholds
         self.hot_seller_threshold = float(os.getenv("HOT_SELLER_THRESHOLD", "1.0"))
         self.warm_seller_threshold = float(os.getenv("WARM_SELLER_THRESHOLD", "0.75"))
+
+        # Temperature classification thresholds (configurable)
+        self.hot_questions_required = int(os.getenv("HOT_QUESTIONS_REQUIRED", str(JorgeSellerConfig.HOT_QUESTIONS_REQUIRED)))
+        self.hot_quality_threshold = float(os.getenv("HOT_QUALITY_THRESHOLD", str(JorgeSellerConfig.HOT_QUALITY_THRESHOLD)))
+        self.warm_questions_required = int(os.getenv("WARM_QUESTIONS_REQUIRED", str(JorgeSellerConfig.WARM_QUESTIONS_REQUIRED)))
+        self.warm_quality_threshold = float(os.getenv("WARM_QUALITY_THRESHOLD", str(JorgeSellerConfig.WARM_QUALITY_THRESHOLD)))
 
         # Message settings
         self.max_sms_length = int(os.getenv("MAX_SMS_LENGTH", "160"))

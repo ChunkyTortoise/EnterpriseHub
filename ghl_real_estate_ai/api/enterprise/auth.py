@@ -71,7 +71,7 @@ class EnterpriseAuthService:
         self.security = HTTPBearer()
 
         # JWT configuration for enterprise tokens
-        self.jwt_secret = settings.JWT_SECRET_KEY or secrets.token_urlsafe(32)
+        self.jwt_secret = settings.jwt_secret_key or secrets.token_urlsafe(32)
         self.jwt_algorithm = "HS256"
         self.enterprise_token_expiry = 28800  # 8 hours for enterprise sessions
 

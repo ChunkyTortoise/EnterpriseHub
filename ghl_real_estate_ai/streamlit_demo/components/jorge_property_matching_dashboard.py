@@ -595,7 +595,7 @@ def render_property_search_section(api_client: JorgePropertyMatchingAPIClient):
             for i, property_data in enumerate(matches['matches'][:5]):
                 with st.container():
                     st.markdown(f"""
-                    <div class="property-card">
+                    <div class="holographic-card property-card">
                         <div class="property-header">
                             <div class="property-address">{property_data['address']}, {property_data['city']}</div>
                             <div class="property-price">${property_data['price']:,}</div>

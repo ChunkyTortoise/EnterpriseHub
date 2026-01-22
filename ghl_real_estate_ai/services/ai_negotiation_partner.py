@@ -27,6 +27,7 @@ from ghl_real_estate_ai.services.win_probability_predictor import get_win_probab
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.enhanced_lead_intelligence import get_enhanced_lead_intelligence
+from ghl_real_estate_ai.services.memory_service import MemoryService
 
 logger = logging.getLogger(__name__)
 
@@ -40,17 +41,20 @@ class AINegotiationPartner:
     coaching capabilities for active negotiations.
     """
     
+    # SHARED RESOURCE POOL
+    _psychology_analyzer = None
+    _leverage_calculator = None
+    _strategy_engine = None
+    _win_predictor = None
+    _cache_service = None
+    _claude_assistant = None
+    _lead_intelligence = None
+    _memory = None
+    _pool_lock = asyncio.Lock()
+    
     def __init__(self):
-        # Core intelligence engines
-        self.psychology_analyzer = get_seller_psychology_analyzer()
-        self.leverage_calculator = get_market_leverage_calculator()
-        self.strategy_engine = get_negotiation_strategy_engine()
-        self.win_predictor = get_win_probability_predictor()
-        
-        # Support services
-        self.cache_service = get_cache_service()
-        self.claude_assistant = ClaudeAssistant()
-        self.lead_intelligence = get_enhanced_lead_intelligence()
+        # Initialize shared resources
+        self._init_shared_resources()
         
         # Active coaching sessions
         self.active_negotiations: Dict[str, Dict[str, Any]] = {}
@@ -62,6 +66,49 @@ class AINegotiationPartner:
             "win_rate_predictions": [],
             "strategy_effectiveness": {}
         }
+
+    def _init_shared_resources(self):
+        """Implements the Shared Resource Pool pattern to reduce memory footprint."""
+        if AINegotiationPartner._psychology_analyzer is not None:
+            return
+            
+        # Synchronous initialization of core engines
+        AINegotiationPartner._psychology_analyzer = get_seller_psychology_analyzer()
+        AINegotiationPartner._leverage_calculator = get_market_leverage_calculator()
+        AINegotiationPartner._strategy_engine = get_negotiation_strategy_engine()
+        AINegotiationPartner._win_predictor = get_win_probability_predictor()
+        
+        # Support services
+        AINegotiationPartner._cache_service = get_cache_service()
+        AINegotiationPartner._claude_assistant = ClaudeAssistant()
+        AINegotiationPartner._lead_intelligence = get_enhanced_lead_intelligence()
+        AINegotiationPartner._memory = MemoryService()
+        
+        logger.info("AINegotiationPartner: Shared Resource Pool Initialized")
+
+    @property
+    def psychology_analyzer(self): return AINegotiationPartner._psychology_analyzer
+    
+    @property
+    def leverage_calculator(self): return AINegotiationPartner._leverage_calculator
+    
+    @property
+    def strategy_engine(self): return AINegotiationPartner._strategy_engine
+    
+    @property
+    def win_predictor(self): return AINegotiationPartner._win_predictor
+    
+    @property
+    def cache_service(self): return AINegotiationPartner._cache_service
+    
+    @property
+    def claude_assistant(self): return AINegotiationPartner._claude_assistant
+    
+    @property
+    def lead_intelligence(self): return AINegotiationPartner._lead_intelligence
+    
+    @property
+    def memory(self): return AINegotiationPartner._memory
     
     async def analyze_negotiation_intelligence(
         self, 

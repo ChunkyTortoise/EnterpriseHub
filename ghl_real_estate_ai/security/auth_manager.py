@@ -475,28 +475,73 @@ class AuthManager:
     # Private helper methods
     
     async def _get_user_by_username(self, username: str) -> Optional[User]:
-        """Get user by username (implement database lookup)"""
-        # TODO: Implement database lookup
-        # For now, return mock data
-        if username == "admin":
-            return User(
-                user_id="user_1",
-                username="admin",
-                email="admin@example.com",
-                full_name="Administrator",
-                roles=[Role.ADMIN],
-                provider=AuthProvider.LOCAL,
-                is_admin=True
-            )
+        """Get user by username from PostgreSQL"""
+        from ghl_real_estate_ai.services.database_service import get_database
+        db = await get_database()
+        
+        async with db.get_connection() as conn:
+            row = await conn.fetchrow("SELECT * FROM users WHERE username = $1", username)
+            
+            if row:
+                u = dict(row)
+                return User(
+                    user_id=str(u['id']),
+                    username=u['username'],
+                    email=u['email'],
+                    full_name=u['full_name'],
+                    roles=[Role(r) for r in u['roles']],
+                    provider=AuthProvider(u['provider']),
+                    is_active=u['is_active'],
+                    is_verified=u['is_verified'],
+                    is_admin=u['is_admin'],
+                    created_at=u['created_at'],
+                    last_login=u['last_login'],
+                    failed_attempts=u['failed_attempts'],
+                    locked_until=u['locked_until'],
+                    password_changed_at=u['password_changed_at'],
+                    mfa_enabled=u['mfa_enabled'],
+                    mfa_secret=u['mfa_secret']
+                )
         return None
     
     async def _get_user_by_id(self, user_id: str) -> Optional[User]:
-        """Get user by ID"""
+        """Get user by ID from PostgreSQL"""
         # Check cache first
         if user_id in self._user_cache:
             return self._user_cache[user_id]
         
-        # TODO: Implement database lookup
+        from ghl_real_estate_ai.services.database_service import get_database
+        db = await get_database()
+        
+        async with db.get_connection() as conn:
+            try:
+                import uuid
+                row = await conn.fetchrow("SELECT * FROM users WHERE id = $1", uuid.UUID(user_id))
+            except Exception:
+                return None
+            
+            if row:
+                u = dict(row)
+                user = User(
+                    user_id=str(u['id']),
+                    username=u['username'],
+                    email=u['email'],
+                    full_name=u['full_name'],
+                    roles=[Role(r) for r in u['roles']],
+                    provider=AuthProvider(u['provider']),
+                    is_active=u['is_active'],
+                    is_verified=u['is_verified'],
+                    is_admin=u['is_admin'],
+                    created_at=u['created_at'],
+                    last_login=u['last_login'],
+                    failed_attempts=u['failed_attempts'],
+                    locked_until=u['locked_until'],
+                    password_changed_at=u['password_changed_at'],
+                    mfa_enabled=u['mfa_enabled'],
+                    mfa_secret=u['mfa_secret']
+                )
+                self._user_cache[user_id] = user
+                return user
         return None
     
     def _verify_password(self, password: str, user: User) -> bool:
@@ -705,7 +750,41 @@ class AuthManager:
                 }
             )
     
-    async def _update_user(self, user: User):
-        """Update user in database"""
-        self._user_cache[user.user_id] = user
-        # TODO: Update database
+        async def _update_user(self, user: User):
+    
+            """Update user in PostgreSQL"""
+    
+            from ghl_real_estate_ai.services.database_service import get_database
+    
+            db = await get_database()
+    
+            
+    
+            async with db.transaction() as conn:
+    
+                import uuid
+    
+                await conn.execute("""
+    
+                    UPDATE users SET
+    
+                        last_login =     
+    ,
+    
+                        failed_attempts = $2,
+    
+                        locked_until = $3,
+    
+                        updated_at = NOW()
+    
+                    WHERE id = $4
+    
+                """, user.last_login, user.failed_attempts, user.locked_until, uuid.UUID(user.user_id))
+    
+            
+    
+            # Update cache
+    
+            self._user_cache[user.user_id] = user
+    
+    

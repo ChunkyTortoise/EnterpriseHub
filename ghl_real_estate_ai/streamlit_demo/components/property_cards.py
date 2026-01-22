@@ -72,7 +72,7 @@ def render_premium_property_card(property: Dict[str, Any], index: int = 0):
     
     # Use the sophisticated HTML structure from styles.css
     st.markdown(f"""
-    <div class="premium-property-card">
+    <div class="holographic-card premium-property-card">
         <div class="property-image-container">
             <div class="match-score-badge">
                 <span>✨ {match_score}% Match</span>
@@ -141,7 +141,7 @@ def render_property_card(property: dict):
 
         st.markdown(f"""
 
-        <div style='
+        <div class="holographic-card" style='
 
             background: rgba(22, 27, 34, 0.7);
 

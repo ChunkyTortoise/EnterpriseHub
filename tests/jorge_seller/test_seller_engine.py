@@ -234,3 +234,118 @@ async def test_vapi_retry_all_attempts_fail(seller_engine, mock_conversation_man
             # Should have Voice-Handoff-Failed tag
             tags = [a["tag"] for a in result["actions"] if a["type"] == "add_tag"]
             assert "Voice-Handoff-Failed" in tags
+
+
+@pytest.mark.asyncio
+async def test_configurable_thresholds_custom_hot():
+    """Test MEDIUM-002 Fix: Hot seller temperature calculation with custom thresholds"""
+    from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+    # Create custom config with modified hot thresholds
+    custom_config = JorgeSellerConfig()
+    custom_config.HOT_QUESTIONS_REQUIRED = 3  # Lower threshold for testing
+    custom_config.HOT_QUALITY_THRESHOLD = 0.6  # Lower quality threshold
+
+    # Initialize engine with custom config and minimal mocks
+    mock_conversation_manager = AsyncMock()
+    mock_ghl_client = AsyncMock()
+    seller_engine = JorgeSellerEngine(mock_conversation_manager, mock_ghl_client, config=custom_config)
+
+    # Test the temperature calculation directly (bypass full pipeline)
+    seller_data = {
+        "motivation": "relocation",
+        "timeline_acceptable": True,  # Required for hot
+        "property_condition": "move-in ready",
+        "questions_answered": 3,  # Only 3 questions (would fail default hot criteria of 4)
+        "response_quality": 0.65,  # Lower quality (would fail default hot criteria of 0.7)
+    }
+
+    # Execute temperature calculation directly
+    temperature_result = await seller_engine._calculate_seller_temperature(seller_data)
+
+    # Assert - should be HOT with custom thresholds (3 questions >= 3, quality 0.65 >= 0.6, timeline True)
+    assert temperature_result["temperature"] == "hot", \
+        f"Expected 'hot' but got '{temperature_result['temperature']}' with custom thresholds"
+
+    # Verify thresholds were applied
+    assert "analytics" in temperature_result
+    analytics = temperature_result["analytics"]
+    assert "thresholds_used" in analytics
+    assert analytics["thresholds_used"]["hot_questions"] == 3
+    assert analytics["thresholds_used"]["hot_quality"] == 0.6
+
+
+@pytest.mark.asyncio
+async def test_configurable_thresholds_custom_warm():
+    """Test MEDIUM-002 Fix: Warm seller temperature calculation with custom thresholds"""
+    from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+    # Create custom config with modified warm thresholds
+    custom_config = JorgeSellerConfig()
+    custom_config.WARM_QUESTIONS_REQUIRED = 2  # Lower threshold for testing
+    custom_config.WARM_QUALITY_THRESHOLD = 0.4  # Lower quality threshold
+
+    # Initialize engine with custom config and minimal mocks
+    mock_conversation_manager = AsyncMock()
+    mock_ghl_client = AsyncMock()
+    seller_engine = JorgeSellerEngine(mock_conversation_manager, mock_ghl_client, config=custom_config)
+
+    # Test the temperature calculation directly (bypass full pipeline)
+    seller_data = {
+        "motivation": "relocation",  # Question 1 answered
+        "property_condition": "needs work",  # Question 3 answered (2 total)
+        "timeline_acceptable": False,
+        "questions_answered": 2,
+        "response_quality": 0.45,  # Lower quality (would fail default warm criteria of 0.5)
+    }
+
+    # Execute temperature calculation directly
+    temperature_result = await seller_engine._calculate_seller_temperature(seller_data)
+
+    # Assert - should be WARM with custom thresholds (2 questions >= 2, quality 0.45 >= 0.4)
+    assert temperature_result["temperature"] == "warm", \
+        f"Expected 'warm' but got '{temperature_result['temperature']}' with custom thresholds"
+
+    # Verify thresholds were applied
+    assert "analytics" in temperature_result
+    analytics = temperature_result["analytics"]
+    assert "thresholds_used" in analytics
+    assert analytics["thresholds_used"]["warm_questions"] == 2
+    assert analytics["thresholds_used"]["warm_quality"] == 0.4
+
+
+@pytest.mark.asyncio
+async def test_default_thresholds_backward_compatibility(mock_conversation_manager, mock_ghl_client):
+    """Test MEDIUM-002 Fix: Default thresholds maintain backward compatibility"""
+    # Initialize engine without config (should use defaults)
+    seller_engine = JorgeSellerEngine(mock_conversation_manager, mock_ghl_client)
+
+    contact_id = "default_config_test"
+    user_message = "Yes definitely"
+    location_id = "test_location"
+
+    # Simulate standard hot seller scenario with default thresholds
+    mock_conversation_manager.extract_seller_data.return_value = {
+        "motivation": "relocation",
+        "timeline_acceptable": True,
+        "property_condition": "move-in ready",
+        "price_expectation": 500000,
+        "questions_answered": 4,
+        "response_quality": 0.9,
+        "contact_name": "Default User"
+    }
+
+    # Execute
+    result = await seller_engine.process_seller_response(contact_id, user_message, location_id)
+
+    # Assert - should be HOT with default thresholds (4 questions, 0.7 quality)
+    assert result["temperature"] == "hot"
+
+    # Verify default thresholds were used
+    assert "analytics" in result
+    analytics = result["analytics"]
+    assert "thresholds_used" in analytics
+    assert analytics["thresholds_used"]["hot_questions"] == 4  # Default
+    assert analytics["thresholds_used"]["hot_quality"] == 0.7  # Default
+    assert analytics["thresholds_used"]["warm_questions"] == 3  # Default
+    assert analytics["thresholds_used"]["warm_quality"] == 0.5  # Default
