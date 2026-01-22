@@ -613,9 +613,18 @@ class PredictiveLeadScorerV2:
         
         if is_seller and price_expectation:
             try:
-                # PHASE 6: ALIGNED FINANCIAL ENGINEERING
-                # ARV is typically 1.35x for Jorge's target markets
-                arv = float(price_expectation) * 1.35
+                # PHASE 7: FINANCIAL PRECISION
+                # Use data-driven valuation via NationalMarketIntelligence
+                from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
+                market_intel = get_national_market_intelligence()
+                
+                # Fetch refined ARV (Market Valuation)
+                location_str = seller_prefs.get("property_address") or context.get("location_id") or "national"
+                price_val = float(price_expectation)
+                
+                # Use the new precise tool
+                arv = await market_intel.get_market_valuation(location_str, price_val)
+                
                 repair_cost = float(repair_estimate) if repair_estimate else 0
                 
                 # Transactional Costs (Jorge System 3.0 Standard)
