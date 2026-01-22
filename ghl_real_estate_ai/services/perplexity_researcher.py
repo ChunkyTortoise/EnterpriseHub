@@ -91,6 +91,30 @@ class PerplexityResearcher:
         context = "Find square footage, lot size, last sold price, year built, and any unique architectural features."
         return await self.research_topic(topic, context)
 
+    async def find_high_yield_markets(self, criteria: str = "net yield > 15%") -> List[Dict[str, Any]]:
+        """
+        Phase 5: Dynamic Market Expansion.
+        Uses Perplexity to find new high-yield markets.
+        """
+        topic = f"Find 3-5 US zip codes with high real estate investment potential meeting criteria: {criteria}"
+        context = "Focus on net yield, cash-on-cash return, and stable market indicators. Return as structured list if possible."
+        
+        report = await self.research_topic(topic, context)
+        # In a real system, we'd use Claude to parse this report into structured JSON
+        # For now, we return the report content as a 'reasoning' block
+        return [{"zip_code": "unknown", "reasoning": report}]
+
+    async def refresh_market_data(self, location: str):
+        """
+        Phase 5: Self-Healing Data Pipeline (The Hunter).
+        Refreshes market data in RAG engine.
+        """
+        logger.info(f"Refreshing market data for {location}...")
+        trends = await self.get_market_trends(location)
+        # Integration with RAG engine would go here:
+        # await rag_engine.update_document(f"market_trends_{location}", trends)
+        return trends
+
 def get_perplexity_researcher() -> PerplexityResearcher:
     """Get global PerplexityResearcher instance."""
     return PerplexityResearcher()

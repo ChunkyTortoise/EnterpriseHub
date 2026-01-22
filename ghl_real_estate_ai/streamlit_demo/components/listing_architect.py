@@ -1,6 +1,8 @@
 
 import streamlit as st
 import time
+import asyncio
+from ghl_real_estate_ai.services.intelligent_listing_generator import IntelligentListingGenerator
 
 def render_listing_architect():
     """
@@ -8,6 +10,12 @@ def render_listing_architect():
     Generates high-conversion property descriptions and social syndication plans.
     """
     from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart, render_dossier_block
+    import pandas as pd
+    import plotly.express as px
+    
+    # Initialize generator
+    if 'listing_generator' not in st.session_state:
+        st.session_state.listing_generator = IntelligentListingGenerator()
     
     st.markdown("""
         <div style="background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(20px); padding: 1.5rem 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);">
@@ -30,14 +38,15 @@ def render_listing_architect():
         st.markdown("#### 🏗️ PROPERTY DNA")
         
         with st.container(border=True):
-            address = st.text_input("Address", "742 Evergreen Terrace")
+            address = st.text_input("Address", "1234 Oak Hill Drive, Austin, TX 78704")
+            zip_code = st.text_input("ZIP Code", "78704")
             price = st.number_input("Listing Price ($)", value=815000)
             
-            style = st.selectbox("Narrative Style", ["Luxury/Elegant", "Family/Warm", "Modern/Minimalist", "Investor/ROI"])
+            style = st.selectbox("Preferred Narrative", ["Luxury/Elegant", "Family/Warm", "Investor/ROI", "Modern/Minimalist"])
             
             features = st.multiselect(
                 "Key Highlights",
-                ["Chef's Kitchen", "Rooftop Deck", "Smart Home", "Pool", "Walkable", "Guest Suite"],
+                ["Chef's Kitchen", "Rooftop Deck", "Smart Home", "Pool", "Walkable", "Guest Suite", "Solar Panels", "Updated HVAC"],
                 default=["Chef's Kitchen", "Rooftop Deck"]
             )
             
@@ -45,23 +54,58 @@ def render_listing_architect():
             
             if st.button("🚀 Architect Campaign", use_container_width=True, type="primary"):
                 with st.spinner("Claude is analyzing local market trends and crafting copy..."):
-                    time.sleep(1.5)
-                    st.session_state.listing_generated = True
-                    st.toast("Campaign Architected!", icon="✨")
+                    # Prepare property data
+                    prop_data = {
+                        "address": address,
+                        "zip_code": zip_code,
+                        "price": price,
+                        "features": features,
+                        "type": "Single Family" # Simplified
+                    }
+                    
+                    # Run async generation
+                    try:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        listings = loop.run_until_complete(
+                            st.session_state.listing_generator.generate_enhanced_listings(prop_data)
+                        )
+                        st.session_state.architect_results = listings
+                        st.session_state.listing_generated = True
+                        st.toast("Campaign Architected!", icon="✨")
+                    except Exception as e:
+                        st.error(f"Generation failed: {e}")
 
     with col_output:
-        if st.session_state.get('listing_generated'):
+        if st.session_state.get('listing_generated') and 'architect_results' in st.session_state:
             st.markdown("#### 📄 MULTI-CHANNEL DEPLOYMENT")
+            
+            results = st.session_state.architect_results
+            # Map style selection to result index if possible, or just show all
             
             tab_z, tab_fb, tab_sms = st.tabs(["🏡 MLS / ZILLOW", "🟦 SOCIAL AD", "📱 SMS BLAST"])
             
             with tab_z:
-                mls_copy = f"Rare opportunity in the heart of Zilker! This {style.lower()} masterpiece at {address} features a {features[0]} and a breathtaking {features[1]}. Perfect for {target_audience.lower()} seeking the ultimate Austin lifestyle. Priced competitively at ${price:,}."
-                render_dossier_block(mls_copy, title="PUBLIC MLS DESCRIPTION")
+                # Show the most relevant result based on style
+                # results: [emotional, analytical, premium]
+                selected_result = results[0] # Default
+                if "Luxury" in style: selected_result = results[2]
+                elif "Investor" in style: selected_result = results[1]
+                
+                render_dossier_block(selected_result['text'], title=f"PUBLIC MLS DESCRIPTION ({selected_result['tone'].upper()})")
+                
+                if selected_result.get('market_summary'):
+                    st.caption(f"💡 Market Context Injected: {selected_result['market_summary']}")
+                
                 st.button("📋 Copy to Clipboard", key="copy_z", use_container_width=True)
                 
             with tab_fb:
-                fb_copy = f"🔥 JUST LISTED in Zilker!\n\nStop scrolling. This is the one. 🥂\n✨ {features[0]}\n✨ {features[1]}\n\nIdeal for {target_audience.lower()}!\n\n📍 {address}\n💰 ${price:,}\n\nDM for a private VIP tour before it hits Zillow! 📩"
+                # Generate a social ad variation
+                fb_copy = f"🔥 JUST LISTED in {results[0].get('neighborhood', 'Austin')}!\n\nStop scrolling. This is the one. 🥂\n"
+                for f in features[:2]:
+                    fb_copy += f"✨ {f}\n"
+                fb_copy += f"\nIdeal for {target_audience.lower()}!\n\n📍 {address}\n💰 ${price:,}\n\nDM for a private VIP tour before it hits Zillow! 📩"
+                
                 st.markdown(f"""
                 <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); font-family: 'Inter', sans-serif; line-height: 1.6; white-space: pre-wrap;">
 {fb_copy}
@@ -70,22 +114,22 @@ def render_listing_architect():
                 st.button("🚀 Sync to Meta Ad Manager", use_container_width=True)
                 
             with tab_sms:
-                sms_copy = f"Hey! Just listed a gem in Zilker that matches your luxury profile. It has a {features[1]} you have to see. Want the private link? - Jorge"
+                sms_copy = f"Hey! Just listed a gem in {results[0].get('neighborhood', 'your area')} that matches your profile. It has a {features[0]} you have to see. Want the private link? - Jorge"
                 st.info(sms_copy)
-                st.button("📨 Blast to 142 Matching Nodes", type="primary", use_container_width=True)
+                st.button("📨 Blast to Matching Nodes", type="primary", use_container_width=True)
                 
             st.markdown("---")
-            st.markdown("#### 📈 PREDICTIVE CTR ANALYSIS")
+            st.markdown("#### 📈 PREDICTIVE PERFORMANCE")
             m1, m2 = st.columns(2)
             with m1:
-                st.metric("Estimated CTR", "4.8%", "+1.2%")
+                st.metric("Estimated CTR", "5.2%", "+1.6%")
             with m2:
-                st.metric("Viral Potential", "High", "82/100")
+                st.metric("Market Fit", "94/100", "High")
             
-            # Simple bar chart for reach
+            # Reach chart
             df_reach = pd.DataFrame({
                 'Channel': ['Organic', 'Paid Social', 'SMS'],
-                'Reach': [1200, 4500, 142]
+                'Reach': [1450, 5200, 186]
             })
             fig = px.bar(df_reach, x='Channel', y='Reach', color='Channel', color_discrete_sequence=['#6366F1', '#8B5CF6', '#10B981'])
             st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)

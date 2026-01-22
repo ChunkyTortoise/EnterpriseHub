@@ -11,7 +11,7 @@ Provides endpoints for:
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -22,6 +22,7 @@ from ghl_real_estate_ai.services.advanced_analytics import (
 )
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.campaign_analytics import CampaignTracker
+from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -80,6 +81,7 @@ class CampaignPerformance(BaseModel):
 async def get_dashboard_metrics(
     location_id: str = Query(..., description="GHL Location ID"),
     days: int = Query(default=7, description="Number of days to analyze"),
+    current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)
 ):
     """
     Get high-level analytics dashboard metrics.
@@ -132,7 +134,7 @@ async def get_dashboard_metrics(
 
 
 @router.get("/performance-report/{location_id}")
-async def get_performance_report(location_id: str):
+async def get_performance_report(location_id: str, current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Generate detailed performance analysis report.
 
@@ -159,7 +161,7 @@ async def get_performance_report(location_id: str):
 
 # A/B Testing Endpoints
 @router.post("/experiments", status_code=201)
-async def create_experiment(location_id: str, experiment: ExperimentCreate):
+async def create_experiment(location_id: str, experiment: ExperimentCreate, current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Create a new A/B test experiment.
 
@@ -193,7 +195,7 @@ async def create_experiment(location_id: str, experiment: ExperimentCreate):
 
 
 @router.get("/experiments/{location_id}")
-async def list_experiments(location_id: str):
+async def list_experiments(location_id: str, current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     List all active A/B test experiments for a location.
     """
@@ -215,7 +217,7 @@ async def list_experiments(location_id: str):
 
 
 @router.get("/experiments/{location_id}/{experiment_id}/analysis")
-async def analyze_experiment(location_id: str, experiment_id: str):
+async def analyze_experiment(location_id: str, experiment_id: str, current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Get detailed analysis of an A/B test experiment.
 
@@ -241,7 +243,7 @@ async def analyze_experiment(location_id: str, experiment_id: str):
 
 @router.post("/experiments/{location_id}/{experiment_id}/results")
 async def record_experiment_result(
-    location_id: str, experiment_id: str, variant: str, result: ExperimentResult
+    location_id: str, experiment_id: str, variant: str, result: ExperimentResult, current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)
 ):
     """
     Record a result for an experiment variant.
@@ -275,7 +277,7 @@ async def record_experiment_result(
 
 
 @router.post("/experiments/{location_id}/{experiment_id}/complete")
-async def complete_experiment(location_id: str, experiment_id: str):
+async def complete_experiment(location_id: str, experiment_id: str, current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Mark an experiment as complete and archive it.
     """
@@ -300,6 +302,7 @@ async def complete_experiment(location_id: str, experiment_id: str):
 async def get_campaign_performance(
     location_id: str,
     days: int = Query(default=30, description="Number of days to analyze"),
+    current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)
 ):
     """
     Get performance metrics for all campaigns in a location.
@@ -331,7 +334,7 @@ async def get_campaign_performance(
 
 
 @router.get("/campaigns/{location_id}/{campaign_id}/details")
-async def get_campaign_details(location_id: str, campaign_id: str):
+async def get_campaign_details(location_id: str, campaign_id: str, current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Get detailed analytics for a specific campaign.
     """
@@ -361,7 +364,7 @@ class OptimizationRequest(BaseModel):
 
 # Conversation Optimization Endpoints
 @router.post("/optimize/next-question")
-async def suggest_next_question(request: OptimizationRequest):
+async def suggest_next_question(request: OptimizationRequest, current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Get AI-powered suggestion for the next best question to ask.
 
@@ -394,3 +397,4 @@ async def analytics_health():
         "service": "analytics",
         "timestamp": datetime.now().isoformat(),
     }
+

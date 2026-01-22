@@ -22,18 +22,32 @@ class AuditEventType(str, Enum):
     # Security Events
     LOGIN_ATTEMPT = "login_attempt"
     LOGIN_SUCCESS = "login_success"
+    SUCCESSFUL_LOGIN = "successful_login"
     LOGIN_FAILURE = "login_failure"
+    LOGIN_ATTEMPT_INACTIVE_USER = "login_attempt_inactive_user"
+    LOGIN_ATTEMPT_LOCKED_USER = "login_attempt_locked_user"
+    FAILED_LOGIN_ATTEMPT = "failed_login_attempt"
     LOGOUT = "logout"
     SESSION_EXPIRED = "session_expired"
     SESSION_REVOKED = "session_revoked"
     PASSWORD_CHANGED = "password_changed"
     MFA_ENABLED = "mfa_enabled"
     MFA_DISABLED = "mfa_disabled"
+    MFA_VERIFICATION_FAILED = "mfa_verification_failed"
+    MFA_VERIFICATION_ERROR = "mfa_verification_error"
     ACCOUNT_LOCKED = "account_locked"
     ACCOUNT_UNLOCKED = "account_unlocked"
     PERMISSION_DENIED = "permission_denied"
     SUSPICIOUS_ACTIVITY = "suspicious_activity"
     RATE_LIMIT_EXCEEDED = "rate_limit_exceeded"
+    AUTHENTICATION_FAILED = "authentication_failed"
+    AUTHENTICATION_REQUIRED = "authentication_required"
+    AUTHORIZATION_FAILED = "authorization_failed"
+    THREAT_DETECTED = "threat_detected"
+    BLOCKED_IP_ACCESS = "blocked_ip_access"
+    SUSPICIOUS_IP_ACCESS = "suspicious_ip_access"
+    INPUT_VALIDATION_FAILED = "input_validation_failed"
+    REQUEST_FAILED = "request_failed"
     
     # Admin Actions
     USER_CREATED = "user_created"
@@ -47,6 +61,9 @@ class AuditEventType(str, Enum):
     SYSTEM_CONFIG_CHANGED = "system_config_changed"
     BACKUP_CREATED = "backup_created"
     BACKUP_RESTORED = "backup_restored"
+    TOKEN_REFRESHED = "token_refreshed"
+    ALL_SESSIONS_REVOKED = "all_sessions_revoked"
+    ROLES_IMPORTED = "roles_imported"
     
     # Data Access
     DATA_ACCESSED = "data_accessed"
@@ -210,6 +227,13 @@ class AuditLogger:
         Returns:
             str: Event ID
         """
+        # Ensure severity is AuditSeverity enum
+        if isinstance(severity, str):
+            try:
+                severity = AuditSeverity(severity.lower())
+            except ValueError:
+                severity = AuditSeverity.MEDIUM
+
         # Generate event ID
         event_id = self._generate_event_id(event_type, user_id, session_id)
         
@@ -237,8 +261,11 @@ class AuditLogger:
             self._event_buffer.append(event)
             
             # Update metrics
-            self._event_counts[event_type.value] = self._event_counts.get(event_type.value, 0) + 1
-            self._severity_counts[severity.value] = self._severity_counts.get(severity.value, 0) + 1
+            event_type_val = event_type.value if hasattr(event_type, "value") else str(event_type)
+            severity_val = severity.value if hasattr(severity, "value") else str(severity)
+            
+            self._event_counts[event_type_val] = self._event_counts.get(event_type_val, 0) + 1
+            self._severity_counts[severity_val] = self._severity_counts.get(severity_val, 0) + 1
             
             # Immediate flush for critical events
             if severity == AuditSeverity.CRITICAL:

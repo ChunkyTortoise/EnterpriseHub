@@ -51,6 +51,10 @@ class IntegrationEventType(Enum):
     REVIEW_RECEIVED = "review_received"
 
 
+# Alias for backward compatibility
+EventType = IntegrationEventType
+
+
 @dataclass
 class IntegrationEvent:
     """Integration event that triggers cross-module actions"""

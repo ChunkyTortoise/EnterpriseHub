@@ -5,97 +5,267 @@ Target: 80%+ coverage
 """
 
 import pytest
+import httpx
 from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from datetime import datetime, timedelta
-from pathlib import Path
-import json
+from ghl_real_estate_ai.services.ghl_client import GHLClient
+from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageType
 
-# Import the module to test
-from ghl_real_estate_ai.services.ghl_client import *
-
-
-class TestGhlClient:
-    """Comprehensive test suite for ghl_client."""
-    
-    @pytest.fixture
-    def mock_dependencies(self):
-        """Mock common dependencies."""
-        return {
-            "logger": Mock(),
-            "config": Mock(),
-            "client": Mock()
-        }
-
-    # Function Tests
-
-    def test___init___success(self, mock_dependencies):
-        """Test __init__ with valid inputs."""
-        assert True  # Basic test implementation
-        # This is a template - replace with real test
-        assert True  # Basic assertion
-    
-    def test___init___error_handling(self, mock_dependencies):
-        """Test __init__ error handling."""
-        # Placeholder
-        assert True
-
-
+@pytest.mark.asyncio
 class TestGHLClient:
-    """Tests for GHLClient class."""
+    """Comprehensive test suite for GHLClient."""
     
+    @pytest.fixture(autouse=True)
+    def integration_test_lifecycle(self):
+        """Override integration test lifecycle to avoid async conflict."""
+        yield
+
     @pytest.fixture
-    def instance(self):
-        """Create instance for testing."""
-        # Create proper instance
-        client_instance = GHLClient()
-        assert client_instance is not None
-        return client_instance
-    
-    def test_initialization(self, instance):
-        """Test GHLClient initialization."""
-        # Test object creation
-        assert isinstance(instance, GHLClient)
-        assert True  # Basic assertion
+    def client(self):
+        """Create GHLClient instance."""
+        return GHLClient(api_key="test_key", location_id="test_loc")
 
+    # --- Initialization Tests ---
 
-# Integration Tests
-class TestIntegration:
-    """Integration tests for module interactions."""
-    
-    def test_end_to_end_workflow(self):
-        """Test complete workflow."""
-        # Integration test
-        # Test GHL API integration
-        assert True
-        assert True  # Basic assertion
+    def test_init_defaults(self):
+        """Test initialization with defaults."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
+            mock_settings.ghl_api_key = "default_key"
+            mock_settings.ghl_location_id = "default_loc"
+            
+            client = GHLClient()
+            assert client.api_key == "default_key"
+            assert client.location_id == "default_loc"
 
+    def test_init_overrides(self):
+        """Test initialization with overrides."""
+        client = GHLClient(api_key="custom_key", location_id="custom_loc")
+        assert client.api_key == "custom_key"
+        assert client.location_id == "custom_loc"
 
-# Edge Cases
-class TestEdgeCases:
-    """Test edge cases and boundary conditions."""
-    
-    def test_empty_inputs(self):
-        """Test with empty inputs."""
-        assert True  # Basic assertion
-    
-    def test_large_inputs(self):
-        """Test with large data sets."""
-        assert True  # Basic assertion
-    
-    def test_invalid_types(self):
-        """Test with invalid data types."""
-        assert True  # Basic assertion
+    # --- Health Check Tests ---
 
+    def test_check_health_test_mode(self):
+        """Test health check in test mode."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
+            mock_settings.test_mode = True
+            client = GHLClient()
+            response = client.check_health()
+            assert response.status_code == 200
 
-# Performance Tests
-@pytest.mark.slow
-class TestPerformance:
-    """Performance and load tests."""
-    
-    def test_response_time(self):
-        """Test response time under load."""
-        assert True  # Basic assertion
+    def test_check_health_live_success(self, client):
+        """Test health check live success."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
+             patch("httpx.Client") as MockClient:
+            mock_settings.test_mode = False
+            
+            mock_http = MockClient.return_value.__enter__.return_value
+            mock_http.get.return_value = Mock(status_code=200)
+            
+            response = client.check_health()
+            assert response.status_code == 200
 
+    def test_check_health_live_failure(self, client):
+        """Test health check failure."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
+             patch("httpx.Client") as MockClient:
+            mock_settings.test_mode = False
+            
+            mock_http = MockClient.return_value.__enter__.return_value
+            mock_http.get.side_effect = Exception("Connection refused")
+            
+            response = client.check_health()
+            assert response.status_code == 500
+
+    # --- Get Conversations Tests ---
+
+    def test_get_conversations_invalid_limit(self, client):
+        """Test invalid limit raises ValueError."""
+        with pytest.raises(ValueError, match="Invalid conversation limit"):
+            client.get_conversations(limit=0)
+
+    def test_get_conversations_success(self, client):
+        """Test successful conversation fetch."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
+             patch("httpx.Client") as MockClient:
+            mock_settings.test_mode = False
+            
+            mock_http = MockClient.return_value.__enter__.return_value
+            mock_http.get.return_value.json.return_value = {"conversations": [{"id": 1}]}
+            mock_http.get.return_value.status_code = 200
+            
+            convs = client.get_conversations()
+            assert len(convs) == 1
+            assert convs[0]["id"] == 1
+
+    def test_get_conversations_timeout(self, client):
+        """Test timeout handling."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
+             patch("httpx.Client") as MockClient:
+            mock_settings.test_mode = False
+            
+            mock_http = MockClient.return_value.__enter__.return_value
+            mock_http.get.side_effect = httpx.TimeoutException("Timeout")
+            
+            with pytest.raises(ConnectionError, match="Timeout fetching conversations"):
+                client.get_conversations()
+
+    # --- Get Opportunities Tests ---
+
+    def test_get_opportunities_success(self, client):
+        """Test successful opportunity fetch."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
+             patch("httpx.Client") as MockClient:
+            mock_settings.test_mode = False
+            
+            mock_http = MockClient.return_value.__enter__.return_value
+            mock_http.get.return_value.json.return_value = {"opportunities": [{"monetary_value": 1000}]}
+            mock_http.get.return_value.status_code = 200
+            
+            opps = client.get_opportunities()
+            assert len(opps) == 1
+            assert opps[0]["monetary_value"] == 1000
+
+    # --- Send Message Tests ---
+
+    async def test_send_message_success(self, client):
+        """Test sending message success."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
+             patch("httpx.AsyncClient") as MockClient:
+            mock_settings.test_mode = False
+            
+            # Setup Mock Response
+            mock_response = Mock()
+            mock_response.json.return_value = {"status": "ok"}
+            mock_response.status_code = 200
+            
+            # Setup AsyncClient
+            mock_http = MockClient.return_value.__aenter__.return_value
+            mock_http.post = AsyncMock(return_value=mock_response)
+            
+            response = await client.send_message("contact_123", "Hello")
+            assert response["status"] == "ok"
+
+    async def test_send_message_test_mode(self, client):
+        """Test sending message in test mode."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
+            mock_settings.test_mode = True
+            response = await client.send_message("contact_123", "Hello")
+            assert response["status"] == "mocked"
+
+    # --- Remove Tags Tests (Critical Security) ---
+
+    async def test_remove_tags_validation(self, client):
+        """Test input validation for remove_tags."""
+        with pytest.raises(ValueError, match="Contact ID is required"):
+            await client.remove_tags("", ["tag"])
+            
+        with pytest.raises(ValueError, match="Valid tags list is required"):
+            await client.remove_tags("contact_123", [])
+
+    async def test_remove_tags_success(self, client):
+        """Test successful tag removal."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
+             patch("httpx.AsyncClient") as MockClient:
+            mock_settings.test_mode = False
+            
+            mock_http = MockClient.return_value.__aenter__.return_value
+            
+            # Mock GET contact response
+            mock_get_response = Mock()
+            mock_get_response.json.return_value = {"tags": ["Tag A", "Tag B"]}
+            mock_get_response.status_code = 200
+            mock_http.get = AsyncMock(return_value=mock_get_response)
+            
+            # Mock PUT contact response
+            mock_put_response = Mock()
+            mock_put_response.status_code = 200
+            mock_http.put = AsyncMock(return_value=mock_put_response)
+            
+            response = await client.remove_tags("contact_123", ["Tag A"])
+            
+            assert response["status"] == "success"
+            assert response["removed_tags"] == ["Tag A"]
+            assert response["remaining_tags"] == ["Tag B"]
+
+    async def test_remove_tags_critical_failure(self, client):
+        """Test critical failure in tag removal."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
+             patch("httpx.AsyncClient") as MockClient:
+            mock_settings.test_mode = False
+            
+            mock_http = MockClient.return_value.__aenter__.return_value
+            mock_http.get = AsyncMock(side_effect=httpx.HTTPError("API Error"))
+            
+            with pytest.raises(httpx.HTTPError):
+                await client.remove_tags("contact_123", ["Tag A"])
+
+    # --- Apply Actions Tests ---
+
+    async def test_apply_actions_success(self, client):
+        """Test applying multiple actions."""
+        actions = [
+            GHLAction(type=ActionType.SEND_MESSAGE, message="Hi", channel=MessageType.SMS),
+            GHLAction(type=ActionType.ADD_TAG, tag="Tag A")
+        ]
+        
+        # Mock sub-methods
+        client.send_message = AsyncMock(return_value={"status": "sent"})
+        client.add_tags = AsyncMock(return_value={"status": "added"})
+        
+        results = await client.apply_actions("contact_123", actions)
+        
+        assert len(results) == 2
+        assert results[0]["status"] == "sent"
+        assert results[1]["status"] == "added"
+
+    async def test_apply_actions_critical_failure(self, client):
+        """Test that critical action failure stops execution."""
+        actions = [
+            GHLAction(type=ActionType.REMOVE_TAG, tag="Security Tag")
+        ]
+        
+        client.remove_tags = AsyncMock(side_effect=Exception("API Fail"))
+        
+        with pytest.raises(RuntimeError, match="Critical security action failed"):
+            await client.apply_actions("contact_123", actions)
+
+    async def test_apply_actions_non_critical_failure(self, client):
+        """Test that non-critical failure continues execution."""
+        actions = [
+            GHLAction(type=ActionType.SEND_MESSAGE, message="Hi", channel=MessageType.SMS),
+            GHLAction(type=ActionType.ADD_TAG, tag="Tag A")
+        ]
+        
+        client.send_message = AsyncMock(side_effect=Exception("SMS Fail"))
+        client.add_tags = AsyncMock(return_value={"status": "added"})
+        
+        results = await client.apply_actions("contact_123", actions)
+        
+        assert len(results) == 2
+        assert results[0]["status"] == "failed"
+        assert results[1]["status"] == "added"
+
+    # --- Fetch Dashboard Data Tests ---
+
+    def test_fetch_dashboard_data_success(self, client):
+        """Test fetching dashboard data."""
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
+            mock_settings.test_mode = False
+            
+            # Mock sync methods
+            client.get_conversations = Mock(return_value=[
+                {"id": 1, "tags": ["Qualified"], "contactName": "John"}
+            ])
+            client.get_opportunities = Mock(return_value=[
+                {"status": "won", "monetary_value": 5000}
+            ])
+            
+            data = client.fetch_dashboard_data()
+            
+            assert data["metrics"]["total_revenue"] == 5000
+            assert data["metrics"]["active_leads"] == 1
+            assert data["metrics"]["qualified_leads"] == 1
+            assert data["metrics"]["conversion_rate"] == 100.0
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--cov"])
+    pytest.main([__file__, "-v"])

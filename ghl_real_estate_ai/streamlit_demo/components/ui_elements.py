@@ -138,7 +138,256 @@ def render_insight_card(title, value, description, status='info', action_label=N
 
 
     
-    if action_label and action_key:
-        if st.button(action_label, key=action_key, use_container_width=True):
-            st.session_state.current_hub = "🧠 Lead Intelligence Hub"
-            st.rerun()
+        if action_label and action_key:
+
+
+    
+            if st.button(action_label, key=action_key, use_container_width=True):
+
+
+    
+                st.session_state.current_hub = "🧠 Lead Intelligence Hub"
+
+
+    
+                st.rerun()
+
+
+    
+    
+
+
+    
+    def apply_page_transitions():
+
+
+    
+        """
+
+
+    
+        Injects custom CSS for smooth page transitions and micro-interactions.
+
+
+    
+        """
+
+
+    
+        st.markdown("""
+
+
+    
+            <style>
+
+
+    
+                /* Smooth Fade-in Animation for the entire app container */
+
+
+    
+                .stApp {
+
+
+    
+                    animation: fadeIn 0.8s ease-out;
+
+
+    
+                }
+
+
+    
+                
+
+
+    
+                @keyframes fadeIn {
+
+
+    
+                    0% { opacity: 0; transform: translateY(10px); }
+
+
+    
+                    100% { opacity: 1; transform: translateY(0); }
+
+
+    
+                }
+
+
+    
+                
+
+
+    
+                /* Micro-interactions for buttons */
+
+
+    
+                .stButton > button {
+
+
+    
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+
+    
+                }
+
+
+    
+                .stButton > button:hover {
+
+
+    
+                    transform: translateY(-2px);
+
+
+    
+                    box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4) !important;
+
+
+    
+                    border-color: #6366f1 !important;
+
+
+    
+                }
+
+
+    
+                
+
+
+    
+                /* Glossy card hover effect */
+
+
+    
+                [data-testid="stExpander"] {
+
+
+    
+                    transition: all 0.3s ease;
+
+
+    
+                    border: 1px solid rgba(255,255,255,0.05) !important;
+
+
+    
+                }
+
+
+    
+                [data-testid="stExpander"]:hover {
+
+
+    
+                    border-color: rgba(99, 102, 241, 0.3) !important;
+
+
+    
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+
+
+    
+                }
+
+
+    
+            </style>
+
+
+    
+        """, unsafe_allow_html=True)
+
+
+    
+    
+
+
+    
+    def render_loading_animation():
+
+
+    
+        """Renders a sleek pulse animation for AI operations."""
+
+
+    
+        st.markdown("""
+
+
+    
+            <div style="display: flex; justify-content: center; align-items: center; padding: 2rem;">
+
+
+    
+                <div style="
+
+
+    
+                    width: 60px; height: 60px; 
+
+
+    
+                    border-radius: 50%; 
+
+
+    
+                    background: #6366f1; 
+
+
+    
+                    box-shadow: 0 0 0 rgba(99, 102, 241, 0.4);
+
+
+    
+                    animation: pulse 1.5s infinite;
+
+
+    
+                "></div>
+
+
+    
+            </div>
+
+
+    
+            <style>
+
+
+    
+                @keyframes pulse {
+
+
+    
+                    0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+
+
+    
+                    70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(99, 102, 241, 0); }
+
+
+    
+                    100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+
+
+    
+                }
+
+
+    
+            </style>
+
+
+    
+        """, unsafe_allow_html=True)
+
+
+    
+    

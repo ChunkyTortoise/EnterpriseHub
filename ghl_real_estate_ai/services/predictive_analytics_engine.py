@@ -175,6 +175,11 @@ class ContentPersonalization:
     test_variation: Optional[str]
     control_content: Optional[str]
 
+    @property
+    def personalized_content(self) -> str:
+        """Alias for content_body to match test expectations."""
+        return self.content_body
+
 @dataclass
 class MarketTimingAnalysis:
     """Market timing optimization analysis"""
@@ -535,9 +540,17 @@ class AnomalyDetectionSystem:
         self.baseline_stats = {}
         self.trained = False
         
-    async def detect_lead_anomalies(self, lead_data: Dict[str, Any], historical_context: List[Dict]) -> List[AnomalyDetection]:
-        """Detect anomalies in current lead behavior"""
+    async def detect_lead_anomalies(self, lead_data: Dict[str, Any], historical_context: Optional[List[Dict]] = None) -> List[AnomalyDetection]:
+        """Detect anomalies in lead behavior vs historical baselines.
         
+        Args:
+            lead_data: Lead data to analyze
+            historical_context: Optional list of historical lead data for baseline
+            
+        Returns:
+            List of detected anomalies
+        """
+        historical_context = historical_context or []
         anomalies = []
         
         try:
@@ -1358,11 +1371,11 @@ class MarketTimingOptimizer:
     def __init__(self):
         self.cache = CacheService()
         
-    async def analyze_market_timing(self, market_segment: str = 'general') -> MarketTimingAnalysis:
+    async def analyze_market_timing(self, market_segment: str = 'general', context: Optional[Dict] = None, side: str = 'buy') -> MarketTimingAnalysis:
         """Analyze current market timing and provide recommendations"""
         
         # Cache market analysis for 4 hours
-        cache_key = f"market_timing:{market_segment}"
+        cache_key = f"market_timing:{market_segment}:{side}"
         cached_analysis = await self.cache.get(cache_key)
         if cached_analysis:
             return MarketTimingAnalysis(**cached_analysis)
@@ -1608,18 +1621,35 @@ class PredictiveAnalyticsEngine:
             'predictions_made': 0
         }
         
-    async def run_comprehensive_analysis(self, lead_data: Dict, historical_context: List[Dict]) -> Dict[str, Any]:
-        """Run comprehensive predictive analytics for a lead"""
+    async def run_comprehensive_analysis(self, lead_data: Union[Dict, str], historical_context: Union[List[Dict], Dict, None] = None) -> Dict[str, Any]:
+        """
+        Run comprehensive predictive analytics for a lead
         
+        Supports legacy signature: (lead_id, lead_data)
+        and new signature: (lead_data, historical_context)
+        """
+        
+        # Handle signature polymorphism
+        if isinstance(lead_data, str):
+            # Legacy: (lead_id, lead_data)
+            lead_id = lead_data
+            actual_lead_data = historical_context if isinstance(historical_context, dict) else {}
+            actual_historical_context = [] # Not provided in legacy call
+        else:
+            # New: (lead_data, historical_context)
+            actual_lead_data = lead_data
+            lead_id = actual_lead_data.get('lead_id', 'unknown')
+            actual_historical_context = historical_context or []
+
         analysis_start = datetime.now()
         
         try:
             # Run all analyses in parallel
             results = await asyncio.gather(
-                self.pattern_discovery.discover_conversion_patterns(historical_context),
-                self.anomaly_detection.detect_lead_anomalies(lead_data, historical_context),
+                self.pattern_discovery.discover_conversion_patterns(actual_historical_context),
+                self.anomaly_detection.detect_lead_anomalies(actual_lead_data, actual_historical_context),
                 self.content_personalization.generate_personalized_content(
-                    lead_data.get('lead_id', 'unknown'), lead_data, 'email'
+                    lead_id, actual_lead_data, 'email'
                 ),
                 self.market_timing.analyze_market_timing(),
                 return_exceptions=True
@@ -1647,7 +1677,7 @@ class PredictiveAnalyticsEngine:
                 
             # Generate comprehensive insights
             insights = await self._generate_comprehensive_insights(
-                lead_data, patterns, anomalies, content, market_analysis
+                actual_lead_data, patterns, anomalies, content, market_analysis
             )
             
             # Update metrics
@@ -1659,41 +1689,26 @@ class PredictiveAnalyticsEngine:
             analysis_time = (datetime.now() - analysis_start).total_seconds()
             
             return {
-                'lead_id': lead_data.get('lead_id'),
-                'analysis_timestamp': datetime.now(),
-                'analysis_duration_seconds': analysis_time,
-                
-                # Core results
-                'behavioral_patterns': [asdict(p) for p in patterns] if patterns else [],
-                'anomalies': [asdict(a) for a in anomalies] if anomalies else [],
-                'personalized_content': asdict(content) if content else None,
-                'market_timing': asdict(market_analysis) if market_analysis else None,
-                
-                # Strategic insights
-                'comprehensive_insights': insights,
-                'confidence_score': insights.get('confidence_score', 0.5),
-                'recommended_actions': insights.get('actions', []),
-                'risk_assessment': insights.get('risks', []),
-                'opportunity_assessment': insights.get('opportunities', []),
-                
-                # Metadata
-                'analytics_version': '2.0.0',
-                'models_used': ['pattern_discovery', 'anomaly_detection', 'content_ai', 'market_timing']
+                "lead_id": lead_id,
+                "status": "success",
+                "analysis_timestamp": datetime.now().isoformat(),
+                "execution_time_ms": int(analysis_time * 1000),
+                "behavioral_patterns": patterns,
+                "anomalies": anomalies,
+                "personalization": content,
+                "market_timing": market_analysis,
+                "insights": insights
             }
             
         except Exception as e:
             logger.error(f"CRITICAL: Comprehensive analysis completely failed: {e}")
-            # Escalate comprehensive analysis failure
-            await self._escalate_analytics_failure("comprehensive_analysis_critical", {
-                "error": str(e),
-                "lead_id": lead_data.get('lead_id'),
-                "impact": "Complete predictive analytics system failure"
-            })
+            await self._alert_analytics_failure("comprehensive_analysis_critical_failure", str(e), "PredictiveAnalyticsEngine")
+            
             return {
-                'lead_id': lead_data.get('lead_id'),
-                'error': str(e),
-                'analysis_timestamp': datetime.now(),
-                'status': 'failed'
+                "lead_id": lead_id if 'lead_id' in locals() else "unknown",
+                "status": "error",
+                "message": str(e),
+                "timestamp": datetime.now().isoformat()
             }
             
     async def _generate_comprehensive_insights(self, lead_data: Dict, patterns: List, 

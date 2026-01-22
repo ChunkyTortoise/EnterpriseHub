@@ -27,9 +27,10 @@ class Settings(BaseSettings):
     ghl_agency_id: Optional[str] = None
 
     # LLM Configuration
-    claude_model: str = "claude-3-5-sonnet-20240620"
-    claude_sonnet_model: str = "claude-3-5-sonnet-20240620"
-    claude_haiku_model: str = "claude-3-haiku-20240307"
+    claude_model: str = "claude-3-5-sonnet-20241022"
+    claude_sonnet_model: str = "claude-3-5-sonnet-20241022"
+    claude_haiku_model: str = "claude-3-5-haiku-20241022"
+    claude_opus_model: str = "claude-3-opus-20240229"  # High-stakes tasks
     temperature: float = 0.7
     max_tokens: int = 150
     default_llm_provider: str = "claude"
@@ -169,6 +170,11 @@ class Settings(BaseSettings):
     apollo_webhook_secret: Optional[str] = None
     twilio_webhook_secret: Optional[str] = None
     sendgrid_webhook_secret: Optional[str] = None
+
+    # Vapi.ai Configuration
+    vapi_api_key: Optional[str] = None
+    vapi_assistant_id: Optional[str] = None
+    vapi_phone_number_id: Optional[str] = None
 
     # Testing
     test_mode: bool = False

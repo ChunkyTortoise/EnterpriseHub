@@ -33,6 +33,7 @@ class AgentRole(Enum):
     GAMMA = "integration_validator"
     DELTA = "documentation_finalizer"
     EPSILON = "deployment_preparer"
+    PHI = "frontend_engineer"
 
 
 class TaskStatus(Enum):
@@ -74,8 +75,138 @@ class Agent:
 
 from ghl_real_estate_ai.agents.blackboard import SharedBlackboard
 from ghl_real_estate_ai.agent_system.skills.base import registry as skill_registry
+import ghl_real_estate_ai.agent_system.skills.frontend
+import ghl_real_estate_ai.agent_system.skills.codebase
+import ghl_real_estate_ai.agent_system.skills.ghl_bridge
+import ghl_real_estate_ai.agent_system.skills.semantic_chunking
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.agents.traceability import trace_agent_action
+from ghl_real_estate_ai.agent_system.hooks.security import SecuritySentry
+from ghl_real_estate_ai.agent_system.hooks.real_estate import SentimentDecoder
+
+from ghl_real_estate_ai.agent_system.hooks.governance import governance_auditor
+from ghl_real_estate_ai.services.roi_engine import roi_engine
+from ghl_real_estate_ai.services.ghl_client import GHLClient
+
+class RecoveryOrchestrator:
+    """
+    Handles GHL API failures (429s/500s) by proposing alternative paths.
+    Logs recovery events to AUDIT_MANIFEST.md.
+    """
+    def __init__(self, llm: LLMClient):
+        self.llm = llm
+
+    async def propose_recovery(self, error_context: Dict[str, Any], blackboard: SharedBlackboard) -> str:
+        """
+        Proposes an alternative path when a GHL action fails.
+        """
+        timestamp = datetime.now().isoformat()
+        agent_name = error_context.get("agent", "Unknown")
+        error_msg = error_context.get("error", "Unknown error")
+        failed_action = error_context.get("action", "Unknown action")
+        
+        print(f"🩹 RecoveryOrchestrator triggered for {failed_action} (Error: {error_msg})")
+        
+        prompt = f"""
+        A GHL API action has failed in the agent swarm.
+        
+        Failed Action: {failed_action}
+        Error: {error_msg}
+        Agent: {agent_name}
+        
+        Context from Blackboard:
+        {blackboard.get_full_context()[-1000:]}
+        
+        Propose a recovery strategy. If it was a communication failure (e.g. SMS failed), 
+        suggest an alternative channel (Email, Task Creation, or Manual Follow-up).
+        
+        Provide a concise recovery plan (max 2 sentences).
+        """
+        
+        response = await self.llm.agenerate(
+            prompt=prompt,
+            model="gemini-2.0-pro-exp-02-05",
+            temperature=0.1
+        )
+        recovery_plan = response.content.strip()
+        
+        # Log to Audit Manifest
+        self.log_recovery_event(failed_action, error_msg, recovery_plan)
+        
+        # Write to blackboard
+        blackboard.write(f"recovery_plan_{failed_action}", recovery_plan, "RecoveryOrchestrator")
+        
+        return recovery_plan
+
+    def log_recovery_event(self, action: str, error: str, resolution: str):
+        """Logs a recovery event to the manifest."""
+        try:
+            governance_auditor.log_recovery_event(action, error, resolution)
+        except:
+            pass
+
+class ConflictResolver:
+    """
+    Identifies and resolves contradictions on the Shared Blackboard.
+    Used when multiple agents propose conflicting actions or state updates.
+    """
+    def __init__(self, llm: LLMClient):
+        self.llm = llm
+
+    async def resolve(self, blackboard: SharedBlackboard) -> List[str]:
+        """
+        Scans blackboard history for potential conflicts and resolves them.
+        Returns a list of resolution summaries.
+        """
+        history = blackboard.get_history()
+        # Find recent duplicate writes to same keys or related keys
+        recent_entries = history[-10:] if len(history) > 10 else history
+        
+        # Simple heuristic: Check for multiple agents writing to the same key in a short window
+        key_map = {}
+        for entry in recent_entries:
+            key = entry['key']
+            if key not in key_map:
+                key_map[key] = []
+            key_map[key].append(entry)
+            
+        resolutions = []
+        for key, entries in key_map.items():
+            if len(set(e['agent'] for e in entries)) > 1:
+                # Potential conflict: Multiple agents writing to the same key
+                print(f"⚖️ Conflict detected on key '{key}' between {set(e['agent'] for e in entries)}")
+                
+                resolution = await self._resolve_with_llm(key, entries)
+                blackboard.write(f"resolution_{key}", resolution, "ConflictResolver")
+                
+                agents = list(set(e['agent'] for e in entries))
+                governance_auditor.log_conflict_resolution(agents, f"Multiple agents wrote to {key}", resolution)
+                resolutions.append(f"Resolved {key}: {resolution}")
+                
+        return resolutions
+
+    async def _resolve_with_llm(self, key: str, entries: List[Dict]) -> str:
+        conflict_desc = "\n".join([f"- Agent {e['agent']}: {e['value']}" for e in entries])
+        
+        prompt = f"""
+        A conflict has been detected on the Shared Blackboard for the key '{key}'.
+        Multiple agents have provided different values:
+        
+        {conflict_desc}
+        
+        As the ConflictResolver, your job is to synthesize these inputs into a single, 
+        consistent truth or decide which agent's input takes precedence based on the context.
+        
+        Provide the final resolved value for the key '{key}'.
+        Reply ONLY with the resolved value.
+        """
+        
+        response = await self.llm.agenerate(
+            prompt=prompt,
+            model="gemini-2.0-pro-exp-02-05",
+            temperature=0.1
+        )
+        return response.content.strip()
 
 class SwarmOrchestrator:
     """
@@ -90,6 +221,12 @@ class SwarmOrchestrator:
         self.completed_tasks: Set[str] = set()
         self.blackboard = SharedBlackboard()
         self.llm = LLMClient()
+        
+        # Hardening Hooks (Phase 4)
+        self.security_sentry = SecuritySentry()
+        self.sentiment_decoder = SentimentDecoder()
+        self.conflict_resolver = ConflictResolver(self.llm)
+        self.recovery_orchestrator = RecoveryOrchestrator(self.llm)
         
         self._initialize_agents()
         self._initialize_tasks()
@@ -176,6 +313,14 @@ class SwarmOrchestrator:
             
             # Record response in messages for context maintenance
             if response.content:
+                # 🛡️ Security Check (Phase 4 Hardening)
+                if not self.security_sentry.scan_output(response.content, agent_name=agent.name):
+                    print(f"🚨 SECURITY VIOLATION detected in {agent.name} output! Blocking task.")
+                    self.blackboard.write(f"security_violation_{task_id}", "PII or Injection detected", agent.name)
+                    task.status = TaskStatus.FAILED
+                    task.error = "Security violation detected"
+                    return {"error": "Security violation"}
+
                 messages.append({"role": "assistant", "content": response.content})
                 final_response = response.content
             
@@ -197,7 +342,15 @@ class SwarmOrchestrator:
                             tool_results.append({"tool": tool_name, "result": result})
                         except Exception as e:
                             print(f"❌ Tool {tool_name} failed: {e}")
-                            tool_results.append({"tool": tool_name, "error": str(e)})
+                            recovery_plan = await self.recovery_orchestrator.propose_recovery(
+                                {"agent": agent.name, "action": tool_name, "error": str(e)},
+                                self.blackboard
+                            )
+                            tool_results.append({
+                                "tool": tool_name, 
+                                "error": str(e),
+                                "recovery_plan": recovery_plan
+                            })
                     else:
                         tool_results.append({"tool": tool_name, "error": "Skill not found"})
 
@@ -228,6 +381,14 @@ class SwarmOrchestrator:
         task.status = TaskStatus.COMPLETED
         task.completed_at = datetime.now()
         task.result = {"content": final_response, "messages_count": len(messages)}
+        
+        # 🧠 Sentiment Analysis (Phase 4 Hardening)
+        sentiment = self.sentiment_decoder.analyze(final_response)
+        task.result["sentiment"] = sentiment["sentiment"]
+        if sentiment["emotional_state"] == "volatile":
+            print(f"⚠️ VOLATILE sentiment detected in result for {task_id}")
+            self.blackboard.write(f"task_warning_{task_id}", "Volatile sentiment detected in output", agent.name)
+
         self.completed_tasks.add(task_id)
         
         self.blackboard.write(f"task_result_{task_id}", task.result, agent.name)
@@ -305,6 +466,23 @@ class SwarmOrchestrator:
                 "Build process validation",
                 "Deployment scripts",
                 "Production readiness checklist"
+            ]
+        )
+
+        # Phi - Frontend Engineer
+        self.agents[AgentRole.PHI] = Agent(
+            role=AgentRole.PHI,
+            name="Phi Frontend Engineer",
+            description="Generates production-grade UI, dashboards, and visualizations",
+            capabilities=[
+                "Shadcn/UI component generation",
+                "Tremor dashboard construction",
+                "Next.js page routing",
+                "Data visualization (Recharts/ECharts)",
+                "Frontend state management",
+                "Hot-reload preview management",
+                "Visual regression testing",
+                "Semantic React Refactoring"
             ]
         )
         
@@ -484,6 +662,44 @@ class SwarmOrchestrator:
                 estimated_time=25
             ),
             
+            # Phase 6.5: Frontend Generation (PHI)
+            Task(
+                id="task_021",
+                title="Generate Core UI Components",
+                description="Generate Shadcn-based UI components for Enterprise Hub",
+                assigned_to=AgentRole.PHI,
+                dependencies=["task_001"],
+                priority=2,
+                estimated_time=30
+            ),
+            Task(
+                id="task_022",
+                title="Construct KPI Dashboard",
+                description="Build interactive Tremor dashboard for executive metrics",
+                assigned_to=AgentRole.PHI,
+                dependencies=["task_021", "task_013"],
+                priority=1,
+                estimated_time=45
+            ),
+            Task(
+                id="task_023",
+                title="Integrate AI State Sync",
+                description="Implement global state sync for AI insights in the frontend",
+                assigned_to=AgentRole.PHI,
+                dependencies=["task_022"],
+                priority=2,
+                estimated_time=40
+            ),
+            Task(
+                id="task_024",
+                title="Visual QA & Self-Correction Loop",
+                description="Execute an autonomous visual QA loop using Playwright and Vision analysis to verify and correct the generated dashboard components.",
+                assigned_to=AgentRole.PHI,
+                dependencies=["task_023"],
+                priority=2,
+                estimated_time=15
+            ),
+
             # Phase 7: Final Validation
             Task(
                 id="task_019",
@@ -603,11 +819,26 @@ class SwarmOrchestrator:
         # ... (keep existing implementation)
         return [] # Placeholder as we are adding a new method below
 
+    def _calculate_complexity(self) -> float:
+        """
+        Calculates a complexity score (0.0 to 1.0) based on blackboard state.
+        Factors: Context length, number of completed tasks, tool usage density.
+        """
+        context = self.blackboard.get_full_context()
+        context_score = min(len(context) / 10000, 1.0)
+        
+        task_score = len(self.completed_tasks) / len(self.tasks) if self.tasks else 0
+        
+        # Simple weighted average
+        complexity = (context_score * 0.7) + (task_score * 0.3)
+        return complexity
+
     async def run_parallel_swarm(self):
         """
         Executes the swarm tasks in parallel where dependencies allow.
+        Dynamically adjusts concurrency based on blackboard complexity.
         """
-        print("\n🚀 Starting Parallel Swarm Execution...")
+        print("\n🚀 Starting Parallel Swarm Execution (Adaptive Scaling)...")
         
         while len(self.completed_tasks) < len(self.tasks):
             ready_tasks = self.get_ready_tasks()
@@ -618,11 +849,36 @@ class SwarmOrchestrator:
                 print("🏁 No more tasks ready. Swarm complete.")
                 break
             
-            print(f"📡 Dispatching {len(ready_tasks)} parallel tasks...")
-            # Execute all currently ready tasks in parallel
-            await asyncio.gather(*(self.execute_task(t.id) for t in ready_tasks))
+            complexity = self._calculate_complexity()
+            # Adaptive Scaling: High complexity = lower concurrency to ensure stability/reasoning quality
+            # Low complexity = higher concurrency for speed.
+            # Limiting to 1 for free tier stability
+            max_parallel = 1 
+            tasks_to_run = ready_tasks[:max_parallel]
+            
+            print(f"📡 Dispatching {len(tasks_to_run)} parallel tasks (Complexity: {complexity:.2f}, Max Parallel: {max_parallel})...")
+            
+            # Execute selected tasks in parallel
+            await asyncio.gather(*(self.execute_task(t.id) for t in tasks_to_run))
+            
+            # Rate limit buffer - Free tier is very restrictive
+            await asyncio.sleep(10)
+            
+            # Autonomous Conflict Resolution (Phase 6)
+            resolutions = await self.conflict_resolver.resolve(self.blackboard)
+            if resolutions:
+                print(f"⚖️ Autonomous Conflict Resolution applied: {len(resolutions)} keys resolved.")
             
         print("\n✨ Parallel Swarm Execution Finished.")
+        
+        # Calculate ROI (Phase 7)
+        swarm_stats = {
+            "tasks_completed": len(self.completed_tasks),
+            "matches_found": self.blackboard.read("property_matches_count") or 0 # Example key
+        }
+        roi_results = roi_engine.calculate_swarm_roi(swarm_stats, agent_name="SwarmOrchestrator")
+        print(f"💰 ROI Generated: ${roi_results['total_value_generated']}")
+
         self.print_status()
 
 

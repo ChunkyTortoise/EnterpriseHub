@@ -342,7 +342,7 @@ def integration_test_config():
 
 
 @pytest.fixture(autouse=True)
-async def integration_test_lifecycle():
+def integration_test_lifecycle():
     """
     Automatic fixture for integration test lifecycle management.
 
@@ -372,11 +372,13 @@ async def integration_test_lifecycle():
     else:
         logger.info(f"Integration test completed: {duration:.2f}s")
 
-    # Cleanup any remaining async tasks
+    # Cleanup any remaining async tasks if a loop exists
     try:
-        pending = asyncio.all_tasks()
-        if pending:
-            logger.debug(f"Cleaning up {len(pending)} pending async tasks")
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            pending = asyncio.all_tasks(loop)
+            if pending:
+                logger.debug(f"Cleaning up {len(pending)} pending async tasks")
     except Exception as e:
         logger.debug(f"Task cleanup check failed: {e}")
 

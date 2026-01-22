@@ -3,11 +3,15 @@ import sqlite3
 import pandas as pd
 import json
 import os
+import asyncio
+from pathlib import Path
+from datetime import datetime
 from dotenv import load_dotenv
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
 load_dotenv()
 
-st.set_page_config(page_title="Jorge AI Brain", layout="wide")
+st.set_page_config(page_title="Jorge AI Brain - Multi-Tenant", layout="wide")
 
 def get_db_path():
     db_url = os.getenv("DATABASE_URL")
@@ -16,6 +20,21 @@ def get_db_path():
     return os.getenv("DB_PATH", "real_estate_engine.db")
 
 DB_PATH = get_db_path()
+
+def get_available_locations():
+    analytics_dir = Path("data/analytics")
+    locations = ["All Locations"]
+    if analytics_dir.exists():
+        for loc_dir in analytics_dir.iterdir():
+            if loc_dir.is_dir():
+                locations.append(loc_dir.name)
+    return locations
+
+# Sidebar for multi-tenancy control
+st.sidebar.title("🏢 Tenant Management")
+available_locs = get_available_locations()
+selected_location = st.sidebar.selectbox("Select Location", available_locs)
+force_refresh = st.sidebar.button("Force Refresh Data")
 
 def load_data():
     if not os.path.exists(DB_PATH):
@@ -41,7 +60,59 @@ def load_data():
         conn.close()
     return df_likes
 
-st.title("🧠 Jorge Real Estate AI: Live Intelligence")
+async def get_dashboard_data(location_id: str, force_refresh: bool = False):
+    service = AnalyticsService()
+    
+    if location_id == "All Locations":
+        # Aggregate all locations (for Jorge/SuperAdmin)
+        all_events = []
+        summary = {
+            "total_messages": 0,
+            "leads_scored": 0,
+            "hot_leads": 0,
+            "vague_streaks": 0,
+            "take_away_closes": 0,
+            "recent_events": []
+        }
+        
+        locs = get_available_locations()
+        locs.remove("All Locations")
+        
+        for loc in locs:
+            loc_summary = await service.get_cached_daily_summary(loc, force_refresh=force_refresh)
+            loc_events = await service.get_events(loc) # Get raw events for "Recent Logs"
+            
+            summary["total_messages"] += loc_summary.get("total_messages", 0)
+            summary["leads_scored"] += loc_summary.get("leads_scored", 0)
+            summary["hot_leads"] += loc_summary.get("hot_leads", 0)
+            
+            # Count specific Jorge metrics from raw events
+            seller_events = [e for e in loc_events if e.get('event_type') == 'jorge_seller_interaction']
+            summary["vague_streaks"] += sum(1 for e in seller_events if e.get('data', {}).get('vague_streak', 0) > 0)
+            summary["take_away_closes"] += sum(1 for e in seller_events if e.get('data', {}).get('response_type') == 'take_away_close')
+            
+            summary["recent_events"].extend(seller_events)
+            
+        # Sort recent events
+        summary["recent_events"] = sorted(summary["recent_events"], key=lambda x: x['timestamp'], reverse=True)[:10]
+        return summary
+    else:
+        # Single location optimization
+        loc_summary = await service.get_cached_daily_summary(location_id, force_refresh=force_refresh)
+        loc_events = await service.get_events(location_id)
+        
+        seller_events = [e for e in loc_events if e.get('event_type') == 'jorge_seller_interaction']
+        
+        return {
+            "total_messages": loc_summary.get("total_messages", 0),
+            "leads_scored": loc_summary.get("leads_scored", 0),
+            "hot_leads": loc_summary.get("hot_leads", 0),
+            "vague_streaks": sum(1 for e in seller_events if e.get('data', {}).get('vague_streak', 0) > 0),
+            "take_away_closes": sum(1 for e in seller_events if e.get('data', {}).get('response_type') == 'take_away_close'),
+            "recent_events": sorted(seller_events, key=lambda x: x['timestamp'], reverse=True)[:10]
+        }
+
+st.title(f"🧠 Jorge AI Brain: {selected_location}")
 
 col1, col2 = st.columns(2)
 
@@ -51,6 +122,7 @@ with col1:
     if df.empty:
         st.write("No 'Like' interactions recorded yet.")
     else:
+        # Filter logic here if DB had location_id
         for index, row in df.iterrows():
             st.write(f"**{row['address']}** - ❤️ {row['likes']} Likes")
             if row['image_url']:
@@ -62,18 +134,15 @@ with col1:
 
 with col2:
     st.subheader("🤖 Recent Logic Logs")
-    st.info("System Status: PRODUCTION (Railway)")
+    st.info(f"Viewing: {selected_location} | Status: PRODUCTION")
     
-    # In a real app, this could pull from a log file or a dedicated logs table
     st.code("""
-    [10:00:01] New Swipe: LIKE on 123 Palm Dr
-    [10:00:02] Intelligence: Generated Persona 'Modernist Pool Lover'
-    [10:00:03] GHL: Updated Custom Field
-    [10:00:05] Vapi: Triggered Call to +1 (555)...
+    [SYSTEM] Intelligence Engine Online
+    [SYSTEM] Multi-Tenant Isolation: ENABLED
+    [SYSTEM] Cache Layer: REDIS + MEMORY FALLBACK
     """, language="bash")
     
     st.subheader("🔄 Latest Leads & Personas")
-    # Add a table showing latest leads and their generated personas if available
     if os.path.exists(DB_PATH):
         conn = sqlite3.connect(DB_PATH)
         try:
@@ -84,3 +153,30 @@ with col2:
             st.error(f"Error loading leads: {e}")
         finally:
             conn.close()
+
+# --- Jorge Bot Ecosystem Analytics ---
+st.markdown("---")
+st.header("🤖 Jorge Bot Ecosystem Analytics")
+
+# Run async code safely
+try:
+    dashboard_data = asyncio.run(get_dashboard_data(selected_location, force_refresh))
+except RuntimeError:
+    loop = asyncio.get_event_loop()
+    dashboard_data = loop.run_until_complete(get_dashboard_data(selected_location, force_refresh))
+
+if dashboard_data:
+    col_a, col_b, col_c = st.columns(3)
+    col_a.metric("Total Messages (Today)", dashboard_data["total_messages"])
+    col_b.metric("Take-Away Closes Triggered", dashboard_data["take_away_closes"])
+    col_c.metric("Vague Streaks Detected", dashboard_data["vague_streaks"])
+    
+    st.subheader("Recent Seller Bot Logs")
+    if dashboard_data["recent_events"]:
+        for e in dashboard_data["recent_events"]:
+            data = e.get('data', {})
+            st.text(f"[{e['timestamp']}] Temp: {data.get('temperature')} | Q: {data.get('questions_answered')}/4 | Vague: {data.get('vague_streak')}")
+    else:
+        st.write("No seller bot interactions recorded yet today.")
+else:
+    st.info("No analytics data found for the selected location today.")

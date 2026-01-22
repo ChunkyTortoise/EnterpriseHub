@@ -5,9 +5,11 @@ Handles interaction with the Graphiti knowledge graph for the Real Estate AI.
 
 import os
 import logging
+import json
+import time
+from pathlib import Path
 from typing import List, Dict, Optional, Any
 from .schema import ENTITY_LEAD, RELATION_TYPES
-import json
 
 # Try to import graphiti_core and drivers
 try:
@@ -74,9 +76,6 @@ class LocalMemoryManager:
         recent = interactions[-5:]
         formatted = "\n".join([f"- {i['role']}: {i['text']}" for i in recent])
         return f"## Recent Interactions (Local Memory)\n{formatted}"
-
-import time
-from pathlib import Path
 
 class GraphitiMemoryManager:
     def __init__(self):
@@ -201,5 +200,105 @@ class GraphitiMemoryManager:
         except Exception as e:
             logging.error(f"Error consolidating memory: {e}")
 
+from ghl_real_estate_ai.core.llm_client import LLMClient
+
+class MemorySynthesizer:
+    """
+    Condenses old interaction nodes into 'Agent Dossiers' to prevent context bloat.
+    """
+    def __init__(self, fallback_manager: LocalMemoryManager):
+        self.fallback = fallback_manager
+        self.llm = LLMClient()
+
+    async def synthesize_dossier(self, lead_id: str) -> str:
+        """
+        Creates a concise dossier (summary) of a lead's history.
+        """
+        interactions = self.fallback.memory.get(lead_id, [])
+        if not interactions:
+            return "No history available for this lead."
+            
+        # If there's already a dossier, we might want to update it
+        # For now, we synthesize from all available interactions
+        
+        history_text = "\n".join([f"{i['role']}: {i['text']}" for i in interactions])
+        
+        prompt = f"""
+        You are a Memory Synthesis Engine. 
+        Summarize the following interaction history with lead {lead_id} into a concise 'Agent Dossier'.
+        Focus on:
+        - Key needs and preferences.
+        - Objections raised.
+        - Current status/stage in the funnel.
+        - Next best action.
+        
+        HISTORY:
+        {history_text}
+        
+        Keep the summary under 150 words.
+        """
+        
+        try:
+            response = await self.llm.agenerate(
+                prompt=prompt,
+                model="gemini-2.0-flash",
+                temperature=0.1
+            )
+            dossier = response.content
+            
+            # Save dossier back to local memory as a special entry
+            if "dossiers" not in self.fallback.memory:
+                self.fallback.memory["dossiers"] = {}
+            
+            self.fallback.memory["dossiers"][lead_id] = {
+                "content": dossier,
+                "synthesized_at": time.time(),
+                "interaction_count": len(interactions)
+            }
+            self.fallback._save()
+            
+            return dossier
+        except Exception as e:
+            logging.error(f"Memory synthesis failed for {lead_id}: {e}")
+            return "Error synthesizing dossier."
+
+    async def synthesize_market_trends(self, market_name: str = "Global") -> str:
+        """
+        Aggregates dossiers from multiple leads to generate a Market Heatmap summary.
+        """
+        dossiers = self.fallback.memory.get("dossiers", {})
+        if not dossiers:
+            return f"Insufficient data for {market_name} market trends."
+            
+        combined_dossiers = "\n---\n".join([f"Lead Dossier: {d['content']}" for d in dossiers.values()])
+        
+        prompt = f"""
+        You are a Market Intelligence Analyst. 
+        Analyze the following lead dossiers for the '{market_name}' market and generate a 'Market Heatmap' summary.
+        
+        IDENTIFIED DOSSIERS:
+        {combined_dossiers}
+        
+        Focus on:
+        - Emerging trends across multiple leads.
+        - Common objections or friction points.
+        - Sentiment heatmap (overall market mood).
+        - Strategic recommendations for the swarm.
+        
+        Keep the summary under 300 words.
+        """
+        
+        try:
+            response = await self.llm.agenerate(
+                prompt=prompt,
+                model="gemini-2.0-flash",
+                temperature=0.2
+            )
+            return response.content
+        except Exception as e:
+            logging.error(f"Market trend synthesis failed: {e}")
+            return "Error synthesizing market trends."
+
 # Global instance
 memory_manager = GraphitiMemoryManager()
+memory_synthesizer = MemorySynthesizer(memory_manager.fallback)

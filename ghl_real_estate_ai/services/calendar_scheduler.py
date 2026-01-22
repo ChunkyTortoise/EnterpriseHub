@@ -1070,3 +1070,23 @@ Looking forward to helping you with your real estate needs!
 
             # Graceful fallback - don't expose errors to lead
             return False, "", []
+
+
+# Global instance for singleton pattern
+_scheduler_instance: Optional[CalendarScheduler] = None
+
+
+def get_smart_scheduler(ghl_client: Optional[GHLClient] = None) -> CalendarScheduler:
+    """
+    Get or create a global instance of CalendarScheduler.
+    
+    Args:
+        ghl_client: Optional GHL client to inject
+        
+    Returns:
+        CalendarScheduler instance
+    """
+    global _scheduler_instance
+    if _scheduler_instance is None:
+        _scheduler_instance = CalendarScheduler(ghl_client=ghl_client)
+    return _scheduler_instance

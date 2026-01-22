@@ -12,6 +12,9 @@ from enum import Enum
 
 from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity
 from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.services.sentiment_drift_engine import SentimentDriftEngine
+from ghl_real_estate_ai.services.psychographic_segmentation_engine import PsychographicSegmentationEngine
+from ghl_real_estate_ai.services.market_context_injector import MarketContextInjector
 
 
 class ClaudeTaskType(Enum):
@@ -34,6 +37,7 @@ class ClaudeRequest:
     task_type: ClaudeTaskType
     context: Dict[str, Any]
     prompt: str
+    tenant_id: Optional[str] = None
     model: str = "claude-3-5-sonnet-20241022"
     max_tokens: int = 4000
     temperature: float = 0.7
@@ -93,6 +97,9 @@ class ClaudeOrchestrator:
         self.llm = llm_client or LLMClient(provider=LLMProvider.CLAUDE)
         self.memory = memory_service or MemoryService()
         self.researcher = PerplexityResearcher()
+        self.sentiment_drift_engine = SentimentDriftEngine(self.llm)
+        self.psychographic_engine = PsychographicSegmentationEngine(self.llm)
+        self.market_injector = MarketContextInjector(self.llm)
 
         # Scoring services
         self.jorge_scorer = LeadScorer()
@@ -243,7 +250,8 @@ class ClaudeOrchestrator:
                 max_tokens=request.max_tokens,
                 temperature=request.temperature,
                 streaming=request.streaming,
-                complexity=complexity
+                complexity=complexity,
+                tenant_id=request.tenant_id
             )
 
             # Parse and structure response
@@ -497,6 +505,56 @@ class ClaudeOrchestrator:
 
         return await self.process_request(request)
 
+    async def analyze_conversation_sentiment(self, 
+                                          lead_id: str, 
+                                          messages: List[Dict[str, str]],
+                                          tenant_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Analyze conversation sentiment for drift and re-engagement opportunity.
+        
+        Args:
+            lead_id: The ID of the lead
+            messages: Conversation history
+            tenant_id: Optional tenant ID
+            
+        Returns:
+            Analysis results from SentimentDriftEngine
+        """
+        return await self.sentiment_drift_engine.analyze_conversation_drift(
+            messages=messages,
+            lead_id=lead_id,
+            tenant_id=tenant_id
+        )
+
+    async def detect_lead_persona(self, 
+                                 lead_id: str, 
+                                 messages: List[Dict[str, str]],
+                                 lead_context: Dict[str, Any],
+                                 tenant_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Detect lead persona for tone adaptation.
+        """
+        return await self.psychographic_engine.detect_persona(
+            messages=messages,
+            lead_context=lead_context,
+            tenant_id=tenant_id
+        )
+
+    async def provide_market_reality_check(self, 
+                                         expected_price: float, 
+                                         address: str, 
+                                         zip_code: str,
+                                         tenant_id: Optional[str] = None) -> str:
+        """
+        Provide a market-aware pricing reality check.
+        """
+        market_context = await self.market_injector.get_market_context(address, zip_code)
+        return await self.market_injector.synthesize_price_reality_check(
+            seller_expected_price=expected_price,
+            market_context=market_context,
+            tenant_id=tenant_id
+        )
+
     async def perform_research(self,
                                topic: str,
                                context: Optional[Dict[str, Any]] = None) -> ClaudeResponse:
@@ -585,7 +643,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                           max_tokens: int,
                           temperature: float,
                           streaming: bool = False,
-                          complexity: Optional[TaskComplexity] = None) -> Any:
+                          complexity: Optional[TaskComplexity] = None,
+                          tenant_id: Optional[str] = None) -> Any:
         """Make actual Claude API call"""
 
         if streaming:
@@ -596,7 +655,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 system_prompt=system_prompt,
                 max_tokens=max_tokens,
                 temperature=temperature,
-                complexity=complexity
+                complexity=complexity,
+                tenant_id=tenant_id
             ):
                 content += chunk
             # Note: streaming doesn't return usage info in current LLMClient implementation
@@ -609,7 +669,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 system_prompt=system_prompt,
                 max_tokens=max_tokens,
                 temperature=temperature,
-                complexity=complexity
+                complexity=complexity,
+                tenant_id=tenant_id
             )
 
     def _parse_response(self, content: str, task_type: ClaudeTaskType) -> ClaudeResponse:

@@ -126,7 +126,7 @@ class TestPredictiveLeadScorerV2:
     ):
         """Test successful predictive score calculation."""
         # Mock dependencies
-        with patch.object(scorer.traditional_scorer, 'calculate_with_reasoning') as mock_traditional, \
+        with patch.object(scorer.traditional_scorer, 'calculate_with_reasoning', new_callable=AsyncMock) as mock_traditional, \
              patch.object(scorer.ml_model, 'predict_closing_probability', return_value=mock_ml_prediction) as mock_ml, \
              patch.object(scorer.feature_engineer, 'extract_conversation_features', return_value=mock_conv_features) as mock_features:
 
@@ -313,7 +313,7 @@ class TestPredictiveLeadScorerV2:
         mock_conversation_context
     ):
         """Test ROI predictions calculation."""
-        revenue, efficiency = await scorer._calculate_roi_predictions(
+        revenue, efficiency, yield_est, margin = await scorer._calculate_roi_predictions(
             closing_probability=0.75,
             conv_features=mock_conv_features,
             context=mock_conversation_context
@@ -362,7 +362,7 @@ class TestPredictiveLeadScorerV2:
     async def test_caching_behavior(self, scorer, mock_conversation_context):
         """Test that scoring results are properly cached."""
         # Mock cache to verify caching behavior
-        with patch.object(scorer.traditional_scorer, 'calculate_with_reasoning') as mock_scorer:
+        with patch.object(scorer.traditional_scorer, 'calculate_with_reasoning', new_callable=AsyncMock) as mock_scorer:
             mock_scorer.return_value = {
                 "score": 5,
                 "classification": "hot",
@@ -409,7 +409,7 @@ class TestPredictiveLeadScorerV2:
         # Very long conversation
         long_context = {
             "conversation_history": [
-                {"role": "user", "text": f"Message {i}"} for i in range(100)
+                {"role": "user", "text": f"Message {i}? I am very interested in learning more about this property."} for i in range(100)
             ],
             "extracted_preferences": {
                 "budget": "1000000",

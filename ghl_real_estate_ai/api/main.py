@@ -33,6 +33,8 @@ from ghl_real_estate_ai.api.routes import (
     webhook,
     auth,
     lead_intelligence,
+    agent_sync,
+    reports,
 )
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 from ghl_real_estate_ai.api.middleware import (
@@ -42,6 +44,7 @@ from ghl_real_estate_ai.api.middleware import (
 from ghl_real_estate_ai.api.middleware.error_handler import ErrorHandlerMiddleware
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service, EnterpriseAuthError
 from fastapi.responses import JSONResponse
 
 class OptimizedJSONResponse(JSONResponse):
@@ -63,15 +66,11 @@ class OptimizedJSONResponse(JSONResponse):
             return [self._remove_nulls(item) for item in obj if item is not None]
         return obj
 
-# Override default JSON response
-app.default_response_class = OptimizedJSONResponse
-
-logger = get_logger(__name__)
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for FastAPI."""
     # Startup logic
+    logger = get_logger(__name__)
     logger.info(
         f"Starting {settings.app_name} v{settings.version}",
         extra={"environment": settings.environment, "model": settings.claude_model},
@@ -106,6 +105,11 @@ app = FastAPI(
     redoc_url="/redoc" if settings.environment == "development" else None,
     lifespan=lifespan,
 )
+
+# Override default JSON response
+app.default_response_class = OptimizedJSONResponse
+
+logger = get_logger(__name__)
 
 # HTTPS enforcement in production
 if os.getenv("ENVIRONMENT") == "production":
@@ -335,6 +339,33 @@ app.include_router(claude_chat.router, prefix="/api")  # Claude chat interface
 app.include_router(lead_lifecycle.router, prefix="/api")
 app.include_router(health.router)  # Health endpoint at root level
 
+# Enterprise Authentication Router
+enterprise_auth_router = APIRouter(prefix="/api/enterprise/auth", tags=["enterprise_authentication"])
+
+@enterprise_auth_router.post("/sso/initiate")
+async def initiate_enterprise_sso_login(domain: str, redirect_uri: str):
+    """
+    Initiate enterprise SSO login flow.
+    """
+    try:
+        sso_data = await enterprise_auth_service.initiate_sso_login(domain, redirect_uri)
+        return sso_data
+    except EnterpriseAuthError as e:
+        raise HTTPException(status_code=400, detail=e.message)
+
+@enterprise_auth_router.get("/sso/callback")
+async def enterprise_sso_callback(code: str, state: str):
+    """
+    Handle enterprise SSO callback.
+    """
+    try:
+        token_data = await enterprise_auth_service.handle_sso_callback(code, state)
+        return token_data
+    except EnterpriseAuthError as e:
+        raise HTTPException(status_code=400, detail=e.message)
+
+app.include_router(enterprise_auth_router)
+
 # Authentication routes (added by Agent 5)
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(properties.router, prefix="/api")
@@ -343,11 +374,13 @@ app.include_router(team.router, prefix="/api")
 app.include_router(crm.router, prefix="/api")
 app.include_router(voice.router, prefix="/api")
 app.include_router(lead_intelligence.router, prefix="/api")
+app.include_router(agent_sync.router, prefix="/api")
 app.include_router(predictive_analytics.router)  # Predictive Analytics ML endpoints
 app.include_router(pricing_optimization.router)  # Pricing & ROI endpoints
 app.include_router(golden_lead_detection.router)  # Golden Lead Detection endpoints
 app.include_router(attribution_reports.router, prefix="/api")  # Attribution Reports endpoints
 app.include_router(jorge_advanced.router, prefix="/api")  # Jorge's Advanced Features endpoints
+app.include_router(reports.router, prefix="/api") # Reports router
 
 # Mobile API endpoints (Mobile-First Agent Experience)
 app.include_router(mobile_router, prefix="/api")  # Mobile API with AR/VR and voice capabilities

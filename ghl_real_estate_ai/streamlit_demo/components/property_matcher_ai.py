@@ -95,6 +95,53 @@ def render_property_matcher(lead_context: Dict, elite_mode: bool=False, analysis
                     st.markdown(f"""\n                    <div style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366F1; padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; border: 1px solid rgba(99, 102, 241, 0.2);">\n                        <span style="color: #6366F1; font-size: 0.85rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif;">✅ NODE ALIGNED WITHIN RANGE</span>\n                    </div>\n                    """, unsafe_allow_html=True)
                 st.markdown('<br>', unsafe_allow_html=True)
                 st.markdown('**📍 SECTOR & SIGNAL ALIGNMENT**')
+                
+                # Radar Chart Implementation
+                try:
+                    import plotly.graph_objects as go
+                    
+                    # Simulated data for the radar chart based on property scores
+                    radar_labels = ['Price Match', 'Location', 'Features', 'Schools', 'Investment']
+                    # We derive these from the factors or property data
+                    radar_values = [
+                        property.get('match_score', 80),
+                        85 if property.get('location_match') else 60,
+                        90 if property.get('features_match') else 70,
+                        80, # Default for schools
+                        75  # Default for investment
+                    ]
+                    
+                    fig = go.Figure()
+                    fig.add_trace(go.Scatterpolar(
+                        r=radar_values + [radar_values[0]],
+                        theta=radar_labels + [radar_labels[0]],
+                        fill='toself',
+                        line_color='#6366F1',
+                        fillcolor='rgba(99, 102, 241, 0.3)'
+                    ))
+                    
+                    fig.update_layout(
+                        polar=dict(
+                            radialaxis=dict(visible=True, range=[0, 100], showticklabels=False, gridcolor='rgba(255,255,255,0.1)'),
+                            angularaxis=dict(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(size=10, color='#8B949E'))
+                        ),
+                        showlegend=False,
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        margin=dict(l=40, r=40, t=20, b=20),
+                        height=250
+                    )
+                    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                except Exception as e:
+                    st.error(f"Radar visualization failed: {e}")
+
+                # Keep existing factor bars as secondary detail
+                factors = [
+                    {'name': 'Price Alignment', 'score': radar_values[0], 'icon': '💰', 'status': True},
+                    {'name': 'Location Match', 'score': radar_values[1], 'icon': '📍', 'status': True},
+                    {'name': 'Feature Coverage', 'score': radar_values[2], 'icon': '✨', 'status': True}
+                ]
+                
                 for factor in factors:
                     col_label, col_bar = st.columns([1, 3])
                     with col_label:

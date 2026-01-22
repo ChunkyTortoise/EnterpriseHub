@@ -6,7 +6,12 @@ multiple geographic markets. Supports dynamic market discovery and service insta
 """
 
 import os
-import yaml
+try:
+    import yaml
+    YAML_AVAILABLE = True
+except ImportError:
+    yaml = None
+    YAML_AVAILABLE = False
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Type, Any
@@ -48,6 +53,10 @@ class MarketRegistry:
     
     def _load_market_configurations(self) -> None:
         """Load all market configurations from YAML files"""
+        if not YAML_AVAILABLE:
+            logger.warning("PyYAML not installed. Market configurations cannot be loaded.")
+            return
+
         if not self.config_dir.exists():
             logger.warning(f"Market config directory not found: {self.config_dir}")
             return

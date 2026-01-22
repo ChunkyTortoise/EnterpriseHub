@@ -44,6 +44,9 @@ class SystemComponent(Enum):
     ANALYTICS_ENGINE = "analytics_engine"
     AB_TESTING_SYSTEM = "ab_testing_system"
     FOLLOWUP_ENGINE = "followup_engine"
+    CALENDAR_SCHEDULER = "calendar_scheduler"
+    MARKET_ENGINE = "market_engine"
+    REGIONAL_COMPLIANCE_AGENT = "regional_compliance_agent"
 
 
 class IntegrationStatus(Enum):
@@ -143,6 +146,15 @@ class AutonomousIntegrationOrchestrator:
             self.ab_testing_system = get_autonomous_ab_testing()
             self.followup_engine = get_autonomous_followup_engine()
 
+            # Phase 7: New Engines
+            from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
+            from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
+            self.calendar_scheduler = get_smart_scheduler()
+            self.market_engine = MarketTimingOpportunityEngine()
+
+            from ghl_real_estate_ai.agents.regional_compliance_agent import get_compliance_agent
+            self.compliance_agent = get_compliance_agent()
+
             # Start component monitoring systems
             await self.analytics_engine.start_real_time_monitoring()
             await self.ab_testing_system.start_testing_engine()
@@ -225,6 +237,14 @@ class AutonomousIntegrationOrchestrator:
 
             logger.info(f"🔄 Processing lead {lead_id} through autonomous pipeline...")
 
+            # Phase 7: Load Omnichannel Lead Journey State
+            db = await get_database()
+            journey_state = await db.get_lead_journey_state(lead_id)
+            if journey_state:
+                context = context or {}
+                context['journey_state'] = journey_state
+                logger.info(f"📍 Lead {lead_id} current stage: {journey_state['current_stage']}")
+
             # 1. Behavioral Analysis
             behavioral_score = await self.behavioral_engine.analyze_lead_behavior(
                 lead_id, activity_data
@@ -295,6 +315,23 @@ class AutonomousIntegrationOrchestrator:
             # 7. Update system metrics
             processing_time = (datetime.now() - start_time).total_seconds()
             await self._update_system_metrics(processing_time, processing_results)
+
+            # Phase 7: Update Omnichannel State after processing
+            new_stage = "nurturing"
+            if behavioral_score.likelihood_score > 70:
+                new_stage = "closing"
+            elif behavioral_score.likelihood_score > 40:
+                new_stage = "qualified"
+            
+            await db.update_lead_journey_state(lead_id, {
+                "current_stage": new_stage,
+                "last_channel": "orchestrator",
+                "last_interaction_summary": f"Processed via Phase 7 pipeline. Confidence: {system_confidence:.2f}",
+                "context_data": {
+                    "last_likelihood": behavioral_score.likelihood_score,
+                    "last_decisions": [d['decision'] for d in processing_results['autonomous_decisions']]
+                }
+            })
 
             # 8. Generate integration event
             await self._create_integration_event(

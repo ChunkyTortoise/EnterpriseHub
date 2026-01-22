@@ -5,6 +5,7 @@ Triggers real-time outbound calls to high-intent leads using Vapi.ai.
 """
 import os
 import requests
+import json
 from typing import Dict, Any, Optional
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -19,18 +20,33 @@ class VapiService:
         if not self.api_key:
             logger.warning("VAPI_API_KEY not found. Voice calls will be disabled.")
 
-    def trigger_outbound_call(self, contact_phone: str, lead_name: str, property_address: str) -> bool:
+    def trigger_outbound_call(
+        self, 
+        contact_phone: str, 
+        lead_name: str, 
+        property_address: str,
+        extra_variables: Optional[Dict[str, Any]] = None
+    ) -> bool:
         """
-        Triggers an outbound call to a lead about a specific property.
+        Triggers an outbound call to a lead with full conversation context.
         """
         if not self.api_key or not self.assistant_id:
-            logger.info(f"🚀 [MOCK] Triggering Vapi Call to {lead_name} ({contact_phone}) about {property_address}")
+            logger.info(f"🚀 [MOCK] Triggering Vapi Call to {lead_name} ({contact_phone})")
+            logger.info(f"   Context: {json.dumps(extra_variables, indent=2) if extra_variables else 'None'}")
             return True
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
+
+        # Combine standard variables with extras
+        variable_values = {
+            "leadName": lead_name,
+            "propertyAddress": property_address
+        }
+        if extra_variables:
+            variable_values.update(extra_variables)
 
         # Vapi Call Payload
         payload = {
@@ -40,10 +56,7 @@ class VapiService:
                 "name": lead_name
             },
             "assistantOverrides": {
-                "variableValues": {
-                    "leadName": lead_name,
-                    "propertyAddress": property_address
-                }
+                "variableValues": variable_values
             }
         }
 

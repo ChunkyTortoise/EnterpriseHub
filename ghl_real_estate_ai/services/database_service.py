@@ -231,8 +231,24 @@ class DatabaseService:
                 ("004_create_lead_campaign_status", self._migration_004_create_lead_campaign_status),
                 ("005_add_audit_fields", self._migration_005_add_audit_fields),
                 ("006_create_clv_predictions", self._migration_006_create_clv_predictions),
-                ("007_create_behavioral_signals", self._migration_007_create_behavioral_signals)
+                ("007_create_behavioral_signals", self._migration_007_create_behavioral_signals),
+                ("008_create_billing_tables", self._migration_008_create_billing_tables),
+                ("009_create_lead_activity_tables", self._migration_009_create_lead_activity_tables),
+                ("010_create_lead_journey_state", self._migration_010_create_lead_journey_state),
+                ("011_create_model_outcomes", self._migration_011_create_model_outcomes)
             ]
+...
+    async def _migration_011_create_model_outcomes(self, conn: Connection) -> None:
+        """Create table for feedback loop retraining data."""
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS model_outcomes (
+                id SERIAL PRIMARY KEY,
+                lead_id UUID REFERENCES leads(id) ON DELETE CASCADE,
+                outcome VARCHAR(50) NOT NULL, -- 'won', 'lost', 'no_show', etc.
+                monetary_value DECIMAL(12, 2) DEFAULT 0.0,
+                recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
             
             # Check and apply migrations
             for version, migration_func in migrations:
@@ -594,6 +610,109 @@ class DatabaseService:
             CREATE INDEX IF NOT EXISTS idx_signal_correlations_strength ON signal_correlations(correlation_strength);
         """)
     
+    async def _migration_008_create_billing_tables(self, conn: Connection) -> None:
+        """Create billing and subscription management tables."""
+        # Subscriptions table
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS subscriptions (
+                id SERIAL PRIMARY KEY,
+                location_id VARCHAR(255) UNIQUE NOT NULL,
+                stripe_subscription_id VARCHAR(255) UNIQUE NOT NULL,
+                stripe_customer_id VARCHAR(255) NOT NULL,
+                tier VARCHAR(50) NOT NULL,
+                status VARCHAR(50) NOT NULL,
+                current_period_start TIMESTAMP WITH TIME ZONE NOT NULL,
+                current_period_end TIMESTAMP WITH TIME ZONE NOT NULL,
+                usage_allowance INTEGER NOT NULL,
+                usage_current INTEGER DEFAULT 0,
+                overage_rate DECIMAL(10, 2) NOT NULL,
+                base_price DECIMAL(10, 2) NOT NULL,
+                trial_end TIMESTAMP WITH TIME ZONE,
+                cancel_at_period_end BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
+
+        # Stripe customers mapping
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS stripe_customers (
+                id SERIAL PRIMARY KEY,
+                location_id VARCHAR(255) UNIQUE NOT NULL,
+                stripe_customer_id VARCHAR(255) UNIQUE NOT NULL,
+                email VARCHAR(255),
+                name VARCHAR(255),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
+
+        # Usage records for overage billing
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS usage_records (
+                id SERIAL PRIMARY KEY,
+                subscription_id INTEGER REFERENCES subscriptions(id) ON DELETE CASCADE,
+                stripe_usage_record_id VARCHAR(255) UNIQUE,
+                lead_id VARCHAR(255) NOT NULL,
+                contact_id VARCHAR(255) NOT NULL,
+                quantity INTEGER DEFAULT 1,
+                amount DECIMAL(10, 2) NOT NULL,
+                tier VARCHAR(50),
+                billing_period_start TIMESTAMP WITH TIME ZONE NOT NULL,
+                billing_period_end TIMESTAMP WITH TIME ZONE NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
+
+    async def _migration_009_create_lead_activity_tables(self, conn: Connection) -> None:
+        """Create extended lead activity tracking tables."""
+        # Property searches
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS property_searches (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+                search_query JSONB NOT NULL,
+                results_count INTEGER DEFAULT 0,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
+
+        # Pricing tool usage
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS pricing_tool_uses (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+                property_details JSONB NOT NULL,
+                valuation_result JSONB,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
+
+        # Agent inquiries
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS agent_inquiries (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+                agent_id UUID,
+                inquiry_text TEXT,
+                status VARCHAR(50) DEFAULT 'pending',
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
+
+    async def _migration_010_create_lead_journey_state(self, conn: Connection) -> None:
+        """Create lead journey state table for omnichannel persistence."""
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS lead_journey_state (
+                lead_id UUID PRIMARY KEY REFERENCES leads(id) ON DELETE CASCADE,
+                current_stage VARCHAR(50) NOT NULL,
+                last_channel VARCHAR(20),
+                last_interaction_summary TEXT,
+                pending_actions JSONB DEFAULT '[]',
+                context_data JSONB DEFAULT '{}',
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
+
     async def _create_indexes(self) -> None:
         """Create database indexes for performance including Service 6 critical optimizations."""
         async with self.get_connection() as conn:
@@ -1157,6 +1276,33 @@ class DatabaseService:
                 LIMIT 100
             """, lead_id)
 
+            # Get property searches
+            property_searches = await conn.fetch("""
+                SELECT search_query, results_count, created_at
+                FROM property_searches
+                WHERE lead_id = $1
+                ORDER BY created_at DESC
+                LIMIT 50
+            """, lead_id)
+
+            # Get pricing tool uses
+            pricing_tool_uses = await conn.fetch("""
+                SELECT property_details, valuation_result, created_at
+                FROM pricing_tool_uses
+                WHERE lead_id = $1
+                ORDER BY created_at DESC
+                LIMIT 50
+            """, lead_id)
+
+            # Get agent inquiries
+            agent_inquiries = await conn.fetch("""
+                SELECT agent_id, inquiry_text, status, created_at
+                FROM agent_inquiries
+                WHERE lead_id = $1
+                ORDER BY created_at DESC
+                LIMIT 50
+            """, lead_id)
+
             # Process communications by type
             email_interactions = []
             sms_responses = []
@@ -1183,13 +1329,13 @@ class DatabaseService:
                     })
 
             return {
-                "property_searches": [],  # TODO: Implement when property search table exists
+                "property_searches": [dict(r) for r in property_searches],
                 "email_interactions": email_interactions,
                 "sms_responses": sms_responses,
                 "call_history": call_history,
                 "website_visits": [{'count': lead_metrics.get('website_visits', 0)}],
-                "pricing_tool_uses": [],  # TODO: Implement when pricing tool table exists
-                "agent_inquiries": [],   # TODO: Implement when agent inquiry table exists
+                "pricing_tool_uses": [dict(r) for r in pricing_tool_uses],
+                "agent_inquiries": [dict(r) for r in agent_inquiries],
                 "behavioral_metrics": {
                     "website_visits": lead_metrics.get('website_visits', 0),
                     "email_opens": lead_metrics.get('email_opens', 0),
@@ -1199,6 +1345,37 @@ class DatabaseService:
                     "social_engagement": lead_metrics.get('social_engagement', 0)
                 }
             }
+
+    async def get_lead_journey_state(self, lead_id: str) -> Optional[Dict[str, Any]]:
+        """Get lead journey state for omnichannel context."""
+        async with self.get_connection() as conn:
+            row = await conn.fetchrow("SELECT * FROM lead_journey_state WHERE lead_id = $1", lead_id)
+            return dict(row) if row else None
+
+    async def update_lead_journey_state(self, lead_id: str, state_data: Dict[str, Any]) -> None:
+        """Update or create lead journey state."""
+        async with self.transaction() as conn:
+            await conn.execute("""
+                INSERT INTO lead_journey_state (
+                    lead_id, current_stage, last_channel, last_interaction_summary, 
+                    pending_actions, context_data, updated_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                ON CONFLICT (lead_id) DO UPDATE SET
+                    current_stage = EXCLUDED.current_stage,
+                    last_channel = EXCLUDED.last_channel,
+                    last_interaction_summary = EXCLUDED.last_interaction_summary,
+                    pending_actions = EXCLUDED.pending_actions,
+                    context_data = lead_journey_state.context_data || EXCLUDED.context_data,
+                    updated_at = NOW()
+            """,
+                lead_id,
+                state_data.get("current_stage", "initial"),
+                state_data.get("last_channel"),
+                state_data.get("last_interaction_summary"),
+                json.dumps(state_data.get("pending_actions", [])),
+                json.dumps(state_data.get("context_data", {}))
+            )
 
     async def get_available_agents(self, limit: int = 50, include_unavailable: bool = False) -> List[Dict[str, Any]]:
         """Get available agents for lead routing."""

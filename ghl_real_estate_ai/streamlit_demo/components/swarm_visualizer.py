@@ -34,6 +34,51 @@ def load_claude_assets():
             agents.append({'name': name, 'path': str(agent_file), 'role': 'Orchestrator' if 'protocol' in name.lower() else 'Specialist'})
     return (agents, skills)
 
+def render_agent_debate_log(lead_id: str = None):
+    """Phase 7: Explainability component to show agent reasoning debate."""
+    st.markdown("### 🗣️ Swarm Explainability: Agent Debate")
+    st.markdown("*Real-time audit trail of specialist agent reasoning and conflict resolution*")
+
+    # Get blackboard data
+    try:
+        from ghl_real_estate_ai.services.autonomous_followup_engine import get_autonomous_followup_engine
+        engine = get_autonomous_followup_engine()
+        blackboard = engine.blackboard
+        debates = blackboard.read("agent_debates") or []
+    except Exception:
+        # Fallback mock data
+        debates = [
+            {"timestamp": "2026-01-21T10:00:00", "agent": "sentiment_analyst", "thought": "Lead sounds slightly frustrated with current interest rates.", "action_proposed": "Use empathetic approach", "confidence": 0.85},
+            {"timestamp": "2026-01-21T10:00:05", "agent": "scheduling_agent", "thought": "Qualification score is 6. Lead is ready for a tour.", "action_proposed": "Propose 3 tour slots", "confidence": 0.92},
+            {"timestamp": "2026-01-21T10:00:10", "agent": "market_context_agent", "thought": "Prime Arbitrage found in Austin Zip 78745. 18.8% ROI.", "action_proposed": "Pitch Arbitrage Pro-forma", "confidence": 0.95}
+        ]
+
+    if not debates:
+        st.info("Waiting for agent activity to populate debate log...")
+        return
+
+    # Filter for lead_id if provided
+    if lead_id:
+        # In a real system, we'd filter here. For now, we show all for the demo.
+        pass
+
+    # Reverse to show newest first
+    debates = debates[::-1]
+
+    for entry in debates:
+        with st.container():
+            col1, col2, col3 = st.columns([1, 4, 1])
+            with col1:
+                st.caption(entry['timestamp'].split('T')[-1][:8])
+                st.markdown(f"**{entry['agent'].replace('_', ' ').title()}**")
+            with col2:
+                st.markdown(f"*{entry['thought']}*")
+                st.info(f"👉 Proposed Action: **{entry['action_proposed']}**")
+            with col3:
+                conf = entry['confidence']
+                st.metric("Confidence", f"{conf:.0%}")
+            st.divider()
+
 def render_swarm_visualizer(lead_name: str=None, lead_data: dict=None):
     """
     Renders the "Swarm Intelligence" Visualization.
@@ -155,5 +200,9 @@ def render_swarm_visualizer(lead_name: str=None, lead_data: dict=None):
             st.progress(progress, text=f"Roadmap Completion: {report['overall']['progress_percentage']:.1f}%")
         else:
             st.progress(0.92, text='Swarm Efficiency: 92%')
-        st.progress(0.85, text='Token Utilization: 85%')
-        st.progress(1.0, text='Security Integrity: 100%')
+            st.progress(0.85, text='Token Utilization: 85%')
+            st.progress(1.0, text='Security Integrity: 100%')
+
+    st.markdown("---")
+    render_agent_debate_log(lead_data.get('lead_id') if lead_data else None)
+        

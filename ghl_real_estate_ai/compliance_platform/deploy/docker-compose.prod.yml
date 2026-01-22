@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ../../../
+      dockerfile: ghl_real_estate_ai/compliance_platform/Dockerfile.api
+    image: compliance-platform-api:latest
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/compliance
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    networks:
+      - compliance-network
+    restart: always
+
+  dashboard:
+    build:
+      context: ../../../
+      dockerfile: ghl_real_estate_ai/compliance_platform/Dockerfile
+    image: compliance-platform-dashboard:latest
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/compliance
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+    depends_on:
+      api:
+        condition: service_started
+      db:
+        condition: service_healthy
+    ports:
+      - "8501:8501"
+    networks:
+      - compliance-network
+    restart: always
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=compliance
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - compliance-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - compliance-network
+    restart: always
+
+networks:
+  compliance-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

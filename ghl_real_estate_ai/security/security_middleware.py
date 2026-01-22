@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 import redis.asyncio as redis
 from fastapi import HTTPException, Request, Response, status
-from fastapi.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 
 from .auth_manager import AuthManager, SecurityConfig
@@ -177,8 +177,9 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     
     async def _detect_threats(self, request: Request, ip_address: str):
         """Detect potential security threats"""
-        path = request.url.path.lower()
-        query = str(request.query_params).lower()
+        import urllib.parse
+        path = urllib.parse.unquote_plus(request.url.path.lower())
+        query = urllib.parse.unquote_plus(str(request.query_params).lower())
         
         # SQL injection patterns
         sql_patterns = [

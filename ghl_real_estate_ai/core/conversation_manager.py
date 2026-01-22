@@ -10,14 +10,14 @@ Orchestrates conversation flow by:
 This is the core brain of the system.
 """
 from typing import Dict, List, Optional, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 import json
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.core.rag_engine import RAGEngine
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
-from ghl_real_estate_ai.services.predictive_lead_scorer import PredictiveLeadScorer
+from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
@@ -68,10 +68,10 @@ class ConversationManager:
 
         # Initialize lead scorers
         self.lead_scorer = LeadScorer()
-        self.predictive_scorer = PredictiveLeadScorer()
+        self.predictive_scorer = PredictiveLeadScorerV2()
 
-        # Persistent memory service
-        self.memory_service = MemoryService(storage_type="file")
+        # Persistent memory service (Dynamically chooses Redis in prod, File in local)
+        self.memory_service = MemoryService()
 
         # Analytics engine for metrics collection
         self.analytics_engine = AnalyticsEngine()
@@ -169,7 +169,12 @@ class ConversationManager:
         context["last_lead_score"] = current_score
 
         # Calculate predictive conversion probability
-        predictive_data = self.predictive_scorer.predict_conversion(context)
+        predictive_result = await self.predictive_scorer.calculate_predictive_score(context, location=location_id)
+        # Serialize the dataclass to a dict for storage
+        # Filter out fields that might not be serializable if any, but asdict should be fine for JSON types
+        # Note: priority_level is an Enum, needs conversion
+        predictive_data = asdict(predictive_result)
+        predictive_data["priority_level"] = predictive_result.priority_level.value
         context["predictive_score"] = predictive_data
 
         # Trim conversation history to max length and summarize if needed
@@ -195,7 +200,8 @@ class ConversationManager:
         self,
         user_message: str,
         current_preferences: Dict[str, Any],
-        tenant_config: Optional[Dict[str, Any]] = None
+        tenant_config: Optional[Dict[str, Any]] = None,
+        images: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Extract structured data from user message.
@@ -214,6 +220,7 @@ class ConversationManager:
             user_message: User's latest message
             current_preferences: Previously extracted preferences
             tenant_config: Optional tenant-specific API keys
+            images: Optional list of base64 images for vision analysis
 
         Returns:
             Dict of extracted preferences
@@ -235,23 +242,11 @@ Extract the following if mentioned (keep previous values if not updated):
 - financing: string ("pre-approved", "pre-qualified", "cash", "not started", etc.)
 - current_situation: string ("renting", "selling current home", "first-time buyer", etc.)
 - home_condition: string ("excellent/move-in ready", "fair/needs work", "poor/fixer-upper")
+- repair_estimate: integer (estimated repair costs if images provided or mentioned)
 - pathway: string ("wholesale" or "listing")
 - selected_slot: string (if user selected a time for appointment, e.g. "Monday at 10am")
 
 Return ONLY valid JSON with extracted fields. If a field is not mentioned, omit it from the response.
-
-Example output:
-{{
-  "budget": 400000,
-  "location": ["Austin", "Round Rock"],
-  "bedrooms": 3,
-  "timeline": "June 2025",
-  "must_haves": ["good schools", "pool"],
-  "financing": "pre-approved",
-  "home_condition": "excellent",
-  "pathway": "listing",
-  "selected_slot": "Monday at 10am"
-}}
 """
 
         try:
@@ -269,15 +264,17 @@ Example output:
                 prompt=extraction_prompt,
                 system_prompt="You are a data extraction specialist. Return only valid JSON.",
                 temperature=0,
-                max_tokens=500
+                max_tokens=500,
+                images=images
             )
             
             # Record usage
             location_id = tenant_config.get("location_id", "unknown") if tenant_config else "unknown"
+            provider_val = response.provider.value if hasattr(response.provider, "value") else str(response.provider)
             await self.analytics.track_llm_usage(
                 location_id=location_id,
                 model=response.model,
-                provider=response.provider.value,
+                provider=provider_val,
                 input_tokens=response.input_tokens or 0,
                 output_tokens=response.output_tokens or 0,
                 cached=False
@@ -308,7 +305,8 @@ Example output:
         self,
         user_message: str,
         current_seller_data: Dict[str, Any],
-        tenant_config: Optional[Dict[str, Any]] = None
+        tenant_config: Optional[Dict[str, Any]] = None,
+        images: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Extract seller-specific data from user message using Claude.
@@ -323,6 +321,7 @@ Example output:
             user_message: User's latest message
             current_seller_data: Previously extracted seller data
             tenant_config: Optional tenant-specific API keys
+            images: Optional list of base64 images for vision analysis
 
         Returns:
             Dict of extracted seller preferences
@@ -343,7 +342,7 @@ TIMELINE:
 
 PROPERTY CONDITION:
 - property_condition: "move-in ready", "needs work", "major repairs", or "unknown"
-- repair_estimate: Any mentioned repair needs or costs
+- repair_estimate: Any mentioned or VISUALLY ESTIMATED (from images) repair needs or costs
 
 PRICE EXPECTATIONS:
 - price_expectation: Numeric price they mentioned (dollars)
@@ -355,20 +354,6 @@ RESPONSE QUALITY METRICS:
 
 Return ONLY JSON with extracted fields. If no new info, return existing data.
 Count questions_answered based on how many of the 4 main categories have data.
-
-Example response:
-{{
-    "motivation": "relocation",
-    "relocation_destination": "Austin, TX",
-    "timeline_acceptable": true,
-    "timeline_urgency": "urgent",
-    "property_condition": "move-in ready",
-    "price_expectation": 450000,
-    "price_flexibility": "negotiable",
-    "response_quality": 0.85,
-    "responsiveness": 0.90,
-    "questions_answered": 4
-}}
 """
 
         try:
@@ -386,15 +371,17 @@ Example response:
                 prompt=extraction_prompt,
                 system_prompt="You are a seller data extraction specialist for real estate. Return only valid JSON.",
                 temperature=0,
-                max_tokens=500
+                max_tokens=500,
+                images=images
             )
 
             # Record usage
             location_id = tenant_config.get("location_id", "unknown") if tenant_config else "unknown"
+            provider_val = response.provider.value if hasattr(response.provider, "value") else str(response.provider)
             await self.analytics.track_llm_usage(
                 location_id=location_id,
                 model=response.model,
-                provider=response.provider.value,
+                provider=provider_val,
                 input_tokens=response.input_tokens or 0,
                 output_tokens=response.output_tokens or 0,
                 cached=False
@@ -515,7 +502,7 @@ Example response:
         ghl_client: Optional[Any] = None
     ) -> AIResponse:
         """
-        Generate AI response using Claude + RAG.
+        Generate AI response using Claude + RAG with parallel pipeline.
 
         Args:
             user_message: User's latest message
@@ -528,147 +515,148 @@ Example response:
         Returns:
             AIResponse with message, extracted data, reasoning, and score
         """
+        import asyncio
+        import time
+        
         contact_name = contact_info.get("first_name", "there")
+        location_id = tenant_config.get("location_id") if tenant_config else None
+        calendar_id = (tenant_config.get("ghl_calendar_id") if tenant_config else None) or settings.ghl_calendar_id
 
-        # 0. Pre-extract data from first message to avoid redundancy
-        # If this is the first interaction (no conversation history yet),
-        # extract data BEFORE generating response to prevent asking about info already provided
+        # 1. Extraction (Still sequential as it's the primary dependency)
         if not context.get("conversation_history"):
-            pre_extracted = await self.extract_data(
+            extracted_data = await self.extract_data(
                 user_message,
                 {},
                 tenant_config=tenant_config
             )
-            merged_preferences = {**context.get("extracted_preferences", {}), **pre_extracted}
-            extracted_data = pre_extracted
         else:
-            # 1. Extract structured data from user message
             extracted_data = await self.extract_data(
                 user_message,
                 context.get("extracted_preferences", {}),
                 tenant_config=tenant_config
             )
 
-            # Merge with existing preferences
-            merged_preferences = {**context.get("extracted_preferences", {}), **extracted_data}
+        merged_preferences = {**context.get("extracted_preferences", {}), **extracted_data}
 
-        # 1.5 Handle Appointment Booking if slot selected
-        appointment_booked_msg = ""
-        selected_slot = extracted_data.get("selected_slot")
-        calendar_id = (tenant_config.get("ghl_calendar_id") if tenant_config else None) or settings.ghl_calendar_id
+        # 2. Parallel Pipeline Execution
+        # We run RAG, Lead Scoring, and Slots/Matches in parallel
         
-        if selected_slot and ghl_client and calendar_id:
-            try:
-                # In a real implementation, we'd match the natural language slot 
-                # to the actual available ISO timestamps.
-                # For Phase 2, we'll implement a basic matching or use the first available
-                # if it seems to match.
-                
-                # Fetch slots to find a match
-                now = datetime.now()
-                start_date = now.strftime("%Y-%m-%d")
-                end_date = (now + timedelta(days=7)).strftime("%Y-%m-%d")
-                slots = await ghl_client.get_available_slots(calendar_id, start_date, end_date)
-                
-                matched_slot = None
-                if slots:
-                    # Simple heuristic: if user says "Monday" and a slot is on Monday, pick it
-                    # In production, we'd use LLM to resolve the specific slot ID
-                    matched_slot = slots[0]["start_time"] # Fallback to first available for demo
-                
-                if matched_slot:
-                    contact_id = contact_info.get("id")
-                    if contact_id:
-                        await ghl_client.create_appointment(
-                            contact_id=contact_id,
-                            calendar_id=calendar_id,
-                            start_time=matched_slot,
-                            title=f"AI Booking: {contact_info.get('first_name', 'Lead')}"
-                        )
-                        dt = datetime.fromisoformat(matched_slot.replace("Z", "+00:00"))
-                        appointment_booked_msg = f"\n\n[SYSTEM: Confirmed for {dt.strftime('%a @ %I:%M %p')}]"
-                        logger.info(f"Appointment booked for {contact_id} at {matched_slot}")
-            except Exception as e:
-                logger.error(f"Auto-booking failed: {str(e)}")
-
-        # 2. Retrieve relevant knowledge from RAG (pathway-aware)
-        location_id = tenant_config.get("location_id") if tenant_config else None
-
-        # Enhance query based on detected pathway
-        enhanced_query = user_message
+        # Prepare RAG query
         pathway = merged_preferences.get("pathway")
         home_condition = merged_preferences.get("home_condition", "").lower()
-
+        enhanced_query = user_message
         if pathway == "wholesale" or "poor" in home_condition or "fixer" in home_condition:
             enhanced_query = f"{user_message} wholesale cash offer as-is quick sale"
         elif pathway == "listing":
             enhanced_query = f"{user_message} MLS listing top dollar market value"
 
-        relevant_docs = self.rag_engine.search(
+        # Define internal helper for parallel tasks
+        async def get_slots_task():
+            if ghl_client and calendar_id:
+                try:
+                    now = datetime.now()
+                    start_date = now.strftime("%Y-%m-%d")
+                    end_date = (now + timedelta(days=3)).strftime("%Y-%m-%d")
+                    return await ghl_client.get_available_slots(calendar_id, start_date, end_date)
+                except Exception as e:
+                    logger.error(f"Parallel slot fetch failed: {e}")
+            return []
+
+        async def get_matches_task():
+            if is_buyer:
+                matches = await asyncio.to_thread(self.property_matcher.find_matches, merged_preferences, limit=2)
+                if matches:
+                    # Parallelize explanations for each match
+                    explanation_tasks = [
+                        self.property_matcher.agentic_explain_match(prop, merged_preferences)
+                        for prop in matches
+                    ]
+                    explanations = await asyncio.gather(*explanation_tasks, return_exceptions=True)
+                    
+                    results = []
+                    for i, prop in enumerate(matches):
+                        explanation = explanations[i] if not isinstance(explanations[i], Exception) else "Great match for your needs."
+                        results.append((prop, explanation))
+                    return results
+            return []
+
+        # Execute parallel tasks
+        rag_task = self.rag_engine.search_corrective(
             query=enhanced_query,
             n_results=settings.rag_top_k_results,
             location_id=location_id
         )
+        
+        # Run Lead Score calculation (sync but fast, wrapped for parallel flow consistency)
+        score_task = asyncio.to_thread(
+            self.lead_scorer.calculate,
+            {
+                "extracted_preferences": merged_preferences,
+                "conversation_history": context.get("conversation_history", []),
+                "created_at": context.get("created_at")
+            }
+        )
 
+        # Launch all parallel tasks
+        results = await asyncio.gather(
+            rag_task,
+            score_task,
+            get_slots_task(),
+            get_matches_task(),
+            return_exceptions=True
+        )
+
+        # Unpack results with safety
+        relevant_docs = results[0] if not isinstance(results[0], Exception) else []
+        lead_score = results[1] if not isinstance(results[1], Exception) else 0
+        slots = results[2] if not isinstance(results[2], Exception) else []
+        property_matches_data = results[3] if not isinstance(results[3], Exception) else []
+
+        # 3. Process results into formatted strings
         relevant_knowledge = "\n\n".join([
             f"[{doc.metadata.get('category', 'info')}]: {doc.text}"
             for doc in relevant_docs
         ]) if relevant_docs else "No specific knowledge base matches."
 
-        # 3. Calculate current lead score
-        lead_score = self.lead_scorer.calculate({
-            "extracted_preferences": merged_preferences,
-            "conversation_history": context.get("conversation_history", []),
-            "created_at": context.get("created_at")
-        })
-
-        # 4. Fetch available calendar slots if lead is HOT (Jorge's requirement)
         available_slots_text = ""
-        # Get calendar ID from tenant config or global settings
-        calendar_id = (tenant_config.get("ghl_calendar_id") if tenant_config else None) or settings.ghl_calendar_id
-        
-        if lead_score >= 3 and ghl_client and calendar_id:
-            try:
-                now = datetime.now()
-                # Fetch slots for next 3 days for better urgency/directness
-                start_date = now.strftime("%Y-%m-%d")
-                end_date = (now + timedelta(days=3)).strftime("%Y-%m-%d")
-
-                slots = await ghl_client.get_available_slots(
-                    calendar_id=calendar_id,
-                    start_date=start_date,
-                    end_date=end_date
-                )
-
-                if slots:
-                    # Professional, direct, and curious tone for appointment setting
-                    available_slots_text = "I can get you on the phone with Jorge's team. Would one of these work?\n"
-                    # Format first 2 slots for brevity on SMS
-                    for slot in slots[:2]:
-                        dt = datetime.fromisoformat(slot["start_time"].replace("Z", "+00:00"))
-                        available_slots_text += f"- {dt.strftime('%a @ %I:%M %p')}\n"
-                    available_slots_text += "Or should I just have them call you when they're free?"
-            except Exception as e:
-                logger.error(f"Failed to fetch calendar slots: {str(e)}")
+        if lead_score >= 3 and slots:
+            available_slots_text = "I can get you on the phone with Jorge's team. Would one of these work?\n"
+            for slot in slots[:2]:
+                dt = datetime.fromisoformat(slot["start_time"].replace("Z", "+00:00"))
+                available_slots_text += f"- {dt.strftime('%a @ %I:%M %p')}\n"
+            available_slots_text += "Or should I just have them call you when they're free?"
         elif lead_score >= 3:
-            # Fallback for hot leads when calendar not configured or slots unavailable
             available_slots_text = "I'll have Jorge call you directly. What time works best for you?"
 
-        # 4.5 Recommend properties if lead is WARM+
         property_recommendations = ""
-        if lead_score >= 2 and is_buyer:
-            matches = self.property_matcher.find_matches(merged_preferences, limit=2)
-            if matches:
-                property_recommendations = "I found a couple of strategic property matches for you:\n"
-                for prop in matches:
-                    # Use Phase 2 Agentic Explanation
-                    explanation = await self.property_matcher.agentic_explain_match(prop, merged_preferences)
-                    property_recommendations += f"- {self.property_matcher.format_match_for_sms(prop)}\n  {explanation}\n"
-                property_recommendations += "Should I send you the full listing details for these?"
+        if lead_score >= 2 and property_matches_data:
+            property_recommendations = "I found a couple of strategic property matches for you:\n"
+            for prop, explanation in property_matches_data:
+                property_recommendations += f"- {self.property_matcher.format_match_for_sms(prop)}\n  {explanation}\n"
+            property_recommendations += "Should I send you the full listing details for these?"
 
-        # 5. Build system prompt with context
+        # 4. Appointment Auto-Booking (Sequential but rare)
+        appointment_booked_msg = ""
+        selected_slot = extracted_data.get("selected_slot")
+        if selected_slot and ghl_client and calendar_id:
+            # Basic auto-booking logic (simplified for Phase 3)
+            try:
+                contact_id = contact_info.get("id")
+                if contact_id and slots:
+                    matched_slot = slots[0]["start_time"]
+                    await ghl_client.create_appointment(
+                        contact_id=contact_id,
+                        calendar_id=calendar_id,
+                        start_time=matched_slot,
+                        title=f"AI Booking: {contact_info.get('first_name', 'Lead')}"
+                    )
+                    dt = datetime.fromisoformat(matched_slot.replace("Z", "+00:00"))
+                    appointment_booked_msg = f"\n\n[SYSTEM: Confirmed for {dt.strftime('%a @ %I:%M %p')}]"
+            except Exception as e:
+                logger.error(f"Auto-booking failed: {e}")
+
+        # 5. Build system prompt and Generate response
         from ghl_real_estate_ai.prompts.system_prompts import build_system_prompt
-        
         system_prompt = build_system_prompt(
             contact_name=contact_name,
             conversation_stage=context.get("conversation_stage", "qualifying"),
@@ -683,12 +671,10 @@ Example response:
             hours_since=context.get("hours_since_last_interaction", 0)
         )
 
-        # 6. Generate response using Claude with history
-        import time
         response_start_time = time.time()
-
+        
+        # LLM Call (Sequential)
         try:
-            # Use tenant-specific LLM client if config provided
             llm_client = self.llm_client
             if tenant_config and tenant_config.get("anthropic_api_key"):
                 llm_client = LLMClient(
@@ -697,11 +683,7 @@ Example response:
                     api_key=tenant_config["anthropic_api_key"]
                 )
 
-            # Format history for Claude (only role and content)
-            history = [
-                {"role": msg["role"], "content": msg["content"]}
-                for msg in context.get("conversation_history", [])
-            ]
+            history = [{"role": msg["role"], "content": msg["content"]} for msg in context.get("conversation_history", [])]
 
             ai_response = await llm_client.agenerate(
                 prompt=user_message,
@@ -711,39 +693,34 @@ Example response:
                 max_tokens=settings.max_tokens
             )
             
-            # Record usage
-            location_id = tenant_config.get("location_id", "unknown") if tenant_config else "unknown"
-            await self.analytics.track_llm_usage(
-                location_id=location_id,
-                model=ai_response.model,
-                provider=ai_response.provider.value,
-                input_tokens=ai_response.input_tokens or 0,
-                output_tokens=ai_response.output_tokens or 0,
-                cached=False,
-                contact_id=contact_info.get("id")
-            )
+            response_time_ms = (time.time() - response_start_time) * 1000
 
-            # SMS 160-character hard limit enforcement
+            # SMS limit enforcement
             if len(ai_response.content) > 160:
                 ai_response.content = ai_response.content[:157] + "..."
 
-            # Calculate response time
-            response_time_ms = (time.time() - response_start_time) * 1000
-
-            # 7. Track metrics in analytics engine
-            location_id = tenant_config.get("location_id") if tenant_config else "default"
+            # 6. Post-Processing (Background Tasks)
             contact_id = contact_info.get("id", "unknown")
-
-            # Detect appointment scheduling
-            appointment_scheduled = any(
-                keyword in ai_response.content.lower()
-                for keyword in ["schedule", "appointment", "calendar", "book"]
-            )
-
-            try:
+            location_id_str = location_id or "default"
+            
+            # Background task for analytics and predictive scoring
+            async def post_processing():
+                # Track usage
+                await self.analytics.track_llm_usage(
+                    location_id=location_id_str,
+                    model=ai_response.model,
+                    provider=ai_response.provider.value,
+                    input_tokens=ai_response.input_tokens or 0,
+                    output_tokens=ai_response.output_tokens or 0,
+                    cached=False,
+                    contact_id=contact_id
+                )
+                
+                # Record event
+                appointment_scheduled = any(k in ai_response.content.lower() for k in ["schedule", "appointment", "calendar", "book"])
                 await self.analytics_engine.record_event(
                     contact_id=contact_id,
-                    location_id=location_id,
+                    location_id=location_id_str,
                     lead_score=lead_score,
                     previous_score=context.get("last_lead_score", 0),
                     message=user_message,
@@ -752,33 +729,32 @@ Example response:
                     context=context,
                     appointment_scheduled=appointment_scheduled
                 )
-            except Exception as analytics_error:
-                # Don't fail the conversation if analytics fails
-                logger.warning(f"Analytics tracking failed: {analytics_error}")
+                
+                # Predictive scoring update in context
+                await self.predictive_scorer.calculate_predictive_score({
+                    **context,
+                    "extracted_preferences": merged_preferences,
+                    "last_lead_score": lead_score
+                }, location=location_id_str)
 
-            logger.info(
-                "Generated AI response",
-                extra={
-                    "contact_name": contact_name,
-                    "lead_score": lead_score,
-                    "message_length": len(ai_response.content),
-                    "response_time_ms": response_time_ms
-                }
-            )
-
-            # Calculate predictive score for the response object
-            predictive_score = self.predictive_scorer.predict_conversion({
-                **context,
-                "extracted_preferences": merged_preferences,
-                "last_lead_score": lead_score
-            })
+            # Fire and forget post-processing
+            asyncio.create_task(post_processing())
 
             return AIResponse(
                 message=ai_response.content,
                 extracted_data=extracted_data,
                 reasoning=f"Lead score: {lead_score}/100",
                 lead_score=lead_score,
-                predictive_score=predictive_score
+                predictive_score=None # Will be updated in context via background task
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to generate response: {e}")
+            return AIResponse(
+                message=f"Hey {contact_name}! I'm having a quick technical issue—give me just a moment and I'll get back to you!",
+                extracted_data={},
+                reasoning="Error",
+                lead_score=0
             )
 
         except Exception as e:

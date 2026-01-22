@@ -46,6 +46,27 @@ class CampaignType(Enum):
     NEIGHBORHOOD_SPOTLIGHT = "neighborhood_spotlight"
 
 
+class CampaignStatus(Enum):
+    """Status levels for campaigns"""
+    DRAFT = "draft"
+    APPROVED = "approved"
+    SCHEDULED = "scheduled"
+    PUBLISHED = "published"
+    COMPLETED = "completed"
+    ARCHIVED = "archived"
+
+
+class CampaignTrigger(Enum):
+    """Triggers for automated campaign creation"""
+    NEW_LISTING = "new_listing"
+    PRICE_REDUCTION = "price_reduction"
+    OPEN_HOUSE = "open_house"
+    SUCCESSFUL_CLOSING = "successful_closing"
+    MARKET_MILESTONE = "market_milestone"
+    SEASONAL_OPPORTUNITY = "seasonal_opportunity"
+    LEAD_MAGNET_REQUEST = "lead_magnet_request"
+
+
 class ContentFormat(Enum):
     """Content format types"""
     FACEBOOK_POST = "facebook_post"

@@ -22,8 +22,11 @@ Lead Classifications (Jorge's Criteria):
 import re
 from datetime import datetime
 from typing import Any, Dict, List
+import json
+import hashlib
 
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 
 class LeadScorer:
@@ -33,31 +36,52 @@ class LeadScorer:
         """Initialize lead scorer with thresholds from config."""
         self.hot_threshold = settings.hot_lead_threshold
         self.warm_threshold = settings.warm_lead_threshold
+        self.cache = get_cache_service()
 
-    def calculate(self, context: Dict[str, Any]) -> int:
+    def _generate_cache_key(self, prefix: str, data: Dict[str, Any]) -> str:
+        """Generate a stable cache key from dictionary data."""
+        # Sort keys to ensure stability
+        data_str = json.dumps(data, sort_keys=True, default=str)
+        data_hash = hashlib.md5(data_str.encode()).hexdigest()
+        return f"lead_scorer:{prefix}:{data_hash}"
+
+    async def calculate(self, context: Dict[str, Any]) -> int:
         """
         Calculate lead score based on NUMBER OF QUESTIONS ANSWERED.
 
         Jorge's Requirement: Count questions answered, not points.
-
-        Qualifying Questions:
-        1. Budget: Did they provide a budget/price range?
-        2. Location: Did they specify a location/area?
-        3. Timeline: Did they share when they want to buy/sell?
-        4. Property Requirements: Beds/baths/must-haves?
-        5. Financing: Pre-approval status?
-        6. Motivation: Why buying/selling now?
-        7. Home Condition: (Sellers only) Condition of their home?
-
-        Args:
-            context: Conversation context containing:
-                - extracted_preferences: Dict of user preferences
-                - conversation_history: List of messages
-                - created_at: Conversation start time
-
-        Returns:
-            Number of questions answered (0-7)
         """
+        if context is None:
+            return 0
+
+        # Try to get from cache first
+        # Use extracted_preferences and seller data for cache key
+        cache_data = {
+            "extracted_preferences": context.get("extracted_preferences", {}),
+            "seller_preferences": context.get("seller_preferences", {}),
+            "seller_temperature": context.get("seller_temperature"),
+            "conversation_type": context.get("conversation_type")
+        }
+        
+        cache_key = self._generate_cache_key("calculate", cache_data)
+        cached_result = await self.cache.get(cache_key)
+        
+        if cached_result is not None:
+            return cached_result
+
+        # Check if this is seller mode (Jorge's bot)
+        if (context.get("seller_preferences") or
+            context.get("seller_temperature") or
+            "seller" in context.get("conversation_type", "").lower()):
+
+            seller_result = self.calculate_seller_score(context.get("seller_preferences", {}))
+            result = seller_result["questions_answered"]
+            
+            # Cache the result (TTL 1 hour)
+            await self.cache.set(cache_key, result, ttl=3600)
+            return result
+
+        # Continue with existing buyer scoring logic...
         questions_answered = 0
         prefs = context.get("extracted_preferences", {})
 
@@ -88,6 +112,9 @@ class LeadScorer:
         # Question 7: Home Condition (sellers only)
         if prefs.get("home_condition"):
             questions_answered += 1
+
+        # Cache the result (TTL 1 hour)
+        await self.cache.set(cache_key, questions_answered, ttl=3600)
 
         return questions_answered
 
@@ -212,7 +239,7 @@ class LeadScorer:
                 "Follow up in 7 days",
             ]
 
-    def calculate_with_reasoning(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def calculate_with_reasoning(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """
         Calculate score with detailed reasoning breakdown.
 
@@ -224,7 +251,16 @@ class LeadScorer:
         Returns:
             Dict containing score, classification, reasoning, and recommended actions
         """
-        score = self.calculate(context)
+        if context is None:
+            return {
+                "score": 0,
+                "questions_answered": 0,
+                "classification": "cold",
+                "reasoning": "No qualifying questions answered yet",
+                "recommended_actions": self.get_recommended_actions(0),
+            }
+
+        score = await self.calculate(context)
         classification = self.classify(score)
         actions = self.get_recommended_actions(score)
 
@@ -364,15 +400,15 @@ class LeadScorer:
         """Jorge's seller temperature classification logic"""
 
         # Hot seller criteria (Jorge's exact requirements)
-        if (score >= 3.8 and  # Nearly all questions answered (allow for partial scores)
+        if (score >= 3.5 and  # Nearly all questions answered (allow for partial scores)
             seller_data.get("timeline_acceptable") is True and  # 30-45 days acceptable
-            response_quality > 0.7 and  # High quality responses
-            responsiveness > 0.7):  # Responsive to messages
+            response_quality >= 0.7 and  # High quality responses
+            responsiveness >= 0.7):  # Responsive to messages
             return "hot"
 
         # Warm seller criteria
         elif (score >= 2.5 and  # Most questions answered
-              response_quality > 0.5):  # Decent responses
+              response_quality >= 0.5):  # Decent responses
             return "warm"
 
         # Cold seller (default)
@@ -445,64 +481,3 @@ class LeadScorer:
             Complete seller scoring analysis
         """
         return self.calculate_seller_score(seller_data)
-
-    # ==============================================================================
-    # UPDATED MAIN METHODS TO HANDLE SELLER MODE
-    # ==============================================================================
-
-    def calculate(self, context: Dict[str, Any]) -> int:
-        """
-        Calculate lead score - now handles both buyer and seller modes.
-
-        Args:
-            context: Conversation context containing:
-                - extracted_preferences: Dict of user preferences
-                - seller_preferences: Dict of seller data (Jorge's bot)
-                - conversation_history: List of messages
-                - seller_temperature: Seller classification (if seller mode)
-
-        Returns:
-            Number of questions answered (0-7 for buyers, 0-4 for sellers)
-        """
-
-        # Check if this is seller mode (Jorge's bot)
-        if (context.get("seller_preferences") or
-            context.get("seller_temperature") or
-            "seller" in context.get("conversation_type", "").lower()):
-
-            seller_result = self.calculate_seller_score(context.get("seller_preferences", {}))
-            return seller_result["questions_answered"]
-
-        # Continue with existing buyer scoring logic...
-        questions_answered = 0
-        prefs = context.get("extracted_preferences", {})
-
-        # Question 1: Budget/Price Range
-        if prefs.get("budget"):
-            questions_answered += 1
-
-        # Question 2: Location Preference
-        if prefs.get("location"):
-            questions_answered += 1
-
-        # Question 3: Timeline
-        if prefs.get("timeline"):
-            questions_answered += 1
-
-        # Question 4: Property Requirements (beds/baths/must-haves)
-        if prefs.get("bedrooms") or prefs.get("bathrooms") or prefs.get("must_haves"):
-            questions_answered += 1
-
-        # Question 5: Financing Status
-        if prefs.get("financing"):
-            questions_answered += 1
-
-        # Question 6: Motivation (why buying/selling now)
-        if prefs.get("motivation"):
-            questions_answered += 1
-
-        # Question 7: Home Condition (sellers only)
-        if prefs.get("home_condition"):
-            questions_answered += 1
-
-        return questions_answered

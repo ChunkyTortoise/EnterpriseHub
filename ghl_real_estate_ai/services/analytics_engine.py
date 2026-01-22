@@ -166,14 +166,26 @@ class MetricsCollector:
         tone_score = self._analyze_tone(response)
 
         # Calculate conversation duration
+        from datetime import timezone
         created_at = context.get("created_at")
         if created_at:
-            created_dt = (
-                datetime.fromisoformat(created_at)
-                if isinstance(created_at, str)
-                else created_at
-            )
-            duration = (datetime.utcnow() - created_dt).total_seconds()
+            try:
+                if isinstance(created_at, str):
+                    # Handle Z suffix for older Python versions
+                    if created_at.endswith('Z'):
+                        created_at = created_at[:-1] + '+00:00'
+                    created_dt = datetime.fromisoformat(created_at)
+                else:
+                    created_dt = created_at
+                
+                # Ensure created_dt is aware
+                if created_dt.tzinfo is None:
+                    created_dt = created_dt.replace(tzinfo=timezone.utc)
+                    
+                duration = (datetime.now(timezone.utc) - created_dt).total_seconds()
+            except Exception as e:
+                logger.warning(f"Duration calculation failed: {e}")
+                duration = 0.0
         else:
             duration = 0.0
 

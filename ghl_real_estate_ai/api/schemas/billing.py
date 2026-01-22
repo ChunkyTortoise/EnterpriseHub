@@ -71,6 +71,7 @@ class CreateSubscriptionRequest(BaseModel):
     trial_days: int = Field(default=14, ge=0, le=30, description="Free trial period in days")
     email: Optional[str] = Field(None, description="Customer email for billing")
     name: Optional[str] = Field(None, description="Customer name for billing")
+    currency: str = Field(default="usd", description="Billing currency (usd, eur, gbp, etc.)")
 
     @validator('email')
     def validate_email(cls, v):
@@ -299,6 +300,7 @@ class TierConfiguration(BaseModel):
     overage_rate: Decimal
     features: List[str]
     stripe_price_id: str
+    currency: str = "usd"
 
     @validator('price_monthly', 'overage_rate')
     def validate_positive_price(cls, v):

@@ -30,6 +30,8 @@ class DocumentType(Enum):
     SELLER_NET_SHEET = "seller_net_sheet"
     BUYER_ESTIMATE = "buyer_estimate"
     INSPECTION_REPORT = "inspection_report"
+    ARBITRAGE_LOI = "arbitrage_loi"
+    ROI_PROFORMA = "roi_proforma"
 
 
 class DocumentStatus(Enum):

@@ -233,6 +233,82 @@ class VectorStore:
             logger.error(f"Error searching vector store: {e}")
             return []
 
+    async def search_corrective(
+        self,
+        query: str,
+        n_results: int = 4,
+        location_id: Optional[str] = None,
+        neighborhood: Optional[str] = None,
+        threshold: float = 0.6
+    ) -> List[SearchResult]:
+        """
+        Corrective RAG (CRAG) Implementation.
+        
+        Evaluates retrieval quality and triggers web search fallback if relevance is low.
+        """
+        # 1. Standard semantic search
+        results = self.search(
+            query=query, 
+            n_results=n_results, 
+            location_id=location_id, 
+            neighborhood=neighborhood
+        )
+        
+        # 2. Evaluate relevance
+        # Chroma cosine distance: 0 is identical, > 0.6 is generally low relevance
+        is_relevant = False
+        if results and results[0].distance < threshold:
+            is_relevant = True
+            
+        if is_relevant:
+            logger.info(f"CRAG: Local results relevant (best distance: {results[0].distance:.4f})")
+            return results
+            
+        # 3. Web Search Fallback (Low relevance or no results)
+        logger.warning(f"CRAG: Low relevance detected (distance: {results[0].distance if results else 'N/A'}). Triggering Web Search.")
+        
+        try:
+            from ghl_real_estate_ai.services.perplexity_researcher import get_perplexity_researcher
+            researcher = get_perplexity_researcher()
+            
+            research_query = query
+            if neighborhood or location_id:
+                research_query += f" specifically for {neighborhood or ''} {location_id or ''}"
+                
+            web_content = await researcher.research_topic(
+                topic=research_query,
+                context="Provide specific real-time data for real estate decisions."
+            )
+            
+            # 4. Ingest new data for future use (Self-Correction Loop)
+            new_doc_id = f"crag_{uuid.uuid4().hex[:8]}"
+            self.add_texts(
+                texts=[web_content],
+                metadatas=[{
+                    "source": "perplexity_web_search",
+                    "query": query,
+                    "category": "market_data",
+                    "retrieved_at": datetime.now().isoformat()
+                }],
+                ids=[new_doc_id],
+                location_id=location_id
+            )
+            
+            # 5. Return web result as a SearchResult
+            web_result = SearchResult(
+                id=new_doc_id,
+                text=web_content,
+                metadata={"source": "perplexity", "category": "market_data"},
+                source="perplexity",
+                distance=0.1 # Artificially high relevance for fresh web data
+            )
+            
+            return [web_result] + results[:n_results-1]
+            
+        except Exception as e:
+            logger.error(f"CRAG: Web search fallback failed: {e}")
+            return results
+
     def clear(self) -> None:
         """Clear all documents from the collection."""
         if not self._client:

@@ -1,0 +1,65 @@
+/**
+ * DESIGN TOKENS FRAMEWORK v2026
+ * Implements semantic tokens for React 19 + Tailwind 4.
+ */
+
+@theme {
+  /* Core Primitives */
+  --color-primary: #00D2FF;
+  --color-primary-rgb: 0, 210, 255;
+  --color-secondary: #0045FF;
+  --color-secondary-rgb: 0, 69, 255;
+  --color-accent: #FF00E5;
+  
+  /* Semantic Roles */
+  --bg-app: #05070A;
+  --bg-card: rgba(15, 23, 42, 0.5);
+  --border-glass: rgba(255, 255, 255, 0.1);
+  
+  /* Spacing Scale (Fluid) */
+  --spacing-container: clamp(1rem, 5vw, 4rem);
+  --spacing-gutter: clamp(1rem, 2vw, 2rem);
+  
+  /* Effects */
+  --shadow-elite: 0 0 40px rgba(0, 210, 255, 0.15);
+  --blur-elite: blur(24px);
+}
+
+:root {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Playfair Display', serif;
+  
+  background-color: var(--bg-app);
+  color: #F8FAFC;
+  font-family: var(--font-sans);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* Typography Utilities */
+.text-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.05em;
+}
+
+.glass-effect {
+  background: var(--bg-card);
+  backdrop-filter: var(--blur-elite);
+  border: 1px solid var(--border-glass);
+}

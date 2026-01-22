@@ -13,12 +13,13 @@ def render_neural_uplink():
     """, unsafe_allow_html=True)
 
     activities = [
-        {"icon": "📝", "color": "#10B981", "text": "Creating contract for <b>John Doe</b>", "time": "Just now"},
-        {"icon": "🔔", "color": "#3B82F6", "text": "New lead: <b>Sarah Smith</b> (Downtown)", "time": "06:40 PM"},
-        {"icon": "🤖", "color": "#8B5CF6", "text": "AI handled objection: <b>Mike Ross</b>", "time": "06:27 PM"},
-        {"icon": "📅", "color": "#F59E0B", "text": "Tour scheduled: <b>123 Main St</b>", "time": "05:42 PM"},
-        {"icon": "💬", "color": "#EC4899", "text": "SMS sent to <b>Emily Davis</b>", "time": "04:42 PM"},
-        {"icon": "📞", "color": "#06B6D4", "text": "Call completed: <b>Robert Chen</b>", "time": "03:42 PM"}
+        {"icon": "🛡️", "color": "#EF4444", "text": "<b>SecuritySentry</b>: PII Scan Cleared (99.8%)", "time": "Just now"},
+        {"icon": "🧠", "color": "#6366F1", "text": "<b>MemorySynthesizer</b>: Dossier created for <i>Sarah Chen</i>", "time": "1m ago"},
+        {"icon": "🕵️", "color": "#10B981", "text": "<b>MarketplaceGovernor</b>: New skill validated successfully", "time": "2m ago"},
+        {"icon": "📈", "color": "#3B82F6", "text": "<b>MarketHeatmap</b>: Synthesizing trends for <i>Austin</i>", "time": "5m ago"},
+        {"icon": "⚡", "color": "#F59E0B", "text": "<b>SwarmOrchestrator</b>: Scaling up (Complexity: 0.82)", "time": "12m ago"},
+        {"icon": "📝", "color": "#10B981", "text": "Creating contract for <b>John Doe</b>", "time": "15m ago"},
+        {"icon": "🔔", "color": "#3B82F6", "text": "New lead: <b>Sarah Smith</b> (Downtown)", "time": "22m ago"}
     ]
 
     for act in activities:

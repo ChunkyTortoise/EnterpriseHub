@@ -574,19 +574,23 @@ def render_subscription_management():
 # Main component interface
 def show():
     """Main entry point for the billing dashboard component"""
+    from ghl_real_estate_ai.streamlit_demo.components.profit_center import render_profit_center
 
     # Initialize session state
     if 'billing_tab' not in st.session_state:
         st.session_state.billing_tab = 'Analytics'
 
     # Tab navigation
-    tab1, tab2 = st.tabs(["📊 Analytics", "⚙️ Management"])
+    tab1, tab2, tab3 = st.tabs(["📊 Analytics", "⚙️ Management", "💎 Profit Center"])
 
     with tab1:
         render_billing_dashboard()
 
     with tab2:
         render_subscription_management()
+        
+    with tab3:
+        render_profit_center()
 
 
 if __name__ == "__main__":

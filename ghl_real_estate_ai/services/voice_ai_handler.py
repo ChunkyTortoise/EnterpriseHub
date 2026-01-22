@@ -52,6 +52,7 @@ class CallPriority(Enum):
     """Call priority levels for routing decisions"""
     URGENT = "urgent"          # Route to Jorge immediately
     HIGH = "high"              # Route to Jorge if available
+    NORMAL = "normal"          # Standard priority
     MEDIUM = "medium"          # AI handles, Jorge backup
     LOW = "low"                # AI handles completely
     AUTOMATED = "automated"    # Full AI automation

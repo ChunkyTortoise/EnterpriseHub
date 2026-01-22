@@ -21,3 +21,45 @@ class LeadPersonaSimulator:
     async def simulate_lead(self, lead_id: str):
         insights = await analyze_lead_behavior(lead_id)
         return f"Simulated lead {lead_id} with engagement {insights['engagement_score']}"
+
+class SentimentDecoder:
+    """Analyzes lead sentiment and emotional state."""
+    
+    def analyze(self, text: str):
+        """Simple rule-based sentiment analysis for MVP."""
+        text_lower = text.lower()
+        
+        urgent_keywords = ["asap", "urgent", "quick", "immediately"]
+        angry_keywords = ["stop", "unprofessional", "don't want", "complaint"]
+        positive_keywords = ["great", "thanks", "perfect", "interested"]
+        
+        sentiment = "neutral"
+        if any(kw in text_lower for kw in urgent_keywords):
+            sentiment = "urgent"
+        elif any(kw in text_lower for kw in angry_keywords):
+            sentiment = "frustrated"
+        elif any(kw in text_lower for kw in positive_keywords):
+            sentiment = "positive"
+            
+        return {
+            "sentiment": sentiment,
+            "raw_text_length": len(text),
+            "emotional_state": "stable" if sentiment != "frustrated" else "volatile"
+        }
+
+from ghl_real_estate_ai.agent_system.dojo.evaluator import DojoEvaluator
+
+class SenseiHook:
+    """LLM-based coaching hook for qualitative feedback."""
+    
+    def __init__(self):
+        self.evaluator = DojoEvaluator()
+        
+    async def coach(self, history: list):
+        """Grades the conversation and returns coaching tips."""
+        evaluation = await self.evaluator.grade_conversation(history)
+        return {
+            "feedback": evaluation["feedback"],
+            "tips": evaluation["coaching_tips"],
+            "overall_score": evaluation["overall"]
+        }

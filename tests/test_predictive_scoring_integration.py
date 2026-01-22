@@ -1,18 +1,23 @@
+import pytest
 import asyncio
 import json
 import os
 from datetime import datetime, timedelta
 
-# Mock environment variables for Settings validation
+# Mock environment variables for Settings validation - MUST be before imports
 os.environ["ANTHROPIC_API_KEY"] = "sk-test-123"
 os.environ["GHL_API_KEY"] = "ghl-test-456"
 os.environ["GHL_LOCATION_ID"] = "loc-test-789"
+os.environ["JORGE_SELLER_MODE"] = "false"
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 
+@pytest.mark.asyncio
 async def test_predictive_integration():
     print("🚀 Testing Predictive Lead Scoring Integration...")
     
+    # Initialize without relying on external services if possible, or mock them
+    # For integration test, we assume environment is set up or mocks are handled
     manager = ConversationManager()
     
     # Mock data for a high-intent lead
@@ -55,25 +60,32 @@ async def test_predictive_integration():
     }
     
     # Test the scorer directly first
+    # Note: Using V2 scorer which returns a dataclass (PredictiveScore)
     print("\n📊 Testing PredictiveScorer directly...")
-    prediction = manager.predictive_scorer.predict_conversion(context)
     
-    print(f"Lead ID: {prediction['contact_id']}")
-    print(f"Conversion Probability: {prediction['conversion_probability']}%")
-    print(f"Confidence: {prediction['confidence']}")
-    print(f"Trajectory: {prediction['trajectory']}")
-    print("\n🧠 Reasoning:")
-    for r in prediction['reasoning']:
+    # Mock the predict_closing_probability method since it uses ML model
+    # We want to test integration of the manager, not the ML model training
+    # But for a real integration test, we might want to let it run if it has defaults
+    
+    # Actually, let's call calculate_predictive_score directly
+    prediction_result = await manager.predictive_scorer.calculate_predictive_score(context, location=location_id)
+    
+    print(f"Closing Probability: {prediction_result.closing_probability:.1%}")
+    print(f"Priority Level: {prediction_result.priority_level}")
+    print(f"Overall Score: {prediction_result.overall_priority_score}")
+    
+    print("\n🧠 Reasoning (Risk Factors):")
+    for r in prediction_result.risk_factors:
         print(f"  - {r}")
         
-    print("\n📋 Recommendations:")
-    for rec in prediction['recommendations']:
-        print(f"  - [{rec['type'].upper()}] {rec['title']}: {rec['action']}")
+    print("\n📋 Recommended Actions:")
+    for action in prediction_result.recommended_actions:
+        print(f"  - {action}")
 
     # Verify rule-based score still works
-    rule_score = manager.lead_scorer.calculate(context)
+    rule_score = await manager.lead_scorer.calculate(context)
     print(f"\n📏 Rule-Based Score (Questions Answered): {rule_score}/7")
-    
+
     if rule_score >= 3:
         print("✅ Correctly identified as HOT lead by Jorge's rules.")
 

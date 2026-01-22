@@ -25,7 +25,7 @@ from ghl_real_estate_ai.models.jorge_property_models import (
     LeadPropertyPreferences, MatchReasoning, PropertyFilters,
     ConfidenceLevel, MatchingAlgorithm, PropertyType, MatchingPerformanceMetrics
 )
-from ghl_real_estate_ai.api.middleware.auth import get_current_user, User
+from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/jorge/property-matching", tags=["jorge-property-matching"])
@@ -109,7 +109,7 @@ async def find_property_matches(
     lead_data: Dict[str, Any] = Body(..., description="Complete lead data and context"),
     preferences: Optional[LeadPropertyPreferences] = Body(None, description="Explicit lead preferences"),
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Find optimal property matches for a lead using Jorge's hybrid AI approach.
@@ -118,11 +118,13 @@ async def find_property_matches(
     Rancho Cucamonga market for optimal recommendations.
     """
     try:
-        logger.info(f"Finding property matches for lead {query.lead_id}")
+        tenant_id = current_user.get("payload", {}).get("tenant_id", "default_tenant")
+        logger.info(f"Finding property matches for lead {query.lead_id} (Tenant: {tenant_id})")
 
         # Create matching request
         request = PropertyMatchRequest(
             lead_id=query.lead_id,
+            tenant_id=tenant_id,
             lead_data=lead_data,
             preferences=preferences,
             max_results=query.max_results,
@@ -148,7 +150,7 @@ async def find_property_matches(
 async def get_match_summary(
     lead_id: str,
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Get a summary of recent property matches for a lead.
@@ -180,7 +182,7 @@ async def get_match_summary(
 async def explain_property_match(
     request: PropertyMatchExplanationRequest,
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Generate detailed explanation for why a specific property matches a lead.
@@ -210,7 +212,7 @@ async def explain_property_match(
 async def get_lead_preferences(
     lead_id: str,
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Get extracted property preferences for a lead.
@@ -243,7 +245,7 @@ async def update_lead_preferences(
     lead_id: str,
     updates: LeadPropertyPreferencesUpdate,
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Update property preferences for a lead.
@@ -286,7 +288,7 @@ async def get_property_inventory(
     page: int = Query(default=1, ge=1, description="Page number"),
     page_size: int = Query(default=20, ge=1, le=100, description="Page size"),
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Get current property inventory with optional filtering.
@@ -350,7 +352,7 @@ async def get_property_inventory(
 @router.get("/performance", response_model=MatchingPerformanceResponse)
 async def get_matching_performance(
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Get performance metrics for the property matching system.
@@ -379,7 +381,7 @@ async def get_matching_performance(
 async def test_property_matching(
     sample_lead_data: Dict[str, Any] = Body(..., description="Sample lead data for testing"),
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Test endpoint for property matching with sample data.
@@ -414,7 +416,7 @@ async def test_property_matching(
 async def get_market_insights(
     neighborhood: Optional[str] = Query(None, description="Specific neighborhood"),
     service: JorgePropertyMatchingService = Depends(get_property_matching_service),
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Get market insights and trends for Rancho Cucamonga.

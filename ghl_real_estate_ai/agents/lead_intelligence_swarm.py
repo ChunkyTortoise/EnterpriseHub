@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Optional, Any, Tuple, Callable
+from ghl_real_estate_ai.services.agent_state_sync import sync_service
 
 import aiohttp
 from pydantic import BaseModel
@@ -211,6 +212,12 @@ class LeadIntelligenceAgent:
         """Perform specialized analysis on lead data"""
         self.status = AgentStatus.ANALYZING
         start_time = asyncio.get_event_loop().time()
+        
+        await sync_service.record_agent_thought(
+            agent_id=self.agent_type.value,
+            thought=f"Starting analysis for lead {lead_data.get('lead_id', 'N/A')}",
+            status="Analyzing"
+        )
 
         try:
             # Delegate to specialized analysis method
@@ -221,11 +228,23 @@ class LeadIntelligenceAgent:
             self._update_performance_metrics(insight.confidence, processing_time)
 
             self.status = AgentStatus.IDLE
+            
+            await sync_service.record_agent_thought(
+                agent_id=self.agent_type.value,
+                thought=f"Completed analysis for lead {lead_data.get('lead_id', 'N/A')}",
+                status="Success"
+            )
             return insight
 
         except Exception as e:
             self.status = AgentStatus.ERROR
             logger.error(f"Agent {self.agent_type.value} analysis failed: {e}")
+            
+            await sync_service.record_agent_thought(
+                agent_id=self.agent_type.value,
+                thought=f"Analysis failed for lead {lead_data.get('lead_id', 'N/A')}: {str(e)}",
+                status="Error"
+            )
 
             # Return error insight
             return AgentInsight(
@@ -858,7 +877,11 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
 
         for change in market_changes:
             if change["type"] == "price_drop":
-                alerts.append(f"PREDATOR ALERT: Property {change['property_id']} dropped in price by {change['amount']}%")
+                alert_msg = f"PREDATOR ALERT: Property {change['property_id']} dropped in price by {change['amount']}%"
+                alerts.append(alert_msg)
+                
+                # Push to Redis for real-time WebSocket stream
+                await self._push_to_websocket_stream(change, lead_data)
                 
                 # Implement Alert Synergy
                 draft = await self._draft_defensive_comparison(change, lead_data)
@@ -886,18 +909,39 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
         )
 
     async def _check_mls_for_changes(self, swiped_list: List[str]) -> List[Dict[str, Any]]:
-        """Mock check for MLS changes"""
-        # In production, this would hit an MLS API
-        changes = []
-        if swiped_list and "PROP_001" in swiped_list:
-            changes.append({
-                "type": "price_drop",
-                "property_id": "PROP_001",
-                "amount": 5.0,
-                "new_price": 725000,
-                "old_price": 765000
-            })
-        return changes
+        """Check for MLS changes using the simulated feed."""
+        from ghl_real_estate_ai.services.simulated_mls_feed import get_simulated_mls
+        mls = get_simulated_mls()
+        return await mls.get_recent_changes(swiped_list)
+
+    async def _push_to_websocket_stream(self, change: Dict[str, Any], lead_data: Dict[str, Any]):
+        """Pushes a Predator Alert to the Redis-backed websocket gateway."""
+        try:
+            from ghl_real_estate_ai.services.realtime_config import get_aioredis_client
+            redis = await get_aioredis_client()
+            
+            if redis:
+                tenant_id = lead_data.get("tenant_id", "default_tenant")
+                alert_payload = {
+                    "type": "predator_alert",
+                    "tenant_id": tenant_id,
+                    "lead_id": lead_data.get("lead_id"),
+                    "lead_name": f"{lead_data.get('first_name', '')} {lead_data.get('last_name', '')}".strip(),
+                    "property_id": change["property_id"],
+                    "old_price": change["old_price"],
+                    "new_price": change["new_price"],
+                    "drop_amount": change["amount"],
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                
+                # Publish to tenant-specific and global alert channels
+                channel = f"alerts:{tenant_id}:predator"
+                await redis.publish(channel, json.dumps(alert_payload))
+                await redis.publish("alerts:global:predator", json.dumps(alert_payload))
+                
+                logger.info(f"Published Predator Alert to WebSocket gateway: {channel}")
+        except Exception as e:
+            logger.error(f"Failed to push alert to WebSocket gateway: {e}")
 
     async def _draft_defensive_comparison(self, change: Dict[str, Any], lead_data: Dict[str, Any]) -> str:
         """Draft a defensive comparison message for the human agent to send"""

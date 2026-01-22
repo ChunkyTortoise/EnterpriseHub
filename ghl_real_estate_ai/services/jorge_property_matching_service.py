@@ -128,13 +128,14 @@ class JorgePropertyMatchingService:
             PropertyMatchResponse with ranked matches and explanations
         """
         start_time = time.time()
-        cache_key = f"jorge:matches:{request.lead_id}:{hash(str(request.dict()))}"
+        tenant_id = request.tenant_id
+        cache_key = f"jorge:tenant:{tenant_id}:matches:{request.lead_id}:{hash(str(request.dict()))}"
 
         try:
             # Check cache first
             cached_response = await self._get_cached_matches(cache_key)
             if cached_response:
-                logger.info(f"Cache hit for lead {request.lead_id}")
+                logger.info(f"Cache hit for lead {request.lead_id} (Tenant: {tenant_id})")
                 return cached_response
 
             # Step 1: Get lead context from Enhanced Scorer
@@ -142,11 +143,11 @@ class JorgePropertyMatchingService:
 
             # Step 2: Extract/update property preferences
             preferences = await self._extract_property_preferences(
-                request.lead_id, request.lead_data, lead_context, request.preferences
+                request.lead_id, tenant_id, request.lead_data, lead_context, request.preferences
             )
 
             # Step 3: Get filtered property inventory
-            properties = await self._get_filtered_inventory(preferences)
+            properties = await self._get_filtered_inventory(tenant_id, preferences)
 
             if not properties:
                 logger.warning(f"No properties found for lead {request.lead_id}")
@@ -204,11 +205,12 @@ class JorgePropertyMatchingService:
 
     async def _extract_property_preferences(self,
                                           lead_id: str,
+                                          tenant_id: str,
                                           lead_data: Dict[str, Any],
                                           lead_context: LeadScoreBreakdown,
                                           explicit_preferences: Optional[LeadPropertyPreferences] = None) -> LeadPropertyPreferences:
         """Extract property preferences from lead data and context."""
-        cache_key = f"jorge:preferences:{lead_id}"
+        cache_key = f"jorge:tenant:{tenant_id}:preferences:{lead_id}"
 
         # Check cache first
         cached = await cache_service.get(cache_key)
@@ -324,18 +326,18 @@ class JorgePropertyMatchingService:
             timeline_urgency=urgency
         )
 
-    async def _get_filtered_inventory(self, preferences: LeadPropertyPreferences) -> List[Property]:
-        """Get filtered property inventory based on preferences."""
-        cache_key = f"jorge:inventory:{hash(str(preferences.dict()))}"
+    async def _get_filtered_inventory(self, tenant_id: str, preferences: LeadPropertyPreferences) -> List[Property]:
+        """Get filtered property inventory based on preferences and tenant context."""
+        cache_key = f"jorge:tenant:{tenant_id}:inventory:{hash(str(preferences.dict()))}"
 
         # Check cache
         cached = await cache_service.get(cache_key)
         if cached:
             return [Property.parse_obj(p) for p in json.loads(cached)]
 
-        # TODO: In production, this would query MLS API
-        # For now, use mock data
-        properties = await self._get_mock_inventory(preferences)
+        # TODO: In production, this would query MLS API or tenant's internal database
+        # For now, use mock data filtered by tenant context
+        properties = await self._get_mock_inventory(tenant_id, preferences)
 
         # Cache filtered inventory
         await cache_service.set(
@@ -346,7 +348,7 @@ class JorgePropertyMatchingService:
 
         return properties
 
-    async def _get_mock_inventory(self, preferences: LeadPropertyPreferences) -> List[Property]:
+    async def _get_mock_inventory(self, tenant_id: str, preferences: LeadPropertyPreferences) -> List[Property]:
         """Get mock inventory for development/demo."""
         from ghl_real_estate_ai.models.jorge_property_models import (
             PropertyAddress, PropertyFeatures, PropertyType, SchoolInfo
@@ -356,6 +358,7 @@ class JorgePropertyMatchingService:
         mock_properties = [
             Property(
                 id="prop_001",
+                tenant_id=tenant_id,
                 address=PropertyAddress(
                     street="4512 Duval Street",
                     zip_code="91737",
@@ -384,6 +387,7 @@ class JorgePropertyMatchingService:
             ),
             Property(
                 id="prop_002",
+                tenant_id=tenant_id,
                 address=PropertyAddress(
                     street="8765 Victoria Avenue",
                     zip_code="91739",
@@ -411,6 +415,7 @@ class JorgePropertyMatchingService:
             ),
             Property(
                 id="prop_003",
+                tenant_id=tenant_id,
                 address=PropertyAddress(
                     street="1234 Terra Vista Drive",
                     zip_code="91737",

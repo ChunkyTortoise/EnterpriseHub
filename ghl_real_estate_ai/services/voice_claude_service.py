@@ -11,11 +11,11 @@ import tempfile
 import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Union, Tuple
-from pydantic import BaseModel, Field
+from enum import Enum
+from pydantic import BaseModel, Field, ConfigDict
 import aiohttp
 import aiofiles
 import speech_recognition as sr
-from pydantic import BaseModel
 import logging
 
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
@@ -24,7 +24,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-class VoiceInteractionType(str):
+class VoiceInteractionType(str, Enum):
     """Types of voice interactions supported."""
     PROPERTY_INQUIRY = "property_inquiry"
     LEAD_UPDATE = "lead_update"
@@ -32,7 +32,7 @@ class VoiceInteractionType(str):
     MARKET_QUESTION = "market_question"
     GENERAL_ASSISTANCE = "general_assistance"
 
-class AudioFormat(str):
+class AudioFormat(str, Enum):
     """Supported audio formats for voice processing."""
     WAV = "wav"
     MP3 = "mp3"
@@ -42,6 +42,8 @@ class AudioFormat(str):
 
 class VoiceRequest(BaseModel):
     """Voice interaction request model."""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     audio_data: str = Field(..., description="Base64 encoded audio data")
     audio_format: AudioFormat = Field(default=AudioFormat.WAV, description="Audio format")
     sample_rate: Optional[int] = Field(default=16000, description="Audio sample rate")

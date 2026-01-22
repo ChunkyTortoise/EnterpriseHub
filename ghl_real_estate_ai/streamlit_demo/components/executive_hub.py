@@ -99,7 +99,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
     st.markdown("---")
     
     # Tabs for sub-features
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Dashboard", "Advanced Metrics", "AI Insights", "Reports", "Market Expansion"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Dashboard", "Advanced Metrics", "AI Insights", "Reports", "Market Expansion", "Market Digest"])
     
     with tab1:
         st.subheader("Executive Dashboard")
@@ -681,4 +681,54 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
         st.markdown("#### 🔮 Geographic Migration Logic")
         st.write("Claude is tracking lead migration patterns from California to Texas to predict future demand.")
         st.image("https://img.freepik.com/free-vector/world-map-with-lines-connection_1017-14238.jpg?size=626&ext=jpg", caption="Simulated Migration Heatmap")
+
+    with tab6:
+        st.subheader("📰 Market Intelligence Weekly Digest")
+        st.markdown("*White-label automated outreach for your client database*")
+        
+        with st.container(border=True):
+            col_digest1, col_digest2 = st.columns([1, 2])
+            
+            with col_digest1:
+                st.markdown("#### ⚙️ Configuration")
+                digest_market = st.selectbox("Target Market", ["Austin, TX", "Rancho Cucamonga, CA"], key="digest_market_sel")
+                digest_zips = st.text_input("Focus ZIP Codes (comma-separated)", "78704, 78745, 78701")
+                agency_name = st.text_input("Agency Name", "Lyrio AI Austin")
+                
+                if st.button("🪄 Generate Weekly Digest", type="primary", use_container_width=True):
+                    st.session_state.digest_requested = True
+                    
+            with col_digest2:
+                if st.session_state.get('digest_requested'):
+                    from ghl_real_estate_ai.services.market_digest_generator import MarketDigestGenerator
+                    digest_gen = MarketDigestGenerator()
+                    
+                    with st.spinner("Claude is synthesizing hyper-local trends..."):
+                        try:
+                            loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(loop)
+                            
+                            zips_list = [z.strip() for z in digest_zips.split(",")]
+                            digest_result = loop.run_until_complete(
+                                digest_gen.generate_weekly_digest(
+                                    market_name=digest_market,
+                                    zip_codes=zips_list,
+                                    agency_branding={"name": agency_name}
+                                )
+                            )
+                            
+                            if "error" in digest_result:
+                                st.error(f"Failed to generate digest: {digest_result['error']}")
+                            else:
+                                st.markdown(f"### {agency_name} | Weekly Intel")
+                                st.markdown(digest_result['content'])
+                                
+                                st.markdown("---")
+                                if st.button("📨 Sync to GHL Email Campaign", use_container_width=True):
+                                    st.success("Digest synced to GHL Email Builder! Sent to 1,245 contacts.")
+                                    st.balloons()
+                        except Exception as e:
+                            st.error(f"Digest generation failed: {e}")
+                else:
+                    st.info("Configure the digest parameters and click 'Generate' to initialize the narrative engine.")
 

@@ -52,6 +52,7 @@ websocket-client==1.6.4
 
 # Async Support
 asyncio-mqtt==0.13.0
+aiofiles==23.2.1
 
 # Statistical Analysis for A/B Testing
 scipy==1.11.4
