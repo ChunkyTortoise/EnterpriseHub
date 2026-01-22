@@ -44,6 +44,10 @@ try:
 except ImportError:
     CLAUDE_SERVICES_AVAILABLE = False
 
+# Import Primitive Components
+from ghl_real_estate_ai.streamlit_demo.components.primitives import render_obsidian_card, CardConfig, icon
+from ghl_real_estate_ai.streamlit_demo.plotly_optimizer import plotly_optimizer
+
 def render_lead_intelligence_hub(services, mock_data, claude, market_key, selected_market, elite_mode=False):
     import inspect
     import os
@@ -170,7 +174,30 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
             classification = result['classification']
             score_color = '#ef4444' if score >= 5 else '#f59e0b' if score >= 3 else '#6366f1'
             score_label = 'PRIORITY: HOT' if score >= 5 else 'PRIORITY: WARM' if score >= 3 else 'PRIORITY: STABLE'
-            st.markdown(f"""\n            <div style='background: rgba(30, 41, 59, 0.6); \n                        padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); \n                        border-left: 6px solid {score_color}; margin-bottom: 2rem; backdrop-filter: blur(10px);'>\n                <div style='display: flex; justify-content: space-between; align-items: center;'>\n                    <div>\n                        <h2 style='margin: 0; color: #FFFFFF !important; font-size: 1.75rem; font-family: "Space Grotesk", sans-serif; letter-spacing: -0.02em;'>{selected_lead_name}</h2>\n                        <div style='display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem;'>\n                            <span style='background: {score_color}20; color: {score_color}; padding: 0.25rem 0.75rem; \n                                         border-radius: 999px; font-size: 0.75rem; font-weight: 800; border: 1px solid {score_color}40; text-transform: uppercase;'>\n                                {score_label}\n                            </span>\n                            <span style='color: #E6EDF3; font-size: 0.95rem; font-weight: 500;'>• {lead_context.get('occupation', 'Unknown Occupation')}</span>\n                            <span style='color: #E6EDF3; font-size: 0.95rem; font-weight: 500;'>• {lead_context.get('location', 'Unknown Location')}</span>\n                        </div>\n                    </div>\n                    <div style='text-align: right;'>\n                        <div style='font-size: 2.25rem; font-weight: 800; color: #FFFFFF; line-height: 1; font-family: "Space Grotesk", sans-serif; text-shadow: 0 0 20px {score_color}40;'>{int(score / 7 * 100)}%</div>\n                        <div style='font-size: 0.75rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-top: 4px;'>Compatibility Score</div>\n                    </div>\n                </div>\n                {(f"<div style='margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.05); font-size: 1rem; color: #f8fafc; line-height: 1.5;'><b>Claude's Strategy:</b> <span style='color: #cbd5e1;'>{(analysis_result.strategic_summary if analysis_result else 'Run analysis to generate strategy.')}</span></div>" if analysis_result else '')}\n            </div>\n            """, unsafe_allow_html=True)
+            render_obsidian_card(
+                title="",
+                content=f"""
+                <div style='display: flex; justify-content: space-between; align-items: center;'>
+                    <div>
+                        <h2 style='margin: 0; color: #FFFFFF !important; font-size: 1.75rem; font-family: "Space Grotesk", sans-serif; letter-spacing: -0.02em;'>{selected_lead_name}</h2>
+                        <div style='display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem;'>
+                            <span style='background: {score_color}20; color: {score_color}; padding: 0.25rem 0.75rem; 
+                                         border-radius: 999px; font-size: 0.75rem; font-weight: 800; border: 1px solid {score_color}40; text-transform: uppercase;'>
+                                {score_label}
+                            </span>
+                            <span style='color: #E6EDF3; font-size: 0.95rem; font-weight: 500;'>• {lead_context.get('occupation', 'Unknown Occupation')}</span>
+                            <span style='color: #E6EDF3; font-size: 0.95rem; font-weight: 500;'>• {lead_context.get('location', 'Unknown Location')}</span>
+                        </div>
+                    </div>
+                    <div style='text-align: right;'>
+                        <div style='font-size: 2.25rem; font-weight: 800; color: #FFFFFF; line-height: 1; font-family: "Space Grotesk", sans-serif; text-shadow: 0 0 20px {score_color}40;'>{int(score / 7 * 100)}%</div>
+                        <div style='font-size: 0.75rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-top: 4px;'>Compatibility Score</div>
+                    </div>
+                </div>
+                {(f"<div style='margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.05); font-size: 1rem; color: #f8fafc; line-height: 1.5;'><b>Claude's Strategy:</b> <span style='color: #cbd5e1;'>{(analysis_result.strategic_summary if analysis_result else 'Run analysis to generate strategy.')}</span></div>" if analysis_result else '')}
+                """,
+                config=CardConfig(variant='alert', glow_color=score_color, padding='1.5rem')
+            )
     else:
         analysis_result = None
     st.markdown('---')
@@ -208,11 +235,29 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     st.markdown('#### Psychological DNA Radar')
                     categories = ['Intent', 'Finance', 'Timeline', 'Trust', 'Authority', 'Flexibility']
                     dna_values = [0.85, 0.72, 0.9, 0.65, 0.8, 0.45]
-                    df_radar = pd.DataFrame(dict(r=dna_values, theta=categories))
-                    fig = go.Figure()
-                    fig.add_trace(go.Scatterpolar(r=dna_values, theta=categories, fill='toself', line_color='#6366F1', fillcolor='rgba(99, 102, 241, 0.2)'))
-                    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 1], gridcolor='rgba(255,255,255,0.1)', tickfont=dict(size=10, color='#8B949E')), angularaxis=dict(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(size=11, color='#E6EDF3')), bgcolor='rgba(0,0,0,0)'), showlegend=False, margin=dict(l=40, r=40, t=40, b=40), height=300)
-                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    def create_dna_radar(values, categories=categories):
+                        fig = go.Figure()
+                        fig.add_trace(go.Scatterpolar(
+                            r=values + [values[0]], 
+                            theta=categories + [categories[0]], 
+                            fill='toself', 
+                            line_color='#6366F1', 
+                            fillcolor='rgba(99, 102, 241, 0.2)'
+                        ))
+                        fig.update_layout(
+                            polar=dict(
+                                radialaxis=dict(visible=True, range=[0, 1], gridcolor='rgba(255,255,255,0.1)', tickfont=dict(size=10, color='#8B949E')), 
+                                angularaxis=dict(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(size=11, color='#E6EDF3')), 
+                                bgcolor='rgba(0,0,0,0)'
+                            ), 
+                            showlegend=False, 
+                            margin=dict(l=40, r=40, t=40, b=40), 
+                            height=300
+                        )
+                        return fig
+
+                    plotly_optimizer.render_chart(create_dna_radar, dna_values, key=f"dna_radar_{selected_lead_name}")
                 except Exception as e:
                     st.error(f'Claude qualification component error: {str(e)}')
                     st.info('🧠 **Fallback Mode**: Using cached behavioral insights')
@@ -259,7 +304,33 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     except Exception:
                         st.info('💡 **Enhanced Intelligence Offline**: Basic conversation analysis temporarily unavailable')
             if selected_lead_name == '-- Select a Lead --':
-                st.markdown('\n                <div style=\'background: rgba(22, 27, 34, 0.7); \n                            padding: 4rem 2rem; \n                            border-radius: 20px; \n                            text-align: center;\n                            border: 1px dashed rgba(99, 102, 241, 0.3);\n                            margin-top: 2rem;\n                            backdrop-filter: blur(12px);\n                            box-shadow: 0 8px 32px rgba(0,0,0,0.4);\'>\n                    <div style=\'font-size: 4rem; margin-bottom: 1.5rem; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.2));\'>🎯</div>\n                    <h2 style=\'color: #FFFFFF; margin: 0 0 1rem 0; font-family: "Space Grotesk", sans-serif;\'>SELECT TARGET NODE</h2>\n                    <p style=\'color: #8B949E; font-size: 1.1rem; max-width: 500px; margin: 0 auto; font-family: "Inter", sans-serif;\'>\n                        Choose a lead identity to initialize multi-dimensional intelligence synthesis, \n                        property alignment, and predictive behavioral modeling.\n                    </p>\n                    <div style=\'margin-top: 3rem; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;\'>\n                        <div style=\'background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); min-width: 140px;\'>\n                            <div style=\'font-size: 2rem; margin-bottom: 0.5rem;\'>📊</div>\n                            <div style=\'font-size: 0.75rem; color: #6366F1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif;\'>Scoring Engine</div>\n                        </div>\n                        <div style=\'background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); min-width: 140px;\'>\n                            <div style=\'font-size: 2rem; margin-bottom: 0.5rem;\'>🏠</div>\n                            <div style=\'font-size: 0.75rem; color: #6366F1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif;\'>Property Align</div>\n                        </div>\n                        <div style=\'background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); min-width: 140px;\'>\n                            <div style=\'font-size: 2rem; margin-bottom: 0.5rem;\'>🔮</div>\n                            <div style=\'font-size: 0.75rem; color: #6366F1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: "Space Grotesk", sans-serif;\'>AI Projections</div>\n                        </div>\n                    </div>\n                </div>\n                ', unsafe_allow_html=True)
+                render_obsidian_card(
+                    title="SELECT TARGET NODE",
+                    content="""
+                        <div style='text-align: center;'>
+                            <div style='font-size: 4rem; margin-bottom: 1.5rem; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.2));'>🎯</div>
+                            <p style='color: #8B949E; font-size: 1.1rem; max-width: 500px; margin: 0 auto;'>
+                                Choose a lead identity to initialize multi-dimensional intelligence synthesis, 
+                                property alignment, and predictive behavioral modeling.
+                            </p>
+                            <div style='margin-top: 3rem; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;'>
+                                <div style='background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); min-width: 140px;'>
+                                    <div style='font-size: 2rem; margin-bottom: 0.5rem;'>📊</div>
+                                    <div style='font-size: 0.75rem; color: #6366F1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;'>Scoring Engine</div>
+                                </div>
+                                <div style='background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); min-width: 140px;'>
+                                    <div style='font-size: 2rem; margin-bottom: 0.5rem;'>🧠</div>
+                                    <div style='font-size: 0.75rem; color: #6366F1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;'>Psych Profiling</div>
+                                </div>
+                                <div style='background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); min-width: 140px;'>
+                                    <div style='font-size: 2rem; margin-bottom: 0.5rem;'>🏠</div>
+                                    <div style='font-size: 0.75rem; color: #6366F1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;'>Prop Match</div>
+                                </div>
+                            </div>
+                        </div>
+                    """,
+                    config=CardConfig(variant='glass', padding='4rem 2rem', show_border=True)
+                )
                 st.stop()
         if claude_services.get('qualification') and elite_mode and (selected_lead_name != '-- Select a Lead --'):
             st.markdown('#### 🧠 Claude Intelligence Dashboard')
@@ -463,7 +534,23 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     if 'error' in fin:
                         st.error(fin['error'])
                     else:
-                        st.markdown(f"""\n                        <div class="agent-card">\n                            <div class="agent-header">\n                                <span class="agent-icon">💰</span>\n                                <span class="agent-name">Financial Analyst</span>\n                            </div>\n                            <div class="agent-stat">\n                                <span class="stat-label">Qualification:</span>\n                                <span class="stat-value">{fin.get('qualification_status', 'Unknown')}</span>\n                            </div>\n                            <div class="agent-stat">\n                                <span class="stat-label">Budget Range:</span>\n                                <span class="stat-value">{fin.get('estimated_budget_range', 'Unknown')}</span>\n                            </div>\n                            <div class="agent-tags">\n                                {' '.join((f'<span class="agent-tag">{sig}</span>' for sig in fin.get('financial_signals', [])))}\n                            </div>\n                        </div>\n                        """, unsafe_allow_html=True)
+                        render_obsidian_card(
+                            title="Financial Analyst",
+                            content=f"""
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                <span style="color: #8B949E;">Qualification:</span>
+                                <span style="color: #E6EDF3; font-weight: 600;">{fin.get('qualification_status', 'Unknown')}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                <span style="color: #8B949E;">Budget Range:</span>
+                                <span style="color: #E6EDF3; font-weight: 600;">{fin.get('estimated_budget_range', 'Unknown')}</span>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1rem;">
+                                {' '.join((f'<span style="background: rgba(99, 102, 241, 0.15); color: #6366F1; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(99, 102, 241, 0.3);">{sig}</span>' for sig in fin.get('financial_signals', [])))}
+                            </div>
+                            """,
+                            icon='money-bill-wave'
+                        )
                         with st.expander('🔍 View Reasoning Trace'):
                             st.info(fin.get('reasoning_trace', 'No trace available.'))
                 with c2:
@@ -471,7 +558,23 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     if 'error' in time_agent:
                         st.error(time_agent['error'])
                     else:
-                        st.markdown(f"""\n                        <div class="agent-card">\n                            <div class="agent-header">\n                                <span class="agent-icon">⏳</span>\n                                <span class="agent-name">Timeline Assessor</span>\n                            </div>\n                            <div class="agent-stat">\n                                <span class="stat-label">Urgency:</span>\n                                <span class="stat-value">{time_agent.get('urgency_level', 'Unknown')}</span>\n                            </div>\n                            <div class="agent-stat">\n                                <span class="stat-label">Target Date:</span>\n                                <span class="stat-value">{time_agent.get('target_move_date', 'Unknown')}</span>\n                            </div>\n                            <div class="agent-tags">\n                                {' '.join((f'<span class="agent-tag">{driver}</span>' for driver in time_agent.get('drivers', [])))}\n                            </div>\n                        </div>\n                        """, unsafe_allow_html=True)
+                        render_obsidian_card(
+                            title="Timeline Assessor",
+                            content=f"""
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                <span style="color: #8B949E;">Urgency:</span>
+                                <span style="color: #E6EDF3; font-weight: 600;">{time_agent.get('urgency_level', 'Unknown')}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                <span style="color: #8B949E;">Target Date:</span>
+                                <span style="color: #E6EDF3; font-weight: 600;">{time_agent.get('target_move_date', 'Unknown')}</span>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1rem;">
+                                {' '.join((f'<span style="background: rgba(99, 102, 241, 0.15); color: #6366F1; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(99, 102, 241, 0.3);">{driver}</span>' for driver in time_agent.get('drivers', [])))}
+                            </div>
+                            """,
+                            icon='hourglass-half'
+                        )
                         with st.expander('🔍 View Reasoning Trace'):
                             st.info(time_agent.get('reasoning_trace', 'No trace available.'))
                 c3, c4 = st.columns(2)
@@ -480,7 +583,23 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     if 'error' in psych:
                         st.error(psych['error'])
                     else:
-                        st.markdown(f"""\n                        <div class="agent-card">\n                            <div class="agent-header">\n                                <span class="agent-icon">🧠</span>\n                                <span class="agent-name">Behavioral Psychologist</span>\n                            </div>\n                            <div class="agent-stat">\n                                <span class="stat-label">Personality:</span>\n                                <span class="stat-value">{psych.get('personality_type', 'Unknown')}</span>\n                            </div>\n                            <div class="agent-stat">\n                                <span class="stat-label">Style:</span>\n                                <span class="stat-value">{psych.get('communication_style', 'Unknown')}</span>\n                            </div>\n                            <div class="agent-tags">\n                                {' '.join((f'<span class="agent-tag">{mot}</span>' for mot in psych.get('motivators', [])))}\n                            </div>\n                        </div>\n                        """, unsafe_allow_html=True)
+                        render_obsidian_card(
+                            title="Behavioral Psychologist",
+                            content=f"""
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                <span style="color: #8B949E;">Personality:</span>
+                                <span style="color: #E6EDF3; font-weight: 600;">{psych.get('personality_type', 'Unknown')}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                <span style="color: #8B949E;">Style:</span>
+                                <span style="color: #E6EDF3; font-weight: 600;">{psych.get('communication_style', 'Unknown')}</span>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1rem;">
+                                {' '.join((f'<span style="background: rgba(99, 102, 241, 0.15); color: #6366F1; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(99, 102, 241, 0.3);">{mot}</span>' for mot in psych.get('motivators', [])))}
+                            </div>
+                            """,
+                            icon='brain'
+                        )
                         with st.expander('🔍 View Reasoning Trace'):
                             st.info(psych.get('reasoning_trace', 'No trace available.'))
                 with c4:
@@ -490,13 +609,47 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     else:
                         risk_level = risk.get('risk_level', 'Unknown')
                         risk_color = '#ef4444' if 'High' in risk_level else '#f59e0b' if 'Medium' in risk_level else '#10b981'
-                        st.markdown(f"""\n                        <div class="agent-card">\n                            <div class="agent-header">\n                                <span class="agent-icon">🛡️</span>\n                                <span class="agent-name">Risk Analyst</span>\n                            </div>\n                            <div class="agent-stat">\n                                <span class="stat-label">Risk Level:</span>\n                                <span class="stat-value" style="color: {risk_color};">{risk_level}</span>\n                            </div>\n                            <div class="agent-stat">\n                                <span class="stat-label">Competitor Risk:</span>\n                                <span class="stat-value">{('YES' if risk.get('competitor_risk') else 'NO')}</span>\n                            </div>\n                            <div class="agent-tags">\n                                {' '.join((f'<span class="agent-tag" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">{obj}</span>' for obj in risk.get('primary_objections', [])))}\n                            </div>\n                        </div>\n                        """, unsafe_allow_html=True)
+                        render_obsidian_card(
+                            title="Risk Analyst",
+                            content=f"""
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                <span style="color: #8B949E;">Risk Level:</span>
+                                <span style="color: {risk_color}; font-weight: 600;">{risk_level}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                <span style="color: #8B949E;">Competitor Risk:</span>
+                                <span style="color: #E6EDF3; font-weight: 600;">{('YES' if risk.get('competitor_risk') else 'NO')}</span>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1rem;">
+                                {' '.join((f'<span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(239, 68, 68, 0.2);">{obj}</span>' for obj in risk.get('primary_objections', [])))}
+                            </div>
+                            """,
+                            icon='shield-alt'
+                        )
                         with st.expander('🔍 View Reasoning Trace'):
                             st.info(risk.get('reasoning_trace', 'No trace available.'))
                 st.markdown('---')
                 neg = results.get('Negotiation Engine', {})
                 if neg:
-                    st.markdown(f'''\n                    <div class="agent-card" style="border-left: 5px solid #6366F1;">\n                        <div class="agent-header">\n                            <span class="agent-icon">🤝</span>\n                            <span class="agent-name">Negotiation Engine (Active Defense)</span>\n                        </div>\n                        <div class="agent-stat">\n                            <span class="stat-label">Tactical Style:</span>\n                            <span class="stat-value">{neg.get('negotiation_style', 'Adaptive')}</span>\n                        </div>\n                        <div class="agent-stat">\n                            <span class="stat-label">Counter-Scripts Ready:</span>\n                            <span class="stat-value">{len(neg.get('counter_scripts', []))}</span>\n                        </div>\n                        <div style="margin-top: 1rem;">\n                            <strong>🎯 Primary Counter:</strong><br>\n                            <span style="color: #6366F1; font-style: italic;">"{neg.get('counter_scripts', ['Ready to assist'])[0]}"</span>\n                        </div>\n                    </div>\n                    ''', unsafe_allow_html=True)
+                    render_obsidian_card(
+                        title="Negotiation Engine (Active Defense)",
+                        content=f"""
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                            <span style="color: #8B949E;">Tactical Style:</span>
+                            <span style="color: #E6EDF3; font-weight: 600;">{neg.get('negotiation_style', 'Adaptive')}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                            <span style="color: #8B949E;">Counter-Scripts Ready:</span>
+                            <span style="color: #E6EDF3; font-weight: 600;">{len(neg.get('counter_scripts', []))}</span>
+                        </div>
+                        <div style="margin-top: 1rem; background: rgba(99, 102, 241, 0.1); padding: 0.75rem; border-radius: 8px; border-left: 3px solid #6366F1;">
+                            <strong style="color: #E6EDF3; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">🎯 Primary Counter</strong><br>
+                            <span style="color: #A5B4FC; font-style: italic;">"{neg.get('counter_scripts', ['Ready to assist'])[0]}"</span>
+                        </div>
+                        """,
+                        icon='handshake',
+                        config=CardConfig(variant='premium', padding='1.5rem')
+                    )
                     with st.expander('🔍 View Negotiation Reasoning & Inter-Agent Messages'):
                         if 'swarm_metadata' in full_results:
                             msgs = full_results['swarm_metadata'].get('inter_agent_messages', [])
@@ -595,9 +748,13 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                         "Message": [1, 2, 3, 4, 5, 6, 7],
                         "Sentiment": [0.8, 0.75, 0.85, 0.6, 0.2, 0.1, -0.2] # Sample trajectory
                     })
-                    fig_traj = px.line(traj_data, x="Message", y="Sentiment", title="Rolling Sentiment (Window: 3)", markers=True)
-                    fig_traj.add_hline(y=0, line_dash="dash", line_color="white", opacity=0.3)
-                    st.plotly_chart(fig_traj, use_container_width=True)
+                    
+                    def create_sentiment_traj(df):
+                        fig_traj = px.line(df, x="Message", y="Sentiment", title="Rolling Sentiment (Window: 3)", markers=True)
+                        fig_traj.add_hline(y=0, line_dash="dash", line_color="white", opacity=0.3)
+                        return fig_traj
+
+                    plotly_optimizer.render_chart(create_sentiment_traj, traj_data, key=f"sentiment_traj_{selected_lead_name}")
                     
                 except Exception as e:
                     st.error(f"Sentiment analysis failed: {e}")
@@ -704,8 +861,35 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                         for seg in result['segments']:
                             seg_name = seg['name'].replace('_', ' ').title()
                             char = seg['characteristics']
-                            segment_html = f"""\n                            <div style="background: rgba(22, 27, 34, 0.7); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px);">\n                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">\n                                    <h3 style="margin: 0; color: #FFFFFF; font-size: 1.25rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif;">{seg_name}</h3>\n                                    <div style="background: rgba(99, 102, 241, 0.15); color: #6366F1; padding: 4px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(99, 102, 241, 0.3); text-transform: uppercase;">{seg['size']} NODES</div>\n                                </div>\n                                \n                                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">\n                                    <div style="display: flex; align-items: center; gap: 0.5rem;">\n                                        <span>📊</span>\n                                        <span style="color: #8B949E; font-size: 0.875rem;">Engagement: <strong style="color: #FFFFFF;">{char['avg_engagement']}%</strong></span>\n                                    </div>\n                                    <div style="display: flex; align-items: center; gap: 0.5rem;">\n                                        <span>⭐</span>\n                                        <span style="color: #8B949E; font-size: 0.875rem;">Score: <strong style="color: #FFFFFF;">{char['avg_lead_score']}</strong></span>\n                                    </div>\n                                </div>\n                                \n                                <div style="font-size: 1.75rem; font-weight: 700; color: #6366F1; margin: 0.5rem 0; font-family: 'Space Grotesk', sans-serif; text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);">${char['total_value']:,.0f}</div>\n                                \n                                <div style="margin: 1rem 0;">\n                                    <strong style="font-size: 0.75rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">Tactical Directives:</strong>\n                                    <ul style="margin: 0.5rem 0; padding-left: 1.25rem; font-size: 0.875rem; color: #E6EDF3; line-height: 1.6; opacity: 0.9;">\n                                        {''.join((f'<li>{action}</li>' for action in seg['recommended_actions'][:2]))}\n                                    </ul>\n                                </div>\n                            </div>\n                            """
-                            st.markdown(segment_html, unsafe_allow_html=True)
+                            render_obsidian_card(
+                                title=seg_name,
+                                content=f"""
+                                <div style="display: flex; justify-content: flex-end; margin-top: -2.5rem; margin-bottom: 1rem;">
+                                    <div style="background: rgba(99, 102, 241, 0.15); color: #6366F1; padding: 4px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(99, 102, 241, 0.3); text-transform: uppercase;">{seg['size']} NODES</div>
+                                </div>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>📊</span>
+                                        <span style="color: #8B949E; font-size: 0.875rem;">Engagement: <strong style="color: #FFFFFF;">{char['avg_engagement']}%</strong></span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>⭐</span>
+                                        <span style="color: #8B949E; font-size: 0.875rem;">Score: <strong style="color: #FFFFFF;">{char['avg_lead_score']}</strong></span>
+                                    </div>
+                                </div>
+                                
+                                <div style="font-size: 1.75rem; font-weight: 700; color: #6366F1; margin: 0.5rem 0; font-family: 'Space Grotesk', sans-serif; text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);">${char['total_value']:,.0f}</div>
+                                
+                                <div style="margin: 1rem 0;">
+                                    <strong style="font-size: 0.75rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Grotesk', sans-serif;">Tactical Directives:</strong>
+                                    <ul style="margin: 0.5rem 0; padding-left: 1.25rem; font-size: 0.875rem; color: #E6EDF3; line-height: 1.6; opacity: 0.9;">
+                                        {''.join((f'<li>{action}</li>' for action in seg['recommended_actions'][:2]))}
+                                    </ul>
+                                </div>
+                                """,
+                                config=CardConfig(variant='glass', padding='1.5rem')
+                            )
                         st.markdown('</div>', unsafe_allow_html=True)
             except (ImportError, Exception) as e:
                 st.info(f'Smart Segmentation module unavailable: {e}')
@@ -1043,6 +1227,20 @@ def _render_lead_roi_sidebar():
         lead_cost = sum((e['data'].get('cost', 0.0) for e in lead_events))
         lead_saved = sum((e['data'].get('saved_cost', 0.0) for e in lead_events))
         lead_hits = sum((1 for e in lead_events if e['data'].get('cached')))
-        st.sidebar.markdown(f"\n        <div style='background: rgba(16, 185, 129, 0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); margin-top: 1rem;'>\n            <div style='font-size: 0.75rem; color: #10B981; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;'>AI ROI Intelligence</div>\n            <div style='display: flex; justify-content: space-between; align-items: center;'>\n                <div style='font-size: 1.5rem; font-weight: 700; color: #FFFFFF;'>${lead_saved:.4f}</div>\n                <div style='background: #10B981; color: white; font-size: 0.65rem; padding: 2px 8px; border-radius: 4px;'>SAVED</div>\n            </div>\n            <div style='font-size: 0.7rem; color: #8B949E; margin-top: 8px;'>\n                <b>{lead_hits}</b> Cache Hits | <b>{lead_tokens:,}</b> Tokens\n            </div>\n        </div>\n        ", unsafe_allow_html=True)
+        with st.sidebar:
+            render_obsidian_card(
+                title="",
+                content=f"""
+                <div style='font-size: 0.75rem; color: #10B981; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;'>AI ROI Intelligence</div>
+                <div style='display: flex; justify-content: space-between; align-items: center;'>
+                    <div style='font-size: 1.5rem; font-weight: 700; color: #FFFFFF;'>${lead_saved:.4f}</div>
+                    <div style='background: #10B981; color: white; font-size: 0.65rem; padding: 2px 8px; border-radius: 4px;'>SAVED</div>
+                </div>
+                <div style='font-size: 0.7rem; color: #8B949E; margin-top: 8px;'>
+                    <b>{lead_hits}</b> Cache Hits | <b>{lead_tokens:,}</b> Tokens
+                </div>
+                """,
+                config=CardConfig(variant='alert', glow_color='#10B981', padding='1.25rem')
+            )
     except Exception as e:
         pass

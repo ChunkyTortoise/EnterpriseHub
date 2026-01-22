@@ -11,8 +11,8 @@ from dataclasses import dataclass
 import streamlit as st
 
 # Import existing services
-from services.property_matcher import PropertyMatcher
-from services.claude_conversation_intelligence import get_conversation_intelligence
+from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
+from ghl_real_estate_ai.services.claude_conversation_intelligence import get_conversation_intelligence
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

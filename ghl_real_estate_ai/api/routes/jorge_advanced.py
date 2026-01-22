@@ -662,11 +662,11 @@ async def get_dashboard_metrics():
         metrics = await integration_hub.get_unified_dashboard()
 
         return DashboardMetrics(
-            voice_ai=metrics["voice_ai"],
-            marketing=metrics["marketing"],
-            client_retention=metrics["client_retention"],
-            market_predictions=metrics["market_predictions"],
-            integration_health=metrics["integration_health"],
+            voice_ai=metrics.voice_ai_stats,
+            marketing=metrics.marketing_stats,
+            client_retention=metrics.retention_stats,
+            market_predictions=metrics.prediction_stats,
+            integration_health=metrics.performance_summary,
             last_updated=datetime.now()
         )
 

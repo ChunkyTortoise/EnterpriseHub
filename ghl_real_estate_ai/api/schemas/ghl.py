@@ -18,6 +18,7 @@ class MessageType(str, Enum):
     SMS = "SMS"
     EMAIL = "Email"
     LIVE_CHAT = "Live_Chat"
+    WHATSAPP = "WhatsApp"
 
 
 class MessageDirection(str, Enum):

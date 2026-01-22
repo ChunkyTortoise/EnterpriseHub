@@ -25,6 +25,42 @@ export function AgentConsole() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const fetchThoughts = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/agent-sync/state');
+        const data = await response.json();
+        
+        if (data.recent_thoughts) {
+          const formattedThoughts: Message[] = data.recent_thoughts.map((t: any, idx: number) => ({
+            id: `thought-${idx}`,
+            sender: t.agent.toLowerCase().includes('bot') ? 'swarm' : 'system',
+            text: `[${t.agent}] ${t.task}`,
+            timestamp: new Date(t.timestamp)
+          }));
+          
+          setMessages(prev => {
+            // Only update if we have new thoughts
+            const lastPrev = prev.filter(m => m.sender !== 'user').length > 0 ? prev.filter(m => m.sender !== 'user')[0].id : '';
+            const lastNew = formattedThoughts.length > 0 ? formattedThoughts[0].id : '';
+            
+            if (lastNew !== lastPrev) {
+              // Merge user messages with new system thoughts
+              const userMsgs = prev.filter(m => m.sender === 'user');
+              return [...userMsgs, ...formattedThoughts].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+            }
+            return prev;
+          });
+        }
+      } catch (err) {
+        console.error("Sync Error:", err);
+      }
+    };
+
+    const interval = setInterval(fetchThoughts, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }

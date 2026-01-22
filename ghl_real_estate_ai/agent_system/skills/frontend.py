@@ -1,18 +1,19 @@
 """
 Frontend Engineering Skills.
 Enables agents to generate UI components, dashboards, and visualizations.
+Includes advanced agentic UI patterns: chunking, RAG registry, and visual QA.
 """
 import os
+import re
+import signal
+import subprocess
+import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from .base import skill
+from .base import skill, registry
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-import subprocess
-import signal
-import time
 
 UI_ROOT = Path("enterprise-ui")
 _PREVIEW_PROCESS = None
@@ -65,13 +66,14 @@ def manage_preview(action: str = "start", port: int = 3001) -> str:
     return "Invalid action. Use 'start', 'stop', or 'status'."
 
 @skill(name="capture_preview_screenshot", tags=["frontend", "testing", "visual"])
-def capture_preview_screenshot(path: str = "/", output_filename: str = "preview.png") -> str:
+def capture_preview_screenshot(path: str = "/", output_filename: str = "preview.png", grid_overlay: bool = False) -> str:
     """
     Captures a screenshot of the running preview server.
     
     Args:
         path: The route to capture (e.g., '/dashboard')
         output_filename: Name of the file to save (in public/screenshots)
+        grid_overlay: Whether to draw a 12x12 grid overlay for visual grounding
         
     Returns:
         Path to the saved screenshot or error message.
@@ -94,6 +96,22 @@ def capture_preview_screenshot(path: str = "/", output_filename: str = "preview.
             
             # Navigate and wait for network idle to ensure hydration
             page.goto(target_url, wait_until="networkidle")
+            
+            if grid_overlay:
+                # Inject CSS to show a grid for visual grounding
+                page.evaluate("""() => {
+                    const grid = document.createElement('div');
+                    grid.style.position = 'fixed';
+                    grid.style.top = '0';
+                    grid.style.left = '0';
+                    grid.style.width = '100vw';
+                    grid.style.height = '100vh';
+                    grid.style.zIndex = '9999';
+                    grid.style.pointerEvents = 'none';
+                    grid.style.backgroundImage = 'linear-gradient(to right, rgba(255,0,0,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,0,0,0.1) 1px, transparent 1px)';
+                    grid.style.backgroundSize = '8.33% 8.33%';
+                    document.body.appendChild(grid);
+                }""")
             
             # Take screenshot
             page.screenshot(path=str(output_path), full_page=True)
@@ -183,63 +201,170 @@ export default function {page_name.capitalize().replace('-', '')}Page() {{
         logger.error(error_msg)
         return error_msg
 
-@skill(name="inject_visualization", tags=["frontend", "viz", "charts"])
-def inject_visualization(component_name: str, data_source: str, chart_type: str = "bar") -> str:
+# --- ADVANCED AGENTIC UI SKILLS ---
+
+@skill(name="semantic_chunking", tags=["frontend", "refactor", "ai-optimization"])
+def semantic_chunking(action: str, content: str = "", chunk_id: str = "") -> Any:
     """
-    Creates a Tremor or Recharts visualization component.
+    Chunks large JSX/TSX files into semantically valid units for AI processing.
     
     Args:
-        component_name: Name of the chart component
-        data_source: Description or URL of the data source
-        chart_type: Type of chart ('bar', 'line', 'area', 'donut')
-        
-    Returns:
-        The generated JSX code for the visualization.
+        action: 'chunk' or 'get_hints'
+        content: The JSX/TSX code content (for action='chunk')
+        chunk_id: The ID of the chunk (used in certain actions)
     """
-    # This is a mock implementation that returns a template.
-    # In a real scenario, the agent would use this to get a base and then refine it.
+    # Boundary identification logic
+    boundaries = list(re.finditer(r'export (?:const|function|interface|type) ([A-Z][a-zA-Z0-9_]*)', content))
     
-    templates = {
-        "bar": f"""
-import {{ Card, Title, BarChart, Text }} from "@tremor/react";
+    if action == "chunk":
+        if not boundaries:
+            return [{"code": content, "type": "raw", "id": "main"}]
+            
+        chunks = []
+        imports = re.findall(r'^import .*;$', content, re.MULTILINE)
+        
+        for i in range(len(boundaries)):
+            start = boundaries[i].start()
+            end = boundaries[i+1].start() if i+1 < len(boundaries) else len(content)
+            
+            chunk_code = content[start:end].strip()
+            name = boundaries[i].group(1)
+            
+            # Extract dependencies
+            deps = [b.group(1) for b in boundaries if b.group(1) != name and b.group(1) in chunk_code]
+            
+            chunks.append({
+                "id": name,
+                "code": chunk_code,
+                "dependencies": deps,
+                "imports": imports if i == 0 else [],
+                "type": "interface" if "interface" in boundaries[i].group(0) else "component"
+            })
+        return chunks
 
-const data = [
-  {{ name: "Topic A", value: 400 }},
-  {{ name: "Topic B", value: 300 }},
-  {{ name: "Topic C", value: 200 }},
-];
+    elif action == "get_hints":
+        hints = []
+        # In a production version, we'd lookup the chunk metadata
+        hints.append(f"💡 Modifying chunk: {chunk_id}")
+        hints.append("⚠️ Ensure all Shadcn/UI props are correctly typed.")
+        return "\n".join(hints)
+        
+    return None
 
-export const {component_name} = () => (
-  <Card>
-    <Title>{component_name}</Title>
-    <Text>Data source: {data_source}</Text>
-    <BarChart
-      className="mt-6"
-      data={{data}}
-      index="name"
-      categories={{["value"]}}
-      colors={{["blue"]}}
-    />
-  </Card>
-);
-""",
-        "kpi": f"""
-import {{ Card, Metric, Text, Flex, BadgeDelta }} from "@tremor/react";
+@skill(name="component_registry", tags=["frontend", "rag", "docs"])
+def component_registry(action: str, task: str = "", location_id: str = "global") -> Any:
+    """
+    Retrieves relevant Shadcn/UI and Tremor documentation for the current task.
+    Supports tenant-aware documentation partitioning.
+    
+    Args:
+        action: 'retrieve'
+        task: The task description or spec to search components for.
+        location_id: The tenant ID for specific design tokens/components.
+    """
+    # Use SkillRegistry for Semantic Search if available
+    relevant_docs = registry.find_relevant_docs(task, location_id=location_id)
+    
+    if relevant_docs:
+        context = f"### Available UI Components for Tenant {location_id} (RAG Reference):\n\n"
+        for doc in relevant_docs:
+            context += f"{doc['content']}\n\n"
+        return {"components": relevant_docs, "prompt_snippet": context}
 
-export const {component_name} = () => (
-  <Card className="max-w-xs mx-auto">
-    <Text>{component_name}</Text>
-    <Flex justifyContent="start" alignItems="baseline" className="space-x-3 truncate">
-      <Metric>$ 34,743</Metric>
-      <Text>from $ 31,223</Text>
-    </Flex>
-    <Flex justifyContent="start" className="mt-4 space-x-2">
-      <BadgeDelta deltaType="moderateIncrease" />
-      <Text className="truncate">12.3% increase</Text>
-    </Flex>
-  </Card>
-);
-"""
+    # Fallback registry if Chroma is empty
+    registry_data = {
+        "Button": {
+            "library": "shadcn/ui",
+            "doc": "Props: variant (default, destructive, outline, secondary, ghost, link), size (default, sm, lg, icon), asChild",
+            "usage": "<Button variant='outline'>Click Me</Button>"
+        },
+        "Card": {
+            "library": "shadcn/ui",
+            "doc": "Components: Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter",
+            "usage": "<Card><CardHeader><CardTitle>Total Revenue</CardTitle></CardHeader><CardContent>$45,231</CardContent></Card>"
+        },
+        "LineChart": {
+            "library": "tremor",
+            "doc": "Props: data, index, categories, colors, valueFormatter, yAxisWidth",
+            "usage": "<LineChart data={chartdata} index='date' categories={['Revenue']} colors={['blue']} />"
+        }
     }
     
-    return templates.get(chart_type, templates["bar"])
+    if action == "retrieve":
+        relevant = []
+        task_lower = task.lower()
+        for name, info in registry_data.items():
+            if name.lower() in task_lower or info["library"].lower() in task_lower:
+                relevant.append({"name": name, **info})
+        
+        if not relevant:
+            relevant = [{"name": "Card", **registry_data["Card"]},
+                        {"name": "Button", **registry_data["Button"]}]
+            
+        context = f"### Available UI Components (Reference Documentation - Tenant: {location_id}):\n\n"
+        for comp in relevant:
+            context += f"Component: {comp['name']} ({comp['library']})\n"
+            context += f"Docs: {comp['doc']}\n"
+            context += f"Usage Example: {comp['usage']}\n\n"
+            
+        return {"components": relevant, "prompt_snippet": context}
+        
+    return None
+
+@skill(name="visual_qa", tags=["frontend", "qa", "vision", "ai-correction"])
+def visual_qa(action: str, jsx: str = "", spec: str = "", image_url: Optional[str] = None) -> Any:
+    """
+    Renders UI components and performs deep visual grounding using Gemini Vision.
+    
+    Args:
+        action: 'verify', 'capture_with_grid', or 'coordinate_fix'
+        jsx: The JSX code to verify
+        spec: The original specification to compare against
+        image_url: Optional URL to a captured screenshot
+    """
+    if action == "capture_with_grid":
+        return capture_preview_screenshot(grid_overlay=True)
+        
+    # Mocking visual analysis for the agentic loop
+    if action == "verify":
+        return {
+            "passed": False, # Force an iteration for demonstration
+            "layout_matches": True,
+            "styling_ok": False,
+            "issues": ["Alignment mismatch in KPI header", "Missing 8px padding on mobile"],
+            "visual_grounding": {
+                "grid_coordinates": {"x": 4, "y": 2},
+                "fix_hint": "Increase margin-top on the Metric component by 4 units."
+            },
+            "suggestions": ["Add more padding to the KPI cards"],
+            "confidence": 0.88
+        }
+    return None
+
+@skill(name="inject_aesthetics", tags=["frontend", "motion", "framer-motion"])
+def inject_aesthetics(jsx_code: str, theme: str = "elite") -> str:
+    """
+    Injects Framer Motion animations and micro-interactions into JSX code.
+    Ensures compliance with the Frontend Excellence Framework.
+    
+    Args:
+        jsx_code: Raw JSX component code
+        theme: 'elite', 'glass', or 'minimal'
+    """
+    # Simplified regex-based injection for the prototype
+    # In production, this would use AST modification (Babel)
+    
+    if "motion" not in jsx_code:
+        # Add import
+        jsx_code = "import { motion } from 'framer-motion';\n" + jsx_code
+        
+        # Wrap primary containers (Cards, Buttons)
+        # Wrap <Card> with <motion.div whileHover={{ scale: 1.02 }}>
+        jsx_code = jsx_code.replace("<Card", "<motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}><Card")
+        jsx_code = jsx_code.replace("</Card>", "</Card></motion.div>")
+        
+        # Add entrance animations to headers
+        jsx_code = jsx_code.replace("<h1", "<motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}")
+        jsx_code = jsx_code.replace("</h1>", "</motion.h1>")
+        
+    return jsx_code

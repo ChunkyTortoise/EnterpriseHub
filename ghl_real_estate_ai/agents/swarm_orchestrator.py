@@ -78,7 +78,6 @@ from ghl_real_estate_ai.agent_system.skills.base import registry as skill_regist
 import ghl_real_estate_ai.agent_system.skills.frontend
 import ghl_real_estate_ai.agent_system.skills.codebase
 import ghl_real_estate_ai.agent_system.skills.ghl_bridge
-import ghl_real_estate_ai.agent_system.skills.semantic_chunking
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.agents.traceability import trace_agent_action
 from ghl_real_estate_ai.agent_system.hooks.security import SecuritySentry
@@ -125,7 +124,7 @@ class RecoveryOrchestrator:
         
         response = await self.llm.agenerate(
             prompt=prompt,
-            model="gemini-2.0-pro-exp-02-05",
+            model="gemini-2.0-flash",
             temperature=0.1
         )
         recovery_plan = response.content.strip()
@@ -203,7 +202,7 @@ class ConflictResolver:
         
         response = await self.llm.agenerate(
             prompt=prompt,
-            model="gemini-2.0-pro-exp-02-05",
+            model="gemini-2.0-flash",
             temperature=0.1
         )
         return response.content.strip()
@@ -256,7 +255,7 @@ class SwarmOrchestrator:
         
         response = await self.llm.agenerate(
             prompt=reflection_prompt,
-            model="gemini-2.0-pro-exp-02-05", # Always use high-reasoning model for reflection
+            model="gemini-2.0-flash", # Always use high-reasoning model for reflection
             temperature=0.1
         )
         
@@ -289,7 +288,7 @@ class SwarmOrchestrator:
         task.started_at = datetime.now()
         
         # Dynamic Model Selection
-        model_name = "gemini-2.0-pro-exp-02-05" if complexity == "high" else self.llm.model
+        model_name = "gemini-2.0-flash" if complexity == "high" else self.llm.model
         
         context = self.blackboard.get_full_context()
         skills = skill_registry.find_relevant_skills(task.description)

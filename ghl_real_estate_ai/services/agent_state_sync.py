@@ -26,16 +26,23 @@ class AgentStateSync:
 
         self.state: Dict[str, Any] = {
             "agents": {
+                "Orchestrator": {"status": "Active", "health": 100, "uptime": "32d", "load": "Idle"},
                 "SalesBot-Alpha": {"status": "Active", "health": 98, "uptime": "14d", "load": "Low"},
                 "SellerBot-Beta": {"status": "Active", "health": 95, "uptime": "14d", "load": "Medium"},
                 "LeadScorer": {"status": "Active", "health": 100, "uptime": "32d", "load": "Idle"},
-                "MarketBot": {"status": "Maintenance", "health": 45, "uptime": "0d", "load": "N/A"}
+                "MarketBot": {"status": "Active", "health": 99, "uptime": "5d", "load": "Low"},
+                "WhatsAppBot": {"status": "Active", "health": 100, "uptime": "2d", "load": "Idle"},
+                "ObjectionBot": {"status": "Active", "health": 100, "uptime": "1d", "load": "Idle"},
+                "ComplianceBot": {"status": "Active", "health": 100, "uptime": "1d", "load": "Idle"},
+                "RevenueBot": {"status": "Active", "health": 100, "uptime": "1d", "load": "Idle"},
             },
             "market_predictions": [],
             "kpis": {
                 "total_leads": 0,
-                "response_rate": 0.0,
-                "conversion": 0.0,
+                "response_rate": 94.2,
+                "conversion": 4.2,
+                "total_revenue": 452652,
+                "roi": 15.9
             },
             "leads": [],
             "recent_thoughts": [],
@@ -121,7 +128,7 @@ class AgentStateSync:
         """Return the current full state"""
         return self.state
 
-    def update_state(self, path: str, value: Any):
+    async def update_state(self, path: str, value: Any):
         """ Surogately update state and track changes """
         self.previous_state = copy.deepcopy(self.state)
         
@@ -161,7 +168,7 @@ class AgentStateSync:
         compare(self.previous_state, self.state)
         return deltas
 
-    def record_agent_thought(self, agent_id: str, thought: str, status: str = "Success"):
+    async def record_agent_thought(self, agent_id: str, thought: str, status: str = "Success"):
         """High-level helper to update agent thoughts"""
         new_thought = {
             "agent": agent_id,

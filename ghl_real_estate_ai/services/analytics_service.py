@@ -228,6 +228,137 @@ class AnalyticsService:
 
         return summary
 
+    async def get_jorge_bot_metrics(self, location_id: str = "all", days: int = 7) -> Dict[str, Any]:
+        """
+        Specialized retrieval for Jorge's Lead and Seller bot metrics.
+        Aggregates across multiple locations if location_id is 'all'.
+        """
+        from datetime import timedelta
+        
+        locations = []
+        if location_id == "all":
+            if self.analytics_dir.exists():
+                locations = [d.name for d in self.analytics_dir.iterdir() if d.is_dir()]
+        else:
+            locations = [location_id]
+            
+        aggregated = {
+            "seller": {
+                "total_interactions": 0,
+                "vague_streaks": 0,
+                "take_away_closes": 0,
+                "handoffs": 0,
+                "avg_quality": 0.0,
+                "temp_breakdown": {"hot": 0, "warm": 0, "cold": 0}
+            },
+            "lead": {
+                "total_scored": 0,
+                "avg_score": 0.0,
+                "immediate_priority": 0,
+                "high_priority": 0
+            },
+            "locations_active": len(locations)
+        }
+        
+        quality_sum = 0.0
+        quality_count = 0
+        score_sum = 0.0
+        score_count = 0
+        
+        # Look back over specified days
+        for i in range(days):
+            date_str = (datetime.utcnow() - timedelta(days=i)).strftime("%Y-%m-%d")
+            
+            for loc in locations:
+                events = await self.get_events(loc, date_str)
+                
+                for event in events:
+                    etype = event.get("event_type")
+                    data = event.get("data", {})
+                    
+                    if etype == "jorge_seller_interaction":
+                        aggregated["seller"]["total_interactions"] += 1
+                        if data.get("vague_streak", 0) > 0:
+                            aggregated["seller"]["vague_streaks"] += 1
+                        if data.get("response_type") == "take_away_close":
+                            aggregated["seller"]["take_away_closes"] += 1
+                        if data.get("response_type") == "handoff":
+                            aggregated["seller"]["handoffs"] += 1
+                        
+                        temp = data.get("temperature", "cold")
+                        aggregated["seller"]["temp_breakdown"][temp] = aggregated["seller"]["temp_breakdown"].get(temp, 0) + 1
+                        
+                        quality_sum += data.get("response_quality", 0.0)
+                        quality_count += 1
+                        
+                    elif etype == "lead_scored":
+                        aggregated["lead"]["total_scored"] += 1
+                        score = data.get("score", 0)
+                        score_sum += score
+                        score_count += 1
+                        
+                        # Priority logic (mocked logic if not in data)
+                        if score >= 90:
+                            aggregated["lead"]["immediate_priority"] += 1
+                        elif score >= 75:
+                            aggregated["lead"]["high_priority"] += 1
+                            
+        if quality_count > 0:
+            aggregated["seller"]["avg_quality"] = quality_sum / quality_count
+        if score_count > 0:
+            aggregated["lead"]["avg_score"] = score_sum / score_count
+            
+        return aggregated
+
+    async def get_seller_friction_metrics(self, days: int = 30) -> Dict[str, Any]:
+        """
+        Analyzes which of Jorge's 4 questions cause the most drop-offs.
+        """
+        from datetime import timedelta
+        
+        # question numbers 1-4
+        friction = {
+            1: {"answered": 0, "vague": 0, "dropoff": 0, "name": "Motivation"},
+            2: {"answered": 0, "vague": 0, "dropoff": 0, "name": "Timeline"},
+            3: {"answered": 0, "vague": 0, "dropoff": 0, "name": "Condition"},
+            4: {"answered": 0, "vague": 0, "dropoff": 0, "name": "Price"}
+        }
+        
+        locations = []
+        if self.analytics_dir.exists():
+            locations = [d.name for d in self.analytics_dir.iterdir() if d.is_dir()]
+            
+        for i in range(days):
+            date_str = (datetime.utcnow() - timedelta(days=i)).strftime("%Y-%m-%d")
+            for loc in locations:
+                events = await self.get_events(loc, date_str, event_type="jorge_seller_interaction")
+                
+                # Group by contact to find max question reached
+                contact_progress = {}
+                for event in events:
+                    cid = event.get("contact_id")
+                    q_num = event.get("data", {}).get("questions_answered", 0)
+                    is_vague = event.get("data", {}).get("vague_streak", 0) > 0
+                    
+                    if cid not in contact_progress or q_num > contact_progress[cid]["max_q"]:
+                        contact_progress[cid] = {"max_q": q_num, "vague_at": set()}
+                    if is_vague:
+                        contact_progress[cid]["vague_at"].add(q_num)
+                
+                for cid, info in contact_progress.items():
+                    max_q = info["max_q"]
+                    for q in range(1, max_q + 1):
+                        if q in friction:
+                            friction[q]["answered"] += 1
+                            if q in info["vague_at"]:
+                                friction[q]["vague"] += 1
+                    
+                    # If they didn't reach question 4, they dropped off after max_q
+                    if max_q < 4 and (max_q + 1) in friction:
+                        friction[max_q + 1]["dropoff"] += 1
+                        
+        return friction
+
     async def get_cached_daily_summary(
         self, location_id: str, date_str: Optional[str] = None, force_refresh: bool = False
     ) -> Dict[str, Any]:
@@ -253,3 +384,52 @@ class AnalyticsService:
         await cache.set(cache_key, summary, ttl=300)
         
         return summary
+
+    async def get_llm_roi_analysis(self, location_id: str, days: int = 30) -> Dict[str, Any]:
+        """
+        Calculate the ROI of AI operations, including cost savings from caching and automation.
+        """
+        from datetime import timedelta
+        
+        total_cost = 0.0
+        total_saved_cost = 0.0
+        total_tokens = 0
+        cache_hits = 0
+        total_requests = 0
+        
+        for i in range(days):
+            date_str = (datetime.utcnow() - timedelta(days=i)).strftime("%Y-%m-%d")
+            events = await self.get_events(location_id, date_str, event_type="llm_usage")
+            
+            for event in events:
+                data = event.get("data", {})
+                total_requests += 1
+                total_cost += data.get("cost", 0.0)
+                total_saved_cost += data.get("saved_cost", 0.0)
+                total_tokens += data.get("total_tokens", 0)
+                if data.get("cached"):
+                    cache_hits += 1
+        
+        # Estimated human hours saved (conservative estimate: 1 request saves 2 minutes of manual work)
+        hours_saved = (total_requests * 2) / 60
+        human_labor_cost_per_hour = 25.0 # Average real estate assistant rate
+        labor_savings = hours_saved * human_labor_cost_per_hour
+        
+        total_value_generated = labor_savings + total_saved_cost
+        net_roi = total_value_generated - total_cost
+        roi_percentage = (net_roi / total_cost * 100) if total_cost > 0 else 0
+        
+        return {
+            "location_id": location_id,
+            "period_days": days,
+            "total_requests": total_requests,
+            "total_tokens": total_tokens,
+            "actual_cost": round(total_cost, 4),
+            "saved_via_caching": round(total_saved_cost, 4),
+            "cache_hit_rate": round(cache_hits / total_requests, 2) if total_requests > 0 else 0,
+            "estimated_hours_saved": round(hours_saved, 1),
+            "labor_cost_savings": round(labor_savings, 2),
+            "total_value_generated": round(total_value_generated, 2),
+            "net_roi": round(net_roi, 2),
+            "roi_percentage": round(roi_percentage, 1)
+        }

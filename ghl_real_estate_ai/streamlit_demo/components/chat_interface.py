@@ -301,6 +301,7 @@ def render_chat_messages():
             <div class="chat-bubble {bubble_class}">
                 {msg['content']}
 
+                {render_tool_executions(msg) if is_ai and msg.get('tool_executions') else ''}
                 {render_reasoning_section(msg) if is_ai and msg.get('reasoning') else ''}
                 {render_sources_section(msg) if is_ai and msg.get('sources') else ''}
                 {render_actions_section(msg) if is_ai and msg.get('recommended_actions') else ''}
@@ -309,6 +310,48 @@ def render_chat_messages():
         """, unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
+
+def render_tool_executions(msg: Dict[str, Any]) -> str:
+    """Render the tool orchestration process (Phase 2 UI Bridge)"""
+    executions = msg.get('tool_executions', [])
+    if not executions:
+        return ""
+
+    tools_html = ""
+    for step in executions:
+        if "tool_calls" in step:
+            for tc in step["tool_calls"]:
+                tools_html += f"""
+                <div style="margin: 8px 0; padding: 8px; background: rgba(99, 102, 241, 0.1); border-radius: 6px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    <div style="font-size: 0.7rem; color: #6366F1; font-weight: bold; text-transform: uppercase;">🛠️ Calling Tool</div>
+                    <div style="font-family: 'Space Mono', monospace; font-size: 0.8rem; margin: 4px 0;">{tc['name']}({json.dumps(tc['args'])})</div>
+                </div>
+                """
+        elif "content" in step and "Tool Result" in str(step["content"]):
+            # Handle old format if present, but new format is list of dicts with type: tool_result
+            pass
+        elif isinstance(step.get("content"), list):
+            for block in step["content"]:
+                if isinstance(block, dict) and block.get("type") == "tool_result":
+                    # Shorten long results
+                    res = str(block.get("content", ""))
+                    if len(res) > 200:
+                        res = res[:197] + "..."
+                    
+                    tools_html += f"""
+                    <div style="margin: 8px 0; padding: 8px; background: rgba(16, 185, 129, 0.05); border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.1);">
+                        <div style="font-size: 0.7rem; color: #10b981; font-weight: bold; text-transform: uppercase;">📥 Result</div>
+                        <div style="font-family: 'Space Mono', monospace; font-size: 0.75rem; margin: 4px 0; opacity: 0.8;">{res}</div>
+                    </div>
+                    """
+
+    return f"""
+    <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
+        <div style="font-size: 0.65rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 700;">Tool Orchestration Log</div>
+        {tools_html}
+    </div>
+    """
 
 
 def render_reasoning_section(msg: Dict[str, Any]) -> str:
@@ -397,6 +440,7 @@ def handle_chat_input(api_base_url: str, contact_id: str, selected_lead: str):
                         "reasoning": response.get('reasoning'),
                         "sources": response.get('sources', []),
                         "recommended_actions": response.get('recommended_actions', []),
+                        "tool_executions": response.get('tool_executions', []),
                         "timestamp": datetime.now().strftime("%H:%M"),
                         "response_time_ms": response.get('response_time_ms', 0)
                     }

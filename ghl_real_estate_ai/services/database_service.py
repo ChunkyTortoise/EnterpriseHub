@@ -235,9 +235,20 @@ class DatabaseService:
                 ("008_create_billing_tables", self._migration_008_create_billing_tables),
                 ("009_create_lead_activity_tables", self._migration_009_create_lead_activity_tables),
                 ("010_create_lead_journey_state", self._migration_010_create_lead_journey_state),
-                ("011_create_model_outcomes", self._migration_011_create_model_outcomes)
+                ("011_create_model_outcomes", self._migration_011_create_model_outcomes),
+                ("012_create_users_table", self._migration_012_create_users_table)
             ]
-...
+            
+            # Check and apply migrations
+            applied = await conn.fetch("SELECT version FROM migrations")
+            applied_versions = {row["version"] for row in applied}
+            
+            for version, migration_func in migrations:
+                if version not in applied_versions:
+                    logger.info(f"Applying migration: {version}")
+                    await migration_func(conn)
+                    await conn.execute("INSERT INTO migrations (version) VALUES ($1)", version)
+
     async def _migration_011_create_model_outcomes(self, conn: Connection) -> None:
         """Create table for feedback loop retraining data."""
         await conn.execute("""
@@ -249,19 +260,31 @@ class DatabaseService:
                 recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
         """)
-            
-            # Check and apply migrations
-            for version, migration_func in migrations:
-                exists = await conn.fetchval(
-                    "SELECT 1 FROM migrations WHERE version = $1", version
-                )
-                
-                if not exists:
-                    logger.info(f"Applying migration: {version}")
-                    await migration_func(conn)
-                    await conn.execute(
-                        "INSERT INTO migrations (version) VALUES ($1)", version
-                    )
+
+    async def _migration_012_create_users_table(self, conn: Connection) -> None:
+        """Create users table for authentication and RBAC."""
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                username VARCHAR(100) UNIQUE NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                full_name VARCHAR(255),
+                roles TEXT[] DEFAULT '{user}',
+                provider VARCHAR(50) DEFAULT 'local',
+                is_active BOOLEAN DEFAULT TRUE,
+                is_verified BOOLEAN DEFAULT FALSE,
+                is_admin BOOLEAN DEFAULT FALSE,
+                mfa_enabled BOOLEAN DEFAULT FALSE,
+                mfa_secret VARCHAR(100),
+                failed_attempts INTEGER DEFAULT 0,
+                locked_until TIMESTAMP WITH TIME ZONE,
+                password_changed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                last_login TIMESTAMP WITH TIME ZONE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
     
     async def _migration_001_create_leads_table(self, conn: Connection) -> None:
         """Create leads table."""
@@ -1473,6 +1496,40 @@ class DatabaseService:
             }
 
     # ============================================================================
+    # Lead Activity Tracking
+    # ============================================================================
+
+    async def log_property_search(self, lead_id: str, search_query: Dict[str, Any], results_count: int = 0) -> str:
+        """Log a property search event."""
+        async with self.transaction() as conn:
+            search_id = str(uuid.uuid4())
+            await conn.execute("""
+                INSERT INTO property_searches (id, lead_id, search_query, results_count)
+                VALUES ($1, $2, $3, $4)
+            """, search_id, uuid.UUID(lead_id), json.dumps(search_query), results_count)
+            return search_id
+
+    async def log_pricing_tool_use(self, lead_id: str, property_details: Dict[str, Any], valuation_result: Optional[Dict[str, Any]] = None) -> str:
+        """Log usage of the pricing tool."""
+        async with self.transaction() as conn:
+            usage_id = str(uuid.uuid4())
+            await conn.execute("""
+                INSERT INTO pricing_tool_uses (id, lead_id, property_details, valuation_result)
+                VALUES ($1, $2, $3, $4)
+            """, usage_id, uuid.UUID(lead_id), json.dumps(property_details), json.dumps(valuation_result) if valuation_result else None)
+            return usage_id
+
+    async def log_agent_inquiry(self, lead_id: str, agent_id: Optional[str], inquiry_text: str) -> str:
+        """Log a direct agent inquiry."""
+        async with self.transaction() as conn:
+            inquiry_id = str(uuid.uuid4())
+            await conn.execute("""
+                INSERT INTO agent_inquiries (id, lead_id, agent_id, inquiry_text)
+                VALUES ($1, $2, $3, $4)
+            """, inquiry_id, uuid.UUID(lead_id), uuid.UUID(agent_id) if agent_id else None, inquiry_text)
+            return inquiry_id
+
+    # ============================================================================
     # Health Checks & Monitoring
     # ============================================================================
     
@@ -1635,6 +1692,24 @@ async def log_communication(comm_data: Dict[str, Any]) -> str:
     """Convenience function to log communication."""
     db = await get_database()
     return await db.log_communication(comm_data)
+
+
+async def log_property_search(lead_id: str, search_query: Dict[str, Any], results_count: int = 0) -> str:
+    """Convenience function to log property search."""
+    db = await get_database()
+    return await db.log_property_search(lead_id, search_query, results_count)
+
+
+async def log_pricing_tool_use(lead_id: str, property_details: Dict[str, Any], valuation_result: Optional[Dict[str, Any]] = None) -> str:
+    """Convenience function to log pricing tool use."""
+    db = await get_database()
+    return await db.log_pricing_tool_use(lead_id, property_details, valuation_result)
+
+
+async def log_agent_inquiry(lead_id: str, agent_id: Optional[str], inquiry_text: str) -> str:
+    """Convenience function to log agent inquiry."""
+    db = await get_database()
+    return await db.log_agent_inquiry(lead_id, agent_id, inquiry_text)
 
 
 # ============================================================================

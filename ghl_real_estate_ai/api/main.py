@@ -5,7 +5,7 @@ Entry point for the webhook server that processes GoHighLevel messages
 and returns AI-generated responses.
 """
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, APIRouter, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -34,6 +34,7 @@ from ghl_real_estate_ai.api.routes import (
     auth,
     lead_intelligence,
     agent_sync,
+    agent_ui,
     reports,
 )
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
@@ -375,6 +376,7 @@ app.include_router(crm.router, prefix="/api")
 app.include_router(voice.router, prefix="/api")
 app.include_router(lead_intelligence.router, prefix="/api")
 app.include_router(agent_sync.router, prefix="/api")
+app.include_router(agent_ui.router, prefix="/api/agent-ui", tags=["Agent UI"])
 app.include_router(predictive_analytics.router)  # Predictive Analytics ML endpoints
 app.include_router(pricing_optimization.router)  # Pricing & ROI endpoints
 app.include_router(golden_lead_detection.router)  # Golden Lead Detection endpoints

@@ -114,6 +114,19 @@ async def get_dashboard_data(location_id: str, force_refresh: bool = False):
 
 st.title(f"🧠 Jorge AI Brain: {selected_location}")
 
+# --- ELITE COMMAND CENTER LAUNCHER ---
+st.markdown("""
+<div style="background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%); padding: 2rem; border-radius: 16px; margin-bottom: 2rem; text-align: center; box-shadow: 0 10px 30px rgba(30, 136, 229, 0.3);">
+    <h2 style="color: white; margin: 0;">🚀 ELITE PHASE 4.0 ACTIVE</h2>
+    <p style="color: rgba(255,255,255,0.8); margin: 0.5rem 0 1.5rem 0;">Experience the full Lead & Seller Command interface with Obsidian Styling</p>
+</div>
+""", unsafe_allow_html=True)
+
+if st.button("🛰️ LAUNCH UNIFIED BOT COMMAND CENTER", type="primary", use_container_width=True):
+    st.info("To launch the full Elite Command Center, run: streamlit run ghl_real_estate_ai/streamlit_demo/jorge_bot_command_center.py")
+    # In a real environment, we could use a link or redirect if hosted
+    st.markdown("[Open Command Center (Local Connection)](http://localhost:8501)")
+
 col1, col2 = st.columns(2)
 
 with col1:

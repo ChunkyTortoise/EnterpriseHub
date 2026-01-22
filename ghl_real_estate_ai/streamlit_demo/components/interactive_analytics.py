@@ -18,9 +18,9 @@ from datetime import datetime, timedelta
 import time
 from typing import Dict, List, Any, Optional, Tuple
 
-def render_interactive_analytics_css():
-    """Inject custom CSS for interactive analytics - Obsidian Command Edition"""
-    st.markdown("\n    <style>\n    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap');\n\n    /* Interactive Analytics Styles */\n    .analytics-container {\n        background: rgba(5, 7, 10, 0.8) !important;\n        border-radius: 20px;\n        padding: 2.5rem;\n        margin: 1rem 0;\n        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);\n        border: 1px solid rgba(255, 255, 255, 0.05);\n        position: relative;\n        overflow: hidden;\n        backdrop-filter: blur(20px);\n    }\n\n    .analytics-container::before {\n        content: '';\n        position: absolute;\n        top: 0;\n        left: 0;\n        right: 0;\n        bottom: 0;\n        background: radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);\n        pointer-events: none;\n    }\n\n    .analytics-header {\n        color: white;\n        text-align: left;\n        margin-bottom: 3rem;\n        position: relative;\n        z-index: 1;\n        border-bottom: 1px solid rgba(255,255,255,0.05);\n        padding-bottom: 2rem;\n    }\n\n    .analytics-title {\n        font-family: 'Space Grotesk', sans-serif !important;\n        font-size: 3rem;\n        font-weight: 700;\n        margin: 0;\n        color: #FFFFFF;\n        letter-spacing: -0.04em;\n        text-transform: uppercase;\n    }\n\n    .analytics-subtitle {\n        font-family: 'Inter', sans-serif;\n        font-size: 1.1rem;\n        margin: 0.75rem 0 0 0;\n        color: #8B949E;\n        font-weight: 500;\n    }\n\n    .chart-container {\n        background: rgba(22, 27, 34, 0.7) !important;\n        border-radius: 12px;\n        padding: 1.75rem;\n        margin: 1rem 0;\n        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);\n        backdrop-filter: blur(12px);\n        border: 1px solid rgba(255, 255, 255, 0.05);\n        border-top: 1px solid rgba(255, 255, 255, 0.1);\n        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n    }\n\n    .chart-container:hover {\n        transform: translateY(-5px);\n        border-color: rgba(99, 102, 241, 0.3);\n        box-shadow: 0 12px 48px rgba(99, 102, 241, 0.2);\n    }\n\n    .chart-title {\n        font-family: 'Space Grotesk', sans-serif !important;\n        font-size: 1.25rem;\n        font-weight: 700;\n        color: #FFFFFF;\n        margin: 0 0 1.5rem 0;\n        padding-bottom: 0.75rem;\n        border-bottom: 1px solid rgba(255,255,255,0.05);\n        text-transform: uppercase;\n        letter-spacing: 0.05em;\n    }\n\n    .metric-grid {\n        display: grid;\n        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));\n        gap: 1.25rem;\n        margin: 2rem 0;\n    }\n\n    .metric-card {\n        background: rgba(22, 27, 34, 0.8);\n        border-radius: 12px;\n        padding: 1.5rem;\n        text-align: left;\n        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);\n        border: 1px solid rgba(255, 255, 255, 0.05);\n        border-left: 4px solid;\n        transition: all 0.3s ease;\n    }\n\n    .metric-card:hover {\n        transform: translateY(-4px);\n        border-color: rgba(255,255,255,0.1);\n        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);\n    }\n\n    .metric-card.positive { border-left-color: #10b981; }\n    .metric-card.negative { border-left-color: #ef4444; }\n    .metric-card.neutral { border-left-color: #6366F1; }\n\n    .metric-value {\n        font-family: 'Space Grotesk', sans-serif !important;\n        font-size: 2rem;\n        font-weight: 700;\n        color: #FFFFFF;\n        margin: 0.5rem 0;\n        text-shadow: 0 0 10px rgba(255,255,255,0.1);\n    }\n\n    .metric-label {\n        font-family: 'Space Grotesk', sans-serif !important;\n        font-size: 0.75rem;\n        color: #8B949E;\n        font-weight: 700;\n        text-transform: uppercase;\n        letter-spacing: 0.1em;\n    }\n\n    .metric-change {\n        font-family: 'Inter', sans-serif;\n        font-size: 0.8rem;\n        font-weight: 700;\n        margin-top: 0.5rem;\n        display: flex;\n        align-items: center;\n        gap: 4px;\n    }\n\n    .filter-panel {\n        background: rgba(255, 255, 255, 0.03);\n        border-radius: 12px;\n        padding: 1.5rem;\n        margin-bottom: 2.5rem;\n        backdrop-filter: blur(10px);\n        border: 1px solid rgba(255, 255, 255, 0.05);\n    }\n\n    .drill-down-nav {\n        background: rgba(99, 102, 241, 0.1);\n        border-radius: 8px;\n        padding: 0.85rem 1.25rem;\n        margin: 1rem 0;\n        display: flex;\n        align-items: center;\n        gap: 0.75rem;\n        color: #6366F1;\n        font-weight: 700;\n        font-family: 'Space Grotesk', sans-serif;\n        text-transform: uppercase;\n        letter-spacing: 0.05em;\n        font-size: 0.8rem;\n        border: 1px solid rgba(99, 102, 241, 0.2);\n    }\n\n    .chart-interactive-hint {\n        background: rgba(99, 102, 241, 0.05);\n        border-left: 3px solid #6366F1;\n        padding: 0.75rem 1rem;\n        margin: 1rem 0;\n        border-radius: 0 8px 8px 0;\n        color: #E6EDF3;\n        font-size: 0.85rem;\n        font-family: 'Inter', sans-serif;\n    }\n\n    /* Mobile Responsive */\n    @media (max-width: 768px) {\n        .analytics-container {\n            padding: 1rem;\n            margin: 0.5rem 0;\n        }\n\n        .analytics-title {\n            font-size: 1.5rem;\n        }\n\n        .chart-container {\n            padding: 1rem;\n            margin: 0.5rem 0;\n        }\n\n        .metric-grid {\n            grid-template-columns: repeat(2, 1fr);\n            gap: 0.5rem;\n        }\n\n        .metric-card {\n            padding: 1rem;\n        }\n\n        .metric-value {\n            font-size: 1.8rem;\n        }\n\n        .filter-row {\n            grid-template-columns: 1fr;\n            gap: 0.5rem;\n        }\n    }\n\n    /* Dark mode support */\n    @media (prefers-color-scheme: dark) {\n        .chart-container {\n            background: rgba(44, 62, 80, 0.95);\n            color: white;\n        }\n\n        .chart-title {\n            color: white;\n        }\n\n        .metric-card {\n            background: #34495e;\n            color: white;\n        }\n\n        .metric-value {\n            color: white;\n        }\n    }\n    </style>\n    ", unsafe_allow_html=True)
+# Import Primitive Components
+from ghl_real_estate_ai.streamlit_demo.components.primitives import render_obsidian_card, CardConfig, icon, ICONS
+from ghl_real_estate_ai.streamlit_demo.plotly_optimizer import plotly_optimizer
 
 class InteractiveAnalytics:
     """Interactive analytics component with drill-down capabilities"""
@@ -33,38 +33,41 @@ class InteractiveAnalytics:
 
     def render(self, container_key: str='interactive_analytics'):
         """Render the interactive analytics dashboard"""
-        render_interactive_analytics_css()
-        st.markdown('<div class="analytics-container">', unsafe_allow_html=True)
         self._render_header()
-        self._render_filter_panel()
-        self._render_drill_down_nav()
-        current_view = st.session_state.analytics_state['current_view']
-        if current_view == 'overview':
-            self._render_overview_dashboard()
-        elif current_view == 'conversion_funnel':
-            self._render_conversion_funnel()
-        elif current_view == 'agent_performance':
-            self._render_agent_performance()
-        elif current_view == 'source_analysis':
-            self._render_source_analysis()
-        elif current_view == 'time_trends':
-            self._render_time_trends()
-        st.markdown('</div>', unsafe_allow_html=True)
+        
+        with st.container():
+            self._render_filter_panel()
+            self._render_drill_down_nav()
+            
+            current_view = st.session_state.analytics_state['current_view']
+            if current_view == 'overview':
+                self._render_overview_dashboard()
+            elif current_view == 'conversion_funnel':
+                self._render_conversion_funnel()
+            elif current_view == 'agent_performance':
+                self._render_agent_performance()
+            elif current_view == 'source_analysis':
+                self._render_source_analysis()
+            elif current_view == 'time_trends':
+                self._render_time_trends()
 
     def _render_header(self):
-        """Render analytics header"""
-        st.markdown(f'\n        <div class="analytics-header">\n            <h1 class="analytics-title">📊 Interactive Analytics</h1>\n            <p class="analytics-subtitle">Real-time business intelligence with drill-down insights</p>\n        </div>\n        ', unsafe_allow_html=True)
+        """Render analytics header using obsidian card primitive"""
+        render_obsidian_card(
+            title="INTERACTIVE ANALYTICS",
+            content="Real-time business intelligence with multi-dimensional drill-down insights.",
+            config=CardConfig(variant='premium', padding='2rem'),
+            icon='chart-mixed'
+        )
 
     def _render_filter_panel(self):
         """Render filter controls"""
-        st.markdown('<div class="filter-panel">', unsafe_allow_html=True)
-        st.markdown('<div class="filter-row">', unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             time_range = st.selectbox('📅 Time Range', ['7d', '30d', '90d', '1y'], index=1, key='analytics_time_range')
             st.session_state.analytics_state['selected_filters']['time_range'] = time_range
         with col2:
-            agent = st.selectbox('👨\u200d💼 Agent', ['all', 'Sarah Johnson', 'Mike Chen', 'Lisa Rodriguez', 'David Kim'], index=0, key='analytics_agent')
+            agent = st.selectbox('👨‍💼 Agent', ['all', 'Sarah Johnson', 'Mike Chen', 'Lisa Rodriguez', 'David Kim'], index=0, key='analytics_agent')
             st.session_state.analytics_state['selected_filters']['agent'] = agent
         with col3:
             source = st.selectbox('📱 Source', ['all', 'Website', 'Facebook', 'Google Ads', 'Referral', 'Direct'], index=0, key='analytics_source')
@@ -72,8 +75,6 @@ class InteractiveAnalytics:
         with col4:
             status = st.selectbox('🎯 Status', ['all', 'hot', 'warm', 'cold', 'converted', 'lost'], index=0, key='analytics_status')
             st.session_state.analytics_state['selected_filters']['status'] = status
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
     def _render_drill_down_nav(self):
         """Render drill-down navigation breadcrumb"""
@@ -100,38 +101,84 @@ class InteractiveAnalytics:
 
     def _render_key_metrics(self, data: Dict[str, Any]):
         """Render key performance metrics - Obsidian Style"""
-        st.markdown('<div class="metric-grid">', unsafe_allow_html=True)
-        metrics = [{'label': 'Total Nodes', 'value': data['total_leads'], 'change': f"+{data['leads_change']}%", 'trend': 'positive' if data['leads_change'] > 0 else 'negative'}, {'label': 'Conversion Rate', 'value': f"{data['conversion_rate']:.1f}%", 'change': f"{data['conversion_change']:+.1f}%", 'trend': 'positive' if data['conversion_change'] > 0 else 'negative'}, {'label': 'Revenue Pipeline', 'value': f"${data['revenue_pipeline']:,.0f}", 'change': f"+{data['revenue_change']}%", 'trend': 'positive' if data['revenue_change'] > 0 else 'negative'}, {'label': 'Avg Latency', 'value': f"{data['avg_response_time']}m", 'change': f"{data['response_time_change']:+}m", 'trend': 'negative' if data['response_time_change'] > 0 else 'positive'}, {'label': 'Hot Signals', 'value': data['hot_leads'], 'change': f"+{data['hot_leads_change']}", 'trend': 'positive' if data['hot_leads_change'] > 0 else 'negative'}, {'label': 'Node Velocity', 'value': f"{data['agent_productivity']:.1f}", 'change': f"{data['productivity_change']:+.1f}", 'trend': 'positive' if data['productivity_change'] > 0 else 'negative'}]
-        for metric in metrics:
-            trend = metric.get('trend', 'neutral')
-            trend_icon = '📈' if trend == 'positive' else '📉'
-            trend_class = trend
-            st.markdown(f"""\n            <div class="metric-card {trend_class}">\n                <div class="metric-label">{metric['label']}</div>\n                <div class="metric-value">{metric['value']}</div>\n                <div class="metric-change {trend_class}">\n                    {trend_icon} {metric['change']}\n                </div>\n            </div>\n            """, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        metrics = [
+            {'label': 'Total Nodes', 'value': data['total_leads'], 'change': f"+{data['leads_change']}%", 'trend': 'positive', 'icon': 'users'},
+            {'label': 'Conversion Rate', 'value': f"{data['conversion_rate']:.1f}%", 'change': f"{data['conversion_change']:+.1f}%", 'trend': 'positive' if data['conversion_change'] > 0 else 'negative', 'icon': 'bullseye'},
+            {'label': 'Revenue Pipeline', 'value': f"${data['revenue_pipeline']:,.0f}", 'change': f"+{data['revenue_change']}%", 'trend': 'positive', 'icon': 'dollar-sign'},
+            {'label': 'Avg Latency', 'value': f"{data['avg_response_time']}m", 'change': f"{data['response_time_change']:+}m", 'trend': 'negative' if data['response_time_change'] > 0 else 'positive', 'icon': 'clock'},
+            {'label': 'Hot Signals', 'value': data['hot_leads'], 'change': f"+{data['hot_leads_change']}", 'trend': 'positive', 'icon': 'fire'},
+            {'label': 'Node Velocity', 'value': f"{data['agent_productivity']:.1f}", 'change': f"{data['productivity_change']:+.1f}", 'trend': 'positive', 'icon': 'bolt'}
+        ]
+        
+        cols = st.columns(3)
+        for i, metric in enumerate(metrics):
+            with cols[i % 3]:
+                trend_color = '#10b981' if metric['trend'] == 'positive' else '#ef4444'
+                render_obsidian_card(
+                    title=metric['label'],
+                    content=f"""
+                    <div style='font-size: 2rem; font-weight: 700; color: #FFFFFF; margin: 0.5rem 0;'>{metric['value']}</div>
+                    <div style='color: {trend_color}; font-size: 0.85rem; font-weight: 600;'>
+                        {'↑' if metric['trend'] == 'positive' else '↓'} {metric['change']}
+                    </div>
+                    """,
+                    config=CardConfig(variant='glass', padding='1.5rem'),
+                    icon=metric['icon']
+                )
 
     def _render_leads_trend_chart(self, data: Dict[str, Any]):
         """Render leads trend over time - Obsidian Style"""
-        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">📈 NODES DISCOVERY TREND</h3>', unsafe_allow_html=True)
+        st.subheader('📈 NODES DISCOVERY TREND')
         dates, leads_data = self._generate_trend_data(data['time_range'])
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=dates, y=leads_data['total'], mode='lines+markers', name='Total Nodes', line=dict(color='#6366F1', width=3), marker=dict(size=8, color='#6366F1', line=dict(color='#FFFFFF', width=1)), hovertemplate='<b>Date:</b> %{x}<br><b>Nodes:</b> %{y}<extra></extra>'))
-        fig.add_trace(go.Scatter(x=dates, y=leads_data['hot'], mode='lines+markers', name='Hot Signals', line=dict(color='#ef4444', width=2), marker=dict(size=6, color='#ef4444'), hovertemplate='<b>Date:</b> %{x}<br><b>Hot Signals:</b> %{y}<extra></extra>'))
-        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
-        st.markdown('\n        <div class="chart-interactive-hint">\n            💡 <strong>Tip:</strong> Click on data points to drill down into daily details\n        </div>\n        ', unsafe_allow_html=True)
+        df_trend = pd.DataFrame({
+            'Date': dates,
+            'Total Nodes': leads_data['total'],
+            'Hot Signals': leads_data['hot']
+        })
+
+        def create_trend_fig(df):
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=df['Date'], y=df['Total Nodes'], 
+                mode='lines+markers', name='Total Nodes', 
+                line=dict(color='#6366F1', width=3), 
+                marker=dict(size=8, color='#6366F1', line=dict(color='#FFFFFF', width=1)), 
+                hovertemplate='<b>Date:</b> %{x}<br><b>Nodes:</b> %{y}<extra></extra>'
+            ))
+            fig.add_trace(go.Scatter(
+                x=df['Date'], y=df['Hot Signals'], 
+                mode='lines+markers', name='Hot Signals', 
+                line=dict(color='#ef4444', width=2), 
+                marker=dict(size=6, color='#ef4444'), 
+                hovertemplate='<b>Date:</b> %{x}<br><b>Hot Signals:</b> %{y}<extra></extra>'
+            ))
+            return fig
+
+        plotly_optimizer.render_chart(create_trend_fig, df_trend, key="analytics_leads_trend")
+        
+        st.info('💡 **Tip:** Click on data points to drill down into daily details')
+        
         if st.button('🔍 Drill into Time Trends', key='drill_time_trends', use_container_width=True):
             self._navigate_to_view('time_trends')
-        st.markdown('</div>', unsafe_allow_html=True)
 
     def _render_conversion_overview_chart(self, data: Dict[str, Any]):
         """Render conversion funnel overview - Obsidian Style"""
-        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">🎯 CONVERSION TRAJECTORY</h3>', unsafe_allow_html=True)
+        st.subheader('🎯 CONVERSION TRAJECTORY')
         funnel_data = data['conversion_funnel']
-        fig = go.Figure(go.Funnel(y=list(funnel_data.keys()), x=list(funnel_data.values()), textinfo='value+percent initial', marker=dict(color=['#6366F1', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444'], line=dict(width=1, color='rgba(255,255,255,0.2)')), hovertemplate='<b>Stage:</b> %{y}<br><b>Count:</b> %{x}<extra></extra>'))
-        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
+        
+        def create_funnel_fig(data_dict):
+            fig = go.Figure(go.Funnel(
+                y=list(data_dict.keys()), 
+                x=list(data_dict.values()), 
+                textinfo='value+percent initial', 
+                marker=dict(color=['#6366F1', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444'], 
+                line=dict(width=1, color='rgba(255,255,255,0.2)')), 
+                hovertemplate='<b>Stage:</b> %{y}<br><b>Count:</b> %{x}<extra></extra>'
+            ))
+            return fig
+
+        plotly_optimizer.render_chart(create_funnel_fig, funnel_data, key="analytics_conversion_funnel")
+
         col1, col2 = st.columns(2)
         with col1:
             lead_to_qualified = funnel_data['Qualified'] / funnel_data['Leads'] * 100
@@ -139,37 +186,49 @@ class InteractiveAnalytics:
         with col2:
             qualified_to_closed = funnel_data['Closed'] / funnel_data['Qualified'] * 100
             st.metric('Qualified→Closed', f'{qualified_to_closed:.1f}%')
+            
         if st.button('🔍 Analyze Conversion Details', key='drill_conversion', use_container_width=True):
             self._navigate_to_view('conversion_funnel')
-        st.markdown('</div>', unsafe_allow_html=True)
 
     def _render_source_distribution_chart(self, data: Dict[str, Any]):
         """Render lead source distribution - Obsidian Style"""
-        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">📱 SIGNAL ORIGIN</h3>', unsafe_allow_html=True)
+        st.subheader('📱 SIGNAL ORIGIN')
         source_data = data['source_distribution']
-        fig = go.Figure(data=[go.Pie(labels=list(source_data.keys()), values=list(source_data.values()), hole=0.6, marker=dict(colors=['#6366F1', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444'], line=dict(color='rgba(255,255,255,0.1)', width=1)), hovertemplate='<b>Source:</b> %{label}<br><b>Count:</b> %{value}<extra></extra>')])
-        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
+        
+        def create_pie_fig(data_dict):
+            fig = go.Figure(data=[go.Pie(
+                labels=list(data_dict.keys()), 
+                values=list(data_dict.values()), 
+                hole=0.6, 
+                marker=dict(colors=['#6366F1', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444'], 
+                line=dict(color='rgba(255,255,255,0.1)', width=1)), 
+                hovertemplate='<b>Source:</b> %{label}<br><b>Count:</b> %{value}<extra></extra>'
+            )])
+            return fig
+
+        plotly_optimizer.render_chart(create_pie_fig, source_data, key="analytics_source_dist")
 
     def _render_agent_performance_summary(self, data: Dict[str, Any]):
         """Render agent performance summary - Obsidian Style"""
-        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">👥 AGENT TELEMETRY</h3>', unsafe_allow_html=True)
+        st.subheader('👥 AGENT TELEMETRY')
         agent_data = data['agent_performance']
         agents = list(agent_data.keys())
-        conversions = [agent_data[agent]['conversions'] for agent in agents]
-        response_times = [agent_data[agent]['avg_response_time'] for agent in agents]
-        fig = make_subplots(rows=2, cols=1, subplot_titles=['CONVERSIONS', 'LATENCY (MIN)'], vertical_spacing=0.15)
-        fig.add_trace(go.Bar(x=agents, y=conversions, name='Conversions', marker=dict(color='#10b981')), row=1, col=1)
-        fig.add_trace(go.Bar(x=agents, y=response_times, name='Latency', marker=dict(color='#6366F1')), row=2, col=1)
-        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
+        
+        def create_agent_fig(data_dict):
+            agents_list = list(data_dict.keys())
+            conversions = [data_dict[agent]['conversions'] for agent in agents_list]
+            response_times = [data_dict[agent]['avg_response_time'] for agent in agents_list]
+            fig = make_subplots(rows=2, cols=1, subplot_titles=['CONVERSIONS', 'LATENCY (MIN)'], vertical_spacing=0.15)
+            fig.add_trace(go.Bar(x=agents_list, y=conversions, name='Conversions', marker=dict(color='#10b981')), row=1, col=1)
+            fig.add_trace(go.Bar(x=agents_list, y=response_times, name='Latency', marker=dict(color='#6366F1')), row=2, col=1)
+            return fig
+
+        plotly_optimizer.render_chart(create_agent_fig, agent_data, key="analytics_agent_summary")
+
         top_agent = max(agents, key=lambda x: agent_data[x]['conversions'])
         st.info(f"🌟 Top Performer: **{top_agent}** ({agent_data[top_agent]['conversions']} conversions)")
         if st.button('🔍 Detailed Agent Analysis', key='drill_agent', use_container_width=True):
             self._navigate_to_view('agent_performance')
-        st.markdown('</div>', unsafe_allow_html=True)
 
     def _render_drill_down_options(self):
         """Render quick drill-down navigation options"""
@@ -190,46 +249,77 @@ class InteractiveAnalytics:
 
     def _render_conversion_funnel(self):
         """Render detailed conversion funnel analysis"""
-        st.markdown('### 🎯 Detailed Conversion Funnel Analysis')
+        st.subheader('🎯 Detailed Conversion Funnel Analysis')
         data = self._get_analytics_data()
         funnel_data = data['conversion_funnel_detailed']
-        fig = go.Figure()
-        stages = list(funnel_data.keys())
-        values = list(funnel_data.values())
-        for i, (stage, value) in enumerate(zip(stages, values)):
-            color_intensity = 1 - i * 0.15
-            fig.add_trace(go.Funnel(y=[stage], x=[value], textinfo='value+percent initial', marker=dict(color=f'rgba(52, 152, 219, {color_intensity})', line=dict(width=2, color='white')), name=stage))
-        fig.update_layout(height=500, title='Lead Conversion Funnel - Detailed View')
-        st.plotly_chart(fig, use_container_width=True)
+        
+        def create_detailed_funnel(data_dict):
+            fig = go.Figure()
+            stages = list(data_dict.keys())
+            values = list(data_dict.values())
+            for i, (stage, value) in enumerate(zip(stages, values)):
+                color_intensity = 1 - i * 0.15
+                fig.add_trace(go.Funnel(
+                    y=[stage], x=[value], 
+                    textinfo='value+percent initial', 
+                    marker=dict(color=f'rgba(99, 102, 241, {color_intensity})', 
+                    line=dict(width=1, color='rgba(255,255,255,0.2)')), 
+                    name=stage
+                ))
+            fig.update_layout(height=500)
+            return fig
+
+        plotly_optimizer.render_chart(create_detailed_funnel, funnel_data, key="analytics_funnel_detailed")
+        
         st.subheader('📋 Stage-by-Stage Analysis')
+        values = list(funnel_data.values())
+        stages = list(funnel_data.keys())
         conversion_df = pd.DataFrame([{'Stage': stage, 'Count': value, 'Drop Rate': f'{(values[i - 1] - value) / values[i - 1] * 100:.1f}%' if i > 0 else 'N/A', 'Conversion Rate': f'{value / values[0] * 100:.1f}%'} for i, (stage, value) in enumerate(zip(stages, values))])
         st.dataframe(conversion_df, use_container_width=True)
 
     def _render_agent_performance(self):
         """Render detailed agent performance analysis"""
-        st.markdown('### 👥 Agent Performance Deep Dive')
+        st.subheader('👥 Agent Performance Deep Dive')
         data = self._get_analytics_data()
         agent_data = data['agent_performance_detailed']
         df = pd.DataFrame(agent_data).T
         df = df.reset_index().rename(columns={'index': 'Agent'})
         metrics = ['conversions', 'avg_response_time', 'leads_handled', 'satisfaction_score']
-        heatmap_data = df[metrics].values
-        fig = go.Figure(data=go.Heatmap(z=heatmap_data.T, x=df['Agent'], y=metrics, colorscale='RdYlBu_r', hovertemplate='<b>Agent:</b> %{x}<br><b>Metric:</b> %{y}<br><b>Value:</b> %{z}<extra></extra>'))
-        fig.update_layout(title='Agent Performance Heatmap', height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        
+        def create_agent_heatmap(df_agents):
+            heatmap_data = df_agents[metrics].values
+            fig = go.Figure(data=go.Heatmap(
+                z=heatmap_data.T, x=df_agents['Agent'], y=metrics, 
+                colorscale='Viridis', 
+                hovertemplate='<b>Agent:</b> %{x}<br><b>Metric:</b> %{y}<br><b>Value:</b> %{z}<extra></extra>'
+            ))
+            fig.update_layout(height=400)
+            return fig
+
+        plotly_optimizer.render_chart(create_agent_heatmap, df, key="analytics_agent_heatmap")
+        
         st.subheader('🏆 Agent Rankings')
         st.dataframe(df.sort_values('conversions', ascending=False), use_container_width=True)
 
     def _render_source_analysis(self):
         """Render detailed source analysis"""
-        st.markdown('### 📱 Lead Source Performance Analysis')
+        st.subheader('📱 Lead Source Performance Analysis')
         data = self._get_analytics_data()
         source_trend = data['source_trend_data']
-        fig = go.Figure()
-        for source in source_trend:
-            fig.add_trace(go.Scatter(x=source_trend[source]['dates'], y=source_trend[source]['values'], mode='lines+markers', name=source, hovertemplate=f'<b>Source:</b> {source}<br><b>Date:</b> %{{x}}<br><b>Leads:</b> %{{y}}<extra></extra>'))
-        fig.update_layout(title='Lead Source Trends Over Time', height=400, hovermode='x unified')
-        st.plotly_chart(fig, use_container_width=True)
+        
+        def create_source_trend(trend_dict):
+            fig = go.Figure()
+            for source in trend_dict:
+                fig.add_trace(go.Scatter(
+                    x=trend_dict[source]['dates'], y=trend_dict[source]['values'], 
+                    mode='lines+markers', name=source, 
+                    hovertemplate=f'<b>Source:</b> {source}<br><b>Date:</b> %{{x}}<br><b>Leads:</b> %{{y}}<extra></extra>'
+                ))
+            fig.update_layout(height=400, hovermode='x unified')
+            return fig
+
+        plotly_optimizer.render_chart(create_source_trend, source_trend, key="analytics_source_trend_detailed")
+        
         st.subheader('💰 Source ROI Analysis')
         roi_data = data['source_roi']
         roi_df = pd.DataFrame(roi_data).T
@@ -238,16 +328,20 @@ class InteractiveAnalytics:
 
     def _render_time_trends(self):
         """Render detailed time trend analysis"""
-        st.markdown('### 📈 Time Trend Analysis')
+        st.subheader('📈 Time Trend Analysis')
         data = self._get_analytics_data()
-        dates = data['time_series']['dates']
-        fig = make_subplots(rows=2, cols=2, subplot_titles=['Leads', 'Conversions', 'Response Time', 'Revenue'], vertical_spacing=0.08, horizontal_spacing=0.08)
-        fig.add_trace(go.Scatter(x=dates, y=data['time_series']['leads'], name='Leads', line=dict(color='#3498db')), row=1, col=1)
-        fig.add_trace(go.Scatter(x=dates, y=data['time_series']['conversions'], name='Conversions', line=dict(color='#2ecc71')), row=1, col=2)
-        fig.add_trace(go.Scatter(x=dates, y=data['time_series']['response_time'], name='Response Time', line=dict(color='#e74c3c')), row=2, col=1)
-        fig.add_trace(go.Scatter(x=dates, y=data['time_series']['revenue'], name='Revenue', line=dict(color='#f39c12')), row=2, col=2)
-        fig.update_layout(height=600, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
+        
+        def create_time_series_subplots(data_dict):
+            dates = data_dict['time_series']['dates']
+            fig = make_subplots(rows=2, cols=2, subplot_titles=['Leads', 'Conversions', 'Response Time', 'Revenue'], vertical_spacing=0.12, horizontal_spacing=0.1)
+            fig.add_trace(go.Scatter(x=dates, y=data_dict['time_series']['leads'], name='Leads', line=dict(color='#6366F1')), row=1, col=1)
+            fig.add_trace(go.Scatter(x=dates, y=data_dict['time_series']['conversions'], name='Conversions', line=dict(color='#10b981')), row=1, col=2)
+            fig.add_trace(go.Scatter(x=dates, y=data_dict['time_series']['response_time'], name='Response Time', line=dict(color='#ef4444')), row=2, col=1)
+            fig.add_trace(go.Scatter(x=dates, y=data_dict['time_series']['revenue'], name='Revenue', line=dict(color='#f59e0b')), row=2, col=2)
+            fig.update_layout(height=600, showlegend=False)
+            return fig
+
+        plotly_optimizer.render_chart(create_time_series_subplots, data, key="analytics_time_trends_detailed")
 
     def _navigate_to_view(self, view_name: str):
         """Navigate to a specific view"""

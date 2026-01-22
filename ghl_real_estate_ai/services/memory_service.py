@@ -58,6 +58,25 @@ class MemoryService:
         # Explicit override
         return self.storage_type == "redis"
 
+    def _get_file_path(self, contact_id: str, location_id: Optional[str] = None) -> Path:
+        """
+        Get the file path for storing a contact's context.
+        
+        Args:
+            contact_id: GHL contact ID
+            location_id: Optional GHL location ID for tenant isolation
+            
+        Returns:
+            Path object
+        """
+        if location_id:
+            # Create location-specific subdirectory
+            location_dir = self.memory_dir / location_id
+            location_dir.mkdir(parents=True, exist_ok=True)
+            return location_dir / f"{contact_id}.json"
+        
+        return self.memory_dir / f"{contact_id}.json"
+
     async def get_context(
         self, contact_id: str, location_id: Optional[str] = None
     ) -> Dict[str, Any]:

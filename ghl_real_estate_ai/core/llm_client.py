@@ -43,6 +43,8 @@ class LLMResponse:
     model: str
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None
+    cache_creation_input_tokens: Optional[int] = None
+    cache_read_input_tokens: Optional[int] = None
     tokens_used: Optional[int] = None  # Legacy support (sum of in + out)
     finish_reason: Optional[str] = None
     tool_calls: Optional[List[Dict[str, Any]]] = None
@@ -428,7 +430,7 @@ class LLMClient:
             elif self.provider == LLMProvider.PERPLEXITY:
                 result = await self._agenerate_perplexity(prompt, system_prompt, history, max_tokens, temperature, model_override=target_model)
             else:
-                # Primary: Claude with Vision support
+                # Primary: Claude with Vision support and Prompt Caching
                 messages = history.copy() if history else []
                 
                 content = []
@@ -442,29 +444,79 @@ class LLMClient:
                                 "data": img_b64
                             }
                         })
-                content.append({"type": "text", "text": prompt})
+                
+                if isinstance(prompt, list):
+                    content.extend(prompt)
+                else:
+                    content.append({"type": "text", "text": prompt})
                 
                 messages.append({"role": "user", "content": content})
                 
+                # ENHANCED: Implement Prompt Caching for large system prompts
+                system_blocks = []
+                if system_prompt:
+                    if len(system_prompt) > 1024: # Cache long system prompts (> ~250 tokens)
+                        system_blocks.append({
+                            "type": "text",
+                            "text": system_prompt,
+                            "cache_control": {"type": "ephemeral"}
+                        })
+                    else:
+                        system_blocks.append({"type": "text", "text": system_prompt})
+                
+                # Format tools for Anthropic (name, description, input_schema)
+                anthropic_tools = []
+                if tools:
+                    for t in tools:
+                        # tools is List[Dict] with name, description, parameters
+                        anthropic_tools.append({
+                            "name": t["name"],
+                            "description": t["description"],
+                            "input_schema": t["parameters"]
+                        })
+
                 response = await self._async_client.messages.create(
                     model=target_model,
                     max_tokens=max_tokens,
                     temperature=temperature,
-                    system=system_prompt or "You are a helpful AI assistant.",
-                    messages=messages
+                    system=system_blocks if system_blocks else "You are a helpful AI assistant.",
+                    messages=messages,
+                    tools=anthropic_tools if anthropic_tools else None,
+                    # Ensure beta headers are sent for caching if required by the version
+                    extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"}
                 )
                 
                 input_tokens = response.usage.input_tokens if hasattr(response, 'usage') else None
                 output_tokens = response.usage.output_tokens if hasattr(response, 'usage') else None
                 
+                # Extract cache performance metrics (90% savings potential)
+                cache_creation = getattr(response.usage, 'cache_creation_input_tokens', 0)
+                cache_read = getattr(response.usage, 'cache_read_input_tokens', 0)
+                
+                # Extract content and tool calls
+                content_text = ""
+                tool_calls = []
+                for block in response.content:
+                    if block.type == "text":
+                        content_text += block.text
+                    elif block.type == "tool_use":
+                        tool_calls.append({
+                            "id": block.id,
+                            "name": block.name,
+                            "args": block.input
+                        })
+
                 result = LLMResponse(
-                    content=response.content[0].text,
+                    content=content_text,
                     provider=self.provider,
                     model=target_model,
                     input_tokens=input_tokens,
                     output_tokens=output_tokens,
+                    cache_creation_input_tokens=cache_creation,
+                    cache_read_input_tokens=cache_read,
                     tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
-                    finish_reason=response.stop_reason
+                    finish_reason=response.stop_reason,
+                    tool_calls=tool_calls if tool_calls else None
                 )
 
         except Exception as e:

@@ -15,6 +15,7 @@ from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.sentiment_drift_engine import SentimentDriftEngine
 from ghl_real_estate_ai.services.psychographic_segmentation_engine import PsychographicSegmentationEngine
 from ghl_real_estate_ai.services.market_context_injector import MarketContextInjector
+from ghl_real_estate_ai.services.skill_registry import SkillCategory, skill_registry
 
 
 class ClaudeTaskType(Enum):
@@ -43,6 +44,8 @@ class ClaudeRequest:
     temperature: float = 0.7
     system_prompt: Optional[str] = None
     streaming: bool = False
+    use_tools: bool = False
+    allowed_categories: Optional[List[SkillCategory]] = None
 
 
 @dataclass
@@ -100,10 +103,29 @@ class ClaudeOrchestrator:
         self.sentiment_drift_engine = SentimentDriftEngine(self.llm)
         self.psychographic_engine = PsychographicSegmentationEngine(self.llm)
         self.market_injector = MarketContextInjector(self.llm)
+        
+        # GHL Client for sync
+        from ghl_real_estate_ai.services.ghl_client import GHLClient
+        self.ghl_client = GHLClient()
 
         # Scoring services
         self.jorge_scorer = LeadScorer()
         self.ml_scorer = PredictiveLeadScorer()
+
+        # MCP Servers for Phase 2 Orchestration
+        from ghl_real_estate_ai.core.mcp_servers.domain.lead_intelligence_server import mcp as lead_mcp
+        from ghl_real_estate_ai.core.mcp_servers.domain.property_intelligence_server import mcp as property_mcp
+        from ghl_real_estate_ai.core.mcp_servers.domain.market_intelligence_server import mcp as market_mcp
+        from ghl_real_estate_ai.core.mcp_servers.domain.negotiation_intelligence_server import mcp as negotiation_mcp
+        from ghl_real_estate_ai.core.mcp_servers.domain.analytics_intelligence_server import mcp as analytics_mcp
+
+        self.mcp_servers = {
+            "LeadIntelligence": lead_mcp,
+            "PropertyIntelligence": property_mcp,
+            "MarketIntelligence": market_mcp,
+            "NegotiationIntelligence": negotiation_mcp,
+            "AnalyticsIntelligence": analytics_mcp
+        }
         
         # Initialize dependencies for ChurnPredictionEngine
         try:
@@ -242,19 +264,110 @@ class ClaudeOrchestrator:
             # Build full prompt
             full_prompt = self._build_prompt(request.prompt, enhanced_context)
 
-            # Make Claude API call
-            llm_response = await self._call_claude(
-                system_prompt=system_prompt,
-                user_prompt=full_prompt,
-                model=request.model,
-                max_tokens=request.max_tokens,
-                temperature=request.temperature,
-                streaming=request.streaming,
-                complexity=complexity,
-                tenant_id=request.tenant_id
-            )
+            # Gather tools if requested
+            tools = []
+            if request.use_tools:
+                tools = await self._get_tools_for_request(request.allowed_categories)
 
-            # Parse and structure response
+            # Initialize conversation for tool use
+            messages = [{"role": "user", "content": [{"type": "text", "text": full_prompt}]}]
+            tool_executions = []
+            
+            # Multi-turn tool orchestration loop (max 5 turns)
+            for turn in range(5):
+                # Specialist Handoff Logic: Adjust system prompt based on previous tool categories
+                current_system_prompt = system_prompt
+                if tool_executions and turn > 0:
+                    last_tool_names = [
+                        m["name"] for m in tool_executions[-1]["content"] 
+                        if m.get("type") == "tool_use"
+                    ]
+                    if last_tool_names:
+                        last_category = skill_registry.get_category_for_tool(last_tool_names[-1])
+                        if last_category:
+                            handoff_prompts = {
+                                SkillCategory.DISCOVERY: "\n\n[SPECIALIST HANDOFF] You are now acting as the Market Discovery Specialist. Focus on identifying trends and finding the perfect neighborhood/property matches.",
+                                SkillCategory.ANALYSIS: "\n\n[SPECIALIST HANDOFF] You are now acting as the Deep Intelligence Analyst. Synthesize the raw data into strategic lead profiles and risk assessments.",
+                                SkillCategory.STRATEGY: "\n\n[SPECIALIST HANDOFF] You are now acting as the Negotiation Strategist. Formulate high-stakes plans to move the deal forward and handle objections.",
+                                SkillCategory.ACTION: "\n\n[SPECIALIST HANDOFF] You are now acting as the Sales Execution Specialist. Focus on high-conversion outreach, scripts, and real-time appointment scheduling.",
+                                SkillCategory.GOVERNANCE: "\n\n[SPECIALIST HANDOFF] You are now acting as the Platform Auditor. Ensure ROI is tracked and all compliance guardrails are respected."
+                            }
+                            current_system_prompt += handoff_prompts.get(last_category, "")
+
+                # Determine what to send as the "next" prompt
+                # Anthropic expects an alternating user/assistant pattern
+                history = messages[:-1] if len(messages) > 1 else None
+                current_prompt_content = messages[-1]["content"]
+                
+                # Make Claude API call
+                llm_response = await self.llm.agenerate(
+                    prompt=current_prompt_content,
+                    system_prompt=current_system_prompt,
+                    history=history,
+                    model=request.model,
+                    max_tokens=request.max_tokens,
+                    temperature=request.temperature,
+                    complexity=complexity,
+                    tenant_id=request.tenant_id,
+                    tools=tools if tools else None
+                )
+
+                # Update messages with assistant response
+                assistant_content = []
+                if llm_response.content:
+                    assistant_content.append({"type": "text", "text": llm_response.content})
+                
+                if llm_response.tool_calls:
+                    for tc in llm_response.tool_calls:
+                        assistant_content.append({
+                            "type": "tool_use",
+                            "id": tc["id"],
+                            "name": tc["name"],
+                            "input": tc["args"]
+                        })
+
+                assistant_message = {"role": "assistant", "content": assistant_content}
+                messages.append(assistant_message)
+                
+                # Log execution step
+                tool_executions.append(assistant_message)
+
+                if not llm_response.tool_calls:
+                    # No more tools to call, we're done
+                    break
+
+                # Execute tool calls and add results to messages
+                tool_results_content = []
+                for tool_call in llm_response.tool_calls:
+                    result_text = await self._execute_tool_call(tool_call)
+                    
+                    # GHL Sync Logic for ACTION tools
+                    tool_name = tool_call["name"]
+                    category = skill_registry.get_category_for_tool(tool_name)
+                    
+                    if category == SkillCategory.ACTION:
+                        # Trigger background sync to GHL
+                        asyncio.create_task(self._sync_action_to_ghl(
+                            tool_name, 
+                            tool_call.get("args", {}), 
+                            result_text,
+                            request.context.get("contact_id") or request.context.get("lead_id")
+                        ))
+
+                    tool_results_content.append({
+                        "type": "tool_result",
+                        "tool_use_id": tool_call["id"],
+                        "content": result_text
+                    })
+                
+                user_tool_message = {
+                    "role": "user",
+                    "content": tool_results_content
+                }
+                messages.append(user_tool_message)
+                tool_executions.append(user_tool_message)
+
+            # Final response from the last LLM turn
             structured_response = self._parse_response(llm_response.content, request.task_type)
             
             # Populate token usage and model info
@@ -262,6 +375,10 @@ class ClaudeOrchestrator:
             structured_response.output_tokens = llm_response.output_tokens
             structured_response.model = llm_response.model
             structured_response.provider = llm_response.provider.value
+
+            # Add tool execution metadata if any
+            if tool_executions:
+                structured_response.metadata["tool_executions"] = tool_executions
 
             # Calculate response time
             response_time = int((time.time() - start_time) * 1000)
@@ -284,6 +401,101 @@ class ClaudeOrchestrator:
                 content=f"Error processing request: {error_str}",
                 metadata={"error": True, "error_type": type(e).__name__}
             )
+
+    async def _get_tools_for_request(self, categories: Optional[List[SkillCategory]] = None) -> List[Dict[str, Any]]:
+        """Gather tool definitions from MCP servers based on allowed categories."""
+        tools = []
+        
+        # Determine tool names based on categories or all
+        if categories:
+            tool_names = []
+            for cat in categories:
+                tool_names.extend(skill_registry.get_tools_for_category(cat))
+        else:
+            tool_names = skill_registry.get_all_tools()
+
+        # Gather definitions from relevant servers
+        for name in tool_names:
+            server_name = skill_registry.get_server_for_tool(name)
+            if server_name in self.mcp_servers:
+                server = self.mcp_servers[server_name]
+                try:
+                    mcp_tool = await server.get_tool(name)
+                    # Convert to Gemini/Claude tool declaration format
+                    try:
+                        parameters = mcp_tool.model_json_schema()
+                    except Exception:
+                        # Fallback for complex schemas that Pydantic V2 fails to serialize for JSON Schema
+                        parameters = {"type": "object", "properties": {}}
+                        
+                    tools.append({
+                        "name": mcp_tool.name,
+                        "description": mcp_tool.description,
+                        "parameters": parameters
+                    })
+                except Exception as e:
+                    print(f"Warning: Failed to load tool {name} from {server_name}: {e}")
+        
+        return tools
+
+    async def _execute_tool_call(self, tool_call: Dict[str, Any]) -> str:
+        """Execute a tool call against the appropriate MCP server."""
+        tool_name = tool_call["name"]
+        arguments = tool_call.get("args", {})
+        
+        server_name = skill_registry.get_server_for_tool(tool_name)
+        if not server_name or server_name not in self.mcp_servers:
+            return f"Error: Tool {tool_name} not found or no server mapped."
+
+        server = self.mcp_servers[server_name]
+        try:
+            # FastMCP execution - based on inspection _call_tool takes (name, arguments)
+            result = await server._call_tool(tool_name, arguments)
+            return str(result)
+        except Exception as e:
+            return f"Error executing tool {tool_name}: {str(e)}"
+
+    async def _sync_action_to_ghl(self, tool_name: str, arguments: Dict[str, Any], result: str, contact_id: Optional[str]) -> None:
+        """
+        Synchronize the results of an 'Action' category tool back to GHL.
+        Runs in background via asyncio.create_task.
+        """
+        if not contact_id or contact_id == "demo_lead":
+            return
+
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+        
+        # Tool to Custom Field Mapping
+        field_mapping = {
+            "generate_lead_outreach_script": "ai_outreach_script",
+            "get_realtime_coaching": "ai_coaching_advice",
+            "analyze_negotiation": "negotiation_strategy",
+            "analyze_lead": "qualification_summary"
+        }
+        
+        field_name = field_mapping.get(tool_name)
+        if not field_name:
+            # Check if Jorge's config has it
+            field_id = JorgeSellerConfig.get_ghl_custom_field_id(tool_name)
+        else:
+            field_id = JorgeSellerConfig.get_ghl_custom_field_id(field_name) or field_name
+
+        if field_id:
+            try:
+                await self.ghl_client.update_custom_field(contact_id, field_id, result)
+                # Also track this as an event for analytics
+                tenant_id = self.ghl_client.location_id
+                # Track event for the sync
+                from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+                analytics = AnalyticsService()
+                await analytics.track_event(
+                    event_type="ghl_sync_success",
+                    location_id=tenant_id,
+                    contact_id=contact_id,
+                    data={"tool": tool_name, "field": field_id}
+                )
+            except Exception as e:
+                print(f"Error syncing {tool_name} to GHL: {e}")
 
     def _get_complexity_for_task(self, task_type: ClaudeTaskType) -> TaskComplexity:
         """Maps ClaudeTaskType to TaskComplexity for intelligent routing"""
@@ -339,7 +551,8 @@ class ClaudeOrchestrator:
                 "query_type": "interactive_chat"
             },
             prompt=f"Jorge asks: {query}",
-            temperature=0.8  # Slightly more creative for chat
+            temperature=0.8,  # Slightly more creative for chat
+            use_tools=True
         )
 
         return await self.process_request(request)

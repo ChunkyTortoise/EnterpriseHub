@@ -38,6 +38,7 @@ class ChatQueryResponse(BaseModel):
     predictive_score: Optional[float] = None
     sources: List[str] = []
     recommended_actions: List[Dict[str, Any]] = []
+    tool_executions: List[Dict[str, Any]] = []
     response_time_ms: int = 0
     conversation_id: Optional[str] = None
 
@@ -113,6 +114,7 @@ async def chat_query(
             extracted_data=claude_response.metadata,
             sources=claude_response.sources,
             recommended_actions=claude_response.recommended_actions,
+            tool_executions=claude_response.metadata.get("tool_executions", []),
             response_time_ms=claude_response.response_time_ms,
             conversation_id=request.contact_id
         )

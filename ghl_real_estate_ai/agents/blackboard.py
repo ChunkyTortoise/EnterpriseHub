@@ -10,11 +10,24 @@ from datetime import datetime
 class SharedBlackboard:
     """
     Thread-safe blackboard for shared agent context.
+    Implemented as a singleton to sync state between API and Swarm.
     """
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(SharedBlackboard, cls).__new__(cls)
+                cls._instance._initialized = False
+            return cls._instance
+
     def __init__(self):
+        if self._initialized:
+            return
         self._data: Dict[str, Any] = {}
         self._history: List[Dict[str, Any]] = []
-        self._lock = threading.Lock()
+        self._initialized = True
 
     def write(self, key: str, value: Any, agent_name: str):
         """Write data to the blackboard."""

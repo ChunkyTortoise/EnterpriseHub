@@ -37,12 +37,16 @@ class EnhancedLeadIntelligence:
     - Circuit breaker protection
     """
 
+    # SHARED RESOURCE POOL: Static instances shared across all tenant-specific instances
+    _claude = None
+    _enhanced_scorer = None
+    _automation_engine = None
+    _memory = None
+    _service_lock = asyncio.Lock()
+
     def __init__(self):
-        # Initialize core services synchronously
-        self.claude = get_claude_orchestrator()
-        self.enhanced_scorer = ClaudeEnhancedLeadScorer()
-        self.automation_engine = ClaudeAutomationEngine()
-        self.memory = MemoryService()
+        # Core services now managed via Shared Resource Pool
+        self._init_shared_resources()
 
         # Initialize enterprise services to None - will be lazy loaded
         self.optimized_cache = None
@@ -64,6 +68,37 @@ class EnhancedLeadIntelligence:
             "avg_analysis_time_ms": 0,
             "deep_dossiers_generated": 0
         }
+
+    def _init_shared_resources(self):
+        """
+        Implements the Shared Resource Pool pattern to reduce memory footprint.
+        Centralizes the psychographic scoring and sentiment engines.
+        """
+        if EnhancedLeadIntelligence._claude is not None:
+            return
+
+        # Synchronous initialization for core engines
+        EnhancedLeadIntelligence._claude = get_claude_orchestrator()
+        EnhancedLeadIntelligence._enhanced_scorer = ClaudeEnhancedLeadScorer()
+        EnhancedLeadIntelligence._automation_engine = ClaudeAutomationEngine()
+        EnhancedLeadIntelligence._memory = MemoryService()
+        logger.info("EnhancedLeadIntelligence: Shared Resource Pool Initialized")
+
+    @property
+    def claude(self) -> ClaudeOrchestrator:
+        return EnhancedLeadIntelligence._claude
+
+    @property
+    def enhanced_scorer(self) -> ClaudeEnhancedLeadScorer:
+        return EnhancedLeadIntelligence._enhanced_scorer
+
+    @property
+    def automation_engine(self) -> ClaudeAutomationEngine:
+        return EnhancedLeadIntelligence._automation_engine
+
+    @property
+    def memory(self) -> MemoryService:
+        return EnhancedLeadIntelligence._memory
 
     async def initialize(self):
         """
