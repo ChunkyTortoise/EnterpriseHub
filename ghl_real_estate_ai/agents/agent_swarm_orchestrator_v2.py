@@ -54,6 +54,7 @@ class AgentSwarmOrchestratorV2:
         self.governance = GovernanceEngine()
         self.portfolio_manager = PortfolioManagerAgent()
         self.dashboard = ExecutiveDashboard()
+        self.reporting_service = MarketOpportunityReportService()
         
         self.agents = {
             "analyst": AgentState("The Analyst", datetime.min, "idle", 0),
@@ -65,6 +66,7 @@ class AgentSwarmOrchestratorV2:
             "dojo": AgentState("The Dojo Master", datetime.min, "idle", 0),
             "sentry": AgentState("The Retention Sentry", datetime.min, "idle", 0),
             "portfolio": AgentState("The Portfolio Manager", datetime.min, "idle", 0),
+            "report_gen": AgentState("The Report Generator", datetime.min, "idle", 0),
             "visualizer": AgentState("The Visualizer", datetime.min, "idle", 0)
         }
         
