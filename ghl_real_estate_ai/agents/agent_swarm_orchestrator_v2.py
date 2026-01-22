@@ -469,9 +469,39 @@ class AgentSwarmOrchestratorV2:
             self.run_retention_sentry(tenant_id),
             self.run_visualizer(tenant_id),
             self.run_dojo(tenant_id),
-            self.run_portfolio_manager(tenant_id)
+            self.run_portfolio_manager(tenant_id),
+            self.run_report_gen(tenant_id)
         ]
         await asyncio.gather(*tasks)
+
+    async def run_report_gen(self, tenant_id: str = "default_tenant"):
+        """
+        The Report Generator: Periodically generates executive briefings.
+        Phase 7: Executive Intelligence.
+        """
+        agent = self.agents["report_gen"]
+        
+        # Only run reports once a day or on-demand
+        if datetime.now() - agent.last_run < timedelta(hours=24):
+            return
+
+        agent.status = "working"
+        logger.info(f"[{tenant_id}] {agent.name} generating market opportunity report...")
+        
+        try:
+            # 1. Generate the monthly report
+            report = await self.reporting_service.generate_monthly_opportunity_report(tenant_id)
+            
+            # 2. Log success and action
+            logger.info(f"📊 [{tenant_id}] {agent.name}: Generated report: {report.title}")
+            # In production, this would email the report or save to GHL files
+            
+            agent.actions_taken += 1
+            agent.last_run = datetime.now()
+            agent.status = "idle"
+        except Exception as e:
+            logger.error(f"{agent.name} failed for tenant {tenant_id}: {e}")
+            agent.status = "error"
 
     async def run_portfolio_manager(self, tenant_id: str = "default_tenant"):
         """
