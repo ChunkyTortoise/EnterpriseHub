@@ -76,7 +76,11 @@ class JorgeSellerConfig:
         "property_condition": "property_condition_field_id",
         "price_expectation": "price_expectation_field_id",
         "questions_answered": "questions_answered_field_id",
-        "qualification_score": "qualification_score_field_id"
+        "qualification_score": "qualification_score_field_id",
+        "expected_roi": "expected_roi_field_id",
+        "lead_value_tier": "lead_value_tier_field_id",
+        "ai_valuation_price": "ai_valuation_price_field_id",
+        "detected_persona": "detected_persona_field_id"
     }
 
     # ========== MESSAGE SETTINGS ==========
