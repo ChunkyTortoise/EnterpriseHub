@@ -37,6 +37,7 @@ from ghl_real_estate_ai.services.lead_source_tracker import LeadSourceTracker, L
 from ghl_real_estate_ai.services.security_framework import verify_webhook
 from ghl_real_estate_ai.services.tenant_service import TenantService
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
+from ghl_real_estate_ai.services.compliance_guard import compliance_guard, ComplianceStatus
 from ghl_real_estate_ai.api.schemas.billing import UsageRecordRequest
 
 logger = get_logger(__name__)
@@ -219,19 +220,32 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 }
             )
 
+            # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
+            final_seller_msg = seller_result["message"]
+            status, reason, violations = await compliance_guard.audit_message(
+                final_seller_msg, 
+                contact_context={"contact_id": contact_id, "mode": "seller"}
+            )
+            
+            if status == ComplianceStatus.BLOCKED:
+                logger.warning(f"Compliance BLOCKED message for {contact_id}: {reason}. Violations: {violations}")
+                final_seller_msg = "Let's stick to the facts about your property. What price are you looking to get?"
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
             logger.info(
                 f"Jorge seller processing completed for {contact_id}",
                 extra={
                     "contact_id": contact_id,
                     "temperature": seller_result["temperature"],
                     "questions_answered": seller_result.get("questions_answered", 0),
-                    "actions_count": len(actions)
+                    "actions_count": len(actions),
+                    "compliance_status": status.value
                 }
             )
 
             return GHLWebhookResponse(
                 success=True,
-                message=seller_result["message"],
+                message=final_seller_msg,
                 actions=actions,
             )
 
@@ -504,6 +518,17 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         # Combine AI response with appointment message if booking was attempted
         final_message = ai_response.message + appointment_message_addition
 
+        # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
+        compliance_status, reason, violations = await compliance_guard.audit_message(
+            final_message, 
+            contact_context={"contact_id": contact_id, "lead_score": ai_response.lead_score}
+        )
+        
+        if compliance_status == ComplianceStatus.BLOCKED:
+            logger.warning(f"Compliance BLOCKED standard message for {contact_id}: {reason}")
+            final_message = "I'm looking forward to helping you find the right home. What's your top priority in a neighborhood?"
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
         background_tasks.add_task(
             current_ghl_client.send_message,
             contact_id=contact_id,
@@ -644,12 +669,28 @@ async def prepare_ghl_actions(
     # Tag based on budget
     budget = extracted_data.get("budget")
     if budget:
-        if budget < 300000:
-            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Budget-Under-300k"))
-        elif budget < 500000:
-            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Budget-300k-500k"))
-        else:
-            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Budget-Over-500k"))
+        # Convert budget to numeric if it's a string like "$400k" or "400,000"
+        try:
+            if isinstance(budget, str):
+                # Simple cleanup: remove $, comma, and handle 'k'
+                clean_budget = budget.lower().replace("$", "").replace(",", "").replace(" ", "")
+                if "k" in clean_budget:
+                    budget_val = float(clean_budget.replace("k", "")) * 1000
+                elif "m" in clean_budget:
+                    budget_val = float(clean_budget.replace("m", "")) * 1000000
+                else:
+                    budget_val = float(clean_budget)
+            else:
+                budget_val = float(budget)
+
+            if budget_val < 300000:
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Budget-Under-300k"))
+            elif budget_val < 500000:
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Budget-300k-500k"))
+            else:
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Budget-Over-500k"))
+        except (ValueError, TypeError):
+            logger.warning(f"Could not parse budget value: {budget}")
 
         # Update Budget Custom Field if configured
         if settings.custom_field_budget:

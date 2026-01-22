@@ -28,6 +28,36 @@ class MessageType(Enum):
     HOT_SELLER_HANDOFF = "hot_seller_handoff"
     OBJECTION_RESPONSE = "objection_response"
     CLOSING = "closing"
+    LABELING = "labeling"
+    CALIBRATED_QUESTION = "calibrated_question"
+
+
+@dataclass
+class NegotiationDrift:
+    """Tracks shifts in seller's negotiation stance"""
+    sentiment_shift: float = 0.0  # Positive = softening, Negative = firming
+    responsiveness_delta: float = 0.0  # Change in response time
+    hedging_count: int = 0  # Number of tentative words used
+    is_softening: bool = False
+
+
+class NegotiationStrategy:
+    """Chris Voss / Spin Selling strategic patterns"""
+    
+    LABELS = [
+        "It seems like {emotion} is important to you.",
+        "It sounds like you're {feeling} about this.",
+        "It looks like {situation} is the main priority.",
+        "It seems like you feel {feeling} about the timeline."
+    ]
+    
+    CALIBRATED_QUESTIONS = [
+        "How am I supposed to do that?",
+        "What is it that brought us to this point?",
+        "What about this is important to you?",
+        "How does this affect your goal of moving?",
+        "What happens if you don't sell?"
+    ]
 
 
 @dataclass
@@ -138,6 +168,62 @@ class JorgeToneEngine:
 
         return self._ensure_sms_compliance(base_message)
 
+    def generate_take_away_close(
+        self,
+        seller_name: Optional[str] = None,
+        reason: Optional[str] = None
+    ) -> str:
+        """
+        Generate a "Take-Away Close" message for low-probability or vague leads.
+        
+        Args:
+            seller_name: Seller name
+            reason: Specific reason for the take-away close (e.g., 'vague', 'low_probability')
+            
+        Returns:
+            Confrontational take-away close message
+        """
+        if reason == "low_probability":
+            base_message = "It doesn't seem like you are serious about selling right now. I'm going to close your file so we can focus on active sellers. Reach out if things change."
+        else:
+            base_message = "It sounds like you aren't ready to sell right now. Should we close your file and stop the process?"
+
+        if seller_name:
+            base_message = f"{seller_name}, {base_message.lower()}"
+
+        return self._ensure_sms_compliance(base_message)
+
+    def generate_net_yield_justification(
+        self,
+        price_expectation: float,
+        ai_valuation: float,
+        net_yield: float,
+        repair_estimate: float = 0,
+        seller_name: Optional[str] = None
+    ) -> str:
+        """
+        Generate a "Net Yield" justification message when seller is firm on price but repairs needed.
+        
+        Args:
+            price_expectation: Seller's expected price
+            ai_valuation: AI's valuation (ARV or current market)
+            net_yield: Calculated net yield percentage (0.0-1.0)
+            repair_estimate: Estimated repair costs
+            seller_name: Seller name for personalization
+            
+        Returns:
+            SMS-compliant ROI justification message
+        """
+        if repair_estimate > 0:
+            base_message = f"Your ${price_expectation:,.0f} is above our ${ai_valuation:,.0f} valuation. With the repairs needed, the net yield is too low. How did you come up with that number?"
+        else:
+            base_message = f"At ${price_expectation:,.0f}, the net yield is only {net_yield:.1%}. Our valuation is closer to ${ai_valuation:,.0f}. What is your bottom dollar?"
+
+        if seller_name:
+            base_message = f"{seller_name}, {base_message.lower()}"
+
+        return self._ensure_sms_compliance(base_message)
+
     def generate_objection_response(
         self,
         objection_type: str,
@@ -169,6 +255,54 @@ class JorgeToneEngine:
             message = f"{seller_name}, {message.lower()}"
 
         return self._ensure_sms_compliance(message)
+
+    def generate_labeled_question(self, emotion_or_situation: str, seller_name: Optional[str] = None) -> str:
+        """Apply Voss-style 'Labeling' to a concern."""
+        import random
+        template = random.choice(NegotiationStrategy.LABELS)
+        # Simplified mapping: emotion vs feeling vs situation
+        label = template.format(emotion=emotion_or_situation, feeling=emotion_or_situation, situation=emotion_or_situation)
+        
+        if seller_name:
+            label = f"{seller_name}, {label.lower()}"
+            
+        return self._ensure_sms_compliance(label)
+
+    def generate_calibrated_question(self, index: int = 2, seller_name: Optional[str] = None) -> str:
+        """Apply Voss-style 'Calibrated Question'."""
+        question = NegotiationStrategy.CALIBRATED_QUESTIONS[index % len(NegotiationStrategy.CALIBRATED_QUESTIONS)]
+        
+        if seller_name:
+            question = f"{seller_name}, {question.lower()}"
+            
+        return self._ensure_sms_compliance(question)
+
+    def detect_negotiation_drift(self, history: List[Dict[str, Any]]) -> NegotiationDrift:
+        """
+        Analyze linguistic nuance to detect if a seller is moving from 'Firm' to 'Flexible'.
+        
+        Indicators:
+        - Decrease in directness score
+        - Increase in hedging ('maybe', 'possibly', 'we'll see')
+        - Change in response latency
+        """
+        drift = NegotiationDrift()
+        if len(history) < 2:
+            return drift
+            
+        hedging_words = ["maybe", "possibly", "think", "might", "could", "considering"]
+        
+        # Analyze current message
+        last_msg = history[-1].get("content", "").lower()
+        for word in hedging_words:
+            if word in last_msg:
+                drift.hedging_count += 1
+                
+        # Simple drift logic: if hedging increases, stance is likely flexible
+        if drift.hedging_count >= 2:
+            drift.is_softening = True
+            
+        return drift
 
     def _apply_confrontational_tone(self, base_message: str, seller_name: Optional[str] = None) -> str:
         """Apply Jorge's confrontational tone to base message."""

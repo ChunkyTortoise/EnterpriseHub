@@ -80,6 +80,7 @@ When you detect the pathway, adjust your questions accordingly.
 **Contact Name:** {contact_name}
 **Conversation Stage:** {conversation_stage}
 **Lead Score:** {lead_score}/100
+{ml_insights}
 
 **Extracted Preferences (from conversation so far):**
 {extracted_preferences}
@@ -305,7 +306,7 @@ Ask these questions ONE AT A TIME, in this exact order:
 
 ## CONFRONTATIONAL TONE ESCALATION
 - **Normal flow**: Ask questions directly
-- **If vague/evasive** (<10 chars or "maybe", "not sure"): "Let me be direct: {question}"
+- **If vague/evasive** (<10 chars or "maybe", "not sure"): "Let me be direct: {{question}}"
 - **If very evasive** (multiple vague answers): "Are you actually serious about selling or just wasting our time?"
 - **Re-engagement**: "Should we close your file or are you still interested?"
 
@@ -723,7 +724,8 @@ def build_system_prompt(
     appointment_status: str = "",
     property_recommendations: str = "",
     is_returning_lead: bool = False,
-    hours_since: float = 0
+    hours_since: float = 0,
+    predictive_score: Any = None
 ) -> str:
     """
     Build complete system prompt with current context.
@@ -742,6 +744,7 @@ def build_system_prompt(
         property_recommendations: Formatted string of matching properties
         is_returning_lead: Whether this is a returning lead after a gap
         hours_since: Hours since last interaction
+        predictive_score: ML-powered lead insights (PredictiveScore object)
 
     Returns:
         Complete system prompt string
@@ -758,6 +761,17 @@ def build_system_prompt(
             is_returning_seller=is_returning_lead,
             hours_since=hours_since
         )
+
+    # ML Insights (Predictive Scoring)
+    ml_context = ""
+    if predictive_score:
+        prob = getattr(predictive_score, 'closing_probability', 0)
+        priority = getattr(predictive_score, 'priority_level', 'LOW')
+        if hasattr(priority, 'value'): priority = priority.value
+        
+        ml_context = f"\n\n## ML LEAD INSIGHTS\n- **Closing Probability**: {prob:.1%}\n- **Priority Level**: {priority.upper()}\n"
+        if hasattr(predictive_score, 'positive_signals') and predictive_score.positive_signals:
+            ml_context += f"- **Key Strengths**: {', '.join(predictive_score.positive_signals[:2])}\n"
 
     # Continue with existing buyer logic...
     # Format extracted preferences
@@ -804,6 +818,7 @@ def build_system_prompt(
         contact_name=contact_name,
         conversation_stage=conversation_stage,
         lead_score=lead_score,
+        ml_insights=ml_context,
         extracted_preferences=prefs_text,
         relevant_knowledge=relevant_knowledge or "No specific knowledge retrieved yet."
     )

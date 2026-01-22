@@ -5,7 +5,7 @@ import { Card, Title, AreaChart, Metric, Text, Flex, BadgeDelta, Grid, ProgressB
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LayoutDashboard, Users, MessageSquare, TrendingUp, Bell, RefreshCw, Mail, Phone, MapPin, BarChart3, Terminal as TerminalIcon, Settings2, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, TrendingUp, Bell, RefreshCw, Mail, Phone, MapPin, BarChart3, Terminal as TerminalIcon, Settings2, ShieldAlert, Sparkles } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -183,6 +183,13 @@ export default function DashboardPage() {
               }}
             >
               Trigger Lead Swarm
+            </Button>
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700"
+              onClick={() => router.push("/agent-ui")}
+              icon={Sparkles}
+            >
+              UI Swarm
             </Button>
           </div>
         </Flex>

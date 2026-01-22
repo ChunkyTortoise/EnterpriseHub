@@ -8,6 +8,8 @@ from ghl_real_estate_ai.services.predictive_lead_scorer import PredictiveLeadSco
 from ghl_real_estate_ai.services.reengagement_engine import ReengagementEngine
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
+from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
 
 router = APIRouter(prefix="/intelligence", tags=["intelligence"])
 
@@ -15,6 +17,33 @@ router = APIRouter(prefix="/intelligence", tags=["intelligence"])
 scorer = PredictiveLeadScorer()
 memory = MemoryService()
 reengage = ReengagementEngine()
+intent_decoder = LeadIntentDecoder()
+
+@router.post("/analyze-intent", response_model=LeadIntentProfile)
+async def analyze_lead_intent(
+    payload: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)
+):
+    """
+    2026 Strategic Roadmap: Phase 1
+    Detailed Semantic & Psychographic Lead Analysis (FRS & PCS).
+    """
+    contact_id = payload.get("contact_id")
+    if not contact_id:
+        raise HTTPException(status_code=400, detail="contact_id is required")
+    
+    # Get history from memory or payload
+    history = payload.get("conversation_history")
+    if not history:
+        context = await memory.get_context(contact_id)
+        history = context.get("conversation_history", [])
+        
+    if not history:
+        # Return empty/neutral profile if no history
+        return intent_decoder.analyze_lead(contact_id, [])
+        
+    profile = intent_decoder.analyze_lead(contact_id, history)
+    return profile
 
 @router.post("/score")
 async def score_lead_intelligence(

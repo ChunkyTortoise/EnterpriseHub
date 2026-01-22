@@ -401,54 +401,45 @@ pytest tests/visual/test_lead_score_card_snapshot.py::test_lead_score_card_acces
 
 ### Step 7: Add to Component Library
 
-Document component in the project's component gallery:
+Document component in the project's component gallery.
+
+### Step 8: Self-Correction Verification Loop (New in 2026)
+
+Implement an autonomous verification loop to ensure visual fidelity and design system adherence.
 
 ```python
 """
-Update component documentation
-File: ghl_real_estate_ai/streamlit_demo/components/primitives/README.md
+Self-Correction Loop for Figma-to-Component
+Uses simulated Playwright environment to verify generated code.
 """
 
-# Lead Score Card
-
-**Purpose**: Display lead scoring information with visual indicators
-
-**Design Source**: [Figma URL]
-
-**Props**:
-- `lead_name` (str): Lead's full name
-- `score` (float): Lead score (0-100)
-- `status` (str): Lead status (hot/warm/cold)
-- `last_interaction` (str): Timestamp of last interaction
-- `confidence` (float): Confidence level (0-1)
-
-**Usage**:
-```python
-from ghl_real_estate_ai.streamlit_demo.components.primitives.lead_score_card import (
-    LeadScoreCardProps,
-    render_lead_score_card
-)
-
-props = LeadScoreCardProps(
-    lead_name="Jane Doe",
-    score=92.0,
-    status="hot",
-    last_interaction="30 minutes ago",
-    confidence=0.95
-)
-
-render_lead_score_card(props)
+def verify_component_fidelity(component_code: str, figma_specs: Dict[str, Any]):
+    # 1. Initialize Simulated Browser
+    # 2. Render generated component
+    # 3. Extract Computed Styles (CSS)
+    # 4. Compare with Figma Specs (Token Adherence)
+    
+    # Example Validation Logic:
+    errors = []
+    if extracted_css['background-color'] != figma_specs['fill']:
+        errors.append(f"Color Mismatch: Expected {figma_specs['fill']}, got {extracted_css['background-color']}")
+        
+    if extracted_css['border-radius'] != figma_specs['borderRadius']:
+        errors.append("Border Radius Mismatch")
+        
+    # 5. If errors found, route back to Step 3 for Self-Healing
+    if errors:
+        return {
+            "status": "FAIL",
+            "errors": errors,
+            "correction_prompt": f"Fix these visual discrepancies: {', '.join(errors)}"
+        }
+    return {"status": "PASS"}
 ```
 
-**Variants**:
-- Default (full information)
-- Compact (minimal display)
-- Interactive (with action buttons)
+**Action**: Before finalizing any component, run the `verify_component_fidelity` check. If it fails, perform up to 3 self-correction iterations automatically.
 
-**Tests**: `tests/visual/test_lead_score_card_snapshot.py`
-```
-
-## Example Usage Scenarios
+## Output Files Structure
 
 ### Scenario 1: Generate Lead Dashboard Component
 

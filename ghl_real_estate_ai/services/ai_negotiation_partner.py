@@ -28,6 +28,9 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.enhanced_lead_intelligence import get_enhanced_lead_intelligence
 from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.services.attom_client import get_attom_client
+from ghl_real_estate_ai.services.negotiation_drift_detector import get_drift_detector
+from ghl_real_estate_ai.agents.voss_negotiation_agent import get_voss_negotiation_agent
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +53,9 @@ class AINegotiationPartner:
     _claude_assistant = None
     _lead_intelligence = None
     _memory = None
+    _attom_client = None
+    _drift_detector = None
+    _voss_agent = None
     _pool_lock = asyncio.Lock()
     
     def __init__(self):
@@ -83,6 +89,9 @@ class AINegotiationPartner:
         AINegotiationPartner._claude_assistant = ClaudeAssistant()
         AINegotiationPartner._lead_intelligence = get_enhanced_lead_intelligence()
         AINegotiationPartner._memory = MemoryService()
+        AINegotiationPartner._attom_client = get_attom_client()
+        AINegotiationPartner._drift_detector = get_drift_detector()
+        AINegotiationPartner._voss_agent = get_voss_negotiation_agent()
         
         logger.info("AINegotiationPartner: Shared Resource Pool Initialized")
 
@@ -109,6 +118,15 @@ class AINegotiationPartner:
     
     @property
     def memory(self): return AINegotiationPartner._memory
+
+    @property
+    def attom_client(self): return AINegotiationPartner._attom_client
+
+    @property
+    def drift_detector(self): return AINegotiationPartner._drift_detector
+
+    @property
+    def voss_agent(self): return AINegotiationPartner._voss_agent
     
     async def analyze_negotiation_intelligence(
         self, 
@@ -124,8 +142,18 @@ class AINegotiationPartner:
         try:
             logger.info(f"Starting negotiation intelligence analysis for property {request.property_id}")
             
-            # Gather required data in parallel
-            property_data, buyer_data, listing_history = await self._gather_analysis_data(request)
+            # Gather required data in parallel, including ATTOM Property DNA
+            property_dna_task = self.attom_client.get_property_dna(request.property_id) # Using property_id as address for now
+            analysis_data_task = self._gather_analysis_data(request)
+            
+            dna_result, (property_data, buyer_data, listing_history) = await asyncio.gather(
+                property_dna_task, analysis_data_task
+            )
+            
+            # Enrich property data with ATTOM DNA
+            if dna_result:
+                property_data["attom_dna"] = dna_result
+                logger.info(f"Enriched property {request.property_id} with ATTOM DNA")
             
             if not property_data:
                 raise ValueError(f"Property data not found for {request.property_id}")
@@ -152,11 +180,25 @@ class AINegotiationPartner:
                 logger.error(f"Market leverage analysis failed: {market_leverage}")
                 raise market_leverage
             
-            # Generate strategy based on psychology and leverage
+            # 🚀 VOSS NEGOTIATION AGENT (LangGraph Workflow)
+            voss_result = await self.voss_agent.run_negotiation(
+                lead_id=request.lead_id,
+                lead_name=buyer_data.get("name", "Lead"),
+                address=request.property_id,
+                history=listing_history.get("communication_history", []) if isinstance(listing_history, dict) else []
+            )
+            logger.info(f"Voss Agent (LangGraph) complete. Level: {voss_result.get('voss_level')}")
+
+            # Generate strategy based on psychology, leverage, and Voss insights
             negotiation_strategy = await self.strategy_engine.generate_negotiation_strategy(
                 request.property_id, seller_psychology, market_leverage, property_data, buyer_data
             )
             
+            # Enrich strategy with Voss response
+            if voss_result.get("generated_response"):
+                negotiation_strategy.primary_script = voss_result["generated_response"]
+                logger.info("Enriched negotiation strategy with Voss-powered script")
+
             # Predict win probability
             win_probability = await self.win_predictor.predict_win_probability(
                 request.property_id, seller_psychology, market_leverage, 
@@ -229,12 +271,23 @@ class AINegotiationPartner:
             
             intelligence = negotiation_context["intelligence"]
             
-            # Analyze current conversation context
+            # 🧠 BEHAVIORAL DRIFT DETECTION
+            # Calculate response latency (simulated or from request if available)
+            latency = request.new_information.get("response_latency_seconds", 0) if hasattr(request, 'new_information') else 0
+            drift_analysis = self.drift_detector.analyze_drift(
+                message=request.conversation_context,
+                response_latency_seconds=latency
+            )
+            
+            # Analyze current conversation context with Claude
             conversation_insights = await self._analyze_conversation_context(
                 request.conversation_context,
                 request.current_situation,
                 intelligence
             )
+            
+            # Inject drift insights into conversation insights
+            conversation_insights["drift_analysis"] = drift_analysis
             
             # Generate immediate guidance
             immediate_guidance = await self._generate_immediate_guidance(
@@ -243,6 +296,10 @@ class AINegotiationPartner:
                 request.buyer_feedback,
                 request.seller_response
             )
+            
+            # Add drift-specific guidance if drifting
+            if drift_analysis["is_drifting"]:
+                immediate_guidance += f" 🎯 {drift_analysis['recommendation']}"
             
             # Identify tactical adjustments
             tactical_adjustments = await self._identify_tactical_adjustments(
@@ -280,7 +337,7 @@ class AINegotiationPartner:
                 risk_alerts=risk_alerts
             )
             
-            logger.info(f"Real-time coaching provided with {len(risk_alerts)} risk alerts")
+            logger.info(f"Real-time coaching provided with {len(risk_alerts)} risk alerts. Drift: {drift_analysis['drift_score']:.2f}")
             return response
             
         except Exception as e:

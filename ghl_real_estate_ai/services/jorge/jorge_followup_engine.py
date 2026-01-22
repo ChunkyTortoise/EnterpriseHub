@@ -80,7 +80,8 @@ class JorgeFollowUpEngine:
         contact_id: str,
         location_id: str,
         trigger_type: str,
-        seller_data: Dict[str, Any]
+        seller_data: Dict[str, Any],
+        variant_config: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Main entry point for follow-up automation.
@@ -90,6 +91,7 @@ class JorgeFollowUpEngine:
             location_id: GHL location ID  
             trigger_type: Type of follow-up trigger (time_based, temperature_change, etc.)
             seller_data: Current seller profile data
+            variant_config: Optional A/B test variant configuration
             
         Returns:
             Follow-up result with message, actions, and scheduling
@@ -107,7 +109,8 @@ class JorgeFollowUpEngine:
             follow_up_message = await self._generate_follow_up_message(
                 seller_data=seller_data,
                 follow_up_config=follow_up_config,
-                contact_id=contact_id
+                contact_id=contact_id,
+                variant_config=variant_config
             )
             
             # 3. Create follow-up actions (tags, workflows, scheduling)
@@ -192,7 +195,8 @@ class JorgeFollowUpEngine:
         self,
         seller_data: Dict[str, Any],
         follow_up_config: Dict[str, Any],
-        contact_id: str
+        contact_id: str,
+        variant_config: Optional[Dict[str, Any]] = None
     ) -> FollowUpMessage:
         """Generate appropriate follow-up message based on type and sequence"""
         
@@ -221,6 +225,18 @@ class JorgeFollowUpEngine:
                 temperature, sequence_position, seller_name
             )
         
+        # --- A/B TESTING: VARIANT ADAPTATION ---
+        if variant_config and variant_config.get("name") != "Standard Direct":
+            try:
+                adapted = await self._adapt_followup_to_variant(
+                    message_content, 
+                    variant_config["name"]
+                )
+                if adapted:
+                    message_content = adapted
+            except Exception as e:
+                self.logger.warning(f"Follow-up variant adaptation failed: {e}")
+
         # Validate message compliance
         compliance_result = self.tone_engine.validate_message_compliance(message_content)
         
@@ -232,6 +248,45 @@ class JorgeFollowUpEngine:
             days_since_last_contact=days_since_contact,
             compliance_score=compliance_result.get("directness_score", 0.0)
         )
+
+    async def _adapt_followup_to_variant(self, message: str, variant_name: str) -> str:
+        """Subtly adapt follow-up message based on A/B test variant."""
+        try:
+            from ghl_real_estate_ai.core.llm_client import LLMClient, TaskComplexity
+            llm_client = LLMClient(provider="claude")
+
+            variant_prompts = {
+                "Educational Hook": "Subtly add a small educational insight or market context before the close. Maintain Jorge's directness.",
+                "Urgency Escalation": "Increase the sense of market urgency and speed. Emphasize why waiting costs money."
+            }
+            
+            instruction = variant_prompts.get(variant_name, "")
+            if not instruction:
+                return message
+
+            prompt = f"""Adapt this real estate follow-up SMS based on this strategy: {instruction}
+            
+            ORIGINAL SMS: "{message}"
+            
+            CONSTRAINTS:
+            1. Keep it under 160 characters.
+            2. NO EMOJIS. NO HYPHENS.
+            3. Maintain Jorge's professional and confrontational style.
+            
+            Return ONLY the adjusted message text."""
+
+            response = await llm_client.agenerate(
+                prompt=prompt,
+                system_prompt="You are a linguistic adaptation engine for SMS real estate marketing.",
+                temperature=0.3,
+                max_tokens=100,
+                complexity=TaskComplexity.ROUTINE
+            )
+            
+            adapted = response.content.strip()
+            return self.tone_engine._ensure_sms_compliance(adapted)
+        except Exception:
+            return message
 
     def _create_qualification_retry_message(
         self,

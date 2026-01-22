@@ -253,6 +253,14 @@ class VoiceAIHandler:
                 "follow_up": "I have deep expertise in that area. Let me share some insights.",
                 "qualify_indicators": ["etiwanda", "alta loma", "central", "victoria gardens"],
                 "weight": 5
+            },
+            {
+                "id": 7,
+                "question": "What's prompting the move? Why are you looking to buy or sell right now?",
+                "intent": "motivation_discovery",
+                "follow_up": "I understand. Knowing the 'why' helps me find the perfect strategy for you.",
+                "qualify_indicators": ["upsizing", "downsizing", "investment", "school district", "work"],
+                "weight": 10
             }
         ]
 

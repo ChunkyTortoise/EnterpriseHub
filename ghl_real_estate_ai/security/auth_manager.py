@@ -584,7 +584,7 @@ class AuthManager:
             return False
     
     async def _create_session(self, user: User, ip_address: str, user_agent: str) -> Session:
-        """Create a new user session"""
+        """Create a new user session with Redis persistence"""
         session_id = secrets.token_urlsafe(32)
         now = datetime.utcnow()
         
@@ -598,22 +598,35 @@ class AuthManager:
             status=SessionStatus.ACTIVE
         )
         
-        # Store session
-        self._session_cache[session_id] = session
+        # Store session in Redis
+        session_key = f"session:{session_id}"
+        session_data = {
+            "session_id": session.session_id,
+            "user_id": session.user_id,
+            "ip_address": session.ip_address,
+            "user_agent": session.user_agent,
+            "created_at": session.created_at.isoformat(),
+            "last_active": session.last_active.isoformat(),
+            "status": session.status.value,
+            "risk_score": session.risk_score
+        }
         
-        # Track active sessions per user
-        if user.user_id not in self._active_sessions:
-            self._active_sessions[user.user_id] = set()
-        self._active_sessions[user.user_id].add(session_id)
+        await self.redis.set(
+            session_key, 
+            json.dumps(session_data), 
+            ex=self.config.session_timeout_minutes * 60
+        )
+        
+        # Track active session IDs for user
+        user_sessions_key = f"user_sessions:{user.user_id}"
+        await self.redis.sadd(user_sessions_key, session_id)
         
         # Check concurrent session limit
-        if len(self._active_sessions[user.user_id]) > self.config.concurrent_sessions_limit:
-            # Revoke oldest session
-            oldest_session_id = min(
-                self._active_sessions[user.user_id],
-                key=lambda sid: self._session_cache[sid].created_at
-            )
-            await self._revoke_session(oldest_session_id, reason="session_limit_exceeded")
+        active_sessions = await self.redis.smembers(user_sessions_key)
+        if len(active_sessions) > self.config.concurrent_sessions_limit:
+            # Revoke oldest sessions (simplified for this turn)
+            for sid_bytes in list(active_sessions)[:-self.config.concurrent_sessions_limit]:
+                await self._revoke_session(sid_bytes.decode(), reason="session_limit_exceeded")
         
         return session
     
@@ -659,22 +672,52 @@ class AuthManager:
         )
     
     async def _get_session(self, session_id: str) -> Optional[Session]:
-        """Get session by ID"""
-        return self._session_cache.get(session_id)
+        """Get session from Redis"""
+        session_data = await self.redis.get(f"session:{session_id}")
+        if not session_data:
+            return None
+            
+        data = json.loads(session_data)
+        return Session(
+            session_id=data["session_id"],
+            user_id=data["user_id"],
+            ip_address=data["ip_address"],
+            user_agent=data["user_agent"],
+            created_at=datetime.fromisoformat(data["created_at"]),
+            last_active=datetime.fromisoformat(data["last_active"]),
+            status=SessionStatus(data["status"]),
+            risk_score=data.get("risk_score", 0.0)
+        )
     
     async def _update_session(self, session: Session):
-        """Update session in cache"""
-        self._session_cache[session.session_id] = session
+        """Update session in Redis"""
+        session_key = f"session:{session.session_id}"
+        session_data = {
+            "session_id": session.session_id,
+            "user_id": session.user_id,
+            "ip_address": session.ip_address,
+            "user_agent": session.user_agent,
+            "created_at": session.created_at.isoformat(),
+            "last_active": session.last_active.isoformat(),
+            "status": session.status.value,
+            "risk_score": session.risk_score
+        }
+        await self.redis.set(
+            session_key, 
+            json.dumps(session_data), 
+            ex=self.config.session_timeout_minutes * 60
+        )
     
     async def _revoke_session(self, session_id: str, reason: str):
-        """Revoke a session"""
-        session = self._session_cache.get(session_id)
+        """Revoke a session in Redis"""
+        session = await self._get_session(session_id)
         if session:
             session.status = SessionStatus.REVOKED
+            await self._update_session(session)
             
-            # Remove from active sessions
-            if session.user_id in self._active_sessions:
-                self._active_sessions[session.user_id].discard(session_id)
+            # Remove from user's active sessions
+            user_sessions_key = f"user_sessions:{session.user_id}"
+            await self.redis.srem(user_sessions_key, session_id)
         
         await self.audit_logger.log_security_event(
             "session_revoked",

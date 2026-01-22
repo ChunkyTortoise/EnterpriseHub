@@ -21,6 +21,7 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
 )
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.negotiation.mia_rvelous import get_mia_optimizer
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,19 @@ class NegotiationStrategyEngine:
             seller_psychology, market_leverage, offer_analysis
         )
         
+        # VANGUARD 3: MIA-RVelous Optimization
+        optimizer = get_mia_optimizer()
+        bid_sequence = optimizer.calculate_optimal_sequence(
+            agent_walkaway=float(offer_analysis["offer_range"]["min"]),
+            buyer_range_estimate=(float(offer_analysis["offer_range"]["min"]), float(offer_analysis["offer_range"]["max"])),
+            max_rounds=5,
+            time_pressure_factor=seller_psychology.urgency_score / 100.0
+        )
+        strategy_blend = optimizer.get_strategy_blend(
+            warmth=seller_psychology.flexibility_score / 100.0,
+            dominance=market_leverage.overall_leverage_score / 100.0
+        )
+        
         # Synthesize complete strategy
         strategy = NegotiationStrategy(
             primary_tactic=primary_tactic,
@@ -98,7 +112,9 @@ class NegotiationStrategyEngine:
             response_to_counter=tactical_guidance["counter_response"],
             negotiation_timeline=tactical_guidance["timeline"],
             primary_talking_points=ai_strategy_insights.get("talking_points", []),
-            objection_responses=ai_strategy_insights.get("objection_responses", {})
+            objection_responses=ai_strategy_insights.get("objection_responses", {}),
+            optimal_bid_sequence=bid_sequence,
+            strategy_blend=strategy_blend
         )
         
         # Cache strategy for 2 hours

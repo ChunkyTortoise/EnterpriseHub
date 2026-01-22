@@ -15,6 +15,7 @@ This comprehensive test validates the complete implementation.
 
 import asyncio
 import json
+import pytest
 import sys
 import os
 import traceback
@@ -58,6 +59,7 @@ class JorgeCompleteIntegrationTest:
         if details and not success:
             print(f"    Details: {details}")
 
+    @pytest.mark.asyncio
     async def test_data_models(self):
         """Test all Pydantic data models."""
         print("\n📋 Testing Data Models...")
@@ -234,6 +236,7 @@ class JorgeCompleteIntegrationTest:
             execution_time = time.time() - start_time
             self.log_test("Analytics Models Creation", False, f"Error: {str(e)}", execution_time)
 
+    @pytest.mark.asyncio
     async def test_services_integration(self):
         """Test service layer integration."""
         print("\n🔧 Testing Service Integration...")

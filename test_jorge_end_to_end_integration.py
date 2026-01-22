@@ -21,6 +21,7 @@ import sys
 import os
 import asyncio
 import json
+import pytest
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
@@ -371,6 +372,7 @@ class MockAnalyticsService:
         })
 
 
+@pytest.mark.asyncio
 async def test_hot_seller_journey():
     """Test complete journey resulting in hot seller"""
     print("🔥 Testing Hot Seller Journey (Complete Qualification)")
@@ -436,6 +438,7 @@ async def test_hot_seller_journey():
     return success, journey_result
 
 
+@pytest.mark.asyncio
 async def test_warm_seller_journey():
     """Test journey resulting in warm seller with follow-up"""
     print("🌡️  Testing Warm Seller Journey (Partial Qualification)")
@@ -491,6 +494,7 @@ async def test_warm_seller_journey():
     return success, journey_result
 
 
+@pytest.mark.asyncio
 async def test_cold_seller_journey():
     """Test journey with minimal engagement"""
     print("🧊 Testing Cold Seller Journey (Minimal Engagement)")
@@ -540,6 +544,7 @@ async def test_cold_seller_journey():
     return success, journey_result
 
 
+@pytest.mark.asyncio
 async def test_system_performance():
     """Test system performance under load"""
     print("⚡ Testing System Performance")
@@ -601,6 +606,7 @@ async def test_system_performance():
     return success
 
 
+@pytest.mark.asyncio
 async def test_edge_cases():
     """Test edge cases and error handling"""
     print("🚨 Testing Edge Cases and Error Handling")

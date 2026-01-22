@@ -345,7 +345,7 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                 st.metric('Match Rate', '92%', '+15%')
             st.info('🎯 **Claude Insight**: This lead shows immediate buying signals with high lifestyle compatibility. Recommend priority agent assignment within 24 hours.')
         elif analysis_result:
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4, col5, col6 = st.columns(6)
             with col1:
                 st.metric('Final Score', f'{analysis_result.final_score:.0f}%', '')
             with col2:
@@ -354,8 +354,44 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                 st.metric('Jorge Score', f'{analysis_result.jorge_score}/7', '')
             with col4:
                 st.metric('Churn Risk', f'{analysis_result.churn_risk_score:.0f}%', '', delta_color='inverse')
+            with col5:
+                st.metric('FRS (Fin)', f'{analysis_result.frs_score:.0f}%', '', help="Financial Readiness Score")
+            with col6:
+                st.metric('PCS (Psych)', f'{analysis_result.pcs_score:.0f}%', '', help="Psychological Commitment Score")
+            
+            # ELITE Metrics Section
+            with st.container(border=True):
+                c_elite1, c_elite2 = st.columns(2)
+                with c_elite1:
+                    st.markdown("#### 💰 Financial Readiness (FRS)")
+                    st.progress(analysis_result.frs_score / 100, text=f"Readiness Index: {analysis_result.frs_score:.0f}%")
+                    st.caption("Probability of transaction completion based on motivation, timeline, and realism.")
+                with c_elite2:
+                    st.markdown("#### 🧠 Psychological Commitment (PCS)")
+                    st.progress(analysis_result.pcs_score / 100, text=f"Commitment Index: {analysis_result.pcs_score:.0f}%")
+                    st.caption("Strength of emotional motivation based on velocity, depth, and engagement signals.")
+
             st.markdown("#### Claude's Strategic Summary")
             st.info(analysis_result.strategic_summary)
+            
+            # 🚀 RLHF Feedback Loop (Phase 4)
+            try:
+                from ghl_real_estate_ai.services.rlhf_service import get_rlhf_service
+                rlhf_service = get_rlhf_service()
+                
+                f_col1, f_col2, f_col3 = st.columns([1, 1, 4])
+                with f_col1:
+                    if st.button("👍", key=f"up_{selected_lead_name}"):
+                        asyncio.run(rlhf_service.record_feedback(f"trace_{selected_lead_name}", 1, context={"lead": selected_lead_name}))
+                        st.toast("Feedback recorded! Model lift +0.1%", icon="🚀")
+                with f_col2:
+                    if st.button("👎", key=f"down_{selected_lead_name}"):
+                        asyncio.run(rlhf_service.record_feedback(f"trace_{selected_lead_name}", -1, context={"lead": selected_lead_name}))
+                        st.toast("Correction logged for retraining.", icon="🔧")
+                with f_col3:
+                    st.caption("Help Jorge train the AI by rating this strategy.")
+            except Exception as e:
+                logger.error(f"RLHF UI Error: {e}")
         else:
             result = services['lead_scorer'].calculate_with_reasoning(lead_context)
             score = result['score']
@@ -584,23 +620,24 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                         st.error(psych['error'])
                     else:
                         render_obsidian_card(
-                            title="Behavioral Psychologist",
+                            title="Psychographic Analysis",
                             content=f"""
                             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
-                                <span style="color: #8B949E;">Personality:</span>
-                                <span style="color: #E6EDF3; font-weight: 600;">{psych.get('personality_type', 'Unknown')}</span>
+                                <span style="color: #8B949E;">Persona Node:</span>
+                                <span style="color: #00E5FF; font-weight: 800; text-transform: uppercase;">{psych.get('personality_type', 'Unknown')}</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
-                                <span style="color: #8B949E;">Style:</span>
-                                <span style="color: #E6EDF3; font-weight: 600;">{psych.get('communication_style', 'Unknown')}</span>
+                            <div style="background: rgba(0, 229, 255, 0.05); padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(0, 229, 255, 0.1); margin: 0.5rem 0;">
+                                <div style="font-size: 0.65rem; color: #8B949E; margin-bottom: 4px;">RECOMMENDED_TONE</div>
+                                <div style="font-size: 0.8rem; color: #E6EDF3; line-height: 1.4;">{psych.get('communication_style', 'Maintain professional neutrality.')}</div>
                             </div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1rem;">
-                                {' '.join((f'<span style="background: rgba(99, 102, 241, 0.15); color: #6366F1; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(99, 102, 241, 0.3);">{mot}</span>' for mot in psych.get('motivators', [])))}
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.5rem;">
+                                {' '.join((f'<span style="background: rgba(99, 102, 241, 0.1); color: #A5B4FC; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">{mot}</span>' for mot in psych.get('motivators', [])))}
                             </div>
                             """,
-                            icon='brain'
+                            icon='brain',
+                            config=CardConfig(variant='glass', padding='1.25rem')
                         )
-                        with st.expander('🔍 View Reasoning Trace'):
+                        with st.expander('🔍 View Psychological DNA'):
                             st.info(psych.get('reasoning_trace', 'No trace available.'))
                 with c4:
                     risk = results.get('Risk Analyst', {})

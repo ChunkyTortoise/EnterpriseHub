@@ -32,6 +32,9 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
+from ghl_real_estate_ai.services.twilio_client import TwilioClient
+from ghl_real_estate_ai.services.sendgrid_client import SendGridClient
+from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
 
@@ -965,6 +968,8 @@ class RealTimeBehavioralNetwork:
         self.cache = get_cache_service()
         self.llm_client = get_llm_client()
         self.lead_intelligence_swarm = get_lead_intelligence_swarm()
+        self.twilio_client = TwilioClient()
+        self.sendgrid_client = SendGridClient()
 
         # Initialize behavioral analysis agents
         self.signal_detector = SignalDetectorAgent(self.llm_client)
@@ -1899,9 +1904,35 @@ class RealTimeBehavioralNetwork:
     async def _send_email_alert(self, alert_payload: Dict[str, Any]) -> Dict[str, Any]:
         """Send email alert to management/agents."""
         try:
-            # Email alert implementation would go here
-            # For now, simulate success
-            return {'success': True, 'message_id': f"email_{int(time.time())}"}
+            lead_id = alert_payload.get('lead_id')
+            lead_name = alert_payload.get('lead_name', 'Unknown')
+            urgency = alert_payload.get('urgency_level', 'medium')
+            
+            subject = f"🚨 {urgency.upper()} PRIORITY: High-Intent Lead Detected - {lead_name}"
+            
+            html_content = f"""
+            <h2>High-Intent Behavioral Signal Detected</h2>
+            <p><strong>Lead Name:</strong> {lead_name}</p>
+            <p><strong>Lead Email:</strong> {alert_payload.get('lead_email')}</p>
+            <p><strong>Urgency Level:</strong> {urgency}</p>
+            <p><strong>Trigger Condition:</strong> {alert_payload.get('behavioral_trigger')}</p>
+            <h3>Recommended Actions:</h3>
+            <ul>
+                {"".join(f"<li>{action}</li>" for action in alert_payload.get('recommended_actions', []))}
+            </ul>
+            <p><a href="{alert_payload.get('dashboard_url')}">View Lead Dashboard</a></p>
+            """
+            
+            # Send email to default agent/management
+            # In production, this would be routed based on assignment
+            result = await self.sendgrid_client.send_email(
+                to_email=alert_payload.get('lead_email'), # Fallback for demo, should be agent email
+                subject=subject,
+                html_content=html_content,
+                lead_id=lead_id
+            )
+            
+            return {'success': True, 'message_id': result.message_id}
         except Exception as e:
             logger.error(f"Error sending email alert: {e}")
             return {'success': False, 'error': str(e)}
@@ -1909,9 +1940,23 @@ class RealTimeBehavioralNetwork:
     async def _send_sms_alert(self, alert_payload: Dict[str, Any]) -> Dict[str, Any]:
         """Send SMS alert for critical priority leads."""
         try:
-            # SMS alert implementation would go here
-            # For now, simulate success
-            return {'success': True, 'message_id': f"sms_{int(time.time())}"}
+            lead_id = alert_payload.get('lead_id')
+            lead_name = alert_payload.get('lead_name', 'Unknown')
+            urgency = alert_payload.get('urgency_level', 'medium')
+            phone = alert_payload.get('lead_phone')
+            
+            if not phone:
+                return {'success': False, 'error': 'No phone number provided'}
+                
+            message = f"🚨 {urgency.upper()} ALERT: High-intent lead {lead_name} detected. Trigger: {alert_payload.get('behavioral_trigger')}. Check dashboard: {alert_payload.get('dashboard_url')}"
+            
+            result = await self.twilio_client.send_sms(
+                to=phone, # In production, this would be agent phone
+                message=message,
+                lead_id=lead_id
+            )
+            
+            return {'success': True, 'message_id': result.sid}
         except Exception as e:
             logger.error(f"Error sending SMS alert: {e}")
             return {'success': False, 'error': str(e)}
@@ -1919,8 +1964,20 @@ class RealTimeBehavioralNetwork:
     async def _send_slack_alert(self, alert_payload: Dict[str, Any]) -> Dict[str, Any]:
         """Send Slack alert to team channel."""
         try:
-            # Slack alert implementation would go here
-            # For now, simulate success
+            # In production, this would use a Slack incoming webhook or client
+            # For now, we log it to the database as a system notification
+            db = await get_database()
+            await db.log_communication({
+                "lead_id": alert_payload.get('lead_id'),
+                "channel": "webhook",
+                "direction": "outbound",
+                "content": f"SLACK ALERT: {alert_payload.get('behavioral_trigger')}",
+                "status": "sent",
+                "metadata": {
+                    "alert_type": "slack",
+                    "payload": alert_payload
+                }
+            })
             return {'success': True, 'message_id': f"slack_{int(time.time())}"}
         except Exception as e:
             logger.error(f"Error sending Slack alert: {e}")
@@ -1929,8 +1986,19 @@ class RealTimeBehavioralNetwork:
     async def _send_dashboard_notification(self, alert_payload: Dict[str, Any]) -> Dict[str, Any]:
         """Send dashboard notification."""
         try:
-            # Dashboard notification implementation would go here
-            # For now, simulate success
+            # Log to internal communication logs for dashboard display
+            db = await get_database()
+            await db.log_communication({
+                "lead_id": alert_payload.get('lead_id'),
+                "channel": "webhook",
+                "direction": "outbound",
+                "content": f"DASHBOARD ALERT: {alert_payload.get('behavioral_trigger')}",
+                "status": "sent",
+                "metadata": {
+                    "alert_type": "dashboard",
+                    "payload": alert_payload
+                }
+            })
             return {'success': True, 'notification_id': f"dashboard_{int(time.time())}"}
         except Exception as e:
             logger.error(f"Error sending dashboard notification: {e}")

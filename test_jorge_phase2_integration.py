@@ -17,6 +17,7 @@ import sys
 import os
 import asyncio
 import json
+import pytest
 from typing import Dict, Any
 from dataclasses import dataclass
 from datetime import datetime
@@ -245,6 +246,7 @@ class IntegratedConversationManager(ConversationManager):
         self.property_matcher = None
 
 
+@pytest.mark.asyncio
 async def test_seller_scoring_integration():
     """Test seller scoring with LeadScorer integration"""
     print("🧮 Testing Seller Scoring Integration")
@@ -290,6 +292,7 @@ async def test_seller_scoring_integration():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_conversation_manager_seller_extraction():
     """Test conversation manager seller data extraction"""
     print("💬 Testing Conversation Manager Seller Extraction")
@@ -315,6 +318,7 @@ async def test_conversation_manager_seller_extraction():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_system_prompt_integration():
     """Test Jorge's seller system prompts"""
     print("📝 Testing System Prompt Integration")
@@ -360,6 +364,7 @@ async def test_system_prompt_integration():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_full_seller_conversation_flow():
     """Test complete seller conversation from start to hot lead"""
     print("🎯 Testing Full Seller Conversation Flow")
@@ -426,6 +431,7 @@ async def test_full_seller_conversation_flow():
     return final_temp == expected_temp
 
 
+@pytest.mark.asyncio
 async def test_temperature_classification_accuracy():
     """Test temperature classification across all seller types"""
     print("🌡️  Testing Temperature Classification Accuracy")

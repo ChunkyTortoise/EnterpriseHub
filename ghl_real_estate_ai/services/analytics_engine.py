@@ -23,7 +23,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.executive_dashboard import ExecutiveDashboardService
-from ghl_real_estate_ai.services.predictive_scoring import PredictiveLeadScorer
+from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
 from ghl_real_estate_ai.services.revenue_attribution import RevenueAttributionEngine
 
 logger = get_logger(__name__)
@@ -127,6 +127,7 @@ class MetricsCollector:
         context: Dict[str, Any],
         appointment_scheduled: bool = False,
         experiment_data: Optional[Dict[str, str]] = None,
+        predictive_result: Optional[Any] = None,
     ) -> ConversationMetrics:
         """
         Record a conversation event with comprehensive metrics.
@@ -142,6 +143,7 @@ class MetricsCollector:
             context: Conversation context
             appointment_scheduled: Whether appointment was scheduled
             experiment_data: Optional A/B test data {"experiment_id": "", "variant": ""}
+            predictive_result: Optional predictive score object
 
         Returns:
             ConversationMetrics object
@@ -171,10 +173,13 @@ class MetricsCollector:
         if created_at:
             try:
                 if isinstance(created_at, str):
-                    # Handle Z suffix for older Python versions
-                    if created_at.endswith('Z'):
-                        created_at = created_at[:-1] + '+00:00'
-                    created_dt = datetime.fromisoformat(created_at)
+                    # Handle possible ISO formats with 'Z' or offsets
+                    try:
+                        if created_at.endswith('Z'):
+                            created_at = created_at[:-1] + '+00:00'
+                        created_dt = datetime.fromisoformat(created_at)
+                    except ValueError:
+                        created_dt = datetime.now(timezone.utc)
                 else:
                     created_dt = created_at
                 
@@ -190,16 +195,23 @@ class MetricsCollector:
             duration = 0.0
 
         # Calculate conversion probability
-        scorer = PredictiveLeadScorer()
-        prediction = scorer.predict_conversion(
-            {
-                "contact_id": contact_id,
-                "lead_score": lead_score,
-                "messages": context.get("conversation_history", [])
-                + [{"text": message}],
-            }
-        )
-        conversion_probability = prediction.get("conversion_probability", 0.0)
+        if predictive_result:
+            conversion_probability = predictive_result.closing_probability
+        else:
+            # Fallback to internal calculation if not provided
+            scorer = PredictiveLeadScorerV2()
+            predictive_result_inner = await scorer.calculate_predictive_score(
+                {
+                    "contact_id": contact_id,
+                    "lead_score": lead_score,
+                    "conversation_history": context.get("conversation_history", [])
+                    + [{"content": message, "role": "user"}],
+                    "extracted_preferences": context.get("extracted_preferences", {}),
+                    "created_at": context.get("created_at")
+                },
+                location=location_id
+            )
+            conversion_probability = predictive_result_inner.closing_probability
 
         # Build metrics object
         metrics = ConversationMetrics(
@@ -230,8 +242,21 @@ class MetricsCollector:
             variant=experiment_data.get("variant") if experiment_data else None,
         )
 
-        # Add to buffer
-        self._buffer.append(metrics)
+        # Include predictive details in data if available
+        if predictive_result:
+            from dataclasses import asdict
+            metrics_dict = asdict(metrics)
+            metrics_dict["predictive_score"] = asdict(predictive_result)
+            # Handle non-serializable fields in nested dict
+            if hasattr(predictive_result.priority_level, 'value'):
+                metrics_dict["predictive_score"]["priority_level"] = predictive_result.priority_level.value
+            if isinstance(metrics_dict["predictive_score"].get("last_updated"), datetime):
+                metrics_dict["predictive_score"]["last_updated"] = metrics_dict["predictive_score"]["last_updated"].isoformat()
+            
+            # Add to buffer as dict for rich JSONL storage
+            self._buffer.append(metrics_dict)
+        else:
+            self._buffer.append(metrics)
 
         # Async flush if buffer is full
         if len(self._buffer) >= self._buffer_size:
@@ -255,8 +280,11 @@ class MetricsCollector:
 
         try:
             with open(metrics_file, "a") as f:
-                for metric in self._buffer:
-                    f.write(json.dumps(asdict(metric)) + "\n")
+                for entry in self._buffer:
+                    if hasattr(entry, "__dict__"):
+                        f.write(json.dumps(asdict(entry)) + "\n")
+                    else:
+                        f.write(json.dumps(entry) + "\n")
 
             logger.debug(f"Flushed {len(self._buffer)} metrics to {metrics_file}")
             self._buffer.clear()
@@ -776,7 +804,7 @@ class AnalyticsEngine:
         self.compliance_monitor = ComplianceMonitor(self.metrics_collector)
         self.topic_analyzer = TopicDistributionAnalyzer(self.metrics_collector)
         self.executive_dashboard = ExecutiveDashboardService()
-        self.predictive_scorer = PredictiveLeadScorer()
+        self.predictive_scorer = PredictiveLeadScorerV2()
         self.revenue_attribution = RevenueAttributionEngine()
 
         logger.info("Analytics engine initialized")
@@ -793,17 +821,22 @@ class AnalyticsEngine:
         context: Dict[str, Any],
         appointment_scheduled: bool = False,
         experiment_data: Optional[Dict[str, str]] = None,
+        predictive_result: Optional[Any] = None,
     ) -> ConversationMetrics:
         """Record a conversation event."""
-        # Calculate conversion probability using predictive scorer
-        prediction = self.predictive_scorer.predict_conversion(
-            {
-                "contact_id": contact_id,
-                "lead_score": lead_score,
-                "messages": context.get("conversation_history", [])
-                + [{"text": message}],
-            }
-        )
+        # Calculate conversion probability using predictive scorer if not provided
+        if not predictive_result:
+            predictive_result = await self.predictive_scorer.calculate_predictive_score(
+                {
+                    "contact_id": contact_id,
+                    "lead_score": lead_score,
+                    "conversation_history": context.get("conversation_history", [])
+                    + [{"content": message, "role": "user"}],
+                    "extracted_preferences": context.get("extracted_preferences", {}),
+                    "created_at": context.get("created_at")
+                },
+                location=location_id
+            )
 
         return await self.metrics_collector.record_conversation_event(
             contact_id=contact_id,
@@ -816,6 +849,7 @@ class AnalyticsEngine:
             context=context,
             appointment_scheduled=appointment_scheduled,
             experiment_data=experiment_data,
+            predictive_result=predictive_result
         )
 
     async def get_conversion_funnel(

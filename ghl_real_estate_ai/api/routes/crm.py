@@ -52,3 +52,20 @@ async def sync_lead(location_id: str, contact_id: str):
     }
     results = await service.sync_lead(mock_contact_data)
     return {"contact_id": contact_id, "results": results}
+
+
+@router.get("/ghl/fields")
+async def get_ghl_fields():
+    """
+    Fetches custom fields from GHL to help developers map the field IDs.
+    """
+    try:
+        from ghl_real_estate_ai.services.ghl_client import GHLClient
+        ghl = GHLClient()
+        fields = await ghl.get_custom_fields()
+        if not fields:
+            return {"message": "No fields found or API key not configured"}
+        return fields
+    except Exception as e:
+        logger.error(f"Error fetching GHL fields: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

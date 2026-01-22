@@ -29,6 +29,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.database_service import DatabaseService, log_communication
 from ghl_real_estate_ai.services.security_framework import SecurityFramework
+from ghl_real_estate_ai.services.template_library_service import get_template_library_service
 
 logger = get_logger(__name__)
 
@@ -390,7 +391,8 @@ class SendGridClient:
                         }
                     })
                 
-                logger.info(f"Email sent to {to_email}, Message ID: {message_id}")
+                masked_email = f"{to_email[:3]}***@{to_email.split('@')[-1]}" if '@' in to_email else "***"
+                logger.info(f"Email sent to {masked_email}, Message ID: {message_id}")
                 return email_message
                 
             except Exception as e:
@@ -401,247 +403,76 @@ class SendGridClient:
                                  variables: Dict[str, Any] = None,
                                  lead_id: str = None,
                                  campaign_id: str = None) -> EmailMessage:
-        """Send email using predefined template."""
-        template = await self._get_email_template(template_name)
+        """Send email using predefined template from TemplateLibraryService."""
+        template_service = await get_template_library_service()
         
-        if not template:
-            raise SendGridAPIException(f"Template '{template_name}' not found")
+        # Search for template by name
+        templates = await template_service.search_templates({"name": template_name, "type": "email"})
         
-        # Use template ID if available, otherwise use content
-        if template.get("sendgrid_id"):
-            return await self.send_email(
-                to_email=to_email,
-                subject="",  # Template handles subject
-                template_id=template["sendgrid_id"],
-                dynamic_template_data=variables or {},
-                lead_id=lead_id,
-                campaign_id=campaign_id
-            )
+        if not templates:
+            # Fallback to hardcoded templates (deprecated)
+            template = await self._get_hardcoded_template(template_name)
+            if not template:
+                raise SendGridAPIException(f"Template '{template_name}' not found")
+            
+            # Use template ID if available, otherwise use content
+            if template.get("sendgrid_id"):
+                return await self.send_email(
+                    to_email=to_email,
+                    subject="",  # Template handles subject
+                    template_id=template["sendgrid_id"],
+                    dynamic_template_data=variables or {},
+                    lead_id=lead_id,
+                    campaign_id=campaign_id
+                )
+            else:
+                # Use template content with variable substitution
+                html_content = template["html_content"]
+                plain_content = template["plain_content"]
+                subject = template["subject"]
+                
+                if variables:
+                    for key, value in variables.items():
+                        html_content = html_content.replace(f"{{{{{key}}}}}", str(value))
+                        plain_content = plain_content.replace(f"{{{{{key}}}}}", str(value))
+                        subject = subject.replace(f"{{{{{key}}}}}", str(value))
+                
+                return await self.send_email(
+                    to_email=to_email,
+                    subject=subject,
+                    html_content=html_content,
+                    plain_content=plain_content,
+                    lead_id=lead_id,
+                    campaign_id=campaign_id
+                )
         else:
-            # Use template content with variable substitution
-            html_content = template["html_content"]
-            plain_content = template["plain_content"]
-            subject = template["subject"]
-            
-            if variables:
-                for key, value in variables.items():
-                    html_content = html_content.replace(f"{{{{{key}}}}}", str(value))
-                    plain_content = plain_content.replace(f"{{{{{key}}}}}", str(value))
-                    subject = subject.replace(f"{{{{{key}}}}}", str(value))
+            # Use matching template from database
+            template = templates[0]
+            rendered = await template_service.render_template(template.id, variables or {})
             
             return await self.send_email(
                 to_email=to_email,
-                subject=subject,
-                html_content=html_content,
-                plain_content=plain_content,
+                subject=rendered.get("subject", ""),
+                html_content=rendered["content"],
                 lead_id=lead_id,
-                campaign_id=campaign_id
+                campaign_id=campaign_id,
+                template_id=template.id
             )
     
-    async def _get_email_template(self, template_name: str) -> Optional[Dict[str, Any]]:
-        """Get email template by name."""
-        # Check cache first
-        cached_template = await self.cache_service.get(f"email_template:{template_name}")
-        if cached_template:
-            return cached_template
-        
+    async def _get_hardcoded_template(self, template_name: str) -> Optional[Dict[str, Any]]:
+        """Get hardcoded email template (deprecated)."""
         # Predefined templates for Service 6
         templates = {
             "welcome": {
                 "id": "template_welcome",
                 "sendgrid_id": self.config.template_ids.get("welcome"),
                 "subject": "Welcome {{first_name}}! Let's find your perfect property",
-                "html_content": """
-                <html>
-                <body>
-                    <h2>Hi {{first_name}}!</h2>
-                    <p>Thank you for reaching out about real estate opportunities. I'm {{agent_name}} and I'm excited to help you find the perfect property.</p>
-                    
-                    <p>Based on your interest, I'll be sending you:</p>
-                    <ul>
-                        <li>Exclusive listings that match your criteria</li>
-                        <li>Market insights and trends</li>
-                        <li>Tips for buyers in today's market</li>
-                    </ul>
-                    
-                    <p>What's the best way to reach you? I'd love to schedule a quick 15-minute call to understand your needs better.</p>
-                    
-                    <p>Best regards,<br>{{agent_name}}<br>{{agent_phone}}</p>
-                    
-                    <p><small>You can <a href="{{unsubscribe_url}}">unsubscribe</a> at any time.</small></p>
-                </body>
-                </html>
-                """,
-                "plain_content": """
-                Hi {{first_name}}!
-                
-                Thank you for reaching out about real estate opportunities. I'm {{agent_name}} and I'm excited to help you find the perfect property.
-                
-                Based on your interest, I'll be sending you:
-                - Exclusive listings that match your criteria
-                - Market insights and trends
-                - Tips for buyers in today's market
-                
-                What's the best way to reach you? I'd love to schedule a quick 15-minute call to understand your needs better.
-                
-                Best regards,
-                {{agent_name}}
-                {{agent_phone}}
-                
-                You can unsubscribe at any time by replying UNSUBSCRIBE.
-                """,
-                "variables": ["first_name", "agent_name", "agent_phone", "unsubscribe_url"]
-            },
-            
-            "follow_up_24h": {
-                "id": "template_follow_up_24h",
-                "sendgrid_id": self.config.template_ids.get("follow_up_24h"),
-                "subject": "{{first_name}}, I found some properties you might love",
-                "html_content": """
-                <html>
-                <body>
-                    <h2>Hi {{first_name}},</h2>
-                    <p>I hope you had a chance to review my previous message. I've been working on finding properties that match your criteria, and I have some exciting options to share.</p>
-                    
-                    <h3>What makes these properties special:</h3>
-                    <ul>
-                        <li>Located in {{preferred_area}}</li>
-                        <li>Within your budget range</li>
-                        <li>Recently updated and market-ready</li>
-                    </ul>
-                    
-                    <p>Would you like me to send you a detailed analysis? I can also arrange private showings this week if any catch your eye.</p>
-                    
-                    <p><a href="{{calendar_link}}" style="background: #007cba; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Schedule a Call</a></p>
-                    
-                    <p>Looking forward to hearing from you,<br>{{agent_name}}</p>
-                </body>
-                </html>
-                """,
-                "plain_content": """
-                Hi {{first_name}},
-                
-                I hope you had a chance to review my previous message. I've been working on finding properties that match your criteria, and I have some exciting options to share.
-                
-                What makes these properties special:
-                - Located in {{preferred_area}}
-                - Within your budget range
-                - Recently updated and market-ready
-                
-                Would you like me to send you a detailed analysis? I can also arrange private showings this week if any catch your eye.
-                
-                Schedule a call: {{calendar_link}}
-                
-                Looking forward to hearing from you,
-                {{agent_name}}
-                """,
-                "variables": ["first_name", "preferred_area", "agent_name", "calendar_link"]
-            },
-            
-            "value_add_market_report": {
-                "id": "template_market_report",
-                "sendgrid_id": self.config.template_ids.get("market_report"),
-                "subject": "{{area_name}} Market Report - What buyers need to know",
-                "html_content": """
-                <html>
-                <body>
-                    <h2>{{area_name}} Market Insights</h2>
-                    <p>Hi {{first_name}},</p>
-                    
-                    <p>I thought you'd find this month's market report valuable as you consider your next move in {{area_name}}.</p>
-                    
-                    <h3>Key Market Trends:</h3>
-                    <ul>
-                        <li>Average days on market: {{avg_days_on_market}} days</li>
-                        <li>Price trend: {{price_trend}}</li>
-                        <li>Inventory levels: {{inventory_level}}</li>
-                    </ul>
-                    
-                    <h3>Buyer Opportunities:</h3>
-                    <p>{{market_opportunities}}</p>
-                    
-                    <p>Want to discuss how these trends affect your search? I'm here to help you navigate this market successfully.</p>
-                    
-                    <p>Best,<br>{{agent_name}}</p>
-                </body>
-                </html>
-                """,
-                "plain_content": """
-                {{area_name}} Market Insights
-                
-                Hi {{first_name}},
-                
-                I thought you'd find this month's market report valuable as you consider your next move in {{area_name}}.
-                
-                Key Market Trends:
-                - Average days on market: {{avg_days_on_market}} days
-                - Price trend: {{price_trend}}
-                - Inventory levels: {{inventory_level}}
-                
-                Buyer Opportunities:
-                {{market_opportunities}}
-                
-                Want to discuss how these trends affect your search? I'm here to help you navigate this market successfully.
-                
-                Best,
-                {{agent_name}}
-                """,
-                "variables": ["first_name", "area_name", "avg_days_on_market", "price_trend", "inventory_level", "market_opportunities", "agent_name"]
-            },
-            
-            "re_engagement_final": {
-                "id": "template_re_engagement_final",
-                "sendgrid_id": self.config.template_ids.get("re_engagement_final"),
-                "subject": "{{first_name}}, should I close your file?",
-                "html_content": """
-                <html>
-                <body>
-                    <h2>Hi {{first_name}},</h2>
-                    <p>I haven't heard from you in a while, and I want to respect your time and inbox.</p>
-                    
-                    <p>If you're no longer interested in receiving property updates and market insights, I completely understand. I'll remove you from my active buyer list.</p>
-                    
-                    <p><strong>However, if you're still interested...</strong></p>
-                    <p>Just reply to this email or give me a quick call. I have some new listings that weren't available when we last spoke, and the market has some interesting opportunities right now.</p>
-                    
-                    <p>Either way, I appreciate the time you gave me to learn about your property goals.</p>
-                    
-                    <p>Best regards,<br>{{agent_name}}<br>{{agent_phone}}</p>
-                    
-                    <p><small>If you prefer not to receive future emails, you can <a href="{{unsubscribe_url}}">unsubscribe here</a>.</small></p>
-                </body>
-                </html>
-                """,
-                "plain_content": """
-                Hi {{first_name}},
-                
-                I haven't heard from you in a while, and I want to respect your time and inbox.
-                
-                If you're no longer interested in receiving property updates and market insights, I completely understand. I'll remove you from my active buyer list.
-                
-                However, if you're still interested...
-                Just reply to this email or give me a quick call. I have some new listings that weren't available when we last spoke, and the market has some interesting opportunities right now.
-                
-                Either way, I appreciate the time you gave me to learn about your property goals.
-                
-                Best regards,
-                {{agent_name}}
-                {{agent_phone}}
-                """,
-                "variables": ["first_name", "agent_name", "agent_phone", "unsubscribe_url"]
+                "html_content": "<html><body><h2>Hi {{first_name}}!</h2><p>Welcome to our service.</p></body></html>",
+                "plain_content": "Hi {{first_name}}! Welcome to our service.",
+                "variables": ["first_name"]
             }
         }
-        
-        template = templates.get(template_name)
-        if template:
-            # Cache for future use
-            await self.cache_service.set(
-                f"email_template:{template_name}",
-                template,
-                ttl=3600  # 1 hour
-            )
-        
-        return template
+        return templates.get(template_name)
     
     # ============================================================================
     # Suppression Management
@@ -653,7 +484,8 @@ class SendGridClient:
         
         for suppression_type, emails in self._suppression_cache.items():
             if email_lower in emails:
-                logger.info(f"Email {email} is suppressed: {suppression_type.value}")
+                masked_email = f"{email[:3]}***@{email.split('@')[-1]}" if '@' in email else "***"
+                logger.info(f"Email {masked_email} is suppressed: {suppression_type.value}")
                 return True
         
         return False
@@ -822,7 +654,8 @@ class SendGridClient:
                     await self.add_to_suppression([email], suppression_type, 
                                                 event.get("reason", f"auto_{event_type}"))
                 
-                logger.debug(f"Processed {event_type} event for {email}")
+                masked_email = f"{email[:3]}***@{email.split('@')[-1]}" if '@' in email else "***"
+                logger.debug(f"Processed {event_type} event for {masked_email}")
             
             return True
             

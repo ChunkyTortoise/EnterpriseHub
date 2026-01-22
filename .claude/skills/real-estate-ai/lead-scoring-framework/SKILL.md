@@ -1,24 +1,32 @@
-# Lead Scoring Framework
+# Lead Scoring Framework (2026 Standard)
 
 ## Description
-A comprehensive real estate lead scoring system that combines Jorge's proven question-count methodology with machine learning predictions and dynamic adaptive weights. This framework unifies multiple scoring approaches with intelligent fallback mechanisms and A/B testing capabilities.
-
-## Key Features
-- **Jorge's Question-Count System**: Production-tested 7-question qualification with Hot/Warm/Cold classification
-- **ML-Enhanced Scoring**: Predictive models trained on behavioral patterns and conversion data
-- **Dynamic Weight Adaptation**: Real-time weight adjustment based on market conditions and performance
-- **Hybrid Orchestration**: Intelligent combination of all scoring methods with fallback hierarchy
-- **A/B Testing Framework**: Compare different scoring approaches and optimize for conversion
-- **Circuit Breaker Pattern**: Graceful degradation when components fail
-- **Performance Monitoring**: Track accuracy, response times, and business impact
+A comprehensive real estate lead scoring system that combines Jorge's proven 7-question qualification methodology with machine learning predictions and dynamic adaptive weights. This framework unifies multiple scoring approaches with intelligent fallback mechanisms, FHA compliance audit trails, and prompt-caching-optimized analysis.
 
 ## When to Use This Skill
-- Implementing multi-faceted lead qualification systems
-- Upgrading from simple scoring to ML-enhanced approaches
-- Building A/B testing frameworks for lead scoring optimization
-- Creating robust production systems with fallback mechanisms
-- Integrating multiple data sources for comprehensive lead analysis
-- Building scalable lead scoring for high-volume real estate operations
+- Implementing multi-faceted lead qualification systems.
+- Upgrading from simple scoring to ML-enhanced autonomous approaches.
+- Building A/B testing frameworks for lead scoring optimization.
+- Ensuring FHA compliance in lead assessments with full audit trails.
+- Optimizing lead analysis costs using Anthropic Prompt Caching.
+
+## Key Instructions
+1. **Analyze Input Data**: Gather conversation history, extracted preferences, and behavioral markers.
+2. **Apply Multi-Layer Scoring**:
+   - **Jorge's Baseline**: Count meaningful answers to 7 core qualification questions.
+   - **ML Enhancement**: Calculate 0-100 conversion probability based on behavioral patterns.
+   - **Market Context**: Adjust weights based on local inventory and seasonality.
+3. **Validate Compliance**: Run Fair Housing Act (FHA) audit checks to ensure unbiased assessment.
+4. **Optimize Cost**: Use prompt caching for large context blocks (system prompts/history).
+5. **Synthesize Reasoning**: Generate a strategic narrative explaining the score, not just the raw numbers.
+
+## Output Format
+- **Score**: 0-100 (ML-predicted)
+- **Classification**: Hot (3+ answers), Warm (2), Cold (≤1)
+- **Reasoning**: Strategic narrative with psychological insights.
+- **FHA Audit**: Structured audit trail (Audit ID, Status, Risk markers).
+- **Next Actions**: Specific, timed recommendations for Jorge.
+- **Cost Metrics**: Tokens used, cache hits, and estimated USD savings.
 
 ## Core Components
 

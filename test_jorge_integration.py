@@ -31,11 +31,13 @@ class TestJorgeIntegration:
 
         # Mock GHL webhook event
         self.base_event = GHLWebhookEvent(
+            type="InboundMessage",
             contact_id="test_contact_123",
             location_id="jorge_location",
             message=MessageData(
                 body="Hi, I need to sell my house",
-                type="SMS"
+                type="SMS",
+                direction="inbound"
             ),
             contact=ContactData(
                 first_name="John",
@@ -125,7 +127,8 @@ class TestJorgeIntegration:
     # JORGE'S 7-QUESTION QUALIFICATION SYSTEM TESTS
     # ============================================================================
 
-    def test_jorge_question_scoring(self):
+    @pytest.mark.asyncio
+    async def test_jorge_question_scoring(self):
         """Test Jorge's exact 7-question scoring system."""
         test_cases = [
             # No questions answered
@@ -155,7 +158,7 @@ class TestJorgeIntegration:
 
         for preferences, expected_score in test_cases:
             context = {"extracted_preferences": preferences}
-            actual_score = self.lead_scorer.calculate(context)
+            actual_score = await self.lead_scorer.calculate(context)
             assert actual_score == expected_score, \
                 f"Preferences {preferences} should score {expected_score}, got {actual_score}"
 
@@ -181,9 +184,10 @@ class TestJorgeIntegration:
 
         # Test without activation tag
         event_no_tag = GHLWebhookEvent(
+            type="InboundMessage",
             contact_id="test_contact",
             location_id="jorge_location",
-            message=MessageData(body="Hello", type="SMS"),
+            message=MessageData(body="Hello", type="SMS", direction="inbound"),
             contact=ContactData(
                 first_name="John",
                 tags=[]  # No activation tag

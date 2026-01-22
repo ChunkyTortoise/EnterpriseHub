@@ -236,7 +236,10 @@ class DatabaseService:
                 ("009_create_lead_activity_tables", self._migration_009_create_lead_activity_tables),
                 ("010_create_lead_journey_state", self._migration_010_create_lead_journey_state),
                 ("011_create_model_outcomes", self._migration_011_create_model_outcomes),
-                ("012_create_users_table", self._migration_012_create_users_table)
+                ("012_create_users_table", self._migration_012_create_users_table),
+                ("013_create_follow_up_tasks", self._migration_013_create_follow_up_tasks),
+                ("014_create_market_intelligence_tables", self._migration_014_create_market_intelligence_tables),
+                ("015_create_agents_table", self._migration_015_create_agents_table)
             ]
             
             # Check and apply migrations
@@ -284,6 +287,112 @@ class DatabaseService:
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
+        """)
+
+    async def _migration_013_create_follow_up_tasks(self, conn: Connection) -> None:
+        """Create table for autonomous follow-up tasks."""
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS follow_up_tasks (
+                id VARCHAR(100) PRIMARY KEY,
+                lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+                contact_id VARCHAR(100) NOT NULL,
+                channel VARCHAR(20) NOT NULL,
+                message TEXT NOT NULL,
+                scheduled_time TIMESTAMP WITH TIME ZONE NOT NULL,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                priority INTEGER DEFAULT 1,
+                intent_level VARCHAR(20),
+                metadata JSONB DEFAULT '{}',
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                executed_at TIMESTAMP WITH TIME ZONE,
+                result JSONB DEFAULT '{}'
+            )
+        """)
+        
+        # Add indexes for task queue performance
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_follow_up_tasks_status_time ON follow_up_tasks(status, scheduled_time ASC);
+            CREATE INDEX IF NOT EXISTS idx_follow_up_tasks_lead_id ON follow_up_tasks(lead_id);
+            CREATE INDEX IF NOT EXISTS idx_follow_up_tasks_priority ON follow_up_tasks(priority DESC);
+        """)
+
+    async def _migration_014_create_market_intelligence_tables(self, conn: Connection) -> None:
+        """Create tables for market intelligence and competitive analysis."""
+        # Market data table
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS market_data (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                market_area VARCHAR(100) NOT NULL,
+                analysis_period VARCHAR(50) NOT NULL,
+                avg_pricing JSONB NOT NULL,
+                market_velocity VARCHAR(50),
+                inventory_levels VARCHAR(50),
+                market_share JSONB,
+                competitor_pricing JSONB,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(market_area, analysis_period)
+            )
+        """)
+
+        # Competitor profiles table
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS competitor_profiles (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                competitor_id VARCHAR(100) UNIQUE NOT NULL,
+                name VARCHAR(200) NOT NULL,
+                website VARCHAR(255),
+                market_areas TEXT[] DEFAULT '{}',
+                specialties TEXT[] DEFAULT '{}',
+                team_size INTEGER,
+                threat_level VARCHAR(20),
+                social_media_handles JSONB DEFAULT '{}',
+                metadata JSONB DEFAULT '{}',
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+
+        # Add indexes
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_market_data_area ON market_data(market_area);
+            CREATE INDEX IF NOT EXISTS idx_competitor_profiles_threat ON competitor_profiles(threat_level);
+        """)
+
+    async def _migration_015_create_agents_table(self, conn: Connection) -> None:
+        """Create table for agents and team members."""
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS agents (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                first_name VARCHAR(100) NOT NULL,
+                last_name VARCHAR(100) NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                phone VARCHAR(20),
+                role VARCHAR(50) DEFAULT 'agent',
+                is_active BOOLEAN DEFAULT true,
+                specializations JSONB DEFAULT '[]',
+                territory JSONB DEFAULT '{}',
+                capacity INTEGER DEFAULT 100,
+                current_load INTEGER DEFAULT 0,
+                avg_response_time_minutes INTEGER DEFAULT 60,
+                conversion_rate DECIMAL(5,2) DEFAULT 0.0,
+                total_leads_handled INTEGER DEFAULT 0,
+                total_conversions INTEGER DEFAULT 0,
+                customer_satisfaction DECIMAL(3,2) DEFAULT 0.0,
+                working_hours JSONB DEFAULT '{}',
+                timezone VARCHAR(50) DEFAULT 'America/Los_Angeles',
+                is_available BOOLEAN DEFAULT true,
+                last_activity TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """)
+        
+        # Add indexes
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_agents_email ON agents(email);
+            CREATE INDEX IF NOT EXISTS idx_agents_availability ON agents(is_available, is_active);
+            CREATE INDEX IF NOT EXISTS idx_agents_load ON agents(current_load, capacity);
         """)
     
     async def _migration_001_create_leads_table(self, conn: Connection) -> None:
@@ -1440,6 +1549,32 @@ class DatabaseService:
 
             return [str(row['id']) for row in rows]
 
+    # ============================================================================
+    # Market Intelligence Operations
+    # ============================================================================
+
+    async def get_market_data(self, market_area: str, analysis_period: str = "30_days") -> Optional[Dict[str, Any]]:
+        """Get market data for a specific area and period."""
+        async with self.get_connection() as conn:
+            row = await conn.fetchrow("""
+                SELECT * FROM market_data 
+                WHERE market_area = $1 AND analysis_period = $2
+            """, market_area, analysis_period)
+            
+            if row:
+                return dict(row)
+            return None
+
+    async def get_competitor_profiles(self, market_areas: List[str]) -> List[Dict[str, Any]]:
+        """Get competitor profiles active in specific market areas."""
+        async with self.get_connection() as conn:
+            rows = await conn.fetch("""
+                SELECT * FROM competitor_profiles 
+                WHERE market_areas && $1
+            """, market_areas)
+            
+            return [dict(row) for row in rows]
+
     async def get_personalization_lead_data(self, lead_id: str) -> Dict[str, Any]:
         """Get lead data for content personalization."""
         async with self.get_connection() as conn:
@@ -1528,6 +1663,89 @@ class DatabaseService:
                 VALUES ($1, $2, $3, $4)
             """, inquiry_id, uuid.UUID(lead_id), uuid.UUID(agent_id) if agent_id else None, inquiry_text)
             return inquiry_id
+
+    # ============================================================================
+    # Follow-up Task Management (Service 6 State Persistence)
+    # ============================================================================
+
+    async def save_follow_up_task(self, task_data: Dict[str, Any]) -> str:
+        """
+        Save a follow-up task to the database for persistence.
+        Ensures state is not lost on service restart.
+        """
+        async with self.transaction() as conn:
+            # Check if task already exists
+            existing = await conn.fetchval("SELECT id FROM follow_up_tasks WHERE id = $1", task_data["task_id"])
+            
+            if existing:
+                await self.update_follow_up_task(task_data["task_id"], task_data)
+                return task_data["task_id"]
+
+            await conn.execute("""
+                INSERT INTO follow_up_tasks (
+                    id, lead_id, contact_id, channel, message, scheduled_time,
+                    status, priority, intent_level, metadata
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            """,
+                task_data["task_id"],
+                uuid.UUID(task_data["lead_id"]) if isinstance(task_data["lead_id"], str) else task_data["lead_id"],
+                task_data["contact_id"],
+                task_data["channel"],
+                task_data["message"],
+                task_data["scheduled_time"],
+                task_data.get("status", "pending"),
+                task_data.get("priority", 1),
+                task_data.get("intent_level"),
+                json.dumps(task_data.get("metadata", {}))
+            )
+            
+            logger.info(f"Persisted follow-up task {task_data['task_id']} for lead {task_data['lead_id']}")
+            return task_data["task_id"]
+
+    async def get_pending_follow_up_tasks(self, limit: int = 100) -> List[Dict[str, Any]]:
+        """Get pending follow-up tasks that are ready for execution."""
+        async with self.get_connection() as conn:
+            rows = await conn.fetch("""
+                SELECT * FROM follow_up_tasks
+                WHERE status IN ('pending', 'scheduled')
+                  AND scheduled_time <= NOW()
+                ORDER BY priority DESC, scheduled_time ASC
+                LIMIT $1
+            """, limit)
+            
+            return [dict(row) for row in rows]
+
+    async def update_follow_up_task(self, task_id: str, updates: Dict[str, Any]) -> bool:
+        """Update follow-up task status and result."""
+        async with self.transaction() as conn:
+            set_clauses = []
+            values = []
+            param_count = 1
+            
+            for field, value in updates.items():
+                if field == "id": continue # Cannot update ID
+                
+                if field == "metadata" or field == "result":
+                    set_clauses.append(f"{field} = ${param_count}")
+                    values.append(json.dumps(value))
+                elif field == "lead_id" and isinstance(value, str):
+                    set_clauses.append(f"{field} = ${param_count}")
+                    values.append(uuid.UUID(value))
+                else:
+                    set_clauses.append(f"{field} = ${param_count}")
+                    values.append(value)
+                param_count += 1
+            
+            if not set_clauses:
+                return True
+                
+            values.append(task_id)
+            query = f"UPDATE follow_up_tasks SET {', '.join(set_clauses)} WHERE id = ${param_count}"
+            
+            result = await conn.execute(query, *values)
+            rows_affected = int(result.split()[-1])
+            return rows_affected > 0
 
     # ============================================================================
     # Health Checks & Monitoring

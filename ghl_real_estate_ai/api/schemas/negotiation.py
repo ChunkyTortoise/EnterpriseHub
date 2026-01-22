@@ -135,6 +135,10 @@ class NegotiationStrategy(BaseModel):
     # Talking points
     primary_talking_points: List[str] = []
     objection_responses: Dict[str, str] = {}
+    
+    # Vanguard 3: Agentic Negotiation (Phase 11)
+    optimal_bid_sequence: List[float] = []
+    strategy_blend: Optional[str] = None
 
 
 class WinProbabilityAnalysis(BaseModel):

@@ -15,6 +15,7 @@ Created: 2026-01-19
 import sys
 import os
 import asyncio
+import pytest
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
@@ -98,6 +99,7 @@ class MockGHLClient:
         self.actions_applied.extend(actions)
 
 
+@pytest.mark.asyncio
 async def test_followup_engine_basic():
     """Test basic follow-up engine functionality"""
     print("🔧 Testing Follow-up Engine Basics")
@@ -138,6 +140,7 @@ async def test_followup_engine_basic():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_followup_scheduler_webhook():
     """Test follow-up scheduler webhook processing"""
     print("📨 Testing Follow-up Scheduler Webhook")
@@ -179,6 +182,7 @@ async def test_followup_scheduler_webhook():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_followup_scheduler_batch():
     """Test batch processing of scheduled follow-ups"""
     print("📊 Testing Batch Follow-up Processing")
@@ -207,6 +211,7 @@ async def test_followup_scheduler_batch():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_ghl_workflow_creation():
     """Test GHL workflow creation for automation"""
     print("⚙️  Testing GHL Workflow Creation")
@@ -234,6 +239,7 @@ async def test_ghl_workflow_creation():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_followup_sequence_timing():
     """Test follow-up sequence timing logic"""
     print("⏰ Testing Follow-up Sequence Timing")
@@ -287,6 +293,7 @@ async def test_followup_sequence_timing():
     print()
 
 
+@pytest.mark.asyncio
 async def test_temperature_based_content():
     """Test temperature-based follow-up content"""
     print("🌡️  Testing Temperature-Based Content")
@@ -323,6 +330,7 @@ async def test_temperature_based_content():
     print()
 
 
+@pytest.mark.asyncio
 async def test_qualification_retry_logic():
     """Test qualification retry logic for incomplete sellers"""
     print("🔄 Testing Qualification Retry Logic")
@@ -366,6 +374,7 @@ async def test_qualification_retry_logic():
     print()
 
 
+@pytest.mark.asyncio
 async def test_sms_compliance_in_followups():
     """Test SMS compliance in all follow-up messages"""
     print("📱 Testing SMS Compliance in Follow-ups")
@@ -431,6 +440,7 @@ async def test_sms_compliance_in_followups():
     print()
 
 
+@pytest.mark.asyncio
 async def test_analytics_tracking():
     """Test analytics tracking for follow-up automation"""
     print("📈 Testing Analytics Tracking")

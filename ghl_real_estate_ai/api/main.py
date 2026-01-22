@@ -36,6 +36,10 @@ from ghl_real_estate_ai.api.routes import (
     agent_sync,
     agent_ui,
     reports,
+    jorge_followup,
+    retell_webhook, # Added Retell Webhook
+    vapi,
+    external_webhooks,
 )
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 from ghl_real_estate_ai.api.middleware import (
@@ -382,7 +386,11 @@ app.include_router(pricing_optimization.router)  # Pricing & ROI endpoints
 app.include_router(golden_lead_detection.router)  # Golden Lead Detection endpoints
 app.include_router(attribution_reports.router, prefix="/api")  # Attribution Reports endpoints
 app.include_router(jorge_advanced.router, prefix="/api")  # Jorge's Advanced Features endpoints
+app.include_router(jorge_followup.router, prefix="/api")  # Jorge's Follow-up Automation endpoints
 app.include_router(reports.router, prefix="/api") # Reports router
+app.include_router(retell_webhook.router, prefix="/api") # Retell AI Webhooks
+app.include_router(vapi.router, prefix="/api") # Vapi Tool Integration
+app.include_router(external_webhooks.router, prefix="/api") # External Webhooks (Twilio, SendGrid)
 
 # Mobile API endpoints (Mobile-First Agent Experience)
 app.include_router(mobile_router, prefix="/api")  # Mobile API with AR/VR and voice capabilities

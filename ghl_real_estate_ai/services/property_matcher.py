@@ -21,6 +21,7 @@ from ghl_real_estate_ai.services.property_matching_strategy import (
     BasicFilteringStrategy,
     AISemanticSearchStrategy
 )
+from ghl_real_estate_ai.services.weaviate_client import get_weaviate_client
 
 logger = get_logger(__name__)
 
@@ -34,6 +35,7 @@ class PropertyMatcher:
 
     # SHARED RESOURCE POOL: Static instances shared across all tenant-specific Matchers
     _shared_valuation_engine = None
+    _weaviate_client = None
     _service_registry = {}
 
     # Class-level cache for property listings (shared across instances)
@@ -82,9 +84,14 @@ class PropertyMatcher:
             # For now, we perform dynamic discovery/import
             from ghl_real_estate_ai.services.dynamic_valuation_engine import get_dynamic_valuation_engine
             PropertyMatcher._shared_valuation_engine = get_dynamic_valuation_engine()
-            logger.info("PropertyMatcher: Centralized AVM Service Linked to Shared Pool")
+            PropertyMatcher._weaviate_client = get_weaviate_client()
+            logger.info("PropertyMatcher: Centralized AVM and Weaviate Services Linked to Shared Pool")
         except Exception as e:
             logger.error(f"Failed to discover shared AVM service: {e}")
+
+    @property
+    def weaviate_client(self):
+        return PropertyMatcher._weaviate_client
 
     async def get_property_valuation(self, property_data: Dict[str, Any]) -> Dict[str, Any]:
         """

@@ -24,7 +24,13 @@ class DojoRunner:
         self.llm = LLMClient()
         self.evaluator = DojoEvaluator()
         
-    async def run_sparring_match(self, regimen_name: str, persona_name: str, max_turns: int = 4):
+    async def run_sparring_match(
+        self, 
+        regimen_name: str, 
+        persona_name: str, 
+        max_turns: int = 4,
+        custom_agent_prompt: Optional[str] = None
+    ):
         """
         Executes a single sparring match between the agent and a persona.
         """
@@ -37,12 +43,15 @@ class DojoRunner:
         
         for turn in range(max_turns):
             # 1. Trainee Agent (Assistant) responds
-            agent_system_prompt = f"""
-            You are an elite Real Estate AI Agent.
-            Your Goal: {persona.get('goal')}
-            Context: You are talking to a lead who is {persona_name}.
-            Behavioral Guidelines: Be professional, helpful, and strictly follow fair housing laws.
-            """
+            if custom_agent_prompt:
+                agent_system_prompt = custom_agent_prompt
+            else:
+                agent_system_prompt = f"""
+                You are an elite Real Estate AI Agent.
+                Your Goal: {persona.get('goal')}
+                Context: You are talking to a lead who is {persona_name}.
+                Behavioral Guidelines: Be professional, helpful, and strictly follow fair housing laws.
+                """
             
             agent_messages = history + [{"role": "user", "content": current_input}]
             try:
@@ -124,7 +133,9 @@ async def run_regimen(regimen_name: str, iterations: int = 1):
     persona_map = {
         "Objection Handling": "The Aggressive Investor",
         "Compliance Drills": "The Fair Housing Trap",
-        "Lead Qualification": "The Vague Browser"
+        "Lead Qualification": "The Vague Browser",
+        "Conflict ROI Defense": "The Litigious Seller",
+        "Equity Protection": "The Repair Denier"
     }
     
     persona_name = persona_map.get(regimen_name, "The Confused First-Timer")
