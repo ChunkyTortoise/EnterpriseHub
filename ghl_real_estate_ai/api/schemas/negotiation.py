@@ -156,6 +156,7 @@ class NegotiationIntelligence(BaseModel):
     """Complete negotiation intelligence package"""
     property_id: str
     lead_id: str
+    tenant_id: str = Field(..., description="Tenant ID owning or managing this negotiation")
     analysis_timestamp: datetime
     
     # Core analyses
@@ -179,6 +180,7 @@ class NegotiationAnalysisRequest(BaseModel):
     """Request for negotiation intelligence analysis"""
     property_id: str
     lead_id: str
+    tenant_id: str = Field(..., description="Tenant ID for the negotiation context")
     
     # Optional context
     buyer_preferences: Optional[Dict[str, Any]] = None

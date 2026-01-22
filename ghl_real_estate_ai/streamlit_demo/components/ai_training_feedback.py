@@ -83,3 +83,23 @@ def render_rlhf_loop():
     )
     st.plotly_chart(fig, use_container_width=True)
     st.caption("RLHF has improved overall matching precision by 6.8% this week.")
+
+    # Dojo Exports (Phase 4 Bridge)
+    if 'rlhf_pool' in st.session_state and st.session_state.rlhf_pool:
+        st.markdown("---")
+        st.markdown("#### 🥋 Exported Dojo Matches (Few-Shot Candidates)")
+        
+        for i, item in enumerate(st.session_state.rlhf_pool):
+            with st.container(border=True):
+                st.markdown(f"**Regimen:** {item['regimen']} | **Persona:** {item['persona']}")
+                st.markdown(f"**Sensei Score:** {item['score']}/5")
+                st.info(f"**Sensei Feedback:** {item['feedback']}")
+                
+                with st.expander("View Transcript"):
+                    for msg in item['history']:
+                        role = "👤 Lead" if msg['role'] == 'user' else "🤖 Agent"
+                        st.markdown(f"**{role}:** {msg['content']}")
+                
+                if st.button(f"✅ Approve for Prompt Library (Item {i})", use_container_width=True):
+                    st.success("Conversation added to Agent prompt library as a few-shot example.")
+                    st.toast("System prompt updated.", icon="🚀")

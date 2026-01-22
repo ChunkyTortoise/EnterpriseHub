@@ -17,6 +17,7 @@ from typing import Dict, List, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -174,7 +175,7 @@ async def liveness_probe():
 
 
 @router.get("/ready", response_model=DetailedHealthResponse)
-async def readiness_probe():
+async def readiness_probe(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Kubernetes-style readiness probe.
     
@@ -291,7 +292,7 @@ async def readiness_probe():
 
 
 @router.get("/deep", response_model=DetailedHealthResponse)
-async def deep_health_check():
+async def deep_health_check(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Comprehensive deep health check.
     
@@ -409,7 +410,7 @@ async def deep_health_check():
 
 
 @router.get("/metrics")
-async def performance_metrics():
+async def performance_metrics(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Get performance and operational metrics.
     
@@ -452,7 +453,7 @@ async def performance_metrics():
 
 
 @router.get("/dependencies")
-async def dependency_status():
+async def dependency_status(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Get status of all external dependencies.
     
@@ -556,7 +557,7 @@ async def dependency_status():
 
 
 @router.post("/alerts/test")
-async def test_alerting():
+async def test_alerting(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """
     Test the alerting system by creating a test alert.
     

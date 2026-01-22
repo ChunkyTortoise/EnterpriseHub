@@ -185,6 +185,8 @@ class LLMClient:
         if self.provider == LLMProvider.CLAUDE:
             if complexity == TaskComplexity.ROUTINE:
                 return settings.claude_haiku_model
+            if complexity == TaskComplexity.HIGH_STAKES:
+                return settings.claude_opus_model
             return settings.claude_sonnet_model
         
         # Default to the initialized model for other providers
@@ -288,7 +290,12 @@ class LLMClient:
             event=HookEvent.PRE_GENERATION,
             agent_name="LLMClient",
             input_data={"prompt": prompt, "system": system_prompt},
-            metadata={"model": target_model, "provider": self.provider.value, "complexity": complexity.value if complexity else None}
+            metadata={
+                "model": target_model, 
+                "provider": self.provider.value, 
+                "complexity": complexity.value if complexity else None,
+                "tenant_id": kwargs.get("tenant_id")
+            }
         ))
 
         response = None
@@ -309,7 +316,11 @@ class LLMClient:
             agent_name="LLMClient",
             input_data={"prompt": prompt},
             output_data=response,
-            metadata={"tokens_used": response.tokens_used, "model": target_model}
+            metadata={
+                "tokens_used": response.tokens_used, 
+                "model": target_model,
+                "tenant_id": kwargs.get("tenant_id")
+            }
         ))
         
         return response
@@ -325,103 +336,172 @@ class LLMClient:
         cached_content: Optional[str] = None,
         tools: Optional[List[Any]] = None,
         complexity: Optional[TaskComplexity] = None,
+        failover: bool = True,
+        images: Optional[List[str]] = None, # Base64 encoded images
         **kwargs
     ) -> LLMResponse:
-        """Generate a response from the LLM (Asynchronous)."""
+        """
+        Generate a response from the LLM (Asynchronous) with Circuit Breaker Failover and Vision support.
+        """
         self._init_async_client()
-        if not self._async_client:
+        if not self._async_client and not failover:
             raise RuntimeError(f"{self.provider.value} async client not initialized")
 
         # Determine which model to use based on complexity
         target_model = self._get_routed_model(complexity)
 
-        if self.provider == LLMProvider.GEMINI:
-            # Gemini history handling
-            full_prompt = f"{system_prompt}\n\n" if system_prompt else ""
-            if history:
-                for msg in history:
-                    full_prompt += f"{msg['role']}: {msg['content']}\n"
-            full_prompt += f"user: {prompt}"
-            
-            gen_config = {"max_output_tokens": max_tokens, "temperature": temperature}
-            
-            if response_schema:
-                gen_config["response_mime_type"] = "application/json"
-                gen_config["response_schema"] = response_schema
+        # Hook: Pre-Generation
+        await hooks.atrigger(HookEvent.PRE_GENERATION, HookContext(
+            event=HookEvent.PRE_GENERATION,
+            agent_name="LLMClient",
+            input_data={"prompt": prompt, "system": system_prompt, "has_images": bool(images)},
+            metadata={
+                "model": target_model, 
+                "provider": self.provider.value, 
+                "complexity": complexity.value if complexity else None,
+                "tenant_id": kwargs.get("tenant_id")
+            }
+        ))
 
-            # Create model instance with tools if provided
-            import google.generativeai as genai
-            model = genai.GenerativeModel(model=target_model, tools=tools)
-            
-            if cached_content:
-                from google.generativeai import caching
-                cache = caching.CachedContent.get(cached_content)
+        try:
+            if self.provider == LLMProvider.GEMINI:
+                # Gemini history handling
+                full_prompt_parts = []
+                if system_prompt:
+                    full_prompt_parts.append(system_prompt)
+                
+                if history:
+                    for msg in history:
+                        full_prompt_parts.append(f"{msg['role']}: {msg['content']}")
+                
+                full_prompt_parts.append(f"user: {prompt}")
+                
+                # Add images to Gemini prompt
+                if images:
+                    for img_b64 in images:
+                        full_prompt_parts.append({
+                            "mime_type": "image/jpeg",
+                            "data": img_b64
+                        })
+                
+                gen_config = {"max_output_tokens": max_tokens, "temperature": temperature}
+                
+                if response_schema:
+                    gen_config["response_mime_type"] = "application/json"
+                    gen_config["response_schema"] = response_schema
+
+                import google.generativeai as genai
+                model = genai.GenerativeModel(model_name=target_model, tools=tools)
+                
                 response = await model.generate_content_async(
-                    full_prompt,
-                    generation_config=gen_config,
-                    cached_content=cache
-                )
-            else:
-                response = await model.generate_content_async(
-                    full_prompt,
+                    full_prompt_parts,
                     generation_config=gen_config
                 )
-            
-            input_tokens = getattr(response.usage_metadata, 'prompt_token_count', None) if hasattr(response, 'usage_metadata') else None
-            output_tokens = getattr(response.usage_metadata, 'candidates_token_count', None) if hasattr(response, 'usage_metadata') else None
-            
-            # Extract tool calls if they exist
-            tool_calls = []
-            if response.candidates and response.candidates[0].content.parts:
-                for part in response.candidates[0].content.parts:
-                    if part.function_call:
-                        tool_calls.append({
-                            "name": part.function_call.name,
-                            "args": dict(part.function_call.args)
+                
+                input_tokens = getattr(response.usage_metadata, 'prompt_token_count', None) if hasattr(response, 'usage_metadata') else None
+                output_tokens = getattr(response.usage_metadata, 'candidates_token_count', None) if hasattr(response, 'usage_metadata') else None
+                
+                tool_calls = []
+                if response.candidates and response.candidates[0].content.parts:
+                    for part in response.candidates[0].content.parts:
+                        if part.function_call:
+                            tool_calls.append({
+                                "name": part.function_call.name,
+                                "args": dict(part.function_call.args)
+                            })
+
+                try:
+                    content = response.text
+                except ValueError:
+                    content = ""
+
+                result = LLMResponse(
+                    content=content,
+                    provider=self.provider,
+                    model=target_model,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
+                    finish_reason=response.candidates[0].finish_reason.name if response.candidates else None,
+                    tool_calls=tool_calls if tool_calls else None
+                )
+            elif self.provider == LLMProvider.PERPLEXITY:
+                result = await self._agenerate_perplexity(prompt, system_prompt, history, max_tokens, temperature, model_override=target_model)
+            else:
+                # Primary: Claude with Vision support
+                messages = history.copy() if history else []
+                
+                content = []
+                if images:
+                    for img_b64 in images:
+                        content.append({
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/jpeg",
+                                "data": img_b64
+                            }
                         })
+                content.append({"type": "text", "text": prompt})
+                
+                messages.append({"role": "user", "content": content})
+                
+                response = await self._async_client.messages.create(
+                    model=target_model,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    system=system_prompt or "You are a helpful AI assistant.",
+                    messages=messages
+                )
+                
+                input_tokens = response.usage.input_tokens if hasattr(response, 'usage') else None
+                output_tokens = response.usage.output_tokens if hasattr(response, 'usage') else None
+                
+                result = LLMResponse(
+                    content=response.content[0].text,
+                    provider=self.provider,
+                    model=target_model,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
+                    finish_reason=response.stop_reason
+                )
 
-            # Try to get text content, handle case where it might be empty (tool call only)
-            try:
-                content = response.text
-            except ValueError:
-                content = ""
+        except Exception as e:
+            logger.error(f"LLM Provider {self.provider.value} failed: {e}")
+            if failover and self.provider != LLMProvider.GEMINI and settings.google_api_key:
+                logger.warning(f"CIRCUIT BREAKER: Failing over to Gemini to preserve lead interaction.")
+                failover_client = LLMClient(provider="gemini")
+                result = await failover_client.agenerate(
+                    prompt=prompt,
+                    system_prompt=system_prompt,
+                    history=history,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    response_schema=response_schema,
+                    tools=tools,
+                    failover=False, 
+                    images=images,
+                    **kwargs
+                )
+            else:
+                raise e
 
-            return LLMResponse(
-                content=content,
-                provider=self.provider,
-                model=target_model,
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
-                finish_reason=response.candidates[0].finish_reason.name if response.candidates else None,
-                tool_calls=tool_calls if tool_calls else None
-            )
-        elif self.provider == LLMProvider.PERPLEXITY:
-            return await self._agenerate_perplexity(prompt, system_prompt, history, max_tokens, temperature, model_override=target_model)
-        else:
-            messages = history.copy() if history else []
-            messages.append({"role": "user", "content": prompt})
-            
-            response = await self._async_client.messages.create(
-                model=target_model,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                system=system_prompt or "You are a helpful AI assistant.",
-                messages=messages
-            )
-            
-            input_tokens = response.usage.input_tokens if hasattr(response, 'usage') else None
-            output_tokens = response.usage.output_tokens if hasattr(response, 'usage') else None
-            
-            return LLMResponse(
-                content=response.content[0].text,
-                provider=self.provider,
-                model=target_model,
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                tokens_used=(input_tokens + output_tokens) if input_tokens and output_tokens else None,
-                finish_reason=response.stop_reason
-            )
+        # Hook: Post-Generation
+        await hooks.atrigger(HookEvent.POST_GENERATION, HookContext(
+            event=HookEvent.POST_GENERATION,
+            agent_name="LLMClient",
+            input_data={"prompt": prompt},
+            output_data=result,
+            metadata={
+                "tokens_used": result.tokens_used, 
+                "model": result.model,
+                "tenant_id": kwargs.get("tenant_id"),
+                "is_failover": self.provider != result.provider
+            }
+        ))
+        
+        return result
 
     async def astream(
         self,
@@ -486,7 +566,7 @@ class LLMClient:
 
         target_model = model_override or self.model
         import google.generativeai as genai
-        model = genai.GenerativeModel(model=target_model, tools=tools)
+        model = genai.GenerativeModel(model_name=target_model, tools=tools)
         
         if cached_content:
             from google.generativeai import caching

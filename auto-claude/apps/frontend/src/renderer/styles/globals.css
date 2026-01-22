@@ -6,9 +6,30 @@
 
 /* Define custom theme colors for Tailwind CSS v4 */
 @theme {
+  /* Core Primitives (Elite 2026) */
+  --color-primary-elite: #00D2FF;
+  --color-primary-elite-rgb: 0, 210, 255;
+  --color-secondary-elite: #0045FF;
+  --color-secondary-elite-rgb: 0, 69, 255;
+  --color-accent-elite: #FF00E5;
+
   /* Font families */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Playfair Display', serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  /* Semantic Roles (Elite 2026) */
+  --bg-app-elite: #05070A;
+  --bg-card-elite: rgba(15, 23, 42, 0.5);
+  --border-glass-elite: rgba(255, 255, 255, 0.1);
+
+  /* Spacing Scale (Fluid) */
+  --spacing-container-elite: clamp(1rem, 5vw, 4rem);
+  --spacing-gutter-elite: clamp(1rem, 2vw, 2rem);
+
+  /* Effects */
+  --shadow-elite: 0 0 40px rgba(0, 210, 255, 0.15);
+  --blur-elite: blur(24px);
 
   /* Colors - using CSS variables for theme switching */
   --color-border: var(--border);
@@ -1025,6 +1046,81 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.8);
   --shadow-focus: 0 0 0 3px rgba(74, 222, 128, 0.3);
+}
+
+/* ============================================
+   ELITE THEME (2026 Edition)
+   Deep oceanic blues with neon accents
+   ============================================ */
+[data-theme="elite"] {
+  --background: var(--bg-app-elite);
+  --foreground: #F8FAFC;
+
+  --card: var(--bg-card-elite);
+  --card-foreground: #F8FAFC;
+
+  --primary: var(--color-primary-elite);
+  --primary-foreground: #05070A;
+
+  --secondary: var(--color-secondary-elite);
+  --secondary-foreground: #F8FAFC;
+
+  --muted: #0F172A;
+  --muted-foreground: #94A3B8;
+
+  --accent: var(--color-accent-elite);
+  --accent-foreground: #05070A;
+
+  --destructive: #FF0055;
+  --destructive-foreground: #F8FAFC;
+
+  --border: var(--border-glass-elite);
+  --input: var(--border-glass-elite);
+  --ring: var(--color-primary-elite);
+
+  --sidebar: #020617;
+  --sidebar-foreground: #F8FAFC;
+
+  --popover: #0F172A;
+  --popover-foreground: #F8FAFC;
+
+  /* Shadows & Effects */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
+  --shadow-lg: var(--shadow-elite);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.8);
+  --shadow-focus: 0 0 0 3px rgba(0, 210, 255, 0.3);
+}
+
+/* Custom Scrollbar - following Elite design system */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-elite);
+}
+
+/* Typography Utilities */
+.text-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.05em;
+}
+
+.glass-effect {
+  background: var(--card);
+  backdrop-filter: var(--blur-elite);
+  border: 1px solid var(--border);
 }
 
 /* Base styles */

@@ -11,9 +11,33 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import anthropic
+import asyncio
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+
+# Jorge System 3.0 - Phase 5: Autonomous Expansion
+# Import the Cleaner agent logic (Self-Healing Data Pipeline)
+try:
+    from ghl_real_estate_ai.agents.agent_swarm_orchestrator_v2 import AgentSwarmOrchestratorV2
+    cleaner_orchestrator = AgentSwarmOrchestratorV2()
+except ImportError:
+    cleaner_orchestrator = None
+
+# Phase 7: Autonomous Integration Orchestrator
+try:
+    from ghl_real_estate_ai.services.autonomous_integration_orchestrator import get_autonomous_integration_orchestrator
+    orchestrator = get_autonomous_integration_orchestrator()
+    asyncio.create_task(orchestrator.initialize_system())
+except ImportError:
+    orchestrator = None
+
+# Phase 7: Model Retraining
+try:
+    from ghl_real_estate_ai.services.model_retraining_service import get_retraining_service
+    retraining_service = get_retraining_service()
+except ImportError:
+    retraining_service = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -251,12 +275,29 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
     try:
         payload = await request.json()
         logger.info(f"Received webhook: {payload}")
+        
+        # Phase 5: Self-Healing Data Pipeline (The Cleaner)
+        if cleaner_orchestrator:
+            logger.info("Triggering 'The Cleaner' agent for data standardization...")
+            payload = await cleaner_orchestrator.run_cleaner(payload)
+            logger.info(f"Cleaned payload: {payload}")
+            
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
 
     contact_id = payload.get("contactId")
     location_id = payload.get("locationId")
     tags = payload.get("tags", [])
+    hook_type = payload.get("type")
+
+    # Phase 7: Handle Opportunity Status Changes for Retraining
+    if hook_type == "OpportunityStatusUpdate" and retraining_service:
+        status = payload.get("status", "").lower()
+        value = float(payload.get("monetaryValue", 0.0))
+        if status in ["won", "lost", "abandoned"]:
+            logger.info(f"🎯 Capturing outcome for retraining: {contact_id} -> {status}")
+            background_tasks.add_task(retraining_service.record_outcome, contact_id, status, value)
+            return JSONResponse({"status": "outcome_recorded"})
 
     # Check if AI should engage
     ai_on = "AI Assistant: ON" in tags or "ai_on" in tags
@@ -265,6 +306,45 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
     if ai_off or not ai_on:
         logger.info(f"AI not engaged for contact {contact_id} - tags: {tags}")
         return JSONResponse({"status": "skipped", "reason": "AI not enabled"})
+
+    # Phase 7: Autonomous Processing via Orchestrator
+    if orchestrator:
+        logger.info(f"🚀 Processing lead {contact_id} via Autonomous Integration Orchestrator (Phase 7)")
+        # Map GHL payload to expected activity data
+        activity_data = {
+            "tags": tags,
+            "customFields": payload.get("customFields", {}),
+            "type": payload.get("type")
+        }
+        # In GHL webhooks, the message is often in customFields or another field depending on trigger
+        recent_messages = [payload.get("message", "")] if payload.get("message") else []
+        
+        results = await orchestrator.process_lead_comprehensive(
+            lead_id=contact_id,
+            activity_data=activity_data,
+            context={"location_id": location_id, "recent_messages": recent_messages}
+        )
+        
+        # Phase 7: Regional Compliance Audit
+        from ghl_real_estate_ai.agents.regional_compliance_agent import get_compliance_agent
+        compliance = get_compliance_agent()
+        # Region could be determined from location_id or custom field
+        region = payload.get("customFields", {}).get("region", "TX")
+        
+        # Check if an automated response was generated
+        objection_result = results.get("component_results", {}).get("objection_handling", {})
+        if objection_result.get("objection_detected") and objection_result.get("suggested_response"):
+            ai_message = objection_result["suggested_response"]
+            
+            # Compliance check before sending
+            warnings = compliance.audit_message(ai_message, region)
+            if warnings:
+                logger.warning(f"⚠️ Compliance Warning for lead {contact_id}: {warnings}")
+                # In strict mode, we might block the message here. 
+                # For now, we log and proceed with Jorge's approval.
+
+            background_tasks.add_task(send_sms_via_ghl, contact_id, location_id, ai_message)
+            return JSONResponse({"status": "responded_to_objection", "message": ai_message})
 
     # Get or create qualification state
     if contact_id not in qualification_states:

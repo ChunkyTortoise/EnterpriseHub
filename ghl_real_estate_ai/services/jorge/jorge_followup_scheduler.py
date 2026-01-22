@@ -460,6 +460,10 @@ class JorgeFollowUpScheduler:
     async def _should_trigger_follow_up(self, seller_data: Dict[str, Any]) -> bool:
         """Determine if follow-up should be triggered"""
         
+        # 1. Business Hours Check (Jorge's Requirement: 9 AM - 6 PM)
+        if not self._is_business_hours():
+            return False
+
         # Don't follow up with hot sellers (they should be handled by agents)
         if seller_data.get("seller_temperature") == "hot":
             return False
@@ -492,6 +496,22 @@ class JorgeFollowUpScheduler:
                 pass
         
         return True
+
+    def _is_business_hours(self) -> bool:
+        """
+        Check if current time is within business hours (9 AM - 6 PM).
+        TODO: Implement location-specific timezone lookup using location_id.
+        Currently uses server time (assumed to be UTC or configured system time).
+        """
+        now = datetime.now()
+        
+        # Weekend Check (Optional: Jorge might want weekends)
+        # if now.weekday() >= 5: return False 
+        
+        start_hour = 9
+        end_hour = 18 # 6 PM
+        
+        return start_hour <= now.hour < end_hour
 
     async def _get_contacts_due_for_follow_up(
         self,

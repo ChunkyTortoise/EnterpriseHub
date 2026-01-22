@@ -1,0 +1,41 @@
+# Gemini CLI Configuration
+
+[api]
+model_default = "gemini-2.5-flash"
+api_key_env = "GOOGLE_API_KEY"
+rate_limit = 100  # requests per minute
+timeout_sec = 60
+
+[cache]
+enabled = true
+ttl_sec = 3600  # 1 hour
+max_size_mb = 100
+
+[mcp]
+# Enable MCP server discovery
+enabled = true
+
+[[mcp.servers]]
+name = "context-compressor"
+command = "python ghl_real_estate_ai/core/mcp_servers/context_compressor.py"
+transport = "stdio"
+auto_approve_tools = true
+
+[[mcp.servers]]
+name = "prompt-library"
+command = "python ghl_real_estate_ai/core/mcp_servers/prompt_library.py"
+transport = "stdio"
+auto_approve_tools = true
+
+[logging]
+enabled = true
+log_file = "gemini_api.log"
+log_level = "info"
+include_tokens = true
+include_cost = true
+
+[ide]
+# IDE integration (VS Code + Gemini Code Assist)
+enabled = true
+workspace_root = "./"
+native_diff = true

@@ -81,6 +81,7 @@ class PropertyFeatures(BaseModel):
 class Property(BaseModel):
     """Complete property information."""
     id: str
+    tenant_id: str = Field(..., description="Tenant ID owning or managing this property")
     mls_number: Optional[str] = None
     address: PropertyAddress
     price: float
@@ -204,6 +205,7 @@ class PropertyMatch(BaseModel):
 class PropertyMatchRequest(BaseModel):
     """Request for property matching."""
     lead_id: str
+    tenant_id: str = Field(..., description="Tenant ID for the lead and matching context")
     lead_data: Dict[str, Any]
     preferences: Optional[LeadPropertyPreferences] = None
 

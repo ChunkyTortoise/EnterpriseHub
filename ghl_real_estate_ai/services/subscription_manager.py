@@ -73,7 +73,7 @@ class SubscriptionManager:
             # Get tier configuration
             tier_config = SUBSCRIPTION_TIERS[request.tier]
 
-            # Store subscription in database (database operations would go here)
+            # Store subscription in database
             subscription_data = {
                 "location_id": request.location_id,
                 "stripe_subscription_id": stripe_subscription.id,
@@ -87,7 +87,7 @@ class SubscriptionManager:
                     stripe_subscription.current_period_end, tz=timezone.utc
                 ),
                 "usage_allowance": tier_config.usage_allowance,
-                "usage_current": 0,  # Start with 0 usage
+                "usage_current": 0,
                 "overage_rate": tier_config.overage_rate,
                 "base_price": tier_config.price_monthly,
                 "trial_end": datetime.fromtimestamp(
@@ -96,21 +96,59 @@ class SubscriptionManager:
                 "cancel_at_period_end": stripe_subscription.cancel_at_period_end or False
             }
 
-            # TODO: Insert into database
-            # await db.subscriptions.insert(subscription_data)
+            from ghl_real_estate_ai.services.database_service import get_database
+            db = await get_database()
+            
+            # Insert subscription into database
+            async with db.get_connection() as conn:
+                await conn.execute("""
+                    INSERT INTO subscriptions (
+                        location_id, stripe_subscription_id, stripe_customer_id,
+                        tier, status, current_period_start, current_period_end,
+                        usage_allowance, usage_current, overage_rate, base_price,
+                        trial_end, cancel_at_period_end
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                    ON CONFLICT (location_id) DO UPDATE SET
+                        stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+                        status = EXCLUDED.status,
+                        current_period_start = EXCLUDED.current_period_start,
+                        current_period_end = EXCLUDED.current_period_end,
+                        tier = EXCLUDED.tier,
+                        usage_allowance = EXCLUDED.usage_allowance
+                """, 
+                    subscription_data["location_id"],
+                    subscription_data["stripe_subscription_id"],
+                    subscription_data["stripe_customer_id"],
+                    subscription_data["tier"],
+                    subscription_data["status"],
+                    subscription_data["current_period_start"],
+                    subscription_data["current_period_end"],
+                    subscription_data["usage_allowance"],
+                    subscription_data["usage_current"],
+                    subscription_data["overage_rate"],
+                    subscription_data["base_price"],
+                    subscription_data["trial_end"],
+                    subscription_data["cancel_at_period_end"]
+                )
 
-            # TODO: Store customer mapping
-            # await db.stripe_customers.insert({
-            #     "location_id": request.location_id,
-            #     "stripe_customer_id": stripe_subscription.customer,
-            #     "email": request.email,
-            #     "name": request.name
-            # })
+                # Store customer mapping
+                await conn.execute("""
+                    INSERT INTO stripe_customers (location_id, stripe_customer_id, email, name)
+                    VALUES ($1, $2, $3, $4)
+                    ON CONFLICT (location_id) DO UPDATE SET
+                        stripe_customer_id = EXCLUDED.stripe_customer_id,
+                        email = EXCLUDED.email,
+                        name = EXCLUDED.name
+                """, request.location_id, stripe_subscription.customer, request.email, request.name)
 
             logger.info(f"Successfully initialized subscription {stripe_subscription.id}")
 
+            # Get the inserted record to return correct ID
+            async with db.get_connection() as conn:
+                db_id = await conn.fetchval("SELECT id FROM subscriptions WHERE location_id = $1", request.location_id)
+
             return SubscriptionResponse(
-                id=1,  # TODO: Get from database
+                id=db_id,
                 **subscription_data,
                 usage_percentage=0.0,
                 next_invoice_date=datetime.fromtimestamp(
@@ -138,14 +176,25 @@ class SubscriptionManager:
             Active subscription or None if no active subscription
         """
         try:
-            # TODO: Query database for active subscription
-            # subscription_record = await db.subscriptions.filter(
-            #     location_id=location_id,
-            #     status="active"
-            # ).first()
+            from ghl_real_estate_ai.services.database_service import get_database
+            db = await get_database()
+            
+            async with db.get_connection() as conn:
+                row = await conn.fetchrow("""
+                    SELECT * FROM subscriptions 
+                    WHERE location_id = $1 AND status = 'active'
+                """, location_id)
 
-            # For now, return None (no database integration yet)
-            logger.info(f"Queried active subscription for location {location_id}")
+            if row:
+                sub_data = dict(row)
+                usage_percentage = (sub_data['usage_current'] / sub_data['usage_allowance']) * 100 if sub_data['usage_allowance'] > 0 else 0
+                return SubscriptionResponse(
+                    **sub_data,
+                    usage_percentage=round(usage_percentage, 2),
+                    next_invoice_date=sub_data['current_period_end']
+                )
+            
+            logger.info(f"No active subscription found for location {location_id}")
             return None
 
         except Exception as e:
@@ -170,9 +219,17 @@ class SubscriptionManager:
             SubscriptionManagerError: If tier change fails
         """
         try:
-            # TODO: Get current subscription from database
-            # current_subscription = await db.subscriptions.get(id=subscription_id)
-
+            from ghl_real_estate_ai.services.database_service import get_database
+            db = await get_database()
+            
+            # Get current subscription from database
+            async with db.get_connection() as conn:
+                current_row = await conn.fetchrow("SELECT * FROM subscriptions WHERE id = $1", subscription_id)
+            
+            if not current_row:
+                raise SubscriptionManagerError(f"Subscription {subscription_id} not found")
+            
+            current_sub = dict(current_row)
             logger.info(f"Changing subscription {subscription_id} to tier {new_tier}")
 
             # Get new tier configuration
@@ -181,16 +238,8 @@ class SubscriptionManager:
             # Modify subscription in Stripe
             modify_request = ModifySubscriptionRequest(tier=new_tier)
             stripe_subscription = await self.billing_service.modify_subscription(
-                "subscription_id_placeholder",  # TODO: Use actual Stripe ID
+                current_sub['stripe_subscription_id'],
                 modify_request
-            )
-
-            # Calculate proration and update database
-            period_start = datetime.fromtimestamp(
-                stripe_subscription.current_period_start, tz=timezone.utc
-            )
-            period_end = datetime.fromtimestamp(
-                stripe_subscription.current_period_end, tz=timezone.utc
             )
 
             # Reset usage allowance for new tier
@@ -199,30 +248,48 @@ class SubscriptionManager:
                 "usage_allowance": new_tier_config.usage_allowance,
                 "overage_rate": new_tier_config.overage_rate,
                 "base_price": new_tier_config.price_monthly,
-                # Keep current usage unless it's a period reset
+                "current_period_start": datetime.fromtimestamp(stripe_subscription.current_period_start, tz=timezone.utc),
+                "current_period_end": datetime.fromtimestamp(stripe_subscription.current_period_end, tz=timezone.utc),
+                "status": stripe_subscription.status
             }
 
-            # TODO: Update database
-            # await db.subscriptions.update(subscription_id, usage_reset_data)
+            # Update database
+            async with db.get_connection() as conn:
+                await conn.execute("""
+                    UPDATE subscriptions SET
+                        tier = $1, usage_allowance = $2, overage_rate = $3,
+                        base_price = $4, current_period_start = $5, current_period_end = $6,
+                        status = $7, updated_at = NOW()
+                    WHERE id = $8
+                """, 
+                    usage_reset_data["tier"],
+                    usage_reset_data["usage_allowance"],
+                    usage_reset_data["overage_rate"],
+                    usage_reset_data["base_price"],
+                    usage_reset_data["current_period_start"],
+                    usage_reset_data["current_period_end"],
+                    usage_reset_data["status"],
+                    subscription_id
+                )
 
             logger.info(f"Successfully changed subscription {subscription_id} to {new_tier}")
 
             return SubscriptionResponse(
                 id=subscription_id,
-                location_id="placeholder",  # TODO: Get from database
+                location_id=current_sub['location_id'],
                 stripe_subscription_id=stripe_subscription.id,
                 stripe_customer_id=stripe_subscription.customer,
                 tier=new_tier,
                 status=SubscriptionStatus(stripe_subscription.status),
-                current_period_start=period_start,
-                current_period_end=period_end,
+                current_period_start=usage_reset_data["current_period_start"],
+                current_period_end=usage_reset_data["current_period_end"],
                 **usage_reset_data,
-                usage_current=0,  # TODO: Get from database
-                usage_percentage=0.0,  # Will be calculated
+                usage_current=current_sub['usage_current'],
+                usage_percentage=0.0,  # Will be calculated by client
                 trial_end=None,
                 cancel_at_period_end=stripe_subscription.cancel_at_period_end or False,
-                next_invoice_date=period_end,
-                created_at=datetime.now(timezone.utc)
+                next_invoice_date=usage_reset_data["current_period_end"],
+                created_at=current_sub['created_at']
             )
 
         except BillingServiceError as e:
@@ -325,14 +392,16 @@ class SubscriptionManager:
             Total overage cost
         """
         try:
-            # TODO: Get subscription details from database
-            # subscription = await db.subscriptions.get(id=subscription_id)
-            # overage_rate = subscription.overage_rate
+            from ghl_real_estate_ai.services.database_service import get_database
+            db = await get_database()
+            
+            async with db.get_connection() as conn:
+                overage_rate = await conn.fetchval("SELECT overage_rate FROM subscriptions WHERE id = $1", subscription_id)
 
-            # Placeholder overage rate (from Professional tier)
-            overage_rate = SUBSCRIPTION_TIERS[SubscriptionTier.PROFESSIONAL].overage_rate
+            if overage_rate is None:
+                overage_rate = SUBSCRIPTION_TIERS[SubscriptionTier.PROFESSIONAL].overage_rate
 
-            total_overage_cost = overage_rate * Decimal(overage_count)
+            total_overage_cost = Decimal(str(overage_rate)) * Decimal(overage_count)
 
             logger.info(
                 f"Calculated overage cost for subscription {subscription_id}: "
@@ -362,10 +431,21 @@ class SubscriptionManager:
             Billing result with usage record details
         """
         try:
-            # TODO: Get subscription billing period from database
-            period_start = datetime.now(timezone.utc).replace(day=1)  # Placeholder
-            period_end = period_start + timedelta(days=32)
-            period_end = period_end.replace(day=1) - timedelta(days=1)  # Last day of month
+            from ghl_real_estate_ai.services.database_service import get_database
+            db = await get_database()
+            
+            # Get subscription billing period from database
+            async with db.get_connection() as conn:
+                sub_row = await conn.fetchrow("""
+                    SELECT current_period_start, current_period_end 
+                    FROM subscriptions WHERE id = $1
+                """, subscription_id)
+            
+            if not sub_row:
+                raise SubscriptionManagerError(f"Subscription {subscription_id} not found")
+
+            period_start = sub_row['current_period_start']
+            period_end = sub_row['current_period_end']
 
             # Create usage record request
             usage_request = UsageRecordRequest(
@@ -381,18 +461,20 @@ class SubscriptionManager:
             # Record usage with Stripe
             stripe_usage_record = await self.billing_service.add_usage_record(usage_request)
 
-            # TODO: Store usage record in database
-            # await db.usage_records.insert({
-            #     "subscription_id": subscription_id,
-            #     "stripe_usage_record_id": stripe_usage_record.id,
-            #     "lead_id": lead_id,
-            #     "contact_id": contact_id,
-            #     "quantity": 1,
-            #     "amount": lead_price,
-            #     "tier": tier,
-            #     "billing_period_start": period_start,
-            #     "billing_period_end": period_end
-            # })
+            # Store usage record in database
+            async with db.get_connection() as conn:
+                await conn.execute("""
+                    INSERT INTO usage_records (
+                        subscription_id, stripe_usage_record_id, lead_id, contact_id,
+                        quantity, amount, tier, billing_period_start, billing_period_end
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                """, 
+                    subscription_id, stripe_usage_record.id, lead_id, contact_id,
+                    1, lead_price, tier, period_start, period_end
+                )
+                
+                # Increment current usage count
+                await conn.execute("UPDATE subscriptions SET usage_current = usage_current + 1 WHERE id = $1", subscription_id)
 
             logger.info(
                 f"Billed overage for subscription {subscription_id}: "
@@ -438,35 +520,41 @@ class SubscriptionManager:
             Usage summary with current period statistics
         """
         try:
-            # TODO: Get subscription and usage data from database
-            # subscription = await db.subscriptions.filter(location_id=location_id, status="active").first()
-            # if not subscription:
-            #     return None
+            from ghl_real_estate_ai.services.database_service import get_database
+            db = await get_database()
+            
+            async with db.get_connection() as conn:
+                subscription = await conn.fetchrow("SELECT * FROM subscriptions WHERE location_id = $1 AND status = 'active'", location_id)
+                if not subscription:
+                    return None
 
-            # current_period_start = subscription.current_period_start
-            # current_period_end = subscription.current_period_end
+                sub_data = dict(subscription)
+                
+                # Count usage by tier from usage_records
+                tier_counts_rows = await conn.fetch("""
+                    SELECT tier, COUNT(*) as count 
+                    FROM usage_records 
+                    WHERE subscription_id = $1 
+                      AND billing_period_start = $2
+                    GROUP BY tier
+                """, sub_data['id'], sub_data['current_period_start'])
+                
+                usage_by_tier = {row['tier']: row['count'] for row in tier_counts_rows}
 
-            # usage_records = await db.usage_records.filter(
-            #     subscription_id=subscription.id,
-            #     billing_period_start__lte=current_period_start,
-            #     billing_period_end__gte=current_period_end
-            # ).all()
-
-            # Placeholder data
-            usage_allowance = 150  # Professional tier
-            usage_current = 87
+            usage_allowance = sub_data['usage_allowance']
+            usage_current = sub_data['usage_current']
             usage_remaining = max(0, usage_allowance - usage_current)
             overage_count = max(0, usage_current - usage_allowance)
 
-            base_cost = SUBSCRIPTION_TIERS[SubscriptionTier.PROFESSIONAL].price_monthly
-            overage_rate = SUBSCRIPTION_TIERS[SubscriptionTier.PROFESSIONAL].overage_rate
+            base_cost = sub_data['base_price']
+            overage_rate = sub_data['overage_rate']
             overage_cost = overage_rate * Decimal(overage_count)
             total_cost = base_cost + overage_cost
 
             return UsageSummary(
-                subscription_id=1,  # Placeholder
-                period_start=datetime.now(timezone.utc).replace(day=1),
-                period_end=datetime.now(timezone.utc).replace(day=1) + timedelta(days=32),
+                subscription_id=sub_data['id'],
+                period_start=sub_data['current_period_start'],
+                period_end=sub_data['current_period_end'],
                 usage_allowance=usage_allowance,
                 usage_current=usage_current,
                 usage_remaining=usage_remaining,
@@ -474,11 +562,7 @@ class SubscriptionManager:
                 base_cost=base_cost,
                 overage_cost=overage_cost,
                 total_cost=total_cost,
-                usage_by_tier={
-                    "hot": 24,
-                    "warm": 38,
-                    "cold": 25
-                }
+                usage_by_tier=usage_by_tier
             )
 
         except Exception as e:
@@ -494,13 +578,22 @@ class SubscriptionManager:
             Tier distribution with counts and percentages
         """
         try:
-            # TODO: Query database for actual tier distribution
-            # tier_counts = await db.subscriptions.group_by('tier').count()
-
-            # Placeholder data
-            starter_count = 12
-            professional_count = 23
-            enterprise_count = 8
+            from ghl_real_estate_ai.services.database_service import get_database
+            db = await get_database()
+            
+            async with db.get_connection() as conn:
+                rows = await conn.fetch("""
+                    SELECT tier, COUNT(*) as count 
+                    FROM subscriptions 
+                    WHERE status = 'active'
+                    GROUP BY tier
+                """)
+            
+            tier_counts = {row['tier']: row['count'] for row in rows}
+            
+            starter_count = tier_counts.get(SubscriptionTier.STARTER.value, 0)
+            professional_count = tier_counts.get(SubscriptionTier.PROFESSIONAL.value, 0)
+            enterprise_count = tier_counts.get(SubscriptionTier.ENTERPRISE.value, 0)
             total_subscriptions = starter_count + professional_count + enterprise_count
 
             if total_subscriptions > 0:

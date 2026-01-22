@@ -224,6 +224,7 @@ try:
     from ghl_real_estate_ai.streamlit_demo.components.floating_claude import render_floating_claude
     from ghl_real_estate_ai.streamlit_demo.components.project_copilot import render_project_copilot
     from ghl_real_estate_ai.streamlit_demo.components.billing_dashboard import show as render_billing_dashboard
+    from ghl_real_estate_ai.streamlit_demo.components.marketplace_management import render_marketplace_management
 
     SERVICES_LOADED = True
 except ImportError as e:
@@ -1071,8 +1072,10 @@ with st.sidebar:
     bi_hubs = [
         "Executive Command Center",
         "Lead Intelligence Hub",
+        "Agent ROI Dashboard",
         "Real-Time Intelligence",
         "Billing Analytics",
+        "Marketplace Management",
         "Ops & Optimization"
     ]
     
@@ -2123,6 +2126,25 @@ if selected_hub == "Executive Command Center":
             """
             render_dossier_block(synthesis_html, title="STRATEGIC SYNTHESIS: CHIEF STRATEGY OFFICER")
             
+            # PHASE 6: REVENUE ARBITRAGE MAP
+            st.markdown("---")
+            st.markdown("### 🗺️ Revenue Arbitrage Map")
+            st.markdown("*Predictive yield analysis for institutional-grade decision making*")
+            
+            # Mock data for arbitrage
+            arbitrage_data = pd.DataFrame({
+                "Zip Code": ["78701", "78704", "78745", "78751", "78758", "78702"],
+                "Net Yield %": [14.7, 14.6, 18.8, 13.9, 19.2, 20.1],
+                "Potential Profit": [125000, 110000, 85000, 95000, 75000, 105000]
+            })
+            
+            fig_map = px.bar(arbitrage_data, x="Zip Code", y="Potential Profit", 
+                             color="Net Yield %", text="Net Yield %",
+                             color_continuous_scale="Viridis",
+                             title="Profit Potential by Zip Code (Ranked by Yield)")
+            fig_map.update_traces(texttemplate='%{text}%', textposition='outside')
+            st.plotly_chart(style_obsidian_chart(fig_map), use_container_width=True)
+
             st.markdown("#### Specialist Findings")
             specialists = swarm_results.get("specialist_insights", {})
             
@@ -2185,6 +2207,9 @@ if selected_hub == "Executive Command Center":
     render_executive_hub(services, mock_data, sparkline, render_insight_card)
 elif selected_hub == "Lead Intelligence Hub":
     render_lead_intelligence_hub(services, mock_data, claude, market_key, selected_market, elite_mode=st.session_state.get('elite_mode', False))
+elif selected_hub == "Agent ROI Dashboard":
+    from ghl_real_estate_ai.streamlit_demo.components.agent_roi_dashboard import render_agent_roi_dashboard
+    render_agent_roi_dashboard()
 elif selected_hub == "Voice Claude":
     render_voice_claude_hub()
 elif selected_hub == "Voice AI Assistant":
@@ -2231,6 +2256,9 @@ elif selected_hub == "Billing Analytics":
         st.error("⚠️ Billing Analytics Temporarily Unavailable")
         st.info("Billing system integration is being optimized. Please try again shortly.")
         print(f"BILLING DASHBOARD ERROR: {str(e)}")
+elif selected_hub == "Marketplace Management":
+    render_marketplace_management()
+
 elif selected_hub == "Ops & Optimization":
     ops_hub = OpsOptimizationHub(services, claude)
     ops_hub.render_hub()

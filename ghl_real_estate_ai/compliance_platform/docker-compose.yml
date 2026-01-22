@@ -1,0 +1,71 @@
+# Enterprise AI Compliance Platform
+# Docker Compose configuration for full deployment
+
+version: '3.8'
+
+services:
+  # Main Compliance Platform
+  compliance-platform:
+    build:
+      context: ../..
+      dockerfile: ghl_real_estate_ai/compliance_platform/Dockerfile
+    container_name: ai-compliance-platform
+    ports:
+      - "8501:8501"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/compliance
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - compliance-network
+
+  # Redis for caching and audit logs
+  redis:
+    image: redis:7-alpine
+    container_name: compliance-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - compliance-network
+
+  # PostgreSQL for persistent storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: compliance-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=compliance
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - compliance-network
+
+volumes:
+  redis-data:
+  postgres-data:
+
+networks:
+  compliance-network:
+    driver: bridge

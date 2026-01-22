@@ -158,7 +158,7 @@ class SellerPsychologyAnalyzer:
         if days_on_market > 60 and offers == 0:
             market_feedback = "poor"
             seller_awareness = "low" if not listing_history.price_drops else "learning"
-        elif offers > 0 but days_on_market > 30:
+        elif offers > 0 and days_on_market > 30:
             market_feedback = "mixed"
             seller_awareness = "moderate"
         else:

@@ -103,15 +103,8 @@ class JWTAuth:
                 detail="Token has expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        except jwt.InvalidTokenError as e:
-            logger.error(f"Invalid JWT token: {str(e)}", extra={"security_event": "jwt_verification_failed", "error_id": "JWT_005"})
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
         except JWTError as e:
-            logger.error(f"JWT processing error: {str(e)}", extra={"security_event": "jwt_processing_error", "error_id": "JWT_006"})
+            logger.error(f"Invalid JWT token: {str(e)}", extra={"security_event": "jwt_verification_failed", "error_id": "JWT_005"})
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
@@ -163,3 +156,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         )
     
     return {"user_id": user_id, "payload": payload}
+
+
+# Alias for backward compatibility
+require_auth = get_current_user
+verify_jwt_token = JWTAuth.verify_token

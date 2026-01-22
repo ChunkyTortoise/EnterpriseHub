@@ -26,15 +26,17 @@ class MemoryService:
     Persistent memory service for storing conversation context.
     """
 
-    def __init__(self, storage_type: str = "file"):
+    def __init__(self, storage_type: Optional[str] = None):
         """
         Initialize memory service.
 
         Args:
-            storage_type: Type of storage ("memory" or "file").
-                         Defaults to "file" as per settings.
+            storage_type: Optional storage type override ("memory", "file", or "redis").
+                         If None, determined by settings.environment and location_id.
         """
-        self.storage_type = storage_type
+        from ghl_real_estate_ai.services.cache_service import get_cache_service
+        self.cache_service = get_cache_service()
+        self.storage_type = storage_type or ("redis" if settings.environment == "production" else "file")
         self.memory_dir = Path("data/memory")
 
         if self.storage_type == "file":
@@ -42,97 +44,25 @@ class MemoryService:
             logger.info(
                 f"Memory service initialized with file storage at {self.memory_dir}"
             )
+        elif self.storage_type == "redis":
+            logger.info("Memory service initialized with Redis-first storage")
         else:
             self._memory_cache: Dict[str, Dict[str, Any]] = {}
             logger.info("Memory service initialized with in-memory storage")
 
-    def _get_file_path(
-        self, contact_id: str, location_id: Optional[str] = None
-    ) -> Path:
-        """Get file path for a contact's memory, scoped by location."""
-        import re
-
-        # Enhanced sanitization with security validation
-        RESERVED_NAMES = {
-            "con", "prn", "aux", "nul", "com1", "com2", "com3", "com4",
-            "lpt1", "lpt2", "passwd", "shadow", "windowssystem32", "system32"
-        }
-
-        def sanitize(id_str: str) -> str:
-            """
-            Secure sanitization to prevent path traversal and reserved names.
-
-            Args:
-                id_str: Unique identifier
-
-            Returns:
-                Sanitized identifier
-
-            Raises:
-                ValueError: If identifier is invalid or reserved
-            """
-            if not id_str or not isinstance(id_str, str):
-                raise ValueError("ID must be non-empty string")
-
-            # Remove path separators and traversal attempts first
-            cleaned = id_str.replace("/", "").replace("\\", "").replace("..", "")
-
-            # Strip any remaining path components
-            cleaned = os.path.basename(cleaned)
-
-            # Keep only safe characters
-            cleaned = re.sub(r"[^a-zA-Z0-9_-]", "", cleaned)
-
-            # Validate minimum length and reserved names
-            if not cleaned or len(cleaned) < 3:
-                raise ValueError("ID too short or empty after sanitization")
-
-            if cleaned.lower() in RESERVED_NAMES:
-                raise ValueError(f"Reserved name not allowed: {cleaned}")
-
-            # Limit maximum length
-            if len(cleaned) > 64:
-                raise ValueError("ID exceeds maximum length")
-
-            return cleaned
-
-        try:
-            safe_contact_id = sanitize(contact_id)
-        except ValueError as e:
-            logger.error(f"Invalid contact_id '{contact_id}': {e}")
-            safe_contact_id = f"sanitized_{hash(contact_id) % 100000}"
-
-        if location_id:
-            try:
-                safe_location_id = sanitize(location_id)
-            except ValueError as e:
-                logger.error(f"Invalid location_id '{location_id}': {e}")
-                safe_location_id = f"sanitized_{hash(location_id) % 100000}"
-
-            tenant_dir = self.memory_dir / safe_location_id
-
-            # Verify final path is within memory_dir (defense in depth)
-            final_path = (tenant_dir / f"{safe_contact_id}.json").resolve()
-            if not str(final_path).startswith(str(self.memory_dir.resolve())):
-                logger.error("Path traversal attempt detected, using default path")
-                return self.memory_dir / f"{safe_contact_id}.json"
-
-            tenant_dir.mkdir(parents=True, exist_ok=True)
-            return final_path
-
-        # Verify default path as well
-        final_path = (self.memory_dir / f"{safe_contact_id}.json").resolve()
-        if not str(final_path).startswith(str(self.memory_dir.resolve())):
-            logger.error("Path traversal attempt detected in default path")
-            raise ValueError("Security violation: Invalid file path")
-
-        return final_path
+    def _should_use_redis(self, location_id: Optional[str]) -> bool:
+        """Determine if Redis should be used for this request."""
+        # In production, we always prefer Redis for multitenancy
+        if settings.environment == "production" and settings.redis_url:
+            return True
+        # Explicit override
+        return self.storage_type == "redis"
 
     async def get_context(
         self, contact_id: str, location_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Retrieve conversation context for a contact.
+        Retrieve conversation context for a contact with multitenant support.
 
         Args:
             contact_id: GHL contact ID
@@ -141,12 +71,28 @@ class MemoryService:
         Returns:
             Conversation context dict
         """
+        # 1. Try Redis first for production/multitenant isolation
+        if self._should_use_redis(location_id):
+            cache_key = f"ctx:{location_id or 'global'}:{contact_id}"
+            context = await self.cache_service.get(cache_key)
+            if context:
+                # Graphiti Integration: Inject Semantic Context
+                if graphiti_manager.enabled:
+                    try:
+                        graphiti_context = await graphiti_manager.retrieve_context(contact_id)
+                        context["relevant_knowledge"] = graphiti_context
+                    except Exception as ge:
+                        logger.warning(f"Failed to retrieve Graphiti context for {contact_id}: {ge}")
+                return context
+
+        # 2. Fallback to Memory cache
         if self.storage_type == "memory":
             cache_key = f"{location_id}:{contact_id}" if location_id else contact_id
             return self._memory_cache.get(
                 cache_key, self._get_default_context(contact_id, location_id)
             )
 
+        # 3. Fallback to File storage
         file_path = self._get_file_path(contact_id, location_id)
         if file_path.exists():
             try:
@@ -175,9 +121,9 @@ class MemoryService:
         location_id: Optional[str] = None
     ) -> None:
         """
-        Record a new interaction to both file memory and Graphiti.
+        Record a new interaction to preferred storage and Graphiti.
         """
-        # 1. Update File Context
+        # 1. Update Context (handles Redis/File/Memory internally)
         context = await self.get_context(contact_id, location_id)
         
         interaction = {
@@ -219,11 +165,29 @@ class MemoryService:
         if location_id:
             context["location_id"] = location_id
 
+        # 1. Save to Redis for production/multitenant isolation
+        if self._should_use_redis(location_id):
+            cache_key = f"ctx:{location_id or 'global'}:{contact_id}"
+            # Context lasts 7 days in Redis
+            await self.cache_service.set(cache_key, context, ttl=604800)
+            
+            # If we are in transition/backup mode, also save to file
+            if settings.environment != "production":
+                file_path = self._get_file_path(contact_id, location_id)
+                try:
+                    with open(file_path, "w") as f:
+                        json.dump(context, f, indent=2)
+                except Exception:
+                    pass
+            return
+
+        # 2. Save to Memory
         if self.storage_type == "memory":
             cache_key = f"{location_id}:{contact_id}" if location_id else contact_id
             self._memory_cache[cache_key] = context
             return
 
+        # 3. Save to File
         file_path = self._get_file_path(contact_id, location_id)
         try:
             with open(file_path, "w") as f:

@@ -125,6 +125,17 @@ class BillingService:
             )
 
 
+    def _get_price_id(self, tier: SubscriptionTier, currency: str) -> str:
+        """Get localized price ID for a tier and currency."""
+        tier_config = SUBSCRIPTION_TIERS[tier]
+        
+        # In a real global system, we would have a mapping or fetch from Stripe
+        # For now, we'll use a naming convention: price_starter_eur, etc.
+        if currency.lower() == "usd":
+            return tier_config.stripe_price_id
+        
+        return f"{tier_config.stripe_price_id}_{currency.lower()}"
+
     # ===================================================================
     # Subscription Management
     # ===================================================================
@@ -175,14 +186,15 @@ class BillingService:
             subscription_data = {
                 "customer": customer.id,
                 "items": [{
-                    "price": tier_config.stripe_price_id,
+                    "price": self._get_price_id(request.tier, request.currency),
                     "quantity": 1
                 }],
                 "metadata": {
                     "location_id": request.location_id,
                     "tier": request.tier.value,
                     "usage_allowance": str(tier_config.usage_allowance),
-                    "overage_rate": str(tier_config.overage_rate)
+                    "overage_rate": str(tier_config.overage_rate),
+                    "currency": request.currency
                 },
                 "expand": ["latest_invoice.payment_intent"],
                 "payment_behavior": "default_incomplete",

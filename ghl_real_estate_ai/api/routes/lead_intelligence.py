@@ -7,6 +7,7 @@ from typing import Dict, Any, List
 from ghl_real_estate_ai.services.predictive_lead_scorer import PredictiveLeadScorer
 from ghl_real_estate_ai.services.reengagement_engine import ReengagementEngine
 from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
 
 router = APIRouter(prefix="/intelligence", tags=["intelligence"])
 
@@ -17,7 +18,8 @@ reengage = ReengagementEngine()
 
 @router.post("/score")
 async def score_lead_intelligence(
-    payload: Dict[str, Any] = Body(...)
+    payload: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)
 ):
     """
     Advanced Behavioral Scoring Endpoint.
@@ -46,7 +48,8 @@ async def score_lead_intelligence(
 
 @router.post("/trigger-recovery")
 async def trigger_agentic_recovery(
-    payload: Dict[str, Any] = Body(...)
+    payload: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)
 ):
     """
     Sentiment-Aware Recovery Trigger.

@@ -67,10 +67,17 @@ class PredictiveScore:
     # ROI predictions
     estimated_revenue_potential: float
     effort_efficiency_score: float  # Revenue potential / effort required
-
+    
     # Model metadata
     model_confidence: float
     last_updated: datetime
+
+    # ROI predictions (continued)
+    net_yield_estimate: Optional[float] = None # For sellers: (Market - (Price+Repairs))/Market
+    potential_margin: Optional[float] = None    # For sellers: Estimated dollar profit
+    
+    # Phase 5: Autonomous Expansion
+    has_conflicting_intent: bool = False # Flag for HITL escalation
 
 
 @dataclass
@@ -115,47 +122,87 @@ class PredictiveLeadScorerV2:
         self.cache_ttl = 1800  # 30 minutes
 
         # Scoring weights for composite score
-        self.weights = {
+        self.default_weights = {
             "qualification": 0.25,    # Traditional qualification
             "closing_probability": 0.35,  # ML prediction (highest weight)
             "engagement": 0.20,       # Conversation engagement
             "urgency": 0.20          # Timeline urgency
         }
+        self.weights = self.default_weights.copy()
 
-        # Priority thresholds
+        # Priority thresholds aligned with business requirements
+        # Score 95+ → CRITICAL, 80-94 → HIGH, 60-79 → MEDIUM, 35-59 → LOW, <35 → COLD
         self.priority_thresholds = {
-            LeadPriority.CRITICAL: 90,
-            LeadPriority.HIGH: 75,
-            LeadPriority.MEDIUM: 50,
-            LeadPriority.LOW: 25,
+            LeadPriority.CRITICAL: 95,
+            LeadPriority.HIGH: 80,
+            LeadPriority.MEDIUM: 60,
+            LeadPriority.LOW: 35,
             LeadPriority.COLD: 0
         }
 
+    async def _load_dynamic_weights(self):
+        """Phase 7: Load weights adjusted by the retraining loop."""
+        dynamic_weights = await cache.get("dynamic_scoring_weights")
+        if dynamic_weights:
+            self.weights = dynamic_weights
+            logger.debug(f"Applied dynamic weights: {self.weights}")
+
     async def calculate_predictive_score(
-        self,
-        conversation_context: Dict[str, Any],
-        location: Optional[str] = None
-    ) -> PredictiveScore:
+        self, conversation_context: List[Dict[str, str]], location: str = "austin"
+    ) -> "PredictiveScore":
         """
         Calculate comprehensive predictive score for a lead.
 
         Args:
-            conversation_context: Full conversation context with history and preferences
-            location: Target location for market analysis
+            conversation_context: List of message dictionaries or Dict with conversation data
+            location: Market location for context
 
         Returns:
-            PredictiveScore with all scoring dimensions and insights
+            PredictiveScore object with multi-dimensional analysis
         """
-        cache_key = f"predictive_score_v2:{hash(str(conversation_context))}"
-        cached = await cache.get(cache_key)
-        if cached:
-            return cached
-
         logger.info("Calculating predictive score v2...")
 
+        # Input validation - handle None or invalid inputs
+        if conversation_context is None:
+            logger.warning("Received None conversation_context, using empty fallback")
+            conversation_context = {
+                "conversation_history": [],
+                "extracted_preferences": {},
+                "created_at": datetime.now().isoformat()
+            }
+
+        # Normalize input: if it's a list, wrap it in a dict
+        if isinstance(conversation_context, list):
+            conversation_context = {
+                "conversation_history": conversation_context,
+                "extracted_preferences": {},
+                "created_at": datetime.now().isoformat()
+            }
+
+        # Ensure required keys exist
+        if not isinstance(conversation_context, dict):
+            logger.warning(f"Invalid conversation_context type: {type(conversation_context)}, using empty fallback")
+            conversation_context = {
+                "conversation_history": [],
+                "extracted_preferences": {},
+                "created_at": datetime.now().isoformat()
+            }
+
+        # Ensure conversation_history key exists
+        if "conversation_history" not in conversation_context:
+            conversation_context["conversation_history"] = []
+        if "extracted_preferences" not in conversation_context:
+            conversation_context["extracted_preferences"] = {}
+
+        # Generate cache key from context hash
+        cache_key = f"predictive_score:{hash(str(conversation_context))}:{location}"
+
         try:
+            # Phase 7: Dynamic Weights
+            await self._load_dynamic_weights()
+
             # 1. Traditional qualification scoring
-            traditional_result = self.traditional_scorer.calculate_with_reasoning(conversation_context)
+            traditional_result = await self.traditional_scorer.calculate_with_reasoning(conversation_context)
             qualification_score = traditional_result["score"]
             qualification_percentage = self.traditional_scorer.get_percentage_score(qualification_score)
 
@@ -194,7 +241,7 @@ class PredictiveLeadScorerV2:
             )
 
             # 10. ROI analysis
-            estimated_revenue, effort_efficiency = await self._calculate_roi_predictions(
+            estimated_revenue, effort_efficiency, net_yield, potential_margin = await self._calculate_roi_predictions(
                 ml_prediction.closing_probability, conv_features, conversation_context
             )
 
@@ -203,6 +250,9 @@ class PredictiveLeadScorerV2:
             time_investment = await self._recommend_time_investment(
                 ml_prediction.closing_probability, effort_efficiency
             )
+            
+            # 12. Phase 5: Conflicting Intent Detection
+            has_conflicting_intent = self._detect_conflicting_intent(conversation_context, urgency_score)
 
             score = PredictiveScore(
                 # Traditional scoring
@@ -232,10 +282,15 @@ class PredictiveLeadScorerV2:
                 # ROI predictions
                 estimated_revenue_potential=estimated_revenue,
                 effort_efficiency_score=effort_efficiency,
+                net_yield_estimate=net_yield,
+                potential_margin=potential_margin,
 
                 # Model metadata
                 model_confidence=ml_prediction.model_confidence,
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
+                
+                # Phase 5
+                has_conflicting_intent=has_conflicting_intent
             )
 
             # Cache for 30 minutes
@@ -350,8 +405,17 @@ class PredictiveLeadScorerV2:
         """Calculate urgency score from conversation and context."""
         base_urgency = conv_features.urgency_score * 100
 
+        # Handle both dict and list context types
+        if isinstance(context, list):
+            # If context is a list of messages, wrap it
+            context = {"conversation_history": context, "extracted_preferences": {}}
+        elif not isinstance(context, dict):
+            context = {"conversation_history": [], "extracted_preferences": {}}
+
         # Check timeline from preferences
         prefs = context.get("extracted_preferences", {})
+        if prefs is None:
+            prefs = {}
         timeline = prefs.get("timeline", "")
 
         if timeline:
@@ -473,20 +537,55 @@ class PredictiveLeadScorerV2:
 
         return actions
 
+    def _detect_conflicting_intent(self, context: Dict, urgency_score: float) -> bool:
+        """
+        Phase 5: Detects if a lead has conflicting motivations (e.g., urgent but high price).
+        Used for HITL escalation.
+        """
+        seller_prefs = context.get("seller_preferences", {})
+        if not seller_prefs:
+            return False
+            
+        # Example 1: Urgent timeline but demanding firm top-dollar price
+        is_urgent = urgency_score > 70 or seller_prefs.get("timeline_urgency") == "urgent"
+        is_firm_on_price = seller_prefs.get("price_flexibility") == "firm"
+        
+        # In a real system, we'd compare price_expectation to market ARV
+        # For now, if both are high, flag as conflicting
+        if is_urgent and is_firm_on_price:
+            return True
+            
+        # Example 2: Major repairs needed but expects move-in ready price
+        condition = seller_prefs.get("property_condition")
+        if condition in ["major repairs", "poor"] and is_firm_on_price:
+            return True
+            
+        return False
+
     async def _calculate_roi_predictions(
         self,
         closing_probability: float,
         conv_features,
         context: Dict
-    ) -> Tuple[float, float]:
+    ) -> Tuple[float, float, Optional[float], Optional[float]]:
         """Calculate ROI predictions for Jorge's time investment."""
 
         # Estimate commission based on budget/market data
         prefs = context.get("extracted_preferences", {})
+        seller_prefs = context.get("seller_preferences", {})
+        
+        # Determine if this is a seller deal
+        is_seller = bool(seller_prefs)
+        
         budget = prefs.get("budget")
+        price_expectation = seller_prefs.get("price_expectation")
+        repair_estimate = seller_prefs.get("repair_estimate", 0)
 
         try:
-            if isinstance(budget, str):
+            if is_seller and price_expectation:
+                # Use price expectation for sellers
+                estimated_value = float(price_expectation)
+            elif isinstance(budget, str):
                 # Extract numeric value
                 import re
                 budget_str = re.sub(r'[^\d.]', '', budget)
@@ -502,11 +601,35 @@ class PredictiveLeadScorerV2:
         except (ValueError, TypeError):
             estimated_value = 650000  # Default market value
 
-        # Assume 3% commission
+        # Assume 3% commission for standard deals
         potential_commission = estimated_value * 0.03
 
         # Calculate expected revenue
         expected_revenue = potential_commission * closing_probability
+        
+        # Calculate Seller-Specific Net Yield & Margin (Jorge System 3.0 Enterprise)
+        net_yield = None
+        potential_margin = None
+        
+        if is_seller and price_expectation:
+            try:
+                # PHASE 6: ALIGNED FINANCIAL ENGINEERING
+                # ARV is typically 1.35x for Jorge's target markets
+                arv = float(price_expectation) * 1.35
+                repair_cost = float(repair_estimate) if repair_estimate else 0
+                
+                # Transactional Costs (Jorge System 3.0 Standard)
+                acquisition_closing = float(price_expectation) * 0.03
+                selling_costs = arv * 0.06
+                holding_costs = arv * 0.008 * 6 # 6 months holding
+                
+                potential_margin = arv - float(price_expectation) - repair_cost - acquisition_closing - selling_costs - holding_costs
+                net_yield = potential_margin / arv if arv > 0 else 0
+                
+                # Revenue Potential: 30% weighting for commission, 70% for investment profit
+                expected_revenue = (expected_revenue * 0.3) + (potential_margin * closing_probability * 0.7)
+            except (ValueError, TypeError):
+                pass
 
         # Estimate effort required based on lead characteristics
         base_effort = 10  # Base hours for any lead
@@ -526,7 +649,7 @@ class PredictiveLeadScorerV2:
         # Efficiency score: revenue per hour of effort
         effort_efficiency = expected_revenue / max(base_effort, 1)
 
-        return expected_revenue, effort_efficiency
+        return expected_revenue, effort_efficiency, net_yield, potential_margin
 
     async def _analyze_optimal_contact_timing(self, conv_features, urgency_score: float) -> str:
         """Analyze optimal timing for next contact."""
@@ -560,23 +683,45 @@ class PredictiveLeadScorerV2:
 
     async def _fallback_scoring(self, context: Dict) -> PredictiveScore:
         """Fallback scoring when ML model fails."""
-        traditional_result = self.traditional_scorer.calculate_with_reasoning(context)
-        score = traditional_result["score"]
-        percentage = self.traditional_scorer.get_percentage_score(score)
+        try:
+            # Handle None or invalid context
+            if context is None:
+                context = {"conversation_history": [], "extracted_preferences": {}}
+
+            # Handle list input (normalize to dict)
+            if isinstance(context, list):
+                context = {"conversation_history": context, "extracted_preferences": {}}
+            elif not isinstance(context, dict):
+                context = {"conversation_history": [], "extracted_preferences": {}}
+
+            # Ensure required keys exist
+            if "conversation_history" not in context:
+                context["conversation_history"] = []
+
+            traditional_result = await self.traditional_scorer.calculate_with_reasoning(context)
+            score = traditional_result.get("score", 0)
+            percentage = self.traditional_scorer.get_percentage_score(score)
+            recommended_actions = traditional_result.get("recommended_actions", ["Continue qualification process"])
+
+        except Exception as e:
+            logger.warning(f"Fallback scoring error in traditional scorer: {e}")
+            score = 0
+            percentage = 0
+            recommended_actions = ["Continue qualification process"]
 
         return PredictiveScore(
             qualification_score=score,
             qualification_percentage=percentage,
-            closing_probability=percentage / 100.0 * 0.8,  # Conservative estimate
+            closing_probability=max(0.0, percentage / 100.0 * 0.8),  # Conservative estimate
             closing_confidence_interval=(0.0, 0.8),
             engagement_score=float(percentage),
             urgency_score=50.0,
             risk_score=50.0,
             overall_priority_score=float(percentage),
-            priority_level=self._determine_priority_level(percentage),
+            priority_level=self._determine_priority_level(float(percentage)),
             risk_factors=["ML model unavailable"],
             positive_signals=[f"Traditional score: {score}/7 questions"],
-            recommended_actions=traditional_result["recommended_actions"],
+            recommended_actions=recommended_actions,
             optimal_contact_timing="Within 24 hours",
             time_investment_recommendation="Standard process",
             estimated_revenue_potential=15000.0,  # Average commission

@@ -283,37 +283,70 @@ class JorgeToneEngine:
         return message
 
     def _truncate_message(self, message: str) -> str:
-        """Truncate message to SMS length limit while preserving meaning."""
-
+        """
+        Truncate message to SMS length limit while preserving the CTA (Tail-Preserving).
+        
+        Strategy:
+        1. Always keep the last sentence (The Question/CTA).
+        2. Fill remaining space with the start of the message.
+        3. If we must cut, cut from the middle/end of the context section.
+        """
         if len(message) <= self.tone_profile.max_length:
             return message
 
-        # Try to truncate at sentence boundary
-        sentences = message.split('. ')
-        if len(sentences) > 1:
-            truncated = sentences[0]
-            if len(truncated) <= self.tone_profile.max_length:
-                return truncated + ('.' if not truncated.endswith('?') else '')
-
-        # Truncate at word boundary
-        words = message.split()
-        truncated_words = []
-        current_length = 0
-
-        for word in words:
-            if current_length + len(word) + 1 <= self.tone_profile.max_length:
-                truncated_words.append(word)
-                current_length += len(word) + 1
+        # Split into sentences (handling . ? !)
+        # Simple split by punctuation followed by space
+        sentences = re.split(r'(?<=[.?!])\s+', message)
+        
+        if not sentences:
+            return message[:self.tone_profile.max_length-3] + "..."
+            
+        # Identify CTA (Last sentence)
+        cta = sentences[-1]
+        
+        # If CTA alone is too long (rare), truncate it directly
+        if len(cta) > self.tone_profile.max_length:
+            return cta[:self.tone_profile.max_length-3] + "..."
+            
+        # Calculate remaining space
+        # -4 for " ... " separator
+        remaining_space = self.tone_profile.max_length - len(cta) - 4
+        
+        if remaining_space < 10:
+            # Only enough space for CTA basically
+            return cta
+            
+        # Construct the context (everything before CTA)
+        context_sentences = sentences[:-1]
+        if not context_sentences:
+            return cta
+            
+        # Try to fit as many context sentences as possible from the start
+        context_str = ""
+        for i, sent in enumerate(context_sentences):
+            # +1 for space
+            if len(context_str) + len(sent) + 1 <= remaining_space:
+                context_str += (sent + " ")
             else:
+                # Can't fit this full sentence. 
+                # If it's the first sentence, truncate it.
+                if i == 0:
+                    available = remaining_space - len(context_str)
+                    if available > 10:
+                        context_str += sent[:available]
                 break
-
-        result = ' '.join(truncated_words)
-
-        # Ensure it ends properly
-        if result and not result[-1] in '.!?':
-            result += '.'
-
-        return result
+                
+        # Combine
+        if context_str:
+            final_msg = f"{context_str.strip()}... {cta}"
+        else:
+            final_msg = cta
+            
+        # Double check length (paranoid check)
+        if len(final_msg) > self.tone_profile.max_length:
+            return final_msg[:self.tone_profile.max_length]
+            
+        return final_msg
 
     def _generate_no_response_followup(self, question_number: int) -> str:
         """Generate follow-up for when seller doesn't respond."""

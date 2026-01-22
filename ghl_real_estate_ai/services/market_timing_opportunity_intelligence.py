@@ -944,6 +944,38 @@ class MarketTimingOpportunityEngine:
             logger.error(f"Error generating opportunity dashboard: {e}")
             return {'error': str(e), 'market_area': market_area}
     
+    async def generate_roi_proforma(self, opportunity_id: str, market_area: str) -> Dict[str, Any]:
+        """Generate a detailed ROI pro-forma for a detected opportunity."""
+        try:
+            # Fetch opportunity details (simulated)
+            dashboard = await self.get_opportunity_dashboard(market_area)
+            opps = [o for o in dashboard['opportunities'] if o['type'] in opportunity_id or opportunity_id in o['type']]
+            opp = opps[0] if opps else dashboard['opportunities'][0]
+
+            # Financial Engineering (Phase 7)
+            purchase_price = 500000 # Base for calculation
+            arv_multiplier = 1.25 # After Repair Value
+            
+            proforma = {
+                "opportunity_type": opp['type'],
+                "market_area": market_area,
+                "analysis_date": datetime.now().isoformat(),
+                "financial_projection": {
+                    "purchase_price": purchase_price,
+                    "estimated_repairs": 50000,
+                    "closing_costs": purchase_price * 0.03,
+                    "projected_arv": purchase_price * arv_multiplier,
+                    "potential_profit": (purchase_price * arv_multiplier) - purchase_price - 50000 - (purchase_price * 0.03),
+                    "roi_percentage": opp['score']
+                },
+                "market_data": dashboard['market_overview'],
+                "one_click_url": f"https://jorge-system.io/offer?opp={opportunity_id}&area={market_area}"
+            }
+            return proforma
+        except Exception as e:
+            logger.error(f"Error generating proforma: {e}")
+            return {"error": str(e)}
+
     # Helper methods for calculations and analysis
     def _determine_market_phase(self, price_trend: Dict, inventory_levels: Dict, sales_velocity: Dict) -> MarketPhase:
         """Determine current market phase based on indicators."""

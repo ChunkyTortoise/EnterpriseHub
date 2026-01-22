@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta, date
 from typing import Dict, List, Any, Optional, Union, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from enum import Enum
 import re
 import uuid
@@ -157,6 +157,28 @@ class MarketOpportunity:
     def __post_init__(self):
         if self.created_at is None:
             self.created_at = datetime.now()
+
+
+@dataclass
+class InvestmentAnalysis:
+    """Detailed investment property analysis"""
+    property_id: str
+    purchase_price: float
+    estimated_rent: float
+    annual_expenses: float
+    
+    # ROI Metrics
+    cap_rate: float
+    cash_on_cash_return: float
+    gross_rent_multiplier: float
+    five_year_appreciation_estimate: float
+    
+    # Risk/Reward
+    investment_grade: str  # A, B, C, D
+    risk_score: float
+    recommendation: str
+    
+    analysis_date: datetime = field(default_factory=datetime.now)
 
 
 class MarketPredictionEngine:

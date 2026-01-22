@@ -43,6 +43,15 @@ try:
     HAS_ML_LIBS = True
 except ImportError:
     HAS_ML_LIBS = False
+    # Define dummy classes to prevent NameError
+    class StandardScaler:
+        def fit(self, x): return self
+        def fit_transform(self, x): return x
+        def transform(self, x): return x
+    class LabelEncoder:
+        def fit_transform(self, x): return x
+        def transform(self, x): return x
+    class RandomForestClassifier: pass
 
 # Service Integrations
 from ghl_real_estate_ai.services.cache_service import CacheService
@@ -1087,7 +1096,7 @@ class AdvancedMLLeadScoringEngine:
         # Opportunities  
         if features.timing_urgency_signals > 0.7:
             opportunities.append("High urgency signals - fast timeline opportunity")
-        if features.financial_readiness > 0.8:
+        if features.financing_readiness > 0.8:
             opportunities.append("Strong financial readiness - likely to close")
         if features.question_sophistication > 0.6:
             opportunities.append("Sophisticated questions indicate serious buyer")
@@ -1121,7 +1130,7 @@ class AdvancedMLLeadScoringEngine:
             'timeline': timeline
         }
         
-    def _create_fallback_result(self, lead_id: str, lead_data: Dict, start_time: datetime) -> MLScoringResult:
+    def _create_fallback_result(self, lead_id: str, lead_data: Dict, start_time: datetime, error: str = None) -> MLScoringResult:
         """Create fallback result when ML prediction fails"""
         latency_ms = (datetime.now() - start_time).total_seconds() * 1000
         

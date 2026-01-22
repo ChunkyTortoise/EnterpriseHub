@@ -23,6 +23,7 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
 from ghl_real_estate_ai.services.ai_negotiation_partner import get_ai_negotiation_partner
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.api.middleware.rate_limiter import rate_limit
+from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -30,20 +31,12 @@ router = APIRouter(prefix="/api/v1/negotiation", tags=["Negotiation Intelligence
 security = HTTPBearer()
 
 
-# Dependency for authentication
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Validate API token - simplified for demo"""
-    if not credentials.token or len(credentials.token) < 10:
-        raise HTTPException(status_code=401, detail="Invalid authentication token")
-    return {"user_id": "authenticated_user"}
-
-
 @router.post("/analyze", response_model=NegotiationIntelligence)
 @rate_limit(calls=100, period=3600)  # 100 calls per hour
 async def analyze_negotiation_intelligence(
     request: NegotiationAnalysisRequest,
     background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Generate comprehensive negotiation intelligence analysis.
@@ -51,7 +44,9 @@ async def analyze_negotiation_intelligence(
     Analyzes seller psychology, market leverage, generates strategy,
     and predicts win probability for optimal negotiation outcomes.
     """
-    logger.info(f"Negotiation analysis request for property {request.property_id}")
+    tenant_id = current_user.get("payload", {}).get("tenant_id", "default_tenant")
+    request.tenant_id = tenant_id
+    logger.info(f"Negotiation analysis request for property {request.property_id} (Tenant: {tenant_id})")
     
     try:
         negotiation_partner = get_ai_negotiation_partner()
@@ -86,7 +81,7 @@ async def analyze_negotiation_intelligence(
 @rate_limit(calls=200, period=3600)  # 200 calls per hour
 async def get_realtime_coaching(
     request: RealTimeCoachingRequest,
-    current_user: dict = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Provide real-time negotiation coaching based on conversation context.
@@ -118,7 +113,7 @@ async def get_realtime_coaching(
 async def update_negotiation_strategy(
     negotiation_id: str,
     request: StrategyUpdateRequest,
-    current_user: dict = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Update negotiation strategy based on new information.
@@ -155,7 +150,7 @@ async def update_negotiation_strategy(
 @router.get("/active/{property_id}", response_model=Optional[NegotiationIntelligence])
 async def get_active_negotiation(
     property_id: str,
-    current_user: dict = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Get active negotiation intelligence for a property.
@@ -183,7 +178,7 @@ async def get_active_negotiation(
 
 @router.get("/metrics", response_model=NegotiationMetrics)
 async def get_negotiation_metrics(
-    current_user: dict = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Get system performance and negotiation metrics.
@@ -230,7 +225,7 @@ async def get_negotiation_metrics(
 @router.delete("/active/{property_id}")
 async def end_negotiation(
     property_id: str,
-    current_user: dict = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     End an active negotiation session.
@@ -290,7 +285,7 @@ async def get_scenario_analysis(
     offer_percentage: Optional[float] = None,
     cash_offer: Optional[bool] = None,
     quick_close: Optional[bool] = None,
-    current_user: dict = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Get scenario-based win probability analysis.

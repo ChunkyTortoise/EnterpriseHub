@@ -174,7 +174,7 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
     else:
         analysis_result = None
     st.markdown('---')
-    tab1, tab_swarm, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab_journey, tab9, tab10 = st.tabs(['Lead Scoring', 'Agent Swarm', 'Deep Dossier', 'Retention Monitor', 'Property Matcher', 'Smart Swipe', 'Buyer Portal', 'Segmentation', 'Personalization', 'Journey Orchestration', 'Predictions', 'Simulator'])
+    tab1, tab_swarm, tab2, tab3, tab_sentiment, tab4, tab5, tab6, tab7, tab8, tab_journey, tab9, tab10 = st.tabs(['Lead Scoring', 'Agent Swarm', 'Deep Dossier', 'Retention Monitor', 'Sentiment Recovery', 'Property Matcher', 'Smart Swipe', 'Buyer Portal', 'Segmentation', 'Personalization', 'Journey Orchestration', 'Predictions', 'Simulator'])
     with tab1:
         st.subheader('AI Lead Scoring')
         col_map, col_details = st.columns([1, 1])
@@ -532,6 +532,76 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
             with col4:
                 st.metric('Success Rate', '78.5%', '+2.1%')
             st.info('💡 The full Churn Prediction Engine provides 26 behavioral features, multi-horizon risk scoring, and automated intervention orchestration.')
+    with tab_sentiment:
+        st.subheader("❄️ Sentiment Drift & Cold Lead Recovery")
+        st.markdown("*AI-powered detection of declining engagement with automated re-engagement workflows*")
+        
+        if selected_lead_name == '-- Select a Lead --':
+            st.info("👈 Please select a lead to analyze sentiment drift.")
+        else:
+            from ghl_real_estate_ai.services.sentiment_drift_engine import SentimentDriftEngine
+            sentiment_engine = SentimentDriftEngine()
+            
+            # Mock conversation history for demo if not present
+            mock_history = [
+                {"role": "user", "content": "I'm looking for a house in Austin, budget around $500k.", "timestamp": "2026-01-10"},
+                {"role": "assistant", "content": "That's great! Austin has some wonderful neighborhoods. What's your timeline?", "timestamp": "2026-01-10"},
+                {"role": "user", "content": "Hoping to move in 3 months.", "timestamp": "2026-01-10"},
+                {"role": "assistant", "content": "Perfect. What are your must-haves?", "timestamp": "2026-01-10"},
+                {"role": "user", "content": "I'm not sure anymore, market seems crazy.", "timestamp": "2026-01-20"},
+                {"role": "assistant", "content": "It can be fast-paced! What specifically is concerning you?", "timestamp": "2026-01-20"},
+                {"role": "user", "content": "Just send me stuff, I'll look later.", "timestamp": "2026-01-21"}
+            ]
+            
+            with st.spinner("🧠 Analyzing conversation sentiment drift..."):
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    drift_result = loop.run_until_complete(
+                        sentiment_engine.analyze_conversation_drift(mock_history, selected_lead_name)
+                    )
+                    
+                    col_drift1, col_drift2 = st.columns([1, 1])
+                    
+                    with col_drift1:
+                        st.markdown("#### 📊 Drift Analysis")
+                        drift_score = drift_result.get('drift_score', 0.0)
+                        drift_color = "inverse" if drift_score < -0.3 else "normal"
+                        st.metric("Sentiment Drift", f"{drift_score:.2f}", delta=f"{drift_score:.2f}", delta_color=drift_color)
+                        
+                        # Gauge for sentiment
+                        current_sentiment = drift_result.get('recent_sentiment', 0.0)
+                        st.markdown(f"**Current Sentiment Node:** {'🔴' if current_sentiment < 0 else '🟡' if current_sentiment < 0.5 else '🟢'}")
+                        st.progress((current_sentiment + 1) / 2, text=f"Sentiment Score: {current_sentiment:.2f}")
+                        
+                    with col_drift2:
+                        if drift_result.get('alert') == 'COLD_LEAD':
+                            st.warning("⚠️ COLD LEAD DETECTED")
+                            st.error(f"Potential Objection: {drift_result.get('objection_hint')}")
+                            
+                            re_engage_msg = sentiment_engine.get_reengagement_message(selected_lead_name.split(' ')[0], drift_result.get('objection_hint'))
+                            st.markdown("#### 🚀 Recommended Re-engagement")
+                            st.info(f"**Draft SMS:** {re_engage_msg}")
+                            if st.button("📨 Send Re-engagement SMS", use_container_width=True, type="primary"):
+                                st.success("Re-engagement workflow triggered in GHL!")
+                        else:
+                            st.success("✅ Lead engagement is stable.")
+                            st.info("No immediate intervention required based on sentiment drift.")
+                            
+                    st.markdown("---")
+                    st.markdown("#### 📈 Sentiment Trajectory")
+                    # Trajectory plot
+                    traj_data = pd.DataFrame({
+                        "Message": [1, 2, 3, 4, 5, 6, 7],
+                        "Sentiment": [0.8, 0.75, 0.85, 0.6, 0.2, 0.1, -0.2] # Sample trajectory
+                    })
+                    fig_traj = px.line(traj_data, x="Message", y="Sentiment", title="Rolling Sentiment (Window: 3)", markers=True)
+                    fig_traj.add_hline(y=0, line_dash="dash", line_color="white", opacity=0.3)
+                    st.plotly_chart(fig_traj, use_container_width=True)
+                    
+                except Exception as e:
+                    st.error(f"Sentiment analysis failed: {e}")
+
     with tab4:
         st.subheader('🏠 Claude Semantic Property Matching')
         if selected_lead_name == '-- Select a Lead --':

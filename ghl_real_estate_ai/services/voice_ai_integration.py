@@ -28,10 +28,10 @@ import json
 import time
 import numpy as np
 import wave
-import audioop
+import uuid
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional, Tuple, Any, AsyncGenerator
+from typing import Dict, List, Optional, Tuple, Any, AsyncGenerator, Union
 from abc import ABC, abstractmethod
 import logging
 from concurrent.futures import ThreadPoolExecutor
@@ -395,7 +395,7 @@ class EmotionAnalysisService:
             return cached_result
             
         # Analyze text sentiment
-        text_sentiment = self._analyze_text_sentiment(text)
+        text_sentiment = await self._analyze_text_sentiment(text)
         
         # Analyze audio emotional cues
         audio_emotion = self._analyze_audio_emotion(audio_features)
@@ -408,7 +408,7 @@ class EmotionAnalysisService:
         
         return combined_analysis
         
-    def _analyze_text_sentiment(self, text: str) -> Dict[str, Any]:
+    async def _analyze_text_sentiment(self, text: str) -> Dict[str, Any]:
         """Analyze sentiment from text content"""
         if not HAS_SPEECH_LIBS or not text.strip():
             return {
@@ -967,6 +967,7 @@ class VoiceAIIntegration:
         
         # Call state management
         self.active_calls = {}  # call_id -> call state
+        self.call_sessions = self.active_calls # Alias for tests
         
         # Performance metrics
         self.metrics = {
@@ -976,28 +977,49 @@ class VoiceAIIntegration:
             'average_processing_latency_ms': 0.0
         }
         
-    async def start_call_analysis(self, call_id: str, lead_id: str, agent_id: str) -> bool:
-        """Start real-time analysis for a new call"""
+    async def start_call_analysis(self, call_id: Union[str, Dict], lead_id: Optional[str] = None, agent_id: Optional[str] = None) -> str:
+        """
+        Start real-time analysis for a new call.
         
-        if call_id in self.active_calls:
-            logger.warning(f"Call {call_id} already being analyzed")
-            return False
+        Supports legacy signature: (call_metadata_dict)
+        and new signature: (call_id, lead_id, agent_id)
+        
+        Returns the call_id.
+        """
+        if isinstance(call_id, dict):
+            # Legacy: (metadata_dict)
+            metadata = call_id
+            actual_call_id = metadata.get('call_id', str(uuid.uuid4()))
+            actual_lead_id = metadata.get('lead_id', 'unknown_lead')
+            actual_agent_id = metadata.get('agent_id', 'unknown_agent')
+        else:
+            # New: (call_id, lead_id, agent_id)
+            actual_call_id = call_id
+            actual_lead_id = lead_id or 'unknown_lead'
+            actual_agent_id = agent_id or 'unknown_agent'
+
+        if actual_call_id in self.active_calls:
+            logger.warning(f"Call {actual_call_id} already being analyzed")
+            return actual_call_id
             
-        self.active_calls[call_id] = {
-            'call_id': call_id,
-            'lead_id': lead_id,
-            'agent_id': agent_id,
+        self.active_calls[actual_call_id] = {
+            'call_id': actual_call_id,
+            'lead_id': actual_lead_id,
+            'agent_id': actual_agent_id,
+            'metadata': metadata if isinstance(call_id, dict) else {},
+            'status': 'active',
             'start_time': datetime.now(),
             'segments': [],
             'coaching_prompts': [],
+            'live_coaching_prompts': [], # Alias for tests
             'live_transcript': "",
             'current_speaker': None,
             'speech_buffer': b'',
             'last_analysis_time': datetime.now()
         }
         
-        logger.info(f"Started voice AI analysis for call {call_id}")
-        return True
+        logger.info(f"Started voice AI analysis for call {actual_call_id}")
+        return actual_call_id
         
     async def process_audio_stream(self, call_id: str, audio_chunk: bytes, speaker_id: str = 'unknown') -> Dict[str, Any]:
         """
@@ -1017,7 +1039,7 @@ class VoiceAIIntegration:
             has_speech = self.audio_processor.detect_speech(audio_chunk)
             
             if not has_speech:
-                return {'status': 'no_speech', 'latency_ms': 0}
+                return {'status': 'no_speech', 'call_id': call_id, 'latency_ms': 0}
                 
             # Accumulate audio in buffer
             call_state['speech_buffer'] += audio_chunk
@@ -1040,11 +1062,13 @@ class VoiceAIIntegration:
                 processing_time = (datetime.now() - start_time).total_seconds() * 1000
                 self._update_metrics(processing_time)
                 
+                if result is None:
+                    return {'status': 'processed', 'call_id': call_id}
                 return result
                 
             else:
                 # Not enough audio yet
-                return {'status': 'buffering', 'buffer_size': len(call_state['speech_buffer'])}
+                return {'status': 'buffering', 'call_id': call_id, 'buffer_size': len(call_state['speech_buffer'])}
                 
         except Exception as e:
             logger.error(f"CRITICAL: Audio processing failed for call {call_id}: {e}")

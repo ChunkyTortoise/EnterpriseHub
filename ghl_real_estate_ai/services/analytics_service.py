@@ -227,3 +227,29 @@ class AnalyticsService:
             summary["avg_lead_score"] = total_score / scored_count
 
         return summary
+
+    async def get_cached_daily_summary(
+        self, location_id: str, date_str: Optional[str] = None, force_refresh: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Get daily summary, using cache if available to avoid expensive file reads.
+        """
+        if not date_str:
+            date_str = datetime.utcnow().strftime("%Y-%m-%d")
+
+        from ghl_real_estate_ai.services.cache_service import get_tenant_cache
+        cache = get_tenant_cache(location_id)
+        cache_key = f"analytics_summary:{date_str}"
+
+        if not force_refresh:
+            cached_summary = await cache.get(cache_key)
+            if cached_summary:
+                return cached_summary
+
+        # Compute summary
+        summary = await self.get_daily_summary(location_id, date_str)
+        
+        # Cache for 5 minutes (300 seconds)
+        await cache.set(cache_key, summary, ttl=300)
+        
+        return summary

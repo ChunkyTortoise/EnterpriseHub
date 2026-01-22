@@ -17,6 +17,11 @@ from ghl_real_estate_ai.services.memory_service import MemoryService
 class TestMemoryService:
     """Comprehensive test suite for MemoryService."""
     
+    @pytest.fixture(autouse=True)
+    def integration_test_lifecycle(self):
+        """Override integration test lifecycle to avoid async conflict."""
+        yield
+
     @pytest.fixture
     def mock_graphiti(self):
         """Mock Graphiti memory manager."""

@@ -49,7 +49,50 @@ class Skill:
         # Create a dynamic Pydantic model for validation and schema
         model_name = f"{self.name.capitalize()}Params"
         dynamic_model = create_model(model_name, **fields)
-        return dynamic_model.model_json_schema()
+        schema = dynamic_model.model_json_schema()
+        return self._clean_schema(schema)
+
+    def _clean_schema(self, schema: Dict[str, Any]) -> Dict[str, Any]:
+        """Cleans JSON schema for Gemini API compatibility."""
+        if not isinstance(schema, dict):
+            return schema
+            
+        # Remove unsupported fields
+        unsupported = ["anyOf", "allOf", "oneOf", "default", "$defs", "definitions", "title", "examples"]
+        
+        # Handle anyOf by taking the first non-null type if possible
+        if "anyOf" in schema:
+            options = schema["anyOf"]
+            # Find first option that isn't null type
+            best_option = options[0]
+            for opt in options:
+                if isinstance(opt, dict) and opt.get("type") != "null":
+                    best_option = opt
+                    break
+            schema.update(best_option)
+            
+        # Convert type to uppercase for Gemini Proto compatibility
+        if "type" in schema and isinstance(schema["type"], str):
+            schema["type"] = schema["type"].upper()
+            
+        # Create a list of keys to delete to avoid modification while iterating
+        to_delete = [field for field in unsupported if field in schema]
+        for field in to_delete:
+            del schema[field]
+                
+        # Recursively clean nested objects
+        if "properties" in schema:
+            for prop in schema["properties"].values():
+                self._clean_schema(prop)
+        
+        if "items" in schema:
+            self._clean_schema(schema["items"])
+            
+        # Ensure type is present for objects
+        if "type" not in schema and "properties" in schema:
+            schema["type"] = "OBJECT"
+            
+        return schema
 
     def execute(self, **kwargs) -> Any:
         """Execute the skill with provided arguments."""
@@ -79,28 +122,48 @@ class SkillRegistry:
             cls._instance.skills = {}
             cls._instance.mcp = FastMCP("EnterpriseHub")
             cls._instance._chroma_client = None
-            cls._instance._collection = None
-            cls._instance._init_vector_db()
+            cls._instance._skill_collections = {} # Map location_id -> collection
+            cls._instance._doc_collections = {} # Map location_id -> collection for docs
+            cls._instance._doc_cache = {} # In-memory fallback
+            cls._instance._init_chroma()
         return cls._instance
 
-    def _init_vector_db(self):
-        """Initialize ChromaDB for semantic skill search."""
+    def _init_chroma(self):
+        """Initialize ChromaDB client."""
         try:
             import chromadb
-            # Use a persistent path or ephemeral for now
             self._chroma_client = chromadb.Client()
-            self._collection = self._chroma_client.get_or_create_collection(
-                name="skill_registry",
-                metadata={"hnsw:space": "cosine"}
-            )
         except (ImportError, Exception) as e:
-            # Chromadb might fail due to onnxruntime on some platforms
-            # We will gracefully fall back to keyword search
             self._chroma_client = None
-            self._collection = None
             print(f"⚠️ ChromaDB Semantic Search unavailable ({str(e)}). Using keyword fallback.")
 
-    def register(self, name: Optional[str] = None, tags: List[str] = None):
+    def _get_skill_collection(self, location_id: str = "global"):
+        """Gets or creates a skill collection for a specific tenant."""
+        if not self._chroma_client:
+            return None
+        
+        if location_id not in self._skill_collections:
+            collection_name = f"skills_{location_id}"
+            self._skill_collections[location_id] = self._chroma_client.get_or_create_collection(
+                name=collection_name,
+                metadata={"hnsw:space": "cosine", "location_id": location_id}
+            )
+        return self._skill_collections[location_id]
+
+    def _get_doc_collection(self, location_id: str = "global"):
+        """Gets or creates a documentation collection."""
+        if not self._chroma_client:
+            return None
+        
+        if location_id not in self._doc_collections:
+            collection_name = f"component_docs_{location_id}"
+            self._doc_collections[location_id] = self._chroma_client.get_or_create_collection(
+                name=collection_name,
+                metadata={"hnsw:space": "cosine", "location_id": location_id}
+            )
+        return self._doc_collections[location_id]
+
+    def register(self, name: Optional[str] = None, tags: List[str] = None, location_id: str = "global"):
         """Decorator to register a function as a skill."""
         def decorator(func: Callable):
             skill = Skill(func, name=name, tags=tags)
@@ -109,29 +172,42 @@ class SkillRegistry:
             # Register with FastMCP
             self.mcp.tool()(func)
             
-            # Register with Vector DB
-            if self._collection:
+            # Register with Vector DB (Partitioned by location_id)
+            collection = self._get_skill_collection(location_id)
+            if collection:
                 text = f"{skill.name}: {skill.description} {' '.join(skill.tags)}"
-                self._collection.upsert(
+                collection.upsert(
                     documents=[text],
                     ids=[skill.name],
-                    metadatas=[{"name": skill.name, "tags": ",".join(skill.tags)}]
+                    metadatas=[{"name": skill.name, "tags": ",".join(skill.tags), "location_id": location_id}]
                 )
             
             return func
         return decorator
 
+    def register_document(self, name: str, content: str, tags: List[str] = None, location_id: str = "global"):
+        """Registers a documentation string with the vector DB."""
+        collection = self._get_doc_collection(location_id)
+        if collection:
+            collection.upsert(
+                documents=[content],
+                ids=[name],
+                metadatas=[{"name": name, "tags": ",".join(tags or []), "location_id": location_id}]
+            )
+
     def get_skill(self, name: str) -> Optional[Skill]:
         return self.skills.get(name)
 
-    def find_relevant_skills(self, query: str, limit: int = 5) -> List[Skill]:
+    def find_relevant_skills(self, query: str, limit: int = 5, location_id: str = "global") -> List[Skill]:
         """
         Find relevant skills using Semantic Search (ChromaDB) with keyword fallback.
+        Strictly isolated by location_id.
         """
-        # 1. Try Semantic Search
-        if self._collection:
+        # 1. Try Semantic Search in the tenant-specific collection
+        collection = self._get_skill_collection(location_id)
+        if collection:
             try:
-                results = self._collection.query(
+                results = collection.query(
                     query_texts=[query],
                     n_results=min(limit, len(self.skills))
                 )
@@ -141,7 +217,7 @@ class SkillRegistry:
                         return found_skills
             except Exception as e:
                 # Log error and fall back
-                print(f"Vector search failed: {e}")
+                print(f"Vector search failed for location {location_id}: {e}")
 
         # 2. Fallback to Keyword Search
         relevant = []
@@ -154,6 +230,38 @@ class SkillRegistry:
         
         return relevant[:limit] if relevant else list(self.skills.values())[:limit]
 
+    def find_relevant_docs(self, query: str, limit: int = 3, location_id: str = "global") -> List[Dict[str, Any]]:
+        """Finds relevant component documentation using Semantic Search or keyword fallback."""
+        collection = self._get_doc_collection(location_id)
+        if collection:
+            try:
+                results = collection.query(query_texts=[query], n_results=limit)
+                if results and results['ids'] and results['ids'][0]:
+                    docs = []
+                    for i, doc_id in enumerate(results['ids'][0]):
+                        docs.append({
+                            "id": doc_id,
+                            "content": results['documents'][0][i],
+                            "distance": results['distances'][0][i]
+                        })
+                    return docs
+            except Exception as e:
+                print(f"Doc search failed for location {location_id}: {e}")
+
+        # Keyword fallback to in-memory cache
+        relevant_docs = []
+        query_words = set(query.lower().split())
+        
+        cache = self._doc_cache.get(location_id, {})
+        for name, content in cache.items():
+            if any(word in content.lower() for word in query_words):
+                relevant_docs.append({
+                    "id": name,
+                    "content": content,
+                    "distance": 1.0 # No real distance
+                })
+        return relevant_docs[:limit]
+
     def get_all_gemini_tools(self) -> List[Dict[str, Any]]:
         """Return all registered skills as Gemini tool declarations."""
         return [skill.to_gemini_tool()["function_declarations"][0] for skill in self.skills.values()]
@@ -162,13 +270,13 @@ class SkillRegistry:
 registry = SkillRegistry()
 
 @registry.register(name="discover_skills", tags=["system", "meta"])
-def discover_skills(query: Optional[str] = None) -> List[Dict[str, Any]]:
+def discover_skills(query: Optional[str] = None, location_id: str = "global") -> List[Dict[str, Any]]:
     """
     Lists all available skills or searches for relevant ones if a query is provided.
     Useful for agents to understand their own capabilities.
     """
     if query:
-        skills = registry.find_relevant_skills(query)
+        skills = registry.find_relevant_skills(query, location_id=location_id)
     else:
         skills = list(registry.skills.values())
         
@@ -181,6 +289,6 @@ def discover_skills(query: Optional[str] = None) -> List[Dict[str, Any]]:
         for s in skills
     ]
 
-def skill(name: Optional[str] = None, tags: List[str] = None):
+def skill(name: Optional[str] = None, tags: List[str] = None, location_id: str = "global"):
     """Convenience decorator for registering skills."""
-    return registry.register(name=name, tags=tags)
+    return registry.register(name=name, tags=tags, location_id=location_id)

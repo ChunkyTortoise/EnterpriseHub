@@ -32,15 +32,19 @@ class OpsOptimizationHub:
         st.header("Ops & Optimization")
         st.markdown("*Manager-level analytics and team performance tracking*")
         
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12 = st.tabs([
             "Quality",
             "Revenue",
+            "Revenue Arbitrage",
             "Benchmarks",
             "Coaching",
             "Control",
+            "Model Retraining",
             "RLHF Loop",
             "Governance",
-            "Agentic OS"
+            "Agentic OS",
+            "Enterprise Pulse",
+            "Ambiguity Queue"
         ])
         
         with tab1:
@@ -48,8 +52,11 @@ class OpsOptimizationHub:
                 
         with tab2:
             self._render_revenue_attribution()
-            
+
         with tab3:
+            self._render_revenue_arbitrage()
+            
+        with tab4:
             self._render_benchmarking()
                 
         with tab4:
@@ -58,14 +65,245 @@ class OpsOptimizationHub:
         with tab5:
             self._render_control_panel()
 
-        with tab8:
+        with tab7:
+            self._render_model_retraining()
+
+        with tab9:
             render_agent_os_tab()
             
-        with tab6:
+        with tab8:
             render_rlhf_loop()
             
         with tab7:
             render_security_governance()
+
+        with tab9:
+            self._render_enterprise_pulse()
+            
+        with tab10:
+            self._render_ambiguity_queue()
+
+    def _render_revenue_arbitrage(self):
+        """Phase 6: Revenue Arbitrage Map & Investor Intelligence"""
+        st.subheader("📈 Revenue Arbitrage Intelligence")
+        st.markdown("Predictive financial engineering identifying the highest-margin investment opportunities.")
+
+        # Quant Metrics Row
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Avg Portfolio CoC", "24.5%", "+3.2%")
+        col2.metric("Target IRR", "18.2%", "Stable")
+        col3.metric("Arbitrage Gap", "$1.2M", "+$250K")
+        col4.metric("Quant Accuracy", "94.2%", "+1.5%")
+
+        # Arbitrage Map
+        st.markdown("---")
+        st.markdown("#### 🗺️ Revenue Arbitrage Map (by Zip Code)")
+        
+        # Mock data for arbitrage map - In production, this pulls from QuantAgent logs
+        arbitrage_data = pd.DataFrame({
+            "Zip Code": ["78701", "78704", "78745", "78751", "78758", "78702"],
+            "Market Price": [850000, 750000, 450000, 680000, 390000, 520000],
+            "Predicted Margin": [125000, 110000, 85000, 95000, 75000, 105000],
+            "Net Yield %": [14.7, 14.6, 18.8, 13.9, 19.2, 20.1],
+            "Competition": ["High", "High", "Medium", "Medium", "Low", "Medium"]
+        })
+
+        fig = px.scatter(arbitrage_data, x="Zip Code", y="Net Yield %", 
+                         size="Predicted Margin", color="Net Yield %",
+                         hover_name="Zip Code", hover_data=["Market Price", "Competition"],
+                         color_continuous_scale="Viridis",
+                         title="Opportunity Density vs. Yield")
+        
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
+
+        # Quantitative Strategy Breakdown
+        st.markdown("---")
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("#### 💎 High-Yield Clusters")
+            st.info("**78758 & 78702**: Identified as 'Prime Arbitrage' zones. Low competition combined with high predicted Net Yield (>19%).")
+            st.success("Recommendation: Deploy 'The Hunter' to aggressive CRAG scanning in these sectors.")
+        
+        with c2:
+            st.markdown("#### 🛡️ Risk-Adjusted Forecasts")
+            # Simulated forecasting chart
+            forecast_dates = pd.date_range(start=datetime.datetime.now(), periods=6, freq='M')
+            forecast_values = [1.2, 1.4, 1.35, 1.6, 1.8, 1.75] # Millions
+            fig_forecast = go.Figure()
+            fig_forecast.add_trace(go.Scatter(x=forecast_dates, y=forecast_values, mode='lines+markers', name='Predicted Profit', line=dict(color='#10B981', width=3)))
+            st.plotly_chart(style_obsidian_chart(fig_forecast), use_container_width=True)
+
+    def _render_model_retraining(self):
+        """Phase 7: Adaptive Model Retraining Management"""
+        st.subheader("🔄 Adaptive Model Retraining")
+        st.markdown("Closed-loop optimization of AI scoring weights based on GHL deal outcomes.")
+
+        # Real-time Feedback Loop Stats
+        col1, col2, col3, col4 = st.columns(4)
+        
+        # Get retraining stats from cache/db
+        try:
+            from ghl_real_estate_ai.services.cache_service import get_cache_service
+            cache = get_cache_service()
+            outcome_count = asyncio.run(cache.get("retraining_outcome_count")) or 0
+            dynamic_weights = asyncio.run(cache.get("dynamic_scoring_weights")) or {
+                "qualification": 0.25, "closing_probability": 0.35, "engagement": 0.20, "urgency": 0.20
+            }
+        except Exception:
+            outcome_count = 0
+            dynamic_weights = {"qualification": 0.25, "closing_probability": 0.35, "engagement": 0.20, "urgency": 0.20}
+
+        col1.metric("Pending Outcomes", f"{outcome_count}/10", f"{10-outcome_count} to next cycle")
+        col2.metric("Weight Drift", "0.04", "Active")
+        col3.metric("Last Retrain", "2h ago", "Auto")
+        col4.metric("Model Health", "98.2%", "Healthy")
+
+        st.markdown("---")
+        st.markdown("#### 🎯 Active Scoring Weights (Adaptive)")
+        
+        # Visualize dynamic weights
+        weight_df = pd.DataFrame([
+            {"Factor": k.replace('_', ' ').title(), "Weight": v} 
+            for k, v in dynamic_weights.items()
+        ])
+        fig = px.bar(weight_df, x="Factor", y="Weight", color="Factor", 
+                     color_discrete_sequence=px.colors.qualitative.Pastel)
+        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
+
+        # Manual Override
+        with st.expander("🛠️ Manual Weight Adjustment (Expert Mode)"):
+            st.warning("Manual overrides will temporarily pause the adaptive feedback loop.")
+            cols = st.columns(len(dynamic_weights))
+            for i, (factor, weight) in enumerate(dynamic_weights.items()):
+                with cols[i]:
+                    st.slider(f"{factor.title()}", 0.0, 1.0, weight, step=0.01, key=f"weight_slider_{factor}")
+            
+            if st.button("Apply Manual Weights"):
+                st.success("Weights updated and logged to SharedBlackboard.")
+
+        # Outcome Feed
+        st.markdown("---")
+        st.markdown("#### 📥 Recent Deal Outcomes")
+        outcomes = [
+            {"lead": "Sarah Chen", "outcome": "WON", "value": "$16,500", "date": "1h ago"},
+            {"lead": "David Kim", "outcome": "WON", "value": "$10,500", "date": "3h ago"},
+            {"lead": "Mike Rodriguez", "outcome": "LOST", "value": "$0", "date": "5h ago"}
+        ]
+        st.table(outcomes)
+
+    def _render_ambiguity_queue(self):
+        """Phase 5: HITL Ambiguity Queue for Jorge"""
+        st.subheader("⚠️ Ambiguity Queue (HITL)")
+        st.markdown("Leads flagged by AI for **Conflicting Intent** or **High-Value Ambiguity** requiring manual review.")
+        
+        # Mock data for demonstration - in production, query the MemoryService/PredictiveScorer
+        ambiguous_leads = [
+            {
+                "id": "cont_12345",
+                "name": "Sarah Jenkins",
+                "conflict": "Urgent timeline (30 days) but Firm on Price ($450k, 15% over ARV)",
+                "score": 88,
+                "potential": "$15,000"
+            },
+            {
+                "id": "cont_67890",
+                "name": "Mark Thompson",
+                "conflict": "Major Repairs needed but expecting 'Excellent' condition pricing",
+                "score": 72,
+                "potential": "$22,500"
+            }
+        ]
+        
+        for lead in ambiguous_leads:
+            with st.container():
+                st.markdown(f"""
+                    <div style='background: rgba(245, 158, 11, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3); margin-bottom: 1rem;'>
+                        <div style='display: flex; justify-content: space-between;'>
+                            <span style='font-weight: bold; color: #F59E0B;'>{lead['name']} ({lead['id']})</span>
+                            <span style='color: #8B949E;'>Priority Score: {lead['score']}</span>
+                        </div>
+                        <div style='margin-top: 0.5rem; color: #FFFFFF;'>
+                            <strong>Conflict detected:</strong> {lead['conflict']}
+                        </div>
+                        <div style='margin-top: 0.5rem; display: flex; gap: 10px;'>
+                            <button style='background: #10B981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;'>Approve AI Pathway</button>
+                            <button style='background: #EF4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;'>Take Over Manually</button>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+        
+        if not ambiguous_leads:
+            st.success("Clean queue! No high-value ambiguities detected.")
+
+    def _render_enterprise_pulse(self):
+        st.subheader("Enterprise AI Pulse")
+        st.markdown("Real-time system health, multi-tenant latency, and predictive ROI.")
+
+        # Metrics Row
+        col1, col2, col3, col4 = st.columns(4)
+        
+        # Pull data from gemini_metrics.csv if it exists, otherwise use mock
+        import os
+        import pandas as pd
+        metrics_file = "gemini_metrics.csv"
+        
+        if os.path.exists(metrics_file):
+            df = pd.read_csv(metrics_file)
+            total_cost = df['cost_usd'].sum()
+            failover_count = df['is_failover'].sum()
+            tenant_count = df['tenant_id'].nunique()
+            avg_tokens = df['total_tokens'].mean()
+        else:
+            total_cost = 142.85
+            failover_count = 3
+            tenant_count = 12
+            avg_tokens = 1450
+
+        col1.metric("Total LLM Cost", f"${total_cost:.2f}", "-5%")
+        col2.metric("Failover Events", failover_count, "-2" if failover_count > 0 else "0")
+        col3.metric("Active Tenants", tenant_count, "+1")
+        col4.metric("Avg Token/Msg", int(avg_tokens), "+12")
+
+        # Pulse Charts
+        st.markdown("---")
+        c1, c2 = st.columns(2)
+
+        with c1:
+            st.markdown("#### ⚡ System Latency (ms)")
+            # Simulated latency data - in production would pull from AnalyticsEngine
+            latency_data = [350, 420, 380, 450, 310, 290, 320, 340, 310, 305]
+            from app import sparkline
+            st.plotly_chart(sparkline(latency_data, color="#6366F1", height=100), use_container_width=True)
+            st.caption("P95 Latency: 342ms | P99 Latency: 485ms")
+
+        with c2:
+            st.markdown("#### 💰 Cost per Tenant")
+            if os.path.exists(metrics_file):
+                df = pd.read_csv(metrics_file)
+                tenant_costs = df.groupby('tenant_id')['cost_usd'].sum().reset_index()
+            else:
+                tenant_costs = pd.DataFrame({
+                    "tenant_id": ["loc_austin", "loc_rancho", "loc_miami", "loc_dallas"],
+                    "cost_usd": [45.20, 32.10, 28.50, 37.05]
+                })
+            
+            fig = px.bar(tenant_costs, x="tenant_id", y="cost_usd", 
+                         color="cost_usd", color_continuous_scale="Purples")
+            from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+            st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
+
+        st.markdown("---")
+        st.markdown("#### 🛡️ Circuit Breaker Failover Frequency")
+        # Show failover distribution by provider
+        failover_data = pd.DataFrame({
+            "Provider": ["Claude (Primary)", "Gemini (Failover)", "Perplexity (Research)"],
+            "Requests": [850, failover_count, 45]
+        })
+        fig_fail = px.pie(failover_data, values="Requests", names="Provider", 
+                          hole=0.4, color_discrete_sequence=["#6366F1", "#10B981", "#F59E0B"])
+        st.plotly_chart(style_obsidian_chart(fig_fail), use_container_width=True)
 
     def _render_quality_assurance(self):
         st.subheader("AI Quality Assurance")

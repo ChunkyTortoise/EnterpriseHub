@@ -88,7 +88,13 @@ class ClosingProbabilityModel:
         self.model_metrics: Optional[ModelMetrics] = None
 
         # Load existing model if available
-        asyncio.create_task(self._load_model())
+        try:
+            loop = asyncio.get_running_loop()
+            if loop.is_running():
+                loop.create_task(self._load_model())
+        except RuntimeError:
+            # No running event loop, model will be loaded on first use or manual call
+            pass
 
     async def _load_model(self) -> bool:
         """

@@ -42,3 +42,21 @@ class SharedBlackboard:
         """Returns the change history of the blackboard."""
         with self._lock:
             return self._history.copy()
+
+    def log_debate(self, lead_id: str, agent_name: str, thought: str, action_proposed: str, confidence: float):
+        """Phase 7: Log granular agent reasoning for the explainability dashboard."""
+        with self._lock:
+            entry = {
+                "timestamp": datetime.now().isoformat(),
+                "lead_id": lead_id,
+                "agent": agent_name,
+                "thought": thought,
+                "action_proposed": action_proposed,
+                "confidence": confidence
+            }
+            # We can store this in a special 'debates' list or write to a dedicated DB table
+            debates = self._data.get("agent_debates", [])
+            debates.append(entry)
+            self._data["agent_debates"] = debates[-50:] # Keep last 50 for live view
+
+    

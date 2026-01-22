@@ -4,7 +4,8 @@ Gemini Workflow Hooks System.
 Provides lifecycle hooks for the Agent system, allowing for 
 custom logic before/after LLM interactions and Tool execution.
 """
-from typing import Callable, List, Optional, Any, Dict
+import asyncio
+from typing import Callable, List, Optional, Any, Dict, Union, Awaitable
 from dataclasses import dataclass
 from enum import Enum
 
@@ -26,25 +27,40 @@ class HookContext:
     metadata: Optional[Dict[str, Any]] = None
 
 class HookManager:
-    """Manages lifecycle hooks."""
+    """Manages lifecycle hooks, supporting both sync and async callbacks."""
     
     def __init__(self):
-        self._hooks: Dict[HookEvent, List[Callable[[HookContext], None]]] = {
+        self._hooks: Dict[HookEvent, List[Callable[[HookContext], Union[None, Awaitable[None]]]]] = {
             event: [] for event in HookEvent
         }
 
-    def register(self, event: HookEvent, callback: Callable[[HookContext], None]):
+    def register(self, event: HookEvent, callback: Callable[[HookContext], Union[None, Awaitable[None]]]):
         """Register a hook callback."""
         self._hooks[event].append(callback)
 
     def trigger(self, event: HookEvent, context: HookContext):
-        """Trigger all hooks for an event."""
+        """Trigger all hooks for an event (synchronous)."""
         for callback in self._hooks[event]:
             try:
-                callback(context)
+                if asyncio.iscoroutinefunction(callback):
+                    # For sync trigger of async function, create a task
+                    asyncio.create_task(callback(context))
+                else:
+                    callback(context)
             except Exception as e:
                 # Hooks should not break the main flow, just log error
-                print(f"Error in hook {event.value}: {e}")
+                print(f"Error in sync hook {event.value}: {e}")
+
+    async def atrigger(self, event: HookEvent, context: HookContext):
+        """Trigger all hooks for an event (asynchronous)."""
+        for callback in self._hooks[event]:
+            try:
+                if asyncio.iscoroutinefunction(callback):
+                    await callback(context)
+                else:
+                    callback(context)
+            except Exception as e:
+                print(f"Error in async hook {event.value}: {e}")
 
 # Global hook manager instance
 hooks = HookManager()
