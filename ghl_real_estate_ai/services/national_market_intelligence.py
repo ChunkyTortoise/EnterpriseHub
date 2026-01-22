@@ -636,6 +636,49 @@ class NationalMarketIntelligence:
         # Corporate relocations typically afford 1.5x median home price
         return dest_metrics.median_home_price * 1.5
 
+    async def get_market_metrics(self, market_id: str) -> Optional[MarketMetrics]:
+        """
+        Public API: Get metrics for a specific market.
+        If market_id is not found, tries to match by name or location string.
+        """
+        # 1. Try direct ID match
+        metrics = self.market_metrics.get(market_id.lower())
+        if metrics:
+            return metrics
+            
+        # 2. Try fuzzy name match
+        for m_id, m_metrics in self.market_metrics.items():
+            if market_id.lower() in m_metrics.market_name.lower():
+                return m_metrics
+                
+        # 3. If not found, return None
+        logger.warning(f"Market metrics not found for: {market_id}")
+        return None
+
+    async def get_market_valuation(self, location_str: str, base_price: float) -> float:
+        """
+        Phase 7: Financial Precision.
+        Calculate refined AI valuation using actual market comps/metrics.
+        """
+        metrics = await self.get_market_metrics(location_str)
+        
+        if metrics:
+            # Use real market appreciation and opportunity score to refine valuation
+            # Higher opportunity and appreciation = higher valuation relative to base
+            appreciation_factor = 1 + (metrics.price_appreciation_1y / 100)
+            opportunity_boost = 1 + (metrics.opportunity_score / 1000) # Small boost based on market health
+            
+            # Refined valuation logic: 
+            # We use base_price (seller expectation) and adjust based on market trends
+            refined_val = base_price * appreciation_factor * opportunity_boost
+            
+            logger.info(f"Refined valuation for {location_str}: ${refined_val:,.2f} (based on {metrics.market_name})")
+            return refined_val
+            
+        # Fallback to a slightly more intelligent proxy than 1.1x
+        logger.info(f"Using proxy valuation for {location_str}")
+        return base_price * 1.15
+
     async def get_national_market_overview(self) -> Dict[str, Any]:
         """Get comprehensive national market overview"""
         cache_key = "national_market_overview"

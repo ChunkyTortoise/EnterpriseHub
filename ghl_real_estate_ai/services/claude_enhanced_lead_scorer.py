@@ -32,6 +32,8 @@ class UnifiedScoringResult:
     ml_conversion_score: float  # 0-100 conversion probability
     churn_risk_score: float  # 0-100 risk of churn
     engagement_score: float  # 0-100 engagement level
+    frs_score: float  # 0-100 Financial Readiness Score
+    pcs_score: float  # 0-100 Psychological Commitment Score
 
     # Claude AI Analysis
     strategic_summary: str  # Executive summary
@@ -77,6 +79,8 @@ class ClaudeEnhancedLeadScorer:
         from ghl_real_estate_ai.services.churn_prediction_engine import ChurnPredictionEngine
         from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
         from ghl_real_estate_ai.services.behavioral_triggers import BehavioralTriggerEngine
+        from ghl_real_estate_ai.services.scoring.voss_scoring_engine import get_voss_scoring_engine
+        from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 
         # Core services
         self.claude = claude_orchestrator or get_claude_orchestrator()
@@ -85,6 +89,8 @@ class ClaudeEnhancedLeadScorer:
         # Component scorers
         self.jorge_scorer = LeadScorer()
         self.ml_scorer = PredictiveLeadScorer()
+        self.voss_engine = get_voss_scoring_engine()
+        self.intent_decoder = LeadIntentDecoder()
         
         # Initialize dependencies for ChurnPredictionEngine
         try:
@@ -149,6 +155,16 @@ class ClaudeEnhancedLeadScorer:
                 jorge_result, ml_result, churn_result
             )
 
+            # Step 2.5: Calculate Voss High-Stakes Scores (Enhanced with IntentDecoder)
+            # Use conversation history if available, else last_message
+            history = memory_context.get("conversation_history", [])
+            if not history and lead_context.get("last_message"):
+                history = [{"role": "user", "content": lead_context.get("last_message")}]
+            
+            intent_profile = self.intent_decoder.analyze_lead(lead_id, history)
+            frs_score = intent_profile.frs_score
+            pcs_score = intent_profile.pcs_score
+
             # Step 3: Generate Claude reasoning
             claude_start = datetime.now()
             claude_analysis = await self._generate_claude_reasoning(
@@ -181,6 +197,8 @@ class ClaudeEnhancedLeadScorer:
                 ml_conversion_score=ml_result.get('score', 0),
                 churn_risk_score=churn_result.get('risk_score_7d', 50),
                 engagement_score=self._calculate_engagement_score(lead_context, memory_context),
+                frs_score=frs_score,
+                pcs_score=pcs_score,
 
                 # Claude Analysis
                 strategic_summary=claude_analysis.get('strategic_summary', ''),
@@ -232,6 +250,8 @@ class ClaudeEnhancedLeadScorer:
                 ml_conversion_score=0,
                 churn_risk_score=50,
                 engagement_score=0,
+                frs_score=0,
+                pcs_score=0,
                 strategic_summary=f"Analysis failed: {str(e)}",
                 behavioral_insights="Unable to analyze due to error",
                 reasoning=f"Error in scoring pipeline: {str(e)}",

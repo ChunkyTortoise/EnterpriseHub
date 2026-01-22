@@ -846,7 +846,7 @@ class PredictiveLeadRouter:
                     max_capacity=record.get('capacity', 15),
                     success_rate=record.get('conversion_rate', 0.0) / 100.0 if record.get('conversion_rate') else 0.0,
                     avg_response_time=record.get('avg_response_time_minutes', 60),
-                    last_activity=datetime.now(),  # TODO: Add last_activity to database schema
+                    last_activity=record.get('last_activity') or datetime.now(),
                     metadata={
                         'role': record.get('role'),
                         'customer_satisfaction': record.get('customer_satisfaction'),

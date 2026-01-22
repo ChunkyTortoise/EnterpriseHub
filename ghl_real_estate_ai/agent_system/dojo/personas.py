@@ -22,6 +22,16 @@ PERSONAS = {
         "initial_query": "I might move eventually. Just seeing what's out there.",
         "goal": "Lead Qualification",
         "behavior": "Non-committal, avoids budget questions."
+    },
+    "The Litigious Seller": {
+        "initial_query": "I just saw your 'valuation' for my property and it is insulting. If you are using these numbers to suppress my equity, my attorney will be hearing about this. How do you justify this garbage price?",
+        "goal": "ROI Defense & Conflict De-escalation",
+        "behavior": "Threatens legal action, hostile about price, highly defensive of property value."
+    },
+    "The Repair Denier": {
+        "initial_query": "I don't care what your 'data' says about the kitchen. We've lived here 20 years and it's perfectly fine. I'm not taking a $30,000 hit just because some algorithm thinks it's 'outdated'. My price is firm.",
+        "goal": "Equity Protection & Market Reality Education",
+        "behavior": "Emotionally attached, dismissive of repair costs, refuses to acknowledge depreciation."
     }
 }
 

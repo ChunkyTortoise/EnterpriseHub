@@ -26,6 +26,9 @@ from ghl_real_estate_ai.prompts.reengagement_templates import REENGAGEMENT_TEMPL
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
+from ghl_real_estate_ai.core.governance_engine import GovernanceEngine
+from ghl_real_estate_ai.core.recovery_engine import RecoveryEngine
+
 logger = get_logger(__name__)
 
 
@@ -81,6 +84,10 @@ class ConversationManager:
 
         # Property matcher for listing recommendations
         self.property_matcher = PropertyMatcher()
+        
+        # --- GOVERNANCE & RECOVERY (AGENT G1 & R1) ---
+        self.governance = GovernanceEngine()
+        self.recovery = RecoveryEngine()
 
         logger.info("Conversation manager initialized")
 
@@ -165,16 +172,19 @@ class ConversationManager:
                 context["extracted_preferences"].update(extracted_data)
 
         # Update last lead score for analytics tracking
-        current_score = self.lead_scorer.calculate(context)
+        current_score = await self.lead_scorer.calculate(context)
         context["last_lead_score"] = current_score
 
         # Calculate predictive conversion probability
         predictive_result = await self.predictive_scorer.calculate_predictive_score(context, location=location_id)
         # Serialize the dataclass to a dict for storage
-        # Filter out fields that might not be serializable if any, but asdict should be fine for JSON types
-        # Note: priority_level is an Enum, needs conversion
         predictive_data = asdict(predictive_result)
         predictive_data["priority_level"] = predictive_result.priority_level.value
+        
+        # Ensure last_updated is a string for JSON serialization
+        if isinstance(predictive_data.get("last_updated"), datetime):
+            predictive_data["last_updated"] = predictive_data["last_updated"].isoformat()
+            
         context["predictive_score"] = predictive_data
 
         # Trim conversation history to max length and summarize if needed
@@ -517,11 +527,11 @@ Count questions_answered based on how many of the 4 main categories have data.
         """
         import asyncio
         import time
-        
+
         contact_name = contact_info.get("first_name", "there")
         location_id = tenant_config.get("location_id") if tenant_config else None
+        location_id_str = location_id or "default"
         calendar_id = (tenant_config.get("ghl_calendar_id") if tenant_config else None) or settings.ghl_calendar_id
-
         # 1. Extraction (Still sequential as it's the primary dependency)
         if not context.get("conversation_history"):
             extracted_data = await self.extract_data(
@@ -595,6 +605,15 @@ Count questions_answered based on how many of the 4 main categories have data.
                 "created_at": context.get("created_at")
             }
         )
+        
+        # Run Predictive Scoring in parallel (optimization)
+        predictive_task = self.predictive_scorer.calculate_predictive_score(
+            {
+                **context,
+                "extracted_preferences": merged_preferences
+            }, 
+            location=location_id_str
+        )
 
         # Launch all parallel tasks
         results = await asyncio.gather(
@@ -602,13 +621,25 @@ Count questions_answered based on how many of the 4 main categories have data.
             score_task,
             get_slots_task(),
             get_matches_task(),
+            predictive_task,
             return_exceptions=True
         )
         # Unpack results with safety
         relevant_docs = results[0] if not isinstance(results[0], Exception) else []
-        lead_score = results[1] if not isinstance(results[1], Exception) else 0
+        
+        # Ensure lead_score is an integer (awaited result from score_task)
+        lead_score_result = results[1]
+        if isinstance(lead_score_result, Exception):
+            logger.error(f"Lead scoring failed: {lead_score_result}")
+            lead_score = 0
+        else:
+            lead_score = int(lead_score_result) if lead_score_result is not None else 0
+            
         slots = results[2] if not isinstance(results[2], Exception) else []
         property_matches_data = results[3] if not isinstance(results[3], Exception) else []
+        
+        # Unpack predictive score
+        predictive_result = results[4] if not isinstance(results[4], Exception) else None
 
         # 3. Process results into formatted strings
         relevant_knowledge = "\n\n".join([
@@ -666,7 +697,8 @@ Count questions_answered based on how many of the 4 main categories have data.
             appointment_status=appointment_booked_msg,
             property_recommendations=property_recommendations,
             is_returning_lead=context.get("is_returning_lead", False),
-            hours_since=context.get("hours_since_last_interaction", 0)
+            hours_since=context.get("hours_since_last_interaction", 0),
+            predictive_score=predictive_result  # Pass predictive score to prompt
         )
 
         response_start_time = time.time()
@@ -683,7 +715,7 @@ Count questions_answered based on how many of the 4 main categories have data.
 
             history = [{"role": msg["role"], "content": msg["content"]} for msg in context.get("conversation_history", [])]
 
-            ai_response = await llm_client.agenerate(
+            ai_response_obj = await llm_client.agenerate(
                 prompt=user_message,
                 system_prompt=system_prompt,
                 history=history,
@@ -691,84 +723,86 @@ Count questions_answered based on how many of the 4 main categories have data.
                 max_tokens=settings.max_tokens
             )
             
-            response_time_ms = (time.time() - response_start_time) * 1000
-
-            # SMS limit enforcement
-            if len(ai_response.content) > 160:
-                ai_response.content = ai_response.content[:157] + "..."
-
-            # 6. Post-Processing (Background Tasks)
-            contact_id = contact_info.get("id", "unknown")
-            location_id_str = location_id or "default"
+            response_content = ai_response_obj.content
             
-            # Background task for analytics and predictive scoring
-            async def post_processing():
-                # Track usage
-                await self.analytics.track_llm_usage(
-                    location_id=location_id_str,
-                    model=ai_response.model,
-                    provider=ai_response.provider.value,
-                    input_tokens=ai_response.input_tokens or 0,
-                    output_tokens=ai_response.output_tokens or 0,
-                    cached=False,
-                    contact_id=contact_id
-                )
-                
-                # Record event
-                appointment_scheduled = any(k in ai_response.content.lower() for k in ["schedule", "appointment", "calendar", "book"])
-                await self.analytics_engine.record_event(
-                    contact_id=contact_id,
-                    location_id=location_id_str,
-                    lead_score=lead_score,
-                    previous_score=context.get("last_lead_score", 0),
-                    message=user_message,
-                    response=ai_response.content,
-                    response_time_ms=response_time_ms,
-                    context=context,
-                    appointment_scheduled=appointment_scheduled
-                )
-                
-                # Predictive scoring update in context
-                await self.predictive_scorer.calculate_predictive_score({
-                    **context,
-                    "extracted_preferences": merged_preferences,
-                    "last_lead_score": lead_score
-                }, location=location_id_str)
+        except Exception as e:
+            logger.error(f"Primary generation failed, triggering RECOVERY MODE: {e}")
+            self.recovery.log_failure("llm")
+            
+            # SAFE MODE FALLBACK
+            response_content = self.recovery.get_safe_fallback(
+                contact_name=contact_name,
+                conversation_history=context.get("conversation_history", []),
+                extracted_preferences=merged_preferences,
+                is_seller=not is_buyer
+            )
+            
+            # Create a mock response object for tracking
+            from ghl_real_estate_ai.core.llm_client import LLMResponse, LLMProvider
+            ai_response_obj = LLMResponse(
+                content=response_content,
+                provider=LLMProvider.CLAUDE,
+                model="recovery-mode-fallback",
+                tokens_used=0
+            )
 
-            # Fire and forget post-processing
-            asyncio.create_task(post_processing())
+        response_time_ms = (time.time() - response_start_time) * 1000
 
-            return AIResponse(
-                message=ai_response.content,
-                extracted_data=extracted_data,
-                reasoning=f"Lead score: {lead_score}/100",
+        # --- AGENT GOVERNANCE ENFORCEMENT (AGENT G1) ---
+        final_message = self.governance.enforce(response_content)
+
+        # 6. Post-Processing (Background Tasks)
+        contact_id = contact_info.get("id", "unknown")
+        
+        # Background task for analytics and predictive scoring
+        async def post_processing():
+            # Track usage
+            await self.analytics.track_llm_usage(
+                location_id=location_id_str,
+                model=ai_response_obj.model,
+                provider=ai_response_obj.provider.value,
+                input_tokens=ai_response_obj.input_tokens or 0,
+                output_tokens=ai_response_obj.output_tokens or 0,
+                cached=False,
+                contact_id=contact_id
+            )
+            
+            # Update predictive scoring in context (already calculated in parallel)
+            if predictive_result:
+                from dataclasses import asdict
+                predictive_data = asdict(predictive_result)
+                predictive_data["priority_level"] = predictive_result.priority_level.value
+                if isinstance(predictive_data.get("last_updated"), datetime):
+                    predictive_data["last_updated"] = predictive_data["last_updated"].isoformat()
+                context["predictive_score"] = predictive_data
+            
+            # Record event
+            appointment_scheduled = any(k in final_message.lower() for k in ["schedule", "appointment", "calendar", "book"])
+            await self.analytics_engine.record_event(
+                contact_id=contact_id,
+                location_id=location_id_str,
                 lead_score=lead_score,
-                predictive_score=None # Will be updated in context via background task
+                previous_score=context.get("last_lead_score", 0),
+                message=user_message,
+                response=final_message,
+                response_time_ms=response_time_ms,
+                context=context,
+                appointment_scheduled=appointment_scheduled,
+                predictive_result=predictive_result
             )
 
-        except Exception as e:
-            logger.error(f"Failed to generate response: {e}")
-            return AIResponse(
-                message=f"Hey {contact_name}! I'm having a quick technical issue—give me just a moment and I'll get back to you!",
-                extracted_data={},
-                reasoning="Error",
-                lead_score=0
-            )
+        # Fire and forget post-processing
+        asyncio.create_task(post_processing())
 
-        except Exception as e:
-            logger.error(
-                f"Failed to generate AI response: {str(e)}",
-                extra={"error": str(e)}
-            )
-            # Fallback response
-            return AIResponse(
-                message=f"Hey {contact_name}! Thanks for reaching out. I'm having a quick technical issue—give me just a moment and I'll get back to you!",
-                extracted_data={},
-                reasoning="Error occurred",
-                lead_score=0
-            )
+        return AIResponse(
+            message=final_message,
+            extracted_data=extracted_data,
+            reasoning=f"Lead score: {lead_score}/100",
+            lead_score=lead_score,
+            predictive_score=None # Will be updated in context via background task
+        )
 
-    async def calculate_lead_score(self, contact_id: str, location_id: Optional[str] = None) -> int:
+    async def extract_data(self, contact_id: str, location_id: Optional[str] = None) -> int:
         """
         Calculate lead score for a contact.
 

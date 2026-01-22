@@ -12,6 +12,7 @@ Created: 2026-01-19
 import sys
 import os
 import asyncio
+import pytest
 from typing import Dict, Any
 
 # Add the project root to Python path
@@ -99,6 +100,7 @@ class MockGHLClient:
         self.actions_log.append(("apply_actions", contact_id, actions))
 
 
+@pytest.mark.asyncio
 async def test_question_sequence():
     """Test Jorge's 4-question sequence"""
     print("🧪 Testing Jorge's Question Sequence")
@@ -133,6 +135,7 @@ async def test_question_sequence():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_temperature_classification():
     """Test Jorge's seller temperature classification"""
     print("🌡️  Testing Temperature Classification")
@@ -168,6 +171,7 @@ async def test_temperature_classification():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_seller_profile():
     """Test SellerProfile data structure"""
     print("📊 Testing Seller Profile")
@@ -203,6 +207,7 @@ async def test_seller_profile():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_message_sanitization():
     """Test Jorge's message sanitization"""
     print("🧹 Testing Message Sanitization")
@@ -226,6 +231,7 @@ async def test_message_sanitization():
     print("\n")
 
 
+@pytest.mark.asyncio
 async def test_full_conversation_flow():
     """Test full conversation flow simulation"""
     print("💬 Testing Full Conversation Flow")

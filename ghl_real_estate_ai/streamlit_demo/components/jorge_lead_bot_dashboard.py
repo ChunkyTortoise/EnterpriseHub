@@ -48,6 +48,46 @@ except ImportError:
         GETTING_SERIOUS = "getting_serious"
         JUST_LOOKING = "just_looking"
 
+# Import Phase 5 Intent Decoder
+try:
+    from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+    from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
+    INTENT_DECODER_AVAILABLE = True
+except ImportError:
+    INTENT_DECODER_AVAILABLE = False
+
+# Import Phase 5 CMA Generator
+try:
+    from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
+    from ghl_real_estate_ai.utils.pdf_renderer import PDFRenderer
+    CMA_GENERATOR_AVAILABLE = True
+except ImportError:
+    CMA_GENERATOR_AVAILABLE = False
+
+# Import Phase 6 Lead Bot Workflow
+try:
+    from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
+    from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
+    from ghl_real_estate_ai.models.workflows import LeadFollowUpState
+    LEAD_BOT_WORKFLOW_AVAILABLE = True
+except ImportError:
+    LEAD_BOT_WORKFLOW_AVAILABLE = False
+
+# Import Phase 7 Whisper Coach
+try:
+    from ghl_real_estate_ai.services.whisper_coach import WhisperCoachEngine
+    WHISPER_COACH_AVAILABLE = True
+except ImportError:
+    WHISPER_COACH_AVAILABLE = False
+
+# Import Phase 8 Property Visualizer
+try:
+    import streamlit.components.v1 as components
+    from ghl_real_estate_ai.services.property_visualizer import PropertyVisualizer
+    PROPERTY_VISUALIZER_AVAILABLE = True
+except ImportError:
+    PROPERTY_VISUALIZER_AVAILABLE = False
+
 # Import the Property Matching service
 try:
     from jorge_property_matching_service import JorgePropertyMatchingService
@@ -233,6 +273,104 @@ class JorgeAPIClient:
             {"id": "lead_005", "name": "Jennifer White", "phone": "+1-555-567-8901", "email": "jennifer.w@email.com", "score": 91.7, "priority": "immediate", "stage": "ready_to_buy", "last_contact": "30 minutes ago", "source": "Referral", "budget": "$900K-1.2M", "timeline": "Immediate", "notes": "Cash buyer"}
         ]
 
+    async def get_intent_profile(self, lead_id: str, history: List[Dict[str, str]]) -> Dict[str, Any]:
+        """Fetch real intent profile using Phase 5 Intent Decoder."""
+        if INTENT_DECODER_AVAILABLE:
+            try:
+                decoder = LeadIntentDecoder()
+                profile = decoder.analyze_lead(lead_id, history)
+                return profile.dict()
+            except Exception as e:
+                print(f"Decoder Error: {e}")
+        return await self.analyze_intent_phase1(history)
+
+    async def run_followup_simulation(self, lead_data: Dict[str, Any], step: str) -> Dict[str, Any]:
+        """Simulate a step in the 3-7-30 follow-up sequence."""
+        if LEAD_BOT_WORKFLOW_AVAILABLE:
+            try:
+                bot = LeadBotWorkflow()
+                # Prepare state
+                state: LeadFollowUpState = {
+                    "lead_id": lead_data.get("id", "demo_lead"),
+                    "lead_name": lead_data.get("name", "Demo Lead"),
+                    "contact_phone": lead_data.get("phone", "+15551234567"),
+                    "contact_email": lead_data.get("email", "demo@example.com"),
+                    "property_address": lead_data.get("property", "123 Main St, Austin, TX"),
+                    "conversation_history": lead_data.get("history", []),
+                    "intent_profile": None,
+                    "current_step": step,
+                    "engagement_status": "ghosted",
+                    "last_interaction_time": datetime.now() - timedelta(days=3),
+                    "stall_breaker_attempted": False,
+                    "cma_generated": False
+                }
+                
+                # We invoke the workflow. Since it's a LangGraph, we can run it 
+                # (simplified here since we want to see a specific node result)
+                # For simulation, we'll manually call the node matching the step
+                if step == "day_3":
+                    result = bot.send_day_3_sms(state)
+                elif step == "day_7":
+                    result = await bot.initiate_day_7_call(state)
+                elif step == "day_14":
+                    result = bot.send_day_14_email(state)
+                else:
+                    result = {"current_step": step}
+                
+                return result
+            except Exception as e:
+                print(f"Workflow Simulation Error: {e}")
+        
+        return {"current_step": step, "status": "simulated"}
+
+    async def analyze_intent_phase1(self, conversation_history: List[Dict[str, str]]) -> Dict[str, Any]:
+        """Call Phase 1 Intent Analysis (2026 Roadmap)."""
+        if INTENT_DECODER_AVAILABLE:
+            try:
+                decoder = LeadIntentDecoder()
+                # Analyze lead using the real decoder
+                profile = decoder.analyze_lead("demo_lead", conversation_history)
+                return profile.dict()
+            except Exception as e:
+                print(f"Decoder Error: {e}")
+
+        if REQUESTS_AVAILABLE:
+            try:
+                # Assuming localhost:8000 for now
+                response = requests.post(
+                    f"{self.base_url}/api/intelligence/analyze-intent",
+                    json={"contact_id": "demo_lead", "conversation_history": conversation_history},
+                    timeout=5
+                )
+                if response.status_code == 200:
+                    return response.json()
+            except Exception as e:
+                print(f"API Error: {e}")
+        
+        # Fallback Mock for Demo if API fails or requests missing
+        return {
+            "lead_id": "demo_lead",
+            "frs": {
+                "total_score": 88.5,
+                "classification": "Hot Lead",
+                "motivation": {"score": 90, "category": "High Intent", "detected_markers": ["moving for job"]},
+                "timeline": {"score": 90, "category": "High Commitment", "target_date": None},
+                "condition": {"score": 85, "category": "Realistic", "acknowledged_defects": ["needs paint"]},
+                "price": {"score": 80, "category": "Price-Aware", "zestimate_mentioned": True}
+            },
+            "pcs": {
+                "total_score": 75,
+                "response_velocity_score": 100,
+                "message_length_score": 50,
+                "question_depth_score": 60,
+                "objection_handling_score": 50,
+                "call_acceptance_score": 100,
+                "last_updated": datetime.now().isoformat()
+            },
+            "next_best_action": "Route to Jorge (Voice Call)",
+            "stall_breaker_suggested": None
+        }
+
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import (
     inject_elite_css, 
     style_obsidian_chart, 
@@ -242,8 +380,11 @@ from ghl_real_estate_ai.streamlit_demo.obsidian_theme import (
     render_terminal_log,
     render_voice_waveform,
     render_tactical_dock,
-    render_journey_line
+    render_journey_line,
+    render_neural_heatmap
 )
+
+from ghl_real_estate_ai.services.war_room_service import WarRoomService
 
 # Initialize API client and Enhanced Scorer
 @st.cache_resource
@@ -255,6 +396,67 @@ def get_enhanced_scorer():
     if ENHANCED_SCORER_AVAILABLE:
         return EnhancedSmartLeadScorer()
     return None
+
+@st.cache_resource
+def get_war_room_service():
+    return WarRoomService()
+
+@st.cache_resource
+def get_whisper_coach():
+    return WhisperCoachEngine()
+
+@st.cache_resource
+def get_property_visualizer():
+    return PropertyVisualizer()
+
+@st.cache_resource
+def get_jorge_seller_bot():
+    return JorgeSellerBot()
+
+def render_jorge_seller_bot_section(api_client: JorgeAPIClient):
+    """Render the Phase 6 Jorge Seller Bot section."""
+    st.markdown(f'### {get_svg_icon("negotiation")} Jorge Persona // Motivated Seller Bot', unsafe_allow_html=True)
+    st.markdown("Confrontational qualification and stall-breaking protocol.")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
+        st.subheader("💬 Active Seller Chat")
+        
+        user_msg = st.text_area("Seller Message", "I'll get back to you next week, I'm pretty busy right now.", key="seller_msg_input")
+        
+        if st.button("🚀 ENGAGE JORGE PERSONA", type="primary", use_container_width=True):
+            bot = get_jorge_seller_bot()
+            history = [{"role": "user", "content": user_msg}]
+            with st.spinner("Jorge is typing..."):
+                result = asyncio.run(bot.process_seller_message("demo_seller", "Robert Miller", history))
+                st.session_state['jorge_seller_result'] = result
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col2:
+        if 'jorge_seller_result' in st.session_state:
+            res = st.session_state['jorge_seller_result']
+            st.markdown(f'<div class="elite-card" style="padding: 1.5rem; border-top: 2px solid var(--negotiation-neon) !important;">', unsafe_allow_html=True)
+            
+            # Strategy Header
+            st.markdown(f"#### 🎯 STRATEGY: {res['current_tone']}")
+            
+            if res['stall_detected']:
+                st.error(f"⚠️ STALL DETECTED: {res['detected_stall_type'].upper()}")
+            
+            # The Response
+            st.markdown(f"""
+                <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; font-style: italic; border-left: 3px solid var(--negotiation-neon); margin: 1rem 0;">
+                    "{res['response_content']}"
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Metrics
+            st.caption(f"Psychological Commitment: {res['psychological_commitment']}%")
+            st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            st.info("Enter a seller message to see Jorge's direct response.")
 
 def render_voice_ai_section(api_client: JorgeAPIClient):
     """Render the Voice AI section."""
@@ -337,6 +539,161 @@ def render_voice_ai_section(api_client: JorgeAPIClient):
         fig = px.bar(outcomes_df, x="Outcome", y="Count", color="Count", color_continuous_scale='Blues')
         st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
 
+def render_followup_orchestrator(api_client: JorgeAPIClient):
+    """Render the Phase 6 Ghost-in-the-Machine Follow-Up Orchestrator."""
+    st.markdown(f'### {get_svg_icon("intelligence")} Ghost-in-the-Machine // Follow-Up Orchestrator', unsafe_allow_html=True)
+    st.markdown("Autonomous re-engagement engine for cold and ghosted leads.")
+    
+    if not LEAD_BOT_WORKFLOW_AVAILABLE:
+        st.error("Lead Bot Workflow not available.")
+        return
+
+    # Simulation Controls
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
+        st.subheader("🤖 Sequence Controller")
+        
+        target_lead = st.selectbox("Select Lead to Simulate", ["Sarah Johnson", "Mike Chen", "Jennifer White"])
+        
+        simulation_step = st.select_slider(
+            "Current Sequence Position",
+            options=["initial", "day_3", "day_7", "day_14", "day_30"],
+            value="day_7"
+        )
+        
+        if st.button("🚀 EXECUTE CURRENT STEP", type="primary", use_container_width=True):
+            with st.spinner(f"Executing {simulation_step} for {target_lead}..."):
+                # In production, this would call LeadBotWorkflow().workflow.ainvoke(...)
+                st.success(f"✅ {simulation_step.upper()} successfully executed!")
+                st.toast(f"Sequence advanced for {target_lead}", icon="👻")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col2:
+        st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
+        st.subheader("📊 Sequence Logic & Content")
+        
+        if simulation_step == "day_3":
+            st.markdown("**Channel:** SMS // **Tone:** Soft Check-in")
+            st.info("💬 'Hi {Name}—just following up on your property. No pressure, but we have qualified buyers interested...'")
+        elif simulation_step == "day_7":
+            st.markdown("**Channel:** Voice AI // **Tone:** Jorge Stall-Breaker")
+            st.warning("🔊 'Hey {Name}, I know I've reached out, but market conditions are shifting. Would 15 mins make sense?'")
+        elif simulation_step == "day_14":
+            st.markdown("**Channel:** Email // **Tone:** Value Injection")
+            st.success("📄 [CMA Snapshot] 'Zillow's estimate is off by $50K. Here is the real analysis...'")
+        
+        # Timeline view
+        st.divider()
+        st.markdown("**Journey Timeline:**")
+        render_journey_line(temperature="hot" if simulation_step == "day_7" else "warm", progress=60)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+def render_whisper_mode():
+    """Render the Phase 7 Whisper Mode Real-Time Coaching Dashboard."""
+    st.markdown(f'### {get_svg_icon("voice")} Whisper Mode // Real-Time Coaching', unsafe_allow_html=True)
+    st.markdown("Live sentiment analysis and tactical cues for active calls.")
+    
+    if not WHISPER_COACH_AVAILABLE:
+        st.error("Whisper Coach Engine not available.")
+        return
+
+    coach = get_whisper_coach()
+    
+    # Selection for active call
+    active_call_id = "call_jorge_001"
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    # Fetch live coaching data (real or mock fallback)
+    feed = asyncio.run(coach.get_live_feed(active_call_id))
+    
+    with col1:
+        st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
+        st.subheader("👤 Lead Profile")
+        st.markdown("**Name:** Sarah Johnson")
+        st.markdown("**Property:** 123 Maple St")
+        st.markdown("**Last Intent:** Hot (88 FRS)")
+        
+        st.divider()
+        st.markdown("**Key Motivation:** Relocating for job")
+        st.markdown("**Top Objection:** Pricing / Zestimate")
+        
+        if 'transcript_peek' in feed:
+            st.divider()
+            st.caption(f"🎤 TRANSCRIPT PEEK: \"{feed['transcript_peek']}\"")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col2:
+        st.markdown('<div class="elite-card" style="padding: 1.5rem; border-top: 2px solid var(--negotiation-neon) !important;">', unsafe_allow_html=True)
+        st.subheader("💡 Coaching Cues")
+        
+        if feed['objection_type']:
+            st.warning(f"⚠️ {feed['objection_type'].upper()} OBJECTION DETECTED")
+        else:
+            st.success("🟢 RAPPORT BUILDING PHASE")
+            
+        st.markdown(f"""
+            <div style="font-size: 1.2rem; font-weight: 700; color: white; margin: 1rem 0; line-height: 1.4;">
+                {feed['suggestion']}
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("📊 INJECT CMA SNAPSHOT", use_container_width=True):
+            st.toast("CMA Data injected into Jorge's view!", icon="📊")
+            if 'global_decisions' in st.session_state:
+                st.session_state.global_decisions.append({
+                    "action": "CMA Injection",
+                    "why": "Countering price objection with real-time comp data.",
+                    "time": datetime.now().strftime("%H:%M:%S")
+                })
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col3:
+        st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
+        st.subheader("📈 Live Sentiment")
+        
+        # Sentiment Gauge
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = feed['sentiment'],
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            gauge = {
+                'axis': {'range': [None, 100], 'tickcolor': "white"},
+                'bar': {'color': "var(--negotiation-neon)"},
+                'steps': [
+                    {'range': [0, 40], 'color': "rgba(255, 0, 0, 0.1)"},
+                    {'range': [40, 70], 'color': "rgba(255, 255, 0, 0.1)"},
+                    {'range': [70, 100], 'color': "rgba(0, 255, 0, 0.1)"}
+                ],
+            }
+        ))
+        st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
+        
+        # Pulse animation for "Live"
+        st.markdown("""
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <div class="status-pulse" style="background: #00E5FF; box-shadow: 0 0 10px #00E5FF; position: static; transform: none;"></div>
+                <span style="color: #00E5FF; font-weight: 800; font-size: 0.7rem; letter-spacing: 0.2em;">LIVE_TRANSCRIPTION_STREAM</span>
+            </div>
+        """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Transcription Stream View
+    st.markdown('<div class="terminal-window" style="height: 150px; margin-top: 1.5rem;">', unsafe_allow_html=True)
+    st.markdown("""
+        <div style="font-weight: bold; color: var(--elite-accent); font-size: 0.7rem; margin-bottom: 8px;">
+            > TRANSCRIPT_SYNC // {active_call_id}
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Mock some transcript history
+    st.markdown(f'<div class="terminal-line"><span class="terminal-timestamp">[00:05]</span> <span style="color: #8B949E;">Jorge:</span> "Hey Sarah, I saw you were looking at 123 Maple St. What caught your eye?"</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="terminal-line"><span class="terminal-timestamp">[00:12]</span> <span style="color: #6366F1;">Sarah:</span> "Yeah, the kitchen is nice, but Zillow says it\'s overpriced for the area..."</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="terminal-line" style="border-right: 2px solid var(--negotiation-neon); width: fit-content; animation: blink 0.5s step-end infinite;">_</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
 def render_marketing_section():
     """Render the Marketing Automation section."""
     st.markdown(f'### {get_svg_icon("referral")} Automated Marketing Campaigns', unsafe_allow_html=True)
@@ -412,6 +769,19 @@ def render_retention_section():
             st.metric("Referrals", "12", delta="+4")
         st.markdown('</div>', unsafe_allow_html=True)
 
+def render_property_digital_twin(address: str):
+    """Render the Phase 8 Three.js Digital Twin for a property."""
+    if not PROPERTY_VISUALIZER_AVAILABLE:
+        st.error("Property Visualizer not available.")
+        return
+
+    visualizer = get_property_visualizer()
+    html_content = visualizer.generate_threejs_html(address)
+    
+    st.markdown(f'<div style="text-align: center; font-family: \'Space Grotesk\'; font-size: 0.7rem; color: var(--elite-accent); letter-spacing: 0.2em; margin-bottom: 0.5rem;">3D_DIGITAL_TWIN_ACTIVE</div>', unsafe_allow_html=True)
+    components.html(html_content, height=350)
+    st.markdown(f'<div style="text-align: center; color: var(--text-secondary); font-size: 0.6rem;">{address.upper()} // INTERACTIVE NEURAL MESH</div>', unsafe_allow_html=True)
+
 def render_market_prediction_section():
     """Render the Market Prediction section."""
     st.markdown(f'### {get_svg_icon("intelligence")} Market Intelligence Dossiers', unsafe_allow_html=True)
@@ -448,7 +818,13 @@ def render_market_prediction_section():
         render_dossier_block(content, title=f"{neighborhood.upper()} INTELLIGENCE")
     
     with col2:
-        st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
+        st.markdown('<div class="elite-card" style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center;">', unsafe_allow_html=True)
+        st.subheader("🏠 Property Digital Twin")
+        selected_twin = st.selectbox("Select Property Model", ["123 Maple St", "456 Oak Ave"])
+        render_property_digital_twin(selected_twin)
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('<div class="elite-card" style="padding: 1.5rem; margin-top: 1.5rem;">', unsafe_allow_html=True)
         st.subheader("Recent Predictions")
         
         predictions = [
@@ -517,6 +893,15 @@ def render_enhanced_lead_scoring_section(api_client: JorgeAPIClient):
         if analyze_button and lead_name:
             lead_data = {"name": lead_name, "budget": budget, "timeline": timeline}
             analysis = asyncio.run(api_client.analyze_lead(lead_data))
+            
+            # Phase 5: Integrate Intent Decoder for deeper semantic analysis
+            if INTENT_DECODER_AVAILABLE:
+                decoder = LeadIntentDecoder()
+                # Mock a conversation based on input for the demo
+                mock_history = [{"role": "user", "content": f"I want to buy for {budget} in {timeline}."}]
+                intent_profile = decoder.analyze_lead(lead_name, mock_history)
+                analysis['intent_profile'] = intent_profile.dict()
+            
             st.session_state['latest_analysis'] = analysis
             st.session_state['analyzed_lead_name'] = lead_name
         st.markdown('</div>', unsafe_allow_html=True)
@@ -535,7 +920,28 @@ def render_enhanced_lead_scoring_section(api_client: JorgeAPIClient):
             render_neural_progress("Financial Readiness", breakdown['financial_readiness'])
             render_neural_progress("Timeline Urgency", breakdown['timeline_urgency'])
             
+            # Phase 5: FRS/PCS Breakdown if available
+            if 'intent_profile' in analysis:
+                st.markdown("---")
+                intent = analysis['intent_profile']
+                frs = intent['frs']
+                pcs = intent['pcs']
+                
+                st.markdown(f"#### 🧠 Intelligence Activation: {frs['classification']}")
+                
+                c1, c2, c3, c4 = st.columns(4)
+                with c1: st.metric("Motivation", f"{frs['motivation']['score']}%")
+                with c2: st.metric("Timeline", f"{frs['timeline']['score']}%")
+                with c3: st.metric("Condition", f"{frs['condition']['score']}%")
+                with c4: st.metric("Price", f"{frs['price']['score']}%")
+                
+                st.info(f"👉 **Commitment Level (PCS): {pcs['total_score']}%**")
+                
+                if intent['stall_breaker_suggested']:
+                    st.warning(f"🔓 Stall-Breaker Triggered: {intent['stall_breaker_suggested']}")
+
             # Radar Chart
+            st.markdown("---")
             score_df = pd.DataFrame({
                 'Dimension': ['Intent', 'Financial', 'Timeline', 'Engagement', 'Referral', 'Local'],
                 'Score': [breakdown['intent_score'], breakdown['financial_readiness'], breakdown['timeline_urgency'], 
@@ -572,27 +978,212 @@ def render_lead_pipeline_section(api_client: JorgeAPIClient):
     
     pipeline = asyncio.run(api_client.get_lead_pipeline())
     
-    for lead in pipeline:
-        with st.container():
-            st.markdown(f'<div class="elite-card" style="padding: 1.25rem; margin-bottom: 1rem;">', unsafe_allow_html=True)
-            col1, col2, col3 = st.columns([2, 2, 1])
+    col_list, col_details = st.columns([3, 2])
+    
+    with col_list:
+        selected_lead = None
+        for lead in pipeline:
+            with st.container():
+                st.markdown(f'<div class="elite-card" style="padding: 1.25rem; margin-bottom: 1rem;">', unsafe_allow_html=True)
+                col1, col2, col3 = st.columns([2, 2, 1])
+                
+                with col1:
+                    st.markdown(f"**👤 {lead['name']}**")
+                    st.caption(f"Source: {lead['source']} | Budget: {lead['budget']}")
+                
+                with col2:
+                    # Map priority to temperature
+                    temp = "hot" if lead['priority'] == "immediate" else "warm" if lead['priority'] == "high" else "cold"
+                    # Map score to progress
+                    render_journey_line(temperature=temp, progress=lead['score'])
+                
+                with col3:
+                    st.markdown(f"<div style='text-align: right;'><span style='font-size: 1.2rem; font-weight: bold; color: var(--elite-accent);'>{lead['score']}%</span><br><span style='font-size: 0.7rem; color: var(--text-secondary);'>{lead['priority'].upper()}</span></div>", unsafe_allow_html=True)
+                    if st.button("Details", key=f"details_{lead['id']}", use_container_width=True):
+                        st.session_state['selected_lead_id'] = lead['id']
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_details:
+        lead_id = st.session_state.get('selected_lead_id')
+        if lead_id:
+            lead = next((l for l in pipeline if l['id'] == lead_id), None)
+            if lead:
+                st.markdown(f'<div class="elite-card" style="padding: 1.5rem; border-left: 4px solid var(--elite-accent) !important;">', unsafe_allow_html=True)
+                st.subheader(f"📂 DOSSIER: {lead['name'].upper()}")
+                
+                # Digital Twin Integration
+                address = "123 Maple St" # Mock mapping
+                render_property_digital_twin(address)
+                
+                st.divider()
+                st.markdown(f"**Budget:** {lead['budget']}")
+                st.markdown(f"**Timeline:** {lead['timeline']}")
+                st.markdown(f"**Notes:** {lead['notes']}")
+                
+                if st.button("💬 Start Conversation", use_container_width=True):
+                    st.toast(f"Opening chat with {lead['name']}...", icon="💬")
+                st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            st.info("Select a lead from the pipeline to view their dossier and digital twin.")
+
+def render_phase1_intent_analysis(api_client: JorgeAPIClient):
+    """Render the Phase 1 Intent Analysis (FRS & PCS) section."""
+    st.markdown(f'### {get_svg_icon("intelligence")} Phase 1: Intent Analysis (FRS & PCS)', unsafe_allow_html=True)
+    st.markdown("Semantic & Psychographic Lead Analysis - 2026 Strategic Roadmap")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
+        st.subheader("💬 Test Conversation")
+        
+        user_input = st.text_area("Lead Message", "I need to sell fast because I'm relocating for a job transfer. In 30 days. It needs work, selling as-is.", height=100)
+        
+        if st.button("🧠 Analyze Intent", type="primary", use_container_width=True):
+            with st.spinner("Decoding semantic intent..."):
+                # Mock a conversation history
+                history = [{"role": "user", "content": user_input}]
+                analysis = asyncio.run(api_client.get_intent_profile("demo_lead", history))
+                st.session_state['phase1_analysis'] = analysis
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col2:
+        if 'phase1_analysis' in st.session_state:
+            data = st.session_state['phase1_analysis']
+            frs = data['frs']
+            pcs = data['pcs']
             
-            with col1:
-                st.markdown(f"**👤 {lead['name']}**")
-                st.caption(f"Source: {lead['source']} | Budget: {lead['budget']}")
+            st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
+            st.markdown(f"#### FRS: {frs['total_score']} ({frs['classification']})")
             
-            with col2:
-                # Map priority to temperature
-                temp = "hot" if lead['priority'] == "immediate" else "warm" if lead['priority'] == "high" else "cold"
-                # Map score to progress
-                render_journey_line(temperature=temp, progress=lead['score'])
+            # FRS Breakdown
+            col2_1, col2_2 = st.columns(2)
+            with col2_1:
+                st.metric("Motivation", frs['motivation']['score'], help=frs['motivation']['category'])
+                st.metric("Timeline", frs['timeline']['score'], help=frs['timeline']['category'])
+            with col2_2:
+                st.metric("Condition", frs['condition']['score'], help=frs['condition']['category'])
+                st.metric("Price", frs['price']['score'], help=frs['price']['category'])
             
-            with col3:
-                st.markdown(f"<div style='text-align: right;'><span style='font-size: 1.2rem; font-weight: bold; color: var(--elite-accent);'>{lead['score']}%</span><br><span style='font-size: 0.7rem; color: var(--text-secondary);'>{lead['priority'].upper()}</span></div>", unsafe_allow_html=True)
-                if st.button("Details", key=f"details_{lead['id']}", use_container_width=True):
-                    st.toast(f"Loading dossier for {lead['name']}...", icon="📂")
+            st.markdown("---")
+            st.markdown(f"#### PCS: {pcs['total_score']} (Commitment)")
+            st.info(f"👉 Next Action: **{data['next_best_action']}**")
             
+            if data['stall_breaker_suggested']:
+                 st.warning(f"🔓 Stall Breaker: {data['stall_breaker_suggested']}")
+                 if st.button("🚀 EXECUTE STALL-BREAKER", type="primary", use_container_width=True):
+                     st.session_state.global_decisions.append({
+                         "action": "Stall-Breaker Executed",
+                         "why": f"Detected stall marker in message. Triggering Jorge-Style response.",
+                         "time": datetime.now().strftime("%H:%M:%S")
+                     })
+                     st.toast("STALL-BREAKER SENT: Engaging no-BS protocol.", icon="🧠")
+            
+            st.markdown("---")
+            st.subheader("🛡️ Zillow Defense")
+            if st.button("📊 Generate Zillow-Defense CMA", use_container_width=True):
+                if CMA_GENERATOR_AVAILABLE:
+                    with st.spinner("Calculating AI Valuation vs Zestimate..."):
+                        generator = CMAGenerator()
+                        report = asyncio.run(generator.generate_report("Subject Property", zestimate=850000))
+                        pdf_url = PDFRenderer.generate_pdf_url(report)
+                        st.session_state['cma_report_url'] = pdf_url
+                        st.session_state.global_decisions.append({
+                            "action": "CMA Generated",
+                            "why": "Zillow-Defense protocol activated for lead valuation.",
+                            "time": datetime.now().strftime("%H:%M:%S")
+                        })
+                        st.success("✅ Zillow-Defense CMA Ready!")
+                else:
+                    st.error("CMA Generator not available.")
+            
+            if 'cma_report_url' in st.session_state:
+                st.markdown(f'<a href="{st.session_state["cma_report_url"]}" target="_blank" style="text-decoration: none;"><div style="padding: 10px; background: var(--elite-accent); color: black; text-align: center; border-radius: 8px; font-weight: bold;">📥 DOWNLOAD ZILLOW-DEFENSE PDF</div></a>', unsafe_allow_html=True)
+
             st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            st.info("Enter a message to analyze lead intent.")
+
+def render_war_room_section():
+    """Render the Phase 10 War Room Heat Map and Pattern Discovery."""
+    st.markdown(f'### {get_svg_icon("intelligence")} Jorge War Room: Market Heat', unsafe_allow_html=True)
+    
+    service = get_war_room_service()
+    data = asyncio.run(service.get_heat_map_data())
+    
+    # Summary Metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1: st.metric("Active Leads", data['market_summary']['total_active_leads'], delta="+12%")
+    with col2: st.metric("Hottest Area", data['market_summary']['hottest_area'])
+    with col3: st.metric("Avg Heat Value", f"{data['market_summary']['avg_market_heat']}/100", delta="3.2")
+    with col4: st.metric("MOAT Status", "SECURE", help="Intelligence Layer Integrity")
+    
+    st.divider()
+    
+    col_map, col_graph = st.columns([2, 1])
+    
+    with col_map:
+        st.markdown('<div class="elite-card" style="padding: 1rem;">', unsafe_allow_html=True)
+        st.subheader("🔥 Property Heat Map")
+        
+        props_df = pd.DataFrame(data['properties'])
+        
+        if not props_df.empty:
+            # Mapbox scatter plot (simplified for demo if token not present)
+            fig = px.scatter(
+                props_df,
+                x="lng",
+                y="lat",
+                color="heat_value",
+                size="leads_count",
+                hover_name="address",
+                color_continuous_scale="rdbu_r",
+                title="Geographic Lead Density"
+            )
+            st.plotly_chart(style_obsidian_chart(fig), use_container_width=True)
+        else:
+            st.info("No active property data available.")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+    with col_graph:
+        st.markdown('<div class="elite-card" style="padding: 1rem;">', unsafe_allow_html=True)
+        st.subheader("🔗 Pattern Discovery")
+        
+        # Phase 10: AI Detected Patterns from Service
+        patterns = data.get('patterns', [])
+        
+        for p in patterns:
+            color = "var(--negotiation-neon)" if p.get('priority') == "HIGH" else "var(--elite-accent)"
+            st.markdown(f"""
+                <div style="margin-bottom: 12px; padding: 12px; border-left: 2px solid {color}; background: rgba(0,229,255,0.03); border-radius: 4px;">
+                    <div style="font-size: 0.6rem; font-weight: 800; color: {color}; margin-bottom: 4px;">{p['type']}</div>
+                    <div style="font-size: 0.8rem; line-height: 1.4; color: white;">{p['desc']}</div>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        st.divider()
+        st.subheader("🔗 Lead Relationships")
+        
+        # Enhanced Relationship Graph (Visual representation)
+        rels = data['relationships']
+        
+        # Create a simple visual graph using dots and lines
+        for rel in rels[:10]: # Limit to top 10 for UI clarity
+            strength_width = int(rel['strength'] * 100)
+            st.markdown(f"""
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <div style="font-size: 0.7rem; color: #8B949E; width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{rel['source']}</div>
+                    <div style="flex-grow: 1; height: 2px; background: rgba(255,255,255,0.1); position: relative;">
+                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: {strength_width}%; background: var(--negotiation-neon); box-shadow: 0 0 5px var(--negotiation-neon);"></div>
+                    </div>
+                    <div style="font-size: 0.7rem; color: var(--elite-accent); width: 60px;">{rel['target']}</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        if len(rels) > 10:
+            st.caption(f"+ {len(rels) - 10} more relationships detected")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 def render_jorge_lead_bot_dashboard():
     """Main function to render Jorge's Lead Bot Dashboard."""
@@ -615,25 +1206,33 @@ def render_jorge_lead_bot_dashboard():
     api_client = get_api_client()
     render_integration_dashboard(api_client)
     
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12 = st.tabs([
         "🎯 Neural Scoring",
         "📊 Pipeline",
         "🎤 Voice AI",
-        "🎯 Marketing",
+        "💼 Seller Bot",
+        "👻 Follow-Up",
         "🤝 Retention",
         "📈 Market Intelligence",
         "🏠 Property AI",
-        "📊 Analytics"
+        "📊 Analytics",
+        "🧠 Intent Analysis",
+        "🔥 War Room",
+        "🎤 Whisper Mode"
     ])
 
     with tab1: render_enhanced_lead_scoring_section(api_client)
     with tab2: render_lead_pipeline_section(api_client)
     with tab3: render_voice_ai_section(api_client)
-    with tab4: render_marketing_section()
-    with tab5: render_retention_section()
-    with tab6: render_market_prediction_section()
-    with tab7: render_property_matching_integration_section()
-    with tab8: render_analytics_integration_section()
+    with tab4: render_jorge_seller_bot_section(api_client)
+    with tab5: render_followup_orchestrator(api_client)
+    with tab6: render_retention_section()
+    with tab7: render_market_prediction_section()
+    with tab8: render_property_matching_integration_section()
+    with tab9: render_analytics_integration_section()
+    with tab10: render_phase1_intent_analysis(api_client)
+    with tab11: render_war_room_section()
+    with tab12: render_whisper_mode()
 
     # Neural Uplink Terminal at the bottom
     st.markdown("---")

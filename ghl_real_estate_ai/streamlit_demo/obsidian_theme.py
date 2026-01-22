@@ -29,6 +29,7 @@ def inject_elite_css():
                 --text-primary: #FFFFFF;
                 --text-secondary: #8B949E;
                 --glass-blur: blur(20px);
+                --pivot-warning: #FF3D00;
             }
 
             html, body, [class*="css"] {
@@ -163,6 +164,160 @@ def inject_elite_css():
                 height: 24px;
                 fill: var(--negotiation-neon);
                 filter: drop-shadow(0 0 5px var(--negotiation-neon));
+            }
+
+            /* --- Phase 4: Swarm Sovereign Orchestration --- */
+
+            /* Handoff Pulse Animation */
+            .handoff-pulse-active {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 100vw;
+                height: 100vh;
+                background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+                pointer-events: none;
+                z-index: 999998;
+                animation: handoff-glow 2s ease-out forwards;
+            }
+
+            @keyframes handoff-glow {
+                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+                30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+                100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+            }
+
+            /* Strategy Pivot Warning */
+            .pivot-warning-card {
+                border-left: 4px solid var(--pivot-warning) !important;
+                background: rgba(255, 61, 0, 0.05) !important;
+                animation: pivot-shimmer 2s infinite;
+            }
+
+            @keyframes pivot-shimmer {
+                0% { border-left-color: var(--pivot-warning); box-shadow: 0 0 5px rgba(255, 61, 0, 0.2); }
+                50% { border-left-color: #FF8A65; box-shadow: 0 0 15px rgba(255, 61, 0, 0.4); }
+                100% { border-left-color: var(--pivot-warning); box-shadow: 0 0 5px rgba(255, 61, 0, 0.2); }
+            }
+
+            /* Global Decision Stream */
+            .decision-stream-container {
+                background: rgba(5, 7, 10, 0.8);
+                border-top: 1px solid var(--obsidian-border);
+                padding: 1rem;
+                font-family: 'JetBrains Mono', monospace;
+                max-height: 150px;
+                overflow-y: auto;
+            }
+
+            .decision-item {
+                display: flex;
+                gap: 15px;
+                padding: 5px 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+                font-size: 0.75rem;
+            }
+
+            .decision-why { color: var(--negotiation-neon); font-style: italic; }
+            .decision-action { color: var(--elite-accent); font-weight: bold; }
+
+            /* --- Phase 3: Strategic Foresight UI --- */
+
+            /* Neural Heatmap Radar Sweep */
+            .radar-container {
+                position: relative;
+                width: 300px;
+                height: 300px;
+                margin: 0 auto;
+                background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+                border-radius: 50%;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                overflow: hidden;
+            }
+
+            .radar-sweep {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 50%;
+                height: 50%;
+                background: conic-gradient(from 0deg, var(--elite-accent) 0%, transparent 40%);
+                transform-origin: top left;
+                animation: radar-rotate 4s linear infinite;
+                opacity: 0.3;
+                filter: blur(5px);
+            }
+
+            @keyframes radar-rotate {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+
+            .heatmap-point {
+                position: absolute;
+                width: 8px;
+                height: 8px;
+                background: var(--negotiation-neon);
+                border-radius: 50%;
+                box-shadow: 0 0 15px var(--negotiation-neon);
+                animation: pulse-point 2s infinite;
+            }
+
+            @keyframes pulse-point {
+                0%, 100% { transform: scale(1); opacity: 0.6; }
+                50% { transform: scale(1.5); opacity: 1; }
+            }
+
+            /* Biometric Heartbeat EKG */
+            .heartbeat-container {
+                height: 40px;
+                width: 100%;
+                background: rgba(0, 0, 0, 0.2);
+                overflow: hidden;
+                position: relative;
+                border-radius: 4px;
+            }
+
+            .heartbeat-path {
+                stroke: var(--negotiation-neon);
+                stroke-width: 2;
+                fill: none;
+                stroke-dasharray: 1000;
+                stroke-dashoffset: 1000;
+                animation: heartbeat-dash 2s linear infinite;
+                filter: drop-shadow(0 0 5px var(--negotiation-neon));
+            }
+
+            @keyframes heartbeat-dash {
+                to { stroke-dashoffset: 0; }
+            }
+
+            /* Swarm Communication Pulse */
+            .swarm-sync-animation {
+                animation: swarm-pulse 1.5s ease-in-out;
+            }
+
+            @keyframes swarm-pulse {
+                0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+                70% { box-shadow: 0 0 0 20px rgba(99, 102, 241, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+            }
+
+            /* The Data Moat Hex Grid */
+            .moat-overlay {
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMzQuNjQiIHZpZXdCb3g9IjAgMCA0MCAzNC42NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTAgMEwyMCAxNy4zMkwxMCAzNC42NEwwIDE3LjMyTDEwIDBaIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoOTksIDEwMiwgMjQxLCAwLjE1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+');
+                background-size: 40px 34.64px;
+                pointer-events: none;
+                z-index: 1;
+                transition: all 0.5s ease;
+            }
+
+            .moat-active {
+                background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMzQuNjQiIHZpZXdCb3g9IjAgMCA0MCAzNC42NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTAgMEwyMCAxNy4zMkwxMCAzNC42NEwwIDE3LjMyTDEwIDBaIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMCwgMjI5LCAyNTUsIDAuMykiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==');
+                filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.2));
             }
 
             /* --- Phase 2: Tactical UI Components --- */
@@ -513,5 +668,103 @@ def render_journey_line(temperature="warm", progress=65):
             <div class="journey-line-container">
                 <div class="journey-line-glow {glow_class}" style="width: {progress}%;"></div>
             </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+def render_biometric_heartbeat(urgency="normal"):
+    """Renders a pulsing EKG-style biometric heartbeat."""
+    speed = "1.5s" if urgency == "normal" else "0.8s" if urgency == "high" else "0.4s"
+    st.markdown(f"""
+        <div style="margin: 15px 0;">
+            <div style="font-family: 'Space Grotesk', sans-serif; font-size: 0.65rem; color: var(--text-secondary); font-weight: 700; margin-bottom: 5px; letter-spacing: 0.1em;">
+                BIOMETRIC_NEGOTIATION_SYNC // {urgency.upper()}
+            </div>
+            <div class="heartbeat-container">
+                <svg viewBox="0 0 400 40" preserveAspectRatio="none" style="width: 100%; height: 100%;">
+                    <path class="heartbeat-path" d="M0 20 L40 20 L50 10 L60 30 L70 20 L110 20 L120 20 L130 5 L140 35 L150 20 L200 20 L240 20 L250 10 L260 30 L270 20 L310 20 L320 20 L330 5 L340 35 L350 20 L400 20" 
+                          style="animation-duration: {speed};" />
+                </svg>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+def render_neural_heatmap(points=None):
+    """Renders a geographic 'Lead Cluster' radar heatmap."""
+    if points is None:
+        points = [
+            {"top": "30%", "left": "40%"},
+            {"top": "60%", "left": "70%"},
+            {"top": "45%", "left": "25%"},
+            {"top": "80%", "left": "50%"}
+        ]
+    
+    points_html = "".join([f'<div class="heatmap-point" style="top: {p["top"]}; left: {p["left"]};"></div>' for p in points])
+    
+    st.markdown(f"""
+        <div class="radar-container">
+            <div class="radar-sweep"></div>
+            {points_html}
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.1); font-family: 'Space Grotesk'; font-size: 0.5rem; letter-spacing: 0.5em;">
+                SCANNING...
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+def render_moat_overlay(active=False):
+    """Renders a hexagonal 'Data Moat' security overlay."""
+    active_class = "moat-active" if active else ""
+    st.markdown(f'<div class="moat-overlay {active_class}"></div>', unsafe_allow_html=True)
+
+def render_countdown_gauge(days_remaining, total_days=30):
+    """
+    Phase 4: Predictive 'Time-to-Close' Clock.
+    Uses a circular SVG to predict days remaining based on negotiation velocity.
+    """
+    percentage = max(0, min(100, (days_remaining / total_days) * 100))
+    circumference = 2 * 3.14159 * 45
+    offset = circumference * (1 - (100 - percentage) / 100)
+    
+    color = "var(--negotiation-neon)" if days_remaining < 7 else "var(--elite-accent)"
+    
+    st.markdown(f"""
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem;">
+            <div style="position: relative; width: 120px; height: 120px;">
+                <svg viewBox="0 0 100 100" style="transform: rotate(-90deg); width: 100%; height: 100%;">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8" />
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="{color}" stroke-width="8" 
+                            stroke-dasharray="{circumference}" stroke-dashoffset="{offset}"
+                            style="transition: stroke-dashoffset 1s ease-in-out; filter: drop-shadow(0 0 5px {color});" />
+                </svg>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(0deg); text-align: center;">
+                    <div style="font-family: 'Space Grotesk'; font-size: 1.5rem; font-weight: 700; color: white;">{days_remaining}</div>
+                    <div style="font-family: 'Inter'; font-size: 0.5rem; color: var(--text-secondary); text-transform: uppercase;">Days</div>
+                </div>
+            </div>
+            <div style="font-family: 'Space Grotesk'; font-size: 0.65rem; color: var(--text-secondary); margin-top: 10px; font-weight: 700; letter-spacing: 0.1em;">
+                PREDICTED_TIME_TO_CLOSE
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+def render_decision_stream(decisions):
+    """
+    Phase 4: Global Decision Stream log.
+    Logs not just what, but WHY.
+    """
+    items_html = "".join([
+        f'<div class="decision-item">'
+        f'<span style="color: #4B5563;">[{d.get("time", datetime.now().strftime("%H:%M:%S"))}]</span> '
+        f'<span class="decision-action">{d["action"]}</span> '
+        f'<span class="decision-why">Reason: {d["why"]}</span>'
+        f'</div>'
+        for d in decisions
+    ])
+    
+    st.markdown(f"""
+        <div class="decision-stream-container">
+            <div style="font-family: 'Space Grotesk'; font-size: 0.6rem; color: var(--elite-accent); margin-bottom: 8px; font-weight: 700; letter-spacing: 0.2em;">
+                // GLOBAL_DECISION_STREAM_V4.2.0
+            </div>
+            {items_html}
         </div>
     """, unsafe_allow_html=True)

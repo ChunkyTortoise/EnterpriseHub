@@ -43,6 +43,7 @@ class LeadFeatures:
     property_matches: int  # number of matching properties
     communication_quality: float  # 0-1: quality of responses
     source_quality: str  # organic/referral/paid/other
+    lead_data_raw: Optional[Dict] = None
 
 
 @dataclass
@@ -213,6 +214,7 @@ class PredictiveLeadScorer:
             property_matches=property_matches,
             communication_quality=communication_quality,
             source_quality=source_quality,
+            lead_data_raw=lead_data
         )
 
     def score_lead(
@@ -328,8 +330,45 @@ class PredictiveLeadScorer:
         intent_bonus = self._calculate_intent_bonus(features)
         total_score += intent_bonus
         contributions["intent_bonus"] = intent_bonus
+        
+        # --- SENTIMENT-DRIVEN URGENCY BOOST (Enhancement) ---
+        sentiment_urgency = self._detect_urgency_sentiment(features.lead_data_raw if hasattr(features, 'lead_data_raw') else {})
+        if sentiment_urgency > 0:
+            total_score += (sentiment_urgency * 0.1) # Up to 10% bonus
+            contributions["sentiment_urgency"] = sentiment_urgency * 0.1
 
         return total_score, contributions
+
+    def _detect_urgency_sentiment(self, lead_data: Dict) -> float:
+        """
+        Detect emotional urgency and intensity in lead messages.
+        Returns 0.0 to 1.0 based on detected intensity.
+        """
+        messages = lead_data.get("messages", [])
+        if not messages:
+            return 0.0
+            
+        intensity = 0.0
+        # High intensity keywords that imply immediate action or frustration
+        urgent_keywords = ["must", "immediately", "urgent", "emergency", "homeless", "deadline", "fast", "asap", "now", "today"]
+        
+        for msg in messages:
+            content = msg.get("text", "").lower()
+            # Check for keywords
+            if any(k in content for k in urgent_keywords):
+                intensity += 0.3
+            
+            # Check for punctuation intensity
+            if "!" in content:
+                intensity += 0.1
+            if "!!!" in content:
+                intensity += 0.2
+            
+            # Check for CAPS (shouting/intensity)
+            if content.upper() == content and len(content) > 10:
+                intensity += 0.2
+                
+        return min(intensity, 1.0)
 
     def _normalize_score(self, raw_score: float) -> float:
         """Normalize score to 0-100 range"""

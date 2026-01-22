@@ -16,7 +16,7 @@ import json
 import math
 
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
-from ghl_real_estate_ai.services.predictive_lead_scorer import PredictiveLeadScorer
+from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
 from ghl_real_estate_ai.services.revenue_attribution import RevenueAttributionEngine
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 from ghl_real_estate_ai.services.cache_service import CacheService
@@ -86,13 +86,13 @@ class DynamicPricingOptimizer:
     ROI-justified dynamic pricing engine that calculates per-lead pricing
     based on quality scores, conversion probability, and demonstrable ROI value.
     
-    Integrates with existing LeadScorer, PredictiveLeadScorer, and RevenueAttributionEngine
+    Integrates with existing LeadScorer, PredictiveLeadScorerV2, and RevenueAttributionEngine
     to provide transparent, defensible pricing that justifies premium rates.
     """
     
     def __init__(self):
         self.lead_scorer = LeadScorer()
-        self.predictive_scorer = PredictiveLeadScorer()
+        self.predictive_scorer = PredictiveLeadScorerV2()
         self.revenue_attribution = RevenueAttributionEngine()
         self.analytics = AnalyticsEngine()
         self.cache = CacheService()
@@ -129,17 +129,13 @@ class DynamicPricingOptimizer:
             config = await self._get_pricing_config(location_id)
             
             # Parallel scoring - gather all intelligence
-            jorge_result, ml_result, historical_data = await asyncio.gather(
-                self._get_jorge_score(contact_id, context),
-                self._get_ml_prediction(contact_id, context), 
-                self._get_historical_performance(location_id),
-                return_exceptions=True
-            )
+            # Await async scoring methods
+            jorge_score = await self.lead_scorer.calculate(context)
             
-            # Handle any scoring failures gracefully
-            jorge_score = jorge_result if not isinstance(jorge_result, Exception) else 0
-            ml_prediction = ml_result if not isinstance(ml_result, Exception) else 0.5
-            historical_perf = historical_data if not isinstance(historical_data, Exception) else {}
+            predictive_result = await self.predictive_scorer.calculate_predictive_score(context, location=location_id)
+            ml_prediction = predictive_result.closing_probability
+            
+            historical_perf = await self._get_historical_performance(location_id)
             
             # Determine lead tier based on Jorge's scoring
             tier = self._classify_lead_tier(jorge_score)
@@ -193,12 +189,16 @@ class DynamicPricingOptimizer:
             )
             
             # Track pricing event for analytics
-            await self.analytics.record_event({
-                "event_type": "pricing_calculated",
-                "contact_id": contact_id,
-                "location_id": location_id,
-                "pricing_result": result.__dict__
-            })
+            await self.analytics.record_event(
+                contact_id=contact_id,
+                location_id=location_id,
+                lead_score=jorge_score,
+                previous_score=0, # Not available here
+                message="Dynamic Pricing Calculated",
+                response="N/A",
+                response_time_ms=0,
+                context=context or {}
+            )
             
             return result
             
@@ -375,26 +375,6 @@ class DynamicPricingOptimizer:
         except Exception as e:
             logger.warning(f"Using default pricing config for {location_id}: {e}")
             return PricingConfiguration(location_id=location_id)
-    
-    async def _get_jorge_score(self, contact_id: str, context: Dict) -> int:
-        """Get Jorge's question-based scoring (0-7)"""
-        try:
-            # Use existing lead scorer
-            score_result = await self.lead_scorer.calculate(contact_id, context or {})
-            return score_result.get("questions_answered", 0)
-        except Exception as e:
-            logger.warning(f"Failed to get Jorge score for {contact_id}: {e}")
-            return 0
-    
-    async def _get_ml_prediction(self, contact_id: str, context: Dict) -> float:
-        """Get ML-based conversion probability (0.0-1.0)"""
-        try:
-            # Use existing predictive scorer
-            prediction = await self.predictive_scorer.predict_conversion_probability(contact_id)
-            return min(1.0, max(0.0, prediction))
-        except Exception as e:
-            logger.warning(f"Failed to get ML prediction for {contact_id}: {e}")
-            return 0.5  # Neutral fallback
     
     async def _get_historical_performance(self, location_id: str) -> Dict:
         """Get historical conversion performance by tier"""

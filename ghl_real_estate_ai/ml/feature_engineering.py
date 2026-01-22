@@ -193,7 +193,19 @@ class FeatureEngineer:
         # Calculate conversation duration
         now = datetime.now()
         if isinstance(created_at, str):
-            created_at = datetime.fromisoformat(created_at)
+            # Handle possible ISO formats with 'Z' or offsets
+            try:
+                if created_at.endswith('Z'):
+                    created_at = created_at[:-1] + '+00:00'
+                created_at = datetime.fromisoformat(created_at)
+            except ValueError:
+                # Fallback if parsing fails
+                created_at = now
+        
+        # Ensure we're comparing naive datetimes
+        if created_at.tzinfo is not None:
+            created_at = created_at.replace(tzinfo=None)
+            
         duration_minutes = (now - created_at).total_seconds() / 60
 
         # Calculate average response time (simplified)

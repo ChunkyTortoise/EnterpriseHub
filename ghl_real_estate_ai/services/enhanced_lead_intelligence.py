@@ -14,6 +14,9 @@ from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestra
 from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer, UnifiedScoringResult
 from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine, ScriptType
 from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.services.attom_client import get_attom_client
+from ghl_real_estate_ai.services.latex_report_generator import get_latex_report_generator
+from ghl_real_estate_ai.services.heygen_service import get_heygen_service
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -26,6 +29,7 @@ class EnhancedLeadIntelligence:
 
     Features:
     - Comprehensive lead scoring with Claude reasoning
+    - Pre-Lead Intelligence via ATTOM API (Property DNA)
     - Real-time behavioral insights
     - Dynamic script generation
     - Deep Cognitive Dossiers (Research)
@@ -42,6 +46,9 @@ class EnhancedLeadIntelligence:
     _enhanced_scorer = None
     _automation_engine = None
     _memory = None
+    _attom_client = None
+    _latex_gen = None
+    _heygen = None
     _service_lock = asyncio.Lock()
 
     def __init__(self):
@@ -82,6 +89,9 @@ class EnhancedLeadIntelligence:
         EnhancedLeadIntelligence._enhanced_scorer = ClaudeEnhancedLeadScorer()
         EnhancedLeadIntelligence._automation_engine = ClaudeAutomationEngine()
         EnhancedLeadIntelligence._memory = MemoryService()
+        EnhancedLeadIntelligence._attom_client = get_attom_client()
+        EnhancedLeadIntelligence._latex_gen = get_latex_report_generator()
+        EnhancedLeadIntelligence._heygen = get_heygen_service()
         logger.info("EnhancedLeadIntelligence: Shared Resource Pool Initialized")
 
     @property
@@ -99,6 +109,18 @@ class EnhancedLeadIntelligence:
     @property
     def memory(self) -> MemoryService:
         return EnhancedLeadIntelligence._memory
+
+    @property
+    def attom_client(self):
+        return EnhancedLeadIntelligence._attom_client
+
+    @property
+    def latex_gen(self):
+        return EnhancedLeadIntelligence._latex_gen
+
+    @property
+    def heygen(self):
+        return EnhancedLeadIntelligence._heygen
 
     async def initialize(self):
         """
@@ -393,6 +415,21 @@ class EnhancedLeadIntelligence:
         # Fall back to enhanced analysis with performance optimizations
         return await self._enhanced_analysis_with_optimizations(lead_name, lead_context, force_refresh)
 
+    async def get_pre_lead_intelligence(self, address: str) -> Dict[str, Any]:
+        """
+        Fetch proprietary Pre-Lead Intelligence (ATTOM DNA + Life Events).
+        """
+        dna_task = self.attom_client.get_property_dna(address)
+        triggers_task = self.attom_client.get_life_event_triggers(address)
+        
+        dna, triggers = await asyncio.gather(dna_task, triggers_task)
+        
+        return {
+            "property_dna": dna,
+            "life_event_triggers": triggers,
+            "summary": f"Property DNA: {dna.get('characteristics', {}).get('sqft')} sqft, {dna.get('characteristics', {}).get('bedrooms')} beds. Triggers: {triggers}"
+        }
+
     async def _enhanced_analysis_with_optimizations(self,
                                                   lead_name: str,
                                                   lead_context: Dict[str, Any],
@@ -415,6 +452,16 @@ class EnhancedLeadIntelligence:
                     
             except Exception as e:
                 logger.warning(f"Optimized cache access failed: {e}")
+
+        # 🚀 PRE-LEAD INTELLIGENCE ENRICHMENT
+        property_address = lead_context.get("location") or lead_context.get("extracted_preferences", {}).get("location")
+        if property_address:
+            try:
+                pre_lead_intel = await self.get_pre_lead_intelligence(property_address)
+                lead_context["pre_lead_intelligence"] = pre_lead_intel
+                logger.info(f"Enriched analysis for {lead_name} with Pre-Lead Intelligence")
+            except Exception as e:
+                logger.error(f"Pre-Lead Intelligence enrichment failed: {e}")
 
         # Perform enhanced analysis with circuit breaker protection
         try:
@@ -670,6 +717,40 @@ class EnhancedLeadIntelligence:
         </div>
         """, unsafe_allow_html=True)
 
+    async def generate_personalized_report_and_video(self, 
+                                                   lead_name: str, 
+                                                   lead_context: Dict[str, Any],
+                                                   analysis_result: UnifiedScoringResult) -> Dict[str, Any]:
+        """
+        Phase 3: Combine LaTeX reporting with HeyGen video presentation.
+        """
+        # 1. Generate LaTeX Report
+        report_data = {
+            "lead_name": lead_name,
+            "address": lead_context.get("location", "The Property"),
+            "valuation": analysis_result.ml_conversion_score * 5000 + 400000, # Mock valuation
+            "frs_score": analysis_result.frs_score,
+            "alignment": analysis_result.classification.title() + " Readiness",
+            "strategy": analysis_result.strategic_summary
+        }
+        tex_source = self.latex_gen.generate_tex_source(report_data)
+        self.latex_gen.mock_pdf_render(tex_source)
+        
+        # 2. Generate HeyGen Video Script
+        video_script = f"Hi {lead_name}, I've just finished your personalized market intelligence report for {report_data['address']}. " \
+                       f"Based on our analysis, your transaction readiness score is {analysis_result.frs_score} percent. " \
+                       f"I'm sending the full detailed report now. Let's discuss when you're ready."
+        
+        # 3. Trigger HeyGen
+        video_result = await self.heygen.generate_personalized_video(lead_name, video_script)
+        
+        return {
+            "success": True,
+            "latex_source": tex_source,
+            "video_result": video_result,
+            "report_url": "https://lyrio.io/reports/demo_report.pdf" # Mock
+        }
+
     def render_enhanced_behavioral_insight(self,
                                          lead_name: str,
                                          analysis_result: UnifiedScoringResult):
@@ -707,6 +788,33 @@ class EnhancedLeadIntelligence:
                     for opportunity in analysis_result.opportunities[:3]:
                         st.markdown(f"• {opportunity}")
 
+            # 🏰 PRE-LEAD DNA (ATTOM DATA MOAT)
+            pre_lead_intel = analysis_result.conversation_context.get("pre_lead_intelligence")
+            if pre_lead_intel:
+                with st.expander("🏰 Pre-Lead DNA (Proprietary Data Moat)", expanded=True):
+                    dna = pre_lead_intel.get("property_dna", {})
+                    triggers = pre_lead_intel.get("life_event_triggers", {})
+                    
+                    st.markdown("#### 🧬 Property DNA (ATTOM)")
+                    dna_cols = st.columns(4)
+                    with dna_cols[0]:
+                        st.metric("Years Owned", dna.get("summary", {}).get("years_owned", "N/A"))
+                    with dna_cols[1]:
+                        st.metric("SqFt", dna.get("characteristics", {}).get("sqft", "N/A"))
+                    with dna_cols[2]:
+                        st.metric("Beds/Baths", f"{dna.get('characteristics', {}).get('bedrooms', 'N/A')}/{dna.get('characteristics', {}).get('bathrooms', 'N/A')}")
+                    with dna_cols[3]:
+                        st.metric("Absentee", "YES" if dna.get("summary", {}).get("absentee_owner") else "NO")
+
+                    st.markdown("#### ⚡ Life Event Triggers")
+                    trig_cols = st.columns(3)
+                    with trig_cols[0]:
+                        st.markdown(f"**Probate:** {'🔴 YES' if triggers.get('probate') else '🟢 NO'}")
+                    with trig_cols[1]:
+                        st.markdown(f"**Liens:** {triggers.get('liens', 0)}")
+                    with trig_cols[2]:
+                        st.markdown(f"**Tax Delinquent:** {'🔴 YES' if triggers.get('tax_delinquent') else '🟢 NO'}")
+
     def render_enhanced_quick_actions(self,
                                     lead_name: str,
                                     analysis_result: UnifiedScoringResult):
@@ -732,6 +840,11 @@ class EnhancedLeadIntelligence:
         with col4:
             if st.button("📅 Schedule Tour", use_container_width=True):
                 self._handle_quick_action("schedule", lead_name, analysis_result)
+
+        # Phase 3: Personalized Video Report
+        st.markdown("#### 📹 Personalized Media (Phase 3 Moat)")
+        if st.button("🎬 Generate Personalized Video Report (LaTeX + HeyGen)", type="primary", use_container_width=True):
+            self._handle_quick_action("video_report", lead_name, analysis_result)
 
     def _handle_quick_action(self, action_type: str, lead_name: str, analysis_result: UnifiedScoringResult):
         """Handle quick action button clicks with Claude intelligence."""
@@ -786,6 +899,27 @@ class EnhancedLeadIntelligence:
                         st.toast(f"Call script ready for {lead_name}!", icon="📞")
                     else:
                         st.error(f"Call script generation failed: {script_result.get('error', 'Unknown error')}")
+
+                elif action_type == "video_report":
+                    # Generate Phase 3 Report and Video
+                    lead_context = analysis_result.conversation_context
+                    result = loop.run_until_complete(self.generate_personalized_report_and_video(
+                        lead_name, lead_context, analysis_result
+                    ))
+                    
+                    if result.get("success"):
+                        st.success(f"🎥 Phase 3 Media Pack Generated for {lead_name}!")
+                        col_v1, col_v2 = st.columns(2)
+                        with col_v1:
+                            st.info("📄 LaTeX Report Source Ready")
+                            st.code(result["latex_source"][:300] + "...", language="latex")
+                        with col_v2:
+                            st.info("🎬 HeyGen Video Processing")
+                            st.write(f"Video ID: `{result['video_result']['video_id']}`")
+                            st.write(f"Status: `{result['video_result']['status']}`")
+                        st.toast("Personalized video report queued!", icon="🎬")
+                    else:
+                        st.error("Failed to generate video report pack.")
 
                 elif action_type == "schedule":
                     # Use next best action from analysis

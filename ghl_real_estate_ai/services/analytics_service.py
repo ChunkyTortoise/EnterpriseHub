@@ -297,8 +297,13 @@ class AnalyticsService:
                         score_sum += score
                         score_count += 1
                         
-                        # Priority logic (mocked logic if not in data)
-                        if score >= 90:
+                        # Priority logic (use predictive_score if available)
+                        priority = data.get("predictive_score", {}).get("priority_level", "").lower()
+                        if priority == "critical" or priority == "immediate":
+                            aggregated["lead"]["immediate_priority"] += 1
+                        elif priority == "high":
+                            aggregated["lead"]["high_priority"] += 1
+                        elif score >= 90:
                             aggregated["lead"]["immediate_priority"] += 1
                         elif score >= 75:
                             aggregated["lead"]["high_priority"] += 1

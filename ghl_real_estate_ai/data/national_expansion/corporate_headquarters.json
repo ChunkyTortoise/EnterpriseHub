@@ -1,0 +1,144 @@
+{
+  "amazon": {
+    "company_name": "Amazon",
+    "ticker_symbol": "AMZN",
+    "industry": "Technology/E-commerce",
+    "headquarters_location": [
+      47.6062,
+      -122.3321
+    ],
+    "headquarters_city": "Seattle",
+    "headquarters_state": "WA",
+    "employee_count": 1540000,
+    "fortune_ranking": 2,
+    "partnership_tier": "platinum",
+    "preferred_markets": [
+      "seattle",
+      "austin",
+      "denver",
+      "phoenix"
+    ],
+    "relocation_volume_annual": 850,
+    "average_relocation_budget": 85000.0,
+    "contact_info": {
+      "hr_director": "corporate-relocations@amazon.com",
+      "phone": "+1-206-266-1000",
+      "program_manager": "Jane Smith"
+    },
+    "program_start_date": "2024-01-15T00:00:00",
+    "last_updated": "2026-01-22T02:20:18.191774"
+  },
+  "microsoft": {
+    "company_name": "Microsoft Corporation",
+    "ticker_symbol": "MSFT",
+    "industry": "Technology",
+    "headquarters_location": [
+      47.674,
+      -122.1215
+    ],
+    "headquarters_city": "Redmond",
+    "headquarters_state": "WA",
+    "employee_count": 221000,
+    "fortune_ranking": 14,
+    "partnership_tier": "platinum",
+    "preferred_markets": [
+      "seattle",
+      "austin",
+      "denver",
+      "phoenix"
+    ],
+    "relocation_volume_annual": 420,
+    "average_relocation_budget": 95000.0,
+    "contact_info": {
+      "hr_director": "relocations@microsoft.com",
+      "phone": "+1-425-882-8080",
+      "program_manager": "David Chen"
+    },
+    "program_start_date": "2024-03-01T00:00:00",
+    "last_updated": "2026-01-22T02:20:18.191780"
+  },
+  "google": {
+    "company_name": "Alphabet Inc. (Google)",
+    "ticker_symbol": "GOOGL",
+    "industry": "Technology",
+    "headquarters_location": [
+      37.422,
+      -122.0841
+    ],
+    "headquarters_city": "Mountain View",
+    "headquarters_state": "CA",
+    "employee_count": 190000,
+    "fortune_ranking": 29,
+    "partnership_tier": "platinum",
+    "preferred_markets": [
+      "austin",
+      "denver",
+      "seattle"
+    ],
+    "relocation_volume_annual": 380,
+    "average_relocation_budget": 125000.0,
+    "contact_info": {
+      "hr_director": "people-ops-relocations@google.com",
+      "phone": "+1-650-253-0000",
+      "program_manager": "Sarah Martinez"
+    },
+    "program_start_date": "2024-02-01T00:00:00",
+    "last_updated": "2026-01-22T02:20:18.191783"
+  },
+  "boeing": {
+    "company_name": "Boeing Company",
+    "ticker_symbol": "BA",
+    "industry": "Aerospace",
+    "headquarters_location": [
+      41.8781,
+      -87.6298
+    ],
+    "headquarters_city": "Chicago",
+    "headquarters_state": "IL",
+    "employee_count": 156000,
+    "fortune_ranking": 54,
+    "partnership_tier": "gold",
+    "preferred_markets": [
+      "seattle",
+      "denver",
+      "houston"
+    ],
+    "relocation_volume_annual": 285,
+    "average_relocation_budget": 75000.0,
+    "contact_info": {
+      "hr_director": "talent.mobility@boeing.com",
+      "phone": "+1-312-544-2000",
+      "program_manager": "Michael Johnson"
+    },
+    "program_start_date": "2024-04-15T00:00:00",
+    "last_updated": "2026-01-22T02:20:18.191785"
+  },
+  "intel": {
+    "company_name": "Intel Corporation",
+    "ticker_symbol": "INTC",
+    "industry": "Semiconductors",
+    "headquarters_location": [
+      37.3861,
+      -121.9644
+    ],
+    "headquarters_city": "Santa Clara",
+    "headquarters_state": "CA",
+    "employee_count": 131900,
+    "fortune_ranking": 45,
+    "partnership_tier": "gold",
+    "preferred_markets": [
+      "phoenix",
+      "austin",
+      "denver"
+    ],
+    "relocation_volume_annual": 225,
+    "average_relocation_budget": 82000.0,
+    "contact_info": {
+      "hr_director": "global.mobility@intel.com",
+      "phone": "+1-408-765-8080",
+      "program_manager": "Lisa Wang"
+    },
+    "program_start_date": "2024-05-01T00:00:00",
+    "last_updated": "2026-01-22T02:20:18.191786"
+  }
+}

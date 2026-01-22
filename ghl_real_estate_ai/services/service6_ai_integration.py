@@ -52,13 +52,33 @@ from ghl_real_estate_ai.services.realtime_inference_engine import (
 )
 
 # Import existing services for integration
-from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.tiered_cache_service import TieredCacheService
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.claude_platform_companion import ClaudePlatformCompanion
 from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+class Service6AIError(Exception):
+    """Base exception for Service 6 AI integration errors"""
+    pass
+
+class AIScoringError(Service6AIError):
+    """Raised when ML scoring fails"""
+    pass
+
+class AIVoiceAnalysisError(Service6AIError):
+    """Raised when voice analysis fails"""
+    pass
+
+class AIPredictiveError(Service6AIError):
+    """Raised when predictive analytics fails"""
+    pass
+
+class AIInferenceError(Service6AIError):
+    """Raised when real-time inference fails"""
+    pass
 
 @dataclass
 class Service6AIResponse:
@@ -140,13 +160,17 @@ class Service6EnhancedClaudePlatformCompanion(ClaudePlatformCompanion):
         # MLOps for model management
         self.mlops = create_mlops_pipeline()
         
-        self.cache = CacheService()
+        self.cache = TieredCacheService()
         self.memory = MemoryService()
         
     async def initialize(self):
         """Initialize all AI components"""
         
         try:
+            # Start tiered cache service
+            await self.cache.start()
+            logger.info("Tiered cache service started")
+
             # Start real-time inference engine if enabled
             if self.realtime_inference:
                 await self.realtime_inference.start()
@@ -175,140 +199,107 @@ class Service6EnhancedClaudePlatformCompanion(ClaudePlatformCompanion):
         operation_id = f"s6_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{lead_id}"
         start_time = datetime.now()
         
-        try:
-            # Gather all AI analysis results in parallel
-            analysis_tasks = []
+        # Gather all AI analysis results in parallel
+        analysis_tasks = []
+        
+        # Advanced ML Scoring
+        if self.ml_scoring_engine and self.config.enable_advanced_ml_scoring:
+            analysis_tasks.append(
+                self._run_ml_scoring_analysis(lead_id, lead_data)
+            )
+        else:
+            analysis_tasks.append(asyncio.create_task(self._return_none()))
             
-            # Advanced ML Scoring
-            if self.ml_scoring_engine and self.config.enable_advanced_ml_scoring:
-                analysis_tasks.append(
-                    self._run_ml_scoring_analysis(lead_id, lead_data)
+        # Voice AI Analysis (if call data available)
+        if self.voice_ai and include_voice and lead_data.get('call_data'):
+            analysis_tasks.append(
+                self._run_voice_analysis(lead_id, lead_data['call_data'])
+            )
+        else:
+            analysis_tasks.append(asyncio.create_task(self._return_none()))
+            
+        # Predictive Analytics
+        if self.predictive_analytics and include_predictive:
+            analysis_tasks.append(
+                self._run_predictive_analysis(lead_id, lead_data)
+            )
+        else:
+            analysis_tasks.append(asyncio.create_task(self._return_none()))
+            
+        # Execute all analyses
+        results = await asyncio.gather(
+            *analysis_tasks, return_exceptions=True
+        )
+        
+        # Check for critical failures in results
+        for res in results:
+            if isinstance(res, Service6AIError):
+                logger.error(f"Critical AI failure in comprehensive analysis: {res}")
+                raise res
+            elif isinstance(res, Exception):
+                logger.error(f"Unexpected failure in comprehensive analysis: {res}")
+                raise Service6AIError(f"Unexpected AI failure: {str(res)}") from res
+
+        ml_result, voice_result, predictive_result = results
+            
+        # Generate personalized content
+        personalized_content = None
+        if self.predictive_analytics:
+            try:
+                personalized_content = await self.predictive_analytics.content_personalization.generate_personalized_content(
+                    lead_id, lead_data, 'email'
                 )
-            else:
-                analysis_tasks.append(asyncio.create_task(self._return_none()))
+            except Exception as e:
+                logger.warning(f"Content personalization failed (non-critical): {e}")
                 
-            # Voice AI Analysis (if call data available)
-            if self.voice_ai and include_voice and lead_data.get('call_data'):
-                analysis_tasks.append(
-                    self._run_voice_analysis(lead_id, lead_data['call_data'])
-                )
-            else:
-                analysis_tasks.append(asyncio.create_task(self._return_none()))
-                
-            # Predictive Analytics
-            if self.predictive_analytics and include_predictive:
-                analysis_tasks.append(
-                    self._run_predictive_analysis(lead_id, lead_data)
-                )
-            else:
-                analysis_tasks.append(asyncio.create_task(self._return_none()))
-                
-            # Execute all analyses
-            ml_result, voice_result, predictive_result = await asyncio.gather(
-                *analysis_tasks, return_exceptions=True
-            )
+        # Synthesize unified insights
+        unified_insights = await self._synthesize_insights(
+            lead_id, lead_data, ml_result, voice_result, predictive_result, personalized_content
+        )
+        
+        # Calculate processing time
+        processing_time = (datetime.now() - start_time).total_seconds() * 1000
+        
+        # Build comprehensive response
+        response = Service6AIResponse(
+            operation_id=operation_id,
+            lead_id=lead_id,
+            timestamp=datetime.now(),
             
-            # Handle exceptions gracefully
-            if isinstance(ml_result, Exception):
-                logger.error(f"ML scoring failed: {ml_result}")
-                ml_result = None
-            if isinstance(voice_result, Exception):
-                logger.error(f"Voice analysis failed: {voice_result}")
-                voice_result = None
-            if isinstance(predictive_result, Exception):
-                logger.error(f"Predictive analysis failed: {predictive_result}")
-                predictive_result = None
-                
-            # Generate personalized content
-            personalized_content = None
-            if self.predictive_analytics:
-                try:
-                    personalized_content = await self.predictive_analytics.content_personalization.generate_personalized_content(
-                        lead_id, lead_data, 'email'
-                    )
-                except Exception as e:
-                    logger.error(f"Content personalization failed: {e}")
-                    
-            # Synthesize unified insights
-            unified_insights = await self._synthesize_insights(
-                lead_id, lead_data, ml_result, voice_result, predictive_result, personalized_content
-            )
+            ml_scoring_result=ml_result,
+            voice_analysis_result=voice_result,
+            predictive_insights=predictive_result,
+            personalized_content=personalized_content,
             
-            # Calculate processing time
-            processing_time = (datetime.now() - start_time).total_seconds() * 1000
+            unified_lead_score=unified_insights['unified_score'],
+            confidence_level=unified_insights['confidence'],
+            priority_level=unified_insights['priority'],
             
-            # Build comprehensive response
-            response = Service6AIResponse(
-                operation_id=operation_id,
-                lead_id=lead_id,
-                timestamp=datetime.now(),
-                
-                ml_scoring_result=ml_result,
-                voice_analysis_result=voice_result,
-                predictive_insights=predictive_result,
-                personalized_content=personalized_content,
-                
-                unified_lead_score=unified_insights['unified_score'],
-                confidence_level=unified_insights['confidence'],
-                priority_level=unified_insights['priority'],
-                
-                immediate_actions=unified_insights['immediate_actions'],
-                strategic_recommendations=unified_insights['strategic_recommendations'],
-                risk_alerts=unified_insights['risk_alerts'],
-                opportunity_signals=unified_insights['opportunity_signals'],
-                
-                processing_time_ms=processing_time,
-                models_used=unified_insights['models_used'],
-                data_sources=unified_insights['data_sources'],
-                
-                enhanced_claude_integration=self.enhanced_scorer is not None,
-                realtime_inference_active=self.realtime_inference is not None,
-                voice_ai_enabled=self.voice_ai is not None
-            )
+            immediate_actions=unified_insights['immediate_actions'],
+            strategic_recommendations=unified_insights['strategic_recommendations'],
+            risk_alerts=unified_insights['risk_alerts'],
+            opportunity_signals=unified_insights['opportunity_signals'],
             
-            # Cache comprehensive result
-            await self.cache.set(
-                f"s6_analysis:{lead_id}", 
-                asdict(response), 
-                ttl=self.config.default_cache_ttl_seconds
-            )
+            processing_time_ms=processing_time,
+            models_used=unified_insights['models_used'],
+            data_sources=unified_insights['data_sources'],
             
-            # Update memory with insights
-            await self._update_memory_with_insights(lead_id, response)
-            
-            return response
-            
-        except Exception as e:
-            logger.error(f"Comprehensive analysis failed for lead {lead_id}: {e}")
-            
-            # Return minimal fallback response
-            return Service6AIResponse(
-                operation_id=operation_id,
-                lead_id=lead_id,
-                timestamp=datetime.now(),
-                
-                ml_scoring_result=None,
-                voice_analysis_result=None,
-                predictive_insights=None,
-                personalized_content=None,
-                
-                unified_lead_score=50.0,  # Neutral fallback
-                confidence_level=0.3,
-                priority_level='medium',
-                
-                immediate_actions=["Manual review required due to analysis failure"],
-                strategic_recommendations=["Retry analysis when system available"],
-                risk_alerts=["AI analysis system temporarily unavailable"],
-                opportunity_signals=[],
-                
-                processing_time_ms=(datetime.now() - start_time).total_seconds() * 1000,
-                models_used=[],
-                data_sources=[],
-                
-                enhanced_claude_integration=False,
-                realtime_inference_active=False,
-                voice_ai_enabled=False
-            )
+            enhanced_claude_integration=self.enhanced_scorer is not None,
+            realtime_inference_active=self.realtime_inference is not None,
+            voice_ai_enabled=self.voice_ai is not None
+        )
+        
+        # Cache comprehensive result
+        await self.cache.set(
+            f"s6_analysis:{lead_id}", 
+            asdict(response), 
+            ttl=self.config.default_cache_ttl_seconds
+        )
+        
+        # Update memory with insights
+        await self._update_memory_with_insights(lead_id, response)
+        
+        return response
             
     async def realtime_lead_scoring(self, lead_id: str, features: Dict[str, Any],
                                   priority: str = 'normal') -> InferenceResponse:
@@ -514,7 +505,7 @@ class Service6EnhancedClaudePlatformCompanion(ClaudePlatformCompanion):
             return await self.ml_scoring_engine.score_lead_comprehensive(lead_id, lead_data)
         except Exception as e:
             logger.error(f"ML scoring analysis failed: {e}")
-            return None
+            raise AIScoringError(f"ML scoring analysis failed: {str(e)}")
             
     async def _run_voice_analysis(self, lead_id: str, call_data: Dict[str, Any]) -> Optional[CallAnalysis]:
         """Run voice analysis if call data available"""
@@ -525,7 +516,7 @@ class Service6EnhancedClaudePlatformCompanion(ClaudePlatformCompanion):
             return None
         except Exception as e:
             logger.error(f"Voice analysis failed: {e}")
-            return None
+            raise AIVoiceAnalysisError(f"Voice analysis failed: {str(e)}")
             
     async def _run_predictive_analysis(self, lead_id: str, lead_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Run predictive analytics analysis"""
@@ -541,7 +532,7 @@ class Service6EnhancedClaudePlatformCompanion(ClaudePlatformCompanion):
             )
         except Exception as e:
             logger.error(f"Predictive analysis failed: {e}")
-            return None
+            raise AIPredictiveError(f"Predictive analysis failed: {str(e)}")
             
     async def _synthesize_insights(self, lead_id: str, lead_data: Dict[str, Any],
                                  ml_result: Optional[MLScoringResult],

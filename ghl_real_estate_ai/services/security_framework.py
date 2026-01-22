@@ -67,7 +67,9 @@ class SecurityConfig(BaseModel):
         "ghl": settings.ghl_webhook_secret,
         "apollo": settings.apollo_webhook_secret,
         "twilio": settings.twilio_webhook_secret,
-        "sendgrid": settings.sendgrid_webhook_secret
+        "sendgrid": settings.sendgrid_webhook_secret,
+        "vapi": settings.vapi_webhook_secret,
+        "retell": settings.retell_webhook_secret
     }
     
     # CORS Settings
@@ -312,9 +314,30 @@ class SecurityFramework:
             return self._verify_twilio_signature(request, body)
         elif provider == "sendgrid":
             return self._verify_sendgrid_signature(request, body)
+        elif provider == "vapi":
+            return self._verify_vapi_signature(request, body)
         else:
             logger.error(f"Unknown webhook provider: {provider}")
             return False
+    
+    def _verify_vapi_signature(self, request: Request, body: bytes) -> bool:
+        """
+        Verify Vapi.ai webhook signature.
+        Vapi uses x-vapi-secret header for authentication.
+        """
+        provided_secret = request.headers.get("x-vapi-secret")
+        if not provided_secret:
+            logger.error("Vapi webhook secret missing")
+            return False
+        
+        configured_secret = self.config.webhook_signing_secrets.get("vapi")
+        if not configured_secret:
+            logger.error("Vapi webhook secret not configured")
+            # In development, we might want to allow if secret is not set, 
+            # but for production hardening we must require it.
+            return settings.environment == "development"
+            
+        return hmac.compare_digest(provided_secret, configured_secret)
     
     def _verify_ghl_signature(self, request: Request, body: bytes) -> bool:
         """Verify GoHighLevel webhook signature."""

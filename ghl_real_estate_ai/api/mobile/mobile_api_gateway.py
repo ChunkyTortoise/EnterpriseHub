@@ -317,14 +317,51 @@ async def offline_sync(
 
         for operation in sync_request.pending_operations:
             try:
-                # Process each operation
+                # Process each operation with conflict detection
                 if operation.get('type') == 'lead_update':
-                    # TODO: Implement lead update with conflict detection
-                    sync_results.append({
-                        "operation_id": operation.get('id'),
-                        "status": "success",
-                        "server_timestamp": datetime.utcnow()
-                    })
+                    lead_id = operation.get('lead_id')
+                    client_timestamp = datetime.fromisoformat(operation.get('client_updated_at'))
+                    
+                    # Fetch current server state
+                    from ghl_real_estate_ai.services.database_service import get_database
+                    db = await get_database()
+                    server_lead = await db.get_lead(lead_id)
+                    
+                    if not server_lead:
+                        sync_results.append({
+                            "operation_id": operation.get('id'),
+                            "status": "failed",
+                            "error": "Lead not found on server"
+                        })
+                        continue
+                        
+                    server_timestamp = server_lead.get('updated_at')
+                    
+                    # Conflict Detection: Server is newer than client's base version
+                    if server_timestamp > client_timestamp:
+                        conflicts.append({
+                            "operation_id": operation.get('id'),
+                            "lead_id": lead_id,
+                            "error": "Version mismatch: server has newer data",
+                            "server_version": server_lead,
+                            "requires_manual_resolution": True
+                        })
+                        continue
+
+                    # Safe to update
+                    success = await db.update_lead(lead_id, operation.get('updates'))
+                    if success:
+                        sync_results.append({
+                            "operation_id": operation.get('id'),
+                            "status": "success",
+                            "server_timestamp": datetime.utcnow()
+                        })
+                    else:
+                        sync_results.append({
+                            "operation_id": operation.get('id'),
+                            "status": "failed",
+                            "error": "Database update failed"
+                        })
                 elif operation.get('type') == 'note_create':
                     # TODO: Implement note creation
                     sync_results.append({

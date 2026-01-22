@@ -178,8 +178,7 @@ class AppointmentBookingEvent(BaseModel):
     confirmation_sent: bool = False
     booking_duration_seconds: Optional[int] = None  # Time to book from qualification
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     error: Optional[str] = None
 
 
@@ -196,5 +195,6 @@ class ConversationContext(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-# Backward compatibility alias
+# Backward compatibility aliases
 ContactData = GHLContact
+MessageData = GHLMessage

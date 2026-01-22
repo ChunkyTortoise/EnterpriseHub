@@ -15,7 +15,7 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 from abc import ABC, abstractmethod
 
-from ..core.llm_client import LLMClient
+from ghl_real_estate_ai.core.llm_client import LLMClient
 from ..services.cache_service import CacheService
 from ..services.database_service import DatabaseService
 from ..services.enhanced_error_handling import enhanced_error_handler

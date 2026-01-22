@@ -66,7 +66,48 @@ class JorgeFollowUpScheduler:
         self.analytics_service = analytics_service
         self.followup_engine = JorgeFollowUpEngine(conversation_manager, ghl_client)
         self.schedule_config = FollowUpSchedule()
+        
+        # Swarm Coordination: Cache & RAG Warming
+        from ghl_real_estate_ai.services.cache_service import get_cache_service
+        from ghl_real_estate_ai.core.rag_engine import RAGEngine
+        from ghl_real_estate_ai.services.autonomous_ab_testing import get_autonomous_ab_testing
+        
+        self.cache = get_cache_service()
+        self.rag_engine = RAGEngine()
+        self.ab_testing = get_autonomous_ab_testing()
+        
         self.logger = logging.getLogger(__name__)
+
+    async def _get_or_create_follow_up_test(self) -> str:
+        """Ensures a follow-up sequence A/B test exists and returns its ID."""
+        test_name = "Follow-up Strategy Optimization"
+        from ghl_real_estate_ai.services.autonomous_ab_testing import TestType
+        
+        # Check if already in active tests
+        for test_id, config in self.ab_testing.active_tests.items():
+            if config.test_name == test_name:
+                return test_id
+                
+        # Create new test
+        variants = [
+            {"name": "Standard Direct", "description": "Jorge's standard confrontational style"},
+            {"name": "Educational Hook", "description": "Subtly more educational before the close"},
+            {"name": "Urgency Escalation", "description": "Heavy emphasis on market speed"}
+        ]
+        
+        test_config = await self.ab_testing.create_test(
+            test_name=test_name,
+            test_type=TestType.FOLLOW_UP_SEQUENCE,
+            variants=variants,
+            target_metrics=["response_rate", "conversion_rate"],
+            success_criteria={"response_rate": 0.15}
+        )
+        
+        # Activate the test
+        from ghl_real_estate_ai.services.autonomous_ab_testing import TestStatus
+        test_config.status = TestStatus.ACTIVE
+        
+        return test_config.test_id
 
     async def process_webhook_follow_up(
         self,
@@ -106,12 +147,45 @@ class JorgeFollowUpScheduler:
                     "contact_id": contact_id
                 }
             
+            # --- SWARM COORDINATION: PRE-WARM RAG CACHE ---
+            # Pre-calculate RAG context for expected replies to this follow-up
+            try:
+                # Map follow-up sequence to conversation stage for prefetching
+                stage = "initial"
+                if seller_data.get("questions_answered", 0) >= 2:
+                    stage = "qualification"
+                
+                await self.cache.predictive_prefetch(
+                    contact_id=contact_id,
+                    conversation_stage=stage,
+                    rag_engine_ref=self.rag_engine
+                )
+            except Exception as pe:
+                self.logger.warning(f"RAG prefetch failed for contact {contact_id}: {pe}")
+
+            # --- AUTONOMOUS A/B TESTING: ALLOCATE VARIANT ---
+            variant_config = None
+            try:
+                test_id = await self._get_or_create_follow_up_test()
+                variant = await self.ab_testing.allocate_participant(
+                    test_id=test_id,
+                    participant_id=contact_id,
+                    context=seller_data
+                )
+                if variant:
+                    variant_config = variant.configuration
+                    variant_config["variant_id"] = variant.variant_id
+                    variant_config["test_id"] = test_id
+            except Exception as ab_e:
+                self.logger.warning(f"A/B test allocation failed: {ab_e}")
+
             # Process the follow-up
             follow_up_result = await self.followup_engine.process_follow_up_trigger(
                 contact_id=contact_id,
                 location_id=location_id,
                 trigger_type="webhook_trigger",
-                seller_data=seller_data
+                seller_data=seller_data,
+                variant_config=variant_config
             )
             
             # Execute actions via GHL
@@ -131,11 +205,23 @@ class JorgeFollowUpScheduler:
                     next_follow_up=follow_up_result["next_follow_up"]
                 )
             
+            # --- FEEDBACK LOOP: Save A/B Test State to Context ---
+            if self.conversation_manager:
+                await self.conversation_manager.update_context(
+                    contact_id=contact_id,
+                    location_id=location_id,
+                    user_message="", # No user message yet
+                    ai_response=follow_up_result.get("message", ""),
+                    active_ab_test=variant_config,
+                    last_ai_message_type="follow_up"
+                )
+
             # Track analytics
             await self._track_follow_up_analytics(
                 contact_id=contact_id,
                 follow_up_result=follow_up_result,
-                trigger_type="webhook"
+                trigger_type="webhook",
+                variant_config=variant_config
             )
             
             return {
@@ -204,12 +290,43 @@ class JorgeFollowUpScheduler:
                         location_id=location_id
                     )
                     
+                    # --- SWARM COORDINATION: PRE-WARM RAG CACHE ---
+                    try:
+                        stage = "initial"
+                        if seller_data.get("questions_answered", 0) >= 2:
+                            stage = "qualification"
+                        
+                        await self.cache.predictive_prefetch(
+                            contact_id=contact_id,
+                            conversation_stage=stage,
+                            rag_engine_ref=self.rag_engine
+                        )
+                    except Exception as pe:
+                        self.logger.warning(f"RAG prefetch failed for contact {contact_id}: {pe}")
+
+                    # --- AUTONOMOUS A/B TESTING: ALLOCATE VARIANT ---
+                    variant_config = None
+                    try:
+                        test_id = await self._get_or_create_follow_up_test()
+                        variant = await self.ab_testing.allocate_participant(
+                            test_id=test_id,
+                            participant_id=contact_id,
+                            context=seller_data
+                        )
+                        if variant:
+                            variant_config = variant.configuration
+                            variant_config["variant_id"] = variant.variant_id
+                            variant_config["test_id"] = test_id
+                    except Exception as ab_e:
+                        self.logger.warning(f"A/B test allocation failed: {ab_e}")
+
                     # Process follow-up
                     follow_up_result = await self.followup_engine.process_follow_up_trigger(
                         contact_id=contact_id,
                         location_id=location_id,
                         trigger_type="time_based",
-                        seller_data=seller_data
+                        seller_data=seller_data,
+                        variant_config=variant_config
                     )
                     
                     # Execute actions
@@ -229,6 +346,17 @@ class JorgeFollowUpScheduler:
                             next_follow_up=follow_up_result["next_follow_up"]
                         )
                     
+                    # --- FEEDBACK LOOP: Save A/B Test State to Context ---
+                    if self.conversation_manager:
+                        await self.conversation_manager.update_context(
+                            contact_id=contact_id,
+                            location_id=location_id,
+                            user_message="", # No user message yet
+                            ai_response=follow_up_result.get("message", ""),
+                            active_ab_test=variant_config,
+                            last_ai_message_type="follow_up"
+                        )
+
                     results["successful"] += 1
                     
                 except Exception as e:
@@ -288,7 +416,7 @@ class JorgeFollowUpScheduler:
                     },
                     {
                         "type": "webhook",
-                        "url": "/api/webhooks/jorge-follow-up",
+                        "url": "/api/jorge-followup/webhook",
                         "method": "POST",
                         "data": {
                             "trigger_type": "initial_follow_up",
@@ -315,7 +443,7 @@ class JorgeFollowUpScheduler:
                     },
                     {
                         "type": "webhook", 
-                        "url": "/api/webhooks/jorge-follow-up",
+                        "url": "/api/jorge-followup/webhook",
                         "method": "POST",
                         "data": {
                             "trigger_type": "qualification_retry",
@@ -341,7 +469,7 @@ class JorgeFollowUpScheduler:
                     },
                     {
                         "type": "webhook",
-                        "url": "/api/webhooks/jorge-follow-up",
+                        "url": "/api/jorge-followup/webhook",
                         "method": "POST",
                         "data": {
                             "trigger_type": "temperature_escalation",
@@ -367,7 +495,7 @@ class JorgeFollowUpScheduler:
                     },
                     {
                         "type": "webhook",
-                        "url": "/api/webhooks/jorge-follow-up", 
+                        "url": "/api/jorge-followup/webhook", 
                         "method": "POST",
                         "data": {
                             "trigger_type": "long_term_nurture",
@@ -421,7 +549,7 @@ class JorgeFollowUpScheduler:
             "2. Create new workflow 'Jorge Seller - Initial Follow-up'",
             "3. Set trigger: Tag Added → 'Needs Qualifying'",
             "4. Add Wait action: 2 days",
-            "5. Add Webhook action: POST to /api/webhooks/jorge-follow-up",
+            "5. Add Webhook action: POST to /api/jorge-followup/webhook",
             "6. Repeat for other workflow templates",
             "7. Ensure webhook URLs point to your server",
             "8. Test each workflow with a sample contact"
@@ -615,7 +743,8 @@ class JorgeFollowUpScheduler:
         self,
         contact_id: str,
         follow_up_result: Dict[str, Any],
-        trigger_type: str
+        trigger_type: str,
+        variant_config: Optional[Dict[str, Any]] = None
     ) -> None:
         """Track follow-up analytics"""
         
@@ -630,6 +759,12 @@ class JorgeFollowUpScheduler:
                 "actions_count": len(follow_up_result.get("actions", [])),
                 "compliance_score": follow_up_result.get("compliance", {}).get("compliance_score", 0)
             }
+            
+            # Record A/B test data if available
+            if variant_config:
+                analytics_data["ab_test_id"] = variant_config.get("test_id")
+                analytics_data["ab_variant_id"] = variant_config.get("variant_id")
+                analytics_data["ab_variant_name"] = variant_config.get("name")
             
             if self.analytics_service:
                 await self.analytics_service.track_event(

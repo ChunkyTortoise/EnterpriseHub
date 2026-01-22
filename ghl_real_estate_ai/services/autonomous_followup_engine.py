@@ -16,6 +16,7 @@ Date: January 17, 2026
 Status: Advanced Agent-Driven Follow-up Orchestration System
 """
 import asyncio
+import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
@@ -31,6 +32,7 @@ from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
 from ghl_real_estate_ai.services.database_service import get_database
+from ghl_real_estate_ai.api.schemas.ghl import MessageType
 
 logger = get_logger(__name__)
 
@@ -1165,30 +1167,54 @@ class AutonomousFollowUpEngine:
             logger.error(f"❌ Error in monitor_and_respond: {e}")
 
     async def execute_pending_tasks(self):
-        """Execute pending follow-up tasks that are ready."""
+        """
+        Execute pending follow-up tasks that are ready.
+        Loads tasks from database for production state persistence.
+        """
         try:
-            async with self.task_lock:
-                now = datetime.now()
+            db = await get_database()
+            db_tasks = await db.get_pending_follow_up_tasks(limit=self.batch_size)
 
-                # Find tasks ready for execution
-                ready_tasks = [
-                    task
-                    for task in self.pending_tasks
-                    if task.status == FollowUpStatus.SCHEDULED
-                    and task.scheduled_time <= now
-                ]
+            if not db_tasks:
+                # Fallback to in-memory tasks if DB returns nothing but memory has some
+                async with self.task_lock:
+                    now = datetime.now()
+                    ready_tasks = [
+                        task
+                        for task in self.pending_tasks
+                        if task.status == FollowUpStatus.SCHEDULED
+                        and task.scheduled_time <= now
+                    ]
+                    if not ready_tasks:
+                        return
+                    
+                    tasks_to_execute = ready_tasks[:self.batch_size]
+            else:
+                # Convert DB rows back to FollowUpTask objects
+                tasks_to_execute = []
+                for row in db_tasks:
+                    tasks_to_execute.append(FollowUpTask(
+                        task_id=row['id'],
+                        lead_id=str(row['lead_id']),
+                        contact_id=row['contact_id'],
+                        channel=FollowUpChannel(row['channel']),
+                        message=row['message'],
+                        scheduled_time=row['scheduled_time'],
+                        status=FollowUpStatus(row['status']),
+                        priority=row['priority'],
+                        intent_level=IntentLevel(row['intent_level']) if row['intent_level'] else None,
+                        metadata=json.loads(row['metadata']) if isinstance(row['metadata'], str) else row['metadata'],
+                        created_at=row['created_at']
+                    ))
 
-                # Sort by priority (highest first)
-                ready_tasks.sort(key=lambda t: t.priority, reverse=True)
+            logger.info(f"📤 Executing {len(tasks_to_execute)} ready follow-up tasks from persistent storage")
 
-                logger.info(f"📤 Executing {len(ready_tasks)} ready follow-up tasks")
-
-                # Execute tasks
-                for task in ready_tasks[:self.batch_size]:  # Limit batch size
-                    await self._execute_task(task)
+            # Execute tasks
+            for task in tasks_to_execute:
+                await self._execute_task(task)
 
         except Exception as e:
-            logger.error(f"❌ Error executing pending tasks: {e}")
+            logger.error(f"❌ Error executing pending tasks from database: {e}")
 
     async def _monitoring_loop(self):
         """Continuous monitoring loop."""
@@ -1337,6 +1363,25 @@ class AutonomousFollowUpEngine:
             async with self.task_lock:
                 self.pending_tasks.append(task)
 
+            # PRODUCTION HARDENING: Persist task to database for state persistence
+            try:
+                db = await get_database()
+                await db.save_follow_up_task({
+                    "task_id": task.task_id,
+                    "lead_id": task.lead_id,
+                    "contact_id": task.contact_id,
+                    "channel": task.channel.value,
+                    "message": task.message,
+                    "scheduled_time": task.scheduled_time,
+                    "status": task.status.value,
+                    "priority": task.priority,
+                    "intent_level": task.intent_level.value if task.intent_level else None,
+                    "metadata": task.metadata
+                })
+                logger.info(f"✅ Persisted follow-up task {task.task_id} to database")
+            except Exception as e:
+                logger.error(f"❌ Failed to persist follow-up task {task.task_id}: {e}")
+
             # Update agent performance tracking
             await self._update_agent_performance(valid_recommendations)
 
@@ -1355,7 +1400,7 @@ class AutonomousFollowUpEngine:
             logger.error(f"❌ Error in multi-agent lead processing {lead_id}: {e}")
 
     async def _execute_task(self, task: FollowUpTask):
-        """Execute a follow-up task."""
+        """Execute a follow-up task and update its persistent state."""
         try:
             logger.info(
                 f"📤 Executing follow-up task {task.task_id} via {task.channel.value}"
@@ -1372,17 +1417,27 @@ class AutonomousFollowUpEngine:
                 success = await self._initiate_call(task.contact_id)
 
             # Update task status
+            executed_at = datetime.now()
             if success:
                 task.status = FollowUpStatus.SENT
-                task.executed_at = datetime.now()
-                task.result = {"success": True, "timestamp": datetime.now().isoformat()}
-
+                task.executed_at = executed_at
+                task.result = {"success": True, "timestamp": executed_at.isoformat()}
                 logger.info(f"✅ Follow-up task {task.task_id} sent successfully")
             else:
                 task.status = FollowUpStatus.FAILED
                 task.result = {"success": False, "error": "Delivery failed"}
-
                 logger.error(f"❌ Follow-up task {task.task_id} failed")
+
+            # PRODUCTION HARDENING: Update task status in database
+            try:
+                db = await get_database()
+                await db.update_follow_up_task(task.task_id, {
+                    "status": task.status.value,
+                    "executed_at": task.executed_at,
+                    "result": task.result
+                })
+            except Exception as db_e:
+                logger.error(f"⚠️ Failed to update task status in DB for {task.task_id}: {db_e}")
 
             # Remove from pending queue
             async with self.task_lock:
@@ -1392,8 +1447,15 @@ class AutonomousFollowUpEngine:
 
         except Exception as e:
             logger.error(f"❌ Error executing task {task.task_id}: {e}")
-            task.status = FollowUpStatus.FAILED
-            task.result = {"success": False, "error": str(e)}
+            # Update failure in DB if possible
+            try:
+                db = await get_database()
+                await db.update_follow_up_task(task.task_id, {
+                    "status": FollowUpStatus.FAILED.value,
+                    "result": {"success": False, "error": str(e)}
+                })
+            except:
+                pass
 
     async def _build_agent_consensus(
         self, recommendations: List[FollowUpRecommendation], swarm_analysis: Any
@@ -1704,18 +1766,48 @@ Generate the message:"""
             return False
 
     async def _initiate_call(self, contact_id: str) -> bool:
-        """Initiate call via Vapi integration."""
+        """Initiate call via Vapi integration with full lead context."""
         try:
             from ghl_real_estate_ai.services.vapi_service import VapiService
             vapi = VapiService()
-            clean_contact_id = contact_id.replace("contact_", "")
-            # Assuming we fetch phone number from GHL first
-            from ghl_real_estate_ai.services.ghl_client import GHLClient
-            ghl = GHLClient()
-            # This is a bit complex for a single step, but let's assume we have it or use a default
-            # In a real scenario, we'd fetch the contact details
-            await vapi.start_outbound_call(clean_contact_id)
-            return True
+            
+            # Extract lead_id from contact_id (prefixed with contact_)
+            lead_id = contact_id.replace("contact_", "")
+            
+            # Fetch lead profile for Vapi context
+            lead_profile = await self._get_lead_profile(lead_id)
+            phone = lead_profile.get('phone')
+            name = lead_profile.get('name', 'Homeowner')
+            
+            if not phone:
+                logger.error(f"Cannot initiate call: No phone number for lead {lead_id}")
+                return False
+
+            # Fetch additional context for Voss Drift adaptation
+            activity_data = await self._get_lead_activity(lead_id)
+            
+            # Calculate a dummy drift score for now or fetch from recent negotiation state
+            # PRODUCTION HARDENING: Integrate with NegotiationDriftDetector
+            from ghl_real_estate_ai.services.negotiation_drift_detector import get_drift_detector
+            detector = get_drift_detector()
+            
+            # Analyze recent activity for drift if available
+            recent_msg = ""
+            if activity_data.get('sms_responses'):
+                recent_msg = activity_data['sms_responses'][0].get('content', "")
+            
+            drift_analysis = detector.analyze_drift(recent_msg)
+            
+            return vapi.trigger_outbound_call(
+                contact_phone=phone,
+                lead_name=name,
+                property_address=lead_profile.get('demographics', {}).get('city', 'your property'),
+                extra_variables={
+                    "lead_id": lead_id,
+                    "drift_score": drift_analysis["drift_score"],
+                    "flexibility": drift_analysis["recommendation"]
+                }
+            )
         except Exception as e:
             logger.error(f"Failed to initiate call via Vapi: {e}")
             return False

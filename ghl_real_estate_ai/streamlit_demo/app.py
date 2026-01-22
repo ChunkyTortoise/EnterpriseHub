@@ -640,6 +640,29 @@ with st.sidebar:
     
     if elite_mode:
         st.success("✨ Elite Mode Active")
+
+    # VANGUARD 2: Adaptive UI Control (Phase 11)
+    st.markdown("---")
+    st.markdown("### 🧠 Adaptive UI (Vanguard 2)")
+    stress_sim = st.slider("Simulate Agent Stress:", 0.0, 10.0, st.session_state.get('sim_stress', 0.0))
+    st.session_state.sim_stress = stress_sim
+    
+    from ghl_real_estate_ai.services.adaptive_ui_service import get_adaptive_ui_service
+    ui_service = get_adaptive_ui_service()
+    # Mocking acoustic features for demo
+    current_ui_mode = ui_service.analyze_stress({"speech_rate": 1.0 + (stress_sim/10)}, (5-stress_sim)/5)
+    st.session_state.ui_mode = current_ui_mode.value
+    
+    mode_colors = {"Calm": "#10B981", "Focused": "#F59E0B", "Crisis": "#EF4444"}
+    mode_color = mode_colors.get(st.session_state.ui_mode, "#6366F1")
+    
+    st.markdown(f"""
+    <div style="background: {mode_color}22; border: 1px solid {mode_color}; padding: 10px; border-radius: 8px; text-align: center;">
+        <span style="color: {mode_color}; font-weight: bold; font-size: 0.9rem;">MODE: {st.session_state.ui_mode.upper()}</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.info(ui_service.get_prescriptive_recommendation(current_ui_mode))
     
     st.markdown("---")
 
@@ -1072,6 +1095,7 @@ with st.sidebar:
     bi_hubs = [
         "Executive Command Center",
         "Lead Intelligence Hub",
+        "Data Arbitrage Hub",
         "Agent ROI Dashboard",
         "Real-Time Intelligence",
         "Billing Analytics",
@@ -2207,6 +2231,9 @@ if selected_hub == "Executive Command Center":
     render_executive_hub(services, mock_data, sparkline, render_insight_card)
 elif selected_hub == "Lead Intelligence Hub":
     render_lead_intelligence_hub(services, mock_data, claude, market_key, selected_market, elite_mode=st.session_state.get('elite_mode', False))
+elif selected_hub == "Data Arbitrage Hub":
+    from ghl_real_estate_ai.streamlit_demo.components.data_arbitrage_dashboard import render_data_arbitrage_dashboard
+    render_data_arbitrage_dashboard()
 elif selected_hub == "Agent ROI Dashboard":
     from ghl_real_estate_ai.streamlit_demo.components.agent_roi_dashboard import render_agent_roi_dashboard
     render_agent_roi_dashboard()

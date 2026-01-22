@@ -28,6 +28,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.database_service import DatabaseService, log_communication
 from ghl_real_estate_ai.services.security_framework import SecurityFramework
+from ghl_real_estate_ai.services.template_library_service import get_template_library_service
 
 logger = get_logger(__name__)
 
@@ -239,7 +240,8 @@ class TwilioClient:
                 ttl=86400  # 24 hours
             )
             
-            logger.info(f"Validated phone number {phone_number}: {result.carrier_type}")
+            masked_phone = f"{phone_number[:5]}***{phone_number[-4:]}" if len(phone_number) > 9 else "***"
+            logger.info(f"Validated phone number {masked_phone}: {result.carrier_type}")
             return result
             
         except TwilioRestException as e:
@@ -346,7 +348,8 @@ class TwilioClient:
                         }
                     })
                 
-                logger.info(f"SMS sent successfully to {to_normalized}, SID: {sms_message.sid}")
+                masked_to = f"{to_normalized[:5]}***{to_normalized[-4:]}" if len(to_normalized) > 9 else "***"
+                logger.info(f"SMS sent successfully to {masked_to}, SID: {sms_message.sid}")
                 return sms_message
                 
             except TwilioRestException as e:
@@ -378,34 +381,41 @@ class TwilioClient:
                                variables: Dict[str, Any] = None,
                                lead_id: str = None,
                                campaign_id: str = None) -> SMSMessage:
-        """Send SMS using predefined template."""
-        template = await self._get_message_template(template_name)
+        """Send SMS using predefined template from TemplateLibraryService."""
+        template_service = await get_template_library_service()
         
-        if not template:
-            raise TwilioAPIException(f"Template '{template_name}' not found")
+        # Search for template by name
+        templates = await template_service.search_templates({"name": template_name, "type": "sms"})
         
-        # Replace variables in template
-        message = template["content"]
-        if variables:
-            for key, value in variables.items():
-                message = message.replace(f"{{{key}}}", str(value))
+        if not templates:
+            # Fallback to hardcoded templates if not found in database (for backward compatibility during migration)
+            template = await self._get_hardcoded_template(template_name)
+            if not template:
+                raise TwilioAPIException(f"Template '{template_name}' not found")
+            
+            message = template["content"]
+            if variables:
+                for key, value in variables.items():
+                    message = message.replace(f"{{{key}}}", str(value))
+            
+            template_id = template.get("id")
+        else:
+            # Use the first matching template from database
+            template = templates[0]
+            rendered = await template_service.render_template(template.id, variables or {})
+            message = rendered["content"]
+            template_id = template.id
         
         return await self.send_sms(
             to=to,
             message=message,
             lead_id=lead_id,
             campaign_id=campaign_id,
-            template_id=template.get("id")
+            template_id=template_id
         )
     
-    async def _get_message_template(self, template_name: str) -> Optional[Dict[str, Any]]:
-        """Get message template by name."""
-        # Check cache first
-        cached_template = await self.cache_service.get(f"sms_template:{template_name}")
-        if cached_template:
-            return cached_template
-        
-        # Predefined templates for Service 6
+    async def _get_hardcoded_template(self, template_name: str) -> Optional[Dict[str, Any]]:
+        """Get hardcoded message template (deprecated)."""
         templates = {
             "instant_response": {
                 "id": "template_instant_response",
@@ -432,17 +442,7 @@ class TwilioClient:
                 "content": "Hi {first_name}! I see you're actively looking. I have some exclusive listings that aren't public yet. Can we chat today? - {agent_name}"
             }
         }
-        
-        template = templates.get(template_name)
-        if template:
-            # Cache for future use
-            await self.cache_service.set(
-                f"sms_template:{template_name}",
-                template,
-                ttl=3600  # 1 hour
-            )
-        
-        return template
+        return templates.get(template_name)
     
     # ============================================================================
     # Opt-Out Management
@@ -667,7 +667,8 @@ class TwilioClient:
                         }
                     })
             
-            logger.info(f"Processed incoming SMS from {from_number}")
+            masked_from = f"{from_number[:5]}***{from_number[-4:]}" if len(from_number) > 9 else "***"
+            logger.info(f"Processed incoming SMS from {masked_from}")
             return True
             
         except Exception as e:

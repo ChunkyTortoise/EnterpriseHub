@@ -16,6 +16,15 @@
 
 ## Technical Excellence Metrics
 
+### Autonomous Development & AI-Native Metrics (2026 Standard)
+| Metric | Target | Definition |
+|--------|--------|------------|
+| **Prompt→Commit Success Rate** | >85% | AI suggestions accepted and deployed without human rewrite. |
+| **Defect Density (AI vs. Human)** | < AI-Assisted | Confirmed defects per thousand lines of code (KLOC) compared to human baseline. |
+| **Review Rework Percentage** | <15% | Percentage of lines modified by a human after AI generation during code review. |
+| **Semantic Correctness** | 100% | Logical verification that code behavior matches natural language intent. |
+| **LLM-as-a-Judge Score** | ≥0.9 | G-Eval rubric score for nuance, safety, and alignment. |
+
 ### Code Quality Standards
 ```yaml
 Required Metrics:
@@ -25,12 +34,6 @@ Required Metrics:
   documentation_coverage: ≥85%
   mobile_responsiveness: 100% across devices
   accessibility_score: ≥90/100
-
-Portfolio-Specific:
-  code_comments: Comprehensive for client review
-  error_handling: User-friendly for demo scenarios
-  logging: Detailed for troubleshooting demos
-  monitoring: Real-time metrics for presentations
 ```
 
 ### User Experience Benchmarks

@@ -195,9 +195,11 @@ services:
       ENABLE_EMAIL_AUTOMATION: ${ENABLE_EMAIL_AUTOMATION:-true}
       ENABLE_GHL_SYNC: ${ENABLE_GHL_SYNC:-true}
       
-    ports:
-      - "8000:8000"  # Main API
-      - "8001:8001"  # Health checks and monitoring
+    # SECURITY: Ports removed from production - use Traefik or Nginx instead
+    # For development access, use docker-compose.dev.yml override
+    # ports:
+    #   - "8000:8000"  # Main API
+    #   - "8001:8001"  # Health checks and monitoring
     volumes:
       - app_logs:/app/logs
       - app_data:/app/data
@@ -232,8 +234,9 @@ services:
       - STREAMLIT_SERVER_PORT=8501
       - STREAMLIT_SERVER_ADDRESS=0.0.0.0
       - API_BASE_URL=http://service6-app:8000
-    ports:
-      - "8501:8501"
+    # SECURITY: Ports removed from production - use Traefik or Nginx instead
+    # ports:
+    #   - "8501:8501"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8501/"]
       interval: 30s

@@ -19,10 +19,11 @@ async def main():
     print(f"📊 Average Score: {results['average_score']:.2f}/5.0")
     
     for i, res in enumerate(results['results']):
+        scores = res['scores']
         print(f"\nIteration {i+1} Breakdown:")
-        print(f"  - Compliance: {res['compliance']:.1f}")
-        print(f"  - Empathy: {res['empathy']:.1f}")
-        print(f"  - Goal Pursuit: {res['goal_pursuit']:.1f}")
+        print(f"  - Compliance: {scores['compliance']:.1f}")
+        print(f"  - Empathy: {scores['empathy']:.1f}")
+        print(f"  - Goal Pursuit: {scores['goal_pursuit']:.1f}")
         print(f"  - Overall: {res['overall']:.2f}")
 
 if __name__ == "__main__":

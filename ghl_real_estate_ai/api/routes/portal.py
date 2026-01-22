@@ -318,3 +318,23 @@ async def get_smart_deck(
     except Exception as e:
         logger.error(f"Error getting smart deck: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/smart-deck")
+async def get_smart_deck_legacy(contact_id: str, location_id: Optional[str] = None):
+    """
+    Legacy compatibility endpoint for SwipeDeck React component.
+    """
+    try:
+        # Use provided location_id or default from settings
+        loc_id = location_id or settings.ghl_location_id
+        
+        deck = await swipe_manager.get_smart_deck(
+            lead_id=contact_id,
+            location_id=loc_id,
+            limit=10
+        )
+        return {"deck": deck}
+    except Exception as e:
+        logger.error(f"Error in legacy smart deck: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -4,7 +4,7 @@ Configuration module for GHL Real Estate AI.
 Manages environment variables and application settings using Pydantic.
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, validator
+from pydantic import Field, field_validator, ValidationInfo
 from typing import Optional
 from enum import Enum
 import os
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     temperature: float = 0.7
     max_tokens: int = 150
     default_llm_provider: str = "claude"
-    gemini_model: str = Field("gemini-2.0-flash-lite", env="GEMINI_MODEL")
+    gemini_model: str = Field("gemini-2.0-flash-lite", validation_alias="GEMINI_MODEL")
     google_api_key: Optional[str] = None
     perplexity_api_key: Optional[str] = None
     perplexity_model: str = "sonar"
@@ -130,6 +130,13 @@ class Settings(BaseSettings):
     custom_field_appointment_time: Optional[str] = None  # Store scheduled appointment time
     custom_field_appointment_type: Optional[str] = None  # Store appointment type
 
+    # Phase 2: Custom Field IDs (Seller Bot)
+    custom_field_seller_temperature: Optional[str] = None
+    custom_field_seller_motivation: Optional[str] = None
+    custom_field_timeline_urgency: Optional[str] = None
+    custom_field_property_condition: Optional[str] = None
+    custom_field_price_expectation: Optional[str] = None
+
     # Calendar & Appointment Settings (Jorge's Rancho Cucamonga Business)
     appointment_auto_booking_enabled: bool = True
     appointment_booking_threshold: int = 5  # Lead score threshold for auto-booking (70%)
@@ -175,24 +182,32 @@ class Settings(BaseSettings):
     vapi_api_key: Optional[str] = None
     vapi_assistant_id: Optional[str] = None
     vapi_phone_number_id: Optional[str] = None
+    vapi_webhook_secret: Optional[str] = None
+
+    # Retell AI Configuration (Added for Phase 2)
+    retell_api_key: Optional[str] = None
+    retell_agent_id: Optional[str] = None
+    retell_webhook_secret: Optional[str] = None
 
     # Testing
     test_mode: bool = False
 
-    @validator('jwt_secret_key')
-    def validate_jwt_secret(cls, v, values):
+    @field_validator('jwt_secret_key')
+    @classmethod
+    def validate_jwt_secret(cls, v: str, info: ValidationInfo):
         """SECURITY FIX: Validate JWT secret in production."""
-        environment = values.get('environment', 'development')
+        environment = info.data.get('environment', 'development')
         if environment == 'production' and len(v) < 32:
             print("❌ SECURITY ERROR: JWT_SECRET_KEY must be at least 32 characters in production")
             print("   Generate with: openssl rand -hex 32")
             sys.exit(1)
         return v
 
-    @validator('ghl_webhook_secret')
-    def validate_webhook_secret(cls, v, values):
+    @field_validator('ghl_webhook_secret')
+    @classmethod
+    def validate_webhook_secret(cls, v: Optional[str], info: ValidationInfo):
         """SECURITY FIX: Validate webhook secret in production."""
-        environment = values.get('environment', 'development')
+        environment = info.data.get('environment', 'development')
         if environment == 'production' and not v:
             print("❌ SECURITY ERROR: GHL_WEBHOOK_SECRET is required in production")
             print("   Generate with: openssl rand -hex 32")
@@ -201,15 +216,17 @@ class Settings(BaseSettings):
             print("⚠️  WARNING: Webhook secret should be at least 32 characters")
         return v
 
-    @validator('anthropic_api_key')
-    def validate_anthropic_key(cls, v):
+    @field_validator('anthropic_api_key')
+    @classmethod
+    def validate_anthropic_key(cls, v: str):
         """Validate Anthropic API key format."""
         if v and not v.startswith('sk-ant-'):
             print("⚠️  WARNING: Anthropic API key should start with 'sk-ant-'")
         return v
 
-    @validator('ghl_api_key')
-    def validate_ghl_key(cls, v, values):
+    @field_validator('ghl_api_key')
+    @classmethod
+    def validate_ghl_key(cls, v: str):
         """Validate GHL API key format."""
         if v and not v.startswith('eyJ'):
             print("⚠️  WARNING: GHL API key should be JWT format (starts with 'eyJ')")

@@ -29,6 +29,7 @@ import hashlib
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
 
@@ -1050,50 +1051,77 @@ class CompetitiveIntelligenceSystem:
             return 50.0  # Default score
 
     async def _get_market_data(self, market_areas: List[str], analysis_period: str) -> Dict[str, Any]:
-        """Get market data for analysis (placeholder implementation)."""
-        # TODO: Implement real market data retrieval
-        return {
-            'market_areas': market_areas,
-            'analysis_period': analysis_period,
-            'avg_pricing': {'low': 300000, 'avg': 450000, 'high': 750000},
-            'market_velocity': 'moderate',
-            'inventory_levels': 'balanced',
-            'market_share': {'our_share': 12.5, 'top_competitor': 18.3},
-            'competitor_pricing': {}
-        }
+        """Get market data for analysis from database."""
+        try:
+            db = await get_database()
+            
+            # Aggregate data for multiple market areas
+            aggregated_data = {
+                'market_areas': market_areas,
+                'analysis_period': analysis_period,
+                'avg_pricing': {'low': 0, 'avg': 0, 'high': 0},
+                'market_velocity': 'unknown',
+                'inventory_levels': 'unknown',
+                'market_share': {},
+                'competitor_pricing': {}
+            }
+            
+            count = 0
+            for area in market_areas:
+                area_data = await db.get_market_data(area, analysis_period)
+                if area_data:
+                    # Basic aggregation logic
+                    pricing = area_data.get('avg_pricing', {})
+                    aggregated_data['avg_pricing']['low'] += pricing.get('low', 0)
+                    aggregated_data['avg_pricing']['avg'] += pricing.get('avg', 0)
+                    aggregated_data['avg_pricing']['high'] += pricing.get('high', 0)
+                    
+                    aggregated_data['market_velocity'] = area_data.get('market_velocity')
+                    aggregated_data['inventory_levels'] = area_data.get('inventory_levels')
+                    count += 1
+            
+            if count > 0:
+                aggregated_data['avg_pricing']['low'] /= count
+                aggregated_data['avg_pricing']['avg'] /= count
+                aggregated_data['avg_pricing']['high'] /= count
+                
+            return aggregated_data
+            
+        except Exception as e:
+            logger.error(f"Error retrieving market data: {e}")
+            return {
+                'market_areas': market_areas,
+                'analysis_period': analysis_period,
+                'avg_pricing': {'low': 300000, 'avg': 450000, 'high': 750000},
+                'market_velocity': 'moderate',
+                'inventory_levels': 'balanced'
+            }
 
     async def _get_competitor_profiles(self, market_areas: List[str]) -> List[CompetitorProfile]:
-        """Get competitor profiles for market areas (placeholder implementation)."""
-        # TODO: Implement real competitor data retrieval
-        return [
-            CompetitorProfile(
-                competitor_id="comp_001",
-                name="Premier Realty Group",
-                website="https://premierrealty.com",
-                market_areas=market_areas,
-                specialties=["luxury_homes", "commercial"],
-                team_size=15,
-                threat_level=ThreatLevel.HIGH
-            ),
-            CompetitorProfile(
-                competitor_id="comp_002",
-                name="Metro Real Estate",
-                website="https://metrore.com",
-                market_areas=market_areas,
-                specialties=["first_time_buyers", "condos"],
-                team_size=8,
-                threat_level=ThreatLevel.MODERATE
-            ),
-            CompetitorProfile(
-                competitor_id="comp_003",
-                name="Elite Properties",
-                website="https://eliteprops.com",
-                market_areas=market_areas,
-                specialties=["luxury_homes", "investment"],
-                team_size=12,
-                threat_level=ThreatLevel.HIGH
-            )
-        ]
+        """Get competitor profiles for market areas from database."""
+        try:
+            db = await get_database()
+            profiles_data = await db.get_competitor_profiles(market_areas)
+            
+            profiles = []
+            for data in profiles_data:
+                profiles.append(CompetitorProfile(
+                    competitor_id=data['competitor_id'],
+                    name=data['name'],
+                    website=data.get('website', ''),
+                    market_areas=data.get('market_areas', []),
+                    specialties=data.get('specialties', []),
+                    team_size=data.get('team_size', 0),
+                    threat_level=ThreatLevel(data.get('threat_level', 'moderate')),
+                    social_media_handles=data.get('social_media_handles', {}),
+                    metadata=data.get('metadata', {})
+                ))
+                
+            return profiles
+            
+        except Exception as e:
+            logger.error(f"Error retrieving competitor profiles: {e}")
+            return []
 
     def _create_fallback_report(
         self, market_areas: List[str], competitors: List[CompetitorProfile]

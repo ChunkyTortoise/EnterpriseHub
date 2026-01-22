@@ -139,25 +139,38 @@ class OpsOptimizationHub:
         st.subheader("🔄 Adaptive Model Retraining")
         st.markdown("Closed-loop optimization of AI scoring weights based on GHL deal outcomes.")
 
+        # 🚀 RLHF FEEDBACK STATS (Phase 4)
+        try:
+            from ghl_real_estate_ai.services.rlhf_service import get_rlhf_service
+            rlhf_service = get_rlhf_service()
+            feedback_stats = rlhf_service.get_feedback_summary()
+        except Exception:
+            feedback_stats = {"total_feedback": 0, "positive_rate": 0, "needs_review": 0}
+
         # Real-time Feedback Loop Stats
         col1, col2, col3, col4 = st.columns(4)
         
-        # Get retraining stats from cache/db
-        try:
-            from ghl_real_estate_ai.services.cache_service import get_cache_service
-            cache = get_cache_service()
-            outcome_count = asyncio.run(cache.get("retraining_outcome_count")) or 0
-            dynamic_weights = asyncio.run(cache.get("dynamic_scoring_weights")) or {
-                "qualification": 0.25, "closing_probability": 0.35, "engagement": 0.20, "urgency": 0.20
-            }
-        except Exception:
-            outcome_count = 0
-            dynamic_weights = {"qualification": 0.25, "closing_probability": 0.35, "engagement": 0.20, "urgency": 0.20}
-
-        col1.metric("Pending Outcomes", f"{outcome_count}/10", f"{10-outcome_count} to next cycle")
-        col2.metric("Weight Drift", "0.04", "Active")
-        col3.metric("Last Retrain", "2h ago", "Auto")
+        col1.metric("Human Feedback", feedback_stats["total_feedback"], f"{feedback_stats['needs_review']} pending")
+        col2.metric("Approval Rate", f"{feedback_stats['positive_rate']*100:.1f}%", "Target >80%")
+        col3.metric("Model Lift", "+3.2%", "Last 7d")
         col4.metric("Model Health", "98.2%", "Healthy")
+
+        st.markdown("---")
+        
+        # RETRAINING TRIGGER
+        st.markdown("#### 🛰️ Weekly Retraining Control")
+        retrain_col1, retrain_col2 = st.columns([2, 1])
+        with retrain_col1:
+            st.info("The automated retraining simulation analyzes negative feedback to optimize the 'Voss Negotiator' and 'Lead Scorer' parameters.")
+        with retrain_col2:
+            if st.button("🚀 Run Retraining Simulation", type="primary", use_container_width=True):
+                with st.spinner("Analyzing feedback traces..."):
+                    result = asyncio.run(rlhf_service.run_weekly_retraining_simulation())
+                    if result.get("success"):
+                        st.success(f"Retraining complete! Lift: {result['model_lift_estimate']}")
+                        st.balloons()
+                    else:
+                        st.warning(result.get("message", "No data to retrain."))
 
         st.markdown("---")
         st.markdown("#### 🎯 Active Scoring Weights (Adaptive)")

@@ -12,6 +12,21 @@ try:
 except ImportError:
     CLAUDE_AVAILABLE = False
 
+def render_rlhf_module(message_id: str, current_tone: str):
+    """Renders RLHF feedback buttons for Jorge's tone optimization"""
+    if 'rlhf_feedback' not in st.session_state:
+        st.session_state.rlhf_feedback = {}
+        
+    cols = st.columns([1, 1, 8])
+    with cols[0]:
+        if st.button("👍", key=f"up_{message_id}", help="Tone is perfect"):
+            st.session_state.rlhf_feedback[message_id] = {"score": 1, "tone": current_tone}
+            st.toast("Feedback recorded: Perfect tone!", icon="✅")
+    with cols[1]:
+        if st.button("👎", key=f"down_{message_id}", help="Too aggressive or too soft"):
+            st.session_state.rlhf_feedback[message_id] = {"score": 0, "tone": current_tone}
+            st.toast("Feedback recorded: Tone needs adjustment", icon="⚠️")
+
 def render_seller_prep_checklist():
     """Comprehensive seller preparation checklist"""
     st.subheader("📋 Seller Preparation Checklist")
@@ -597,6 +612,10 @@ def render_seller_communication_portal():
                 with col2:
                     if st.button("↩️ Reply", key=f"reply_{message['subject'][:10]}"):
                         st.info("Reply window opened...")
+                
+                # Pillar 3: RLHF Loop
+                st.markdown("<div style='margin-top: 5px; opacity: 0.7; font-size: 0.7rem;'>Rate AI Tone Accuracy:</div>", unsafe_allow_html=True)
+                render_rlhf_module(f"msg_{hash(message['subject'])}", "Confrontational")
 
     with tab2:
         st.markdown("##### Calls & Meetings")

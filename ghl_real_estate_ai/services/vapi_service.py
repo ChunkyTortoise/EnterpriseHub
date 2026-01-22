@@ -60,6 +60,55 @@ class VapiService:
             }
         }
 
+        # Deep Persona Handoff: Override system prompt with tone instructions if provided
+        if extra_variables and "tone_instruction" in extra_variables:
+            payload["assistantOverrides"]["instructions"] = extra_variables["tone_instruction"]
+            logger.info(f"🎭 Applying Tone Instruction to Vapi Handoff for {lead_name}")
+
+        # Phase 7: Litigious Seller ROI Defense Override
+        if extra_variables and extra_variables.get("persona") == "The Litigious Seller":
+            roi_defense_script = (
+                "\n\n### ROI DEFENSE SCRIPT (LITIGIOUS SELLER)\n"
+                "The lead is extremely defensive and has mentioned legal action regarding their property value. "
+                "DO NOT back down on the data. Use actual market metrics to justify the repairs and price gap. "
+                "Explain that our valuation is based on verifiable market absorption rates and recent 'Needs Work' comps. "
+                "Be professional, firm, and de-escalate by focusing strictly on ROI and financial logic."
+            )
+            current_instructions = payload.get("assistantOverrides", {}).get("instructions", "")
+            payload["assistantOverrides"]["instructions"] = current_instructions + roi_defense_script
+            logger.warning(f"⚖️ INJECTING ROI DEFENSE SCRIPT for Litigious Seller: {lead_name}")
+
+        # PRODUCTION HARDENING: Voss 'Drift Scores' and 'Levels' Integration
+        if extra_variables and "drift_score" in extra_variables:
+            drift_score = extra_variables["drift_score"]
+            try:
+                from ghl_real_estate_ai.services.negotiation_drift_detector import get_drift_detector
+                detector = get_drift_detector()
+                recommendation = detector._get_drift_recommendation(drift_score)
+                
+                voss_instruction = (
+                    f"\n\n### VOSS NEGOTIATION ADAPTATION (Drift Score: {drift_score:.2f})\n"
+                    f"Current Lead Flexibility: {recommendation}\n"
+                    "Adjust your negotiation level accordingly. "
+                )
+                
+                if drift_score > 0.7:
+                    voss_instruction += "Use 'The Direct Challenge' - push for immediate commitment as the lead is highly flexible."
+                elif drift_score > 0.4:
+                    voss_instruction += "Use 'Labeling' - confirm their internal drift by saying 'It seems like you're considering other options'."
+                else:
+                    voss_instruction += "Use 'Mirroring' - maintain their firm position and build rapport by repeating their last few words."
+
+                current_instructions = payload.get("assistantOverrides", {}).get("instructions", "")
+                # If current_instructions is still empty, get it from assistantOverrides
+                if not current_instructions:
+                    current_instructions = ""
+                
+                payload["assistantOverrides"]["instructions"] = current_instructions + voss_instruction
+                logger.info(f"🧠 Voss Drift adaptation applied to Vapi call for {lead_name} (Score: {drift_score:.2f})")
+            except Exception as e:
+                logger.error(f"Failed to apply Voss Drift adaptation: {e}")
+
         try:
             url = f"{self.base_url}/call/phone"
             response = requests.post(url, headers=headers, json=payload)

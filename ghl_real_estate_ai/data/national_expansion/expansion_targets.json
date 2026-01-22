@@ -1,0 +1,80 @@
+{
+  "denver": {
+    "market_id": "denver",
+    "market_name": "Denver Metropolitan Area",
+    "state": "CO",
+    "region": "Rocky Mountain West",
+    "expansion_priority": 10,
+    "corporate_headquarters_count": 8,
+    "fortune_500_presence": 12,
+    "estimated_annual_revenue_potential": 385000.0,
+    "market_entry_complexity": "medium",
+    "competitive_landscape": {
+      "major_competitors": [
+        "Re/Max",
+        "Coldwell Banker",
+        "Kentwood Real Estate"
+      ],
+      "market_share_opportunity": 0.15,
+      "differentiation_factors": [
+        "Tech hub expertise",
+        "Corporate relocation specialization"
+      ]
+    },
+    "expansion_timeline": "Q1 2026",
+    "investment_required": 125000.0,
+    "roi_projection": 3.8
+  },
+  "phoenix": {
+    "market_id": "phoenix",
+    "market_name": "Phoenix Metropolitan Area",
+    "state": "AZ",
+    "region": "Southwest Desert",
+    "expansion_priority": 9,
+    "corporate_headquarters_count": 6,
+    "fortune_500_presence": 8,
+    "estimated_annual_revenue_potential": 425000.0,
+    "market_entry_complexity": "medium",
+    "competitive_landscape": {
+      "major_competitors": [
+        "Long Realty",
+        "Russ Lyon Sotheby's",
+        "HomeSmart"
+      ],
+      "market_share_opportunity": 0.18,
+      "differentiation_factors": [
+        "Luxury retirement expertise",
+        "Corporate headquarters focus"
+      ]
+    },
+    "expansion_timeline": "Q2 2026",
+    "investment_required": 145000.0,
+    "roi_projection": 4.2
+  },
+  "seattle": {
+    "market_id": "seattle",
+    "market_name": "Seattle Metropolitan Area",
+    "state": "WA",
+    "region": "Pacific Northwest",
+    "expansion_priority": 10,
+    "corporate_headquarters_count": 15,
+    "fortune_500_presence": 18,
+    "estimated_annual_revenue_potential": 625000.0,
+    "market_entry_complexity": "high",
+    "competitive_landscape": {
+      "major_competitors": [
+        "Windermere",
+        "John L. Scott",
+        "Redfin"
+      ],
+      "market_share_opportunity": 0.12,
+      "differentiation_factors": [
+        "Tech giant specialization",
+        "International corporate transfers"
+      ]
+    },
+    "expansion_timeline": "Q1 2026",
+    "investment_required": 225000.0,
+    "roi_projection": 4.8
+  }
+}
