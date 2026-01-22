@@ -6,6 +6,7 @@ property matching workflows for enhanced user experience.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import time
 from typing import Dict, Any, List, Optional
@@ -45,7 +46,7 @@ def generate_narrative_sync(
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-        narrative = loop.run_until_complete(
+        narrative = run_async(
             engine.generate_personalized_narrative(
                 property_data=property_data,
                 lead_data=lead_data,

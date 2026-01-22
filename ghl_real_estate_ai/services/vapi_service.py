@@ -60,6 +60,15 @@ class VapiService:
             }
         }
 
+        # Persona-based Assistant Mapping
+        persona = extra_variables.get("persona") if extra_variables else None
+        if persona == "loss_aversion":
+            # Specifically trigger the urgency_market_v2 assistant profile
+            # In production, this would be an ID from env; here we use the specific name/ID requested
+            target_assistant_id = os.getenv("VAPI_ASSISTANT_ID_LOSS_AVERSION", "urgency_market_v2")
+            payload["assistantId"] = target_assistant_id
+            logger.info(f"⏳ Persona 'loss_aversion' detected: Mapping to assistant profile '{target_assistant_id}'")
+
         # Deep Persona Handoff: Override system prompt with tone instructions if provided
         if extra_variables and "tone_instruction" in extra_variables:
             payload["assistantOverrides"]["instructions"] = extra_variables["tone_instruction"]

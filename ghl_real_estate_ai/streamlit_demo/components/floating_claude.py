@@ -1,4 +1,5 @@
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import time
 from datetime import datetime
@@ -64,13 +65,9 @@ def generate_omni_response(prompt):
     omni_context = '\n    You are the Omnipotent Claude Assistant for the EnterpriseHub v6.0 and GHL Real Estate AI project.\n    You have deep, complete knowledge of the entire codebase, architecture, and business goals.\n    \n    PROJECT OVERVIEW:\n    - EnterpriseHub: A professional AI services showcase (v6.0).\n    - Client: Jorge Sales (Lyrio.io).\n    - Project: GHL Real Estate AI (Elite v4.0).\n    - Stack: Python, Streamlit, Claude 3.5 Sonnet, GoHighLevel API.\n    \n    CORE MODULES:\n    1. Executive Command Center: Business-wide metrics and Swarm Intelligence.\n    2. Lead Intelligence Hub: AI-powered lead scoring (15-factor engine) and behavioral analysis.\n    3. Swarm Intelligence: Multi-agent coordination (Analyst, Performance, Pipeline, Strategic Advisor).\n    4. Proactive Intelligence: 24/7 monitoring, alerts, and predictive insights.\n    5. Sales Copilot: Live call assistance and contract generation.\n    6. Automation Studio: GHL workflow orchestration and content generation.\n    7. Buyer/Seller Journey Hubs: Specialized portals for transaction stages.\n    \n    TECHNICAL MOATS:\n    - Decoupled Intelligence Core.\n    - Graphiti-powered Semantic Memory.\n    - 522+ automated tests passing.\n    - Multi-tenant architecture.\n    \n    YOUR ROLE:\n    - Guide the user (Jorge) through the system.\n    - Explain how different hubs work.\n    - Provide strategic advice based on the data in the hubs.\n    - Answer technical questions about the architecture (referencing GHL_TECHNICAL_DOCUMENTATION.md).\n    - Be proactive, direct, and elite.\n    '
     try:
         request = ClaudeRequest(task_type=ClaudeTaskType.OMNIPOTENT_ASSISTANT, context={'market': st.session_state.get('selected_market', 'Austin'), 'current_hub': st.session_state.get('current_hub', 'Executive'), 'omni_context': True}, system_prompt=omni_context, prompt=f'Jorge asks: {prompt}')
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        response_obj = loop.run_until_complete(orchestrator.process_request(request))
-        loop.run_until_complete(analytics_service.track_llm_usage(location_id='demo_location', model=response_obj.model or 'claude-3-5-sonnet', provider=response_obj.provider or 'claude', input_tokens=response_obj.input_tokens or 0, output_tokens=response_obj.output_tokens or 0, cached=False))
+        
+        response_obj = run_async(orchestrator.process_request(request))
+        run_async(analytics_service.track_llm_usage(location_id='demo_location', model=response_obj.model or 'claude-3-5-sonnet', provider=response_obj.provider or 'claude', input_tokens=response_obj.input_tokens or 0, output_tokens=response_obj.output_tokens or 0, cached=False))
         return response_obj.content
     except Exception as e:
         return f'I apologize, Jorge. I encountered an error while accessing my core intelligence: {str(e)}. I am still in demo mode, but I can tell you that the GHL integration is ready for deployment.'

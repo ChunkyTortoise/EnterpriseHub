@@ -402,28 +402,24 @@ class Service6EnhancedClaudePlatformCompanion(ClaudePlatformCompanion):
         
         # Use enhanced scorer if available
         if self.enhanced_scorer:
-            try:
-                # Get comprehensive lead analysis
-                lead_data = await self.memory.get_context(lead_id)
-                comprehensive_result = await self.enhanced_scorer.analyze_lead_comprehensive(
-                    lead_id, lead_data
-                )
-                
-                # Use Claude to generate contextually aware response
-                claude_response = await self.generate_intelligent_response(
-                    message, enhanced_context, comprehensive_result
-                )
-                
-                return {
-                    'response': claude_response,
-                    'ai_enhanced': True,
-                    'lead_score': comprehensive_result.final_score,
-                    'recommended_actions': comprehensive_result.recommended_actions[:3],
-                    'confidence': comprehensive_result.confidence_score
-                }
-                
-            except Exception as e:
-                logger.error(f"Enhanced Claude conversation failed: {e}")
+            # Get comprehensive lead analysis
+            lead_data = await self.memory.get_context(lead_id)
+            comprehensive_result = await self.enhanced_scorer.analyze_lead_comprehensive(
+                lead_id, lead_data
+            )
+            
+            # Use Claude to generate contextually aware response
+            claude_response = await self.generate_intelligent_response(
+                message, enhanced_context, comprehensive_result
+            )
+            
+            return {
+                'response': claude_response,
+                'ai_enhanced': True,
+                'lead_score': comprehensive_result.final_score,
+                'recommended_actions': comprehensive_result.recommended_actions[:3],
+                'confidence': comprehensive_result.confidence_score
+            }
                 
         # Fallback to standard Claude response
         return await self.generate_standard_response(message, conversation_history)
@@ -584,12 +580,11 @@ class Service6EnhancedClaudePlatformCompanion(ClaudePlatformCompanion):
                     unified_score = fallback_result.final_score
                     unified_confidence = fallback_result.confidence_score
                     models_used.append('enhanced_claude_scorer')
-                except:
-                    unified_score = 50.0
-                    unified_confidence = 0.5
+                except Exception as e:
+                    logger.error(f"Fallback scoring failed: {e}")
+                    raise AIScoringError(f"All scoring models failed, including fallback: {str(e)}")
             else:
-                unified_score = 50.0
-                unified_confidence = 0.5
+                raise AIScoringError("No scoring engines available and no fallback configured")
                 
         # Determine priority level
         if unified_score >= 80 and unified_confidence >= 0.8:

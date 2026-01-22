@@ -10,6 +10,7 @@ Created: 2026-01-17
 
 import asyncio
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
@@ -166,7 +167,7 @@ def load_golden_leads_summary(tenant_id: str):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             services["detector"].get_golden_leads_summary(tenant_id)
         )
     finally:
@@ -180,7 +181,7 @@ def load_behavioral_insights(tenant_id: str):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             services["detector"].get_behavioral_insights(tenant_id)
         )
     finally:
@@ -194,7 +195,7 @@ def load_lead_details(lead_id: str):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             services["detector"].get_lead_details(lead_id)
         )
     finally:
@@ -208,7 +209,7 @@ def load_performance_metrics():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             services["detector"].get_performance_metrics()
         )
     finally:

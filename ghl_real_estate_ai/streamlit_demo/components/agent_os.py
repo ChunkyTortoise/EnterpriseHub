@@ -1,4 +1,5 @@
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import os
 import pandas as pd
 import plotly.express as px
@@ -178,11 +179,7 @@ def render_agent_os_tab():
                 with st.status("🥋 Sparring in progress...", expanded=True) as status:
                     runner = DojoRunner()
                     # Use a new event loop or the existing one
-                    try:
-                        loop = asyncio.get_event_loop()
-                    except RuntimeError:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
+                    
                     
                     st.write("Initializing Trainee Agent...")
                     st.write(f"Simulating Lead Persona: {persona}...")
@@ -190,7 +187,7 @@ def render_agent_os_tab():
                     st.session_state.last_regimen = regimen
                     st.session_state.last_persona = persona
                     
-                    result = loop.run_until_complete(runner.run_sparring_match(regimen, persona))
+                    result = run_async(runner.run_sparring_match(regimen, persona))
                     
                     status.update(label="✅ Sparring Match Complete!", state="complete", expanded=False)
                     st.session_state.last_dojo_result = result

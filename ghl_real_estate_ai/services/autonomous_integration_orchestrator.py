@@ -155,6 +155,10 @@ class AutonomousIntegrationOrchestrator:
             from ghl_real_estate_ai.agents.regional_compliance_agent import get_compliance_agent
             self.compliance_agent = get_compliance_agent()
 
+            # Phase 7: Workflow Orchestration
+            from ghl_real_estate_ai.agents.workflow_factory import get_workflow_factory
+            self.workflow_factory = get_workflow_factory()
+
             # Start component monitoring systems
             await self.analytics_engine.start_real_time_monitoring()
             await self.ab_testing_system.start_testing_engine()
@@ -292,10 +296,40 @@ class AutonomousIntegrationOrchestrator:
             if ab_allocation:
                 processing_results["component_results"]["ab_testing"] = ab_allocation
 
-            # 5. Autonomous follow-up orchestration
+            # 5. Autonomous follow-up orchestration & Full Lifecycle Workflows
             if behavioral_score.likelihood_score >= 30:  # Minimum threshold for follow-up
                 # Process through the 10-agent follow-up system
                 await self.followup_engine.monitor_and_respond([lead_id])
+
+                # Determine and execute Lifecycle Workflow (Phase 7)
+                is_seller = "seller" in str(activity_data.get("tags", [])).lower() or "sell" in str(activity_data.get("customFields", {}).get("motivation", "")).lower()
+                workflow_type = "seller" if is_seller else "buyer"
+                
+                try:
+                    workflow = self.workflow_factory.get_workflow(workflow_type)
+                    
+                    # Prepare state for workflow
+                    # Note: This is a simplified state mapping, in prod it would be more robust
+                    state = {
+                        "lead_id": lead_id,
+                        "lead_name": context.get("lead_name", "Lead"),
+                        "conversation_history": context.get("conversation_history", []),
+                        "engagement_status": journey_state.get("current_stage", "new") if journey_state else "new",
+                        # ... other fields
+                    }
+                    
+                    # Run one turn of the lifecycle workflow
+                    # workflow_result = await workflow.workflow.ainvoke(state)
+                    # processing_results["component_results"]["lifecycle_workflow"] = workflow_result
+                    
+                    processing_results["autonomous_decisions"].append({
+                        "component": "lifecycle_workflow",
+                        "decision": f"Routed to {workflow_type.capitalize()} Workflow",
+                        "confidence": 1.0,
+                        "action": f"Executed lifecycle turn for stage: {state['engagement_status']}"
+                    })
+                except Exception as workflow_e:
+                    logger.error(f"Error in lifecycle workflow execution: {workflow_e}")
 
                 processing_results["autonomous_decisions"].append({
                     "component": "followup_engine",

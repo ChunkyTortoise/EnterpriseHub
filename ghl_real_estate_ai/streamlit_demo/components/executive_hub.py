@@ -1,4 +1,5 @@
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -48,11 +49,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
         
         with st.spinner("Synthesizing strategic intelligence..."):
             try:
-                try:
-                    loop = asyncio.get_event_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
+                
                 
                 request = ClaudeRequest(
                     task_type=ClaudeTaskType.EXECUTIVE_BRIEFING,
@@ -61,10 +58,10 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                     temperature=0.7
                 )
                 
-                briefing_result = loop.run_until_complete(orchestrator.process_request(request))
+                briefing_result = run_async(orchestrator.process_request(request))
                 
                 # Record usage
-                loop.run_until_complete(analytics_service.track_llm_usage(
+                run_async(analytics_service.track_llm_usage(
                     location_id="demo_location",
                     model=briefing_result.model or "claude-3-5-sonnet",
                     provider=briefing_result.provider or "claude",
@@ -560,11 +557,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                 with st.spinner("Claude is synthesizing comprehensive pipeline data..."):
                     try:
                         orchestrator = get_claude_orchestrator()
-                        try:
-                            loop = asyncio.get_event_loop()
-                        except RuntimeError:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
+                        
                         
                         # Generate full report
                         report_data = {
@@ -573,7 +566,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                             "system": health
                         }
                         
-                        report_result = loop.run_until_complete(
+                        report_result = run_async(
                             orchestrator.synthesize_report(
                                 metrics=report_data,
                                 report_type="executive_quarterly_projection",
@@ -582,7 +575,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                         )
                         
                         # Record usage
-                        loop.run_until_complete(analytics_service.track_llm_usage(
+                        run_async(analytics_service.track_llm_usage(
                             location_id="demo_location",
                             model=report_result.model or "claude-3-5-sonnet",
                             provider=report_result.provider or "claude",
@@ -709,7 +702,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                             asyncio.set_event_loop(loop)
                             
                             zips_list = [z.strip() for z in digest_zips.split(",")]
-                            digest_result = loop.run_until_complete(
+                            digest_result = run_async(
                                 digest_gen.generate_weekly_digest(
                                     market_name=digest_market,
                                     zip_codes=zips_list,

@@ -40,7 +40,7 @@ analytics_service = AnalyticsService()
 
 # Helper for async calls
 def run_async(coro):
-    return asyncio.run(coro)
+    return run_async(coro)
 
 # Sidebar navigation
 page = st.sidebar.selectbox("Navigation", ["Tenant Management", "Knowledge Base", "Analytics"])

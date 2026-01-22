@@ -21,6 +21,7 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.ml.closing_probability_model import ClosingProbabilityModel, ModelPrediction
 from ghl_real_estate_ai.ml.feature_engineering import FeatureEngineer
+from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
 
 logger = get_logger(__name__)
 cache = get_cache_service()
@@ -78,6 +79,11 @@ class PredictiveScore:
     
     # Phase 5: Autonomous Expansion
     has_conflicting_intent: bool = False # Flag for HITL escalation
+
+    # Phase 3: Swarm Consensus
+    swarm_consensus_score: Optional[float] = None
+    swarm_consensus_level: Optional[str] = None
+    swarm_processing_time_ms: Optional[float] = None
 
 
 @dataclass
@@ -206,10 +212,13 @@ class PredictiveLeadScorerV2:
             qualification_score = traditional_result["score"]
             qualification_percentage = self.traditional_scorer.get_percentage_score(qualification_score)
 
-            # 2. ML-powered closing probability
-            ml_prediction: ModelPrediction = await self.ml_model.predict_closing_probability(
-                conversation_context, location
-            )
+            # 2. ML-powered closing probability & Swarm Consensus (Parallel)
+            lead_id = conversation_context.get("contact_id") or f"lead_{hash(str(conversation_context))}"
+            
+            ml_task = asyncio.create_task(self.ml_model.predict_closing_probability(conversation_context, location))
+            swarm_task = asyncio.create_task(lead_intelligence_swarm.analyze_lead_comprehensive(lead_id, conversation_context))
+            
+            ml_prediction, swarm_consensus = await asyncio.gather(ml_task, swarm_task)
 
             # 3. Extract conversation features for detailed analysis
             conv_features = await self.feature_engineer.extract_conversation_features(conversation_context)
@@ -224,13 +233,19 @@ class PredictiveLeadScorerV2:
             # 6. Calculate risk score
             risk_score = await self._calculate_risk_score(conv_features, ml_prediction)
 
-            # 7. Calculate composite priority score
-            overall_priority_score = self._calculate_composite_score(
-                qualification_percentage,
-                ml_prediction.closing_probability * 100,
-                engagement_score,
-                urgency_score
+            # 7. Calculate composite priority score (Weighted with Swarm Consensus)
+            swarm_weight = 0.15
+            ml_weight = self.weights["closing_probability"] - (swarm_weight / 2)
+            qual_weight = self.weights["qualification"] - (swarm_weight / 2)
+            
+            overall_priority_score = (
+                qualification_percentage * qual_weight +
+                ml_prediction.closing_probability * 100 * ml_weight +
+                engagement_score * self.weights["engagement"] +
+                urgency_score * self.weights["urgency"] +
+                swarm_consensus.overall_score * swarm_weight
             )
+            overall_priority_score = min(overall_priority_score, 100.0)
 
             # 8. Determine priority level
             priority_level = self._determine_priority_level(overall_priority_score)
@@ -290,7 +305,12 @@ class PredictiveLeadScorerV2:
                 last_updated=datetime.now(),
                 
                 # Phase 5
-                has_conflicting_intent=has_conflicting_intent
+                has_conflicting_intent=has_conflicting_intent,
+                
+                # Phase 3
+                swarm_consensus_score=swarm_consensus.overall_score,
+                swarm_consensus_level=swarm_consensus.consensus_level.value,
+                swarm_processing_time_ms=swarm_consensus.processing_time_ms
             )
 
             # Cache for 30 minutes
@@ -398,8 +418,29 @@ class PredictiveLeadScorerV2:
         if conv_features.location_specificity > 0.7:
             base_engagement += 10
 
+        # Latency Analysis (Tactical Behavioral Response)
+        latency_score = await self._calculate_latency_score(conv_features)
+        base_engagement += latency_score
+
         # Cap at 100
         return min(base_engagement, 100.0)
+
+    async def _calculate_latency_score(self, conv_features) -> float:
+        """
+        Analyze response time consistency. 
+        If a hot lead's response time slows down, it indicates interest drift.
+        """
+        # avg_response_time is in seconds
+        avg_time = conv_features.avg_response_time
+        
+        if avg_time < 300: # < 5 minutes
+            return 10.0
+        elif avg_time < 1800: # < 30 minutes
+            return 5.0
+        elif avg_time > 86400: # > 24 hours
+            return -20.0 # Significant penalty for slow response
+            
+        return 0.0
 
     async def _calculate_urgency_score(self, conv_features, context) -> float:
         """Calculate urgency score from conversation and context."""
@@ -495,6 +536,10 @@ class PredictiveLeadScorerV2:
     ) -> List[str]:
         """Generate advanced action recommendations."""
         actions = []
+
+        # Temperature-Escalation Logic
+        if priority == LeadPriority.CRITICAL or (priority == LeadPriority.HIGH and conv_features.avg_response_time > 3600):
+            actions.append("🔥 TEMPERATURE ESCALATION: Response latency detected in high-intent lead. Call immediately to re-engage.")
 
         if priority == LeadPriority.CRITICAL:
             actions.extend([

@@ -976,6 +976,63 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
             return f"Hi {lead_data.get('first_name', 'there')}, I noticed a price drop on {change['property_id']}. Let's discuss how this affects our strategy."
 
 
+class NegotiationStrategistAgent(LeadIntelligenceAgent):
+    """Specialized agent for negotiation strategy and tactical behavioral response"""
+
+    def __init__(self):
+        super().__init__(AgentType.COMMUNICATION_OPTIMIZER, {
+            "focus_areas": ["negotiation_drift", "persona_adaptation", "tactical_triggers"],
+            "strategies": ["voss_labeling", "price_anchor_defense", "micro_commitment"]
+        })
+        from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
+        self.tone_engine = JorgeToneEngine()
+        from ghl_real_estate_ai.agents.voss_negotiation_agent import get_voss_negotiation_agent
+        self.voss_agent = get_voss_negotiation_agent()
+
+    async def _perform_specialized_analysis(self, lead_data: Dict[str, Any]) -> AgentInsight:
+        """Analyze negotiation stance and tactical opportunities"""
+        await asyncio.sleep(0.1)
+        
+        history = lead_data.get("conversation_history", [])
+        drift = self.tone_engine.detect_negotiation_drift(history)
+        
+        persona = lead_data.get("persona", "unknown")
+        
+        recommendations = []
+        voss_response = None
+        
+        if drift.is_softening:
+            recommendations.append("Trigger ROI Proforma - flexibility detected")
+            
+            # Phase 3: Voss-Powered Closure Execution
+            voss_result = await self.voss_agent.run_negotiation(
+                lead_id=lead_data.get("lead_id", "N/A"),
+                lead_name=lead_data.get("first_name", "there"),
+                address=lead_data.get("property_address", "your property"),
+                history=history
+            )
+            voss_response = voss_result.get("generated_response")
+            recommendations.append(f"Voss Closure: {voss_response}")
+        
+        if persona == "loss_aversion":
+            recommendations.append("Switch to 'Cost of Waiting' qualification branching")
+        elif persona == "investor":
+            recommendations.append("Switch to 'ROI/Cap Rate' qualification branching")
+
+        return AgentInsight(
+            agent_type=self.agent_type,
+            confidence=0.9,
+            primary_finding=f"Negotiation stance: {'Softening' if drift.is_softening else 'Firm'}. Persona: {persona}",
+            supporting_evidence=[f"Drift score: {drift.sentiment_shift}", f"Hedging count: {drift.hedging_count}"],
+            recommendations=recommendations,
+            risk_factors=["Price anchor mismatch"] if not drift.is_softening else [],
+            opportunity_score=80.0 if drift.is_softening else 40.0,
+            urgency_level="high" if drift.is_softening else "medium",
+            processing_time_ms=100.0,
+            data_sources=["conversation_history", "tone_engine"],
+            metadata={"drift": drift.__dict__}
+        )
+
 class LeadIntelligenceSwarm:
     """Multi-agent orchestration system for comprehensive lead intelligence"""
 
@@ -1001,6 +1058,7 @@ class LeadIntelligenceSwarm:
         self.agents[AgentType.BEHAVIORAL_PROFILER] = BehavioralProfilerAgent()
         self.agents[AgentType.INTENT_DETECTOR] = IntentDetectorAgent()
         self.agents[AgentType.MARKET_ANALYST] = MarketAnalystAgent()
+        self.agents[AgentType.COMMUNICATION_OPTIMIZER] = NegotiationStrategistAgent()
 
         # Additional agents would be initialized here:
         # self.agents[AgentType.FINANCIAL_ASSESSOR] = FinancialAssessorAgent()
@@ -1253,9 +1311,57 @@ class LeadIntelligenceSwarm:
                 learning_tasks.append(task)
 
         await asyncio.gather(*learning_tasks, return_exceptions=True)
+        
+        # Phase 6: Dojo Learning - Record Winning Tactics
+        if actual_outcome.get("is_conversion"):
+            await self.record_winning_tactics(lead_id, lead_consensus, actual_outcome)
 
         logger.info(f"Swarm learned from outcome for lead {lead_id}")
 
+    async def record_winning_tactics(self, lead_id: str, consensus: SwarmConsensus, outcome: Dict[str, Any]):
+        """
+        Phase 6: The Dojo.
+        Reverse-analyzes a closed deal to identify exactly which agent insights
+        and tactical triggers drove the 'Win'.
+        """
+        logger.info(f"🏆 Dojo: Recording winning tactics for deal {lead_id}")
+        
+        winning_triggers = []
+        for insight in consensus.agent_insights:
+            if insight.confidence > 0.8 and insight.opportunity_score > 70:
+                winning_triggers.append({
+                    "agent": insight.agent_type.value,
+                    "finding": insight.primary_finding,
+                    "recommendation_used": True
+                })
+        
+        # Send to Collective Learning Engine (Mock for Phase 6)
+        try:
+            from ghl_real_estate_ai.intelligence.collective_learning_engine import CollectiveLearningEngine
+            # In production, we'd use the DI container to get the instance
+            logger.info(f"🚀 Sharing {len(winning_triggers)} winning patterns with Collective Intelligence")
+        except ImportError:
+            pass
+
+    async def adjust_agent_weights(self, agent_ratings: Dict[str, float]):
+        """
+        Phase 6: Jorge's Dojo (RLHF).
+        Allows human feedback to manually boost or nerf specific agent influence.
+        Example: Jorge marks a 'Behavioral' insight as 'Weak', lowering its weight.
+        """
+        for agent_id, rating in agent_ratings.items():
+            try:
+                # Find agent by string ID
+                agent_type = next((t for t in AgentType if t.value == agent_id), None)
+                if agent_type and agent_type in self.agents:
+                    agent = self.agents[agent_type]
+                    # Adjust accuracy based on human rating (0.0 to 1.0)
+                    old_accuracy = agent.performance_metrics["accuracy_score"]
+                    new_accuracy = (old_accuracy * 0.7) + (rating * 0.3)
+                    agent.performance_metrics["accuracy_score"] = new_accuracy
+                    logger.info(f"🥋 Dojo RLHF: Adjusted {agent_id} weight. Accuracy: {old_accuracy:.2f} -> {new_accuracy:.2f}")
+            except Exception as e:
+                logger.error(f"Failed to adjust agent weight: {e}")
 
 # Global swarm instance
 lead_intelligence_swarm = LeadIntelligenceSwarm()

@@ -1,4 +1,5 @@
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -136,11 +137,7 @@ class SalesCopilotHub:
                     lead_context = lead_options.get(lead_name, {})
                     lead_id = lead_context.get('lead_id', 'demo_lead')
                     
-                    try:
-                        loop = asyncio.get_event_loop()
-                    except RuntimeError:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
+                    
                         
                         
                     # Request tactical counter from Claude
@@ -151,10 +148,10 @@ class SalesCopilotHub:
                         temperature=0.7
                     )
                     
-                    response = loop.run_until_complete(orchestrator.process_request(request))
+                    response = run_async(orchestrator.process_request(request))
                     
                     # Record usage
-                    loop.run_until_complete(analytics_service.track_llm_usage(
+                    run_async(analytics_service.track_llm_usage(
                         location_id="demo_location",
                         model=response.model or "claude-3-5-sonnet",
                         provider=response.provider or "claude",
@@ -250,11 +247,7 @@ class SalesCopilotHub:
                     
                     try:
                         # Run async analysis
-                        try:
-                            loop = asyncio.get_event_loop()
-                        except RuntimeError:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
+                        
                         
                         request = ClaudeRequest(
                             task_type=ClaudeTaskType.REPORT_SYNTHESIS,
@@ -263,10 +256,10 @@ class SalesCopilotHub:
                             temperature=0.7
                         )
                         
-                        report_result = loop.run_until_complete(orchestrator.process_request(request))
+                        report_result = run_async(orchestrator.process_request(request))
                         
                         # Record usage
-                        loop.run_until_complete(analytics_service.track_llm_usage(
+                        run_async(analytics_service.track_llm_usage(
                             location_id="demo_location",
                             model=report_result.model or "claude-3-5-sonnet",
                             provider=report_result.provider or "claude",

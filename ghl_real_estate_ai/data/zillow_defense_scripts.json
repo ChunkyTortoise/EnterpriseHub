@@ -1,0 +1,18 @@
+{
+    "cookie_cutter": {
+        "script": "Zillow's algorithm is accurate on cookie-cutter suburbs where homes are identical. But your property has custom updates and a premium lot position that Zillow's algorithm simply doesn't see. I do. Let me show you the comps that actually matter.",
+        "logic": "Targeting generic algorithm limitations."
+    },
+    "off_market": {
+        "script": "For off-market properties, Zillow's error jumps to over 7%. That's $50-70k on a $1M home. My analysis uses actual recent sales in your immediate neighborhood, not just public record estimates.",
+        "logic": "Highlighting higher error rates for off-market data."
+    },
+    "luxury": {
+        "script": "Zillow's algorithm can't quantify what makes luxury homes valuable: high-end finishes, smart home systems, and architectural significance. These comps show what sophisticated buyers are actually paying for homes like yours.",
+        "logic": "Emphasizing high-end features that algorithms miss."
+    },
+    "unique_property": {
+        "script": "Unique properties often see a 20%+ error rate on Zillow because there's no direct data point for your specific configuration. We're operating with better intel based on real human tours of these properties.",
+        "logic": "Leveraging local expertise vs. math-only models."
+    }
+}

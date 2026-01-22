@@ -12,6 +12,7 @@ Created: 2026-01-19
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 from enum import Enum
+import asyncio
 import json
 import logging
 import time
@@ -19,6 +20,7 @@ from datetime import datetime
 
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine, MessageType
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,16 @@ class SellerQuestions:
 
     # Question 4: Price Expectations
     PRICE = "What price would incentivize you to sell?"
+
+    # --- SPECIALIZED PERSONA QUESTIONS (Tactical Behavioral Response) ---
+    
+    # Investor Branch
+    INVESTOR_CAP_RATE = "What's your target cap rate for this asset, and are you looking to do a 1031 exchange?"
+    INVESTOR_LIQUIDITY = "Are you looking for a quick cash exit or are you open to terms if the ROI is right?"
+    
+    # Loss Aversion Branch
+    LOSS_AVERSION_PLAN_B = "If the market shifts and inventory doubles next month, what's your plan B if the home doesn't sell?"
+    LOSS_AVERSION_RATE_RISK = "With rates being volatile, if your buying power drops 10% by waiting, does selling now become a necessity?"
 
     @classmethod
     def get_question_order(cls) -> List[SellerQuestionType]:
@@ -128,12 +140,14 @@ class JorgeSellerEngine:
         from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
         from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
         from ghl_real_estate_ai.services.psychographic_segmentation_engine import PsychographicSegmentationEngine
+        from ghl_real_estate_ai.services.seller_psychology_analyzer import get_seller_psychology_analyzer
         
         self.governance = GovernanceEngine()
         self.recovery = RecoveryEngine()
         self.predictive_scorer = PredictiveLeadScorerV2()
         self.pricing_optimizer = DynamicPricingOptimizer()
         self.psychographic_engine = PsychographicSegmentationEngine()
+        self.psychology_analyzer = get_seller_psychology_analyzer()
 
     async def process_seller_response(
         self,
@@ -198,6 +212,38 @@ class JorgeSellerEngine:
             temperature_result = await self._calculate_seller_temperature(extracted_seller_data)
             temperature = temperature_result["temperature"]
 
+            # --- SELLER PSYCHOLOGY ANALYSIS (New Enhancement) ---
+            psychology_profile = None
+            if extracted_seller_data.get("property_address"):
+                try:
+                    # Attempt to analyze seller psychology based on property and comms
+                    # This uses DOM, price drops, and tone to determine negotiation stance
+                    from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory
+                    
+                    # Mocking ListingHistory for now - in production this comes from MLS/Attom integration
+                    # We'll use what we've extracted so far
+                    mock_history = ListingHistory(
+                        property_id=contact_id, # Simplified
+                        days_on_market=context.get("days_since_first_contact", 0),
+                        original_list_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
+                        current_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
+                        price_drops=[]
+                    )
+                    
+                    comm_data = {
+                        "avg_response_time_hours": context.get("avg_response_time", 24),
+                        "communication_tone": context.get("last_ai_message_type", "professional")
+                    }
+                    
+                    psychology_profile = await self.psychology_analyzer.analyze_seller_psychology(
+                        property_id=contact_id,
+                        listing_history=mock_history,
+                        communication_data=comm_data
+                    )
+                    self.logger.info(f"Psychology Profile detected for {contact_id}: {psychology_profile.motivation_type}")
+                except Exception as pe:
+                    self.logger.warning(f"Psychology analysis failed: {pe}")
+
             # 4. Calculate Predictive ML Score & ROI-Based Pricing (Extreme Value Phase)
             predictive_result = await self.predictive_scorer.calculate_predictive_score(context, location=location_id)
             pricing_result = await self.pricing_optimizer.calculate_lead_price(contact_id, location_id, context)
@@ -208,6 +254,37 @@ class JorgeSellerEngine:
                 lead_context={**extracted_seller_data, "contact_id": contact_id},
                 tenant_id=location_id
             )
+            
+            # 5b. Swarm Intelligence (Parallel Analysis)
+            # Deploy the swarm to analyze the lead while we process other ML models
+            swarm_task = asyncio.create_task(
+                lead_intelligence_swarm.analyze_lead_comprehensive(
+                    contact_id,
+                    {**context, **extracted_seller_data, "persona": persona_data.get("primary_persona")}
+                )
+            )
+
+            # 5c. Detect Negotiation Drift (Tactical Behavioral Response)
+            # We await the swarm result specifically for NegotiationStrategistAgent (COMMUNICATION_OPTIMIZER)
+            try:
+                swarm_consensus = await swarm_task
+                optimizer_insight = next((i for i in swarm_consensus.agent_insights if i.agent_type.value == "communication_optimizer"), None)
+                
+                if optimizer_insight:
+                    drift_data = optimizer_insight.metadata.get("drift", {})
+                    extracted_seller_data["drift_softening"] = drift_data.get("is_softening", False)
+                    extracted_seller_data["price_break_probability"] = drift_data.get("price_break_probability", 0.0)
+                    self.logger.info(f"🧠 Swarm-Driven Drift Detection: softening={extracted_seller_data['drift_softening']}")
+                else:
+                    # Fallback to local tone engine if agent failed
+                    drift = self.tone_engine.detect_negotiation_drift(context.get("conversation_history", []))
+                    extracted_seller_data["drift_softening"] = drift.is_softening
+                    extracted_seller_data["price_break_probability"] = drift.price_break_probability
+            except Exception as se:
+                self.logger.warning(f"Swarm analysis failed, falling back to local drift: {se}")
+                drift = self.tone_engine.detect_negotiation_drift(context.get("conversation_history", []))
+                extracted_seller_data["drift_softening"] = drift.is_softening
+                extracted_seller_data["price_break_probability"] = drift.price_break_probability
             
             # --- ADAPTIVE ESCALATION (Phase 7) ---
             new_closing_prob = predictive_result.closing_probability
@@ -266,7 +343,8 @@ class JorgeSellerEngine:
                         contact_id=contact_id,
                         location_id=location_id,
                         predictive_result=predictive_result,
-                        persona_data=persona_data
+                        persona_data=persona_data,
+                        psychology_profile=psychology_profile
                     )
                     final_message = response_result["message"]
             except Exception as re:
@@ -538,23 +616,38 @@ class JorgeSellerEngine:
         contact_id: str,
         location_id: str,
         predictive_result: Any = None,
-        persona_data: Dict = None
+        persona_data: Dict = None,
+        psychology_profile: Any = None
     ) -> Dict:
         """Generate Jorge's confrontational seller response using tone engine with dynamic branching"""
         questions_answered = seller_data.get("questions_answered", 0)
         current_question_number = SellerQuestions.get_question_number(seller_data)
         vague_streak = seller_data.get("vague_streak", 0)
         newly_answered_count = seller_data.get("newly_answered_count", 0)
+        user_message = seller_data.get("last_user_message", "")
+        
+        # Extract persona details
+        persona_data = persona_data or {}
+        primary_persona = persona_data.get("primary_persona", "unknown")
         
         # PROACTIVE INTELLIGENCE: Trigger "Take-Away Close" early if ML predicts low conversion
         low_probability = False
         if predictive_result and predictive_result.closing_probability < 0.2 and questions_answered >= 1:
             low_probability = True
 
-        # DEEP PSYCHOLOGICAL PROFILING: Adapt tone based on persona
+        # DEEP PSYCHOLOGICAL PROFILING: Adapt tone based on persona and psychology
         persona_override = ""
         if persona_data:
             persona_override = self.psychographic_engine.get_system_prompt_override(persona_data)
+            
+        # Add psychology-based instructions if profile exists
+        if psychology_profile:
+            psych_instruction = f"\nSELLER PSYCHOLOGY: Motivation={psychology_profile.motivation_type}, Urgency={psychology_profile.urgency_level}. "
+            if psychology_profile.urgency_level in ["high", "critical"]:
+                psych_instruction += "Increase pressure on the timeline."
+            elif psychology_profile.motivation_type == "financial":
+                psych_instruction += "Focus on the net proceeds and bottom line."
+            persona_override += psych_instruction
 
         # 1. Hot Seller Handoff
         if temperature == "hot":
@@ -564,7 +657,69 @@ class JorgeSellerEngine:
             )
             response_type = "handoff"
 
-        # 2. ROI DEFENSE: Net Yield Justification (Phase 7)
+        # 2. LOSS AVERSION / COST OF WAITING (Tactical Behavioral Response)
+        elif primary_persona == "loss_aversion" and questions_answered >= 1:
+            # Emphasize the cost of waiting while still moving the qualification forward
+            cost_msg = self.tone_engine.generate_cost_of_waiting_message(
+                seller_name=seller_data.get("contact_name"),
+                market_trend="interest rates" if "rate" in user_message.lower() else "rising inventory"
+            )
+            
+            # Get next question
+            next_q = self.tone_engine.generate_qualification_message(
+                question_number=current_question_number,
+                seller_name=seller_data.get("contact_name"),
+                context=seller_data
+            )
+            
+            # Combine them, ensuring SMS compliance
+            message = f"{cost_msg} {next_q}"
+            response_type = "loss_aversion_qualification"
+
+        # 2b. NEGOTIATION DRIFT / ROI PROFORMA (Tactical Behavioral Response)
+        elif seller_data.get("price_break_probability", 0) > 0.7 and questions_answered >= 2:
+            try:
+                # Price Break Detection: Seller is softening significantly
+                # Trigger Voss-powered closure
+                voss_result = await self.voss_agent.run_negotiation(
+                    lead_id=contact_id,
+                    lead_name=seller_data.get("contact_name", "there"),
+                    address=seller_data.get("property_address", "your property"),
+                    history=context.get("conversation_history", [])
+                )
+                message = voss_result.get("generated_response", "Is it a ridiculous idea to suggest we lock in a price today?")
+                
+                # Apply Jorge's tone constraints
+                message = self.tone_engine._ensure_sms_compliance(message)
+                response_type = "price_break_closure"
+            except Exception as ve:
+                self.logger.warning(f"Voss closure failed: {ve}")
+                message = "It sounds like you're becoming more flexible on the price. Should we finalize the numbers today?"
+                response_type = "price_break_fallback"
+
+        elif seller_data.get("drift_softening") and questions_answered >= 2:
+            try:
+                # Use DynamicPricingOptimizer for live ROI Proforma data
+                proforma_data = await self.pricing_optimizer.calculate_lead_price(contact_id, location_id, seller_data)
+                
+                ack = f"I'm sensing some flexibility. I've prepared a live ROI analysis for your property based on {proforma_data.expected_roi}% yield targets."
+                next_q = self.tone_engine.generate_qualification_message(
+                    question_number=current_question_number,
+                    seller_name=seller_data.get("contact_name"),
+                    context=seller_data
+                )
+                message = f"{ack} {next_q}"
+                response_type = "softening_drift_proforma"
+            except Exception as doc_e:
+                self.logger.warning(f"Failed to generate proforma ack: {doc_e}")
+                message = self.tone_engine.generate_qualification_message(
+                    question_number=current_question_number,
+                    seller_name=seller_data.get("contact_name"),
+                    context=seller_data
+                )
+                response_type = "qualification"
+
+        # 3. ROI DEFENSE: Net Yield Justification (Phase 7)
         elif (seller_data.get("property_condition") == "Needs Work" and 
               seller_data.get("price_expectation") and 
               predictive_result and 
@@ -597,7 +752,8 @@ class JorgeSellerEngine:
                         ai_valuation=ai_valuation,
                         net_yield=predictive_result.net_yield_estimate,
                         repair_estimate=float(seller_data.get("repair_estimate", 50000)), # Default repair if unknown
-                        seller_name=seller_data.get("contact_name")
+                        seller_name=seller_data.get("contact_name"),
+                        psychology_profile=psychology_profile
                     )
                     response_type = "roi_justification"
                 else:
@@ -624,9 +780,52 @@ class JorgeSellerEngine:
             reason = "low_probability" if low_probability else "vague"
             message = self.tone_engine.generate_take_away_close(
                 seller_name=seller_data.get("contact_name"),
-                reason=reason
+                reason=reason,
+                psychology_profile=psychology_profile
             )
             response_type = "take_away_close"
+
+        # Phase 7: Arbitrage Execution for Investors
+        elif (primary_persona == "investor" or "invest" in seller_data.get("motivation", "").lower()) and questions_answered >= 1:
+            try:
+                from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
+                opportunity_engine = MarketTimingOpportunityEngine()
+                
+                # Fetch opportunities for the market
+                market_area = seller_data.get("property_address") or location_id
+                dashboard = await opportunity_engine.get_opportunity_dashboard(market_area)
+                
+                # Find a PRICING_ARBITRAGE opportunity if available
+                arbitrage_opp = next((o for o in dashboard.get('opportunities', []) if o['type'] == 'pricing_arbitrage'), None)
+                
+                # Use centralized tone engine for elite arbitrage pitch
+                ack = self.tone_engine.generate_arbitrage_pitch(
+                    seller_name=seller_data.get("contact_name"),
+                    yield_spread=arbitrage_opp['score'] if arbitrage_opp else 0.0,
+                    market_area="adjacent zones" if arbitrage_opp else "sub markets"
+                )
+                
+                next_q = self.tone_engine.generate_qualification_message(
+                    question_number=current_question_number,
+                    seller_name=seller_data.get("contact_name"),
+                    context=seller_data
+                )
+                # Combine but ensure we don't double up on the name
+                if seller_data.get("contact_name") and next_q.startswith(seller_data.get("contact_name")):
+                    # Strip name and comma from next_q if ack already has it
+                    next_q_clean = next_q.replace(f"{seller_data.get('contact_name')}, ", "", 1)
+                    message = f"{ack} {next_q_clean}"
+                else:
+                    message = f"{ack} {next_q}"
+                response_type = "arbitrage_pitch"
+            except Exception as e:
+                self.logger.warning(f"Failed to pitch arbitrage: {e}")
+                message = self.tone_engine.generate_qualification_message(
+                    question_number=current_question_number,
+                    seller_name=seller_data.get("contact_name"),
+                    context=seller_data
+                )
+                response_type = "qualification"
 
         # 3. Market-Aware Insight Injection (Enhancement)
         elif seller_data.get("requires_market_insight") and questions_answered >= 1:
@@ -668,17 +867,25 @@ class JorgeSellerEngine:
                 # Find a PRICING_ARBITRAGE opportunity if available
                 arbitrage_opp = next((o for o in dashboard.get('opportunities', []) if o['type'] == 'pricing_arbitrage'), None)
                 
-                if arbitrage_opp:
-                    ack = f"Since you're an investor, you should know we're seeing a massive {arbitrage_opp['score']}% arbitrage gap in nearby zones right now."
-                else:
-                    ack = "We're currently tracking several high-yield arbitrage opportunities in this market."
+                # Use centralized tone engine for elite arbitrage pitch
+                ack = self.tone_engine.generate_arbitrage_pitch(
+                    seller_name=seller_data.get("contact_name"),
+                    yield_spread=arbitrage_opp['score'] if arbitrage_opp else 0.0,
+                    market_area="adjacent zones" if arbitrage_opp else "sub markets"
+                )
                 
                 next_q = self.tone_engine.generate_qualification_message(
                     question_number=current_question_number,
                     seller_name=seller_data.get("contact_name"),
                     context=seller_data
                 )
-                message = f"{ack} {next_q}"
+                # Combine but ensure we don't double up on the name
+                if seller_data.get("contact_name") and next_q.startswith(seller_data.get("contact_name")):
+                    # Strip name and comma from next_q if ack already has it
+                    next_q_clean = next_q.replace(f"{seller_data.get('contact_name')}, ", "", 1)
+                    message = f"{ack} {next_q_clean}"
+                else:
+                    message = f"{ack} {next_q}"
                 response_type = "arbitrage_pitch"
             except Exception as e:
                 self.logger.warning(f"Failed to pitch arbitrage: {e}")
@@ -703,13 +910,37 @@ class JorgeSellerEngine:
                     seller_name=seller_data.get("contact_name")
                 )
             else:
-                # Generate next qualification question
-                message = self.tone_engine.generate_qualification_message(
-                    question_number=current_question_number,
-                    seller_name=seller_data.get("contact_name"),
-                    context=seller_data
-                )
-            response_type = "qualification"
+                # DYNAMIC PERSONA BRANCHING (Tactical Behavioral Response)
+                if primary_persona == "investor" and questions_answered >= 2:
+                    # Switch to investor-specific high-stakes question
+                    message = SellerQuestions.INVESTOR_CAP_RATE
+                    if seller_data.get("investor_q1_answered"):
+                        message = SellerQuestions.INVESTOR_LIQUIDITY
+                    
+                    # Apply Jorge's tone & compliance
+                    message = self.tone_engine._apply_confrontational_tone(message, seller_data.get("contact_name"))
+                    message = self.tone_engine._ensure_sms_compliance(message)
+                    response_type = "investor_branch"
+                
+                elif primary_persona == "loss_aversion" and questions_answered >= 2:
+                    # Switch to loss-aversion-specific high-stakes question
+                    message = SellerQuestions.LOSS_AVERSION_PLAN_B
+                    if seller_data.get("loss_aversion_q1_answered"):
+                        message = SellerQuestions.LOSS_AVERSION_RATE_RISK
+                        
+                    # Apply Jorge's tone & compliance
+                    message = self.tone_engine._apply_confrontational_tone(message, seller_data.get("contact_name"))
+                    message = self.tone_engine._ensure_sms_compliance(message)
+                    response_type = "loss_aversion_branch"
+                
+                else:
+                    # Standard Qualification Branch
+                    message = self.tone_engine.generate_qualification_message(
+                        question_number=current_question_number,
+                        seller_name=seller_data.get("contact_name"),
+                        context=seller_data
+                    )
+                    response_type = "qualification"
 
         # 6. Nurture (Completed but not hot)
         else:
@@ -775,20 +1006,26 @@ class JorgeSellerEngine:
             return message
 
     async def _get_market_insight(self, location: str) -> str:
-        """Fetch real-time market insight using MarketIntelligence MCP tool"""
+        """Fetch real-time market insight using NationalMarketIntelligence service"""
         try:
-            from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
-            orchestrator = get_claude_orchestrator()
+            from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
+            market_intel = get_national_market_intelligence()
             
-            # Simple call to MarketIntelligence tool
-            # Note: In a real flow, this would use a specific prompt, but we'll mock the 'elite' feel
-            # by fetching real DOM (Days on Market) or price trends if possible.
+            # Fetch real market metrics
+            metrics = await market_intel.get_market_metrics(location)
+            if metrics:
+                # Construct a direct, confrontational insight based on real data
+                insight = f"Market data for {location} shows inventory is {metrics.inventory_trend}. "
+                if metrics.days_on_market < 30:
+                    insight += f"Serious buyers are moving in under {metrics.days_on_market} days. "
+                else:
+                    insight += "Homes are sitting longer, which means you're losing leverage every day. "
+                return insight
             
-            # For now, let's provide a data-driven looking insight
-            # In production, this would actually call: orchestrator.perform_research(...)
-            return f"I see you're looking at {location}. Most homes there are moving in 22 days right now if priced correctly."
-        except Exception:
-            return "Got it."
+            return f"I've been tracking {location}. Buyers are getting picky, so you need to be realistic."
+        except Exception as e:
+            self.logger.warning(f"Market insight fetch failed: {e}")
+            return "Market conditions are shifting fast."
 
     async def _create_seller_actions(
         self,
@@ -869,6 +1106,16 @@ class JorgeSellerEngine:
             from ghl_real_estate_ai.services.vapi_service import VapiService
             vapi_service = VapiService()
             contact_phone = seller_data.get("phone")
+            
+            # Persona-Based Script Mapping (Tactical Behavioral Response)
+            script_mapping = {
+                "investor": "script_investor_roi_v3",
+                "loss_aversion": "script_urgency_market_v2",
+                "luxury_seeker": "script_high_end_white_glove",
+                "first_time_buyer": "script_educational_guide"
+            }
+            voice_script_id = script_mapping.get(persona_data.get("primary_persona"), "script_standard_jorge")
+
             if contact_phone:
                 # Retry configuration: 3 attempts with exponential backoff (1s, 2s, 4s)
                 max_retries = 3
@@ -885,6 +1132,8 @@ class JorgeSellerEngine:
                             extra_variables={
                                 **seller_data, 
                                 "persona": persona_data.get("primary_persona"),
+                                "voice_script_id": voice_script_id,
+                                "drift_softening": drift.is_softening if 'drift' in locals() else False,
                                 "tone_instruction": self.psychographic_engine.get_system_prompt_override(persona_data or {})
                             }
                         )

@@ -18,10 +18,49 @@ class LeadFollowUpState(TypedDict):
     intent_profile: Optional[LeadIntentProfile]
     
     # Workflow Status
-    current_step: str  # "initial", "day_3_sms", "day_7_call", "day_14_email", "day_30_nudge", "handed_off", "nurture"
-    engagement_status: str # "new", "ghosted", "re_engaged", "qualified"
+    current_step: str  # "initial", "day_3_sms", "day_7_call", "day_14_email", "day_30_nudge", "showing_scheduled", "offer_stage", "closing_nurture", "handed_off", "nurture"
+    engagement_status: str # "new", "ghosted", "re_engaged", "qualified", "showing_booked", "offer_sent", "under_contract", "closed"
     
     # Logic Tracking
     last_interaction_time: Optional[datetime]
     stall_breaker_attempted: bool
     cma_generated: bool
+    
+    # Full Lifecycle Fields
+    showing_date: Optional[datetime]
+    showing_feedback: Optional[str]
+    offer_amount: Optional[float]
+    closing_date: Optional[datetime]
+
+class SellerWorkflowState(TypedDict):
+    """
+    State definition for the Jorge Seller Workflow.
+    Tracks the seller's journey from qualification to closing.
+    """
+    lead_id: str
+    lead_name: str
+    contact_phone: str
+    contact_email: Optional[str]
+    property_address: Optional[str]
+    
+    # Conversation Context
+    conversation_history: List[Dict[str, str]]
+    seller_data: Dict[str, Any]
+    temperature: str  # "hot", "warm", "cold"
+    
+    # Workflow Status
+    current_step: str  # "qualification", "pre_listing", "active_listing", "under_contract", "closing_nurture", "closed"
+    engagement_status: str # "new", "qualifying", "qualified", "listing_prep", "active", "under_contract", "closed"
+    
+    # Logic Tracking
+    questions_answered: int
+    last_interaction_time: Optional[datetime]
+    valuation_provided: bool
+    
+    # Full Lifecycle Fields
+    listing_date: Optional[datetime]
+    contract_date: Optional[datetime]
+    closing_date: Optional[datetime]
+    final_sale_price: Optional[float]
+    net_proceeds: Optional[float]
+    closing_milestones: List[Dict[str, Any]] # Inspection, Appraisal, etc.

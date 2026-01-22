@@ -13,6 +13,7 @@ Built specifically for Jorge's GHL Real Estate AI system.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import json
 import pandas as pd
@@ -36,7 +37,7 @@ except ImportError:
 
 # Import the analytics service
 try:
-    from jorge_analytics_service import JorgeAnalyticsService
+    from ghl_real_estate_ai.services.jorge_analytics_service import JorgeAnalyticsService
     ANALYTICS_SERVICE_AVAILABLE = True
 except ImportError:
     ANALYTICS_SERVICE_AVAILABLE = False
@@ -82,7 +83,7 @@ class JorgeAnalyticsAPIClient:
                 "contracts_signed": random.randint(25, 45),
                 "closings": random.randint(18, 35),
                 "funnel_efficiency": random.uniform(0.65, 0.82),
-                "bottleneck_stage": random.choice(["qualified_leads", "appointments_set", "showings_completed"])
+                "bottleneck_stage": random.choice(["qualified_leads", "appointments_set", "showings_completed", "offers_made"])
             },
             "geographic_performance": {
                 "rancho_cucamonga": {
@@ -108,6 +109,9 @@ class JorgeAnalyticsAPIClient:
                 "avg_lead_score": random.uniform(68.5, 78.2),
                 "score_trend": random.uniform(0.03, 0.08),
                 "high_quality_percentage": random.uniform(0.32, 0.48),
+                "speed_to_lead": random.randint(5, 15), # New KPI: Seconds
+                "appointment_rate": random.uniform(0.18, 0.25), # New KPI: %
+                "cma_value_variance": random.randint(15000, 45000), # New KPI: $
                 "conversion_by_score": {
                     "90-100": random.uniform(0.82, 0.95),
                     "80-89": random.uniform(0.65, 0.78),
@@ -575,7 +579,7 @@ def render_revenue_forecasting_section(api_client: JorgeAnalyticsAPIClient):
 
         if st.button("🚀 Generate Forecast", type="primary", use_container_width=True):
             with st.spinner("🧠 Analyzing market patterns and generating forecast..."):
-                forecast_data = asyncio.run(api_client.get_revenue_forecast(horizon_days))
+                forecast_data = run_async(api_client.get_revenue_forecast(horizon_days))
                 st.session_state['forecast_data'] = forecast_data
                 st.success("✅ Revenue forecast generated successfully!")
 
@@ -660,7 +664,7 @@ def render_conversion_funnel_section(api_client: JorgeAnalyticsAPIClient):
     st.markdown("**Identify bottlenecks and optimize conversion rates**")
 
     # Get funnel data
-    funnel_data = asyncio.run(api_client.get_funnel_analysis())
+    funnel_data = run_async(api_client.get_funnel_analysis())
 
     col1, col2 = st.columns([2, 1])
 
@@ -677,7 +681,8 @@ def render_conversion_funnel_section(api_client: JorgeAnalyticsAPIClient):
             ("Appointments Set", current['appointments_set'], conversion_rates['qualified_to_appointment']),
             ("Showings Completed", current['showings_completed'], conversion_rates['appointment_to_showing']),
             ("Offers Made", current['offers_made'], conversion_rates['showing_to_offer']),
-            ("Contracts Signed", current['contracts_signed'], conversion_rates['offer_to_contract']),
+            ("Offers Accepted", int(current['offers_made'] * 0.6), 0.60),
+            ("Escrow / Under Contract", current['under_contract'], 0.85),
             ("Closings", current['closings'], conversion_rates['contract_to_closing'])
         ]
 
@@ -781,7 +786,7 @@ def render_geographic_analytics_section(api_client: JorgeAnalyticsAPIClient):
     st.markdown("**Market-specific insights and expansion opportunities**")
 
     # Get geographic data
-    geo_data = asyncio.run(api_client.get_geographic_analytics())
+    geo_data = run_async(api_client.get_geographic_analytics())
 
     col1, col2 = st.columns([2, 1])
 
@@ -894,7 +899,7 @@ def render_lead_quality_intelligence_section(api_client: JorgeAnalyticsAPIClient
     st.markdown("**AI-driven insights into lead scoring and quality trends**")
 
     # Get dashboard metrics for lead quality
-    dashboard_metrics = asyncio.run(api_client.get_analytics_dashboard_metrics())
+    dashboard_metrics = run_async(api_client.get_analytics_dashboard_metrics())
     quality_metrics = dashboard_metrics['lead_quality_metrics']
 
     col1, col2 = st.columns(2)
@@ -945,6 +950,16 @@ def render_lead_quality_intelligence_section(api_client: JorgeAnalyticsAPIClient
         # Quality insights
         insights = [
             {
+                "metric": "Avg Speed to Lead",
+                "value": f"{quality_metrics['speed_to_lead']}s",
+                "insight": "Time from inbound inquiry to first bot response"
+            },
+            {
+                "metric": "CMA Engagement Rate",
+                "value": "74.2%",
+                "insight": "Percentage of leads who interact with the AI-generated CMA"
+            },
+            {
                 "metric": "Lead Score Correlation",
                 "value": "87.2%",
                 "insight": "Strong correlation between lead score and conversion probability"
@@ -953,16 +968,6 @@ def render_lead_quality_intelligence_section(api_client: JorgeAnalyticsAPIClient
                 "metric": "Score Accuracy",
                 "value": "91.4%",
                 "insight": "High-scoring leads convert at predicted rates"
-            },
-            {
-                "metric": "False Positive Rate",
-                "value": "8.6%",
-                "insight": "Low rate of high-scoring leads that don't convert"
-            },
-            {
-                "metric": "Optimization Impact",
-                "value": "+24%",
-                "insight": "Revenue increase from quality-based prioritization"
             }
         ]
 
@@ -995,7 +1000,7 @@ def render_roi_attribution_section(api_client: JorgeAnalyticsAPIClient):
     st.markdown("**Comprehensive marketing channel performance and attribution insights**")
 
     # Get dashboard metrics for ROI data
-    dashboard_metrics = asyncio.run(api_client.get_analytics_dashboard_metrics())
+    dashboard_metrics = run_async(api_client.get_analytics_dashboard_metrics())
     roi_attribution = dashboard_metrics['roi_attribution']
 
     col1, col2 = st.columns([2, 1])
@@ -1279,7 +1284,7 @@ def render_analytics_integration_dashboard(api_client: JorgeAnalyticsAPIClient):
     st.markdown("**Real-time business intelligence and forecasting overview**")
 
     # Get dashboard metrics
-    metrics = asyncio.run(api_client.get_analytics_dashboard_metrics())
+    metrics = run_async(api_client.get_analytics_dashboard_metrics())
 
     # System health indicators
     st.subheader("🚀 Analytics Engine Health")
@@ -1318,10 +1323,24 @@ def render_analytics_integration_dashboard(api_client: JorgeAnalyticsAPIClient):
 
     kpis = [
         {
-            'icon': '💰',
-            'label': 'Forecasted Revenue',
-            'value': f"${revenue_forecast['forecasted_revenue']:,.0f}",
-            'change': revenue_forecast['growth_rate'] * 100,
+            'icon': '⚡',
+            'label': 'Speed to Lead',
+            'value': f"{quality_data['speed_to_lead']}s",
+            'change': -12.5,
+            'trend': 'positive' # Lower is better for speed
+        },
+        {
+            'icon': '📅',
+            'label': 'Appointment Rate',
+            'value': f"{quality_data['appointment_rate']:.1%}",
+            'change': 4.8,
+            'trend': 'positive'
+        },
+        {
+            'icon': '🛡️',
+            'label': 'CMA Value Edge',
+            'value': f"${quality_data['cma_value_variance']:,.0f}",
+            'change': 1200,
             'trend': 'positive'
         },
         {
@@ -1337,20 +1356,6 @@ def render_analytics_integration_dashboard(api_client: JorgeAnalyticsAPIClient):
             'value': f"{quality_data['avg_lead_score']:.0f}/100",
             'change': quality_data['score_trend'] * 100,
             'trend': 'positive' if quality_data['score_trend'] > 0 else 'negative'
-        },
-        {
-            'icon': '⚡',
-            'label': 'Prediction Accuracy',
-            'value': f"{revenue_forecast['model_accuracy']:.1%}",
-            'change': 2.1,
-            'trend': 'positive'
-        },
-        {
-            'icon': '📊',
-            'label': 'Confidence Level',
-            'value': f"{revenue_forecast['confidence_level']:.1%}",
-            'change': 1.8,
-            'trend': 'positive'
         },
         {
             'icon': '🚨',

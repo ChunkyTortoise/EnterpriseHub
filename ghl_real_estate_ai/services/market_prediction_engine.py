@@ -212,9 +212,21 @@ class MarketPredictionEngine:
         # Prediction cache
         self.predictions_cache = {}
         self.opportunities_cache = {}
+        self._initialization_lock = asyncio.Lock()
+        self._is_initialized = False
 
-        # Initialize with mock data and train models
-        asyncio.create_task(self._initialize_models())
+        logger.info("MarketPredictionEngine initialized (lazy models)")
+
+    async def _ensure_initialized(self):
+        """Ensure models are initialized before use"""
+        if self._is_initialized:
+            return
+            
+        async with self._initialization_lock:
+            if self._is_initialized:
+                return
+            await self._initialize_models()
+            self._is_initialized = True
 
     async def _initialize_models(self):
         """Initialize and train ML models with historical data"""
@@ -504,6 +516,7 @@ class MarketPredictionEngine:
         current_conditions: Optional[Dict[str, Any]] = None
     ) -> PredictionResult:
         """Predict price appreciation for neighborhood"""
+        await self._ensure_initialized()
 
         if 'price_appreciation' not in self.models:
             raise ValueError("Price appreciation model not trained")
@@ -581,6 +594,7 @@ class MarketPredictionEngine:
         property_details: Optional[Dict[str, Any]] = None
     ) -> PredictionResult:
         """Predict optimal timing for buying or selling"""
+        await self._ensure_initialized()
 
         if 'timing' not in self.models:
             raise ValueError("Timing model not trained")
@@ -647,6 +661,7 @@ class MarketPredictionEngine:
         investment_horizon: int = 5  # years
     ) -> PredictionResult:
         """Predict investment ROI for a specific property"""
+        await self._ensure_initialized()
 
         if 'roi' not in self.models:
             raise ValueError("ROI model not trained")
@@ -713,6 +728,7 @@ class MarketPredictionEngine:
 
     async def detect_market_opportunities(self) -> List[MarketOpportunity]:
         """Detect and score market opportunities across all neighborhoods"""
+        await self._ensure_initialized()
 
         opportunities = []
 
@@ -751,6 +767,7 @@ class MarketPredictionEngine:
 
     async def analyze_seasonal_patterns(self, neighborhood: str) -> Dict[str, Any]:
         """Analyze seasonal market patterns for neighborhood"""
+        await self._ensure_initialized()
 
         # Get historical data for the neighborhood
         neighborhood_data = [
@@ -789,6 +806,7 @@ class MarketPredictionEngine:
         neighborhood: str = None
     ) -> Dict[str, Any]:
         """Analyze impact of interest rate changes on market"""
+        await self._ensure_initialized()
 
         # Get current conditions
         neighborhoods = [neighborhood] if neighborhood else ["etiwanda", "alta_loma", "central_rc", "north_rc", "south_rc"]
@@ -1252,6 +1270,7 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
 
     async def get_prediction_analytics(self) -> Dict[str, Any]:
         """Get analytics on prediction performance and trends"""
+        await self._ensure_initialized()
 
         analytics = {
             "model_performance": {},
@@ -1281,6 +1300,7 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
 
     async def get_area_predictions(self, area: str) -> List[Dict[str, Any]]:
         """Get predictions for multiple neighborhoods in an area"""
+        await self._ensure_initialized()
         
         # In a real scenario, this would look up neighborhoods for the area
         # For now, we'll use Rancho Cucamonga neighborhoods as the primary area

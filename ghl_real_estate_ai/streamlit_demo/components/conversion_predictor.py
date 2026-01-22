@@ -1,4 +1,5 @@
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
@@ -57,11 +58,7 @@ def render_conversion_predictor(services, selected_lead_name, analysis_result=No
                 try:
                     # Try async intent scoring
                     import asyncio
-                    try:
-                        loop = asyncio.get_event_loop()
-                    except RuntimeError:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
+                    
                     
                     # Mock conversation history for demo
                     history = [
@@ -78,7 +75,7 @@ def render_conversion_predictor(services, selected_lead_name, analysis_result=No
                         'email_opens': random_opens(lead_id)
                     }
                     
-                    intent_score = loop.run_until_complete(scorer.score_lead_with_intent(lead_id, lead_data, history))
+                    intent_score = run_async(scorer.score_lead_with_intent(lead_id, lead_data, history))
                     prediction = {
                         'probability': intent_score.score,
                         'delta': 8, # Higher delta due to new intent detection

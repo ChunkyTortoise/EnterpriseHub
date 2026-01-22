@@ -156,7 +156,7 @@ async def display_matches():
                     st.toast("Architectural Consultant Notified.")
 
 # Run async display
-asyncio.run(display_matches())
+run_async(display_matches())
 
 # Footer Nav
 st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)

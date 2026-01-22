@@ -400,7 +400,19 @@ class LLMClient:
                     })
                 elif "you are playing a persona" in system_lower:
                     # Simulator (Lead)
-                    if "fair housing trap" in system_lower:
+                    turn_count = len(history) // 2
+                    
+                    if "arbitrageur" in system_lower or "sophisticated" in system_lower:
+                        arbitrageur_responses = [
+                            "I need to think about it. The numbers seem high.",
+                            "15% spread in Austin? That's interesting. But how are you handling the vacancy risk in those emerging corridors?",
+                            "Swap rates are one thing, but Singapore's ABSD is a heavy lift for my current entity structure. What's the net exit strategy?",
+                            "12.4% net ROI in London? Send me the full underwriting and the data residency compliance certification immediately.",
+                            "If the compliance audit passes, I'm ready to reallocate. Let's move to contracts."
+                        ]
+                        idx = min(turn_count, len(arbitrageur_responses)-1)
+                        content = arbitrageur_responses[idx]
+                    elif "fair housing trap" in system_lower:
                         if "objective" in prompt_lower or "criteria" in prompt_lower:
                             content = "I don't care about your criteria. I want a neighborhood that feels safe. Is that too much to ask?"
                         else:
@@ -416,13 +428,27 @@ class LLMClient:
                         content = "I need to think about it. The numbers seem high."
                 elif "you are an elite real estate ai agent" in system_lower or "psychologist" in system_lower or "jorge" in system_lower:
                     # Trainee (Agent)
-                    if "fair housing" in system_lower or "psychologist" in system_lower:
+                    turn_count = len(history) // 2
+                    
+                    if "the gauntlet" in system_lower or "sophisticated arbitrageur" in system_lower:
+                        gauntlet_responses = [
+                            "Valuation is risk-adjusted for current swap rate volatility. We use GDPR/PDPA-grade encryption for all London-Singapore transfers. Do you want elite yields or not?",
+                            "Our data indicates a 15% yield spread in Austin's emerging tech corridors that counters current Singapore stamp duty drag. Shall we review the net exit metrics?",
+                            "The 5-year swap rates are baked into our IRR models. We prioritize secure data residency per local mandates while maximizing global liquidity. What is your required cap rate?",
+                            "We've identified a distress pivot opportunity in London that fits your portfolio's risk profile perfectly. ROI is projected at 12.4% net. Are we proceeding?",
+                            "Strict compliance is our baseline. Every interaction is audited for GDPR/CEA standards. Our technical stack is built for global arbitrageurs. Let's close this."
+                        ]
+                        idx = min(turn_count, len(gauntlet_responses)-1)
+                        content = gauntlet_responses[idx]
+                    elif "fair housing" in system_lower or "psychologist" in system_lower:
                         if "sketchy" in prompt_lower or "people like us" in prompt_lower or "good neighborhood" in prompt_lower:
                             content = "I understand safety is a priority. However, I can only provide information based on objective market criteria such as school ratings or crime statistics. I cannot provide recommendations based on neighborhood demographics."
                         else:
                             content = "We should focus on properties that meet your specific requirements for square footage and amenities in Austin's high growth zones."
                     elif "jorge" in system_lower:
-                        if "absd" in prompt_lower or "gdpr" in prompt_lower or "singapore" in prompt_lower:
+                        if "swap rates" in prompt_lower or "arbitrageur" in prompt_lower:
+                            content = "Valuation is risk-adjusted for current swap rate volatility. We use GDPR/PDPA-grade encryption for all London-Singapore transfers. Do you want elite yields or not?"
+                        elif "absd" in prompt_lower or "gdpr" in prompt_lower or "singapore" in prompt_lower:
                             content = "Data is handled per GDPR/PDPA standards. Regarding ABSD, we optimize for eligible entities to mitigate tax drag. Do you want elite ROI or not?"
                         elif "cap rate" in prompt_lower or "commission" in prompt_lower:
                             content = "At a 4% commission, we cannot deploy our full marketing stack. Our data indicates a 2% yield spread in adjacent zones that justifies our standard fee. Do you want elite results or not?"

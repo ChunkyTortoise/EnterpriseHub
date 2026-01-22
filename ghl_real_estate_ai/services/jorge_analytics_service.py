@@ -985,12 +985,286 @@ class JorgeAnalyticsService:
     # Additional helper methods would be implemented here...
     # _generate_executive_insights, _assess_market_conditions, etc.
 
-    async def _generate_executive_insights(self, *args) -> Tuple[List[str], List[str], List[str], List[str]]:
-        """Generate executive insights using AI."""
-        # Simplified implementation
-        insights = ["Revenue trending upward", "Lead quality improving", "Market timing favorable"]
-        actions = ["Focus on high-performing areas", "Optimize underperforming sources"]
-        risks = ["Market seasonality approaching", "Increased competition"]
-        opportunities = ["Expand in Alta Loma", "Enhance referral program"]
+        async def _generate_executive_insights(self, *args) -> Tuple[List[str], List[str], List[str], List[str]]:
 
-        return insights, actions, risks, opportunities
+            """Generate executive insights using AI."""
+
+            # Simplified implementation
+
+            insights = ["Revenue trending upward", "Lead quality improving", "Market timing favorable"]
+
+            actions = ["Focus on high-performing areas", "Optimize underperforming sources"]
+
+            risks = ["Market seasonality approaching", "Increased competition"]
+
+            opportunities = ["Expand in Alta Loma", "Enhance referral program"]
+
+    
+
+            return insights, actions, risks, opportunities
+
+    
+
+        def _create_fallback_funnel_analysis(self, time_period_days: int) -> FunnelAnalysis:
+
+            """Create fallback funnel analysis."""
+
+            stage_order = [
+
+                FunnelStage.NEW_LEAD, FunnelStage.QUALIFIED, FunnelStage.APPOINTMENT,
+
+                FunnelStage.SHOWING, FunnelStage.OFFER, FunnelStage.OFFER_ACCEPTED,
+
+                FunnelStage.ESCROW, FunnelStage.CLOSED
+
+            ]
+
+            
+
+            stages = []
+
+            for stage in stage_order:
+
+                stages.append(FunnelMetrics(
+
+                    stage=stage,
+
+                    lead_count=0,
+
+                    conversion_rate=0.0,
+
+                    avg_time_in_stage_days=0.0,
+
+                    drop_off_count=0,
+
+                    drop_off_percentage=0.0
+
+                ))
+
+                
+
+            return FunnelAnalysis(
+
+                time_period_days=time_period_days,
+
+                stages=stages,
+
+                conversion_rates={},
+
+                drop_off_points=[],
+
+                bottleneck_stage=FunnelStage.NEW_LEAD,
+
+                optimization_opportunities=["System initializing..."],
+
+                overall_conversion_rate=0.0,
+
+                avg_lead_to_close_days=0.0,
+
+                improvement_potential_percent=0.0,
+
+                recommended_actions=["Collect more lead data"]
+
+            )
+
+    
+
+        def _create_fallback_quality_metrics(self) -> LeadQualityMetrics:
+
+            """Create fallback quality metrics."""
+
+            return LeadQualityMetrics(
+
+                total_leads_scored=0,
+
+                avg_lead_score=0.0,
+
+                score_distribution={"0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0},
+
+                prediction_accuracy=0.0,
+
+                calibration_score=0.0,
+
+                false_positive_rate=0.0,
+
+                false_negative_rate=0.0,
+
+                avg_confidence=0.0,
+
+                high_confidence_accuracy=0.0,
+
+                low_confidence_accuracy=0.0
+
+            )
+
+    
+
+        def _create_fallback_market_timing(self) -> MarketTimingInsight:
+
+            """Create fallback market timing insight."""
+
+            metrics = MarketTimingMetrics(
+
+                active_inventory=0,
+
+                new_listings_count=0,
+
+                inventory_months=0.0,
+
+                buyer_demand_index=0.0,
+
+                showing_activity=0,
+
+                offer_activity=0,
+
+                median_list_price=0.0,
+
+                median_sale_price=0.0,
+
+                price_velocity_percent=0.0,
+
+                avg_days_on_market=0,
+
+                market_temperature=MarketTemperature.WARM,
+
+                best_action="wait",
+
+                confidence_score=0.0,
+
+                analysis_date=datetime.now().date()
+
+            )
+
+            return MarketTimingInsight(
+
+                current_conditions=metrics,
+
+                historical_trends=[],
+
+                buyer_recommendations=[],
+
+                seller_recommendations=[],
+
+                investor_recommendations=[],
+
+                predicted_peak_season="Unknown",
+
+                predicted_inventory_change="Stable",
+
+                price_movement_forecast="Stable",
+
+                seasonal_factors=[],
+
+                economic_indicators={}
+
+            )
+
+    
+
+        def _create_fallback_geographic_analysis(self) -> GeographicAnalysis:
+
+            """Create fallback geographic analysis."""
+
+            return GeographicAnalysis(
+
+                total_areas_analyzed=0,
+
+                geographic_metrics=[],
+
+                best_performing_zip="N/A",
+
+                worst_performing_zip="N/A",
+
+                highest_revenue_zip="N/A",
+
+                most_competitive_zip="N/A",
+
+                expansion_opportunities=[],
+
+                underperforming_areas=[],
+
+                market_gaps=[],
+
+                avg_conversion_rate=0.0,
+
+                total_market_revenue=0.0,
+
+                geographic_concentration=0.0
+
+            )
+
+    
+
+        def _create_fallback_competitive_intel(self) -> CompetitiveIntel:
+
+            """Create fallback competitive intelligence."""
+
+            return CompetitiveIntel(
+
+                top_competitors=[],
+
+                competitive_advantages=[],
+
+                competitive_threats=[],
+
+                differentiation_opportunities=[],
+
+                competitive_strategy_recommendations=[],
+
+                pricing_recommendations="Market average",
+
+                positioning_recommendations="Standard"
+
+            )
+
+    
+
+        def _create_fallback_performance_summary(self, time_period_days: int) -> PerformanceSummary:
+
+            """Create fallback performance summary."""
+
+            return PerformanceSummary(
+
+                summary_period_days=time_period_days,
+
+                total_revenue=0.0,
+
+                total_conversions=0,
+
+                avg_conversion_rate=0.0,
+
+                lead_scoring_accuracy=0.0,
+
+                revenue_trend="stable",
+
+                conversion_trend="stable",
+
+                quality_trend="stable",
+
+                goals_on_track=0,
+
+                goals_behind=0,
+
+                goals_ahead=0,
+
+                performance_alerts=[],
+
+                improvement_opportunities=[],
+
+                revenue_forecast_30d=0.0,
+
+                conversion_forecast_30d=0
+
+            )
+
+    
+
+        def _create_fallback(self, error_type: type) -> Any:
+
+            """Create a generic fallback based on type."""
+
+            # This is a bit of a hack to handle gather results
+
+            return None
+
+    

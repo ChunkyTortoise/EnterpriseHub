@@ -4,6 +4,7 @@ System health, revenue attribution, and Agentic OS orchestration.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -165,7 +166,7 @@ class OpsOptimizationHub:
         with retrain_col2:
             if st.button("🚀 Run Retraining Simulation", type="primary", use_container_width=True):
                 with st.spinner("Analyzing feedback traces..."):
-                    result = asyncio.run(rlhf_service.run_weekly_retraining_simulation())
+                    result = run_async(rlhf_service.run_weekly_retraining_simulation())
                     if result.get("success"):
                         st.success(f"Retraining complete! Lift: {result['model_lift_estimate']}")
                         st.balloons()

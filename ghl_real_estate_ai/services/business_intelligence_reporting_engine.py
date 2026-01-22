@@ -69,6 +69,7 @@ class ReportType(Enum):
     RISK_ASSESSMENT = "risk_assessment"
     COMPLIANCE_REPORT = "compliance_report"
     FORECASTING_REPORT = "forecasting_report"
+    MARKET_OPPORTUNITY = "market_opportunity"
     CUSTOM_ANALYSIS = "custom_analysis"
 
 

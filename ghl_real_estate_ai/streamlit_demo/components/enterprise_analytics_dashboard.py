@@ -28,6 +28,7 @@ Created: January 2026
 
 import asyncio
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -227,7 +228,7 @@ def load_real_time_metrics():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             engines["revenue_attribution"].get_real_time_metrics()
         )
     except Exception as e:
@@ -247,7 +248,7 @@ def load_attribution_report(days_back=30):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             engines["revenue_attribution"].generate_attribution_report(
                 start_date=start_date,
                 end_date=end_date
@@ -270,7 +271,7 @@ def load_clv_report(days_back=90):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             engines["customer_lifetime"].generate_clv_report(
                 start_date=start_date,
                 end_date=end_date

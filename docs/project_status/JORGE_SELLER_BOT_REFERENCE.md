@@ -29,6 +29,13 @@
 - **Warm**: Answered most questions + timeline beyond 45 days + some hesitation
 - **Cold**: Vague answers or stops responding + long timeline or exploring
 
+### 🧠 2026 INTELLIGENCE LAYER (New)
+- **ROI-Based Pricing Pushback**: Uses AI valuation vs. seller expectations to justify price adjustments based on net yield.
+- **Behavioral Reactivation**: Detects "negotiation drift" (softening/firming) in seller language to adjust pressure.
+- **Loss Aversion Closes**: Uses "Take-Away" closes for high-emotional attachment sellers to force a reality check.
+- **National Market Intel**: Integrates real-time market trends (inventory, DOM, appreciation) into insights.
+- **Psychological Profiling**: Categorizes sellers (Emotional, Distressed, Financial) to tune tone directness.
+
 ---
 
 ## 🏗️ KEY FILES TO REFERENCE/MODIFY
@@ -618,7 +625,7 @@ if is_seller_mode:
 ## 📞 DEPLOYMENT CHECKLIST
 
 ### GHL Sub-account Setup
-- [ ] Create custom fields: seller_temperature, seller_motivation, price_expectation, property_condition
+- [ ] Create custom fields: seller_temperature, seller_motivation, price_expectation, property_condition, psychology_type, urgency_level
 - [ ] Create workflow: Hot Seller Notification workflow
 - [ ] Create tags: Hot-Seller, Warm-Seller, Cold-Seller
 - [ ] Configure: Needs Qualifying trigger tag

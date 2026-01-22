@@ -6,6 +6,7 @@ Author: EnterpriseHub AI
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import json
 import time
@@ -215,12 +216,8 @@ class AutomationStudioHub:
 
 def run_async(coro):
     import asyncio
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(coro)
+    
+    return run_async(coro)
 
     def _render_marketplace(self):
         """Elite Marketplace for pre-built workflows"""
@@ -317,11 +314,7 @@ def run_async(coro):
                 with st.spinner("Claude is optimizing neural weights and persona instructions..."):
                     try:
                         import asyncio
-                        try:
-                            loop = asyncio.get_event_loop()
-                        except RuntimeError:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
+                        
                         
                         # Build optimization context
                         opt_context = {
@@ -349,10 +342,10 @@ def run_async(coro):
                             temperature=0.7
                         )
                         
-                        response = loop.run_until_complete(orchestrator.process_request(request))
+                        response = run_async(orchestrator.process_request(request))
                         
                         # Record usage
-                        loop.run_until_complete(analytics_service.track_llm_usage(
+                        run_async(analytics_service.track_llm_usage(
                             location_id="demo_location",
                             model=response.model or "claude-3-5-sonnet",
                             provider=response.provider or "claude",

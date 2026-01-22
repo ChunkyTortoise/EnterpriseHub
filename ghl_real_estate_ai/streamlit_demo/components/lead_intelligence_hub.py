@@ -1,4 +1,5 @@
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import json
 import datetime
@@ -155,12 +156,8 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
         else:
             with st.spinner(f'🧠 Claude is performing multi-dimensional analysis for {selected_lead_name}...'):
                 try:
-                    try:
-                        loop = asyncio.get_event_loop()
-                    except RuntimeError:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                    analysis_result = loop.run_until_complete(enhanced_intelligence.get_comprehensive_lead_analysis(selected_lead_name, lead_context))
+                    
+                    analysis_result = run_async(enhanced_intelligence.get_comprehensive_lead_analysis(selected_lead_name, lead_context))
                     st.session_state[analysis_cache_key] = analysis_result
                 except Exception as e:
                     st.error(f'Analysis failed: {str(e)}')
@@ -382,11 +379,11 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                 f_col1, f_col2, f_col3 = st.columns([1, 1, 4])
                 with f_col1:
                     if st.button("👍", key=f"up_{selected_lead_name}"):
-                        asyncio.run(rlhf_service.record_feedback(f"trace_{selected_lead_name}", 1, context={"lead": selected_lead_name}))
+                        run_async(rlhf_service.record_feedback(f"trace_{selected_lead_name}", 1, context={"lead": selected_lead_name}))
                         st.toast("Feedback recorded! Model lift +0.1%", icon="🚀")
                 with f_col2:
                     if st.button("👎", key=f"down_{selected_lead_name}"):
-                        asyncio.run(rlhf_service.record_feedback(f"trace_{selected_lead_name}", -1, context={"lead": selected_lead_name}))
+                        run_async(rlhf_service.record_feedback(f"trace_{selected_lead_name}", -1, context={"lead": selected_lead_name}))
                         st.toast("Correction logged for retraining.", icon="🔧")
                 with f_col3:
                     st.caption("Help Jorge train the AI by rating this strategy.")
@@ -475,7 +472,7 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                             contact_id = lead_options[selected_lead_name].get('contact_id', 'contact_123_demo')
                             loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(loop)
-                            sync_result = loop.run_until_complete(sync_service.sync_dna_to_ghl(contact_id, dna_payload))
+                            sync_result = run_async(sync_service.sync_dna_to_ghl(contact_id, dna_payload))
                             if sync_result['status'] == 'success':
                                 st.success(f"✅ DNA Dossier synced! {sync_result['fields_updated']} fields updated in GHL.")
                                 st.balloons()
@@ -529,12 +526,8 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                         lead_context = lead_options[selected_lead_name]
                         st.write('Running parallel analysis...')
                         try:
-                            try:
-                                loop = asyncio.get_event_loop()
-                            except RuntimeError:
-                                loop = asyncio.new_event_loop()
-                                asyncio.set_event_loop(loop)
-                            swarm_results = loop.run_until_complete(swarm_service.run_swarm(lead_context))
+                            
+                            swarm_results = run_async(swarm_service.run_swarm(lead_context))
                             st.session_state[f'swarm_results_{selected_lead_name}'] = swarm_results
                             status.update(label='✅ Swarm Mission Complete', state='complete', expanded=False)
                         except Exception as e:
@@ -747,7 +740,7 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                 try:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
-                    drift_result = loop.run_until_complete(
+                    drift_result = run_async(
                         sentiment_engine.analyze_conversation_drift(mock_history, selected_lead_name)
                     )
                     
@@ -810,14 +803,10 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                 st.markdown('---')
                 st.markdown('### 🔮 Life Transition & Investment Forecast')
                 col_trans1, col_trans2 = st.columns(2)
-                try:
-                    loop = asyncio.get_event_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                lifestyle_profile = loop.run_until_complete(semantic_matcher._extract_lifestyle_profile(lead_context))
-                transitions = loop.run_until_complete(semantic_matcher.predict_life_transitions(lifestyle_profile))
-                investment_psych = loop.run_until_complete(semantic_matcher.get_investment_psychology(lead_context))
+                
+                lifestyle_profile = run_async(semantic_matcher._extract_lifestyle_profile(lead_context))
+                transitions = run_async(semantic_matcher.predict_life_transitions(lifestyle_profile))
+                investment_psych = run_async(semantic_matcher.get_investment_psychology(lead_context))
                 with col_trans1:
                     st.markdown('#### ⏳ Life Transition')
                     st.success(f"**Predicted Next Stage:** {transitions.get('predicted_next_stage', 'Unknown').title()}")
@@ -883,12 +872,8 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     for conv in mock_data['conversations']:
                         leads_for_segmentation.append({'id': conv.get('contact_id'), 'name': conv.get('contact_name'), 'engagement_score': conv.get('message_count') * 10, 'lead_score': conv.get('lead_score'), 'budget': 500000 if conv.get('budget') == 'unknown' else 1500000, 'last_activity_days_ago': 2, 'buyer_type': 'luxury_buyer' if 'lux' in conv.get('contact_id', '') else 'standard', 'interested_property_type': 'single_family'})
                 if leads_for_segmentation:
-                    try:
-                        loop = asyncio.get_event_loop()
-                    except RuntimeError:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                    result = loop.run_until_complete(services['segmentation'].segment_leads(leads_for_segmentation, method='behavioral'))
+                    
+                    result = run_async(services['segmentation'].segment_leads(leads_for_segmentation, method='behavioral'))
                     if result['segments']:
                         main_segment = result['segments'][0]
                         render_segmentation_pulse(main_segment)
@@ -1048,15 +1033,11 @@ def render_real_time_conversation_coach(claude_services, lead_context, selected_
         try:
             conversation_engine = claude_services['conversation']
             with st.spinner('Analyzing thread state...'):
-                try:
-                    loop = asyncio.get_event_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
+                
                 formatted_msgs = []
                 for m in coaching_messages:
                     formatted_msgs.append({'role': 'user' if m['role'] == 'lead' else 'assistant', 'content': m['content']})
-                thread_analysis = loop.run_until_complete(conversation_engine.analyze_conversation_thread(f'coaching_{selected_lead_name}', formatted_msgs, lead_context))
+                thread_analysis = run_async(conversation_engine.analyze_conversation_thread(f'coaching_{selected_lead_name}', formatted_msgs, lead_context))
                 closing_signals = thread_analysis.get('closing_signals')
                 if closing_signals:
                     readiness = closing_signals.closing_readiness_score

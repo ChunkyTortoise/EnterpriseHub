@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 import asyncio
 import time
 from typing import Dict, Any, List
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Page configuration
 st.set_page_config(
@@ -1636,7 +1637,7 @@ def main():
                     try:
                         analyzer = get_ai_analyzer()
                         # Run async function
-                        response = asyncio.run(analyzer.answer_compliance_question(
+                        response = run_async(analyzer.answer_compliance_question(
                             user_question,
                             context=selected_context
                         ))
@@ -1691,7 +1692,7 @@ def main():
                 with st.spinner(f"Analyzing {selected_model}..."):
                     try:
                         analyzer = get_ai_analyzer()
-                        analysis = asyncio.run(analyzer.analyze_model_risks(
+                        analysis = run_async(analyzer.analyze_model_risks(
                             selected_model,
                             selected_model_data
                         ))
@@ -1739,7 +1740,7 @@ def main():
                 with st.spinner("Generating executive summary..."):
                     try:
                         analyzer = get_ai_analyzer()
-                        summary = asyncio.run(analyzer.generate_executive_summary(data))
+                        summary = run_async(analyzer.generate_executive_summary(data))
                         st.session_state.executive_summary = summary
                         st.toast("Executive summary generated!", icon="✅")
                     except Exception as e:

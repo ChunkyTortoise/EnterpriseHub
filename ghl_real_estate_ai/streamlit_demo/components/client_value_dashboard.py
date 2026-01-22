@@ -9,6 +9,7 @@ Created: 2026-01-17
 
 import asyncio
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
@@ -36,7 +37,7 @@ def load_pricing_analytics(location_id: str, days: int = 30):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             services["pricing_optimizer"].get_pricing_analytics(location_id, days)
         )
     finally:
@@ -50,7 +51,7 @@ def load_roi_report(location_id: str, days: int = 30):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             services["roi_calculator"].generate_client_roi_report(location_id, days)
         )
     finally:
@@ -356,7 +357,7 @@ def render_human_vs_ai_tab(location_id: str):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        comparisons = loop.run_until_complete(
+        comparisons = run_async(
             services["roi_calculator"].calculate_human_vs_ai_comparison(location_id)
         )
     finally:
@@ -586,7 +587,7 @@ def render_projections_tab(roi_data: Any, pricing_data: Dict):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            calc_result = loop.run_until_complete(
+            calc_result = run_async(
                 services["roi_calculator"].get_savings_calculator(
                     leads_per_month=leads_per_month,
                     messages_per_lead=messages_per_lead,

@@ -6,6 +6,7 @@ real-time coaching, and strategy optimization.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -662,7 +663,7 @@ class NegotiationIntelligenceDashboard:
                 )
                 
                 # Run async analysis (simplified for demo)
-                # In production, this would use asyncio.run()
+                # In production, this would use run_async()
                 analysis_result = {
                     "property_id": property_id,
                     "lead_id": lead_id,

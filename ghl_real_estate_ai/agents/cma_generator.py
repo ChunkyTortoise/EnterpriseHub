@@ -2,6 +2,7 @@ import asyncio
 from datetime import date, timedelta
 from typing import List, Dict, Any
 from ghl_real_estate_ai.models.cma import CMAReport, CMAProperty, Comparable, MarketContext
+from ghl_real_estate_ai.services.zillow_defense_service import get_zillow_defense_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -13,8 +14,7 @@ class CMAGenerator:
     """
 
     def __init__(self):
-        # In a real implementation, we'd inject MLS and LLM clients here
-        pass
+        self.defense_service = get_zillow_defense_service()
 
     async def generate_report(self, address: str, zestimate: float = 0.0) -> CMAReport:
         """
@@ -106,27 +106,23 @@ class CMAGenerator:
 
     def _mock_llm_analysis(self, subject: CMAProperty, comps: List[Comparable], market: MarketContext) -> Dict[str, Any]:
         """
-        Simulates the LLM's Zillow-Defense output.
+        Simulates the LLM's Zillow-Defense output using the Defense Service.
         """
         # Simple logic to determine value from comps
         avg_comp_val = sum(c.adjusted_value for c in comps) / len(comps)
-        
         estimated_val = round(avg_comp_val, -3) # Round to nearest 1k
-        z_variance = estimated_val - market.zillow_zestimate
-        z_percent = round((z_variance / market.zillow_zestimate) * 100, 1)
+        
+        # VANGUARD 5: Zillow Defense Integration
+        defense = self.defense_service.analyze_variance(estimated_val, market.zillow_zestimate)
         
         return {
             "estimated_value": estimated_val,
             "value_range_low": estimated_val * 0.95,
             "value_range_high": estimated_val * 1.05,
             "confidence_score": 88,
-            "zillow_variance_abs": abs(z_variance),
-            "zillow_variance_percent": abs(z_percent),
-            "zillow_explanation": (
-                "Zillow's algorithm misses the recent $45k kitchen renovation and the premium "
-                "corner lot positioning. Our comps are strictly pulled from the last 45 days, "
-                "reflecting the true current heat of the neighborhood."
-            ),
+            "zillow_variance_abs": defense.variance_abs,
+            "zillow_variance_percent": defense.variance_percent,
+            "zillow_explanation": defense.recommended_script,
             "market_narrative": (
                 "The Austin market is tightening. While inventory has ticked up to 1,450 units, "
                 "properties in the 2,800sqft range with recent updates are moving 15% faster "

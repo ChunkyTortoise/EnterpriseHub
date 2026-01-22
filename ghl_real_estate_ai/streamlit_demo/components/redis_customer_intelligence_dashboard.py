@@ -21,6 +21,7 @@ Created: January 2026 - Redis Integration Complete
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -239,7 +240,7 @@ class RedisCustomerIntelligenceDashboard:
         try:
             # Since we can't use async directly, we'll call the health check method
             # In a real implementation, you'd want to handle this differently
-            health_status = asyncio.run(self.analytics_connector.health_check()) if self.analytics_connector else {}
+            health_status = run_async(self.analytics_connector.health_check()) if self.analytics_connector else {}
         except Exception:
             health_status = {"redis_connection": "error", "data_available": False}
         
@@ -293,7 +294,7 @@ class RedisCustomerIntelligenceDashboard:
             # Clear cache to force refresh
             if hasattr(st.session_state, 'redis_connector'):
                 try:
-                    asyncio.run(st.session_state.redis_connector.cache_service.clear())
+                    run_async(st.session_state.redis_connector.cache_service.clear())
                     st.success("Cache cleared, data will refresh")
                 except:
                     st.info("Data refresh initiated")
@@ -358,9 +359,8 @@ class RedisCustomerIntelligenceDashboard:
             return
         
         try:
-            # Fetch real-time metrics (using asyncio.run for demo, 
-            # in production you'd handle this differently)
-            metrics_data = asyncio.run(
+            # Fetch real-time metrics (using run_async for Streamlit compatibility)
+            metrics_data = run_async(
                 self.analytics_connector.get_real_time_metrics(
                     metric_types=selected_metrics,
                     limit=100
@@ -490,7 +490,7 @@ class RedisCustomerIntelligenceDashboard:
         
         try:
             # Fetch segmentation data
-            segments_data = asyncio.run(
+            segments_data = run_async(
                 self.analytics_connector.get_customer_segments(
                     segment_types=selected_segments if selected_segments else None
                 )
@@ -583,7 +583,7 @@ class RedisCustomerIntelligenceDashboard:
         
         try:
             # Fetch journey data
-            journey_data = asyncio.run(
+            journey_data = run_async(
                 self.analytics_connector.get_journey_mapping_data(
                     stages=selected_stages if selected_stages else None
                 )
@@ -714,7 +714,7 @@ class RedisCustomerIntelligenceDashboard:
         
         try:
             # Fetch predictive data
-            predictions_data = asyncio.run(
+            predictions_data = run_async(
                 self.analytics_connector.get_predictive_scores()
             )
             
@@ -854,7 +854,7 @@ class RedisCustomerIntelligenceDashboard:
         
         try:
             # Fetch conversation analytics
-            conversation_data = asyncio.run(
+            conversation_data = run_async(
                 self.analytics_connector.get_conversation_analytics()
             )
             
@@ -943,7 +943,7 @@ class RedisCustomerIntelligenceDashboard:
         
         try:
             # Get health status
-            health_status = asyncio.run(self.analytics_connector.health_check())
+            health_status = run_async(self.analytics_connector.health_check())
             
             # System status overview
             col1, col2 = st.columns([1, 1])

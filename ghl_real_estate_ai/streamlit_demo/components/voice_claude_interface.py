@@ -4,6 +4,7 @@ Provides hands-free interaction with Claude through voice commands.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import json
 import time
@@ -151,13 +152,9 @@ def render_voice_claude_interface():
 
         # Voice activation toggle
         if st.button("🎤 Activate Voice", use_container_width=True, type="primary"):
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+            
 
-            success = loop.run_until_complete(companion.initialize_voice_commands())
+            success = run_async(companion.initialize_voice_commands())
             if success:
                 st.success("Voice system activated!")
                 st.rerun()
@@ -208,14 +205,10 @@ def render_voice_claude_interface():
         if st.button("Process Command"):
             if test_command.strip():
                 with st.spinner("Processing voice command..."):
-                    try:
-                        loop = asyncio.get_event_loop()
-                    except RuntimeError:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
+                    
 
                     # Simulate processing the command
-                    response = loop.run_until_complete(
+                    response = run_async(
                         companion.process_voice_command(test_command)
                     )
 

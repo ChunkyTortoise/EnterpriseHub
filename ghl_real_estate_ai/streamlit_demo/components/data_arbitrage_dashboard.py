@@ -4,6 +4,7 @@ Visualizes pre-MLS data intelligence including Probate and Tax Liens.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 from ghl_real_estate_ai.services.data_arbitrage_service import get_data_arbitrage_service
 
@@ -23,7 +24,7 @@ def render_data_arbitrage_dashboard():
             if not probate_leads:
                 import asyncio
                 loop = asyncio.new_event_loop()
-                probate_leads = loop.run_until_complete(arbitrage_service.get_probate_leads(zip_code))
+                probate_leads = run_async(arbitrage_service.get_probate_leads(zip_code))
                 st.session_state[f"probate_{zip_code}"] = probate_leads
 
             with col1:
@@ -42,7 +43,7 @@ def render_data_arbitrage_dashboard():
                 st.markdown("#### 🏛️ Tax Liens & Life Events")
                 import asyncio
                 loop = asyncio.new_event_loop()
-                liens = loop.run_until_complete(arbitrage_service.get_tax_liens(zip_code))
+                liens = run_async(arbitrage_service.get_tax_liens(zip_code))
                 
                 df_liens = pd.DataFrame(liens)
                 st.dataframe(df_liens[["address", "lien_amount", "filing_date", "propensity_score"]])

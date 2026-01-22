@@ -12,6 +12,9 @@ import asyncio
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.market_prediction_engine import MarketPredictionEngine
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 class AgentStateSync:
     """
@@ -46,17 +49,37 @@ class AgentStateSync:
             },
             "leads": [],
             "recent_thoughts": [],
+            "lead_events": {}, # New: Map of lead_id -> list of events
 
             "system_health": "optimal",
             "last_updated": datetime.now().isoformat()
         }
 
-        # Generate some initial leads with calculated scores
-        asyncio.create_task(self._initialize_leads())
-        
         self.previous_state = copy.deepcopy(self.state)
-        asyncio.create_task(self._load_initial_state())
-        asyncio.create_task(self._initialize_market_predictions()) # Call new method
+        self._initialization_lock = asyncio.Lock()
+        self._is_initialized = False
+
+        logger.info("AgentStateSync initialized (lazy)")
+
+    async def _ensure_initialized(self):
+        """Ensure the state is fully initialized"""
+        if self._is_initialized:
+            return
+            
+        async with self._initialization_lock:
+            if self._is_initialized:
+                return
+            
+            # Start background initialization
+            await self._load_initial_state()
+            await self._initialize_leads()
+            await self._initialize_market_predictions()
+            
+            # Ensure lead_events exists in state
+            if "lead_events" not in self.state:
+                self.state["lead_events"] = {}
+
+            self._is_initialized = True
 
     async def _initialize_market_predictions(self):
         # Fetch market predictions for Rancho Cucamonga (example location)
@@ -81,6 +104,8 @@ class AgentStateSync:
         sample_leads_data = [
             {
                 "id": "L1", "name": "Sarah Jenkins", "status": "Hot",
+                "engagement_status": "offer_sent",
+                "current_step": "facilitate_offer",
                 "extracted_preferences": {
                     "budget": 500000, "location": "Austin, TX", "timeline": "ASAP",
                     "bedrooms": 3, "motivation": "Relocating for job"
@@ -88,12 +113,16 @@ class AgentStateSync:
             },
             {
                 "id": "L2", "name": "Michael Chen", "status": "Warm",
+                "engagement_status": "qualified",
+                "current_step": "post_showing_survey",
                 "extracted_preferences": {
                     "budget": 350000, "location": "Miami, FL", "timeline": "3 months"
                 }
             },
             {
                 "id": "L3", "name": "Emma Wilson", "status": "Cold",
+                "engagement_status": "new",
+                "current_step": "analyze_intent",
                 "extracted_preferences": {
                     "location": "Dallas, TX"
                 }
@@ -130,6 +159,7 @@ class AgentStateSync:
 
     async def update_state(self, path: str, value: Any):
         """ Surogately update state and track changes """
+        await self._ensure_initialized()
         self.previous_state = copy.deepcopy(self.state)
         
         # Simple path-based update (e.g., "kpis/total_leads")
@@ -170,6 +200,7 @@ class AgentStateSync:
 
     async def record_agent_thought(self, agent_id: str, thought: str, status: str = "Success"):
         """High-level helper to update agent thoughts"""
+        await self._ensure_initialized()
         new_thought = {
             "agent": agent_id,
             "task": thought,
@@ -185,6 +216,47 @@ class AgentStateSync:
         self.state["recent_thoughts"] = thoughts[:10]
         self.state["last_updated"] = datetime.now().isoformat()
         await self.cache.set("agent_state_sync_state", self.state)
+
+    async def record_lead_event(self, lead_id: str, source: str, event: str, event_type: str = "thought"):
+        """
+        Records a specific event for a lead.
+        source: "AI", "GHL", "System"
+        event_type: "thought", "action", "node", "sms", "error"
+        """
+        await self._ensure_initialized()
+        
+        if "lead_events" not in self.state:
+            self.state["lead_events"] = {}
+            
+        if lead_id not in self.state["lead_events"]:
+            self.state["lead_events"][lead_id] = []
+            
+        new_event = {
+            "time": datetime.now().strftime("%I:%M %p"),
+            "full_timestamp": datetime.now().isoformat(),
+            "source": source,
+            "event": event,
+            "type": event_type
+        }
+        
+        # Add to the beginning of the list
+        self.state["lead_events"][lead_id].insert(0, new_event)
+        
+        # Keep only last 50 events per lead
+        self.state["lead_events"][lead_id] = self.state["lead_events"][lead_id][:50]
+        
+        self.state["last_updated"] = datetime.now().isoformat()
+        await self.cache.set("agent_state_sync_state", self.state)
+        
+        # Also mirror to recent_thoughts for global visibility if it's AI
+        if source == "AI":
+            await self.record_agent_thought(source, f"Lead {lead_id}: {event}")
+
+    def get_lead_events(self, lead_id: str) -> List[Dict[str, Any]]:
+        """Retrieve events for a specific lead"""
+        if "lead_events" not in self.state:
+            return []
+        return self.state["lead_events"].get(lead_id, [])
 
 # Singleton for prototype
 sync_service = AgentStateSync()

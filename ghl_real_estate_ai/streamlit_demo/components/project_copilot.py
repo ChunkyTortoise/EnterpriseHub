@@ -3,6 +3,7 @@ Project Copilot - Claude-Driven Project Navigator
 Greets the user and provides guided walkthroughs of the platform.
 """
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 from datetime import datetime
 from ghl_real_estate_ai.services.claude_platform_companion import get_claude_platform_companion
@@ -43,7 +44,7 @@ def render_welcome_walkthrough():
                     try:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
-                        greeting = loop.run_until_complete(companion.generate_project_greeting("Jorge"))
+                        greeting = run_async(companion.generate_project_greeting("Jorge"))
                         greeting_text = greeting
                     except Exception:
                         pass
@@ -133,7 +134,7 @@ def render_project_copilot():
                     try:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
-                        guidance = loop.run_until_complete(companion.get_hub_guidance(current_hub))
+                        guidance = run_async(companion.get_hub_guidance(current_hub))
                         st.info(guidance)
                     except:
                         st.info(f"The {current_hub} is optimized for Phase 6 operations. Focus on your high-intent leads.")

@@ -29,6 +29,7 @@ class FollowUpType(Enum):
     LONG_TERM_NURTURE = "long_term_nurture"  # 14 days ongoing
     QUALIFICATION_RETRY = "qualification_retry"  # Retry incomplete qualification
     TEMPERATURE_ESCALATION = "temperature_escalation"  # Warm → Hot attempts
+    BEHAVIORAL_REACTIVATION = "behavioral_reactivation" # Reactivate based on intent signals
 
 
 @dataclass
@@ -212,6 +213,10 @@ class JorgeFollowUpEngine:
             message_content = self._create_qualification_retry_message(
                 seller_data, sequence_position, seller_name
             )
+        elif follow_up_type == FollowUpType.BEHAVIORAL_REACTIVATION:
+            message_content = self._create_behavioral_reactivation_message(
+                seller_data, seller_name
+            )
         elif follow_up_type == FollowUpType.TEMPERATURE_ESCALATION:
             message_content = self._create_temperature_escalation_message(
                 seller_data, sequence_position, seller_name
@@ -328,6 +333,23 @@ class JorgeFollowUpEngine:
             base_message = "Interest rates dropped. Now might be the perfect time to make your move. Thoughts?"
         else:
             base_message = "Last chance to get ahead of the spring market rush. Should we schedule a quick call?"
+        
+        if seller_name:
+            base_message = f"{seller_name}, {base_message.lower()}"
+            
+        return self.tone_engine._ensure_sms_compliance(base_message)
+
+    def _create_behavioral_reactivation_message(
+        self,
+        seller_data: Dict[str, Any],
+        seller_name: Optional[str]
+    ) -> str:
+        """Create confrontational re-engagement message based on behavioral signals"""
+        
+        # Trigger reason (default to valuation search)
+        trigger = seller_data.get("last_behavioral_trigger", "checking home values")
+        
+        base_message = f"I saw you were {trigger} again. Are you ready to be serious about selling or should we stop wasting time?"
         
         if seller_name:
             base_message = f"{seller_name}, {base_message.lower()}"

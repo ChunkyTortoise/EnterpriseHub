@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import asyncio
 import json
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Import enhanced services
 try:
@@ -1406,12 +1407,6 @@ def render_seller_journey_hub(services, render_property_valuation_engine, render
         
         with st.spinner("Claude is optimizing the seller journey..."):
             try:
-                try:
-                    loop = asyncio.get_event_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                
                 # Build inventory context
                 inventory_metrics = {
                     "active_listings": 3,
@@ -1421,7 +1416,7 @@ def render_seller_journey_hub(services, render_property_valuation_engine, render
                 }
                 
                 # Use chat_query for inventory advice
-                inventory_result = loop.run_until_complete(
+                inventory_result = run_async(
                     orchestrator.chat_query(
                         query="Provide strategic inventory optimization counsel. Analyze current market velocity and suggest 2 focus areas for listing maximization.",
                         context={"metrics": inventory_metrics, "task": "inventory_counsel"}

@@ -152,6 +152,8 @@ class NationalMarketIntelligence:
         self.competitive_analyses: Dict[str, CompetitiveAnalysis] = {}
         self.pricing_intelligence: Optional[PricingIntelligence] = None
         self.migration_patterns: List[MigrationPattern] = []
+        self._initialization_lock = asyncio.Lock()
+        self._is_initialized = False
 
         # Initialize analytics
         self._initialize_market_intelligence()
@@ -163,9 +165,20 @@ class NationalMarketIntelligence:
         # Load existing data or create initial intelligence
         self._load_existing_data()
 
-        # If no existing data, create initial intelligence
-        if not self.market_metrics:
-            asyncio.create_task(self._generate_initial_intelligence())
+    async def _ensure_initialized(self) -> None:
+        """Ensure the service is fully initialized with data"""
+        if self._is_initialized or self.market_metrics:
+            self._is_initialized = True
+            return
+
+        async with self._initialization_lock:
+            # Re-check after acquiring lock
+            if self._is_initialized or self.market_metrics:
+                self._is_initialized = True
+                return
+                
+            await self._generate_initial_intelligence()
+            self._is_initialized = True
 
     def _load_existing_data(self) -> None:
         """Load existing intelligence data from files"""
@@ -679,8 +692,70 @@ class NationalMarketIntelligence:
         logger.info(f"Using proxy valuation for {location_str}")
         return base_price * 1.15
 
+    async def get_zip_variance(self, zip_code: str) -> float:
+        """
+        Fetch the price variance (online estimate error rate) for a specific zip code.
+        Used for Price Anchor Defense against inaccurate Zestimates.
+        """
+        await self._ensure_initialized()
+        # In a production system, this would query a real-time database of sales vs estimates.
+        # For the prototype, we simulate variance based on market volatility and opportunity scores.
+        metrics = await self.get_market_metrics(zip_code)
+        
+        if metrics:
+            # Volatile or rapidly growing markets tend to have higher online estimate errors
+            base_variance = 5.0
+            if metrics.market_trend == MarketTrend.RAPIDLY_GROWING:
+                base_variance += 7.5
+            elif metrics.market_trend == MarketTrend.VOLATILE:
+                base_variance += 10.0
+                
+            # Higher opportunity score often correlates with faster-moving inventory, increasing error
+            score_adj = (metrics.opportunity_score - 50) / 10
+            
+            return round(base_variance + score_adj, 1)
+            
+        # Default variance if zip not specifically found
+        return 8.4
+
+    async def predict_cross_market_demand(self, source_market: str, destination_market: str) -> Dict[str, Any]:
+        """
+        Phase 4: Cross-Market Hive Mind.
+        Predict demand in a destination market based on source market migration data.
+        Example: Austin tech-migration driving luxury demand in Miami.
+        """
+        # Find the relevant migration pattern
+        pattern = next((p for p in self.migration_patterns 
+                       if p.source_market.lower() == source_market.lower() 
+                       and p.destination_market.lower() == destination_market.lower()), None)
+        
+        dest_metrics = await self.get_market_metrics(destination_market)
+        source_metrics = await self.get_market_metrics(source_market)
+        
+        if not pattern or not dest_metrics:
+            return {"demand_score": 0.0, "reason": "Insufficient migration data"}
+            
+        # Calculation: Volume * Salary Band * Destination Opportunity
+        # High volume of high-salary migrants into a high-opportunity market = peak demand
+        avg_salary = (pattern.average_salary_band[0] + pattern.average_salary_band[1]) / 2
+        salary_factor = avg_salary / 100000 # Normalized to 100k
+        
+        demand_score = (pattern.annual_volume / 100) * salary_factor * (dest_metrics.opportunity_score / 50)
+        demand_score = min(100.0, demand_score * 10) # Scaling
+        
+        return {
+            "source_market": source_market,
+            "destination_market": destination_market,
+            "demand_score": round(demand_score, 1),
+            "primary_industries": pattern.primary_industries,
+            "avg_housing_budget": pattern.average_housing_budget,
+            "trend": pattern.trend_direction,
+            "insight": f"High-yield migration from {source_market} is driving {pattern.primary_industries[0]} demand in {destination_market}."
+        }
+
     async def get_national_market_overview(self) -> Dict[str, Any]:
         """Get comprehensive national market overview"""
+        await self._ensure_initialized()
         cache_key = "national_market_overview"
 
         cached = await self.cache.get(cache_key)

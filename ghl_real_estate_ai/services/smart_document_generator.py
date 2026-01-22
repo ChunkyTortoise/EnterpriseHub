@@ -68,7 +68,7 @@ class SmartDocumentGenerator:
         self.ghl_api_key = ghl_api_key
         self.ghl_location_id = ghl_location_id
 
-    def generate_document(
+    async def generate_document(
         self,
         document_type: DocumentType,
         template_id: str,
@@ -87,6 +87,25 @@ class SmartDocumentGenerator:
         Returns:
             Generated document details
         """
+        # --- PHASE 2: ROI PROFORMA GENERATION ---
+        if document_type == DocumentType.ROI_PROFORMA:
+            from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
+            market_intel = get_national_market_intelligence()
+            
+            location = data.get("property_address") or data.get("market_id", "austin")
+            market_metrics = await market_intel.get_market_metrics(location)
+            
+            if market_metrics:
+                # Populate estimated profit fields based on market intelligence
+                data["market_appreciation"] = f"{market_metrics.price_appreciation_1y}%"
+                data["opportunity_score"] = market_metrics.opportunity_score
+                
+                # Calculate estimated profit (Example: 15% of median price adjusted by opportunity)
+                base_profit = market_metrics.median_home_price * 0.15
+                adjusted_profit = base_profit * (market_metrics.opportunity_score / 100)
+                data["estimated_profit"] = f"${adjusted_profit:,.2f}"
+                data["market_trend"] = market_metrics.market_trend.value
+
         document = {
             "id": f"doc_{datetime.now().timestamp()}",
             "type": document_type.value,
@@ -124,7 +143,7 @@ class SmartDocumentGenerator:
 
         return document
 
-    def generate_disclosure_packet(
+    async def generate_disclosure_packet(
         self, property_data: Dict[str, Any], jurisdiction: str
     ) -> Dict[str, Any]:
         """
@@ -157,7 +176,7 @@ class SmartDocumentGenerator:
 
         # Generate each required document
         for doc_type in required_docs:
-            doc = self.generate_document(
+            doc = await self.generate_document(
                 DocumentType[doc_type.upper()],
                 f"template_{doc_type}_{jurisdiction}",
                 property_data,
@@ -174,7 +193,7 @@ class SmartDocumentGenerator:
         # Add optional documents
         optional_docs = self._get_optional_disclosures(property_data)
         for doc_type in optional_docs:
-            doc = self.generate_document(
+            doc = await self.generate_document(
                 DocumentType[doc_type.upper()], f"template_{doc_type}", property_data
             )
             packet["documents"].append(

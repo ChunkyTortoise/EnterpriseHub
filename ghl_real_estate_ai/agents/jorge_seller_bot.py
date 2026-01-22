@@ -32,13 +32,26 @@ class JorgeSellerBot:
         workflow.add_node("detect_stall", self.detect_stall)
         workflow.add_node("select_strategy", self.select_strategy)
         workflow.add_node("generate_jorge_response", self.generate_jorge_response)
+        workflow.add_node("execute_follow_up", self.execute_follow_up)
 
         # Define Edges
         workflow.set_entry_point("analyze_intent")
         workflow.add_edge("analyze_intent", "detect_stall")
         workflow.add_edge("detect_stall", "select_strategy")
-        workflow.add_edge("select_strategy", "generate_jorge_response")
+        
+        # Routing based on next_action
+        workflow.add_conditional_edges(
+            "select_strategy",
+            self._route_seller_action,
+            {
+                "respond": "generate_jorge_response",
+                "follow_up": "execute_follow_up",
+                "end": END
+            }
+        )
+        
         workflow.add_edge("generate_jorge_response", END)
+        workflow.add_edge("execute_follow_up", END)
 
         return workflow.compile()
 
@@ -54,7 +67,8 @@ class JorgeSellerBot:
         return {
             "intent_profile": profile,
             "psychological_commitment": profile.pcs.total_score,
-            "is_qualified": profile.frs.classification in ["Hot Lead", "Warm Lead"]
+            "is_qualified": profile.frs.classification in ["Hot Lead", "Warm Lead"],
+            "last_action_timestamp": datetime.now()
         }
 
     def detect_stall(self, state: JorgeSellerState) -> Dict:
@@ -131,6 +145,36 @@ class JorgeSellerBot:
         
         return {"response_content": content}
 
+    async def execute_follow_up(self, state: JorgeSellerState) -> Dict:
+        """Execute automated follow-up for unresponsive or lukewarm sellers."""
+        logger.info(f"Executing follow-up for {state['lead_name']} (Attempt {state.get('follow_up_count', 0) + 1})")
+        
+        # Follow-up scripts based on previous stage
+        follow_ups = {
+            "qualification": "Checking back—did you ever decide on a timeline for {address}?",
+            "valuation_defense": "I've updated the comps for your neighborhood. Zillow is still high. Ready for the truth?",
+            "listing_prep": "The photographer is in your area Thursday. Should I book him for your place?"
+        }
+        
+        stage = state.get('current_journey_stage', 'qualification')
+        template = follow_ups.get(stage, "Still interested in selling {address} or should I close the file?")
+        
+        # In prod, send via GHL
+        return {
+            "response_content": template.format(address=state.get('property_address', 'your property')),
+            "follow_up_count": state.get('follow_up_count', 0) + 1
+        }
+
+    # --- Helper Logic ---
+
+    def _route_seller_action(self, state: JorgeSellerState) -> Literal["respond", "follow_up", "end"]:
+        """Determine if we should respond immediately or queue a follow-up."""
+        if state['next_action'] == "follow_up":
+            return "follow_up"
+        if state['next_action'] == "end":
+            return "end"
+        return "respond"
+
     async def process_seller_message(self, 
                                    lead_id: str, 
                                    lead_name: str, 
@@ -145,10 +189,13 @@ class JorgeSellerBot:
             "current_tone": "direct",
             "stall_detected": False,
             "detected_stall_type": None,
-            "next_action": "analyze",
+            "next_action": "respond", # Changed from "analyze"
             "response_content": "",
             "psychological_commitment": 0.0,
-            "is_qualified": False
+            "is_qualified": False,
+            "current_journey_stage": "qualification",
+            "follow_up_count": 0,
+            "last_action_timestamp": None
         }
         
         return await self.workflow.ainvoke(initial_state)

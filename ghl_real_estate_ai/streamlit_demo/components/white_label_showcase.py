@@ -6,6 +6,7 @@ Showcases brand customization, workflow automation, and integration marketplace.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import asyncio
 import json
@@ -349,7 +350,7 @@ class WhiteLabelShowcase:
             # Get workflows for each tier
             workflows_by_tier = {}
             for tier in BrandingTier:
-                workflows = loop.run_until_complete(
+                workflows = run_async(
                     self.service.get_available_workflows(tier)
                 )
                 workflows_by_tier[tier] = workflows
@@ -421,7 +422,7 @@ class WhiteLabelShowcase:
             # Get integrations for each tier
             integrations_by_tier = {}
             for tier in BrandingTier:
-                integrations = loop.run_until_complete(
+                integrations = run_async(
                     self.service.get_integration_marketplace(tier)
                 )
                 integrations_by_tier[tier] = integrations

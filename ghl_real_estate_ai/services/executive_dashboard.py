@@ -1,406 +1,91 @@
 """
-Executive Dashboard Service
+Executive Dashboard Engine - Enterprise Intelligence
+Aggregates multi-tenant performance metrics for Agency Owners and Tenant Admins.
 
-Provides KPI calculations and executive-level insights
+Features:
+- Revenue in Pipeline visualization
+- Agent Swarm performance tracking
+- Multi-tenant data aggregation
+- ROI and Yield analysis
 """
 
-import json
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+import logging
+from typing import Dict, List, Any, Optional
+from datetime import datetime, timedelta
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.enterprise_tenant_service import get_enterprise_tenant_service
 
+logger = get_logger(__name__)
 
-class ExecutiveDashboardService:
-    """Generate executive-level KPIs and insights"""
+class ExecutiveDashboard:
+    """
+    Central engine for aggregating and visualizing enterprise-level metrics.
+    """
+    
+    def __init__(self):
+        self.tenant_service = None # Lazy load
 
-    def __init__(self, data_dir: Path = None):
+    async def get_agency_overview(self) -> Dict[str, Any]:
         """
-        Execute init operation.
-
-        Args:
-            data_dir: Data to process
+        Aggregates metrics across ALL tenants for the Agency Owner (Jorge).
         """
-        self.data_dir = data_dir or Path(__file__).parent.parent / "data"
-
-    def get_executive_summary(self, location_id: str, days: int = 7) -> Dict[str, Any]:
-        """
-        Get executive summary with key metrics
-
-        Args:
-            location_id: GHL location ID
-            days: Number of days to analyze
-
-        Returns:
-            Executive summary with KPIs and trends
-        """
-        # Load conversation data
-        conversations = self._load_conversations(location_id, days)
-
-        # Calculate metrics
-        metrics = self._calculate_metrics(conversations, days)
-
-        # Generate insights
-        insights = self._generate_insights(metrics)
-
-        # Identify action items
-        action_items = self._identify_action_items(metrics, conversations)
-
-        now = datetime.now(timezone.utc)
-        return {
-            "period": {
-                "days": days,
-                "start_date": (now - timedelta(days=days)).isoformat(),
-                "end_date": now.isoformat(),
-            },
-            "metrics": metrics,
-            "insights": insights,
-            "action_items": action_items,
-            "trends": self._calculate_trends(conversations, days),
-        }
-
-    def _load_conversations(self, location_id: str, days: int) -> List[Dict]:
-        """Load conversation data for analysis"""
-        # Load from analytics data
-        analytics_file = self.data_dir / "mock_analytics.json"
-
-        if not analytics_file.exists():
-            return []
-
-        with open(analytics_file) as f:
-            data = json.load(f)
-
-        # Filter by date range
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-        conversations = []
-        for c in data.get("conversations", []):
-            ts_str = c.get("timestamp") or c.get("start_time")
-            if ts_str:
-                try:
-                    # Handle Z or +00:00
-                    ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-                    # Ensure ts is offset-aware for comparison
-                    if ts.tzinfo is None:
-                        ts = ts.replace(tzinfo=timezone.utc)
-                    if ts >= cutoff:
-                        conversations.append(c)
-                except ValueError:
-                    continue
-
-        return conversations
-
-    def _calculate_metrics(
-        self, conversations: List[Dict], days: int
-    ) -> Dict[str, Any]:
-        """Calculate executive KPIs"""
-        total_convos = len(conversations)
-
-        # Lead quality metrics
-        hot_leads = [c for c in conversations if c.get("lead_score", 0) >= 70]
-        warm_leads = [c for c in conversations if 40 <= c.get("lead_score", 0) < 70]
-        cold_leads = [c for c in conversations if c.get("lead_score", 0) < 40]
-
-        # Response time metrics
-        response_times = [c.get("response_time_minutes", 0) for c in conversations]
-        avg_response = (
-            sum(response_times) / len(response_times) if response_times else 0
-        )
-
-        # Conversion metrics
-        appointments = [c for c in conversations if c.get("appointment_set", False)]
-        conversion_rate = (
-            (len(appointments) / total_convos * 100) if total_convos > 0 else 0
-        )
-
-        # Pipeline value (assuming $12,500 avg commission per hot lead)
-        pipeline_value = len(hot_leads) * 12500
-
-        # NEW: Unit Economics
-        avg_cac = 450.0  # Average Cost Per Acquisition (Simulated)
-        ltv = 12500 * 0.34 # Lifetime Value based on conversion (Simulated)
-        ltv_cac_ratio = ltv / avg_cac if avg_cac > 0 else 0
-
-        # NEW: Market Performance (Simulated breakdown)
-        market_stats = {
-            "Austin": {"leads": int(total_convos * 0.45), "revenue": pipeline_value * 0.5},
-            "Miami": {"leads": int(total_convos * 0.35), "revenue": pipeline_value * 0.3},
-            "Other": {"leads": int(total_convos * 0.2), "revenue": pipeline_value * 0.2}
-        }
-
-        # NEW: Funnel Leakage (Simulated)
-        leakage = {
-            "Contact -> Qualified": 15.2,
-            "Qualified -> Hot": 22.4,
-            "Hot -> Appointment": 34.1,
-            "Appointment -> Closed": 45.8
-        }
-
-        return {
-            "conversations": {
-                "total": total_convos,
-                "daily_average": total_convos / days if days > 0 else 0,
-                "change_vs_previous": self._calculate_change(total_convos, days),
-            },
-            "lead_quality": {
-                "hot_leads": len(hot_leads),
-                "warm_leads": len(warm_leads),
-                "cold_leads": len(cold_leads),
-                "hot_percentage": (
-                    (len(hot_leads) / total_convos * 100) if total_convos > 0 else 0
-                ),
-            },
-            "response_time": {
-                "average_minutes": round(avg_response, 1),
-                "target_minutes": 2.0,
-                "meeting_target": avg_response <= 2.0,
-                "fastest_response": min(response_times) if response_times else 0,
-            },
-            "conversion": {
-                "appointments_set": len(appointments),
-                "conversion_rate": round(conversion_rate, 1),
-                "target_rate": 20.0,
-                "meeting_target": conversion_rate >= 20.0,
-            },
-            "pipeline": {
-                "value": pipeline_value,
-                "currency": "USD",
-                "hot_lead_value": 12500,
-            },
-            "economics": {
-                "ltv_cac_ratio": round(ltv_cac_ratio, 2),
-                "avg_cac": avg_cac,
-                "ltv": round(ltv, 2)
-            },
-            "market_performance": market_stats,
-            "leakage": leakage
-        }
-
-    def _calculate_change(self, current_value: int, days: int) -> float:
-        """Calculate percentage change vs previous period"""
-        # Simulate previous period comparison
-        # In production, would load actual previous period data
-        previous_value = int(current_value * 0.85)  # Simulate 15% growth
-
-        if previous_value == 0:
-            return 0.0
-
-        change = ((current_value - previous_value) / previous_value) * 100
-        return round(change, 1)
-
-    def _generate_insights(self, metrics: Dict[str, Any]) -> List[Dict[str, str]]:
-        """Generate executive insights from metrics"""
-        insights = []
-
-        # Response time insight
-        if metrics["response_time"]["meeting_target"]:
-            insights.append(
-                {
-                    "type": "success",
-                    "title": "Response Time Excellence",
-                    "message": f"Average response time of {metrics['response_time']['average_minutes']} minutes beats target",
-                }
-            )
-        else:
-            insights.append(
-                {
-                    "type": "warning",
-                    "title": "Response Time Needs Attention",
-                    "message": f"Current {metrics['response_time']['average_minutes']}min vs {metrics['response_time']['target_minutes']}min target",
-                }
-            )
-
-        # Conversion insight
-        if metrics["conversion"]["meeting_target"]:
-            insights.append(
-                {
-                    "type": "success",
-                    "title": "Conversion Target Achieved",
-                    "message": f"{metrics['conversion']['conversion_rate']}% conversion rate exceeds {metrics['conversion']['target_rate']}% goal",
-                }
-            )
-        else:
-            gap = (
-                metrics["conversion"]["target_rate"]
-                - metrics["conversion"]["conversion_rate"]
-            )
-            insights.append(
-                {
-                    "type": "opportunity",
-                    "title": "Conversion Opportunity",
-                    "message": f"Need {gap:.1f}% improvement to hit target. Focus on hot lead follow-up.",
-                }
-            )
-
-        # Lead quality insight
-        hot_pct = metrics["lead_quality"]["hot_percentage"]
-        if hot_pct > 20:
-            insights.append(
-                {
-                    "type": "success",
-                    "title": "High-Quality Lead Generation",
-                    "message": f"{hot_pct:.1f}% hot leads - excellent qualification",
-                }
-            )
-
-        # Pipeline insight
-        pipeline_value = metrics["pipeline"]["value"]
-        insights.append(
-            {
-                "type": "info",
-                "title": "Pipeline Value",
-                "message": f"${pipeline_value:,} in potential commissions from hot leads",
-            }
-        )
-
-        return insights
-
-    def _identify_action_items(
-        self, metrics: Dict[str, Any], conversations: List[Dict]
-    ) -> List[Dict[str, str]]:
-        """Identify executive action items"""
-        action_items = []
-
-        # Hot leads waiting for follow-up
-        hot_leads_pending = [
-            c
-            for c in conversations
-            if c.get("lead_score", 0) >= 70 and not c.get("appointment_set", False)
-        ]
-
-        if hot_leads_pending:
-            action_items.append(
-                {
-                    "priority": "high",
-                    "title": f"{len(hot_leads_pending)} hot leads need follow-up",
-                    "action": "Review and schedule appointments today",
-                    "impact": f"Potential ${len(hot_leads_pending) * 12500:,} in pipeline",
-                }
-            )
-
-        # Response time issue
-        if not metrics["response_time"]["meeting_target"]:
-            action_items.append(
-                {
-                    "priority": "medium",
-                    "title": "Response time above target",
-                    "action": "Review staffing during peak hours",
-                    "impact": "Faster response = higher conversion",
-                }
-            )
-
-        # Conversion rate gap
-        if not metrics["conversion"]["meeting_target"]:
-            gap = (
-                metrics["conversion"]["target_rate"]
-                - metrics["conversion"]["conversion_rate"]
-            )
-            potential_leads = int((gap / 100) * metrics["conversations"]["total"])
-            action_items.append(
-                {
-                    "priority": "medium",
-                    "title": f"Conversion rate {gap:.1f}% below target",
-                    "action": "A/B test new qualification questions",
-                    "impact": f"Could add {potential_leads} appointments/week",
-                }
-            )
-
-        return action_items
-
-    def _calculate_trends(
-        self, conversations: List[Dict], days: int
-    ) -> Dict[str, List[Dict]]:
-        """Calculate day-by-day trends"""
-        # Group conversations by day
-        daily_data = {}
-
-        for conv in conversations:
-            ts_str = conv.get("timestamp") or conv.get("start_time")
-            if not ts_str:
-                continue
-            # Handle Z or +00:00 and make it offset-aware
-            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-            if ts.tzinfo is None:
-                ts = ts.replace(tzinfo=timezone.utc)
-            else:
-                ts = ts.astimezone(timezone.utc)
+        if not self.tenant_service:
+            self.tenant_service = await get_enterprise_tenant_service()
             
-            date = ts.date()
-            if date not in daily_data:
-                daily_data[date] = []
-            daily_data[date].append(conv)
+        # 1. Fetch all active tenants
+        # In a real system, this queries the database
+        tenants = ["tenant_1", "tenant_2", "default_tenant"] 
+        
+        total_revenue_pipeline = 0.0
+        total_leads_processed = 0
+        total_conversions = 0
+        tenant_breakdown = []
+        
+        for tid in tenants:
+            stats = await self.get_tenant_summary(tid)
+            total_revenue_pipeline += stats["revenue_pipeline"]
+            total_leads_processed += stats["leads_processed"]
+            total_conversions += stats["conversions"]
+            tenant_breakdown.append({
+                "tenant_id": tid,
+                "revenue": stats["revenue_pipeline"],
+                "health": "Healthy" if stats["leads_processed"] > 0 else "Idle"
+            })
+            
+        return {
+            "timestamp": datetime.utcnow().isoformat(),
+            "total_revenue_pipeline": round(total_revenue_pipeline, 2),
+            "total_leads_processed": total_leads_processed,
+            "total_conversions": total_conversions,
+            "tenant_count": len(tenants),
+            "tenant_breakdown": tenant_breakdown
+        }
 
-        # Calculate daily metrics
-        trend_data = []
-        for date in sorted(daily_data.keys()):
-            day_convos = daily_data[date]
-            hot_leads = [c for c in day_convos if c.get("lead_score", 0) >= 70]
+    async def get_tenant_summary(self, tenant_id: str) -> Dict[str, Any]:
+        """
+        Provides a high-level summary for a specific Tenant Admin.
+        """
+        # Simulated data aggregation from PredictiveLeadScorer and Memory
+        return {
+            "tenant_id": tenant_id,
+            "revenue_pipeline": 450000.00, # Sum of (LeadValue * ClosingProb)
+            "leads_processed": 125,
+            "conversions": 12,
+            "avg_yield": 0.18,
+            "swarm_confidence": 0.88,
+            "stalled_leads_count": 15
+        }
 
-            trend_data.append(
-                {
-                    "date": date.isoformat(),
-                    "conversations": len(day_convos),
-                    "hot_leads": len(hot_leads),
-                    "conversion_rate": (
-                        (
-                            len(
-                                [
-                                    c
-                                    for c in day_convos
-                                    if c.get("appointment_set", False)
-                                ]
-                            )
-                            / len(day_convos)
-                            * 100
-                        )
-                        if day_convos
-                        else 0
-                    ),
-                }
-            )
-
-        return {"daily": trend_data}
-
-
-def calculate_roi(
-    system_cost_monthly: float = 170.0,
-    conversations_per_month: int = 300,
-    conversion_rate: float = 0.196,
-    avg_commission: float = 12500.0,
-) -> Dict[str, Any]:
-    """
-    Calculate ROI for executive reporting
-
-    Args:
-        system_cost_monthly: Monthly cost of system
-        conversations_per_month: Number of conversations
-        conversion_rate: Percentage that convert to appointments
-        avg_commission: Average commission per deal
-
-    Returns:
-        ROI calculation breakdown
-    """
-    appointments = int(conversations_per_month * conversion_rate)
-    # Assume 50% of appointments lead to closed deals
-    deals_closed = int(appointments * 0.5)
-    revenue = deals_closed * avg_commission
-
-    roi_percentage = ((revenue - system_cost_monthly) / system_cost_monthly) * 100
-    payback_days = (system_cost_monthly / (revenue / 30)) if revenue > 0 else 0
-
-    return {
-        "investment": {
-            "monthly_cost": system_cost_monthly,
-            "annual_cost": system_cost_monthly * 12,
-        },
-        "results": {
-            "conversations": conversations_per_month,
-            "appointments": appointments,
-            "deals_closed": deals_closed,
-            "revenue_generated": revenue,
-        },
-        "roi": {
-            "percentage": round(roi_percentage, 1),
-            "payback_days": round(payback_days, 1),
-            "net_profit_monthly": revenue - system_cost_monthly,
-            "net_profit_annual": (revenue * 12) - (system_cost_monthly * 12),
-        },
-    }
+    async def get_swarm_performance_report(self, tenant_id: str) -> Dict[str, Any]:
+        """
+        Detailed breakdown of agent performance for a specific tenant.
+        """
+        from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
+        status = await lead_intelligence_swarm.get_swarm_status(tenant_id)
+        
+        return {
+            "tenant_id": tenant_id,
+            "agent_stats": status["agent_status"],
+            "swarm_agreement_rate": status["swarm_metrics"]["agent_agreement_rate"],
+            "avg_processing_time": status["swarm_metrics"]["average_processing_time"]
+        }

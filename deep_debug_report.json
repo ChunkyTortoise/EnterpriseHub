@@ -1,0 +1,209 @@
+[
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83c\udfaf Neural Scoring",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83c\udfaf_Neural_Scoring.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83d\udcca Pipeline",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83d\udcca_Pipeline.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83c\udfa4 Voice AI",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83c\udfa4_Voice_AI.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83d\udcbc Seller Bot",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83d\udcbc_Seller_Bot.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83d\udc7b Follow-Up",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83d\udc7b_Follow-Up.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83e\udd1d Retention",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83e\udd1d_Retention.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83d\udcc8 Market Intelligence",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83d\udcc8_Market_Intelligence.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83c\udfe0 Property AI",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83c\udfe0_Property_AI.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83d\udcca Analytics",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83d\udcca_Analytics.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83e\udde0 Intent Analysis",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83e\udde0_Intent_Analysis.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83d\udd25 War Room",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83d\udd25_War_Room.png"
+  },
+  {
+    "hub": "\ud83c\udfaf Lead Command",
+    "tab": "\ud83c\udfa4 Whisper Mode",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 3,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83c\udfaf_Lead_Command_\ud83c\udfa4_Whisper_Mode.png"
+  },
+  {
+    "hub": "\u2694\ufe0f Seller Command",
+    "tab": "\ud83c\udfaf Negotiation",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 1,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\u2694\ufe0f_Seller_Command_\ud83c\udfaf_Negotiation.png"
+  },
+  {
+    "hub": "\u2694\ufe0f Seller Command",
+    "tab": "\ud83d\udcca Pipeline",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 1,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\u2694\ufe0f_Seller_Command_\ud83d\udcca_Pipeline.png"
+  },
+  {
+    "hub": "\u2694\ufe0f Seller Command",
+    "tab": "\ud83d\udee1\ufe0f Compliance",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 1,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\u2694\ufe0f_Seller_Command_\ud83d\udee1\ufe0f_Compliance.png"
+  },
+  {
+    "hub": "\ud83d\udcca Business Analytics",
+    "tab": "\ud83d\udcb0 Revenue Forecasting",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 4,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83d\udcca_Business_Analytics_\ud83d\udcb0_Revenue_Forecasting.png"
+  },
+  {
+    "hub": "\ud83d\udcca Business Analytics",
+    "tab": "\ud83c\udfaf Conversion Funnel",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 4,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83d\udcca_Business_Analytics_\ud83c\udfaf_Conversion_Funnel.png"
+  },
+  {
+    "hub": "\ud83d\udcca Business Analytics",
+    "tab": "\ud83d\uddfa\ufe0f Geographic Analytics",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 4,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83d\udcca_Business_Analytics_\ud83d\uddfa\ufe0f_Geographic_Analytics.png"
+  },
+  {
+    "hub": "\ud83d\udcca Business Analytics",
+    "tab": "\ud83e\udde0 Lead Intelligence",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 4,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83d\udcca_Business_Analytics_\ud83e\udde0_Lead_Intelligence.png"
+  },
+  {
+    "hub": "\ud83d\udcca Business Analytics",
+    "tab": "\ud83d\udcb5 ROI Attribution",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 4,
+    "tables": 0,
+    "screenshot": "debug_screenshots/\ud83d\udcca_Business_Analytics_\ud83d\udcb5_ROI_Attribution.png"
+  },
+  {
+    "hub": "\u2699\ufe0f System Config",
+    "tab": "\ud83c\udfaf Lead Bot Config",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 0,
+    "tables": 1,
+    "screenshot": "debug_screenshots/\u2699\ufe0f_System_Config_\ud83c\udfaf_Lead_Bot_Config.png"
+  },
+  {
+    "hub": "\u2699\ufe0f System Config",
+    "tab": "\u2694\ufe0f Seller Bot Config",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 0,
+    "tables": 1,
+    "screenshot": "debug_screenshots/\u2699\ufe0f_System_Config_\u2694\ufe0f_Seller_Bot_Config.png"
+  },
+  {
+    "hub": "\u2699\ufe0f System Config",
+    "tab": "\ud83d\udd17 GHL Integration",
+    "status": "PASS",
+    "errors": [],
+    "plotly_charts": 0,
+    "tables": 1,
+    "screenshot": "debug_screenshots/\u2699\ufe0f_System_Config_\ud83d\udd17_GHL_Integration.png"
+  }
+]

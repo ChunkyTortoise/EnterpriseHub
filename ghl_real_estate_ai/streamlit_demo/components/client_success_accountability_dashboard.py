@@ -13,6 +13,7 @@ Features:
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -43,10 +44,10 @@ def load_agent_performance_data(agent_id: str, period_days: int = 30):
         asyncio.set_event_loop(loop)
         
         try:
-            report = loop.run_until_complete(
+            report = run_async(
                 service.generate_agent_performance_report(agent_id, period_days)
             )
-            dashboard_data = loop.run_until_complete(
+            dashboard_data = run_async(
                 service.get_transparency_dashboard_data(agent_id)
             )
             return report, dashboard_data
@@ -67,7 +68,7 @@ def load_roi_data(client_id: str, agent_id: str):
         asyncio.set_event_loop(loop)
         
         try:
-            roi_report = loop.run_until_complete(
+            roi_report = run_async(
                 service.calculate_client_roi(client_id, agent_id)
             )
             return roi_report
@@ -88,7 +89,7 @@ def load_pricing_justification(agent_id: str, proposed_rate: float):
         asyncio.set_event_loop(loop)
         
         try:
-            justification = loop.run_until_complete(
+            justification = run_async(
                 service.justify_premium_pricing(agent_id, proposed_rate)
             )
             return justification

@@ -47,6 +47,7 @@ from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.autonomous_objection_handler import get_autonomous_objection_handler
 from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
 from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
+from ghl_real_estate_ai.agents.workflow_factory import get_workflow_factory
 
 compliance_enforcer = PolicyEnforcer()
 objection_handler = get_autonomous_objection_handler()
@@ -216,15 +217,16 @@ async def safe_send_sms(contact_id: str, location_id: str, message: str, agent_n
     if not compliance["allowed"]:
         logger.warning(f"🚫 BLOCKED non-compliant message for {contact_id}: {compliance['violations']}")
         # Log to dashboard
-        await sync_service.record_agent_thought(
-            "ComplianceBot", 
-            f"BLOCKED: FHA violation for {contact_id}. Suggestion: {compliance['suggestion']}", 
-            "Error"
+        await sync_service.record_lead_event(
+            contact_id, 
+            "AI", 
+            f"BLOCKED: FHA violation. Suggestion: {compliance['suggestion']}", 
+            "error"
         )
         return
 
     # 2. Log successful delivery attempt to dashboard
-    await sync_service.record_agent_thought(agent_name, f"Sending message to {contact_id}: {message[:50]}...")
+    await sync_service.record_lead_event(contact_id, "AI", f"Sending SMS: {message[:50]}...", "sms")
 
     # 3. Send via GHL
     await send_sms_via_ghl(contact_id, location_id, message)
@@ -344,6 +346,52 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
     if ai_off or not ai_on:
         logger.info(f"AI not engaged for contact {contact_id} - tags: {tags}")
         return JSONResponse({"status": "skipped", "reason": "AI not enabled"})
+
+    # Lifecycle Node Triggering based on Tags
+    lifecycle_tags = {
+        "ai_schedule_showing": ("buyer", "schedule_showing"),
+        "ai_facilitate_offer": ("buyer", "facilitate_offer"),
+        "ai_escrow_nurture": ("seller", "under_contract"),
+        "ai_post_closing": ("seller", "post_close")
+    }
+
+    for tag, (wf_type, node) in lifecycle_tags.items():
+        if tag in tags:
+            logger.info(f"🚀 Manual lifecycle trigger: {tag} for {contact_id}")
+            wf_factory = get_workflow_factory()
+            workflow = wf_factory.get_workflow(wf_type)
+            
+            # Record the manual trigger event
+            await sync_service.record_lead_event(
+                contact_id, 
+                "GHL", 
+                f"Manual Trigger: Applied tag '{tag}'", 
+                "action"
+            )
+            
+            # Prepare state
+            state = {
+                "lead_id": contact_id,
+                "lead_name": payload.get("contact", {}).get("firstName", "Lead"),
+                "contact_phone": payload.get("contact", {}).get("phone", ""),
+                "contact_email": payload.get("contact", {}).get("email", ""),
+                "property_address": payload.get("customFields", {}).get("property_address"),
+                "conversation_history": [], # Should load from DB in prod
+                "engagement_status": "new",
+                "current_step": node
+            }
+            
+            # Execute specific node if possible, or run workflow with node as entry
+            # Simplified: invoke workflow and let it route
+            background_tasks.add_task(workflow.workflow.ainvoke, state)
+            
+            await sync_service.record_lead_event(
+                contact_id, 
+                "AI", 
+                f"Starting {node} workflow node.", 
+                "node"
+            )
+            return JSONResponse({"status": "lifecycle_triggered", "node": node})
 
     # Phase 7: Autonomous Processing via Orchestrator
     if orchestrator:
