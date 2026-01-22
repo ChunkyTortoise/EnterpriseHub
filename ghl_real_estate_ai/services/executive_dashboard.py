@@ -17,7 +17,7 @@ from ghl_real_estate_ai.services.enterprise_tenant_service import get_enterprise
 
 logger = get_logger(__name__)
 
-class ExecutiveDashboard:
+class ExecutiveDashboardService:
     """
     Central engine for aggregating and visualizing enterprise-level metrics.
     """
