@@ -370,6 +370,46 @@ class NationalMarketRegistry:
                 expansion_timeline="Q1 2026",
                 investment_required=225000.0,
                 roi_projection=4.8
+            ),
+
+            "london": MarketExpansionTarget(
+                market_id="london",
+                market_name="London Metropolitan Area",
+                state="London",
+                region="EMEA",
+                expansion_priority=10,
+                corporate_headquarters_count=25,
+                fortune_500_presence=35,
+                estimated_annual_revenue_potential=1250000.0,
+                market_entry_complexity="high",
+                competitive_landscape={
+                    "major_competitors": ["Savills", "Knight Frank", "Foxtons"],
+                    "market_share_opportunity": 0.08,
+                    "differentiation_factors": ["US-style proactive service", "AI-powered ROI defense"]
+                },
+                expansion_timeline="Q3 2026",
+                investment_required=450000.0,
+                roi_projection=5.2
+            ),
+
+            "singapore": MarketExpansionTarget(
+                market_id="singapore",
+                market_name="Singapore",
+                state="Singapore",
+                region="APAC",
+                expansion_priority=9,
+                corporate_headquarters_count=20,
+                fortune_500_presence=28,
+                estimated_annual_revenue_potential=950000.0,
+                market_entry_complexity="high",
+                competitive_landscape={
+                    "major_competitors": ["PropNex", "ERA", "Huttons"],
+                    "market_share_opportunity": 0.10,
+                    "differentiation_factors": ["Cross-border relocation", "Advanced data analytics"]
+                },
+                expansion_timeline="Q4 2026",
+                investment_required=350000.0,
+                roi_projection=4.5
             )
         }
 
@@ -386,7 +426,7 @@ class NationalMarketRegistry:
 
     def _initialize_national_markets(self) -> None:
         """Initialize new market services for national expansion markets"""
-        national_markets = ["denver", "phoenix", "seattle"]
+        national_markets = ["denver", "phoenix", "seattle", "london", "singapore"]
 
         for market_id in national_markets:
             if market_id not in self.base_registry.service_classes:

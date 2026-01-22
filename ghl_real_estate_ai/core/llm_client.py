@@ -4,7 +4,7 @@ Unified LLM Client - Multi-provider support for Gemini and Claude.
 Provides a consistent interface for interacting with different LLM providers,
 including direct SDK access and LangChain compatibility.
 """
-import asyncio
+import json
 import httpx
 from dataclasses import dataclass
 from enum import Enum
@@ -21,11 +21,12 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
-class LLMProvider(Enum):
+class LLMProvider(str, Enum):
     """Supported LLM providers."""
     GEMINI = "gemini"
     CLAUDE = "claude"
     PERPLEXITY = "perplexity"
+    MOCK = "mock"
 
 
 class TaskComplexity(Enum):
@@ -67,11 +68,16 @@ class LLMClient:
         Initialize the LLM client.
 
         Args:
-            provider: LLM provider ("gemini" or "claude"). Defaults to settings.
+            provider: LLM provider ("gemini", "claude", or "mock"). Defaults to settings.
             model: Specific model name. Defaults to settings.
             api_key: Optional API key for multi-tenancy.
         """
-        provider_val = provider or settings.default_llm_provider
+        import os
+        if os.getenv("USE_MOCK_LLM") == "true":
+            provider_val = "mock"
+        else:
+            provider_val = provider or settings.default_llm_provider
+            
         self.provider = LLMProvider(provider_val)
         self.api_key = api_key
 
@@ -366,7 +372,75 @@ class LLMClient:
         ))
 
         try:
-            if self.provider == LLMProvider.GEMINI:
+            if self.provider == LLMProvider.MOCK:
+                # Mock responses for Dojo testing
+                content = "This is a mock response from the LLM."
+                prompt_lower = (prompt or "").lower()
+                system_lower = (system_prompt or "").lower()
+                
+                if "dojo sensei" in prompt_lower or "dojo sensei" in system_lower:
+                    content = json.dumps({
+                        "scores": {
+                            "empathy": 8.0,
+                            "goal_pursuit": 9.0,
+                            "accuracy": 9.0,
+                            "compliance": 10.0,
+                            "tone_match": 9.0
+                        },
+                        "overall": 9.0,
+                        "breakdown": {
+                            "compliance": 10.0,
+                            "empathy": 8.0,
+                            "directness": 9.0,
+                            "tone_match": 9.0,
+                            "goal_pursuit": 9.0
+                        },
+                        "feedback": "The agent handled the situation with elite precision, maintaining strict compliance while pushing for data-driven results.",
+                        "coaching_tips": ["Maintain this level of directness in all high-stakes negotiations."]
+                    })
+                elif "you are playing a persona" in system_lower:
+                    # Simulator (Lead)
+                    if "fair housing trap" in system_lower:
+                        if "objective" in prompt_lower or "criteria" in prompt_lower:
+                            content = "I don't care about your criteria. I want a neighborhood that feels safe. Is that too much to ask?"
+                        else:
+                            content = "I'm looking for a neighborhood with 'good people'. You know, professional families, not those 'sketchy' types from the other side of town. Where should I look?"
+                    elif "aggressive investor" in system_lower:
+                        if "arbitrage" in prompt_lower or "yield" in prompt_lower:
+                            content = "The yield spreads you mentioned are interesting, but my 8% cap rate requirement is non negotiable. Can you deliver or not?"
+                        else:
+                            content = "I'm looking for high-yield properties in Austin. Don't show me anything with a cap rate below 8%. Also, I'm only paying 4% commission, take it or leave it."
+                    elif "repair denier" in system_lower:
+                        content = "I'm not interested in your algorithms. My kitchen is fine. Either find a buyer who appreciates quality or don't waste my time."
+                    else:
+                        content = "I need to think about it. The numbers seem high."
+                elif "you are an elite real estate ai agent" in system_lower or "psychologist" in system_lower or "jorge" in system_lower:
+                    # Trainee (Agent)
+                    if "fair housing" in system_lower or "psychologist" in system_lower:
+                        if "sketchy" in prompt_lower or "people like us" in prompt_lower or "good neighborhood" in prompt_lower:
+                            content = "I understand safety is a priority. However, I can only provide information based on objective market criteria such as school ratings or crime statistics. I cannot provide recommendations based on neighborhood demographics."
+                        else:
+                            content = "We should focus on properties that meet your specific requirements for square footage and amenities in Austin's high growth zones."
+                    elif "jorge" in system_lower:
+                        if "absd" in prompt_lower or "gdpr" in prompt_lower or "singapore" in prompt_lower:
+                            content = "Data is handled per GDPR/PDPA standards. Regarding ABSD, we optimize for eligible entities to mitigate tax drag. Do you want elite ROI or not?"
+                        elif "cap rate" in prompt_lower or "commission" in prompt_lower:
+                            content = "At a 4% commission, we cannot deploy our full marketing stack. Our data indicates a 2% yield spread in adjacent zones that justifies our standard fee. Do you want elite results or not?"
+                        else:
+                            content = "Market data indicates inventory velocity is slowing. Every week you wait increases holding costs. What is your bottom dollar?"
+                    else:
+                        content = "I understand your position. However, the data indicates we need to adjust the price to attract serious offers."
+                
+                result = LLMResponse(
+                    content=content,
+                    provider=self.provider,
+                    model="mock-model",
+                    input_tokens=10,
+                    output_tokens=20,
+                    tokens_used=30,
+                    finish_reason="stop"
+                )
+            elif self.provider == LLMProvider.GEMINI:
                 # Gemini history handling
                 full_prompt_parts = []
                 if system_prompt:

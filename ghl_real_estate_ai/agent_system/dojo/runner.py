@@ -135,7 +135,8 @@ async def run_regimen(regimen_name: str, iterations: int = 1):
         "Compliance Drills": "The Fair Housing Trap",
         "Lead Qualification": "The Vague Browser",
         "Conflict ROI Defense": "The Litigious Seller",
-        "Equity Protection": "The Repair Denier"
+        "Equity Protection": "The Repair Denier",
+        "International Compliance": "The International Regulatory Skeptic"
     }
     
     persona_name = persona_map.get(regimen_name, "The Confused First-Timer")

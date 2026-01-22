@@ -1,0 +1,171 @@
+# London EMEA Market Configuration
+# Multi-Market Geographic Expansion - Configuration-driven market data
+# Global finance and tech hub
+
+# Basic Market Identification
+market_id: london
+market_name: "London Metropolitan Area"
+market_type: finance_hub
+state: "London"
+region: "EMEA"
+currency: gbp
+timezone: "Europe/London"
+mls_provider: "UK Land Registry / Rightmove Data"
+
+# Geographic Center (Trafalgar Square)
+coordinates: [51.5074, -0.1278]
+
+# Market Economic Indicators
+median_home_price: 750000
+price_appreciation_1y: 4.5
+inventory_days: 45
+
+# Market Specialization Configuration
+specializations:
+  primary_specialization: "Global Finance and International Relocation"
+  secondary_specializations:
+    - "Canary Wharf Executive Housing"
+    - "Tech City Startup Ecosystem"
+    - "Luxury West End Properties"
+    - "International Student Housing"
+
+  unique_advantages:
+    - "Deep understanding of UK property law"
+    - "Global financial sector relationships"
+    - "EMEA regional headquarters expertise"
+    - "Multi-currency investment analysis"
+
+  target_client_types:
+    - "Finance professionals (HSBC, Barclays, Goldman Sachs)"
+    - "Tech workers (Google UK, Meta EMEA)"
+    - "International investors"
+    - "Corporate relocation programs"
+
+  expertise_tags:
+    - "london_specialist"
+    - "finance_hub"
+    - "emea_expansion"
+    - "luxury_london"
+    - "uk_property"
+
+  knowledge_base_path: "data/knowledge_base/london_expertise.json"
+
+# Neighborhood Configurations
+neighborhoods:
+  - name: "Canary Wharf"
+    zone: "East London"
+    median_price: 650000
+    price_trend_3m: 2.1
+    school_rating: 8.5
+    walkability_score: 90
+    coordinates: [51.5049, -0.0195]
+    appeal_scores:
+      finance_appeal: 98
+      executive_appeal: 95
+      commute_appeal: 95
+      luxury_appeal: 85
+    amenities:
+      - "Financial District"
+      - "Modern Skyscrapers"
+      - "Elizabeth Line Access"
+      - "Upscale Shopping"
+    demographics:
+      age_median: 32
+      income_median: 85000
+      tech_workers: 0.35
+    corporate_proximity:
+      hsbc: 2
+      barclays: 3
+      google_uk: 20
+
+  - name: "Shoreditch"
+    zone: "East London"
+    median_price: 720000
+    price_trend_3m: 5.4
+    school_rating: 7.8
+    walkability_score: 95
+    coordinates: [51.5229, -0.0777]
+    appeal_scores:
+      tech_appeal: 95
+      startup_appeal: 98
+      lifestyle_appeal: 90
+      arts_appeal: 95
+    amenities:
+      - "Silicon Roundabout"
+      - "Street Art"
+      - "Nightlife"
+      - "Co-working Spaces"
+    demographics:
+      age_median: 28
+      income_median: 65000
+      tech_workers: 0.70
+    corporate_proximity:
+      google_uk: 10
+      meta_emea: 12
+
+  - name: "Kensington"
+    zone: "West London"
+    median_price: 2500000
+    price_trend_3m: 1.5
+    school_rating: 9.7
+    walkability_score: 85
+    coordinates: [51.5010, -0.1906]
+    appeal_scores:
+      luxury_appeal: 100
+      family_appeal: 95
+      culture_appeal: 98
+      executive_appeal: 90
+    amenities:
+      - "Royal Parks"
+      - "Museums"
+      - "High-end Retail"
+      - "Historic Architecture"
+    demographics:
+      age_median: 42
+      income_median: 180000
+      tech_workers: 0.20
+    corporate_proximity:
+      google_uk: 15
+      hsbc: 25
+
+# Major Employer Configurations
+employers:
+  - employer_id: "hsbc"
+    name: "HSBC Holdings"
+    industry: "Banking/Finance"
+    location: "Canary Wharf"
+    coordinates: [51.5049, -0.0195]
+    employee_count: 40000
+    preferred_neighborhoods:
+      - "Canary Wharf"
+      - "Greenwich"
+      - "Isle of Dogs"
+    average_salary_range: [60000, 350000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q3"]
+
+  - employer_id: "google_uk"
+    name: "Google UK"
+    industry: "Technology"
+    location: "King's Cross"
+    coordinates: [51.5323, -0.1235]
+    employee_count: 7000
+    preferred_neighborhoods:
+      - "Shoreditch"
+      - "Islington"
+      - "Camden"
+    average_salary_range: [80000, 220000]
+    relocation_frequency: "high"
+    hiring_seasons: ["Q1", "Q2"]
+
+# Configuration Metadata
+config_version: "1.0"
+last_updated: "2026-01-22T10:00:00Z"
+active: true
+demographics:
+  population: 8982000
+  median_age: 35.6
+  median_household_income: 54000
+  college_education_rate: 0.52
+  employment_rate: 0.94
+  population_growth_rate: 0.008

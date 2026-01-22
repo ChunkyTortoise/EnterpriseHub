@@ -85,6 +85,7 @@ class ModifySubscriptionRequest(BaseModel):
     tier: Optional[SubscriptionTier] = Field(None, description="New tier (for upgrades/downgrades)")
     payment_method_id: Optional[str] = Field(None, description="New payment method")
     cancel_at_period_end: Optional[bool] = Field(None, description="Schedule cancellation")
+    currency: Optional[str] = Field(None, description="New currency (if changing location/market)")
 
 
 class SubscriptionResponse(BaseModel):
@@ -95,6 +96,7 @@ class SubscriptionResponse(BaseModel):
     stripe_customer_id: str
     tier: SubscriptionTier
     status: SubscriptionStatus
+    currency: str = Field(default="usd", description="Billing currency")
     current_period_start: datetime
     current_period_end: datetime
     usage_allowance: int = Field(..., description="Leads included in tier")
@@ -125,6 +127,7 @@ class SubscriptionSummary(BaseModel):
     location_id: str
     tier: SubscriptionTier
     status: SubscriptionStatus
+    currency: str = "usd"
     usage_current: int
     usage_allowance: int
     usage_percentage: float

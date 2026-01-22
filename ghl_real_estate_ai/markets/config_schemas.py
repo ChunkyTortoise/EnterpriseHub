@@ -146,8 +146,9 @@ class MarketConfig(BaseModel):
     market_id: str = Field(..., description="Unique market identifier")
     market_name: str = Field(..., description="Human-readable market name")
     market_type: MarketType = Field(..., description="Market type classification")
-    state: str = Field(..., description="State code (e.g., TX, CA)")
+    state: str = Field(..., description="State code or province")
     region: str = Field(..., description="Geographic region")
+    currency: str = Field(default="usd", description="Market currency (usd, gbp, sgd, etc.)")
 
     # Geographic data
     coordinates: Tuple[float, float] = Field(..., description="Market center coordinates")
