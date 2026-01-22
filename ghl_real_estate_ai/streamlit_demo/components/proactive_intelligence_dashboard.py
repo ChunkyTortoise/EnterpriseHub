@@ -4,6 +4,7 @@ Real-time alerts, predictions, and performance coaching interface.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import json
 import time
@@ -15,12 +16,8 @@ import plotly.express as px
 
 # Helper for safe asyncio execution in Streamlit
 def run_async(coro):
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(coro)
+    
+    return run_async(coro)
 
 # Import proactive intelligence services
 try:

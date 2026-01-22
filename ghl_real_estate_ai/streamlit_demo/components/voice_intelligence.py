@@ -1,5 +1,6 @@
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import random
 import time
 import asyncio
@@ -104,17 +105,13 @@ def render_voice_intelligence():
             with st.spinner("Analyzing audio stream..."):
                 try:
                     orchestrator = get_claude_orchestrator()
-                    try:
-                        loop = asyncio.get_event_loop()
-                    except RuntimeError:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
+                    
                     
                     # Synthesize transcript for Claude
                     transcript_text = "\n".join([f"{e['role']}: {e['text']}" for e in current_transcript])
                     
                     # Get coaching result
-                    coaching_result = loop.run_until_complete(
+                    coaching_result = run_async(
                         orchestrator.chat_query(
                             query="Provide 2 real-time battlecards and current lead sentiment based on this call transcript.",
                             context={"transcript": transcript_text, "lead_name": selected_lead, "task": "live_call_coaching"},

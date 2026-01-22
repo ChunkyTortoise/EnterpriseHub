@@ -3,6 +3,7 @@ Deep Research Hub Component - Powered by Perplexity AI.
 Provides real-time web research and market intelligence within the dashboard.
 """
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 from ghl_real_estate_ai.services.perplexity_researcher import get_perplexity_researcher
 
@@ -42,7 +43,7 @@ def render_deep_research_hub():
                 with st.spinner(f"Performing deep research on {market_query}..."):
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
-                    result = loop.run_until_complete(researcher.get_market_trends(market_query, period))
+                    result = run_async(researcher.get_market_trends(market_query, period))
                     st.markdown("### Research Results")
                     st.markdown(result)
             else:
@@ -57,7 +58,7 @@ def render_deep_research_hub():
                 with st.spinner(f"Searching public records for {property_address}..."):
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
-                    result = loop.run_until_complete(researcher.find_property_info(property_address))
+                    result = run_async(researcher.find_property_info(property_address))
                     st.markdown("### Property Report")
                     st.markdown(result)
             else:
@@ -76,7 +77,7 @@ def render_deep_research_hub():
                 with st.spinner(f"Analyzing {nb_name} in {nb_city}..."):
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
-                    result = loop.run_until_complete(researcher.analyze_neighborhood(nb_name, nb_city))
+                    result = run_async(researcher.analyze_neighborhood(nb_name, nb_city))
                     st.markdown("### Neighborhood Profile")
                     st.markdown(result)
             else:
@@ -92,7 +93,7 @@ def render_deep_research_hub():
                 with st.spinner("Executing deep research..."):
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
-                    result = loop.run_until_complete(researcher.research_topic(custom_topic, custom_context))
+                    result = run_async(researcher.research_topic(custom_topic, custom_context))
                     st.markdown("### Research Report")
                     st.markdown(result)
             else:
@@ -115,7 +116,7 @@ def render_deep_research_hub():
                     
                     # We can use the orchestrator's new perform_research method
                     with st.spinner("Step 2: Synthesizing strategic insights via Claude..."):
-                        response = loop.run_until_complete(orchestrator.perform_research(hybrid_topic))
+                        response = run_async(orchestrator.perform_research(hybrid_topic))
                         
                         st.markdown("### 🧠 Claude's Strategic Synthesis")
                         st.markdown(response.content)

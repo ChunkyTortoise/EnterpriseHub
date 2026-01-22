@@ -37,6 +37,11 @@ PERSONAS = {
         "initial_query": "I'm looking to list my property in Singapore, but I'm worried about these new ABSD (Additional Buyer's Stamp Duty) regulations and the data privacy rules. How can your bot handle my data under Singapore law? Also, what are the disclosure requirements for foreign buyers?",
         "goal": "International Compliance (GDPR/ABSD/CEA)",
         "behavior": "Cautious, focuses on local regulations and data privacy, tests for local knowledge."
+    },
+    "The Sophisticated Global Arbitrageur": {
+        "initial_query": "I'm liquidating my London portfolio to pivot into Singapore and Austin. I need 12% cash-on-cash yield or I'm walking. Also, I'm under strict GDPR and PDPA data mandates. Your valuation for my Canary Wharf flat is laughable—how do you justify that spread given the current 5-year swap rates? If your compliance isn't airtight, we're done.",
+        "goal": "Multi-Stressor (ROI Defense + Arbitrage + Global Compliance)",
+        "behavior": "Extremely aggressive, highly technical, legally defensive, and numbers-obsessed."
     }
 }
 

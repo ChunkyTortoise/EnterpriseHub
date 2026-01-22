@@ -13,6 +13,7 @@ Created: 2026-01-21
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import sys
 import os
 import time
@@ -44,6 +45,7 @@ try:
     from ghl_real_estate_ai.streamlit_demo.components.jorge_lead_bot_dashboard import render_jorge_lead_bot_dashboard
     from ghl_real_estate_ai.streamlit_demo.components.jorge_seller_bot_dashboard import render_jorge_seller_bot_dashboard
     from ghl_real_estate_ai.streamlit_demo.components.jorge_analytics_dashboard import render_jorge_analytics_dashboard
+    from ghl_real_estate_ai.streamlit_demo.components.lifecycle_dashboard import render_full_lifecycle_dashboard
     COMPONENTS_AVAILABLE = True
 except ImportError as e:
     st.error(f"Error loading dashboard components: {e}")
@@ -119,7 +121,7 @@ def render_sidebar():
 
         hub_selection = st.radio(
             "Select Intelligence Hub:",
-            ["🎯 Lead Command", "⚔️ Seller Command", "📊 Business Analytics", "⚙️ System Config"],
+            ["🎯 Lead Command", "⚔️ Seller Command", "📊 Business Analytics", "🧬 Full Lifecycle", "⚙️ System Config"],
             index=0
         )
         
@@ -190,6 +192,8 @@ def main():
         render_jorge_seller_bot_dashboard()
     elif selected_hub == "📊 Business Analytics":
         render_jorge_analytics_dashboard()
+    elif selected_hub == "🧬 Full Lifecycle":
+        render_full_lifecycle_dashboard()
     else:
         st.header("⚙️ AI System Configuration")
         st.markdown("*Granular control over Jorge's AI bots, tone, and GHL integration MOATs*")
@@ -227,11 +231,17 @@ def main():
             
             moat_service = get_moat_service()
             if moat_service:
-                health = asyncio.run(moat_service.get_moat_health())
-                col1, col2, col3 = st.columns(3)
-                with col1: st.metric("GHL Moat Sync", health['ghl_sync'].upper())
-                with col2: st.metric("Lyrio Headless", health['lyrio_headless'].upper())
-                with col3: st.metric("Data Integrity", f"{health['moat_integrity']}%")
+                try:
+                    health = moat_service.get_moat_health()
+                    if isinstance(health, dict):
+                        col1, col2, col3 = st.columns(3)
+                        with col1: st.metric("GHL Moat Sync", health.get('ghl_sync', 'N/A').upper())
+                        with col2: st.metric("Lyrio Headless", health.get('lyrio_headless', 'N/A').upper())
+                        with col3: st.metric("Data Integrity", f"{health.get('moat_integrity', 0)}%")
+                    else:
+                        st.error(f"Invalid health data format: {type(health)}")
+                except Exception as e:
+                    st.error(f"Failed to fetch moat health: {e}")
             
             st.markdown("---")
             st.subheader("Field Mapping (MOAT)")

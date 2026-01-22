@@ -1,0 +1,22 @@
+{
+    "price_too_high": {
+        "cue": "Let me show you something. Compare your property to this recent sale at [Comp Address]. We're actually 12% BELOW market.",
+        "logic": "Price justification via comp data."
+    },
+    "timeline_delay": {
+        "cue": "Actually, we close in 30 days on average. Why? We don't play games. Cash offer, no inspection contingencies. That's the Jorge Guarantee.",
+        "logic": "Overcoming closing speed anxiety."
+    },
+    "has_another_agent": {
+        "cue": "That's fine. Quick question: have they actually toured the comps, or are they just sending you automated Zillow links?",
+        "logic": "Differentiation on expertise."
+    },
+    "market_uncertainty": {
+        "cue": "The math changed this week. If you wait, you're betting against the interest rate trend. Let's look at the actual numbers now.",
+        "logic": "Urgency based on market shifts."
+    },
+    "hesitation": {
+        "cue": "Slow down. Let them talk. They're processing the data I just sent.",
+        "logic": "Pacing recommendation for Jorge."
+    }
+}

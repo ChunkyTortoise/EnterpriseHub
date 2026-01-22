@@ -28,6 +28,7 @@ Created: 2026-01-18
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import logging
 from datetime import datetime, timedelta
@@ -112,13 +113,13 @@ class RealTimeValueDashboard:
             
             # Load real-time data
             with st.spinner("Loading real-time value data..."):
-                roi_calculation = asyncio.run(
+                roi_calculation = run_async(
                     self.value_engine.calculate_real_time_roi(
                         agent_id, client_id, transaction_id
                     )
                 )
                 
-                value_communication = asyncio.run(
+                value_communication = run_async(
                     self.value_engine.generate_value_communication_package(
                         agent_id, client_id or "default_client"
                     )
@@ -592,7 +593,7 @@ class RealTimeValueDashboard:
         st.markdown("### 💰 Pricing Justification")
         
         # Get pricing recommendation
-        pricing_recommendation = asyncio.run(
+        pricing_recommendation = run_async(
             self.value_engine.optimize_dynamic_pricing(agent_id)
         )
         

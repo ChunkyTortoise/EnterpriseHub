@@ -1096,6 +1096,7 @@ with st.sidebar:
         "Executive Command Center",
         "Lead Intelligence Hub",
         "Data Arbitrage Hub",
+        "Jorge War Room",
         "Agent ROI Dashboard",
         "Real-Time Intelligence",
         "Billing Analytics",
@@ -2234,6 +2235,9 @@ elif selected_hub == "Lead Intelligence Hub":
 elif selected_hub == "Data Arbitrage Hub":
     from ghl_real_estate_ai.streamlit_demo.components.data_arbitrage_dashboard import render_data_arbitrage_dashboard
     render_data_arbitrage_dashboard()
+elif selected_hub == "Jorge War Room":
+    from ghl_real_estate_ai.streamlit_demo.components.war_room_dashboard import render_war_room_dashboard
+    render_war_room_dashboard()
 elif selected_hub == "Agent ROI Dashboard":
     from ghl_real_estate_ai.streamlit_demo.components.agent_roi_dashboard import render_agent_roi_dashboard
     render_agent_roi_dashboard()

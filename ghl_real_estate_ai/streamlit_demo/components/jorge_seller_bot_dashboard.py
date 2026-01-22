@@ -12,6 +12,7 @@ Built specifically for Jorge's GHL system.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import json
 import pandas as pd
@@ -164,7 +165,7 @@ def render_seller_negotiation_section(api_client: JorgeSellerAPIClient):
     """Render the Seller Negotiation section."""
     st.markdown(f'### {get_svg_icon("negotiation")} Tactical Negotiation Engine', unsafe_allow_html=True)
     
-    metrics = asyncio.run(api_client.get_seller_metrics())
+    metrics = run_async(api_client.get_seller_metrics())
     stats = metrics["negotiation_stats"]
     
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -192,7 +193,7 @@ def render_seller_negotiation_section(api_client: JorgeSellerAPIClient):
                 with st.spinner("Decoding Zillow Variance..."):
                     generator = CMAGenerator()
                     # Mocking a property for the demo
-                    report = asyncio.run(generator.generate_report("123 Maple St", zestimate=625000))
+                    report = run_async(generator.generate_report("123 Maple St", zestimate=625000))
                     pdf_url = PDFRenderer.generate_pdf_url(report)
                     st.session_state['seller_cma_url'] = pdf_url
                     if 'global_decisions' in st.session_state:
@@ -228,7 +229,7 @@ def render_seller_pipeline_section(api_client: JorgeSellerAPIClient):
     """Render the Seller Pipeline."""
     st.markdown(f'### {get_svg_icon("referral")} Seller Pipeline Dossier', unsafe_allow_html=True)
     
-    pipeline = asyncio.run(api_client.get_seller_pipeline())
+    pipeline = run_async(api_client.get_seller_pipeline())
     
     for seller in pipeline:
         with st.container():

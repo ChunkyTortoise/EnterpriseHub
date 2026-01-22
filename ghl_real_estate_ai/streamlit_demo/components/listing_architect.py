@@ -1,5 +1,6 @@
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import time
 import asyncio
 from ghl_real_estate_ai.services.intelligent_listing_generator import IntelligentListingGenerator
@@ -67,7 +68,7 @@ def render_listing_architect():
                     try:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
-                        listings = loop.run_until_complete(
+                        listings = run_async(
                             st.session_state.listing_generator.generate_enhanced_listings(prop_data)
                         )
                         st.session_state.architect_results = listings

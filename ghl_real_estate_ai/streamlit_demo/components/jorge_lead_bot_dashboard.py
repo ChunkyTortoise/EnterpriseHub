@@ -12,6 +12,7 @@ Built specifically for Jorge's GHL system.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import json
 import pandas as pd
@@ -82,7 +83,9 @@ except ImportError:
 
 # Import Phase 8 Property Visualizer
 try:
-    import streamlit.components.v1 as components
+    import streamlit
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+.components.v1 as components
     from ghl_real_estate_ai.services.property_visualizer import PropertyVisualizer
     PROPERTY_VISUALIZER_AVAILABLE = True
 except ImportError:
@@ -90,14 +93,14 @@ except ImportError:
 
 # Import the Property Matching service
 try:
-    from jorge_property_matching_service import JorgePropertyMatchingService
+    from ghl_real_estate_ai.services.jorge_property_matching_service import JorgePropertyMatchingService
     PROPERTY_MATCHING_SERVICE_AVAILABLE = True
 except ImportError:
     PROPERTY_MATCHING_SERVICE_AVAILABLE = False
 
 # Import the Analytics service
 try:
-    from jorge_analytics_service import JorgeAnalyticsService
+    from ghl_real_estate_ai.services.jorge_analytics_service import JorgeAnalyticsService
     ANALYTICS_SERVICE_AVAILABLE = True
 except ImportError:
     ANALYTICS_SERVICE_AVAILABLE = False
@@ -430,7 +433,7 @@ def render_jorge_seller_bot_section(api_client: JorgeAPIClient):
             bot = get_jorge_seller_bot()
             history = [{"role": "user", "content": user_msg}]
             with st.spinner("Jorge is typing..."):
-                result = asyncio.run(bot.process_seller_message("demo_seller", "Robert Miller", history))
+                result = run_async(bot.process_seller_message("demo_seller", "Robert Miller", history))
                 st.session_state['jorge_seller_result'] = result
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -483,7 +486,7 @@ def render_voice_ai_section(api_client: JorgeAPIClient):
             if phone_number:
                 with st.spinner("Initiating AI call..."):
                     try:
-                        result = asyncio.run(api_client.start_voice_call(phone_number, caller_name))
+                        result = run_async(api_client.start_voice_call(phone_number, caller_name))
                         st.success(f"✅ Call started! Call ID: {result['call_id']}")
                     except Exception as e:
                         st.error(f"❌ Failed to start call: {str(e)}")
@@ -499,7 +502,7 @@ def render_voice_ai_section(api_client: JorgeAPIClient):
         st.markdown("<br>", unsafe_allow_html=True)
 
         # Get analytics
-        analytics = asyncio.run(api_client.get_voice_analytics())
+        analytics = run_async(api_client.get_voice_analytics())
         voice_data = analytics["analytics"]
         
         # Key metrics
@@ -607,7 +610,7 @@ def render_whisper_mode():
     col1, col2, col3 = st.columns([1, 1, 1])
     
     # Fetch live coaching data (real or mock fallback)
-    feed = asyncio.run(coach.get_live_feed(active_call_id))
+    feed = run_async(coach.get_live_feed(active_call_id))
     
     with col1:
         st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
@@ -842,7 +845,7 @@ def render_integration_dashboard(api_client: JorgeAPIClient):
     st.markdown(f'### {get_svg_icon("intelligence")} Jorge\'s Command Center', unsafe_allow_html=True)
     
     # Get dashboard metrics
-    metrics = asyncio.run(api_client.get_dashboard_metrics())
+    metrics = run_async(api_client.get_dashboard_metrics())
     
     # System health indicators
     col1, col2, col3, col4, col5, col6 = st.columns(6)
@@ -866,7 +869,7 @@ def render_integration_dashboard(api_client: JorgeAPIClient):
 
     # Enhanced Lead Scoring Summary
     st.subheader("🎯 Enhanced Lead Intelligence")
-    scoring_analytics = asyncio.run(api_client.get_scoring_analytics())
+    scoring_analytics = run_async(api_client.get_scoring_analytics())
 
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1: st.metric("🔴 Immediate", scoring_analytics['priority_breakdown']['immediate'])
@@ -892,7 +895,7 @@ def render_enhanced_lead_scoring_section(api_client: JorgeAPIClient):
 
         if analyze_button and lead_name:
             lead_data = {"name": lead_name, "budget": budget, "timeline": timeline}
-            analysis = asyncio.run(api_client.analyze_lead(lead_data))
+            analysis = run_async(api_client.analyze_lead(lead_data))
             
             # Phase 5: Integrate Intent Decoder for deeper semantic analysis
             if INTENT_DECODER_AVAILABLE:
@@ -957,7 +960,7 @@ def render_property_matching_integration_section():
     st.header("🏠 Property Matching AI System")
     st.markdown("**AI-powered property recommendations with hybrid neural + rules matching**")
     try:
-        from jorge_property_matching_dashboard import render_jorge_property_matching_dashboard
+        from ghl_real_estate_ai.streamlit_demo.components.jorge_property_matching_dashboard import render_jorge_property_matching_dashboard
         render_jorge_property_matching_dashboard()
     except ImportError:
         st.error("⚠️ Property Matching AI system not available.")
@@ -967,7 +970,7 @@ def render_analytics_integration_section():
     st.header("📊 Advanced Analytics System")
     st.markdown("**Comprehensive business intelligence with forecasting and ROI attribution**")
     try:
-        from jorge_analytics_dashboard import render_jorge_analytics_dashboard
+        from ghl_real_estate_ai.streamlit_demo.components.jorge_analytics_dashboard import render_jorge_analytics_dashboard
         render_jorge_analytics_dashboard()
     except ImportError:
         st.error("⚠️ Advanced Analytics system not available.")
@@ -976,7 +979,7 @@ def render_lead_pipeline_section(api_client: JorgeAPIClient):
     """Render the Lead Pipeline section with Journey Glow Mapping."""
     st.markdown(f'### {get_svg_icon("referral")} Tactical Lead Pipeline', unsafe_allow_html=True)
     
-    pipeline = asyncio.run(api_client.get_lead_pipeline())
+    pipeline = run_async(api_client.get_lead_pipeline())
     
     col_list, col_details = st.columns([3, 2])
     
@@ -1044,7 +1047,7 @@ def render_phase1_intent_analysis(api_client: JorgeAPIClient):
             with st.spinner("Decoding semantic intent..."):
                 # Mock a conversation history
                 history = [{"role": "user", "content": user_input}]
-                analysis = asyncio.run(api_client.get_intent_profile("demo_lead", history))
+                analysis = run_async(api_client.get_intent_profile("demo_lead", history))
                 st.session_state['phase1_analysis'] = analysis
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1086,7 +1089,7 @@ def render_phase1_intent_analysis(api_client: JorgeAPIClient):
                 if CMA_GENERATOR_AVAILABLE:
                     with st.spinner("Calculating AI Valuation vs Zestimate..."):
                         generator = CMAGenerator()
-                        report = asyncio.run(generator.generate_report("Subject Property", zestimate=850000))
+                        report = run_async(generator.generate_report("Subject Property", zestimate=850000))
                         pdf_url = PDFRenderer.generate_pdf_url(report)
                         st.session_state['cma_report_url'] = pdf_url
                         st.session_state.global_decisions.append({
@@ -1110,7 +1113,7 @@ def render_war_room_section():
     st.markdown(f'### {get_svg_icon("intelligence")} Jorge War Room: Market Heat', unsafe_allow_html=True)
     
     service = get_war_room_service()
-    data = asyncio.run(service.get_heat_map_data())
+    data = run_async(service.get_heat_map_data())
     
     # Summary Metrics
     col1, col2, col3, col4 = st.columns(4)

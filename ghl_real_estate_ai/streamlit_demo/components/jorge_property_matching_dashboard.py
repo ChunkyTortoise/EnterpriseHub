@@ -13,6 +13,7 @@ Built specifically for Jorge's GHL Real Estate AI system.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import json
 import pandas as pd
@@ -36,7 +37,7 @@ except ImportError:
 
 # Import the property matching service
 try:
-    from jorge_property_matching_service import JorgePropertyMatchingService
+    from ghl_real_estate_ai.services.jorge_property_matching_service import JorgePropertyMatchingService
     PROPERTY_MATCHING_SERVICE_AVAILABLE = True
 except ImportError:
     PROPERTY_MATCHING_SERVICE_AVAILABLE = False
@@ -575,7 +576,7 @@ def render_property_search_section(api_client: JorgePropertyMatchingAPIClient):
 
             # Find matches
             with st.spinner("🧠 Finding perfect property matches with AI..."):
-                matches = asyncio.run(api_client.find_property_matches(lead_data))
+                matches = run_async(api_client.find_property_matches(lead_data))
                 st.session_state['property_matches'] = matches
                 st.session_state['search_lead_data'] = lead_data
                 st.success(f"✅ Found {matches['total_matches']} property matches for {lead_name}!")
@@ -629,7 +630,7 @@ def render_property_search_section(api_client: JorgePropertyMatchingAPIClient):
 
                     # Explanation button
                     if st.button(f"💬 Explain Match", key=f"explain_{i}", use_container_width=True):
-                        explanation = asyncio.run(api_client.explain_property_match(property_data['id'], lead_data))
+                        explanation = run_async(api_client.explain_property_match(property_data['id'], lead_data))
                         st.session_state[f'explanation_{i}'] = explanation
 
                     # Show explanation if available
@@ -676,7 +677,7 @@ def render_inventory_analytics_section(api_client: JorgePropertyMatchingAPIClien
     st.markdown("**Real-time market intelligence and inventory insights**")
 
     # Get inventory data
-    inventory_data = asyncio.run(api_client.get_property_inventory())
+    inventory_data = run_async(api_client.get_property_inventory())
 
     col1, col2 = st.columns(2)
 
@@ -757,7 +758,7 @@ def render_matching_performance_section(api_client: JorgePropertyMatchingAPIClie
     st.markdown("**Monitor and optimize AI matching accuracy**")
 
     # Get performance data
-    performance_data = asyncio.run(api_client.get_match_performance_analytics())
+    performance_data = run_async(api_client.get_match_performance_analytics())
 
     col1, col2 = st.columns(2)
 
@@ -868,7 +869,7 @@ def render_property_matching_integration_dashboard(api_client: JorgePropertyMatc
     st.markdown("**AI-powered property intelligence and matching overview**")
 
     # Get dashboard metrics
-    metrics = asyncio.run(api_client.get_property_matching_metrics())
+    metrics = run_async(api_client.get_property_matching_metrics())
 
     # System health indicators
     st.subheader("🚀 Matching Engine Health")
@@ -1023,7 +1024,7 @@ def render_jorge_property_matching_dashboard():
 
     with tab4:
         # Get additional metrics
-        metrics = asyncio.run(api_client.get_property_matching_metrics())
+        metrics = run_async(api_client.get_property_matching_metrics())
 
         st.header("🎯 Match Intelligence Center")
 

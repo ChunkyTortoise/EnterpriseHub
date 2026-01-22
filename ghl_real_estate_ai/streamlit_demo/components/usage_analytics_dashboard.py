@@ -10,6 +10,7 @@ Created: 2026-01-17
 
 import asyncio
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
@@ -140,7 +141,7 @@ def load_usage_metrics(tenant_id: str, time_range: int = 24):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             services["usage_analytics"].get_usage_metrics(tenant_id, time_range)
         )
     finally:
@@ -154,7 +155,7 @@ def load_behavioral_insights(tenant_id: str):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             services["usage_analytics"].get_behavioral_insights(tenant_id)
         )
     finally:
@@ -168,7 +169,7 @@ def load_performance_trends(tenant_id: str, days: int = 7):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(
+        return run_async(
             services["usage_analytics"].get_performance_trends(tenant_id, days)
         )
     finally:

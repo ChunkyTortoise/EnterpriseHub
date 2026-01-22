@@ -1,4 +1,5 @@
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import time
 import asyncio
 from typing import Dict, Any, Optional
@@ -93,11 +94,7 @@ def render_conversation_simulator(services, selected_lead_name):
                         orchestrator = get_claude_orchestrator()
                         try:
                             # Run async call in Streamlit
-                            try:
-                                loop = asyncio.get_event_loop()
-                            except RuntimeError:
-                                loop = asyncio.new_event_loop()
-                                asyncio.set_event_loop(loop)
+                            
                             
                             # Build context for Claude
                             chat_context = {
@@ -107,7 +104,7 @@ def render_conversation_simulator(services, selected_lead_name):
                                 "history": st.session_state.sim_messages[:-1]
                             }
                             
-                            claude_response = loop.run_until_complete(
+                            claude_response = run_async(
                                 orchestrator.chat_query(
                                     query=prompt,
                                     context=chat_context,

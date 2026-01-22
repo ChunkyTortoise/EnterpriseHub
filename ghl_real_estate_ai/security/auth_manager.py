@@ -584,9 +584,10 @@ class AuthManager:
             return False
     
     async def _create_session(self, user: User, ip_address: str, user_agent: str) -> Session:
-        """Create a new user session with Redis persistence"""
+        """Create a new user session with Redis and PostgreSQL persistence"""
         session_id = secrets.token_urlsafe(32)
         now = datetime.utcnow()
+        expires_at = now + timedelta(minutes=self.config.session_timeout_minutes)
         
         session = Session(
             session_id=session_id,
@@ -598,7 +599,7 @@ class AuthManager:
             status=SessionStatus.ACTIVE
         )
         
-        # Store session in Redis
+        # 1. Store session in Redis
         session_key = f"session:{session_id}"
         session_data = {
             "session_id": session.session_id,
@@ -617,6 +618,22 @@ class AuthManager:
             ex=self.config.session_timeout_minutes * 60
         )
         
+        # 2. Store session in PostgreSQL (Implementation 11)
+        from ghl_real_estate_ai.services.database_service import get_database
+        db = await get_database()
+        async with db.transaction() as conn:
+            import uuid
+            await conn.execute("""
+                INSERT INTO sessions (
+                    session_id, user_id, ip_address, user_agent, 
+                    status, risk_score, created_at, last_active, expires_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            """, 
+                session_id, uuid.UUID(user.user_id), ip_address, user_agent,
+                session.status.value, session.risk_score, now, now, expires_at
+            )
+        
         # Track active session IDs for user
         user_sessions_key = f"user_sessions:{user.user_id}"
         await self.redis.sadd(user_sessions_key, session_id)
@@ -624,8 +641,9 @@ class AuthManager:
         # Check concurrent session limit
         active_sessions = await self.redis.smembers(user_sessions_key)
         if len(active_sessions) > self.config.concurrent_sessions_limit:
-            # Revoke oldest sessions (simplified for this turn)
-            for sid_bytes in list(active_sessions)[:-self.config.concurrent_sessions_limit]:
+            # Revoke oldest sessions
+            sorted_sessions = list(active_sessions)
+            for sid_bytes in sorted_sessions[:-self.config.concurrent_sessions_limit]:
                 await self._revoke_session(sid_bytes.decode(), reason="session_limit_exceeded")
         
         return session
@@ -672,25 +690,63 @@ class AuthManager:
         )
     
     async def _get_session(self, session_id: str) -> Optional[Session]:
-        """Get session from Redis"""
+        """Get session from Redis with DB fallback (Implementation 11)"""
+        # Try Redis first
         session_data = await self.redis.get(f"session:{session_id}")
-        if not session_data:
-            return None
+        if session_data:
+            data = json.loads(session_data)
+            return Session(
+                session_id=data["session_id"],
+                user_id=data["user_id"],
+                ip_address=data["ip_address"],
+                user_agent=data["user_agent"],
+                created_at=datetime.fromisoformat(data["created_at"]),
+                last_active=datetime.fromisoformat(data["last_active"]),
+                status=SessionStatus(data["status"]),
+                risk_score=data.get("risk_score", 0.0)
+            )
             
-        data = json.loads(session_data)
-        return Session(
-            session_id=data["session_id"],
-            user_id=data["user_id"],
-            ip_address=data["ip_address"],
-            user_agent=data["user_agent"],
-            created_at=datetime.fromisoformat(data["created_at"]),
-            last_active=datetime.fromisoformat(data["last_active"]),
-            status=SessionStatus(data["status"]),
-            risk_score=data.get("risk_score", 0.0)
-        )
+        # Fallback to PostgreSQL (Implementation 11)
+        from ghl_real_estate_ai.services.database_service import get_database
+        db = await get_database()
+        async with db.get_connection() as conn:
+            row = await conn.fetchrow("SELECT * FROM sessions WHERE session_id = $1", session_id)
+            if row:
+                s = dict(row)
+                # Re-cache in Redis
+                session = Session(
+                    session_id=s["session_id"],
+                    user_id=str(s["user_id"]),
+                    ip_address=s["ip_address"],
+                    user_agent=s["user_agent"],
+                    created_at=s["created_at"],
+                    last_active=s["last_active"],
+                    status=SessionStatus(s["status"]),
+                    risk_score=float(s["risk_score"])
+                )
+                
+                # Update Redis
+                session_data = {
+                    "session_id": session.session_id,
+                    "user_id": session.user_id,
+                    "ip_address": session.ip_address,
+                    "user_agent": session.user_agent,
+                    "created_at": session.created_at.isoformat(),
+                    "last_active": session.last_active.isoformat(),
+                    "status": session.status.value,
+                    "risk_score": session.risk_score
+                }
+                await self.redis.set(
+                    f"session:{session_id}", 
+                    json.dumps(session_data), 
+                    ex=self.config.session_timeout_minutes * 60
+                )
+                return session
+        return None
     
     async def _update_session(self, session: Session):
-        """Update session in Redis"""
+        """Update session in Redis and PostgreSQL (Implementation 11)"""
+        # Update Redis
         session_key = f"session:{session.session_id}"
         session_data = {
             "session_id": session.session_id,
@@ -707,6 +763,18 @@ class AuthManager:
             json.dumps(session_data), 
             ex=self.config.session_timeout_minutes * 60
         )
+        
+        # Update PostgreSQL (Implementation 11)
+        from ghl_real_estate_ai.services.database_service import get_database
+        db = await get_database()
+        async with db.transaction() as conn:
+            await conn.execute("""
+                UPDATE sessions SET
+                    last_active = $1,
+                    status = $2,
+                    risk_score = $3
+                WHERE session_id = $4
+            """, session.last_active, session.status.value, session.risk_score, session.session_id)
     
     async def _revoke_session(self, session_id: str, reason: str):
         """Revoke a session in Redis"""
@@ -794,40 +862,22 @@ class AuthManager:
             )
     
         async def _update_user(self, user: User):
-    
-            """Update user in PostgreSQL"""
-    
-            from ghl_real_estate_ai.services.database_service import get_database
-    
-            db = await get_database()
-    
+        """Update user in PostgreSQL"""
+        from ghl_real_estate_ai.services.database_service import get_database
+        db = await get_database()
+        
+        async with db.transaction() as conn:
+            import uuid
+            await conn.execute("""
+                UPDATE users SET
+                    last_login = $1,
+                    failed_attempts = $2,
+                    locked_until = $3,
+                    updated_at = NOW()
+                WHERE id = $4
+            """, user.last_login, user.failed_attempts, user.locked_until, uuid.UUID(user.user_id))
             
-    
-            async with db.transaction() as conn:
-    
-                import uuid
-    
-                await conn.execute("""
-    
-                    UPDATE users SET
-    
-                        last_login =     
-    ,
-    
-                        failed_attempts = $2,
-    
-                        locked_until = $3,
-    
-                        updated_at = NOW()
-    
-                    WHERE id = $4
-    
-                """, user.last_login, user.failed_attempts, user.locked_until, uuid.UUID(user.user_id))
-    
-            
-    
-            # Update cache
-    
-            self._user_cache[user.user_id] = user
+        # Update cache
+        self._user_cache[user.user_id] = user
     
     

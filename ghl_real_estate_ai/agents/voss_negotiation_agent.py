@@ -79,7 +79,10 @@ class VossNegotiationAgent:
         
         # Logic: If lead is drifting (becoming flexible), increase intensity to close.
         # If lead is firm, use lower level (rapport building).
-        if drift_score > 0.7:
+        if drift_score > 0.9:
+            voss_level = 5 # 'No-Oriented' Closure
+            tone = "Strategic/Direct"
+        elif drift_score > 0.7:
             voss_level = 4 # Direct Challenge
             tone = "Aggressive/Direct"
         elif drift_score > 0.4:

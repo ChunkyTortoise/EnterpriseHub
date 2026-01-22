@@ -1,4 +1,5 @@
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import plotly.express as px
 
@@ -129,14 +130,10 @@ def render_neighborhood_explorer(lead_profile: dict = None):
                     st.markdown("#### 🧠 Claude's Social/Cultural Fit Analysis")
                     with st.spinner("Analyzing social alignment..."):
                         import asyncio
-                        try:
-                            loop = asyncio.get_event_loop()
-                        except RuntimeError:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
+                        
                         
                         neighborhood_data = {"name": target_address or "Selected Area"}
-                        compatibility = loop.run_until_complete(
+                        compatibility = run_async(
                             semantic_matcher.get_neighborhood_compatibility(lead_profile, neighborhood_data)
                         )
                         

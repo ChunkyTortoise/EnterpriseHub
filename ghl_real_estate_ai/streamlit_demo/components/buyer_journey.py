@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import asyncio
 import json
 import time
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Import enhanced services
 try:
@@ -403,18 +404,12 @@ def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_prope
         
         with st.spinner("Claude is mapping the buyer journey..."):
             try:
-                try:
-                    loop = asyncio.get_event_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                
                 # Get lead context
                 lead_options = st.session_state.get('lead_options', {})
                 lead_data = lead_options.get(selected_lead_name, {})
                 
                 # Use chat_query for journey advice
-                journey_result = loop.run_until_complete(
+                journey_result = run_async(
                     orchestrator.chat_query(
                         query="Provide strategic buyer journey counsel for this lead. Map their current stage and suggest 2 immediate next steps.",
                         context={"lead_name": selected_lead_name, "lead_data": lead_data, "task": "journey_counsel"}

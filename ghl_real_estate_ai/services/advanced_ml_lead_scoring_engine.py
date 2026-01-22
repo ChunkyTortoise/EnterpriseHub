@@ -81,7 +81,7 @@ class MLFeatureVector:
     
     # Financial Features
     budget_clarity_score: float  # How clear budget statements are
-    financing_readiness: float  # Pre-approval, cash mentions etc
+    financial_readiness: float  # Pre-approval, cash mentions etc
     price_sensitivity: float  # Reaction to different price points
     affordability_ratio: float  # Budget vs viewed properties
     

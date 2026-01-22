@@ -37,6 +37,8 @@ class FunnelStage(Enum):
     APPOINTMENT = "appointment"
     SHOWING = "showing"
     OFFER = "offer"
+    OFFER_ACCEPTED = "offer_accepted"
+    ESCROW = "escrow"
     UNDER_CONTRACT = "under_contract"
     CLOSED = "closed"
 

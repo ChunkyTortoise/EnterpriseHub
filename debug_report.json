@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-01-22T06:43:31.442629",
+  "uplink_status": {
+    "Lead Bot": "",
+    "Seller Bot": "",
+    "Vapi Voice AI": ""
+  },
+  "terminal_logs": [
+    "[00:05] Jorge: \"Hey Sarah, I saw you were looking at 123 Maple St. What caught your eye?\"",
+    "[00:12] Sarah: \"Yeah, the kitchen is nice, but Zillow says it's overpriced for the area...\"",
+    "[06:43:17] [ANALYSIS] Detecting buyer urgency for Sarah Johnson... high intent detected.",
+    "[06:43:17] [PROTOCOL] Take-Away Mode engaged for 750K property bracket.",
+    "[06:43:17] [SYNTHESIS] Neural Health score updated for Lead ID: 005.",
+    "[06:43:17] [VOICE_AI] Active call session: +1-555-0192 (Qualification in progress)",
+    "[06:43:17] [MARKET] Predictive model identifying supply squeeze in Upland."
+  ],
+  "ghl_mapping": "Not found"
+}

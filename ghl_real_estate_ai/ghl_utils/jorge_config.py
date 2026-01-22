@@ -80,7 +80,9 @@ class JorgeSellerConfig:
         "expected_roi": "expected_roi_field_id",
         "lead_value_tier": "lead_value_tier_field_id",
         "ai_valuation_price": "ai_valuation_price_field_id",
-        "detected_persona": "detected_persona_field_id"
+        "detected_persona": "detected_persona_field_id",
+        "psychology_type": "psychology_type_field_id",
+        "urgency_level": "urgency_level_field_id"
     }
 
     # ========== MESSAGE SETTINGS ==========

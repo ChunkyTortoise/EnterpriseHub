@@ -1,40 +1,26 @@
 """
 Intent Decoder Engine - Section 1 of 2026 Strategic Roadmap
 Calculates Financial Readiness Score (FRS) and Psychological Commitment Score (PCS).
+Updated to use unified models in ghl_real_estate_ai.models.lead_scoring.
 """
 
 import logging
 import re
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
+
+from ghl_real_estate_ai.models.lead_scoring import (
+    LeadIntentProfile,
+    FinancialReadinessScore,
+    PsychologicalCommitmentScore,
+    MotivationSignals,
+    TimelineCommitment,
+    ConditionRealism,
+    PriceResponsiveness
+)
 
 logger = logging.getLogger(__name__)
-
-class IntentPillars(BaseModel):
-    model_config = ConfigDict(use_enum_values=True)
-    motivation: float = Field(0.0, ge=0, le=100)
-    timeline: float = Field(0.0, ge=0, le=100)
-    condition: float = Field(0.0, ge=0, le=100)
-    price: float = Field(0.0, ge=0, le=100)
-
-class PCSMetrics(BaseModel):
-    model_config = ConfigDict(use_enum_values=True)
-    response_velocity: float = Field(0.0, ge=0, le=100)
-    message_length: float = Field(0.0, ge=0, le=100)
-    question_depth: float = Field(0.0, ge=0, le=100)
-    objection_handling: float = Field(0.0, ge=0, le=100)
-    call_acceptance: float = Field(0.0, ge=0, le=100)
-
-class LeadIntentProfile(BaseModel):
-    model_config = ConfigDict(use_enum_values=True)
-    contact_id: str
-    frs_score: float = Field(0.0, ge=0, le=100)
-    pcs_score: float = Field(0.0, ge=0, le=100)
-    pillars: IntentPillars
-    pcs_metrics: PCSMetrics
-    analysis_timestamp: datetime = Field(default_factory=datetime.now)
-    insights: List[str] = []
 
 class LeadIntentDecoder:
     """
@@ -70,91 +56,134 @@ class LeadIntentDecoder:
         
         all_text = " ".join([m.get("content", "").lower() for m in conversation_history])
         
-        # Calculate Pillars
-        motivation_score = self._score_pillar(all_text, self.high_intent_motivation, self.mixed_intent_motivation, self.low_intent_motivation)
-        timeline_score = self._score_pillar(all_text, self.high_intent_timeline, self.flexible_timeline, self.vague_timeline)
-        condition_score = self._score_pillar(all_text, self.realistic_condition, self.negotiable_condition, self.unrealistic_condition)
-        price_score = self._score_pillar(all_text, self.price_aware, self.price_flexible, [])
+        # 1. Calculate Pillars
+        motivation_data = self._analyze_motivation(all_text)
+        timeline_data = self._analyze_timeline(all_text)
+        condition_data = self._analyze_condition(all_text)
+        price_data = self._analyze_price(all_text)
 
-        pillars = IntentPillars(
-            motivation=motivation_score,
-            timeline=timeline_score,
-            condition=condition_score,
-            price=price_score
+        # 2. Calculate FRS
+        frs_total = (motivation_data.score * 0.35) + \
+                    (timeline_data.score * 0.30) + \
+                    (condition_data.score * 0.20) + \
+                    (price_data.score * 0.15)
+        
+        frs_classification = "Cold"
+        if frs_total >= 75: frs_classification = "Hot"
+        elif frs_total >= 50: frs_classification = "Warm"
+        elif frs_total >= 25: frs_classification = "Lukewarm"
+
+        frs_score = FinancialReadinessScore(
+            total_score=round(frs_total, 2),
+            motivation=motivation_data,
+            timeline=timeline_data,
+            condition=condition_data,
+            price=price_data,
+            classification=frs_classification
         )
 
-        # Calculate FRS
-        frs_score = (motivation_score * 0.35) + (timeline_score * 0.30) + (condition_score * 0.20) + (price_score * 0.15)
+        # 3. Calculate PCS
+        pcs_score = self._calculate_pcs(conversation_history)
 
-        # Calculate PCS Metrics (Heuristic for now)
-        pcs_metrics = self._calculate_pcs_metrics(conversation_history)
-        
-        # Calculate PCS
-        pcs_score = (pcs_metrics.response_velocity * 0.20) + \
-                    (pcs_metrics.message_length * 0.15) + \
-                    (pcs_metrics.question_depth * 0.20) + \
-                    (pcs_metrics.objection_handling * 0.25) + \
-                    (pcs_metrics.call_acceptance * 0.20)
-
-        insights = self._generate_insights(pillars, pcs_metrics)
+        # 4. Determine Next Best Action
+        next_action = "Nurture - Low Intent"
+        if frs_classification == "Hot":
+            next_action = "Urgent: Call Lead Immediately"
+        elif frs_classification == "Warm":
+            next_action = "Send Soft Check-in SMS"
+        elif pcs_score.total_score > 70:
+            next_action = "Schedule Property Tour"
 
         return LeadIntentProfile(
-            contact_id=contact_id,
-            frs_score=round(frs_score, 2),
-            pcs_score=round(pcs_score, 2),
-            pillars=pillars,
-            pcs_metrics=pcs_metrics,
-            insights=insights
+            lead_id=contact_id,
+            frs=frs_score,
+            pcs=pcs_score,
+            next_best_action=next_action
         )
 
-    def _score_pillar(self, text: str, high: List[str], mixed: List[str], low: List[str]) -> float:
-        """Scores a specific intent pillar based on linguistic markers."""
-        score = 50.0 # Baseline
+    def _analyze_motivation(self, text: str) -> MotivationSignals:
+        detected = [m for m in self.high_intent_motivation if m in text]
+        score = 50
+        category = "Mixed Intent"
         
-        if any(marker in text for marker in high):
-            score += 35
-        elif any(marker in text for marker in mixed):
-            score += 10
-        elif any(marker in text for marker in low):
-            score -= 30
+        if detected:
+            score = 85
+            category = "High Intent"
+        elif any(m in text for m in self.low_intent_motivation):
+            score = 20
+            category = "Low Intent"
             
-        return max(0.0, min(100.0, score))
+        return MotivationSignals(score=score, detected_markers=detected, category=category)
 
-    def _calculate_pcs_metrics(self, history: List[Dict[str, str]]) -> PCSMetrics:
-        """Heuristic calculation of psychological commitment signals."""
+    def _analyze_timeline(self, text: str) -> TimelineCommitment:
+        score = 50
+        category = "Flexible"
+        if any(m in text for m in self.high_intent_timeline):
+            score = 90
+            category = "High Commitment"
+        elif any(m in text for m in self.vague_timeline):
+            score = 20
+            category = "Vague"
+        return TimelineCommitment(score=score, category=category)
+
+    def _analyze_condition(self, text: str) -> ConditionRealism:
+        score = 50
+        category = "Negotiable"
+        if any(m in text for m in self.realistic_condition):
+            score = 85
+            category = "Realistic"
+        elif any(m in text for m in self.unrealistic_condition):
+            score = 20
+            category = "Unrealistic"
+        return ConditionRealism(score=score, category=category)
+
+    def _analyze_price(self, text: str) -> PriceResponsiveness:
+        score = 50
+        category = "Price-Flexible"
+        zestimate = "zestimate" in text
+        if any(m in text for m in self.price_aware):
+            score = 85
+            category = "Price-Aware"
+        return PriceResponsiveness(score=score, zestimate_mentioned=zestimate, category=category)
+
+    def _calculate_pcs(self, history: List[Dict[str, str]]) -> PsychologicalCommitmentScore:
         if not history:
-            return PCSMetrics()
+            return PsychologicalCommitmentScore(
+                total_score=0,
+                response_velocity_score=0,
+                message_length_score=0,
+                question_depth_score=0,
+                objection_handling_score=0,
+                call_acceptance_score=0
+            )
 
         # Message Length
         avg_len = sum(len(m.get("content", "").split()) for m in history) / len(history)
-        len_score = min(100, avg_len * 4) # 25 words = 100
+        len_score = min(100, int(avg_len * 4))
 
         # Question Depth
         q_count = sum(1 for m in history if "?" in m.get("content", ""))
-        q_score = min(100, q_count * 25) # 4 questions = 100
+        q_score = min(100, q_count * 25)
 
         # Call Acceptance
         call_keywords = ["call", "phone", "tour", "schedule", "meet"]
         call_score = 100 if any(kw in " ".join([m.get("content", "").lower() for m in history]) for kw in call_keywords) else 0
 
-        # Placeholder for complex velocity and objection handling
-        return PCSMetrics(
-            response_velocity=80.0, # Mocked
-            message_length=len_score,
-            question_depth=q_score,
-            objection_handling=60.0, # Mocked
-            call_acceptance=call_score
-        )
+        # Heuristics for others
+        velocity_score = 80
+        objection_score = 60
 
-    def _generate_insights(self, pillars: IntentPillars, pcs: PCSMetrics) -> List[str]:
-        """Generates human-readable insights based on scores."""
-        insights = []
-        if pillars.motivation > 75:
-            insights.append("High motivation detected - prioritize immediate outreach.")
-        if pillars.timeline > 75:
-            insights.append("Urgent timeline confirmed (30-45 day window).")
-        if pcs.call_acceptance > 50:
-            insights.append("Lead is open to direct voice communication.")
-        if pillars.condition < 40:
-            insights.append("Alert: Potential condition/price mismatch.")
-        return insights
+        total = (velocity_score * 0.20) + \
+                (len_score * 0.15) + \
+                (q_score * 0.20) + \
+                (objection_score * 0.25) + \
+                (call_score * 0.20)
+
+        return PsychologicalCommitmentScore(
+            total_score=round(total, 2),
+            response_velocity_score=velocity_score,
+            message_length_score=len_score,
+            question_depth_score=q_score,
+            objection_handling_score=objection_score,
+            call_acceptance_score=call_score
+        )

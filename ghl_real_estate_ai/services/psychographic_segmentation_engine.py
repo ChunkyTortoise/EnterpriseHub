@@ -18,6 +18,7 @@ class PsychographicPersona:
     MOTIVATED_SELLER = "motivated_seller"
     FLIPPER = "flipper"
     LUXURY_SEEKER = "luxury_seeker"
+    LOSS_AVERSION = "loss_aversion"
 
 class PsychographicSegmentationEngine:
     """
@@ -63,6 +64,7 @@ class PsychographicSegmentationEngine:
         - Motivated Seller: Urgency, looking for quick close, distressed or relocating.
         - Flipper: Looking for "fixer-uppers", speed and price flexibility.
         - Luxury Seeker: High-end finishes, exclusivity, prestige, high budget.
+        - Loss Aversion: Primarily motivated by avoiding a loss rather than making a gain. Fear of market crash, rising rates, or "missing the window".
         
         Return ONLY a JSON object:
         {{
@@ -105,7 +107,8 @@ class PsychographicSegmentationEngine:
             PsychographicPersona.FIRST_TIME_BUYER: f"Tone: Educational and reassuring. Explain the process clearly and address common anxieties. {tone_desc}",
             PsychographicPersona.MOTIVATED_SELLER: f"Tone: Direct and solution-oriented. Focus on speed, ease of transaction, and certain outcomes. {tone_desc}",
             PsychographicPersona.FLIPPER: f"Tone: Fast-paced and professional. Focus on property potential, as-is conditions, and quick math. {tone_desc}",
-            PsychographicPersona.LUXURY_SEEKER: f"Tone: Sophisticated and exclusive. Emphasize prestige, architectural details, and high-end finishes. {tone_desc}"
+            PsychographicPersona.LUXURY_SEEKER: f"Tone: Sophisticated and exclusive. Emphasize prestige, architectural details, and high-end finishes. {tone_desc}",
+            PsychographicPersona.LOSS_AVERSION: f"Tone: Urgent and risk-focused. Emphasize the 'Cost of Waiting' and the risk of missing the current market window. {tone_desc}"
         }
         
         return overrides.get(persona, f"Tone: {tone_desc}")

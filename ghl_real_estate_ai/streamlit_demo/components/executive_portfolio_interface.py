@@ -7,6 +7,7 @@ and strategic decision-making for ultra-high-net-worth clients.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -449,7 +450,7 @@ class ExecutivePortfolioInterface:
             # Analyze portfolio
             if st.button("🔄 Update Portfolio Analysis", key="analyze_portfolio"):
                 with st.spinner("Analyzing portfolio..."):
-                    analysis = asyncio.run(self.portfolio_manager.analyze_portfolio(client, properties))
+                    analysis = run_async(self.portfolio_manager.analyze_portfolio(client, properties))
                     st.session_state.portfolio_analysis = analysis
                     st.success("Portfolio analysis updated successfully!")
 
@@ -483,7 +484,7 @@ class ExecutivePortfolioInterface:
                 st.divider()
 
                 # Executive report
-                asyncio.run(self.render_executive_report(client, analysis))
+                run_async(self.render_executive_report(client, analysis))
 
         else:
             st.info("👆 Please select a client to view their portfolio.")

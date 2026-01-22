@@ -14,6 +14,7 @@ Features:
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -332,7 +333,7 @@ class UltraPremiumDashboard:
 
         # AI-powered market insights
         with st.expander("🤖 AI Market Analysis", expanded=False):
-            market_insight = asyncio.run(self._generate_market_insights(luxury_inventory, trends))
+            market_insight = run_async(self._generate_market_insights(luxury_inventory, trends))
             st.markdown(market_insight)
 
     async def _generate_market_insights(self, inventory: pd.DataFrame, trends: pd.DataFrame) -> str:

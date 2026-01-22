@@ -40,11 +40,17 @@ async def handle_twilio_sms_status(request: Request):
         if success:
             return {"status": "success"}
         else:
-            return {"status": "error", "message": "Failed to process webhook"}
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Failed to process Twilio status webhook"
+            )
             
     except Exception as e:
         logger.error(f"Error processing Twilio status webhook: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, 
+            detail=f"Service temporarily unavailable: {str(e)}"
+        )
 
 @router.post("/twilio/sms-incoming")
 @verify_webhook("twilio")
@@ -66,11 +72,17 @@ async def handle_twilio_sms_incoming(request: Request):
         if success:
             return {"status": "success"}
         else:
-            return {"status": "error", "message": "Failed to process incoming SMS"}
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Failed to process incoming SMS"
+            )
             
     except Exception as e:
         logger.error(f"Error processing Twilio incoming webhook: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, 
+            detail=f"Service temporarily unavailable: {str(e)}"
+        )
 
 @router.post("/sendgrid/events")
 @verify_webhook("sendgrid")
@@ -90,11 +102,17 @@ async def handle_sendgrid_events(request: Request):
         if success:
             return {"status": "success"}
         else:
-            return {"status": "error", "message": "Failed to process SendGrid events"}
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Failed to process SendGrid events"
+            )
             
     except Exception as e:
         logger.error(f"Error processing SendGrid event webhook: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, 
+            detail=f"Service temporarily unavailable: {str(e)}"
+        )
 
 @router.post("/apollo/enrichment")
 @verify_webhook("apollo")
@@ -112,4 +130,7 @@ async def handle_apollo_enrichment(request: Request):
             
     except Exception as e:
         logger.error(f"Error processing Apollo enrichment webhook: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, 
+            detail=f"Service temporarily unavailable: {str(e)}"
+        )

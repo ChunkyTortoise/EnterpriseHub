@@ -5,6 +5,7 @@ import asyncio
 from datetime import datetime
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.core.evaluator_agent import EvaluatorAgent
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 st.set_page_config(page_title="Prompt Testing Lab", layout="wide")
 
@@ -63,7 +64,7 @@ else:
                         for k, v in ctx.items():
                             final_prompt = final_prompt.replace(f"{{{{{k}}}}}", str(v))
                             
-                        response = asyncio.run(client.agenerate(
+                        response = run_async(client.agenerate(
                             prompt=final_prompt,
                             system_prompt=persona,
                             model="gemini-1.5-flash"
@@ -75,7 +76,7 @@ else:
                         st.divider()
                         st.subheader("Auto-Evaluation")
                         evaluator = EvaluatorAgent()
-                        eval_result = asyncio.run(evaluator.evaluate_response(
+                        eval_result = run_async(evaluator.evaluate_response(
                             response_text=response.content,
                             context=ctx,
                             rubric_type="real_estate" if "sales" in p_data["tags"] else "general"
@@ -119,8 +120,8 @@ else:
                 with st.spinner("Variant A..."):
                     prompt_a = p_a["content"]
                     for k, v in ctx.items(): prompt_a = prompt_a.replace(f"{{{{{k}}}}}", str(v))
-                    resp_a = asyncio.run(client.agenerate(prompt=prompt_a, system_prompt=p_a["persona"], model="gemini-1.5-flash"))
-                    eval_a = asyncio.run(evaluator.evaluate_response(resp_a.content, ctx))
+                    resp_a = run_async(client.agenerate(prompt=prompt_a, system_prompt=p_a["persona"], model="gemini-1.5-flash"))
+                    eval_a = run_async(evaluator.evaluate_response(resp_a.content, ctx))
                     st.write(resp_a.content)
                     st.metric("Score A", f"{eval_a.get('overall_score', 0):.2f}")
                     
@@ -128,8 +129,8 @@ else:
                 with st.spinner("Variant B..."):
                     prompt_b = p_b["content"]
                     for k, v in ctx.items(): prompt_b = prompt_b.replace(f"{{{{{k}}}}}", str(v))
-                    resp_b = asyncio.run(client.agenerate(prompt=prompt_b, system_prompt=p_b["persona"], model="gemini-1.5-flash"))
-                    eval_b = asyncio.run(evaluator.evaluate_response(resp_b.content, ctx))
+                    resp_b = run_async(client.agenerate(prompt=prompt_b, system_prompt=p_b["persona"], model="gemini-1.5-flash"))
+                    eval_b = run_async(evaluator.evaluate_response(resp_b.content, ctx))
                     st.write(resp_b.content)
                     st.metric("Score B", f"{eval_b.get('overall_score', 0):.2f}")
             

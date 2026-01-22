@@ -1,5 +1,6 @@
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import time
 from ghl_real_estate_ai.services.enhanced_property_matcher import EnhancedPropertyMatcher
 
@@ -55,13 +56,9 @@ def render_property_swipe(services, lead_name: str = "Client"):
             from ghl_real_estate_ai.services.enhanced_lead_intelligence import get_enhanced_lead_intelligence
             eli = get_enhanced_lead_intelligence()
             import asyncio
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
             
-            commentary = loop.run_until_complete(eli.get_swipe_commentary(prop['raw_data'], lead_name))
+            
+            commentary = run_async(eli.get_swipe_commentary(prop['raw_data'], lead_name))
         except Exception:
             commentary = f"A stunning find in {prop['neighborhood']}!"
 

@@ -6,6 +6,7 @@ import streamlit as st
 import asyncio
 from datetime import datetime, timedelta
 from ghl_real_estate_ai.services.claude_journey_orchestrator import get_journey_orchestrator
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 def render_journey_orchestrator(lead_id: str, lead_name: str, lead_profile: dict):
     """
@@ -21,14 +22,7 @@ def render_journey_orchestrator(lead_id: str, lead_name: str, lead_profile: dict
     if journey_key not in st.session_state:
         with st.spinner("🧠 Claude is architecting the optimal journey..."):
             try:
-                # Handle event loop for async call
-                try:
-                    loop = asyncio.get_event_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                
-                journey_plan = loop.run_until_complete(
+                journey_plan = run_async(
                     orchestrator.design_personalized_journey(lead_id, lead_profile)
                 )
                 st.session_state[journey_key] = journey_plan
@@ -80,17 +74,12 @@ def render_journey_orchestrator(lead_id: str, lead_name: str, lead_profile: dict
                 if st.button("🚀 Execute Priority Handoff", type="primary", use_container_width=True):
                     with st.spinner("Dispatching Mission Dossier to Jorge's Mobile..."):
                         try:
-                            loop = asyncio.get_event_loop()
-                        except RuntimeError:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
-                        
-                        dispatch_res = loop.run_until_complete(
-                            orchestrator.monitor_and_dispatch(lead_id, lead_name, {"closing_readiness": readiness, "top_triggers": ["Investment ROI", "Family Safety"]})
-                        )
-                        if dispatch_res.get("action") == "priority_handoff":
-                            st.success("✅ PRIORITY HANDOFF DISPATCHED!")
-                            st.balloons()
+                            dispatch_res = run_async(
+                                orchestrator.monitor_and_dispatch(lead_id, lead_name, {"closing_readiness": readiness, "top_triggers": ["Investment ROI", "Family Safety"]})
+                            )
+                            if dispatch_res.get("action") == "priority_handoff":
+                                st.success("✅ PRIORITY HANDOFF DISPATCHED!")
+                                st.balloons()
             else:
                 st.success("🟢 Monitoring Nurture Path")
                 st.caption("Next check in 2.5 hours")
@@ -132,8 +121,7 @@ def render_journey_orchestrator(lead_id: str, lead_name: str, lead_profile: dict
     st.markdown("#### ⏰ Intelligent Timing Windows")
     with st.spinner("Analyzing engagement patterns..."):
         try:
-            loop = asyncio.get_event_loop()
-            timing_windows = loop.run_until_complete(orchestrator.predict_optimal_touchpoints(lead_id))
+            timing_windows = run_async(orchestrator.predict_optimal_touchpoints(lead_id))
             
             t_cols = st.columns(len(timing_windows))
             for i, window in enumerate(timing_windows):

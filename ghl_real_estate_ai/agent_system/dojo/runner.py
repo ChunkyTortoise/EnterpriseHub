@@ -42,6 +42,7 @@ class DojoRunner:
         session_cost = 0.0
         
         for turn in range(max_turns):
+            print(f"DEBUG: Turn {turn+1}/{max_turns}")
             # 1. Trainee Agent (Assistant) responds
             if custom_agent_prompt:
                 agent_system_prompt = custom_agent_prompt
@@ -55,11 +56,13 @@ class DojoRunner:
             
             agent_messages = history + [{"role": "user", "content": current_input}]
             try:
+                print(f"DEBUG: Calling Trainee with {len(agent_messages)} messages")
                 agent_response_obj = await self.llm.chat(
                     messages=agent_messages,
                     system=agent_system_prompt
                 )
                 agent_text = agent_response_obj.content
+                print(f"DEBUG: Trainee responded: {agent_text[:50]}...")
                 
                 # Track cost
                 if agent_response_obj.input_tokens and agent_response_obj.output_tokens:
@@ -98,17 +101,20 @@ class DojoRunner:
             """
             
             try:
+                print(f"DEBUG: Calling Simulator with {len(history)} messages")
                 simulator_response_obj = await self.llm.chat(
                     messages=history,
                     system=simulator_system_prompt
                 )
                 current_input = simulator_response_obj.content
+                print(f"DEBUG: Simulator responded: {current_input[:50]}...")
             except Exception as e:
                 logger.error(f"Error calling Simulator LLM: {e}")
                 current_input = "I'm sorry, I'm having trouble connecting."
                 break
             
         # 3. Evaluator grades
+        print(f"DEBUG: Calling Evaluator with {len(history)} messages")
         score = await self.evaluator.grade_conversation(history)
         score['session_cost'] = session_cost
         score['turns'] = len(history) // 2
@@ -136,7 +142,8 @@ async def run_regimen(regimen_name: str, iterations: int = 1):
         "Lead Qualification": "The Vague Browser",
         "Conflict ROI Defense": "The Litigious Seller",
         "Equity Protection": "The Repair Denier",
-        "International Compliance": "The International Regulatory Skeptic"
+        "International Compliance": "The International Regulatory Skeptic",
+        "The Gauntlet": "The Sophisticated Global Arbitrageur"
     }
     
     persona_name = persona_map.get(regimen_name, "The Confused First-Timer")

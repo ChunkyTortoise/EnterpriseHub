@@ -6,10 +6,12 @@ from langgraph.graph import StateGraph, END
 from ghl_real_estate_ai.models.workflows import LeadFollowUpState
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
+from ghl_real_estate_ai.services.ghost_followup_engine import get_ghost_followup_engine, GhostState
 from ghl_real_estate_ai.utils.pdf_renderer import PDFRenderer
 from ghl_real_estate_ai.integrations.retell import RetellClient
 from ghl_real_estate_ai.integrations.lyrio import LyrioClient
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.agent_state_sync import sync_service
 
 logger = get_logger(__name__)
 
@@ -19,10 +21,14 @@ class LeadBotWorkflow:
     Implements the 'Ghost-in-the-Machine' Re-engagement Strategy.
     """
     
-    def __init__(self):
+    def __init__(self, ghl_client=None):
         self.intent_decoder = LeadIntentDecoder()
         self.retell_client = RetellClient()
         self.cma_generator = CMAGenerator()
+        self.ghost_engine = get_ghost_followup_engine()
+        self.ghl_client = ghl_client
+        from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
+        self.market_intel = get_national_market_intelligence()
         self.workflow = self._build_graph()
 
     def _build_graph(self) -> StateGraph:
@@ -39,6 +45,12 @@ class LeadBotWorkflow:
         workflow.add_node("send_day_14_email", self.send_day_14_email)
         workflow.add_node("send_day_30_nudge", self.send_day_30_nudge)
         
+        # Full Lifecycle Nodes
+        workflow.add_node("schedule_showing", self.schedule_showing)
+        workflow.add_node("post_showing_survey", self.post_showing_survey)
+        workflow.add_node("facilitate_offer", self.facilitate_offer)
+        workflow.add_node("contract_to_close_nurture", self.contract_to_close_nurture)
+        
         # Define Edges
         workflow.set_entry_point("analyze_intent")
         workflow.add_edge("analyze_intent", "determine_path")
@@ -53,6 +65,10 @@ class LeadBotWorkflow:
                 "day_7": "initiate_day_7_call",
                 "day_14": "send_day_14_email",
                 "day_30": "send_day_30_nudge",
+                "schedule_showing": "schedule_showing",
+                "post_showing": "post_showing_survey",
+                "facilitate_offer": "facilitate_offer",
+                "closing_nurture": "contract_to_close_nurture",
                 "qualified": END,
                 "nurture": END
             }
@@ -64,6 +80,10 @@ class LeadBotWorkflow:
         workflow.add_edge("initiate_day_7_call", END)
         workflow.add_edge("send_day_14_email", END)
         workflow.add_edge("send_day_30_nudge", END)
+        workflow.add_edge("schedule_showing", END)
+        workflow.add_edge("post_showing_survey", END)
+        workflow.add_edge("facilitate_offer", END)
+        workflow.add_edge("contract_to_close_nurture", END)
         
         return workflow.compile()
 
@@ -72,6 +92,9 @@ class LeadBotWorkflow:
     async def analyze_intent(self, state: LeadFollowUpState) -> Dict:
         """Score the lead using the Phase 1 Intent Decoder."""
         logger.info(f"Analyzing intent for lead {state['lead_id']}")
+        
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Analyzing lead intent profile.", "thought")
+
         profile = self.intent_decoder.analyze_lead(
             state['lead_id'], 
             state['conversation_history']
@@ -87,6 +110,13 @@ class LeadBotWorkflow:
             profile.pcs.total_score,
             [profile.frs.classification]
         ))
+        
+        await sync_service.record_lead_event(
+            state['lead_id'], 
+            "AI", 
+            f"Intent Decoded: {profile.frs.classification} (Score: {profile.frs.total_score})", 
+            "thought"
+        )
         
         return {"intent_profile": profile}
 
@@ -106,10 +136,12 @@ class LeadBotWorkflow:
 
         if (is_price_aware or has_keyword) and not state.get('cma_generated'):
             logger.info("DEBUG: determine_path - Routing to generate_cma")
+            await sync_service.record_lead_event(state['lead_id'], "AI", "Price awareness detected. Routing to CMA generation.", "node")
             return {"current_step": "generate_cma", "engagement_status": "responsive"}
 
         # 2. Check for immediate qualification (High Intent)
         if state['intent_profile'].frs.classification == "Hot Lead":
+            await sync_service.record_lead_event(state['lead_id'], "AI", "High intent lead detected. Routing to qualified state.", "thought")
             return {"current_step": "qualified", "engagement_status": "qualified"}
             
         # 3. Check for ghosting (No response > 48h - Mock logic)
@@ -124,6 +156,8 @@ class LeadBotWorkflow:
         
         address = state.get('property_address', '123 Main St, Austin, TX') # Fallback if missing
         
+        await sync_service.record_lead_event(state['lead_id'], "AI", f"Generating CMA for {address}", "thought")
+
         # Generate Report
         report = await self.cma_generator.generate_report(address)
         
@@ -153,6 +187,8 @@ class LeadBotWorkflow:
         # In a real system, we'd send this via GHL API here
         logger.info(f"CMA Injection: {response_msg}")
         
+        await sync_service.record_lead_event(state['lead_id'], "AI", f"CMA Generated with ${report.zillow_variance_abs:,.0f} variance.", "thought")
+        
         return {
             "cma_generated": True, 
             "current_step": "nurture", # Return to nurture or wait for reply
@@ -160,19 +196,18 @@ class LeadBotWorkflow:
         }
 
     async def send_day_3_sms(self, state: LeadFollowUpState) -> Dict:
-        """Day 3: Soft Check-in with FRS-aware logic."""
-        frs = state['intent_profile'].frs.total_score
-        name = state['lead_name']
-        prop = state.get('property_address', 'your property')
+        """Day 3: Soft Check-in with FRS-aware logic via GhostEngine."""
+        ghost_state = GhostState(
+            contact_id=state['lead_id'],
+            current_day=3,
+            frs_score=state['intent_profile'].frs.total_score
+        )
         
-        if frs > 60:
-            msg = f"Hi {name}—just following up on {prop}. No pressure, but we have qualified buyers interested in your market RIGHT NOW. Still thinking about it? [Link]"
-        elif frs > 40:
-            msg = f"Hi {name}, wanted to share some new market data for {prop}. Prices are shifting. Link here: [Link]"
-        else:
-            msg = f"Hi {name}, checking in on {prop}. No rush on our end, just keeping you in the loop."
+        action = await self.ghost_engine.process_lead_step(ghost_state, state['conversation_history'])
+        msg = action['content']
             
-        logger.info(f"Day 3 SMS to {state['contact_phone']}: {msg}")
+        logger.info(f"Day 3 SMS to {state['contact_phone']}: {msg} (Logic: {action.get('logic')})")
+        await sync_service.record_lead_event(state['lead_id'], "AI", f"Sent Day 3 SMS: {msg[:50]}...", "sms")
         # Call GHL API to send SMS here (Mocked)
         return {"engagement_status": "ghosted", "current_step": "day_7_call"} # Advance step for next run
 
@@ -189,6 +224,8 @@ class LeadBotWorkflow:
             "frs_score": state['intent_profile'].frs.total_score
         }
         
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Initiating Day 7 Retell AI Call.", "action")
+
         # Trigger Retell Call (Fire-and-forget for Dashboard UI performance)
         def _call_finished(fut):
             try:
@@ -208,23 +245,127 @@ class LeadBotWorkflow:
         return {"engagement_status": "ghosted", "current_step": "day_14_email"}
 
     async def send_day_14_email(self, state: LeadFollowUpState) -> Dict:
-        """Day 14: Value Injection (CMA)."""
-        logger.info(f"Sending Day 14 Email to {state['contact_email']}")
-        # Logic to generate CMA PDF would go here
+        """Day 14: Value Injection (CMA) via GhostEngine."""
+        ghost_state = GhostState(
+            contact_id=state['lead_id'],
+            current_day=14,
+            frs_score=state['intent_profile'].frs.total_score
+        )
+        action = await self.ghost_engine.process_lead_step(ghost_state, state['conversation_history'])
+        
+        logger.info(f"Sending Day 14 Email to {state['contact_email']}: {action['content']}")
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Sent Day 14 Email with value injection.", "sms")
+        # Logic to generate and send CMA PDF would go here
         return {"engagement_status": "ghosted", "current_step": "day_30_nudge"}
 
     async def send_day_30_nudge(self, state: LeadFollowUpState) -> Dict:
-        """Day 30: Final qualification attempt."""
-        logger.info(f"Sending Day 30 SMS to {state['contact_phone']}")
+        """Day 30: Final qualification attempt via GhostEngine."""
+        ghost_state = GhostState(
+            contact_id=state['lead_id'],
+            current_day=30,
+            frs_score=state['intent_profile'].frs.total_score
+        )
+        action = await self.ghost_engine.process_lead_step(ghost_state, state['conversation_history'])
+        
+        logger.info(f"Sending Day 30 SMS to {state['contact_phone']}: {action['content']}")
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Sent Day 30 final nudge SMS.", "sms")
         return {"engagement_status": "nurture", "current_step": "nurture"}
+
+    async def schedule_showing(self, state: LeadFollowUpState) -> Dict:
+        """Handle showing coordination with market-aware scheduling."""
+        logger.info(f"Scheduling showing for {state['lead_name']} at {state['property_address']}")
+        
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Coordinating showing with market-aware scheduling.", "thought")
+
+        # Phase 7: Use Smart Scheduler
+        from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
+        scheduler = get_smart_scheduler(self.ghl_client)
+        
+        address = state.get('property_address', 'the property')
+        market_metrics = await self.market_intel.get_market_metrics(address)
+        
+        # Inject urgency if market is hot
+        urgency_msg = ""
+        if market_metrics and market_metrics.inventory_days < 15:
+            urgency_msg = f" This market is moving fast ({market_metrics.inventory_days} days avg), so we should see it soon."
+            
+        msg = f"Great choice! I'm coordinating with the listing agent for {address}.{urgency_msg} Does tomorrow afternoon work for a tour?"
+        
+        await sync_service.record_lead_event(state['lead_id'], "AI", f"Showing inquiry sent for {address}.", "sms")
+
+        # In a real system, trigger GHL SMS here
+        return {"engagement_status": "showing_booked", "current_step": "post_showing"}
+
+    async def post_showing_survey(self, state: LeadFollowUpState) -> Dict:
+        """Collect feedback after a showing with behavioral intent capture."""
+        logger.info(f"Collecting post-showing feedback from {state['lead_name']}")
+        
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Collecting post-showing behavioral feedback.", "thought")
+
+        # Use Tone Engine (Jorge style if applicable, or standard)
+        msg = "How was the tour? On a scale of 1-10, how well does this home fit what you're looking for?"
+        
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Post-showing survey sent.", "sms")
+
+        return {"current_step": "facilitate_offer", "engagement_status": "qualified"}
+
+    async def facilitate_offer(self, state: LeadFollowUpState) -> Dict:
+        """Guide the lead through the offer submission process using NationalMarketIntelligence."""
+        logger.info(f"Facilitating offer for {state['lead_name']}")
+        
+        address = state.get('property_address', 'the property')
+        await sync_service.record_lead_event(state['lead_id'], "AI", f"Facilitating offer strategy for {address}", "thought")
+
+        metrics = await self.market_intel.get_market_metrics(address)
+        
+        # Generate offer strategy advice
+        strategy = "We should look at recent comps to find the right number."
+        if metrics:
+            if metrics.price_appreciation_1y > 10:
+                strategy = "Given the 10%+ appreciation in this area, we might need to be aggressive with the terms."
+            else:
+                strategy = "Market is stable here, so we have some room to negotiate on repairs."
+                
+        msg = f"I've prepared an offer strategy for {address}. {strategy} Ready to review the numbers?"
+        
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Offer strategy sent to lead.", "sms")
+
+        return {"engagement_status": "offer_sent", "current_step": "closing_nurture"}
+
+    async def contract_to_close_nurture(self, state: LeadFollowUpState) -> Dict:
+        """Automated touchpoints during the escrow period with milestone tracking."""
+        logger.info(f"Escrow nurture for {state['lead_name']}")
+        
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Starting escrow nurture and milestone tracking.", "node")
+
+        # Milestone logic (mocked for now, but structure is there)
+        msg = "Congrats again on being under contract! The next major milestone is the inspection. I'll be there to make sure everything is handled."
+        
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Escrow update: Inspection milestone tracked.", "thought")
+
+        return {"engagement_status": "under_contract", "current_step": "closed"}
 
     # --- Helper Logic ---
 
-    def _route_next_step(self, state: LeadFollowUpState) -> Literal["day_3", "day_7", "day_14", "day_30", "qualified", "nurture"]:
+    def _route_next_step(self, state: LeadFollowUpState) -> Literal["generate_cma", "day_3", "day_7", "day_14", "day_30", "schedule_showing", "post_showing", "facilitate_offer", "closing_nurture", "qualified", "nurture"]:
         """Conditional routing logic."""
         # Fix for phase 3: check for generate_cma first
         if state.get('current_step') == 'generate_cma':
             return "generate_cma"
+
+        # Check for lifecycle transitions
+        engagement = state['engagement_status']
+        if engagement == "showing_booked":
+            return "post_showing"
+        if engagement == "offer_sent":
+            return "closing_nurture"
+        if engagement == "under_contract":
+            return "qualified" # Or specific closing node
+            
+        # Logic for booking showings if score is high
+        if state['intent_profile'] and state['intent_profile'].frs.classification == "Hot Lead":
+            if engagement != "showing_booked":
+                return "schedule_showing"
 
         if state['engagement_status'] == "qualified":
             return "qualified"
@@ -239,18 +380,34 @@ class LeadBotWorkflow:
         # Default fallback
         return "nurture"
 
-    def _select_stall_breaker(self, state: LeadFollowUpState) -> str:
-        """Select the appropriate stall-breaking script based on intent profile."""
-        last_msg = state['conversation_history'][-1]['content'].lower() if state['conversation_history'] else ""
-        
-        if "thinking" in last_msg:
-            return "What specifically are you thinking about? The timeline, the price, or whether you actually want to sell?"
-        if "get back" in last_msg:
-            return "I appreciate it, but I need to know: are you *actually* selling, or just exploring?"
-        if "zestimate" in last_msg or "zillow" in last_msg:
-            return "Zillow's algorithm doesn't know your kitchen was just renovated. Want to see real comps?"
-        if "agent" in last_msg or "realtor" in last_msg:
-            return "Cool. Quick question: has your agent actually *toured* those comps? If not, we're operating with better intel."
+        def _select_stall_breaker(self, state: LeadFollowUpState) -> str:
+
+            """Select the appropriate stall-breaking script based on intent profile via GhostEngine."""
+
+            last_msg = state['conversation_history'][-1]['content'].lower() if state['conversation_history'] else ""
+
             
-        # Default generic stall breaker
-        return "If you're serious about selling, you need to know market conditions are shifting. Would 15 minutes to look at real numbers make sense?"
+
+            objection_type = "market_shift" # Default
+
+            if "thinking" in last_msg:
+
+                objection_type = "thinking_about_it"
+
+            elif "get back" in last_msg:
+
+                objection_type = "get_back_to_you"
+
+            elif "zestimate" in last_msg or "zillow" in last_msg:
+
+                objection_type = "zestimate_reference"
+
+            elif "agent" in last_msg or "realtor" in last_msg:
+
+                objection_type = "has_realtor"
+
+                
+
+            return self.ghost_engine.get_stall_breaker(objection_type)
+
+    

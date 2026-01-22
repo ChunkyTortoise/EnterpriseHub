@@ -22,10 +22,10 @@ from enum import Enum
 import logging
 from decimal import Decimal
 
-from ..core.event_bus import EventBus
-from ..core.ai_client import AIClient
-from ..analytics.executive_analytics_engine import ExecutiveAnalyticsEngine
-from ..prediction.deep_learning_forecaster import DeepLearningForecaster
+from core.event_bus import EventBus
+from core.ai_client import AIClient
+from analytics.executive_analytics_engine import ExecutiveAnalyticsEngine
+from prediction.deep_learning_forecaster import DeepLearningForecaster
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,9 @@ class RegulatoryJurisdiction(Enum):
     AUSTRALIA_ASIC = "australia_asic"
     SINGAPORE_MAS = "singapore_mas"
     CHINA_CSRC = "china_csrc"
+    FINANCIAL_GLOBAL = "financial_global"
+    EMEA_REAL_ESTATE = "emea_real_estate"
+    APAC_REAL_ESTATE = "apac_real_estate"
 
 class ComplianceRiskLevel(Enum):
     """Compliance risk severity levels"""
@@ -168,14 +171,39 @@ class CompliancePredictionEngine:
         # 2. Analyze competitor compliance patterns
         competitor_patterns = await self._analyze_competitor_compliance_patterns(competitor_actions)
 
-        # 3. Predict violation risks based on competitive intelligence
-        violation_risks = await self._predict_violation_risks(
-            business_context, regulatory_changes, competitor_patterns, time_horizon_months
-        )
+        # 3. Predict violation risks based on competitive intelligence in parallel
+        async def predict_risk(change):
+            # Use deep learning to predict violation probability
+            violation_probability = await self._calculate_violation_probability(
+                business_context, change, competitor_patterns
+            )
 
-        # 4. Generate prevention strategies for each risk
-        for risk in violation_risks:
-            risk.mitigation_strategies = await self._generate_prevention_strategies(risk)
+            if violation_probability > 0.15:  # 15% threshold for risk consideration
+                return ComplianceViolationRisk(
+                    risk_id=f"risk_{change.regulation_id}_{datetime.now().strftime('%Y%m%d')}",
+                    regulation_area=change.regulatory_area,
+                    jurisdiction=change.jurisdiction,
+                    risk_level=self._calculate_risk_level(violation_probability),
+                    violation_probability=violation_probability,
+                    predicted_violation_date=change.effective_date + timedelta(days=90),
+                    estimated_penalty=self._estimate_penalty(change, violation_probability),
+                    triggering_competitive_actions=await self._identify_triggering_actions(
+                        change, competitor_patterns
+                    ),
+                    mitigation_strategies=[],  # Will be populated later
+                    prevention_cost=Decimal('0'),  # Will be calculated
+                    prevention_timeline=timedelta(days=60)
+                )
+            return None
+
+        risk_results = await asyncio.gather(*(predict_risk(change) for change in regulatory_changes))
+        violation_risks = [r for r in risk_results if r is not None]
+
+        # 4. Generate prevention strategies for each risk in parallel (Phase 7 performance optimization)
+        async def populate_strategies(r):
+            r.mitigation_strategies = await self._generate_prevention_strategies(r)
+            
+        await asyncio.gather(*(populate_strategies(risk) for risk in violation_risks))
 
         # 5. Prioritize risks by business impact
         violation_risks.sort(key=lambda x: x.estimated_penalty, reverse=True)
@@ -223,20 +251,24 @@ class CompliancePredictionEngine:
         return arbitrage_opportunities
 
     async def _monitor_regulatory_landscape(self) -> List[RegulatoryChange]:
-        """Monitor regulatory changes across all jurisdictions"""
+        """Monitor regulatory changes across all jurisdictions (Phase 7 Optimized)"""
 
-        regulatory_changes = []
+        # 1. Scrape all sources in parallel
+        async def scrape_jurisdiction(jurisdiction, sources):
+            tasks = [self._scrape_regulatory_source(source, jurisdiction) for source in sources]
+            results = await asyncio.gather(*tasks)
+            return [change for sublist in results for change in sublist]
 
-        # Monitor each jurisdiction's regulatory sources
-        for jurisdiction, sources in self.regulatory_sources.items():
-            for source in sources:
-                changes = await self._scrape_regulatory_source(source, jurisdiction)
-                regulatory_changes.extend(changes)
+        jurisdiction_tasks = [scrape_jurisdiction(j, s) for j, s in self.regulatory_sources.items()]
+        jurisdiction_results = await asyncio.gather(*jurisdiction_tasks)
+        regulatory_changes = [change for sublist in jurisdiction_results for change in sublist]
 
-        # AI-powered regulatory impact analysis
-        for change in regulatory_changes:
+        # 2. AI-powered regulatory impact analysis in parallel
+        async def analyze_impact(change):
             change.business_impact_score = await self._assess_business_impact(change)
             change.competitive_advantage_potential = await self._assess_competitive_impact(change)
+
+        await asyncio.gather(*(analyze_impact(change) for change in regulatory_changes))
 
         return regulatory_changes
 
@@ -345,11 +377,9 @@ class CompliancePredictionEngine:
         self,
         violation_risks: List[ComplianceViolationRisk]
     ) -> Dict[str, bool]:
-        """Trigger automated prevention for high-confidence violation risks"""
+        """Trigger automated prevention for high-confidence violation risks (Phase 7 Optimized)"""
 
-        automation_results = {}
-
-        for risk in violation_risks:
+        async def run_prevention(risk):
             # Automate prevention for high-confidence, high-impact risks
             if (risk.violation_probability > 0.80 and
                 risk.estimated_penalty > Decimal('1000000') and
@@ -358,8 +388,7 @@ class CompliancePredictionEngine:
                 try:
                     # Execute automated prevention
                     success = await self._execute_automated_prevention(risk)
-                    automation_results[risk.risk_id] = success
-
+                    
                     if success:
                         logger.info(f"Automated prevention executed for risk {risk.risk_id}")
 
@@ -370,12 +399,18 @@ class CompliancePredictionEngine:
                             "penalty_prevented": float(risk.estimated_penalty),
                             "roi": float(risk.estimated_penalty / risk.prevention_cost)
                         })
+                        return risk.risk_id, True
                     else:
                         logger.warning(f"Automated prevention failed for risk {risk.risk_id}")
+                        return risk.risk_id, False
 
                 except Exception as e:
                     logger.error(f"Error in automated prevention for risk {risk.risk_id}: {e}")
-                    automation_results[risk.risk_id] = False
+                    return risk.risk_id, False
+            return None, None
+
+        results = await asyncio.gather(*(run_prevention(risk) for risk in violation_risks))
+        automation_results = {k: v for k, v in results if k is not None}
 
         return automation_results
 
@@ -433,8 +468,8 @@ class CompliancePredictionEngine:
         # Scale penalty based on violation probability and business impact
         estimated_penalty = base_penalty + (
             (max_penalty - base_penalty) *
-            violation_probability *
-            regulatory_change.business_impact_score
+            Decimal(str(violation_probability)) *
+            Decimal(str(regulatory_change.business_impact_score))
         )
 
         return Decimal(str(estimated_penalty))

@@ -216,6 +216,19 @@ class Settings(BaseSettings):
             print("⚠️  WARNING: Webhook secret should be at least 32 characters")
         return v
 
+    @field_validator('redis_password')
+    @classmethod
+    def validate_redis_password(cls, v: Optional[str], info: ValidationInfo):
+        """SECURITY FIX: Validate Redis password in production."""
+        environment = info.data.get('environment', 'development')
+        if environment == 'production' and not v:
+            print("❌ SECURITY ERROR: REDIS_PASSWORD is required in production")
+            print("   Generate with: openssl rand -hex 32")
+            sys.exit(1)
+        if v and len(v) < 32:
+            print("⚠️  WARNING: Redis password should be at least 32 characters")
+        return v
+
     @field_validator('anthropic_api_key')
     @classmethod
     def validate_anthropic_key(cls, v: str):

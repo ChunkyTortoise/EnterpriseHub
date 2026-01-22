@@ -38,7 +38,7 @@ class GHLMoatService:
         logger.info(f"MOAT_SYNC: Successfully pushed to GHL/Lyrio Custom Objects.")
         return {"status": "success", "synced_fields": list(moat_profile.keys())}
 
-    async def get_moat_health(self) -> Dict[str, Any]:
+    def get_moat_health(self) -> Dict[str, Any]:
         """Check the status of the Intelligence Layer sync."""
         return {
             "ghl_sync": "active",

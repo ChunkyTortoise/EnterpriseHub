@@ -8,6 +8,7 @@ tracking, and revenue forecasting for scaling $130K → $400K MRR.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -64,7 +65,7 @@ def render_client_expansion_dashboard():
     # Generate framework button
     if st.sidebar.button("🔄 Generate Expansion Framework", type="primary"):
         with st.spinner("Analyzing 50+ clients and generating expansion opportunities..."):
-            framework = asyncio.run(
+            framework = run_async(
                 expansion_service.generate_expansion_framework(include_action_plan=True)
             )
             st.session_state['expansion_framework'] = framework

@@ -1,0 +1,10 @@
+Traceback:
+File "/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/streamlit_demo/jorge_bot_command_center.py", line 267, in <module>
+    main()
+    ~~~~^^
+File "/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/streamlit_demo/jorge_bot_command_center.py", line 232, in main
+    with col1: st.metric("GHL Moat Sync", health['ghl_sync'].upper())
+                                          ~~~~~~^^^^^^^^^^^^
+Copy
+Ask Google
+Ask ChatGPT

@@ -27,3 +27,8 @@ class JorgeSellerState(TypedDict):
     # Metrics
     psychological_commitment: float
     is_qualified: bool
+    
+    # Journey Tracking
+    current_journey_stage: str # "qualification", "valuation_defense", "listing_prep", "active_listing", "under_contract", "closed"
+    follow_up_count: int
+    last_action_timestamp: Optional[datetime]

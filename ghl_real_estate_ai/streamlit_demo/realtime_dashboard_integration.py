@@ -83,14 +83,15 @@ def render_realtime_intelligence_dashboard():
             dashboard_sidebar_controls()
 
         # Main dashboard tabs
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab_whisper = st.tabs([
             "🎯 Live Overview",
             "📊 Lead Scoreboard",
             "🚨 Alert Center",
             "📈 Interactive Analytics",
             "🧬 Matrix View",
             "⚡ Performance",
-            "📦 Payload Monitor"
+            "📦 Payload Monitor",
+            "🎙️ Whisper Mode"
         ])
 
         with tab1:
@@ -190,6 +191,14 @@ def render_realtime_intelligence_dashboard():
             
         with tab7:
             render_payload_monitor()
+
+        with tab_whisper:
+            from ghl_real_estate_ai.streamlit_demo.components.whisper_dashboard import render_whisper_dashboard
+            render_whisper_dashboard(
+                lead_id="tech_professional_sarah",
+                lead_name="Sarah Chen",
+                property_address="789 Pine Ave, Austin, TX"
+            )
 
     except ImportError as e:
         render_fallback_dashboard(f"Component import error: {str(e)}")

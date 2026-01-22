@@ -3,6 +3,7 @@ Property Matcher AI Component
 AI-powered property matching with reasoning and scoring breakdown
 """
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 from typing import Dict, List
 
 # Import Primitive Components
@@ -84,12 +85,8 @@ def render_property_matcher(lead_context: Dict, elite_mode: bool=False, analysis
                         from ghl_real_estate_ai.services.enhanced_lead_intelligence import get_enhanced_lead_intelligence
                         eli = get_enhanced_lead_intelligence()
                         import asyncio
-                        try:
-                            loop = asyncio.get_event_loop()
-                        except RuntimeError:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
-                        deep_reasoning = loop.run_until_complete(eli.get_psychological_property_fit(property, analysis_result))
+                        
+                        deep_reasoning = run_async(eli.get_psychological_property_fit(property, analysis_result))
                         st.info(f"🤖 **Claude's Psychological Insight:** {deep_reasoning}")
                     except Exception as e:
                         st.error(f'AI Insight failed: {e}')

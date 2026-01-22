@@ -39,6 +39,7 @@ class NegotiationDrift:
     responsiveness_delta: float = 0.0  # Change in response time
     hedging_count: int = 0  # Number of tentative words used
     is_softening: bool = False
+    price_break_probability: float = 0.0  # Probability (0-1) that seller will accept lower price
 
 
 class NegotiationStrategy:
@@ -171,7 +172,8 @@ class JorgeToneEngine:
     def generate_take_away_close(
         self,
         seller_name: Optional[str] = None,
-        reason: Optional[str] = None
+        reason: Optional[str] = None,
+        psychology_profile: Any = None
     ) -> str:
         """
         Generate a "Take-Away Close" message for low-probability or vague leads.
@@ -179,11 +181,15 @@ class JorgeToneEngine:
         Args:
             seller_name: Seller name
             reason: Specific reason for the take-away close (e.g., 'vague', 'low_probability')
+            psychology_profile: Optional psychological profile for tone tuning
             
         Returns:
             Confrontational take-away close message
         """
-        if reason == "low_probability":
+        # If seller has high emotional attachment, use loss aversion
+        if psychology_profile and getattr(psychology_profile, 'emotional_attachment_score', 0) > 70:
+            base_message = "It seems you are too attached to the property to see the market reality. I'm going to close your file. Let me know if you decide to be a seller instead of a homeowner."
+        elif reason == "low_probability":
             base_message = "It doesn't seem like you are serious about selling right now. I'm going to close your file so we can focus on active sellers. Reach out if things change."
         else:
             base_message = "It sounds like you aren't ready to sell right now. Should we close your file and stop the process?"
@@ -199,7 +205,8 @@ class JorgeToneEngine:
         ai_valuation: float,
         net_yield: float,
         repair_estimate: float = 0,
-        seller_name: Optional[str] = None
+        seller_name: Optional[str] = None,
+        psychology_profile: Any = None
     ) -> str:
         """
         Generate a "Net Yield" justification message when seller is firm on price but repairs needed.
@@ -210,11 +217,15 @@ class JorgeToneEngine:
             net_yield: Calculated net yield percentage (0.0-1.0)
             repair_estimate: Estimated repair costs
             seller_name: Seller name for personalization
+            psychology_profile: Optional psychological profile
             
         Returns:
             SMS-compliant ROI justification message
         """
-        if repair_estimate > 0:
+        # If distressed, be even more direct about the financial reality
+        if psychology_profile and getattr(psychology_profile, 'motivation_type', '') == "distressed":
+            base_message = f"Financial reality check: ${price_expectation:,.0f} is a pipe dream given the condition. Our max is ${ai_valuation:,.0f}. Are you ready to solve this problem or not?"
+        elif repair_estimate > 0:
             base_message = f"Your ${price_expectation:,.0f} is above our ${ai_valuation:,.0f} valuation. With the repairs needed, the net yield is too low. How did you come up with that number?"
         else:
             base_message = f"At ${price_expectation:,.0f}, the net yield is only {net_yield:.1%}. Our valuation is closer to ${ai_valuation:,.0f}. What is your bottom dollar?"
@@ -256,6 +267,58 @@ class JorgeToneEngine:
 
         return self._ensure_sms_compliance(message)
 
+    def generate_cost_of_waiting_message(
+        self,
+        seller_name: Optional[str] = None,
+        market_trend: str = "rising inventory"
+    ) -> str:
+        """
+        Generate a 'Cost of Waiting' message for Loss Aversion personas.
+        
+        Args:
+            seller_name: Seller name
+            market_trend: Specific market trend to emphasize (e.g., 'rising inventory', 'interest rates')
+            
+        Returns:
+            Confrontational urgency message
+        """
+        if "rate" in market_trend.lower():
+            base_message = "Yield spreads are tightening due to rate volatility. If you wait, your equity position will be diluted. Are you prepared to take that loss?"
+        else:
+            base_message = "Inventory velocity is slowing. Every week you wait increases your holding costs and lowers your net exit. Do you want to sell now or lose more?"
+
+        if seller_name:
+            base_message = f"{seller_name}, {base_message.lower()}"
+
+        return self._ensure_sms_compliance(base_message)
+
+    def generate_arbitrage_pitch(
+        self,
+        seller_name: Optional[str] = None,
+        yield_spread: float = 0.0,
+        market_area: str = "adjacent zones"
+    ) -> str:
+        """
+        Generate an elite arbitrage pitch for investor personas.
+        
+        Args:
+            seller_name: Seller name
+            yield_spread: Calculated yield spread percentage
+            market_area: Target market area
+            
+        Returns:
+            Technical, data-driven arbitrage message
+        """
+        if yield_spread > 0:
+            base_message = f"Market data indicates a {yield_spread:.1f}% yield spread in {market_area}. We are currently exploiting this pricing arbitrage. Do you want in or not?"
+        else:
+            base_message = f"We are tracking sub markets where yield spreads are outpacing city averages. This is an elite opportunity for capital deployment. What is your goal?"
+
+        if seller_name:
+            base_message = f"{seller_name}, {base_message.lower()}"
+
+        return self._ensure_sms_compliance(base_message)
+
     def generate_labeled_question(self, emotion_or_situation: str, seller_name: Optional[str] = None) -> str:
         """Apply Voss-style 'Labeling' to a concern."""
         import random
@@ -284,23 +347,42 @@ class JorgeToneEngine:
         Indicators:
         - Decrease in directness score
         - Increase in hedging ('maybe', 'possibly', 'we'll see')
+        - Use of softening keywords ('flexible', 'bottom line', 'negotiable', 'OBO')
         - Change in response latency
         """
         drift = NegotiationDrift()
-        if len(history) < 2:
+        if len(history) < 1:
             return drift
             
-        hedging_words = ["maybe", "possibly", "think", "might", "could", "considering"]
+        hedging_words = ["maybe", "possibly", "think", "might", "could", "considering", "we'll see", "depends"]
+        softening_words = ["flexible", "negotiable", "bottom line", "obo", "or best offer", "make an offer", "willing to talk"]
+        firming_words = ["firm", "fixed", "not moving", "final", "absolute", "won't take a penny less"]
         
-        # Analyze current message
+        # Analyze last message
         last_msg = history[-1].get("content", "").lower()
+        
         for word in hedging_words:
             if word in last_msg:
                 drift.hedging_count += 1
+                drift.sentiment_shift += 0.1
                 
-        # Simple drift logic: if hedging increases, stance is likely flexible
-        if drift.hedging_count >= 2:
+        for word in softening_words:
+            if word in last_msg:
+                drift.sentiment_shift += 0.3
+                drift.is_softening = True
+                
+        for word in firming_words:
+            if word in last_msg:
+                drift.sentiment_shift -= 0.3
+                
+        # Simple drift logic: if hedging increases or softening words used
+        if drift.hedging_count >= 2 or drift.sentiment_shift > 0.2:
             drift.is_softening = True
+            
+        # Calculate Price Break Probability
+        # Base: sentiment shift + (hedging count * 0.1)
+        base_prob = (drift.sentiment_shift + (drift.hedging_count * 0.1))
+        drift.price_break_probability = max(0.0, min(0.95, base_prob))
             
         return drift
 

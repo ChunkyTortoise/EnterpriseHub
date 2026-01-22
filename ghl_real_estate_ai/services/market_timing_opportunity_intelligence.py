@@ -944,6 +944,10 @@ class MarketTimingOpportunityEngine:
             logger.error(f"Error generating opportunity dashboard: {e}")
             return {'error': str(e), 'market_area': market_area}
     
+    async def get_zip_variance(self, zip_code: str) -> float:
+        """Fetch zip code variance from national market service."""
+        return await self.national_market_service.get_zip_variance(zip_code)
+    
     async def generate_roi_proforma(self, opportunity_id: str, market_area: str) -> Dict[str, Any]:
         """Generate a detailed ROI pro-forma for a detected opportunity."""
         try:
