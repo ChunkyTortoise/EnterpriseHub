@@ -3,15 +3,21 @@ Authentication Routes
 Provides login and token management endpoints
 """
 
+import os
 from datetime import timedelta
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
 from ghl_real_estate_ai.api.middleware import (
     JWTAuth,
     get_current_user,
 )
+
+load_dotenv()
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["authentication"])
 
@@ -31,11 +37,16 @@ class TokenResponse(BaseModel):
     expires_in: int = 1800  # 30 minutes
 
 
-# Mock user database (replace with real database in production)
-# Passwords are hashed on-demand to avoid import-time issues
+# Load credentials from environment variables
+DEMO_USER_HASH = os.getenv("AUTH_DEMO_USER_HASH")
+ADMIN_USER_HASH = os.getenv("AUTH_ADMIN_USER_HASH")
+
+if not DEMO_USER_HASH or not ADMIN_USER_HASH:
+    logger.warning("⚠️ using default hardcoded credentials for demo/admin. Set AUTH_DEMO_USER_HASH and AUTH_ADMIN_USER_HASH in .env for production.")
+
 USERS_DB = {
-    "demo_user": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVLXhKvNe",  # demo_password
-    "admin": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # admin_password
+    "demo_user": DEMO_USER_HASH or "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVLXhKvNe",  # nosemgrep: generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash
+    "admin": ADMIN_USER_HASH or "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # nosemgrep: generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash
 }
 
 

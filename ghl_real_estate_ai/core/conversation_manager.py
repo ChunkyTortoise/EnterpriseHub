@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 import json
+import os
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.core.rag_engine import RAGEngine
@@ -28,6 +29,17 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 from ghl_real_estate_ai.core.governance_engine import GovernanceEngine
 from ghl_real_estate_ai.core.recovery_engine import RecoveryEngine
+
+# Import conversation optimizer with error handling
+try:
+    from ghl_real_estate_ai.services.conversation_optimizer import ConversationOptimizer
+    CONVERSATION_OPTIMIZER_AVAILABLE = True
+except ImportError:
+    CONVERSATION_OPTIMIZER_AVAILABLE = False
+    ConversationOptimizer = None
+
+# Feature flag for conversation optimization
+ENABLE_CONVERSATION_OPTIMIZATION = os.getenv('ENABLE_CONVERSATION_OPTIMIZATION', 'false').lower() == 'true'
 
 logger = get_logger(__name__)
 
@@ -88,6 +100,21 @@ class ConversationManager:
         # --- GOVERNANCE & RECOVERY (AGENT G1 & R1) ---
         self.governance = GovernanceEngine()
         self.recovery = RecoveryEngine()
+
+        # Initialize conversation optimizer
+        self.conversation_optimizer = None
+        if CONVERSATION_OPTIMIZER_AVAILABLE and ENABLE_CONVERSATION_OPTIMIZATION:
+            try:
+                self.conversation_optimizer = ConversationOptimizer()
+                self.optimization_enabled = True
+                logger.info("Conversation optimization enabled")
+            except Exception as e:
+                logger.warning(f"Failed to initialize conversation optimizer: {e}")
+                self.optimization_enabled = False
+        else:
+            self.optimization_enabled = False
+            if ENABLE_CONVERSATION_OPTIMIZATION and not CONVERSATION_OPTIMIZER_AVAILABLE:
+                logger.warning("Conversation optimization requested but service not available")
 
         logger.info("Conversation manager initialized")
 
@@ -187,12 +214,53 @@ class ConversationManager:
             
         context["predictive_score"] = predictive_data
 
-        # Trim conversation history to max length and summarize if needed
-        max_length = settings.max_conversation_history_length
-        if len(context["conversation_history"]) > max_length:
-            # Before trimming, we could theoretically summarize,
-            # but for now we'll just keep the preferences updated.
-            context["conversation_history"] = context["conversation_history"][-max_length:]
+        # Optimize conversation history with intelligent context pruning
+        if self.optimization_enabled and self.conversation_optimizer:
+            try:
+                # Calculate token budget for conversation history
+                current_message = user_message + ai_response  # Combined recent context
+                token_budget = self.conversation_optimizer.calculate_token_budget(
+                    system_prompt="",  # Will be calculated during response generation
+                    current_message=current_message,
+                    max_context_tokens=7000  # Conservative budget for context
+                )
+                
+                # Apply intelligent optimization
+                optimized_history, stats = self.conversation_optimizer.optimize_conversation_history(
+                    conversation_history=context["conversation_history"],
+                    token_budget=token_budget,
+                    preserve_preferences=True  # Always preserve user preferences
+                )
+                
+                context["conversation_history"] = optimized_history
+                
+                # Log optimization stats for monitoring
+                if stats and stats.get("tokens_saved", 0) > 0:
+                    logger.info(
+                        f"Conversation optimized for {contact_id}: "
+                        f"{stats['savings_percentage']:.1f}% tokens saved "
+                        f"({stats['tokens_saved']} tokens), "
+                        f"{stats['messages_removed']} messages removed",
+                        extra={
+                            "contact_id": contact_id,
+                            "optimization_stats": stats
+                        }
+                    )
+                
+            except Exception as e:
+                # Graceful degradation - use original logic
+                logger.warning(f"Conversation optimization failed: {e}")
+                # Fall through to original trimming logic
+                max_length = settings.max_conversation_history_length
+                if len(context["conversation_history"]) > max_length:
+                    context["conversation_history"] = context["conversation_history"][-max_length:]
+        else:
+            # Original conversation history trimming (fallback)
+            max_length = settings.max_conversation_history_length
+            if len(context["conversation_history"]) > max_length:
+                # Before trimming, we could theoretically summarize,
+                # but for now we'll just keep the preferences updated.
+                context["conversation_history"] = context["conversation_history"][-max_length:]
 
         # Store context
         await self.memory_service.save_context(contact_id, context, location_id=location_id)
