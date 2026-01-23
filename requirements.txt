@@ -42,7 +42,7 @@ tiktoken>=0.7.0  # Token counting
 spacy>=3.7.0  # Advanced NLP
 transformers>=4.40.0  # Transformer models
 google-generativeai>=0.8.0  # Gemini AI Studio support
-textblob==0.17.1
+textblob==0.19.0
 langgraph==1.0.6
 langchain-core>=0.1.0
 langchain-anthropic>=0.1.0
@@ -67,8 +67,8 @@ celery>=5.3.0  # Background tasks
 # ==============================================================================
 # Utilities
 # ==============================================================================
-python-dotenv==1.0.0  # Environment variable management
-openpyxl==3.1.2  # Excel file support for data export
+python-dotenv==1.2.1  # Environment variable management
+openpyxl==3.1.5  # Excel file support for data export
 PyGithub>=2.1.1 # GitHub API interactions
 qrcode[pil]>=7.4.2
 fastmcp
