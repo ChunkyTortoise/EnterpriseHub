@@ -6,6 +6,7 @@ including direct SDK access and LangChain compatibility.
 """
 import json
 import httpx
+import os
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Generator, Optional, Union, AsyncGenerator, List, TYPE_CHECKING
@@ -13,6 +14,17 @@ from typing import Any, Dict, Generator, Optional, Union, AsyncGenerator, List, 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.core.hooks import hooks, HookEvent, HookContext
+
+# Import enhanced prompt caching with error handling
+try:
+    from ghl_real_estate_ai.services.enhanced_prompt_caching import EnhancedPromptCaching
+    ENHANCED_CACHING_AVAILABLE = True
+except ImportError:
+    ENHANCED_CACHING_AVAILABLE = False
+    EnhancedPromptCaching = None
+
+# Feature flag for enhanced caching
+ENABLE_ENHANCED_CACHING = os.getenv('ENABLE_ENHANCED_CACHING', 'false').lower() == 'true'
 
 # Import LangChain models only for type checking
 if TYPE_CHECKING:
@@ -94,6 +106,21 @@ class LLMClient:
         # Initialize provider client (Lazy initialization)
         self._client = None
         self._async_client = None
+
+        # Initialize enhanced prompt caching
+        self.enhanced_caching = None
+        if ENHANCED_CACHING_AVAILABLE and ENABLE_ENHANCED_CACHING:
+            try:
+                self.enhanced_caching = EnhancedPromptCaching()
+                self.enhanced_caching_enabled = True
+                logger.info("Enhanced prompt caching enabled")
+            except Exception as e:
+                logger.warning(f"Failed to initialize enhanced prompt caching: {e}")
+                self.enhanced_caching_enabled = False
+        else:
+            self.enhanced_caching_enabled = False
+            if ENABLE_ENHANCED_CACHING and not ENHANCED_CACHING_AVAILABLE:
+                logger.warning("Enhanced caching requested but service not available")
 
     def _init_client(self) -> None:
         """Initialize the provider-specific client."""
@@ -553,17 +580,60 @@ class LLMClient:
                 
                 messages.append({"role": "user", "content": content})
                 
-                # ENHANCED: Implement Prompt Caching for large system prompts
+                # ENHANCED: Comprehensive Prompt Caching with EnhancedPromptCaching service
                 system_blocks = []
-                if system_prompt:
-                    if len(system_prompt) > 1024: # Cache long system prompts (> ~250 tokens)
-                        system_blocks.append({
-                            "type": "text",
-                            "text": system_prompt,
-                            "cache_control": {"type": "ephemeral"}
-                        })
-                    else:
-                        system_blocks.append({"type": "text", "text": system_prompt})
+                
+                if self.enhanced_caching_enabled and self.enhanced_caching and system_prompt:
+                    try:
+                        # Extract user preferences and context from kwargs for comprehensive caching
+                        user_preferences = kwargs.get("user_context", {})
+                        conversation_history = history or []
+                        location_id = kwargs.get("location_id", "default")
+                        
+                        # Analyze what should be cached
+                        cache_candidates = self.enhanced_caching.analyze_cache_candidates(
+                            system_prompt=system_prompt,
+                            user_preferences=user_preferences,
+                            market_context=kwargs.get("market_context", ""),
+                            conversation_history=conversation_history,
+                            location_id=location_id
+                        )
+                        
+                        # Build optimized system blocks with cache control
+                        if cache_candidates:
+                            system_blocks = self.enhanced_caching.build_cached_messages(
+                                cache_candidates, location_id
+                            )
+                            
+                            # Log caching details
+                            total_cached_tokens = sum(c.token_count for c in cache_candidates if c.should_cache)
+                            logger.info(f"Enhanced caching: {len(cache_candidates)} candidates, {total_cached_tokens} tokens cached")
+                        else:
+                            # Fallback to simple system prompt
+                            system_blocks.append({"type": "text", "text": system_prompt})
+                            
+                    except Exception as e:
+                        logger.warning(f"Enhanced caching failed, using fallback: {e}")
+                        # Fallback to basic caching
+                        if len(system_prompt) > 1024:
+                            system_blocks.append({
+                                "type": "text",
+                                "text": system_prompt,
+                                "cache_control": {"type": "ephemeral"}
+                            })
+                        else:
+                            system_blocks.append({"type": "text", "text": system_prompt})
+                else:
+                    # Original basic caching logic (fallback)
+                    if system_prompt:
+                        if len(system_prompt) > 1024: # Cache long system prompts (> ~250 tokens)
+                            system_blocks.append({
+                                "type": "text",
+                                "text": system_prompt,
+                                "cache_control": {"type": "ephemeral"}
+                            })
+                        else:
+                            system_blocks.append({"type": "text", "text": system_prompt})
                 
                 # Format tools for Anthropic (name, description, input_schema)
                 anthropic_tools = []

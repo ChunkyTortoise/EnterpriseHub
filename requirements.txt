@@ -80,7 +80,15 @@ PyYAML>=6.0  # YAML file processing for configuration
 # Database & Service6 Production Dependencies
 # ==============================================================================
 psycopg2-binary>=2.9.0  # PostgreSQL adapter for Python
+pgvector>=0.2.0  # Postgres Vector extension support
+sqlalchemy>=2.0.0 # ORM for robust DB handling
 aiohttp==3.13.3          # Async HTTP client/server for Service6 networking
+
+# ==============================================================================
+# Security & Compliance (Enterprise Grade)
+# ==============================================================================
+semgrep>=1.50.0  # Static analysis & secret detection
+safety>=2.3.0    # Dependency vulnerability scanner
 
 # ==============================================================================
 # Testing & Quality Assurance

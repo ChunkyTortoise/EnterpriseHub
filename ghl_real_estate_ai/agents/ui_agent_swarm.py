@@ -28,11 +28,14 @@ from ghl_real_estate_ai.agents.blackboard import SharedBlackboard
 
 # Import the unified frontend skills
 import ghl_real_estate_ai.agent_system.skills.frontend
+import ghl_real_estate_ai.agent_system.skills.voice
+import ghl_real_estate_ai.agent_system.skills.simulation
 
 class UIAgentSwarm:
     """
     Manages the Ultimate UI generation lifecycle.
     Implements multi-agent debates and live sandbox synchronization.
+    Now supports Voice-to-UI and A/B Simulation.
     """
     
     def __init__(self, project_root: Path, location_id: str = "global"):
@@ -41,13 +44,26 @@ class UIAgentSwarm:
         self.blackboard = SharedBlackboard()
         self.location_id = location_id
         
-    async def generate_ui_stream(self, spec: str) -> AsyncGenerator[Dict[str, Any], None]:
+    async def generate_ui_stream(self, spec: str, voice_transcript: Optional[str] = None) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Runs the UI generation swarm and yields real-time events.
-        Now includes multi-agent debates.
+        Now includes multi-agent debates, Voice processing, and A/B simulation.
         """
         yield {"event": "thinking", "content": f"Initializing Ultimate UI Swarm for tenant: {self.location_id}"}
         
+        # 0. VOICE PROCESSING PHASE (Optional)
+        if voice_transcript:
+            yield {"event": "thinking", "content": "Processing voice transcript to extract UI intent..."}
+            voice_skill = skill_registry.get_skill("process_voice_intent")
+            voice_intent = await voice_skill.execute(transcript=voice_transcript)
+            
+            if voice_intent["ui_trigger"]:
+                yield {"event": "thinking", "content": f"Voice intent detected: {', '.join(voice_intent['intent'])}"}
+                spec = voice_intent["ui_spec"]
+            else:
+                yield {"event": "error", "content": "No UI-related intent found in voice transcript."}
+                return
+
         # 1. ARCHITECTURE PHASE
         yield {"event": "thinking", "content": "Decomposing specification into atomic components via RAG Registry..."}
         
@@ -90,6 +106,45 @@ class UIAgentSwarm:
             aesthetic_skill = skill_registry.get_skill("inject_aesthetics")
             polished_code = aesthetic_skill.execute(jsx_code=code)
             
+            # --- PHASE 3: A/B SIMULATION ---
+            yield {"event": "thinking", "content": f"Simulating lead engagement for {comp['name']} via Behavioral ML..."}
+            sim_skill = skill_registry.get_skill("predict_ui_conversion")
+            prediction = await sim_skill.execute(jsx_code=polished_code)
+            
+            score = prediction["predicted_conversion_rate"]
+            yield {
+                "event": "simulation_result", 
+                "name": comp["name"], 
+                "score": score,
+                "tips": prediction["optimization_tips"],
+                "features": prediction.get("features_extracted", {})
+            }
+
+            # --- ULTIMATE: SELF-REFLECTION LOOP ---
+            if score < 0.7:
+                yield {"event": "thinking", "content": f"Conversion score ({score}) is below threshold. Triggering autonomous self-correction..."}
+                
+                reflection_prompt = f"The previous version scored low in conversion simulation. Optimization tips: {', '.join(prediction['optimization_tips'])}. Please refactor the component to address these issues while maintaining the original specs."
+                
+                yield {"event": "thinking", "content": f"Engineer is refactoring {comp['name']} for better conversion..."}
+                refined_code = await self._simulate_refinement(polished_code, reflection_prompt)
+                
+                # Re-apply aesthetics
+                polished_code = aesthetic_skill.execute(jsx_code=refined_code)
+                
+                # Re-simulate
+                yield {"event": "thinking", "content": f"Re-simulating {comp['name']} after self-correction..."}
+                prediction = await sim_skill.execute(jsx_code=polished_code)
+                score = prediction["predicted_conversion_rate"]
+                
+                yield {
+                    "event": "simulation_result", 
+                    "name": comp["name"], 
+                    "score": score,
+                    "tips": ["Self-correction applied."] + prediction["optimization_tips"],
+                    "features": prediction.get("features_extracted", {})
+                }
+            
             components_code.append(polished_code)
             yield {"event": "component_ready", "name": comp["name"], "code": polished_code}
         
@@ -116,6 +171,20 @@ class UIAgentSwarm:
             full_jsx += "\n// Applied visual coordinate fix for header alignment\n"
             
         yield {"event": "final_ui_ready", "jsx": full_jsx, "qa_status": "verified"}
+        
+        # 6. VOICE BRIEFING PHASE
+        yield {"event": "thinking", "content": "Synthesizing AI voice briefing for the new dashboard..."}
+        briefing_text = f"I have successfully generated your {spec}. The components have been optimized for conversion based on our behavioral models and verified through visual grounding. You can now preview the live dashboard."
+        
+        voice_skill = skill_registry.get_skill("synthesize_voice_briefing")
+        voice_result = await voice_skill.execute(text=briefing_text)
+        
+        yield {
+            "event": "voice_briefing",
+            "audio_data": voice_result.get("audio_data"),
+            "content_type": voice_result.get("content_type"),
+            "text": briefing_text
+        }
 
     async def _simulate_generation(self, component: Dict, docs: Dict) -> str:
         """Simulates an agent generating code for a single component"""

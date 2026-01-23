@@ -1,28 +1,48 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Body
 from fastapi.responses import StreamingResponse
 import asyncio
 import json
 from pathlib import Path
+from typing import Dict, Any, Optional
+from datetime import datetime
+import os
 from ghl_real_estate_ai.agents.blackboard import SharedBlackboard
 from ghl_real_estate_ai.agents.ui_agent_swarm import UIAgentSwarm
+from ghl_real_estate_ai.services.learning.engine import ContentBasedModel
+from ghl_real_estate_ai.services.learning.interfaces import FeatureVector
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter()
 
-# In a real app, this would be injected or shared
+# Model storage path (shared with simulation skill)
+MODEL_PATH = "./data/ml/ui_simulator_v1.json"
+
+# In a real app, these would be injected or shared
 blackboard = SharedBlackboard()
+_ml_engine = ContentBasedModel(model_id="ui_simulator_v1")
+
+async def _ensure_model_loaded():
+    if not _ml_engine.is_trained and os.path.exists(MODEL_PATH):
+        logger.info(f"Loading UI Simulator model in API from {MODEL_PATH}")
+        await _ml_engine.load(MODEL_PATH)
 
 @router.get("/stream-ui-generation")
-async def stream_ui_generation(request: Request, objective: str, location_id: str = "global"):
+async def stream_ui_generation(
+    request: Request, 
+    objective: str = "", 
+    location_id: str = "global",
+    voice_transcript: str = None
+):
     """
     SSE endpoint that triggers the UI Agent Swarm and streams events in real-time.
+    Supports both direct text objective and voice-transcribed intent.
     """
     swarm = UIAgentSwarm(Path("."), location_id=location_id)
 
     async def event_generator():
         try:
-            async for event in swarm.generate_ui_stream(objective):
+            async for event in swarm.generate_ui_stream(objective, voice_transcript=voice_transcript):
                 # Check if client disconnected
                 if await request.is_disconnected():
                     break
@@ -33,6 +53,42 @@ async def stream_ui_generation(request: Request, objective: str, location_id: st
             yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+@router.post("/record-feedback")
+async def record_feedback(
+    component_id: str = Body(...),
+    user_id: str = Body(...),
+    rating: float = Body(...), # 1.0 for like, -1.0 for dislike
+    features: Dict[str, float] = Body(...)
+):
+    """
+    Records user feedback (like/dislike) for a generated component.
+    Updates the Behavioral ML Engine to improve future conversion predictions.
+    """
+    logger.info(f"Recording feedback for {component_id} from {user_id}: {rating}")
+    await _ensure_model_loaded()
+    
+    fv = FeatureVector(
+        entity_id=user_id,
+        entity_type="lead_segment",
+        numerical_features=features,
+        feature_names=list(features.keys())
+    )
+    
+    # Update the ML Engine online
+    success = await _ml_engine.update_online(fv, rating)
+    
+    # Persist the updated "Design DNA"
+    await _ml_engine.save(MODEL_PATH)
+    
+    # Log to blackboard for transparency
+    blackboard.write(
+        f"feedback_{datetime.now().timestamp()}", 
+        {"component_id": component_id, "rating": rating, "user_id": user_id}, 
+        "UserFeedbackLoop"
+    )
+    
+    return {"status": "success", "updated": success}
 
 @router.get("/stream-ui-updates")
 async def stream_ui_updates(request: Request):

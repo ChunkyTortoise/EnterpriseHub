@@ -38,7 +38,7 @@ class VoiceService:
         # Real STT implementation would go here
         return "Transcription not implemented"
 
-    async def synthesize_speech(self, text: str, voice_id: str = "jorge") -> bytes:
+    async def synthesize_speech(self, text: str, voice_id: str = "21m00Tcm4TlvDq8ikWAM") -> bytes: # Default: Rachel
         """
         Convert text to speech using ElevenLabs.
         """
@@ -47,8 +47,29 @@ class VoiceService:
             return b"mock_audio_content"
 
         # Real TTS implementation with ElevenLabs
-        # endpoint = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-        return b"Speech synthesis not implemented"
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        headers = {
+            "Accept": "audio/mpeg",
+            "Content-Type": "application/json",
+            "xi-api-key": self.elevenlabs_api_key
+        }
+        data = {
+            "text": text,
+            "model_id": "eleven_monolingual_v1",
+            "voice_settings": {
+                "stability": 0.5,
+                "similarity_boost": 0.5
+            }
+        }
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(url, json=data, headers=headers)
+                response.raise_for_status()
+                return response.content
+        except Exception as e:
+            logger.error(f"ElevenLabs TTS failed: {e}")
+            return b"Error synthesizing speech"
 
     def analyze_voice_sentiment(self, audio_metadata: Dict[str, Any]) -> str:
         """
@@ -56,3 +77,13 @@ class VoiceService:
         """
         # This is a placeholder for advanced voice analysis
         return "neutral"
+
+# Global service instance
+_voice_service = None
+
+def get_voice_service() -> VoiceService:
+    """Get the global voice service instance."""
+    global _voice_service
+    if _voice_service is None:
+        _voice_service = VoiceService()
+    return _voice_service

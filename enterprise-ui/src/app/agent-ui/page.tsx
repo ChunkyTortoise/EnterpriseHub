@@ -44,19 +44,25 @@ interface UIEvent {
   issues?: string[];
   fix?: string;
   status?: string;
+  features?: any;
+  audio_data?: string;
 }
 
 export default function AgentUIPage() {
   const [objective, setObjective] = useState("Executive Dashboard with KPI cards and revenue charts");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [useVoice, setVoiceMode] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("Hey Claude, build me a high-converting dashboard for my Austin market leads with revenue trends.");
   const [events, setEvents] = useState<UIEvent[]>([]);
-  const [components, setComponents] = useState<{name: string, status: string, code?: string}[]>([]);
+  const [components, setComponents] = useState<{name: string, status: string, code?: string, features?: any, feedback?: number}[]>([]);
   const [finalJsx, setFinalJsx] = useState("");
   const [qaStatus, setQaStatus] = useState<"idle" | "capturing" | "verifying" | "passed" | "failed">("idle");
   const [activeTab, setActiveTab] = useState("code");
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -64,8 +70,36 @@ export default function AgentUIPage() {
     }
   }, [events]);
 
+  const playAudio = (base64Data: string) => {
+    if (!base64Data) return;
+    
+    const audioBlob = b64toBlob(base64Data, "audio/mpeg");
+    const audioUrl = URL.createObjectURL(audioBlob);
+    
+    if (audioRef.current) {
+      audioRef.current.src = audioUrl;
+      audioRef.current.play();
+      setIsPlayingAudio(true);
+    }
+  };
+
+  const b64toBlob = (b64Data: string, contentType = "", sliceSize = 512) => {
+    const byteCharacters = atob(b64Data);
+    const byteArrays = [];
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+      const slice = byteCharacters.slice(offset, offset + sliceSize);
+      const byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
+    return new Blob(byteArrays, { type: contentType });
+  };
+
   const startGeneration = () => {
-    if (!objective.trim()) return;
+    if (!objective.trim() && !useVoice) return;
 
     // Reset state
     setEvents([]);
@@ -73,8 +107,19 @@ export default function AgentUIPage() {
     setFinalJsx("");
     setIsGenerating(true);
     setQaStatus("idle");
+    setIsPlayingAudio(false);
 
-    const url = `http://localhost:8000/api/agent-ui/stream-ui-generation?objective=${encodeURIComponent(objective)}&location_id=ghl_demo_user`;
+    const queryParams = new URLSearchParams({
+      location_id: "ghl_demo_user"
+    });
+
+    if (useVoice) {
+      queryParams.append("voice_transcript", voiceTranscript);
+    } else {
+      queryParams.append("objective", objective);
+    }
+
+    const url = `http://localhost:8000/api/agent-ui/stream-ui-generation?${queryParams.toString()}`;
 
     const es = new EventSource(url);
     eventSourceRef.current = es;
@@ -139,6 +184,25 @@ export default function AgentUIPage() {
       }]);
     });
 
+    es.addEventListener("simulation_result", (e) => {
+      const data = JSON.parse(e.data);
+      setComponents(prev => prev.map(c => 
+        c.name === data.name ? { ...c, features: data.features } : c
+      ));
+      setEvents(prev => [...prev, { 
+        event: "simulation", 
+        content: `Behavioral ML Prediction for ${data.name}: ${Math.round(data.score * 100)}% conversion. Tips: ${data.tips.join(", ")}` 
+      }]);
+    });
+
+    es.addEventListener("voice_briefing", (e) => {
+      const data = JSON.parse(e.data);
+      setEvents(prev => [...prev, { event: "system", content: "AI Voice Briefing ready. Playing audio..." }]);
+      if (data.audio_data) {
+        playAudio(data.audio_data);
+      }
+    });
+
     es.addEventListener("final_ui_ready", (e) => {
       const data = JSON.parse(e.data);
       setFinalJsx(data.jsx);
@@ -155,6 +219,30 @@ export default function AgentUIPage() {
     };
   };
 
+  const handleFeedback = async (name: string, rating: number) => {
+    const comp = components.find(c => c.name === name);
+    if (!comp || !comp.features) return;
+
+    try {
+      await fetch("http://localhost:8000/api/agent-ui/record-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          component_id: name,
+          user_id: "ghl_demo_user",
+          rating: rating,
+          features: comp.features
+        })
+      });
+      
+      setComponents(prev => prev.map(c => 
+        c.name === name ? { ...c, feedback: rating } : c
+      ));
+    } catch (err) {
+      console.error("Feedback error:", err);
+    }
+  };
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(finalJsx);
     alert("JSX copied to clipboard!");
@@ -163,6 +251,13 @@ export default function AgentUIPage() {
   return (
     <main className="p-8 bg-slate-950 min-h-screen text-slate-200 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Audio Element for Briefings */}
+        <audio 
+          ref={audioRef} 
+          onEnded={() => setIsPlayingAudio(false)} 
+          className="hidden" 
+        />
+        
         {/* Header */}
         <Flex justifyContent="between" alignItems="center">
           <div>
@@ -177,6 +272,16 @@ export default function AgentUIPage() {
             <Text className="text-slate-400 mt-1">Multi-agent design debates with real-time visual grounding.</Text>
           </div>
           <div className="flex items-center gap-4">
+            {isPlayingAudio && (
+              <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/20 px-3 py-1 flex items-center gap-2">
+                <div className="flex gap-0.5 items-end h-3">
+                  <div className="w-0.5 bg-purple-400 animate-[bounce_1s_infinite]" />
+                  <div className="w-0.5 bg-purple-400 animate-[bounce_1.2s_infinite]" />
+                  <div className="w-0.5 bg-purple-400 animate-[bounce_0.8s_infinite]" />
+                </div>
+                Voice Briefing Active
+              </Badge>
+            )}
             <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 px-3 py-1">
               Multi-Agent Debate Active
             </Badge>
@@ -190,24 +295,62 @@ export default function AgentUIPage() {
           {/* Left Column: Control & Status */}
           <Col numItemsLg={1} className="space-y-6">
             <Card className="bg-slate-900 border-slate-800">
-              <Title className="text-slate-100 mb-4 flex items-center gap-2">
-                <Zap className="h-4 w-4 text-blue-400" />
-                Swarm Control
-              </Title>
-              <textarea
-                value={objective}
-                onChange={(e) => setObjective(e.target.value)}
-                disabled={isGenerating}
-                className="w-full h-32 bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
-                placeholder="Describe the UI you want to build..."
-              />
+              <Flex justifyContent="between" alignItems="center" className="mb-4">
+                <Title className="text-slate-100 flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-blue-400" />
+                  Swarm Control
+                </Title>
+                <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                  <Button 
+                    size="xs" 
+                    variant={!useVoice ? "primary" : "light"}
+                    onClick={() => setVoiceMode(false)}
+                    className="text-[10px] px-2 py-1"
+                  >
+                    Text
+                  </Button>
+                  <Button 
+                    size="xs" 
+                    variant={useVoice ? "primary" : "light"}
+                    onClick={() => setVoiceMode(true)}
+                    className="text-[10px] px-2 py-1"
+                  >
+                    Voice
+                  </Button>
+                </div>
+              </Flex>
+              
+              {!useVoice ? (
+                <textarea
+                  value={objective}
+                  onChange={(e) => setObjective(e.target.value)}
+                  disabled={isGenerating}
+                  className="w-full h-32 bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+                  placeholder="Describe the UI you want to build..."
+                />
+              ) : (
+                <div className="space-y-3">
+                  <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20 flex items-center gap-3">
+                    <div className="animate-pulse bg-blue-500 h-2 w-2 rounded-full" />
+                    <Text className="text-[10px] text-blue-400 font-mono uppercase tracking-tighter">Mock Voice Metadata Active</Text>
+                  </div>
+                  <textarea
+                    value={voiceTranscript}
+                    onChange={(e) => setVoiceTranscript(e.target.value)}
+                    disabled={isGenerating}
+                    className="w-full h-32 bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none italic"
+                    placeholder="Simulate a voice command..."
+                  />
+                </div>
+              )}
+
               <Button 
                 className="w-full mt-4 bg-blue-600 hover:bg-blue-700 py-6 text-lg font-bold rounded-xl shadow-lg shadow-blue-900/20"
                 onClick={startGeneration}
                 disabled={isGenerating}
-                icon={isGenerating ? Cpu : Play}
+                icon={isGenerating ? Cpu : useVoice ? Sparkles : Play}
               >
-                {isGenerating ? "Swarm Executing..." : "Ignite Swarm"}
+                {isGenerating ? "Swarm Executing..." : useVoice ? "Trigger Voice-to-UI" : "Ignite Swarm"}
               </Button>
             </Card>
 
@@ -293,9 +436,11 @@ export default function AgentUIPage() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       className={`flex gap-3 ${ 
-                        ev.event === 'critic' ? 'text-amber-400 bg-amber-400/5 p-2 rounded' : 
-                        ev.event === 'engineer' ? 'text-blue-400 bg-blue-400/5 p-2 rounded' : 
-                        ev.event === 'success' ? 'text-green-400' : 'text-slate-400'
+                        ev.event === 'critic' ? 'text-amber-400 bg-amber-400/5 p-2 rounded border-l-2 border-amber-500' : 
+                        ev.event === 'engineer' ? 'text-blue-400 bg-blue-400/5 p-2 rounded border-l-2 border-blue-500' : 
+                        ev.event === 'simulation' ? 'text-emerald-400 bg-emerald-400/5 p-2 rounded border-l-2 border-emerald-500 italic' :
+                        ev.event === 'warning' ? 'text-rose-400 bg-rose-400/5 p-2 rounded border-l-2 border-rose-500' :
+                        ev.event === 'success' ? 'text-green-400 font-bold' : 'text-slate-400'
                       }`}
                     >
                       <span className="text-slate-600 flex-shrink-0">[{new Date().toLocaleTimeString([], {hour12: false})}]</span>
@@ -304,6 +449,8 @@ export default function AgentUIPage() {
                         {ev.event === 'system' && <span className="text-slate-500 mr-2">⚙️</span>}
                         {ev.event === 'critic' && <span className="font-bold mr-2">⚖️ {ev.agent}:</span>}
                         {ev.event === 'engineer' && <span className="font-bold mr-2">🛠️ {ev.agent}:</span>}
+                        {ev.event === 'simulation' && <span className="font-bold mr-2">📈 SIM:</span>}
+                        {ev.event === 'warning' && <span className="font-bold mr-2">⚠️ QA:</span>}
                         {ev.content}
                       </span>
                     </motion.div>
@@ -388,7 +535,25 @@ export default function AgentUIPage() {
                               </div>
                               <Flex className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                                 <div className="h-2 w-12 bg-blue-100 dark:bg-blue-900/30 rounded" />
-                                <div className="h-2 w-8 bg-slate-100 dark:bg-slate-800 rounded ml-2" />
+                                <div className="h-2 w-8 bg-slate-100 dark:border-slate-800 rounded ml-2" />
+                                <Flex justifyContent="end" className="gap-2 ml-auto">
+                                  <Button 
+                                    size="xs" 
+                                    variant={comp.feedback === 1 ? "primary" : "outline"} 
+                                    className="rounded-full p-1"
+                                    onClick={() => handleFeedback(comp.name, 1)}
+                                  >
+                                    👍
+                                  </Button>
+                                  <Button 
+                                    size="xs" 
+                                    variant={comp.feedback === -1 ? "secondary" : "outline"} 
+                                    className="rounded-full p-1"
+                                    onClick={() => handleFeedback(comp.name, -1)}
+                                  >
+                                    👎
+                                  </Button>
+                                </Flex>
                               </Flex>
                             </motion.div>
                           ))}

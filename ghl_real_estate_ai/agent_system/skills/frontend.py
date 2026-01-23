@@ -252,7 +252,7 @@ def semantic_chunking(action: str, content: str = "", chunk_id: str = "") -> Any
     return None
 
 @skill(name="component_registry", tags=["frontend", "rag", "docs"])
-def component_registry(action: str, task: str = "", location_id: str = "global") -> Any:
+def component_registry(action: str, task: str = "", location_id: str = "frontend") -> Any:
     """
     Retrieves relevant Shadcn/UI and Tremor documentation for the current task.
     Supports tenant-aware documentation partitioning.

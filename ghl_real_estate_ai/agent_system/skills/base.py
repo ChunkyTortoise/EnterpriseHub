@@ -132,7 +132,15 @@ class SkillRegistry:
         """Initialize ChromaDB client."""
         try:
             import chromadb
-            self._chroma_client = chromadb.Client()
+            import os
+            
+            # Ensure the data directory exists
+            db_path = os.path.join(os.getcwd(), "data", "chroma")
+            os.makedirs(db_path, exist_ok=True)
+            
+            # Use PersistentClient for production persistence
+            self._chroma_client = chromadb.PersistentClient(path=db_path)
+            print(f"✅ ChromaDB initialized with persistence at: {db_path}")
         except (ImportError, Exception) as e:
             self._chroma_client = None
             print(f"⚠️ ChromaDB Semantic Search unavailable ({str(e)}). Using keyword fallback.")

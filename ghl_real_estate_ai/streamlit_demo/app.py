@@ -188,6 +188,7 @@ try:
 
     # Component Imports
     from ghl_real_estate_ai.streamlit_demo.components.churn_early_warning_dashboard import ChurnEarlyWarningDashboard
+    from ghl_real_estate_ai.streamlit_demo.components.claude_cost_tracking_dashboard import render_claude_cost_tracking_dashboard
     from ghl_real_estate_ai.streamlit_demo.components.property_valuation import render_property_valuation_engine
     from ghl_real_estate_ai.streamlit_demo.components.financing_calculator import render_financing_calculator
     from ghl_real_estate_ai.streamlit_demo.components.neighborhood_intelligence import render_neighborhood_explorer
@@ -1101,7 +1102,8 @@ with st.sidebar:
         "Real-Time Intelligence",
         "Billing Analytics",
         "Marketplace Management",
-        "Ops & Optimization"
+        "Ops & Optimization",
+        "Claude Cost Tracking"
     ]
     
     st.markdown("<div style='font-size: 0.7rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.15em; margin-top: 15px; margin-bottom: 8px; font-weight: 700;'>Autonomous Agents</div>", unsafe_allow_html=True)
@@ -2293,6 +2295,12 @@ elif selected_hub == "Marketplace Management":
 elif selected_hub == "Ops & Optimization":
     ops_hub = OpsOptimizationHub(services, claude)
     ops_hub.render_hub()
+elif selected_hub == "Claude Cost Tracking":
+    try:
+        render_claude_cost_tracking_dashboard()
+    except Exception as e:
+        st.error(f"Error loading cost tracking dashboard: {str(e)}")
+        st.info("Cost tracking dashboard is optimizing. Please try again.")
 elif selected_hub == "Swarm Intelligence":
     lead_name = st.session_state.get('selected_lead_name', '-- Select a Lead --')
     lead_data = st.session_state.get('lead_options', {}).get(lead_name)
