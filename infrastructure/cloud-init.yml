@@ -1,0 +1,492 @@
+#cloud-config
+# Jorge's AI Platform - Server Initialization
+# Track 4: Production deployment automation
+
+# Disable root password
+disable_root: false
+
+# System updates
+package_update: true
+package_upgrade: true
+
+# Install required packages
+packages:
+  - docker.io
+  - docker-compose
+  - nginx
+  - certbot
+  - python3-certbot-nginx
+  - git
+  - curl
+  - wget
+  - htop
+  - unzip
+  - jq
+  - fail2ban
+  - ufw
+  - redis-tools
+  - postgresql-client
+
+# Configure Docker
+runcmd:
+  # Enable and start Docker
+  - systemctl enable docker
+  - systemctl start docker
+  - usermod -aG docker root
+
+  # Create application directory
+  - mkdir -p /opt/jorge-platform
+  - mkdir -p /opt/jorge-platform/logs
+  - mkdir -p /opt/jorge-platform/backups
+  - mkdir -p /opt/jorge-platform/ssl
+  - mkdir -p /opt/jorge-platform/data
+
+  # Set up Jorge platform deployment user
+  - useradd -m -s /bin/bash -G docker jorge
+  - mkdir -p /home/jorge/.ssh
+  - chown -R jorge:jorge /home/jorge
+  - chmod 700 /home/jorge/.ssh
+  - chown -R jorge:jorge /opt/jorge-platform
+
+  # Configure firewall
+  - ufw --force enable
+  - ufw allow ssh
+  - ufw allow http
+  - ufw allow https
+
+  # Configure fail2ban for SSH protection
+  - systemctl enable fail2ban
+  - systemctl start fail2ban
+
+  # Download and install Docker Compose (latest version)
+  - curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  - chmod +x /usr/local/bin/docker-compose
+  - ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+  # Clone Jorge's platform repository
+  - cd /opt/jorge-platform
+  - git clone https://github.com/jorge/EnterpriseHub.git .
+  - chown -R jorge:jorge /opt/jorge-platform
+
+  # Set up nginx configuration directory
+  - mkdir -p /etc/nginx/sites-available
+  - mkdir -p /etc/nginx/sites-enabled
+  - rm -f /etc/nginx/sites-enabled/default
+
+  # Create SSL directory
+  - mkdir -p /etc/letsencrypt
+  - chown -R root:root /etc/letsencrypt
+
+  # Set up automatic SSL renewal
+  - echo "0 3 * * 0 root certbot renew --nginx --quiet && systemctl reload nginx" >> /etc/crontab
+
+  # Configure system limits for high performance
+  - echo "fs.file-max = 100000" >> /etc/sysctl.conf
+  - echo "net.core.somaxconn = 65536" >> /etc/sysctl.conf
+  - echo "net.ipv4.tcp_max_syn_backlog = 65536" >> /etc/sysctl.conf
+  - sysctl -p
+
+  # Configure Docker daemon for production
+  - mkdir -p /etc/docker
+
+# Docker daemon configuration
+write_files:
+  - content: |
+      {
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "10m",
+          "max-file": "3"
+        },
+        "storage-driver": "overlay2",
+        "live-restore": true,
+        "userland-proxy": false,
+        "experimental": false
+      }
+    path: /etc/docker/daemon.json
+    owner: root:root
+    permissions: '0644'
+
+  - content: |
+      #!/bin/bash
+      # Jorge Platform Health Check Script
+
+      echo "🔍 Jorge Platform Health Check"
+      echo "================================"
+
+      # Check Docker
+      if docker --version > /dev/null 2>&1; then
+          echo "✅ Docker installed: $(docker --version)"
+      else
+          echo "❌ Docker not available"
+      fi
+
+      # Check Docker Compose
+      if docker-compose --version > /dev/null 2>&1; then
+          echo "✅ Docker Compose installed: $(docker-compose --version)"
+      else
+          echo "❌ Docker Compose not available"
+      fi
+
+      # Check Nginx
+      if nginx -v > /dev/null 2>&1; then
+          echo "✅ Nginx installed: $(nginx -v 2>&1)"
+      else
+          echo "❌ Nginx not available"
+      fi
+
+      # Check SSL/Certbot
+      if certbot --version > /dev/null 2>&1; then
+          echo "✅ Certbot installed: $(certbot --version)"
+      else
+          echo "❌ Certbot not available"
+      fi
+
+      # Check disk space
+      echo "📊 Disk Usage:"
+      df -h / | tail -1
+
+      # Check memory
+      echo "🧠 Memory Usage:"
+      free -h
+
+      # Check running containers
+      echo "🐳 Running Containers:"
+      docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+      echo "================================"
+      echo "✅ Health check complete!"
+    path: /opt/jorge-platform/scripts/health-check.sh
+    owner: jorge:jorge
+    permissions: '0755'
+
+  - content: |
+      #!/bin/bash
+      # Jorge Platform Deployment Script
+
+      set -e
+
+      echo "🚀 Deploying Jorge AI Platform"
+      echo "================================"
+
+      # Navigate to platform directory
+      cd /opt/jorge-platform
+
+      # Pull latest code
+      echo "📥 Pulling latest code..."
+      git pull origin main
+
+      # Set environment variables
+      if [ ! -f .env.production ]; then
+          echo "⚠️  Creating production environment file..."
+          cp .env.example .env.production
+          echo "📝 Please edit .env.production with your credentials"
+      fi
+
+      # Build and deploy containers
+      echo "🏗️  Building and starting containers..."
+      docker-compose -f docker-compose.production.yml down
+      docker-compose -f docker-compose.production.yml pull
+      docker-compose -f docker-compose.production.yml up -d --build
+
+      # Wait for services to be healthy
+      echo "⏳ Waiting for services to start..."
+      sleep 30
+
+      # Run health checks
+      echo "🔍 Running health checks..."
+      ./scripts/health-check.sh
+
+      # Show status
+      echo "📊 Deployment Status:"
+      docker-compose -f docker-compose.production.yml ps
+
+      echo "================================"
+      echo "✅ Jorge Platform deployed successfully!"
+      echo "🌐 Platform should be available at: https://${DOMAIN:-jorge-ai-platform.com}"
+    path: /opt/jorge-platform/scripts/deploy.sh
+    owner: jorge:jorge
+    permissions: '0755'
+
+  - content: |
+      #!/bin/bash
+      # Jorge Platform SSL Setup Script
+
+      DOMAIN=${1:-jorge-ai-platform.com}
+      EMAIL=${2:-admin@jorge-ai-platform.com}
+
+      echo "🔒 Setting up SSL for Jorge AI Platform"
+      echo "Domain: $DOMAIN"
+      echo "Email: $EMAIL"
+      echo "================================"
+
+      # Stop nginx if running
+      systemctl stop nginx || true
+
+      # Get SSL certificate
+      echo "📜 Obtaining SSL certificate..."
+      certbot certonly --standalone -d $DOMAIN -d www.$DOMAIN --email $EMAIL --agree-tos --non-interactive
+
+      # Copy nginx configuration
+      echo "⚙️  Configuring nginx..."
+      cp /opt/jorge-platform/nginx/production.conf /etc/nginx/sites-available/jorge-platform
+      ln -sf /etc/nginx/sites-available/jorge-platform /etc/nginx/sites-enabled/
+
+      # Update domain in nginx config
+      sed -i "s/jorge-ai-platform.com/$DOMAIN/g" /etc/nginx/sites-enabled/jorge-platform
+
+      # Test nginx configuration
+      nginx -t
+
+      # Start nginx
+      systemctl enable nginx
+      systemctl start nginx
+
+      echo "================================"
+      echo "✅ SSL setup complete!"
+      echo "🌐 Jorge Platform should be available at: https://$DOMAIN"
+    path: /opt/jorge-platform/scripts/setup-ssl.sh
+    owner: jorge:jorge
+    permissions: '0755'
+
+  - content: |
+      # Jorge Platform Environment Variables
+      # Track 4: Production configuration template
+
+      # Environment
+      ENVIRONMENT=production
+      LOG_LEVEL=INFO
+
+      # Domain Configuration
+      DOMAIN=jorge-ai-platform.com
+      API_DOMAIN=api.jorge-ai-platform.com
+
+      # Database Configuration
+      DATABASE_URL=postgresql://jorge:secure_password@postgres:5432/jorge_platform_prod
+      POSTGRES_DB=jorge_platform_prod
+      POSTGRES_USER=jorge
+      POSTGRES_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
+
+      # Redis Configuration
+      REDIS_URL=redis://redis:6379
+      REDIS_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
+
+      # API Keys (IMPORTANT: Replace with actual keys)
+      ANTHROPIC_API_KEY=your_claude_api_key_here
+      GHL_API_KEY=your_ghl_api_key_here
+      ZILLOW_API_KEY=your_zillow_api_key_here
+
+      # Authentication
+      JWT_SECRET_KEY=CHANGE_THIS_TO_SECURE_RANDOM_STRING
+      NEXTAUTH_SECRET=CHANGE_THIS_TO_SECURE_RANDOM_STRING
+      NEXTAUTH_URL=https://jorge-ai-platform.com
+
+      # CORS Configuration
+      CORS_ORIGINS=https://jorge-ai-platform.com,https://www.jorge-ai-platform.com
+
+      # Frontend Configuration
+      NEXT_PUBLIC_API_BASE=https://api.jorge-ai-platform.com
+      NEXT_PUBLIC_SOCKET_URL=wss://api.jorge-ai-platform.com/websocket
+
+      # Docker Images (for CI/CD)
+      JORGE_BACKEND_IMAGE=ghcr.io/jorge/real-estate-ai-backend:latest
+      JORGE_FRONTEND_IMAGE=ghcr.io/jorge/real-estate-ai-frontend:latest
+      JORGE_WORKER_IMAGE=ghcr.io/jorge/real-estate-ai-worker:latest
+      JORGE_COLOR=blue
+
+      # Monitoring
+      GRAFANA_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
+      PROMETHEUS_ENABLED=true
+
+      # Alerting
+      ALERT_EMAIL=jorge@jorge-ai-platform.com
+      SLACK_WEBHOOK_URL=your_slack_webhook_here
+
+      # Performance
+      WORKERS=4
+      MAX_CONNECTIONS=100
+      CACHE_TTL=3600
+
+      # Security
+      ENABLE_RATE_LIMITING=true
+      RATE_LIMIT_REQUESTS=100
+      RATE_LIMIT_WINDOW=60
+
+      # Backup Configuration
+      BACKUP_ENABLED=true
+      BACKUP_SCHEDULE=0 3 * * *
+      BACKUP_RETENTION_DAYS=30
+    path: /opt/jorge-platform/.env.production.template
+    owner: jorge:jorge
+    permissions: '0644'
+
+  - content: |
+      server {
+          listen 80;
+          server_name jorge-ai-platform.com www.jorge-ai-platform.com;
+
+          # Redirect HTTP to HTTPS
+          return 301 https://$host$request_uri;
+      }
+
+      server {
+          listen 443 ssl http2;
+          server_name jorge-ai-platform.com www.jorge-ai-platform.com;
+
+          # SSL Configuration
+          ssl_certificate /etc/letsencrypt/live/jorge-ai-platform.com/fullchain.pem;
+          ssl_certificate_key /etc/letsencrypt/live/jorge-ai-platform.com/privkey.pem;
+
+          # SSL Security Settings
+          ssl_protocols TLSv1.2 TLSv1.3;
+          ssl_prefer_server_ciphers off;
+          ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+          ssl_session_timeout 1d;
+          ssl_session_cache shared:SSL:50m;
+          ssl_stapling on;
+          ssl_stapling_verify on;
+
+          # Security Headers
+          add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+          add_header X-Frame-Options DENY always;
+          add_header X-Content-Type-Options nosniff always;
+          add_header X-XSS-Protection "1; mode=block" always;
+          add_header Referrer-Policy "no-referrer-when-downgrade" always;
+          add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+
+          # Gzip Compression
+          gzip on;
+          gzip_vary on;
+          gzip_min_length 1024;
+          gzip_proxied expired no-cache no-store private no_last_modified no_etag auth;
+          gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
+
+          # Rate Limiting
+          limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+          limit_req_zone $binary_remote_addr zone=web:10m rate=30r/s;
+
+          # Frontend (Next.js)
+          location / {
+              limit_req zone=web burst=50 nodelay;
+
+              proxy_pass http://frontend:3000;
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection 'upgrade';
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+              proxy_cache_bypass $http_upgrade;
+
+              # Timeouts
+              proxy_connect_timeout 5s;
+              proxy_send_timeout 60s;
+              proxy_read_timeout 60s;
+          }
+
+          # API Routes
+          location /api {
+              limit_req zone=api burst=20 nodelay;
+
+              proxy_pass http://api-1:8000;
+              proxy_http_version 1.1;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+
+              # API-specific headers
+              proxy_set_header X-Request-ID $request_id;
+
+              # Timeouts
+              proxy_connect_timeout 5s;
+              proxy_send_timeout 30s;
+              proxy_read_timeout 30s;
+          }
+
+          # WebSocket Support
+          location /ws {
+              proxy_pass http://api-1:8000;
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection "upgrade";
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+
+              # WebSocket timeouts
+              proxy_read_timeout 86400;
+          }
+
+          # Health Check Endpoint
+          location /health {
+              access_log off;
+              proxy_pass http://api-1:8000/health;
+              proxy_set_header Host $host;
+          }
+
+          # Static Assets (with long cache)
+          location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+              expires 1y;
+              add_header Cache-Control "public, immutable";
+              access_log off;
+
+              proxy_pass http://frontend:3000;
+              proxy_set_header Host $host;
+          }
+
+          # Block common attack patterns
+          location ~ /\.(?!well-known) {
+              deny all;
+              access_log off;
+              log_not_found off;
+          }
+
+          location ~ ^/(wp-|admin|phpmyadmin) {
+              deny all;
+              access_log off;
+              log_not_found off;
+          }
+
+          # Custom error pages
+          error_page 404 /404.html;
+          error_page 500 502 503 504 /50x.html;
+
+          # Access and error logs
+          access_log /var/log/nginx/jorge-platform.access.log;
+          error_log /var/log/nginx/jorge-platform.error.log;
+      }
+    path: /etc/nginx/sites-available/jorge-platform
+    owner: root:root
+    permissions: '0644'
+
+# Final commands
+final_message: |
+  🎉 Jorge's AI Platform Server Setup Complete!
+
+  ✅ Docker and Docker Compose installed
+  ✅ Nginx configured for SSL termination
+  ✅ Certbot installed for SSL certificates
+  ✅ Security hardening applied (UFW, Fail2ban)
+  ✅ Application directory prepared: /opt/jorge-platform
+
+  🚀 Next Steps:
+  1. Configure domain DNS to point to this server
+  2. Run: /opt/jorge-platform/scripts/setup-ssl.sh [domain] [email]
+  3. Configure .env.production with API keys
+  4. Run: /opt/jorge-platform/scripts/deploy.sh
+
+  📝 Important Files:
+  - Platform directory: /opt/jorge-platform
+  - SSL setup: /opt/jorge-platform/scripts/setup-ssl.sh
+  - Deployment: /opt/jorge-platform/scripts/deploy.sh
+  - Health check: /opt/jorge-platform/scripts/health-check.sh
+
+  🔐 Security Notes:
+  - Change all default passwords in .env.production
+  - Restrict SSH access by IP if possible
+  - Monitor logs in /var/log/nginx/
+
+  Jorge's AI Platform is ready for production deployment! 🚀

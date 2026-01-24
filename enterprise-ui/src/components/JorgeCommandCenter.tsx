@@ -20,7 +20,9 @@ import {
   Wifi,
   WifiOff,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Brain,
+  Map
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -33,6 +35,12 @@ import JorgeChatInterface from './JorgeChatInterface'
 import { useWebSocket } from '@/components/providers/WebSocketProvider'
 import useBotStatus, { type BotStatusMap } from '@/lib/hooks/useBotStatus'
 import { useRealTimeMetrics } from '@/lib/hooks/useRealTimeMetrics'
+import { ShapExplainability } from './analytics/ShapExplainability'
+import { HeatmapOfOpportunity } from './analytics/HeatmapOfOpportunity'
+import { BotInsightsPanel } from './analytics/BotInsightsPanel'
+import { VoiceCallMonitor } from './analytics/VoiceCallMonitor'
+import { CommissionPipeline } from './analytics/CommissionPipeline'
+import { cn } from '@/lib/utils'
 
 interface BotPerformanceCardProps {
   bot: JorgeBotStatus
@@ -371,7 +379,7 @@ export function JorgeCommandCenter() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <Bot className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <div className="text-lg font-medium text-gray-600">Loading Jorge's AI Platform...</div>
+          <div className="text-lg font-medium text-gray-600">Loading Jorge&apos;s AI Platform...</div>
         </div>
       </div>
     )
@@ -463,12 +471,18 @@ export function JorgeCommandCenter() {
             })}
           </div>
           
+          {/* Proactive Agentic Operations */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <BotInsightsPanel />
+            <VoiceCallMonitor />
+          </div>
+          
           {/* Special Features Section */}
-          <Card>
+          <Card className="jorge-card border-none bg-white/5 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-yellow-500" />
-                Jorge's Unique Features
+                Jorge&apos;s Unique Features
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -653,39 +667,38 @@ export function JorgeCommandCenter() {
               </CardContent>
             </Card>
 
-            {/* Revenue Tracking */}
-            {metrics?.revenue && (
-              <Card className="col-span-1 md:col-span-2 lg:col-span-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-green-600" />
-                    Revenue Pipeline
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Pipeline Value:</span>
-                      <span className="font-semibold text-green-600">
-                        ${metrics.revenue.potential_pipeline.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Jorge's Commission (6%):</span>
-                      <span className="font-semibold text-purple-600">
-                        ${metrics.revenue.commission_projected.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Deals in Progress:</span>
-                      <span className="font-semibold">
-                        {metrics.revenue.deals_in_progress}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* Heatmap of Opportunity */}
+            <Card className="col-span-1 md:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Map className="w-4 h-4 text-jorge-glow" />
+                  Heatmap of Opportunity (Austin, TX)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <HeatmapOfOpportunity />
+              </CardContent>
+            </Card>
+
+            {/* Revenue Tracking (Commission Pipeline) */}
+            <CommissionPipeline />
+
+            {/* Lead Score Explainability (SHAP) */}
+            <Card className="md:col-span-2 lg:col-span-1">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Brain className="w-4 h-4 text-jorge-glow" />
+                  Lead Score Explainability
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ShapExplainability 
+                  baseScore={50} 
+                  finalScore={88}
+                  className="bg-transparent border-none p-0 backdrop-blur-none"
+                />
+              </CardContent>
+            </Card>
 
             {/* Lead Bot Automation */}
             <Card className="md:col-span-2 lg:col-span-2">
