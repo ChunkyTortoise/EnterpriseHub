@@ -32,7 +32,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 import redis.asyncio as redis
 
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.property_alert_engine import get_property_alert_engine, AlertType
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 

@@ -299,6 +299,221 @@ groups:
           runbook: "https://runbooks.jorge-revenue.com/suspicious-activity"
 
   # ============================================
+  # Jorge Bot Ecosystem Alerts
+  # ============================================
+  - name: jorge_bot_ecosystem
+    interval: 30s
+    rules:
+      - alert: JorgeSellerBotFailureRate
+        expr: |
+          (
+            rate(jorge_seller_bot_failures_total[5m])
+            /
+            rate(jorge_seller_bot_interactions_total[5m])
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: product
+        annotations:
+          summary: "Jorge Seller Bot high failure rate"
+          description: "Jorge Seller Bot failure rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          impact: "Lead qualification disrupted, revenue impact"
+          runbook: "https://runbooks.jorge-revenue.com/seller-bot-failures"
+
+      - alert: JorgeSellerBotResponseTimeSlow
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(jorge_seller_bot_response_time_seconds_bucket[5m])) by (le)
+          ) > 3
+        for: 5m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "Jorge Seller Bot response time slow"
+          description: "95th percentile response time is {{ $value }}s (threshold: 3s)"
+          impact: "Poor lead experience, potential lead loss"
+
+      - alert: LeadBotLifecycleStalled
+        expr: |
+          increase(lead_bot_stalled_conversations_total[15m]) > 5
+        for: 15m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "Lead Bot lifecycle conversations stalled"
+          description: "{{ $value }} lead conversations stalled in last 15 minutes"
+          impact: "Lead nurture process disrupted"
+
+      - alert: IntentDecoderAccuracyDrop
+        expr: |
+          intent_decoder_accuracy_percentage < 90
+        for: 10m
+        labels:
+          severity: critical
+          team: data_science
+        annotations:
+          summary: "Intent Decoder accuracy below threshold"
+          description: "Intent decoder accuracy is {{ $value }}% (threshold: 90%)"
+          impact: "Lead scoring quality degraded, misqualified leads"
+          runbook: "https://runbooks.jorge-revenue.com/intent-decoder"
+
+  # ============================================
+  # ML Pipeline Performance Alerts
+  # ============================================
+  - name: ml_pipeline_performance
+    interval: 30s
+    rules:
+      - alert: MLPredictionLatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(ml_prediction_duration_seconds_bucket[5m])) by (le)
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: data_science
+        annotations:
+          summary: "ML prediction latency high"
+          description: "95th percentile ML prediction time is {{ $value }}s (target: <0.05s)"
+          impact: "Bot response delays, poor user experience"
+
+      - alert: MLModelAccuracyDegraded
+        expr: |
+          ml_model_accuracy_percentage < 92
+        for: 10m
+        labels:
+          severity: critical
+          team: data_science
+        annotations:
+          summary: "ML model accuracy degraded"
+          description: "ML model accuracy is {{ $value }}% (threshold: 92%)"
+          impact: "Lead scoring quality reduced, business impact"
+          runbook: "https://runbooks.jorge-revenue.com/ml-model-retrain"
+
+      - alert: MLFeatureDriftDetected
+        expr: |
+          ml_feature_drift_score > 0.3
+        for: 15m
+        labels:
+          severity: warning
+          team: data_science
+        annotations:
+          summary: "ML feature drift detected"
+          description: "Feature drift score is {{ $value }} (threshold: 0.3)"
+          impact: "Model performance may degrade, requires monitoring"
+
+  # ============================================
+  # Conversation Intelligence Alerts
+  # ============================================
+  - name: conversation_intelligence
+    interval: 60s
+    rules:
+      - alert: ConversationAnalysisBacklog
+        expr: |
+          conversation_analysis_queue_length > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "Conversation analysis backlog building up"
+          description: "{{ $value }} conversations waiting for analysis"
+          impact: "Delayed insights, reduced bot effectiveness"
+
+      - alert: ConversationIntelligenceServiceDown
+        expr: |
+          up{job="claude-conversation-intelligence"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: engineering
+        annotations:
+          summary: "Conversation Intelligence service down"
+          description: "Claude conversation intelligence service is unavailable"
+          impact: "No real-time conversation insights, manual intervention required"
+
+  # ============================================
+  # External API Dependency Alerts
+  # ============================================
+  - name: external_api_dependencies
+    interval: 60s
+    rules:
+      - alert: ClaudeAPIHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(claude_api_request_duration_seconds_bucket[5m])) by (le)
+          ) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "Claude AI API high latency"
+          description: "95th percentile Claude API response time is {{ $value }}s"
+          impact: "Slow bot responses, poor user experience"
+
+      - alert: GHLAPIRateLimitApproaching
+        expr: |
+          ghl_api_rate_limit_remaining < 200
+        for: 5m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "GHL API rate limit approaching"
+          description: "Only {{ $value }} GHL API calls remaining"
+          impact: "API throttling imminent, lead sync disruption risk"
+
+      - alert: ExternalAPIErrorRateHigh
+        expr: |
+          (
+            sum(rate(external_api_errors_total[5m])) by (api)
+            /
+            sum(rate(external_api_requests_total[5m])) by (api)
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          team: engineering
+        annotations:
+          summary: "High error rate for external API: {{ $labels.api }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.api }}"
+          impact: "External service integration failing"
+
+  # ============================================
+  # Property Alert Engine Performance
+  # ============================================
+  - name: property_alerts
+    interval: 60s
+    rules:
+      - alert: PropertyAlertProcessingDelay
+        expr: |
+          property_alert_processing_delay_seconds > 300
+        for: 10m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "Property alert processing delayed"
+          description: "Property alerts delayed by {{ $value }}s (threshold: 300s)"
+          impact: "Leads not receiving timely property updates"
+
+      - alert: PropertyAlertEngineDown
+        expr: |
+          up{job="property-alert-engine"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: engineering
+        annotations:
+          summary: "Property Alert Engine is down"
+          description: "Property alert processing service unavailable"
+          impact: "No property alerts being sent to leads"
+
+  # ============================================
   # SLA Compliance Alerts
   # ============================================
   - name: sla_compliance
@@ -333,3 +548,21 @@ groups:
           summary: "Response time SLA at risk"
           description: "99th percentile response time is {{ $value }}s (SLA: <2s)"
           impact: "Customer experience degradation"
+
+      - alert: JorgeBotEcosystemSLABreach
+        expr: |
+          (
+            (
+              rate(jorge_seller_bot_interactions_total[5m]) - rate(jorge_seller_bot_failures_total[5m])
+            )
+            /
+            rate(jorge_seller_bot_interactions_total[5m])
+          ) < 0.985
+        for: 10m
+        labels:
+          severity: critical
+          team: product
+        annotations:
+          summary: "Jorge Bot ecosystem SLA breach"
+          description: "Bot success rate is {{ $value | humanizePercentage }} (SLA: 98.5%)"
+          impact: "Core business functionality SLA violation"

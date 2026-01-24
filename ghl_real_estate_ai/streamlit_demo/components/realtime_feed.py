@@ -25,7 +25,7 @@ import threading
 import queue
 from dataclasses import asdict
 
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.auth_service import get_auth_service, UserRole
 
 logger = get_logger(__name__)

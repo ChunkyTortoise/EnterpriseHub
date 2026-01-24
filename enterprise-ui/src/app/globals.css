@@ -1,27 +1,110 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --foreground: #0a0a0a;
-  --background: #ffffff;
-}
+@theme {
+  --color-jorge-dark: #0f0f0f;
+  --color-jorge-electric: #0052ff;
+  --color-jorge-glow: #00f0ff;
+  --color-jorge-gold: #ffd700;
+  --color-jorge-steel: #4a5568;
+  
+  --background-jorge-gradient: linear-gradient(135deg, #0f0f0f 0%, #000000 100%);
+  --background-jorge-gradient-dark: radial-gradient(circle at top center, #1a1a1a 0%, #0f0f0f 100%);
+  
+  --animate-pulse-glow: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-beam: beam 10s linear infinite;
+  
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground: #ededed;
-    --background: #000000;
+  @keyframes beam {
+    from {
+      stroke-dashoffset: 1000;
+    }
+    to {
+      stroke-dashoffset: -1000;
+    }
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+:root {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0052ff;
+  --primary-foreground: #f5f5f5;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #f5f5f5;
+  --accent-foreground: #0a0a0a;
+  --destructive: #ef4444;
+  --destructive-foreground: #f5f5f5;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #0052ff;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: #0f0f0f;
+  --foreground: #f5f5f5;
+  --card: #1a1a1a;
+  --card-foreground: #f5f5f5;
+  --popover: #1a1a1a;
+  --popover-foreground: #f5f5f5;
+  --primary: #0052ff;
+  --primary-foreground: #f5f5f5;
+  --secondary: #262626;
+  --secondary-foreground: #f5f5f5;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --accent: #262626;
+  --accent-foreground: #f5f5f5;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #f5f5f5;
+  --border: #262626;
+  --input: #262626;
+  --ring: #0052ff;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .jorge-card {
+    @apply bg-card border border-border rounded-xl p-4 transition-all duration-200;
+  }
+  
+  .jorge-card-hover {
+    @apply hover:border-jorge-electric/50 hover:shadow-lg hover:shadow-jorge-electric/10;
+  }
+  
+  .jorge-haptic {
+    @apply active:scale-95 transition-transform;
+  }
+  
+  .jorge-display {
+    @apply font-bold tracking-tight uppercase;
+  }
+  
+  .jorge-code {
+    @apply font-mono text-xs tracking-wider uppercase;
+  }
+  
+  .property-value {
+    @apply font-bold text-jorge-gold;
   }
 }

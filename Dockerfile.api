@@ -1,0 +1,84 @@
+# =========================================================================
+# Multi-stage Dockerfile for Jorge's Real Estate AI FastAPI Backend
+# Optimized for horizontal scaling and production deployment
+# =========================================================================
+
+# Stage 1: Builder stage for dependencies
+FROM python:3.11-slim-bullseye AS builder
+
+# Install system dependencies for building Python packages
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    g++ \
+    libffi-dev \
+    libssl-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set work directory
+WORKDIR /app
+
+# Copy requirements files
+COPY requirements.txt requirements-prod.txt ./
+
+# Install Python dependencies in builder stage
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir -r requirements-prod.txt
+
+# Stage 2: Production runtime stage
+FROM python:3.11-slim-bullseye AS runtime
+
+# Install runtime system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd -r jorge && useradd -r -g jorge -m -s /bin/bash jorge
+
+# Set work directory
+WORKDIR /app
+
+# Copy Python packages from builder stage
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY ghl_real_estate_ai/ ./ghl_real_estate_ai/
+COPY bots/ ./bots/
+COPY tests/ ./tests/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./
+COPY .env.example ./
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/data /app/cache
+
+# Set proper ownership
+RUN chown -R jorge:jorge /app
+
+# Switch to non-root user
+USER jorge
+
+# Environment variables for production
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
+ENV ENVIRONMENT=production
+ENV LOG_LEVEL=info
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Create startup script for Socket.IO integration
+COPY scripts/start-api.sh /app/start-api.sh
+RUN chmod +x /app/start-api.sh
+
+# Command to run the application with Socket.IO
+CMD ["/app/start-api.sh"]

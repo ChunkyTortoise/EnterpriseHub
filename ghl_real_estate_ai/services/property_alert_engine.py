@@ -27,7 +27,7 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 import logging
 
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.enhanced_property_matcher import EnhancedPropertyMatcher
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher, RealTimeEvent, EventType
 from ghl_real_estate_ai.services.cache_service import get_cache_service
@@ -518,31 +518,28 @@ class PropertyAlertEngine:
                 await asyncio.sleep(5)  # Wait before retrying
 
     async def _deliver_alert_via_websocket(self, alert: PropertyAlert):
-        """Deliver alert through WebSocket system."""
-        # Create WebSocket event
-        websocket_event = RealTimeEvent(
-            event_type=EventType.LEAD_UPDATE,  # Will extend with PROPERTY_ALERT in next task
-            data={
-                "alert_id": alert.id,
-                "alert_type": alert.alert_type.value,
-                "alert_priority": alert.alert_priority.value,
-                "alert_title": alert.alert_title,
-                "alert_message": alert.alert_message,
-                "alert_summary": alert.alert_summary,
-                "match_score": alert.match_score,
-                "property_data": alert.property_data,
-                "lead_id": alert.lead_id,
-                "tenant_id": alert.tenant_id
-            },
-            timestamp=datetime.now(timezone.utc),
-            user_id=None,  # Will be mapped from lead_id in production
+        """Deliver alert through WebSocket system with Jorge-specific event structure."""
+        # Use the Jorge-specific property alert publisher with frontend-expected structure
+        await self.event_publisher.publish_property_alert(
+            alert_id=alert.id,
+            contact_id=alert.lead_id,  # Map lead_id → contact_id for frontend
             location_id=alert.tenant_id,
-            priority="high" if alert.alert_priority in [AlertPriority.HIGH, AlertPriority.URGENT] else "normal"
+            property_id=alert.property_id,
+            match_score=alert.match_score,
+            alert_type=alert.alert_type.value,
+            property_data={
+                'address': alert.property_data.get('address', 'Unknown Address'),
+                'price': alert.property_data.get('price', 0),
+                'beds': alert.property_data.get('bedrooms', 0),
+                'baths': alert.property_data.get('bathrooms', 0),
+                'sqft': alert.property_data.get('sqft', 0),
+                'listing_date': alert.property_data.get('listing_date'),
+                'match_reasons': alert.match_reasoning.get('primary_factors', []) if alert.match_reasoning else []
+            },
+            match_reasoning=alert.match_reasoning
         )
 
-        # Publish through event publisher
-        await self.event_publisher.publish_event(websocket_event)
-        logger.debug(f"Published WebSocket event for alert {alert.id}")
+        logger.debug(f"Published Jorge property alert event for alert {alert.id} (contact: {alert.lead_id})")
 
 # Global singleton instance
 _property_alert_engine = None

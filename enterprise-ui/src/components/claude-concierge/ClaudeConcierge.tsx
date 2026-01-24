@@ -10,7 +10,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { MessageSquare, X, Sparkles, ChevronDown, ChevronUp, Settings, Zap } from 'lucide-react'
+import { MessageSquare, X, Sparkles, ChevronDown, ChevronUp, Settings, Zap, Eye, Bot, Activity, Users, ArrowRightLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -43,11 +43,26 @@ export function ClaudeConcierge() {
     state.proactiveSuggestions.filter(s => !s.dismissed && !s.acceptedAt)
   )
 
+  // ✨ Omnipresent Coordination State
+  const omnipresentMonitoring = useConciergeStore((state) => state.omnipresentMonitoring)
+  const coordinationMetrics = useConciergeStore((state) => state.coordinationMetrics)
+  const activeBotSessions = useConciergeStore((state) => state.activeBotSessions)
+  const realtimeCoaching = useConciergeStore((state) => state.realtimeCoaching)
+
   // Store actions
   const toggleVisibility = useConciergeStore((state) => state.toggleVisibility)
   const setExpanded = useConciergeStore((state) => state.setExpanded)
   const sendMessage = useConciergeStore((state) => state.sendMessage)
   const initializeConcierge = useConciergeStore((state) => state.initializeConcierge)
+
+  // ✨ Omnipresent Coordination Actions
+  const enableOmnipresentAwareness = useConciergeStore((state) => state.enableOmnipresentAwareness)
+  const disableOmnipresentAwareness = useConciergeStore((state) => state.disableOmnipresentAwareness)
+  const orchestrateBotHandoff = useConciergeStore((state) => state.orchestrateBotHandoff)
+  const provideRealTimeCoaching = useConciergeStore((state) => state.provideRealTimeCoaching)
+  const syncContextAcrossBots = useConciergeStore((state) => state.syncContextAcrossBots)
+  const refreshCoordinationMetrics = useConciergeStore((state) => state.refreshCoordinationMetrics)
+  const toggleRealtimeCoaching = useConciergeStore((state) => state.toggleRealtimeCoaching)
   const toggleSuggestions = useConciergeStore((state) => state.toggleSuggestions)
   const getPerformanceMetrics = useConciergeStore((state) => state.getPerformanceMetrics)
 
@@ -85,7 +100,7 @@ export function ClaudeConcierge() {
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSendMessage()
@@ -115,7 +130,24 @@ export function ClaudeConcierge() {
           )} />
 
           {/* Status indicators */}
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-pulse" />
+          <div className={cn(
+            "absolute -top-1 -right-1 w-4 h-4 rounded-full animate-pulse",
+            omnipresentMonitoring.enabled ? "bg-green-500" : "bg-blue-500"
+          )} />
+
+          {/* Omnipresent monitoring indicator */}
+          {omnipresentMonitoring.enabled && (
+            <div className="absolute -top-1 -left-1 w-3 h-3 bg-purple-500 rounded-full">
+              <Eye className="w-2 h-2 text-white" />
+            </div>
+          )}
+
+          {/* Active bot sessions count */}
+          {activeBotSessions.length > 0 && (
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-bold">{activeBotSessions.length}</span>
+            </div>
+          )}
 
           {activeSuggestions.length > 0 && (
             <div className="absolute -top-2 -left-2 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
@@ -143,14 +175,42 @@ export function ClaudeConcierge() {
           </div>
 
           <div>
-            <h3 className="font-semibold text-sm text-gray-900">Claude Concierge</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-sm text-gray-900">Claude Concierge</h3>
+              {omnipresentMonitoring.enabled && (
+                <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700">
+                  <Eye className="w-3 h-3 mr-1" />
+                  Omnipresent
+                </Badge>
+              )}
+            </div>
             <p className="text-xs text-gray-600">
-              {isInitialized ? 'Your AI Platform Guide' : 'Initializing...'}
+              {isInitialized
+                ? omnipresentMonitoring.enabled
+                  ? `Monitoring ${omnipresentMonitoring.activeConversations.length} conversations`
+                  : 'Your AI Platform Guide'
+                : 'Initializing...'
+              }
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Bot coordination indicators */}
+          {activeBotSessions.length > 0 && (
+            <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700">
+              <Bot className="w-3 h-3 mr-1" />
+              {activeBotSessions.length}
+            </Badge>
+          )}
+
+          {/* Real-time coaching indicator */}
+          {realtimeCoaching.enabled && (
+            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+              <Zap className="w-3 h-3" />
+            </Badge>
+          )}
+
           {/* Performance indicator */}
           {performanceMetrics.avgResponseTime > 0 && (
             <Badge variant="outline" className="text-xs">
@@ -162,7 +222,7 @@ export function ClaudeConcierge() {
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="p-1 hover:bg-white/50 rounded transition-colors"
-            title="Settings"
+            title="Settings & Coordination"
           >
             <Settings size={14} />
           </button>
@@ -189,7 +249,88 @@ export function ClaudeConcierge() {
 
       {/* Settings Panel */}
       {showSettings && isExpanded && (
-        <div className="p-3 bg-gray-50 border-b text-sm space-y-2">
+        <div className="p-3 bg-gray-50 border-b text-sm space-y-3">
+          {/* ✨ Omnipresent Coordination Controls */}
+          <div className="space-y-2 border-b border-gray-200 pb-2">
+            <h4 className="font-semibold text-purple-700 text-xs uppercase tracking-wider">Bot Coordination</h4>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-purple-600" />
+                <span className="text-gray-700">Omnipresent Awareness</span>
+              </div>
+              <Badge variant={omnipresentMonitoring.enabled ? "default" : "outline"} className="text-xs">
+                {omnipresentMonitoring.enabled ? "Active" : "Inactive"}
+              </Badge>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-blue-600" />
+                <span className="text-gray-700">Real-time Coaching</span>
+              </div>
+              <button
+                onClick={() => toggleRealtimeCoaching(!realtimeCoaching.enabled)}
+                className={cn(
+                  "w-10 h-6 rounded-full transition-colors relative",
+                  realtimeCoaching.enabled ? "bg-blue-500" : "bg-gray-300"
+                )}
+              >
+                <div className={cn(
+                  "w-4 h-4 bg-white rounded-full absolute top-1 transition-transform",
+                  realtimeCoaching.enabled ? "translate-x-5" : "translate-x-1"
+                )} />
+              </button>
+            </div>
+
+            {/* Coordination Metrics */}
+            {coordinationMetrics && (
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 pt-2">
+                <div className="flex items-center gap-1">
+                  <Bot className="w-3 h-3" />
+                  Active Bots: {coordinationMetrics.active_sessions}
+                </div>
+                <div className="flex items-center gap-1">
+                  <ArrowRightLeft className="w-3 h-3" />
+                  Handoffs: {coordinationMetrics.total_handoffs_24h}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Activity className="w-3 h-3" />
+                  Quality: {Math.round(coordinationMetrics.conversation_quality_score * 10)/10}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  Success: {Math.round(coordinationMetrics.handoff_success_rate * 100)}%
+                </div>
+              </div>
+            )}
+
+            {/* Quick Actions */}
+            <div className="flex gap-2 pt-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs h-6 px-2"
+                onClick={() => refreshCoordinationMetrics()}
+              >
+                <Activity className="w-3 h-3 mr-1" />
+                Refresh
+              </Button>
+              {activeConversation && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-6 px-2"
+                  onClick={() => syncContextAcrossBots(activeConversation.id)}
+                >
+                  <ArrowRightLeft className="w-3 h-3 mr-1" />
+                  Sync
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* AI Suggestions Toggle */}
           <div className="flex items-center justify-between">
             <span className="text-gray-700">Proactive Suggestions</span>
             <button
@@ -206,6 +347,7 @@ export function ClaudeConcierge() {
             </button>
           </div>
 
+          {/* Performance Metrics */}
           <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
             <div>Conversations: {performanceMetrics.conversationsCount}</div>
             <div>Interactions: {performanceMetrics.totalInteractions}</div>
@@ -313,7 +455,7 @@ export function ClaudeConcierge() {
                 ref={inputRef}
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder={isInitialized ? "Ask me anything..." : "Initializing..."}
                 className="flex-1 text-sm"
                 disabled={!isInitialized || isTyping}

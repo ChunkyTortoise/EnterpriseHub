@@ -7,7 +7,7 @@ import {
   BuildingOffice2Icon,
   UserGroupIcon,
   MapPinIcon,
-  NavigationIcon,
+  ArrowRightIcon,
   PhoneIcon,
   EyeIcon,
   ClockIcon,
@@ -547,7 +547,7 @@ export function NearbyPropertiesWidget({
                         }}
                         className="flex items-center justify-center gap-1 py-2 bg-jorge-electric/20 text-jorge-electric text-xs font-semibold rounded jorge-haptic"
                       >
-                        <NavigationIcon className="w-3 h-3" />
+                        <ArrowRightIcon className="w-3 h-3" />
                         Navigate
                       </button>
 

@@ -1,0 +1,277 @@
+{{/* Alert Templates for Jorge's Real Estate AI Platform */}}
+{{/* Reusable templates for consistent, professional alert formatting */}}
+
+{{/* Jorge Bot Performance Alert Template */}}
+{{ define "jorge.bot.title" }}
+🤖 Jorge Bot Alert: {{ .GroupLabels.alertname }}
+{{ end }}
+
+{{ define "jorge.bot.slack.text" }}
+{{ range .Alerts }}
+*Bot:* {{ .Labels.bot_type | title }} Bot
+*Status:* {{ if eq .Status "firing" }}🔴 FIRING{{ else }}✅ RESOLVED{{ end }}
+*Alert:* {{ .Annotations.summary }}
+
+*Business Impact:* {{ .Annotations.impact }}
+*Technical Details:* {{ .Annotations.description }}
+{{ if .Annotations.runbook }}*Recovery Guide:* {{ .Annotations.runbook }}{{ end }}
+
+*Performance Metrics:*
+{{ if .Annotations.response_time }}• Response Time: {{ .Annotations.response_time }}{{ end }}
+{{ if .Annotations.accuracy }}• Accuracy: {{ .Annotations.accuracy }}{{ end }}
+{{ if .Annotations.error_rate }}• Error Rate: {{ .Annotations.error_rate }}{{ end }}
+
+*Started:* {{ .StartsAt.Format "15:04:05 UTC" }}
+{{ if .EndsAt }}*Resolved:* {{ .EndsAt.Format "15:04:05 UTC" }}{{ end }}
+---
+{{ end }}
+{{ end }}
+
+{{/* ML Model Performance Alert Template */}}
+{{ define "jorge.ml.title" }}
+🧠 ML Model Alert: {{ .GroupLabels.alertname }}
+{{ end }}
+
+{{ define "jorge.ml.slack.text" }}
+{{ range .Alerts }}
+*Model Component:* {{ .Labels.model_component | default "ML Pipeline" }}
+*Status:* {{ if eq .Status "firing" }}🔴 DEGRADED{{ else }}✅ HEALTHY{{ end }}
+*Issue:* {{ .Annotations.summary }}
+
+*Model Health:*
+{{ if .Annotations.accuracy }}• Current Accuracy: {{ .Annotations.accuracy }}{{ end }}
+{{ if .Annotations.latency }}• Prediction Latency: {{ .Annotations.latency }}{{ end }}
+{{ if .Annotations.throughput }}• Throughput: {{ .Annotations.throughput }}{{ end }}
+
+*Business Impact:*
+{{ .Annotations.impact }}
+
+*Technical Details:*
+{{ .Annotations.description }}
+
+{{ if .Annotations.runbook }}*ML Ops Guide:* {{ .Annotations.runbook }}{{ end }}
+
+*Time:* {{ .StartsAt.Format "15:04:05 UTC" }}
+{{ if .EndsAt }}*Resolved:* {{ .EndsAt.Format "15:04:05 UTC" }}{{ end }}
+---
+{{ end }}
+{{ end }}
+
+{{/* Infrastructure Critical Alert Template */}}
+{{ define "jorge.infra.critical.title" }}
+🔥 CRITICAL Infrastructure Alert: {{ .GroupLabels.alertname }}
+{{ end }}
+
+{{ define "jorge.infra.critical.slack.text" }}
+{{ range .Alerts }}
+*Service:* Jorge Real Estate AI Platform
+*Component:* {{ .Labels.component | default "Infrastructure" }}
+*Severity:* 🔴 CRITICAL
+
+*Alert Summary:*
+{{ .Annotations.summary }}
+
+*System Impact:*
+{{ .Annotations.description }}
+
+*Service Health Status:*
+{{ if .Labels.service }}• Service: {{ .Labels.service }}{{ end }}
+{{ if .Labels.instance }}• Instance: {{ .Labels.instance }}{{ end }}
+{{ if .Annotations.availability }}• Availability: {{ .Annotations.availability }}{{ end }}
+
+{{ if .Annotations.runbook }}
+*IMMEDIATE ACTIONS:*
+{{ .Annotations.runbook }}
+{{ end }}
+
+*SLA Risk:* {{ if eq .Labels.severity "critical" }}HIGH - 99.99% uptime SLA at risk{{ else }}MEDIUM{{ end }}
+
+*Time:* {{ .StartsAt.Format "15:04:05 UTC" }}
+{{ if .EndsAt }}*Resolved:* {{ .EndsAt.Format "15:04:05 UTC" }} (Duration: {{ .EndsAt.Sub .StartsAt }}){{ end }}
+
+{{ if eq .Status "firing" }}@channel - Immediate attention required{{ end }}
+---
+{{ end }}
+{{ end }}
+
+{{/* Security Alert Template */}}
+{{ define "jorge.security.title" }}
+🔒 Security Alert: {{ .GroupLabels.alertname }}
+{{ end }}
+
+{{ define "jorge.security.slack.text" }}
+{{ range .Alerts }}
+*Security Event:* {{ .Annotations.summary }}
+*Threat Level:* {{ .Labels.severity | upper }}
+*Platform:* Jorge Real Estate AI
+
+*Incident Details:*
+{{ .Annotations.description }}
+
+*Potential Impact:*
+{{ .Annotations.impact | default "Data security or system integrity risk" }}
+
+*Detection Time:* {{ .StartsAt.Format "15:04:05 UTC" }}
+{{ if .EndsAt }}*Resolution Time:* {{ .EndsAt.Format "15:04:05 UTC" }}{{ end }}
+
+{{ if .Annotations.runbook }}
+*Security Response Guide:*
+{{ .Annotations.runbook }}
+{{ end }}
+
+{{ if eq .Status "firing" }}@security-team - Security incident response required{{ end }}
+---
+{{ end }}
+{{ end }}
+
+{{/* Business Intelligence Alert Template */}}
+{{ define "jorge.business.title" }}
+📈 Business Metric Alert: {{ .GroupLabels.alertname }}
+{{ end }}
+
+{{ define "jorge.business.slack.text" }}
+{{ range .Alerts }}
+*Business Metric:* {{ .Annotations.summary }}
+*Platform:* Jorge Real Estate AI
+*Alert Type:* {{ .Labels.severity | title }}
+
+*Business Context:*
+{{ .Annotations.description }}
+
+*Revenue Impact:*
+{{ .Annotations.impact | default "Potential business performance impact" }}
+
+*Key Metrics:*
+{{ if .Annotations.conversion_rate }}• Conversion Rate: {{ .Annotations.conversion_rate }}{{ end }}
+{{ if .Annotations.revenue }}• Revenue Impact: {{ .Annotations.revenue }}{{ end }}
+{{ if .Annotations.lead_volume }}• Lead Volume: {{ .Annotations.lead_volume }}{{ end }}
+
+*Time Period:* {{ .StartsAt.Format "15:04:05 UTC" }}
+{{ if .EndsAt }} to {{ .EndsAt.Format "15:04:05 UTC" }}{{ end }}
+
+*Recommended Actions:*
+{{ .Annotations.runbook | default "Review business performance dashboard and investigate trends" }}
+---
+{{ end }}
+{{ end }}
+
+{{/* Property Alert Engine Template */}}
+{{ define "jorge.property.title" }}
+🏠 Property Alert Engine: {{ .GroupLabels.alertname }}
+{{ end }}
+
+{{ define "jorge.property.slack.text" }}
+{{ range .Alerts }}
+*Property System:* {{ .Annotations.summary }}
+*Alert Level:* {{ .Labels.severity | title }}
+
+*System Status:*
+{{ .Annotations.description }}
+
+*Lead Impact:*
+{{ .Annotations.impact | default "Property alert delivery affected" }}
+
+*Performance Metrics:*
+{{ if .Annotations.processing_delay }}• Processing Delay: {{ .Annotations.processing_delay }}{{ end }}
+{{ if .Annotations.alert_volume }}• Alert Volume: {{ .Annotations.alert_volume }}{{ end }}
+{{ if .Annotations.match_rate }}• Match Rate: {{ .Annotations.match_rate }}{{ end }}
+
+*Time:* {{ .StartsAt.Format "15:04:05 UTC" }}
+{{ if .EndsAt }}*Resolved:* {{ .EndsAt.Format "15:04:05 UTC" }}{{ end }}
+
+{{ if .Annotations.runbook }}*System Recovery:* {{ .Annotations.runbook }}{{ end }}
+---
+{{ end }}
+{{ end }}
+
+{{/* Email Template for Critical Alerts */}}
+{{ define "jorge.email.critical.subject" }}
+CRITICAL ALERT: Jorge Platform - {{ .GroupLabels.alertname }}
+{{ end }}
+
+{{ define "jorge.email.critical.body" }}
+CRITICAL ALERT - Jorge Real Estate AI Platform
+================================================
+
+Alert Summary: {{ .CommonAnnotations.summary }}
+Severity Level: CRITICAL
+Platform Component: {{ .GroupLabels.component | default "Jorge AI Platform" }}
+
+{{ range .Alerts }}
+ALERT DETAILS:
+--------------
+Alert: {{ .Annotations.summary }}
+Description: {{ .Annotations.description }}
+Business Impact: {{ .Annotations.impact }}
+Team Responsible: {{ .Labels.team }}
+
+{{ if .Annotations.runbook }}
+IMMEDIATE RECOVERY ACTIONS:
+--------------------------
+{{ .Annotations.runbook }}
+{{ end }}
+
+TIMELINE:
+---------
+Alert Started: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+{{ if .EndsAt }}Alert Resolved: {{ .EndsAt.Format "2006-01-02 15:04:05 UTC" }}
+Total Duration: {{ .EndsAt.Sub .StartsAt }}{{ else }}Status: ONGOING{{ end }}
+
+{{ end }}
+
+SLA IMPACT:
+-----------
+99.99% Uptime SLA: {{ if eq .CommonLabels.severity "critical" }}AT RISK{{ else }}MONITORING{{ end }}
+Customer Impact: {{ .CommonAnnotations.impact | default "Platform functionality affected" }}
+
+ESCALATION:
+-----------
+This alert has been sent to:
+- On-call engineering team (PagerDuty)
+- {{ .CommonLabels.team | title }} team (Slack)
+- Management notification (Email)
+
+For urgent assistance: +1-XXX-XXX-XXXX (Emergency Hotline)
+
+--
+Jorge Real Estate AI Platform Monitoring
+Automated Alert System v1.0.0
+{{ end }}
+
+{{/* Resolved Alert Template */}}
+{{ define "jorge.resolved.slack.text" }}
+✅ **RESOLVED** - {{ .GroupLabels.alertname }}
+
+{{ range .Alerts }}
+*Alert:* {{ .Annotations.summary }}
+*Component:* {{ .Labels.component | default "Jorge Platform" }}
+*Duration:* {{ .EndsAt.Sub .StartsAt }}
+
+*Resolution Time:* {{ .EndsAt.Format "15:04:05 UTC" }}
+*Total Downtime:* {{ .EndsAt.Sub .StartsAt }}
+
+{{ if .Annotations.resolution_notes }}*Resolution Notes:* {{ .Annotations.resolution_notes }}{{ end }}
+
+✨ System operating normally
+{{ end }}
+{{ end }}
+
+{{/* PagerDuty Description Template */}}
+{{ define "jorge.pagerduty.description" }}
+{{ .CommonAnnotations.summary }} - Jorge AI Platform ({{ .CommonLabels.environment }})
+{{ end }}
+
+{{ define "jorge.pagerduty.details" }}
+{
+  "alert_name": "{{ .GroupLabels.alertname }}",
+  "platform": "Jorge Real Estate AI",
+  "environment": "{{ .GroupLabels.environment }}",
+  "severity": "{{ .CommonLabels.severity }}",
+  "team": "{{ .CommonLabels.team }}",
+  "component": "{{ .CommonLabels.component }}",
+  "alert_count": "{{ len .Alerts }}",
+  "business_impact": "{{ .CommonAnnotations.impact }}",
+  "runbook_url": "{{ .CommonAnnotations.runbook }}",
+  "started_at": "{{ (index .Alerts 0).StartsAt.Format "2006-01-02T15:04:05Z" }}"
+}
+{{ end }}

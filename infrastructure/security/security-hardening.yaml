@@ -1,0 +1,468 @@
+# Jorge's Real Estate AI Platform - Security Hardening Configuration
+# Enterprise-grade security controls for production environment
+# SOC2 Type II compliance ready with comprehensive security measures
+# Version: 1.0.0
+
+# ================================================================
+# NETWORK SECURITY POLICIES
+# ================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: jorge-platform-network-policy
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: security
+spec:
+  podSelector:
+    matchLabels:
+      app: jorge-revenue-api
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # Ingress rules - restrict incoming traffic
+  ingress:
+    # Allow traffic from ingress controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8000
+
+    # Allow internal communication between Jorge services
+    - from:
+        - podSelector:
+            matchLabels:
+              app: jorge-platform
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 8080  # Health checks
+
+    # Allow monitoring from Prometheus
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 8000  # Metrics endpoint
+
+  # Egress rules - control outbound traffic
+  egress:
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # Allow HTTPS traffic to external APIs (Claude, GHL)
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+
+    # Allow database connections
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgresql
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow Redis connections
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+
+---
+# ================================================================
+# POD SECURITY POLICY
+# ================================================================
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: jorge-platform-psp
+  labels:
+    app: jorge-platform
+    component: security
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  allowedCapabilities: []
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+  seLinux:
+    rule: 'RunAsAny'
+
+---
+# ================================================================
+# RBAC - SERVICE ACCOUNT
+# ================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jorge-platform-service-account
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: security
+automountServiceAccountToken: false
+
+---
+# ================================================================
+# RBAC - ROLE
+# ================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jorge-platform-role
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: security
+rules:
+  # Allow reading ConfigMaps for application configuration
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+
+  # Allow reading Secrets for API keys (restricted)
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["jorge-platform-secrets"]
+    verbs: ["get"]
+
+  # Allow updating own endpoints for health checks
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "update"]
+
+---
+# ================================================================
+# RBAC - ROLE BINDING
+# ================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jorge-platform-role-binding
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: security
+subjects:
+  - kind: ServiceAccount
+    name: jorge-platform-service-account
+    namespace: jorge-revenue-platform
+roleRef:
+  kind: Role
+  name: jorge-platform-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ================================================================
+# SECRETS MANAGEMENT
+# ================================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jorge-platform-secrets
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: security
+  annotations:
+    kubernetes.io/description: "Jorge Platform API keys and sensitive configuration"
+type: Opaque
+stringData:
+  # These would be set via sealed-secrets or external secrets operator in production
+  ANTHROPIC_API_KEY: "REPLACE_WITH_ACTUAL_KEY"
+  GHL_CLIENT_SECRET: "REPLACE_WITH_ACTUAL_SECRET"
+  DATABASE_PASSWORD: "REPLACE_WITH_ACTUAL_PASSWORD"
+  REDIS_PASSWORD: "REPLACE_WITH_ACTUAL_PASSWORD"
+  JWT_SECRET_KEY: "REPLACE_WITH_ACTUAL_JWT_SECRET"
+
+---
+# ================================================================
+# SECURITY CONTEXT
+# ================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jorge-security-config
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: security
+data:
+  security-policy.yaml: |
+    # Application Security Configuration
+    security:
+      # Authentication settings
+      authentication:
+        jwt_expiry_seconds: 3600
+        refresh_token_expiry_days: 30
+        max_login_attempts: 5
+        lockout_duration_minutes: 15
+
+      # Authorization settings
+      authorization:
+        require_2fa: true
+        session_timeout_minutes: 60
+        admin_session_timeout_minutes: 30
+
+      # API Security
+      api:
+        rate_limiting:
+          enabled: true
+          requests_per_minute: 60
+          burst_size: 100
+        cors:
+          enabled: true
+          allowed_origins: ["https://app.jorge-revenue.com"]
+          allowed_methods: ["GET", "POST", "PUT", "DELETE"]
+          max_age: 86400
+
+      # Data Protection
+      data_protection:
+        encryption_at_rest: true
+        encryption_in_transit: true
+        pii_encryption: true
+        audit_logging: true
+        data_retention_days: 2555  # 7 years for real estate compliance
+
+      # Security Headers
+      headers:
+        hsts:
+          enabled: true
+          max_age: 31536000
+          include_subdomains: true
+        csp:
+          enabled: true
+          policy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.anthropic.com https://services.leadconnectorhq.com"
+        frame_options: "DENY"
+        content_type_options: "nosniff"
+        xss_protection: "1; mode=block"
+
+---
+# ================================================================
+# MONITORING AND ALERTING FOR SECURITY EVENTS
+# ================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-monitoring-config
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: security-monitoring
+data:
+  falco-rules.yaml: |
+    # Custom Falco rules for Jorge Platform security monitoring
+    - rule: Unauthorized API Access
+      desc: Detect unauthorized access attempts to Jorge APIs
+      condition: >
+        http and
+        (ka.target.resource contains "/api/" and
+         ka.response_code >= 401 and ka.response_code <= 403)
+      output: >
+        Unauthorized API access attempt
+        (user=%ka.user.name method=%ka.method resource=%ka.target.resource
+         response_code=%ka.response_code source_ip=%ka.source.address)
+      priority: WARNING
+      tags: [api, security]
+
+    - rule: High Rate of Failed Authentications
+      desc: Detect potential brute force attacks
+      condition: >
+        http and
+        ka.target.resource contains "/auth/" and
+        ka.response_code = 401
+      output: >
+        High rate of authentication failures
+        (method=%ka.method resource=%ka.target.resource
+         source_ip=%ka.source.address count=%ka.count)
+      priority: CRITICAL
+      tags: [authentication, brute-force]
+
+    - rule: Sensitive Data Access
+      desc: Monitor access to sensitive endpoints
+      condition: >
+        http and
+        (ka.target.resource contains "/api/leads/" or
+         ka.target.resource contains "/api/analytics/" or
+         ka.target.resource contains "/api/admin/")
+      output: >
+        Sensitive data endpoint accessed
+        (user=%ka.user.name method=%ka.method resource=%ka.target.resource
+         source_ip=%ka.source.address)
+      priority: INFO
+      tags: [data-access, audit]
+
+---
+# ================================================================
+# CONTAINER SECURITY POLICY
+# ================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: container-security-policy
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: security
+data:
+  dockerfile-security.json: |
+    {
+      "base_image_requirements": {
+        "allowed_base_images": [
+          "python:3.11-slim",
+          "python:3.11-alpine",
+          "distroless/python3"
+        ],
+        "security_scanning": {
+          "max_critical_vulnerabilities": 0,
+          "max_high_vulnerabilities": 2,
+          "scan_tools": ["trivy", "snyk", "grype"]
+        }
+      },
+      "container_hardening": {
+        "run_as_non_root": true,
+        "read_only_root_filesystem": true,
+        "no_new_privileges": true,
+        "drop_all_capabilities": true,
+        "security_context": {
+          "runAsUser": 1001,
+          "runAsGroup": 1001,
+          "fsGroup": 1001
+        }
+      },
+      "secrets_management": {
+        "no_secrets_in_image": true,
+        "use_external_secrets": true,
+        "secret_scanning": true
+      }
+    }
+
+---
+# ================================================================
+# COMPLIANCE CONFIGURATION
+# ================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: compliance-config
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: compliance
+data:
+  soc2-controls.yaml: |
+    # SOC2 Type II Controls Configuration
+    soc2_controls:
+      # CC6.1 - Logical and Physical Access Controls
+      access_controls:
+        multi_factor_authentication: true
+        role_based_access_control: true
+        privileged_access_management: true
+        access_reviews:
+          frequency: "quarterly"
+          automated: true
+
+      # CC6.2 - Authentication and Authorization
+      identity_management:
+        single_sign_on: true
+        password_policy:
+          minimum_length: 12
+          complexity_requirements: true
+          rotation_days: 90
+        session_management:
+          timeout_minutes: 60
+          concurrent_session_limit: 3
+
+      # CC6.3 - Data Protection
+      data_protection:
+        encryption:
+          at_rest: "AES-256"
+          in_transit: "TLS-1.3"
+          key_management: "vault"
+        data_classification: true
+        data_loss_prevention: true
+
+      # CC7.1 - System Operations
+      system_operations:
+        change_management: true
+        vulnerability_management:
+          scanning_frequency: "daily"
+          patching_sla_days: 7
+        incident_response: true
+        business_continuity: true
+
+      # CC8.1 - Data Processing and Integrity
+      data_integrity:
+        backup_retention_years: 7
+        data_quality_monitoring: true
+        audit_logging:
+          retention_years: 7
+          immutable_storage: true
+
+  gdpr-compliance.yaml: |
+    # GDPR Compliance Configuration
+    gdpr_compliance:
+      data_processing:
+        lawful_basis: "legitimate_interest"
+        purpose_limitation: true
+        data_minimization: true
+        accuracy_maintenance: true
+
+      data_subject_rights:
+        right_to_access: true
+        right_to_rectification: true
+        right_to_erasure: true
+        right_to_portability: true
+        right_to_object: true
+
+      privacy_by_design:
+        data_protection_impact_assessment: true
+        privacy_settings_default: true
+        consent_management: true
+
+      breach_notification:
+        internal_notification_hours: 1
+        supervisory_authority_hours: 72
+        data_subject_notification: true

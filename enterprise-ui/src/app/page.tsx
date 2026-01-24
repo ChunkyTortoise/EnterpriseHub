@@ -17,6 +17,9 @@ export default function Home() {
           <Link className="text-sm font-semibold hover:text-blue-600 transition-colors" href="/jorge">
             Jorge Command Center
           </Link>
+          <Link className="text-sm font-semibold hover:text-blue-600 transition-colors" href="/presentation/demo">
+            Demo Center
+          </Link>
           <Link className="text-sm font-semibold hover:text-blue-600 transition-colors" href="/dashboard">
             Intelligence Hub
           </Link>

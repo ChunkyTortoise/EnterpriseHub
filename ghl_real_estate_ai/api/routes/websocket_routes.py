@@ -13,7 +13,7 @@ import json
 import asyncio
 from datetime import datetime
 
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.websocket_server import get_websocket_manager, WebSocketClient
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.auth_service import get_auth_service, UserRole

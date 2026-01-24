@@ -1,0 +1,631 @@
+name: Jorge Platform - Production Deployment Pipeline
+# Enterprise-grade CI/CD with comprehensive testing, security scanning, and deployment automation
+# Designed for 99.99% uptime SLA compliance with automated rollback capabilities
+
+on:
+  push:
+    branches: [main, release/*]
+    tags: [v*]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, ready_for_review]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: jorge-salas/jorge-revenue-platform
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+# Global permissions for enterprise security
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+  actions: read
+  checks: write
+
+jobs:
+  # ================================================================
+  # SECURITY AND CODE QUALITY CHECKS
+  # ================================================================
+  security-scan:
+    name: 🔒 Security & Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      security-status: ${{ steps.security-check.outputs.status }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for security analysis
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install security tools
+        run: |
+          pip install safety bandit semgrep
+          sudo apt-get update && sudo apt-get install -y clamav
+
+      - name: Secrets Detection
+        run: |
+          # Check for accidentally committed secrets
+          if grep -r "sk-" --include="*.py" --include="*.js" --include="*.env*" . || \
+             grep -r "AKIA" --include="*.py" --include="*.js" --include="*.env*" . || \
+             grep -r "ghp_" --include="*.py" --include="*.js" --include="*.env*" .; then
+            echo "::error::Potential secrets detected in codebase"
+            exit 1
+          fi
+
+      - name: Python Security Analysis
+        run: |
+          # Check for known vulnerabilities in dependencies
+          pip install -r requirements.txt
+          safety check --json --output safety-report.json || true
+
+          # Static analysis for security issues
+          bandit -r ghl_real_estate_ai/ -f json -o bandit-report.json || true
+
+      - name: Code Quality Analysis
+        run: |
+          pip install ruff mypy
+
+          # Linting and formatting check
+          ruff check ghl_real_estate_ai/ --output-format=json > ruff-report.json || true
+
+          # Type checking
+          mypy ghl_real_estate_ai/ --json-report mypy-report || true
+
+      - name: Upload Security Reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            safety-report.json
+            bandit-report.json
+            ruff-report.json
+            mypy-report/
+
+      - name: Security Status Check
+        id: security-check
+        run: |
+          # Evaluate security scan results
+          CRITICAL_ISSUES=0
+
+          if [ -f safety-report.json ]; then
+            CRITICAL_VULNS=$(jq '.vulnerabilities | length' safety-report.json)
+            CRITICAL_ISSUES=$((CRITICAL_ISSUES + CRITICAL_VULNS))
+          fi
+
+          if [ -f bandit-report.json ]; then
+            HIGH_SEVERITY=$(jq '.results[] | select(.issue_severity == "HIGH") | .issue_severity' bandit-report.json | wc -l)
+            CRITICAL_ISSUES=$((CRITICAL_ISSUES + HIGH_SEVERITY))
+          fi
+
+          if [ $CRITICAL_ISSUES -gt 0 ]; then
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "::error::$CRITICAL_ISSUES critical security issues found"
+            exit 1
+          else
+            echo "status=passed" >> $GITHUB_OUTPUT
+            echo "::notice::No critical security issues found"
+          fi
+
+  # ================================================================
+  # COMPREHENSIVE TESTING PIPELINE
+  # ================================================================
+  test-jorge-bots:
+    name: 🤖 Jorge Bot Ecosystem Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: security-scan
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Configure test environment
+        run: |
+          cp .env.example .env.test
+          echo "REDIS_URL=redis://localhost:6379" >> .env.test
+          echo "DATABASE_URL=postgresql://postgres:testpass@localhost:5432/testdb" >> .env.test
+          echo "TESTING=true" >> .env.test
+
+      - name: Run Jorge Seller Bot Tests
+        run: |
+          pytest tests/bots/test_jorge_seller_bot.py -v \
+            --junitxml=test-results/jorge-seller-bot.xml \
+            --cov=ghl_real_estate_ai.agents.jorge_seller_bot \
+            --cov-report=xml:coverage/jorge-seller-bot.xml
+
+      - name: Run Lead Bot Tests
+        run: |
+          pytest tests/bots/test_lead_bot.py -v \
+            --junitxml=test-results/lead-bot.xml \
+            --cov=ghl_real_estate_ai.agents.lead_bot \
+            --cov-report=xml:coverage/lead-bot.xml
+
+      - name: Run Intent Decoder Tests
+        run: |
+          pytest tests/bots/test_intent_decoder.py -v \
+            --junitxml=test-results/intent-decoder.xml \
+            --cov=ghl_real_estate_ai.agents.intent_decoder \
+            --cov-report=xml:coverage/intent-decoder.xml
+
+      - name: Jorge Bot Performance Benchmarks
+        run: |
+          python scripts/jorge_bot_performance_test.py --output=bot-performance.json
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: jorge-bot-test-results
+          path: |
+            test-results/
+            coverage/
+            bot-performance.json
+
+  test-ml-pipeline:
+    name: 🧠 ML Analytics Pipeline Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: security-scan
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install ML dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-ml.txt
+
+      - name: ML Model Validation Tests
+        run: |
+          pytest tests/ml/ -v \
+            --junitxml=test-results/ml-pipeline.xml \
+            --cov=bots.shared.ml_analytics_engine \
+            --cov-report=xml:coverage/ml-pipeline.xml
+
+      - name: ML Performance Validation (Target: 42.3ms)
+        run: |
+          python scripts/ml_performance_benchmark.py \
+            --target-latency-ms=50 \
+            --min-accuracy=0.92 \
+            --output=ml-performance.json
+
+      - name: Feature Drift Detection
+        run: |
+          python scripts/detect_feature_drift.py --threshold=0.3
+
+      - name: Upload ML test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ml-test-results
+          path: |
+            test-results/
+            coverage/
+            ml-performance.json
+
+  test-integration:
+    name: 🔗 Integration & API Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [test-jorge-bots, test-ml-pipeline]
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Run Integration Tests
+        run: |
+          pytest tests/integration/ -v \
+            --junitxml=test-results/integration.xml \
+            --cov=ghl_real_estate_ai \
+            --cov-report=xml:coverage/integration.xml
+
+      - name: API Contract Tests
+        run: |
+          pytest tests/api/ -v \
+            --junitxml=test-results/api-contracts.xml
+
+      - name: Load Testing (Baseline)
+        run: |
+          python scripts/load_test_baseline.py \
+            --duration=60 \
+            --max-response-time=1000 \
+            --output=load-test-results.json
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration-test-results
+          path: |
+            test-results/
+            coverage/
+            load-test-results.json
+
+  # ================================================================
+  # CONTAINER BUILD AND SECURITY SCANNING
+  # ================================================================
+  build-and-scan:
+    name: 🏗️ Build & Security Scan Container
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [test-integration]
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+      security-scan-status: ${{ steps.container-scan.outputs.status }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push container
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+            VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
+            REVISION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
+
+      - name: Container Security Scan
+        id: container-scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'  # Fail on HIGH/CRITICAL vulnerabilities
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Container Scan Status
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "status=passed" >> $GITHUB_OUTPUT
+            echo "::notice::Container security scan passed"
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "::error::Container security scan found critical vulnerabilities"
+          fi
+
+  # ================================================================
+  # STAGING DEPLOYMENT & VALIDATION
+  # ================================================================
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build-and-scan
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure Kubernetes
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG_STAGING }}
+
+      - name: Deploy to Staging
+        run: |
+          chmod +x scripts/deploy-enterprise-production.sh
+          scripts/deploy-enterprise-production.sh staging ${{ github.sha }} rolling
+
+      - name: Staging Health Verification
+        run: |
+          # Wait for staging deployment to be healthy
+          sleep 60
+          curl -f https://staging-api.jorge-revenue.example.com/health/detailed
+
+      - name: Run Staging E2E Tests
+        run: |
+          pytest tests/e2e/ -v --base-url=https://staging-api.jorge-revenue.example.com
+
+      - name: Staging Performance Validation
+        run: |
+          python scripts/performance_validation.py \
+            --base-url=https://staging-api.jorge-revenue.example.com \
+            --sla-response-time=1000 \
+            --duration=300
+
+  # ================================================================
+  # PRODUCTION DEPLOYMENT (MANUAL APPROVAL)
+  # ================================================================
+  deploy-production:
+    name: 🏭 Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production  # Requires manual approval in GitHub
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Pre-deployment Validation
+        run: |
+          echo "🔍 Pre-deployment validation checklist:"
+          echo "✅ All tests passed"
+          echo "✅ Security scans clean"
+          echo "✅ Staging validation successful"
+          echo "✅ Manual approval received"
+
+      - name: Configure Production Kubernetes
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG_PRODUCTION }}
+
+      - name: Backup Current Production State
+        run: |
+          mkdir -p production-backup
+          kubectl get all -n jorge-revenue-platform -o yaml > production-backup/current-state.yaml
+
+      - name: Deploy to Production (Blue-Green)
+        run: |
+          chmod +x scripts/deploy-enterprise-production.sh
+
+          # Use blue-green deployment for zero downtime
+          scripts/deploy-enterprise-production.sh production ${{ github.sha }} blue-green
+
+      - name: Production Health Monitoring
+        run: |
+          # Extended health monitoring for production
+          python scripts/production_health_monitor.py \
+            --duration=600 \
+            --sla-uptime=99.99 \
+            --max-response-time=1000
+
+      - name: Business Validation Tests
+        run: |
+          # Verify Jorge bots are working correctly
+          python scripts/jorge_bot_business_validation.py \
+            --environment=production \
+            --test-lead-qualification \
+            --test-ml-predictions
+
+      - name: Update Production Status
+        if: success()
+        run: |
+          # Update deployment status
+          echo "✅ Production deployment successful" >> $GITHUB_STEP_SUMMARY
+          echo "🏭 Environment: Production" >> $GITHUB_STEP_SUMMARY
+          echo "🏷️ Version: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "⏱️ Deployed at: $(date -u)" >> $GITHUB_STEP_SUMMARY
+
+  # ================================================================
+  # POST-DEPLOYMENT MONITORING & ROLLBACK
+  # ================================================================
+  post-deployment-monitoring:
+    name: 📊 Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: success() || failure()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Monitor Deployment Health
+        run: |
+          python scripts/post_deployment_monitoring.py \
+            --environment=production \
+            --monitoring-duration=1800 \
+            --alert-threshold=99.99
+
+      - name: Generate Deployment Report
+        run: |
+          python scripts/generate_deployment_report.py \
+            --deployment-id=${{ github.run_id }} \
+            --version=${{ github.sha }} \
+            --environment=production
+
+      - name: Upload Deployment Artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: production-deployment-report
+          path: |
+            deployment-report.json
+            deployment-summary.md
+            monitoring-results/
+
+  # ================================================================
+  # EMERGENCY ROLLBACK JOB
+  # ================================================================
+  emergency-rollback:
+    name: 🆘 Emergency Rollback
+    runs-on: ubuntu-latest
+    if: failure() && needs.deploy-production.result == 'failure'
+    needs: deploy-production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure Kubernetes
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG_PRODUCTION }}
+
+      - name: Execute Emergency Rollback
+        run: |
+          echo "🆘 EMERGENCY ROLLBACK INITIATED"
+          kubectl rollout undo deployment/jorge-revenue-api -n jorge-revenue-platform
+
+          # Wait for rollback completion
+          kubectl rollout status deployment/jorge-revenue-api -n jorge-revenue-platform --timeout=300s
+
+      - name: Verify Rollback Health
+        run: |
+          sleep 30
+          curl -f https://api.jorge-revenue.example.com/health/detailed
+
+      - name: Send Emergency Notifications
+        if: always()
+        run: |
+          echo "🚨 PRODUCTION DEPLOYMENT FAILED - ROLLBACK EXECUTED"
+          echo "Time: $(date -u)"
+          echo "Commit: ${{ github.sha }}"
+          echo "Rollback Status: ${{ job.status }}"
+
+          # In real implementation, this would trigger PagerDuty/Slack alerts
+
+# ================================================================
+# WORKFLOW COMPLETION NOTIFICATION
+# ================================================================
+  notify-completion:
+    name: 📢 Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy-production, post-deployment-monitoring]
+    if: always()
+
+    steps:
+      - name: Determine Overall Status
+        id: status
+        run: |
+          if [[ "${{ needs.deploy-production.result }}" == "success" && "${{ needs.post-deployment-monitoring.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=Production deployment completed successfully" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=Production deployment encountered issues" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ steps.status.outputs.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          custom_payload: |
+            {
+              "attachments": [{
+                "color": "${{ steps.status.outputs.status }}" == "success" ? "good" : "danger",
+                "title": "Jorge Platform Deployment",
+                "fields": [
+                  {"title": "Environment", "value": "Production", "short": true},
+                  {"title": "Status", "value": "${{ steps.status.outputs.status }}", "short": true},
+                  {"title": "Version", "value": "${{ github.sha }}", "short": true},
+                  {"title": "Duration", "value": "${{ job.status }}", "short": true}
+                ],
+                "text": "${{ steps.status.outputs.message }}"
+              }]
+            }

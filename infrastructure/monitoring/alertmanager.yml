@@ -1,0 +1,347 @@
+# Alertmanager Configuration for Jorge's Real Estate AI Platform
+# Multi-channel alert routing with escalation policies for 99.99% uptime SLA
+# Version: 1.0.0
+
+global:
+  smtp_smarthost: 'smtp.example.com:587'
+  smtp_from: 'alerts@jorge-revenue.example.com'
+  smtp_auth_username: 'alerts@jorge-revenue.example.com'
+  smtp_auth_password_file: '/etc/alertmanager/secrets/smtp_password'
+
+# Template files for custom message formatting
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Route configuration - defines how alerts are grouped and sent
+route:
+  group_by: ['alertname', 'severity', 'team']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'default-notifications'
+
+  routes:
+    # ======================================
+    # CRITICAL ALERTS - Immediate Response
+    # ======================================
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 30m
+      routes:
+        # Jorge Bot Ecosystem Critical Issues
+        - match_re:
+            alertname: '(JorgeSellerBotFailureRate|IntentDecoderAccuracyDrop|MLModelAccuracyDegraded)'
+        receiver: 'product-critical'
+
+        # Infrastructure Critical Issues
+        - match_re:
+            alertname: '(ServiceDown|DatabaseConnectionPoolExhausted|SLAViolation99_9Uptime)'
+          receiver: 'engineering-critical'
+
+        # Security Issues
+        - match:
+            team: security
+          receiver: 'security-critical'
+
+    # ======================================
+    # WARNING ALERTS - Proactive Monitoring
+    # ======================================
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 60s
+      group_interval: 5m
+      repeat_interval: 6h
+      routes:
+        # Performance Degradation
+        - match_re:
+            alertname: '(HighResponseTime|MLPredictionLatencyHigh|JorgeSellerBotResponseTimeSlow)'
+          receiver: 'performance-team'
+
+        # Resource Issues
+        - match_re:
+            alertname: '(HighMemoryUsage|HighCPUUsage|RedisHighMemoryUsage)'
+          receiver: 'infrastructure-team'
+
+        # Business Logic Issues
+        - match:
+            team: product
+          receiver: 'product-team'
+
+    # ======================================
+    # INFO ALERTS - Business Intelligence
+    # ======================================
+    - match:
+        severity: info
+      receiver: 'business-intelligence'
+      group_wait: 300s
+      group_interval: 15m
+      repeat_interval: 24h
+
+    # ======================================
+    # TEAM-SPECIFIC ROUTING
+    # ======================================
+    - match:
+        team: data_science
+      receiver: 'ml-data-science-team'
+
+    - match:
+        team: engineering
+      receiver: 'engineering-team'
+
+    - match:
+        team: product
+      receiver: 'product-team'
+
+# Alert receivers - define notification channels and formatting
+receivers:
+  # ======================================
+  # DEFAULT NOTIFICATIONS
+  # ======================================
+  - name: 'default-notifications'
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_general'
+        channel: '#alerts-general'
+        title: 'Jorge Platform Alert'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Severity:* {{ .Labels.severity }}
+          *Description:* {{ .Annotations.description }}
+          {{ if .Annotations.runbook }}*Runbook:* {{ .Annotations.runbook }}{{ end }}
+          {{ end }}
+        send_resolved: true
+
+  # ======================================
+  # CRITICAL ALERT CHANNELS
+  # ======================================
+  - name: 'critical-alerts'
+    # PagerDuty for 24/7 on-call response
+    pagerduty_configs:
+      - service_key_file: '/etc/alertmanager/secrets/pagerduty_service_key'
+        description: 'CRITICAL: {{ .GroupLabels.alertname }} - {{ .CommonAnnotations.summary }}'
+        severity: 'critical'
+        details:
+          environment: '{{ .GroupLabels.environment }}'
+          alert_count: '{{ len .Alerts }}'
+          runbook: '{{ .CommonAnnotations.runbook }}'
+
+    # Slack for immediate team visibility
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_critical'
+        channel: '#alerts-critical'
+        color: 'danger'
+        title: '🚨 CRITICAL ALERT - Immediate Action Required'
+        text: |
+          {{ range .Alerts }}
+          *Service:* Jorge Real Estate AI Platform
+          *Alert:* {{ .Annotations.summary }}
+          *Impact:* {{ .Annotations.impact }}
+          *Description:* {{ .Annotations.description }}
+          {{ if .Annotations.runbook }}*Runbook:* {{ .Annotations.runbook }}{{ end }}
+          *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          {{ end }}
+        send_resolved: true
+
+    # Email for audit trail
+    email_configs:
+      - to: 'oncall@jorge-revenue.example.com'
+        from: 'alerts@jorge-revenue.example.com'
+        subject: 'CRITICAL: Jorge Platform Alert - {{ .GroupLabels.alertname }}'
+        body: |
+          CRITICAL ALERT - Jorge Real Estate AI Platform
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Severity: {{ .Labels.severity }}
+          Team: {{ .Labels.team }}
+
+          Description: {{ .Annotations.description }}
+          {{ if .Annotations.impact }}Business Impact: {{ .Annotations.impact }}{{ end }}
+          {{ if .Annotations.runbook }}Runbook: {{ .Annotations.runbook }}{{ end }}
+
+          Started: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          {{ if .EndsAt }}Resolved: {{ .EndsAt.Format "2006-01-02 15:04:05 UTC" }}{{ end }}
+          {{ end }}
+
+  # ======================================
+  # PRODUCT TEAM CRITICAL ALERTS
+  # ======================================
+  - name: 'product-critical'
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_product'
+        channel: '#jorge-bots-critical'
+        color: 'danger'
+        title: '🤖 JORGE BOT ECOSYSTEM CRITICAL ISSUE'
+        text: |
+          {{ range .Alerts }}
+          *Bot Alert:* {{ .Annotations.summary }}
+          *Business Impact:* {{ .Annotations.impact }}
+          *Details:* {{ .Annotations.description }}
+          {{ if .Annotations.runbook }}*Fix Guide:* {{ .Annotations.runbook }}{{ end }}
+
+          @channel - Immediate attention required for Jorge's bot performance
+          {{ end }}
+        send_resolved: true
+
+    # Teams notification for Product team
+    webhook_configs:
+      - url_file: '/etc/alertmanager/secrets/teams_webhook_product'
+        title: 'Jorge Bot Critical Alert'
+        text: |
+          Jorge's AI bots are experiencing critical issues that affect lead qualification and revenue generation.
+
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Impact: {{ .Annotations.impact }}
+          {{ end }}
+
+  # ======================================
+  # ENGINEERING CRITICAL ALERTS
+  # ======================================
+  - name: 'engineering-critical'
+    pagerduty_configs:
+      - service_key_file: '/etc/alertmanager/secrets/pagerduty_engineering_key'
+        description: 'INFRA CRITICAL: {{ .GroupLabels.alertname }}'
+        severity: 'critical'
+
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_engineering'
+        channel: '#infrastructure-critical'
+        color: 'danger'
+        title: '🔥 INFRASTRUCTURE CRITICAL ALERT'
+        text: |
+          {{ range .Alerts }}
+          *Infrastructure Alert:* {{ .Annotations.summary }}
+          *System Impact:* {{ .Annotations.description }}
+          {{ if .Annotations.runbook }}*Recovery Guide:* {{ .Annotations.runbook }}{{ end }}
+
+          @here - Platform stability at risk
+          {{ end }}
+
+  # ======================================
+  # SECURITY CRITICAL ALERTS
+  # ======================================
+  - name: 'security-critical'
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_security'
+        channel: '#security-incidents'
+        color: 'danger'
+        title: '🔒 SECURITY INCIDENT - Jorge Platform'
+        text: |
+          {{ range .Alerts }}
+          *Security Alert:* {{ .Annotations.summary }}
+          *Details:* {{ .Annotations.description }}
+          {{ if .Annotations.runbook }}*Response Guide:* {{ .Annotations.runbook }}{{ end }}
+
+          @security-team - Potential security threat detected
+          {{ end }}
+
+    email_configs:
+      - to: 'security@jorge-revenue.example.com'
+        subject: 'SECURITY INCIDENT: Jorge Platform - {{ .GroupLabels.alertname }}'
+
+  # ======================================
+  # WARNING ALERT CHANNELS
+  # ======================================
+  - name: 'warning-alerts'
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_general'
+        channel: '#alerts-warnings'
+        color: 'warning'
+        title: '⚠️ Platform Warning Alert'
+        text: |
+          {{ range .Alerts }}
+          *Warning:* {{ .Annotations.summary }}
+          *Details:* {{ .Annotations.description }}
+          {{ if .Annotations.runbook }}*Guidance:* {{ .Annotations.runbook }}{{ end }}
+          {{ end }}
+        send_resolved: true
+
+  # ======================================
+  # TEAM-SPECIFIC CHANNELS
+  # ======================================
+  - name: 'performance-team'
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_performance'
+        channel: '#performance-monitoring'
+        title: '📊 Performance Alert - Jorge Platform'
+
+  - name: 'infrastructure-team'
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_infrastructure'
+        channel: '#infrastructure-alerts'
+        title: '🏗️ Infrastructure Alert'
+
+  - name: 'product-team'
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_product'
+        channel: '#product-alerts'
+        title: '📱 Product Alert - Jorge Bots'
+
+  - name: 'ml-data-science-team'
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_ml'
+        channel: '#ml-model-alerts'
+        color: 'warning'
+        title: '🧠 ML Model Alert - Jorge Platform'
+        text: |
+          {{ range .Alerts }}
+          *ML Alert:* {{ .Annotations.summary }}
+          *Model Impact:* {{ .Annotations.description }}
+          {{ if .Annotations.runbook }}*Model Fix Guide:* {{ .Annotations.runbook }}{{ end }}
+          {{ end }}
+
+  - name: 'engineering-team'
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_engineering'
+        channel: '#engineering-alerts'
+        title: '⚙️ Engineering Alert'
+
+  # ======================================
+  # BUSINESS INTELLIGENCE
+  # ======================================
+  - name: 'business-intelligence'
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/secrets/slack_webhook_business'
+        channel: '#business-insights'
+        color: 'good'
+        title: '📈 Business Metric Alert'
+        text: |
+          {{ range .Alerts }}
+          *Business Alert:* {{ .Annotations.summary }}
+          *Business Impact:* {{ .Annotations.impact }}
+          *Trend:* {{ .Annotations.description }}
+          {{ end }}
+
+# Inhibition rules - prevent noise by suppressing dependent alerts
+inhibit_rules:
+  # Suppress non-critical alerts when critical alerts of the same type are firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
+
+  # Suppress individual service alerts when entire platform is down
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '(HighResponseTime|HighErrorRate|MLPredictionLatencyHigh)'
+    equal: ['instance']
+
+  # Suppress bot-specific alerts when overall bot ecosystem SLA is breached
+  - source_match:
+      alertname: 'JorgeBotEcosystemSLABreach'
+    target_match_re:
+      alertname: '(JorgeSellerBotFailureRate|LeadBotLifecycleStalled|IntentDecoderAccuracyDrop)'
+
+  # Suppress external API alerts when the service using them is down
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '(ClaudeAPIHighLatency|GHLAPIRateLimitApproaching)'
+    equal: ['instance']

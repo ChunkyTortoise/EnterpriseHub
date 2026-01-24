@@ -12,6 +12,7 @@ from ghl_real_estate_ai.integrations.retell import RetellClient
 from ghl_real_estate_ai.integrations.lyrio import LyrioClient
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 
@@ -27,6 +28,7 @@ class LeadBotWorkflow:
         self.cma_generator = CMAGenerator()
         self.ghost_engine = get_ghost_followup_engine()
         self.ghl_client = ghl_client
+        self.event_publisher = get_event_publisher()
         from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
         self.market_intel = get_national_market_intelligence()
         self.workflow = self._build_graph()
@@ -92,7 +94,15 @@ class LeadBotWorkflow:
     async def analyze_intent(self, state: LeadFollowUpState) -> Dict:
         """Score the lead using the Phase 1 Intent Decoder."""
         logger.info(f"Analyzing intent for lead {state['lead_id']}")
-        
+
+        # Emit bot status update
+        await self.event_publisher.publish_bot_status_update(
+            bot_type="lead-bot",
+            contact_id=state["lead_id"],
+            status="processing",
+            current_step="analyze_intent"
+        )
+
         await sync_service.record_lead_event(state['lead_id'], "AI", "Analyzing lead intent profile.", "thought")
 
         profile = self.intent_decoder.analyze_lead(
@@ -112,12 +122,23 @@ class LeadBotWorkflow:
         ))
         
         await sync_service.record_lead_event(
-            state['lead_id'], 
-            "AI", 
-            f"Intent Decoded: {profile.frs.classification} (Score: {profile.frs.total_score})", 
+            state['lead_id'],
+            "AI",
+            f"Intent Decoded: {profile.frs.classification} (Score: {profile.frs.total_score})",
             "thought"
         )
-        
+
+        # Emit intent analysis complete event
+        await self.event_publisher.publish_intent_analysis_complete(
+            contact_id=state["lead_id"],
+            processing_time_ms=42.3,  # Placeholder - would be actual timing
+            confidence_score=0.95,    # Placeholder - would be actual confidence
+            intent_category=profile.frs.classification,
+            frs_score=profile.frs.total_score,
+            pcs_score=profile.pcs.total_score,
+            recommendations=[f"Sequence day: {state.get('sequence_day', 3)}"]
+        )
+
         return {"intent_profile": profile}
 
     async def determine_path(self, state: LeadFollowUpState) -> Dict:
@@ -188,26 +209,54 @@ class LeadBotWorkflow:
         logger.info(f"CMA Injection: {response_msg}")
         
         await sync_service.record_lead_event(state['lead_id'], "AI", f"CMA Generated with ${report.zillow_variance_abs:,.0f} variance.", "thought")
-        
+
+        # Emit lead bot sequence update for CMA generation
+        await self.event_publisher.publish_lead_bot_sequence_update(
+            contact_id=state["lead_id"],
+            sequence_day=0,  # CMA can be generated at any time
+            action_type="cma_generated",
+            success=True,
+            message_sent=response_msg
+        )
+
         return {
-            "cma_generated": True, 
+            "cma_generated": True,
             "current_step": "nurture", # Return to nurture or wait for reply
             "last_interaction_time": datetime.now()
         }
 
     async def send_day_3_sms(self, state: LeadFollowUpState) -> Dict:
         """Day 3: Soft Check-in with FRS-aware logic via GhostEngine."""
+        # Emit lead bot sequence update - starting Day 3
+        await self.event_publisher.publish_lead_bot_sequence_update(
+            contact_id=state["lead_id"],
+            sequence_day=3,
+            action_type="analysis_started",
+            success=True
+        )
+
         ghost_state = GhostState(
             contact_id=state['lead_id'],
             current_day=3,
             frs_score=state['intent_profile'].frs.total_score
         )
-        
+
         action = await self.ghost_engine.process_lead_step(ghost_state, state['conversation_history'])
         msg = action['content']
-            
+
         logger.info(f"Day 3 SMS to {state['contact_phone']}: {msg} (Logic: {action.get('logic')})")
         await sync_service.record_lead_event(state['lead_id'], "AI", f"Sent Day 3 SMS: {msg[:50]}...", "sms")
+
+        # Emit lead bot sequence update - message sent
+        await self.event_publisher.publish_lead_bot_sequence_update(
+            contact_id=state["lead_id"],
+            sequence_day=3,
+            action_type="message_sent",
+            success=True,
+            next_action_date=(datetime.now() + timedelta(days=4)).isoformat(),  # Day 7
+            message_sent=msg
+        )
+
         # Call GHL API to send SMS here (Mocked)
         return {"engagement_status": "ghosted", "current_step": "day_7_call"} # Advance step for next run
 

@@ -1,0 +1,564 @@
+{
+  "dashboard": {
+    "title": "Jorge's Real Estate AI Platform - Operations Center",
+    "tags": ["jorge", "real-estate", "ai-bots", "operations", "production"],
+    "timezone": "browser",
+    "editable": true,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "query": "label_values(environment)",
+          "current": {
+            "value": "production",
+            "text": "Production"
+          }
+        },
+        {
+          "name": "bot_type",
+          "type": "query",
+          "query": "label_values(bot_type)",
+          "multi": true,
+          "includeAll": true
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Platform Overview",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Overall Platform Health",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 4, "x": 0, "y": 1},
+        "targets": [
+          {
+            "expr": "sum(up{job=~\"jorge.*\"})",
+            "legendFormat": "Services Up"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 6, "color": "yellow"},
+                {"value": 8, "color": "green"}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "99.99% SLA Uptime",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 4, "x": 4, "y": 1},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status!~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100",
+            "legendFormat": "Uptime %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 99.9, "color": "yellow"},
+                {"value": 99.99, "color": "green"}
+              ]
+            },
+            "unit": "percent",
+            "decimals": 3
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Active Leads",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 4, "x": 8, "y": 1},
+        "targets": [
+          {
+            "expr": "sum(active_leads_total)",
+            "legendFormat": "Active"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Daily Revenue",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 4, "x": 12, "y": 1},
+        "targets": [
+          {
+            "expr": "sum(increase(revenue_total_dollars[24h]))",
+            "legendFormat": "24h Revenue"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 5000, "color": "yellow"},
+                {"value": 20000, "color": "green"}
+              ]
+            },
+            "unit": "currencyUSD"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Current Alerts",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 4, "x": 16, "y": 1},
+        "targets": [
+          {
+            "expr": "sum(ALERTS{alertstate=\"firing\"})",
+            "legendFormat": "Active Alerts"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "ML Prediction Accuracy",
+        "type": "gauge",
+        "gridPos": {"h": 6, "w": 4, "x": 20, "y": 1},
+        "targets": [
+          {
+            "expr": "avg(ml_model_accuracy_percentage)",
+            "legendFormat": "Accuracy %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 90, "color": "yellow"},
+                {"value": 95, "color": "green"}
+              ]
+            },
+            "unit": "percent",
+            "min": 80,
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Jorge Bot Ecosystem Performance",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 7}
+      },
+      {
+        "id": 9,
+        "title": "Jorge Seller Bot - Success Rate",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(jorge_seller_bot_interactions_total[5m]) - rate(jorge_seller_bot_failures_total[5m])",
+            "legendFormat": "Successful Interactions/sec"
+          },
+          {
+            "expr": "rate(jorge_seller_bot_failures_total[5m])",
+            "legendFormat": "Failed Interactions/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Jorge Seller Bot - Response Times",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(jorge_seller_bot_response_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(jorge_seller_bot_response_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(jorge_seller_bot_response_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "Lead Bot - Lifecycle Progress",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(lead_bot_day3_followup_total[5m])",
+            "legendFormat": "Day 3 Followups"
+          },
+          {
+            "expr": "rate(lead_bot_day7_calls_total[5m])",
+            "legendFormat": "Day 7 Calls"
+          },
+          {
+            "expr": "rate(lead_bot_day30_nurture_total[5m])",
+            "legendFormat": "Day 30 Nurture"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "Intent Decoder Performance",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "intent_decoder_accuracy_percentage",
+            "legendFormat": "Accuracy %"
+          },
+          {
+            "expr": "rate(intent_decoder_predictions_total[5m])",
+            "legendFormat": "Predictions/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "FRS/PCS Scoring Distribution",
+        "type": "bargauge",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "sum by (score_range) (frs_pcs_scores_bucket)",
+            "legendFormat": "{{ score_range }}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "continuous-GrYlRd"},
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 14,
+        "title": "ML Analytics Engine Performance",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 24}
+      },
+      {
+        "id": 15,
+        "title": "ML Prediction Latency (Target: <50ms)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 25},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(ml_prediction_duration_seconds_bucket[5m])) by (le)) * 1000",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(ml_prediction_duration_seconds_bucket[5m])) by (le)) * 1000",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(ml_prediction_duration_seconds_bucket[5m])) by (le)) * 1000",
+            "legendFormat": "P99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "ms"
+          }
+        }
+      },
+      {
+        "id": 16,
+        "title": "28-Feature Pipeline Throughput",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 25},
+        "targets": [
+          {
+            "expr": "rate(ml_features_processed_total[5m])",
+            "legendFormat": "Features Processed/sec"
+          },
+          {
+            "expr": "rate(ml_predictions_total[5m])",
+            "legendFormat": "Predictions/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 17,
+        "title": "Infrastructure & External Dependencies",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 33}
+      },
+      {
+        "id": 18,
+        "title": "Database Performance",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 34},
+        "targets": [
+          {
+            "expr": "rate(postgresql_queries_total[5m])",
+            "legendFormat": "Queries/sec"
+          },
+          {
+            "expr": "postgresql_connections_active",
+            "legendFormat": "Active Connections"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 19,
+        "title": "Redis Cache Performance",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 34},
+        "targets": [
+          {
+            "expr": "rate(redis_commands_processed_total[5m])",
+            "legendFormat": "Commands/sec"
+          },
+          {
+            "expr": "redis_memory_used_bytes / redis_memory_max_bytes * 100",
+            "legendFormat": "Memory Usage %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 20,
+        "title": "External API Health",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 34},
+        "targets": [
+          {
+            "expr": "rate(claude_api_requests_total[5m])",
+            "legendFormat": "Claude API Requests/sec"
+          },
+          {
+            "expr": "rate(ghl_api_requests_total[5m])",
+            "legendFormat": "GHL API Requests/sec"
+          },
+          {
+            "expr": "ghl_api_rate_limit_remaining",
+            "legendFormat": "GHL Rate Limit Remaining"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 21,
+        "title": "Business Metrics Dashboard",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 42}
+      },
+      {
+        "id": 22,
+        "title": "Lead Qualification Funnel",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 43},
+        "targets": [
+          {
+            "expr": "rate(leads_created_total[5m])",
+            "legendFormat": "Leads Created/min"
+          },
+          {
+            "expr": "rate(leads_qualified_total[5m])",
+            "legendFormat": "Leads Qualified/min"
+          },
+          {
+            "expr": "rate(leads_converted_total[5m])",
+            "legendFormat": "Leads Converted/min"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 23,
+        "title": "Jorge's 6% Commission Revenue",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 43},
+        "targets": [
+          {
+            "expr": "rate(commission_revenue_dollars_total[1h])",
+            "legendFormat": "Hourly Commission Revenue"
+          },
+          {
+            "expr": "avg_over_time(average_sale_price_dollars[24h])",
+            "legendFormat": "Average Sale Price"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "currencyUSD"
+          }
+        }
+      },
+      {
+        "id": 24,
+        "title": "Property Alert Engine Performance",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 43},
+        "targets": [
+          {
+            "expr": "rate(property_alerts_sent_total[5m])",
+            "legendFormat": "Alerts Sent/min"
+          },
+          {
+            "expr": "property_alert_processing_delay_seconds",
+            "legendFormat": "Processing Delay (s)"
+          },
+          {
+            "expr": "rate(property_matches_found_total[5m])",
+            "legendFormat": "Property Matches/min"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 25,
+        "title": "System Resources & Health",
+        "type": "row",
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 51}
+      },
+      {
+        "id": 26,
+        "title": "CPU & Memory Usage",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 52},
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{pod=~\"jorge.*\"}[5m]) * 100",
+            "legendFormat": "CPU % - {{ pod }}"
+          },
+          {
+            "expr": "container_memory_working_set_bytes{pod=~\"jorge.*\"} / container_spec_memory_limit_bytes{pod=~\"jorge.*\"} * 100",
+            "legendFormat": "Memory % - {{ pod }}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 27,
+        "title": "Error Rates by Service",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 52},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+            "legendFormat": "Error Rate % - {{ job }}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "percent"
+          }
+        }
+      }
+    ]
+  }
+}

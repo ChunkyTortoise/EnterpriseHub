@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 import logging
 
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException, status
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.auth_service import get_auth_service, UserRole
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
@@ -39,6 +39,25 @@ class EventType(Enum):
     USER_ACTIVITY = "user_activity"
     DASHBOARD_REFRESH = "dashboard_refresh"
     PROPERTY_ALERT = "property_alert"  # Real-time property matching alerts
+
+    # Jorge Bot Ecosystem Events
+    BOT_STATUS_UPDATE = "bot_status_update"
+    JORGE_QUALIFICATION_PROGRESS = "jorge_qualification_progress"
+    LEAD_BOT_SEQUENCE_UPDATE = "lead_bot_sequence_update"
+    INTENT_ANALYSIS_COMPLETE = "intent_analysis_complete"
+    CONVERSATION_EVENT = "conversation_event"
+    SYSTEM_HEALTH_UPDATE = "system_health_update"
+
+    # Bot Coordination Events
+    BOT_HANDOFF_REQUEST = "bot_handoff_request"
+    BOT_HANDOFF_ACCEPTED = "bot_handoff_accepted"
+    BOT_HANDOFF_COMPLETED = "bot_handoff_completed"
+    COACHING_OPPORTUNITY_DETECTED = "coaching_opportunity_detected"
+    COACHING_ACCEPTED = "coaching_accepted"
+    CONTEXT_SYNC_UPDATE = "context_sync_update"
+    COORDINATION_STATUS_UPDATE = "coordination_status_update"
+    OMNIPRESENT_INTELLIGENCE_UPDATE = "omnipresent_intelligence_update"
+    COORDINATION_PERFORMANCE_METRICS = "coordination_performance_metrics"
 
 class ConnectionStatus(Enum):
     """WebSocket connection status."""
@@ -208,19 +227,29 @@ class WebSocketManager:
             # Admin sees all events
             return set(EventType)
         elif role == UserRole.AGENT:
-            # Agent sees business-relevant events
+            # Agent sees business-relevant events including Jorge bot ecosystem
             return {
                 EventType.LEAD_UPDATE,
                 EventType.CONVERSATION_UPDATE,
                 EventType.COMMISSION_UPDATE,
                 EventType.DASHBOARD_REFRESH,
-                EventType.PERFORMANCE_UPDATE
+                EventType.PERFORMANCE_UPDATE,
+                EventType.PROPERTY_ALERT,
+                # Key Jorge bot events for agents
+                EventType.BOT_STATUS_UPDATE,
+                EventType.JORGE_QUALIFICATION_PROGRESS,
+                EventType.LEAD_BOT_SEQUENCE_UPDATE,
+                EventType.CONVERSATION_EVENT,
+                EventType.BOT_HANDOFF_REQUEST,
+                EventType.COACHING_OPPORTUNITY_DETECTED
             }
         else:  # VIEWER
             # Viewer sees limited read-only events
             return {
                 EventType.DASHBOARD_REFRESH,
-                EventType.SYSTEM_ALERT
+                EventType.SYSTEM_ALERT,
+                EventType.SYSTEM_HEALTH_UPDATE,
+                EventType.BOT_STATUS_UPDATE
             }
 
     async def connect(self, websocket: WebSocket, client: WebSocketClient) -> str:
@@ -450,12 +479,27 @@ class WebSocketManager:
                 EventType.COMMISSION_UPDATE,
                 EventType.PERFORMANCE_UPDATE,
                 EventType.DASHBOARD_REFRESH,
-                EventType.SYSTEM_ALERT
+                EventType.SYSTEM_ALERT,
+                EventType.PROPERTY_ALERT,
+                # Jorge Bot Ecosystem Events
+                EventType.BOT_STATUS_UPDATE,
+                EventType.JORGE_QUALIFICATION_PROGRESS,
+                EventType.LEAD_BOT_SEQUENCE_UPDATE,
+                EventType.INTENT_ANALYSIS_COMPLETE,
+                EventType.CONVERSATION_EVENT,
+                EventType.SYSTEM_HEALTH_UPDATE,
+                # Bot Coordination Events (limited access)
+                EventType.BOT_HANDOFF_REQUEST,
+                EventType.BOT_HANDOFF_COMPLETED,
+                EventType.COACHING_OPPORTUNITY_DETECTED,
+                EventType.COORDINATION_STATUS_UPDATE
             },
             UserRole.VIEWER: {
                 EventType.DASHBOARD_REFRESH,
                 EventType.SYSTEM_ALERT,
-                EventType.PERFORMANCE_UPDATE
+                EventType.PERFORMANCE_UPDATE,
+                EventType.SYSTEM_HEALTH_UPDATE,
+                EventType.BOT_STATUS_UPDATE
             }
         }
         

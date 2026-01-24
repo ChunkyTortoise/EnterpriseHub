@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from dataclasses import dataclass
 import json
 
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.websocket_server import get_websocket_manager, RealTimeEvent, EventType
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.auth_service import UserRole
@@ -448,6 +448,317 @@ class EventPublisher:
         await self._publish_event(event)
         logger.info(f"Published property alert: {alert_type} for lead {lead_id} - {property_address} ({match_score:.1f}% match)")
 
+    # Jorge Bot Ecosystem Event Publishers
+
+    async def publish_bot_status_update(
+        self,
+        bot_type: str,
+        contact_id: str,
+        status: str,
+        current_step: Optional[str] = None,
+        processing_time_ms: Optional[float] = None,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish bot status update event.
+
+        Args:
+            bot_type: Type of bot (jorge-seller, lead-bot, intent-decoder)
+            contact_id: Contact/lead identifier
+            status: Bot status (active, idle, processing, completed, error)
+            current_step: Current processing step (optional)
+            processing_time_ms: Processing time in milliseconds (optional)
+            user_id: User associated with bot operation (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        event = RealTimeEvent(
+            event_type=EventType.BOT_STATUS_UPDATE,
+            data={
+                "bot_type": bot_type,
+                "contact_id": contact_id,
+                "status": status,
+                "current_step": current_step,
+                "processing_time_ms": processing_time_ms,
+                "last_activity": datetime.now(timezone.utc).isoformat(),
+                "summary": f"{bot_type.replace('-', ' ').title()} bot {status}"
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="high" if status == "error" else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published bot status: {bot_type} - {status} (contact: {contact_id})")
+
+    async def publish_jorge_qualification_progress(
+        self,
+        contact_id: str,
+        current_question: int,
+        questions_answered: int,
+        seller_temperature: str,
+        qualification_scores: Optional[Dict[str, float]] = None,
+        next_action: Optional[str] = None,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish Jorge seller bot qualification progress event.
+
+        Args:
+            contact_id: Contact/lead identifier
+            current_question: Current question number (1-4)
+            questions_answered: Total questions answered so far
+            seller_temperature: Seller temperature (hot, warm, cold)
+            qualification_scores: FRS/PCS scores (optional)
+            next_action: Next recommended action (optional)
+            user_id: User associated with qualification (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        progress_percentage = min(100, (questions_answered / 4) * 100)
+
+        event = RealTimeEvent(
+            event_type=EventType.JORGE_QUALIFICATION_PROGRESS,
+            data={
+                "contact_id": contact_id,
+                "current_question": current_question,
+                "questions_answered": questions_answered,
+                "total_questions": 4,  # Jorge's 4 core questions
+                "progress_percentage": round(progress_percentage, 1),
+                "seller_temperature": seller_temperature,
+                "qualification_scores": qualification_scores or {},
+                "next_action": next_action,
+                "qualification_stage": f"Q{current_question}" if current_question <= 4 else "Complete",
+                "summary": f"Jorge qualification {progress_percentage:.0f}% complete - {seller_temperature} seller"
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="high" if seller_temperature == "hot" else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published Jorge qualification progress: {progress_percentage:.0f}% ({seller_temperature} - contact: {contact_id})")
+
+    async def publish_lead_bot_sequence_update(
+        self,
+        contact_id: str,
+        sequence_day: int,
+        action_type: str,
+        success: bool,
+        next_action_date: Optional[str] = None,
+        message_sent: Optional[str] = None,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish lead bot 3-7-30 sequence progress event.
+
+        Args:
+            contact_id: Contact/lead identifier
+            sequence_day: Day in sequence (3, 7, 30)
+            action_type: Type of action (analysis_started, message_sent, call_scheduled, etc.)
+            success: Whether the action was successful
+            next_action_date: Next scheduled action date (optional)
+            message_sent: Message content preview (optional)
+            user_id: User associated with sequence (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        event = RealTimeEvent(
+            event_type=EventType.LEAD_BOT_SEQUENCE_UPDATE,
+            data={
+                "contact_id": contact_id,
+                "sequence_day": sequence_day,
+                "action_type": action_type,
+                "success": success,
+                "next_action_date": next_action_date,
+                "message_preview": message_sent[:100] + "..." if message_sent and len(message_sent) > 100 else message_sent,
+                "sequence_progress": self._calculate_sequence_progress(sequence_day),
+                "summary": f"Day {sequence_day} sequence {action_type} - {'Success' if success else 'Failed'}"
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="high" if not success else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published lead bot sequence: Day {sequence_day} {action_type} ({'success' if success else 'failed'} - contact: {contact_id})")
+
+    async def publish_intent_analysis_complete(
+        self,
+        contact_id: str,
+        processing_time_ms: float,
+        confidence_score: float,
+        intent_category: str,
+        frs_score: Optional[float] = None,
+        pcs_score: Optional[float] = None,
+        recommendations: Optional[List[str]] = None,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish intent decoder analysis completion event.
+
+        Args:
+            contact_id: Contact/lead identifier
+            processing_time_ms: Analysis processing time in milliseconds
+            confidence_score: Analysis confidence score (0-1)
+            intent_category: Categorized intent result
+            frs_score: Financial Readiness Score (optional)
+            pcs_score: Psychological Commitment Score (optional)
+            recommendations: Analysis recommendations (optional)
+            user_id: User associated with analysis (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        event = RealTimeEvent(
+            event_type=EventType.INTENT_ANALYSIS_COMPLETE,
+            data={
+                "contact_id": contact_id,
+                "processing_time_ms": round(processing_time_ms, 2),
+                "confidence_score": round(confidence_score, 3),
+                "intent_category": intent_category,
+                "frs_score": round(frs_score, 1) if frs_score else None,
+                "pcs_score": round(pcs_score, 1) if pcs_score else None,
+                "recommendations": recommendations or [],
+                "performance_tier": "excellent" if processing_time_ms < 50 else "good" if processing_time_ms < 100 else "acceptable",
+                "summary": f"Intent analysis complete - {intent_category} ({confidence_score:.1%} confidence)"
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published intent analysis: {intent_category} ({confidence_score:.1%} - {processing_time_ms:.1f}ms - contact: {contact_id})")
+
+    async def publish_bot_handoff_request(
+        self,
+        handoff_id: str,
+        from_bot: str,
+        to_bot: str,
+        contact_id: str,
+        handoff_reason: str,
+        context_transfer: Dict[str, Any],
+        urgency: str = "normal",
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish bot handoff coordination event.
+
+        Args:
+            handoff_id: Unique handoff identifier
+            from_bot: Source bot identifier
+            to_bot: Target bot identifier
+            contact_id: Contact/lead identifier
+            handoff_reason: Reason for handoff
+            context_transfer: Context data being transferred
+            urgency: Handoff urgency (immediate, normal, low)
+            user_id: User associated with handoff (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        event = RealTimeEvent(
+            event_type=EventType.BOT_HANDOFF_REQUEST,
+            data={
+                "handoff_id": handoff_id,
+                "from_bot": from_bot,
+                "to_bot": to_bot,
+                "contact_id": contact_id,
+                "handoff_reason": handoff_reason,
+                "context_summary": {
+                    "conversation_length": len(context_transfer.get("conversation_history", [])),
+                    "qualification_scores": context_transfer.get("qualification_scores", {}),
+                    "lead_temperature": context_transfer.get("lead_temperature", "unknown")
+                },
+                "urgency": urgency,
+                "context_size_kb": round(len(str(context_transfer)) / 1024, 2),
+                "summary": f"Handoff request: {from_bot} → {to_bot} ({handoff_reason})"
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="high" if urgency == "immediate" else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published bot handoff request: {from_bot} → {to_bot} (ID: {handoff_id}, contact: {contact_id})")
+
+    async def publish_system_health_update(
+        self,
+        component: str,
+        status: str,
+        response_time_ms: float,
+        error_message: Optional[str] = None,
+        additional_metrics: Optional[Dict[str, Any]] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish system component health update event.
+
+        Args:
+            component: Component name (redis, ghl_api, claude_api, database, jorge_bots)
+            status: Component status (healthy, degraded, down, recovering)
+            response_time_ms: Component response time in milliseconds
+            error_message: Error message if status is down/degraded (optional)
+            additional_metrics: Additional component metrics (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        event = RealTimeEvent(
+            event_type=EventType.SYSTEM_HEALTH_UPDATE,
+            data={
+                "component": component,
+                "status": status,
+                "response_time_ms": round(response_time_ms, 2),
+                "error_message": error_message,
+                "health_score": self._calculate_health_score(status, response_time_ms),
+                "metrics": additional_metrics or {},
+                "checked_at": datetime.now(timezone.utc).isoformat(),
+                "summary": f"{component.replace('_', ' ').title()}: {status} ({response_time_ms:.0f}ms)"
+            },
+            timestamp=datetime.now(timezone.utc),
+            location_id=location_id,
+            priority="critical" if status == "down" else "high" if status == "degraded" else "low"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published system health: {component} - {status} ({response_time_ms:.1f}ms)")
+
+    def _calculate_sequence_progress(self, sequence_day: int) -> Dict[str, Any]:
+        """Calculate lead bot sequence progress information."""
+        progress_map = {
+            3: {"progress": 33, "next_day": 7, "description": "Day 3 Follow-up"},
+            7: {"progress": 67, "next_day": 30, "description": "Day 7 Call"},
+            30: {"progress": 100, "next_day": None, "description": "Day 30 Final Touch"}
+        }
+
+        return progress_map.get(sequence_day, {"progress": 0, "next_day": None, "description": "Unknown"})
+
+    def _calculate_health_score(self, status: str, response_time_ms: float) -> float:
+        """Calculate component health score based on status and response time."""
+        status_scores = {
+            "healthy": 1.0,
+            "degraded": 0.6,
+            "recovering": 0.4,
+            "down": 0.0
+        }
+
+        base_score = status_scores.get(status, 0.5)
+
+        # Adjust based on response time
+        if response_time_ms < 100:
+            time_modifier = 1.0
+        elif response_time_ms < 500:
+            time_modifier = 0.8
+        elif response_time_ms < 1000:
+            time_modifier = 0.6
+        else:
+            time_modifier = 0.4
+
+        return round(base_score * time_modifier, 2)
+
     async def _publish_event(self, event: RealTimeEvent):
         """
         Publish event with performance tracking and batching.
@@ -652,3 +963,42 @@ async def publish_property_alert(alert_id: str, lead_id: str, property_id: str, 
     publisher = get_event_publisher()
     await publisher.publish_property_alert(alert_id, lead_id, property_id, match_score,
                                          alert_type, property_data, **kwargs)
+
+# Jorge Bot Ecosystem Convenience Functions
+
+async def publish_bot_status_update(bot_type: str, contact_id: str, status: str, **kwargs):
+    """Convenience function to publish bot status update."""
+    publisher = get_event_publisher()
+    await publisher.publish_bot_status_update(bot_type, contact_id, status, **kwargs)
+
+async def publish_jorge_qualification_progress(contact_id: str, current_question: int,
+                                             questions_answered: int, seller_temperature: str, **kwargs):
+    """Convenience function to publish Jorge qualification progress."""
+    publisher = get_event_publisher()
+    await publisher.publish_jorge_qualification_progress(contact_id, current_question,
+                                                       questions_answered, seller_temperature, **kwargs)
+
+async def publish_lead_bot_sequence_update(contact_id: str, sequence_day: int,
+                                         action_type: str, success: bool, **kwargs):
+    """Convenience function to publish lead bot sequence update."""
+    publisher = get_event_publisher()
+    await publisher.publish_lead_bot_sequence_update(contact_id, sequence_day, action_type, success, **kwargs)
+
+async def publish_intent_analysis_complete(contact_id: str, processing_time_ms: float,
+                                         confidence_score: float, intent_category: str, **kwargs):
+    """Convenience function to publish intent analysis completion."""
+    publisher = get_event_publisher()
+    await publisher.publish_intent_analysis_complete(contact_id, processing_time_ms,
+                                                   confidence_score, intent_category, **kwargs)
+
+async def publish_bot_handoff_request(handoff_id: str, from_bot: str, to_bot: str,
+                                    contact_id: str, handoff_reason: str, context_transfer: Dict[str, Any], **kwargs):
+    """Convenience function to publish bot handoff request."""
+    publisher = get_event_publisher()
+    await publisher.publish_bot_handoff_request(handoff_id, from_bot, to_bot, contact_id,
+                                              handoff_reason, context_transfer, **kwargs)
+
+async def publish_system_health_update(component: str, status: str, response_time_ms: float, **kwargs):
+    """Convenience function to publish system health update."""
+    publisher = get_event_publisher()
+    await publisher.publish_system_health_update(component, status, response_time_ms, **kwargs)
