@@ -35,6 +35,9 @@ EnterpriseHub/
 - `llm_client.py` - Claude API integration with streaming
 - `property_matcher.py` - AI-powered property recommendations
 - `enhanced_lead_intelligence.py` - Multi-source lead analysis
+- `property_alert_engine.py` - Real-time property matching alerts with intelligent de-duplication
+- `property_scoring_pipeline.py` - Background property scoring with APScheduler
+- `event_publisher.py` - Enhanced WebSocket event system with property alerts
 
 **Complete architecture**: `.claude/reference/project-architecture.md` (when needed)
 
@@ -50,6 +53,7 @@ EnterpriseHub/
 | **AI/LLM** | Claude 3.5 Sonnet | Anthropic SDK, streaming responses |
 | **Cache** | Redis 7+ | TTL-based invalidation, connection pooling |
 | **Database** | PostgreSQL 15+ | Async SQLAlchemy, Alembic migrations |
+| **Background Jobs** | APScheduler + Redis | Property scoring pipeline, alert processing |
 | **Testing** | pytest + pytest-asyncio | 80% coverage threshold |
 | **CRM Integration** | GoHighLevel API | OAuth2, webhook validation |
 
@@ -207,7 +211,8 @@ secrets/**                   # Any secrets directory
 2. ghl_real_estate_ai/services/claude_assistant.py       # Core AI service
 3. ghl_real_estate_ai/services/cache_service.py          # Caching patterns
 4. ghl_real_estate_ai/core/llm_client.py                 # LLM integration
-5. .claude/settings.json                                  # Project config
+5. ghl_real_estate_ai/services/property_alert_engine.py  # Property alerts system
+6. .claude/settings.json                                  # Project config
 ```
 
 ### Allowed Paths (Full Access)
@@ -296,6 +301,40 @@ def calculate_scores(lead_ids_hash):
     # Cached based on lead IDs hash
     pass
 ```
+
+### Property Alert System (Phase 1 Complete)
+
+**Architecture**: Background scoring pipeline with real-time WebSocket delivery
+
+**Components**:
+- `property_alert_engine.py` - Central orchestrator with intelligent de-duplication
+- `property_scoring_pipeline.py` - APScheduler-based background scoring (15min intervals)
+- `property_alert_dashboard.py` - Specialized UI with detailed property cards
+- Enhanced `event_publisher.py` and `notification_system.py` for real-time delivery
+
+**Pattern**:
+```python
+# Background job processes properties every 15 minutes
+async def score_properties_for_alerts():
+    properties = await get_new_properties()
+    for lead in active_leads:
+        matches = await enhanced_matcher.find_matches(properties, lead.preferences)
+        for match in matches:
+            if match.score >= lead.alert_threshold:
+                await alert_engine.create_alert(lead.id, match)
+
+# Real-time delivery via WebSocket events
+await event_publisher.publish_property_alert(
+    alert_id, lead_id, property_id, match_score, alert_type, property_data
+)
+```
+
+**Key Features**:
+- Intelligent de-duplication prevents duplicate property alerts
+- Rate limiting (max alerts per day per lead) prevents notification fatigue
+- Multi-channel delivery ready (WebSocket + future email/SMS integration)
+- Rich property cards with match reasoning and interactive actions
+- Alert preferences per lead with configurable thresholds
 
 ---
 
