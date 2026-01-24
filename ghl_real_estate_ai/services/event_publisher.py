@@ -16,7 +16,7 @@ Features:
 import asyncio
 import time
 from typing import Dict, Any, Optional, List, Callable
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass
 import json
 
@@ -725,6 +725,231 @@ class EventPublisher:
 
         await self._publish_event(event)
         logger.info(f"Published system health: {component} - {status} ({response_time_ms:.1f}ms)")
+
+    # === BUYER BOT EVENT PUBLISHERS ===
+
+    async def publish_buyer_intent_analysis(
+        self,
+        contact_id: str,
+        buyer_temperature: str,
+        financial_readiness: float,
+        urgency_score: float,
+        confidence_level: float,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """Publish buyer intent analysis results."""
+        event = RealTimeEvent(
+            event_type=EventType.BUYER_INTENT_ANALYSIS,
+            data={
+                "contact_id": contact_id,
+                "buyer_temperature": buyer_temperature,
+                "financial_readiness_score": financial_readiness,
+                "urgency_score": urgency_score,
+                "confidence_level": confidence_level,
+                "analysis_timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="high" if buyer_temperature in ["hot", "warm"] else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published buyer intent analysis: {buyer_temperature} (contact: {contact_id})")
+
+    async def publish_buyer_qualification_progress(
+        self,
+        contact_id: str,
+        current_step: str,
+        financial_readiness_score: float,
+        motivation_score: float,
+        qualification_status: str,
+        properties_matched: int = 0,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """Publish buyer qualification progress (mirrors jorge_qualification_progress)."""
+        event = RealTimeEvent(
+            event_type=EventType.BUYER_QUALIFICATION_PROGRESS,
+            data={
+                "contact_id": contact_id,
+                "current_step": current_step,
+                "financial_readiness_score": financial_readiness_score,
+                "motivation_score": motivation_score,
+                "qualification_status": qualification_status,
+                "properties_matched": properties_matched,
+                "overall_score": (financial_readiness_score + motivation_score) / 2,
+                "progress_timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="high" if qualification_status == "qualified" else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published buyer qualification progress: {qualification_status} ({current_step} - contact: {contact_id})")
+
+    async def publish_buyer_qualification_complete(
+        self,
+        contact_id: str,
+        qualification_status: str,
+        final_score: float,
+        properties_matched: int,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """Publish buyer qualification completion."""
+        event = RealTimeEvent(
+            event_type=EventType.BUYER_QUALIFICATION_COMPLETE,
+            data={
+                "contact_id": contact_id,
+                "qualification_status": qualification_status,
+                "final_score": final_score,
+                "properties_matched": properties_matched,
+                "completion_timestamp": datetime.now(timezone.utc).isoformat(),
+                "next_action": "property_search" if qualification_status == "qualified" else "nurture"
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="high" if qualification_status == "qualified" else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published buyer qualification complete: {qualification_status} (score: {final_score} - contact: {contact_id})")
+
+    async def publish_buyer_follow_up_scheduled(
+        self,
+        contact_id: str,
+        action_type: str,
+        scheduled_hours: int,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """Publish buyer follow-up scheduling."""
+        event = RealTimeEvent(
+            event_type=EventType.BUYER_FOLLOW_UP_SCHEDULED,
+            data={
+                "contact_id": contact_id,
+                "action_type": action_type,
+                "scheduled_hours": scheduled_hours,
+                "scheduled_for": (datetime.now(timezone.utc) + timedelta(hours=scheduled_hours)).isoformat(),
+                "schedule_timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published buyer follow-up scheduled: {action_type} in {scheduled_hours}h (contact: {contact_id})")
+
+    async def publish_property_match_update(
+        self,
+        contact_id: str,
+        properties_matched: int,
+        match_criteria: Dict[str, Any],
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """Publish property matching results."""
+        event = RealTimeEvent(
+            event_type=EventType.PROPERTY_MATCH_UPDATE,
+            data={
+                "contact_id": contact_id,
+                "properties_matched": properties_matched,
+                "match_criteria": match_criteria,
+                "match_timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="high" if properties_matched > 0 else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published property match update: {properties_matched} matches (contact: {contact_id})")
+
+    # === SMS COMPLIANCE EVENT PUBLISHERS ===
+
+    async def publish_sms_compliance_event(
+        self,
+        phone_number: str,
+        event_type: str,
+        reason: str,
+        additional_data: Optional[Dict] = None,
+        location_id: Optional[str] = None
+    ):
+        """Publish SMS compliance events for audit trail."""
+        event = RealTimeEvent(
+            event_type=EventType.SMS_COMPLIANCE,
+            data={
+                "phone_number_suffix": phone_number[-4:] if phone_number else "****",  # Only last 4 digits for privacy
+                "compliance_event_type": event_type,
+                "reason": reason,
+                "additional_data": additional_data or {},
+                "compliance_timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            timestamp=datetime.now(timezone.utc),
+            location_id=location_id,
+            priority="critical"  # Compliance events are always critical
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published SMS compliance event: {event_type} - {reason} (phone: ***{phone_number[-4:] if phone_number else '****'})")
+
+    async def publish_sms_opt_out_processed(
+        self,
+        phone_number: str,
+        opt_out_method: str,
+        message_content: Optional[str] = None,
+        location_id: Optional[str] = None
+    ):
+        """Publish SMS opt-out processing confirmation."""
+        event = RealTimeEvent(
+            event_type=EventType.SMS_OPT_OUT_PROCESSED,
+            data={
+                "phone_number_suffix": phone_number[-4:] if phone_number else "****",
+                "opt_out_method": opt_out_method,
+                "message_content": message_content[:100] + "..." if message_content and len(message_content) > 100 else message_content,
+                "processed_timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            timestamp=datetime.now(timezone.utc),
+            location_id=location_id,
+            priority="high"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published SMS opt-out processed: {opt_out_method} (phone: ***{phone_number[-4:] if phone_number else '****'})")
+
+    async def publish_sms_frequency_limit_hit(
+        self,
+        phone_number: str,
+        limit_type: str,
+        current_count: int,
+        limit_value: int,
+        location_id: Optional[str] = None
+    ):
+        """Publish SMS frequency limit violations."""
+        event = RealTimeEvent(
+            event_type=EventType.SMS_FREQUENCY_LIMIT_HIT,
+            data={
+                "phone_number_suffix": phone_number[-4:] if phone_number else "****",
+                "limit_type": limit_type,
+                "current_count": current_count,
+                "limit_value": limit_value,
+                "limit_hit_timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            timestamp=datetime.now(timezone.utc),
+            location_id=location_id,
+            priority="high"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published SMS frequency limit hit: {limit_type} {current_count}/{limit_value} (phone: ***{phone_number[-4:] if phone_number else '****'})")
 
     def _calculate_sequence_progress(self, sequence_day: int) -> Dict[str, Any]:
         """Calculate lead bot sequence progress information."""

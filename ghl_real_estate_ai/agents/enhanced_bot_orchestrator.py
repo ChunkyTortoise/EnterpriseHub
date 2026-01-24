@@ -13,6 +13,7 @@ from enum import Enum
 from ghl_real_estate_ai.agents.adaptive_jorge_seller_bot import AdaptiveJorgeBot, get_adaptive_jorge_bot
 from ghl_real_estate_ai.agents.predictive_lead_bot import PredictiveLeadBot, get_predictive_lead_bot
 from ghl_real_estate_ai.agents.realtime_intent_decoder import RealTimeIntentDecoder, get_realtime_intent_decoder
+from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -240,13 +241,49 @@ class EnhancedBotOrchestrator:
         return await self._fallback_lead_sequence(session.lead_id, session.conversation_history)
 
     async def _orchestrate_buyer_conversation(self, session: ConversationSession, message: str, intent_update: Optional[Dict]) -> Dict[str, Any]:
-        """Orchestrate buyer conversation (future enhancement)."""
-        # Placeholder for future buyer bot enhancements
-        return {
-            "bot_type": "standard_buyer",
-            "message": "Buyer bot enhancements not implemented in Track 1",
-            "enhancement_level": "none"
-        }
+        """Orchestrate buyer conversation using Jorge's buyer bot."""
+        try:
+            buyer_bot = JorgeBuyerBot(tenant_id=session.lead_id)
+
+            # Process buyer conversation through complete qualification workflow
+            result = await buyer_bot.process_buyer_conversation(
+                buyer_id=session.lead_id,
+                buyer_name=session.lead_name,
+                conversation_history=session.conversation_history
+            )
+
+            # Emit buyer-specific qualification progress
+            if result.get("intent_profile"):
+                await self.event_publisher.publish_buyer_qualification_progress(
+                    contact_id=session.lead_id,
+                    current_step=result.get("current_qualification_step", "discovery"),
+                    financial_readiness_score=result.get("financial_readiness_score", 0),
+                    motivation_score=result.get("buying_motivation_score", 0),
+                    qualification_status="qualified" if result.get("is_qualified") else "in_progress",
+                    properties_matched=len(result.get("matched_properties", []))
+                )
+
+            return {
+                "bot_type": "jorge_buyer",
+                "message": result.get("response_content", "Let me help you find the right property."),
+                "enhancement_level": "qualified_buyer_bot",
+                "buyer_temperature": result.get("buyer_temperature", "cold"),
+                "financial_readiness_score": result.get("financial_readiness_score", 0),
+                "properties_matched": len(result.get("matched_properties", [])),
+                "qualification_status": "qualified" if result.get("is_qualified") else "in_progress",
+                "next_action": result.get("next_action", "continue_qualification"),
+                "processing_time": datetime.now(),
+                "workflow_result": result
+            }
+
+        except Exception as e:
+            logger.error(f"Error in buyer bot orchestration for {session.lead_id}: {str(e)}")
+            return {
+                "bot_type": "jorge_buyer_error",
+                "message": "I'm having technical difficulties. Let me connect you with Jorge directly.",
+                "enhancement_level": "error_fallback",
+                "error": str(e)
+            }
 
     async def _get_or_create_session(self, session_id: str, lead_id: str, lead_name: str, conversation_history: List[Dict]) -> ConversationSession:
         """Get existing session or create new one."""

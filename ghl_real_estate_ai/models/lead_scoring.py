@@ -57,3 +57,31 @@ class LeadIntentProfile(BaseModel):
     market_context: Optional[str] = None
     next_best_action: str = Field(..., description="Recommended next step for Jorge or Bot")
     stall_breaker_suggested: Optional[str] = None
+
+
+class BuyerIntentProfile(BaseModel):
+    """Buyer intent analysis results. Mirrors LeadIntentProfile structure for buyers."""
+
+    # Financial Readiness Score (FRS) - 0-100
+    financial_readiness: float = Field(..., description="Overall financial readiness score")
+    budget_clarity: float = Field(..., description="Clarity of budget understanding")
+    financing_status_score: float = Field(..., description="Pre-approval/financing status score")
+
+    # Motivation Score (MS) - 0-100
+    urgency_score: float = Field(..., description="Urgency to purchase")
+    timeline_pressure: float = Field(..., description="Timeline commitment level")
+    consequence_awareness: float = Field(..., description="Understanding of market consequences")
+
+    # Property Fit Score (PFS) - 0-100
+    preference_clarity: float = Field(..., description="Clarity of property preferences")
+    market_realism: float = Field(..., description="Realistic expectations vs market")
+    decision_authority: float = Field(..., description="Authority to make decisions")
+
+    # Overall Classification
+    buyer_temperature: str = Field(..., description="hot/warm/lukewarm/cold/ice_cold")
+    confidence_level: float = Field(..., description="Confidence in the analysis")
+
+    # Analysis Context
+    conversation_turns: int = Field(..., description="Number of conversation turns analyzed")
+    key_insights: Dict[str, Any] = Field(default_factory=dict, description="Key buyer insights")
+    next_qualification_step: str = Field(..., description="Next step in qualification process")
