@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-01-23T06:25:39.049038",
+  "analysis": {
+    "lead_score": 54.2,
+    "urgency": 0.0,
+    "qualification": 0.4,
+    "intent_confidence": 0.25,
+    "budget_analysis": "medium",
+    "timeline_analysis": "unknown",
+    "location_analysis": [],
+    "financing_analysis": "unknown",
+    "budget_max": 400000,
+    "has_specific_budget": true,
+    "has_clear_timeline": false,
+    "has_location_preference": false,
+    "is_pre_approved": false,
+    "errors": [],
+    "fallback_used": false,
+    "jorge_validation": {
+      "passes_jorge_criteria": true,
+      "validation_issues": [],
+      "jorge_priority": "normal",
+      "estimated_commission": 24000.0,
+      "service_area_match": false
+    },
+    "meets_jorge_criteria": true,
+    "estimated_commission": 24000.0,
+    "jorge_priority": "normal"
+  },
+  "message_hash": "8a3128e3"
+}

@@ -237,6 +237,31 @@ except ImportError as e:
     ENHANCED_LEAD_SCORER_AVAILABLE = False
     ENHANCED_PROPERTY_MATCHER_AVAILABLE = False
     CHURN_PREDICTION_ENGINE_AVAILABLE = False
+    CLAUDE_COMPANION_AVAILABLE = False
+    claude_companion = None
+
+    # Define fallback mock classes for all required services
+    # This prevents NameError when get_services() is called
+    LeadScorer = MockService
+    AISmartSegmentationService = MockService
+    PredictiveLeadScorer = MockService
+    AIContentPersonalizationService = MockService
+    DealCloserAI = MockService
+    CommissionCalculator = MockService
+    MeetingPrepAssistant = MockService
+    ExecutiveDashboardService = MockService
+    SmartDocumentGenerator = MockService
+    QualityAssuranceEngine = MockService
+    RevenueAttributionEngine = MockService
+    BenchmarkingEngine = MockService
+    AgentCoachingService = MockService
+    AutoFollowUpSequences = MockService
+    WorkflowMarketplaceService = MockService
+    PropertyMatcher = MockService
+    ReengagementEngine = MockService
+    ChurnIntegrationService = MockService
+    ClaudeAssistantOptimized = MockService
+    claude = MockService()
 
 # Helper function to load data
 def load_mock_data():
@@ -466,9 +491,17 @@ def warm_demo_cache_comprehensive():
 def get_services(market="Austin"):
     listings_file = "property_listings.json" if market == "Austin" else "property_listings_rancho.json"
     listings_path = Path(__file__).parent.parent / "data" / "knowledge_base" / listings_file
-    
-    from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
-    from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine
+
+    # Safe import of orchestrator services with fallback
+    try:
+        from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+        from ghl_real_estate_ai.services.claude_automation_engine import ClaudeAutomationEngine
+        claude_orchestrator = get_claude_orchestrator()
+        claude_automation = ClaudeAutomationEngine()
+    except ImportError as e:
+        print(f"Warning: Claude orchestrator services not available: {e}")
+        claude_orchestrator = MockService()
+        claude_automation = MockService()
 
     services_dict = {
         "lead_scorer": LeadScorer(),
@@ -487,8 +520,8 @@ def get_services(market="Austin"):
         "sequences": AutoFollowUpSequences(),
         "marketplace": WorkflowMarketplaceService(),
         "property_matcher": PropertyMatcher(listings_path=str(listings_path)),
-        "claude_orchestrator": get_claude_orchestrator(),
-        "claude_automation": ClaudeAutomationEngine(),
+        "claude_orchestrator": claude_orchestrator,
+        "claude_automation": claude_automation,
         "churn_service": ChurnIntegrationService(
             memory_service=None,  # Would be injected with actual services
             lifecycle_tracker=None,
@@ -1205,7 +1238,7 @@ with st.sidebar:
     
     # System Health Sparkline in Sidebar
     st.markdown("<br>", unsafe_allow_html=True)
-    st.plotly_chart(sparkline([98, 99, 97, 99, 100, 99], color="#10B981", height=30), use_container_width=True, config={'displayModeBar': False})
+    st.plotly_chart(sparkline([98, 99, 97, 99, 100, 99], color="#10B981", height=30), width="stretch", config={'displayModeBar': False})
     st.caption("SYSTEM STABILITY: 99.8% (NORMAL)")
 
     st.markdown("---")
@@ -1279,7 +1312,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🔄 Refresh Data", use_container_width=True, type="primary"):
+    if st.button("🔄 Refresh Data", width="stretch", type="primary"):
         # Clear all caches to ensure fresh data
         st.cache_data.clear()
         st.cache_resource.clear()
@@ -1326,8 +1359,8 @@ with st.sidebar:
         **Sync Status:** ✅ Operational
         **Lead Buffer:** 128MB Persistent
         """)
-        st.link_button("🌐 Open Lyrio Dashboard", "https://app.gohighlevel.com", use_container_width=True)
-        st.link_button("📨 AI Conversation Audit", "https://app.gohighlevel.com", use_container_width=True)
+        st.link_button("🌐 Open Lyrio Dashboard", "https://app.gohighlevel.com", width="stretch")
+        st.link_button("📨 AI Conversation Audit", "https://app.gohighlevel.com", width="stretch")
 
     st.markdown("---")
     
@@ -2092,7 +2125,7 @@ if selected_hub == "Executive Command Center":
             st.markdown("### Executive Swarm Intelligence")
             st.markdown("*Deploy a swarm of specialized agents to analyze your entire business ecosystem*")
         with col2:
-            if st.button("🚀 Deploy Executive Swarm", use_container_width=True):
+            if st.button("🚀 Deploy Executive Swarm", width="stretch"):
                 st.session_state.deploy_executive_swarm = True
     
     if st.session_state.get('deploy_executive_swarm', False):
@@ -2170,7 +2203,7 @@ if selected_hub == "Executive Command Center":
                              color_continuous_scale="Viridis",
                              title="Profit Potential by Zip Code (Ranked by Yield)")
             fig_map.update_traces(texttemplate='%{text}%', textposition='outside')
-            st.plotly_chart(style_obsidian_chart(fig_map), use_container_width=True)
+            st.plotly_chart(style_obsidian_chart(fig_map), width="stretch")
 
             st.markdown("#### Specialist Findings")
             specialists = swarm_results.get("specialist_insights", {})
@@ -2226,7 +2259,7 @@ if selected_hub == "Executive Command Center":
                     with st.expander("Expand Intelligence"):
                         st.json(result)
             
-            if st.button("Close Report", use_container_width=True):
+            if st.button("Close Report", width="stretch"):
                 st.session_state.deploy_executive_swarm = False
                 st.rerun()
                 

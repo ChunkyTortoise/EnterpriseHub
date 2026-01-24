@@ -1,0 +1,48 @@
+I need to integrate advanced production features from jorge_deployment_package into the jorge_real_estate_bots MVP to create an enterprise-grade platform.
+
+CURRENT STATUS (Just Completed):
+✅ Production API server bug fixed and validated (jorge_claude_intelligence.py:450)
+✅ API running on localhost:8001 - fully operational (339ms response times)
+✅ Dashboard running on localhost:8503 with real data
+✅ Test results: Lead scoring, Jorge validation, 5-minute rule all working
+
+PHASE 1 MISSION (8 hours - Start Now):
+Extract and integrate 3 CRITICAL files:
+
+1. jorge_claude_intelligence.py (722 lines) → bots/lead_bot/services/
+   - PerformanceCache: <100ms cache hits (memory + file)
+   - JorgeBusinessRules: $200K-$800K validation, service areas, commission calc
+   - ClaudeLeadIntelligence: Hybrid pattern + AI, performance tracking
+   - PerformanceMetrics: Tracking dataclass
+
+2. jorge_kpi_dashboard.py (482 lines) → command_center/dashboard.py
+   - 7 dashboard sections (metrics, funnel, trends, performance, etc.)
+   - Real-time data with auto-refresh
+   - Hot leads alerts, export capabilities
+
+3. jorge_fastapi_lead_bot.py (618 lines) → Merge with bots/lead_bot/main.py
+   - Performance monitoring middleware
+   - Pydantic models (LeadMessage, GHLWebhook, LeadAnalysisResponse)
+   - 5-minute rule enforcement
+   - Background task processing
+
+CONTEXT FILES TO READ FIRST:
+1. ~/Documents/GitHub/EnterpriseHub/jorge_deployment_package/NEXT_SESSION_PROMPT.md (COMPLETE GUIDE - READ THIS FIRST)
+2. ~/Documents/GitHub/EnterpriseHub/jorge_deployment_package/USEFUL_CODE_ANALYSIS.md (File-by-file analysis)
+3. ~/Documents/GitHub/EnterpriseHub/jorge_deployment_package/EXTRACTABLE_CODE_INDEX.md (Quick reference)
+
+CRITICAL NOTES:
+⚠️ Bug at line 450 is ALREADY FIXED (budget_max access corrected)
+⚠️ DO NOT copy .env file (production secrets)
+⚠️ Test incrementally after each extraction
+⚠️ Keep MVP's clean structure, add production features
+
+STARTING POINT:
+cd ~/Documents/GitHub/jorge_real_estate_bots
+git checkout -b feature/integrate-production-phase1
+
+Then follow Step-by-Step Integration Plan in NEXT_SESSION_PROMPT.md
+
+Please start by reading NEXT_SESSION_PROMPT.md, then begin Phase 1 integration starting with extracting PerformanceCache from jorge_claude_intelligence.py.
+
+Let's build an enterprise-grade Jorge Bot platform! 🚀

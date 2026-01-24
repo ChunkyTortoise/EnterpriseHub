@@ -1,0 +1,38 @@
+{
+  "contact_id": "test_seller_relocation",
+  "location_id": "3xt4qayAh35BlDLaUv7P",
+  "created_at": "2026-01-22T09:38:01.812794",
+  "last_updated": "2026-01-22T09:38:01.812803",
+  "conversation_history": [
+    {
+      "timestamp": "2026-01-22T09:38:01.812798",
+      "user_message": "I got transferred to Seattle and need to sell my house in Cedar Park within 60 days. It's move-in ready but I don't have time for the traditional sales process. Looking for a cash offer.",
+      "ai_response": "How would you describe your home, would you say it's move in ready or would it need some work?",
+      "extracted_data": {
+        "motivation": "I got transferred to Seattle and need to sell my house in Cedar Park within 60 days. It's move-in re",
+        "timeline_acceptable": true,
+        "price_expectation": "60",
+        "questions_answered": 3,
+        "response_quality": 1.0
+      }
+    }
+  ],
+  "lead_preferences": {
+    "motivation": "I got transferred to Seattle and need to sell my house in Cedar Park within 60 days. It's move-in re",
+    "timeline_acceptable": true,
+    "price_expectation": "60",
+    "questions_answered": 3,
+    "response_quality": 1.0
+  },
+  "seller_preferences": {
+    "motivation": "I got transferred to Seattle and need to sell my house in Cedar Park within 60 days. It's move-in re",
+    "timeline_acceptable": true,
+    "price_expectation": "60",
+    "questions_answered": 3,
+    "response_quality": 1.0
+  },
+  "bot_state": "initial",
+  "lead_score": 0,
+  "seller_temperature": "warm",
+  "last_ai_response_time": "2026-01-22T09:38:01.812804"
+}

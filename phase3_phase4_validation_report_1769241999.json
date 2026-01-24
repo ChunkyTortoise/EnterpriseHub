@@ -1,0 +1,85 @@
+{
+  "overall_score": 77.78571428571428,
+  "status": "ACCEPTABLE - Deployment possible with caution",
+  "category_results": {
+    "environment": {
+      "score": 0.0,
+      "details": "0/9 required vars, 0/4 config vars"
+    },
+    "imports": {
+      "score": 71.42857142857143,
+      "details": "5/7 services imported",
+      "imported_services": {
+        "enhanced_caching": "<class 'ghl_real_estate_ai.services.enhanced_prompt_caching.EnhancedPromptCaching'>",
+        "async_service": "<class 'ghl_real_estate_ai.services.async_parallelization_service.AsyncParallelizationService'>",
+        "token_budget": "<class 'ghl_real_estate_ai.services.token_budget_service.TokenBudgetService'>",
+        "semantic_cache": "<class 'ghl_real_estate_ai.services.semantic_response_caching.SemanticResponseCache'>",
+        "dashboard": "<class 'ghl_real_estate_ai.streamlit_demo.components.claude_cost_tracking_dashboard.CostTrackingDashboard'>"
+      }
+    },
+    "initialization": {
+      "score": 100.0,
+      "details": "5/5 services initialized",
+      "initialized_services": {
+        "enhanced_caching": "<ghl_real_estate_ai.services.enhanced_prompt_caching.EnhancedPromptCaching object at 0x10e3bf9d0>",
+        "async_service": "<ghl_real_estate_ai.services.async_parallelization_service.AsyncParallelizationService object at 0x10e3bfd90>",
+        "token_budget": "<ghl_real_estate_ai.services.token_budget_service.TokenBudgetService object at 0x10e3bfc50>",
+        "semantic_cache": "<ghl_real_estate_ai.services.semantic_response_caching.SemanticResponseCache object at 0x105b882f0>",
+        "dashboard": "<ghl_real_estate_ai.streamlit_demo.components.claude_cost_tracking_dashboard.CostTrackingDashboard object at 0x10e403230>"
+      }
+    },
+    "functionality": {
+      "score": 100.0,
+      "details": "2/2 services functional",
+      "test_results": [
+        [
+          "token_budget",
+          true,
+          0.0105
+        ],
+        [
+          "semantic_cache",
+          true,
+          0.9979654098963516
+        ]
+      ]
+    },
+    "performance": {
+      "score": 90.0,
+      "details": "Average of 3 performance tests",
+      "individual_scores": [
+        90,
+        95,
+        85
+      ]
+    },
+    "integration": {
+      "score": 100.0,
+      "details": "Average of 2 integration tests",
+      "test_scores": [
+        100.0,
+        100.0
+      ]
+    }
+  },
+  "errors": [
+    "Environment variable ENABLE_CONVERSATION_OPTIMIZATION not set to true",
+    "Environment variable ENABLE_ENHANCED_CACHING not set to true",
+    "Environment variable ENABLE_ASYNC_OPTIMIZATION not set to true",
+    "Environment variable ENABLE_TOKEN_BUDGET_ENFORCEMENT not set to true",
+    "Environment variable ENABLE_DATABASE_CONNECTION_POOLING not set to true",
+    "Environment variable ENABLE_SEMANTIC_RESPONSE_CACHING not set to true",
+    "Environment variable ENABLE_MULTI_TENANT_OPTIMIZATION not set to true",
+    "Environment variable ENABLE_ADVANCED_ANALYTICS not set to true",
+    "Environment variable ENABLE_COST_PREDICTION not set to true",
+    "Failed to import conversation_optimizer: No module named 'tiktoken'",
+    "Failed to import database_service: No module named 'sqlalchemy'"
+  ],
+  "warnings": [
+    "TOKEN_BUDGET_DEFAULT_MONTHLY value 0 outside recommended range",
+    "TOKEN_BUDGET_DEFAULT_DAILY value 0 outside recommended range",
+    "DB_POOL_SIZE value 0 outside recommended range",
+    "SEMANTIC_CACHE_SIMILARITY_THRESHOLD value 0.0 outside recommended range"
+  ],
+  "timestamp": "2026-01-24T00:06:39.830807"
+}

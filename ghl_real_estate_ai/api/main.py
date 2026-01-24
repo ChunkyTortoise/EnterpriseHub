@@ -24,6 +24,7 @@ from ghl_real_estate_ai.api.routes import (
     health,
     jorge_advanced,
     lead_lifecycle,
+    ml_scoring,  # Phase 4B: Real-time ML lead scoring API
     portal,
     predictive_analytics,
     pricing_optimization,
@@ -39,6 +40,7 @@ from ghl_real_estate_ai.api.routes import (
     jorge_followup,
     retell_webhook, # Added Retell Webhook
     vapi,
+    websocket_routes, # Real-time WebSocket routes
     external_webhooks,
 )
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
@@ -337,6 +339,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 
 # Include routers
+app.include_router(websocket_routes.router, prefix="/api")  # Real-time WebSocket endpoints
 app.include_router(webhook.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(bulk_operations.router, prefix="/api")
@@ -381,6 +384,7 @@ app.include_router(voice.router, prefix="/api")
 app.include_router(lead_intelligence.router, prefix="/api")
 app.include_router(agent_sync.router, prefix="/api")
 app.include_router(agent_ui.router, prefix="/api/agent-ui", tags=["Agent UI"])
+app.include_router(ml_scoring.router)  # Phase 4B: Real-time ML Lead Scoring API
 app.include_router(predictive_analytics.router)  # Predictive Analytics ML endpoints
 app.include_router(pricing_optimization.router)  # Pricing & ROI endpoints
 app.include_router(golden_lead_detection.router)  # Golden Lead Detection endpoints
