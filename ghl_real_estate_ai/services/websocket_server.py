@@ -48,6 +48,18 @@ class EventType(Enum):
     CONVERSATION_EVENT = "conversation_event"
     SYSTEM_HEALTH_UPDATE = "system_health_update"
 
+    # Buyer Bot Events
+    BUYER_INTENT_ANALYSIS = "buyer_intent_analysis"
+    BUYER_QUALIFICATION_PROGRESS = "buyer_qualification_progress"
+    BUYER_QUALIFICATION_COMPLETE = "buyer_qualification_complete"
+    BUYER_FOLLOW_UP_SCHEDULED = "buyer_follow_up_scheduled"
+    PROPERTY_MATCH_UPDATE = "property_match_update"
+
+    # SMS Compliance Events
+    SMS_COMPLIANCE = "sms_compliance"
+    SMS_OPT_OUT_PROCESSED = "sms_opt_out_processed"
+    SMS_FREQUENCY_LIMIT_HIT = "sms_frequency_limit_hit"
+
     # Bot Coordination Events
     BOT_HANDOFF_REQUEST = "bot_handoff_request"
     BOT_HANDOFF_ACCEPTED = "bot_handoff_accepted"
