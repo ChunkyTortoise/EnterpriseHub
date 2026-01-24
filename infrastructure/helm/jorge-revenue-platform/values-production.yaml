@@ -1,0 +1,598 @@
+# Jorge's Real Estate AI Platform - Production Helm Values
+# Enterprise-grade configuration for 99.99% uptime SLA
+# Version: 2.0.0
+
+# ================================================================
+# GLOBAL CONFIGURATION
+# ================================================================
+global:
+  environment: production
+  region: us-east-1
+  domain: jorge-platform.com
+  storageClass: gp3
+  monitoring:
+    enabled: true
+    retention: "30d"
+  security:
+    enabled: true
+    podSecurityPolicy: true
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+
+# ================================================================
+# IMAGE CONFIGURATION
+# ================================================================
+image:
+  registry: ghcr.io
+  repository: jorge-salas/jorge-revenue-platform
+  tag: latest
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# ================================================================
+# DEPLOYMENT STRATEGY
+# ================================================================
+deploymentStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 0%
+
+# ================================================================
+# SCALING CONFIGURATION
+# ================================================================
+replicaCount: 6
+
+autoscaling:
+  enabled: true
+  minReplicas: 6
+  maxReplicas: 50
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+# ================================================================
+# RESOURCE ALLOCATION
+# ================================================================
+resources:
+  requests:
+    cpu: 1000m      # 1 CPU core
+    memory: 2Gi     # 2 GB RAM
+    ephemeral-storage: 5Gi
+  limits:
+    cpu: 2000m      # 2 CPU cores
+    memory: 4Gi     # 4 GB RAM
+    ephemeral-storage: 10Gi
+
+# ================================================================
+# SERVICE CONFIGURATION
+# ================================================================
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "alb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "${AWS_SSL_CERT_ARN}"
+
+# ================================================================
+# INGRESS CONFIGURATION
+# ================================================================
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: "${AWS_SSL_CERT_ARN}"
+    alb.ingress.kubernetes.io/load-balancer-attributes: |
+      idle_timeout.timeout_seconds=300,
+      routing.http2.enabled=true,
+      access_logs.s3.enabled=true
+  hosts:
+    - host: api.jorge-platform.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: jorge-platform-tls
+      hosts:
+        - api.jorge-platform.com
+
+# ================================================================
+# HEALTH CHECKS
+# ================================================================
+healthcheck:
+  liveness:
+    enabled: true
+    path: /health/live
+    port: 8000
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    successThreshold: 1
+    failureThreshold: 3
+
+  readiness:
+    enabled: true
+    path: /health/ready
+    port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+
+  startup:
+    enabled: true
+    path: /health/startup
+    port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 30
+
+# ================================================================
+# ENVIRONMENT VARIABLES
+# ================================================================
+env:
+  - name: ENVIRONMENT
+    value: "production"
+  - name: LOG_LEVEL
+    value: "INFO"
+  - name: WORKERS
+    value: "4"
+  - name: TIMEOUT
+    value: "300"
+  - name: KEEP_ALIVE
+    value: "5"
+  - name: MAX_REQUESTS
+    value: "1000"
+  - name: MAX_REQUESTS_JITTER
+    value: "50"
+  - name: CORS_ORIGINS
+    value: "https://jorge-platform.com,https://app.jorge-platform.com"
+  - name: AWS_DEFAULT_REGION
+    value: "us-east-1"
+  - name: REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: jorge-platform-secrets
+        key: redis-url
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: jorge-platform-secrets
+        key: database-url
+  - name: ANTHROPIC_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: jorge-platform-secrets
+        key: anthropic-api-key
+  - name: GHL_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: jorge-platform-secrets
+        key: ghl-api-key
+  - name: JWT_SECRET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: jorge-platform-secrets
+        key: jwt-secret
+
+# ================================================================
+# SECURITY CONFIGURATION
+# ================================================================
+security:
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+      add:
+        - NET_BIND_SERVICE
+
+  networkPolicy:
+    enabled: true
+    policyTypes:
+      - Ingress
+      - Egress
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                name: kube-system
+        ports:
+          - protocol: TCP
+            port: 8000
+    egress:
+      - to: []
+        ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 443
+          - protocol: TCP
+            port: 5432
+          - protocol: TCP
+            port: 6379
+
+# ================================================================
+# VOLUMES AND PERSISTENCE
+# ================================================================
+volumes:
+  - name: tmp-volume
+    emptyDir: {}
+  - name: cache-volume
+    emptyDir:
+      sizeLimit: 1Gi
+  - name: logs-volume
+    emptyDir:
+      sizeLimit: 2Gi
+
+volumeMounts:
+  - name: tmp-volume
+    mountPath: /tmp
+  - name: cache-volume
+    mountPath: /app/cache
+  - name: logs-volume
+    mountPath: /app/logs
+
+# ================================================================
+# WORKER CONFIGURATION
+# ================================================================
+worker:
+  enabled: true
+  replicaCount: 4
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+  env:
+    - name: WORKER_TYPE
+      value: "celery"
+    - name: CELERY_CONCURRENCY
+      value: "4"
+    - name: CELERY_QUEUES
+      value: "default,property_alerts,ml_processing,lead_processing"
+
+  autoscaling:
+    enabled: true
+    minReplicas: 4
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+
+# ================================================================
+# SCHEDULER CONFIGURATION
+# ================================================================
+scheduler:
+  enabled: true
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+  env:
+    - name: SCHEDULER_TYPE
+      value: "apscheduler"
+
+# ================================================================
+# MONITORING AND OBSERVABILITY
+# ================================================================
+monitoring:
+  enabled: true
+
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    path: /metrics
+    port: 8000
+
+  prometheusRule:
+    enabled: true
+    rules:
+      - alert: HighRequestLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request latency detected"
+          description: "95th percentile latency is above 1 second"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 10%"
+
+      - alert: MLInferenceLatency
+        expr: histogram_quantile(0.95, rate(ml_inference_duration_seconds_bucket[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ML inference latency too high"
+          description: "95th percentile ML inference latency is above 50ms"
+
+      - alert: JorgeBotAccuracy
+        expr: jorge_bot_accuracy_percentage < 90
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Jorge Bot accuracy below threshold"
+          description: "Jorge Bot accuracy is below 90%"
+
+# ================================================================
+# LOGGING CONFIGURATION
+# ================================================================
+logging:
+  enabled: true
+  level: INFO
+  format: json
+
+  fluentd:
+    enabled: true
+    image: fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch
+    elasticsearch:
+      host: elasticsearch.logging.svc.cluster.local
+      port: 9200
+      index: jorge-platform
+
+# ================================================================
+# SECRETS MANAGEMENT
+# ================================================================
+secrets:
+  create: false  # Secrets are managed externally via AWS Secrets Manager
+  name: jorge-platform-secrets
+
+externalSecrets:
+  enabled: true
+  secretStore:
+    provider: aws
+    region: us-east-1
+    role: "arn:aws:iam::ACCOUNT:role/jorge-platform-secrets-role"
+
+  secrets:
+    - name: jorge-platform-secrets
+      data:
+        - secretKey: database-url
+          remoteRef:
+            key: jorge-platform-db-credentials
+            property: connection_string
+        - secretKey: redis-url
+          remoteRef:
+            key: jorge-platform-redis-credentials
+            property: connection_string
+        - secretKey: anthropic-api-key
+          remoteRef:
+            key: jorge-platform-api-keys
+            property: anthropic_key
+        - secretKey: ghl-api-key
+          remoteRef:
+            key: jorge-platform-api-keys
+            property: ghl_key
+        - secretKey: jwt-secret
+          remoteRef:
+            key: jorge-platform-auth
+            property: jwt_secret
+
+# ================================================================
+# PERFORMANCE TUNING
+# ================================================================
+performance:
+  jvm:
+    heapSize: "2g"
+    gcSettings: "-XX:+UseG1GC -XX:G1HeapRegionSize=16m"
+
+  gunicorn:
+    workers: 4
+    workerClass: "uvicorn.workers.UvicornWorker"
+    maxRequests: 1000
+    maxRequestsJitter: 50
+    timeout: 300
+    keepalive: 5
+
+# ================================================================
+# BACKUP CONFIGURATION
+# ================================================================
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM UTC
+
+  s3:
+    bucket: "jorge-platform-backups"
+    region: "us-east-1"
+    retention: "30d"
+
+  databases:
+    postgres:
+      enabled: true
+      schedule: "0 1 * * *"  # Daily at 1 AM UTC
+
+  files:
+    enabled: true
+    paths:
+      - "/app/data"
+      - "/app/logs"
+
+# ================================================================
+# DISASTER RECOVERY
+# ================================================================
+disasterRecovery:
+  enabled: true
+  crossRegion:
+    enabled: true
+    region: "us-west-2"
+
+  rpo: "1h"  # Recovery Point Objective
+  rto: "15m" # Recovery Time Objective
+
+# ================================================================
+# FEATURE FLAGS
+# ================================================================
+featureFlags:
+  enableNewUI: true
+  enableAdvancedAnalytics: true
+  enableMLExplainability: true
+  enableRealTimeNotifications: true
+  enableMobileAPI: true
+
+# ================================================================
+# EXTERNAL SERVICES
+# ================================================================
+externalServices:
+  ghl:
+    baseUrl: "https://services.leadconnectorhq.com"
+    timeout: 30
+    retries: 3
+
+  anthropic:
+    baseUrl: "https://api.anthropic.com"
+    timeout: 60
+    retries: 3
+
+  retell:
+    baseUrl: "https://api.retellai.com"
+    timeout: 30
+    retries: 3
+
+# ================================================================
+# CACHE CONFIGURATION
+# ================================================================
+cache:
+  redis:
+    enabled: true
+    ttl:
+      default: 300      # 5 minutes
+      ml_predictions: 300 # 5 minutes
+      api_responses: 60   # 1 minute
+      session_data: 3600  # 1 hour
+
+  application:
+    enabled: true
+    type: "memory"
+    maxSize: "512mb"
+
+# ================================================================
+# RATE LIMITING
+# ================================================================
+rateLimiting:
+  enabled: true
+  redis: true
+
+  limits:
+    global:
+      requests: 1000
+      window: "1m"
+
+    api:
+      requests: 100
+      window: "1m"
+
+    ml:
+      requests: 50
+      window: "1m"
+
+    jorge_bots:
+      requests: 20
+      window: "1m"
+
+# ================================================================
+# GRACEFUL SHUTDOWN
+# ================================================================
+gracefulShutdown:
+  enabled: true
+  timeoutSeconds: 30
+
+  preStopHook:
+    enabled: true
+    command: ["/bin/sh", "-c", "sleep 15"]
+
+# ================================================================
+# NODE AFFINITY AND TOLERATIONS
+# ================================================================
+nodeSelector: {}
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - jorge-revenue-platform
+          topologyKey: kubernetes.io/hostname
+
+tolerations: []
+
+# ================================================================
+# SERVICE MESH (if using Istio)
+# ================================================================
+serviceMesh:
+  enabled: false
+  istio:
+    virtualService:
+      enabled: false
+    destinationRule:
+      enabled: false
+    peerAuthentication:
+      enabled: false
+
+# ================================================================
+# CHAOS ENGINEERING
+# ================================================================
+chaosEngineering:
+  enabled: false  # Enable only in testing environments
+
+  experiments:
+    podKill:
+      enabled: false
+      schedule: "0 14 * * 1"  # Mondays at 2 PM
+
+    networkLatency:
+      enabled: false
+      latency: "100ms"
+      schedule: "0 14 * * 3"  # Wednesdays at 2 PM

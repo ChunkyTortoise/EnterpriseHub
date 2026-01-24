@@ -1,0 +1,478 @@
+# Jorge's Real Estate AI Platform - Production Ingress Configuration
+# AWS ALB with SSL termination, WAF integration, and production routing
+# Version: 2.0.0
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jorge-platform-ingress
+  namespace: jorge-revenue-platform
+  annotations:
+    # AWS Load Balancer Controller specific annotations
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-name: jorge-platform-alb
+
+    # SSL and Certificate configuration
+    alb.ingress.kubernetes.io/certificate-arn: "${SSL_CERT_ARN}"
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-2-2017-01
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+
+    # Security and WAF
+    alb.ingress.kubernetes.io/wafv2-acl-arn: "${WAF_ACL_ARN}"
+    alb.ingress.kubernetes.io/security-groups: "${ALB_SECURITY_GROUP_ID}"
+
+    # Health checks and performance
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-path: /health/live
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
+
+    # Load balancing and stickiness
+    alb.ingress.kubernetes.io/load-balancer-attributes: |
+      idle_timeout.timeout_seconds=300,
+      routing.http2.enabled=true,
+      access_logs.s3.enabled=true,
+      access_logs.s3.bucket=jorge-platform-alb-logs,
+      access_logs.s3.prefix=production
+
+    # Rate limiting and protection
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/rate-limit-connections: "10"
+
+    # CORS and security headers
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://jorge-platform.com,https://app.jorge-platform.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+
+    # Additional security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss: https:;" always;
+
+  labels:
+    app: jorge-platform
+    component: ingress
+    environment: production
+    platform: jorge-revenue
+
+spec:
+  tls:
+    - hosts:
+        - api.jorge-platform.com
+        - jorge-platform.com
+        - app.jorge-platform.com
+      secretName: jorge-platform-tls
+
+  rules:
+    # ================================================================
+    # API Routes (Primary Backend)
+    # ================================================================
+    - host: api.jorge-platform.com
+      http:
+        paths:
+          # Health check endpoints (highest priority)
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # Jorge Bot specific endpoints
+          - path: /api/v1/jorge-bots
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # ML Analytics endpoints
+          - path: /api/v1/ml
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # Revenue optimization endpoints
+          - path: /api/v1/revenue-optimization
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # Presentation and ROI endpoints
+          - path: /api/v1/presentations
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # Business intelligence endpoints
+          - path: /api/v1/business-intelligence
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # GHL integration webhooks
+          - path: /api/v1/webhooks
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # Analytics and reporting
+          - path: /api/v1/analytics
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # Property alerts and matching
+          - path: /api/v1/property-alerts
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # Admin and management endpoints
+          - path: /api/v1/admin
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # WebSocket endpoints for real-time features
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # OpenAPI documentation
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # Metrics endpoint (secured)
+          - path: /metrics
+            pathType: Exact
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # Default API routing
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+          # Root API endpoint
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-revenue-api-service
+                port:
+                  number: 8000
+
+    # ================================================================
+    # Frontend Application (Next.js)
+    # ================================================================
+    - host: jorge-platform.com
+      http:
+        paths:
+          # Static assets (highest priority for caching)
+          - path: /_next/static
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-frontend-service
+                port:
+                  number: 3000
+
+          # Health check for frontend
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: jorge-frontend-service
+                port:
+                  number: 3000
+
+          # Presentation hub routes
+          - path: /presentation
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-frontend-service
+                port:
+                  number: 3000
+
+          # Dashboard and analytics
+          - path: /dashboard
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-frontend-service
+                port:
+                  number: 3000
+
+          # Admin interface
+          - path: /admin
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-frontend-service
+                port:
+                  number: 3000
+
+          # Authentication routes
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-frontend-service
+                port:
+                  number: 3000
+
+          # API routes from Next.js
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-frontend-service
+                port:
+                  number: 3000
+
+          # Default frontend routing (lowest priority)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-frontend-service
+                port:
+                  number: 3000
+
+    # ================================================================
+    # Application Subdomain (Alternative Frontend Access)
+    # ================================================================
+    - host: app.jorge-platform.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jorge-frontend-service
+                port:
+                  number: 3000
+
+---
+# ================================================================
+# Additional Ingress for Monitoring (Secured)
+# ================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jorge-platform-monitoring-ingress
+  namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-name: jorge-platform-monitoring-alb
+
+    # SSL configuration
+    alb.ingress.kubernetes.io/certificate-arn: "${SSL_CERT_ARN}"
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-2-2017-01
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+
+    # IP whitelist for monitoring access (internal only)
+    nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/16,172.16.0.0/12,192.168.0.0/16"
+
+    # Authentication required
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: monitoring-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Jorge Platform Monitoring"
+
+  labels:
+    app: jorge-platform
+    component: monitoring
+    environment: production
+
+spec:
+  tls:
+    - hosts:
+        - monitoring.jorge-platform.com
+      secretName: jorge-platform-monitoring-tls
+
+  rules:
+    - host: monitoring.jorge-platform.com
+      http:
+        paths:
+          # Grafana dashboard
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: monitoring-grafana
+                port:
+                  number: 3000
+
+          # Prometheus (admin access only)
+          - path: /prometheus
+            pathType: Prefix
+            backend:
+              service:
+                name: monitoring-prometheus-server
+                port:
+                  number: 9090
+
+          # AlertManager
+          - path: /alertmanager
+            pathType: Prefix
+            backend:
+              service:
+                name: monitoring-alertmanager
+                port:
+                  number: 9093
+
+---
+# ================================================================
+# TLS Secret for SSL Certificate
+# ================================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jorge-platform-tls
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: tls
+    environment: production
+type: kubernetes.io/tls
+data:
+  # Certificate and private key will be populated by cert-manager
+  # or manually from AWS ACM
+  tls.crt: ""
+  tls.key: ""
+
+---
+# ================================================================
+# Monitoring Basic Auth Secret
+# ================================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: monitoring-basic-auth
+  namespace: monitoring
+  labels:
+    app: jorge-platform
+    component: monitoring-auth
+    environment: production
+type: Opaque
+data:
+  # Generate with: htpasswd -nb admin yourpassword | base64
+  # Replace with your actual credentials
+  auth: YWRtaW46JGFwcjEkYVBvZElvVVkkOGlST2w0Z2tZZ0NMQ2o3R284NjRsLg==
+
+---
+# ================================================================
+# Network Policy for Additional Security
+# ================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: jorge-platform-network-policy
+  namespace: jorge-revenue-platform
+  labels:
+    app: jorge-platform
+    component: network-security
+    environment: production
+spec:
+  podSelector:
+    matchLabels:
+      app: jorge-revenue-api
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from ALB
+    - from:
+        - namespaceSelector:
+          matchLabels:
+            name: kube-system
+      ports:
+        - protocol: TCP
+          port: 8000
+    # Allow health checks
+    - from: []
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow HTTPS outbound
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+    # Allow database connections
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Allow Redis connections
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 6379

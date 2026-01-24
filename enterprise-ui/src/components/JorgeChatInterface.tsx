@@ -4,7 +4,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Phone, Mail, Calendar, TrendingUp, AlertTriangle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Send, Bot, User, Phone, Mail, Calendar, TrendingUp, AlertTriangle, Sparkles, BarChart3, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,12 +13,108 @@ import { Badge } from '@/components/ui/badge'
 import { useChatStore } from '@/store/useChatStore'
 import { useActiveConversation, useBotTyping, useRealtimeStatus } from '@/lib/providers'
 import { format } from 'date-fns'
+import { cn } from '@/lib/utils'
+
+import { ShapExplainability } from './analytics/ShapExplainability'
 
 interface ChatMessage {
   content: string
   role: 'user' | 'bot'
   timestamp: string
   botId: string
+  type?: 'text' | 'chart' | 'lead_action' | 'property' | 'shap_explainability'
+  metadata?: any
+}
+
+function TypingIndicator() {
+  return (
+    <div className="flex items-center gap-1 px-3 py-2 bg-[#1a1a1a] border border-white/5 rounded-2xl w-fit">
+      <motion.div
+        animate={{ opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1] }}
+        className="w-1.5 h-1.5 bg-blue-500 rounded-full"
+      />
+      <motion.div
+        animate={{ opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.2 }}
+        className="w-1.5 h-1.5 bg-blue-500 rounded-full"
+      />
+      <motion.div
+        animate={{ opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.4 }}
+        className="w-1.5 h-1.5 bg-blue-500 rounded-full"
+      />
+    </div>
+  )
+}
+
+function GenerativeContent({ type, metadata }: { type: string, metadata?: any }) {
+  if (type === 'shap_explainability') {
+    return (
+      <div className="mt-3">
+        <ShapExplainability 
+          baseScore={metadata?.baseScore || 50} 
+          finalScore={metadata?.finalScore || 85}
+          features={metadata?.features}
+        />
+      </div>
+    )
+  }
+
+  if (type === 'chart') {
+    return (
+      <div className="mt-3 p-4 bg-black/40 border border-white/10 rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-jorge-glow" />
+            <span className="text-xs font-semibold text-white uppercase tracking-wider">Market Analysis</span>
+          </div>
+          <Badge className="bg-jorge-glow/10 text-jorge-glow border-none text-[10px]">Real-time</Badge>
+        </div>
+        <div className="h-32 flex items-end gap-1 px-2">
+          {[40, 70, 45, 90, 65, 80, 50, 85].map((h, i) => (
+            <motion.div
+              key={i}
+              initial={{ height: 0 }}
+              animate={{ height: `${h}%` }}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              className="flex-1 bg-gradient-to-t from-blue-600 to-jorge-glow rounded-t-sm"
+            />
+          ))}
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="p-2 bg-white/5 rounded-lg">
+            <div className="text-[10px] text-gray-500 uppercase font-mono">Growth</div>
+            <div className="text-sm font-bold text-white">+12.4%</div>
+          </div>
+          <div className="p-2 bg-white/5 rounded-lg">
+            <div className="text-[10px] text-gray-500 uppercase font-mono">Confidence</div>
+            <div className="text-sm font-bold text-white">94%</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (type === 'lead_action') {
+    return (
+      <div className="mt-3 space-y-2">
+        <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle2 className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-bold text-blue-100 uppercase">Recommended Action</span>
+          </div>
+          <p className="text-xs text-blue-200/80 mb-3">{metadata?.reason || "Jorge suggests escalating this lead based on psychological commitment scores."}</p>
+          <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white h-8 text-xs jorge-haptic">
+            Execute Escalation
+            <ChevronRight className="w-3 h-3 ml-1" />
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return null
 }
 
 interface MessageBubbleProps {
@@ -29,39 +126,58 @@ function MessageBubble({ message, isTyping = false }: MessageBubbleProps) {
   const isBot = message.role === 'bot'
   
   return (
-    <div className={`flex gap-3 ${isBot ? 'flex-row' : 'flex-row-reverse'} mb-4`}>
-      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+    <motion.div 
+      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className={cn(
+        "flex gap-3 mb-6",
+        isBot ? "flex-row" : "flex-row-reverse"
+      )}
+    >
+      <div className={cn(
+        "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center border transition-all duration-300",
         isBot 
-          ? 'bg-blue-500 text-white' 
-          : 'bg-gray-500 text-white'
-      }`}>
+          ? "bg-blue-500/10 border-blue-500/30 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.1)]" 
+          : "bg-white/5 border-white/10 text-gray-400"
+      )}>
         {isBot ? <Bot size={16} /> : <User size={16} />}
       </div>
       
-      <div className={`flex-1 max-w-[80%] ${isBot ? '' : 'flex justify-end'}`}>
-        <div className={`rounded-lg px-4 py-2 ${
+      <div className={cn(
+        "flex-1 max-w-[85%] sm:max-w-[75%]",
+        isBot ? "" : "flex flex-col items-end"
+      )}>
+        <div className={cn(
+          "relative rounded-2xl px-4 py-3 shadow-sm transition-all duration-300",
           isBot 
-            ? 'bg-blue-50 text-blue-900 border border-blue-200' 
-            : 'bg-gray-100 text-gray-900 border border-gray-200'
-        }`}>
-          <div className="text-sm leading-relaxed whitespace-pre-wrap">
+            ? "bg-[#1a1a1a] text-gray-200 border border-white/5 rounded-tl-none" 
+            : "bg-blue-600 text-white border border-blue-500/30 rounded-tr-none"
+        )}>
+          {isBot && (
+            <div className="absolute -top-5 left-0 flex items-center gap-1.5">
+              <span className="text-[10px] font-bold tracking-widest text-blue-500 uppercase font-mono">Agent</span>
+              <Sparkles className="w-2.5 h-2.5 text-blue-500" />
+            </div>
+          )}
+          
+          <div className="text-sm leading-relaxed whitespace-pre-wrap font-medium">
             {message.content}
-            {isTyping && (
-              <span className="inline-flex ml-1">
-                <span className="animate-pulse">●</span>
-                <span className="animate-pulse delay-100">●</span>
-                <span className="animate-pulse delay-200">●</span>
-              </span>
-            )}
           </div>
-          <div className={`text-xs mt-1 ${
-            isBot ? 'text-blue-600' : 'text-gray-600'
-          }`}>
-            {format(new Date(message.timestamp), 'h:mm a')}
+
+          {isBot && message.type && (
+            <GenerativeContent type={message.type} metadata={message.metadata} />
+          )}
+
+          <div className={cn(
+            "text-[9px] mt-2 font-mono uppercase tracking-tighter opacity-40",
+            isBot ? "text-gray-400" : "text-blue-100"
+          )}>
+            {format(new Date(message.timestamp), 'HH:mm:ss')} • {isBot ? 'Verified AI' : 'User'}
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -74,29 +190,36 @@ function BotStatusIndicator({ botId }: { botId: string }) {
   
   if (!status) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500">
-        <div className="w-2 h-2 rounded-full bg-gray-400" />
-        Connecting...
+      <div className="flex items-center gap-2 text-[10px] jorge-code text-gray-500 bg-white/5 px-2 py-1 rounded-full border border-white/10">
+        <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+        Synchronizing...
       </div>
     )
   }
   
-  const statusColor = status.status === 'online' ? 'green' : 'gray'
-  const statusText = isTyping ? 'Typing...' : status.status
+  const statusColor = status.status === 'online' ? 'bg-jorge-glow' : 'bg-gray-600'
+  const statusText = isTyping ? 'Synthesizing...' : status.status.toUpperCase()
   
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <div className={`w-2 h-2 rounded-full bg-${statusColor}-500 ${
-        status.status === 'online' ? 'animate-pulse' : ''
-      }`} />
-      <span className="text-gray-700">{statusText}</span>
-      {!isConnected && (
-        <AlertTriangle size={14} className="text-amber-500" /* title="Connection unstable" */ />
-      )}
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
+        <div className={cn(
+          "w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(0,240,255,0.5)]",
+          status.status === 'online' ? 'bg-jorge-glow animate-pulse' : 'bg-gray-600'
+        )} />
+        <span className="text-[10px] font-bold jorge-code text-gray-300 tracking-wider">{statusText}</span>
+      </div>
+      
       {status.responseTimeMs && (
-        <span className="text-xs text-gray-500">
-          ({status.responseTimeMs}ms avg)
-        </span>
+        <div className="text-[10px] jorge-code text-jorge-glow/60 hidden sm:block">
+          {status.responseTimeMs}MS
+        </div>
+      )}
+      
+      {!isConnected && (
+        <Badge variant="outline" className="h-5 text-[9px] bg-red-500/10 text-red-400 border-red-500/20 px-1.5">
+          UNSTABLE
+        </Badge>
       )}
     </div>
   )
@@ -104,26 +227,30 @@ function BotStatusIndicator({ botId }: { botId: string }) {
 
 function QuickActions({ onActionSelect }: { onActionSelect: (action: string) => void }) {
   const actions = [
-    { icon: <Phone size={14} />, label: "Schedule Call", action: "I'd like to schedule a call" },
-    { icon: <Mail size={14} />, label: "Send Info", action: "Please send me more information" },
-    { icon: <Calendar size={14} />, label: "Book Showing", action: "I want to schedule a property showing" },
-    { icon: <TrendingUp size={14} />, label: "Market Analysis", action: "Can you provide a market analysis?" },
+    { icon: <Phone size={14} />, label: "Call", action: "I'd like to schedule a call" },
+    { icon: <Mail size={14} />, label: "Info", action: "Please send me more information" },
+    { icon: <Calendar size={14} />, label: "Showing", action: "I want to schedule a property showing" },
+    { icon: <TrendingUp size={14} />, label: "Market", action: "Can you provide a market analysis?" },
   ]
   
   return (
-    <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
-      <span className="text-xs font-medium text-gray-600 w-full mb-1">Quick Actions:</span>
+    <div className="flex flex-wrap gap-2 py-4">
       {actions.map((action, index) => (
-        <Button
+        <motion.div
           key={index}
-          variant="outline"
-          size="sm"
-          onClick={() => onActionSelect(action.action)}
-          className="flex items-center gap-2 text-xs h-8"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          {action.icon}
-          {action.label}
-        </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onActionSelect(action.action)}
+            className="bg-white/5 border-white/10 hover:bg-white/10 text-gray-300 text-[10px] font-bold jorge-code h-8 px-3 rounded-lg flex items-center gap-2 group transition-all"
+          >
+            <span className="text-jorge-glow opacity-60 group-hover:opacity-100">{action.icon}</span>
+            {action.label}
+          </Button>
+        </motion.div>
       ))}
     </div>
   )
@@ -192,60 +319,79 @@ export function JorgeChatInterface({
   }
   
   return (
-    <Card className={`flex flex-col h-[600px] ${className}`}>
-      <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+    <Card className={cn(
+      "flex flex-col h-[700px] border-white/10 bg-jorge-dark/40 backdrop-blur-xl overflow-hidden shadow-2xl relative",
+      className
+    )}>
+      {/* Dynamic Background Element */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
+      
+      <CardHeader className="border-b border-white/5 bg-white/[0.02] py-4 px-6">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Bot className="w-5 h-5 text-blue-600" />
+          <div className="flex flex-col gap-1">
+            <CardTitle className="flex items-center gap-3 text-white text-lg font-bold tracking-tight">
+              <div className="p-1.5 bg-blue-500/10 rounded-md border border-blue-500/20">
+                <Bot className="w-5 h-5 text-blue-500" />
+              </div>
               {botName}
             </CardTitle>
             <BotStatusIndicator botId={botId} />
           </div>
           
           <div className="flex gap-2">
-            <Badge variant="outline" className="bg-white">
-              Jorge's AI
+            <Badge variant="outline" className="bg-white/5 border-white/10 text-gray-400 font-mono text-[9px] uppercase tracking-widest px-2">
+              JORGE V4.0
             </Badge>
-            <Badge variant="outline" className="bg-green-50 text-green-700">
-              Real Estate Pro
+            <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 font-mono text-[9px] uppercase tracking-widest px-2">
+              SECURE
             </Badge>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="flex-1 flex flex-col p-0">
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden relative">
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {!activeConversation?.messages?.length ? (
-            <div className="text-center text-gray-500 mt-8">
-              <Bot className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <h3 className="font-semibold mb-2">Start a conversation with {botName}</h3>
-              <p className="text-sm mb-4">
-                I'm here to help with real estate questions, property searches, and lead qualification.
+            <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto animate-in fade-in zoom-in duration-500">
+              <div className="relative mb-6">
+                <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full" />
+                <div className="relative w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl">
+                  <Sparkles className="w-8 h-8 text-blue-500" />
+                </div>
+              </div>
+              <h3 className="text-white font-bold text-xl mb-2 tracking-tight">Jorge Concierge Active</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-8">
+                Ready to handle qualification, market analysis, and strategic property matching. How can I assist?
               </p>
-              <QuickActions onActionSelect={handleQuickAction} />
+              <div className="w-full">
+                <QuickActions onActionSelect={handleQuickAction} />
+              </div>
             </div>
           ) : (
             <>
-              {activeConversation.messages.map((message, index) => (
-                <MessageBubble
-                  key={index}
-                  message={message}
-                />
-              ))}
-              
-              {isTyping && (
-                <MessageBubble
-                  message={{
-                    content: '',
-                    role: 'bot',
-                    timestamp: new Date().toISOString(),
-                    botId
-                  }}
-                  isTyping={true}
-                />
-              )}
+              <AnimatePresence initial={false}>
+                {activeConversation.messages.map((message, index) => (
+                  <MessageBubble
+                    key={index}
+                    message={message}
+                  />
+                ))}
+                
+                {isTyping && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="flex gap-3 mb-6"
+                  >
+                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center">
+                      <Bot size={16} />
+                    </div>
+                    <TypingIndicator />
+                  </motion.div>
+                )}
+              </AnimatePresence>
               
               <div ref={messagesEndRef} />
             </>
@@ -253,32 +399,41 @@ export function JorgeChatInterface({
         </div>
         
         {/* Input Area */}
-        <div className="border-t p-4">
-          <div className="flex gap-2">
-            <Input
-              ref={inputRef}
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
-              className="flex-1"
-              disabled={isTyping}
-            />
-            <Button 
-              onClick={handleSendMessage}
-              disabled={!messageInput.trim() || isTyping}
-              size="sm"
-              className="px-4"
-            >
-              <Send size={16} />
-            </Button>
+        <div className="p-4 bg-white/[0.02] border-t border-white/5">
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition duration-500" />
+            <div className="relative flex items-center gap-2 bg-[#0f0f0f] border border-white/10 rounded-xl p-1.5 focus-within:border-blue-500/50 transition-all">
+              <Input
+                ref={inputRef}
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Message Jorge AI..."
+                className="flex-1 bg-transparent border-none text-white focus-visible:ring-0 placeholder:text-gray-600 h-10"
+                disabled={isTyping}
+              />
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  onClick={handleSendMessage}
+                  disabled={!messageInput.trim() || isTyping}
+                  size="icon"
+                  className="h-9 w-9 bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all"
+                >
+                  <Send size={16} />
+                </Button>
+              </motion.div>
+            </div>
           </div>
           
-          {activeConversation?.messages?.length === 0 && (
-            <div className="mt-3">
-              <QuickActions onActionSelect={handleQuickAction} />
+          <div className="flex items-center justify-between mt-3 px-1">
+            <p className="text-[10px] text-gray-500 jorge-code">
+              Cmd + Enter to send • Verified AI Response
+            </p>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1 h-1 rounded-full bg-blue-500" />
+              <span className="text-[10px] text-blue-500/60 font-mono tracking-widest uppercase">Encryption Active</span>
             </div>
-          )}
+          </div>
         </div>
       </CardContent>
     </Card>

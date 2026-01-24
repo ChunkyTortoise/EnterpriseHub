@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
 import { ClaudeConcierge } from "@/components/claude-concierge/ClaudeConcierge";
+import { CommandMenu } from "@/components/ui/CommandMenu";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -148,6 +149,7 @@ export default function RootLayout({
           <div className="min-h-screen bg-jorge-gradient-dark">
             {children}
             <ClaudeConcierge />
+            <CommandMenu />
           </div>
         </Providers>
       </body>
