@@ -18,14 +18,20 @@ router = APIRouter()
 # Model storage path (shared with simulation skill)
 MODEL_PATH = "./data/ml/ui_simulator_v1.json"
 
-# In a real app, these would be injected or shared
-blackboard = SharedBlackboard()
-_ml_engine = ContentBasedModel(model_id="ui_simulator_v1")
+# In-memory cache for multi-tenant models
+_models: Dict[str, ContentBasedModel] = {}
 
-async def _ensure_model_loaded():
-    if not _ml_engine.is_trained and os.path.exists(MODEL_PATH):
-        logger.info(f"Loading UI Simulator model in API from {MODEL_PATH}")
-        await _ml_engine.load(MODEL_PATH)
+async def _get_model(location_id: str = "global") -> ContentBasedModel:
+    if location_id not in _models:
+        model = ContentBasedModel(model_id=f"ui_simulator_{location_id}")
+        # Try to load tenant-specific model
+        if os.path.exists(MODEL_PATH) or os.path.exists(f"./data/ml/{location_id}_ui_simulator_v1.json"):
+            await model.load(MODEL_PATH, tenant_id=location_id)
+        _models[location_id] = model
+    return _models[location_id]
+
+# Blackboard remains shared for the cockpit
+blackboard = SharedBlackboard()
 
 @router.get("/stream-ui-generation")
 async def stream_ui_generation(
@@ -59,14 +65,17 @@ async def record_feedback(
     component_id: str = Body(...),
     user_id: str = Body(...),
     rating: float = Body(...), # 1.0 for like, -1.0 for dislike
-    features: Dict[str, float] = Body(...)
+    features: Dict[str, float] = Body(...),
+    location_id: str = Body("global")
 ):
     """
     Records user feedback (like/dislike) for a generated component.
     Updates the Behavioral ML Engine to improve future conversion predictions.
+    Now supports Multi-Tenant DNA via location_id.
     """
-    logger.info(f"Recording feedback for {component_id} from {user_id}: {rating}")
-    await _ensure_model_loaded()
+    logger.info(f"Recording feedback for {component_id} from {user_id} in {location_id}: {rating}")
+    
+    model = await _get_model(location_id)
     
     fv = FeatureVector(
         entity_id=user_id,
@@ -76,15 +85,15 @@ async def record_feedback(
     )
     
     # Update the ML Engine online
-    success = await _ml_engine.update_online(fv, rating)
+    success = await model.update_online(fv, rating)
     
-    # Persist the updated "Design DNA"
-    await _ml_engine.save(MODEL_PATH)
+    # Persist the updated "Design DNA" specifically for this tenant
+    await model.save(MODEL_PATH, tenant_id=location_id)
     
     # Log to blackboard for transparency
     blackboard.write(
         f"feedback_{datetime.now().timestamp()}", 
-        {"component_id": component_id, "rating": rating, "user_id": user_id}, 
+        {"component_id": component_id, "rating": rating, "user_id": user_id, "location_id": location_id}, 
         "UserFeedbackLoop"
     )
     

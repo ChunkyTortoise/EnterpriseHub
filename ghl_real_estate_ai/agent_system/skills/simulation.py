@@ -15,24 +15,31 @@ logger = get_logger(__name__)
 # Model storage path
 MODEL_PATH = "./data/ml/ui_simulator_v1.json"
 
-# Initialize model with persistence
-_model = ContentBasedModel(model_id="ui_simulator_v1")
+# Initialize model instance - we'll use a per-tenant approach
+# In a high-concurrency environment, consider a cache of models
+_models: Dict[str, ContentBasedModel] = {}
 
-async def _ensure_model_loaded():
-    if not _model.is_trained and os.path.exists(MODEL_PATH):
-        logger.info(f"Loading UI Simulator model from {MODEL_PATH}")
-        await _model.load(MODEL_PATH)
+async def _get_model(location_id: str) -> ContentBasedModel:
+    if location_id not in _models:
+        model = ContentBasedModel(model_id=f"ui_simulator_{location_id}")
+        # Try to load tenant-specific model, fallback to global if not found
+        success = await model.load(MODEL_PATH, tenant_id=location_id)
+        if not success:
+            logger.info(f"No existing model for tenant {location_id}, starting fresh.")
+        _models[location_id] = model
+    return _models[location_id]
 
 @skill(name="predict_ui_conversion", tags=["simulation", "ml", "conversion"])
-async def predict_ui_conversion(jsx_code: str, target_audience: str = "general") -> Dict[str, Any]:
+async def predict_ui_conversion(jsx_code: str, target_audience: str = "general", location_id: str = "global") -> Dict[str, Any]:
     """
     Predicts the conversion rate of a generated UI component using Behavioral ML.
     
     Args:
         jsx_code: The JSX/TSX code of the component.
         target_audience: Description of the target lead segment.
+        location_id: The GHL location ID for multi-tenant DNA.
     """
-    await _ensure_model_loaded()
+    model = await _get_model(location_id)
     
     # 1. Advanced Feature Extraction from JSX
     # ... (rest of the extraction logic remains same)
@@ -70,16 +77,16 @@ async def predict_ui_conversion(jsx_code: str, target_audience: str = "general")
     )
     
     # 2. Predict via ML Engine
-    if not _model.is_trained:
+    if not model.is_trained:
         # Simulate training on high-converting dashboard patterns if no model found
-        await _model.train(
+        await model.train(
             features=[fv], 
             targets=[0.85]
         )
-        # Save initial "Gold Standard"
-        await _model.save(MODEL_PATH)
+        # Save initial "Gold Standard" for this tenant
+        await model.save(MODEL_PATH, tenant_id=location_id)
         
-    prediction = await _model.predict(fv)
+    prediction = await model.predict(fv)
     
     # 3. Generate Granular Optimization Tips
     tips = []

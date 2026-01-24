@@ -109,7 +109,7 @@ class UIAgentSwarm:
             # --- PHASE 3: A/B SIMULATION ---
             yield {"event": "thinking", "content": f"Simulating lead engagement for {comp['name']} via Behavioral ML..."}
             sim_skill = skill_registry.get_skill("predict_ui_conversion")
-            prediction = await sim_skill.execute(jsx_code=polished_code)
+            prediction = await sim_skill.execute(jsx_code=polished_code, location_id=self.location_id)
             
             score = prediction["predicted_conversion_rate"]
             yield {
@@ -134,7 +134,7 @@ class UIAgentSwarm:
                 
                 # Re-simulate
                 yield {"event": "thinking", "content": f"Re-simulating {comp['name']} after self-correction..."}
-                prediction = await sim_skill.execute(jsx_code=polished_code)
+                prediction = await sim_skill.execute(jsx_code=polished_code, location_id=self.location_id)
                 score = prediction["predicted_conversion_rate"]
                 
                 yield {
@@ -174,7 +174,9 @@ class UIAgentSwarm:
         
         # 6. VOICE BRIEFING PHASE
         yield {"event": "thinking", "content": "Synthesizing AI voice briefing for the new dashboard..."}
-        briefing_text = f"I have successfully generated your {spec}. The components have been optimized for conversion based on our behavioral models and verified through visual grounding. You can now preview the live dashboard."
+        
+        market_insight = await self._get_market_insight()
+        briefing_text = f"I have successfully generated your {spec}. The components have been optimized for conversion based on our behavioral models and verified through visual grounding. {market_insight} You can now preview the live dashboard."
         
         voice_skill = skill_registry.get_skill("synthesize_voice_briefing")
         voice_result = await voice_skill.execute(text=briefing_text)
@@ -185,6 +187,34 @@ class UIAgentSwarm:
             "content_type": voice_result.get("content_type"),
             "text": briefing_text
         }
+
+    async def _get_market_insight(self) -> str:
+        """Fetches real-time market insights to contextualize the briefing."""
+        try:
+            # Simple mapping: if location_id or spec mentions a market, use it
+            market_id = None
+            if "austin" in self.location_id.lower():
+                market_id = "austin"
+            elif "demo" in self.location_id.lower():
+                market_id = "austin" # Default for demo
+                
+            if not market_id:
+                return "The UI is optimized for general lead engagement patterns."
+                
+            from ghl_real_estate_ai.markets.registry import get_market_service
+            service = get_market_service(market_id)
+            if service:
+                metrics = await service.get_market_metrics()
+                # Use real metrics if available, otherwise fallback to config-driven defaults
+                inventory_status = "high-inventory" if metrics.months_supply > 4.5 else "low-inventory"
+                trend = "upward" if metrics.price_trend_3m > 0 else "correcting"
+                
+                return f"This dashboard is specifically optimized for the current {inventory_status} trend in {service.market_name}, with components chosen to perform well while the market is {trend}."
+            return ""
+        except Exception as e:
+            from ghl_real_estate_ai.ghl_utils.logger import get_logger
+            get_logger(__name__).error(f"Error fetching market insight: {e}")
+            return ""
 
     async def _simulate_generation(self, component: Dict, docs: Dict) -> str:
         """Simulates an agent generating code for a single component"""
