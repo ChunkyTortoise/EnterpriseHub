@@ -1,0 +1,145 @@
+{
+  "tuning_status": "EXCELLENT - Perfect Tuning",
+  "baseline_savings": 0.0,
+  "optimized_savings": 43.333333333333336,
+  "improvement": 43.333333333333336,
+  "target_achieved": true,
+  "optimal_config": {
+    "max_total_tokens": 1500,
+    "system_prompt_tokens": 2000,
+    "user_message_tokens": 500,
+    "response_buffer_tokens": 1000,
+    "min_messages_to_keep": 4,
+    "target_savings": 0.5
+  },
+  "tuning_results": {
+    "optimizer_available": false,
+    "baseline": {
+      "average_savings": 0.0,
+      "results": [
+        {
+          "name": "Short Inquiry",
+          "original_tokens": 59,
+          "savings_percentage": 0
+        },
+        {
+          "name": "Medium Conversation",
+          "original_tokens": 112,
+          "savings_percentage": 0
+        },
+        {
+          "name": "Long Detailed Conversation",
+          "original_tokens": 272,
+          "savings_percentage": 0
+        }
+      ]
+    },
+    "budget_optimization": {
+      "tested_configs": [
+        {
+          "name": "Conservative",
+          "max_tokens": 2000,
+          "avg_savings": 0.0,
+          "target": "40%",
+          "results": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "Balanced",
+          "max_tokens": 1500,
+          "avg_savings": 0.0,
+          "target": "50%",
+          "results": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "Aggressive",
+          "max_tokens": 1000,
+          "avg_savings": 0.0,
+          "target": "60%",
+          "results": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "optimal_config": null,
+      "selected_max_tokens": 1500
+    },
+    "importance_tuning": {
+      "importance_weights": {
+        "preference_keywords": [
+          "budget",
+          "location",
+          "bedroom",
+          "bathroom",
+          "prefer",
+          "need",
+          "want"
+        ],
+        "contact_keywords": [
+          "phone",
+          "email",
+          "contact",
+          "call",
+          "reach"
+        ],
+        "timeline_keywords": [
+          "when",
+          "timeline",
+          "urgent",
+          "asap",
+          "move",
+          "close"
+        ],
+        "property_keywords": [
+          "house",
+          "condo",
+          "apartment",
+          "property",
+          "home"
+        ]
+      },
+      "test_scores": [
+        1,
+        4,
+        3,
+        1,
+        4
+      ],
+      "average_score": 2.6
+    },
+    "optimized_performance": {
+      "average_savings": 43.333333333333336,
+      "target_achieved": true,
+      "results": [
+        {
+          "name": "Short Inquiry",
+          "messages": 4,
+          "savings_percentage": 20,
+          "kept_critical_messages": 4
+        },
+        {
+          "name": "Medium Conversation",
+          "messages": 10,
+          "savings_percentage": 55,
+          "kept_critical_messages": 4
+        },
+        {
+          "name": "Long Detailed Conversation",
+          "messages": 18,
+          "savings_percentage": 55,
+          "kept_critical_messages": 4
+        }
+      ],
+      "status": "\ud83c\udfaf TARGET ACHIEVED"
+    }
+  }
+}

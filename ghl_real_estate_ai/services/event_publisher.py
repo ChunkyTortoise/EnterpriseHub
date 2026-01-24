@@ -368,6 +368,86 @@ class EventPublisher:
             "user_id": user_id
         }
 
+    async def publish_property_alert(
+        self,
+        alert_id: str,
+        lead_id: str,
+        property_id: str,
+        match_score: float,
+        alert_type: str,
+        property_data: Dict[str, Any],
+        match_reasoning: Optional[Dict[str, Any]] = None,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish property alert event for real-time property matching.
+
+        Args:
+            alert_id: Unique alert identifier
+            lead_id: Lead who should receive the alert
+            property_id: Property that matched
+            match_score: Match score (0-100)
+            alert_type: Type of alert (new_match, price_drop, market_opportunity)
+            property_data: Property details for the alert
+            match_reasoning: Detailed matching reasoning (optional)
+            user_id: User associated with lead (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        # Extract key property details for quick access
+        property_address = property_data.get('address', 'Unknown Address')
+        property_price = property_data.get('price', 0)
+        property_bedrooms = property_data.get('bedrooms', 0)
+        property_bathrooms = property_data.get('bathrooms', 0)
+        property_sqft = property_data.get('sqft', 0)
+
+        # Determine priority based on match score and alert type
+        priority = "high" if match_score >= 85 or alert_type == "price_drop" else "normal"
+        if alert_type in ["market_opportunity", "back_on_market"] and match_score >= 90:
+            priority = "critical"
+
+        event = RealTimeEvent(
+            event_type=EventType.PROPERTY_ALERT,
+            data={
+                "alert_id": alert_id,
+                "lead_id": lead_id,
+                "property_id": property_id,
+                "match_score": round(match_score, 2),
+                "alert_type": alert_type,
+
+                # Property summary for quick display
+                "property_summary": {
+                    "address": property_address,
+                    "price": property_price,
+                    "formatted_price": f"${property_price:,.0f}" if property_price else "Price on request",
+                    "bedrooms": property_bedrooms,
+                    "bathrooms": property_bathrooms,
+                    "sqft": property_sqft,
+                    "formatted_sqft": f"{property_sqft:,} sq ft" if property_sqft else "Size not listed"
+                },
+
+                # Full property data for detailed view
+                "property_data": property_data,
+                "match_reasoning": match_reasoning or {},
+
+                # Alert metadata
+                "alert_priority": priority,
+                "requires_action": match_score >= 90,
+                "expires_at": (datetime.now(timezone.utc).timestamp() + 86400),  # 24 hours from now
+
+                # Human-readable summary
+                "summary": f"New {alert_type.replace('_', ' ').title()}: {property_address} ({match_score:.0f}% match)",
+                "notification_text": f"Found a {match_score:.0f}% match! {property_address} - ${property_price:,.0f}" if property_price else f"Found a {match_score:.0f}% match! {property_address}"
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority=priority
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published property alert: {alert_type} for lead {lead_id} - {property_address} ({match_score:.1f}% match)")
+
     async def _publish_event(self, event: RealTimeEvent):
         """
         Publish event with performance tracking and batching.
@@ -562,6 +642,13 @@ async def publish_performance_update(metric_name: str, metric_value: float, **kw
     await publisher.publish_performance_update(metric_name, metric_value, **kwargs)
 
 async def publish_dashboard_refresh(component: str, data: Dict[str, Any], **kwargs):
-    """Convenience function to publish dashboard refresh.""" 
+    """Convenience function to publish dashboard refresh."""
     publisher = get_event_publisher()
     await publisher.publish_dashboard_refresh(component, data, **kwargs)
+
+async def publish_property_alert(alert_id: str, lead_id: str, property_id: str, match_score: float,
+                                alert_type: str, property_data: Dict[str, Any], **kwargs):
+    """Convenience function to publish property alert."""
+    publisher = get_event_publisher()
+    await publisher.publish_property_alert(alert_id, lead_id, property_id, match_score,
+                                         alert_type, property_data, **kwargs)
