@@ -1,0 +1,57 @@
+{
+  "system": {
+    "version": "2.0.0-unified",
+    "deployment_date": "2026-01-23T05:00:47.211949",
+    "components": [
+      "seller_bot_fastapi",
+      "command_center_dashboard",
+      "lead_bot_enhanced"
+    ]
+  },
+  "performance": {
+    "seller_analysis_timeout_ms": 500,
+    "lead_analysis_timeout_ms": 500,
+    "claude_api_timeout_ms": 3000,
+    "webhook_response_timeout_ms": 2000,
+    "cache_ttl_seconds": 300,
+    "five_minute_rule_threshold_ms": 300000
+  },
+  "jorge_business_rules": {
+    "min_budget": 200000,
+    "max_budget": 800000,
+    "service_areas": [
+      "Dallas",
+      "Plano",
+      "Frisco",
+      "McKinney",
+      "Allen",
+      "Richardson"
+    ],
+    "preferred_timeline_days": 60,
+    "commission_rate": 0.06,
+    "hot_lead_threshold": 80,
+    "seller_qualification_questions": 4,
+    "confrontational_level": "high"
+  },
+  "microservices": {
+    "seller_bot_port": 8002,
+    "lead_bot_port": 8001,
+    "dashboard_port": 8501,
+    "monitoring_port": 8503
+  },
+  "monitoring": {
+    "enable_performance_tracking": true,
+    "enable_five_minute_alerts": true,
+    "enable_business_metrics": true,
+    "dashboard_refresh_seconds": 30,
+    "alert_email": "jorge@example.com"
+  },
+  "features": {
+    "enable_claude_ai": true,
+    "enable_hybrid_analysis": true,
+    "enable_caching": true,
+    "enable_background_tasks": true,
+    "enable_agent_coordination": true,
+    "enable_real_time_monitoring": true
+  }
+}

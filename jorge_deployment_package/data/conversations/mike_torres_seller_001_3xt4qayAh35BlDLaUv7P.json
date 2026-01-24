@@ -1,0 +1,41 @@
+{
+  "contact_id": "mike_torres_seller_001",
+  "location_id": "3xt4qayAh35BlDLaUv7P",
+  "created_at": "2026-01-22T09:33:38.341271",
+  "last_updated": "2026-01-22T09:33:38.341277",
+  "conversation_history": [
+    {
+      "timestamp": "2026-01-22T09:33:38.341274",
+      "user_message": "Hi, I saw your ad about buying houses fast. I inherited my dad's house\n    in Cedar Park and I live in California now. I just want to sell it quickly and not\n    deal with repairs or showings. What can you offer?",
+      "ai_response": "Thanks for the information. I'll have our team review and get back to you.",
+      "extracted_data": {
+        "motivation": "Hi, I saw your ad about buying houses fast. I inherited my dad's house\n    in Cedar Park and I live ",
+        "timeline_acceptable": false,
+        "property_condition": "Needs Work",
+        "price_expectation": ",",
+        "questions_answered": 4,
+        "response_quality": 1.0
+      }
+    }
+  ],
+  "lead_preferences": {
+    "motivation": "Hi, I saw your ad about buying houses fast. I inherited my dad's house\n    in Cedar Park and I live ",
+    "timeline_acceptable": false,
+    "property_condition": "Needs Work",
+    "price_expectation": ",",
+    "questions_answered": 4,
+    "response_quality": 1.0
+  },
+  "seller_preferences": {
+    "motivation": "Hi, I saw your ad about buying houses fast. I inherited my dad's house\n    in Cedar Park and I live ",
+    "timeline_acceptable": false,
+    "property_condition": "Needs Work",
+    "price_expectation": ",",
+    "questions_answered": 4,
+    "response_quality": 1.0
+  },
+  "bot_state": "initial",
+  "lead_score": 0,
+  "seller_temperature": "warm",
+  "last_ai_response_time": "2026-01-22T09:33:38.341277"
+}

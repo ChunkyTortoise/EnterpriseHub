@@ -155,7 +155,18 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             detail="Could not validate credentials"
         )
     
-    return {"user_id": user_id, "payload": payload}
+    # Get full user object from auth service
+    from ghl_real_estate_ai.services.auth_service import get_auth_service
+    auth_service = get_auth_service()
+    
+    user = await auth_service.get_user_by_id(int(user_id))
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive"
+        )
+    
+    return user
 
 
 # Alias for backward compatibility

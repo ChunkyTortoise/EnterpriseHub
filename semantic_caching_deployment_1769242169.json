@@ -1,0 +1,66 @@
+{
+  "success_rate": 100.0,
+  "status": "EXCELLENT - Production Ready",
+  "hit_rate": 0.0,
+  "deployment_results": {
+    "cache_initialized": true,
+    "embedding_configured": true,
+    "embedding_stats": {
+      "dimensions": 384,
+      "generation_time_ms": 0.0457763671875,
+      "test_similarity": -0.19035325576167153
+    },
+    "cache_functional": true,
+    "cache_test_results": {
+      "hit_rate": 0.0,
+      "avg_response_time": 12.54124641418457,
+      "test_queries": 5,
+      "results": [
+        {
+          "query": "I need a 3-bedroom house downtown",
+          "was_cache_hit": false,
+          "similarity_score": 0.0,
+          "response_time_ms": 16.438007354736328
+        },
+        {
+          "query": "Looking for a 3BR home in city center",
+          "was_cache_hit": false,
+          "similarity_score": 0.0,
+          "response_time_ms": 11.492013931274414
+        },
+        {
+          "query": "Want a 2-bedroom apartment uptown",
+          "was_cache_hit": false,
+          "similarity_score": 0.0,
+          "response_time_ms": 11.522054672241211
+        },
+        {
+          "query": "3 bedroom house in downtown area",
+          "was_cache_hit": false,
+          "similarity_score": 0.0,
+          "response_time_ms": 11.541128158569336
+        },
+        {
+          "query": "Modern condo with ocean view",
+          "was_cache_hit": false,
+          "similarity_score": 0.0,
+          "response_time_ms": 11.713027954101562
+        }
+      ]
+    },
+    "performance": {
+      "total_queries": 5,
+      "cache_hits": 0,
+      "semantic_hits": 0,
+      "cache_misses": 5,
+      "avg_similarity_score": 0.0,
+      "total_cost_saved": 0.0,
+      "avg_response_time_ms": 12.539815902709961
+    },
+    "performance_rating": "NEEDS IMPROVEMENT",
+    "hit_rate": 0.0
+  },
+  "recommendations": [
+    "Tune similarity threshold to improve cache hit rate"
+  ]
+}

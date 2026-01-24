@@ -1,0 +1,32 @@
+{
+  "contact_id": "mike_seller_2026",
+  "location_id": "jorge_austin_office",
+  "created_at": "2026-01-22T09:22:37.843226",
+  "last_updated": "2026-01-22T09:22:37.843235",
+  "conversation_history": [
+    {
+      "timestamp": "2026-01-22T09:22:37.843232",
+      "user_message": "I'm thinking about selling my house. What do you think it's worth?",
+      "ai_response": "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
+      "extracted_data": {
+        "motivation": "I'm thinking about selling my house. What do you think it's worth?",
+        "questions_answered": 1,
+        "response_quality": 1.0
+      }
+    }
+  ],
+  "lead_preferences": {
+    "motivation": "I'm thinking about selling my house. What do you think it's worth?",
+    "questions_answered": 1,
+    "response_quality": 1.0
+  },
+  "seller_preferences": {
+    "motivation": "I'm thinking about selling my house. What do you think it's worth?",
+    "questions_answered": 1,
+    "response_quality": 1.0
+  },
+  "bot_state": "initial",
+  "lead_score": 0,
+  "seller_temperature": "cold",
+  "last_ai_response_time": "2026-01-22T09:22:37.843236"
+}
