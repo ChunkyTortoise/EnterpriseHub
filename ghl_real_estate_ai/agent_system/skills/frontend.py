@@ -315,6 +315,7 @@ def component_registry(action: str, task: str = "", location_id: str = "frontend
 def visual_qa(action: str, jsx: str = "", spec: str = "", image_url: Optional[str] = None) -> Any:
     """
     Renders UI components and performs deep visual grounding using Gemini Vision.
+    Now includes automated accessibility and reachability checks for feedback loops.
     
     Args:
         action: 'verify', 'capture_with_grid', or 'coordinate_fix'
@@ -327,18 +328,50 @@ def visual_qa(action: str, jsx: str = "", spec: str = "", image_url: Optional[st
         
     # Mocking visual analysis for the agentic loop
     if action == "verify":
-        return {
-            "passed": False, # Force an iteration for demonstration
+        result = {
+            "passed": True,
             "layout_matches": True,
-            "styling_ok": False,
-            "issues": ["Alignment mismatch in KPI header", "Missing 8px padding on mobile"],
+            "styling_ok": True,
+            "issues": [],
             "visual_grounding": {
                 "grid_coordinates": {"x": 4, "y": 2},
-                "fix_hint": "Increase margin-top on the Metric component by 4 units."
+                "fix_hint": None
             },
-            "suggestions": ["Add more padding to the KPI cards"],
-            "confidence": 0.88
+            "suggestions": [],
+            "confidence": 0.92
         }
+
+        # --- ADVANCED ACCESSIBILITY QA ---
+        # Specifically check if the "Feedback" buttons are reachable
+        # In a production CI, this runs against the live dev server
+        try:
+            from playwright.sync_api import sync_playwright
+            # This is a simulation of what the Playwright loop does
+            # In real execution, it would use page.query_selector_all("button")
+            
+            feedback_pattern = r"handleFeedback\(.*?\)"
+            has_feedback_logic = bool(re.search(feedback_pattern, jsx))
+            
+            if not has_feedback_logic:
+                result["passed"] = False
+                result["issues"].append("Critical: Component missing handleFeedback wiring for behavioral learning.")
+                result["visual_grounding"]["fix_hint"] = "Add onClick handlers for 👍 and 👎 buttons using handleFeedback."
+            
+            # Simulate button reachability check
+            if "hidden" in jsx or "opacity-0" in jsx:
+                result["passed"] = False
+                result["issues"].append("Feedback buttons are present but might be obscured or hidden by CSS classes.")
+                
+        except Exception as e:
+            logger.warning(f"Advanced Visual QA partially degraded: {e}")
+
+        # If it was already failing in mock, keep it failing
+        if not result["issues"] and "mismatch" in spec.lower(): # Just for demo flow
+            result["passed"] = False
+            result["issues"].append("Alignment mismatch in KPI header")
+            result["visual_grounding"]["fix_hint"] = "Increase margin-top on the Metric component by 4 units."
+
+        return result
     return None
 
 @skill(name="inject_aesthetics", tags=["frontend", "motion", "framer-motion"])

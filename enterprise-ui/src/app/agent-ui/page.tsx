@@ -230,6 +230,7 @@ export default function AgentUIPage() {
         body: JSON.stringify({
           component_id: name,
           user_id: "ghl_demo_user",
+          location_id: "ghl_demo_user",
           rating: rating,
           features: comp.features
         })

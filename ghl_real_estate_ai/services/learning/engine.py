@@ -108,7 +108,14 @@ class CollaborativeFilteringModel(ILearningModel):
             self.user_factors[uid] = target
         return True
 
-    async def save(self, path: str) -> bool:
+    def _get_tenant_path(self, path: str, tenant_id: Optional[str] = None) -> str:
+        if not tenant_id:
+            return path
+        directory, filename = os.path.split(path)
+        return os.path.join(directory, f"{tenant_id}_{filename}")
+
+    async def save(self, path: str, tenant_id: Optional[str] = None) -> bool:
+        target_path = self._get_tenant_path(path, tenant_id)
         data = {
             "model_id": self._model_id,
             "user_factors": self.user_factors,
@@ -116,15 +123,16 @@ class CollaborativeFilteringModel(ILearningModel):
             "global_mean": self.global_mean,
             "is_trained": self._is_trained
         }
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        with open(target_path, "w") as f:
             json.dump(data, f)
         return True
 
-    async def load(self, path: str) -> bool:
-        if not os.path.exists(path):
+    async def load(self, path: str, tenant_id: Optional[str] = None) -> bool:
+        target_path = self._get_tenant_path(path, tenant_id)
+        if not os.path.exists(target_path):
             return False
-        with open(path, "r") as f:
+        with open(target_path, "r") as f:
             data = json.load(f)
             self.user_factors = data.get("user_factors", {})
             self.item_factors = data.get("item_factors", {})
@@ -226,7 +234,14 @@ class ContentBasedModel(ILearningModel):
             self.user_profiles[uid] = item_vec * target
         return True
 
-    async def save(self, path: str) -> bool:
+    def _get_tenant_path(self, path: str, tenant_id: Optional[str] = None) -> str:
+        if not tenant_id:
+            return path
+        directory, filename = os.path.split(path)
+        return os.path.join(directory, f"{tenant_id}_{filename}")
+
+    async def save(self, path: str, tenant_id: Optional[str] = None) -> bool:
+        target_path = self._get_tenant_path(path, tenant_id)
         # Convert numpy arrays to lists for JSON serialization
         serializable_profiles = {
             uid: vec.tolist() for uid, vec in self.user_profiles.items()
@@ -236,15 +251,16 @@ class ContentBasedModel(ILearningModel):
             "user_profiles": serializable_profiles,
             "is_trained": self._is_trained
         }
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        with open(target_path, "w") as f:
             json.dump(data, f)
         return True
 
-    async def load(self, path: str) -> bool:
-        if not os.path.exists(path):
+    async def load(self, path: str, tenant_id: Optional[str] = None) -> bool:
+        target_path = self._get_tenant_path(path, tenant_id)
+        if not os.path.exists(target_path):
             return False
-        with open(path, "r") as f:
+        with open(target_path, "r") as f:
             data = json.load(f)
             # Convert lists back to numpy arrays
             self.user_profiles = {
