@@ -72,7 +72,8 @@ class NotificationSystem:
                     "lead": True,
                     "commission": True,
                     "system": True,
-                    "performance": True
+                    "performance": True,
+                    "property_alert": True
                 }
             }
             
@@ -232,8 +233,8 @@ class NotificationSystem:
         
         # Category filters
         st.subheader("Categories")
-        col1, col2, col3, col4 = st.columns(4)
-        
+        col1, col2, col3, col4, col5 = st.columns(5)
+
         with col1:
             settings["categories_enabled"]["lead"] = st.checkbox(
                 "🫂 Leads", value=settings["categories_enabled"]["lead"], key="cat_lead"
@@ -249,6 +250,10 @@ class NotificationSystem:
         with col4:
             settings["categories_enabled"]["performance"] = st.checkbox(
                 "📊 Performance", value=settings["categories_enabled"]["performance"], key="cat_performance"
+            )
+        with col5:
+            settings["categories_enabled"]["property_alert"] = st.checkbox(
+                "🏠 Properties", value=settings["categories_enabled"]["property_alert"], key="cat_property_alert"
             )
 
     def _render_notification_list(self):
@@ -319,9 +324,10 @@ class NotificationSystem:
         # Category icons
         category_icons = {
             "lead": "👤",
-            "commission": "💰", 
+            "commission": "💰",
             "system": "⚙️",
             "performance": "📊",
+            "property_alert": "🏠",
             "general": "📄"
         }
         
@@ -452,6 +458,8 @@ class NotificationSystem:
             self._create_system_notification(data, priority)
         elif event_type == "performance_update":
             self._create_performance_notification(data, priority)
+        elif event_type == "property_alert":
+            self._create_property_alert_notification(data, priority)
 
     def _create_lead_notification(self, data: Dict[str, Any], priority: str):
         """Create notification for lead update."""
@@ -531,13 +539,13 @@ class NotificationSystem:
         metric_name = data.get("metric_name", "Unknown")
         formatted_value = data.get("formatted_value", "Unknown")
         trend = data.get("trend", "neutral")
-        
+
         # Only notify on significant performance changes
         if trend in ["down", "critical"]:
             title = "Performance Alert"
             message = f"{metric_name}: {formatted_value}"
             severity = "warning" if trend == "down" else "error"
-            
+
             self.add_notification(
                 title=title,
                 message=message,
@@ -545,6 +553,60 @@ class NotificationSystem:
                 category="performance",
                 source_event_type="performance_update"
             )
+
+    def _create_property_alert_notification(self, data: Dict[str, Any], priority: str):
+        """Create notification for property alert."""
+        alert_type = data.get("alert_type", "new_match")
+        match_score = data.get("match_score", 0)
+        lead_id = data.get("lead_id", "Unknown")
+        property_summary = data.get("property_summary", {})
+
+        # Extract property details
+        address = property_summary.get("address", "Unknown Property")
+        formatted_price = property_summary.get("formatted_price", "Price on request")
+
+        # Create notification title based on alert type
+        alert_type_titles = {
+            "new_match": "🏠 New Property Match",
+            "price_drop": "📉 Price Drop Alert",
+            "market_opportunity": "💎 Market Opportunity",
+            "back_on_market": "🔄 Back on Market",
+            "price_increase": "📈 Price Update",
+            "status_change": "📋 Status Update"
+        }
+
+        title = alert_type_titles.get(alert_type, "🏠 Property Alert")
+
+        # Create comprehensive message
+        message = f"{address} • {formatted_price} • {match_score}% match"
+        if match_score >= 90:
+            message += " • ⭐ Excellent match!"
+        elif match_score >= 80:
+            message += " • ✨ Great match!"
+
+        # Determine severity based on match score and alert type
+        if alert_type in ["market_opportunity", "price_drop"] and match_score >= 85:
+            severity = "warning"  # High priority for good opportunities
+        elif match_score >= 90:
+            severity = "success"  # Excellent matches
+        elif alert_type == "price_drop":
+            severity = "info"  # Price drops are always interesting
+        else:
+            severity = "info"  # Standard property alerts
+
+        # Create action URL for viewing property details
+        action_url = f"/property/{data.get('property_id', 'unknown')}"
+        action_label = "View Property"
+
+        self.add_notification(
+            title=title,
+            message=message,
+            severity=severity,
+            category="property_alert",
+            action_url=action_url,
+            action_label=action_label,
+            source_event_type="property_alert"
+        )
 
     def get_notification_summary(self) -> Dict[str, Any]:
         """Get notification summary statistics."""

@@ -20,6 +20,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 from sklearn.preprocessing import StandardScaler
 import joblib
+import shap
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

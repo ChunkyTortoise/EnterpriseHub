@@ -260,6 +260,54 @@ class MLLeadPredictor:
 
         return score, confidence, feature_importance
 
+    async def get_shap_explanation(self, lead_context: Dict[str, Any], lead_name: str) -> Optional[Any]:
+        """
+        Generate comprehensive SHAP explanation for a lead prediction
+        
+        Args:
+            lead_context: Lead data for explanation
+            lead_name: Human-readable lead name
+            
+        Returns:
+            SHAPExplanation object or None if not available
+        """
+        try:
+            from ghl_real_estate_ai.services.shap_explainer_service import get_shap_explanation
+            
+            if not self._is_loaded:
+                await self.load_model()
+                
+            if not self.model or not self.scaler or not self.shap_explainer:
+                logger.warning("SHAP explanation not available - model components missing")
+                return None
+            
+            # Extract features
+            features = self._extract_features(lead_context)
+            
+            # Get prediction score
+            score, confidence, _ = await self.predict_lead_score(lead_context)
+            
+            # Generate comprehensive SHAP explanation
+            lead_id = lead_context.get('lead_id', f"lead_{lead_name.lower().replace(' ', '_')}")
+            
+            explanation = await get_shap_explanation(
+                model=self.model,
+                scaler=self.scaler,
+                shap_explainer=self.shap_explainer,
+                feature_names=self.feature_names,
+                features=features,
+                lead_id=lead_id,
+                lead_name=lead_name,
+                prediction_score=score
+            )
+            
+            logger.info(f"SHAP explanation generated for {lead_name}")
+            return explanation
+            
+        except Exception as e:
+            logger.error(f"SHAP explanation generation failed: {e}")
+            return None
+
     def classify_lead(self, score: float) -> str:
         """Classify lead based on ML score"""
         if score >= 75:
