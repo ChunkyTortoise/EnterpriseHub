@@ -1,0 +1,144 @@
+{
+  "version": 2,
+  "name": "jorge-real-estate-platform",
+  "alias": ["jorge-ai-platform", "jorge-real-estate"],
+  "regions": ["iad1", "sfo1"],
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm ci",
+  "devCommand": "npm run dev",
+  "public": true,
+  "cleanUrls": true,
+  "trailingSlash": false,
+
+  "env": {
+    "NEXT_PUBLIC_APP_NAME": "Jorge's Real Estate AI Platform",
+    "NEXT_PUBLIC_APP_VERSION": "1.0.0",
+    "NEXT_PUBLIC_BUILD_TIME": "@vercel-build-time",
+    "NODE_ENV": "production"
+  },
+
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1",
+      "SKIP_ENV_VALIDATION": "false"
+    }
+  },
+
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Requested-With"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self)"
+        }
+      ]
+    }
+  ],
+
+  "rewrites": [
+    {
+      "source": "/health",
+      "destination": "/api/health"
+    },
+    {
+      "source": "/status",
+      "destination": "/api/status"
+    },
+    {
+      "source": "/metrics",
+      "destination": "/api/metrics"
+    },
+    {
+      "source": "/api/jorge-seller/:path*",
+      "destination": "/api/jorge-seller/:path*"
+    },
+    {
+      "source": "/api/lead-bot/:path*",
+      "destination": "/api/lead-bot/:path*"
+    },
+    {
+      "source": "/api/intent-decoder/:path*",
+      "destination": "/api/intent-decoder/:path*"
+    }
+  ],
+
+  "redirects": [
+    {
+      "source": "/dashboard",
+      "destination": "/jorge",
+      "permanent": true
+    },
+    {
+      "source": "/admin",
+      "destination": "/jorge",
+      "permanent": false
+    }
+  ],
+
+  "functions": {
+    "app/api/*/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/jorge-seller/*/route.ts": {
+      "maxDuration": 45
+    },
+    "app/api/health/route.ts": {
+      "maxDuration": 10
+    }
+  },
+
+  "crons": [
+    {
+      "path": "/api/health/check",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/metrics/collect",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
