@@ -1,0 +1,59 @@
+# =========================================================================
+# Dockerfile for Jorge's Real Estate AI Background Workers (Celery)
+# Handles background job processing for horizontal scaling
+# =========================================================================
+
+# Use same base as API for consistency
+FROM python:3.11-slim-bullseye AS runtime
+
+# Install runtime system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd -r jorge && useradd -r -g jorge -m -s /bin/bash jorge
+
+# Set work directory
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt requirements-prod.txt ./
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir -r requirements-prod.txt
+
+# Install Celery and related dependencies
+RUN pip install --no-cache-dir \
+    celery[redis] \
+    flower \
+    kombu \
+    billiard
+
+# Copy application code
+COPY ghl_real_estate_ai/ ./ghl_real_estate_ai/
+COPY bots/ ./bots/
+COPY .env.example ./
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/data /app/cache
+
+# Set proper ownership
+RUN chown -R jorge:jorge /app
+
+# Switch to non-root user
+USER jorge
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
+ENV ENVIRONMENT=production
+ENV LOG_LEVEL=info
+
+# Create startup script for workers
+COPY scripts/start-worker.sh /app/start-worker.sh
+RUN chmod +x /app/start-worker.sh
+
+# Default command (can be overridden in docker-compose)
+CMD ["/app/start-worker.sh"]

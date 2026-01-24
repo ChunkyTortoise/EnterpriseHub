@@ -11,7 +11,7 @@ from fastapi import HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from .auth_service import get_auth_service, User, UserRole
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -14,9 +14,17 @@ import time
 import logging
 from contextlib import asynccontextmanager
 
+# Import WebSocket and Socket.IO integration services
+from ghl_real_estate_ai.api.socketio_app import integrate_socketio_with_fastapi
+from ghl_real_estate_ai.services.websocket_server import get_websocket_manager
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+from ghl_real_estate_ai.services.system_health_monitor import start_system_health_monitoring, stop_system_health_monitoring
+from ghl_real_estate_ai.services.coordination_engine import get_coordination_engine
+
 from ghl_real_estate_ai.api.routes import (
     analytics,
     attribution_reports,
+    bot_management,  # Bot Management API for frontend integration
     bulk_operations,
     claude_chat,
     crm,
@@ -97,9 +105,67 @@ async def lifespan(app: FastAPI):
             logger.info(f"Auto-registered primary tenant: {settings.ghl_location_id}")
         except Exception as e:
             logger.error(f"Failed to auto-register primary tenant: {e}")
-            
+
+    # ========================================================================
+    # START WEBSOCKET SERVICES (Phase 3: Real-time Integration)
+    # ========================================================================
+
+    logger.info("Starting WebSocket and real-time services...")
+
+    try:
+        # Start WebSocket manager background services
+        websocket_manager = get_websocket_manager()
+        await websocket_manager.start_services()
+        logger.info("WebSocket manager services started")
+
+        # Start event publisher
+        event_publisher = get_event_publisher()
+        await event_publisher.start()
+        logger.info("Event publisher service started")
+
+        # Start system health monitoring
+        await start_system_health_monitoring()
+        logger.info("System health monitoring started")
+
+        # Initialize Socket.IO integration
+        await integrate_socketio_with_fastapi(app)
+        logger.info("Socket.IO integration completed")
+
+        logger.info("✅ All real-time WebSocket services started successfully")
+
+    except Exception as e:
+        logger.error(f"❌ Failed to start WebSocket services: {e}")
+        # Don't raise here - allow app to start but log the issue
+        logger.warning("WebSocket services failed to start - real-time features may be unavailable")
+
     yield
-    
+
+    # ========================================================================
+    # SHUTDOWN WEBSOCKET SERVICES
+    # ========================================================================
+
+    logger.info("Shutting down WebSocket and real-time services...")
+
+    try:
+        # Stop system health monitoring
+        await stop_system_health_monitoring()
+        logger.info("System health monitoring stopped")
+
+        # Stop event publisher
+        event_publisher = get_event_publisher()
+        await event_publisher.stop()
+        logger.info("Event publisher service stopped")
+
+        # Stop WebSocket manager services
+        websocket_manager = get_websocket_manager()
+        await websocket_manager.stop_services()
+        logger.info("WebSocket manager services stopped")
+
+        logger.info("✅ All real-time services shutdown completed")
+
+    except Exception as e:
+        logger.error(f"❌ Error shutting down WebSocket services: {e}")
+
     # Shutdown logic
     logger.info(f"Shutting down {settings.app_name}")
 
@@ -340,6 +406,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 # Include routers
 app.include_router(websocket_routes.router, prefix="/api")  # Real-time WebSocket endpoints
+app.include_router(bot_management.router, prefix="/api")  # Bot Management API for frontend integration
 app.include_router(webhook.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(bulk_operations.router, prefix="/api")

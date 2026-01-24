@@ -13,7 +13,7 @@ from ghl_real_estate_ai.services.auth_middleware import (
     check_streamlit_auth, set_streamlit_auth, clear_streamlit_auth,
     require_streamlit_permission, format_user_role, get_user_permissions
 )
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 

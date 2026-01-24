@@ -8,12 +8,12 @@ import {
   BuildingOffice2Icon,
   UserGroupIcon,
   PhoneIcon,
-  NavigationIcon,
+  ArrowTopRightOnSquareIcon,
   AdjustmentsHorizontalIcon,
   MagnifyingGlassIcon,
-  LayersIcon,
-  CompassIcon,
-  CrosshairsIcon,
+  Squares2X2Icon,
+  MapIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 
 import useLocationServices from "@/hooks/useLocationServices";
@@ -87,7 +87,7 @@ export function PropertyMap({
     { id: 'listings', name: 'Active Listings', visible: true, color: 'jorge-glow', icon: HomeIcon },
     { id: 'sales', name: 'Recent Sales', visible: true, color: 'jorge-gold', icon: BuildingOffice2Icon },
     { id: 'leads', name: 'Lead Properties', visible: true, color: 'jorge-electric', icon: UserGroupIcon },
-    { id: 'geofences', name: 'Alert Areas', visible: true, color: 'purple-400', icon: CompassIcon },
+    { id: 'geofences', name: 'Alert Areas', visible: true, color: 'purple-400', icon: MapIcon },
   ]);
 
   // Mock properties data - in production, fetch from API
@@ -311,7 +311,7 @@ export function PropertyMap({
                   showFilters ? 'bg-jorge-electric/20 text-jorge-electric' : 'bg-white/10 text-gray-400'
                 }`}
               >
-                <LayersIcon className="w-4 h-4" />
+                <Squares2X2Icon className="w-4 h-4" />
               </button>
               <button
                 onClick={centerOnCurrentLocation}
@@ -325,7 +325,7 @@ export function PropertyMap({
                     className="w-4 h-4 border border-jorge-glow border-t-transparent rounded-full"
                   />
                 ) : (
-                  <CrosshairsIcon className="w-4 h-4" />
+                  <PlusIcon className="w-4 h-4" />
                 )}
               </button>
             </div>
@@ -575,7 +575,7 @@ export function PropertyMap({
               }}
               className="flex items-center justify-center gap-1 py-2 bg-jorge-electric/20 text-jorge-electric text-xs font-semibold rounded jorge-haptic"
             >
-              <NavigationIcon className="w-3 h-3" />
+              <ArrowTopRightOnSquareIcon className="w-3 h-3" />
               Navigate
             </button>
 
@@ -593,7 +593,7 @@ export function PropertyMap({
               onClick={() => handleCreateGeofence(selectedProperty)}
               className="flex items-center justify-center gap-1 py-2 bg-jorge-gold/20 text-jorge-gold text-xs font-semibold rounded jorge-haptic"
             >
-              <CompassIcon className="w-3 h-3" />
+              <MapIcon className="w-3 h-3" />
               Alert
             </button>
           </div>

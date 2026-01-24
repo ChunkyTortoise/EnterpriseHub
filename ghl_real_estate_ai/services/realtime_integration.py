@@ -20,7 +20,7 @@ from typing import Dict, List, Any, Optional, Callable, Union
 from datetime import datetime, timezone
 from dataclasses import dataclass
 
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher, EventType
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.auth_service import UserRole

@@ -23,7 +23,7 @@ import json
 import threading
 import time
 
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)

@@ -20,7 +20,7 @@ import time
 import json
 from dataclasses import dataclass
 
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 

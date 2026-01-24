@@ -10,7 +10,7 @@ import {
   CogIcon,
   ExclamationTriangleIcon,
   PhoneIcon,
-  NavigationIcon,
+  MapIcon,
   ChartBarIcon,
   HomeIcon,
 } from "@heroicons/react/24/outline";
@@ -113,7 +113,7 @@ export function LocationDashboard({
       >
         <h1 className="jorge-display text-2xl">LOCATION INTELLIGENCE</h1>
         <div className="flex items-center justify-center gap-2 text-sm jorge-code text-gray-400">
-          <NavigationIcon className="w-4 h-4 text-jorge-electric" />
+          <MapIcon className="w-4 h-4 text-jorge-electric" />
           <span>GPS TRACKING</span>
           <span>•</span>
           <span className={`${isTracking ? 'text-jorge-glow' : 'text-yellow-400'}`}>
@@ -247,7 +247,7 @@ export function LocationDashboard({
                 disabled={isLoading}
                 className="flex items-center justify-center gap-2 py-2 bg-jorge-glow/20 text-jorge-glow text-xs font-semibold rounded jorge-haptic disabled:opacity-50"
               >
-                <NavigationIcon className="w-4 h-4" />
+                <MapIcon className="w-4 h-4" />
                 REFRESH
               </button>
             </div>
@@ -489,7 +489,7 @@ export function LocationDashboard({
             }}
             className="flex items-center justify-center gap-2 py-3 bg-jorge-electric/20 text-jorge-electric text-xs font-semibold rounded jorge-haptic"
           >
-            <NavigationIcon className="w-4 h-4" />
+            <MapIcon className="w-4 h-4" />
             SHARE LOCATION
           </button>
 

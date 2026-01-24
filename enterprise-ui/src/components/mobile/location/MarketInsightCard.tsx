@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import {
   ChartBarIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   HomeIcon,
   BanknotesIcon,
   CalendarIcon,
@@ -132,7 +132,7 @@ export function MarketInsightCard({
       case 'hot':
         return FireIcon;
       case 'warm':
-        return TrendingUpIcon;
+        return ArrowTrendingUpIcon;
       case 'balanced':
         return ChartBarIcon;
       case 'slow':
@@ -145,9 +145,9 @@ export function MarketInsightCard({
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'increasing':
-        return TrendingUpIcon;
+        return ArrowTrendingUpIcon;
       case 'decreasing':
-        return TrendingDownIcon;
+        return ArrowTrendingDownIcon;
       default:
         return ChartBarIcon;
     }
@@ -257,7 +257,7 @@ export function MarketInsightCard({
         className="jorge-card"
       >
         <h3 className="jorge-heading text-base mb-3 flex items-center gap-2">
-          <TrendingUpIcon className="w-4 h-4 text-jorge-glow" />
+          <ArrowTrendingUpIcon className="w-4 h-4 text-jorge-glow" />
           Price Trends
         </h3>
 

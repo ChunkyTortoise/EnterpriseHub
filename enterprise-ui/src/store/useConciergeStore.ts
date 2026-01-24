@@ -18,6 +18,7 @@ import type {
   ProactiveSuggestion
 } from '@/lib/claude-concierge/ClaudeConciergeService'
 import type { PlatformContext } from '@/lib/claude-concierge/ContextManager'
+import type { BotSession, CoordinationMetrics, HandoffResult, CoachingResult } from '@/lib/claude-concierge/BotCoordinationEngine'
 
 export interface ConciergeConversation {
   id: string
@@ -76,6 +77,20 @@ export interface ConciergeState {
   errorCount: number
   totalInteractions: number
 
+  // ✨ Omnipresent Coordination State
+  omnipresentMonitoring: {
+    enabled: boolean
+    activeConversations: string[]
+    monitoringStartedAt: string | null
+  }
+  coordinationMetrics: CoordinationMetrics | null
+  activeBotSessions: BotSession[]
+  realtimeCoaching: {
+    enabled: boolean
+    lastCoachingEvent: string | null
+    coachingHistory: CoachingResult[]
+  }
+
   // Actions - Initialization
   initializeConcierge: () => Promise<void>
   resetService: () => void
@@ -98,11 +113,20 @@ export interface ConciergeState {
 
   // Actions - Bot Integration
   acceptHandoff: (handoff: BotHandoffRecommendation) => Promise<void>
-  executeAction: (action: SuggestedAction) => Promise<void>
 
-  // Actions - Context Tracking
+  // ✨ Actions - Omnipresent Coordination
+  enableOmnipresentAwareness: (conversationId: string, contactId: string, locationId: string) => Promise<void>
+  disableOmnipresentAwareness: (conversationId: string) => void
+  orchestrateBotHandoff: (conversationId: string, targetBot: 'jorge-seller' | 'lead-bot' | 'intent-decoder', reason: string, urgency?: 'immediate' | 'scheduled' | 'background') => Promise<HandoffResult>
+  provideRealTimeCoaching: (conversationId: string, coachingType: 'response_optimization' | 'timing_adjustment' | 'strategy_pivot' | 'objection_handling' | 'temperature_escalation') => Promise<CoachingResult>
+  syncContextAcrossBots: (conversationId: string) => Promise<void>
+  refreshCoordinationMetrics: () => void
+  toggleRealtimeCoaching: (enabled: boolean) => void
+
+  // Actions - Context Tracking & Actions
   trackPageView: (route: string) => void
-  trackUserAction: (action: any) => void
+  trackUserAction: (action: string, data?: any) => void
+  executeAction: (action: SuggestedAction) => Promise<void>
 
   // Actions - Analytics
   getPerformanceMetrics: () => any
@@ -129,6 +153,20 @@ export const useConciergeStore = create<ConciergeState>()(
       proactiveSuggestions: [],
       lastSuggestionUpdate: null,
       suggestionsEnabled: true,
+
+      // ✨ Omnipresent Coordination Initial State
+      omnipresentMonitoring: {
+        enabled: false,
+        activeConversations: [],
+        monitoringStartedAt: null,
+      },
+      coordinationMetrics: null,
+      activeBotSessions: [],
+      realtimeCoaching: {
+        enabled: true, // Default enabled for Jorge methodology
+        lastCoachingEvent: null,
+        coachingHistory: [],
+      },
 
       responseTimeHistory: [],
       errorCount: 0,
@@ -197,13 +235,16 @@ export const useConciergeStore = create<ConciergeState>()(
         })
       },
 
-      // Send message to Concierge
+      // Send message to Concierge with bulletproof error handling
       sendMessage: async (message: string) => {
         const state = get()
         const startTime = Date.now()
+        const correlationId = `concierge_msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
         if (!state.conciergeService || !state.isInitialized) {
-          throw new Error('Concierge service not initialized')
+          const error = new Error('Concierge service not initialized')
+          console.error('🚨 CONCIERGE NOT INITIALIZED:', { correlationId })
+          throw error
         }
 
         const conversationId = state.activeConversationId || get().createConversation()
@@ -228,10 +269,23 @@ export const useConciergeStore = create<ConciergeState>()(
         }))
 
         try {
-          // Capture current platform context
-          const platformContext = await state.contextManager?.captureContext()
+          // Import error handling utilities
+          const { errorService, withRetry } = await import('@/lib/errors/ErrorService')
 
-          // Stream response from Concierge
+          // Capture current platform context with retry
+          const platformContext = await withRetry(
+            async () => {
+              if (!state.contextManager) {
+                throw new Error('Context manager not available')
+              }
+              return state.contextManager.captureContext()
+            },
+            'context_capture',
+            { maxRetries: 2, initialDelayMs: 500 },
+            { correlationId, logToConsole: false }
+          )
+
+          // Stream response from Concierge with enhanced error handling
           const responseGenerator = state.conciergeService.chat({
             userMessage: message,
             conversationId,
@@ -239,19 +293,70 @@ export const useConciergeStore = create<ConciergeState>()(
           })
 
           let fullResponse = ''
+          let streamError: any = null
 
-          // Process streaming response
-          for await (const chunk of responseGenerator) {
-            fullResponse += chunk
+          try {
+            // Process streaming response with error detection
+            for await (const chunk of responseGenerator) {
+              fullResponse += chunk
 
-            // Update assistant message in real-time
-            set((state) => {
-              const conversation = state.conversations[conversationId]
-              const messages = conversation.messages
-              const lastMessage = messages[messages.length - 1]
+              // Update assistant message in real-time
+              set((state) => {
+                const conversation = state.conversations[conversationId]
+                const messages = conversation.messages
+                const lastMessage = messages[messages.length - 1]
 
-              // If last message is from assistant, update it; otherwise add new
-              if (lastMessage?.role === 'assistant') {
+                // If last message is from assistant, update it; otherwise add new
+                if (lastMessage?.role === 'assistant') {
+                  return {
+                    conversations: {
+                      ...state.conversations,
+                      [conversationId]: {
+                        ...conversation,
+                        messages: [
+                          ...messages.slice(0, -1),
+                          {
+                            ...lastMessage,
+                            content: fullResponse,
+                            timestamp: new Date().toISOString(),
+                          }
+                        ]
+                      }
+                    }
+                  }
+                } else {
+                  return {
+                    conversations: {
+                      ...state.conversations,
+                      [conversationId]: {
+                        ...conversation,
+                        messages: [
+                          ...messages,
+                          {
+                            role: 'assistant',
+                            content: fullResponse,
+                            timestamp: new Date().toISOString(),
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              })
+            }
+
+            // Get final response with metadata
+            const finalResponse = await responseGenerator.return()
+
+            if (finalResponse) {
+              const processingTime = Date.now() - startTime
+
+              // Update final message with metadata
+              set((state) => {
+                const conversation = state.conversations[conversationId]
+                const messages = conversation.messages
+                const lastMessage = messages[messages.length - 1]
+
                 return {
                   conversations: {
                     ...state.conversations,
@@ -261,79 +366,35 @@ export const useConciergeStore = create<ConciergeState>()(
                         ...messages.slice(0, -1),
                         {
                           ...lastMessage,
-                          content: fullResponse,
-                          timestamp: new Date().toISOString(),
+                          content: finalResponse.content,
+                          metadata: {
+                            reasoning: finalResponse.reasoning,
+                            suggestedActions: finalResponse.suggestedActions,
+                            handoffRecommendation: finalResponse.botHandoff,
+                            processingTime,
+                            correlationId
+                          }
                         }
-                      ]
-                    }
-                  }
-                }
-              } else {
-                return {
-                  conversations: {
-                    ...state.conversations,
-                    [conversationId]: {
-                      ...conversation,
-                      messages: [
-                        ...messages,
-                        {
-                          role: 'assistant',
-                          content: fullResponse,
-                          timestamp: new Date().toISOString(),
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            })
-          }
-
-          // Get final response with metadata
-          const finalResponse = await responseGenerator.return()
-
-          if (finalResponse) {
-            const processingTime = Date.now() - startTime
-
-            // Update final message with metadata
-            set((state) => {
-              const conversation = state.conversations[conversationId]
-              const messages = conversation.messages
-              const lastMessage = messages[messages.length - 1]
-
-              return {
-                conversations: {
-                  ...state.conversations,
-                  [conversationId]: {
-                    ...conversation,
-                    messages: [
-                      ...messages.slice(0, -1),
-                      {
-                        ...lastMessage,
-                        content: finalResponse.content,
-                        metadata: {
-                          reasoning: finalResponse.reasoning,
-                          suggestedActions: finalResponse.suggestedActions,
-                          handoffRecommendation: finalResponse.botHandoff,
-                          processingTime,
-                        }
+                      ],
+                      metadata: {
+                        ...conversation.metadata,
+                        totalInteractions: (conversation.metadata?.totalInteractions || 0) + 1,
+                        avgResponseTime: conversation.metadata?.avgResponseTime
+                          ? (conversation.metadata.avgResponseTime + processingTime) / 2
+                          : processingTime,
                       }
-                    ],
-                    metadata: {
-                      ...conversation.metadata,
-                      totalInteractions: (conversation.metadata?.totalInteractions || 0) + 1,
-                      avgResponseTime: conversation.metadata?.avgResponseTime
-                        ? (conversation.metadata.avgResponseTime + processingTime) / 2
-                        : processingTime,
                     }
-                  }
-                },
-                isTyping: false,
-                lastResponseTime: processingTime,
-                responseTimeHistory: [...state.responseTimeHistory, processingTime].slice(-10), // Keep last 10
-                totalInteractions: state.totalInteractions + 1
-              }
-            })
+                  },
+                  isTyping: false,
+                  lastResponseTime: processingTime,
+                  responseTimeHistory: [...state.responseTimeHistory, processingTime].slice(-10),
+                  totalInteractions: state.totalInteractions + 1
+                }
+              })
+            }
+          } catch (streamProcessingError) {
+            streamError = streamProcessingError
+            throw streamProcessingError
           }
 
           // Track successful interaction
@@ -343,17 +404,72 @@ export const useConciergeStore = create<ConciergeState>()(
             processingTime: Date.now() - startTime,
             messageLength: message.length,
             responseLength: fullResponse.length,
+            correlationId,
             timestamp: new Date().toISOString()
           })
 
         } catch (error) {
-          console.error('Concierge message failed:', error)
+          // 🚨 CRITICAL: Enhanced error handling - never silent failures
+          const { errorService } = await import('@/lib/errors/ErrorService')
+          const errorInfo = await errorService.handleError(
+            error,
+            'ConciergeStore.sendMessage',
+            {
+              correlationId,
+              reportToService: true,
+              logToConsole: true
+            }
+          )
 
-          // Add error message
+          console.error('🚨 CONCIERGE MESSAGE FAILED [NEVER SILENT]:', {
+            errorId: errorInfo.id,
+            conversationId,
+            correlationId,
+            messagePreview: message.substring(0, 100) + '...',
+            severity: errorInfo.severity,
+            retryable: errorInfo.shouldRetry,
+            userMessage: errorInfo.userMessage
+          })
+
+          // Create intelligent error message based on error type
+          let errorContent = errorInfo.userMessage
+
+          // Add specific guidance based on error category
+          if (errorInfo.category === 'network') {
+            errorContent += ' I\'ll automatically retry when your connection is restored.'
+          } else if (errorInfo.category === 'api') {
+            errorContent += ' The issue appears to be temporary. You can try asking your question again.'
+          } else {
+            errorContent += ' You can also try starting a conversation with one of the specialized Jorge bots.'
+          }
+
+          // Add helpful actions
           const errorMessage: ConciergeMessage = {
             role: 'assistant',
-            content: 'I apologize, but I encountered an error processing your request. Please try again or let me help you navigate the platform directly.',
+            content: errorContent,
             timestamp: new Date().toISOString(),
+            metadata: {
+              errorInfo: {
+                id: errorInfo.id,
+                code: errorInfo.code,
+                category: errorInfo.category,
+                retryable: errorInfo.shouldRetry
+              },
+              suggestedActions: [
+                {
+                  type: 'navigation' as const,
+                  label: 'Try Jorge Seller Bot',
+                  description: 'Start seller qualification directly',
+                  data: { route: '/jorge?tab=seller-bot' }
+                },
+                {
+                  type: 'navigation' as const,
+                  label: 'View Dashboard',
+                  description: 'Return to main dashboard',
+                  data: { route: '/jorge' }
+                }
+              ]
+            }
           }
 
           set((state) => ({
@@ -369,14 +485,20 @@ export const useConciergeStore = create<ConciergeState>()(
             errorCount: state.errorCount + 1
           }))
 
-          // Track error
+          // Track detailed error metrics
           get().trackUserAction({
             type: 'concierge_error',
-            error: error instanceof Error ? error.message : 'Unknown error',
+            errorId: errorInfo.id,
+            errorCode: errorInfo.code,
+            errorCategory: errorInfo.category,
+            retryable: errorInfo.shouldRetry,
+            correlationId,
+            error: errorInfo.message,
             timestamp: new Date().toISOString()
           })
 
-          throw error
+          // Re-throw for upstream handling if needed
+          throw errorInfo
         }
       },
 
@@ -666,6 +788,200 @@ export const useConciergeStore = create<ConciergeState>()(
           totalInteractions: 0,
           lastResponseTime: 0
         })
+      },
+
+      // ✨ OMNIPRESENT COORDINATION ACTIONS
+
+      // Enable omnipresent awareness for a conversation
+      enableOmnipresentAwareness: async (conversationId: string, contactId: string, locationId: string) => {
+        try {
+          const state = get()
+          if (!state.conciergeService) {
+            throw new Error('Concierge service not initialized')
+          }
+
+          // Enable omnipresent monitoring
+          await state.conciergeService.enableOmnipresentAwareness(conversationId, contactId, locationId)
+
+          // Update state
+          const updatedActiveConversations = [...state.omnipresentMonitoring.activeConversations]
+          if (!updatedActiveConversations.includes(conversationId)) {
+            updatedActiveConversations.push(conversationId)
+          }
+
+          set({
+            omnipresentMonitoring: {
+              enabled: true,
+              activeConversations: updatedActiveConversations,
+              monitoringStartedAt: state.omnipresentMonitoring.monitoringStartedAt || new Date().toISOString()
+            }
+          })
+
+          // Refresh coordination metrics
+          get().refreshCoordinationMetrics()
+
+          console.log(`🎯 Omnipresent awareness enabled for conversation ${conversationId}`)
+        } catch (error) {
+          console.error('Failed to enable omnipresent awareness:', error)
+          throw error
+        }
+      },
+
+      // Disable omnipresent awareness for a conversation
+      disableOmnipresentAwareness: (conversationId: string) => {
+        const state = get()
+        const updatedActiveConversations = state.omnipresentMonitoring.activeConversations.filter(
+          id => id !== conversationId
+        )
+
+        set({
+          omnipresentMonitoring: {
+            ...state.omnipresentMonitoring,
+            activeConversations: updatedActiveConversations,
+            enabled: updatedActiveConversations.length > 0
+          }
+        })
+
+        console.log(`🔄 Omnipresent awareness disabled for conversation ${conversationId}`)
+      },
+
+      // Orchestrate bot handoff with Jorge methodology
+      orchestrateBotHandoff: async (
+        conversationId: string,
+        targetBot: 'jorge-seller' | 'lead-bot' | 'intent-decoder',
+        reason: string,
+        urgency: 'immediate' | 'scheduled' | 'background' = 'scheduled'
+      ): Promise<HandoffResult> => {
+        try {
+          const state = get()
+          if (!state.conciergeService) {
+            throw new Error('Concierge service not initialized')
+          }
+
+          // Execute handoff through the omnipresent service
+          const result = await state.conciergeService.orchestrateBotHandoff(
+            conversationId,
+            targetBot,
+            reason,
+            urgency
+          )
+
+          // Track handoff in conversation metadata
+          if (result.success && state.conversations[conversationId]) {
+            const conversation = state.conversations[conversationId]
+            set({
+              conversations: {
+                ...state.conversations,
+                [conversationId]: {
+                  ...conversation,
+                  metadata: {
+                    ...conversation.metadata,
+                    handoffsGenerated: (conversation.metadata?.handoffsGenerated || 0) + 1
+                  }
+                }
+              }
+            })
+          }
+
+          // Refresh coordination metrics
+          get().refreshCoordinationMetrics()
+
+          return result
+        } catch (error) {
+          console.error('Bot handoff orchestration failed:', error)
+          throw error
+        }
+      },
+
+      // Provide real-time coaching to active bots
+      provideRealTimeCoaching: async (
+        conversationId: string,
+        coachingType: 'response_optimization' | 'timing_adjustment' | 'strategy_pivot' | 'objection_handling' | 'temperature_escalation'
+      ): Promise<CoachingResult> => {
+        try {
+          const state = get()
+          if (!state.conciergeService) {
+            throw new Error('Concierge service not initialized')
+          }
+
+          if (!state.realtimeCoaching.enabled) {
+            throw new Error('Real-time coaching is disabled')
+          }
+
+          // Provide coaching through the omnipresent service
+          const result = await state.conciergeService.provideRealTimeCoaching(conversationId, coachingType)
+
+          // Update coaching history
+          set({
+            realtimeCoaching: {
+              ...state.realtimeCoaching,
+              lastCoachingEvent: new Date().toISOString(),
+              coachingHistory: [
+                ...state.realtimeCoaching.coachingHistory.slice(-19), // Keep last 20
+                result
+              ]
+            }
+          })
+
+          console.log(`🎓 Real-time coaching provided: ${coachingType}`)
+          return result
+        } catch (error) {
+          console.error('Real-time coaching failed:', error)
+          throw error
+        }
+      },
+
+      // Sync context across all bots
+      syncContextAcrossBots: async (conversationId: string) => {
+        try {
+          const state = get()
+          if (!state.conciergeService) {
+            throw new Error('Concierge service not initialized')
+          }
+
+          await state.conciergeService.syncContextAcrossBots(conversationId)
+
+          // Track context sync
+          state.contextManager?.trackUIInteraction('concierge', 'context_sync', {
+            conversationId,
+            timestamp: new Date().toISOString()
+          })
+
+          console.log(`🔄 Context synchronized across bots for ${conversationId}`)
+        } catch (error) {
+          console.error('Context sync failed:', error)
+          throw error
+        }
+      },
+
+      // Refresh coordination metrics
+      refreshCoordinationMetrics: () => {
+        try {
+          const state = get()
+          if (!state.conciergeService) return
+
+          const metrics = state.conciergeService.getCoordinationMetrics()
+          const sessions = state.conciergeService.getActiveBotSessions()
+
+          set({
+            coordinationMetrics: metrics,
+            activeBotSessions: sessions
+          })
+        } catch (error) {
+          console.error('Failed to refresh coordination metrics:', error)
+        }
+      },
+
+      // Toggle real-time coaching
+      toggleRealtimeCoaching: (enabled: boolean) => {
+        const state = get()
+        set({
+          realtimeCoaching: {
+            ...state.realtimeCoaching,
+            enabled
+          }
+        })
+        console.log(`🎓 Real-time coaching ${enabled ? 'enabled' : 'disabled'}`)
       },
     }),
     {

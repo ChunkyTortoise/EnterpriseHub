@@ -1,0 +1,331 @@
+# CloudFlare CDN Configuration for Jorge's Real Estate AI Platform
+# Optimized for <2s frontend load time and global performance
+
+apiVersion: v1
+kind: CloudFlareConfig
+metadata:
+  name: jorge-real-estate-cdn
+  description: "CDN optimization for sub-2s frontend load times"
+
+# CloudFlare Zone Configuration
+zone:
+  name: "jorge-real-estate.com"  # Replace with actual domain
+  plan: "pro"  # Pro plan required for advanced features
+
+# Performance Optimizations
+cache:
+  # Static Assets - Long-term caching
+  browser_cache:
+    - pattern: "*.js"
+      ttl: "1y"
+      edge_ttl: "1y"
+      cache_level: "cache_everything"
+    - pattern: "*.css"
+      ttl: "1y"
+      edge_ttl: "1y"
+      cache_level: "cache_everything"
+    - pattern: "*.woff2"
+      ttl: "1y"
+      edge_ttl: "1y"
+      cache_level: "cache_everything"
+    - pattern: "*.png"
+      ttl: "1y"
+      edge_ttl: "1y"
+      cache_level: "cache_everything"
+    - pattern: "*.jpg"
+      ttl: "1y"
+      edge_ttl: "1y"
+      cache_level: "cache_everything"
+    - pattern: "*.svg"
+      ttl: "1y"
+      edge_ttl: "1y"
+      cache_level: "cache_everything"
+
+  # API Responses - Short-term caching
+  api_cache:
+    - pattern: "/api/v1/ml/score*"
+      ttl: "5m"
+      edge_ttl: "5m"
+      cache_level: "cache_everything"
+      cache_key_fields:
+        - "lead_id"
+        - "authorization"
+    - pattern: "/api/v1/analytics/*"
+      ttl: "15m"
+      edge_ttl: "15m"
+      cache_level: "cache_everything"
+    - pattern: "/api/v1/properties/search*"
+      ttl: "10m"
+      edge_ttl: "10m"
+      cache_level: "cache_everything"
+
+  # Dynamic Content - No caching
+  bypass_cache:
+    - pattern: "/api/v1/auth/*"
+    - pattern: "/api/v1/webhooks/*"
+    - pattern: "/api/v1/real-time/*"
+
+# Compression Settings
+compression:
+  brotli: true
+  gzip: true
+  compression_level: 6  # Balanced compression for performance
+  file_types:
+    - "text/html"
+    - "text/css"
+    - "text/javascript"
+    - "application/javascript"
+    - "application/json"
+    - "text/xml"
+    - "image/svg+xml"
+
+# Minification
+minification:
+  css: true
+  html: true
+  javascript: true
+
+# Image Optimization
+image_optimization:
+  polish: "lossless"  # Lossless compression for real estate images
+  formats:
+    - "webp"
+    - "avif"  # Next-gen format support
+  resize: true
+  quality: 85  # Balance quality vs size for property photos
+
+# Rocket Loader (async JS loading)
+rocket_loader: true
+
+# Auto Minify
+auto_minify:
+  css: true
+  html: true
+  js: true
+
+# Security Headers
+security_headers:
+  hsts:
+    enabled: true
+    max_age: 31536000
+    include_subdomains: true
+    preload: true
+
+  content_security_policy:
+    enabled: true
+    policy: |
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' *.anthropic.com *.claude.ai;
+      style-src 'self' 'unsafe-inline' fonts.googleapis.com;
+      font-src 'self' fonts.gstatic.com;
+      img-src 'self' data: https:;
+      connect-src 'self' *.anthropic.com wss: ws:;
+      frame-ancestors 'none';
+      base-uri 'self';
+      form-action 'self';
+
+  x_frame_options: "DENY"
+  x_content_type_options: "nosniff"
+  x_xss_protection: "1; mode=block"
+  referrer_policy: "strict-origin-when-cross-origin"
+
+# Page Rules for Performance
+page_rules:
+  # Frontend Assets - Maximum performance
+  - url: "jorge-real-estate.com/_next/static/*"
+    settings:
+      cache_level: "cache_everything"
+      edge_cache_ttl: "1y"
+      browser_cache_ttl: "1y"
+
+  # API Endpoints - Intelligent caching
+  - url: "jorge-real-estate.com/api/v1/ml/score*"
+    settings:
+      cache_level: "cache_everything"
+      edge_cache_ttl: "5m"
+      browser_cache_ttl: "0"  # Don't cache in browser for fresh data
+
+  # Main Application - Standard caching
+  - url: "jorge-real-estate.com/*"
+    settings:
+      cache_level: "standard"
+      browser_cache_ttl: "1h"
+      edge_cache_ttl: "1h"
+
+# Origin Configuration
+origin:
+  # Primary origin (Vercel)
+  primary:
+    address: "jorge-real-estate.vercel.app"  # Replace with actual Vercel URL
+    port: 443
+    ssl: true
+
+  # Load balancing (if multiple origins)
+  load_balancing:
+    enabled: false
+
+# Geographic Configuration
+geo:
+  # Primary regions for real estate market
+  primary_regions:
+    - "US"
+    - "CA"
+
+  # Bandwidth optimization by region
+  bandwidth_optimization:
+    enabled: true
+    regions: ["US", "CA", "MX"]
+
+# Workers Configuration (for edge computing)
+workers:
+  # Edge API optimization worker
+  - name: "api-optimizer"
+    script: |
+      addEventListener('fetch', event => {
+        event.respondWith(handleRequest(event.request))
+      })
+
+      async function handleRequest(request) {
+        const url = new URL(request.url)
+
+        // Add performance headers
+        if (url.pathname.startsWith('/api/')) {
+          const response = await fetch(request)
+          const newResponse = new Response(response.body, response)
+
+          newResponse.headers.set('X-Edge-Optimized', 'true')
+          newResponse.headers.set('X-Performance-Target', '<100ms')
+
+          return newResponse
+        }
+
+        return fetch(request)
+      }
+    routes:
+      - "jorge-real-estate.com/api/*"
+
+# Performance Monitoring
+monitoring:
+  real_user_monitoring:
+    enabled: true
+
+  analytics:
+    enabled: true
+
+  performance_insights:
+    enabled: true
+    thresholds:
+      first_contentful_paint: "1.5s"
+      largest_contentful_paint: "2.5s"
+      first_input_delay: "100ms"
+      cumulative_layout_shift: "0.1"
+
+# DDoS Protection
+ddos_protection:
+  sensitivity: "medium"
+
+# Bot Management
+bot_management:
+  enabled: true
+  fight_mode: false  # Don't break legitimate bots
+
+# Rate Limiting
+rate_limiting:
+  # API endpoints
+  - pattern: "/api/v1/ml/score*"
+    requests_per_minute: 60
+    period: "1m"
+
+  - pattern: "/api/*"
+    requests_per_minute: 300
+    period: "1m"
+
+  # General site
+  - pattern: "/*"
+    requests_per_minute: 1000
+    period: "1m"
+
+# Development Settings
+development:
+  # Development mode settings
+  always_online: true
+  development_mode: false  # Set to true for testing
+  purge_cache_on_deploy: true
+
+# Deployment Configuration
+deployment:
+  # Automatic deployment triggers
+  triggers:
+    - event: "git_push"
+      branch: "main"
+      action: "purge_cache"
+
+    - event: "vercel_deploy"
+      action: "warm_cache"
+
+  # Cache warming after deployment
+  cache_warming:
+    enabled: true
+    urls:
+      - "/"
+      - "/dashboard"
+      - "/api/v1/health"
+      - "/_next/static/css/*"
+      - "/_next/static/js/*"
+
+# Cost Optimization
+cost_optimization:
+  # Bandwidth alliance
+  bandwidth_alliance: true
+
+  # Argo Smart Routing (requires Argo plan)
+  argo_smart_routing: false  # Enable if budget allows
+
+  # Argo Tunnel (for secure origin)
+  argo_tunnel: false
+
+# Expected Performance Impact
+expected_performance:
+  frontend_load_time:
+    current: "2.5s"
+    target: "<2s"
+    improvement: "20%"
+
+  cache_hit_rate:
+    target: ">90%"
+
+  bandwidth_savings:
+    compression: "60-80%"
+    image_optimization: "30-50%"
+
+  global_latency:
+    improvement: "40-60ms"
+
+# Monitoring & Alerts
+alerts:
+  performance_degradation:
+    threshold: ">3s load time"
+    action: "notify_team"
+
+  cache_hit_rate_low:
+    threshold: "<80%"
+    action: "investigate_cache_config"
+
+  origin_errors:
+    threshold: ">5% error rate"
+    action: "check_origin_health"
+
+# Notes for Implementation
+implementation_notes: |
+  1. Replace 'jorge-real-estate.com' with actual domain
+  2. Update Vercel origin address
+  3. Adjust cache TTLs based on content update frequency
+  4. Monitor performance metrics after implementation
+  5. Consider Argo Smart Routing for premium performance
+  6. Test thoroughly in development mode first
+  7. Implement gradual rollout for production
+
+# Version and Maintenance
+config_version: "1.0.0"
+last_updated: "2026-01-24"
+maintenance_schedule: "Weekly cache performance review"

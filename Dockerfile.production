@@ -1,83 +1,158 @@
-# Multi-stage production Dockerfile for optimal performance
-FROM python:3.11-slim as base
+# Jorge's Real Estate AI Platform - Enhanced Production Dockerfile
+# Multi-stage build optimized for CI/CD deployment automation
+# Supports both API and Worker modes with advanced security and monitoring
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
+# =============================================================================
+# Build Arguments and Metadata
+# =============================================================================
+ARG BUILD_DATE
+ARG VERSION
+ARG VCS_REF
+ARG PYTHON_VERSION=3.11
+
+# =============================================================================
+# Base Stage: Common Dependencies
+# =============================================================================
+FROM python:${PYTHON_VERSION}-slim-bullseye AS base
+
+# Metadata labels
+LABEL maintainer="Jorge Platform Team"
+LABEL org.label-schema.build-date=$BUILD_DATE
+LABEL org.label-schema.name="jorge-platform-production"
+LABEL org.label-schema.description="Jorge's Real Estate AI Platform - Production Runtime"
+LABEL org.label-schema.url="https://jorge-platform.com"
+LABEL org.label-schema.vcs-ref=$VCS_REF
+LABEL org.label-schema.version=$VERSION
+LABEL org.label-schema.schema-version="1.0"
+LABEL jorge.platform="true"
+LABEL jorge.version=$VERSION
+LABEL jorge.component="production-runtime"
+
+# Production environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONHASHSEED=random \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    ENVIRONMENT="production" \
+    LOG_LEVEL="INFO" \
+    WORKERS=1 \
+    TIMEOUT=120 \
+    KEEP_ALIVE=5 \
+    MAX_REQUESTS=1000 \
+    MAX_REQUESTS_JITTER=50
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies with security focus
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    dumb-init \
+    netcat-openbsd \
+    postgresql-client \
+    redis-tools \
+    ca-certificates \
     git \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/cache/apt/archives/*
 
-# ==============================================================================
-# Dependencies Stage
-# ==============================================================================
-FROM base as dependencies
+# =============================================================================
+# Dependencies Stage: Python Package Installation
+# =============================================================================
+FROM base AS dependencies
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy requirements files for better caching
+COPY requirements.txt requirements-prod.txt ./
+COPY ghl_real_estate_ai/requirements_clean.txt ./ghl_requirements.txt
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Create virtual environment and install dependencies
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# ==============================================================================
-# Development Stage
-# ==============================================================================
-FROM dependencies as development
+# Install Python dependencies with optimizations
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements-prod.txt && \
+    pip install --no-cache-dir \
+        gunicorn[gthread] \
+        uvicorn[standard] \
+        prometheus-client \
+        structlog
+
+# =============================================================================
+# Development Stage (for local development)
+# =============================================================================
+FROM dependencies AS development
 
 # Copy source code
 COPY . .
 
 # Set PYTHONPATH
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app \
+    ENVIRONMENT="development"
 
-# Expose ports
-EXPOSE 8501 8000 9090
+# Development tools
+RUN pip install --no-cache-dir \
+    pytest \
+    pytest-asyncio \
+    pytest-cov \
+    black \
+    ruff
 
-# Development command
+# Expose ports for development
+EXPOSE 8000 8501 9090 5678
+
+# Development command (Streamlit for legacy UI)
 CMD ["streamlit", "run", "ghl_real_estate_ai/streamlit_demo/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
 
-# ==============================================================================
-# Production Stage
-# ==============================================================================
-FROM dependencies as production
+# =============================================================================
+# Production Stage: Optimized Runtime
+# =============================================================================
+FROM base AS production
 
-# Create non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# Copy virtual environment from dependencies stage
+COPY --from=dependencies /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy source code with proper ownership
-COPY --chown=appuser:appuser . .
+# Create non-root user with specific UID/GID for security
+RUN groupadd -g 1001 jorge && \
+    useradd -r -u 1001 -g jorge -d /home/jorge -s /bin/bash jorge && \
+    mkdir -p /home/jorge && \
+    chown jorge:jorge /home/jorge
 
-# Set PYTHONPATH
-ENV PYTHONPATH=/app
+# Create application directories with proper permissions
+RUN mkdir -p /app/logs /app/metrics /app/cache /app/data /app/tmp && \
+    chown -R jorge:jorge /app
 
-# Install production dependencies
-RUN pip install --no-cache-dir gunicorn uvicorn[standard]
+# Copy application source code with proper ownership
+COPY --chown=jorge:jorge ghl_real_estate_ai/ ./ghl_real_estate_ai/
+COPY --chown=jorge:jorge bots/ ./bots/
+COPY --chown=jorge:jorge scripts/ ./scripts/
+COPY --chown=jorge:jorge *.py ./
+COPY --chown=jorge:jorge requirements*.txt ./
 
-# Create necessary directories
-RUN mkdir -p /app/logs /app/metrics /app/cache && \
-    chown -R appuser:appuser /app/logs /app/metrics /app/cache
+# Copy and configure production entrypoint
+COPY --chown=jorge:jorge scripts/docker-entrypoint-production.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh && \
+    chmod +x scripts/*.sh
 
-# Switch to non-root user
-USER appuser
+# Set PYTHONPATH for production
+ENV PYTHONPATH="/app:$PYTHONPATH"
 
-# Health check
+# Security: Switch to non-root user
+USER jorge
+
+# Configure health check for API mode
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8501/health || exit 1
+    CMD curl -f http://localhost:8000/health || exit 1
 
-# Expose ports
-EXPOSE 8501 8000 9090
+# Expose production ports
+EXPOSE 8000
 
-# Production startup script
-COPY --chown=appuser:appuser scripts/start-production.sh /app/start-production.sh
-RUN chmod +x /app/start-production.sh
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "/docker-entrypoint.sh"]
 
-CMD ["/app/start-production.sh"]
+# Default to API mode (can be overridden for worker mode)
+CMD ["api"]

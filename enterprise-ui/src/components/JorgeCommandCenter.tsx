@@ -31,7 +31,7 @@ import { jorgeApi, jorgeQueryKeys, type JorgeBotStatus } from '@/lib/jorge-api-c
 import { useChatStore } from '@/store/useChatStore'
 import JorgeChatInterface from './JorgeChatInterface'
 import { useWebSocket } from '@/components/providers/WebSocketProvider'
-import { useBotStatus, type BotStatusMap } from '@/lib/hooks/useBotStatus'
+import useBotStatus, { type BotStatusMap } from '@/lib/hooks/useBotStatus'
 import { useRealTimeMetrics } from '@/lib/hooks/useRealTimeMetrics'
 
 interface BotPerformanceCardProps {
@@ -103,17 +103,19 @@ function BotPerformanceCard({
   }
   
   return (
-    <Card className="h-full hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500">
-      <CardHeader className="pb-3">
+    <Card className="h-full jorge-card jorge-card-hover border-l-4 border-l-blue-500 overflow-hidden">
+      <CardHeader className="pb-3 relative">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Bot className="w-8 h-8 text-blue-600" />
-              <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${statusColor}`} />
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <Bot className="w-6 h-6 text-blue-500" />
+              </div>
+              <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-card ${statusColor}`} />
             </div>
             <div>
-              <CardTitle className="text-lg font-bold">{bot.name}</CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
+              <CardTitle className="text-lg font-bold text-white">{bot.name}</CardTitle>
+              <p className="text-xs text-gray-400 mt-1 line-clamp-1">
                 {getBotDescription(bot.id)}
               </p>
             </div>
@@ -121,19 +123,20 @@ function BotPerformanceCard({
           
           <div className="flex items-center gap-2">
             {isRealTimeConnected && (
-              <Wifi className="w-3 h-3 text-green-500" title="Real-time connected" />
+              <Wifi className="w-3 h-3 text-jorge-glow animate-pulse" title="Real-time connected" />
             )}
             <Badge
               variant="outline"
-              className={`${
+              className={cn(
+                "jorge-code text-[10px]",
                 currentStatus === 'active' || currentStatus === 'online'
-                  ? 'bg-green-50 text-green-700 border-green-200'
+                  ? 'bg-green-500/10 text-green-400 border-green-500/20'
                   : currentStatus === 'processing'
-                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                   : currentStatus === 'error'
-                  ? 'bg-red-50 text-red-700 border-red-200'
-                  : 'bg-gray-50 text-gray-600'
-              }`}
+                  ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                  : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+              )}
             >
               {statusText}
             </Badge>
@@ -144,46 +147,46 @@ function BotPerformanceCard({
       <CardContent className="space-y-4">
         {/* Current Step (if real-time connected) */}
         {isRealTimeConnected && currentStep && currentStep !== 'Ready' && (
-          <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="p-2 bg-blue-500/5 border border-blue-500/10 rounded-lg">
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-blue-600" />
-              <div className="text-sm font-medium text-blue-800">Current Step:</div>
+              <Activity className="w-3 h-3 text-blue-400" />
+              <div className="text-[10px] jorge-code text-blue-300">Current Step:</div>
             </div>
-            <div className="text-sm text-blue-700 mt-1">{currentStep}</div>
+            <div className="text-xs text-blue-200 mt-1 font-medium">{currentStep}</div>
           </div>
         )}
 
         {/* Performance Metrics */}
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <div className="text-lg font-bold text-blue-700">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="p-2 bg-blue-500/5 rounded-lg border border-blue-500/10">
+            <div className="text-lg font-bold text-blue-400">
               {activeConversations}
               {isRealTimeConnected && (
                 <Loader2 className="w-3 h-3 inline ml-1 animate-pulse" />
               )}
             </div>
-            <div className="text-xs text-blue-600">
-              {isRealTimeConnected ? 'Active Now' : 'Today'}
+            <div className="text-[10px] jorge-code text-blue-500/70">
+              {isRealTimeConnected ? 'Active' : 'Today'}
             </div>
           </div>
-          <div className="p-2 bg-green-50 rounded-lg">
-            <div className="text-lg font-bold text-green-700">{bot.leadsQualified}</div>
-            <div className="text-xs text-green-600">Qualified</div>
+          <div className="p-2 bg-jorge-glow/5 rounded-lg border border-jorge-glow/10">
+            <div className="text-lg font-bold text-jorge-glow">{bot.leadsQualified}</div>
+            <div className="text-[10px] jorge-code text-jorge-glow/70">Qual</div>
           </div>
-          <div className="p-2 bg-purple-50 rounded-lg">
-            <div className="text-lg font-bold text-purple-700">
-              {Math.round(responseTime)}ms
+          <div className="p-2 bg-jorge-gold/5 rounded-lg border border-jorge-gold/10">
+            <div className="text-lg font-bold text-jorge-gold">
+              {Math.round(responseTime)}<span className="text-[10px]">ms</span>
             </div>
-            <div className="text-xs text-purple-600">Response</div>
+            <div className="text-[10px] jorge-code text-jorge-gold/70">Lat</div>
           </div>
         </div>
         
         {/* Bot Features */}
         <div className="space-y-2">
-          <h4 className="font-semibold text-sm text-gray-700">Capabilities:</h4>
+          <h4 className="jorge-code text-[10px] text-gray-500">Capabilities:</h4>
           <div className="flex flex-wrap gap-1">
             {getBotFeatures(bot.id).map((feature, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
+              <Badge key={index} variant="secondary" className="text-[9px] bg-white/5 text-gray-300 border-none px-1.5 py-0">
                 {feature}
               </Badge>
             ))}
@@ -194,28 +197,27 @@ function BotPerformanceCard({
         <div className="flex gap-2 pt-2">
           <Button 
             onClick={() => onStartConversation(bot.id)}
-            className="flex-1 bg-blue-600 hover:bg-blue-700"
+            className="flex-1 bg-jorge-electric hover:bg-blue-600 text-white jorge-haptic h-8 text-xs"
             size="sm"
             disabled={bot.status === 'offline'}
           >
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Start Chat
+            <MessageSquare className="w-3 h-3 mr-2" />
+            Control
           </Button>
-          <Button variant="outline" size="sm">
-            <Activity className="w-4 h-4 mr-1" />
-            Stats
+          <Button variant="outline" size="sm" className="h-8 text-xs border-white/10 hover:bg-white/5">
+            <Activity className="w-3 h-3" />
           </Button>
         </div>
         
         {/* Last Activity */}
-        <div className="text-xs text-gray-500 border-t pt-2">
+        <div className="text-[10px] jorge-code text-gray-600 border-t border-white/5 pt-2">
           <div className="flex items-center justify-between">
-            <span>Last active:</span>
+            <span>Last Heartbeat:</span>
             <div className="flex items-center gap-1">
               {isRealTimeConnected && (
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <div className="w-1.5 h-1.5 bg-jorge-glow rounded-full animate-pulse" />
               )}
-              <span>
+              <span className="text-gray-400">
                 {lastActivity
                   ? new Date(lastActivity).toLocaleTimeString()
                   : new Date(bot.lastActivity).toLocaleTimeString()
@@ -223,12 +225,6 @@ function BotPerformanceCard({
               </span>
             </div>
           </div>
-          {isRealTimeConnected && realTimeBotStatus && (
-            <div className="flex justify-between mt-1 text-xs text-green-600">
-              <span>Success Rate:</span>
-              <span>{realTimeBotStatus.performance.successRate.toFixed(1)}%</span>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
@@ -266,74 +262,67 @@ function SystemMetrics() {
     <div className="space-y-4">
       {/* Real-time connection status */}
       {wsConnected && (
-        <Alert className="bg-green-50 border-green-200">
-          <Wifi className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
-            <div className="flex items-center justify-between">
-              <span>
-                Real-time monitoring active • Data age: {dataAge}s
-                {isAnyBotProcessing() && (
-                  <span className="ml-2 text-green-600">• Bots processing</span>
-                )}
-              </span>
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        <Alert className="bg-jorge-glow/5 border-jorge-glow/20 text-jorge-glow h-10 py-0 flex items-center">
+          <Wifi className="h-4 w-4 text-jorge-glow" />
+          <AlertDescription className="text-jorge-glow/80 jorge-code text-[10px] flex items-center justify-between w-full ml-2">
+            <div className="flex items-center gap-2">
+              <span>Real-time monitoring active • Data age: {dataAge}s</span>
+              {isAnyBotProcessing() && (
+                <div className="flex items-center gap-1 text-jorge-glow">
+                  <span className="w-1 h-1 bg-jorge-glow rounded-full animate-ping" />
+                  <span>Bots processing</span>
+                </div>
+              )}
             </div>
+            {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
           </AlertDescription>
         </Alert>
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className={wsConnected ? 'border-l-4 border-l-green-500' : ''}>
+        <Card className={cn("jorge-card", wsConnected && 'border-l-2 border-l-jorge-glow')}>
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center mb-2">
-              <MessageSquare className="w-8 h-8 text-blue-600" />
+              <MessageSquare className="w-6 h-6 text-blue-500" />
               {wsConnected && isAnyBotProcessing() && (
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse ml-2" />
+                <div className="w-2 h-2 bg-jorge-glow rounded-full animate-pulse ml-2" />
               )}
             </div>
-            <div className="text-2xl font-bold text-gray-900">{totalConversations}</div>
-            <div className="text-sm text-gray-600">
-              {wsConnected ? 'Active Conversations' : 'Conversations Today'}
+            <div className="text-2xl font-bold text-white">{totalConversations}</div>
+            <div className="text-[10px] jorge-code text-gray-500">
+              {wsConnected ? 'Active' : 'Daily'} Volume
             </div>
           </CardContent>
         </Card>
 
-        <Card className={wsConnected ? 'border-l-4 border-l-green-500' : ''}>
+        <Card className={cn("jorge-card", wsConnected && 'border-l-2 border-l-jorge-glow')}>
           <CardContent className="p-4 text-center">
-            <Target className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-900">{totalLeadsQualified}</div>
-            <div className="text-sm text-gray-600">Leads Qualified</div>
+            <Target className="w-6 h-6 text-jorge-glow mx-auto mb-2" />
+            <div className="text-2xl font-bold text-white">{totalLeadsQualified}</div>
+            <div className="text-[10px] jorge-code text-gray-500">Total Qualified</div>
           </CardContent>
         </Card>
 
-        <Card className={wsConnected ? 'border-l-4 border-l-green-500' : ''}>
+        <Card className={cn("jorge-card", wsConnected && 'border-l-2 border-l-jorge-glow')}>
           <CardContent className="p-4 text-center">
-            <Zap className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-900">
-              {Math.round(avgResponseTime)}ms
+            <Zap className="w-6 h-6 text-purple-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-white">
+              {Math.round(avgResponseTime)}<span className="text-sm font-normal text-gray-500 ml-1">ms</span>
             </div>
-            <div className="text-sm text-gray-600">Avg Response</div>
-            {wsConnected && metrics && (
-              <div className="text-xs text-purple-600 mt-1">
-                Target: 42ms
-              </div>
-            )}
+            <div className="text-[10px] jorge-code text-gray-500">Avg Latency</div>
           </CardContent>
         </Card>
 
-        <Card className={wsConnected ? 'border-l-4 border-l-green-500' : ''}>
+        <Card className={cn("jorge-card", wsConnected && 'border-l-2 border-l-jorge-glow')}>
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center mb-2">
-              <Bot className="w-8 h-8 text-orange-600" />
-              {wsConnected && (
-                <Wifi className="w-3 h-3 text-green-500 ml-1" />
-              )}
+              <Bot className="w-6 h-6 text-orange-500" />
             </div>
-            <div className="text-2xl font-bold text-gray-900">
-              {displayBotCount}/{bots.length}
+            <div className="text-2xl font-bold text-white">
+              {displayBotCount}<span className="text-sm font-normal text-gray-500 ml-1">/ {bots.length}</span>
             </div>
-            <div className="text-sm text-gray-600">
-              {wsConnected ? 'Bots Active' : 'Bots Online'}
+            <div className="text-[10px] jorge-code text-gray-500">
+              Agent Coverage
             </div>
           </CardContent>
         </Card>
@@ -389,51 +378,42 @@ export function JorgeCommandCenter() {
   }
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-700">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Jorge Command Center</h1>
-          <p className="text-gray-600 mt-1">
-            Professional AI-powered real estate bot ecosystem
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-8 h-8 bg-jorge-electric rounded flex items-center justify-center">
+              <Zap className="w-5 h-5 text-white fill-current" />
+            </div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">JORGE <span className="text-jorge-electric">BRAIN</span></h1>
+          </div>
+          <p className="text-gray-400 text-sm jorge-code">
+            Enterprise Real Estate Intelligence • v4.0.2
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-green-50 text-green-700">
-            ✅ Production Ready
-          </Badge>
-          <Badge variant="outline" className="bg-blue-50 text-blue-700">
-            🤖 LangGraph Powered
+        <div className="flex items-center flex-wrap gap-2">
+          {/* Status Badges */}
+          <div className="flex bg-white/5 border border-white/10 rounded-full p-1 pr-3 items-center gap-2">
+            <div className={cn(
+              "w-2 h-2 rounded-full ml-2",
+              wsConnected ? "bg-jorge-glow animate-pulse" : "bg-yellow-500"
+            )} />
+            <span className="text-[10px] jorge-code text-gray-300">
+              {wsConnected ? "System Live" : "Polling Mode"}
+            </span>
+          </div>
+
+          <Badge variant="outline" className={cn(
+            "jorge-code text-[10px] border-none px-3 py-1",
+            overallHealth === 'healthy' ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+          )}>
+            {overallHealth === 'healthy' ? "HEALTHY" : "CRITICAL"}
           </Badge>
 
-          {/* Real-time status indicator */}
-          {wsConnected ? (
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-              <Wifi className="w-3 h-3 mr-1" />
-              Live
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
-              <WifiOff className="w-3 h-3 mr-1" />
-              Polling
-            </Badge>
-          )}
-
-          {/* System health indicator */}
-          <Badge
-            variant="outline"
-            className={`${
-              overallHealth === 'healthy'
-                ? 'bg-green-50 text-green-700 border-green-300'
-                : overallHealth === 'degraded'
-                ? 'bg-yellow-50 text-yellow-700 border-yellow-300'
-                : 'bg-red-50 text-red-700 border-red-300'
-            }`}
-          >
-            {overallHealth === 'healthy' && '💚 Healthy'}
-            {overallHealth === 'degraded' && '⚠️ Degraded'}
-            {overallHealth === 'critical' && '🔴 Critical'}
+          <Badge variant="outline" className="jorge-code text-[10px] bg-blue-500/10 text-blue-400 border-none px-3 py-1">
+            PROD READY
           </Badge>
         </div>
       </div>
@@ -442,10 +422,10 @@ export function JorgeCommandCenter() {
       <SystemMetrics />
       
       <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="dashboard">Bot Dashboard</TabsTrigger>
-          <TabsTrigger value="chat">Active Chat</TabsTrigger>
-          <TabsTrigger value="analytics">Performance Analytics</TabsTrigger>
+        <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl h-11 w-full max-w-md">
+          <TabsTrigger value="dashboard" className="rounded-lg data-[state=active]:bg-jorge-electric data-[state=active]:text-white jorge-code text-[10px]">Command</TabsTrigger>
+          <TabsTrigger value="chat" className="rounded-lg data-[state=active]:bg-jorge-electric data-[state=active]:text-white jorge-code text-[10px]">Interface</TabsTrigger>
+          <TabsTrigger value="analytics" className="rounded-lg data-[state=active]:bg-jorge-electric data-[state=active]:text-white jorge-code text-[10px]">Analytics</TabsTrigger>
         </TabsList>
         
         <TabsContent value="dashboard" className="space-y-6">

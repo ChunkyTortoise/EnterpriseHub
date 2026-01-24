@@ -166,29 +166,29 @@ export function LocationWidget() {
     }
   };
 
-  const getPropertyTypeColor = (type: string) => {
+  const getPropertyTypeClasses = (type: string) => {
     switch (type) {
       case 'listing':
-        return 'jorge-glow';
+        return { bg: 'bg-jorge-glow/20', text: 'text-jorge-glow' };
       case 'recent_sale':
-        return 'jorge-gold';
+        return { bg: 'bg-jorge-gold/20', text: 'text-jorge-gold' };
       case 'lead_property':
-        return 'jorge-electric';
+        return { bg: 'bg-jorge-electric/20', text: 'text-jorge-electric' };
       default:
-        return 'gray-400';
+        return { bg: 'bg-gray-400/20', text: 'text-gray-400' };
     }
   };
 
-  const getLeadStatusColor = (status: string) => {
+  const getLeadStatusClasses = (status: string) => {
     switch (status) {
       case 'scheduled':
-        return 'jorge-electric';
+        return { text: 'text-jorge-electric' };
       case 'active':
-        return 'jorge-glow';
+        return { text: 'text-jorge-glow' };
       case 'contacted':
-        return 'jorge-gold';
+        return { text: 'text-jorge-gold' };
       default:
-        return 'gray-400';
+        return { text: 'text-gray-400' };
     }
   };
 
@@ -307,7 +307,7 @@ export function LocationWidget() {
 
           {nearbyProperties.map((property, index) => {
             const PropertyIcon = getPropertyTypeIcon(property.type);
-            const color = getPropertyTypeColor(property.type);
+            const classes = getPropertyTypeClasses(property.type);
 
             return (
               <motion.div
@@ -320,8 +320,8 @@ export function LocationWidget() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 bg-${color}/20 rounded-lg`}>
-                      <PropertyIcon className={`w-4 h-4 text-${color}`} />
+                    <div className={`p-2 ${classes.bg} rounded-lg`}>
+                      <PropertyIcon className={`w-4 h-4 ${classes.text}`} />
                     </div>
                     <div>
                       <h4 className="text-sm font-medium text-white truncate">
@@ -330,7 +330,7 @@ export function LocationWidget() {
                       <div className="flex items-center gap-2 text-xs text-gray-400">
                         <span>{property.distance} mi</span>
                         <span>•</span>
-                        <span className={`text-${color} font-semibold`}>
+                        <span className={`${classes.text} font-semibold`}>
                           {property.status}
                         </span>
                         {property.daysAgo && (
@@ -368,7 +368,7 @@ export function LocationWidget() {
           </h3>
 
           {nearbyLeads.map((lead, index) => {
-            const statusColor = getLeadStatusColor(lead.status);
+            const statusClasses = getLeadStatusClasses(lead.status);
 
             return (
               <motion.div
@@ -391,7 +391,7 @@ export function LocationWidget() {
                       <div className="flex items-center gap-2 text-xs text-gray-400">
                         <span>{lead.distance} mi</span>
                         <span>•</span>
-                        <span className={`text-${statusColor} font-semibold`}>
+                        <span className={`${statusClasses.text} font-semibold`}>
                           {lead.status.toUpperCase()}
                         </span>
                         <span>•</span>
@@ -438,6 +438,14 @@ export function LocationWidget() {
               <div className="text-xs text-gray-400">Area</div>
             </div>
           </div>
+
+          {/* Enhanced Controls */}
+          <button
+            onClick={() => window.location.href = '/field-agent/location'}
+            className="w-full mt-3 py-2 bg-jorge-electric/20 text-jorge-electric text-xs font-semibold rounded jorge-haptic"
+          >
+            OPEN LOCATION INTELLIGENCE →
+          </button>
         </motion.div>
       )}
     </div>

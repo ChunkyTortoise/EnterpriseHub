@@ -16,7 +16,7 @@ from ghl_real_estate_ai.services.production_monitoring import (
     get_production_monitor, check_database_health, check_cache_health, check_auth_service_health
 )
 from ghl_real_estate_ai.services.database_optimizer import get_database_optimizer
-from ghl_real_estate_ai.core.logger import get_logger
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 

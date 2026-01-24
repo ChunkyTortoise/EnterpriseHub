@@ -3,14 +3,14 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import {
-  CompassIcon,
+  MapIcon,
   PlusIcon,
   TrashIcon,
   PencilIcon,
   BellIcon,
   MapPinIcon,
   ClockIcon,
-  BatteryIcon,
+  BoltIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   XCircleIcon,
@@ -175,7 +175,7 @@ export function GeofenceManager({
       >
         <h1 className="jorge-display text-2xl">GEOFENCE MANAGER</h1>
         <div className="flex items-center justify-center gap-2 text-sm jorge-code text-gray-400">
-          <CompassIcon className="w-4 h-4 text-jorge-electric" />
+          <MapIcon className="w-4 h-4 text-jorge-electric" />
           <span>{activeGeofences.length} ACTIVE</span>
           <span>•</span>
           <span>{geofenceStats.todayTriggers} TODAY</span>
@@ -256,7 +256,7 @@ export function GeofenceManager({
           </button>
 
           <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
-            <BatteryIcon className="w-4 h-4" />
+            <BoltIcon className="w-4 h-4" />
             <span>Battery Optimized</span>
           </div>
         </div>
@@ -297,7 +297,7 @@ export function GeofenceManager({
       >
         {filteredGeofences.length === 0 ? (
           <div className="jorge-card text-center py-8">
-            <CompassIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <MapIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-400 text-sm">
               {filter === 'all' ? 'No geofences created yet' :
                filter === 'active' ? 'No active geofences' :
