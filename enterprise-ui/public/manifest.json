@@ -1,0 +1,117 @@
+{
+  "name": "Jorge's Real Estate AI Platform",
+  "short_name": "Jorge AI",
+  "description": "Professional AI-powered real estate command center with enterprise bot ecosystem",
+  "start_url": "/field-agent",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0052FF",
+  "background_color": "#0A0E1A",
+  "scope": "/",
+  "lang": "en-US",
+  "categories": ["business", "productivity", "finance"],
+  "icons": [
+    {
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Jorge Seller Bot",
+      "short_name": "Seller Bot",
+      "description": "Confrontational seller qualification",
+      "url": "/field-agent/seller-bot",
+      "icons": [{ "src": "/icons/bot-seller.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Property Scanner",
+      "short_name": "Scanner",
+      "description": "QR code property lookup",
+      "url": "/field-agent/scanner",
+      "icons": [{ "src": "/icons/scanner.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Voice Notes",
+      "short_name": "Voice",
+      "description": "Speech-to-text notes",
+      "url": "/field-agent/voice-notes",
+      "icons": [{ "src": "/icons/voice.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Client Presentation",
+      "short_name": "Present",
+      "description": "Professional demos",
+      "url": "/presentation",
+      "icons": [{ "src": "/icons/presentation.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/field-agent-dashboard.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Field Agent Dashboard"
+    },
+    {
+      "src": "/screenshots/property-scanner.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Property Scanner"
+    },
+    {
+      "src": "/screenshots/client-presentation.png",
+      "sizes": "2048x1536",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Client Presentation Mode"
+    }
+  ],
+  "prefer_related_applications": false
+}

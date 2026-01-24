@@ -14,6 +14,9 @@ export default function Home() {
           <span className="ml-2 text-xl font-bold tracking-tight">Lyrio EnterpriseHub</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-8">
+          <Link className="text-sm font-semibold hover:text-blue-600 transition-colors" href="/jorge">
+            Jorge Command Center
+          </Link>
           <Link className="text-sm font-semibold hover:text-blue-600 transition-colors" href="/dashboard">
             Intelligence Hub
           </Link>
@@ -50,8 +53,8 @@ export default function Home() {
                 className="flex flex-col sm:flex-row gap-4"
               >
                 <Button asChild size="lg" className="h-14 px-8 text-lg bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/20 group">
-                  <Link href="/dashboard" className="flex items-center">
-                    Enter Intelligence Hub 
+                  <Link href="/jorge" className="flex items-center">
+                    Enter Jorge Command Center
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
