@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Union
 import aiohttp
 from aiohttp import ClientTimeout, BasicAuth
 from fastapi import HTTPException, Request
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, ValidationInfo, Field
 from twilio.rest import Client as TwilioSyncClient
 from twilio.base.exceptions import TwilioRestException
 
@@ -47,23 +47,25 @@ class MessageStatus(Enum):
 class TwilioConfig(BaseModel):
     """Twilio client configuration."""
     
-    account_sid: str = settings.twilio_account_sid
-    auth_token: str = settings.twilio_auth_token
-    phone_number: str = settings.twilio_phone_number
-    webhook_base_url: str = settings.webhook_base_url
+    account_sid: str = Field(default_factory=lambda: settings.twilio_account_sid)
+    auth_token: str = Field(default_factory=lambda: settings.twilio_auth_token)
+    phone_number: str = Field(default_factory=lambda: settings.twilio_phone_number)
+    webhook_base_url: str = Field(default_factory=lambda: settings.webhook_base_url)
     timeout: int = 30
     max_retries: int = 3
     retry_delay: float = 1.0
     rate_limit_messages_per_minute: int = 100
     
-    @validator('account_sid', 'auth_token', 'phone_number')
-    def validate_required_fields(cls, v, field):
+    @field_validator('account_sid', 'auth_token', 'phone_number')
+    @classmethod
+    def validate_required_fields(cls, v: str, info: ValidationInfo):
         if not v or v.startswith("your_twilio_"):
-            raise ValueError(f"Valid Twilio {field.name} is required")
+            raise ValueError(f"Valid Twilio {info.field_name} is required")
         return v
     
-    @validator('phone_number')
-    def validate_phone_format(cls, v):
+    @field_validator('phone_number')
+    @classmethod
+    def validate_phone_format(cls, v: str):
         if not v.startswith('+'):
             raise ValueError("Phone number must include country code (e.g., +1234567890)")
         return v

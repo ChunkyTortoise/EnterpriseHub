@@ -170,4 +170,8 @@ def get_socketio_app_for_uvicorn(main_app: FastAPI) -> socketio.ASGIApp:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
+    if loop.is_running():
+        import nest_asyncio
+        nest_asyncio.apply()
+
     return loop.run_until_complete(create_app())

@@ -10,7 +10,6 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from 'cmdk'
 import {
   Settings,
@@ -18,7 +17,9 @@ import {
   Zap,
   TrendingUp,
   Target,
-  Activity
+  Activity,
+  Brain,
+  BarChart3
 } from 'lucide-react'
 
 export function CommandMenu() {
@@ -75,10 +76,10 @@ export function CommandMenu() {
                   <Bot size={16} />
                 </div>
                 <span className="text-sm font-medium text-gray-300">Jorge Dashboard</span>
-                <CommandShortcut className="text-[10px] text-gray-600 font-mono">G D</CommandShortcut>
+                <span className="text-[10px] text-gray-600 font-mono">G D</span>
               </CommandItem>
               
-              <CommandItem 
+              <CommandItem
                 onSelect={() => runCommand(() => router.push('/executive-dashboard'))}
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer aria-selected:bg-white/10 transition-colors"
               >
@@ -86,7 +87,29 @@ export function CommandMenu() {
                   <TrendingUp size={16} />
                 </div>
                 <span className="text-sm font-medium text-gray-300">Executive Overview</span>
-                <CommandShortcut className="text-[10px] text-gray-600 font-mono">G E</CommandShortcut>
+                <span className="text-[10px] text-gray-600 font-mono">G E</span>
+              </CommandItem>
+
+              <CommandItem
+                onSelect={() => runCommand(() => router.push('/intelligence'))}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer aria-selected:bg-white/10 transition-colors"
+              >
+                <div className="p-1.5 bg-blue-500/10 rounded-md text-blue-400">
+                  <Brain size={16} />
+                </div>
+                <span className="text-sm font-medium text-gray-300">Business Intelligence</span>
+                <span className="text-[10px] text-gray-600 font-mono bg-amber-500/10 text-amber-400 px-1.5 rounded">PHASE 7</span>
+              </CommandItem>
+
+              <CommandItem
+                onSelect={() => runCommand(() => router.push('/bi-dashboard'))}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer aria-selected:bg-white/10 transition-colors"
+              >
+                <div className="p-1.5 bg-emerald-500/10 rounded-md text-emerald-400">
+                  <BarChart3 size={16} />
+                </div>
+                <span className="text-sm font-medium text-gray-300">Advanced BI Dashboard</span>
+                <span className="text-[10px] text-gray-600 font-mono bg-emerald-500/10 text-emerald-400 px-1.5 rounded">NEW</span>
               </CommandItem>
             </CommandGroup>
 

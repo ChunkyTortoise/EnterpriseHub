@@ -28,8 +28,8 @@ class PropertyAnalysisRequest(BaseModel):
     address: Optional[str] = None
     mls: Optional[str] = None
     coordinates: Optional[Dict[str, float]] = None  # {lat, lng}
-    analysisLevel: str = Field(..., regex="^(Union[BASIC, STANDARD]|Union[PREMIUM, INSTITUTIONAL])$")
-    investmentStrategy: str = Field(..., regex="^(Union[RENTAL_INCOME, FIX_AND_FLIP]|Union[BUY_AND_HOLD, COMMERCIAL])$")
+    analysisLevel: str = Field(..., pattern="^(BASIC|STANDARD|PREMIUM|INSTITUTIONAL)$")
+    investmentStrategy: str = Field(..., pattern="^(RENTAL_INCOME|FIX_AND_FLIP|BUY_AND_HOLD|COMMERCIAL)$")
     customContext: Optional[Dict[str, Any]] = None
 
 # ============================================================================

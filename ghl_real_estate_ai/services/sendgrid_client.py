@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Union
 import aiohttp
 from aiohttp import ClientTimeout
 from fastapi import HTTPException, Request
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, ValidationInfo, Field
 import sendgrid
 from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment, FileContent, FileName, FileType
 
@@ -62,24 +62,26 @@ class SuppressionType(Enum):
 class SendGridConfig(BaseModel):
     """SendGrid client configuration."""
     
-    api_key: str = settings.sendgrid_api_key
-    sender_email: str = settings.sendgrid_sender_email
-    sender_name: str = settings.sendgrid_sender_name
-    webhook_base_url: str = settings.webhook_base_url
+    api_key: str = Field(default_factory=lambda: settings.sendgrid_api_key)
+    sender_email: str = Field(default_factory=lambda: settings.sendgrid_sender_email)
+    sender_name: str = Field(default_factory=lambda: settings.sendgrid_sender_name)
+    webhook_base_url: str = Field(default_factory=lambda: settings.webhook_base_url)
     template_ids: Dict[str, str] = {}
     timeout: int = 30
     max_retries: int = 3
     retry_delay: float = 1.0
     rate_limit_emails_per_minute: int = 1000
     
-    @validator('api_key', 'sender_email')
-    def validate_required_fields(cls, v, field):
+    @field_validator('api_key', 'sender_email')
+    @classmethod
+    def validate_required_fields(cls, v: str, info: ValidationInfo):
         if not v or v.startswith("your_sendgrid_"):
-            raise ValueError(f"Valid SendGrid {field.name} is required")
+            raise ValueError(f"Valid SendGrid {info.field_name} is required")
         return v
     
-    @validator('sender_email')
-    def validate_email_format(cls, v):
+    @field_validator('sender_email')
+    @classmethod
+    def validate_email_format(cls, v: str):
         import re
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(pattern, v):
