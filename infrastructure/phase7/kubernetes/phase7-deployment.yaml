@@ -1,0 +1,474 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jorge-phase7
+  labels:
+    app.kubernetes.io/name: jorge-real-estate-ai
+    app.kubernetes.io/version: "phase7"
+    app.kubernetes.io/component: advanced-intelligence
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phase7-revenue-intelligence
+  namespace: jorge-phase7
+  labels:
+    app: revenue-intelligence
+    phase: "7"
+    component: forecasting-engine
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: revenue-intelligence
+  template:
+    metadata:
+      labels:
+        app: revenue-intelligence
+        phase: "7"
+        component: forecasting-engine
+    spec:
+      containers:
+      - name: revenue-intelligence
+        image: jorge-real-estate-ai/phase7-revenue:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: PHASE
+          value: "7"
+        - name: SERVICE_NAME
+          value: "revenue-intelligence"
+        - name: JORGE_METHODOLOGY_ENABLED
+          value: "true"
+        - name: ML_MODEL_PATH
+          value: "/models/revenue-forecasting"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: redis-url
+        - name: POSTGRES_URL
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: postgres-url
+        - name: CLAUDE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: claude-api-key
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        volumeMounts:
+        - name: ml-models
+          mountPath: /models
+          readOnly: true
+        - name: config
+          mountPath: /config
+          readOnly: true
+      volumes:
+      - name: ml-models
+        configMap:
+          name: phase7-ml-models
+      - name: config
+        configMap:
+          name: phase7-config
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phase7-business-intelligence
+  namespace: jorge-phase7
+  labels:
+    app: business-intelligence
+    phase: "7"
+    component: dashboard-backend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: business-intelligence
+  template:
+    metadata:
+      labels:
+        app: business-intelligence
+        phase: "7"
+        component: dashboard-backend
+    spec:
+      containers:
+      - name: bi-dashboard
+        image: jorge-real-estate-ai/phase7-bi:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8001
+          name: http
+        - containerPort: 9091
+          name: metrics
+        env:
+        - name: PHASE
+          value: "7"
+        - name: SERVICE_NAME
+          value: "business-intelligence"
+        - name: STREAMING_ENABLED
+          value: "true"
+        - name: CACHE_TTL
+          value: "300"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: redis-url
+        - name: POSTGRES_URL
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: postgres-url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "150m"
+          limits:
+            memory: "512Mi"
+            cpu: "300m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phase7-conversation-analytics
+  namespace: jorge-phase7
+  labels:
+    app: conversation-analytics
+    phase: "7"
+    component: analytics-engine
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: conversation-analytics
+  template:
+    metadata:
+      labels:
+        app: conversation-analytics
+        phase: "7"
+        component: analytics-engine
+    spec:
+      containers:
+      - name: conversation-analytics
+        image: jorge-real-estate-ai/phase7-analytics:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8002
+          name: http
+        - containerPort: 9092
+          name: metrics
+        env:
+        - name: PHASE
+          value: "7"
+        - name: SERVICE_NAME
+          value: "conversation-analytics"
+        - name: JORGE_METHODOLOGY_WEIGHT
+          value: "0.35"
+        - name: ML_CONFIDENCE_THRESHOLD
+          value: "0.85"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: redis-url
+        - name: POSTGRES_URL
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: postgres-url
+        - name: CLAUDE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: claude-api-key
+        resources:
+          requests:
+            memory: "384Mi"
+            cpu: "200m"
+          limits:
+            memory: "768Mi"
+            cpu: "400m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phase7-market-intelligence
+  namespace: jorge-phase7
+  labels:
+    app: market-intelligence
+    phase: "7"
+    component: automation-engine
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: market-intelligence
+  template:
+    metadata:
+      labels:
+        app: market-intelligence
+        phase: "7"
+        component: automation-engine
+    spec:
+      containers:
+      - name: market-intelligence
+        image: jorge-real-estate-ai/phase7-market:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8003
+          name: http
+        - containerPort: 9093
+          name: metrics
+        env:
+        - name: PHASE
+          value: "7"
+        - name: SERVICE_NAME
+          value: "market-intelligence"
+        - name: TREND_PREDICTION_DAYS
+          value: "14"
+        - name: MARKET_ANALYSIS_INTERVAL
+          value: "3600"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: redis-url
+        - name: POSTGRES_URL
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: postgres-url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "150m"
+          limits:
+            memory: "512Mi"
+            cpu: "300m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phase7-stream-processor
+  namespace: jorge-phase7
+  labels:
+    app: stream-processor
+    phase: "7"
+    component: streaming-service
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: stream-processor
+  template:
+    metadata:
+      labels:
+        app: stream-processor
+        phase: "7"
+        component: streaming-service
+    spec:
+      containers:
+      - name: stream-processor
+        image: jorge-real-estate-ai/phase7-streaming:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8004
+          name: http
+        - containerPort: 8080
+          name: websocket
+        - containerPort: 9094
+          name: metrics
+        env:
+        - name: PHASE
+          value: "7"
+        - name: SERVICE_NAME
+          value: "stream-processor"
+        - name: WEBSOCKET_ENABLED
+          value: "true"
+        - name: BUFFER_SIZE
+          value: "1000"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phase7-cache-service
+  namespace: jorge-phase7
+  labels:
+    app: cache-service
+    phase: "7"
+    component: intelligent-cache
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: cache-service
+  template:
+    metadata:
+      labels:
+        app: cache-service
+        phase: "7"
+        component: intelligent-cache
+    spec:
+      containers:
+      - name: cache-service
+        image: jorge-real-estate-ai/phase7-cache:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8005
+          name: http
+        - containerPort: 9095
+          name: metrics
+        env:
+        - name: PHASE
+          value: "7"
+        - name: SERVICE_NAME
+          value: "cache-service"
+        - name: PREDICTIVE_WARMING_ENABLED
+          value: "true"
+        - name: CACHE_HIT_TARGET
+          value: "0.95"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: phase7-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "192Mi"
+            cpu: "100m"
+          limits:
+            memory: "384Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10

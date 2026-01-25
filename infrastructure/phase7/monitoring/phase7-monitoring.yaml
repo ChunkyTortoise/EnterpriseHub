@@ -1,0 +1,509 @@
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: phase7-revenue-intelligence-monitor
+  namespace: jorge-phase7
+  labels:
+    app: revenue-intelligence
+    phase: "7"
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: revenue-intelligence
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    honorLabels: true
+
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: phase7-business-intelligence-monitor
+  namespace: jorge-phase7
+  labels:
+    app: business-intelligence
+    phase: "7"
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: business-intelligence
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    honorLabels: true
+
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: phase7-conversation-analytics-monitor
+  namespace: jorge-phase7
+  labels:
+    app: conversation-analytics
+    phase: "7"
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: conversation-analytics
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    honorLabels: true
+
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: phase7-market-intelligence-monitor
+  namespace: jorge-phase7
+  labels:
+    app: market-intelligence
+    phase: "7"
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: market-intelligence
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    honorLabels: true
+
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: phase7-stream-processor-monitor
+  namespace: jorge-phase7
+  labels:
+    app: stream-processor
+    phase: "7"
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: stream-processor
+  endpoints:
+  - port: metrics
+    interval: 15s  # More frequent monitoring for streaming
+    path: /metrics
+    honorLabels: true
+
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: phase7-cache-service-monitor
+  namespace: jorge-phase7
+  labels:
+    app: cache-service
+    phase: "7"
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: cache-service
+  endpoints:
+  - port: metrics
+    interval: 15s  # More frequent monitoring for cache
+    path: /metrics
+    honorLabels: true
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: phase7-alerts
+  namespace: jorge-phase7
+  labels:
+    app: phase7-alerts
+    component: monitoring
+spec:
+  groups:
+  - name: phase7_performance_alerts
+    rules:
+    - alert: Phase7HighLatency
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{namespace="jorge-phase7"}[5m])) > 0.1
+      for: 2m
+      labels:
+        severity: warning
+        phase: "7"
+      annotations:
+        summary: "Phase 7 service experiencing high latency"
+        description: "{{ $labels.service }} has 95th percentile latency of {{ $value }}s"
+
+    - alert: Phase7HighErrorRate
+      expr: rate(http_requests_total{namespace="jorge-phase7",status=~"5.."}[5m]) / rate(http_requests_total{namespace="jorge-phase7"}[5m]) > 0.05
+      for: 1m
+      labels:
+        severity: critical
+        phase: "7"
+      annotations:
+        summary: "Phase 7 service experiencing high error rate"
+        description: "{{ $labels.service }} error rate is {{ $value | humanizePercentage }}"
+
+    - alert: Phase7LowCacheHitRate
+      expr: cache_hit_rate{namespace="jorge-phase7"} < 0.90
+      for: 3m
+      labels:
+        severity: warning
+        phase: "7"
+      annotations:
+        summary: "Phase 7 cache hit rate below target"
+        description: "Cache hit rate is {{ $value | humanizePercentage }}, below 90% target"
+
+    - alert: Phase7MLModelLatency
+      expr: ml_prediction_duration_seconds{namespace="jorge-phase7"} > 0.05
+      for: 2m
+      labels:
+        severity: warning
+        phase: "7"
+      annotations:
+        summary: "Phase 7 ML model latency exceeds target"
+        description: "{{ $labels.model }} latency is {{ $value }}s, above 50ms target"
+
+  - name: phase7_business_alerts
+    rules:
+    - alert: Phase7RevenueForeccastingDown
+      expr: up{job="revenue-intelligence-service"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        phase: "7"
+        business_impact: "high"
+      annotations:
+        summary: "Phase 7 Revenue Forecasting service is down"
+        description: "Revenue Intelligence service is unavailable - business forecasting impacted"
+
+    - alert: Phase7JorgeMethodologyDegraded
+      expr: jorge_methodology_effectiveness{namespace="jorge-phase7"} < 0.80
+      for: 5m
+      labels:
+        severity: warning
+        phase: "7"
+        business_impact: "medium"
+      annotations:
+        summary: "Jorge methodology effectiveness below threshold"
+        description: "Jorge methodology effectiveness is {{ $value | humanizePercentage }}, below 80% target"
+
+    - alert: Phase7ConversionRateDrop
+      expr: conversation_conversion_rate{namespace="jorge-phase7"} < 0.12
+      for: 10m
+      labels:
+        severity: warning
+        phase: "7"
+        business_impact: "high"
+      annotations:
+        summary: "Phase 7 conversation conversion rate below target"
+        description: "Conversion rate is {{ $value | humanizePercentage }}, below 12% target"
+
+  - name: phase7_infrastructure_alerts
+    rules:
+    - alert: Phase7HighCPUUtilization
+      expr: avg(rate(container_cpu_usage_seconds_total{namespace="jorge-phase7"}[5m])) by (pod) > 0.85
+      for: 5m
+      labels:
+        severity: warning
+        phase: "7"
+      annotations:
+        summary: "Phase 7 pod CPU utilization high"
+        description: "Pod {{ $labels.pod }} CPU utilization is {{ $value | humanizePercentage }}"
+
+    - alert: Phase7HighMemoryUtilization
+      expr: avg(container_memory_usage_bytes{namespace="jorge-phase7"} / container_spec_memory_limit_bytes{namespace="jorge-phase7"}) by (pod) > 0.90
+      for: 3m
+      labels:
+        severity: critical
+        phase: "7"
+      annotations:
+        summary: "Phase 7 pod memory utilization critical"
+        description: "Pod {{ $labels.pod }} memory utilization is {{ $value | humanizePercentage }}"
+
+    - alert: Phase7PodRestartLoop
+      expr: rate(kube_pod_container_status_restarts_total{namespace="jorge-phase7"}[15m]) > 0
+      for: 0m
+      labels:
+        severity: warning
+        phase: "7"
+      annotations:
+        summary: "Phase 7 pod restarting"
+        description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: phase7-grafana-dashboards
+  namespace: jorge-phase7
+  labels:
+    app: phase7-grafana
+    component: monitoring
+data:
+  phase7-overview.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Jorge Phase 7 - Advanced Intelligence Overview",
+        "tags": ["jorge", "phase7", "real-estate"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Revenue Intelligence Performance",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(revenue_predictions_total{namespace=\"jorge-phase7\"}[5m])",
+                "legendFormat": "Predictions/sec"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "reqps",
+                "min": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "title": "Jorge Methodology Effectiveness",
+            "type": "gauge",
+            "targets": [
+              {
+                "expr": "jorge_methodology_effectiveness{namespace=\"jorge-phase7\"}",
+                "legendFormat": "Jorge Score"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "min": 0,
+                "max": 100,
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 70},
+                    {"color": "green", "value": 85}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 3,
+            "title": "ML Model Latency",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(ml_prediction_duration_seconds_bucket{namespace=\"jorge-phase7\"}[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(ml_prediction_duration_seconds_bucket{namespace=\"jorge-phase7\"}[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "s",
+                "min": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "title": "Cache Performance",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "cache_hit_rate{namespace=\"jorge-phase7\"}",
+                "legendFormat": "Hit Rate"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "min": 80,
+                "max": 100
+              }
+            }
+          },
+          {
+            "id": 5,
+            "title": "Conversation Analytics",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "conversation_sentiment_score{namespace=\"jorge-phase7\"}",
+                "legendFormat": "Sentiment"
+              },
+              {
+                "expr": "conversation_conversion_probability{namespace=\"jorge-phase7\"}",
+                "legendFormat": "Conversion Probability"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
+
+  phase7-business-intelligence.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Jorge Phase 7 - Business Intelligence Dashboard",
+        "tags": ["jorge", "phase7", "business-intelligence"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Revenue Forecasting Accuracy",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "revenue_forecast_accuracy{namespace=\"jorge-phase7\"}",
+                "legendFormat": "Accuracy"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "min": 0,
+                "max": 100
+              }
+            }
+          },
+          {
+            "id": 2,
+            "title": "Deal Probability Distribution",
+            "type": "histogram",
+            "targets": [
+              {
+                "expr": "deal_probability_score{namespace=\"jorge-phase7\"}",
+                "legendFormat": "Probability"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Commission Defense Success",
+            "type": "gauge",
+            "targets": [
+              {
+                "expr": "commission_retention_rate{namespace=\"jorge-phase7\"}",
+                "legendFormat": "Retention Rate"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "min": 0,
+                "max": 100,
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 80},
+                    {"color": "green", "value": 90}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 4,
+            "title": "Market Intelligence Trends",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "market_trend_score{namespace=\"jorge-phase7\"}",
+                "legendFormat": "Trend Score"
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: phase7-alertmanager-config
+  namespace: jorge-phase7
+  labels:
+    app: phase7-alertmanager
+    component: monitoring
+data:
+  alertmanager.yml: |
+    global:
+      smtp_smarthost: 'localhost:587'
+      smtp_from: 'alerts@jorge-ai.com'
+
+    route:
+      group_by: ['alertname', 'phase']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'phase7-team'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'phase7-critical'
+      - match:
+          business_impact: high
+        receiver: 'phase7-business-critical'
+
+    receivers:
+    - name: 'phase7-team'
+      email_configs:
+      - to: 'phase7-team@jorge-ai.com'
+        subject: 'Phase 7 Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+
+    - name: 'phase7-critical'
+      email_configs:
+      - to: 'phase7-oncall@jorge-ai.com'
+        subject: 'CRITICAL: Phase 7 Alert - {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          CRITICAL Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          {{ end }}
+      slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#phase7-critical'
+        title: 'Phase 7 Critical Alert'
+        text: |
+          {{ range .Alerts }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}
+
+    - name: 'phase7-business-critical'
+      email_configs:
+      - to: 'jorge@jorge-ai.com'
+        subject: 'Business Impact: Phase 7 Alert - {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Business Critical Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Business Impact: {{ .Labels.business_impact }}
+          {{ end }}
