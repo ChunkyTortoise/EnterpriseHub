@@ -594,13 +594,21 @@ class JorgeSellerBot:
         current_q = state.get('current_question', 1)
         questions_answered = len([h for h in state.get('conversation_history', []) if h.get('role') == 'user'])
 
+        intent_profile = state.get('intent_profile')
+        frs_score = 0
+        if intent_profile:
+            if hasattr(intent_profile, 'frs'):
+                frs_score = intent_profile.frs.total_score
+            elif isinstance(intent_profile, dict):
+                frs_score = intent_profile.get('frs', {}).get('total_score', 0)
+
         await self.event_publisher.publish_jorge_qualification_progress(
             contact_id=state["lead_id"],
             current_question=min(current_q + 1, 4),
             questions_answered=min(questions_answered, 4),
             seller_temperature=state.get('seller_temperature', 'cold'),
             qualification_scores={
-                "frs_score": state.get('intent_profile', {}).get('frs', {}).get('total_score', 0),
+                "frs_score": frs_score,
                 "pcs_score": state.get('psychological_commitment', 0)
             },
             next_action="await_response"
