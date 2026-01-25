@@ -206,7 +206,10 @@ class Settings(BaseSettings):
 
     # Security
     ghl_webhook_secret: Optional[str] = None  # For signature verification
-    jwt_secret_key: str = Field(default="development-jwt-secret-key-for-testing-only-not-for-production-use")  # JWT signing secret
+    # SECURITY: JWT secret must be provided via environment variable.
+    # No default value to prevent accidental use of weak secrets in production.
+    # In development, set JWT_SECRET_KEY in .env file.
+    jwt_secret_key: Optional[str] = Field(default=None)
     apollo_webhook_secret: Optional[str] = None
     twilio_webhook_secret: Optional[str] = None
     sendgrid_webhook_secret: Optional[str] = None
@@ -227,13 +230,61 @@ class Settings(BaseSettings):
 
     @field_validator('jwt_secret_key')
     @classmethod
-    def validate_jwt_secret(cls, v: str, info: ValidationInfo):
-        """SECURITY FIX: Validate JWT secret in production."""
+    def validate_jwt_secret(cls, v: Optional[str], info: ValidationInfo):
+        """
+        SECURITY FIX: Validate JWT secret with fail-fast pattern.
+
+        - Production: MUST have 32+ character secret, exits immediately if missing/weak
+        - Development: Generates a temporary secret with warning, but logs it clearly
+        """
+        import secrets as secrets_module
+        import logging
+
         environment = info.data.get('environment', 'development')
-        if environment == 'production' and len(v) < 32:
-            print("❌ SECURITY ERROR: JWT_SECRET_KEY must be at least 32 characters in production")
-            print("   Generate with: openssl rand -hex 32")
-            sys.exit(1)
+
+        # Production: Fail fast if no secret or weak secret
+        if environment == 'production':
+            if not v:
+                print("=" * 60)
+                print("CRITICAL SECURITY ERROR: JWT_SECRET_KEY is required in production")
+                print("=" * 60)
+                print("The application cannot start without a secure JWT secret.")
+                print("")
+                print("To fix this:")
+                print("  1. Generate a secure secret:")
+                print("     openssl rand -hex 32")
+                print("  2. Set the environment variable:")
+                print("     export JWT_SECRET_KEY='your-generated-secret'")
+                print("=" * 60)
+                sys.exit(1)
+            if len(v) < 32:
+                print("=" * 60)
+                print("CRITICAL SECURITY ERROR: JWT_SECRET_KEY is too weak")
+                print("=" * 60)
+                print(f"Current length: {len(v)} characters (minimum: 32)")
+                print("")
+                print("Generate a secure secret with:")
+                print("  openssl rand -hex 32")
+                print("=" * 60)
+                sys.exit(1)
+            return v
+
+        # Development: Allow missing secret but generate temporary one with clear warning
+        if not v:
+            temp_secret = secrets_module.token_urlsafe(32)
+            logging.warning(
+                "JWT_SECRET_KEY not set - using temporary secret for development. "
+                "This secret will change on restart. Set JWT_SECRET_KEY in .env for persistence."
+            )
+            return temp_secret
+
+        # Development with provided secret: warn if weak
+        if len(v) < 32:
+            logging.warning(
+                f"JWT_SECRET_KEY is only {len(v)} characters. "
+                "For security, use at least 32 characters (openssl rand -hex 32)"
+            )
+
         return v
 
     @field_validator('ghl_webhook_secret')

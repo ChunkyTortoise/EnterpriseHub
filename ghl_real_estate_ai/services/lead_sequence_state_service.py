@@ -5,7 +5,7 @@ Manages sequence progression state in Redis to ensure continuity across conversa
 Tracks which day each lead is on, completion status, and next scheduled actions.
 """
 import asyncio
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -33,6 +33,40 @@ class SequenceStatus(Enum):
     COMPLETED = "completed"
     PAUSED = "paused"
     FAILED = "failed"
+
+
+# Valid state transitions for the sequence state machine
+# Format: {from_status: [allowed_to_statuses]}
+VALID_STATUS_TRANSITIONS: Dict[SequenceStatus, List[SequenceStatus]] = {
+    SequenceStatus.PENDING: [SequenceStatus.IN_PROGRESS, SequenceStatus.PAUSED, SequenceStatus.FAILED],
+    SequenceStatus.IN_PROGRESS: [SequenceStatus.COMPLETED, SequenceStatus.PAUSED, SequenceStatus.FAILED],
+    SequenceStatus.PAUSED: [SequenceStatus.IN_PROGRESS, SequenceStatus.COMPLETED, SequenceStatus.FAILED],
+    SequenceStatus.COMPLETED: [],  # Terminal state - no transitions allowed
+    SequenceStatus.FAILED: [SequenceStatus.PENDING],  # Can retry from failed
+}
+
+# Valid day transitions for the sequence days
+# Format: {from_day: [allowed_to_days]}
+VALID_DAY_TRANSITIONS: Dict[SequenceDay, List[SequenceDay]] = {
+    SequenceDay.INITIAL: [SequenceDay.DAY_3],
+    SequenceDay.DAY_3: [SequenceDay.DAY_7, SequenceDay.QUALIFIED, SequenceDay.NURTURE],
+    SequenceDay.DAY_7: [SequenceDay.DAY_14, SequenceDay.QUALIFIED, SequenceDay.NURTURE],
+    SequenceDay.DAY_14: [SequenceDay.DAY_30, SequenceDay.QUALIFIED, SequenceDay.NURTURE],
+    SequenceDay.DAY_30: [SequenceDay.NURTURE, SequenceDay.QUALIFIED],
+    SequenceDay.NURTURE: [SequenceDay.QUALIFIED],  # Can still qualify from nurture
+    SequenceDay.QUALIFIED: [],  # Terminal state
+}
+
+
+class InvalidStateTransitionError(Exception):
+    """Raised when an invalid state transition is attempted."""
+    def __init__(self, from_state: str, to_state: str, state_type: str = "status"):
+        self.from_state = from_state
+        self.to_state = to_state
+        self.state_type = state_type
+        super().__init__(
+            f"Invalid {state_type} transition from '{from_state}' to '{to_state}'"
+        )
 
 @dataclass
 class LeadSequenceState:
@@ -120,6 +154,95 @@ class LeadSequenceStateService:
     def _get_active_sequences_key(self) -> str:
         """Key for tracking active sequences."""
         return f"{self.key_prefix}:active"
+
+    def _validate_status_transition(
+        self,
+        from_status: SequenceStatus,
+        to_status: SequenceStatus,
+        lead_id: str
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Validate a status transition is allowed.
+
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        if from_status == to_status:
+            return True, None  # No-op transitions are allowed
+
+        allowed_transitions = VALID_STATUS_TRANSITIONS.get(from_status, [])
+        if to_status not in allowed_transitions:
+            error_msg = (
+                f"Invalid status transition for lead {lead_id}: "
+                f"'{from_status.value}' -> '{to_status.value}'. "
+                f"Allowed transitions: {[s.value for s in allowed_transitions]}"
+            )
+            logger.warning(error_msg)
+            return False, error_msg
+
+        return True, None
+
+    def _validate_day_transition(
+        self,
+        from_day: SequenceDay,
+        to_day: SequenceDay,
+        lead_id: str
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Validate a day transition is allowed.
+
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        if from_day == to_day:
+            return True, None  # No-op transitions are allowed
+
+        allowed_transitions = VALID_DAY_TRANSITIONS.get(from_day, [])
+        if to_day not in allowed_transitions:
+            error_msg = (
+                f"Invalid day transition for lead {lead_id}: "
+                f"'{from_day.value}' -> '{to_day.value}'. "
+                f"Allowed transitions: {[d.value for d in allowed_transitions]}"
+            )
+            logger.warning(error_msg)
+            return False, error_msg
+
+        return True, None
+
+    async def transition_status(
+        self,
+        lead_id: str,
+        new_status: SequenceStatus,
+        force: bool = False
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Transition sequence status with validation.
+
+        Args:
+            lead_id: The lead ID
+            new_status: Target status
+            force: If True, skip validation (use for recovery scenarios)
+
+        Returns:
+            Tuple of (success, error_message)
+        """
+        state = await self.get_state(lead_id)
+        if not state:
+            return False, f"No sequence state found for lead {lead_id}"
+
+        if not force:
+            is_valid, error_msg = self._validate_status_transition(
+                state.sequence_status, new_status, lead_id
+            )
+            if not is_valid:
+                return False, error_msg
+
+        old_status = state.sequence_status
+        state.sequence_status = new_status
+        await self.save_state(state)
+
+        logger.info(f"Lead {lead_id} status transition: {old_status.value} -> {new_status.value}")
+        return True, None
 
     async def create_sequence(
         self,

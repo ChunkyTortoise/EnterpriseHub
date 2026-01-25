@@ -16,7 +16,7 @@ from ghl_real_estate_ai.integrations.lyrio import LyrioClient
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.services.lead_sequence_state_service import get_sequence_service, SequenceDay, LeadSequenceState
+from ghl_real_estate_ai.services.lead_sequence_state_service import get_sequence_service, SequenceDay, LeadSequenceState, SequenceStatus
 from ghl_real_estate_ai.services.lead_sequence_scheduler import get_lead_scheduler
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
 
