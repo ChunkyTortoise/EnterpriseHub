@@ -918,13 +918,71 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                     except json.JSONDecodeError:
                         pass
 
-            # Strategy 3: Find first JSON object in content
-            json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', content, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group(0))
+            # Strategy 3: Find first JSON object using balanced bracket matching
+            json_start = content.find('{')
+            if json_start >= 0:
+                json_str = self._extract_balanced_json(content, json_start)
+                if json_str:
+                    return json.loads(json_str)
 
             return None
         except (json.JSONDecodeError, AttributeError, IndexError):
+            return None
+
+    def _extract_balanced_json(self, content: str, start_idx: int) -> Optional[str]:
+        """
+        Extract a JSON object using balanced bracket matching to avoid regex catastrophic backtracking.
+
+        Args:
+            content: Text content
+            start_idx: Index of the opening brace
+
+        Returns:
+            JSON string if valid brackets found, None otherwise
+        """
+        try:
+            brace_count = 0
+            in_string = False
+            escape_next = False
+
+            for i in range(start_idx, len(content)):
+                char = content[i]
+
+                # Handle string escaping
+                if escape_next:
+                    escape_next = False
+                    continue
+
+                if char == '\\' and in_string:
+                    escape_next = True
+                    continue
+
+                # Handle string boundaries
+                if char == '"':
+                    in_string = not in_string
+                    continue
+
+                # Only count braces outside of strings
+                if not in_string:
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+
+                        # Found matching closing brace
+                        if brace_count == 0:
+                            candidate = content[start_idx:i+1]
+                            # Validate it's actually JSON before returning
+                            try:
+                                json.loads(candidate)
+                                return candidate
+                            except json.JSONDecodeError:
+                                # Continue searching for next JSON object
+                                break
+
+            return None
+
+        except (IndexError, TypeError):
             return None
 
     def _extract_list_items(self, content: str, section_header: str) -> List[str]:
@@ -1035,6 +1093,428 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
         return response
 
+    def _parse_confidence_score(self, content: str, json_data: Optional[Dict[str, Any]] = None) -> Optional[float]:
+        """
+        Extract confidence score from Claude response.
+
+        Extraction strategies:
+        1. JSON field: {"confidence": 0.85}
+        2. Percentage: "confidence: 85%" or "85% confidence"
+        3. Decimal: "confidence: 0.85"
+        4. Qualitative: "high confidence" → 0.8
+
+        Args:
+            content: Response text
+            json_data: Parsed JSON data if available
+
+        Returns:
+            Confidence score (0-1) or None if not found
+        """
+        try:
+            # Strategy 1: Extract from JSON
+            if json_data:
+                if "confidence" in json_data:
+                    conf = json_data["confidence"]
+                    # Handle percentage or decimal
+                    if isinstance(conf, (int, float)):
+                        return min(1.0, max(0.0, conf if conf <= 1.0 else conf / 100.0))
+                if "confidence_score" in json_data:
+                    conf = json_data["confidence_score"]
+                    return min(1.0, max(0.0, conf if conf <= 1.0 else conf / 100.0))
+
+            # Strategy 2: Extract percentage from text
+            # Patterns: "confidence: 85%", "85% confidence", "confidence = 0.85"
+            percentage_patterns = [
+                r'confidence:?\s*(\d+(?:\.\d+)?)\s*%',
+                r'(\d+(?:\.\d+)?)\s*%\s*confidence',
+                r'confidence(?:\s+score)?:?\s*=?\s*(\d+(?:\.\d+)?)',
+            ]
+
+            for pattern in percentage_patterns:
+                match = re.search(pattern, content, re.IGNORECASE)
+                if match:
+                    value = float(match.group(1))
+                    # Normalize to 0-1 range
+                    return min(1.0, max(0.0, value if value <= 1.0 else value / 100.0))
+
+            # Strategy 3: Qualitative confidence mapping
+            qualitative_map = {
+                r'\b(very\s+)?high\s+confidence\b': 0.9,
+                r'\bconfident\b': 0.8,
+                r'\bmoderate\s+confidence\b': 0.7,
+                r'\bsome\s+confidence\b': 0.6,
+                r'\blow\s+confidence\b': 0.4,
+                r'\bvery\s+low\s+confidence\b': 0.3,
+            }
+
+            for pattern, score in qualitative_map.items():
+                if re.search(pattern, content, re.IGNORECASE):
+                    return score
+
+            # Default: Return moderate confidence if indicators found
+            if re.search(r'\bconfidence\b', content, re.IGNORECASE):
+                return 0.7
+
+            return None
+
+        except (ValueError, TypeError, AttributeError):
+            return None
+
+    def _parse_recommended_actions(self, content: str, json_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """
+        Extract recommended actions from Claude response.
+
+        Returns structured actions with:
+        - action: The action to take
+        - priority: high/medium/low
+        - timing: immediate/urgent/moderate/low
+        - reasoning: Why this action is recommended
+
+        Args:
+            content: Response text
+            json_data: Parsed JSON data if available
+
+        Returns:
+            List of action dictionaries
+        """
+        actions = []
+
+        try:
+            # Strategy 1: Extract from JSON
+            if json_data:
+                if "recommended_actions" in json_data:
+                    json_actions = json_data["recommended_actions"]
+                    if isinstance(json_actions, list):
+                        for item in json_actions:
+                            if isinstance(item, dict):
+                                actions.append(item)
+                            elif isinstance(item, str):
+                                actions.append(self._structure_action(item))
+                    return actions
+
+                if "actions" in json_data:
+                    json_actions = json_data["actions"]
+                    if isinstance(json_actions, list):
+                        for item in json_actions:
+                            if isinstance(item, dict):
+                                actions.append(item)
+                            elif isinstance(item, str):
+                                actions.append(self._structure_action(item))
+                    return actions
+
+            # Strategy 2: Extract from text sections
+            section_headers = [
+                "recommended actions",
+                "next steps",
+                "action items",
+                "recommendations",
+                "suggested actions"
+            ]
+
+            for header in section_headers:
+                items = self._extract_list_items(content, header)
+                if items:
+                    for item in items:
+                        actions.append(self._structure_action(item))
+                    break  # Use first matching section
+
+            return actions
+
+        except Exception:
+            return []
+
+    def _structure_action(self, action_text: str) -> Dict[str, Any]:
+        """
+        Convert action text into structured dict with priority and timing.
+
+        Args:
+            action_text: Raw action description
+
+        Returns:
+            Structured action dict
+        """
+        # Detect priority keywords
+        priority = "medium"
+        if re.search(r'\b(critical|urgent|immediate|high\s+priority)\b', action_text, re.IGNORECASE):
+            priority = "high"
+        elif re.search(r'\b(low\s+priority|optional|consider)\b', action_text, re.IGNORECASE):
+            priority = "low"
+
+        # Detect timing keywords
+        timing = "moderate"
+        if re.search(r'\b(immediate|now|asap|today|urgent)\b', action_text, re.IGNORECASE):
+            timing = "immediate"
+        elif re.search(r'\b(within\s+24|tomorrow|soon)\b', action_text, re.IGNORECASE):
+            timing = "urgent"
+        elif re.search(r'\b(this\s+week|next\s+few\s+days)\b', action_text, re.IGNORECASE):
+            timing = "moderate"
+        elif re.search(r'\b(next\s+week|later|when\s+possible)\b', action_text, re.IGNORECASE):
+            timing = "low"
+
+        return {
+            "action": action_text.strip(),
+            "priority": priority,
+            "timing": timing
+        }
+
+    def _parse_script_variants(self, content: str, json_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """
+        Extract script variants for A/B testing.
+
+        Returns structured variants with:
+        - variant_name: A, B, Control, etc.
+        - script_text: The actual script
+        - rationale: Why this approach works
+        - expected_performance: Predicted effectiveness
+        - channel: SMS, email, call, etc.
+
+        Args:
+            content: Response text
+            json_data: Parsed JSON data if available
+
+        Returns:
+            List of script variant dictionaries
+        """
+        variants = []
+
+        try:
+            # Strategy 1: Extract from JSON
+            if json_data:
+                if "variants" in json_data:
+                    json_variants = json_data["variants"]
+                    if isinstance(json_variants, list):
+                        return json_variants
+                    elif isinstance(json_variants, dict):
+                        # Convert dict of variants to list
+                        for name, data in json_variants.items():
+                            if isinstance(data, dict):
+                                data["variant_name"] = name
+                                variants.append(data)
+                            else:
+                                variants.append({
+                                    "variant_name": name,
+                                    "script_text": str(data)
+                                })
+                        return variants
+
+                if "scripts" in json_data:
+                    return self._parse_script_variants(content, {"variants": json_data["scripts"]})
+
+            # Strategy 2: Extract from text sections
+            # Look for "Variant A:", "Script 1:", "Option A:", etc.
+            variant_patterns = [
+                r'(?:Variant|Script|Option)\s+([A-Z\d]+):\s*\n(.*?)(?=(?:Variant|Script|Option)\s+[A-Z\d]+:|$)',
+                r'(\d+)\.\s+(.+?)(?=\n\d+\.|\Z)',
+            ]
+
+            for pattern in variant_patterns:
+                matches = re.findall(pattern, content, re.DOTALL | re.IGNORECASE)
+                if matches:
+                    for name, script_text in matches:
+                        # Extract rationale if present
+                        rationale_match = re.search(r'rationale:?\s*(.+?)(?=\n\n|\n[A-Z]|\Z)', script_text, re.IGNORECASE | re.DOTALL)
+                        rationale = rationale_match.group(1).strip() if rationale_match else ""
+
+                        # Clean script text
+                        clean_script = re.sub(r'rationale:.*', '', script_text, flags=re.IGNORECASE | re.DOTALL).strip()
+
+                        variants.append({
+                            "variant_name": name.strip(),
+                            "script_text": clean_script,
+                            "rationale": rationale
+                        })
+                    break
+
+            return variants
+
+        except Exception:
+            return []
+
+    def _parse_risk_factors(self, content: str, json_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, str]]:
+        """
+        Extract risk factors from lead analysis.
+
+        Returns structured risks with:
+        - factor: Description of the risk
+        - severity: high/medium/low
+        - mitigation: Suggested mitigation strategy
+
+        Args:
+            content: Response text
+            json_data: Parsed JSON data if available
+
+        Returns:
+            List of risk factor dictionaries
+        """
+        risks = []
+
+        try:
+            # Strategy 1: Extract from JSON
+            if json_data:
+                if "risk_factors" in json_data:
+                    json_risks = json_data["risk_factors"]
+                    if isinstance(json_risks, list):
+                        for item in json_risks:
+                            if isinstance(item, dict):
+                                risks.append(item)
+                            elif isinstance(item, str):
+                                risks.append(self._structure_risk(item))
+                    return risks
+
+                if "risks" in json_data:
+                    json_risks = json_data["risks"]
+                    if isinstance(json_risks, list):
+                        for item in json_risks:
+                            if isinstance(item, dict):
+                                risks.append(item)
+                            elif isinstance(item, str):
+                                risks.append(self._structure_risk(item))
+                    return risks
+
+            # Strategy 2: Extract from text sections
+            section_headers = [
+                "risk factors",
+                "risks",
+                "potential risks",
+                "concerns",
+                "challenges"
+            ]
+
+            for header in section_headers:
+                items = self._extract_list_items(content, header)
+                if items:
+                    for item in items:
+                        risks.append(self._structure_risk(item))
+                    break
+
+            return risks
+
+        except Exception:
+            return []
+
+    def _structure_risk(self, risk_text: str) -> Dict[str, str]:
+        """
+        Convert risk text into structured dict with severity classification.
+
+        Args:
+            risk_text: Raw risk description
+
+        Returns:
+            Structured risk dict
+        """
+        # Detect severity keywords
+        severity = "medium"
+        if re.search(r'\b(critical|severe|high\s+risk|major)\b', risk_text, re.IGNORECASE):
+            severity = "high"
+        elif re.search(r'\b(low\s+risk|minor|slight)\b', risk_text, re.IGNORECASE):
+            severity = "low"
+
+        # Extract mitigation if present
+        mitigation_match = re.search(r'(?:mitigation|solution|address|handle):?\s*(.+?)$', risk_text, re.IGNORECASE)
+        mitigation = mitigation_match.group(1).strip() if mitigation_match else ""
+
+        # Clean risk text
+        clean_risk = re.sub(r'(?:mitigation|solution|address|handle):.*', '', risk_text, flags=re.IGNORECASE).strip()
+
+        return {
+            "factor": clean_risk,
+            "severity": severity,
+            "mitigation": mitigation
+        }
+
+    def _parse_opportunities(self, content: str, json_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, str]]:
+        """
+        Extract opportunities from analysis (upsell, cross-sell, growth areas).
+
+        Returns structured opportunities with:
+        - opportunity: Description of the opportunity
+        - potential_value: Estimated value (dollar amount or qualitative)
+        - action_required: What action to take
+        - timeframe: When to pursue
+
+        Args:
+            content: Response text
+            json_data: Parsed JSON data if available
+
+        Returns:
+            List of opportunity dictionaries
+        """
+        opportunities = []
+
+        try:
+            # Strategy 1: Extract from JSON
+            if json_data:
+                if "opportunities" in json_data:
+                    json_opps = json_data["opportunities"]
+                    if isinstance(json_opps, list):
+                        for item in json_opps:
+                            if isinstance(item, dict):
+                                opportunities.append(item)
+                            elif isinstance(item, str):
+                                opportunities.append(self._structure_opportunity(item))
+                    return opportunities
+
+            # Strategy 2: Extract from text sections
+            section_headers = [
+                "opportunities",
+                "growth opportunities",
+                "upsell potential",
+                "competitive advantages",
+                "strategic opportunities"
+            ]
+
+            for header in section_headers:
+                items = self._extract_list_items(content, header)
+                if items:
+                    for item in items:
+                        opportunities.append(self._structure_opportunity(item))
+                    break
+
+            return opportunities
+
+        except Exception:
+            return []
+
+    def _structure_opportunity(self, opp_text: str) -> Dict[str, str]:
+        """
+        Convert opportunity text into structured dict with value assessment.
+
+        Args:
+            opp_text: Raw opportunity description
+
+        Returns:
+            Structured opportunity dict
+        """
+        # Extract dollar amounts
+        value_match = re.search(r'\$\s*([\d,]+(?:\.\d{2})?)', opp_text)
+        potential_value = value_match.group(0) if value_match else ""
+
+        # Extract percentage values
+        if not potential_value:
+            pct_match = re.search(r'(\d+(?:\.\d+)?)\s*%', opp_text)
+            potential_value = pct_match.group(0) if pct_match else "medium"
+
+        # Classify qualitatively if no numbers found
+        if not potential_value or potential_value == "medium":
+            if re.search(r'\b(high|significant|major|substantial)\b', opp_text, re.IGNORECASE):
+                potential_value = "high"
+            elif re.search(r'\b(low|minimal|small)\b', opp_text, re.IGNORECASE):
+                potential_value = "low"
+
+        # Extract action if present
+        action_match = re.search(r'(?:action|next\s+step):?\s*(.+?)$', opp_text, re.IGNORECASE)
+        action_required = action_match.group(1).strip() if action_match else ""
+
+        # Clean opportunity text
+        clean_opp = re.sub(r'(?:action|next\s+step):.*', '', opp_text, flags=re.IGNORECASE).strip()
+        clean_opp = re.sub(r'\$[\d,]+(?:\.\d{2})?', '', clean_opp).strip()
+
+        return {
+            "opportunity": clean_opp,
+            "potential_value": potential_value,
+            "action_required": action_required
+        }
+
     async def _gather_lead_context(self,
                                   lead_id: str,
                                   include_scoring: bool = True,
@@ -1060,15 +1540,322 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
             # Get churn analysis if requested
             if include_churn_analysis:
-                # This would need to be implemented based on available data
-                # churn_result = await self.churn_predictor.predict_churn_risk(lead_id)
-                # context["churn_analysis"] = churn_result
-                pass
+                churn_analysis = await self._analyze_churn_risk_comprehensive(
+                    lead_id, memory_data
+                )
+                context["churn_analysis"] = churn_analysis
 
         except Exception as e:
             context["error"] = f"Error gathering context: {str(e)}"
 
         return context
+
+    def _extract_conversation_messages(self, memory_data: Dict[str, Any]) -> List[Dict[str, str]]:
+        """
+        Extract and validate conversation messages from memory data.
+
+        Args:
+            memory_data: Memory context dictionary
+
+        Returns:
+            List of validated message dictionaries with 'role' and 'content' keys
+        """
+        try:
+            raw_messages = []
+
+            # Strategy 1: Direct conversation_history field
+            if "conversation_history" in memory_data:
+                history = memory_data["conversation_history"]
+                if isinstance(history, list) and len(history) > 0:
+                    raw_messages = history
+
+            # Strategy 2: Messages field
+            elif "messages" in memory_data:
+                messages = memory_data["messages"]
+                if isinstance(messages, list) and len(messages) > 0:
+                    raw_messages = messages
+
+            # Strategy 3: Nested in context
+            elif "context" in memory_data:
+                context = memory_data["context"]
+                if isinstance(context, dict):
+                    if "conversation_history" in context:
+                        raw_messages = context["conversation_history"]
+                    elif "messages" in context:
+                        raw_messages = context["messages"]
+
+            # Validate and clean messages
+            validated_messages = []
+            for i, msg in enumerate(raw_messages):
+                try:
+                    # Ensure message is a dictionary
+                    if not isinstance(msg, dict):
+                        continue
+
+                    # Extract and validate required fields
+                    role = msg.get('role')
+                    content = msg.get('content')
+
+                    # Skip invalid messages
+                    if not role or not content:
+                        continue
+
+                    # Normalize role values
+                    role_str = str(role).lower().strip()
+                    if role_str not in ['user', 'assistant', 'system', 'human', 'ai', 'bot']:
+                        # Map common role variations
+                        if role_str in ['customer', 'lead', 'client']:
+                            role_str = 'user'
+                        elif role_str in ['agent', 'jorge', 'bot', 'ai']:
+                            role_str = 'assistant'
+                        else:
+                            role_str = 'user'  # Default fallback
+
+                    # Clean and validate content
+                    content_str = str(content).strip()
+                    if not content_str or len(content_str) > 10000:  # Skip empty or excessively long messages
+                        continue
+
+                    validated_messages.append({
+                        'role': role_str,
+                        'content': content_str
+                    })
+
+                except Exception:
+                    # Skip individual malformed messages
+                    continue
+
+            return validated_messages
+
+        except Exception:
+            # Graceful degradation on any error
+            return []
+
+    async def _analyze_churn_risk_comprehensive(self,
+                                                 lead_id: str,
+                                                 memory_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Perform comprehensive multi-dimensional churn risk analysis.
+
+        Integrates:
+        - Core ML-based churn prediction
+        - Sentiment drift analysis
+        - Psychographic risk factors
+        - Historical engagement patterns
+
+        Args:
+            lead_id: Lead identifier
+            memory_data: Memory context data
+
+        Returns:
+            Comprehensive churn analysis dictionary with:
+            - core_prediction: ML model results
+            - sentiment_analysis: Drift detection results
+            - psychographic_factors: Personality-based risk
+            - composite_risk_score: Weighted average risk (0-100)
+            - intervention_recommendations: Actionable steps
+            - confidence_level: Overall analysis confidence (0-1)
+            - analysis_timestamp: When analysis was performed
+        """
+        try:
+            # Initialize result structure
+            analysis = {
+                "lead_id": lead_id,
+                "analysis_timestamp": datetime.now().isoformat(),
+                "status": "success"
+            }
+
+            # Extract conversation messages for behavioral analysis
+            messages = self._extract_conversation_messages(memory_data)
+
+            # Robust parallel execution with named task mapping and timeout protection
+            task_map = {}
+
+            # Build task map only for available/applicable analyses
+            if hasattr(self, 'churn_predictor') and self.churn_predictor:
+                task_map['core_prediction'] = self.churn_predictor.predict_churn_risk(lead_id)
+
+            if len(messages) >= 4:
+                task_map['sentiment'] = self.sentiment_drift_engine.analyze_conversation_drift(
+                    messages=messages,
+                    lead_id=lead_id
+                )
+
+            if len(messages) >= 2:
+                task_map['psychographic'] = self.psychographic_engine.detect_persona(
+                    messages=messages,
+                    lead_context=memory_data
+                )
+
+            # Execute tasks with timeout protection
+            results = {}
+            if task_map:
+                try:
+                    task_results = await asyncio.wait_for(
+                        asyncio.gather(*task_map.values(), return_exceptions=True),
+                        timeout=30.0  # 30 second timeout for all parallel tasks
+                    )
+                    results = dict(zip(task_map.keys(), task_results))
+                except asyncio.TimeoutError:
+                    # Log timeout and continue with defaults
+                    analysis["execution_warning"] = f"Churn analysis timeout for lead {lead_id}"
+
+            # Process core prediction results with robust error handling
+            ml_risk_score = 50.0  # Default neutral risk
+            ml_confidence = 0.3   # Default low confidence
+
+            if 'core_prediction' in results:
+                result = results['core_prediction']
+                if isinstance(result, Exception):
+                    analysis["core_prediction"] = {"error": f"ML prediction failed: {str(result)}"}
+                elif result and hasattr(result, 'risk_score_14d'):
+                    # ChurnPrediction dataclass - extract with validation
+                    try:
+                        analysis["core_prediction"] = {
+                            "risk_score_7d": getattr(result, 'risk_score_7d', 50.0),
+                            "risk_score_14d": getattr(result, 'risk_score_14d', 50.0),
+                            "risk_score_30d": getattr(result, 'risk_score_30d', 50.0),
+                            "risk_tier": result.risk_tier.value if hasattr(result.risk_tier, 'value') else str(result.risk_tier),
+                            "confidence": getattr(result, 'confidence', 0.3),
+                            "top_risk_factors": getattr(result, 'top_risk_factors', [])[:5],  # Top 5 factors
+                            "recommended_actions": getattr(result, 'recommended_actions', [])[:3],  # Top 3 actions
+                            "intervention_urgency": getattr(result, 'intervention_urgency', 'medium'),
+                            "model_version": getattr(result, 'model_version', 'unknown')
+                        }
+                        ml_risk_score = float(result.risk_score_14d)
+                        ml_confidence = float(result.confidence)
+                    except (AttributeError, ValueError, TypeError) as e:
+                        analysis["core_prediction"] = {"error": f"ML prediction parsing failed: {str(e)}"}
+                else:
+                    analysis["core_prediction"] = {"error": "ML prediction returned invalid data"}
+            else:
+                analysis["core_prediction"] = {"error": "ML prediction not available"}
+
+            # Process sentiment analysis results with robust error handling
+            sentiment_risk = 50.0      # Default neutral risk
+            sentiment_confidence = 0.2 # Default low confidence
+
+            if 'sentiment' in results:
+                result = results['sentiment']
+                if isinstance(result, Exception):
+                    analysis["sentiment_analysis"] = {"error": f"Sentiment analysis failed: {str(result)}"}
+                elif result and isinstance(result, dict):
+                    analysis["sentiment_analysis"] = result
+
+                    # Convert sentiment drift to risk contribution
+                    drift_score = result.get("drift_score", 0)
+                    if drift_score < -0.4:  # Significant negative drift
+                        sentiment_risk = 75.0
+                    elif drift_score < -0.2:  # Moderate negative drift
+                        sentiment_risk = 55.0
+                    elif drift_score < 0:  # Slight negative drift
+                        sentiment_risk = 35.0
+                    else:  # Positive or neutral
+                        sentiment_risk = 20.0
+
+                    sentiment_confidence = result.get("confidence", 0.5)
+                else:
+                    analysis["sentiment_analysis"] = {"status": "invalid_data"}
+            else:
+                analysis["sentiment_analysis"] = {"status": "insufficient_data"}
+
+            # Process psychographic analysis results with robust error handling
+            psycho_risk_modifier = 1.0  # Default neutral modifier
+            persona_confidence = 0.2    # Default low confidence
+
+            if 'psychographic' in results:
+                result = results['psychographic']
+                if isinstance(result, Exception):
+                    analysis["psychographic_factors"] = {"error": f"Psychographic analysis failed: {str(result)}"}
+                elif result and isinstance(result, dict):
+                    analysis["psychographic_factors"] = result
+
+                    # Map personas to churn risk modifiers
+                    persona = result.get("primary_persona", "unknown")
+                    persona_confidence = result.get("confidence", 0.5)
+
+                    # High-risk personas
+                    if persona in ["loss_aversion", "motivated_seller"]:
+                        psycho_risk_modifier = 1.2  # 20% higher risk
+                    # Medium-risk personas
+                    elif persona in ["first_time_buyer", "owner_occupant"]:
+                        psycho_risk_modifier = 1.0  # Neutral
+                    # Lower-risk personas
+                    elif persona in ["investor", "luxury_seeker"]:
+                        psycho_risk_modifier = 0.8  # 20% lower risk
+                    else:
+                        psycho_risk_modifier = 1.0  # Default neutral
+                else:
+                    analysis["psychographic_factors"] = {"status": "invalid_data"}
+            else:
+                analysis["psychographic_factors"] = {"status": "insufficient_data"}
+
+            # Calculate composite risk score (weighted average)
+            # Weights: ML (60%), Sentiment (25%), Psychographic modifier (15%)
+            base_risk = (ml_risk_score * 0.60) + (sentiment_risk * 0.25)
+            composite_risk_score = min(100.0, base_risk * (0.85 + (psycho_risk_modifier * 0.15)))
+
+            # Calculate overall confidence (average of component confidences)
+            overall_confidence = (
+                (ml_confidence * 0.5) +
+                (sentiment_confidence * 0.3) +
+                (persona_confidence * 0.2)
+            )
+
+            analysis["composite_risk_score"] = round(composite_risk_score, 2)
+            analysis["confidence_level"] = round(overall_confidence, 2)
+
+            # Generate synthesized intervention recommendations
+            recommendations = []
+
+            # Add ML-based recommendations
+            if core_prediction and hasattr(core_prediction, 'recommended_actions'):
+                recommendations.extend(core_prediction.recommended_actions[:2])
+
+            # Add sentiment-based recommendations
+            if sentiment_result and sentiment_result.get("alert") == "COLD_LEAD":
+                objection = sentiment_result.get("objection_hint", "general concerns")
+                recommendations.append(
+                    f"Address {objection} with personalized re-engagement message"
+                )
+
+            # Add psychographic-based recommendations
+            if psycho_result and "recommended_tone" in psycho_result:
+                tone = psycho_result["recommended_tone"]
+                recommendations.append(
+                    f"Adjust communication tone: {tone}"
+                )
+
+            # Prioritize if high risk
+            if composite_risk_score >= 70:
+                recommendations.insert(0, "URGENT: Immediate intervention required")
+
+            analysis["intervention_recommendations"] = recommendations[:5]  # Top 5
+
+            # Add risk tier classification
+            if composite_risk_score >= 80:
+                analysis["risk_tier"] = "critical"
+            elif composite_risk_score >= 60:
+                analysis["risk_tier"] = "high"
+            elif composite_risk_score >= 30:
+                analysis["risk_tier"] = "medium"
+            else:
+                analysis["risk_tier"] = "low"
+
+            return analysis
+
+        except Exception as e:
+            # Graceful fallback with error details
+            return {
+                "lead_id": lead_id,
+                "analysis_timestamp": datetime.now().isoformat(),
+                "status": "error",
+                "error_message": str(e),
+                "composite_risk_score": 50.0,  # Neutral default
+                "confidence_level": 0.1,  # Very low confidence
+                "risk_tier": "unknown",
+                "intervention_recommendations": ["Manual review recommended due to analysis error"]
+            }
 
     def _update_metrics(self, response_time: int, success: bool):
         """Update performance metrics"""
