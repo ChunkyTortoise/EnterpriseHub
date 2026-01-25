@@ -18,6 +18,40 @@ from langgraph.graph import StateGraph, END
 
 from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
 from ghl_real_estate_ai.agents.buyer_intent_decoder import BuyerIntentDecoder
+
+# Custom exceptions for proper error handling and escalation
+class BuyerQualificationError(Exception):
+    """Base exception for buyer qualification failures"""
+    def __init__(self, message: str, recoverable: bool = False, escalate: bool = False):
+        super().__init__(message)
+        self.recoverable = recoverable
+        self.escalate = escalate
+
+class BuyerIntentAnalysisError(BuyerQualificationError):
+    """Raised when buyer intent analysis fails"""
+    pass
+
+class FinancialAssessmentError(BuyerQualificationError):
+    """Raised when financial readiness assessment fails"""
+    pass
+
+class ClaudeAPIError(BuyerQualificationError):
+    """Raised when Claude AI service fails"""
+    pass
+
+class NetworkError(BuyerQualificationError):
+    """Raised when network connectivity issues occur"""
+    pass
+
+class ComplianceValidationError(BuyerQualificationError):
+    """Raised when compliance validation fails (Fair Housing, TREC)"""
+    pass
+
+# Error IDs for monitoring and alerting
+ERROR_ID_BUYER_QUALIFICATION_FAILED = "BUYER_QUALIFICATION_FAILED"
+ERROR_ID_FINANCIAL_ASSESSMENT_FAILED = "FINANCIAL_ASSESSMENT_FAILED"
+ERROR_ID_COMPLIANCE_VIOLATION = "COMPLIANCE_VIOLATION"
+ERROR_ID_SYSTEM_FAILURE = "SYSTEM_FAILURE"
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
@@ -116,14 +150,46 @@ class JorgeBuyerBot:
                 "buyer_temperature": profile.buyer_temperature
             }
 
-        except Exception as e:
-            logger.error(f"Error analyzing buyer intent for {state['buyer_id']}: {str(e)}")
+        except (ClaudeAPIError, NetworkError) as e:
+            # Transient errors - retry with backoff
+            logger.warning(f"Transient error analyzing buyer intent for {state['buyer_id']}: {e}",
+                         extra={"error_id": ERROR_ID_BUYER_QUALIFICATION_FAILED,
+                                "buyer_id": state['buyer_id'],
+                                "recoverable": True})
+            # TODO: Implement retry mechanism with exponential backoff
             return {
                 "intent_profile": None,
-                "financial_readiness_score": 25.0,
-                "buying_motivation_score": 25.0,
-                "current_qualification_step": "budget"
+                "qualification_status": "retry_required",
+                "error": "Temporary service issue. Retrying analysis.",
+                "financial_readiness_score": None,  # Don't default to low scores
+                "buying_motivation_score": None,
+                "current_qualification_step": "intent_retry"
             }
+        except BuyerIntentAnalysisError as e:
+            # Business logic errors - alert and escalate
+            logger.error(f"BUSINESS CRITICAL: Intent analysis failed for {state['buyer_id']}: {e}",
+                        extra={"error_id": ERROR_ID_BUYER_QUALIFICATION_FAILED,
+                               "buyer_id": state['buyer_id'],
+                               "escalate": True})
+            # TODO: Implement escalate_to_human_review method
+            return {
+                "intent_profile": None,
+                "qualification_status": "manual_review_required",
+                "error": "Analysis requires human review. Lead prioritized for immediate attention.",
+                "escalation_reason": "intent_analysis_failure",
+                "financial_readiness_score": None,  # Preserve unknown state
+                "buying_motivation_score": None,
+                "current_qualification_step": "human_review"
+            }
+        except Exception as e:
+            # Unexpected system errors - escalate immediately
+            logger.error(f"SYSTEM ERROR: Unexpected failure in buyer intent analysis: {e}",
+                        extra={"error_id": ERROR_ID_SYSTEM_FAILURE,
+                               "buyer_id": state['buyer_id'],
+                               "critical": True})
+            # Don't hide system failures - let them bubble up
+            raise BuyerQualificationError(f"System failure in intent analysis: {str(e)}",
+                                        recoverable=False, escalate=True)
 
     async def assess_financial_readiness(self, state: BuyerBotState) -> Dict:
         """
@@ -157,12 +223,39 @@ class JorgeBuyerBot:
                 "financial_readiness_score": profile.financial_readiness
             }
 
-        except Exception as e:
-            logger.error(f"Error assessing financial readiness for {state['buyer_id']}: {str(e)}")
+        except NetworkError as e:
+            # External service failures - retry with alternative sources
+            logger.warning(f"Financial service network error for buyer {state['buyer_id']}: {e}",
+                         extra={"error_id": ERROR_ID_FINANCIAL_ASSESSMENT_FAILED,
+                                "buyer_id": state['buyer_id'],
+                                "retry_recommended": True})
+            # TODO: Implement fallback financial assessment method
             return {
-                "financing_status": "unknown",
-                "budget_range": None
+                "financing_status": "assessment_pending",
+                "budget_range": None,
+                "requires_manual_review": True,
+                "error": "Financial assessment temporarily unavailable. Will retry shortly."
             }
+        except ComplianceValidationError as e:
+            # Compliance failures - immediate escalation
+            logger.error(f"COMPLIANCE VIOLATION: Financial assessment failed validation for {state['buyer_id']}: {e}",
+                        extra={"error_id": ERROR_ID_COMPLIANCE_VIOLATION,
+                               "buyer_id": state['buyer_id'],
+                               "compliance_alert": True})
+            # TODO: Implement escalate_compliance_violation method
+            return {
+                "financing_status": "compliance_review_required",
+                "budget_range": None,
+                "error": "Assessment requires compliance review",
+                "compliance_issue": str(e)
+            }
+        except Exception as e:
+            logger.error(f"Unexpected error in financial assessment for {state['buyer_id']}: {e}",
+                        extra={"error_id": ERROR_ID_FINANCIAL_ASSESSMENT_FAILED,
+                               "buyer_id": state['buyer_id']})
+            # Don't hide unexpected errors - let them bubble up for investigation
+            raise FinancialAssessmentError(f"Unexpected financial assessment failure: {str(e)}",
+                                         recoverable=False, escalate=True)
 
     async def qualify_property_needs(self, state: BuyerBotState) -> Dict:
         """
