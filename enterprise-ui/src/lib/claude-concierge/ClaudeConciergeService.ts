@@ -573,7 +573,7 @@ export class ClaudeConciergeService {
     userMessage: string
     conversationHistory: Message[]
   }): Promise<ReadableStream> {
-    const response = await fetch(`${this.baseApiUrl}/concierge/chat`, {
+    const response = await fetch(`${this.baseApiUrl}/claude-concierge/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -590,7 +590,9 @@ export class ClaudeConciergeService {
         model: this.MODEL_MAIN,
         maxTokens: this.MAX_TOKENS,
         temperature: this.TEMPERATURE,
-        stream: true
+        stream: true,
+        // Match backend expectations
+        platform_context: await this.contextManager.captureContext()
       })
     })
 
@@ -610,7 +612,7 @@ export class ClaudeConciergeService {
     model?: string
     maxTokens?: number
   }): Promise<string> {
-    const response = await fetch(`${this.baseApiUrl}/concierge/query`, {
+    const response = await fetch(`${this.baseApiUrl}/claude-concierge/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -619,7 +621,9 @@ export class ClaudeConciergeService {
         systemPrompt: params.systemPrompt,
         message: params.userMessage,
         model: params.model || this.MODEL_MAIN,
-        maxTokens: params.maxTokens || 1024
+        maxTokens: params.maxTokens || 1024,
+        streaming: false,
+        platform_context: await this.contextManager.captureContext()
       })
     })
 
@@ -670,7 +674,14 @@ export class ClaudeConciergeService {
             try {
               const data = JSON.parse(line.slice(6))
 
-              if (data.type === 'content_block_delta' && data.delta?.text) {
+              // Handle platform-standard format from FastAPI
+              if (data.type === 'content' && data.data?.content) {
+                const text = data.data.content
+                fullContent += text
+                yield text
+              } 
+              // Fallback for raw Anthropic format if needed
+              else if (data.type === 'content_block_delta' && data.delta?.text) {
                 const text = data.delta.text
                 fullContent += text
                 yield text

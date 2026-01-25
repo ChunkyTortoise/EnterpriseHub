@@ -93,82 +93,101 @@ if run_button:
             
             apply_custom_style(theme_colors)
             
-            # 2. Layout Results
-            col1, col2, col3 = st.columns([1.5, 1, 1])
+            # 2. Responsive Layout using Tabs for Mobile Excellence
+            tab_main, tab_visuals, tab_market, tab_lead_recovery = st.tabs([
+                "📋 Summary", "🎨 Visuals", "📊 Market & Moat", "🚀 Lead Recovery"
+            ])
             
-            with col1:
-                st.markdown(f"### <span class='agent-badge'>EXECUTIVE</span> {result.get('executive_summary', {}).get('investment_verdict', 'ANALYSIS_COMPLETE')}", unsafe_allow_html=True)
-                st.write(result.get("executive_summary", {}).get("executive_summary", "No summary generated."))
-                
-                st.markdown("---")
-                st.markdown("### <span class='agent-badge'>AI_STAGING</span> High-Fidelity Gallery", unsafe_allow_html=True)
-                staged_images = result.get("staged_images", [])
-                if staged_images:
-                    cols = st.columns(len(staged_images))
-                    for idx, img in enumerate(staged_images):
-                        with cols[idx]:
-                            st.image(img['url'], caption=f"{img['room']} ({img['provider']})", use_container_width=True)
-                else:
-                    st.warning("No high-fidelity staging images available.")
-                
-                st.markdown("---")
-                st.markdown("### <span class='agent-badge'>MARKETING</span> Campaign Copy", unsafe_allow_html=True)
-                marketing = result.get("marketing_campaigns", {})
-                if marketing:
-                    st.success(f"**Campaign:** {marketing.get('campaign_name')}")
-                    with st.expander("📱 SMS Copy"):
-                        st.write(marketing.get("sms_copy"))
-                    with st.expander("📧 Email Body"):
-                        st.write(marketing.get("email_body"))
+            with tab_main:
+                col_left, col_right = st.columns([2, 1])
+                with col_left:
+                    st.markdown(f"### <span class='agent-badge'>EXECUTIVE</span> {result.get('executive_summary', {}).get('investment_verdict', 'ANALYSIS_COMPLETE')}", unsafe_allow_html=True)
+                    st.write(result.get("executive_summary", {}).get("executive_summary", "No summary generated."))
+                    
+                    st.markdown("---")
+                    st.markdown("### <span class='agent-badge'>ANALYST</span> Financial Projections", unsafe_allow_html=True)
+                    financials = result.get("analysis_results", {}).get("financials", {})
+                    f_cols = st.columns(2)
+                    for i, (k, v) in enumerate(financials.items()):
+                        if isinstance(v, (int, float)):
+                            with f_cols[i % 2]:
+                                st.metric(label=k.replace('_', ' ').title(), value=f"${v:,.0f}" if v > 1000 else v)
 
-            with col2:
-                st.markdown("### <span class='agent-badge'>PLATFORM_EVAL</span> Quality Score", unsafe_allow_html=True)
-                evals = result.get("evaluations", {})
-                if evals:
-                    score = evals.get("overall_platform_score", 0) * 100
-                    st.progress(score / 100, text=f"Pipeline Integrity: {score:.1f}%")
-                    st.info(f"**Feedback:** {evals.get('analysis_quality', {}).get('feedback')}")
-                
-                st.markdown("### <span class='agent-badge'>MATCHES</span> GHL Lead Bridge", unsafe_allow_html=True)
-                matched_leads = result.get("matched_leads", [])
-                if matched_leads:
-                    for lead in matched_leads[:3]:
-                        with st.container():
+                with col_right:
+                    st.markdown("### <span class='agent-badge'>MATCHES</span> GHL Lead Bridge", unsafe_allow_html=True)
+                    matched_leads = result.get("matched_leads", [])
+                    if matched_leads:
+                        for lead in matched_leads[:3]:
                             st.markdown(f"""
                             <div class='property-card'>
                                 <strong>{lead['first_name']} {lead['last_name']}</strong><br/>
                                 <span class='match-score'>{lead['match_score']}% Match</span>
                             </div>
                             """, unsafe_allow_html=True)
-                            if st.button(f"Send Outreach to {lead['first_name']}", key=f"btn_{lead['id']}"):
-                                st.toast(f"Outreach triggered for {lead['first_name']}!")
+                    
+                    st.markdown("### <span class='agent-badge'>PLATFORM_EVAL</span> Integrity", unsafe_allow_html=True)
+                    evals = result.get("evaluations", {})
+                    if evals:
+                        score = evals.get("overall_platform_score", 0) * 100
+                        st.progress(score / 100, text=f"Score: {score:.1f}%")
+
+            with tab_visuals:
+                st.markdown("### <span class='agent-badge'>AI_STAGING</span> High-Fidelity Gallery", unsafe_allow_html=True)
+                staged_images = result.get("staged_images", [])
+                if staged_images:
+                    cols = st.columns(min(len(staged_images), 3))
+                    for idx, img in enumerate(staged_images):
+                        with cols[idx % 3]:
+                            st.image(img['url'], caption=f"{img['room']} ({img['provider']})", use_container_width=True)
                 
                 st.markdown("---")
-                st.markdown("### <span class='agent-badge'>ANALYST</span> Financials", unsafe_allow_html=True)
-                financials = result.get("analysis_results", {}).get("financials", {})
-                for k, v in financials.items():
-                    if isinstance(v, (int, float)):
-                        st.metric(label=k.replace('_', ' ').title(), value=f"${v:,.0f}" if v > 1000 else v)
-
-            with col3:
                 st.markdown("### <span class='agent-badge'>VISUALIZER</span> 3D Digital Twin", unsafe_allow_html=True)
                 viz = PropertyVisualizer()
                 html = viz.generate_threejs_html(address)
-                st.components.v1.html(html, height=350)
+                st.components.v1.html(html, height=400)
+
+            with tab_market:
+                col_m1, col_m2 = st.columns(2)
+                with col_m1:
+                    st.markdown("### <span class='agent-badge'>RESEARCH</span> Market Context", unsafe_allow_html=True)
+                    research = result.get("research_data", {})
+                    context = research.get("market_context", {})
+                    if context:
+                        st.info(f"**Neighborhood:** {context.get('neighborhood')}\n\n**Price Trend:** {context.get('price_trend')}\n\n**Inventory:** {context.get('inventory_level')}")
+                
+                with col_m2:
+                    st.markdown("### <span class='agent-badge'>PHASE_7</span> Competitive Moat", unsafe_allow_html=True)
+                    analysis = result.get("analysis_results", {})
+                    comp = analysis.get("competitive_landscape")
+                    if comp:
+                        st.metric("Competitor Count", comp.get("competitor_count", 0))
+                        st.metric("Threat Level", comp.get("threat_level", "Unknown"))
+                        st.write(f"**Strategic Advantage:** {comp.get('strategic_advantage')}")
+                    else:
+                        st.warning("Competitive intelligence data pending.")
+
+            with tab_lead_recovery:
+                st.markdown("### <span class='agent-badge'>SERVICE_6</span> Hardened Lead Recovery", unsafe_allow_html=True)
+                s6 = result.get("service6_insights", {})
+                recovery = s6.get("recovery_analysis", [])
+                if recovery:
+                    for item in recovery:
+                        with st.expander(f"Lead ID: {item['lead_id']} - Priority: {item['priority']}"):
+                            st.write(f"**Unified Score:** {item['unified_score']}/100")
+                            st.write(f"**Sentiment:** {item['sentiment']}")
+                            st.write("**Recommended Actions:**")
+                            for action in item['recommended_actions']:
+                                st.write(f"- {action}")
+                else:
+                    st.info("No lead recovery analysis available for this property.")
                 
                 st.markdown("---")
-                st.markdown("### <span class='agent-badge'>RESEARCH</span> Market Context", unsafe_allow_html=True)
-                research = result.get("research_data", {})
-                context = research.get("market_context", {})
-                if context:
-                    st.write(f"**Neighborhood:** {context.get('neighborhood')}")
-                    st.write(f"**Price Trend:** {context.get('price_trend')}")
-                    st.write(f"**Inventory:** {context.get('inventory_level')}")
-                
-                st.markdown("---")
-                st.markdown("### <span class='agent-badge'>DESIGN</span> Style Specs", unsafe_allow_html=True)
-                for room in design_data.get("staged_rooms", []):
-                    st.markdown(f"**{room['room_name']}:** {room['style']}")
+                st.markdown("### <span class='agent-badge'>MARKETING</span> Personalized Outreach", unsafe_allow_html=True)
+                marketing = result.get("marketing_campaigns", {})
+                if marketing:
+                    st.success(f"**Campaign:** {marketing.get('campaign_name')}")
+                    st.text_area("📱 SMS Copy", marketing.get("sms_copy"), height=100)
+                    st.text_area("📧 Email Body", marketing.get("email_body"), height=200)
 
         except Exception as e:
             st.error(f"Pipeline Failed: {str(e)}")

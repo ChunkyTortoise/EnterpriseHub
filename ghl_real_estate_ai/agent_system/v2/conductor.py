@@ -20,6 +20,7 @@ from ghl_real_estate_ai.services.ghl_integration_service import ghl_integration_
 from ghl_real_estate_ai.services.lead_scoring_service import lead_scoring_service
 from ghl_real_estate_ai.services.visual_asset_service import visual_asset_service
 from ghl_real_estate_ai.services.performance_monitoring_service import performance_monitor
+from ghl_real_estate_ai.services.service6_ai_integration import create_service6_ai_orchestrator
 
 # 1. Define the Graph State
 class ConductorState(TypedDict):
@@ -39,9 +40,10 @@ class ConductorState(TypedDict):
     matched_leads: Optional[List[Dict[str, Any]]]
     marketing_campaigns: Optional[Dict[str, Any]]
     
-    # Phase 6: Enterprise Polish
+    # Phase 6 & 7: Enterprise Polish & Moat
     evaluations: Annotated[Dict[str, Any], operator.ior] # Merges dicts
     staged_images: Optional[List[Dict[str, str]]]
+    service6_insights: Optional[Dict[str, Any]] # Advanced Lead Recovery
     
     # Metadata
     errors: Annotated[List[str], operator.add]
@@ -129,7 +131,20 @@ async def design_node(state: ConductorState):
     query = f"design:{state['property_address']}:{state['analysis_results']}"
     cached = await semantic_cache.get(query)
     if cached:
-        return {"design_data": cached, "status": "design_complete_cached"}
+        # Regenerate images if not in cache (or just return them if they were stored)
+        staged_images = cached.get("staged_images")
+        if not staged_images:
+            staged_rooms = [room.get("room_name") for room in cached.get("staged_rooms", [])]
+            staging_style = cached.get("theme_name", "Modern")
+            staged_images = await visual_asset_service.generate_staging_images(staging_style, staged_rooms)
+            cached["staged_images"] = staged_images
+            await semantic_cache.set(query, cached)
+            
+        return {
+            "design_data": cached, 
+            "staged_images": staged_images,
+            "status": "design_complete_cached"
+        }
 
     print(f"🎨 Generating design concepts for: {state['property_address']}")
     deps = DesignDeps()
@@ -144,6 +159,9 @@ async def design_node(state: ConductorState):
         staged_rooms = [room.room_name for room in result.output.staged_rooms]
         staging_style = result.output.staged_rooms[0].style if result.output.staged_rooms else "Modern"
         staged_images = await visual_asset_service.generate_staging_images(staging_style, staged_rooms)
+        
+        # Store images in the data dict for caching
+        data["staged_images"] = staged_images
         
         # Log Performance
         performance_monitor.log_agent_run("designer", time.time() - start_time, {"input": 1500, "output": 600}, "success")
@@ -235,6 +253,35 @@ async def marketing_node(state: ConductorState):
     except Exception as e:
         return {"errors": [f"Marketing Error: {str(e)}"], "status": "failed"}
 
+async def lead_recovery_node(state: ConductorState):
+    """Phase 7: Hardened Lead Recovery Engine (Service 6)."""
+    if not state.get("matched_leads"):
+        return {"status": "no_leads_for_recovery"}
+        
+    print(f"🚀 Hardening lead recovery using Service 6 AI...")
+    orchestrator = create_service6_ai_orchestrator()
+    await orchestrator.initialize()
+    
+    recovery_results = []
+    # Analyze the top 3 leads deeply
+    for lead in state["matched_leads"][:3]:
+        try:
+            analysis = await orchestrator.analyze_lead(lead.get("id", "unknown"), lead)
+            recovery_results.append({
+                "lead_id": lead.get("id"),
+                "unified_score": analysis.unified_lead_score,
+                "priority": analysis.priority_level,
+                "recommended_actions": analysis.immediate_actions,
+                "sentiment": analysis.predictive_insights.get("sentiment") if analysis.predictive_insights else "Neutral"
+            })
+        except Exception as e:
+            print(f"⚠️ Service 6 Analysis failed for lead {lead.get('id')}: {e}")
+            
+    return {
+        "service6_insights": {"recovery_analysis": recovery_results},
+        "status": "lead_recovery_complete"
+    }
+
 async def evaluation_node(state: ConductorState):
     """Phase 6: Final evaluation and data moat update."""
     print(f"⚖️ Performing final enterprise-grade evaluation...")
@@ -264,6 +311,7 @@ workflow.add_node("analyst", analysis_node)
 workflow.add_node("designer", design_node)
 workflow.add_node("executive", executive_node)
 workflow.add_node("marketer", marketing_node)
+workflow.add_node("lead_recovery", lead_recovery_node)
 workflow.add_node("evaluator", evaluation_node)
 
 # Define Edges
@@ -278,7 +326,8 @@ workflow.add_edge("researcher", "analyst")
 workflow.add_edge("analyst", "designer")
 workflow.add_edge("designer", "executive")
 workflow.add_edge("executive", "marketer")
-workflow.add_edge("marketer", "evaluator")
+workflow.add_edge("marketer", "lead_recovery")
+workflow.add_edge("lead_recovery", "evaluator")
 workflow.add_edge("evaluator", END)
 
 # Compile Graph
@@ -300,6 +349,7 @@ async def process_request(address: str, request: str, market: Optional[str] = No
         "marketing_campaigns": None,
         "evaluations": {},
         "staged_images": None,
+        "service6_insights": None,
         "status": "started"
     }
     return await conductor_app.ainvoke(initial_state)

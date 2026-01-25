@@ -23,6 +23,9 @@ from ghl_real_estate_ai.services.claude_conversation_intelligence import ClaudeC
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.ghl_deal_intelligence_service import (
+    get_ghl_deal_intelligence_service, GHLDealData
+)
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -153,6 +156,9 @@ class EmergencyDealRescue:
         self.cache = get_cache_service()
         self.analytics = AnalyticsService()
 
+        # GHL Deal Intelligence (lazy-loaded)
+        self._ghl_deal_service = None
+
         # Configuration
         self.monitoring_interval = 300  # 5 minutes
         self.cache_ttl = 1800  # 30 minutes
@@ -171,6 +177,12 @@ class EmergencyDealRescue:
             'high_alert': 500000,        # $500K+ deals get high priority
             'standard_alert': 300000     # $300K+ deals get standard monitoring
         }
+
+    async def get_ghl_deal_service(self):
+        """Get GHL deal intelligence service (lazy loading)."""
+        if self._ghl_deal_service is None:
+            self._ghl_deal_service = await get_ghl_deal_intelligence_service()
+        return self._ghl_deal_service
 
     async def assess_deal_risk(self, deal_id: str, conversation_context: Optional[Dict] = None) -> DealRiskProfile:
         """
@@ -394,35 +406,127 @@ class EmergencyDealRescue:
         return signals
 
     async def _load_deal_data(self, deal_id: str) -> Optional[Dict]:
-        """Load deal data from cache or database."""
-        # Check cache first
-        cache_key = f"deal_data:{deal_id}"
-        cached_data = await self.cache.get(cache_key)
-        if cached_data:
-            return json.loads(cached_data)
+        """Load deal data from GHL CRM."""
+        try:
+            ghl_service = await self.get_ghl_deal_service()
+            ghl_deal = await ghl_service.get_deal_by_id(deal_id)
 
-        # Mock deal data (in production, load from CRM/database)
-        deal_data = {
-            'deal_id': deal_id,
-            'deal_value': 650000,
-            'commission_value': 39000,  # 6% commission
-            'days_since_contract': 18,
-            'planned_close_date': datetime.now() + timedelta(days=12),
-            'buyer_profile': {
-                'type': 'first_time_buyer',
-                'financing': 'conventional',
-                'qualification_score': 78
-            },
-            'property_details': {
-                'type': 'single_family',
-                'price_range': 'mid_market',
-                'location': '78731'
+            if not ghl_deal:
+                logger.warning(f"Deal {deal_id} not found in GHL CRM")
+                return None
+
+            # Convert GHL deal data to legacy format for compatibility
+            deal_data = {
+                'deal_id': ghl_deal.deal_id,
+                'deal_value': ghl_deal.deal_value,
+                'commission_value': ghl_deal.commission_value,
+                'days_since_contract': ghl_deal.days_since_creation,
+                'planned_close_date': ghl_deal.expected_close_date or (datetime.now() + timedelta(days=30)),
+                'buyer_profile': {
+                    'type': self._classify_buyer_type(ghl_deal),
+                    'financing': 'conventional',  # Default - could be extracted from custom fields
+                    'qualification_score': self._calculate_buyer_qualification_score(ghl_deal)
+                },
+                'property_details': {
+                    'type': ghl_deal.property_type or 'single_family',
+                    'price_range': self._classify_price_range(ghl_deal.deal_value),
+                    'location': self._extract_location_from_address(ghl_deal.property_address),
+                    'address': ghl_deal.property_address,
+                    'value': ghl_deal.property_value
+                },
+                'contact_info': {
+                    'name': ghl_deal.contact_name,
+                    'email': ghl_deal.contact_email,
+                    'phone': ghl_deal.contact_phone
+                },
+                'deal_stage': ghl_deal.deal_stage,
+                'pipeline_id': ghl_deal.pipeline_id,
+                'last_contact_date': ghl_deal.last_contact_date,
+                'conversation_count': ghl_deal.conversation_count,
+                'recent_messages': ghl_deal.recent_messages,
+                'deal_source': ghl_deal.deal_source,
+                'tags': ghl_deal.tags,
+                'custom_fields': ghl_deal.custom_fields,
+                'created_date': ghl_deal.created_date,
+                'updated_date': ghl_deal.updated_date
             }
-        }
 
-        # Cache for 30 minutes
-        await self.cache.set(cache_key, json.dumps(deal_data, default=str), expire=1800)
-        return deal_data
+            return deal_data
+
+        except Exception as e:
+            logger.error(f"Error loading deal data from GHL for {deal_id}: {e}")
+            return None
+
+    def _classify_buyer_type(self, deal: GHLDealData) -> str:
+        """Classify buyer type based on deal characteristics."""
+        tags = [tag.lower() for tag in deal.tags]
+
+        if any(tag in tags for tag in ['first_time', 'firsttime', 'fthb']):
+            return 'first_time_buyer'
+        elif any(tag in tags for tag in ['investor', 'investment', 'rental']):
+            return 'investor'
+        elif any(tag in tags for tag in ['relocating', 'relocation', 'transfer']):
+            return 'relocating'
+        elif deal.deal_value > 1000000:
+            return 'luxury_buyer'
+        else:
+            return 'repeat_buyer'
+
+    def _calculate_buyer_qualification_score(self, deal: GHLDealData) -> int:
+        """Calculate buyer qualification score based on available data."""
+        score = 50  # Base score
+
+        # Adjust based on communication activity
+        if deal.conversation_count > 10:
+            score += 20
+        elif deal.conversation_count > 5:
+            score += 10
+
+        # Adjust based on deal value vs timeline
+        if deal.days_since_creation < 30 and deal.deal_value > 500000:
+            score += 15  # Well-qualified, moves quickly
+
+        # Adjust based on deal stage progression
+        if deal.deal_stage.lower() in ['qualified', 'contract', 'under_contract']:
+            score += 20
+
+        # Recent communication is positive
+        if deal.last_contact_date and (datetime.now() - deal.last_contact_date).days < 3:
+            score += 10
+
+        return min(100, max(10, score))
+
+    def _classify_price_range(self, deal_value: float) -> str:
+        """Classify deal into price range categories."""
+        if deal_value >= 1000000:
+            return 'luxury'
+        elif deal_value >= 500000:
+            return 'high_end'
+        elif deal_value >= 300000:
+            return 'mid_market'
+        else:
+            return 'entry_level'
+
+    def _extract_location_from_address(self, address: Optional[str]) -> str:
+        """Extract location/ZIP code from property address."""
+        if not address:
+            return '78701'  # Default Austin ZIP
+
+        # Try to extract ZIP code
+        import re
+        zip_match = re.search(r'\b(78\d{3})\b', address)
+        if zip_match:
+            return zip_match.group(1)
+
+        # Try to extract city/area
+        if 'austin' in address.lower():
+            return '78701'
+        elif 'cedar park' in address.lower():
+            return '78613'
+        elif 'round rock' in address.lower():
+            return '78664'
+
+        return '78701'  # Default
 
     async def _calculate_overall_risk(self, signals: List[ChurnSignal], deal_data: Dict) -> float:
         """Calculate composite risk score from all signals."""
