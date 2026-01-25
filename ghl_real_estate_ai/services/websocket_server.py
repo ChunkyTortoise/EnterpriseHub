@@ -39,6 +39,7 @@ class EventType(Enum):
     USER_ACTIVITY = "user_activity"
     DASHBOARD_REFRESH = "dashboard_refresh"
     PROPERTY_ALERT = "property_alert"  # Real-time property matching alerts
+    LEAD_METRIC_UPDATE = "lead_metric_update"  # Updates to pcs_score or temperature
 
     # Jorge Bot Ecosystem Events
     BOT_STATUS_UPDATE = "bot_status_update"
@@ -493,6 +494,7 @@ class WebSocketManager:
                 EventType.DASHBOARD_REFRESH,
                 EventType.SYSTEM_ALERT,
                 EventType.PROPERTY_ALERT,
+                EventType.LEAD_METRIC_UPDATE,
                 # Jorge Bot Ecosystem Events
                 EventType.BOT_STATUS_UPDATE,
                 EventType.JORGE_QUALIFICATION_PROGRESS,

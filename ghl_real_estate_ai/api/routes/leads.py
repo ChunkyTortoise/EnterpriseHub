@@ -5,7 +5,7 @@ Integrates frontend Elite Dashboard with GHL production services
 
 from fastapi import APIRouter, HTTPException, Query, Depends, Body
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 
 from ghl_real_estate_ai.ghl_utils.ghl_api_client import GHLAPIClient
@@ -14,6 +14,7 @@ from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.services.websocket_server import get_websocket_manager, RealTimeEvent, EventType
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["Leads Management"])
@@ -139,6 +140,21 @@ async def update_lead_status(
                 logger.warning(f"Failed to update PCS field for {lead_id}: {result.get('error')}")
             else:
                 updates_performed.append("pcs_score")
+            
+        # 4. Broadcast update to Elite Dashboard if any metrics changed
+        if "temperature" in updates_performed or "pcs_score" in updates_performed:
+            ws_manager = get_websocket_manager()
+            await ws_manager.publish_event(RealTimeEvent(
+                event_type=EventType.LEAD_METRIC_UPDATE,
+                data={
+                    "leadId": lead_id,
+                    "temperature": new_temp,
+                    "pcsScore": new_pcs,
+                    "updatedAt": datetime.now().isoformat()
+                },
+                timestamp=datetime.now(timezone.utc),
+                priority="normal"
+            ))
             
         return {
             "success": True, 

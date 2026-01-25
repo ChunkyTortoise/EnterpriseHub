@@ -529,7 +529,8 @@ class JorgeSocketNamespace(AsyncNamespace):
                 EventType.PERFORMANCE_UPDATE: 'performance_metrics',
                 EventType.USER_ACTIVITY: 'user_activity',
                 EventType.DASHBOARD_REFRESH: 'dashboard_refresh',
-                EventType.PROPERTY_ALERT: 'property_alert'
+                EventType.PROPERTY_ALERT: 'property_alert',
+                EventType.LEAD_METRIC_UPDATE: 'lead_metric_update'
             }
 
             socketio_event_name = socketio_event_map.get(event.event_type, 'real_time_event')
