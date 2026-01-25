@@ -6,7 +6,7 @@ import json
 import asyncio
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Union
 from dataclasses import dataclass
 import streamlit as st
 
@@ -242,8 +242,8 @@ Lead Profile:
 
 Extract detailed lifestyle insights in JSON format using our ENHANCED 16+ LIFESTYLE DIMENSIONS model:
 {{
-    "personality_type": "analytical|emotional|social|practical|hybrid",
-    "life_stage": "young_professional|growing_family|established_family|empty_nester|retiree|first_time_buyer|transitioning",
+    "personality_type": "Union[analytical, emotional]|Union[social, practical]|hybrid",
+    "life_stage": "Union[young_professional, growing_family]|Union[established_family, empty_nester]|Union[retiree, first_time_buyer]|transitioning",
     "enhanced_lifestyle_priorities": {{
         // Core Dimensions (Original 8)
         "status": float (0.0-1.0, importance of status and prestige),
@@ -274,48 +274,48 @@ Extract detailed lifestyle insights in JSON format using our ENHANCED 16+ LIFEST
         "cultural_access": float (0.0-1.0, arts, dining, and cultural amenities)
     }},
     "life_transition_indicators": {{
-        "career_stage": "entry|growth|peak|transition|retirement",
-        "relationship_status": "single|coupled|married|divorced|widowed",
-        "family_dynamics": "planning|expanding|stable|launching|empty",
-        "financial_trajectory": "building|accumulating|preserving|distributing",
-        "housing_evolution": "upgrading|rightsizing|downsizing|relocating",
-        "health_considerations": "none|planning|active|critical"
+        "career_stage": "Union[entry, growth]|Union[peak, transition]|retirement",
+        "relationship_status": "Union[single, coupled]|Union[married, divorced]|widowed",
+        "family_dynamics": "Union[planning, expanding]|Union[stable, launching]|empty",
+        "financial_trajectory": "Union[building, accumulating]|Union[preserving, distributing]",
+        "housing_evolution": "Union[upgrading, rightsizing]|Union[downsizing, relocating]",
+        "health_considerations": "Union[none, planning]|Union[active, critical]"
     }},
     "psychological_motivators": {{
-        "primary_driver": "achievement|security|belonging|autonomy|legacy",
+        "primary_driver": "Union[achievement, security]|Union[belonging, autonomy]|legacy",
         "stress_factors": [list of current life stressors affecting housing decisions],
         "aspiration_themes": [list of future-focused motivations],
         "fear_factors": [list of concerns or anxieties about housing decisions],
         "validation_needs": [what they need to feel confident in their choice]
     }},
     "investment_psychology_profile": {{
-        "investment_sophistication": "beginner|intermediate|advanced|expert",
-        "risk_appetite": "conservative|balanced|growth|aggressive",
-        "time_horizon": "short_term|medium_term|long_term|generational",
-        "portfolio_role": "primary_residence|investment_property|mixed_use|diversification",
-        "market_timing_beliefs": "timing_important|time_in_market|value_focused|opportunity_driven"
+        "investment_sophistication": "Union[beginner, intermediate]|Union[advanced, expert]",
+        "risk_appetite": "Union[conservative, balanced]|Union[growth, aggressive]",
+        "time_horizon": "Union[short_term, medium_term]|Union[long_term, generational]",
+        "portfolio_role": "Union[primary_residence, investment_property]|Union[mixed_use, diversification]",
+        "market_timing_beliefs": "Union[timing_important, time_in_market]|Union[value_focused, opportunity_driven]"
     }},
     "neighborhood_compatibility_factors": {{
-        "demographic_preferences": "diverse|similar_age|similar_income|similar_lifestyle",
-        "social_interaction_level": "private|selective|social|community_leader",
-        "political_alignment": "progressive|moderate|conservative|apolitical",
-        "lifestyle_pace": "urban_energy|suburban_balance|rural_tranquility",
-        "change_tolerance": "loves_new_development|accepts_growth|prefers_established|resists_change"
+        "demographic_preferences": "Union[diverse, similar_age]|Union[similar_income, similar_lifestyle]",
+        "social_interaction_level": "Union[private, selective]|Union[social, community_leader]",
+        "political_alignment": "Union[progressive, moderate]|Union[conservative, apolitical]",
+        "lifestyle_pace": "Union[urban_energy, suburban_balance]|rural_tranquility",
+        "change_tolerance": "Union[loves_new_development, accepts_growth]|Union[prefers_established, resists_change]"
     }},
     "hidden_desires": [list of unstated wants and aspirations],
     "future_planning": {{
-        "family_growth": "planning|stable|downsizing",
-        "career_trajectory": "advancing|stable|retiring",
-        "financial_goals": "wealth_building|stability|preservation",
-        "lifestyle_evolution": "upgrading|maintaining|simplifying",
-        "geographic_flexibility": "location_bound|willing_to_relocate|actively_seeking_change",
-        "housing_permanence": "temporary|medium_term|long_term|forever_home"
+        "family_growth": "Union[planning, stable]|downsizing",
+        "career_trajectory": "Union[advancing, stable]|retiring",
+        "financial_goals": "Union[wealth_building, stability]|preservation",
+        "lifestyle_evolution": "Union[upgrading, maintaining]|simplifying",
+        "geographic_flexibility": "Union[location_bound, willing_to_relocate]|actively_seeking_change",
+        "housing_permanence": "Union[temporary, medium_term]|Union[long_term, forever_home]"
     }},
-    "decision_style": "thorough|quick|collaborative|delegated|consensus_driven",
-    "communication_preferences": "data_driven|story_focused|visual|social_proof|experiential",
-    "risk_tolerance": "conservative|moderate|aggressive|calculated_risk_taker",
-    "timeline_flexibility": "rigid|moderate|flexible|opportunity_driven",
-    "budget_sensitivity": "price_focused|value_focused|luxury_focused|investment_focused"
+    "decision_style": "Union[thorough, quick]|Union[collaborative, delegated]|consensus_driven",
+    "communication_preferences": "Union[data_driven, story_focused]|Union[visual, social_proof]|experiential",
+    "risk_tolerance": "Union[conservative, moderate]|Union[aggressive, calculated_risk_taker]",
+    "timeline_flexibility": "Union[rigid, moderate]|Union[flexible, opportunity_driven]",
+    "budget_sensitivity": "Union[price_focused, value_focused]|Union[luxury_focused, investment_focused]"
 }}
 
 IMPORTANT: Analyze each lifestyle dimension carefully. Look for:
@@ -507,7 +507,7 @@ Provide just the probability score (e.g., 0.73) with brief reasoning.
         try:
             import re
             # Look for float values in the response
-            float_match = re.search(r'(0\\.\\d+|1\\.0|0|1)', response_content)
+            float_match = re.search(r'(0\\.\\d+|1\\.Union[0, 0]|1)', response_content)
             if float_match:
                 return float(float_match.group())
             else:

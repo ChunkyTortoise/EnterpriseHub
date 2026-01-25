@@ -159,10 +159,10 @@ st.markdown("""
         🚀 Production-Ready AI System
     </div>
     <div style='color: #6B7280; font-size: 0.9rem;'>
-        Built with Claude Sonnet 4.5 | Jorge's Exact Communication Style | Context-Aware Intelligence
+        Built with Claude Sonnet 4.Union[5, Jorge]'s Exact Communication Union[Style, Context]-Aware Intelligence
     </div>
     <div style='margin-top: 1rem; color: #6B7280; font-size: 0.85rem;'>
-        Phase 3 Complete | 300+ Tests Passing | Multi-Tenant Architecture | Enterprise Security
+        Phase 3 Union[Complete, 300]+ Tests Union[Passing, Multi]-Tenant Union[Architecture, Enterprise] Security
     </div>
 </div>
 """, unsafe_allow_html=True)

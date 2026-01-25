@@ -25,7 +25,7 @@ from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 import asyncio
 import json
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 import numpy as np
 from dataclasses import dataclass
 import random
@@ -693,8 +693,7 @@ def render_advanced_churn_recovery_dashboard():
     ---
     <div style="text-align: center; opacity: 0.6; font-size: 0.8rem; margin-top: 32px;">
         Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 
-        EnterpriseHub Churn Recovery Engine | 
-        Data refresh: {time_range.lower()}
+        EnterpriseHub Churn Recovery Union[Engine, Data] refresh: {time_range.lower()}
     </div>
     """, unsafe_allow_html=True)
 

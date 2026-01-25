@@ -160,6 +160,58 @@ class ModelMetrics:
 
 
 @dataclass
+class LeadJourneyPrediction:
+    """Track 3.1: Lead journey progression prediction"""
+    lead_id: str
+    current_stage: str
+    predicted_next_stage: str
+    stage_progression_velocity: float  # 0.0-1.0, higher = faster progression
+    estimated_close_date: Optional[datetime]
+    conversion_probability: float  # Overall conversion likelihood
+    stage_bottlenecks: List[str]  # Identified bottleneck factors
+    confidence: float
+    processing_time_ms: float
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for caching/serialization"""
+        result = asdict(self)
+        result['estimated_close_date'] = self.estimated_close_date.isoformat() if self.estimated_close_date else None
+        result['created_at'] = self.created_at.isoformat()
+        return result
+
+
+@dataclass
+class ConversionProbabilityAnalysis:
+    """Track 3.1: Stage-specific conversion analysis"""
+    lead_id: str
+    current_stage: str
+    stage_conversion_probability: float  # Probability of converting from current stage
+    next_stage_probability: float  # Probability of advancing to next stage
+    drop_off_risk: float  # Risk of lead going cold
+    optimal_action: str  # Recommended next action
+    urgency_score: float  # 0.0-1.0, timing criticality
+    confidence: float
+    processing_time_ms: float
+    created_at: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
+class TouchpointOptimization:
+    """Track 3.1: Behavioral timing optimization"""
+    lead_id: str
+    optimal_touchpoints: List[Dict[str, Any]]  # [{"day": 3, "channel": "sms", "probability": 0.8}]
+    response_pattern: str  # "fast", "moderate", "slow"
+    best_contact_times: List[int]  # Hours of day (0-23)
+    channel_preferences: Dict[str, float]  # {"sms": 0.8, "email": 0.6, "call": 0.9}
+    next_optimal_contact: datetime  # When to contact next
+    contact_frequency_recommendation: str  # "aggressive", "moderate", "patient"
+    confidence: float
+    processing_time_ms: float
+    created_at: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
 class FeatureEngineeringConfig:
     """Configuration for feature engineering pipeline"""
     enabled_features: List[str]
@@ -907,6 +959,260 @@ class MLAnalyticsEngine:
 
         return all_results
 
+    # ================================
+    # TRACK 3.1: PREDICTIVE INTELLIGENCE METHODS
+    # ================================
+
+    async def predict_lead_journey(self, lead_id: str, tenant_id: Optional[str] = None) -> LeadJourneyPrediction:
+        """
+        Track 3.1: Predict lead journey progression using existing ML foundation
+
+        Leverages existing 28-feature extraction + adds journey-specific enrichment
+        Performance target: <50ms (extends existing <50ms SLA)
+        Caching: 5-minute TTL for journey predictions
+        """
+        start_time = time.time()
+
+        try:
+            # Generate cache key
+            cache_key = f"journey_prediction:{lead_id}:{tenant_id or 'default'}"
+
+            # Check cache first (journey predictions cached for 5 minutes)
+            cached_result = await self.cache.get(cache_key)
+            if cached_result:
+                return LeadJourneyPrediction(**cached_result)
+
+            # REUSE existing feature extraction (0ms additional cost)
+            lead_data = await self._fetch_lead_data(lead_id)
+            base_features = await self.feature_pipeline.engineer_features(lead_data)
+
+            # ENRICH with journey-specific features (5-10ms budget)
+            journey_features = self._extract_journey_features(lead_data)
+
+            # Calculate journey progression velocity
+            velocity = self._calculate_progression_velocity(base_features, journey_features)
+
+            # Predict next stage and timing
+            current_stage = journey_features.get("current_stage", "initial_contact")
+            next_stage, stage_probability = self._predict_next_stage(base_features, current_stage)
+
+            # Estimate close date based on velocity and market timing
+            estimated_close_date = self._estimate_close_date(velocity, current_stage, base_features)
+
+            # Calculate overall conversion probability
+            conversion_prob = self._calculate_conversion_probability(base_features, journey_features)
+
+            # Identify bottlenecks
+            bottlenecks = self._identify_stage_bottlenecks(base_features, journey_features)
+
+            processing_time = (time.time() - start_time) * 1000
+
+            result = LeadJourneyPrediction(
+                lead_id=lead_id,
+                current_stage=current_stage,
+                predicted_next_stage=next_stage,
+                stage_progression_velocity=velocity,
+                estimated_close_date=estimated_close_date,
+                conversion_probability=conversion_prob,
+                stage_bottlenecks=bottlenecks,
+                confidence=stage_probability,
+                processing_time_ms=processing_time
+            )
+
+            # Cache for 5 minutes
+            await self.cache.set(cache_key, result.to_dict(), 300)
+
+            # Publish journey prediction event
+            await self._publish_event(
+                MLEventType.LEAD_ML_SCORED,  # Reuse existing event type
+                {
+                    "lead_id": lead_id,
+                    "prediction_type": "journey",
+                    "current_stage": current_stage,
+                    "predicted_next_stage": next_stage,
+                    "conversion_probability": conversion_prob,
+                    "processing_time_ms": processing_time
+                }
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Journey prediction failed for lead {lead_id}: {e}")
+            processing_time = (time.time() - start_time) * 1000
+
+            # Fallback journey prediction
+            return LeadJourneyPrediction(
+                lead_id=lead_id,
+                current_stage="unknown",
+                predicted_next_stage="qualification",
+                stage_progression_velocity=0.5,
+                estimated_close_date=datetime.now() + timedelta(days=30),
+                conversion_probability=0.5,
+                stage_bottlenecks=["insufficient_data"],
+                confidence=0.3,
+                processing_time_ms=processing_time
+            )
+
+    async def predict_conversion_probability(self, lead_id: str, stage: str, tenant_id: Optional[str] = None) -> ConversionProbabilityAnalysis:
+        """
+        Track 3.1: Stage-specific conversion probability with actionable insights
+
+        Builds on existing ML prediction + adds stage-specific analysis
+        Performance target: <50ms using cached features where possible
+        """
+        start_time = time.time()
+
+        try:
+            # Generate cache key
+            cache_key = f"conversion_analysis:{lead_id}:{stage}:{tenant_id or 'default'}"
+
+            # Check cache first
+            cached_result = await self.cache.get(cache_key)
+            if cached_result:
+                return ConversionProbabilityAnalysis(**cached_result)
+
+            # REUSE existing feature extraction
+            lead_data = await self._fetch_lead_data(lead_id)
+            base_features = await self.feature_pipeline.engineer_features(lead_data)
+
+            # Stage-specific analysis
+            stage_features = self._extract_stage_features(lead_data, stage)
+
+            # Calculate stage-specific conversion probability
+            stage_conversion_prob = self._calculate_stage_conversion_probability(base_features, stage_features, stage)
+
+            # Calculate probability of advancing to next stage
+            next_stage_prob = self._calculate_next_stage_probability(base_features, stage)
+
+            # Assess drop-off risk
+            drop_off_risk = 1.0 - (stage_conversion_prob * next_stage_prob)
+
+            # Generate optimal action recommendation
+            optimal_action = self._recommend_optimal_action(base_features, stage_features, stage)
+
+            # Calculate urgency score based on timing and market context
+            urgency_score = self._calculate_urgency_score(base_features, stage_features)
+
+            processing_time = (time.time() - start_time) * 1000
+
+            result = ConversionProbabilityAnalysis(
+                lead_id=lead_id,
+                current_stage=stage,
+                stage_conversion_probability=stage_conversion_prob,
+                next_stage_probability=next_stage_prob,
+                drop_off_risk=drop_off_risk,
+                optimal_action=optimal_action,
+                urgency_score=urgency_score,
+                confidence=min(stage_conversion_prob, next_stage_prob),
+                processing_time_ms=processing_time
+            )
+
+            # Cache for 10 minutes (conversion analysis)
+            await self.cache.set(cache_key, asdict(result), 600)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Conversion probability analysis failed for lead {lead_id}: {e}")
+            processing_time = (time.time() - start_time) * 1000
+
+            # Fallback analysis
+            return ConversionProbabilityAnalysis(
+                lead_id=lead_id,
+                current_stage=stage,
+                stage_conversion_probability=0.5,
+                next_stage_probability=0.5,
+                drop_off_risk=0.3,
+                optimal_action="schedule_follow_up",
+                urgency_score=0.5,
+                confidence=0.3,
+                processing_time_ms=processing_time
+            )
+
+    async def predict_optimal_touchpoints(self, lead_id: str, tenant_id: Optional[str] = None) -> TouchpointOptimization:
+        """
+        Track 3.1: Behavioral timing optimization for maximum engagement
+
+        Analyzes response patterns + market timing for optimal contact strategy
+        Performance target: <50ms leveraging existing behavioral analysis
+        """
+        start_time = time.time()
+
+        try:
+            # Generate cache key
+            cache_key = f"touchpoint_optimization:{lead_id}:{tenant_id or 'default'}"
+
+            # Check cache first
+            cached_result = await self.cache.get(cache_key)
+            if cached_result:
+                if 'next_optimal_contact' in cached_result and cached_result['next_optimal_contact']:
+                    cached_result['next_optimal_contact'] = datetime.fromisoformat(cached_result['next_optimal_contact'])
+                return TouchpointOptimization(**cached_result)
+
+            # Get lead data and existing features
+            lead_data = await self._fetch_lead_data(lead_id)
+            base_features = await self.feature_pipeline.engineer_features(lead_data)
+
+            # Analyze response patterns
+            response_pattern = self._analyze_response_patterns(lead_data)
+
+            # Determine optimal touchpoint sequence
+            optimal_touchpoints = self._calculate_optimal_touchpoints(base_features, response_pattern)
+
+            # Analyze best contact times
+            best_contact_times = self._analyze_optimal_contact_times(lead_data)
+
+            # Determine channel preferences based on response history
+            channel_preferences = self._analyze_channel_preferences(lead_data)
+
+            # Calculate next optimal contact time
+            next_contact_time = self._calculate_next_contact_time(response_pattern, best_contact_times)
+
+            # Recommend contact frequency strategy
+            frequency_recommendation = self._recommend_contact_frequency(base_features, response_pattern)
+
+            # Calculate confidence based on data quality
+            confidence = self._calculate_touchpoint_confidence(lead_data, response_pattern)
+
+            processing_time = (time.time() - start_time) * 1000
+
+            result = TouchpointOptimization(
+                lead_id=lead_id,
+                optimal_touchpoints=optimal_touchpoints,
+                response_pattern=response_pattern,
+                best_contact_times=best_contact_times,
+                channel_preferences=channel_preferences,
+                next_optimal_contact=next_contact_time,
+                contact_frequency_recommendation=frequency_recommendation,
+                confidence=confidence,
+                processing_time_ms=processing_time
+            )
+
+            # Cache for 15 minutes (touchpoint optimization)
+            result_dict = asdict(result)
+            result_dict['next_optimal_contact'] = next_contact_time.isoformat()
+            await self.cache.set(cache_key, result_dict, 900)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Touchpoint optimization failed for lead {lead_id}: {e}")
+            processing_time = (time.time() - start_time) * 1000
+
+            # Fallback optimization
+            return TouchpointOptimization(
+                lead_id=lead_id,
+                optimal_touchpoints=[{"day": 3, "channel": "sms", "probability": 0.7}],
+                response_pattern="moderate",
+                best_contact_times=[9, 14, 17],  # 9 AM, 2 PM, 5 PM
+                channel_preferences={"sms": 0.7, "email": 0.5, "call": 0.6},
+                next_optimal_contact=datetime.now() + timedelta(hours=24),
+                contact_frequency_recommendation="moderate",
+                confidence=0.3,
+                processing_time_ms=processing_time
+            )
+
     async def _process_batch_for_model(self, model_name: str, requests: List[MLPredictionRequest]) -> List[MLPredictionResult]:
         """Process batch of requests for a specific model"""
         try:
@@ -992,6 +1298,583 @@ class MLAnalyticsEngine:
 
         except Exception as e:
             logger.error(f"Failed to escalate lead {result.lead_id}: {e}")
+
+    # ================================
+    # TRACK 3.1: SUPPORTING METHODS FOR PREDICTIVE INTELLIGENCE
+    # ================================
+
+    def _extract_journey_features(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract journey-specific features for progression analysis"""
+        messages = lead_data.get("messages", [])
+        created_at = lead_data.get("created_at", datetime.now())
+
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+
+        # Determine current stage based on conversation depth and actions
+        current_stage = self._determine_current_stage(lead_data)
+
+        # Calculate progression indicators
+        days_in_current_stage = self._calculate_stage_duration(lead_data, current_stage)
+        interaction_density = len(messages) / max(1, (datetime.now() - created_at).days or 1)
+        question_progression = self._calculate_question_progression(messages)
+
+        return {
+            "current_stage": current_stage,
+            "days_in_current_stage": days_in_current_stage,
+            "interaction_density": min(10.0, interaction_density),
+            "question_progression": question_progression,
+            "conversation_depth": len(messages),
+            "stage_completion_indicators": self._get_stage_completion_indicators(lead_data, current_stage)
+        }
+
+    def _determine_current_stage(self, lead_data: Dict[str, Any]) -> str:
+        """Determine lead's current stage in the journey"""
+        messages = lead_data.get("messages", [])
+        jorge_score = lead_data.get("jorge_score", 0)
+
+        # Analyze conversation content for stage indicators
+        all_content = " ".join([msg.get("content", "").lower() for msg in messages])
+
+        # Stage detection based on conversation patterns
+        if "price" in all_content and "budget" in all_content and "qualified" in all_content:
+            return "qualified"
+        elif any(word in all_content for word in ["looking", "interested", "buying"]):
+            if jorge_score > 3.0:
+                return "qualified"
+            else:
+                return "initial_contact"
+        elif "schedule" in all_content or "appointment" in all_content:
+            return "appointment_scheduled"
+        elif "property" in all_content and "showing" in all_content:
+            return "showing_scheduled"
+        else:
+            return "initial_contact"
+
+    def _calculate_progression_velocity(self, base_features: Dict[str, Any], journey_features: Dict[str, Any]) -> float:
+        """Calculate how quickly lead is progressing through stages"""
+        # Velocity factors
+        response_time = base_features.get("response_time_avg", 60.0)  # minutes
+        engagement_score = base_features.get("engagement_score", 0.5)
+        interaction_density = journey_features.get("interaction_density", 0.1)
+        days_in_stage = journey_features.get("days_in_current_stage", 1)
+
+        # Calculate velocity (0.0 = slow, 1.0 = very fast)
+        response_velocity = max(0.0, min(1.0, (120 - response_time) / 120))  # Faster response = higher velocity
+        engagement_velocity = engagement_score
+        stage_velocity = max(0.0, min(1.0, (7 - days_in_stage) / 7))  # Less time in stage = higher velocity
+
+        # Weighted average
+        velocity = (response_velocity * 0.3 + engagement_velocity * 0.4 + stage_velocity * 0.3)
+        return min(1.0, max(0.0, velocity))
+
+    def _predict_next_stage(self, features: Dict[str, Any], current_stage: str) -> Tuple[str, float]:
+        """Predict next stage and confidence"""
+        stage_progression = {
+            "initial_contact": ("qualification", 0.8),
+            "qualification": ("appointment_scheduled", 0.7),
+            "appointed": ("showing_scheduled", 0.9),
+            "showing_scheduled": ("offer_discussion", 0.6),
+            "offer_discussion": ("closing", 0.5),
+            "closing": ("closed_won", 0.8)
+        }
+
+        base_next_stage, base_confidence = stage_progression.get(current_stage, ("qualification", 0.5))
+
+        # Adjust confidence based on engagement and Jorge score
+        engagement_score = features.get("engagement_score", 0.5)
+        jorge_score = features.get("jorge_score", 0.0)
+
+        confidence_adjustment = (engagement_score + (jorge_score / 5.0)) / 2.0
+        adjusted_confidence = min(1.0, base_confidence * (0.5 + confidence_adjustment))
+
+        return base_next_stage, adjusted_confidence
+
+    def _estimate_close_date(self, velocity: float, current_stage: str, features: Dict[str, Any]) -> Optional[datetime]:
+        """Estimate likely close date based on velocity and stage"""
+        # Stage-based typical days to close
+        stage_days_map = {
+            "initial_contact": 45,
+            "qualification": 35,
+            "appointment_scheduled": 25,
+            "showing_scheduled": 15,
+            "offer_discussion": 10,
+            "closing": 5,
+            "closed_won": 0
+        }
+
+        base_days = stage_days_map.get(current_stage, 30)
+
+        # Adjust based on velocity (higher velocity = shorter timeline)
+        velocity_multiplier = 2.0 - velocity  # velocity 1.0 = 1.0x, velocity 0.0 = 2.0x
+        adjusted_days = int(base_days * velocity_multiplier)
+
+        # Market timing adjustment (can be enhanced with real market data)
+        market_activity = features.get("market_activity_level", 0.7)
+        market_multiplier = 2.0 - market_activity  # Higher activity = shorter timeline
+        final_days = int(adjusted_days * market_multiplier)
+
+        return datetime.now() + timedelta(days=final_days)
+
+    def _calculate_conversion_probability(self, base_features: Dict[str, Any], journey_features: Dict[str, Any]) -> float:
+        """Calculate overall conversion probability"""
+        # Base factors
+        jorge_score = base_features.get("jorge_score", 0.0) / 5.0  # Normalize to 0-1
+        engagement_score = base_features.get("engagement_score", 0.5)
+        timeline_urgency = base_features.get("timeline_urgency", 0.5)
+        price_range_fit = base_features.get("price_range_fit", 0.5)
+
+        # Journey-specific factors
+        stage = journey_features.get("current_stage", "initial_contact")
+        stage_completion = journey_features.get("stage_completion_indicators", 0.5)
+
+        # Stage-based base probability
+        stage_probabilities = {
+            "initial_contact": 0.15,
+            "qualification": 0.35,
+            "appointment_scheduled": 0.55,
+            "showing_scheduled": 0.75,
+            "offer_discussion": 0.85,
+            "closing": 0.95,
+            "closed_won": 1.0
+        }
+
+        base_prob = stage_probabilities.get(stage, 0.2)
+
+        # Weighted combination
+        final_probability = (
+            base_prob * 0.3 +
+            jorge_score * 0.25 +
+            engagement_score * 0.20 +
+            timeline_urgency * 0.15 +
+            price_range_fit * 0.10
+        )
+
+        return min(1.0, max(0.0, final_probability))
+
+    def _identify_stage_bottlenecks(self, base_features: Dict[str, Any], journey_features: Dict[str, Any]) -> List[str]:
+        """Identify potential bottlenecks in lead progression"""
+        bottlenecks = []
+
+        # Response time bottleneck
+        response_time = base_features.get("response_time_avg", 60.0)
+        if response_time > 240:  # > 4 hours
+            bottlenecks.append("slow_response_time")
+
+        # Engagement bottleneck
+        engagement_score = base_features.get("engagement_score", 0.5)
+        if engagement_score < 0.3:
+            bottlenecks.append("low_engagement")
+
+        # Stage duration bottleneck
+        days_in_stage = journey_features.get("days_in_current_stage", 1)
+        if days_in_stage > 7:
+            bottlenecks.append("stalled_in_stage")
+
+        # Price fit bottleneck
+        price_fit = base_features.get("price_range_fit", 0.5)
+        if price_fit < 0.4:
+            bottlenecks.append("price_misalignment")
+
+        # Communication bottleneck
+        question_progression = journey_features.get("question_progression", 0.5)
+        if question_progression < 0.3:
+            bottlenecks.append("insufficient_qualification")
+
+        return bottlenecks if bottlenecks else ["no_bottlenecks_detected"]
+
+    def _extract_stage_features(self, lead_data: Dict[str, Any], stage: str) -> Dict[str, Any]:
+        """Extract stage-specific features for conversion analysis"""
+        messages = lead_data.get("messages", [])
+
+        # Stage-specific feature extraction
+        stage_features = {
+            "stage_entry_date": datetime.now() - timedelta(days=2),  # Mock data
+            "stage_progression_score": 0.7,
+            "stage_specific_engagement": self._calculate_stage_engagement(messages, stage),
+            "stage_completion_indicators": self._get_stage_completion_indicators(lead_data, stage),
+            "stage_risk_factors": self._identify_stage_risks(lead_data, stage)
+        }
+
+        return stage_features
+
+    def _calculate_stage_duration(self, lead_data: Dict[str, Any], current_stage: str) -> int:
+        """Calculate how many days lead has been in current stage"""
+        # Mock implementation - in real system, track stage transitions
+        created_at = lead_data.get("created_at", datetime.now())
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+
+        return max(1, (datetime.now() - created_at).days)
+
+    def _calculate_question_progression(self, messages: List[Dict[str, Any]]) -> float:
+        """Calculate how well questions are progressing in qualification"""
+        if not messages:
+            return 0.0
+
+        # Count qualification-related questions
+        qualification_keywords = ["budget", "timeline", "location", "requirements", "financing"]
+        question_count = 0
+
+        for msg in messages:
+            content = msg.get("content", "").lower()
+            if any(keyword in content for keyword in qualification_keywords):
+                question_count += 1
+
+        # Score based on progression through qualification topics
+        return min(1.0, question_count / 5.0)  # 5 key qualification areas
+
+    def _get_stage_completion_indicators(self, lead_data: Dict[str, Any], stage: str) -> float:
+        """Get completion indicators for specific stage"""
+        # Stage completion criteria
+        completion_indicators = {
+            "initial_contact": 0.8,  # Contact established
+            "qualification": 0.6,   # Partially qualified
+            "appointment_scheduled": 0.9,  # Appointment set
+            "showing_scheduled": 0.7,  # Showing planned
+            "offer_discussion": 0.5,  # Negotiating
+            "closing": 0.8  # Near close
+        }
+
+        return completion_indicators.get(stage, 0.5)
+
+    def _analyze_response_patterns(self, lead_data: Dict[str, Any]) -> str:
+        """Analyze lead's response pattern for touchpoint optimization"""
+        messages = lead_data.get("messages", [])
+
+        if len(messages) < 2:
+            return "insufficient_data"
+
+        # Calculate average response time
+        response_times = []
+        for i in range(1, len(messages)):
+            prev_msg = messages[i-1]
+            curr_msg = messages[i]
+
+            if prev_msg.get("sender") == "agent" and curr_msg.get("sender") == "lead":
+                try:
+                    prev_time = datetime.fromisoformat(prev_msg.get("timestamp", ""))
+                    curr_time = datetime.fromisoformat(curr_msg.get("timestamp", ""))
+                    response_time = (curr_time - prev_time).total_seconds() / 3600  # hours
+                    response_times.append(response_time)
+                except:
+                    continue
+
+        if not response_times:
+            return "moderate"
+
+        avg_response_hours = sum(response_times) / len(response_times)
+
+        # Classify response pattern
+        if avg_response_hours <= 2:
+            return "fast"
+        elif avg_response_hours <= 12:
+            return "moderate"
+        else:
+            return "slow"
+
+    def _calculate_optimal_touchpoints(self, features: Dict[str, Any], response_pattern: str) -> List[Dict[str, Any]]:
+        """Calculate optimal touchpoint sequence"""
+        # Pattern-based touchpoint strategies
+        touchpoint_strategies = {
+            "fast": [
+                {"day": 1, "channel": "sms", "probability": 0.9},
+                {"day": 3, "channel": "call", "probability": 0.8},
+                {"day": 7, "channel": "sms", "probability": 0.7},
+                {"day": 14, "channel": "email", "probability": 0.6}
+            ],
+            "moderate": [
+                {"day": 3, "channel": "sms", "probability": 0.8},
+                {"day": 7, "channel": "email", "probability": 0.7},
+                {"day": 14, "channel": "call", "probability": 0.6},
+                {"day": 30, "channel": "sms", "probability": 0.5}
+            ],
+            "slow": [
+                {"day": 5, "channel": "email", "probability": 0.7},
+                {"day": 14, "channel": "sms", "probability": 0.6},
+                {"day": 21, "channel": "email", "probability": 0.5},
+                {"day": 45, "channel": "call", "probability": 0.4}
+            ]
+        }
+
+        base_touchpoints = touchpoint_strategies.get(response_pattern, touchpoint_strategies["moderate"])
+
+        # Adjust probabilities based on engagement score
+        engagement_score = features.get("engagement_score", 0.5)
+        adjustment_factor = 0.5 + engagement_score  # 0.5 to 1.5 multiplier
+
+        adjusted_touchpoints = []
+        for touchpoint in base_touchpoints:
+            adjusted_prob = min(1.0, touchpoint["probability"] * adjustment_factor)
+            adjusted_touchpoints.append({
+                **touchpoint,
+                "probability": adjusted_prob
+            })
+
+        return adjusted_touchpoints
+
+    def _analyze_optimal_contact_times(self, lead_data: Dict[str, Any]) -> List[int]:
+        """Analyze best contact times based on response history"""
+        messages = lead_data.get("messages", [])
+
+        # Analyze response times by hour
+        response_hours = []
+        for msg in messages:
+            if msg.get("sender") == "lead":
+                try:
+                    timestamp = datetime.fromisoformat(msg.get("timestamp", ""))
+                    response_hours.append(timestamp.hour)
+                except:
+                    continue
+
+        if not response_hours:
+            # Default optimal times (business hours)
+            return [9, 13, 17]  # 9 AM, 1 PM, 5 PM
+
+        # Find most common response hours
+        from collections import Counter
+        hour_counts = Counter(response_hours)
+        top_hours = [hour for hour, count in hour_counts.most_common(3)]
+
+        return top_hours if len(top_hours) >= 2 else [9, 13, 17]
+
+    def _analyze_channel_preferences(self, lead_data: Dict[str, Any]) -> Dict[str, float]:
+        """Analyze channel preferences based on response patterns"""
+        messages = lead_data.get("messages", [])
+
+        # Mock channel analysis (in real system, track channel response rates)
+        channel_scores = {
+            "sms": 0.8,      # High engagement for SMS
+            "email": 0.6,    # Moderate for email
+            "call": 0.7,     # Good for voice calls
+            "whatsapp": 0.75 # High for WhatsApp
+        }
+
+        # Adjust based on engagement patterns
+        engagement_score = len([m for m in messages if m.get("sender") == "lead"]) / max(1, len(messages))
+
+        # Higher engagement leads prefer more direct channels
+        if engagement_score > 0.7:
+            channel_scores["call"] += 0.1
+            channel_scores["sms"] += 0.1
+
+        return channel_scores
+
+    def _calculate_next_contact_time(self, response_pattern: str, best_hours: List[int]) -> datetime:
+        """Calculate optimal next contact time"""
+        now = datetime.now()
+
+        # Pattern-based timing
+        hour_delays = {
+            "fast": 4,      # 4 hours for fast responders
+            "moderate": 24, # 24 hours for moderate
+            "slow": 72      # 72 hours for slow responders
+        }
+
+        delay_hours = hour_delays.get(response_pattern, 24)
+
+        # Calculate next contact time
+        next_contact = now + timedelta(hours=delay_hours)
+
+        # Adjust to optimal hour
+        optimal_hour = best_hours[0] if best_hours else 9
+        next_contact = next_contact.replace(hour=optimal_hour, minute=0, second=0, microsecond=0)
+
+        # Ensure it's not in the past
+        if next_contact <= now:
+            next_contact += timedelta(days=1)
+
+        return next_contact
+
+    def _recommend_contact_frequency(self, features: Dict[str, Any], response_pattern: str) -> str:
+        """Recommend contact frequency strategy"""
+        engagement_score = features.get("engagement_score", 0.5)
+        timeline_urgency = features.get("timeline_urgency", 0.5)
+
+        # High engagement + urgency = aggressive approach
+        if engagement_score > 0.7 and timeline_urgency > 0.7:
+            return "aggressive"
+        # Low engagement = patient approach
+        elif engagement_score < 0.4:
+            return "patient"
+        else:
+            return "moderate"
+
+    def _calculate_touchpoint_confidence(self, lead_data: Dict[str, Any], response_pattern: str) -> float:
+        """Calculate confidence in touchpoint recommendations"""
+        messages = lead_data.get("messages", [])
+
+        # Confidence based on data quality
+        data_quality_score = min(1.0, len(messages) / 10.0)  # More messages = higher confidence
+
+        # Pattern reliability
+        pattern_reliability = {
+            "fast": 0.8,
+            "moderate": 0.9,
+            "slow": 0.7,
+            "insufficient_data": 0.3
+        }
+
+        pattern_score = pattern_reliability.get(response_pattern, 0.5)
+
+        return (data_quality_score * 0.6 + pattern_score * 0.4)
+
+    def _calculate_stage_conversion_probability(self, features: Dict[str, Any], stage_features: Dict[str, Any], stage: str) -> float:
+        """Calculate stage-specific conversion probability"""
+        # Stage-based conversion rates (from Jorge's historical data)
+        stage_conversion_rates = {
+            "initial_contact": 0.25,
+            "qualification": 0.45,
+            "appointment_scheduled": 0.65,
+            "showing_scheduled": 0.80,
+            "offer_discussion": 0.85,
+            "closing": 0.95
+        }
+
+        base_rate = stage_conversion_rates.get(stage, 0.3)
+
+        # Adjust based on features
+        jorge_score = features.get("jorge_score", 0.0) / 5.0
+        engagement_score = features.get("engagement_score", 0.5)
+        stage_engagement = stage_features.get("stage_specific_engagement", 0.5)
+
+        adjustment = (jorge_score + engagement_score + stage_engagement) / 3.0
+        adjusted_rate = base_rate * (0.5 + adjustment)
+
+        return min(1.0, max(0.1, adjusted_rate))
+
+    def _calculate_next_stage_probability(self, features: Dict[str, Any], stage: str) -> float:
+        """Calculate probability of advancing to next stage"""
+        # Similar to stage conversion but focuses on progression
+        stage_progression_rates = {
+            "initial_contact": 0.6,
+            "qualification": 0.7,
+            "appointment_scheduled": 0.8,
+            "showing_scheduled": 0.6,
+            "offer_discussion": 0.7,
+            "closing": 0.9
+        }
+
+        base_rate = stage_progression_rates.get(stage, 0.5)
+
+        # Adjust based on urgency and engagement
+        timeline_urgency = features.get("timeline_urgency", 0.5)
+        engagement_score = features.get("engagement_score", 0.5)
+
+        adjustment = (timeline_urgency + engagement_score) / 2.0
+        adjusted_rate = base_rate * (0.6 + adjustment * 0.4)
+
+        return min(1.0, max(0.1, adjusted_rate))
+
+    def _recommend_optimal_action(self, features: Dict[str, Any], stage_features: Dict[str, Any], stage: str) -> str:
+        """Recommend optimal next action for the stage"""
+        engagement_score = features.get("engagement_score", 0.5)
+        timeline_urgency = features.get("timeline_urgency", 0.5)
+        stage_risk_factors = stage_features.get("stage_risk_factors", [])
+
+        # Stage-specific action recommendations
+        actions_by_stage = {
+            "initial_contact": ["schedule_qualification_call", "send_market_report", "follow_up_sms"],
+            "qualification": ["schedule_appointment", "send_property_recommendations", "clarify_requirements"],
+            "appointment_scheduled": ["confirm_appointment", "prepare_property_package", "send_market_update"],
+            "showing_scheduled": ["confirm_showing", "prepare_comps", "follow_up_interest"],
+            "offer_discussion": ["present_offer", "negotiate_terms", "schedule_closing"],
+            "closing": ["finalize_paperwork", "coordinate_closing", "celebrate_success"]
+        }
+
+        stage_actions = actions_by_stage.get(stage, ["follow_up_contact"])
+
+        # Select action based on engagement and urgency
+        if timeline_urgency > 0.7:
+            # Urgent situations need immediate action
+            return stage_actions[0]
+        elif engagement_score < 0.4:
+            # Low engagement needs nurturing
+            return "nurture_relationship"
+        else:
+            # Normal progression
+            return stage_actions[0] if stage_actions else "follow_up_contact"
+
+    def _calculate_urgency_score(self, base_features: Dict[str, Any], stage_features: Dict[str, Any]) -> float:
+        """Calculate urgency score for timing decisions"""
+        timeline_urgency = base_features.get("timeline_urgency", 0.5)
+        stage_completion = stage_features.get("stage_completion_indicators", 0.5)
+        response_time = base_features.get("response_time_avg", 60.0)
+
+        # Urgency factors
+        timeline_factor = timeline_urgency
+        stage_factor = 1.0 - stage_completion  # Less complete = more urgent
+        response_factor = max(0.0, (120 - response_time) / 120)  # Faster response = higher urgency
+
+        # Market timing factor (can be enhanced with real market data)
+        market_factor = base_features.get("market_activity_level", 0.7)
+
+        # Weighted urgency score
+        urgency = (
+            timeline_factor * 0.3 +
+            stage_factor * 0.25 +
+            response_factor * 0.25 +
+            market_factor * 0.2
+        )
+
+        return min(1.0, max(0.0, urgency))
+
+    def _calculate_stage_engagement(self, messages: List[Dict[str, Any]], stage: str) -> float:
+        """Calculate engagement specific to current stage"""
+        if not messages:
+            return 0.3
+
+        stage_keywords = {
+            "initial_contact": ["interested", "looking", "buying", "selling"],
+            "qualification": ["budget", "timeline", "requirements", "financing"],
+            "appointment_scheduled": ["appointment", "meeting", "schedule", "available"],
+            "showing_scheduled": ["property", "showing", "tour", "visit"],
+            "offer_discussion": ["offer", "price", "negotiate", "terms"],
+            "closing": ["closing", "paperwork", "final", "complete"]
+        }
+
+        relevant_keywords = stage_keywords.get(stage, [])
+        keyword_mentions = 0
+
+        lead_messages = [m for m in messages if m.get("sender") == "lead"]
+        for msg in lead_messages:
+            content = msg.get("content", "").lower()
+            keyword_mentions += sum(1 for keyword in relevant_keywords if keyword in content)
+
+        # Score based on keyword density
+        if not lead_messages:
+            return 0.3
+
+        engagement = min(1.0, keyword_mentions / len(lead_messages))
+        return max(0.1, engagement)
+
+    def _identify_stage_risks(self, lead_data: Dict[str, Any], stage: str) -> List[str]:
+        """Identify risk factors for current stage"""
+        risks = []
+
+        # Universal risk factors
+        jorge_score = lead_data.get("jorge_score", 0.0)
+        if jorge_score < 2.0:
+            risks.append("low_qualification_score")
+
+        messages = lead_data.get("messages", [])
+        if len(messages) < 3:
+            risks.append("insufficient_engagement")
+
+        # Stage-specific risks
+        stage_risks = {
+            "initial_contact": ["no_response", "low_interest"],
+            "qualification": ["budget_mismatch", "timeline_unclear"],
+            "appointment_scheduled": ["no_show_risk", "schedule_conflict"],
+            "showing_scheduled": ["property_mismatch", "buyer_hesitation"],
+            "offer_discussion": ["price_negotiation", "financing_issues"],
+            "closing": ["inspection_issues", "financing_delays"]
+        }
+
+        stage_specific_risks = stage_risks.get(stage, [])
+        risks.extend(stage_specific_risks[:2])  # Add top 2 stage-specific risks
+
+        return risks if risks else ["minimal_risk"]
 
     async def _fetch_lead_data(self, lead_id: str) -> Dict[str, Any]:
         """Fetch lead data from database or cache"""

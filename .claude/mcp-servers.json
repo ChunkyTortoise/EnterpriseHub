@@ -1,0 +1,191 @@
+{
+  "version": "1.0",
+  "description": "MCP server configurations for EnterpriseHub real estate platform",
+  "updated": "2026-01-24",
+
+  "servers": [
+    {
+      "name": "ghl-crm",
+      "description": "GoHighLevel CRM integration via MCP",
+      "transport": "http",
+      "url": "http://localhost:3001",
+      "auth": {
+        "type": "bearer_token",
+        "token": "${GHL_API_TOKEN}"
+      },
+      "capabilities": [
+        "contacts",
+        "workflows",
+        "custom_fields",
+        "webhooks",
+        "appointments"
+      ],
+      "tools": [
+        "create_contact",
+        "update_contact",
+        "get_contact",
+        "search_contacts",
+        "trigger_workflow",
+        "set_custom_field",
+        "schedule_appointment"
+      ],
+      "priority": 1,
+      "health_check_interval": 300
+    },
+
+    {
+      "name": "mls-data",
+      "description": "MLS property data integration",
+      "transport": "http",
+      "url": "http://localhost:3002",
+      "auth": {
+        "type": "api_key",
+        "api_key": "${MLS_API_KEY}",
+        "header": "X-MLS-API-Key"
+      },
+      "capabilities": [
+        "property_search",
+        "listing_details",
+        "comparable_sales",
+        "market_statistics",
+        "off_market_access"
+      ],
+      "tools": [
+        "search_properties",
+        "get_property_details",
+        "find_comparables",
+        "get_market_stats",
+        "check_property_status"
+      ],
+      "priority": 1,
+      "health_check_interval": 600
+    },
+
+    {
+      "name": "document-manager",
+      "description": "Real estate document management and processing",
+      "transport": "stdio",
+      "url": "python mcp-servers/document_server.py",
+      "auth": {},
+      "capabilities": [
+        "document_storage",
+        "contract_templates",
+        "disclosure_forms",
+        "e_signature",
+        "document_analysis"
+      ],
+      "tools": [
+        "store_document",
+        "get_document",
+        "generate_contract",
+        "get_disclosure_forms",
+        "send_for_signature",
+        "analyze_document_text"
+      ],
+      "priority": 2,
+      "health_check_interval": 300
+    },
+
+    {
+      "name": "valuation-engine",
+      "description": "Property valuation and market analysis",
+      "transport": "http",
+      "url": "http://localhost:3003",
+      "auth": {
+        "type": "bearer_token",
+        "token": "${VALUATION_API_TOKEN}"
+      },
+      "capabilities": [
+        "automated_valuation",
+        "comparative_analysis",
+        "market_trends",
+        "investment_analysis",
+        "risk_assessment"
+      ],
+      "tools": [
+        "get_property_valuation",
+        "run_comparative_analysis",
+        "analyze_market_trends",
+        "calculate_investment_metrics",
+        "assess_property_risk"
+      ],
+      "priority": 2,
+      "health_check_interval": 900
+    },
+
+    {
+      "name": "communication-hub",
+      "description": "Multi-channel communication management",
+      "transport": "websocket",
+      "url": "ws://localhost:3004/mcp",
+      "auth": {
+        "type": "bearer_token",
+        "token": "${COMM_HUB_TOKEN}"
+      },
+      "capabilities": [
+        "sms_messaging",
+        "email_campaigns",
+        "voice_calls",
+        "social_media",
+        "notification_routing"
+      ],
+      "tools": [
+        "send_sms",
+        "send_email",
+        "initiate_call",
+        "post_social_update",
+        "route_notification"
+      ],
+      "priority": 3,
+      "health_check_interval": 180
+    },
+
+    {
+      "name": "market-intelligence",
+      "description": "Real estate market data and intelligence",
+      "transport": "http",
+      "url": "http://localhost:3005",
+      "auth": {
+        "type": "api_key",
+        "api_key": "${MARKET_DATA_KEY}"
+      },
+      "capabilities": [
+        "neighborhood_analysis",
+        "price_trends",
+        "inventory_tracking",
+        "demographic_data",
+        "economic_indicators"
+      ],
+      "tools": [
+        "analyze_neighborhood",
+        "get_price_trends",
+        "track_inventory_levels",
+        "get_demographic_data",
+        "fetch_economic_indicators"
+      ],
+      "priority": 3,
+      "health_check_interval": 1800
+    }
+  ],
+
+  "connection_settings": {
+    "max_retries": 3,
+    "retry_delay": 5,
+    "connection_timeout": 30,
+    "request_timeout": 60,
+    "health_check_enabled": true
+  },
+
+  "logging": {
+    "level": "INFO",
+    "log_requests": true,
+    "log_responses": false,
+    "log_errors": true
+  },
+
+  "development": {
+    "mock_servers": true,
+    "mock_responses_path": ".claude/mcp-mocks/",
+    "debug_mode": true
+  }
+}

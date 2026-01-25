@@ -15,7 +15,7 @@ import os
 import secrets
 import ssl
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Union
 from enum import Enum
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -311,9 +311,9 @@ class InputValidationConfig:
     
     # SQL injection patterns
     sql_injection_patterns: List[str] = field(default_factory=lambda: [
-        r'(\b(select|union|insert|update|delete|drop|create|alter|exec)\b)',
-        r'(\b(or|and)\b\s+\d+\s*=\s*\d+)',
-        r'(\b(or|and)\b\s+[\'"]\w+[\'"])',
+        r'(\b(Union[select, union]|Union[insert, update]|Union[delete, drop]|Union[create, alter]|exec)\b)',
+        r'(\b(Union[or, and])\b\s+\d+\s*=\s*\d+)',
+        r'(\b(Union[or, and])\b\s+[\'"]\w+[\'"])',
         r'(/\*.*\*/)',
         r'(--[^\n]*)',
         r'(\bxp_\w+)',

@@ -1,0 +1,329 @@
+# Ultra-Fast ML Engine Production Dockerfile
+# Multi-stage build optimized for <25ms inference performance
+# Includes ONNX Runtime, CUDA, and all performance optimizations
+
+# =============================================================================
+# Stage 1: Build Environment with CUDA and Build Tools
+# =============================================================================
+FROM nvidia/cuda:11.8-devel-ubuntu20.04 AS builder
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=${CUDA_HOME}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.9 \
+    python3.9-dev \
+    python3-pip \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    curl \
+    libomp-dev \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install build tools
+RUN python3.9 -m pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Create virtual environment for better isolation
+RUN python3.9 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies with optimizations
+COPY requirements-production.txt /tmp/requirements-production.txt
+RUN pip install --no-cache-dir \
+    # Core ML libraries with CUDA support
+    torch==2.1.0+cu118 torchvision==0.16.0+cu118 --index-url https://download.pytorch.org/whl/cu118 \
+    # ONNX Runtime with GPU support
+    onnxruntime-gpu==1.16.3 \
+    # High-performance computing
+    numba[cuda] \
+    # ML frameworks
+    xgboost[gpu] \
+    scikit-learn \
+    # Data processing
+    numpy \
+    pandas \
+    # Async and web
+    fastapi[all] \
+    uvicorn[standard] \
+    # Redis and caching
+    redis[hiredis] \
+    # AWS integration
+    boto3 \
+    botocore \
+    # Monitoring
+    prometheus-client \
+    # Additional optimizations
+    && pip install --no-cache-dir -r /tmp/requirements-production.txt
+
+# =============================================================================
+# Stage 2: Production Runtime with Optimizations
+# =============================================================================
+FROM nvidia/cuda:11.8-runtime-ubuntu20.04 AS runtime
+
+# Set environment variables for production
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV CUDA_VISIBLE_DEVICES=0
+ENV OMP_NUM_THREADS=4
+ENV NUMBA_NUM_THREADS=4
+ENV OPENBLAS_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
+
+# Performance tuning environment variables
+ENV ONNXRUNTIME_LOG_SEVERITY_LEVEL=3
+ENV TF_CPP_MIN_LOG_LEVEL=2
+ENV NUMBA_CACHE_DIR=/tmp/numba_cache
+ENV CUDA_CACHE_PATH=/tmp/cuda_cache
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y \
+    python3.9 \
+    python3.9-distutils \
+    libomp5 \
+    libgomp1 \
+    curl \
+    # Cleanup
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Create application user for security
+RUN groupadd -r jorge && useradd -r -g jorge -d /app -s /sbin/nologin jorge
+
+# Create application directory structure
+RUN mkdir -p /app/models \
+    /app/cache \
+    /app/logs \
+    /app/tmp \
+    /tmp/numba_cache \
+    /tmp/cuda_cache \
+    && chown -R jorge:jorge /app /tmp/numba_cache /tmp/cuda_cache
+
+# Copy application code
+WORKDIR /app
+COPY --chown=jorge:jorge ghl_real_estate_ai/services/ultra_fast_ml_engine.py /app/
+COPY --chown=jorge:jorge ghl_real_estate_ai/services/cache_service.py /app/
+COPY --chown=jorge:jorge ghl_real_estate_ai/ghl_utils/ /app/ghl_utils/
+COPY --chown=jorge:jorge production_server.py /app/
+
+# Copy optimized model files (if available)
+# These would be built and optimized in CI/CD pipeline
+COPY --chown=jorge:jorge models/optimized/ /app/models/
+
+# Create production configuration
+COPY --chown=jorge:jorge <<EOF /app/config.yaml
+server:
+  host: 0.0.0.0
+  port: 8080
+  workers: 1
+  max_requests: 10000
+  max_requests_jitter: 1000
+
+ml_engine:
+  inference_timeout_ms: 20
+  max_batch_size: 10
+  cache_ttl_seconds: 300
+  model_path: /app/models/jorge_ultra_optimized.onnx
+  fallback_model_path: /app/models/jorge_fallback.json
+
+performance:
+  enable_onnx_optimizations: true
+  enable_numba_jit: true
+  enable_gpu_acceleration: true
+  memory_pool_size_mb: 2048
+
+monitoring:
+  metrics_enabled: true
+  health_check_interval: 10
+  performance_logging: true
+
+cache:
+  redis_cluster_mode: true
+  connection_pool_size: 20
+  max_connections: 100
+  timeout_seconds: 5
+EOF
+
+# Health check script
+COPY --chown=jorge:jorge <<EOF /app/health_check.py
+#!/usr/bin/env python3
+import asyncio
+import aiohttp
+import sys
+import time
+
+async def health_check():
+    try:
+        timeout = aiohttp.ClientTimeout(total=5)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            start_time = time.perf_counter()
+            async with session.get('http://localhost:8080/health') as response:
+                if response.status == 200:
+                    data = await response.json()
+                    inference_time = time.perf_counter() - start_time
+                    if inference_time < 0.025:  # <25ms requirement
+                        print(f"Health check passed: {inference_time*1000:.2f}ms")
+                        sys.exit(0)
+                    else:
+                        print(f"Health check failed: {inference_time*1000:.2f}ms (>25ms)")
+                        sys.exit(1)
+                else:
+                    print(f"Health check failed: HTTP {response.status}")
+                    sys.exit(1)
+    except Exception as e:
+        print(f"Health check failed: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    asyncio.run(health_check())
+EOF
+
+# Performance optimization script
+COPY --chown=jorge:jorge <<EOF /app/optimize_performance.py
+#!/usr/bin/env python3
+"""
+Performance optimization script for ultra-fast ML engine
+Runs CPU/GPU optimization and model warm-up
+"""
+import asyncio
+import os
+import time
+import logging
+from ultra_fast_ml_engine import UltraFastMLEngine, FeaturePreprocessor
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+async def optimize_performance():
+    """Run performance optimizations"""
+    try:
+        logger.info("Starting performance optimization...")
+
+        # Initialize ML engine
+        engine = UltraFastMLEngine("jorge_production")
+
+        # Load and optimize model
+        model_path = "/app/models/jorge_ultra_optimized.onnx"
+        if os.path.exists(model_path):
+            await engine.load_optimized_model(model_path)
+            logger.info("ONNX model loaded successfully")
+        else:
+            logger.warning("ONNX model not found, using fallback")
+            await engine.load_optimized_model("/app/models/jorge_fallback.json")
+
+        # Warm up model with dummy predictions
+        logger.info("Warming up model...")
+        for i in range(20):
+            start_time = time.perf_counter()
+
+            # Create dummy prediction request
+            import numpy as np
+            dummy_features = np.random.random(12).astype(np.float32)
+            feature_hash = f"dummy_{i}"
+
+            from ultra_fast_ml_engine import UltraFastPredictionRequest
+            request = UltraFastPredictionRequest(
+                lead_id=f"warm_up_{i}",
+                features=dummy_features,
+                feature_hash=feature_hash
+            )
+
+            result = await engine.predict_ultra_fast(request)
+            inference_time = result.inference_time_ms
+
+            if inference_time < 25:
+                logger.info(f"Warm-up {i+1}/20: {inference_time:.2f}ms ✓")
+            else:
+                logger.warning(f"Warm-up {i+1}/20: {inference_time:.2f}ms ⚠️")
+
+        # Get performance statistics
+        stats = engine.get_performance_stats()
+        logger.info(f"Performance optimization completed:")
+        logger.info(f"  Average inference time: {stats.get('avg_inference_time_ms', 0):.2f}ms")
+        logger.info(f"  Target achievement: {stats.get('target_achievement', False)}")
+        logger.info(f"  ONNX enabled: {stats.get('onnx_enabled', False)}")
+
+        return stats.get('target_achievement', False)
+
+    except Exception as e:
+        logger.error(f"Performance optimization failed: {e}")
+        return False
+
+if __name__ == "__main__":
+    success = asyncio.run(optimize_performance())
+    if not success:
+        exit(1)
+EOF
+
+# Make scripts executable
+RUN chmod +x /app/health_check.py /app/optimize_performance.py
+
+# Production startup script
+COPY --chown=jorge:jorge <<EOF /app/start_production.sh
+#!/bin/bash
+set -e
+
+echo "Starting Jorge Ultra-Fast ML Engine in Production Mode..."
+
+# Run performance optimization
+echo "Running performance optimization..."
+python3 /app/optimize_performance.py
+if [ \$? -ne 0 ]; then
+    echo "Performance optimization failed!"
+    exit 1
+fi
+
+# Set CPU affinity for performance (if running on dedicated nodes)
+if [ -n "\$CPU_AFFINITY" ]; then
+    echo "Setting CPU affinity: \$CPU_AFFINITY"
+    taskset -c \$CPU_AFFINITY uvicorn production_server:app \\
+        --host 0.0.0.0 \\
+        --port 8080 \\
+        --workers 1 \\
+        --log-level warning \\
+        --access-log \\
+        --loop uvloop
+else
+    # Standard startup
+    uvicorn production_server:app \\
+        --host 0.0.0.0 \\
+        --port 8080 \\
+        --workers 1 \\
+        --log-level warning \\
+        --access-log \\
+        --loop uvloop
+fi
+EOF
+
+RUN chmod +x /app/start_production.sh
+
+# Switch to non-root user
+USER jorge
+
+# Expose ports
+EXPOSE 8080 8081
+
+# Health check
+HEALTHCHECK --interval=15s --timeout=10s --start-period=60s --retries=3 \
+    CMD python3 /app/health_check.py
+
+# Labels for metadata
+LABEL maintainer="jorge-platform-team@example.com"
+LABEL version="3.0.0"
+LABEL component="ultra-fast-ml-engine"
+LABEL performance.target="<25ms inference"
+LABEL deployment.environment="production"
+
+# Default command
+CMD ["/app/start_production.sh"]

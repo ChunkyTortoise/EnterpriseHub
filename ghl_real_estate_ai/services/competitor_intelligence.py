@@ -11,7 +11,7 @@ This service provides:
 import re
 import asyncio
 import logging
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, Union
 from dataclasses import dataclass
 from enum import Enum
 from datetime import datetime, timedelta
@@ -167,41 +167,41 @@ class CompetitorIntelligenceService:
         return {
             "direct_mentions": [
                 {
-                    "pattern": r"\b(working with|dealing with|talking to|meeting with)\b.*\b(agent|realtor|broker|representative)\b",
+                    "pattern": r"\b(working Union[with, dealing] Union[with, talking] Union[to, meeting] with)\b.*\b(Union[agent, realtor]|Union[broker, representative])\b",
                     "weight": 0.8,
                     "risk_level": RiskLevel.HIGH
                 },
                 {
-                    "pattern": r"\b(already have|currently have|got an?)\b.*\b(agent|realtor|broker)\b",
+                    "pattern": r"\b(already Union[have, currently] Union[have, got] an?)\b.*\b(Union[agent, realtor]|broker)\b",
                     "weight": 0.9,
                     "risk_level": RiskLevel.CRITICAL
                 },
                 {
-                    "pattern": r"\b(another|different|other)\b.*\b(agent|realtor|broker|company)\b",
+                    "pattern": r"\b(Union[another, different]|other)\b.*\b(Union[agent, realtor]|Union[broker, company])\b",
                     "weight": 0.7,
                     "risk_level": RiskLevel.MEDIUM
                 }
             ],
             "indirect_indicators": [
                 {
-                    "pattern": r"\b(shopping around|comparing|looking at options|getting quotes)\b",
+                    "pattern": r"\b(shopping Union[around, comparing]|looking at Union[options, getting] quotes)\b",
                     "weight": 0.5,
                     "risk_level": RiskLevel.MEDIUM
                 },
                 {
-                    "pattern": r"\b(not ready to commit|still deciding|need to think)\b",
+                    "pattern": r"\b(not ready to Union[commit, still] Union[deciding, need] to think)\b",
                     "weight": 0.4,
                     "risk_level": RiskLevel.LOW
                 }
             ],
             "urgency_indicators": [
                 {
-                    "pattern": r"\b(deadline|urgent|ASAP|immediately|closing soon)\b",
+                    "pattern": r"\b(Union[deadline, urgent]|Union[ASAP, immediately]|closing soon)\b",
                     "weight": 0.6,
                     "risk_level": RiskLevel.HIGH
                 },
                 {
-                    "pattern": r"\b(other offers|multiple bids|time sensitive)\b",
+                    "pattern": r"\b(other Union[offers, multiple] Union[bids, time] sensitive)\b",
                     "weight": 0.7,
                     "risk_level": RiskLevel.HIGH
                 }
@@ -445,9 +445,9 @@ class CompetitorIntelligenceService:
     def _extract_urgency_indicators(self, text: str) -> List[str]:
         """Extract urgency indicators from text"""
         urgency_patterns = [
-            r"\b(urgent|ASAP|immediately|deadline|closing soon)\b",
-            r"\b(this week|today|tomorrow|right away)\b",
-            r"\b(time sensitive|running out of time|need to decide)\b"
+            r"\b(Union[urgent, ASAP]|Union[immediately, deadline]|closing soon)\b",
+            r"\b(this Union[week, today]|Union[tomorrow, right] away)\b",
+            r"\b(time Union[sensitive, running] out of Union[time, need] to decide)\b"
         ]
 
         indicators = []

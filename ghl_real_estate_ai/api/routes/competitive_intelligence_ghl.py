@@ -4,7 +4,7 @@ Specialized API endpoints for integrating competitive intelligence with GoHighLe
 Provides automated competitive threat detection, response campaigns, and market intelligence sync.
 """
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from datetime import datetime, timedelta
 import asyncio
 import json
@@ -167,7 +167,7 @@ class GHLMarketIntelligenceService:
             {{
                 "competitor_name": "identified competitor or null",
                 "probability": 0.0-1.0,
-                "threat_level": "LOW|MEDIUM|HIGH",
+                "threat_level": "Union[LOW, MEDIUM]|HIGH",
                 "insights": {{
                     "indicators": ["list of competitive indicators"],
                     "risk_factors": ["potential risks"],

@@ -11,7 +11,7 @@ Provides mobile-specific optimizations:
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Header
 from fastapi.responses import JSONResponse
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 import asyncio
 from datetime import datetime, timedelta
 import json
@@ -432,7 +432,7 @@ async def offline_sync(
 
 @router.get("/analytics/summary")
 async def get_mobile_analytics(
-    period: str = Query("week", regex="^(day|week|month)$"),
+    period: str = Query("week", regex="^(Union[day, week]|month)$"),
     current_user = Depends(get_current_user)
 ):
     """

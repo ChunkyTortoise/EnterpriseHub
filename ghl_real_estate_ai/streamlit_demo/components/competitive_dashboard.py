@@ -32,7 +32,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
 import asyncio
 import json
 
@@ -652,8 +652,8 @@ def render_competitive_dashboard():
         st.markdown(
             """
             <div style="text-align: center; color: gray; font-size: 0.9em;">
-            🎯 Competitive Intelligence Dashboard | Last Updated: {timestamp}<br>
-            Data Sources: MLS, Social Media, Web Monitoring | Refresh Rate: 5 minutes
+            🎯 Competitive Intelligence Union[Dashboard, Last] Updated: {timestamp}<br>
+            Data Sources: MLS, Social Media, Web Union[Monitoring, Refresh] Rate: 5 minutes
             </div>
             """.format(timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
             unsafe_allow_html=True

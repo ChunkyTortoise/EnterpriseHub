@@ -74,6 +74,7 @@ class EnterpriseAuthService:
         self.jwt_secret = settings.jwt_secret_key or secrets.token_urlsafe(32)
         self.jwt_algorithm = "HS256"
         self.enterprise_token_expiry = 28800  # 8 hours for enterprise sessions
+        self.enterprise_refresh_token_expiry = 604800  # 7 days for refresh tokens
 
         # SSO provider configurations
         self.sso_providers = {}
@@ -404,8 +405,8 @@ class EnterpriseAuthService:
                 tenant_id, user_info, tenant_config
             )
 
-            # Generate enterprise access token
-            enterprise_token = await self._generate_enterprise_token(enterprise_user, tenant_config)
+            # Generate enterprise access and refresh tokens
+            tokens = await self._generate_enterprise_tokens(enterprise_user, tenant_config)
 
             # Clean up SSO session
             await self.cache_service.delete(f"sso_state:{state}")
@@ -414,7 +415,8 @@ class EnterpriseAuthService:
 
             return {
                 "success": True,
-                "access_token": enterprise_token,
+                "access_token": tokens["access_token"],
+                "refresh_token": tokens["refresh_token"],
                 "token_type": "bearer",
                 "expires_in": self.enterprise_token_expiry,
                 "user": enterprise_user,
@@ -882,10 +884,20 @@ class EnterpriseAuthService:
 
         return list(permissions)
 
-    async def _generate_enterprise_token(self, user: Dict[str, Any], tenant_config: Dict[str, Any]) -> str:
-        """Generate enterprise JWT access token."""
+    async def _generate_enterprise_tokens(self, user: Dict[str, Any], tenant_config: Dict[str, Any]) -> Dict[str, str]:
+        """
+        Generate enterprise JWT access and refresh tokens.
+        
+        Args:
+            user: User information
+            tenant_config: Tenant configuration
+            
+        Returns:
+            Dict containing access_token and refresh_token
+        """
         session_id = str(uuid4())
         session_timeout = tenant_config.get('session_timeout_hours', 8)
+        refresh_token = secrets.token_urlsafe(64)
 
         # Create user session
         user_session = {
@@ -894,7 +906,8 @@ class EnterpriseAuthService:
             "tenant_id": user['tenant_id'],
             "permissions": user.get('permissions', []),
             "created_at": datetime.now(timezone.utc),
-            "expires_at": datetime.now(timezone.utc) + timedelta(hours=session_timeout)
+            "expires_at": datetime.now(timezone.utc) + timedelta(hours=session_timeout),
+            "refresh_token": refresh_token
         }
 
         # Store session
@@ -902,6 +915,13 @@ class EnterpriseAuthService:
             f"enterprise_session:{session_id}",
             user_session,
             ttl=session_timeout * 3600  # Convert to seconds
+        )
+        
+        # Store refresh token mapping to session
+        await self.cache_service.set(
+            f"enterprise_refresh:{refresh_token}",
+            session_id,
+            ttl=self.enterprise_refresh_token_expiry
         )
 
         # Create JWT payload
@@ -914,9 +934,77 @@ class EnterpriseAuthService:
             "exp": datetime.now(timezone.utc) + timedelta(seconds=self.enterprise_token_expiry)
         }
 
-        # Generate token
-        token = jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
-        return token
+        # Generate access token
+        access_token = jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
+        
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }
+
+    async def refresh_enterprise_token(self, refresh_token: str) -> Dict[str, Any]:
+        """
+        Refresh an enterprise access token using a valid refresh token.
+        
+        Args:
+            refresh_token: The refresh token provided by the client
+            
+        Returns:
+            New access and refresh tokens
+        """
+        try:
+            # Retrieve session ID from refresh token
+            session_id = await self.cache_service.get(f"enterprise_refresh:{refresh_token}")
+            if not session_id:
+                raise EnterpriseAuthError(
+                    "Invalid or expired refresh token",
+                    error_code="INVALID_REFRESH_TOKEN"
+                )
+                
+            # Retrieve user session
+            user_session = await self.cache_service.get(f"enterprise_session:{session_id}")
+            if not user_session:
+                raise EnterpriseAuthError(
+                    "Session not found or expired",
+                    error_code="SESSION_NOT_FOUND"
+                )
+                
+            # Verify refresh token matches session
+            if user_session.get('refresh_token') != refresh_token:
+                 raise EnterpriseAuthError(
+                    "Token rotation error",
+                    error_code="TOKEN_ROTATION_FAILURE"
+                )
+            
+            # Retrieve tenant config
+            tenant_config = await self.cache_service.get(f"enterprise_tenant:{user_session['tenant_id']}")
+            if not tenant_config or tenant_config['status'] != 'active':
+                 raise EnterpriseAuthError(
+                    "Tenant not active",
+                    error_code="TENANT_NOT_ACTIVE"
+                )
+            
+            # Generate new tokens
+            new_tokens = await self._generate_enterprise_tokens(user_session['user'], tenant_config)
+            
+            # Clean up old refresh token
+            await self.cache_service.delete(f"enterprise_refresh:{refresh_token}")
+            
+            logger.info(f"Enterprise token refreshed for user {user_session['user']['email']}")
+            
+            return {
+                "success": True,
+                "access_token": new_tokens["access_token"],
+                "refresh_token": new_tokens["refresh_token"],
+                "expires_in": self.enterprise_token_expiry
+            }
+            
+        except Exception as e:
+            logger.error(f"Token refresh failed: {e}")
+            raise EnterpriseAuthError(
+                f"Token refresh failed: {str(e)}",
+                error_code="TOKEN_REFRESH_FAILED"
+            )
 
     async def _invalidate_user_sessions(self, tenant_id: str, user_email: str) -> None:
         """Invalidate all active sessions for a user."""

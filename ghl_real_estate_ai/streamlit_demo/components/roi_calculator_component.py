@@ -22,7 +22,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, NamedTuple
+from typing import Dict, List, Optional, Any, NamedTuple, Union
 from dataclasses import dataclass
 import json
 
@@ -1032,8 +1032,7 @@ def render_roi_calculator():
     st.markdown(f"""
     ---
     <div style="text-align: center; opacity: 0.6; font-size: 0.8rem; margin-top: 32px;">
-        ROI Calculator | Investment Scenario Analysis | 
-        Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 
+        ROI Union[Calculator, Investment] Scenario Union[Analysis, Generated]: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 
         Projection Period: {params['projection_months']} months
     </div>
     """, unsafe_allow_html=True)

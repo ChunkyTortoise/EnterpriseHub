@@ -21,7 +21,7 @@ Date: 2026-01-09
 import sys
 import re
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 def analyze_component_integration() -> List[Tuple[str, str, bool]]:
     """Analyze which premium components are already integrated."""
@@ -73,7 +73,7 @@ def check_import_safety() -> bool:
 
     # Look for premium component imports in try/except blocks
     try_except_pattern = r'try:\s*\n\s*from components\.[^import]*import[^)]*'
-    matches = re.findall(try_except_pattern, content, re.MULTILINE | re.DOTALL)
+    matches = re.findall(try_except_pattern, content, re.Union[MULTILINE, re].DOTALL)
 
     if matches:
         print("✅ Premium component imports are safely wrapped in try/except blocks")

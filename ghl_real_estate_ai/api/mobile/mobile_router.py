@@ -5,7 +5,7 @@ Integrates authentication, AR/VR, voice, and mobile-optimized data endpoints.
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body, Header, Request
 from fastapi.responses import JSONResponse
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
 import asyncio
 from datetime import datetime, timedelta
 import json
@@ -600,7 +600,7 @@ async def get_mobile_lead_details(
 
 @router.get("/analytics/summary", response_model=MobileAnalyticsSummary)
 async def get_mobile_analytics_summary(
-    period: str = Query("week", regex="^(day|week|month)$"),
+    period: str = Query("week", regex="^(Union[day, week]|month)$"),
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """

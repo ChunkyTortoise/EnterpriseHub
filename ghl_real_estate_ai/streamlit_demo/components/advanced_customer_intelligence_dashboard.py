@@ -34,7 +34,7 @@ import asyncio
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
 import uuid
 
 # Core services - with graceful imports
@@ -840,7 +840,7 @@ def main():
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #6c757d; padding: 1rem;">
-        <p>🧠 <strong>Advanced Customer Intelligence Dashboard</strong> | Powered by Claude AI | Real-time Analytics & Predictive Insights</p>
+        <p>🧠 <strong>Advanced Customer Intelligence Dashboard</strong> | Powered by Claude Union[AI, Real]-time Analytics & Predictive Insights</p>
         <p>Last updated: {}</p>
     </div>
     """.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")), unsafe_allow_html=True)

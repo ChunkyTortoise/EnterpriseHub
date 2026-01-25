@@ -88,32 +88,133 @@ const nextConfig: NextConfig = {
   }
 };
 
-// Configure PWA settings for Jorge's Real Estate AI Platform
+// Configure PWA settings for Jorge's Real Estate AI Platform - Mobile Excellence
 const pwaConfig = withPWA({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
+  swSrc: "service-worker.js", // Custom service worker for advanced mobile features
+  fallbacks: {
+    // Offline fallback page
+    document: "/offline",
+  },
   runtimeCaching: [
+    // High-priority property data caching
     {
-      urlPattern: /^https?.*/,
+      urlPattern: /^https:\/\/.*\/api\/properties/,
       handler: "NetworkFirst",
       options: {
-        cacheName: "jorge-ai-api-cache",
+        cacheName: "jorge-property-cache",
+        networkTimeoutSeconds: 3,
         expiration: {
-          maxEntries: 32,
+          maxEntries: 100,
           maxAgeSeconds: 24 * 60 * 60, // 24 hours
+        },
+        cacheKeyWillBeUsed: async ({ request }) => {
+          // Custom cache key for location-based property data
+          const url = new URL(request.url);
+          return `${url.pathname}${url.search}`;
         },
       },
     },
+    // Lead data caching for offline access
     {
-      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+      urlPattern: /^https:\/\/.*\/api\/leads/,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "jorge-lead-cache",
+        networkTimeoutSeconds: 2,
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 60 * 60, // 1 hour
+        },
+      },
+    },
+    // Bot conversation caching
+    {
+      urlPattern: /^https:\/\/.*\/api\/bots/,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "jorge-bot-cache",
+        networkTimeoutSeconds: 5,
+        expiration: {
+          maxEntries: 20,
+          maxAgeSeconds: 30 * 60, // 30 minutes
+        },
+      },
+    },
+    // ML analytics caching
+    {
+      urlPattern: /^https:\/\/.*\/api\/ml/,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "jorge-ml-cache",
+        networkTimeoutSeconds: 10,
+        expiration: {
+          maxEntries: 30,
+          maxAgeSeconds: 2 * 60 * 60, // 2 hours
+        },
+      },
+    },
+    // Static assets with aggressive caching
+    {
+      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/,
       handler: "CacheFirst",
       options: {
         cacheName: "jorge-ai-images",
         expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+          maxEntries: 200,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+        },
+      },
+    },
+    // Font caching
+    {
+      urlPattern: /\.(?:woff|woff2|eot|ttf|otf)$/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "jorge-fonts",
+        expiration: {
+          maxEntries: 20,
+          maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+        },
+      },
+    },
+    // JavaScript and CSS caching
+    {
+      urlPattern: /\.(?:js|css)$/,
+      handler: "StaleWhileRevalidate",
+      options: {
+        cacheName: "jorge-static-assets",
+        expiration: {
+          maxEntries: 60,
+          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+        },
+      },
+    },
+    // Google Fonts
+    {
+      urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "google-fonts-cache",
+        expiration: {
+          maxEntries: 10,
+          maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+        },
+      },
+    },
+    // External API fallback for offline
+    {
+      urlPattern: /^https?.*/,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "jorge-general-cache",
+        networkTimeoutSeconds: 3,
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 24 * 60 * 60, // 24 hours
         },
       },
     },

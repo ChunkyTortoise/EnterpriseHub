@@ -101,7 +101,19 @@
   }
   
   .jorge-code {
-    @apply font-mono text-xs tracking-wider uppercase;
+    @apply font-mono text-[10px] tracking-widest uppercase;
+  }
+  
+  .jorge-label {
+    @apply text-[10px] font-bold text-gray-500 uppercase tracking-[0.1em] leading-none;
+  }
+  
+  .jorge-stat {
+    @apply text-2xl font-bold tracking-tighter text-white;
+  }
+  
+  .jorge-subtext {
+    @apply text-xs text-gray-400 leading-snug;
   }
   
   .property-value {

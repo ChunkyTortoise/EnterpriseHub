@@ -10,7 +10,7 @@ FastAPI router providing comprehensive compliance management endpoints:
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 import csv
 import io
@@ -963,7 +963,7 @@ async def get_report(report_id: str) -> Dict[str, Any]:
     description="Export compliance data in CSV or JSON format."
 )
 async def export_data(
-    format: str = Query("json", regex="^(json|csv)$"),
+    format: str = Query("json", regex="^(Union[json, csv])$"),
     service: ComplianceService = Depends(get_compliance_service)
 ):
     """

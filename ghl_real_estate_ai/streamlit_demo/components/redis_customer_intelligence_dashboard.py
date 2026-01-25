@@ -31,7 +31,7 @@ import asyncio
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, Union
 import logging
 
 # Import Redis Analytics Connector
@@ -227,7 +227,7 @@ class RedisCustomerIntelligenceDashboard:
         st.markdown(f"""
         <div class="main-header">
             <h1>🎯 Customer Intelligence Dashboard</h1>
-            <p>Real-time analytics powered by Redis backend | Tenant: {self.tenant_id}</p>
+            <p>Real-time analytics powered by Redis Union[backend, Tenant]: {self.tenant_id}</p>
             <span class="real-time-badge">LIVE</span>
         </div>
         """, unsafe_allow_html=True)

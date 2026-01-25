@@ -1,0 +1,329 @@
+{
+  "mesh_configuration": {
+    "version": "1.0.0",
+    "environment": "development",
+    "created": "2026-01-24",
+    "description": "Agent mesh configuration for EnterpriseHub real estate platform"
+  },
+
+  "governance": {
+    "max_total_cost_per_hour": 50.0,
+    "max_tasks_per_user_per_hour": 20,
+    "emergency_shutdown_threshold": 100.0,
+    "health_check_interval_seconds": 30,
+    "performance_monitoring_interval_seconds": 120,
+    "cost_monitoring_interval_seconds": 300,
+    "task_timeout_default_seconds": 300,
+    "agent_heartbeat_timeout_seconds": 120
+  },
+
+  "security": {
+    "require_api_keys": true,
+    "rate_limiting_enabled": true,
+    "audit_logging_enabled": true,
+    "access_control_enabled": true,
+    "encryption_at_rest": true,
+    "allowed_user_roles": ["admin", "agent", "user"],
+    "max_concurrent_sessions_per_user": 5
+  },
+
+  "performance": {
+    "auto_scaling_enabled": true,
+    "load_balancing_algorithm": "weighted_round_robin",
+    "performance_thresholds": {
+      "max_queue_time_seconds": 30,
+      "max_load_imbalance_ratio": 0.3,
+      "min_success_rate_percent": 85,
+      "max_response_time_seconds": 60
+    },
+    "scaling_policies": {
+      "scale_up_threshold": 0.8,
+      "scale_down_threshold": 0.3,
+      "cooldown_period_seconds": 300
+    }
+  },
+
+  "registered_agents": [
+    {
+      "agent_id": "jorge_seller_bot_01",
+      "name": "Jorge Seller Bot Primary",
+      "agent_type": "jorge_seller_qualification",
+      "capabilities": [
+        "LEAD_QUALIFICATION",
+        "CONVERSATION_ANALYSIS",
+        "FOLLOWUP_AUTOMATION"
+      ],
+      "status": "idle",
+      "max_concurrent_tasks": 5,
+      "priority_level": 1,
+      "cost_per_token": 0.000015,
+      "sla_response_time_seconds": 15,
+      "endpoint": "internal:jorge_seller_bot",
+      "health_check_url": "/health",
+      "progressive_skills_enabled": true,
+      "mcp_integration_enabled": true,
+      "specializations": {
+        "confrontational_qualification": true,
+        "stall_breaking": true,
+        "frs_pcs_scoring": true,
+        "temperature_classification": true
+      }
+    },
+
+    {
+      "agent_id": "jorge_seller_bot_02",
+      "name": "Jorge Seller Bot Secondary",
+      "agent_type": "jorge_seller_qualification",
+      "capabilities": [
+        "LEAD_QUALIFICATION",
+        "CONVERSATION_ANALYSIS",
+        "FOLLOWUP_AUTOMATION"
+      ],
+      "status": "idle",
+      "max_concurrent_tasks": 3,
+      "priority_level": 2,
+      "cost_per_token": 0.000015,
+      "sla_response_time_seconds": 20,
+      "endpoint": "internal:jorge_seller_bot",
+      "health_check_url": "/health",
+      "progressive_skills_enabled": true,
+      "mcp_integration_enabled": true,
+      "specializations": {
+        "confrontational_qualification": true,
+        "stall_breaking": true,
+        "frs_pcs_scoring": true,
+        "temperature_classification": true
+      }
+    },
+
+    {
+      "agent_id": "lead_lifecycle_bot_01",
+      "name": "Lead Lifecycle Bot",
+      "agent_type": "lead_lifecycle_automation",
+      "capabilities": [
+        "FOLLOWUP_AUTOMATION",
+        "CMA_GENERATION",
+        "VOICE_INTERACTION"
+      ],
+      "status": "idle",
+      "max_concurrent_tasks": 8,
+      "priority_level": 1,
+      "cost_per_token": 0.00001,
+      "sla_response_time_seconds": 30,
+      "endpoint": "internal:lead_bot",
+      "health_check_url": "/health",
+      "progressive_skills_enabled": true,
+      "mcp_integration_enabled": true,
+      "specializations": {
+        "day_3_7_30_automation": true,
+        "retell_ai_integration": true,
+        "cma_value_injection": true,
+        "behavioral_scoring": true
+      }
+    },
+
+    {
+      "agent_id": "property_matcher_01",
+      "name": "Enhanced Property Matcher",
+      "agent_type": "property_matching",
+      "capabilities": [
+        "PROPERTY_MATCHING",
+        "MARKET_INTELLIGENCE",
+        "CONVERSATION_ANALYSIS"
+      ],
+      "status": "idle",
+      "max_concurrent_tasks": 10,
+      "priority_level": 1,
+      "cost_per_token": 0.00001,
+      "sla_response_time_seconds": 10,
+      "endpoint": "internal:enhanced_property_matcher",
+      "health_check_url": "/health",
+      "progressive_skills_enabled": true,
+      "mcp_integration_enabled": true,
+      "specializations": {
+        "ml_semantic_matching": true,
+        "real_time_alerts": true,
+        "intelligent_deduplication": true,
+        "behavioral_preferences": true
+      }
+    },
+
+    {
+      "agent_id": "conversation_intelligence_01",
+      "name": "Claude Conversation Intelligence",
+      "agent_type": "conversation_analysis",
+      "capabilities": [
+        "CONVERSATION_ANALYSIS",
+        "MARKET_INTELLIGENCE"
+      ],
+      "status": "idle",
+      "max_concurrent_tasks": 15,
+      "priority_level": 1,
+      "cost_per_token": 0.000008,
+      "sla_response_time_seconds": 5,
+      "endpoint": "internal:claude_conversation_intelligence",
+      "health_check_url": "/health",
+      "progressive_skills_enabled": true,
+      "mcp_integration_enabled": false,
+      "specializations": {
+        "real_time_intent_analysis": true,
+        "emotional_state_detection": true,
+        "urgency_classification": true,
+        "next_action_recommendations": true
+      }
+    },
+
+    {
+      "agent_id": "mcp_ghl_crm_01",
+      "name": "GHL CRM MCP Agent",
+      "agent_type": "mcp_integration",
+      "capabilities": [
+        "FOLLOWUP_AUTOMATION",
+        "DOCUMENT_PROCESSING"
+      ],
+      "status": "idle",
+      "max_concurrent_tasks": 20,
+      "priority_level": 2,
+      "cost_per_token": 0.000005,
+      "sla_response_time_seconds": 8,
+      "endpoint": "mcp:ghl-crm:create_contact",
+      "health_check_url": "mcp:ghl-crm:health",
+      "progressive_skills_enabled": false,
+      "mcp_integration_enabled": true,
+      "specializations": {
+        "contact_management": true,
+        "workflow_automation": true,
+        "custom_field_sync": true,
+        "webhook_processing": true
+      }
+    },
+
+    {
+      "agent_id": "mcp_mls_data_01",
+      "name": "MLS Data MCP Agent",
+      "agent_type": "mcp_integration",
+      "capabilities": [
+        "PROPERTY_MATCHING",
+        "MARKET_INTELLIGENCE"
+      ],
+      "status": "idle",
+      "max_concurrent_tasks": 25,
+      "priority_level": 2,
+      "cost_per_token": 0.000003,
+      "sla_response_time_seconds": 12,
+      "endpoint": "mcp:mls-data:search_properties",
+      "health_check_url": "mcp:mls-data:health",
+      "progressive_skills_enabled": false,
+      "mcp_integration_enabled": true,
+      "specializations": {
+        "property_search": true,
+        "comparable_sales": true,
+        "market_statistics": true,
+        "off_market_access": true
+      }
+    }
+  ],
+
+  "task_routing_rules": {
+    "lead_qualification": {
+      "primary_agents": ["jorge_seller_bot_01"],
+      "fallback_agents": ["jorge_seller_bot_02"],
+      "required_capabilities": ["LEAD_QUALIFICATION"],
+      "max_wait_time_seconds": 10,
+      "priority_escalation_enabled": true
+    },
+
+    "property_matching": {
+      "primary_agents": ["property_matcher_01"],
+      "fallback_agents": ["mcp_mls_data_01"],
+      "required_capabilities": ["PROPERTY_MATCHING"],
+      "max_wait_time_seconds": 5,
+      "priority_escalation_enabled": false
+    },
+
+    "conversation_analysis": {
+      "primary_agents": ["conversation_intelligence_01"],
+      "fallback_agents": ["jorge_seller_bot_01"],
+      "required_capabilities": ["CONVERSATION_ANALYSIS"],
+      "max_wait_time_seconds": 3,
+      "priority_escalation_enabled": true
+    },
+
+    "followup_automation": {
+      "primary_agents": ["lead_lifecycle_bot_01"],
+      "fallback_agents": ["mcp_ghl_crm_01"],
+      "required_capabilities": ["FOLLOWUP_AUTOMATION"],
+      "max_wait_time_seconds": 15,
+      "priority_escalation_enabled": false
+    },
+
+    "crm_operations": {
+      "primary_agents": ["mcp_ghl_crm_01"],
+      "fallback_agents": [],
+      "required_capabilities": ["FOLLOWUP_AUTOMATION"],
+      "max_wait_time_seconds": 20,
+      "priority_escalation_enabled": false
+    }
+  },
+
+  "alerting": {
+    "enabled": true,
+    "channels": {
+      "email": {
+        "enabled": true,
+        "recipients": ["admin@enterprisehub.dev"]
+      },
+      "slack": {
+        "enabled": false,
+        "webhook_url": "${SLACK_WEBHOOK_URL}"
+      },
+      "webhook": {
+        "enabled": true,
+        "url": "http://localhost:8000/alerts/mesh"
+      }
+    },
+    "alert_rules": {
+      "agent_down": {
+        "threshold": 2,
+        "severity": "critical",
+        "message": "Agent {agent_id} has been down for {duration} minutes"
+      },
+      "high_error_rate": {
+        "threshold": 10,
+        "severity": "warning",
+        "message": "Agent {agent_id} error rate {error_rate}% exceeds threshold"
+      },
+      "cost_threshold": {
+        "threshold": 40,
+        "severity": "warning",
+        "message": "Hourly cost ${cost} approaching limit ${max_cost}"
+      },
+      "performance_degradation": {
+        "threshold": 120,
+        "severity": "warning",
+        "message": "Agent {agent_id} response time {response_time}s exceeds SLA"
+      }
+    }
+  },
+
+  "integration_settings": {
+    "progressive_skills": {
+      "enabled": true,
+      "fallback_to_full_context": true,
+      "token_reduction_target": 68.1,
+      "skills_directory": ".claude/skills/jorge-progressive"
+    },
+    "mcp_protocol": {
+      "enabled": true,
+      "config_file": ".claude/mcp-servers.json",
+      "auto_discovery": true,
+      "health_check_enabled": true
+    },
+    "token_tracking": {
+      "enabled": true,
+      "detailed_logging": true,
+      "cost_calculation": true,
+      "budget_alerts": true
+    }
+  }
+}

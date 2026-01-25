@@ -172,7 +172,7 @@ class ClientCreateRequest(BaseModel):
     """Request schema for creating a client."""
     client_name: str = Field(..., min_length=1, max_length=500)
     client_slug: str = Field(..., min_length=1, max_length=255, regex=r'^[a-z0-9-]+$')
-    client_type: str = Field("real_estate", regex=r'^(real_estate|mortgage|insurance|general)$')
+    client_type: str = Field("real_estate", regex=r'^(Union[real_estate, mortgage]|Union[insurance, general])$')
     monthly_fee: Decimal = Field(..., gt=0, description="Monthly fee in USD")
     monthly_volume_limit: int = Field(1000, gt=0, le=100000)
 
@@ -195,7 +195,7 @@ class ClientCreateRequest(BaseModel):
 class ClientUpdateRequest(BaseModel):
     """Request schema for updating a client."""
     client_name: Optional[str] = Field(None, min_length=1, max_length=500)
-    client_type: Optional[str] = Field(None, regex=r'^(real_estate|mortgage|insurance|general)$')
+    client_type: Optional[str] = Field(None, regex=r'^(Union[real_estate, mortgage]|Union[insurance, general])$')
     is_active: Optional[bool] = None
     monthly_fee: Optional[Decimal] = Field(None, gt=0)
     monthly_volume_limit: Optional[int] = Field(None, gt=0, le=100000)
@@ -233,7 +233,7 @@ class ClientResponse(BaseModel):
 class DNSRecordSchema(BaseModel):
     """DNS record schema."""
     name: str = Field(..., min_length=1)
-    type: str = Field(..., regex=r'^(A|AAAA|CNAME|TXT|MX)$')
+    type: str = Field(..., regex=r'^(Union[A, AAAA]|Union[CNAME, TXT]|MX)$')
     value: str = Field(..., min_length=1)
     ttl: int = Field(300, gt=0, le=86400)
     priority: Optional[int] = Field(None, ge=0)
@@ -292,7 +292,7 @@ class DomainUpdateRequest(BaseModel):
     cdn_enabled: Optional[bool] = None
     cdn_provider: Optional[str] = None
     health_check_url: Optional[str] = None
-    status: Optional[str] = Field(None, regex=r'^(pending|active|error|disabled)$')
+    status: Optional[str] = Field(None, regex=r'^(Union[pending, active]|Union[error, disabled])$')
     configuration_metadata: Optional[Dict[str, Any]] = None
 
 
@@ -630,7 +630,7 @@ class DeploymentUpdateRequest(BaseModel):
     error_tracking_enabled: Optional[bool] = None
     performance_monitoring: Optional[bool] = None
 
-    deployment_status: Optional[str] = Field(None, regex=r'^(pending|deploying|active|error|disabled)$')
+    deployment_status: Optional[str] = Field(None, regex=r'^(Union[pending, deploying]|Union[active, error]|disabled)$')
     deployment_notes: Optional[str] = None
     deployment_metadata: Optional[Dict[str, Any]] = None
 
@@ -702,7 +702,7 @@ class AnalyticsQueryRequest(BaseModel):
     metric_types: List[str] = []
     start_date: datetime
     end_date: datetime
-    granularity: str = Field("hour", regex=r'^(minute|hour|day|week|month)$')
+    granularity: str = Field("hour", regex=r'^(Union[minute, hour]|Union[day, week]|month)$')
     group_by: List[str] = []
     filters: Dict[str, Any] = {}
 
@@ -762,7 +762,7 @@ class PaginationParams(BaseModel):
 class SortParams(BaseModel):
     """Sorting query parameters."""
     sort_by: str = "created_at"
-    sort_order: str = Field("desc", regex=r'^(asc|desc)$')
+    sort_order: str = Field("desc", regex=r'^(Union[asc, desc])$')
 
 
 class FilterParams(BaseModel):

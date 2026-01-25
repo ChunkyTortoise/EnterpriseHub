@@ -93,7 +93,7 @@ class PerformanceMetric(Enum):
 class TemplateVariable(BaseModel):
     """Template variable definition."""
     name: str
-    type: str = Field(default="string", pattern="^(string|number|boolean|date|list|object)$")
+    type: str = Field(default="string", pattern="^(Union[string, number]|Union[boolean, date]|Union[list, object])$")
     default_value: Optional[Any] = None
     description: str = ""
     required: bool = True
@@ -112,7 +112,7 @@ class TemplateMetadata(BaseModel):
     tags: List[str] = []
     industry: Optional[str] = None
     use_case: Optional[str] = None
-    difficulty: str = Field(default="intermediate", pattern="^(beginner|intermediate|advanced)$")
+    difficulty: str = Field(default="intermediate", pattern="^(Union[beginner, intermediate]|advanced)$")
     estimated_setup_time_minutes: int = Field(default=5, ge=1, le=120)
     author: Optional[str] = None
     documentation_url: Optional[str] = None

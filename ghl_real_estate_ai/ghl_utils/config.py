@@ -132,6 +132,7 @@ class Settings(BaseSettings):
 
     # Phase 2: Custom Field IDs (Seller Bot)
     custom_field_seller_temperature: Optional[str] = None
+    custom_field_pcs_score: Optional[str] = None
     custom_field_seller_motivation: Optional[str] = None
     custom_field_timeline_urgency: Optional[str] = None
     custom_field_property_condition: Optional[str] = None

@@ -9,7 +9,7 @@ import plotly.express as px
 import pandas as pd
 import hashlib
 import time
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from functools import lru_cache
 from ghl_real_estate_ai.services.cache_service import CacheService
 
@@ -226,7 +226,7 @@ class OptimizedChartRenderer:
             st.session_state[f'chart_data_{filter_hash}'] = df
         
         # Display data info
-        st.info(f"📊 Loaded {len(df)} leads | Cache Key: `{filter_hash}`")
+        st.info(f"📊 Loaded {len(df)} Union[leads, Cache] Key: `{filter_hash}`")
         
         # Render charts efficiently  
         chart_config = {'bins': chart_bins}

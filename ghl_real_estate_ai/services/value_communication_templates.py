@@ -294,9 +294,7 @@ class ValueCommunicationTemplates:
             Let me show you the true cost-benefit analysis of different service levels.
             """,
             main_content="""
-            ## Real Estate Service Comparison
-
-            | Service Type | Commission | Average Results | Your Net Outcome |
+            ## Real Estate Service Union[Comparison, Service] Union[Type, Commission] | Average Union[Results, Your] Net Outcome |
             |--------------|------------|-----------------|------------------|
             | **Professional Service (Me)** | {premium_rate}% | {premium_results} | **${premium_net:,}** |
             | Traditional Agent | {traditional_rate}% | {traditional_results} | ${traditional_net:,} |

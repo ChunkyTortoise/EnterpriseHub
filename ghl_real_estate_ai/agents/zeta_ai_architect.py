@@ -10,7 +10,7 @@ Date: 2026-01-05
 """
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Union
 import json
 
 
@@ -328,7 +328,7 @@ class ZetaAIArchitect:
                 "method": "POST",
                 "input": {
                     "lead_id": "string",
-                    "recommendation_type": "properties|actions|content",
+                    "recommendation_type": "Union[properties, actions]|content",
                     "limit": "number"
                 },
                 "output": {
@@ -399,7 +399,7 @@ class ZetaAIArchitect:
                         {
                             "id": "string",
                             "category": "string",
-                            "severity": "high|medium|low",
+                            "severity": "Union[high, medium]|low",
                             "title": "string",
                             "description": "string",
                             "metrics": "object",
