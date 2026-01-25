@@ -74,7 +74,7 @@ class JorgeFeatureConfig:
 
     # Jorge-specific settings
     commission_rate: float = 0.06
-    confrontational_enabled: bool = True
+    friendly_approach_enabled: bool = True
     temperature_thresholds: Dict[str, int] = None
 
     def __post_init__(self):
@@ -141,25 +141,25 @@ class AdaptiveQuestionEngine:
             "Are you flexible on the closing date?"
         ]
 
-        # Adaptive questions for different scenarios
+        # Friendly questions for high-intent leads
         self.high_intent_accelerators = [
-            "You sound motivated. When can we tour the property? I have slots tomorrow afternoon.",
-            "Based on your situation, we should move fast. Can we schedule a walkthrough this week?",
-            "I can make this happen quickly. What's your preferred closing timeline?"
+            "It sounds like you're ready to move forward! I'd love to see your property. Would tomorrow afternoon or this week work better for a visit?",
+            "Based on what you've shared, it sounds like we have a great opportunity here. Would you like to schedule a time to discuss your options in detail?",
+            "I'm excited to help you with this! What timeline would work best for your situation?"
         ]
 
-        self.stall_breakers = {
+        self.supportive_clarifiers = {
             "zestimate": [
-                "Zillow doesn't know about your kitchen renovation. Want to see what homes like yours ACTUALLY sold for?",
-                "I've been inside those comps Zillow references. Want the real story?"
+                "Online estimates are a great starting point! I'd love to show you what similar homes in your area have actually sold for recently.",
+                "Those online tools don't see the unique features of your home. Would you like a more personalized market analysis?"
             ],
             "thinking": [
-                "What specifically are you thinking about? Timeline, price, or if you actually want to sell?",
-                "Thinking is expensive when the market's moving. What's the real concern?"
+                "I completely understand you need time to consider this. What specific questions can I help answer for you?",
+                "Taking time to think it through is smart! What aspects would be most helpful for us to discuss?"
             ],
             "agent": [
-                "Has your agent toured those comps personally, or just read them online?",
-                "Cool. Quick question: when did they last sell a property in your neighborhood?"
+                "That's great that you're working with someone! I'm happy to share some additional market insights that might be helpful.",
+                "Wonderful! If you'd like, I can provide some complementary information that might be useful for your decision."
             ]
         }
 
@@ -171,9 +171,9 @@ class AdaptiveQuestionEngine:
         if current_scores.pcs.total_score > 70:
             return await self._fast_track_to_calendar(state)
 
-        # Handle specific objections with targeted questions
+        # Handle specific concerns with supportive questions
         if state.get('detected_stall_type'):
-            return await self._select_stall_breaker(state['detected_stall_type'])
+            return await self._select_supportive_clarifier(state['detected_stall_type'])
 
         # Adaptive questioning based on score progression
         if context.get('adaptation_count', 0) > 0:
@@ -187,10 +187,10 @@ class AdaptiveQuestionEngine:
         import random
         return random.choice(self.high_intent_accelerators)
 
-    async def _select_stall_breaker(self, stall_type: str) -> str:
-        """Select targeted stall-breaker based on objection type"""
+    async def _select_supportive_clarifier(self, clarifier_type: str) -> str:
+        """Select supportive clarifier based on conversation context"""
         import random
-        questions = self.stall_breakers.get(stall_type, self.stall_breakers['thinking'])
+        questions = self.supportive_clarifiers.get(clarifier_type, self.supportive_clarifiers['thinking'])
         return random.choice(questions)
 
     async def _select_adaptive_question(self, state: JorgeSellerState, context: Dict) -> str:
@@ -199,21 +199,21 @@ class AdaptiveQuestionEngine:
         scores = state['intent_profile']
 
         if scores.frs.timeline.score < 50:
-            return "Let's nail down timing - when do you NEED this property sold?"
+            return "I'd love to better understand your timeline. What would work best for your situation?"
         elif scores.frs.price.score < 50:
-            return "What's your number? The price you'd be happy to walk away with?"
+            return "What price range would make this feel like a great decision for you?"
         elif scores.frs.condition.score < 50:
-            return "Are you looking to sell as-is, or planning to fix things up?"
+            return "Would you prefer to sell as-is, or are you thinking about making some updates first?"
 
         # Default fallback
-        return "What's the most important factor in getting this sold for you?"
+        return "What's the most important outcome for you in this process?"
 
     async def _select_standard_question(self, state: JorgeSellerState) -> str:
         """Select from core Jorge questions"""
         current_q = state.get('current_question', 1)
         if current_q <= len(self.jorge_core_questions):
             return self.jorge_core_questions[current_q - 1]
-        return "Are we selling this property or just talking about it?"
+        return "How can I best help you with your property goals?"
 
 class JorgeSellerBot:
     """
@@ -468,14 +468,14 @@ class JorgeSellerBot:
         lead_id = state['lead_id']
         pcs = state['psychological_commitment']
 
-        # EXISTING LOGIC: Jorge's proven confrontational foundation
+        # FRIENDLY APPROACH: Jorge's helpful consultation foundation
         if state['stall_detected']:
-            base_strategy = {"current_tone": "CONFRONTATIONAL", "next_action": "respond"}
+            base_strategy = {"current_tone": "CONSULTATIVE", "next_action": "respond"}
         elif pcs < 30:
-            # Low commitment = Take-away mode (don't waste time)
-            base_strategy = {"current_tone": "TAKE-AWAY", "next_action": "respond"}
+            # Low commitment = Supportive approach (help them understand)
+            base_strategy = {"current_tone": "SUPPORTIVE", "next_action": "respond"}
         else:
-            base_strategy = {"current_tone": "DIRECT", "next_action": "respond"}
+            base_strategy = {"current_tone": "FRIENDLY", "next_action": "respond"}
 
         try:
             # TRACK 3.1 ENHANCEMENT: Predictive Intelligence Layer
@@ -556,36 +556,36 @@ class JorgeSellerBot:
             current_step="generate_response"
         )
 
-        stall_breakers = {
-            "thinking": "What specifically are you thinking about? The timeline, the price, or whether you actually want to sell? Because if it's exploration, you're wasting both our time.",
-            "get_back": "I appreciate it, but I need to know: are you *actually* selling, or just exploring? If you're serious, we talk today. If not, let's not pretend.",
-            "zestimate": "Zillow's algorithm doesn't know your kitchen was just renovated. It's a guess. I deal in reality. Want to see real comps?",
-            "agent": "Cool. Quick question: has your agent actually *toured* those comps? If not, they're just reading a screen. I've been inside them."
+        friendly_responses = {
+            "thinking": "I completely understand you need time to consider this important decision. What specific aspects would be most helpful for me to clarify for you? I'm here to provide any information that might be useful.",
+            "get_back": "No problem at all - everyone's timeline is different. I'm happy to provide information whenever you're ready. Would it be helpful if I shared some resources about the current market conditions?",
+            "zestimate": "Great question about online estimates! Those algorithms can't see the unique features and updates in your home. I'd be happy to show you what similar homes in your neighborhood have actually sold for recently.",
+            "agent": "That's wonderful that you're working with someone! I'd be glad to share some market insights that might be helpful for your team to consider. Would that be useful for you?"
         }
 
         tone_instructions = {
-            "confrontational": "Be direct and challenge their stall. Force a 'Yes' or 'No' commitment.",
-            "take-away": "Act like you don't need your business. If they aren't serious, disqualify them immediately.",
-            "direct": "Professional but zero fluff. Focus on the math and the next steps."
+            "consultative": "Be helpful and supportive. Understand their concerns and provide guidance.",
+            "supportive": "Show empathy and patience. Help them feel comfortable making decisions.",
+            "friendly": "Warm and professional. Focus on building trust and providing value."
         }
 
         # Base prompt for Jorge Persona
         prompt = f"""
-        You are Jorge Salas, a high-performance real estate investor. 
-        Your tone is: DIRECT, NO-BS, CONFRONTATIONAL when necessary.
-        You hate wasting time on 'Lookers'. You want 'Motivated Sellers'.
+        You are Jorge Salas, a successful and helpful real estate professional.
+        Your tone is: FRIENDLY, CONSULTATIVE, and SUPPORTIVE.
+        You genuinely want to help sellers find the best solutions for their situations.
 
         CURRENT CONTEXT:
         Lead: {state['lead_name']}
         Tone Mode: {state['current_tone']} ({tone_instructions.get(state['current_tone'])})
-        Stall Detected: {state['detected_stall_type'] or 'None'}
-        FRS Classification: {state['intent_profile'].frs.classification} 
-        
-        TASK: Generate a response to the lead's last message.
+        Conversation Context: {state['detected_stall_type'] or 'None'}
+        FRS Classification: {state['intent_profile'].frs.classification}
+
+        TASK: Generate a helpful, friendly response to the lead's last message.
         """
         
-        if state['stall_detected'] and state['detected_stall_type'] in stall_breakers:
-            prompt += f"\nINCORPORATE THIS STALL-BREAKER: {stall_breakers[state['detected_stall_type']]}"
+        if state['stall_detected'] and state['detected_stall_type'] in friendly_responses:
+            prompt += f"\nSUGGESTED HELPFUL RESPONSE: {friendly_responses[state['detected_stall_type']]}"
         
         response = await self.claude.analyze_with_context(prompt)
         content = response.get('content') or response.get('analysis') or "Are we selling this property or just talking about it?"

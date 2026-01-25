@@ -1004,3 +1004,138 @@ async def get_system_health():
     """Get comprehensive system health report"""
     performance_monitor = get_performance_monitor()
     return performance_monitor.get_health_report()
+
+
+# ========================================================================
+# JORGE SELLER BOT - FRONTEND INTEGRATION ENDPOINTS
+# ========================================================================
+
+@router.get("/jorge-seller/{lead_id}/progress")
+async def get_jorge_qualification_progress(lead_id: str):
+    """
+    Get Jorge Seller Bot qualification progress for a lead.
+    Expected by frontend: jorge-seller-api.ts line 122
+    """
+    try:
+        # Get intent decoder for FRS/PCS scores
+        intent_decoder = get_intent_decoder()
+
+        # TODO: Get real conversation history from ConversationSessionManager
+        conversation_history = []
+
+        # Analyze lead intent
+        profile = intent_decoder.analyze_lead(lead_id, conversation_history)
+
+        # Map to frontend expected format
+        return {
+            "contact_id": lead_id,
+            "current_question": 1,  # TODO: Track real question progress
+            "questions_answered": len([h for h in conversation_history if h.get("role") == "user"]),
+            "seller_temperature": _classify_temperature(profile),
+            "qualification_scores": {
+                "frs_score": profile.frs.total_score,
+                "pcs_score": profile.pcs.total_score
+            },
+            "next_action": profile.next_best_action,
+            "timestamp": datetime.now().isoformat(),
+            "stall_detected": False,  # TODO: Implement stall detection
+            "detected_stall_type": None,
+            "confrontational_effectiveness": 85  # TODO: Calculate based on responses
+        }
+    except Exception as e:
+        logger.error(f"Failed to get Jorge qualification progress: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get qualification progress")
+
+
+@router.get("/jorge-seller/conversations/{conversation_id}")
+async def get_jorge_conversation_state(conversation_id: str):
+    """
+    Get Jorge Seller Bot conversation state.
+    Expected by frontend: jorge-seller-api.ts line 149
+    """
+    try:
+        # TODO: Get from ConversationSessionManager when implemented
+        # For now, return mock data in expected format
+        return {
+            "conversation_id": conversation_id,
+            "lead_id": conversation_id.split("_")[0] if "_" in conversation_id else conversation_id,
+            "lead_name": "Lead",
+            "stage": "qualification",
+            "current_tone": "CONFRONTATIONAL",
+            "stall_detected": False,
+            "detected_stall_type": None,
+            "seller_temperature": "warm",
+            "psychological_commitment": 65,
+            "is_qualified": False,
+            "questions_answered": 2,
+            "current_question": 3,
+            "ml_confidence": 0.85
+        }
+    except Exception as e:
+        logger.error(f"Failed to get conversation state: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get conversation state")
+
+
+@router.post("/jorge-seller/{lead_id}/stall-breaker")
+async def apply_jorge_stall_breaker(lead_id: str, request: dict):
+    """
+    Apply Jorge's confrontational stall-breaker script.
+    Expected by frontend: jorge-seller-api.ts line 209
+    """
+    try:
+        stall_type = request.get("stall_type", "generic")
+
+        # Jorge's proven stall-breaker scripts
+        stall_breaker_scripts = {
+            "generic": "Look, I'm going to be straight with you. Either you're serious about selling or you're not. Which is it?",
+            "price": "Price is always the excuse when someone's not motivated. What's the real reason you can't decide?",
+            "timeline": "Timeline is just another way of saying 'maybe later.' I work with people who need results now.",
+            "thinking": "Thinking usually means someone else got in your head. What are they telling you?"
+        }
+
+        script = stall_breaker_scripts.get(stall_type, stall_breaker_scripts["generic"])
+
+        logger.info(f"Applied stall-breaker for lead {lead_id}: {stall_type}")
+
+        return {
+            "success": True,
+            "script_applied": stall_type,
+            "next_message": script
+        }
+    except Exception as e:
+        logger.error(f"Failed to apply stall-breaker: {e}")
+        raise HTTPException(status_code=500, detail="Failed to apply stall-breaker")
+
+
+@router.post("/jorge-seller/{lead_id}/handoff")
+async def trigger_jorge_handoff(lead_id: str, request: dict):
+    """
+    Trigger handoff from Jorge Seller Bot to Lead Bot.
+    Expected by frontend: jorge-seller-api.ts line 245
+    """
+    try:
+        target_bot = request.get("target_bot", "lead-bot")
+        reason = request.get("reason", "qualification_complete")
+
+        # Generate handoff ID
+        handoff_id = f"handoff_{int(time.time())}_{lead_id[:8]}"
+
+        # TODO: Implement actual handoff logic with CoordinationEngine
+        # For now, log the handoff request
+        logger.info(f"Jorge handoff triggered: {lead_id} -> {target_bot}, reason: {reason}")
+
+        # Publish handoff event (using generic event publishing)
+        event_publisher = get_event_publisher()
+        # TODO: Implement bot_coordination_event when CoordinationEngine is ready
+        # For now, log the handoff completion
+        logger.info(f"Jorge handoff completed: {lead_id} -> {target_bot}, handoff_id: {handoff_id}")
+
+        return {
+            "success": True,
+            "handoff_id": handoff_id,
+            "target_bot": target_bot,
+            "estimated_time_seconds": 30
+        }
+    except Exception as e:
+        logger.error(f"Failed to trigger handoff: {e}")
+        raise HTTPException(status_code=500, detail="Failed to trigger handoff")
