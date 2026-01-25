@@ -709,12 +709,17 @@ class WebSocketManager:
             for connection_id, client in self.active_connections.items()
         ]
 
-# Global WebSocket manager instance
+# Global WebSocket manager instance with thread-safe singleton
+import threading
 _websocket_manager = None
+_websocket_manager_lock = threading.Lock()
 
 def get_websocket_manager() -> WebSocketManager:
-    """Get singleton WebSocket manager instance."""
+    """Get singleton WebSocket manager instance (thread-safe)."""
     global _websocket_manager
     if _websocket_manager is None:
-        _websocket_manager = WebSocketManager()
+        with _websocket_manager_lock:
+            # Double-check locking pattern to prevent race conditions
+            if _websocket_manager is None:
+                _websocket_manager = WebSocketManager()
     return _websocket_manager

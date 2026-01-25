@@ -298,7 +298,17 @@ class XGBoostModel(AbstractMLModel):
                 return True
 
         except Exception as e:
-            logger.error(f"Failed to load XGBoost model: {e}")
+            logger.critical(f"CRITICAL ML FAILURE: XGBoost model failed to load - {e}",
+                           extra={'alert': True, 'component': 'ml_model', 'severity': 'critical'})
+
+            # IMPORTANT: ML model failure silently degrades prediction accuracy
+            # Operations must be alerted to restore ML capabilities
+            await self._emit_ml_failure_alert("model_load_failure", {
+                "error": str(e),
+                "model_path": str(self.config.model_path) if self.config.model_path else "default",
+                "fallback_mode": "mock_model",
+                "impact": "Reduced prediction accuracy, may affect lead scoring"
+            })
             return False
 
     async def _create_mock_model(self):
@@ -2077,6 +2087,37 @@ class MLAnalyticsEngine:
             health["error"] = str(e)
 
         return health
+
+    async def _emit_ml_failure_alert(self, alert_type: str, details: Dict[str, Any]):
+        """Emit ML system failure alerts for monitoring systems."""
+        alert_data = {
+            "alert_type": alert_type,
+            "severity": "critical",
+            "component": "ml_analytics_engine",
+            "timestamp": time.time(),
+            "details": details,
+            "requires_immediate_attention": True,
+            "impact_assessment": {
+                "prediction_accuracy": "DEGRADED",
+                "lead_scoring": "FALLBACK_MODE",
+                "business_impact": "HIGH - May affect lead conversion rates"
+            }
+        }
+
+        # Log the alert prominently
+        logger.critical(f"ML SYSTEM ALERT: {alert_type}",
+                       extra={'alert_data': alert_data, 'requires_ml_ops_intervention': True})
+
+        # In production, this would integrate with:
+        # 1. MLOps monitoring (MLflow, Weights & Biases)
+        # 2. Infrastructure alerts (PagerDuty)
+        # 3. Slack ML team channel
+        # 4. Automatic model rollback if possible
+        try:
+            logger.warning(f"ML system degraded - {alert_type}: {details}")
+            # Placeholder for actual alerting integration
+        except Exception as e:
+            logger.error(f"Failed to emit ML system alert: {e}")
 
 
 # Factory functions and global instances

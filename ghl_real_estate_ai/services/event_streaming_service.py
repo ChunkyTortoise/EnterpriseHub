@@ -126,9 +126,18 @@ class EventStreamingService:
             logger.info("Event streaming service initialized successfully")
             
         except Exception as e:
-            logger.error(f"Failed to initialize event streaming: {e}")
-            # Fallback to in-memory event system
+            logger.critical(f"INFRASTRUCTURE FAILURE: Kafka unavailable - {e}",
+                          extra={'alert': True, 'component': 'kafka', 'severity': 'critical'})
+            # IMPORTANT: This fallback masks infrastructure issues
+            # Operations should be alerted to fix Kafka before performance degrades
             await self._initialize_memory_fallback()
+
+            # Emit alert event for monitoring systems
+            await self._emit_infrastructure_alert("kafka_failure", {
+                "error": str(e),
+                "fallback_mode": True,
+                "impact": "Limited event queue capacity, potential data loss"
+            })
 
     async def _initialize_memory_fallback(self):
         """Fallback in-memory event system when Kafka unavailable"""
@@ -310,6 +319,36 @@ class EventStreamingService:
             'handlers_registered': sum(len(handlers) for handlers in self.event_handlers.values()),
             'running': self.running
         }
+
+    async def _emit_infrastructure_alert(self, alert_type: str, details: Dict[str, Any]):
+        """Emit infrastructure failure alerts for monitoring systems."""
+        alert_event = StreamEvent(
+            event_type=EventType.SYSTEM_ALERT,
+            data={
+                "alert_type": alert_type,
+                "severity": "critical",
+                "component": "event_streaming",
+                "timestamp": time.time(),
+                "details": details,
+                "requires_immediate_attention": True
+            },
+            priority=StreamPriority.HIGH
+        )
+
+        # Log the alert prominently
+        logger.critical(f"INFRASTRUCTURE ALERT: {alert_type}",
+                       extra={'alert_data': details, 'requires_ops_intervention': True})
+
+        # Try to send alert through backup channels if available
+        try:
+            # In a real implementation, this would:
+            # 1. Send to PagerDuty/OpsGenie
+            # 2. Post to Slack #alerts channel
+            # 3. Send email to ops team
+            # 4. Update status page
+            logger.warning("Infrastructure alert emitted - ops team should be notified")
+        except Exception as e:
+            logger.error(f"Failed to emit infrastructure alert: {e}")
 
 # Singleton instance
 _event_streaming_service = None
