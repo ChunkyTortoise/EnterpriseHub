@@ -658,6 +658,7 @@ Comprehensive documentation is available to help you get the most out of Enterpr
 
 ### Developer Documentation
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture and design patterns
+- **[PHASE2_AGENTS_SKILLS_ANALYSIS.md](PHASE2_AGENTS_SKILLS_ANALYSIS.md)** - ⭐ Advanced agent architecture analysis (68% token reduction)
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 - **[AUTHORS.md](AUTHORS.md)** - Contributors and acknowledgments
 

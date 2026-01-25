@@ -565,12 +565,33 @@ app.add_middleware(
     enable_sanitization=True
 )
 
-# 2. Enhanced rate limiting with threat detection
+# 2. Enhanced rate limiting with environment-based configuration
+def get_rate_limit_config():
+    """Get environment-appropriate rate limiting configuration"""
+    env = os.getenv("ENVIRONMENT", "development")
+    if env == "production":
+        return {
+            "requests_per_minute": 100,
+            "authenticated_rpm": 1000,
+            "enable_ip_blocking": True
+        }
+    elif env == "staging":
+        return {
+            "requests_per_minute": 500,
+            "authenticated_rpm": 5000,
+            "enable_ip_blocking": True
+        }
+    else:  # development/testing
+        return {
+            "requests_per_minute": 10000,
+            "authenticated_rpm": 50000,
+            "enable_ip_blocking": False
+        }
+
+rate_config = get_rate_limit_config()
 app.add_middleware(
     RateLimitMiddleware,
-    requests_per_minute=10000,  # Increased for load testing
-    authenticated_rpm=50000,    # Increased for load testing
-    enable_ip_blocking=False    # Disabled for load testing from localhost
+    **rate_config
 )
 
 # 3. Comprehensive security headers

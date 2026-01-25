@@ -295,16 +295,48 @@ class LeadSequenceStateService:
             logger.error(f"Failed to save sequence state for lead {state.lead_id}: {e}")
             return False
 
-    async def advance_to_next_day(self, lead_id: str) -> Optional[LeadSequenceState]:
-        """Advance lead to the next sequence day."""
+    async def advance_to_next_day(self, lead_id: str, force: bool = False) -> Optional[LeadSequenceState]:
+        """
+        Advance lead to the next sequence day with validation.
+
+        Args:
+            lead_id: The lead ID
+            force: If True, skip validation (use for recovery scenarios)
+
+        Returns:
+            Updated state or None if not found or validation fails
+        """
         state = await self.get_state(lead_id)
         if not state:
             logger.warning(f"No sequence state found for lead {lead_id}")
             return None
 
         now = datetime.now()
+        old_day = state.current_day
 
-        # Mark current day as completed
+        # Determine the next day based on current day
+        next_day_map = {
+            SequenceDay.DAY_3: SequenceDay.DAY_7,
+            SequenceDay.DAY_7: SequenceDay.DAY_14,
+            SequenceDay.DAY_14: SequenceDay.DAY_30,
+            SequenceDay.DAY_30: SequenceDay.NURTURE,
+        }
+
+        next_day = next_day_map.get(state.current_day)
+        if not next_day:
+            logger.warning(
+                f"Cannot advance lead {lead_id} from terminal state: {state.current_day.value}"
+            )
+            return None
+
+        # Validate the transition unless forced
+        if not force:
+            is_valid, error_msg = self._validate_day_transition(old_day, next_day, lead_id)
+            if not is_valid:
+                logger.error(error_msg)
+                return None
+
+        # Mark current day as completed and advance
         if state.current_day == SequenceDay.DAY_3:
             state.day_3_completed = True
             state.day_3_delivered_at = now
@@ -334,7 +366,7 @@ class LeadSequenceStateService:
         state.last_action_at = now
         await self.save_state(state)
 
-        logger.info(f"Advanced lead {lead_id} to {state.current_day.value}")
+        logger.info(f"Advanced lead {lead_id}: {old_day.value} -> {state.current_day.value}")
         return state
 
     async def mark_action_completed(
@@ -432,43 +464,82 @@ class LeadSequenceStateService:
         logger.debug(f"Found {len(due_sequences)} sequences due for action within {within_hours} hours")
         return due_sequences
 
-    async def pause_sequence(self, lead_id: str, reason: str = "manual") -> bool:
-        """Pause a sequence."""
+    async def pause_sequence(self, lead_id: str, reason: str = "manual") -> Tuple[bool, Optional[str]]:
+        """
+        Pause a sequence with validation.
+
+        Returns:
+            Tuple of (success, error_message)
+        """
         state = await self.get_state(lead_id)
         if not state:
-            return False
+            return False, f"No sequence state found for lead {lead_id}"
 
+        # Validate the transition
+        is_valid, error_msg = self._validate_status_transition(
+            state.sequence_status, SequenceStatus.PAUSED, lead_id
+        )
+        if not is_valid:
+            return False, error_msg
+
+        old_status = state.sequence_status
         state.sequence_status = SequenceStatus.PAUSED
         await self.save_state(state)
 
-        logger.info(f"Paused sequence for lead {lead_id}, reason: {reason}")
-        return True
+        logger.info(f"Paused sequence for lead {lead_id} ({old_status.value} -> paused), reason: {reason}")
+        return True, None
 
-    async def resume_sequence(self, lead_id: str) -> bool:
-        """Resume a paused sequence."""
+    async def resume_sequence(self, lead_id: str) -> Tuple[bool, Optional[str]]:
+        """
+        Resume a paused sequence with validation.
+
+        Returns:
+            Tuple of (success, error_message)
+        """
         state = await self.get_state(lead_id)
         if not state:
-            return False
+            return False, f"No sequence state found for lead {lead_id}"
 
+        # Validate the transition
+        is_valid, error_msg = self._validate_status_transition(
+            state.sequence_status, SequenceStatus.IN_PROGRESS, lead_id
+        )
+        if not is_valid:
+            return False, error_msg
+
+        old_status = state.sequence_status
         state.sequence_status = SequenceStatus.IN_PROGRESS
         await self.save_state(state)
 
-        logger.info(f"Resumed sequence for lead {lead_id}")
-        return True
+        logger.info(f"Resumed sequence for lead {lead_id} ({old_status.value} -> in_progress)")
+        return True, None
 
-    async def complete_sequence(self, lead_id: str, final_status: str = "qualified") -> bool:
-        """Mark sequence as completed."""
+    async def complete_sequence(self, lead_id: str, final_status: str = "qualified") -> Tuple[bool, Optional[str]]:
+        """
+        Mark sequence as completed with validation.
+
+        Returns:
+            Tuple of (success, error_message)
+        """
         state = await self.get_state(lead_id)
         if not state:
-            return False
+            return False, f"No sequence state found for lead {lead_id}"
 
+        # Validate the transition
+        is_valid, error_msg = self._validate_status_transition(
+            state.sequence_status, SequenceStatus.COMPLETED, lead_id
+        )
+        if not is_valid:
+            return False, error_msg
+
+        old_status = state.sequence_status
         state.sequence_status = SequenceStatus.COMPLETED
         state.engagement_status = final_status
         await self.save_state(state)
         await self._remove_from_active_sequences(lead_id)
 
-        logger.info(f"Completed sequence for lead {lead_id} with status: {final_status}")
-        return True
+        logger.info(f"Completed sequence for lead {lead_id} ({old_status.value} -> completed) with status: {final_status}")
+        return True, None
 
     async def get_sequence_summary(self, lead_id: str) -> Optional[Dict[str, Any]]:
         """Get a summary of the lead's sequence progress."""

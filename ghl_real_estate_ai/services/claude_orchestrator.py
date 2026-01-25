@@ -4,9 +4,10 @@ Coordinates all Claude AI functionality across chat, scoring, reports, and scrip
 """
 import asyncio
 import json
+import re
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional, Union, Tuple
 from dataclasses import dataclass, asdict
 from enum import Enum
 
@@ -887,35 +888,150 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 tenant_id=tenant_id
             )
 
-    def _parse_response(self, content: str, task_type: ClaudeTaskType) -> ClaudeResponse:
-        """Parse and structure Claude response"""
-        # Basic parsing - could be enhanced with JSON extraction
+    # ==================== COMPREHENSIVE RESPONSE PARSING HELPERS ====================
 
+    def _extract_json_block(self, content: str) -> Optional[Dict[str, Any]]:
+        """
+        Extract JSON block from Claude response.
+
+        Handles:
+        - Markdown code blocks: ```json ... ```
+        - Plain JSON objects
+        - Nested JSON structures
+
+        Returns:
+            Parsed JSON dict or None if extraction fails
+        """
+        try:
+            # Strategy 1: Extract from markdown JSON code block
+            if "```json" in content:
+                json_match = re.search(r'```json\s*\n(.*?)\n```', content, re.DOTALL)
+                if json_match:
+                    return json.loads(json_match.group(1))
+
+            # Strategy 2: Extract from generic code block
+            if "```" in content:
+                code_match = re.search(r'```\s*\n?(.*?)\n?```', content, re.DOTALL)
+                if code_match:
+                    try:
+                        return json.loads(code_match.group(1))
+                    except json.JSONDecodeError:
+                        pass
+
+            # Strategy 3: Find first JSON object in content
+            json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', content, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group(0))
+
+            return None
+        except (json.JSONDecodeError, AttributeError, IndexError):
+            return None
+
+    def _extract_list_items(self, content: str, section_header: str) -> List[str]:
+        """
+        Extract list items from markdown sections.
+
+        Handles:
+        - Numbered lists: 1. Item, 2. Item
+        - Bullet lists: - Item, * Item, • Item
+        - Nested lists
+
+        Args:
+            content: Full text content
+            section_header: Section header to look for (case-insensitive)
+
+        Returns:
+            List of extracted items
+        """
+        items = []
+
+        try:
+            # Find section in content (case-insensitive)
+            pattern = re.compile(rf'{re.escape(section_header)}:?\s*\n', re.IGNORECASE)
+            match = pattern.search(content)
+
+            if not match:
+                return items
+
+            # Extract text after header until next major section or end
+            start_pos = match.end()
+            remaining_text = content[start_pos:]
+
+            # Stop at next major header (##, ###, or capitalized section)
+            next_section = re.search(r'\n#{2,}|\n[A-Z][A-Za-z\s]+:\s*\n', remaining_text)
+            if next_section:
+                section_text = remaining_text[:next_section.start()]
+            else:
+                section_text = remaining_text
+
+            # Extract numbered items (1., 2., etc.)
+            numbered_items = re.findall(r'^\s*\d+\.\s+(.+?)(?=\n\s*\d+\.|\n\n|\Z)', section_text, re.MULTILINE | re.DOTALL)
+            if numbered_items:
+                items.extend([item.strip() for item in numbered_items])
+
+            # Extract bullet items (-, *, •)
+            bullet_items = re.findall(r'^\s*[-*•]\s+(.+?)(?=\n\s*[-*•]|\n\n|\Z)', section_text, re.MULTILINE | re.DOTALL)
+            if bullet_items and not numbered_items:
+                items.extend([item.strip() for item in bullet_items])
+
+        except (AttributeError, IndexError, re.error):
+            pass
+
+        return items
+
+    def _parse_response(self, content: str, task_type: ClaudeTaskType) -> ClaudeResponse:
+        """
+        Parse and structure Claude response with intelligent extraction.
+
+        Extracts:
+        - Confidence scores
+        - Recommended actions
+        - Script variants (for A/B testing)
+        - Risk factors
+        - Opportunities
+
+        Args:
+            content: Raw Claude response text
+            task_type: Type of task for context-specific parsing
+
+        Returns:
+            Structured ClaudeResponse with extracted metadata
+        """
         response = ClaudeResponse(content=content)
 
-        # Try to extract structured elements if present
         try:
-            # Look for confidence indicators
-            if "confidence:" in content.lower():
-                # Extract confidence score
-                pass
+            # Extract JSON block if present for structured data
+            json_data = self._extract_json_block(content)
 
-            # Look for recommended actions
-            if "recommended actions:" in content.lower() or "next steps:" in content.lower():
-                # Extract action items
-                pass
+            # Parse confidence score
+            response.confidence = self._parse_confidence_score(content, json_data)
+
+            # Parse recommended actions
+            response.recommended_actions = self._parse_recommended_actions(content, json_data)
 
             # Task-specific parsing
             if task_type == ClaudeTaskType.SCRIPT_GENERATION:
-                # Extract script variants, rationale, etc.
-                pass
-            elif task_type == ClaudeTaskType.LEAD_ANALYSIS:
-                # Extract risk factors, opportunities, etc.
-                pass
+                # Extract script variants for A/B testing
+                script_variants = self._parse_script_variants(content, json_data)
+                response.metadata["script_variants"] = script_variants
 
-        except Exception:
-            # If parsing fails, return basic response
-            pass
+            elif task_type == ClaudeTaskType.LEAD_ANALYSIS:
+                # Extract risk factors and opportunities
+                risk_factors = self._parse_risk_factors(content, json_data)
+                opportunities = self._parse_opportunities(content, json_data)
+
+                response.metadata["risk_factors"] = risk_factors
+                response.metadata["opportunities"] = opportunities
+
+            elif task_type in [ClaudeTaskType.INTERVENTION_STRATEGY, ClaudeTaskType.REPORT_SYNTHESIS]:
+                # Extract opportunities for strategic tasks
+                opportunities = self._parse_opportunities(content, json_data)
+                response.metadata["opportunities"] = opportunities
+
+        except Exception as e:
+            # Graceful degradation - log error but don't fail
+            response.metadata["parsing_error"] = str(e)
+            response.metadata["parsing_failed"] = True
 
         return response
 
