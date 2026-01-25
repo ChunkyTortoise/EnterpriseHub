@@ -24,6 +24,8 @@ from abc import ABC, abstractmethod
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.sentiment_drift_engine import SentimentDriftEngine
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.travis_county_permits import get_travis_county_permit_service
+from ghl_real_estate_ai.services.economic_indicators_service import get_economic_indicators_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -218,13 +220,13 @@ class MarketSentimentRadar:
         self.sentiment_engine = SentimentDriftEngine()  # Existing sentiment service
         self.claude = ClaudeAssistant()
 
-        # Initialize data sources
+        # Initialize data sources (mix of real and mock for progressive rollout)
         self.data_sources: List[DataSourceInterface] = [
-            MockTwitterSentimentSource(),
-            MockPermitDataSource(),
-            MockNewsSource(),
-            MockHOADataSource()
+            MockTwitterSentimentSource(),  # TODO: Replace with real Twitter Academic API
+            MockHOADataSource()             # TODO: Replace with real HOA/community data
         ]
+
+        # Note: Real data sources are added dynamically to avoid blocking initialization
 
         # Configuration
         self.cache_ttl = 3600  # 1 hour cache
@@ -254,12 +256,34 @@ class MarketSentimentRadar:
 
         # Collect signals from all data sources
         all_signals = []
+
+        # Get static mock sources
         for source in self.data_sources:
             try:
                 signals = await source.fetch_sentiment_data(location, timeframe_days)
                 all_signals.extend(signals)
+                logger.debug(f"Collected {len(signals)} signals from {source.__class__.__name__}")
             except Exception as e:
                 logger.warning(f"Error fetching from {source.__class__.__name__}: {e}")
+
+        # Get real data sources dynamically
+        try:
+            # Travis County permit data (real data)
+            permit_service = await get_travis_county_permit_service()
+            permit_signals = await permit_service.fetch_sentiment_data(location, timeframe_days)
+            all_signals.extend(permit_signals)
+            logger.info(f"Collected {len(permit_signals)} real permit signals for {location}")
+        except Exception as e:
+            logger.warning(f"Error fetching real permit data: {e}")
+
+        try:
+            # Economic indicators (real data)
+            economic_service = await get_economic_indicators_service()
+            economic_signals = await economic_service.fetch_sentiment_data(location, timeframe_days)
+            all_signals.extend(economic_signals)
+            logger.info(f"Collected {len(economic_signals)} real economic signals for {location}")
+        except Exception as e:
+            logger.warning(f"Error fetching real economic data: {e}")
 
         # Analyze signals and build profile
         profile = await self._build_sentiment_profile(location, all_signals)
@@ -289,11 +313,10 @@ class MarketSentimentRadar:
                 last_updated=datetime.now()
             )
 
-        # Categorize signals by type
+        # Categorize signals by type (updated to include real data sources)
         social_signals = [s for s in signals if s.source in ['twitter', 'nextdoor', 'facebook']]
-        permit_signals = [s for s in signals if s.source == 'permits']
-        news_signals = [s for s in signals if s.source in ['local_news', 'austin_american']]
-        economic_signals = [s for s in signals if s.signal_type == SentimentTriggerType.ECONOMIC_STRESS]
+        permit_signals = [s for s in signals if s.source in ['permits', 'travis_county_permits', 'williamson_county_permits']]
+        economic_signals = [s for s in signals if s.source in ['local_news', 'austin_american', 'economic_indicators'] or s.signal_type == SentimentTriggerType.ECONOMIC_STRESS]
         infrastructure_signals = [s for s in signals if s.signal_type == SentimentTriggerType.INFRASTRUCTURE_CONCERN]
 
         # Calculate category scores

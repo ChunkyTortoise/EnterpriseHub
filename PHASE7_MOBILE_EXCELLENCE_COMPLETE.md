@@ -6,15 +6,16 @@
 - **Agent Intelligence**: Upgraded the `analysis_agent` with a new `get_competitive_intelligence` tool.
 - **Data Hub Integration**: Integrated the `CompetitiveIntelligenceHub` into the V2 pipeline to provide real-time market threat assessments.
 - **Strategic Schema**: Added `CompetitiveLandscape` to `AnalysisResult`, ensuring investors receive structured data on competitor pricing, market share deltas, and strategic advantages.
+- **Real-World Data**: Integrated **Travis County Permit Data** and **Economic Indicators** into the `MarketSentimentRadar`, moving from purely mock signals to live regional intelligence.
 
 ### 2. Service 6: Hardened Lead Recovery Engine
 - **V2 Pipeline Node**: Introduced `lead_recovery_node` into the LangGraph orchestration.
 - **Deep AI Analysis**: Integrated `Service6AIOrchestrator` to perform high-fidelity analysis on matched leads, including sentiment detection and unified scoring (0-100).
-- **Actionable Recovery**: The system now generates specific "immediate actions" for recovery, hardening the lead-to-revenue bridge.
+- **Automated GHL Hardening**: The system now automatically applies recovery tags (`AI-Recovery-Active`) and triggers specialized GHL workflows for high-priority/critical leads, ensuring a zero-leak revenue bridge.
 
 ### 3. Track 6: Mobile Excellence & Responsive Refinements
 - **Responsive UI**: Refactored the **V2 Property Showcase** with a tab-based architecture (`st.tabs`), optimized for mobile viewing.
-- **Visual Improvements**: Integrated dedicated views for Competitive Intelligence and Service 6 Recovery analysis.
+- **Visual Feedback**: Added a **GHL Hardening Status** indicator to the UI, providing real-time visual confirmation of automated CRM actions.
 - **Enterprise Polish**: Maintained dynamic theme generation and high-fidelity staging image persistence.
 
 ### 4. Infrastructure & Quality

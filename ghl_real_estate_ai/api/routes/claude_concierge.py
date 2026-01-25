@@ -285,44 +285,27 @@ async def chat_with_concierge(
         concierge_mode = ConciergeMode(request.mode)
 
         if request.streaming:
-            # Return streaming response
+            # Return true streaming response
             async def generate_stream() -> AsyncGenerator[str, None]:
                 try:
-                    # Generate contextual guidance (this could be enhanced to stream)
-                    response = await orchestrator.generate_contextual_guidance(
+                    # Use real streaming from orchestrator
+                    async for chunk in orchestrator.generate_contextual_guidance_stream(
                         context=platform_context,
                         mode=concierge_mode,
                         scope=IntelligenceScope.WORKFLOW
-                    )
-
-                    # Simulate streaming by chunking the response
-                    content_chunks = response.primary_guidance.split('. ')
-
-                    for i, chunk in enumerate(content_chunks):
+                    ):
                         chunk_data = StreamChunk(
                             type="content",
-                            data={"content": chunk + (". " if i < len(content_chunks) - 1 else "")}
+                            data={"content": chunk}
                         )
                         yield f"data: {json.dumps(chunk_data.dict())}\n\n"
-                        await asyncio.sleep(0.1)  # Simulate processing time
-
-                    # Send final metadata
-                    metadata_chunk = StreamChunk(
-                        type="metadata",
-                        data={
-                            "urgency_level": response.urgency_level,
-                            "confidence_score": response.confidence_score,
-                            "immediate_actions": response.immediate_actions,
-                            "response_time_ms": response.response_time_ms
-                        }
-                    )
-                    yield f"data: {json.dumps(metadata_chunk.dict())}\n\n"
 
                     # Signal completion
                     complete_chunk = StreamChunk(type="complete", data={})
                     yield f"data: {json.dumps(complete_chunk.dict())}\n\n"
 
                 except Exception as e:
+                    logger.error(f"Streaming error: {e}")
                     error_chunk = StreamChunk(
                         type="error",
                         data={"error": str(e)}
