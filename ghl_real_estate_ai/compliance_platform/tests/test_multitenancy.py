@@ -18,7 +18,7 @@ import json
 import time
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -241,7 +241,7 @@ class TenantUser:
     def get_all_permissions(self) -> Set[Permission]:
         """Get all permissions for this user"""
         role_perms = ROLE_PERMISSIONS.get(self.role, set())
-        return role_perms | self.custom_permissions
+        return Union[role_perms, self].custom_permissions
 
 
 class TenantContext:
@@ -416,7 +416,7 @@ class TenantIsolation:
 
 
 # Typing import for decorator
-from typing import Tuple
+from typing import Tuple, Union
 
 
 def require_permission(permission: Permission):

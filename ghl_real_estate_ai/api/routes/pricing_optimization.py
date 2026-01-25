@@ -10,7 +10,7 @@ Created: 2026-01-17
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 import json
 
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
@@ -440,7 +440,7 @@ async def optimize_pricing_model(
 @router.get("/export/{location_id}", status_code=HTTP_200_OK)
 async def export_pricing_data(
     location_id: str,
-    format: str = Query("json", regex="^(json|csv|excel)$", description="Export format"),
+    format: str = Query("json", regex="^(Union[json, csv]|excel)$", description="Export format"),
     days: int = Query(30, ge=7, le=365, description="Export period in days"),
     current_user: Dict = Depends(get_current_user)
 ):

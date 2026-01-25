@@ -10,7 +10,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import datetime
 import asyncio
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
 
 # Absolute imports
 try:
@@ -290,7 +290,7 @@ class OpsOptimizationHub:
             latency_data = [350, 420, 380, 450, 310, 290, 320, 340, 310, 305]
             from app import sparkline
             st.plotly_chart(sparkline(latency_data, color="#6366F1", height=100), use_container_width=True)
-            st.caption("P95 Latency: 342ms | P99 Latency: 485ms")
+            st.caption("P95 Latency: Union[342ms, P99] Latency: 485ms")
 
         with c2:
             st.markdown("#### 💰 Cost per Tenant")

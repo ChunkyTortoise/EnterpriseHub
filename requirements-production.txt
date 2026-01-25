@@ -1,0 +1,66 @@
+# Ultra-Fast ML Engine Production Requirements
+# Optimized for <25ms inference performance
+
+# Core FastAPI and async framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+uvloop==0.19.0  # High-performance event loop
+httptools==0.6.1  # Fast HTTP parsing
+
+# Machine Learning Core
+# Note: torch, onnxruntime-gpu, xgboost[gpu] installed in Dockerfile for version control
+scikit-learn==1.3.2
+numpy==1.24.4
+pandas==2.1.4
+
+# High-Performance Computing
+numba==0.58.1  # JIT compilation
+llvmlite==0.41.1  # LLVM backend for numba
+
+# Redis and Caching (optimized)
+redis[hiredis]==5.0.1  # C-based parser for performance
+hiredis==2.2.3
+
+# AWS Integration
+boto3==1.34.0
+botocore==1.34.0
+aioboto3==12.3.0  # Async AWS SDK
+
+# Data Serialization (performance optimized)
+orjson==3.9.10  # Fast JSON serialization
+msgpack==1.0.7  # Efficient binary serialization
+
+# Monitoring and Metrics
+prometheus-client==0.19.0
+psutil==5.9.6  # System metrics
+
+# HTTP Client (for health checks and external calls)
+aiohttp==3.9.1
+httpx==0.25.2
+
+# Configuration Management
+pydantic==2.5.0  # Fast data validation
+pydantic-settings==2.1.0
+
+# Logging and Tracing
+structlog==23.2.0  # Structured logging
+opentelemetry-api==1.21.0  # Distributed tracing
+opentelemetry-sdk==1.21.0
+
+# Security
+cryptography==41.0.8
+
+# Development and Testing (only in development)
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-benchmark==4.0.0
+httpx==0.25.2  # For testing
+
+# Memory and Performance Profiling
+memory-profiler==0.61.0
+line-profiler==4.1.1
+
+# Additional Performance Optimizations
+cachetools==5.3.2  # In-memory caching utilities
+joblib==1.3.2  # Efficient data structures
+cloudpickle==3.0.0  # Serialization for complex objects

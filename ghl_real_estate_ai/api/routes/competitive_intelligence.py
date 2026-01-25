@@ -34,7 +34,7 @@ Integration: Seamlessly integrates with existing EnterpriseHub architecture
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field, validator
 from enum import Enum
@@ -100,7 +100,7 @@ class ThreatDetectionRequest(BaseModel):
 
     competitor_id: Optional[str] = Field(None, description="Specific competitor to analyze")
     threat_types: List[str] = Field(["pricing", "expansion", "technology"], description="Types of threats to detect")
-    sensitivity_level: str = Field("medium", regex="^(low|medium|high)$")
+    sensitivity_level: str = Field("medium", regex="^(Union[low, medium]|high)$")
     time_range_hours: int = Field(24, ge=1, le=168, description="Time range for analysis in hours")
 
 
@@ -108,8 +108,8 @@ class CompetitiveResponseRequest(BaseModel):
     """Request model for competitive response configuration."""
 
     trigger_conditions: List[str] = Field(..., min_items=1)
-    response_type: str = Field(..., regex="^(pricing|marketing|outreach|positioning)$")
-    automation_level: str = Field("manual", regex="^(manual|assisted|automatic)$")
+    response_type: str = Field(..., regex="^(Union[pricing, marketing]|Union[outreach, positioning])$")
+    automation_level: str = Field("manual", regex="^(Union[manual, assisted]|automatic)$")
     approval_required: bool = Field(True, description="Whether response requires manual approval")
 
 
@@ -816,8 +816,8 @@ async def cleanup_expired_data(
 @router.get("/reports/intelligence", response_model=Dict[str, Any])
 async def generate_intelligence_report(
     market_areas: List[str] = Query(..., description="Market areas to analyze"),
-    analysis_period: str = Query("30_days", regex="^(7_days|30_days|90_days|1_year)$"),
-    report_format: str = Query("summary", regex="^(summary|detailed|executive)$"),
+    analysis_period: str = Query("30_days", regex="^(Union[7_days, 30_days]|Union[90_days, 1_year])$"),
+    report_format: str = Query("summary", regex="^(Union[summary, detailed]|executive)$"),
     user: dict = Depends(require_permission("read:competitive_data"))
 ):
     """

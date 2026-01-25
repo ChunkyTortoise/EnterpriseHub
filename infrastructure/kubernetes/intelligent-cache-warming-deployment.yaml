@@ -1,0 +1,358 @@
+# Intelligent Cache Warming Service Production Deployment
+# AWS EKS deployment with Redis cluster integration and ML-based pattern analysis
+# Performance Target: >95% cache hit rates during peak traffic
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cache-warming-config
+  namespace: jorge-platform
+data:
+  redis_cluster_host: "jorge-redis-cluster.cache.amazonaws.com"
+  redis_cluster_port: "6379"
+  redis_cluster_mode: "true"
+  pattern_analysis_interval_minutes: "15"
+  warming_execution_interval_minutes: "5"
+  cache_ttl_seconds: "1800"  # 30 minutes for critical data
+  warm_ahead_minutes: "30"   # Predict 30 minutes ahead
+  max_warming_tasks: "100"
+  warming_concurrency: "5"
+  enable_ml_prediction: "true"
+  confidence_threshold: "0.7"
+  metrics_enabled: "true"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cache-warming-secrets
+  namespace: jorge-platform
+type: Opaque
+data:
+  redis_password: <base64-encoded-redis-password>
+  aws_access_key_id: <base64-encoded-key>
+  aws_secret_access_key: <base64-encoded-secret>
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intelligent-cache-warming
+  namespace: jorge-platform
+  labels:
+    app: intelligent-cache-warming
+    component: cache-optimization
+    version: v2.0.0
+spec:
+  replicas: 2  # Redundancy for critical service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: intelligent-cache-warming
+  template:
+    metadata:
+      labels:
+        app: intelligent-cache-warming
+        component: cache-optimization
+        version: v2.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: jorge-platform-cache-service-account
+      containers:
+      - name: cache-warming-service
+        image: jorge-platform/intelligent-cache-warming:v2.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+          name: http
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        env:
+        - name: REDIS_CLUSTER_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: cache-warming-config
+              key: redis_cluster_host
+        - name: REDIS_CLUSTER_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: cache-warming-config
+              key: redis_cluster_port
+        - name: REDIS_CLUSTER_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: cache-warming-config
+              key: redis_cluster_mode
+        - name: PATTERN_ANALYSIS_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: cache-warming-config
+              key: pattern_analysis_interval_minutes
+        - name: WARMING_EXECUTION_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: cache-warming-config
+              key: warming_execution_interval_minutes
+        - name: ENABLE_ML_PREDICTION
+          valueFrom:
+            configMapKeyRef:
+              name: cache-warming-config
+              key: enable_ml_prediction
+        - name: CONFIDENCE_THRESHOLD
+          valueFrom:
+            configMapKeyRef:
+              name: cache-warming-config
+              key: confidence_threshold
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cache-warming-secrets
+              key: redis_password
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: cache-warming-secrets
+              key: aws_access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: cache-warming-secrets
+              key: aws_secret_access_key
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 2
+        volumeMounts:
+        - name: warming-data
+          mountPath: /app/data
+        - name: tmp-storage
+          mountPath: /tmp
+      volumes:
+      - name: warming-data
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: tmp-storage
+        emptyDir:
+          sizeLimit: 500Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: intelligent-cache-warming-service
+  namespace: jorge-platform
+  labels:
+    app: intelligent-cache-warming
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: intelligent-cache-warming
+
+---
+# CronJob for periodic pattern analysis (backup to in-pod scheduling)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cache-pattern-analysis
+  namespace: jorge-platform
+spec:
+  schedule: "0 */1 * * *"  # Every hour
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: jorge-platform-cache-service-account
+          containers:
+          - name: pattern-analyzer
+            image: jorge-platform/intelligent-cache-warming:v2.0.0
+            command: ["python3", "/app/pattern_analysis_job.py"]
+            env:
+            - name: REDIS_CLUSTER_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: cache-warming-config
+                  key: redis_cluster_host
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cache-warming-secrets
+                  key: redis_password
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "1Gi"
+              limits:
+                cpu: "1"
+                memory: "2Gi"
+          restartPolicy: OnFailure
+
+---
+# PodDisruptionBudget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cache-warming-pdb
+  namespace: jorge-platform
+spec:
+  minAvailable: 1  # Always maintain at least 1 pod
+  selector:
+    matchLabels:
+      app: intelligent-cache-warming
+
+---
+# NetworkPolicy for secure cache warming communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cache-warming-network-policy
+  namespace: jorge-platform
+spec:
+  podSelector:
+    matchLabels:
+      app: intelligent-cache-warming
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: jorge-platform
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to: []  # Allow all outbound (for Redis, S3, etc.)
+    ports:
+    - protocol: TCP
+      port: 6379  # Redis
+    - protocol: TCP
+      port: 443   # HTTPS
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jorge-platform-cache-service-account
+  namespace: jorge-platform
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT-ID:role/jorge-platform-cache-role
+
+---
+# Prometheus ServiceMonitor for cache warming metrics
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cache-warming-monitor
+  namespace: jorge-platform
+  labels:
+    app: intelligent-cache-warming
+spec:
+  selector:
+    matchLabels:
+      app: intelligent-cache-warming
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: instance
+    - sourceLabels: [__meta_kubernetes_pod_ip]
+      targetLabel: pod_ip
+  namespaceSelector:
+    matchNames:
+    - jorge-platform
+
+---
+# Custom Prometheus rules for cache warming
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cache-warming-alerts
+  namespace: jorge-platform
+  labels:
+    app: intelligent-cache-warming
+spec:
+  groups:
+  - name: cache.warming.rules
+    interval: 30s
+    rules:
+    # Cache hit rate monitoring
+    - alert: CacheWarmingHitRateLow
+      expr: |
+        (
+          rate(cache_warming_hits_total[5m]) /
+          (rate(cache_warming_hits_total[5m]) + rate(cache_warming_misses_total[5m]))
+        ) < 0.90
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Cache warming hit rate is low"
+        description: "Cache hit rate ({{ $value | humanizePercentage }}) is below 90% target"
+
+    # Pattern analysis health
+    - alert: CacheWarmingPatternAnalysisStale
+      expr: |
+        time() - cache_warming_last_pattern_analysis_timestamp > 7200  # 2 hours
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Cache warming pattern analysis is stale"
+        description: "Pattern analysis hasn't run for over 2 hours"
+
+    # Warming queue health
+    - alert: CacheWarmingQueueSize
+      expr: cache_warming_queue_size > 50
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Cache warming queue is growing"
+        description: "Cache warming queue has {{ $value }} pending tasks"
+
+    # Prediction accuracy
+    - alert: CacheWarmingPredictionAccuracyLow
+      expr: cache_warming_prediction_accuracy < 0.70
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Cache warming prediction accuracy is low"
+        description: "Prediction accuracy ({{ $value | humanizePercentage }}) is below 70% threshold"

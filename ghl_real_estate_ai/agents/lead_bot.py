@@ -13,6 +13,9 @@ from ghl_real_estate_ai.integrations.lyrio import LyrioClient
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+from ghl_real_estate_ai.services.lead_sequence_state_service import get_sequence_service, SequenceDay
+from ghl_real_estate_ai.services.lead_sequence_scheduler import get_lead_scheduler
+from ghl_real_estate_ai.api.schemas.ghl import MessageType
 
 logger = get_logger(__name__)
 
@@ -29,6 +32,8 @@ class LeadBotWorkflow:
         self.ghost_engine = get_ghost_followup_engine()
         self.ghl_client = ghl_client
         self.event_publisher = get_event_publisher()
+        self.sequence_service = get_sequence_service()
+        self.scheduler = get_lead_scheduler()
         from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
         self.market_intel = get_national_market_intelligence()
         self.workflow = self._build_graph()
@@ -128,6 +133,21 @@ class LeadBotWorkflow:
             "thought"
         )
 
+        # Initialize or restore sequence state
+        sequence_state = await self.sequence_service.get_state(state['lead_id'])
+        if not sequence_state:
+            # Create new sequence for new lead
+            logger.info(f"Creating new sequence for lead {state['lead_id']}")
+            sequence_state = await self.sequence_service.create_sequence(
+                state['lead_id'],
+                initial_day=SequenceDay.DAY_3
+            )
+
+            # Schedule the initial sequence start (immediate or slight delay)
+            await self.scheduler.schedule_sequence_start(state['lead_id'], delay_minutes=1)
+        else:
+            logger.info(f"Restored sequence state for lead {state['lead_id']}: {sequence_state.current_day.value}")
+
         # Emit intent analysis complete event
         await self.event_publisher.publish_intent_analysis_complete(
             contact_id=state["lead_id"],
@@ -136,10 +156,13 @@ class LeadBotWorkflow:
             intent_category=profile.frs.classification,
             frs_score=profile.frs.total_score,
             pcs_score=profile.pcs.total_score,
-            recommendations=[f"Sequence day: {state.get('sequence_day', 3)}"]
+            recommendations=[f"Sequence day: {sequence_state.current_day.value}"]
         )
 
-        return {"intent_profile": profile}
+        return {
+            "intent_profile": profile,
+            "sequence_state": sequence_state.to_dict()
+        }
 
     async def determine_path(self, state: LeadFollowUpState) -> Dict:
         """Decide the next step based on engagement and timeline."""
@@ -165,11 +188,52 @@ class LeadBotWorkflow:
             await sync_service.record_lead_event(state['lead_id'], "AI", "High intent lead detected. Routing to qualified state.", "thought")
             return {"current_step": "qualified", "engagement_status": "qualified"}
             
-        # 3. Check for ghosting (No response > 48h - Mock logic)
-        # In prod, compare datetime.now() with last_interaction_time
-        
-        # This node basically acts as a router/state updater
-        return {}
+        # 3. Use sequence state to determine next step
+        from ghl_real_estate_ai.services.lead_sequence_state_service import LeadSequenceState
+
+        # Restore sequence state from the state dict
+        sequence_data = state.get('sequence_state', {})
+        if sequence_data:
+            sequence_state = LeadSequenceState.from_dict(sequence_data)
+        else:
+            # Fallback: get from service if not in state
+            sequence_state = await self.sequence_service.get_state(state['lead_id'])
+            if not sequence_state:
+                # Create new sequence
+                sequence_state = await self.sequence_service.create_sequence(state['lead_id'])
+
+        logger.info(f"DEBUG: determine_path - sequence state: {sequence_state.current_day.value}, status: {sequence_state.sequence_status.value}")
+
+        # Determine routing based on sequence day
+        if sequence_state.current_day == SequenceDay.DAY_3:
+            logger.info("DEBUG: determine_path - Routing to day_3")
+            await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 3 SMS sequence.", "sequence")
+            return {"current_step": "day_3", "engagement_status": sequence_state.engagement_status}
+
+        elif sequence_state.current_day == SequenceDay.DAY_7:
+            logger.info("DEBUG: determine_path - Routing to day_7")
+            await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 7 call sequence.", "sequence")
+            return {"current_step": "day_7", "engagement_status": sequence_state.engagement_status}
+
+        elif sequence_state.current_day == SequenceDay.DAY_14:
+            logger.info("DEBUG: determine_path - Routing to day_14")
+            await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 14 email sequence.", "sequence")
+            return {"current_step": "day_14", "engagement_status": sequence_state.engagement_status}
+
+        elif sequence_state.current_day == SequenceDay.DAY_30:
+            logger.info("DEBUG: determine_path - Routing to day_30")
+            await sync_service.record_lead_event(state['lead_id'], "AI", "Executing Day 30 final nudge.", "sequence")
+            return {"current_step": "day_30", "engagement_status": sequence_state.engagement_status}
+
+        elif sequence_state.current_day == SequenceDay.QUALIFIED:
+            logger.info("DEBUG: determine_path - Lead is qualified")
+            await sync_service.record_lead_event(state['lead_id'], "AI", "Lead qualified, exiting sequence.", "sequence")
+            return {"current_step": "qualified", "engagement_status": "qualified"}
+
+        else:  # NURTURE or other
+            logger.info("DEBUG: determine_path - Moving to nurture")
+            await sync_service.record_lead_event(state['lead_id'], "AI", "Lead in nurture status.", "sequence")
+            return {"current_step": "nurture", "engagement_status": "nurture"}
 
     async def generate_cma(self, state: LeadFollowUpState) -> Dict:
         """Generate Zillow-Defense CMA and inject into conversation."""
@@ -209,6 +273,9 @@ class LeadBotWorkflow:
         logger.info(f"CMA Injection: {response_msg}")
         
         await sync_service.record_lead_event(state['lead_id'], "AI", f"CMA Generated with ${report.zillow_variance_abs:,.0f} variance.", "thought")
+
+        # Mark CMA as generated in sequence state
+        await self.sequence_service.set_cma_generated(state['lead_id'])
 
         # Emit lead bot sequence update for CMA generation
         await self.event_publisher.publish_lead_bot_sequence_update(
@@ -257,8 +324,28 @@ class LeadBotWorkflow:
             message_sent=msg
         )
 
-        # Call GHL API to send SMS here (Mocked)
-        return {"engagement_status": "ghosted", "current_step": "day_7_call"} # Advance step for next run
+        # Mark Day 3 as completed in sequence state
+        await self.sequence_service.mark_action_completed(state['lead_id'], SequenceDay.DAY_3, "sms_sent")
+
+        # Schedule next sequence action (Day 7 call)
+        await self.scheduler.schedule_next_action(state['lead_id'], SequenceDay.DAY_3)
+
+        # Advance sequence to next day
+        await self.sequence_service.advance_to_next_day(state['lead_id'])
+
+        # Send SMS via GHL API
+        if self.ghl_client:
+            try:
+                await self.ghl_client.send_message(
+                    contact_id=state['lead_id'],
+                    message=msg,
+                    channel=MessageType.SMS
+                )
+                logger.info(f"SMS sent successfully to contact {state['lead_id']}")
+            except Exception as e:
+                logger.error(f"Failed to send SMS via GHL: {e}")
+
+        return {"engagement_status": "ghosted", "current_step": "day_7_call"}
 
     async def initiate_day_7_call(self, state: LeadFollowUpState) -> Dict:
         """Day 7: Initiate Retell AI Call with Stall-Breaker logic."""
@@ -290,7 +377,16 @@ class LeadBotWorkflow:
             metadata={"contact_id": state['lead_id']}
         ))
         task.add_done_callback(_call_finished)
-        
+
+        # Mark Day 7 as completed in sequence state
+        await self.sequence_service.mark_action_completed(state['lead_id'], SequenceDay.DAY_7, "call_initiated")
+
+        # Schedule next sequence action (Day 14 email)
+        await self.scheduler.schedule_next_action(state['lead_id'], SequenceDay.DAY_7)
+
+        # Advance sequence to next day
+        await self.sequence_service.advance_to_next_day(state['lead_id'])
+
         return {"engagement_status": "ghosted", "current_step": "day_14_email"}
 
     async def send_day_14_email(self, state: LeadFollowUpState) -> Dict:
@@ -303,8 +399,31 @@ class LeadBotWorkflow:
         action = await self.ghost_engine.process_lead_step(ghost_state, state['conversation_history'])
         
         logger.info(f"Sending Day 14 Email to {state['contact_email']}: {action['content']}")
-        await sync_service.record_lead_event(state['lead_id'], "AI", "Sent Day 14 Email with value injection.", "sms")
-        # Logic to generate and send CMA PDF would go here
+        await sync_service.record_lead_event(state['lead_id'], "AI", "Sent Day 14 Email with value injection.", "email")
+
+        # Mark Day 14 as completed in sequence state
+        await self.sequence_service.mark_action_completed(state['lead_id'], SequenceDay.DAY_14, "email_sent")
+
+        # Schedule next sequence action (Day 30 SMS)
+        await self.scheduler.schedule_next_action(state['lead_id'], SequenceDay.DAY_14)
+
+        # Advance sequence to next day
+        await self.sequence_service.advance_to_next_day(state['lead_id'])
+
+        # Send email via GHL API
+        if self.ghl_client:
+            try:
+                await self.ghl_client.send_message(
+                    contact_id=state['lead_id'],
+                    message=action['content'],
+                    channel=MessageType.EMAIL
+                )
+                logger.info(f"Email sent successfully to contact {state['lead_id']}")
+            except Exception as e:
+                logger.error(f"Failed to send email via GHL: {e}")
+
+        # TODO: Generate and attach CMA PDF
+
         return {"engagement_status": "ghosted", "current_step": "day_30_nudge"}
 
     async def send_day_30_nudge(self, state: LeadFollowUpState) -> Dict:
@@ -318,6 +437,25 @@ class LeadBotWorkflow:
         
         logger.info(f"Sending Day 30 SMS to {state['contact_phone']}: {action['content']}")
         await sync_service.record_lead_event(state['lead_id'], "AI", "Sent Day 30 final nudge SMS.", "sms")
+
+        # Mark Day 30 as completed in sequence state
+        await self.sequence_service.mark_action_completed(state['lead_id'], SequenceDay.DAY_30, "sms_sent")
+
+        # Complete the sequence - move to nurture
+        await self.sequence_service.complete_sequence(state['lead_id'], "nurture")
+
+        # Send SMS via GHL API
+        if self.ghl_client:
+            try:
+                await self.ghl_client.send_message(
+                    contact_id=state['lead_id'],
+                    message=action['content'],
+                    channel=MessageType.SMS
+                )
+                logger.info(f"Day 30 SMS sent successfully to contact {state['lead_id']}")
+            except Exception as e:
+                logger.error(f"Failed to send Day 30 SMS via GHL: {e}")
+
         return {"engagement_status": "nurture", "current_step": "nurture"}
 
     async def schedule_showing(self, state: LeadFollowUpState) -> Dict:
@@ -429,34 +567,21 @@ class LeadBotWorkflow:
         # Default fallback
         return "nurture"
 
-        def _select_stall_breaker(self, state: LeadFollowUpState) -> str:
+    def _select_stall_breaker(self, state: LeadFollowUpState) -> str:
+        """Select the appropriate stall-breaking script based on intent profile via GhostEngine."""
+        last_msg = state['conversation_history'][-1]['content'].lower() if state['conversation_history'] else ""
 
-            """Select the appropriate stall-breaking script based on intent profile via GhostEngine."""
+        objection_type = "market_shift"  # Default
 
-            last_msg = state['conversation_history'][-1]['content'].lower() if state['conversation_history'] else ""
+        if "thinking" in last_msg:
+            objection_type = "thinking_about_it"
+        elif "get back" in last_msg:
+            objection_type = "get_back_to_you"
+        elif "zestimate" in last_msg or "zillow" in last_msg:
+            objection_type = "zestimate_reference"
+        elif "agent" in last_msg or "realtor" in last_msg:
+            objection_type = "has_realtor"
 
-            
-
-            objection_type = "market_shift" # Default
-
-            if "thinking" in last_msg:
-
-                objection_type = "thinking_about_it"
-
-            elif "get back" in last_msg:
-
-                objection_type = "get_back_to_you"
-
-            elif "zestimate" in last_msg or "zillow" in last_msg:
-
-                objection_type = "zestimate_reference"
-
-            elif "agent" in last_msg or "realtor" in last_msg:
-
-                objection_type = "has_realtor"
-
-                
-
-            return self.ghost_engine.get_stall_breaker(objection_type)
+        return self.ghost_engine.get_stall_breaker(objection_type)
 
     

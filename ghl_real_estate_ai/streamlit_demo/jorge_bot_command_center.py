@@ -27,7 +27,7 @@ if str(project_root) not in sys.path:
 
 # Page configuration
 st.set_page_config(
-    page_title="Jorge AI Command | Elite Edition",
+    page_title="Jorge AI Union[Command, Elite] Edition",
     page_icon="🎯",
     layout="wide",
     initial_sidebar_state="expanded"

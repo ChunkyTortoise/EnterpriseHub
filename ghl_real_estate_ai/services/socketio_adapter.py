@@ -28,7 +28,8 @@ from ghl_real_estate_ai.services.websocket_server import (
     EventType,
     ConnectionStatus
 )
-from ghl_real_estate_ai.services.auth_service import get_auth_service, UserRole
+from ghl_real_estate_ai.services.auth_service import UserRole
+from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
@@ -45,7 +46,7 @@ class JorgeSocketNamespace(AsyncNamespace):
     def __init__(self, namespace: str = '/'):
         super().__init__(namespace)
         self.websocket_manager = get_websocket_manager()
-        self.auth_service = get_auth_service()
+        self.auth_service = enterprise_auth_service
         self.cache_service = get_cache_service()
 
         # Session tracking for Socket.IO compatibility
@@ -66,14 +67,20 @@ class JorgeSocketNamespace(AsyncNamespace):
         try:
             logger.info(f"Socket.IO connection attempt: {sid}")
 
-            # Extract authentication token
+            # Extract authentication token - preferring enterprise_jwt_token for platform consistency
             token = None
-            if auth and 'token' in auth:
-                token = auth['token']
-            elif 'HTTP_AUTHORIZATION' in environ:
-                auth_header = environ['HTTP_AUTHORIZATION']
-                if auth_header.startswith('Bearer '):
-                    token = auth_header[7:]
+            if auth:
+                token = auth.get('enterprise_jwt_token') or auth.get('token')
+
+            if not token:
+                # Check standard Authorization header
+                if 'HTTP_AUTHORIZATION' in environ:
+                    auth_header = environ['HTTP_AUTHORIZATION']
+                    if auth_header.startswith('Bearer '):
+                        token = auth_header[7:]
+                # Fallback to specific enterprise header
+                elif 'HTTP_X_ENTERPRISE_TOKEN' in environ:
+                    token = environ['HTTP_X_ENTERPRISE_TOKEN']
 
             if not token:
                 logger.warning(f"Socket.IO connection rejected - missing token: {sid}")
@@ -457,18 +464,23 @@ class JorgeSocketNamespace(AsyncNamespace):
             logger.error(f"Omnipresent monitoring error for {sid}: {e}")
 
     # Helper methods
-    async def _authenticate_token(self, token: str) -> Optional[object]:
-        """Authenticate JWT token and return user object"""
+    async def _authenticate_token(self, token: str) -> Optional[Any]:
+        """Authenticate JWT token using enterprise auth service"""
         try:
-            payload = self.auth_service.verify_token(token)
-            if not payload:
+            auth_data = await self.auth_service.validate_enterprise_token(token)
+            if not auth_data or 'user' not in auth_data:
                 return None
 
-            user = await self.auth_service.get_user_by_id(payload['user_id'])
-            if not user or not user.is_active:
-                return None
-
-            return user
+            # Create a simple object-like structure for compatibility with existing logic
+            user_data = auth_data['user']
+            
+            class UserInfo:
+                def __init__(self, data):
+                    self.id = data.get('user_id')
+                    self.username = data.get('email')  # Using email as username for enterprise users
+                    self.role = UserRole.ADMIN if "tenant_admin" in data.get('roles', []) else UserRole.AGENT
+            
+            return UserInfo(user_data)
 
         except Exception as e:
             logger.error(f"Token authentication error: {e}")

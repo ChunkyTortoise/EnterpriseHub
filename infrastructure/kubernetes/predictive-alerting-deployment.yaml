@@ -1,0 +1,574 @@
+# Predictive Alerting Engine Production Deployment
+# AWS EKS deployment with ML-based anomaly detection and 15-30 minute advance warnings
+# Performance Target: >85% prediction accuracy with minimal false positives
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: predictive-alerting-config
+  namespace: jorge-platform
+data:
+  # ML Model Configuration
+  model_update_interval_hours: "6"
+  training_window_hours: "168"  # 7 days of training data
+  prediction_horizon_minutes: "30"  # Predict 30 minutes ahead
+  confidence_threshold: "0.85"
+  false_positive_threshold: "0.05"  # Max 5% false positive rate
+
+  # Alert Configuration
+  alert_cooldown_minutes: "15"
+  escalation_delay_minutes: "5"
+  max_alerts_per_hour: "10"
+
+  # Data Sources
+  prometheus_url: "http://prometheus-server:9090"
+  grafana_url: "http://prometheus-grafana:3000"
+  elasticsearch_url: "http://elasticsearch:9200"
+
+  # Business Context
+  business_hours_start: "08:00"
+  business_hours_end: "18:00"
+  critical_business_times: "09:00-10:00,14:00-16:00"  # High-impact periods
+
+  # Feature Engineering
+  enable_seasonal_features: "true"
+  enable_trend_analysis: "true"
+  enable_correlation_analysis: "true"
+
+  # Performance Tuning
+  batch_size: "100"
+  memory_limit_mb: "2048"
+  cpu_threads: "4"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: predictive-alerting-secrets
+  namespace: jorge-platform
+type: Opaque
+data:
+  prometheus_token: <base64-encoded-token>
+  grafana_api_key: <base64-encoded-key>
+  elasticsearch_password: <base64-encoded-password>
+  slack_webhook_url: <base64-encoded-webhook>
+  pagerduty_api_key: <base64-encoded-pagerduty-key>
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: predictive-alerting-engine
+  namespace: jorge-platform
+  labels:
+    app: predictive-alerting-engine
+    component: monitoring
+    version: v1.0.0
+spec:
+  replicas: 2  # High availability for critical service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: predictive-alerting-engine
+  template:
+    metadata:
+      labels:
+        app: predictive-alerting-engine
+        component: monitoring
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: jorge-platform-monitoring-service-account
+      containers:
+      - name: predictive-alerting-engine
+        image: jorge-platform/predictive-alerting-engine:v1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+          name: http
+        - containerPort: 8443
+          protocol: TCP
+          name: https
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "4"
+            memory: "4Gi"
+        env:
+        # Model Configuration
+        - name: MODEL_UPDATE_INTERVAL_HOURS
+          valueFrom:
+            configMapKeyRef:
+              name: predictive-alerting-config
+              key: model_update_interval_hours
+        - name: TRAINING_WINDOW_HOURS
+          valueFrom:
+            configMapKeyRef:
+              name: predictive-alerting-config
+              key: training_window_hours
+        - name: PREDICTION_HORIZON_MINUTES
+          valueFrom:
+            configMapKeyRef:
+              name: predictive-alerting-config
+              key: prediction_horizon_minutes
+        - name: CONFIDENCE_THRESHOLD
+          valueFrom:
+            configMapKeyRef:
+              name: predictive-alerting-config
+              key: confidence_threshold
+
+        # Data Sources
+        - name: PROMETHEUS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: predictive-alerting-config
+              key: prometheus_url
+        - name: GRAFANA_URL
+          valueFrom:
+            configMapKeyRef:
+              name: predictive-alerting-config
+              key: grafana_url
+
+        # Business Context
+        - name: BUSINESS_HOURS_START
+          valueFrom:
+            configMapKeyRef:
+              name: predictive-alerting-config
+              key: business_hours_start
+        - name: BUSINESS_HOURS_END
+          valueFrom:
+            configMapKeyRef:
+              name: predictive-alerting-config
+              key: business_hours_end
+        - name: CRITICAL_BUSINESS_TIMES
+          valueFrom:
+            configMapKeyRef:
+              name: predictive-alerting-config
+              key: critical_business_times
+
+        # Secrets
+        - name: PROMETHEUS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: predictive-alerting-secrets
+              key: prometheus_token
+        - name: GRAFANA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: predictive-alerting-secrets
+              key: grafana_api_key
+        - name: SLACK_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: predictive-alerting-secrets
+              key: slack_webhook_url
+        - name: PAGERDUTY_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: predictive-alerting-secrets
+              key: pagerduty_api_key
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60  # Allow time for model loading
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 2
+        startupProbe:
+          httpGet:
+            path: /startup
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 20
+          timeoutSeconds: 10
+          failureThreshold: 10  # Allow up to 200 seconds for ML model initialization
+
+        volumeMounts:
+        - name: model-storage
+          mountPath: /app/models
+        - name: training-data
+          mountPath: /app/training_data
+        - name: tmp-storage
+          mountPath: /tmp
+
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: predictive-alerting-models
+      - name: training-data
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: tmp-storage
+        emptyDir:
+          sizeLimit: 1Gi
+
+---
+# Persistent Volume Claim for ML models
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: predictive-alerting-models
+  namespace: jorge-platform
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: predictive-alerting-service
+  namespace: jorge-platform
+  labels:
+    app: predictive-alerting-engine
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 8443
+    protocol: TCP
+    name: https
+  selector:
+    app: predictive-alerting-engine
+
+---
+# HPA for predictive alerting engine
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: predictive-alerting-hpa
+  namespace: jorge-platform
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: predictive-alerting-engine
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: prediction_queue_depth
+      target:
+        type: AverageValue
+        averageValue: "20"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 180
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+
+---
+# PodDisruptionBudget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: predictive-alerting-pdb
+  namespace: jorge-platform
+spec:
+  minAvailable: 1  # Always maintain at least 1 pod
+  selector:
+    matchLabels:
+      app: predictive-alerting-engine
+
+---
+# NetworkPolicy for secure communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: predictive-alerting-network-policy
+  namespace: jorge-platform
+spec:
+  podSelector:
+    matchLabels:
+      app: predictive-alerting-engine
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: jorge-platform
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8443
+  egress:
+  - to: []  # Allow all outbound (for Prometheus, Slack, PagerDuty, etc.)
+    ports:
+    - protocol: TCP
+      port: 9090  # Prometheus
+    - protocol: TCP
+      port: 3000  # Grafana
+    - protocol: TCP
+      port: 443   # HTTPS (Slack, PagerDuty)
+    - protocol: TCP
+      port: 80    # HTTP
+
+---
+# ServiceAccount for predictive alerting
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jorge-platform-monitoring-service-account
+  namespace: jorge-platform
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT-ID:role/jorge-platform-monitoring-role
+
+---
+# Prometheus ServiceMonitor for alerting engine metrics
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: predictive-alerting-monitor
+  namespace: jorge-platform
+  labels:
+    app: predictive-alerting-engine
+spec:
+  selector:
+    matchLabels:
+      app: predictive-alerting-engine
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 15s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: instance
+    - sourceLabels: [__meta_kubernetes_pod_ip]
+      targetLabel: pod_ip
+  namespaceSelector:
+    matchNames:
+    - jorge-platform
+
+---
+# Custom Prometheus rules for predictive alerting monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: predictive-alerting-rules
+  namespace: jorge-platform
+  labels:
+    app: predictive-alerting-engine
+spec:
+  groups:
+  - name: predictive.alerting.rules
+    interval: 30s
+    rules:
+    # Model performance monitoring
+    - alert: PredictiveModelAccuracyLow
+      expr: |
+        predictive_alerting_model_accuracy < 0.85
+      for: 10m
+      labels:
+        severity: warning
+        component: predictive-alerting
+      annotations:
+        summary: "Predictive alerting model accuracy is low"
+        description: "Model accuracy ({{ $value | humanizePercentage }}) is below 85% threshold"
+        runbook_url: "https://docs.jorge-platform.com/runbooks/predictive-alerting"
+
+    # False positive rate monitoring
+    - alert: PredictiveAlertingFalsePositiveRateHigh
+      expr: |
+        rate(predictive_alerting_false_positives_total[1h]) /
+        rate(predictive_alerting_predictions_total[1h]) > 0.05
+      for: 15m
+      labels:
+        severity: warning
+        component: predictive-alerting
+      annotations:
+        summary: "Predictive alerting false positive rate is high"
+        description: "False positive rate ({{ $value | humanizePercentage }}) exceeds 5% threshold"
+
+    # Model staleness
+    - alert: PredictiveModelStale
+      expr: |
+        time() - predictive_alerting_model_last_updated_timestamp > 86400  # 24 hours
+      for: 0m
+      labels:
+        severity: critical
+        component: predictive-alerting
+      annotations:
+        summary: "Predictive alerting model is stale"
+        description: "Model hasn't been updated for over 24 hours"
+
+    # Prediction queue health
+    - alert: PredictiveAlertingQueueBacklog
+      expr: prediction_queue_depth > 50
+      for: 5m
+      labels:
+        severity: warning
+        component: predictive-alerting
+      annotations:
+        summary: "Predictive alerting queue has backlog"
+        description: "Prediction queue has {{ $value }} pending items"
+
+    # Service availability
+    - alert: PredictiveAlertingServiceDown
+      expr: |
+        up{job="predictive-alerting-service"} == 0
+      for: 2m
+      labels:
+        severity: critical
+        component: predictive-alerting
+      annotations:
+        summary: "Predictive alerting service is down"
+        description: "Predictive alerting service has been down for more than 2 minutes"
+
+    # Business impact alerts
+    - alert: JorgeBotPerformanceDegradationPredicted
+      expr: |
+        predictive_alerting_jorge_bot_performance_prediction < 0.80
+      for: 0m
+      labels:
+        severity: warning
+        component: jorge-bot
+        business_impact: "high"
+      annotations:
+        summary: "Jorge bot performance degradation predicted"
+        description: "Predictive model forecasts Jorge bot performance will drop to {{ $value | humanizePercentage }} in next 30 minutes"
+        recommended_action: "Review current load and consider scaling Jorge bot instances"
+
+    - alert: CacheHitRateDropPredicted
+      expr: |
+        predictive_alerting_cache_hit_rate_prediction < 0.90
+      for: 0m
+      labels:
+        severity: warning
+        component: cache
+        business_impact: "medium"
+      annotations:
+        summary: "Cache hit rate drop predicted"
+        description: "Cache hit rate predicted to drop to {{ $value | humanizePercentage }} in next 30 minutes"
+        recommended_action: "Trigger proactive cache warming"
+
+    - alert: LeadConversionRateDropPredicted
+      expr: |
+        predictive_alerting_lead_conversion_prediction < 0.15
+      for: 0m
+      labels:
+        severity: critical
+        component: lead-pipeline
+        business_impact: "critical"
+      annotations:
+        summary: "Lead conversion rate drop predicted"
+        description: "Lead conversion rate predicted to drop to {{ $value | humanizePercentage }} in next 30 minutes"
+        recommended_action: "Alert business team and review lead quality factors"
+
+---
+# CronJob for model training and updates
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: predictive-model-training
+  namespace: jorge-platform
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: predictive-model-training
+        spec:
+          serviceAccountName: jorge-platform-monitoring-service-account
+          containers:
+          - name: model-trainer
+            image: jorge-platform/predictive-alerting-engine:v1.0.0
+            command: ["python3", "/app/model_training_job.py"]
+            args:
+              - "--training-window=168"  # 7 days
+              - "--validation-split=0.2"
+              - "--update-models"
+              - "--verbose"
+            env:
+            - name: PROMETHEUS_URL
+              value: "http://prometheus-server:9090"
+            - name: MODEL_STORAGE_PATH
+              value: "/app/models"
+            - name: TRAINING_DATA_PATH
+              value: "/app/training_data"
+            - name: PROMETHEUS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: predictive-alerting-secrets
+                  key: prometheus_token
+            volumeMounts:
+            - name: model-storage
+              mountPath: /app/models
+            - name: training-data
+              mountPath: /app/training_data
+            resources:
+              requests:
+                cpu: "2"
+                memory: "4Gi"
+              limits:
+                cpu: "4"
+                memory: "8Gi"
+          volumes:
+          - name: model-storage
+            persistentVolumeClaim:
+              claimName: predictive-alerting-models
+          - name: training-data
+            emptyDir:
+              sizeLimit: 4Gi
+          restartPolicy: OnFailure
+      backoffLimit: 3

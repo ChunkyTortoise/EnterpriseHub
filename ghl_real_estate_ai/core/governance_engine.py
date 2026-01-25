@@ -10,7 +10,7 @@ Rules:
 """
 import re
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class GovernanceEngine:
             return message
             
         # Regex to find percentage promises (e.g., "20% yield")
-        yield_match = re.search(r'(\d+(?:\.\d+)?)\s*%\s*(?:yield|roi|return)', message, re.IGNORECASE)
+        yield_match = re.search(r'(\d+(?:\.\d+)?)\s*%\s*(?:Union[yield, roi]|return)', message, re.IGNORECASE)
         if yield_match:
             promised_yield = float(yield_match.group(1))
             market_id = context.get("market_id", "national")
@@ -76,7 +76,7 @@ class GovernanceEngine:
             # For now, we cap promised yield at 15% unless verified
             if promised_yield > 15.0:
                 logger.warning(f"⚠️ G2 VERACITY: Promised yield {promised_yield}% exceeds safety limit. Neutralizing.")
-                message = re.sub(r'\d+(?:\.\d+)?\s*%\s*(?:yield|roi|return)', "high yield", message, flags=re.IGNORECASE)
+                message = re.sub(r'\d+(?:\.\d+)?\s*%\s*(?:Union[yield, roi]|return)', "high yield", message, flags=re.IGNORECASE)
         
         # Prevent absolute price promises (e.g., "I guarantee $500k")
         if "guarantee" in message.lower() and "$" in message:

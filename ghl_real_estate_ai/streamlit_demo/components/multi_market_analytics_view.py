@@ -23,7 +23,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 import numpy as np
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass
 import json
 
@@ -841,8 +841,7 @@ def render_multi_market_analytics_view():
     st.markdown(f"""
     ---
     <div style="text-align: center; opacity: 0.6; font-size: 0.8rem; margin-top: 32px;">
-        Multi-Market Analytics | {len(markets)} Markets Analyzed | 
-        Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 
+        Multi-Market Analytics | {len(markets)} Markets Union[Analyzed, Last] updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 
         Data range: {date_range[0]} to {date_range[1] if len(date_range) > 1 else date_range[0]}
     </div>
     """, unsafe_allow_html=True)

@@ -9,7 +9,7 @@ import signal
 import subprocess
 import time
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from .base import skill, registry
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -214,7 +214,7 @@ def semantic_chunking(action: str, content: str = "", chunk_id: str = "") -> Any
         chunk_id: The ID of the chunk (used in certain actions)
     """
     # Boundary identification logic
-    boundaries = list(re.finditer(r'export (?:const|function|interface|type) ([A-Z][a-zA-Z0-9_]*)', content))
+    boundaries = list(re.finditer(r'export (?:Union[const, function]|Union[interface, type]) ([A-Z][a-zA-Z0-9_]*)', content))
     
     if action == "chunk":
         if not boundaries:

@@ -939,3 +939,108 @@ class GHLClient:
         """Get current timestamp in ISO format"""
         from datetime import datetime
         return datetime.utcnow().isoformat() + "Z"
+
+    async def get_contact(self, contact_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get contact information by ID from GHL.
+
+        Args:
+            contact_id: GHL contact ID
+
+        Returns:
+            Contact data dict or None if not found
+
+        Raises:
+            httpx.HTTPError: If API request fails
+        """
+        if not contact_id:
+            logger.error("Contact ID is required")
+            return None
+
+        if settings.test_mode or self.api_key == "dummy":
+            logger.info(f"[TEST MODE] Would fetch contact {contact_id}", extra={"test_mode": True})
+            return {
+                "id": contact_id,
+                "firstName": "Test",
+                "lastName": "Contact",
+                "email": f"test-{contact_id}@example.com",
+                "phone": "+15551234567",
+                "tags": [],
+                "customFields": {}
+            }
+
+        endpoint = f"{self.base_url}/contacts/{contact_id}"
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    endpoint,
+                    headers=self.headers,
+                    timeout=settings.webhook_timeout_seconds,
+                )
+                response.raise_for_status()
+
+                contact_data = response.json()
+
+                logger.info(
+                    f"Successfully fetched contact {contact_id}",
+                    extra={"contact_id": contact_id}
+                )
+
+                return contact_data
+
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                logger.warning(f"Contact {contact_id} not found in GHL")
+                return None
+            else:
+                logger.error(f"HTTP {e.response.status_code} error fetching contact {contact_id}: {str(e)}")
+                raise
+
+        except httpx.HTTPError as e:
+            logger.error(f"Failed to fetch contact {contact_id}: {str(e)}")
+            raise
+
+    async def search_contacts(self, query: str = "", limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Search contacts in GHL.
+
+        Args:
+            query: Search query (name, email, phone)
+            limit: Maximum number of results
+
+        Returns:
+            List of contact dictionaries
+
+        Raises:
+            httpx.HTTPError: If API request fails
+        """
+        if settings.test_mode or self.api_key == "dummy":
+            logger.info(f"[TEST MODE] Would search contacts with query '{query}'", extra={"test_mode": True})
+            return []
+
+        endpoint = f"{self.base_url}/contacts/search"
+        params = {"locationId": self.location_id, "limit": limit}
+
+        if query:
+            params["query"] = query
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    endpoint,
+                    params=params,
+                    headers=self.headers,
+                    timeout=settings.webhook_timeout_seconds,
+                )
+                response.raise_for_status()
+
+                data = response.json()
+                contacts = data.get("contacts", [])
+
+                logger.info(f"Found {len(contacts)} contacts matching query '{query}'")
+                return contacts
+
+        except httpx.HTTPError as e:
+            logger.error(f"Failed to search contacts with query '{query}': {str(e)}")
+            raise

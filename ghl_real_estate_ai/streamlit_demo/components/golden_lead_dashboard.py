@@ -14,7 +14,7 @@ from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 import pandas as pd
 import numpy as np
 from collections import defaultdict
@@ -102,7 +102,7 @@ class MockGoldenLeadDetector:
                 {
                     "signal_type": "budget_clarity",
                     "strength": np.random.uniform(0.6, 0.9),
-                    "evidence": "Specific budget: $850,000 | Budget confidence: 'pre-approved'",
+                    "evidence": "Specific budget: $850,Union[000, Budget] confidence: 'pre-approved'",
                     "confidence": np.random.uniform(0.75, 0.9)
                 },
                 {

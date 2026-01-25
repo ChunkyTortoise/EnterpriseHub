@@ -190,8 +190,8 @@ function BotStatusIndicator({ botId }: { botId: string }) {
   
   if (!status) {
     return (
-      <div className="flex items-center gap-2 text-[10px] jorge-code text-gray-500 bg-white/5 px-2 py-1 rounded-full border border-white/10">
-        <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+      <div className="flex items-center gap-2 jorge-label px-2 py-1 rounded-full bg-white/5 border border-white/10">
+        <div className="w-1.5 h-1.5 rounded-full bg-gray-600 animate-pulse" />
         Synchronizing...
       </div>
     )
@@ -202,22 +202,22 @@ function BotStatusIndicator({ botId }: { botId: string }) {
   
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
+      <div className="flex items-center gap-2 bg-white/5 px-2.5 py-1 rounded-full border border-white/10 group cursor-default">
         <div className={cn(
-          "w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(0,240,255,0.5)]",
+          "w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(0,240,255,0.5)] transition-all duration-500",
           status.status === 'online' ? 'bg-jorge-glow animate-pulse' : 'bg-gray-600'
         )} />
-        <span className="text-[10px] font-bold jorge-code text-gray-300 tracking-wider">{statusText}</span>
+        <span className="jorge-label text-gray-300 group-hover:text-jorge-glow transition-colors">{statusText}</span>
       </div>
       
       {status.responseTimeMs && (
-        <div className="text-[10px] jorge-code text-jorge-glow/60 hidden sm:block">
+        <div className="jorge-code text-jorge-glow/60 hidden sm:block tracking-[0.2em]">
           {status.responseTimeMs}MS
         </div>
       )}
       
       {!isConnected && (
-        <Badge variant="outline" className="h-5 text-[9px] bg-red-500/10 text-red-400 border-red-500/20 px-1.5">
+        <Badge variant="outline" className="h-5 text-[9px] bg-red-500/10 text-red-400 border-red-500/20 px-1.5 animate-pulse">
           UNSTABLE
         </Badge>
       )}
@@ -238,16 +238,16 @@ function QuickActions({ onActionSelect }: { onActionSelect: (action: string) => 
       {actions.map((action, index) => (
         <motion.div
           key={index}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: 1.05, translateY: -2 }}
+          whileTap={{ scale: 0.95 }}
         >
           <Button
             variant="outline"
             size="sm"
             onClick={() => onActionSelect(action.action)}
-            className="bg-white/5 border-white/10 hover:bg-white/10 text-gray-300 text-[10px] font-bold jorge-code h-8 px-3 rounded-lg flex items-center gap-2 group transition-all"
+            className="bg-white/5 border-white/10 hover:bg-white/10 text-gray-300 jorge-label h-8 px-4 rounded-full flex items-center gap-2 group transition-all"
           >
-            <span className="text-jorge-glow opacity-60 group-hover:opacity-100">{action.icon}</span>
+            <span className="text-jorge-glow opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all">{action.icon}</span>
             {action.label}
           </Button>
         </motion.div>

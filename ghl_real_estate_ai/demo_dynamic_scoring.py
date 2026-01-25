@@ -19,7 +19,7 @@ Date: 2026-01-09
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 
 
 class LeadSegment(str, Enum):
@@ -354,7 +354,7 @@ def main():
 
     # Demonstrate weight adaptation
     print("⚖️  Weight Profile Comparison:")
-    print("   Feature                  | First-Time | Investor | Luxury")
+    print("   Union[Feature, First]-Union[Time, Investor] | Luxury")
     print("   " + "-" * 55)
 
     features = ['engagement_score', 'response_time', 'budget_match', 'timeline_urgency', 'communication_quality']

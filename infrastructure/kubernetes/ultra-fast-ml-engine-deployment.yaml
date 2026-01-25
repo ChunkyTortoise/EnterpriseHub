@@ -1,0 +1,334 @@
+# Ultra-Fast ML Engine Production Deployment
+# AWS EKS deployment with ONNX optimization and auto-scaling
+# Performance Target: <25ms inference @ 10k req/s
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ultra-fast-ml-config
+  namespace: jorge-platform
+data:
+  redis_cluster_host: "jorge-redis-cluster.cache.amazonaws.com"
+  redis_cluster_port: "6379"
+  model_s3_bucket: "jorge-platform-ml-models"
+  onnx_runtime_enabled: "true"
+  numba_jit_enabled: "true"
+  inference_timeout_ms: "20"  # Strict timeout for <25ms target
+  max_batch_size: "10"
+  cache_ttl_seconds: "300"
+  metrics_enabled: "true"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ultra-fast-ml-secrets
+  namespace: jorge-platform
+type: Opaque
+data:
+  aws_access_key_id: <base64-encoded-key>
+  aws_secret_access_key: <base64-encoded-secret>
+  redis_password: <base64-encoded-redis-password>
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ultra-fast-ml-engine
+  namespace: jorge-platform
+  labels:
+    app: ultra-fast-ml-engine
+    component: ml-inference
+    version: v3.0.0
+spec:
+  replicas: 8  # Start with 8 replicas for production load
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 2
+      maxSurge: 4
+  selector:
+    matchLabels:
+      app: ultra-fast-ml-engine
+  template:
+    metadata:
+      labels:
+        app: ultra-fast-ml-engine
+        component: ml-inference
+        version: v3.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: jorge-platform-ml-service-account
+      nodeSelector:
+        node.kubernetes.io/instance-type: g5.2xlarge  # GPU-optimized instances
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      containers:
+      - name: ultra-fast-ml-engine
+        image: jorge-platform/ultra-fast-ml-engine:v3.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+          name: http
+        - containerPort: 8081
+          protocol: TCP
+          name: grpc
+        resources:
+          requests:
+            cpu: "3"
+            memory: "6Gi"
+            nvidia.com/gpu: "1"
+          limits:
+            cpu: "6"
+            memory: "12Gi"
+            nvidia.com/gpu: "1"
+        env:
+        - name: REDIS_CLUSTER_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ultra-fast-ml-config
+              key: redis_cluster_host
+        - name: REDIS_CLUSTER_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ultra-fast-ml-config
+              key: redis_cluster_port
+        - name: MODEL_S3_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: ultra-fast-ml-config
+              key: model_s3_bucket
+        - name: ONNX_RUNTIME_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: ultra-fast-ml-config
+              key: onnx_runtime_enabled
+        - name: NUMBA_JIT_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: ultra-fast-ml-config
+              key: numba_jit_enabled
+        - name: INFERENCE_TIMEOUT_MS
+          valueFrom:
+            configMapKeyRef:
+              name: ultra-fast-ml-config
+              key: inference_timeout_ms
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: ultra-fast-ml-secrets
+              key: aws_access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ultra-fast-ml-secrets
+              key: aws_secret_access_key
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ultra-fast-ml-secrets
+              key: redis_password
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 45
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 2
+        startupProbe:
+          httpGet:
+            path: /startup
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6  # Allow up to 1 minute for GPU initialization
+        volumeMounts:
+        - name: model-cache
+          mountPath: /app/model_cache
+        - name: tmp-storage
+          mountPath: /tmp
+      volumes:
+      - name: model-cache
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: tmp-storage
+        emptyDir:
+          sizeLimit: 1Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ultra-fast-ml-service
+  namespace: jorge-platform
+  labels:
+    app: ultra-fast-ml-engine
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 8081
+    targetPort: 8081
+    protocol: TCP
+    name: grpc
+  selector:
+    app: ultra-fast-ml-engine
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ultra-fast-ml-hpa
+  namespace: jorge-platform
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ultra-fast-ml-engine
+  minReplicas: 5
+  maxReplicas: 50
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: ml_inference_queue_depth
+      target:
+        type: AverageValue
+        averageValue: "15"
+  - type: Pods
+    pods:
+      metric:
+        name: ml_inference_latency_ms
+      target:
+        type: AverageValue
+        averageValue: "20"  # Scale up if latency approaches 25ms
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100  # Double capacity quickly
+        periodSeconds: 15
+      - type: Pods
+        value: 5   # Add max 5 pods at once
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300  # 5 minute cooldown
+      policies:
+      - type: Percent
+        value: 10  # Reduce capacity slowly
+        periodSeconds: 60
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ultra-fast-ml-pdb
+  namespace: jorge-platform
+spec:
+  minAvailable: 4  # Always maintain at least 4 pods during updates
+  selector:
+    matchLabels:
+      app: ultra-fast-ml-engine
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ultra-fast-ml-network-policy
+  namespace: jorge-platform
+spec:
+  podSelector:
+    matchLabels:
+      app: ultra-fast-ml-engine
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: jorge-platform
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8081
+  egress:
+  - to: []  # Allow all outbound (for S3, Redis, etc.)
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 6379  # Redis
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jorge-platform-ml-service-account
+  namespace: jorge-platform
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT-ID:role/jorge-platform-ml-role
+
+---
+# Prometheus ServiceMonitor for metrics collection
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ultra-fast-ml-monitor
+  namespace: jorge-platform
+  labels:
+    app: ultra-fast-ml-engine
+spec:
+  selector:
+    matchLabels:
+      app: ultra-fast-ml-engine
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: instance
+    - sourceLabels: [__meta_kubernetes_pod_ip]
+      targetLabel: pod_ip
+  namespaceSelector:
+    matchNames:
+    - jorge-platform

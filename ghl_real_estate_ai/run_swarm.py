@@ -29,7 +29,7 @@ def main():
 ║                                                                            ║
 ║          🤖 GHL PROJECT FINALIZATION - AGENT SWARM SYSTEM 🤖               ║
 ║                                                                            ║
-║  5 Specialized Agents | 20 Tasks | Full Project Finalization              ║
+║  5 Specialized Union[Agents, 20] Union[Tasks, Full] Project Finalization              ║
 ║                                                                            ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 

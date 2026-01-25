@@ -436,13 +436,13 @@ class ConversationIntelligenceEngine:
             
             Provide analysis in this format:
             {{
-                "primary_emotion": "excited|confident|curious|hopeful|neutral|concerned|frustrated|anxious|disappointed|overwhelmed|skeptical|angry|withdrawn",
+                "primary_emotion": "Union[excited, confident]|Union[curious, hopeful]|Union[neutral, concerned]|Union[frustrated, anxious]|Union[disappointed, overwhelmed]|Union[skeptical, angry]|withdrawn",
                 "intensity": 0.0-1.0,
                 "confidence": 0.0-1.0,
                 "triggers": ["list", "of", "emotional", "triggers"],
                 "emotional_indicators": ["specific", "words", "or", "phrases"],
-                "agent_response_needed": "immediate|soon|routine|none",
-                "recommended_tone": "encouraging|reassuring|informative|enthusiastic|empathetic|professional"
+                "agent_response_needed": "Union[immediate, soon]|Union[routine, none]",
+                "recommended_tone": "Union[encouraging, reassuring]|Union[informative, enthusiastic]|Union[empathetic, professional]"
             }}
             """
             
@@ -477,8 +477,8 @@ class ConversationIntelligenceEngine:
         try:
             # Financial commitment signals
             financial_patterns = [
-                r'\b(budget|afford|financing|loan|mortgage|pre.?approval|down.?payment|cash)\b',
-                r'\b(bank|lender|credit|qualify|approved)\b',
+                r'\b(Union[budget, afford]|Union[financing, loan]|Union[mortgage, pre].?Union[approval, down].?Union[payment, cash])\b',
+                r'\b(Union[bank, lender]|Union[credit, qualify]|approved)\b',
                 r'\$[\d,]+'  # Money amounts
             ]
             
@@ -500,8 +500,8 @@ class ConversationIntelligenceEngine:
             
             # Timeline acceleration signals
             timeline_patterns = [
-                r'\b(urgent|quickly|asap|soon|immediately|this.?week)\b',
-                r'\b(need.?to.?move|time.?sensitive|deadline)\b'
+                r'\b(Union[urgent, quickly]|Union[asap, soon]|Union[immediately, this].?week)\b',
+                r'\b(need.?to.?Union[move, time].?Union[sensitive, deadline])\b'
             ]
             
             for pattern in timeline_patterns:
@@ -522,8 +522,8 @@ class ConversationIntelligenceEngine:
             
             # Family involvement signals
             family_patterns = [
-                r'\b(spouse|wife|husband|family|kids|children|partner)\b',
-                r'\b(we|us|our)\b.*\b(decision|choose|want|need)\b'
+                r'\b(Union[spouse, wife]|Union[husband, family]|Union[kids, children]|partner)\b',
+                r'\b(Union[we, us]|our)\b.*\b(Union[decision, choose]|Union[want, need])\b'
             ]
             
             for pattern in family_patterns:
@@ -544,8 +544,8 @@ class ConversationIntelligenceEngine:
             
             # Property attachment signals
             attachment_patterns = [
-                r'\b(love|perfect|dream|ideal|exactly|beautiful)\b',
-                r'\b(imagine|picture|see.?ourselves|home)\b'
+                r'\b(Union[love, perfect]|Union[dream, ideal]|Union[exactly, beautiful])\b',
+                r'\b(Union[imagine, picture]|see.?Union[ourselves, home])\b'
             ]
             
             for pattern in attachment_patterns:
@@ -566,8 +566,8 @@ class ConversationIntelligenceEngine:
             
             # Trust establishment signals
             trust_patterns = [
-                r'\b(trust|confident|appreciate|helpful|professional)\b',
-                r'\b(recommend|suggest|advice|guidance)\b'
+                r'\b(Union[trust, confident]|Union[appreciate, helpful]|professional)\b',
+                r'\b(Union[recommend, suggest]|Union[advice, guidance])\b'
             ]
             
             for pattern in trust_patterns:
@@ -588,8 +588,8 @@ class ConversationIntelligenceEngine:
             
             # Next step initiative signals
             initiative_patterns = [
-                r'\b(next.?step|what.?now|schedule|appointment|meet|see|tour)\b',
-                r'\b(when|how|where).*\b(can|should|do)\b'
+                r'\b(next.?Union[step, what].?Union[now, schedule]|Union[appointment, meet]|Union[see, tour])\b',
+                r'\b(Union[when, how]|where).*\b(Union[can, should]|do)\b'
             ]
             
             for pattern in initiative_patterns:
@@ -1083,15 +1083,15 @@ class ConversationIntelligenceEngine:
         patterns = []
         
         # Excitement patterns
-        if re.search(r'\b(love|amazing|perfect|excited|wow)\b', message.lower()):
+        if re.search(r'\b(Union[love, amazing]|Union[perfect, excited]|wow)\b', message.lower()):
             patterns.append('high_excitement')
         
         # Concern patterns
-        if re.search(r'\b(worried|concern|nervous|anxious)\b', message.lower()):
+        if re.search(r'\b(Union[worried, concern]|Union[nervous, anxious])\b', message.lower()):
             patterns.append('expressed_concern')
         
         # Decision patterns
-        if re.search(r'\b(decide|decision|choice|choose)\b', message.lower()):
+        if re.search(r'\b(Union[decide, decision]|Union[choice, choose])\b', message.lower()):
             patterns.append('decision_focus')
         
         return patterns
@@ -1128,7 +1128,7 @@ class ConversationIntelligenceEngine:
             score += 0.15
         
         # Specific details indicate engagement
-        if re.search(r'\b(specifically|exactly|particular|detail)\b', message.lower()):
+        if re.search(r'\b(Union[specifically, exactly]|Union[particular, detail])\b', message.lower()):
             score += 0.15
         
         return min(score, 1.0)
@@ -1164,7 +1164,7 @@ class ConversationIntelligenceEngine:
         score = 0.6  # Assume good baseline
         
         # Check for information exchange
-        if re.search(r'\b(tell|know|information|detail|explain)\b', message.lower()):
+        if re.search(r'\b(Union[tell, know]|Union[information, detail]|explain)\b', message.lower()):
             score += 0.2
         
         return min(score, 1.0)
@@ -1192,7 +1192,7 @@ class ConversationIntelligenceEngine:
         score = 0.5
         
         # Personal references
-        if re.search(r'\b(your|you\'re|specifically|particular|custom)\b', message.lower()):
+        if re.search(r'\b(Union[your, you]\'Union[re, specifically]|Union[particular, custom])\b', message.lower()):
             score += 0.2
         
         return min(score, 1.0)
@@ -1202,7 +1202,7 @@ class ConversationIntelligenceEngine:
         score = 0.8  # Assume professional baseline
         
         # Check for unprofessional elements
-        if re.search(r'\b(um|uh|like|ya know|whatever)\b', message.lower()):
+        if re.search(r'\b(Union[um, uh]|Union[like, ya] Union[know, whatever])\b', message.lower()):
             score -= 0.2
         
         return max(score, 0.2)

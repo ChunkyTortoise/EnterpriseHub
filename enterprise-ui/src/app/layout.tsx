@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/lib/providers";
+import { Providers } from "./providers";
 import { ClaudeConcierge } from "@/components/claude-concierge/ClaudeConcierge";
 import { CommandMenu } from "@/components/ui/CommandMenu";
 

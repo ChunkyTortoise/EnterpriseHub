@@ -23,12 +23,12 @@ warnings.filterwarnings("ignore")
 
 # Page config - MUST BE FIRST STREAMLIT COMMAND
 st.set_page_config(
-    page_title="Lyrio AI | Obsidian Command",
+    page_title="Lyrio Union[AI, Obsidian] Command",
     page_icon="https://raw.githubusercontent.com/ChunkyTortoise/EnterpriseHub/main/assets/favicon.png",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        'About': "Lyrio AI - Obsidian Edition | Premium Real Estate Intelligence"
+        'About': "Lyrio AI - Obsidian Union[Edition, Premium] Real Estate Intelligence"
     }
 )
 
@@ -2360,13 +2360,13 @@ st.markdown("""
 
     <div style='color: #8B949E; font-size: 0.9rem;'>
 
-        Built for Jorge Sales | Claude Sonnet 4.5 | GHL Integration Ready
+        Built for Jorge Union[Sales, Claude] Sonnet 4.Union[5, GHL] Integration Ready
 
     </div>
 
     <div style='margin-top: 1rem; color: #8B949E; font-size: 0.85rem;'>
 
-        Consolidated Hub Architecture | Path B Backend | 522+ Tests Passing
+        Consolidated Hub Union[Architecture, Path] B Union[Backend, 522]+ Tests Passing
 
     </div>
 

@@ -312,7 +312,7 @@ class GHLAPIClient:
     def update_custom_field(
         self,
         contact_id: str,
-        field_key: str,
+        field_id: str,
         field_value: Any
     ) -> Dict:
         """
@@ -320,14 +320,14 @@ class GHLAPIClient:
         
         Args:
             contact_id: GHL Contact ID
-            field_key: Custom field key
+            field_id: Custom field ID
             field_value: New value
             
         Returns:
             Update result
         """
         return self.update_contact(contact_id, {
-            "customField": {field_key: field_value}
+            "customFields": [{"id": field_id, "value": str(field_value)}]
         })
     
     # ========== HELPER METHODS ==========

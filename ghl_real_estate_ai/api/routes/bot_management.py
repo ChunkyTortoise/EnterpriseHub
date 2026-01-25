@@ -254,7 +254,7 @@ async def stream_bot_conversation(
                 yield _format_sse({
                     "type": "chunk",
                     "content": partial,
-                    "delta": word,
+                    "chunk": word,
                     "progress": (i + 1) / len(words)
                 })
 
@@ -349,7 +349,7 @@ async def get_bot_status(bot_id: str):
         raise HTTPException(status_code=500, detail="Failed to fetch bot status")
 
 # --- ENDPOINT 5: POST /api/jorge-seller/start ---
-@router.post("/api/jorge-seller/start")
+@router.post("/jorge-seller/start")
 async def start_jorge_qualification(request: JorgeStartRequest):
     """
     Start Jorge Seller Bot qualification conversation.
@@ -387,7 +387,7 @@ async def start_jorge_qualification(request: JorgeStartRequest):
         raise HTTPException(status_code=500, detail="Failed to start qualification")
 
 # --- ENDPOINT 6: POST /api/lead-bot/{leadId}/schedule ---
-@router.post("/api/lead-bot/{leadId}/schedule")
+@router.post("/lead-bot/{leadId}/schedule")
 async def trigger_lead_bot_sequence(
     leadId: str,
     request: ScheduleRequest,
@@ -441,7 +441,7 @@ async def trigger_lead_bot_sequence(
         raise HTTPException(status_code=500, detail="Failed to schedule sequence")
 
 # --- ENDPOINT 7: GET /api/intent-decoder/{leadId}/score ---
-@router.get("/api/intent-decoder/{leadId}/score", response_model=IntentScoreResponse)
+@router.get("/intent-decoder/{leadId}/score", response_model=IntentScoreResponse)
 async def get_lead_intent_score(leadId: str):
     """
     Get FRS/PCS scores and intent analysis for a lead.

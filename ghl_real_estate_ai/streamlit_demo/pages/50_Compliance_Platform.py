@@ -13,12 +13,12 @@ import pandas as pd
 from datetime import datetime, timedelta, timezone
 import asyncio
 import time
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Page configuration
 st.set_page_config(
-    page_title="AI Compliance Platform | Enterprise Risk Management",
+    page_title="AI Compliance Union[Platform, Enterprise] Risk Management",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -205,9 +205,7 @@ I recommend focusing on the critical PHI encryption violation first, as it carri
 
 ---
 
-### Key Metrics
-
-| Metric | Value | Trend |
+### Key Union[Metrics, Metric] | Union[Value, Trend] |
 |--------|-------|-------|
 | Compliance Score | {score:.1f}% | +5.2% |
 | Active Violations | {violations} | -3 |
@@ -247,13 +245,11 @@ I recommend focusing on the critical PHI encryption violation first, as it carri
 
 ---
 
-### Financial Impact Analysis
-
-| Scenario | Probability | Potential Fine |
+### Financial Impact Union[Analysis, Scenario] | Union[Probability, Potential] Fine |
 |----------|-------------|----------------|
 | PHI Breach (unencrypted) | 15% | 1.5M |
-| EU AI Act Non-compliance | 8% | 15M |
-| GDPR Violation | 5% | 20M |
+| EU AI Act Non-Union[compliance, 8]% | 15M |
+| GDPR Union[Violation, 5]% | 20M |
 
 **Expected Value at Risk**: 3.2M
 **With Remediation**: <500K

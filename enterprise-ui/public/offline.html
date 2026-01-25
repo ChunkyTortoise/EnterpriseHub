@@ -6,10 +6,12 @@
     <title>Jorge Real Estate AI - Offline</title>
     <style>
         :root {
-            --jorge-glow: #00ff94;
-            --jorge-electric: #00d4ff;
-            --jorge-dark: #0a0b0e;
-            --jorge-card: #1a1b23;
+            --jorge-glow: #00f0ff;
+            --jorge-electric: #0052ff;
+            --jorge-gold: #ffd700;
+            --jorge-dark: #0f0f0f;
+            --jorge-card: #1a1a1a;
+            --jorge-border: #262626;
         }
 
         * {
@@ -39,54 +41,62 @@
         .jorge-logo {
             font-size: 3rem;
             font-weight: 900;
-            color: var(--jorge-glow);
-            margin-bottom: 1rem;
-            text-shadow: 0 0 30px var(--jorge-glow);
+            color: white;
+            margin-bottom: 0.5rem;
             letter-spacing: -2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .jorge-logo span {
+            color: var(--jorge-electric);
         }
 
         .subtitle {
-            font-size: 1.2rem;
-            color: #9ca3af;
+            font-size: 0.7rem;
+            color: #666;
             margin-bottom: 3rem;
-            font-weight: 500;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .offline-icon {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 2rem;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--jorge-glow), var(--jorge-electric));
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 2.5rem;
+            border-radius: 24px;
+            background: var(--jorge-card);
+            border: 1px solid var(--jorge-border);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            animation: pulse 3s infinite;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
 
         .offline-icon::before {
-            content: '📶';
-            font-size: 4rem;
-            filter: grayscale(1) opacity(0.3);
+            content: '⚡';
+            font-size: 2.5rem;
+            color: var(--jorge-electric);
+            filter: drop-shadow(0 0 10px var(--jorge-electric));
         }
 
         .offline-icon::after {
-            content: '';
+            content: 'OFFLINE';
             position: absolute;
-            top: 50%;
+            bottom: -10px;
             left: 50%;
-            width: 140px;
-            height: 6px;
+            transform: translateX(-50%);
             background: #ef4444;
-            transform: translate(-50%, -50%) rotate(45deg);
-            border-radius: 3px;
-            box-shadow: 0 0 20px #ef4444;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 50px var(--jorge-glow); }
-            50% { transform: scale(1.05); box-shadow: 0 0 80px var(--jorge-glow); }
+            color: white;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
         }
 
         .message {
@@ -94,55 +104,66 @@
         }
 
         .title {
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 1.75rem;
+            font-weight: 800;
             color: white;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
+            letter-spacing: -1px;
         }
 
         .description {
-            font-size: 1rem;
-            color: #d1d5db;
+            font-size: 0.9rem;
+            color: #888;
             line-height: 1.6;
             margin-bottom: 2rem;
         }
 
         .features {
-            background: var(--jorge-card);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--jorge-border);
+            border-radius: 20px;
+            padding: 1.5rem;
             margin: 2rem 0;
             text-align: left;
+            backdrop-blur: 10px;
         }
 
         .features h3 {
-            color: var(--jorge-glow);
+            color: var(--jorge-electric);
             margin-bottom: 1rem;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .feature-list {
             list-style: none;
             margin: 0;
             padding: 0;
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 0.75rem;
         }
 
         .feature-list li {
-            padding: 0.5rem 0;
-            color: #d1d5db;
-            font-size: 0.9rem;
+            color: #ccc;
+            font-size: 0.8rem;
             position: relative;
-            padding-left: 1.5rem;
+            padding-left: 1.25rem;
+            font-weight: 500;
         }
 
         .feature-list li::before {
-            content: '✓';
+            content: '';
             position: absolute;
             left: 0;
-            color: var(--jorge-glow);
-            font-weight: bold;
+            top: 6px;
+            width: 6px;
+            height: 6px;
+            background: var(--jorge-glow);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--jorge-glow);
         }
 
         .actions {
@@ -153,55 +174,83 @@
         }
 
         .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
+            padding: 0.75rem 1.75rem;
+            border-radius: 12px;
             border: none;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--jorge-glow), var(--jorge-electric));
-            color: black;
+            background: var(--jorge-electric);
+            color: white;
+            box-shadow: 0 10px 20px rgba(0, 82, 255, 0.3);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 255, 148, 0.3);
+            background: #1a66ff;
+            box-shadow: 0 15px 30px rgba(0, 82, 255, 0.5);
         }
 
         .btn-secondary {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.05);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--jorge-border);
         }
 
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.3);
+            border-color: #444;
         }
 
         .status {
             position: fixed;
             top: 2rem;
             right: 2rem;
-            padding: 1rem;
+            padding: 0.5rem 1rem;
             background: var(--jorge-card);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            font-size: 0.8rem;
-            color: #9ca3af;
+            border: 1px solid var(--jorge-border);
+            border-radius: 100px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            color: #666;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ef4444;
         }
 
         .status.online {
-            border-color: var(--jorge-glow);
             color: var(--jorge-glow);
+            border-color: rgba(0, 240, 255, 0.3);
+        }
+
+        .status.online::before {
+            background: var(--jorge-glow);
+            box-shadow: 0 0 10px var(--jorge-glow);
+            animation: pulse-mini 2s infinite;
+        }
+
+        @keyframes pulse-mini {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .retry-animation {
@@ -219,13 +268,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            opacity: 0.1;
+            opacity: 0.05;
             z-index: -1;
             background:
-                radial-gradient(circle at 20% 80%, var(--jorge-glow) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, var(--jorge-electric) 0%, transparent 50%);
-            animation: float 20s ease-in-out infinite;
+                radial-gradient(circle at 20% 80%, var(--jorge-electric) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, var(--jorge-glow) 0%, transparent 50%);
         }
+
 
         @keyframes float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -250,8 +299,8 @@
     </div>
 
     <div class="container">
-        <div class="jorge-logo">JORGE</div>
-        <div class="subtitle">Real Estate AI Platform</div>
+        <div class="jorge-logo">JORGE <span>BRAIN</span></div>
+        <div class="subtitle">Enterprise Real Estate Intelligence</div>
 
         <div class="offline-icon"></div>
 

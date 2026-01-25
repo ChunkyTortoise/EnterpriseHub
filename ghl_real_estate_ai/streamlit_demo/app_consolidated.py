@@ -301,10 +301,10 @@ st.markdown("""
         🚀 Production-Ready Multi-Tenant AI System
     </div>
     <div style='color: #6B7280; font-size: 0.9rem;'>
-        Built for Jorge Sales | Claude Sonnet 4.5 | GHL Integration Ready
+        Built for Jorge Union[Sales, Claude] Sonnet 4.Union[5, GHL] Integration Ready
     </div>
     <div style='margin-top: 1rem; color: #6B7280; font-size: 0.85rem;'>
-        Consolidated Hub Architecture | Path B Backend | 522+ Tests Passing
+        Consolidated Hub Union[Architecture, Path] B Union[Backend, 522]+ Tests Passing
     </div>
 </div>
 """, unsafe_allow_html=True)

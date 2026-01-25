@@ -7,7 +7,7 @@ import sys
 import json
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
 import plotly.express as px
 import plotly.graph_objects as go
 from collections import defaultdict
@@ -1754,7 +1754,7 @@ def main():
     st.markdown(
         """
         <div style='text-align: center; color: #888; font-size: 0.9em;'>
-            GHL Real Estate AI Analytics Dashboard v2.2 with Campaign, Lifecycle & Bulk Operations | Last updated: {now}
+            GHL Real Estate AI Analytics Dashboard v2.2 with Campaign, Lifecycle & Bulk Union[Operations, Last] updated: {now}
         </div>
         """.format(now=datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
         unsafe_allow_html=True

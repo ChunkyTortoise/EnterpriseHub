@@ -6,6 +6,7 @@ Extends the base LeadBotWorkflow with Track 1 enhancements.
 
 import asyncio
 import json
+import uuid
 from typing import Dict, Any, List, Literal, Optional
 from datetime import datetime, timedelta
 from dataclasses import dataclass
@@ -16,6 +17,14 @@ from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+
+# Track 3.1 Integration
+from bots.shared.ml_analytics_engine import (
+    MLAnalyticsEngine,
+    LeadJourneyPrediction,
+    ConversionProbabilityAnalysis,
+    TouchpointOptimization
+)
 
 logger = get_logger(__name__)
 
@@ -280,6 +289,14 @@ class PredictiveLeadBot(LeadBotWorkflow):
         self.personality_adapter = PersonalityAdapter()
         self.temperature_engine = TemperaturePredictionEngine()
 
+        # Track 3.1: ML Analytics Engine for market timing intelligence
+        self.ml_analytics = MLAnalyticsEngine(tenant_id="jorge_lead_bot")
+
+        # Add bot coordination capability to event publisher
+        self.event_publisher.publish_bot_coordination_request = lambda **kwargs: publish_bot_coordination_request(
+            self.event_publisher, **kwargs
+        )
+
         # Override workflow with enhanced capabilities
         self.workflow = self._build_predictive_graph()
 
@@ -291,6 +308,7 @@ class PredictiveLeadBot(LeadBotWorkflow):
         workflow.add_node("analyze_intent", self.analyze_intent)
         workflow.add_node("behavioral_analysis", self.analyze_behavioral_patterns)  # NEW
         workflow.add_node("predict_optimization", self.predict_sequence_optimization)  # NEW
+        workflow.add_node("track3_market_intelligence", self.apply_track3_market_intelligence)  # TRACK 3.1
         workflow.add_node("determine_path", self.determine_path)
         workflow.add_node("generate_cma", self.generate_cma)
 
@@ -306,11 +324,12 @@ class PredictiveLeadBot(LeadBotWorkflow):
         workflow.add_node("facilitate_offer", self.facilitate_offer)
         workflow.add_node("contract_to_close_nurture", self.contract_to_close_nurture)
 
-        # Enhanced flow
+        # Enhanced flow with Track 3.1
         workflow.set_entry_point("analyze_intent")
         workflow.add_edge("analyze_intent", "behavioral_analysis")
         workflow.add_edge("behavioral_analysis", "predict_optimization")
-        workflow.add_edge("predict_optimization", "determine_path")
+        workflow.add_edge("predict_optimization", "track3_market_intelligence")  # TRACK 3.1
+        workflow.add_edge("track3_market_intelligence", "determine_path")
 
         # Enhanced conditional routing
         workflow.add_conditional_edges(
@@ -398,78 +417,274 @@ class PredictiveLeadBot(LeadBotWorkflow):
 
         return {"sequence_optimization": optimization}
 
+    async def apply_track3_market_intelligence(self, state: LeadFollowUpState) -> Dict:
+        """
+        Track 3.1: Apply market timing intelligence to enhance nurture sequence.
+
+        Integrates ML-powered predictions for:
+        - Lead journey progression and bottlenecks
+        - Stage-specific conversion probability
+        - Optimal touchpoint timing and channels
+        """
+        logger.info(f"Applying Track 3.1 market intelligence for lead {state['lead_id']}")
+
+        await self.event_publisher.publish_bot_status_update(
+            bot_type="predictive-lead-bot",
+            contact_id=state["lead_id"],
+            status="processing",
+            current_step="track3_market_analysis"
+        )
+
+        try:
+            # TRACK 3.1 ENHANCEMENT: Get comprehensive predictive analysis
+            journey_analysis = await self.ml_analytics.predict_lead_journey(state['lead_id'])
+            conversion_analysis = await self.ml_analytics.predict_conversion_probability(
+                state['lead_id'],
+                state.get('current_journey_stage', 'nurture')
+            )
+            touchpoint_analysis = await self.ml_analytics.predict_optimal_touchpoints(state['lead_id'])
+
+            # Apply market timing enhancements to existing sequence optimization
+            enhanced_optimization = await self._apply_market_timing_intelligence(
+                state['sequence_optimization'],
+                journey_analysis,
+                conversion_analysis,
+                touchpoint_analysis
+            )
+
+            # Detect critical scenarios requiring immediate action
+            critical_scenario = await self._detect_critical_scenarios(
+                journey_analysis, conversion_analysis, state
+            )
+
+            # Emit Track 3.1 analysis complete event
+            await self.event_publisher.publish_bot_status_update(
+                bot_type="predictive-lead-bot",
+                contact_id=state["lead_id"],
+                status="enhanced",
+                current_step="track3_analysis_complete",
+                additional_data={
+                    "conversion_probability": journey_analysis.conversion_probability,
+                    "stage_progression_velocity": journey_analysis.stage_progression_velocity,
+                    "response_pattern": touchpoint_analysis.response_pattern,
+                    "urgency_score": conversion_analysis.urgency_score,
+                    "optimal_action": conversion_analysis.optimal_action,
+                    "critical_scenario": critical_scenario,
+                    "enhancement_applied": True,
+                    "processing_time_ms": (
+                        journey_analysis.processing_time_ms +
+                        conversion_analysis.processing_time_ms +
+                        touchpoint_analysis.processing_time_ms
+                    )
+                }
+            )
+
+            return {
+                "journey_analysis": journey_analysis,
+                "conversion_analysis": conversion_analysis,
+                "touchpoint_analysis": touchpoint_analysis,
+                "enhanced_optimization": enhanced_optimization,
+                "critical_scenario": critical_scenario,
+                "track3_applied": True
+            }
+
+        except Exception as e:
+            logger.error(f"Track 3.1 market intelligence failed for {state['lead_id']}: {e}")
+            # Graceful fallback - continue with existing optimization
+            return {
+                "track3_applied": False,
+                "fallback_reason": str(e),
+                "enhanced_optimization": state['sequence_optimization']
+            }
+
     # --- Enhanced Follow-up Nodes ---
 
     async def send_optimized_day_3(self, state: LeadFollowUpState) -> Dict:
-        """Day 3 with optimized timing and personalization."""
-        optimization = state['sequence_optimization']
+        """Day 3 with Track 3.1 enhanced timing and personalization."""
+        # Use Track 3.1 enhanced optimization if available
+        optimization = state.get('enhanced_optimization', state['sequence_optimization'])
         pattern = state['response_pattern']
         personality = state['personality_type']
 
-        # Use optimized timing
+        # Track 3.1: Use market-intelligent timing
         actual_day = optimization.day_3
-        preferred_channel = optimization.channel_sequence[0]
+        preferred_channel = optimization.channel_sequence[0] if optimization.channel_sequence else "SMS"
+
+        # Track 3.1: Check for critical scenarios requiring special handling
+        critical_scenario = state.get('critical_scenario')
+        if critical_scenario and critical_scenario['urgency'] == 'critical':
+            logger.warning(f"CRITICAL SCENARIO: {critical_scenario['type']} - {critical_scenario['recommendation']}")
+            # Override to immediate contact for critical scenarios
+            actual_day = 0  # Contact immediately
+            preferred_channel = "Voice"  # Use most direct channel
 
         await self.event_publisher.publish_lead_bot_sequence_update(
             contact_id=state["lead_id"],
             sequence_day=actual_day,
-            action_type="optimized_outreach",
+            action_type="track3_optimized_outreach",
             success=True,
             channel=preferred_channel,
-            personalization_applied=True
+            personalization_applied=True,
+            track3_enhancement=state.get('track3_applied', False),
+            critical_scenario=critical_scenario
         )
 
-        # Base message
-        base_msg = f"Hi {state['lead_name']}, checking in about your property search. Any questions about the market?"
+        # Base message with Track 3.1 context
+        if critical_scenario:
+            base_msg = f"Hi {state['lead_name']}, following up on your property search. I have some time-sensitive information that could be valuable."
+        else:
+            base_msg = f"Hi {state['lead_name']}, checking in about your property search. Any questions about the market?"
 
         # Adapt message for personality
         adapted_msg = await self.personality_adapter.adapt_message(base_msg, personality, pattern)
 
-        logger.info(f"Optimized Day {actual_day} {preferred_channel} to {state['lead_name']}: {adapted_msg}")
+        logger.info(f"Track 3.1 Enhanced Day {actual_day} {preferred_channel} to {state['lead_name']}: {adapted_msg}")
 
         return {
-            "engagement_status": "predictive_nurture",
+            "engagement_status": "track3_predictive_nurture",
             "current_step": "day_7_call",
             "optimized_timing_applied": True,
-            "personalization_applied": True
+            "personalization_applied": True,
+            "track3_enhancement_applied": state.get('track3_applied', False),
+            "critical_scenario_handled": bool(critical_scenario)
         }
 
     async def initiate_predictive_day_7(self, state: LeadFollowUpState) -> Dict:
-        """Day 7 with predictive timing and channel optimization."""
-        optimization = state['sequence_optimization']
+        """Day 7 with Track 3.1 predictive timing and channel optimization."""
+        # Use Track 3.1 enhanced optimization
+        optimization = state.get('enhanced_optimization', state['sequence_optimization'])
         temperature_pred = state['temperature_prediction']
+        journey_analysis = state.get('journey_analysis')
+        conversion_analysis = state.get('conversion_analysis')
 
-        # Check for early warning
+        # Track 3.1: Check conversion probability for Jorge handoff consideration
+        if (conversion_analysis and
+            conversion_analysis.stage_conversion_probability > 0.7 and
+            journey_analysis and
+            journey_analysis.conversion_probability > 0.6):
+
+            logger.info(f"TRACK 3.1: High conversion indicators for {state['lead_name']} - consider Jorge handoff")
+            await self.event_publisher.publish_bot_status_update(
+                bot_type="predictive-lead-bot",
+                contact_id=state["lead_id"],
+                status="jorge_handoff_recommended",
+                current_step="day_7_high_potential",
+                additional_data={
+                    "conversion_probability": journey_analysis.conversion_probability,
+                    "stage_conversion_probability": conversion_analysis.stage_conversion_probability,
+                    "recommendation": "Consider Jorge Seller Bot engagement for qualification"
+                }
+            )
+
+        # Check for temperature early warning
         if temperature_pred.get('early_warning'):
-            logger.info(f"Early warning triggered for {state['lead_name']}: {temperature_pred['early_warning']['recommendation']}")
+            logger.warning(f"Temperature early warning for {state['lead_name']}: {temperature_pred['early_warning']['recommendation']}")
 
-        # Use optimized channel and timing
+        # Use Track 3.1 optimized channel and timing
         preferred_channel = optimization.channel_sequence[1] if len(optimization.channel_sequence) > 1 else "Voice"
+        actual_day = optimization.day_7
 
-        logger.info(f"Predictive Day {optimization.day_7} {preferred_channel} call for {state['lead_name']}")
+        logger.info(f"Track 3.1 Predictive Day {actual_day} {preferred_channel} call for {state['lead_name']}")
 
-        return {"engagement_status": "predictive_nurture", "current_step": "day_14_email"}
+        return {
+            "engagement_status": "track3_predictive_nurture",
+            "current_step": "day_14_email",
+            "jorge_handoff_eligible": (
+                conversion_analysis and conversion_analysis.stage_conversion_probability > 0.7
+            ) if conversion_analysis else False
+        }
 
     async def send_adaptive_day_14(self, state: LeadFollowUpState) -> Dict:
-        """Day 14 with adaptive messaging and channel selection."""
-        optimization = state['sequence_optimization']
+        """Day 14 with Track 3.1 adaptive messaging and channel selection."""
+        # Use Track 3.1 enhanced optimization
+        optimization = state.get('enhanced_optimization', state['sequence_optimization'])
         personality = state['personality_type']
+        journey_analysis = state.get('journey_analysis')
+        conversion_analysis = state.get('conversion_analysis')
 
         preferred_channel = optimization.channel_sequence[2] if len(optimization.channel_sequence) > 2 else "Email"
+        actual_day = optimization.day_14
 
-        logger.info(f"Adaptive Day {optimization.day_14} {preferred_channel} for {state['lead_name']}")
+        # Track 3.1: Check for bottlenecks requiring intervention
+        intervention_needed = False
+        if (journey_analysis and journey_analysis.stage_bottlenecks and
+            conversion_analysis and conversion_analysis.urgency_score > 0.6):
 
-        return {"engagement_status": "predictive_nurture", "current_step": "day_30_nudge"}
+            intervention_needed = True
+            logger.warning(f"TRACK 3.1: Stage bottlenecks detected for {state['lead_name']}: {journey_analysis.stage_bottlenecks}")
+
+            # Escalate to more direct channel for bottleneck resolution
+            preferred_channel = "Voice"  # Override to voice call for bottleneck resolution
+
+            await self.event_publisher.publish_bot_status_update(
+                bot_type="predictive-lead-bot",
+                contact_id=state["lead_id"],
+                status="bottleneck_intervention",
+                current_step="day_14_bottleneck_resolution",
+                additional_data={
+                    "bottlenecks": journey_analysis.stage_bottlenecks,
+                    "urgency_score": conversion_analysis.urgency_score,
+                    "intervention": "escalated_to_voice_call",
+                    "optimal_action": conversion_analysis.optimal_action
+                }
+            )
+
+        logger.info(f"Track 3.1 Adaptive Day {actual_day} {preferred_channel} for {state['lead_name']}")
+
+        return {
+            "engagement_status": "track3_predictive_nurture",
+            "current_step": "day_30_nudge",
+            "bottleneck_intervention": intervention_needed,
+            "channel_escalated": intervention_needed
+        }
 
     async def send_intelligent_day_30(self, state: LeadFollowUpState) -> Dict:
-        """Day 30 with intelligent re-engagement strategy."""
-        optimization = state['sequence_optimization']
+        """Day 30 with Track 3.1 intelligent re-engagement strategy."""
+        # Use Track 3.1 enhanced optimization
+        optimization = state.get('enhanced_optimization', state['sequence_optimization'])
         temperature_pred = state['temperature_prediction']
+        journey_analysis = state.get('journey_analysis')
+        conversion_analysis = state.get('conversion_analysis')
 
-        # Final attempt with predicted optimal approach
-        logger.info(f"Intelligent Day {optimization.day_30} final engagement for {state['lead_name']}")
+        actual_day = optimization.day_30
 
-        return {"engagement_status": "intelligent_nurture", "current_step": "nurture"}
+        # Track 3.1: Final decision point - nurture vs qualify vs disengage
+        final_strategy = "nurture"  # Default
+
+        if journey_analysis and conversion_analysis:
+            # High potential - recommend Jorge qualification
+            if (journey_analysis.conversion_probability > 0.5 and
+                conversion_analysis.stage_conversion_probability > 0.4):
+                final_strategy = "jorge_qualification"
+
+                await self.event_publisher.publish_bot_coordination_request(
+                    source_bot="predictive-lead-bot",
+                    target_bot="jorge-seller-bot",
+                    contact_id=state["lead_id"],
+                    handoff_type="day_30_qualification",
+                    handoff_data={
+                        "conversion_probability": journey_analysis.conversion_probability,
+                        "stage_conversion_probability": conversion_analysis.stage_conversion_probability,
+                        "lead_temperature": temperature_pred.get('current_temperature', 0),
+                        "sequence_completion": "day_30_reached",
+                        "recommendation": "Jorge confrontational qualification recommended"
+                    }
+                )
+
+            # Low potential with cooling trend - disengage gracefully
+            elif (journey_analysis.conversion_probability < 0.2 and
+                  conversion_analysis.drop_off_risk > 0.8):
+                final_strategy = "graceful_disengage"
+
+        logger.info(f"Track 3.1 Intelligent Day {actual_day} final engagement for {state['lead_name']} - Strategy: {final_strategy}")
+
+        return {
+            "engagement_status": "track3_intelligent_final",
+            "current_step": final_strategy,
+            "jorge_handoff_recommended": final_strategy == "jorge_qualification",
+            "sequence_complete": True,
+            "final_strategy": final_strategy
+        }
 
     # --- Helper Logic ---
 
@@ -483,6 +698,107 @@ class PredictiveLeadBot(LeadBotWorkflow):
 
         # Use parent routing logic with enhancements
         return super()._route_next_step(state)
+
+    # --- Track 3.1 Enhancement Methods ---
+
+    async def _apply_market_timing_intelligence(self, base_optimization: SequenceOptimization,
+                                              journey_analysis: LeadJourneyPrediction,
+                                              conversion_analysis: ConversionProbabilityAnalysis,
+                                              touchpoint_analysis: TouchpointOptimization) -> SequenceOptimization:
+        """
+        Apply Track 3.1 market timing intelligence to enhance sequence optimization.
+
+        Adjusts timing and channels based on:
+        - Lead journey stage progression velocity
+        - Conversion probability and urgency
+        - Optimal touchpoint predictions
+        """
+        enhanced_optimization = SequenceOptimization(
+            day_3=base_optimization.day_3,
+            day_7=base_optimization.day_7,
+            day_14=base_optimization.day_14,
+            day_30=base_optimization.day_30,
+            channel_sequence=base_optimization.channel_sequence.copy()
+        )
+
+        # TIMING ENHANCEMENT 1: Urgency-based acceleration
+        urgency_score = conversion_analysis.urgency_score
+        if urgency_score > 0.8:
+            # HIGH URGENCY: Accelerate sequence significantly
+            enhanced_optimization.day_3 = max(1, int(base_optimization.day_3 * 0.5))
+            enhanced_optimization.day_7 = max(2, int(base_optimization.day_7 * 0.6))
+            enhanced_optimization.day_14 = max(5, int(base_optimization.day_14 * 0.7))
+            logger.info(f"HIGH URGENCY: Accelerated sequence timing by 30-50%")
+
+        elif urgency_score < 0.3:
+            # LOW URGENCY: Extend intervals to avoid over-communication
+            enhanced_optimization.day_7 = min(14, int(base_optimization.day_7 * 1.5))
+            enhanced_optimization.day_14 = min(30, int(base_optimization.day_14 * 1.3))
+            enhanced_optimization.day_30 = min(60, int(base_optimization.day_30 * 1.2))
+            logger.info(f"LOW URGENCY: Extended sequence timing to avoid fatigue")
+
+        # TIMING ENHANCEMENT 2: Progression velocity optimization
+        if journey_analysis.stage_progression_velocity > 0.7:
+            # Fast progressors - maintain momentum
+            enhanced_optimization.day_3 = min(enhanced_optimization.day_3, 2)
+            logger.info(f"Fast progression detected - maintaining momentum with quick follow-up")
+
+        # CHANNEL ENHANCEMENT: Use ML-predicted optimal channels
+        if touchpoint_analysis.channel_preferences:
+            # Sort channels by ML-predicted effectiveness
+            optimal_channels = sorted(
+                touchpoint_analysis.channel_preferences.items(),
+                key=lambda x: x[1],
+                reverse=True
+            )
+            enhanced_optimization.channel_sequence = [ch[0] for ch in optimal_channels[:4]]
+            logger.info(f"Updated channel sequence based on ML preferences: {enhanced_optimization.channel_sequence}")
+
+        return enhanced_optimization
+
+    async def _detect_critical_scenarios(self, journey_analysis: LeadJourneyPrediction,
+                                       conversion_analysis: ConversionProbabilityAnalysis,
+                                       state: LeadFollowUpState) -> Optional[Dict[str, Any]]:
+        """
+        Detect critical scenarios requiring immediate intervention or Jorge Bot handoff.
+
+        Returns scenario details if critical action needed, None otherwise.
+        """
+        # Scenario 1: High value lead cooling down rapidly
+        if (journey_analysis.conversion_probability > 0.6 and
+            conversion_analysis.drop_off_risk > 0.7):
+            return {
+                "type": "high_value_cooling",
+                "urgency": "critical",
+                "recommendation": "immediate_jorge_handoff",
+                "reason": f"High conversion probability ({journey_analysis.conversion_probability:.2f}) but high drop-off risk ({conversion_analysis.drop_off_risk:.2f})",
+                "suggested_action": "Deploy Jorge Seller Bot for confrontational re-engagement within 2 hours"
+            }
+
+        # Scenario 2: Bottleneck detected with high urgency
+        if (journey_analysis.stage_bottlenecks and
+            conversion_analysis.urgency_score > 0.8):
+            return {
+                "type": "urgent_bottleneck",
+                "urgency": "high",
+                "recommendation": "accelerated_sequence",
+                "reason": f"Stage bottlenecks detected with high urgency ({conversion_analysis.urgency_score:.2f})",
+                "bottlenecks": journey_analysis.stage_bottlenecks,
+                "suggested_action": conversion_analysis.optimal_action
+            }
+
+        # Scenario 3: Ready for qualification
+        if (journey_analysis.conversion_probability > 0.75 and
+            conversion_analysis.stage_conversion_probability > 0.8):
+            return {
+                "type": "qualification_ready",
+                "urgency": "medium",
+                "recommendation": "jorge_qualification",
+                "reason": f"High conversion indicators suggest readiness for Jorge's qualification process",
+                "suggested_action": "Schedule Jorge Bot consultation within 24 hours"
+            }
+
+        return None
 
     # --- Public Interface ---
 
@@ -503,7 +819,15 @@ class PredictiveLeadBot(LeadBotWorkflow):
             "response_pattern": None,
             "personality_type": None,
             "temperature_prediction": None,
-            "sequence_optimization": None
+            "sequence_optimization": None,
+
+            # Track 3.1 fields
+            "journey_analysis": None,
+            "conversion_analysis": None,
+            "touchpoint_analysis": None,
+            "enhanced_optimization": None,
+            "critical_scenario": None,
+            "track3_applied": False
         }
 
         return await self.workflow.ainvoke(initial_state)
@@ -524,4 +848,21 @@ async def publish_behavioral_analysis_complete(event_publisher, contact_id: str,
         event_type="behavioral_analysis_complete",
         contact_id=contact_id,
         data=kwargs
+    )
+
+# Add method to event publisher instance for bot coordination
+async def publish_bot_coordination_request(event_publisher, source_bot: str, target_bot: str,
+                                         contact_id: str, handoff_type: str, handoff_data: Dict):
+    """Publish bot coordination/handoff request event."""
+    await event_publisher.publish_event(
+        event_type="bot_coordination_request",
+        contact_id=contact_id,
+        data={
+            "source_bot": source_bot,
+            "target_bot": target_bot,
+            "handoff_type": handoff_type,
+            "handoff_data": handoff_data,
+            "timestamp": datetime.now().isoformat(),
+            "coordination_id": str(uuid.uuid4())
+        }
     )

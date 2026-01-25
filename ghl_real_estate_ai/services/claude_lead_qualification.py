@@ -6,7 +6,7 @@ import asyncio
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Union
 from dataclasses import dataclass
 import streamlit as st
 
@@ -973,9 +973,9 @@ Return JSON with automated actions:
     "schedule_follow_up": boolean,
     "assign_to_agent": boolean,
     "trigger_nurture_sequence": boolean,
-    "priority_level": "urgent|high|medium|low",
+    "priority_level": "Union[urgent, high]|Union[medium, low]",
     "suggested_response": "Specific response text",
-    "optimal_contact_time": "immediate|business_hours|evening|weekend"
+    "optimal_contact_time": "Union[immediate, business_hours]|Union[evening, weekend]"
 }}
 
 Consider qualification tier and readiness levels for appropriate automation.
@@ -1041,7 +1041,7 @@ Keep strategy concise and actionable (2-3 sentences).
         """Parse financial readiness score."""
         try:
             import re
-            float_match = re.search(r'(0\\.\\d+|1\\.0|0|1)', response_content)
+            float_match = re.search(r'(0\\.\\d+|1\\.Union[0, 0]|1)', response_content)
             if float_match:
                 return float(float_match.group())
         except Exception:

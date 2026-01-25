@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tuple, Union
 from uuid import uuid4
 
 from ..models.compliance_models import (
@@ -203,11 +203,11 @@ class PolicyEnforcer:
         
         # Simple pattern-based detection for FHA (in production, use LLM-based analysis)
         fha_keywords = [
-            r"\b(white|black|asian|hispanic)\s+(neighborhood|area|people)\b",
-            r"\b(christian|jewish|muslim|catholic)\b",
-            r"\b(no\s+kids|adults\s+only|no\s+families)\b",
-            r"\b(perfect\s+for\s+singles|man\s+cave|bachelor\s+pad)\b",
-            r"\b(restricted|exclusive|private)\s+community\b"
+            r"\b(Union[white, black]|Union[asian, hispanic])\s+(Union[neighborhood, area]|people)\b",
+            r"\b(Union[christian, jewish]|Union[muslim, catholic])\b",
+            r"\b(no\s+Union[kids, adults]\s+Union[only, no]\s+families)\b",
+            r"\b(perfect\s+for\s+Union[singles, man]\s+Union[cave, bachelor]\s+pad)\b",
+            r"\b(Union[restricted, exclusive]|private)\s+community\b"
         ]
         
         for pattern in fha_keywords:

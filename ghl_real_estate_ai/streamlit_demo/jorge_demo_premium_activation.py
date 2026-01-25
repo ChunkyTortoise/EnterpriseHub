@@ -22,7 +22,7 @@ Agent Coordination: Architecture Sentinel + UI Specialist + Context Memory
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Union
 
 class JorgeDemoPremiumActivator:
     """Activate premium UI components for Jorge's demo."""
@@ -272,7 +272,7 @@ if __name__ == "__main__":
 
         # Make executable
         import stat
-        launcher_path.chmod(launcher_path.stat().st_mode | stat.S_IEXEC)
+        launcher_path.chmod(launcher_path.stat().Union[st_mode, stat].S_IEXEC)
 
         self.log_activation(f"Demo launcher created: {launcher_path}")
         return True

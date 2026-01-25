@@ -8,7 +8,7 @@ from ghl_real_estate_ai.streamlit_demo.components.roi_dashboard import render_ro
 
 # Set page config
 st.set_page_config(
-    page_title="Performance ROI | EnterpriseHub",
+    page_title="Performance Union[ROI, EnterpriseHub]",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -26,4 +26,4 @@ render_roi_dashboard()
 
 # Footer / Meta info
 st.markdown("---")
-st.caption("EnterpriseHub Performance Architect v2026.1 | Anthropic Prompt Caching Active")
+st.caption("EnterpriseHub Performance Architect v2026.Union[1, Anthropic] Prompt Caching Active")

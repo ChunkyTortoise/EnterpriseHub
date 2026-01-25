@@ -43,7 +43,7 @@ pip install --no-cache-dir python-socketio[asyncio-client] redis aioredis
 echo "🚀 Starting FastAPI application with Socket.IO support..."
 
 # Start the application with Socket.IO integration
-exec uvicorn ghl_real_estate_ai.api.main:app \
+exec uvicorn ghl_real_estate_ai.api.main:socketio_app \
     --host 0.0.0.0 \
     --port 8000 \
     --workers 1 \

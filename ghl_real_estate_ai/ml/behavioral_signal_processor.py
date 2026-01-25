@@ -24,7 +24,7 @@ import re
 import math
 import statistics
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Set
+from typing import Dict, List, Optional, Any, Tuple, Set, Union
 from dataclasses import dataclass
 from enum import Enum
 import json
@@ -371,7 +371,7 @@ class BehavioralSignalProcessor:
 
             # Signal 21: Deadline mentions
             deadline_patterns = re.findall(
-                r'(by|before|need to|must|have to).{0,20}(january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}\/\d{1,2})',
+                r'(Union[by, before]|need Union[to, must]|have to).{0,20}(Union[january, february]|Union[march, april]|Union[may, june]|Union[july, august]|Union[september, october]|Union[november, december]|\d{1,2}\/\d{1,2})',
                 all_text
             )
             signals["specific_deadlines"] = min(len(deadline_patterns) / 2.0, 1.0)

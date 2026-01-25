@@ -1,0 +1,167 @@
+{
+  "dashboard": {
+    "title": "Jorge Bot Intelligence - Revenue Impact Dashboard",
+    "description": "Advanced monitoring for Jorge's confrontational bot ecosystem with revenue attribution",
+    "version": 2.0,
+    "panels": [
+      {
+        "title": "Jorge Bot Performance Overview",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(jorge_seller_bot_interactions_total[5m]) * 60",
+            "legendFormat": "Conversations/min"
+          },
+          {
+            "expr": "rate(jorge_seller_bot_qualified_leads_total[5m]) * 60",
+            "legendFormat": "Qualifications/min"
+          },
+          {
+            "expr": "jorge_commission_pipeline_value / 1000",
+            "legendFormat": "Commission Pipeline ($K)"
+          }
+        ],
+        "thresholds": {
+          "steps": [
+            {"color": "red", "value": 0},
+            {"color": "yellow", "value": 50},
+            {"color": "green", "value": 100}
+          ]
+        }
+      },
+      {
+        "title": "Confrontational Bot Effectiveness",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(jorge_objection_breakers_successful_total[5m]) / rate(jorge_objections_detected_total[5m]) * 100",
+            "legendFormat": "Objection Success Rate (%)"
+          },
+          {
+            "expr": "rate(jorge_stall_breakers_used_total[5m])",
+            "legendFormat": "Stall Breakers Used/sec"
+          },
+          {
+            "expr": "avg(jorge_conversation_temperature_score)",
+            "legendFormat": "Avg Lead Temperature"
+          }
+        ]
+      },
+      {
+        "title": "Jorge's 4 Core Questions Performance",
+        "type": "bargauge",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(jorge_question_1_answered_total[5m]) / rate(jorge_question_1_asked_total[5m]) * 100",
+            "legendFormat": "Q1: Why Selling (Response Rate)"
+          },
+          {
+            "expr": "rate(jorge_question_2_answered_total[5m]) / rate(jorge_question_2_asked_total[5m]) * 100",
+            "legendFormat": "Q2: Timeline (Response Rate)"
+          },
+          {
+            "expr": "rate(jorge_question_3_answered_total[5m]) / rate(jorge_question_3_asked_total[5m]) * 100",
+            "legendFormat": "Q3: Price Expectations (Response Rate)"
+          },
+          {
+            "expr": "rate(jorge_question_4_answered_total[5m]) / rate(jorge_question_4_asked_total[5m]) * 100",
+            "legendFormat": "Q4: Decision Authority (Response Rate)"
+          }
+        ]
+      },
+      {
+        "title": "Lead Temperature Classification",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(jorge_leads_by_temperature{temperature=\"hot\"})",
+            "legendFormat": "Hot (75+)"
+          },
+          {
+            "expr": "sum(jorge_leads_by_temperature{temperature=\"warm\"})",
+            "legendFormat": "Warm (50-74)"
+          },
+          {
+            "expr": "sum(jorge_leads_by_temperature{temperature=\"lukewarm\"})",
+            "legendFormat": "Lukewarm (25-49)"
+          },
+          {
+            "expr": "sum(jorge_leads_by_temperature{temperature=\"cold\"})",
+            "legendFormat": "Cold (<25)"
+          }
+        ]
+      },
+      {
+        "title": "Revenue Attribution & Commission Tracking",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "jorge_qualified_leads_total",
+            "legendFormat": "Total Qualified"
+          },
+          {
+            "expr": "jorge_estimated_deal_value / 1000",
+            "legendFormat": "Est. Deal Value ($K)"
+          },
+          {
+            "expr": "jorge_commission_estimate / 1000",
+            "legendFormat": "6% Commission Est. ($K)"
+          },
+          {
+            "expr": "jorge_conversion_probability_avg",
+            "legendFormat": "Avg Conversion Probability (%)"
+          }
+        ]
+      },
+      {
+        "title": "ML Prediction Performance",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, jorge_ml_prediction_duration_ms_bucket)",
+            "legendFormat": "95th Percentile ML Latency (ms)"
+          },
+          {
+            "expr": "jorge_ml_model_accuracy * 100",
+            "legendFormat": "ML Model Accuracy (%)"
+          },
+          {
+            "expr": "rate(jorge_ml_escalations_to_claude_total[5m]) / rate(jorge_ml_predictions_total[5m]) * 100",
+            "legendFormat": "Claude Escalation Rate (%)"
+          }
+        ]
+      },
+      {
+        "title": "Conversation Intelligence Real-time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32},
+        "targets": [
+          {
+            "expr": "jorge_conversation_sentiment_score",
+            "legendFormat": "Sentiment Score"
+          },
+          {
+            "expr": "jorge_urgency_level_detected",
+            "legendFormat": "Urgency Level"
+          },
+          {
+            "expr": "jorge_buying_signals_detected_total",
+            "legendFormat": "Buying Signals Detected"
+          }
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "tags": ["jorge", "bot", "revenue", "intelligence"]
+  }
+}

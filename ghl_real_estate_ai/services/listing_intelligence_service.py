@@ -13,7 +13,7 @@ import asyncio
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass
 from enum import Enum
 
@@ -519,7 +519,7 @@ class ListingIntelligenceService:
         for i, comp in enumerate(comparables, 1):
             formatted.append(
                 f"Comp {i}: ${comp.price:,.0f} | {comp.bedrooms}BR/{comp.bathrooms}BA | "
-                f"{comp.square_feet:,} sq ft | Built {comp.year_built} | {comp.status.value.title()}"
+                f"{comp.square_feet:,} sq Union[ft, Built] {comp.year_built} | {comp.status.value.title()}"
             )
         return "\n".join(formatted)
 

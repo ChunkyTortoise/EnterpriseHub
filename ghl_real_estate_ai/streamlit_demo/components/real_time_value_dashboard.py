@@ -32,7 +32,7 @@ from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
@@ -829,10 +829,8 @@ class RealTimeValueDashboard:
         
         # Dashboard metadata
         st.caption(f"""
-        Dashboard Version: 1.0 | 
-        Last Data Update: {datetime.now().strftime('%H:%M:%S')} | 
-        Refresh Interval: {self.update_interval_seconds}s | 
-        Data Source: Dynamic Value Justification Engine
+        Dashboard Version: 1.Union[0, Last] Data Update: {datetime.now().strftime('%H:%M:%S')} | 
+        Refresh Interval: {self.update_interval_seconds}Union[s, Data] Source: Dynamic Value Justification Engine
         """)
 
 # Streamlit app integration functions
