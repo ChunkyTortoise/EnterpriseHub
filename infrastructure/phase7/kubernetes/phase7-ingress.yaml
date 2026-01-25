@@ -1,0 +1,202 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: phase7-ingress
+  namespace: jorge-phase7
+  labels:
+    app: phase7-ingress
+    phase: "7"
+    component: api-gateway
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://jorge-real-estate-ai.com, https://app.jorge-ai.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type, X-Requested-With"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - phase7-api.jorge-ai.com
+    - intelligence.jorge-ai.com
+    - streaming.jorge-ai.com
+    secretName: phase7-tls-secret
+  rules:
+  - host: phase7-api.jorge-ai.com
+    http:
+      paths:
+      - path: /revenue
+        pathType: Prefix
+        backend:
+          service:
+            name: revenue-intelligence-service
+            port:
+              number: 8000
+      - path: /business-intelligence
+        pathType: Prefix
+        backend:
+          service:
+            name: business-intelligence-service
+            port:
+              number: 8001
+      - path: /analytics
+        pathType: Prefix
+        backend:
+          service:
+            name: conversation-analytics-service
+            port:
+              number: 8002
+      - path: /market
+        pathType: Prefix
+        backend:
+          service:
+            name: market-intelligence-service
+            port:
+              number: 8003
+      - path: /cache
+        pathType: Prefix
+        backend:
+          service:
+            name: cache-service-service
+            port:
+              number: 8005
+  - host: intelligence.jorge-ai.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: business-intelligence-service
+            port:
+              number: 8001
+  - host: streaming.jorge-ai.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: stream-processor-service
+            port:
+              number: 8004
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: stream-processor-service
+            port:
+              number: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: phase7-websocket-ingress
+  namespace: jorge-phase7
+  labels:
+    app: phase7-websocket-ingress
+    phase: "7"
+    component: websocket-gateway
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/websocket-services: "stream-processor-service"
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$binary_remote_addr"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+      proxy_cache_bypass $http_upgrade;
+spec:
+  tls:
+  - hosts:
+    - ws.jorge-ai.com
+    secretName: phase7-websocket-tls
+  rules:
+  - host: ws.jorge-ai.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: stream-processor-service
+            port:
+              number: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: phase7-metrics-ingress
+  namespace: jorge-phase7
+  labels:
+    app: phase7-metrics-ingress
+    phase: "7"
+    component: metrics-gateway
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: metrics-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Phase 7 Metrics - Authentication Required"
+    nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+spec:
+  tls:
+  - hosts:
+    - metrics.jorge-ai.com
+    secretName: phase7-metrics-tls
+  rules:
+  - host: metrics.jorge-ai.com
+    http:
+      paths:
+      - path: /revenue
+        pathType: Prefix
+        backend:
+          service:
+            name: revenue-intelligence-service
+            port:
+              number: 9090
+      - path: /business-intelligence
+        pathType: Prefix
+        backend:
+          service:
+            name: business-intelligence-service
+            port:
+              number: 9091
+      - path: /analytics
+        pathType: Prefix
+        backend:
+          service:
+            name: conversation-analytics-service
+            port:
+              number: 9092
+      - path: /market
+        pathType: Prefix
+        backend:
+          service:
+            name: market-intelligence-service
+            port:
+              number: 9093
+      - path: /streaming
+        pathType: Prefix
+        backend:
+          service:
+            name: stream-processor-service
+            port:
+              number: 9094
+      - path: /cache
+        pathType: Prefix
+        backend:
+          service:
+            name: cache-service-service
+            port:
+              number: 9095
