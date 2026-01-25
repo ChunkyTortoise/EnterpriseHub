@@ -94,11 +94,11 @@ class TimestampedModel(BaseModel):
 class TenantConfigurationRequest(BaseModel):
     """Request to create or update tenant configuration."""
     company_name: str = Field(..., min_length=2, max_length=100)
-    domain: str = Field(..., regex=r'^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$')
+    domain: str = Field(..., pattern=r'^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$')
     sso_provider: SSOProvider
     sso_config: Dict[str, Any] = Field(default_factory=dict)
     partnership_id: Optional[str] = None
-    admin_email: Optional[str] = Field(None, regex=r'^[^@]+@[^@]+\.[^@]+$')
+    admin_email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
     allowed_domains: Optional[List[str]] = Field(default_factory=list)
     max_users: int = Field(1000, ge=1, le=10000)
     session_timeout_hours: int = Field(8, ge=1, le=24)
@@ -137,7 +137,7 @@ class TenantResponse(BaseModel):
 
 class UserProvisioningRequest(BaseModel):
     """Request to provision enterprise user."""
-    email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
+    email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
     name: str = Field(..., min_length=1, max_length=100)
     first_name: Optional[str] = Field(None, max_length=50)
     last_name: Optional[str] = Field(None, max_length=50)
@@ -196,7 +196,7 @@ class AuthenticationResponse(BaseModel):
 class PartnershipCreationRequest(BaseModel):
     """Request to create corporate partnership."""
     company_name: str = Field(..., min_length=2, max_length=200)
-    contact_email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
+    contact_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
     contact_name: Optional[str] = Field(None, max_length=100)
     company_size: Optional[str] = Field(None, description="Small, Medium, Large, Enterprise")
     industry: Optional[str] = Field(None, max_length=100)
@@ -213,7 +213,7 @@ class PartnershipCreationRequest(BaseModel):
 
 class PartnershipUpdateRequest(BaseModel):
     """Request to update partnership configuration."""
-    contact_email: Optional[str] = Field(None, regex=r'^[^@]+@[^@]+\.[^@]+$')
+    contact_email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
     contact_name: Optional[str] = Field(None, max_length=100)
     expected_volume: Optional[int] = Field(None, ge=10, le=10000)
     tier: Optional[PartnershipTier] = None
@@ -261,7 +261,7 @@ class PartnershipDetail(PartnershipSummary):
 
 class RelocationRequest(BaseModel):
     """Individual relocation request."""
-    employee_email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
+    employee_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
     employee_name: Optional[str] = Field(None, max_length=100)
     destination_city: str = Field(..., min_length=2, max_length=100)
     destination_state: Optional[str] = Field(None, max_length=50)
@@ -281,7 +281,7 @@ class BulkRelocationRequest(BaseModel):
     """Request for bulk employee relocations."""
     relocations: List[RelocationRequest] = Field(..., min_items=1, max_items=100)
     batch_priority: Optional[str] = Field("normal", description="normal, high, urgent")
-    notification_email: Optional[str] = Field(None, regex=r'^[^@]+@[^@]+\.[^@]+$')
+    notification_email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
 
 
 class RelocationResponse(BaseModel):
@@ -334,8 +334,8 @@ class ContractCreationRequest(BaseModel):
     partnership_id: str
     expected_monthly_volume: int = Field(..., ge=10, le=5000)
     contract_term_months: int = Field(..., ge=6, le=60)
-    billing_contact_email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
-    secondary_billing_contact: Optional[str] = Field(None, regex=r'^[^@]+@[^@]+\.[^@]+$')
+    billing_contact_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    secondary_billing_contact: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
     payment_terms: PaymentTerms
     billing_frequency: BillingFrequency = BillingFrequency.MONTHLY
     currency: str = Field("USD", max_length=3)

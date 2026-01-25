@@ -549,7 +549,7 @@ async def setup_property_visualization(
 @router.get("/property/{property_id}/model", response_model=Property3DModel)
 async def get_property_3d_model(
     property_id: str,
-    quality: str = Query(default="medium", regex="^(Union[low, medium]|Union[high, ultra])$"),
+    quality: str = Query(default="medium", pattern="^(Union[low, medium]|Union[high, ultra])$"),
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
@@ -762,7 +762,7 @@ async def upload_spatial_mapping(
 @router.get("/tour/{property_id}/waypoints")
 async def get_vr_tour_waypoints(
     property_id: str,
-    quality: str = Query(default="balanced", regex="^(Union[low, balanced]|Union[high, ultra])$"),
+    quality: str = Query(default="balanced", pattern="^(Union[low, balanced]|Union[high, ultra])$"),
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """

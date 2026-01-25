@@ -242,7 +242,10 @@ async def stream_bot_conversation(
                     f"(FRS: {profile.frs.total_score:.0f}, PCS: {profile.pcs.total_score:.0f}). "
                     f"Recommendation: {profile.next_best_action}"
                 )
-                result = {"intent_profile": profile}
+                
+                # Convert profile to dict for processing
+                profile_dict = profile.dict() if hasattr(profile, "dict") else vars(profile)
+                result = {"intent_profile": profile_dict}
 
             # Stream response in chunks for typing effect
             words = bot_response.split()

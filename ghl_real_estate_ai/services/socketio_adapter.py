@@ -572,7 +572,7 @@ class SocketIOManager:
         self.websocket_manager = get_websocket_manager()
         logger.info("Socket.IO Manager initialized")
 
-    async def create_server(self, app=None, cors_allowed_origins="*"):
+    def create_server(self, app=None, cors_allowed_origins="*"):
         """Create Socket.IO server with Redis adapter for scaling"""
         try:
             # Create Socket.IO server with Redis adapter for horizontal scaling

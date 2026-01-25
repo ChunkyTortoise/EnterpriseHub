@@ -12,7 +12,7 @@ import {
   LineChart,
   DonutChart,
   Grid,
-  Progress,
+  ProgressBar,
   Callout
 } from '@tremor/react';
 import {
@@ -82,7 +82,7 @@ export function BotPerformanceMatrix({
   useEffect(() => {
     if (!realTimeUpdates) return;
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/bot-performance/${locationId}`);
+    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_SOCKET_URL?.replace('http', 'ws')}/ws/bot-performance/${locationId}`);
 
     ws.onmessage = (event) => {
       try {
@@ -116,7 +116,7 @@ export function BotPerformanceMatrix({
       setIsLoading(true);
       try {
         const response = await fetch(
-          `http://localhost:8000/api/bi/bot-performance?location_id=${locationId}&timeframe=${timeframe}&include_coordination=${showCoordination}`
+          `${process.env.NEXT_PUBLIC_API_BASE}/api/bi/bot-performance?location_id=${locationId}&timeframe=${timeframe}&include_coordination=${showCoordination}`
         );
         const data = await response.json();
 

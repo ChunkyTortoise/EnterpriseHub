@@ -796,7 +796,7 @@ async def complete_step(
 
 @router.get("/analytics", response_model=JourneyAnalytics)
 async def get_analytics(
-    timeframe: str = Query(default="week", regex="^(Union[day, week]|Union[month, quarter])$"),
+    timeframe: str = Query(default="week", pattern="^(Union[day, week]|Union[month, quarter])$"),
     current_user = Depends(get_current_user)
 ):
     """

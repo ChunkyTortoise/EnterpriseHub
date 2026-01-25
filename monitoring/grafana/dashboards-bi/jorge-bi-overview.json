@@ -1,0 +1,471 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Jorge's BI Dashboard - Production Overview",
+    "tags": ["jorge", "bi", "production", "real-estate"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "30s",
+    "schemaVersion": 39,
+    "version": 1,
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["10s", "30s", "1m", "5m", "15m", "30m", "1h"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "instance",
+          "type": "query",
+          "query": "label_values(up{job=\"jorge-bi-backend\"}, instance)",
+          "refresh": 2,
+          "includeAll": true,
+          "allValue": ".*",
+          "sort": 1
+        },
+        {
+          "name": "interval",
+          "type": "interval",
+          "query": "5m,10m,30m,1h",
+          "auto": true,
+          "auto_min": "10s",
+          "auto_count": 30
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "🏢 Jorge's Real Estate BI Dashboard",
+        "type": "text",
+        "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
+        "options": {
+          "mode": "html",
+          "content": "<div style=\"text-align: center; font-size: 20px; color: #58a6ff;\"><h2>Jorge's Real Estate AI Platform - Business Intelligence</h2><p>Production monitoring for enterprise-grade analytics and 6% commission tracking</p></div>"
+        }
+      },
+      {
+        "id": 2,
+        "title": "🎯 System Health Overview",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 3},
+        "targets": [
+          {
+            "expr": "up{job=\"jorge-bi-backend\"}",
+            "legendFormat": "Backend {{instance}}"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"options": {"0": {"text": "DOWN", "color": "red"}}, "type": "value"},
+              {"options": {"1": {"text": "UP", "color": "green"}}, "type": "value"}
+            ],
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "💰 Jorge's Commission (6%)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 3},
+        "targets": [
+          {
+            "expr": "jorge_commission_total_dollars",
+            "legendFormat": "Total Commission"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "color": {"mode": "continuous-GrYlRd"},
+            "min": 0,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 10000},
+                {"color": "green", "value": 25000}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "🔥 Hot Leads (Jorge Score ≥75)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 3},
+        "targets": [
+          {
+            "expr": "jorge_leads_hot_total",
+            "legendFormat": "Hot Leads"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "colorMode": "value",
+          "graphMode": "line"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "continuous-BlPu"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 5},
+                {"color": "green", "value": 20}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "🤖 Bot Success Rate",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 3},
+        "targets": [
+          {
+            "expr": "avg(bot_success_rate)",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.8},
+                {"color": "green", "value": 0.9}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "📊 Request Rate & Response Times",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 7},
+        "targets": [
+          {
+            "expr": "sum(rate(jorge_bi_http_requests_total[5m]))",
+            "legendFormat": "Requests/sec"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(jorge_bi_http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "95th percentile response time"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(jorge_bi_http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "Median response time"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "show": true,
+            "min": 0
+          },
+          {
+            "label": "Response Time (s)",
+            "show": true,
+            "min": 0
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "legend": {
+          "show": true,
+          "values": false,
+          "min": false,
+          "max": false,
+          "current": false,
+          "total": false,
+          "avg": false
+        }
+      },
+      {
+        "id": 7,
+        "title": "💡 Jorge's Business Intelligence Metrics",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 7},
+        "targets": [
+          {
+            "expr": "jorge_revenue_total_dollars",
+            "legendFormat": "Total Revenue"
+          },
+          {
+            "expr": "jorge_commission_total_dollars",
+            "legendFormat": "Jorge Commission (6%)"
+          },
+          {
+            "expr": "jorge_pipeline_value_dollars",
+            "legendFormat": "Pipeline Value"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "USD",
+            "show": true,
+            "min": 0
+          }
+        ],
+        "xAxis": {
+          "show": true
+        }
+      },
+      {
+        "id": 8,
+        "title": "🌐 WebSocket Connections",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 15},
+        "targets": [
+          {
+            "expr": "websocket_active_connections",
+            "legendFormat": "Active Connections"
+          },
+          {
+            "expr": "rate(websocket_messages_sent_total[5m])",
+            "legendFormat": "Messages/sec Sent"
+          },
+          {
+            "expr": "rate(websocket_messages_received_total[5m])",
+            "legendFormat": "Messages/sec Received"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections/Messages",
+            "show": true,
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "🗄️ Database Performance",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 15},
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends{datname=\"jorge_bi_production\"}",
+            "legendFormat": "Active Connections"
+          },
+          {
+            "expr": "rate(pg_stat_database_xact_commit{datname=\"jorge_bi_production\"}[5m])",
+            "legendFormat": "Commits/sec"
+          },
+          {
+            "expr": "rate(pg_stat_database_xact_rollback{datname=\"jorge_bi_production\"}[5m])",
+            "legendFormat": "Rollbacks/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Count",
+            "show": true,
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "⚡ Cache Performance",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 15},
+        "targets": [
+          {
+            "expr": "redis_connected_clients",
+            "legendFormat": "Redis Clients"
+          },
+          {
+            "expr": "rate(redis_commands_processed_total[5m])",
+            "legendFormat": "Commands/sec"
+          },
+          {
+            "expr": "(redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)) * 100",
+            "legendFormat": "Hit Rate %"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Count/%",
+            "show": true,
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "🧠 AI Services Performance",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 21},
+        "targets": [
+          {
+            "expr": "rate(anthropic_requests_total[5m])",
+            "legendFormat": "Claude API Requests/sec"
+          },
+          {
+            "expr": "anthropic_request_duration_seconds",
+            "legendFormat": "Claude API Response Time"
+          },
+          {
+            "expr": "rate(ml_predictions_total[5m])",
+            "legendFormat": "ML Predictions/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "show": true,
+            "min": 0
+          },
+          {
+            "label": "Response Time (s)",
+            "show": true,
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "🎯 Jorge's Lead Scoring Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 21},
+        "targets": [
+          {
+            "expr": "jorge_leads_hot_total",
+            "legendFormat": "Hot (≥75)"
+          },
+          {
+            "expr": "jorge_leads_warm_total",
+            "legendFormat": "Warm (50-74)"
+          },
+          {
+            "expr": "jorge_leads_cold_total",
+            "legendFormat": "Cold (<50)"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "pieType": "pie",
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          },
+          "legend": {
+            "displayMode": "list",
+            "placement": "right"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              }
+            },
+            "mappings": []
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Hot (≥75)"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Warm (50-74)"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "yellow"}}]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Cold (<50)"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]
+            }
+          ]
+        }
+      },
+      {
+        "id": 13,
+        "title": "⚠️ Recent Alerts",
+        "type": "logs",
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 27},
+        "targets": [
+          {
+            "expr": "{alertname=~\"JorgeBI.*\"}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": true,
+          "showCommonLabels": false,
+          "wrapLogMessage": true,
+          "sortOrder": "Descending"
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "changes(jorge_bi_deployment_timestamp[1d])",
+          "iconColor": "blue",
+          "tags": ["deployment", "jorge-bi"]
+        }
+      ]
+    }
+  },
+  "overwrite": false
+}

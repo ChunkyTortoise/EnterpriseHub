@@ -679,7 +679,7 @@ async def create_compliance_document(
 # Export and Archive
 @router.get("/export/audit")
 async def export_audit_data(
-    format: str = Query("csv", regex="^(Union[csv, json]|Union[pdf, zip])$"),
+    format: str = Query("csv", pattern="^(Union[csv, json]|Union[pdf, zip])$"),
     start_date: datetime = Query(...),
     end_date: datetime = Query(...),
     current_user: Dict = Depends(get_current_user)

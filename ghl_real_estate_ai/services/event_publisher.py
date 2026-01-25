@@ -89,7 +89,8 @@ class EventPublisher:
         lead_data: Dict[str, Any],
         action: str = "updated",
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish lead update event.
@@ -100,6 +101,7 @@ class EventPublisher:
             action: Type of action (created, updated, qualified, etc.)
             user_id: User who triggered the update (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.LEAD_UPDATE,
@@ -108,7 +110,8 @@ class EventPublisher:
                 "action": action,
                 "lead_data": lead_data,
                 "updated_fields": list(lead_data.keys()),
-                "summary": f"Lead {action}: {lead_data.get('name', 'Unknown')}"
+                "summary": f"Lead {action}: {lead_data.get('name', 'Unknown')}",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -126,7 +129,8 @@ class EventPublisher:
         stage: str,
         message: Optional[str] = None,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish conversation stage update event.
@@ -138,6 +142,7 @@ class EventPublisher:
             message: Latest message content (optional)
             user_id: User associated with conversation (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.CONVERSATION_UPDATE,
@@ -147,7 +152,8 @@ class EventPublisher:
                 "stage": stage,
                 "message_preview": message[:100] + "..." if message and len(message) > 100 else message,
                 "stage_progression": self._get_stage_progression(stage),
-                "summary": f"Conversation moved to {stage}"
+                "summary": f"Conversation moved to {stage}",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -176,7 +182,8 @@ class EventPublisher:
         commission_amount: float,
         pipeline_status: str,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish commission pipeline update event.
@@ -187,6 +194,7 @@ class EventPublisher:
             pipeline_status: Pipeline status (potential, confirmed, paid)
             user_id: User associated with deal (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.COMMISSION_UPDATE,
@@ -196,7 +204,8 @@ class EventPublisher:
                 "pipeline_status": pipeline_status,
                 "formatted_amount": f"${commission_amount:,.2f}",
                 "impact": "positive" if commission_amount > 0 else "neutral",
-                "summary": f"Commission {pipeline_status}: ${commission_amount:,.2f}"
+                "summary": f"Commission {pipeline_status}: ${commission_amount:,.2f}",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -213,7 +222,8 @@ class EventPublisher:
         message: str,
         severity: str = "info",
         details: Optional[Dict[str, Any]] = None,
-        target_roles: Optional[List[UserRole]] = None
+        target_roles: Optional[List[UserRole]] = None,
+        **kwargs
     ):
         """
         Publish system alert event.
@@ -224,6 +234,7 @@ class EventPublisher:
             severity: Alert severity (info, warning, error, critical)
             details: Additional alert details (optional)
             target_roles: Specific roles to target (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.SYSTEM_ALERT,
@@ -233,7 +244,8 @@ class EventPublisher:
                 "severity": severity,
                 "details": details or {},
                 "action_required": severity in ["error", "critical"],
-                "summary": f"{severity.upper()}: {message}"
+                "summary": f"{severity.upper()}: {message}",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             priority="critical" if severity == "critical" else "high" if severity == "error" else "normal"
@@ -253,7 +265,8 @@ class EventPublisher:
         metric_value: float,
         metric_unit: str = "",
         comparison: Optional[Dict[str, Any]] = None,
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        **kwargs
     ):
         """
         Publish performance metric update event.
@@ -264,6 +277,7 @@ class EventPublisher:
             metric_unit: Unit of measurement (optional)
             comparison: Comparison data (previous value, trend, etc.) (optional)
             user_id: User associated with metric (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.PERFORMANCE_UPDATE,
@@ -274,7 +288,8 @@ class EventPublisher:
                 "formatted_value": f"{metric_value:.2f}{metric_unit}",
                 "comparison": comparison or {},
                 "trend": self._calculate_trend(comparison) if comparison else "neutral",
-                "summary": f"{metric_name}: {metric_value:.2f}{metric_unit}"
+                "summary": f"{metric_name}: {metric_value:.2f}{metric_unit}",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -302,7 +317,8 @@ class EventPublisher:
         component: str,
         data: Dict[str, Any],
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish dashboard component refresh event.
@@ -312,6 +328,7 @@ class EventPublisher:
             data: Updated component data
             user_id: User requesting refresh (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.DASHBOARD_REFRESH,
@@ -320,7 +337,8 @@ class EventPublisher:
                 "data": data,
                 "cache_key": f"dashboard:{component}:{location_id or 'global'}",
                 "last_updated": datetime.now(timezone.utc).isoformat(),
-                "summary": f"Dashboard component refreshed: {component}"
+                "summary": f"Dashboard component refreshed: {component}",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -336,7 +354,8 @@ class EventPublisher:
         action: str,
         user_id: int,
         details: Optional[Dict[str, Any]] = None,
-        target_roles: Optional[List[UserRole]] = None
+        target_roles: Optional[List[UserRole]] = None,
+        **kwargs
     ):
         """
         Publish user activity event.
@@ -346,6 +365,7 @@ class EventPublisher:
             user_id: User ID performing action
             details: Additional activity details (optional)
             target_roles: Specific roles to notify (optional, defaults to admin only)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.USER_ACTIVITY,
@@ -354,7 +374,8 @@ class EventPublisher:
                 "user_id": user_id,
                 "details": details or {},
                 "session_info": await self._get_session_info(user_id),
-                "summary": f"User activity: {action}"
+                "summary": f"User activity: {action}",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -384,7 +405,8 @@ class EventPublisher:
         property_data: Dict[str, Any],
         match_reasoning: Optional[Dict[str, Any]] = None,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish property alert event for real-time property matching.
@@ -399,6 +421,7 @@ class EventPublisher:
             match_reasoning: Detailed matching reasoning (optional)
             user_id: User associated with lead (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         # Extract key property details for quick access
         property_address = property_data.get('address', 'Unknown Address')
@@ -443,7 +466,8 @@ class EventPublisher:
 
                 # Human-readable summary
                 "summary": f"New {alert_type.replace('_', ' ').title()}: {property_address} ({match_score:.0f}% match)",
-                "notification_text": f"Found a {match_score:.0f}% match! {property_address} - ${property_price:,.0f}" if property_price else f"Found a {match_score:.0f}% match! {property_address}"
+                "notification_text": f"Found a {match_score:.0f}% match! {property_address} - ${property_price:,.0f}" if property_price else f"Found a {match_score:.0f}% match! {property_address}",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -464,7 +488,8 @@ class EventPublisher:
         current_step: Optional[str] = None,
         processing_time_ms: Optional[float] = None,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish bot status update event.
@@ -477,6 +502,7 @@ class EventPublisher:
             processing_time_ms: Processing time in milliseconds (optional)
             user_id: User associated with bot operation (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.BOT_STATUS_UPDATE,
@@ -487,7 +513,8 @@ class EventPublisher:
                 "current_step": current_step,
                 "processing_time_ms": processing_time_ms,
                 "last_activity": datetime.now(timezone.utc).isoformat(),
-                "summary": f"{bot_type.replace('-', ' ').title()} bot {status}"
+                "summary": f"{bot_type.replace('-', ' ').title()} bot {status}",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -507,7 +534,8 @@ class EventPublisher:
         qualification_scores: Optional[Dict[str, float]] = None,
         next_action: Optional[str] = None,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish Jorge seller bot qualification progress event.
@@ -521,6 +549,7 @@ class EventPublisher:
             next_action: Next recommended action (optional)
             user_id: User associated with qualification (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         progress_percentage = min(100, (questions_answered / 4) * 100)
 
@@ -536,7 +565,8 @@ class EventPublisher:
                 "qualification_scores": qualification_scores or {},
                 "next_action": next_action,
                 "qualification_stage": f"Q{current_question}" if current_question <= 4 else "Complete",
-                "summary": f"Jorge qualification {progress_percentage:.0f}% complete - {seller_temperature} seller"
+                "summary": f"Jorge qualification {progress_percentage:.0f}% complete - {seller_temperature} seller",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -556,7 +586,8 @@ class EventPublisher:
         next_action_date: Optional[str] = None,
         message_sent: Optional[str] = None,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish lead bot 3-7-30 sequence progress event.
@@ -570,6 +601,7 @@ class EventPublisher:
             message_sent: Message content preview (optional)
             user_id: User associated with sequence (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.LEAD_BOT_SEQUENCE_UPDATE,
@@ -581,7 +613,8 @@ class EventPublisher:
                 "next_action_date": next_action_date,
                 "message_preview": message_sent[:100] + "..." if message_sent and len(message_sent) > 100 else message_sent,
                 "sequence_progress": self._calculate_sequence_progress(sequence_day),
-                "summary": f"Day {sequence_day} sequence {action_type} - {'Success' if success else 'Failed'}"
+                "summary": f"Day {sequence_day} sequence {action_type} - {'Success' if success else 'Failed'}",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -602,7 +635,8 @@ class EventPublisher:
         pcs_score: Optional[float] = None,
         recommendations: Optional[List[str]] = None,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish intent decoder analysis completion event.
@@ -617,6 +651,7 @@ class EventPublisher:
             recommendations: Analysis recommendations (optional)
             user_id: User associated with analysis (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.INTENT_ANALYSIS_COMPLETE,
@@ -629,7 +664,8 @@ class EventPublisher:
                 "pcs_score": round(pcs_score, 1) if pcs_score else None,
                 "recommendations": recommendations or [],
                 "performance_tier": "excellent" if processing_time_ms < 50 else "good" if processing_time_ms < 100 else "acceptable",
-                "summary": f"Intent analysis complete - {intent_category} ({confidence_score:.1%} confidence)"
+                "summary": f"Intent analysis complete - {intent_category} ({confidence_score:.1%} confidence)",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -650,7 +686,8 @@ class EventPublisher:
         context_transfer: Dict[str, Any],
         urgency: str = "normal",
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish bot handoff coordination event.
@@ -665,6 +702,7 @@ class EventPublisher:
             urgency: Handoff urgency (immediate, normal, low)
             user_id: User associated with handoff (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.BOT_HANDOFF_REQUEST,
@@ -681,7 +719,8 @@ class EventPublisher:
                 },
                 "urgency": urgency,
                 "context_size_kb": round(len(str(context_transfer)) / 1024, 2),
-                "summary": f"Handoff request: {from_bot} → {to_bot} ({handoff_reason})"
+                "summary": f"Handoff request: {from_bot} → {to_bot} ({handoff_reason})",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -699,7 +738,8 @@ class EventPublisher:
         response_time_ms: float,
         error_message: Optional[str] = None,
         additional_metrics: Optional[Dict[str, Any]] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish system component health update event.
@@ -711,6 +751,7 @@ class EventPublisher:
             error_message: Error message if status is down/degraded (optional)
             additional_metrics: Additional component metrics (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.SYSTEM_HEALTH_UPDATE,
@@ -722,7 +763,8 @@ class EventPublisher:
                 "health_score": self._calculate_health_score(status, response_time_ms),
                 "metrics": additional_metrics or {},
                 "checked_at": datetime.now(timezone.utc).isoformat(),
-                "summary": f"{component.replace('_', ' ').title()}: {status} ({response_time_ms:.0f}ms)"
+                "summary": f"{component.replace('_', ' ').title()}: {status} ({response_time_ms:.0f}ms)",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
@@ -742,7 +784,8 @@ class EventPublisher:
         urgency_score: float,
         confidence_level: float,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """Publish buyer intent analysis results."""
         event = RealTimeEvent(
@@ -753,7 +796,8 @@ class EventPublisher:
                 "financial_readiness_score": financial_readiness,
                 "urgency_score": urgency_score,
                 "confidence_level": confidence_level,
-                "analysis_timestamp": datetime.now(timezone.utc).isoformat()
+                "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -773,7 +817,8 @@ class EventPublisher:
         qualification_status: str,
         properties_matched: int = 0,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """Publish buyer qualification progress (mirrors jorge_qualification_progress)."""
         event = RealTimeEvent(
@@ -786,7 +831,8 @@ class EventPublisher:
                 "qualification_status": qualification_status,
                 "properties_matched": properties_matched,
                 "overall_score": (financial_readiness_score + motivation_score) / 2,
-                "progress_timestamp": datetime.now(timezone.utc).isoformat()
+                "progress_timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -804,7 +850,8 @@ class EventPublisher:
         final_score: float,
         properties_matched: int,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """Publish buyer qualification completion."""
         event = RealTimeEvent(
@@ -815,7 +862,8 @@ class EventPublisher:
                 "final_score": final_score,
                 "properties_matched": properties_matched,
                 "completion_timestamp": datetime.now(timezone.utc).isoformat(),
-                "next_action": "property_search" if qualification_status == "qualified" else "nurture"
+                "next_action": "property_search" if qualification_status == "qualified" else "nurture",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -832,7 +880,8 @@ class EventPublisher:
         action_type: str,
         scheduled_hours: int,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """Publish buyer follow-up scheduling."""
         event = RealTimeEvent(
@@ -842,7 +891,8 @@ class EventPublisher:
                 "action_type": action_type,
                 "scheduled_hours": scheduled_hours,
                 "scheduled_for": (datetime.now(timezone.utc) + timedelta(hours=scheduled_hours)).isoformat(),
-                "schedule_timestamp": datetime.now(timezone.utc).isoformat()
+                "schedule_timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -859,7 +909,8 @@ class EventPublisher:
         properties_matched: int,
         match_criteria: Dict[str, Any],
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """Publish property matching results."""
         event = RealTimeEvent(
@@ -868,7 +919,8 @@ class EventPublisher:
                 "contact_id": contact_id,
                 "properties_matched": properties_matched,
                 "match_criteria": match_criteria,
-                "match_timestamp": datetime.now(timezone.utc).isoformat()
+                "match_timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -887,7 +939,8 @@ class EventPublisher:
         event_type: str,
         reason: str,
         additional_data: Optional[Dict] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """Publish SMS compliance events for audit trail."""
         event = RealTimeEvent(
@@ -897,7 +950,8 @@ class EventPublisher:
                 "compliance_event_type": event_type,
                 "reason": reason,
                 "additional_data": additional_data or {},
-                "compliance_timestamp": datetime.now(timezone.utc).isoformat()
+                "compliance_timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
@@ -912,7 +966,8 @@ class EventPublisher:
         phone_number: str,
         opt_out_method: str,
         message_content: Optional[str] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """Publish SMS opt-out processing confirmation."""
         event = RealTimeEvent(
@@ -921,7 +976,8 @@ class EventPublisher:
                 "phone_number_suffix": phone_number[-4:] if phone_number else "****",
                 "opt_out_method": opt_out_method,
                 "message_content": message_content[:100] + "..." if message_content and len(message_content) > 100 else message_content,
-                "processed_timestamp": datetime.now(timezone.utc).isoformat()
+                "processed_timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
@@ -937,7 +993,8 @@ class EventPublisher:
         limit_type: str,
         current_count: int,
         limit_value: int,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """Publish SMS frequency limit violations."""
         event = RealTimeEvent(
@@ -947,7 +1004,8 @@ class EventPublisher:
                 "limit_type": limit_type,
                 "current_count": current_count,
                 "limit_value": limit_value,
-                "limit_hit_timestamp": datetime.now(timezone.utc).isoformat()
+                "limit_hit_timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
@@ -971,7 +1029,8 @@ class EventPublisher:
         priority_level: str = "normal",
         context_data: Optional[Dict[str, Any]] = None,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish proactive conversation insight event.
@@ -988,6 +1047,7 @@ class EventPublisher:
             context_data: Additional insight context (optional)
             user_id: User associated with insight (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.PROACTIVE_INSIGHT,
@@ -1003,7 +1063,8 @@ class EventPublisher:
                 "context_data": context_data or {},
                 "requires_action": priority_level in ["high", "critical"],
                 "expires_at": (datetime.now(timezone.utc).timestamp() + 3600),  # 1 hour expiry
-                "summary": f"AI Insight: {title} ({confidence_score:.1%} confidence)"
+                "summary": f"AI Insight: {title} ({confidence_score:.1%} confidence)",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -1026,7 +1087,8 @@ class EventPublisher:
         implementation_steps: List[str],
         urgency: str = "normal",
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish AI strategy recommendation event.
@@ -1043,6 +1105,7 @@ class EventPublisher:
             urgency: Recommendation urgency (low, normal, high, immediate)
             user_id: User associated with recommendation (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.STRATEGY_RECOMMENDATION,
@@ -1058,7 +1121,8 @@ class EventPublisher:
                 "urgency": urgency,
                 "requires_immediate_action": urgency == "immediate",
                 "estimated_implementation_time": len(implementation_steps) * 5,  # 5 min per step estimate
-                "summary": f"Strategy: {strategy_type.title()} ({confidence_score:.1%} confidence)"
+                "summary": f"Strategy: {strategy_type.title()} ({confidence_score:.1%} confidence)",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -1081,7 +1145,8 @@ class EventPublisher:
         estimated_time_minutes: int,
         resources: Optional[List[Dict[str, str]]] = None,
         user_id: Optional[int] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish AI coaching opportunity event.
@@ -1098,6 +1163,7 @@ class EventPublisher:
             resources: Optional learning resources list
             user_id: User associated with coaching (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         # Calculate priority based on difficulty and objectives
         priority = "high" if difficulty_level == "advanced" and len(learning_objectives) >= 3 else "normal"
@@ -1116,7 +1182,8 @@ class EventPublisher:
                 "resources": resources or [],
                 "skill_development_focus": coaching_area.replace('_', ' ').title(),
                 "completion_tracking_enabled": True,
-                "summary": f"Coaching: {coaching_area.replace('_', ' ').title()} ({difficulty_level}, {estimated_time_minutes}min)"
+                "summary": f"Coaching: {coaching_area.replace('_', ' ').title()} ({difficulty_level}, {estimated_time_minutes}min)",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             user_id=user_id,
@@ -1135,7 +1202,8 @@ class EventPublisher:
         monitoring_contacts: int,
         processing_time_ms: float,
         performance_metrics: Optional[Dict[str, Any]] = None,
-        location_id: Optional[str] = None
+        location_id: Optional[str] = None,
+        **kwargs
     ):
         """
         Publish AI Concierge service status update.
@@ -1148,6 +1216,7 @@ class EventPublisher:
             processing_time_ms: Average processing time in milliseconds
             performance_metrics: Additional performance data (optional)
             location_id: Location/tenant ID (optional)
+            **kwargs: Additional event data
         """
         event = RealTimeEvent(
             event_type=EventType.AI_CONCIERGE_STATUS,
@@ -1160,7 +1229,8 @@ class EventPublisher:
                 "performance_metrics": performance_metrics or {},
                 "efficiency_score": self._calculate_concierge_efficiency(processing_time_ms, active_insights),
                 "status_timestamp": datetime.now(timezone.utc).isoformat(),
-                "summary": f"AI Concierge: {status} - {active_insights} insights, {monitoring_contacts} contacts"
+                "summary": f"AI Concierge: {status} - {active_insights} insights, {monitoring_contacts} contacts",
+                **kwargs
             },
             timestamp=datetime.now(timezone.utc),
             location_id=location_id,
@@ -1617,6 +1687,36 @@ class EventPublisher:
         else:
             return "C (Needs Optimization)"
 
+    async def publish_seller_bot_message_processed(
+        self,
+        contact_id: str,
+        message_content: str,
+        bot_response: str,
+        seller_temperature: str,
+        processing_time_ms: float,
+        questions_answered: int,
+        qualification_complete: bool,
+        **kwargs
+    ):
+        """Publish event after Jorge Seller Bot processes a message."""
+        event = RealTimeEvent(
+            event_type=EventType.BOT_STATUS_UPDATE, # Use existing type or create new
+            data={
+                "contact_id": contact_id,
+                "message_preview": message_content[:50],
+                "bot_response_preview": bot_response[:50],
+                "seller_temperature": seller_temperature,
+                "processing_time_ms": round(processing_time_ms, 2),
+                "questions_answered": questions_answered,
+                "qualification_complete": qualification_complete,
+                "summary": f"Jorge processed message: {seller_temperature} (Q: {questions_answered})",
+                **kwargs
+            },
+            timestamp=datetime.now(timezone.utc),
+            priority="normal"
+        )
+        await self._publish_event(event)
+
 # Global event publisher instance
 _event_publisher = None
 
@@ -1703,6 +1803,17 @@ async def publish_system_health_update(component: str, status: str, response_tim
     """Convenience function to publish system health update."""
     publisher = get_event_publisher()
     await publisher.publish_system_health_update(component, status, response_time_ms, **kwargs)
+
+async def publish_seller_bot_message_processed(contact_id: str, message_content: str,
+                                             bot_response: str, seller_temperature: str,
+                                             processing_time_ms: float, questions_answered: int,
+                                             qualification_complete: bool, **kwargs):
+    """Convenience function to publish seller bot message processed."""
+    publisher = get_event_publisher()
+    await publisher.publish_seller_bot_message_processed(
+        contact_id, message_content, bot_response, seller_temperature,
+        processing_time_ms, questions_answered, qualification_complete, **kwargs
+    )
 
 # AI Concierge Convenience Functions
 

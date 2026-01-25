@@ -362,22 +362,37 @@ async def bi_websocket_health():
         BI WebSocket service status and metrics
     """
     try:
-        # Start BI WebSocket manager if not running
-        if not bi_websocket_manager.is_running:
-            await bi_websocket_manager.start()
+        # Check if BI WebSocket manager exists and is operational
+        if hasattr(bi_websocket_manager, 'is_running'):
+            is_running = bi_websocket_manager.is_running
 
-        # Get comprehensive metrics
-        metrics = bi_websocket_manager.get_metrics()
+            # Try to start if not running
+            if not is_running:
+                try:
+                    await bi_websocket_manager.start()
+                    is_running = True
+                except Exception as start_error:
+                    logger.warning(f"Could not start BI WebSocket manager: {start_error}")
+                    is_running = False
+        else:
+            is_running = True  # Assume operational if no is_running attribute
+
+        # Get metrics safely
+        try:
+            metrics = bi_websocket_manager.get_metrics() if hasattr(bi_websocket_manager, 'get_metrics') else {}
+        except Exception as metrics_error:
+            logger.warning(f"Could not get BI WebSocket metrics: {metrics_error}")
+            metrics = {}
 
         health_status = {
-            "status": "healthy",
+            "status": "healthy" if is_running else "degraded",
             "service": "BI WebSocket Real-Time Service",
             "bi_connections": metrics.get("total_connections", 0),
             "channel_subscriptions": metrics.get("channel_subscriptions", {}),
             "performance_metrics": metrics.get("channel_metrics", {}),
             "connection_quality": metrics.get("connection_quality", {}),
             "background_tasks_running": metrics.get("background_tasks_running", 0),
-            "is_running": metrics.get("is_running", False),
+            "is_running": is_running,
             "last_check": datetime.now().isoformat(),
             "version": "Phase 7 BI Integration"
         }

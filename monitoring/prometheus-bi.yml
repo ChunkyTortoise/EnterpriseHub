@@ -1,0 +1,281 @@
+# ==============================================================================
+# JORGE'S BI DASHBOARD - PROMETHEUS CONFIGURATION
+# Production monitoring for business intelligence services
+# ==============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'jorge-bi-production'
+    environment: 'production'
+    service: 'bi-dashboard'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Rules configuration
+rule_files:
+  - "alert-rules-bi.yml"
+
+# Scrape configurations
+scrape_configs:
+
+  # ============================================================================
+  # PROMETHEUS SELF-MONITORING
+  # ============================================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ============================================================================
+  # BI BACKEND SERVICES
+  # ============================================================================
+  - job_name: 'jorge-bi-backend'
+    static_configs:
+      - targets:
+          - 'bi-backend-1:8000'
+          - 'bi-backend-2:8000'
+    metrics_path: /metrics
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    honor_labels: true
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: bi-backend-1:8000
+      - source_labels: [__address__]
+        regex: 'bi-backend-(\d+):8000'
+        target_label: backend_instance
+        replacement: '${1}'
+    metric_relabel_configs:
+      # Add Jorge-specific labels
+      - source_labels: [__name__]
+        regex: '(jorge_.*|bi_.*)'
+        target_label: jorge_metric
+        replacement: 'true'
+      # Standardize metric names
+      - source_labels: [__name__]
+        regex: 'http_requests_total'
+        target_label: __name__
+        replacement: 'jorge_bi_http_requests_total'
+
+  # ============================================================================
+  # DATABASE MONITORING (PostgreSQL)
+  # ============================================================================
+  - job_name: 'postgres-bi'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: database
+        replacement: 'jorge_bi_production'
+    metric_relabel_configs:
+      # Focus on key PostgreSQL metrics for BI
+      - source_labels: [__name__]
+        regex: '(pg_up|pg_stat_database_.*|pg_stat_bgwriter_.*|pg_locks_count)'
+        action: keep
+
+  # ============================================================================
+  # CACHE MONITORING (Redis)
+  # ============================================================================
+  - job_name: 'redis-bi'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: cache_instance
+        replacement: 'jorge_bi_redis'
+    metric_relabel_configs:
+      # Focus on key Redis metrics for BI
+      - source_labels: [__name__]
+        regex: '(redis_up|redis_connected_clients|redis_used_memory_bytes|redis_commands_processed_total|redis_keyspace_hits_total|redis_keyspace_misses_total)'
+        action: keep
+
+  # ============================================================================
+  # SYSTEM MONITORING (Node Exporter)
+  # ============================================================================
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    metric_relabel_configs:
+      # Focus on key system metrics
+      - source_labels: [__name__]
+        regex: '(node_cpu_seconds_total|node_memory_.*|node_filesystem_.*|node_network_.*|node_load.*)'
+        action: keep
+
+  # ============================================================================
+  # NGINX MONITORING
+  # ============================================================================
+  - job_name: 'nginx-bi'
+    static_configs:
+      - targets: ['nginx-bi:9113']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    metric_relabel_configs:
+      # Focus on key Nginx metrics
+      - source_labels: [__name__]
+        regex: '(nginx_up|nginx_connections_.*|nginx_requests_total|nginx_http_requests_total)'
+        action: keep
+
+  # ============================================================================
+  # CUSTOM BI METRICS
+  # ============================================================================
+  - job_name: 'jorge-bi-custom-metrics'
+    static_configs:
+      - targets:
+          - 'bi-backend-1:8000'
+          - 'bi-backend-2:8000'
+    metrics_path: /api/metrics/jorge
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    params:
+      format: ['prometheus']
+    honor_labels: true
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: 'bi-backend-(\d+):8000'
+        target_label: instance
+        replacement: 'jorge-bi-${1}'
+      - target_label: service
+        replacement: 'jorge-bi-dashboard'
+      - target_label: environment
+        replacement: 'production'
+
+  # ============================================================================
+  # WEBSOCKET METRICS
+  # ============================================================================
+  - job_name: 'jorge-bi-websocket'
+    static_configs:
+      - targets:
+          - 'bi-backend-1:8000'
+          - 'bi-backend-2:8000'
+    metrics_path: /ws/metrics
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: 'bi-backend-(\d+):8000'
+        target_label: websocket_instance
+        replacement: '${1}'
+
+  # ============================================================================
+  # AI SERVICES METRICS
+  # ============================================================================
+  - job_name: 'jorge-ai-services'
+    static_configs:
+      - targets:
+          - 'bi-backend-1:8000'
+          - 'bi-backend-2:8000'
+    metrics_path: /api/metrics/ai
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service_type
+        replacement: 'ai_services'
+    metric_relabel_configs:
+      # Focus on AI performance metrics
+      - source_labels: [__name__]
+        regex: '(anthropic_.*|ai_.*|ml_.*)'
+        action: keep
+
+  # ============================================================================
+  # BUSINESS METRICS (JORGE-SPECIFIC)
+  # ============================================================================
+  - job_name: 'jorge-business-metrics'
+    static_configs:
+      - targets:
+          - 'bi-backend-1:8000'
+          - 'bi-backend-2:8000'
+    metrics_path: /api/metrics/business
+    scrape_interval: 60s  # Business metrics less frequent
+    scrape_timeout: 15s
+    params:
+      include_jorge_commission: ['true']
+      include_lead_scoring: ['true']
+      include_bot_performance: ['true']
+    relabel_configs:
+      - target_label: metric_category
+        replacement: 'business'
+      - target_label: commission_rate
+        replacement: '0.06'  # Jorge's 6% commission
+    metric_relabel_configs:
+      # Keep only Jorge business metrics
+      - source_labels: [__name__]
+        regex: '(jorge_commission_.*|jorge_leads_.*|jorge_revenue_.*|jorge_conversion_.*|bot_performance_.*)'
+        action: keep
+
+# ==============================================================================
+# REMOTE WRITE CONFIGURATION (Optional - for long-term storage)
+# ==============================================================================
+# remote_write:
+#   - url: "https://prometheus-remote-write-endpoint.com/api/v1/write"
+#     headers:
+#       Authorization: "Bearer <token>"
+#     write_relabel_configs:
+#       # Only send critical metrics for long-term storage
+#       - source_labels: [__name__]
+#         regex: '(jorge_revenue_.*|jorge_commission_.*|bi_dashboard_.*)'
+#         action: keep
+
+# ==============================================================================
+# STORAGE CONFIGURATION
+# ==============================================================================
+storage:
+  tsdb:
+    retention_time: '15d'  # 15 days retention
+    retention_size: '50GB'  # Maximum storage size
+    wal_compression: true
+    no_lockfile: false
+
+# ==============================================================================
+# GLOBAL LIMITS
+# ==============================================================================
+limits:
+  # Prevent cardinality explosion
+  max_samples_per_query: 50000000
+  query_timeout: 2m
+  max_concurrent_queries: 20
+
+# ==============================================================================
+# JORGE-SPECIFIC CONFIGURATION
+# ==============================================================================
+# This configuration is optimized for Jorge's BI Dashboard with:
+#
+# 1. BUSINESS FOCUS:
+#    - Jorge's 6% commission tracking
+#    - Lead qualification metrics
+#    - Bot performance monitoring
+#    - Revenue intelligence
+#
+# 2. PERFORMANCE OPTIMIZATION:
+#    - 15s scrape interval for real-time metrics
+#    - 30s for system metrics
+#    - 60s for business metrics
+#    - Selective metric retention
+#
+# 3. SCALABILITY:
+#    - Multi-instance backend monitoring
+#    - Load balancer metrics
+#    - Database and cache monitoring
+#
+# 4. SECURITY:
+#    - No sensitive data in metrics
+#    - Proper label management
+#    - Resource limits
+#
+# ==============================================================================

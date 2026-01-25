@@ -104,7 +104,7 @@ export function BusinessIntelligenceDashboard({
     setIsLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:8000/api/intelligence/executive-dashboard?location_id=${locationId}&timeframe=${timeframe}`
+        `${process.env.NEXT_PUBLIC_API_BASE}/api/intelligence/executive-dashboard?location_id=${locationId}&timeframe=${timeframe}`
       );
       const data = await response.json();
 
@@ -149,7 +149,7 @@ export function BusinessIntelligenceDashboard({
     // Use enhanced useAgentStore BI WebSocket management
     connectBIWebSockets(locationId);
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/business-intelligence/${locationId}`);
+    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_SOCKET_URL?.replace('http', 'ws')}/ws/business-intelligence/${locationId}`);
 
     ws.onopen = () => {
       addEntry({

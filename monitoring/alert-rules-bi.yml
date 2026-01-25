@@ -1,0 +1,378 @@
+# ==============================================================================
+# JORGE'S BI DASHBOARD - PROMETHEUS ALERT RULES
+# Production alerting for business intelligence platform
+# ==============================================================================
+
+groups:
+
+  # ============================================================================
+  # CRITICAL SYSTEM ALERTS
+  # ============================================================================
+  - name: jorge-bi-critical
+    interval: 30s
+    rules:
+
+      # Service Down Alerts
+      - alert: JorgeBIBackendDown
+        expr: up{job="jorge-bi-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: jorge-bi-dashboard
+          component: backend
+          alert_type: service_down
+        annotations:
+          summary: "Jorge BI Backend Instance Down"
+          description: "Jorge BI backend instance {{ $labels.instance }} has been down for more than 1 minute."
+          runbook_url: "https://docs.jorge-platform.com/runbooks/backend-down"
+          action_required: "Immediate investigation required"
+
+      - alert: JorgeBIDatabaseDown
+        expr: pg_up{database="jorge_bi_production"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: jorge-bi-dashboard
+          component: database
+          alert_type: service_down
+        annotations:
+          summary: "Jorge BI Database Down"
+          description: "PostgreSQL database for Jorge BI is unreachable."
+          runbook_url: "https://docs.jorge-platform.com/runbooks/database-down"
+          action_required: "Database restart required"
+
+      - alert: JorgeBICacheDown
+        expr: redis_up{cache_instance="jorge_bi_redis"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: jorge-bi-dashboard
+          component: cache
+          alert_type: service_down
+        annotations:
+          summary: "Jorge BI Redis Cache Down"
+          description: "Redis cache for Jorge BI is unreachable."
+          runbook_url: "https://docs.jorge-platform.com/runbooks/cache-down"
+          action_required: "Cache restart required"
+
+      # High Error Rate
+      - alert: JorgeBIHighErrorRate
+        expr: |
+          (
+            sum(rate(jorge_bi_http_requests_total{status=~"5.."}[5m])) /
+            sum(rate(jorge_bi_http_requests_total[5m]))
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: jorge-bi-dashboard
+          component: backend
+          alert_type: error_rate
+        annotations:
+          summary: "Jorge BI High Error Rate"
+          description: "Jorge BI error rate is {{ $value | humanizePercentage }} for the last 5 minutes."
+          runbook_url: "https://docs.jorge-platform.com/runbooks/high-error-rate"
+
+  # ============================================================================
+  # PERFORMANCE ALERTS
+  # ============================================================================
+  - name: jorge-bi-performance
+    interval: 60s
+    rules:
+
+      # Response Time Alerts
+      - alert: JorgeBISlowResponses
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(jorge_bi_http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: backend
+          alert_type: performance
+        annotations:
+          summary: "Jorge BI Slow Response Times"
+          description: "95th percentile response time is {{ $value | humanizeDuration }} for the last 5 minutes."
+          runbook_url: "https://docs.jorge-platform.com/runbooks/slow-responses"
+
+      # ML Processing Time
+      - alert: JorgeBISlowMLProcessing
+        expr: ml_processing_duration_seconds > 5.0
+        for: 3m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: ml-engine
+          alert_type: performance
+        annotations:
+          summary: "Jorge BI ML Processing Slow"
+          description: "ML processing taking {{ $value | humanizeDuration }} which exceeds 5 second threshold."
+          impact: "Real-time analytics may be delayed"
+
+      # WebSocket Connection Issues
+      - alert: JorgeBIWebSocketConnectionsHigh
+        expr: websocket_active_connections > 900
+        for: 5m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: websocket
+          alert_type: capacity
+        annotations:
+          summary: "Jorge BI High WebSocket Connections"
+          description: "WebSocket connections ({{ $value }}) approaching limit of 1000."
+          action_required: "Consider scaling or connection cleanup"
+
+      # Cache Performance
+      - alert: JorgeBILowCacheHitRate
+        expr: |
+          (
+            redis_keyspace_hits_total /
+            (redis_keyspace_hits_total + redis_keyspace_misses_total)
+          ) * 100 < 85
+        for: 10m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: cache
+          alert_type: performance
+        annotations:
+          summary: "Jorge BI Low Cache Hit Rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} which is below 85% threshold."
+          impact: "Dashboard performance may be degraded"
+
+  # ============================================================================
+  # BUSINESS LOGIC ALERTS (JORGE-SPECIFIC)
+  # ============================================================================
+  - name: jorge-business-alerts
+    interval: 120s
+    rules:
+
+      # Revenue Processing Alerts
+      - alert: JorgeCommissionCalculationFailure
+        expr: jorge_commission_calculation_errors_total > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: business-logic
+          alert_type: business
+          commission_rate: "6_percent"
+        annotations:
+          summary: "Jorge Commission Calculation Issues"
+          description: "{{ $value }} commission calculation errors in the last 5 minutes."
+          business_impact: "Jorge's 6% commission tracking may be inaccurate"
+
+      # Lead Scoring Issues
+      - alert: JorgeLeadScoringDown
+        expr: absent(jorge_leads_scored_total) or increase(jorge_leads_scored_total[15m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: lead-scoring
+          alert_type: business
+        annotations:
+          summary: "Jorge Lead Scoring Not Processing"
+          description: "No leads have been scored in the last 15 minutes."
+          business_impact: "Hot/warm lead qualification may be impacted"
+
+      # Bot Performance Degradation
+      - alert: JorgeBotPerformanceDegraded
+        expr: bot_success_rate < 0.85
+        for: 10m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: bot-performance
+          alert_type: business
+        annotations:
+          summary: "Jorge Bot Performance Degraded"
+          description: "Bot success rate is {{ $value | humanizePercentage }} which is below 85% threshold."
+          business_impact: "Lead qualification efficiency reduced"
+
+      # Revenue Forecast Accuracy
+      - alert: JorgeRevenueForecastAccuracyLow
+        expr: jorge_revenue_forecast_accuracy < 0.8
+        for: 30m
+        labels:
+          severity: info
+          service: jorge-bi-dashboard
+          component: forecasting
+          alert_type: business
+        annotations:
+          summary: "Jorge Revenue Forecast Accuracy Low"
+          description: "Revenue forecast accuracy is {{ $value | humanizePercentage }} which is below 80%."
+          business_impact: "Revenue predictions may be unreliable"
+
+  # ============================================================================
+  # RESOURCE ALERTS
+  # ============================================================================
+  - name: jorge-bi-resources
+    interval: 60s
+    rules:
+
+      # Memory Usage
+      - alert: JorgeBIHighMemoryUsage
+        expr: |
+          (
+            (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) /
+            node_memory_MemTotal_bytes
+          ) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: system
+          alert_type: resources
+        annotations:
+          summary: "Jorge BI High Memory Usage"
+          description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}."
+          action_required: "Monitor for memory leaks or scale up"
+
+      # CPU Usage
+      - alert: JorgeBIHighCPUUsage
+        expr: |
+          (
+            100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+          ) > 80
+        for: 15m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: system
+          alert_type: resources
+        annotations:
+          summary: "Jorge BI High CPU Usage"
+          description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}."
+
+      # Disk Space
+      - alert: JorgeBILowDiskSpace
+        expr: |
+          (
+            (node_filesystem_size_bytes - node_filesystem_free_bytes) /
+            node_filesystem_size_bytes
+          ) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: system
+          alert_type: resources
+        annotations:
+          summary: "Jorge BI Low Disk Space"
+          description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}."
+
+      # Database Connections
+      - alert: JorgeBIDatabaseConnectionsHigh
+        expr: pg_stat_database_numbackends{datname="jorge_bi_production"} > 150
+        for: 5m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: database
+          alert_type: capacity
+        annotations:
+          summary: "Jorge BI High Database Connections"
+          description: "Database has {{ $value }} active connections (limit: 200)."
+
+  # ============================================================================
+  # SECURITY ALERTS
+  # ============================================================================
+  - name: jorge-bi-security
+    interval: 60s
+    rules:
+
+      # Unusual Request Patterns
+      - alert: JorgeBIUnusualRequestVolume
+        expr: |
+          sum(rate(jorge_bi_http_requests_total[5m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: security
+          alert_type: security
+        annotations:
+          summary: "Jorge BI Unusual Request Volume"
+          description: "Request rate is {{ $value }} requests/second which is unusually high."
+          security_concern: "Potential DDoS or abuse detected"
+
+      # Failed Authentication Attempts
+      - alert: JorgeBIHighAuthFailures
+        expr: sum(rate(jorge_bi_auth_failures_total[5m])) > 10
+        for: 3m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: security
+          alert_type: security
+        annotations:
+          summary: "Jorge BI High Authentication Failures"
+          description: "{{ $value }} authentication failures per second in the last 5 minutes."
+          security_concern: "Potential brute force attack"
+
+  # ============================================================================
+  # DATA QUALITY ALERTS
+  # ============================================================================
+  - name: jorge-bi-data-quality
+    interval: 300s  # 5 minute evaluation
+    rules:
+
+      # Missing Data
+      - alert: JorgeBIMissingAnalyticsData
+        expr: absent(jorge_analytics_data_points_total) or increase(jorge_analytics_data_points_total[1h]) < 100
+        for: 1h
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: data-pipeline
+          alert_type: data_quality
+        annotations:
+          summary: "Jorge BI Missing Analytics Data"
+          description: "Analytics data ingestion appears stalled."
+          business_impact: "Dashboard metrics may be stale"
+
+      # Data Freshness
+      - alert: JorgeBIStaleData
+        expr: time() - jorge_last_data_update_timestamp > 3600  # 1 hour
+        for: 30m
+        labels:
+          severity: warning
+          service: jorge-bi-dashboard
+          component: data-pipeline
+          alert_type: data_quality
+        annotations:
+          summary: "Jorge BI Stale Data"
+          description: "Last data update was {{ $value | humanizeDuration }} ago."
+          business_impact: "Dashboard showing outdated information"
+
+# ==============================================================================
+# ALERT ROUTING CONFIGURATION
+# ==============================================================================
+# These alerts are designed to integrate with:
+#
+# 1. SEVERITY LEVELS:
+#    - critical: Immediate response required (PagerDuty, SMS)
+#    - warning: Response within 1 hour (Slack, email)
+#    - info: Awareness only (email, dashboard)
+#
+# 2. BUSINESS CONTEXT:
+#    - Jorge's 6% commission tracking alerts
+#    - Lead scoring and qualification alerts
+#    - Bot performance monitoring
+#    - Revenue intelligence validation
+#
+# 3. ESCALATION PATHS:
+#    - Critical: Jorge + DevOps team
+#    - Warning: DevOps team
+#    - Info: Monitoring dashboard only
+#
+# 4. RUNBOOK INTEGRATION:
+#    - Each alert includes runbook_url
+#    - Standard troubleshooting procedures
+#    - Business impact assessment
+#
+# ==============================================================================

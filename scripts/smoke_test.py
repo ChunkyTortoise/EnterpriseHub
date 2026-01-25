@@ -49,7 +49,7 @@ async def run_smoke_test():
     token = await generate_test_token()
     print(f"✅ Generated Test Token")
     
-    async with httpx.AsyncClient(base_url="http://localhost:8002") as client:
+    async with httpx.AsyncClient(base_url="http://127.0.0.1:8002") as client:
         # 1. Test Health Deep
         print("🔍 Checking /api/health/deep...")
         try:
@@ -58,7 +58,9 @@ async def run_smoke_test():
                 data = response.json()
                 print(f"✅ Health Deep Status: {data.get('overall_status')}")
                 for service in data.get("services", []):
-                    print(f"   - {service['name']}: {service['status']} ({service['response_time_ms']:.2f}ms)")
+                    res_time = service.get('response_time_ms')
+                    res_time_str = f"{res_time:.2f}ms" if res_time is not None else "N/A"
+                    print(f"   - {service['name']}: {service['status']} ({res_time_str})")
             else:
                 print(f"❌ Health Deep Failed: {response.status_code}")
                 print(response.text)

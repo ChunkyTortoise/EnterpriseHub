@@ -1,0 +1,240 @@
+# ==============================================================================
+# JORGE'S BI DASHBOARD - TERRAFORM VARIABLES EXAMPLE
+# Production environment configuration template
+# ==============================================================================
+
+# IMPORTANT: Copy this file to terraform.tfvars and fill in the actual values
+# Never commit terraform.tfvars with real credentials to version control
+
+# ==============================================================================
+# GENERAL CONFIGURATION
+# ==============================================================================
+
+aws_region   = "us-east-1"
+environment  = "production"
+project_name = "jorge-bi-dashboard"
+
+# ==============================================================================
+# NETWORK CONFIGURATION
+# ==============================================================================
+
+# VPC and subnet IDs (replace with actual values from your VPC)
+vpc_id               = "vpc-1234567890abcdef0"
+vpc_cidr            = "10.0.0.0/16"
+public_subnet_ids   = ["subnet-1234567890abcdef0", "subnet-0987654321fedcba0"]
+private_subnet_ids  = ["subnet-abcdef1234567890", "subnet-fedcba0987654321"]
+database_subnet_ids = ["subnet-db1234567890abc", "subnet-db0987654321fed"]
+cache_subnet_ids    = ["subnet-cache1234567890", "subnet-cache0987654321"]
+
+# ==============================================================================
+# EKS CONFIGURATION
+# ==============================================================================
+
+cluster_name          = "jorge-production-eks"
+kubernetes_namespace  = "jorge-bi-production"
+
+# ==============================================================================
+# DATABASE CONFIGURATION (RDS PostgreSQL)
+# ==============================================================================
+
+# Instance sizing for production workloads
+db_instance_class         = "db.r6g.xlarge"    # 4 vCPU, 32 GB RAM
+db_replica_instance_class = "db.r6g.large"     # 2 vCPU, 16 GB RAM (read replica)
+
+# Storage configuration
+db_allocated_storage     = 100   # Initial storage in GB
+db_max_allocated_storage = 1000  # Auto-scaling limit in GB
+
+# Database credentials (use strong passwords)
+db_username = "jorge_bi_admin"
+# db_password = "REPLACE_WITH_STRONG_PASSWORD_MIN_32_CHARS"
+# Example: db_password = "J0rge!B1-Pr0duct10n-DB-P@ssw0rd-2026-V3ry-S3cur3"
+
+# ==============================================================================
+# CACHE CONFIGURATION (ElastiCache Redis)
+# ==============================================================================
+
+# Redis cluster sizing
+redis_node_type = "cache.r6g.large"  # 2 vCPU, 13.07 GB RAM
+redis_num_nodes = 3                  # High availability with 3 nodes
+
+# Redis authentication token (minimum 32 characters)
+# redis_auth_token = "REPLACE_WITH_STRONG_TOKEN_MIN_32_CHARS"
+# Example: redis_auth_token = "J0rge-B1-R3d1s-Pr0d-T0k3n-2026-V3ry-S3cur3-Auth"
+
+# ==============================================================================
+# SSL/TLS CONFIGURATION
+# ==============================================================================
+
+# SSL certificate for HTTPS (obtain from AWS Certificate Manager)
+# certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/abcdef12-3456-7890-abcd-ef1234567890"
+
+# Domain configuration
+domain_name              = "bi.jorge-platform.com"
+alternative_domain_names = ["dashboard.jorge-platform.com"]
+
+# ==============================================================================
+# MONITORING CONFIGURATION
+# ==============================================================================
+
+enable_enhanced_monitoring  = true
+enable_performance_insights = true
+cloudwatch_log_retention    = 30  # days
+
+# ==============================================================================
+# BACKUP CONFIGURATION
+# ==============================================================================
+
+backup_retention_period = 30                    # days
+backup_window          = "03:00-04:00"         # UTC
+maintenance_window     = "sun:04:00-sun:05:00" # UTC
+
+# ==============================================================================
+# SECURITY CONFIGURATION
+# ==============================================================================
+
+enable_deletion_protection  = true
+storage_encrypted           = true
+enable_transit_encryption   = true
+enable_at_rest_encryption   = true
+
+# ==============================================================================
+# SCALING CONFIGURATION
+# ==============================================================================
+
+# Application scaling
+app_min_replicas             = 2   # Minimum for high availability
+app_max_replicas             = 10  # Scale up to handle traffic spikes
+app_target_cpu_utilization   = 70  # Trigger scaling at 70% CPU
+
+# ==============================================================================
+# JORGE-SPECIFIC CONFIGURATION
+# ==============================================================================
+
+jorge_commission_rate    = 0.06    # 6% commission rate
+jorge_monthly_target    = 25000    # $25,000 monthly target
+enable_jorge_features   = true
+
+# ==============================================================================
+# COST OPTIMIZATION
+# ==============================================================================
+
+enable_scheduled_scaling = true
+business_hours_start    = "13:00"  # 8 AM Central Time (UTC)
+business_hours_end      = "02:00"  # 9 PM Central Time (UTC)
+weekend_min_replicas   = 1         # Reduce costs on weekends
+
+# ==============================================================================
+# DISASTER RECOVERY
+# ==============================================================================
+
+enable_multi_az              = true      # High availability
+enable_cross_region_backups  = false     # Set to true for enhanced DR
+dr_region                    = "us-west-2"
+
+# ==============================================================================
+# COMPLIANCE CONFIGURATION
+# ==============================================================================
+
+enable_audit_logging           = true
+data_retention_days            = 2555  # 7 years for compliance
+enable_encryption_in_transit   = true
+
+# ==============================================================================
+# TAGGING CONFIGURATION
+# ==============================================================================
+
+cost_center = "business-intelligence"
+owner      = "jorge-real-estate"
+
+additional_tags = {
+  Project          = "jorge-bi-dashboard"
+  Environment      = "production"
+  Owner           = "jorge-real-estate"
+  CostCenter      = "business-intelligence"
+  BusinessUnit    = "real-estate-ai"
+  DataClass       = "confidential"
+  BackupRequired  = "true"
+  MonitoringLevel = "enhanced"
+  ComplianceLevel = "high"
+  LastModified    = "2026-01-25"
+}
+
+# ==============================================================================
+# FEATURE FLAGS
+# ==============================================================================
+
+enable_ai_concierge           = true
+enable_predictive_analytics   = true
+enable_advanced_visualizations = true
+enable_real_time_streaming     = true
+
+# ==============================================================================
+# PRODUCTION CONFIGURATION
+# ==============================================================================
+
+enable_debug_mode = false
+log_level        = "INFO"
+
+enforce_production_standards = true
+
+# ==============================================================================
+# EXAMPLES OF SECURE VALUES (REPLACE WITH ACTUAL VALUES)
+# ==============================================================================
+
+# Database password example (minimum 32 characters):
+# db_password = "J0rge!B1-Pr0duct10n-DB-P@ssw0rd-2026-V3ry-S3cur3-MinLength32Chars!"
+
+# Redis auth token example (minimum 32 characters):
+# redis_auth_token = "J0rge-B1-R3d1s-Pr0d-T0k3n-2026-V3ry-S3cur3-Auth-Token-Min32!"
+
+# ==============================================================================
+# PRODUCTION CHECKLIST
+# ==============================================================================
+
+# Before deploying to production, ensure:
+#
+# ✅ Database password is strong (32+ characters, mixed case, numbers, symbols)
+# ✅ Redis auth token is strong (32+ characters)
+# ✅ SSL certificate is obtained and verified in AWS Certificate Manager
+# ✅ VPC and subnet IDs are correct for your environment
+# ✅ Domain names are properly configured in Route 53
+# ✅ IAM permissions are properly configured
+# ✅ Backup retention meets compliance requirements
+# ✅ Monitoring is enabled and alerting is configured
+# ✅ Security groups allow only necessary traffic
+# ✅ Encryption is enabled for data at rest and in transit
+# ✅ Multi-AZ is enabled for high availability
+# ✅ Resource sizing is appropriate for expected load
+# ✅ Cost optimization settings are configured
+# ✅ Disaster recovery plan is documented and tested
+# ✅ Compliance requirements are met
+# ✅ All secrets are stored securely (not in this file)
+
+# ==============================================================================
+# SECURITY NOTES
+# ==============================================================================
+
+# NEVER commit actual passwords, tokens, or secrets to version control
+# Use AWS Secrets Manager or Parameter Store for production secrets
+# Rotate secrets regularly (quarterly recommended)
+# Use strong, unique passwords for each service
+# Enable MFA for all administrative access
+# Regularly review and audit access permissions
+# Monitor for unauthorized access attempts
+# Keep Terraform state file secure and encrypted
+
+# ==============================================================================
+# DEPLOYMENT NOTES
+# ==============================================================================
+
+# 1. Copy this file to terraform.tfvars
+# 2. Replace all placeholder values with actual production values
+# 3. Validate configuration: terraform plan
+# 4. Apply infrastructure: terraform apply
+# 5. Verify deployment: run health checks and monitoring
+# 6. Document any custom configurations
+# 7. Test disaster recovery procedures
+# 8. Set up regular backup verification
+
+# ==============================================================================

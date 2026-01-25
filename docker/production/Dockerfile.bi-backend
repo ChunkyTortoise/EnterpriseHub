@@ -1,0 +1,175 @@
+# ==============================================================================
+# JORGE'S BI DASHBOARD - PRODUCTION BACKEND DOCKERFILE
+# Multi-stage build for optimal performance and security
+# ==============================================================================
+
+# ==============================================================================
+# Stage 1: Python Dependencies Builder
+# ==============================================================================
+FROM python:3.11-slim as python-builder
+
+# Set build arguments
+ARG BUILDPLATFORM
+ARG TARGETPLATFORM
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION=2.0.0
+
+# Add labels for metadata
+LABEL maintainer="Jorge's Real Estate AI Platform"
+LABEL version="${VERSION}"
+LABEL description="Jorge's BI Dashboard Backend - Production Build"
+LABEL build-date="${BUILD_DATE}"
+LABEL vcs-ref="${VCS_REF}"
+
+# Install system dependencies for building
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd --gid 1000 jorge && \
+    useradd --uid 1000 --gid jorge --shell /bin/bash --create-home jorge
+
+# Set working directory
+WORKDIR /build
+
+# Copy requirements files
+COPY requirements.txt requirements-prod.txt ./
+COPY pyproject.toml setup.py ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --user -r requirements-prod.txt
+
+# ==============================================================================
+# Stage 2: Application Runtime
+# ==============================================================================
+FROM python:3.11-slim as runtime
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PATH=/home/jorge/.local/bin:$PATH \
+    PORT=8000 \
+    WORKERS=4 \
+    WORKER_CLASS=uvicorn.workers.UvicornWorker \
+    MAX_REQUESTS=1000 \
+    MAX_REQUESTS_JITTER=100 \
+    TIMEOUT=30 \
+    KEEPALIVE=5 \
+    ENVIRONMENT=production
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    postgresql-client \
+    redis-tools \
+    dumb-init \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user
+RUN groupadd --gid 1000 jorge && \
+    useradd --uid 1000 --gid jorge --shell /bin/bash --create-home jorge
+
+# Create application directories
+RUN mkdir -p /app/logs /app/data /app/tmp && \
+    chown -R jorge:jorge /app
+
+# Copy Python dependencies from builder stage
+COPY --from=python-builder --chown=jorge:jorge /root/.local /home/jorge/.local
+
+# Set working directory
+WORKDIR /app
+
+# Copy application code
+COPY --chown=jorge:jorge ghl_real_estate_ai/ ./ghl_real_estate_ai/
+COPY --chown=jorge:jorge scripts/ ./scripts/
+COPY --chown=jorge:jorge configs/ ./configs/
+COPY --chown=jorge:jorge alembic/ ./alembic/
+COPY --chown=jorge:jorge alembic.ini ./
+COPY --chown=jorge:jorge pyproject.toml setup.py ./
+
+# Copy production configuration files
+COPY --chown=jorge:jorge docker/production/entrypoint-bi.sh ./entrypoint.sh
+COPY --chown=jorge:jorge docker/production/healthcheck-bi.sh ./healthcheck.sh
+
+# Make scripts executable
+RUN chmod +x entrypoint.sh healthcheck.sh
+
+# Switch to non-root user
+USER jorge
+
+# Install the application in development mode
+RUN pip install --user --no-deps -e .
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD ./healthcheck.sh
+
+# Use dumb-init as PID 1 for proper signal handling
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+# Start the application
+CMD ["./entrypoint.sh"]
+
+# ==============================================================================
+# Stage 3: Development Override (Optional)
+# ==============================================================================
+FROM runtime as development
+
+USER root
+
+# Install development dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    vim \
+    less \
+    htop \
+    && rm -rf /var/lib/apt/lists/*
+
+USER jorge
+
+# Install development Python packages
+RUN pip install --user \
+    pytest \
+    pytest-asyncio \
+    pytest-cov \
+    black \
+    ruff \
+    mypy
+
+# Override for development
+ENV ENVIRONMENT=development
+ENV LOG_LEVEL=DEBUG
+
+# ==============================================================================
+# Build Information
+# ==============================================================================
+# Build with:
+# docker build --target runtime -t jorge/bi-backend:latest -f docker/production/Dockerfile.bi-backend .
+#
+# Development build:
+# docker build --target development -t jorge/bi-backend:dev -f docker/production/Dockerfile.bi-backend .
+#
+# Multi-platform build:
+# docker buildx build --platform linux/amd64,linux/arm64 --target runtime -t jorge/bi-backend:latest .
+#
+# Security scan:
+# docker scout cves jorge/bi-backend:latest
+#
+# Size optimization achieved through:
+# - Multi-stage build reduces final image size
+# - No build tools in runtime image
+# - Minimal base image (python:3.11-slim)
+# - Proper layer caching
+# - Non-root user for security
+# - Health checks for reliability
+# ==============================================================================

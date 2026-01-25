@@ -38,7 +38,7 @@ class SocketIOIntegration:
         self.websocket_manager = get_websocket_manager()
         self.sio = None
 
-    async def setup_socketio(self):
+    def setup_socketio(self):
         """Setup Socket.IO server and integrate with FastAPI"""
         try:
             # Define CORS origins for Socket.IO
@@ -58,8 +58,8 @@ class SocketIOIntegration:
                     if not origin.startswith("http://localhost")
                 ]
 
-            # Create Socket.IO server
-            self.sio = await self.socketio_manager.create_server(
+            # Create Socket.IO server (synchronous now)
+            self.sio = self.socketio_manager.create_server(
                 cors_allowed_origins=cors_origins
             )
 
@@ -104,7 +104,7 @@ class SocketIOIntegration:
         except Exception as e:
             logger.error(f"Event bridging setup error: {e}")
 
-async def create_socketio_app(main_app: FastAPI) -> socketio.ASGIApp:
+def create_socketio_app(main_app: FastAPI) -> socketio.ASGIApp:
     """
     Create integrated Socket.IO + FastAPI application
 
@@ -116,7 +116,7 @@ async def create_socketio_app(main_app: FastAPI) -> socketio.ASGIApp:
     """
     try:
         integration = SocketIOIntegration(main_app)
-        socketio_app = await integration.setup_socketio()
+        socketio_app = integration.setup_socketio()
 
         logger.info("Socket.IO application created successfully")
         return socketio_app
@@ -142,7 +142,7 @@ async def integrate_socketio_with_fastapi(app: FastAPI):
         integration = SocketIOIntegration(app)
 
         # Setup Socket.IO server (this creates the server but doesn't replace the app)
-        await integration.setup_socketio()
+        integration.setup_socketio()
 
         # Store integration in app state for access in main.py
         app.state.socketio_integration = integration
@@ -153,25 +153,30 @@ async def integrate_socketio_with_fastapi(app: FastAPI):
         logger.error(f"Socket.IO integration error: {e}")
         raise
 
-def get_socketio_app_for_uvicorn(main_app: FastAPI) -> socketio.ASGIApp:
+def get_socketio_app_for_uvicorn(main_app: FastAPI):
     """
     Get Socket.IO ASGI app for uvicorn deployment
 
-    Used when running with uvicorn for development or production.
-    This creates the complete Socket.IO + FastAPI integrated app.
+    Returns a lazy factory function that uvicorn can call to create the
+    integrated Socket.IO + FastAPI app when the event loop is ready.
+
+    This avoids the uvloop/nest_asyncio compatibility issue by deferring
+    the async setup until uvicorn has established the event loop.
     """
-    async def create_app():
-        return await create_socketio_app(main_app)
+    class SocketIOAppFactory:
+        """Lazy factory for Socket.IO app that works with uvicorn lifecycle"""
 
-    # Create event loop if needed
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        def __init__(self, main_app: FastAPI):
+            self.main_app = main_app
+            self._app_cache = None
 
-    if loop.is_running():
-        import nest_asyncio
-        nest_asyncio.apply()
+        async def __call__(self, scope, receive, send):
+            """ASGI callable that creates the Socket.IO app on first request"""
+            if self._app_cache is None:
+                logger.info("Creating Socket.IO app (lazy initialization)")
+                self._app_cache = create_socketio_app(self.main_app)
 
-    return loop.run_until_complete(create_app())
+            # Delegate to the cached Socket.IO app
+            return await self._app_cache(scope, receive, send)
+
+    return SocketIOAppFactory(main_app)

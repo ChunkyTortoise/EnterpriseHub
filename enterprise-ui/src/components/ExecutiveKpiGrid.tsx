@@ -117,7 +117,7 @@ export function ExecutiveKpiGrid({
     if (!realtimeUpdates) return;
 
     const connectWebSocket = () => {
-      const ws = new WebSocket(`ws://localhost:8000/ws/dashboard/${locationId}`);
+      const ws = new WebSocket(`${process.env.NEXT_PUBLIC_SOCKET_URL?.replace('http', 'ws')}/ws/dashboard/${locationId}`);
 
       ws.onopen = () => {
         console.log('BI Dashboard WebSocket connected');
@@ -177,7 +177,7 @@ export function ExecutiveKpiGrid({
     setIsLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:8000/api/bi/dashboard-kpis?location_id=${locationId}&timeframe=${timeframe}`
+        `${process.env.NEXT_PUBLIC_API_BASE}/api/bi/dashboard-kpis?location_id=${locationId}&timeframe=${timeframe}`
       );
       const data = await response.json();
 

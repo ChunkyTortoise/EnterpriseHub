@@ -10,9 +10,11 @@ import os
 import json
 import pickle
 import asyncio
+import threading
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Union
 from dataclasses import dataclass
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -88,43 +90,81 @@ class ClosingProbabilityModel:
         self.last_training_date: Optional[datetime] = None
         self.model_metrics: Optional[ModelMetrics] = None
 
-        # Load existing model if available
-        try:
-            loop = asyncio.get_running_loop()
-            if loop.is_running():
-                loop.create_task(self._load_model())
-        except RuntimeError:
-            # No running event loop, model will be loaded on first use or manual call
-            pass
+        # Thread safety for model loading
+        self._loading_lock = threading.Lock()
+        self._model_loaded = False
+        self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ml-model")
+
+        # Load existing model if available (lazy loading - only when needed)
+        # Removed automatic loading to prevent asyncio conflicts
 
     async def _load_model(self) -> bool:
         """
-        Load existing model from disk.
+        Load existing model from disk using non-blocking I/O.
 
         Returns:
             True if model loaded successfully, False otherwise
         """
+        # Check if already loaded or loading in progress
+        if self._model_loaded:
+            return True
+
+        # Use lock to prevent multiple simultaneous loads
+        if not self._loading_lock.acquire(blocking=False):
+            # Another thread is loading, wait briefly and check again
+            await asyncio.sleep(0.1)
+            return self._model_loaded
+
         try:
-            if os.path.exists(self.model_path) and os.path.exists(self.scaler_path):
-                self.model = joblib.load(self.model_path)
-                self.scaler = joblib.load(self.scaler_path)
+            loop = asyncio.get_event_loop()
 
-                # Load metadata
-                if os.path.exists(self.metadata_path):
-                    with open(self.metadata_path, 'r') as f:
-                        metadata = json.load(f)
-                        self.feature_names = metadata.get("feature_names", [])
-                        self.last_training_date = datetime.fromisoformat(
-                            metadata["last_training_date"]
-                        )
+            # Run blocking I/O operations in thread executor
+            def _load_files():
+                if os.path.exists(self.model_path) and os.path.exists(self.scaler_path):
+                    model = joblib.load(self.model_path)
+                    scaler = joblib.load(self.scaler_path)
 
-                logger.info(f"Loaded model trained on {self.last_training_date}")
+                    metadata = {}
+                    if os.path.exists(self.metadata_path):
+                        with open(self.metadata_path, 'r') as f:
+                            metadata = json.load(f)
+
+                    return model, scaler, metadata
+                return None, None, {}
+
+            # Execute file loading in background thread
+            model, scaler, metadata = await loop.run_in_executor(self._executor, _load_files)
+
+            if model is not None and scaler is not None:
+                self.model = model
+                self.scaler = scaler
+                self.feature_names = metadata.get("feature_names", [])
+
+                if "last_training_date" in metadata:
+                    self.last_training_date = datetime.fromisoformat(metadata["last_training_date"])
+
+                self._model_loaded = True
+                logger.info(f"Model loaded successfully, trained on {self.last_training_date}")
                 return True
 
         except Exception as e:
             logger.error(f"Error loading model: {e}")
 
+        finally:
+            self._loading_lock.release()
+
         return False
+
+    async def _ensure_model_loaded(self) -> bool:
+        """
+        Ensure the model is loaded before use with lazy loading.
+
+        Returns:
+            True if model is available, False otherwise
+        """
+        if not self._model_loaded:
+            return await self._load_model()
+        return True
 
     async def _save_model(self) -> bool:
         """
@@ -273,8 +313,9 @@ class ClosingProbabilityModel:
             return cached
 
         try:
-            if self.model is None or self.scaler is None:
-                logger.warning("Model not trained. Using baseline prediction.")
+            # Ensure model is loaded before prediction
+            if not await self._ensure_model_loaded():
+                logger.warning("Model not available. Using baseline prediction.")
                 return await self._baseline_prediction(conversation_context)
 
             # Extract features

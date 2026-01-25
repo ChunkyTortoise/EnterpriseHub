@@ -88,7 +88,7 @@ class ProcessingStatus(str, Enum):
 class AgencyCreateRequest(BaseModel):
     """Request schema for creating an agency."""
     agency_name: str = Field(..., min_length=1, max_length=500)
-    agency_slug: str = Field(..., min_length=1, max_length=255, regex=r'^[a-z0-9-]+$')
+    agency_slug: str = Field(..., min_length=1, max_length=255, pattern=r'^[a-z0-9-]+$')
     contact_email: EmailStr
     contract_value: Decimal = Field(..., gt=0, description="Annual contract value in USD")
     platform_fee_rate: Decimal = Field(0.20, ge=0, le=1, description="Platform fee as decimal (e.g., 0.20 for 20%)")
@@ -171,8 +171,8 @@ class AgencyStatsResponse(BaseModel):
 class ClientCreateRequest(BaseModel):
     """Request schema for creating a client."""
     client_name: str = Field(..., min_length=1, max_length=500)
-    client_slug: str = Field(..., min_length=1, max_length=255, regex=r'^[a-z0-9-]+$')
-    client_type: str = Field("real_estate", regex=r'^(Union[real_estate, mortgage]|Union[insurance, general])$')
+    client_slug: str = Field(..., min_length=1, max_length=255, pattern=r'^[a-z0-9-]+$')
+    client_type: str = Field("real_estate", pattern=r'^(Union[real_estate, mortgage]|Union[insurance, general])$')
     monthly_fee: Decimal = Field(..., gt=0, description="Monthly fee in USD")
     monthly_volume_limit: int = Field(1000, gt=0, le=100000)
 
@@ -195,7 +195,7 @@ class ClientCreateRequest(BaseModel):
 class ClientUpdateRequest(BaseModel):
     """Request schema for updating a client."""
     client_name: Optional[str] = Field(None, min_length=1, max_length=500)
-    client_type: Optional[str] = Field(None, regex=r'^(Union[real_estate, mortgage]|Union[insurance, general])$')
+    client_type: Optional[str] = Field(None, pattern=r'^(Union[real_estate, mortgage]|Union[insurance, general])$')
     is_active: Optional[bool] = None
     monthly_fee: Optional[Decimal] = Field(None, gt=0)
     monthly_volume_limit: Optional[int] = Field(None, gt=0, le=100000)
@@ -233,7 +233,7 @@ class ClientResponse(BaseModel):
 class DNSRecordSchema(BaseModel):
     """DNS record schema."""
     name: str = Field(..., min_length=1)
-    type: str = Field(..., regex=r'^(Union[A, AAAA]|Union[CNAME, TXT]|MX)$')
+    type: str = Field(..., pattern=r'^(Union[A, AAAA]|Union[CNAME, TXT]|MX)$')
     value: str = Field(..., min_length=1)
     ttl: int = Field(300, gt=0, le=86400)
     priority: Optional[int] = Field(None, ge=0)
@@ -292,7 +292,7 @@ class DomainUpdateRequest(BaseModel):
     cdn_enabled: Optional[bool] = None
     cdn_provider: Optional[str] = None
     health_check_url: Optional[str] = None
-    status: Optional[str] = Field(None, regex=r'^(Union[pending, active]|Union[error, disabled])$')
+    status: Optional[str] = Field(None, pattern=r'^(Union[pending, active]|Union[error, disabled])$')
     configuration_metadata: Optional[Dict[str, Any]] = None
 
 
@@ -453,14 +453,14 @@ class BrandConfigCreateRequest(BaseModel):
     favicon_asset_id: Optional[str] = None
 
     # Color palette (hex colors)
-    primary_color: str = Field("#6D28D9", regex=r'^#[0-9A-Fa-f]{6}$')
-    secondary_color: str = Field("#4C1D95", regex=r'^#[0-9A-Fa-f]{6}$')
-    accent_color: str = Field("#10B981", regex=r'^#[0-9A-Fa-f]{6}$')
-    text_color: str = Field("#1F2937", regex=r'^#[0-9A-Fa-f]{6}$')
-    background_color: str = Field("#F9FAFB", regex=r'^#[0-9A-Fa-f]{6}$')
-    error_color: str = Field("#DC2626", regex=r'^#[0-9A-Fa-f]{6}$')
-    success_color: str = Field("#059669", regex=r'^#[0-9A-Fa-f]{6}$')
-    warning_color: str = Field("#D97706", regex=r'^#[0-9A-Fa-f]{6}$')
+    primary_color: str = Field("#6D28D9", pattern=r'^#[0-9A-Fa-f]{6}$')
+    secondary_color: str = Field("#4C1D95", pattern=r'^#[0-9A-Fa-f]{6}$')
+    accent_color: str = Field("#10B981", pattern=r'^#[0-9A-Fa-f]{6}$')
+    text_color: str = Field("#1F2937", pattern=r'^#[0-9A-Fa-f]{6}$')
+    background_color: str = Field("#F9FAFB", pattern=r'^#[0-9A-Fa-f]{6}$')
+    error_color: str = Field("#DC2626", pattern=r'^#[0-9A-Fa-f]{6}$')
+    success_color: str = Field("#059669", pattern=r'^#[0-9A-Fa-f]{6}$')
+    warning_color: str = Field("#D97706", pattern=r'^#[0-9A-Fa-f]{6}$')
 
     # Typography
     primary_font_family: str = Field("Inter, sans-serif", max_length=255)
@@ -503,11 +503,11 @@ class BrandConfigUpdateRequest(BaseModel):
     favicon_asset_id: Optional[str] = None
 
     # Color palette
-    primary_color: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
-    secondary_color: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
-    accent_color: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
-    text_color: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
-    background_color: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
+    primary_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    secondary_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    accent_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    text_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    background_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
 
     # Typography
     primary_font_family: Optional[str] = Field(None, max_length=255)
@@ -630,7 +630,7 @@ class DeploymentUpdateRequest(BaseModel):
     error_tracking_enabled: Optional[bool] = None
     performance_monitoring: Optional[bool] = None
 
-    deployment_status: Optional[str] = Field(None, regex=r'^(Union[pending, deploying]|Union[active, error]|disabled)$')
+    deployment_status: Optional[str] = Field(None, pattern=r'^(Union[pending, deploying]|Union[active, error]|disabled)$')
     deployment_notes: Optional[str] = None
     deployment_metadata: Optional[Dict[str, Any]] = None
 
@@ -702,7 +702,7 @@ class AnalyticsQueryRequest(BaseModel):
     metric_types: List[str] = []
     start_date: datetime
     end_date: datetime
-    granularity: str = Field("hour", regex=r'^(Union[minute, hour]|Union[day, week]|month)$')
+    granularity: str = Field("hour", pattern=r'^(Union[minute, hour]|Union[day, week]|month)$')
     group_by: List[str] = []
     filters: Dict[str, Any] = {}
 
@@ -762,7 +762,7 @@ class PaginationParams(BaseModel):
 class SortParams(BaseModel):
     """Sorting query parameters."""
     sort_by: str = "created_at"
-    sort_order: str = Field("desc", regex=r'^(Union[asc, desc])$')
+    sort_order: str = Field("desc", pattern=r'^(Union[asc, desc])$')
 
 
 class FilterParams(BaseModel):
