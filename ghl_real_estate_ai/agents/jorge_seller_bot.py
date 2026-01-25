@@ -29,6 +29,15 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 # Track 3.1 Predictive Intelligence Integration
 from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
 
+# Phase 3.3 Bot Intelligence Middleware Integration
+try:
+    from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
+    from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
+    BOT_INTELLIGENCE_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Bot Intelligence Middleware unavailable: {e}")
+    BOT_INTELLIGENCE_AVAILABLE = False
+
 # Optional Enhanced Features (imported conditionally)
 try:
     from ghl_real_estate_ai.services.progressive_skills_manager import ProgressiveSkillsManager
@@ -66,6 +75,7 @@ class JorgeFeatureConfig:
     enable_mcp_integration: bool = False
     enable_adaptive_questioning: bool = False
     enable_track3_intelligence: bool = True  # Default enabled
+    enable_bot_intelligence: bool = True  # Phase 3.3 Intelligence Integration
 
     # Performance settings
     max_concurrent_tasks: int = 5
@@ -280,6 +290,14 @@ class JorgeSellerBot:
             self.question_engine = AdaptiveQuestionEngine()
             logger.info("Jorge bot: Adaptive questioning enabled")
 
+        # Phase 3.3 Bot Intelligence Middleware (optional)
+        self.intelligence_middleware = None
+        if self.config.enable_bot_intelligence and BOT_INTELLIGENCE_AVAILABLE:
+            self.intelligence_middleware = get_bot_intelligence_middleware()
+            logger.info("Jorge bot: Bot Intelligence Middleware enabled (Phase 3.3)")
+        elif self.config.enable_bot_intelligence:
+            logger.warning("Jorge bot: Bot Intelligence requested but dependencies not available")
+
         # Performance tracking
         self.workflow_stats = {
             "total_interactions": 0,
@@ -287,7 +305,9 @@ class JorgeSellerBot:
             "mesh_orchestrations": 0,
             "mcp_calls": 0,
             "adaptive_question_selections": 0,
-            "token_savings": 0
+            "token_savings": 0,
+            "intelligence_enhancements": 0,
+            "intelligence_cache_hits": 0
         }
 
         # Build appropriate workflow based on enabled features
@@ -305,6 +325,11 @@ class JorgeSellerBot:
 
         # Define Nodes
         workflow.add_node("analyze_intent", self.analyze_intent)
+
+        # Add intelligence gathering node if enabled
+        if self.config.enable_bot_intelligence and self.intelligence_middleware:
+            workflow.add_node("gather_intelligence", self.gather_intelligence_context)
+
         workflow.add_node("detect_stall", self.detect_stall)
         workflow.add_node("select_strategy", self.select_strategy)
         workflow.add_node("generate_jorge_response", self.generate_jorge_response)
@@ -312,7 +337,14 @@ class JorgeSellerBot:
 
         # Define Edges
         workflow.set_entry_point("analyze_intent")
-        workflow.add_edge("analyze_intent", "detect_stall")
+
+        # Conditional routing for intelligence gathering
+        if self.config.enable_bot_intelligence and self.intelligence_middleware:
+            workflow.add_edge("analyze_intent", "gather_intelligence")
+            workflow.add_edge("gather_intelligence", "detect_stall")
+        else:
+            workflow.add_edge("analyze_intent", "detect_stall")
+
         workflow.add_edge("detect_stall", "select_strategy")
         
         # Routing based on next_action
@@ -337,6 +369,11 @@ class JorgeSellerBot:
 
         # Enhanced Nodes
         workflow.add_node("analyze_intent", self.analyze_intent)
+
+        # Add intelligence gathering node if enabled
+        if self.config.enable_bot_intelligence and self.intelligence_middleware:
+            workflow.add_node("gather_intelligence", self.gather_intelligence_context)
+
         workflow.add_node("detect_stall", self.detect_stall)
         workflow.add_node("adaptive_strategy", self.adaptive_strategy_selection)
         workflow.add_node("generate_adaptive_response", self.generate_adaptive_response)
@@ -345,7 +382,14 @@ class JorgeSellerBot:
 
         # Enhanced Flow
         workflow.set_entry_point("analyze_intent")
-        workflow.add_edge("analyze_intent", "detect_stall")
+
+        # Conditional routing for intelligence gathering
+        if self.config.enable_bot_intelligence and self.intelligence_middleware:
+            workflow.add_edge("analyze_intent", "gather_intelligence")
+            workflow.add_edge("gather_intelligence", "detect_stall")
+        else:
+            workflow.add_edge("analyze_intent", "detect_stall")
+
         workflow.add_edge("detect_stall", "adaptive_strategy")
 
         # Conditional routing with adaptive logic
@@ -407,6 +451,121 @@ class JorgeSellerBot:
             "seller_temperature": seller_temperature,
             "last_action_timestamp": datetime.now(timezone.utc)
         }
+
+    async def gather_intelligence_context(self, state: JorgeSellerState) -> Dict:
+        """
+        Phase 3.3: Gather intelligence context for enhanced decision making.
+
+        Integrates with Bot Intelligence Middleware to provide:
+        - Property matching intelligence for better recommendations
+        - Conversation intelligence for objection detection
+        - Preference learning for personalized approaches
+
+        Graceful fallback on service failures - never blocks Jorge's workflow.
+        """
+        # Update bot status
+        await self.event_publisher.publish_bot_status_update(
+            bot_type="jorge-seller",
+            contact_id=state["lead_id"],
+            status="processing",
+            current_step="gather_intelligence"
+        )
+
+        intelligence_context = None
+        intelligence_performance_ms = 0.0
+
+        try:
+            if self.intelligence_middleware:
+                logger.info(f"Gathering intelligence context for seller lead {state['lead_id']}")
+
+                # Extract basic preferences from conversation for intelligence gathering
+                preferences = self._extract_preferences_from_conversation(state.get("conversation_history", []))
+
+                # Get intelligence context with <200ms target
+                start_time = time.time()
+                intelligence_context = await self.intelligence_middleware.enhance_bot_context(
+                    bot_type="jorge-seller",
+                    lead_id=state["lead_id"],
+                    location_id=state.get("location_id", "austin"),  # Default to Austin market
+                    conversation_context=state.get("conversation_history", []),
+                    preferences=preferences
+                )
+                intelligence_performance_ms = (time.time() - start_time) * 1000
+
+                # Update performance statistics
+                self.workflow_stats["intelligence_enhancements"] += 1
+                if intelligence_context.cache_hit:
+                    self.workflow_stats["intelligence_cache_hits"] += 1
+
+                # Log performance metrics
+                logger.info(
+                    f"Intelligence gathered for {state['lead_id']} in {intelligence_performance_ms:.1f}ms "
+                    f"(cache_hit: {intelligence_context.cache_hit})"
+                )
+
+                # Emit intelligence gathering event for monitoring
+                await self.event_publisher.publish_conversation_update(
+                    conversation_id=f"jorge_{state['lead_id']}",
+                    lead_id=state['lead_id'],
+                    stage="intelligence_enhanced",
+                    message=f"Intelligence context gathered: {intelligence_context.property_intelligence.match_count} properties, "
+                           f"sentiment {intelligence_context.conversation_intelligence.overall_sentiment:.2f}"
+                )
+
+        except Exception as e:
+            logger.warning(f"Intelligence enhancement unavailable for {state['lead_id']}: {e}")
+            # Don't let intelligence failures block Jorge's workflow
+            intelligence_context = None
+
+        return {
+            "intelligence_context": intelligence_context,
+            "intelligence_performance_ms": intelligence_performance_ms,
+            "intelligence_available": intelligence_context is not None
+        }
+
+    def _extract_preferences_from_conversation(self, conversation_history: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Extract basic preferences from conversation for intelligence gathering."""
+        preferences = {}
+
+        if not conversation_history:
+            return preferences
+
+        # Look for budget signals in conversation
+        conversation_text = " ".join([msg.get("content", "") for msg in conversation_history]).lower()
+
+        # Basic budget extraction (simple keyword matching)
+        budget_keywords = {
+            "under 400": {"budget_max": 400000},
+            "under 500": {"budget_max": 500000},
+            "under 600": {"budget_max": 600000},
+            "under 700": {"budget_max": 700000},
+            "under 800": {"budget_max": 800000},
+            "under 1m": {"budget_max": 1000000},
+            "under 1 million": {"budget_max": 1000000}
+        }
+
+        for keyword, budget_info in budget_keywords.items():
+            if keyword in conversation_text:
+                preferences.update(budget_info)
+                break
+
+        # Timeline extraction
+        timeline_keywords = {
+            "asap": "1_month",
+            "quickly": "1_month",
+            "urgent": "1_month",
+            "3 months": "3_months",
+            "6 months": "6_months",
+            "next year": "12_months",
+            "no rush": "flexible"
+        }
+
+        for keyword, timeline in timeline_keywords.items():
+            if keyword in conversation_text:
+                preferences["timeline"] = timeline
+                break
+
+        return preferences
 
     async def detect_stall(self, state: JorgeSellerState) -> Dict:
         """Detect if the lead is using standard stalling language."""
@@ -531,6 +690,13 @@ class JorgeSellerBot:
                        f"(conv_prob={journey_analysis.conversion_probability:.3f}, "
                        f"pattern={touchpoint_analysis.response_pattern})")
 
+            # PHASE 3.3 ENHANCEMENT: Bot Intelligence Middleware Integration
+            if state.get("intelligence_available") and state.get("intelligence_context"):
+                final_strategy = await self._apply_conversation_intelligence(
+                    final_strategy, state["intelligence_context"], state
+                )
+                logger.info(f"Phase 3.3 intelligence applied to strategy for {lead_id}")
+
             return final_strategy
 
         except Exception as e:
@@ -586,7 +752,11 @@ class JorgeSellerBot:
         
         if state['stall_detected'] and state['detected_stall_type'] in friendly_responses:
             prompt += f"\nSUGGESTED HELPFUL RESPONSE: {friendly_responses[state['detected_stall_type']]}"
-        
+
+        # PHASE 3.3 ENHANCEMENT: Apply Bot Intelligence for Enhanced Responses
+        if state.get("intelligence_available") and state.get("intelligence_context"):
+            prompt = await self._enhance_prompt_with_intelligence(prompt, state["intelligence_context"], state)
+
         response = await self.claude.analyze_with_context(prompt)
         content = response.get('content') or response.get('analysis') or "Are we selling this property or just talking about it?"
 
@@ -809,14 +979,25 @@ class JorgeSellerBot:
 
         start_time = time.time()
 
-        # Discovery phase (103 tokens)
+        # Enhanced discovery context with Austin market intelligence
         discovery_context = {
             "lead_name": lead_data.get("lead_name"),
             "last_message": lead_data.get("last_message", ""),
             "interaction_count": lead_data.get("interaction_count", 1),
             "lead_source": lead_data.get("lead_source"),
-            "property_address": lead_data.get("property_address")
+            "property_address": lead_data.get("property_address"),
+            "seller_temperature": lead_data.get("seller_temperature", "cold"),
+            "frs_score": lead_data.get("frs_score", 0),
+            "pcs_score": lead_data.get("pcs_score", 0),
+            "stall_history": lead_data.get("stall_count", 0)
         }
+
+        # Austin market context injection (68% token reduction enhancement)
+        if self._is_austin_property(lead_data.get("property_address")):
+            discovery_context["market_context"] = "austin"
+            discovery_context["austin_neighborhood"] = self._detect_austin_neighborhood(
+                lead_data.get("property_address")
+            )
 
         discovery_result = await self.skills_manager.discover_skills(
             context=discovery_context,
@@ -861,8 +1042,48 @@ class JorgeSellerBot:
             "qualification_summary": skill_result.get("response_content", ""),
             "is_qualified": confidence > 0.7,
             "seller_temperature": self._confidence_to_temperature(confidence),
-            "execution_time": execution_time
+            "execution_time": execution_time,
+            "market_context": discovery_context.get("market_context"),
+            "austin_neighborhood": discovery_context.get("austin_neighborhood")
         }
+
+    def _is_austin_property(self, address: Optional[str]) -> bool:
+        """Detect if property is in Austin market for progressive skills enhancement."""
+        if not address:
+            return False
+        address_lower = address.lower()
+        return any([
+            "austin" in address_lower,
+            "tx 78" in address_lower,
+            " atx" in address_lower,
+            "austin, tx" in address_lower
+        ])
+
+    def _detect_austin_neighborhood(self, address: Optional[str]) -> Optional[str]:
+        """Extract Austin neighborhood from address for market-specific skills."""
+        if not address:
+            return None
+
+        austin_neighborhoods = {
+            "westlake": ["westlake", "west lake hills"],
+            "tarrytown": ["tarrytown"],
+            "mueller": ["mueller"],
+            "downtown": ["downtown", "west 6th", "rainey"],
+            "south_congress": ["soco", "south congress", "zilker"],
+            "east_austin": ["east austin", "cherrywood"],
+            "cedar_park": ["cedar park"],
+            "round_rock": ["round rock"],
+            "pflugerville": ["pflugerville"],
+            "lakeway": ["lakeway"],
+            "bee_cave": ["bee cave"]
+        }
+
+        address_lower = address.lower()
+        for neighborhood, keywords in austin_neighborhoods.items():
+            if any(keyword in address_lower for keyword in keywords):
+                return neighborhood
+
+        return "central_austin"  # Default for Austin addresses
 
     async def _execute_traditional_qualification(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Traditional full-context qualification"""
@@ -1394,6 +1615,133 @@ class JorgeSellerBot:
         return actions
 
     # ================================
+    # PHASE 3.3 INTELLIGENCE HELPER METHODS
+    # ================================
+
+    async def _apply_conversation_intelligence(
+        self,
+        strategy: Dict[str, Any],
+        intelligence_context: "BotIntelligenceContext",
+        state: JorgeSellerState
+    ) -> Dict[str, Any]:
+        """
+        Apply conversation intelligence to refine Jorge's strategy.
+
+        Uses objection detection and sentiment analysis to adjust approach while
+        maintaining Jorge's confrontational methodology.
+        """
+        try:
+            conversation_intel = intelligence_context.conversation_intelligence
+
+            # Analyze objections for confrontational breakthrough opportunities
+            if conversation_intel.objections_detected:
+                primary_objection = conversation_intel.objections_detected[0]
+                objection_type = primary_objection.get('type', 'unknown')
+                severity = primary_objection.get('severity', 0.5)
+
+                logger.info(f"Jorge confronting {objection_type} objection (severity: {severity})")
+
+                # Jorge's confrontational response to common objections
+                if objection_type in ['price', 'pricing'] and severity > 0.6:
+                    # Strong price objection - use consultative confrontation
+                    strategy['confrontation_angle'] = 'price_reality_check'
+                    strategy['talking_points'] = primary_objection.get('suggested_responses', [])
+                elif objection_type in ['timing', 'timeline'] and severity > 0.5:
+                    # Timeline objection - challenge their urgency
+                    strategy['confrontation_angle'] = 'timeline_commitment_test'
+                elif objection_type in ['trust', 'agent']:
+                    # Trust/agent objection - friendly competitive approach
+                    strategy['current_tone'] = 'FRIENDLY'  # Stay friendly for trust building
+
+            # Adjust intensity based on sentiment
+            sentiment = conversation_intel.overall_sentiment
+            if sentiment < -0.3:
+                # Negative sentiment - ease up slightly but maintain authority
+                strategy['intensity_modifier'] = 'gentle_confrontation'
+            elif sentiment > 0.3:
+                # Positive sentiment - opportunity for stronger engagement
+                strategy['intensity_modifier'] = 'confident_advancement'
+
+            # Use response recommendations for coaching opportunities
+            if conversation_intel.response_recommendations:
+                best_response = conversation_intel.response_recommendations[0]
+                strategy['recommended_response'] = best_response.get('response_text')
+                strategy['recommended_tone'] = best_response.get('tone', strategy.get('current_tone'))
+
+            strategy['intelligence_enhanced'] = True
+            return strategy
+
+        except Exception as e:
+            logger.warning(f"Conversation intelligence application failed: {e}")
+            return strategy
+
+    async def _enhance_prompt_with_intelligence(
+        self,
+        base_prompt: str,
+        intelligence_context: "BotIntelligenceContext",
+        state: JorgeSellerState
+    ) -> str:
+        """
+        Enhance Claude prompt with intelligence context for better responses.
+
+        Adds property recommendations, objection handling guidance, and
+        personalized approach suggestions while maintaining Jorge's style.
+        """
+        try:
+            enhanced_prompt = base_prompt
+
+            # Add property intelligence if available
+            property_intel = intelligence_context.property_intelligence
+            if property_intel.match_count > 0:
+                enhanced_prompt += f"\n\nPROPERTY INTELLIGENCE:"
+                enhanced_prompt += f"\n- Found {property_intel.match_count} relevant properties for this seller"
+                enhanced_prompt += f"\n- Best match score: {property_intel.best_match_score:.1f}%"
+                if property_intel.behavioral_reasoning:
+                    enhanced_prompt += f"\n- Reasoning: {property_intel.behavioral_reasoning}"
+
+            # Add conversation intelligence insights
+            conversation_intel = intelligence_context.conversation_intelligence
+            if conversation_intel.objections_detected:
+                enhanced_prompt += f"\n\nOBJECTION INTELLIGENCE:"
+                for objection in conversation_intel.objections_detected[:2]:  # Top 2 objections
+                    objection_type = objection.get('type', 'unknown')
+                    confidence = objection.get('confidence', 0.0)
+                    context = objection.get('context', '')
+                    enhanced_prompt += f"\n- {objection_type.upper()} objection detected ({confidence:.0%}): {context}"
+
+                    # Add suggested responses
+                    suggestions = objection.get('suggested_responses', [])
+                    if suggestions:
+                        enhanced_prompt += f"\n  Suggested approach: {suggestions[0]}"
+
+            # Add preference intelligence insights
+            preference_intel = intelligence_context.preference_intelligence
+            if preference_intel.profile_completeness > 0.3:
+                enhanced_prompt += f"\n\nPREFERENCE INTELLIGENCE:"
+                enhanced_prompt += f"\n- Profile completeness: {preference_intel.profile_completeness:.0%}"
+                enhanced_prompt += f"\n- Urgency level: {preference_intel.urgency_level:.1f}"
+
+                if preference_intel.budget_range:
+                    budget = preference_intel.budget_range
+                    enhanced_prompt += f"\n- Budget range: ${budget.get('min', 0):,} - ${budget.get('max', 0):,}"
+
+            # Add intelligent approach recommendations
+            enhanced_prompt += f"\n\nINTELLIGENT APPROACH:"
+            enhanced_prompt += f"\n- Recommended approach: {intelligence_context.recommended_approach}"
+            enhanced_prompt += f"\n- Engagement score: {intelligence_context.composite_engagement_score:.1f}"
+
+            if intelligence_context.priority_insights:
+                enhanced_prompt += f"\n- Key insights: {', '.join(intelligence_context.priority_insights[:2])}"
+
+            enhanced_prompt += "\n\nUSE THIS INTELLIGENCE to craft a more targeted, effective response while maintaining Jorge's authentic style."
+
+            return enhanced_prompt
+
+        except Exception as e:
+            logger.warning(f"Prompt enhancement failed: {e}")
+            return base_prompt
+
+    # ================================
     # FACTORY METHODS AND UTILITIES
     # ================================
 
@@ -1408,7 +1756,8 @@ class JorgeSellerBot:
         """Factory method: Create Jorge bot with progressive skills (68% token reduction)"""
         config = JorgeFeatureConfig(
             enable_track3_intelligence=True,
-            enable_progressive_skills=True
+            enable_progressive_skills=True,
+            enable_bot_intelligence=True  # Phase 3.3 enabled
         )
         return cls(tenant_id=tenant_id, config=config)
 
@@ -1420,7 +1769,8 @@ class JorgeSellerBot:
             enable_progressive_skills=True,
             enable_agent_mesh=True,
             enable_mcp_integration=True,
-            enable_adaptive_questioning=True
+            enable_adaptive_questioning=True,
+            enable_bot_intelligence=True  # Phase 3.3 enabled
         )
         return cls(tenant_id=tenant_id, config=config)
 
@@ -1435,7 +1785,8 @@ class JorgeSellerBot:
                 "progressive_skills": self.config.enable_progressive_skills,
                 "agent_mesh": self.config.enable_agent_mesh,
                 "mcp_integration": self.config.enable_mcp_integration,
-                "adaptive_questioning": self.config.enable_adaptive_questioning
+                "adaptive_questioning": self.config.enable_adaptive_questioning,
+                "bot_intelligence": self.config.enable_bot_intelligence  # Phase 3.3
             }
         }
 
@@ -1468,6 +1819,28 @@ class JorgeSellerBot:
                 "question_selections": self.workflow_stats["adaptive_question_selections"],
                 "usage_rate": self.workflow_stats["adaptive_question_selections"] / max(self.workflow_stats["total_interactions"], 1)
             }
+
+        # Phase 3.3 Bot intelligence metrics
+        if self.config.enable_bot_intelligence:
+            intelligence_enhancements = self.workflow_stats["intelligence_enhancements"]
+            cache_hits = self.workflow_stats["intelligence_cache_hits"]
+
+            metrics["bot_intelligence"] = {
+                "total_enhancements": intelligence_enhancements,
+                "cache_hits": cache_hits,
+                "cache_hit_rate": (cache_hits / max(intelligence_enhancements, 1)) * 100,
+                "enhancement_rate": intelligence_enhancements / max(self.workflow_stats["total_interactions"], 1),
+                "middleware_available": self.intelligence_middleware is not None
+            }
+
+            # Get middleware performance metrics if available
+            if self.intelligence_middleware:
+                middleware_metrics = self.intelligence_middleware.get_metrics()
+                metrics["bot_intelligence"]["middleware_performance"] = {
+                    "avg_latency_ms": middleware_metrics.get("avg_latency_ms", 0),
+                    "performance_status": middleware_metrics.get("performance_status", "unknown"),
+                    "service_failures": middleware_metrics.get("service_failures", {})
+                }
 
         return metrics
 
