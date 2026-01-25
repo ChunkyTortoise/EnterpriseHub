@@ -15,7 +15,7 @@ Feature flags allow selective enablement for different deployment scenarios.
 import asyncio
 import time
 from typing import Dict, Any, List, Literal, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
 from uuid import uuid4
 from langgraph.graph import StateGraph, END
@@ -405,7 +405,7 @@ class JorgeSellerBot:
             "psychological_commitment": profile.pcs.total_score,
             "is_qualified": profile.frs.classification in ["Hot Lead", "Warm Lead"],
             "seller_temperature": seller_temperature,
-            "last_action_timestamp": datetime.now()
+            "last_action_timestamp": datetime.now(timezone.utc)
         }
 
     async def detect_stall(self, state: JorgeSellerState) -> Dict:
@@ -779,7 +779,7 @@ class JorgeSellerBot:
                 "frs": state['intent_profile'].frs.total_score,
                 "pcs": state['psychological_commitment']
             },
-            "last_interaction_time": datetime.now(),
+            "last_interaction_time": datetime.now(timezone.utc),
             "adaptation_count": context.get('adaptation_count', 0) + 1,
             "response_patterns": {
                 "adaptive_mode": state.get('adaptive_mode'),
@@ -912,7 +912,7 @@ class JorgeSellerBot:
                 AgentCapability.CONVERSATION_ANALYSIS
             ],
             payload=lead_data,
-            created_at=datetime.now(),
+            created_at=datetime.now(timezone.utc),
             deadline=None,
             max_cost=5.0,
             requester_id="jorge_bot_unified"
@@ -944,7 +944,7 @@ class JorgeSellerBot:
                         "parent_task": parent_task_id,
                         "jorge_commission": self.config.commission_rate
                     },
-                    created_at=datetime.now(),
+                    created_at=datetime.now(timezone.utc),
                     deadline=None,
                     max_cost=2.0,
                     requester_id="jorge_bot_unified"
@@ -1031,7 +1031,7 @@ class JorgeSellerBot:
                     "custom_fields": {
                         "jorge_qualification_score": qualification_analysis.get("qualification_score", 0),
                         "jorge_temperature": qualification_analysis.get("temperature", "cold"),
-                        "jorge_qualified_date": datetime.now().isoformat(),
+                        "jorge_qualified_date": datetime.now(timezone.utc).isoformat(),
                         "jorge_approach": qualification_analysis.get("jorge_strategy", "standard")
                     }
                 }
@@ -1271,7 +1271,7 @@ class JorgeSellerBot:
         Process seller through unified workflow with all enabled enhancements.
         This is the primary entry point for the enhanced Jorge Bot.
         """
-        start_time = datetime.now().timestamp() * 1000
+        start_time = datetime.now(timezone.utc).timestamp() * 1000
         timeline = {}
         self.workflow_stats["total_interactions"] += 1
 
@@ -1280,7 +1280,7 @@ class JorgeSellerBot:
             mesh_task_id = None
             if self.config.enable_agent_mesh:
                 mesh_task_id = await self._create_mesh_qualification_task(lead_data)
-                timeline['mesh_task_created'] = datetime.now().timestamp() * 1000 - start_time
+                timeline['mesh_task_created'] = datetime.now(timezone.utc).timestamp() * 1000 - start_time
 
             # PHASE 2: Execute qualification (progressive or traditional)
             if self.config.enable_progressive_skills:
@@ -1288,13 +1288,13 @@ class JorgeSellerBot:
             else:
                 qualification_analysis = await self._execute_traditional_qualification(lead_data)
 
-            timeline['qualification_complete'] = datetime.now().timestamp() * 1000 - start_time
+            timeline['qualification_complete'] = datetime.now(timezone.utc).timestamp() * 1000 - start_time
 
             # PHASE 3: MCP data enrichment if enabled
             if self.config.enable_mcp_integration:
                 enrichment_result = await self._enrich_with_mcp_data(lead_data, qualification_analysis)
                 qualification_analysis.update(enrichment_result)
-                timeline['mcp_enrichment_complete'] = datetime.now().timestamp() * 1000 - start_time
+                timeline['mcp_enrichment_complete'] = datetime.now(timezone.utc).timestamp() * 1000 - start_time
 
             # PHASE 4: Agent mesh task orchestration if enabled
             orchestrated_tasks = []
@@ -1302,19 +1302,19 @@ class JorgeSellerBot:
                 orchestrated_tasks = await self._orchestrate_supporting_tasks(
                     lead_data, qualification_analysis, mesh_task_id
                 )
-                timeline['orchestration_complete'] = datetime.now().timestamp() * 1000 - start_time
+                timeline['orchestration_complete'] = datetime.now(timezone.utc).timestamp() * 1000 - start_time
 
             # PHASE 5: CRM sync via MCP if enabled
             if self.config.enable_mcp_integration:
                 await self._sync_to_crm_via_mcp(lead_data, qualification_analysis)
-                timeline['crm_sync_complete'] = datetime.now().timestamp() * 1000 - start_time
+                timeline['crm_sync_complete'] = datetime.now(timezone.utc).timestamp() * 1000 - start_time
 
             # PHASE 6: Generate comprehensive result
             result = await self._generate_unified_qualification_result(
                 lead_data, qualification_analysis, orchestrated_tasks, mesh_task_id, timeline
             )
 
-            timeline['total_time'] = datetime.now().timestamp() * 1000 - start_time
+            timeline['total_time'] = datetime.now(timezone.utc).timestamp() * 1000 - start_time
 
             logger.info(f"Jorge unified qualification complete: {result.qualification_score:.1f}% in {timeline['total_time']:.0f}ms")
 

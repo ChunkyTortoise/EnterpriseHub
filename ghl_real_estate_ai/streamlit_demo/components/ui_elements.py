@@ -136,21 +136,10 @@ def render_insight_card(title, value, description, status='info', action_label=N
 
     """, unsafe_allow_html=True)
 
-
-    
-        if action_label and action_key:
-
-
-    
-            if st.button(action_label, key=action_key, use_container_width=True):
-
-
-    
-                st.session_state.current_hub = "🧠 Lead Intelligence Hub"
-
-
-    
-                st.rerun()
+    if action_label and action_key:
+        if st.button(action_label, key=action_key, use_container_width=True):
+            st.session_state.current_hub = "🧠 Lead Intelligence Hub"
+            st.rerun()
 
 
     

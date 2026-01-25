@@ -1098,14 +1098,21 @@ async def health_check():
     try:
         start_time = time.time()
 
-        # Check ML model status
-        ml_status = "available" if ML_ENGINE_AVAILABLE and ml_engine else "unavailable"
+        # Check ML model status - test actual ML engine instead of import status
+        try:
+            from bots.shared.ml_analytics_engine import get_ml_analytics_engine
+            test_ml_engine = get_ml_analytics_engine()
+            ml_status = "available" if test_ml_engine else "unavailable"
+        except Exception:
+            ml_status = "unavailable"
 
         # Check cache status
         try:
-            await cache_service.ping()
-            cache_status = "available"
-        except:
+            # Test actual cache connection
+            health_result = await cache_service.health_check()
+            cache_status = "available" if health_result.get("status") == "healthy" else "unavailable"
+        except Exception as e:
+            logger.warning(f"Cache health check failed: {e}")
             cache_status = "unavailable"
 
         # Simple database check (placeholder)

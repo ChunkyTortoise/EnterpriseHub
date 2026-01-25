@@ -86,6 +86,21 @@ class EventType(Enum):
     OPTIMAL_CONTACT_WINDOW = "optimal_contact_window"
     BEHAVIORAL_FEEDBACK_RECORDED = "behavioral_feedback_recorded"
 
+    # Phase 2.2: Advanced Property Matching Events
+    PROPERTY_MATCH_GENERATED = "property_match_generated"
+    PROPERTY_INVENTORY_UPDATE = "property_inventory_update"
+    BEHAVIORAL_MATCH_IMPROVEMENT = "behavioral_match_improvement"
+
+    # Phase 2.3: Conversation Intelligence Events
+    OBJECTION_DETECTED = "objection_detected"
+    SENTIMENT_WARNING = "sentiment_warning"
+    CONVERSATION_INSIGHT_GENERATED = "conversation_insight_generated"
+
+    # Phase 2.4: Preference Learning Events
+    PREFERENCE_LEARNING_COMPLETE = "preference_learning_complete"
+    PREFERENCE_DRIFT_DETECTED = "preference_drift_detected"
+    PREFERENCE_PROFILE_UPDATED = "preference_profile_updated"
+
 class ConnectionStatus(Enum):
     """WebSocket connection status."""
     CONNECTING = "connecting"

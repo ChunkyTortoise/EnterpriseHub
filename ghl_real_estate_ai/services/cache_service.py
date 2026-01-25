@@ -18,6 +18,7 @@ import logging
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -743,7 +744,7 @@ class CacheService:
                 ttl_ratio = remaining_ttl / ttl
                 if ttl_ratio < refresh_threshold:
                     # Schedule background refresh
-                    asyncio.create_task(self._background_refresh(key, refresh_func, ttl))
+                    safe_create_task(self._background_refresh(key, refresh_func, ttl))
                 return value
         
         # Cache miss or expired, compute now

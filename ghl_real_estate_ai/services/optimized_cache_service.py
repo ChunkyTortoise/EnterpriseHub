@@ -568,6 +568,10 @@ def get_optimized_cache_service(redis_url: Optional[str] = None) -> OptimizedCac
         _optimized_cache = OptimizedCacheService(redis_url)
     return _optimized_cache
 
+def get_cache_service(redis_url: Optional[str] = None) -> OptimizedCacheService:
+    """Alias for get_optimized_cache_service for backward compatibility."""
+    return get_optimized_cache_service(redis_url)
+
 
 # ============================================================================
 # ENHANCED CACHING METHODS FOR PERFORMANCE OPTIMIZATION

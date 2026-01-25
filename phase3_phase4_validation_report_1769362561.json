@@ -1,0 +1,77 @@
+{
+  "overall_score": 95.64285714285714,
+  "status": "EXCELLENT - Ready for production deployment",
+  "category_results": {
+    "environment": {
+      "score": 100.0,
+      "details": "9/9 required vars, 4/4 config vars"
+    },
+    "imports": {
+      "score": 85.71428571428571,
+      "details": "6/7 services imported",
+      "imported_services": {
+        "enhanced_caching": "<class 'ghl_real_estate_ai.services.enhanced_prompt_caching.EnhancedPromptCaching'>",
+        "async_service": "<class 'ghl_real_estate_ai.services.async_parallelization_service.AsyncParallelizationService'>",
+        "token_budget": "<class 'ghl_real_estate_ai.services.token_budget_service.TokenBudgetService'>",
+        "database_service": "<class 'ghl_real_estate_ai.services.database_connection_service.DatabaseConnectionService'>",
+        "semantic_cache": "<class 'ghl_real_estate_ai.services.semantic_response_caching.SemanticResponseCache'>",
+        "dashboard": "<class 'ghl_real_estate_ai.streamlit_demo.components.claude_cost_tracking_dashboard.CostTrackingDashboard'>"
+      }
+    },
+    "initialization": {
+      "score": 100.0,
+      "details": "6/6 services initialized",
+      "initialized_services": {
+        "enhanced_caching": "<ghl_real_estate_ai.services.enhanced_prompt_caching.EnhancedPromptCaching object at 0x114b4b110>",
+        "async_service": "<ghl_real_estate_ai.services.async_parallelization_service.AsyncParallelizationService object at 0x114b4b4d0>",
+        "token_budget": "<ghl_real_estate_ai.services.token_budget_service.TokenBudgetService object at 0x114b4b390>",
+        "database_service": "<ghl_real_estate_ai.services.database_connection_service.DatabaseConnectionService object at 0x114b4b610>",
+        "semantic_cache": "<ghl_real_estate_ai.services.semantic_response_caching.SemanticResponseCache object at 0x10a207e00>",
+        "dashboard": "<ghl_real_estate_ai.streamlit_demo.components.claude_cost_tracking_dashboard.CostTrackingDashboard object at 0x114c28590>"
+      }
+    },
+    "functionality": {
+      "score": 100.0,
+      "details": "3/3 services functional",
+      "test_results": [
+        [
+          "token_budget",
+          true,
+          0.0105
+        ],
+        [
+          "database_service",
+          true,
+          20
+        ],
+        [
+          "semantic_cache",
+          true,
+          0.9979654098963516
+        ]
+      ]
+    },
+    "performance": {
+      "score": 90.0,
+      "details": "Average of 3 performance tests",
+      "individual_scores": [
+        90,
+        95,
+        85
+      ]
+    },
+    "integration": {
+      "score": 100.0,
+      "details": "Average of 2 integration tests",
+      "test_scores": [
+        100.0,
+        100.0
+      ]
+    }
+  },
+  "errors": [
+    "Failed to import conversation_optimizer: No module named 'tiktoken'"
+  ],
+  "warnings": [],
+  "timestamp": "2026-01-25T09:36:01.793005"
+}

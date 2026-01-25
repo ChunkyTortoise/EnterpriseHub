@@ -57,7 +57,7 @@ except ImportError:
 # Jorge AI Integration
 from ghl_real_estate_ai.services.cache_service import get_cache_service, TenantScopedCache
 from ghl_real_estate_ai.services.event_streaming_service import (
-    EventStreamingService, StreamEvent, EventType, Priority
+    get_event_streaming_service, StreamEvent, EventType, Priority
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -719,7 +719,7 @@ class MLAnalyticsEngine:
 
         # Core services
         self.cache = TenantScopedCache(tenant_id) if tenant_id else get_cache_service()
-        self.event_service = EventStreamingService()
+        self.event_service = None # Will be initialized async
         self.feature_pipeline = FeatureEngineeringPipeline()
 
         # Model registry
@@ -737,13 +737,27 @@ class MLAnalyticsEngine:
             "error_count": 0
         }
 
-        # Initialize default model
+        # Initialize default model and services
         try:
             loop = asyncio.get_running_loop()
-            loop.create_task(self._initialize_default_model())
+            loop.create_task(self._initialize_services())
         except RuntimeError:
-            # In a synchronous context, the model will be initialized on first prediction
-            logger.debug("No running event loop found during initialization, skipping background model loading")
+            # In a synchronous context, services will be initialized on first use
+            logger.debug("No running event loop found during initialization, skipping background initialization")
+
+    async def _initialize_services(self):
+        """Initialize background services"""
+        try:
+            self.event_service = await get_event_streaming_service()
+            await self._initialize_default_model()
+        except Exception as e:
+            logger.error(f"Error initializing services: {e}")
+
+    async def _ensure_event_service(self):
+        """Ensure event service is initialized"""
+        if self.event_service is None:
+            self.event_service = await get_event_streaming_service()
+        return self.event_service
 
     async def _initialize_default_model(self):
         """Initialize default XGBoost model"""
@@ -1954,23 +1968,19 @@ class MLAnalyticsEngine:
     async def _publish_event(self, event_type: MLEventType, data: Dict[str, Any]):
         """Publish ML event to event streaming service"""
         try:
-            event = StreamEvent(
-                id=str(uuid.uuid4()),
-                type=EventType.LEAD_SCORED,  # Map to existing event type
-                timestamp=datetime.now().isoformat(),
-                source_service="ml_analytics_engine",
-                priority=Priority.MEDIUM,
-                data={
-                    "ml_event_type": event_type.value,
-                    "tenant_id": self.tenant_id,
-                    **data
-                },
-                correlation_id=data.get("lead_id", str(uuid.uuid4()))
-            )
-
+            event_service = await self._ensure_event_service()
+            
             # Publish if event service is available
-            if hasattr(self.event_service, 'publish_event'):
-                await self.event_service.publish_event("ml_analytics", event)
+            if event_service and hasattr(event_service, 'publish_event'):
+                await event_service.publish_event(
+                    event_type=EventType.LEAD_SCORED,
+                    data={
+                        "ml_event_type": event_type.value,
+                        "tenant_id": self.tenant_id,
+                        **data
+                    },
+                    correlation_id=data.get("lead_id", str(uuid.uuid4()))
+                )
 
         except Exception as e:
             logger.error(f"Failed to publish event {event_type}: {e}")

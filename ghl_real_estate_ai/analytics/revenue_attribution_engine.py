@@ -42,6 +42,7 @@ from abc import ABC, abstractmethod
 # Service integrations
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -419,7 +420,7 @@ class RevenueAttributionEngine:
 
             # Trigger real-time attribution if enabled
             if self.real_time_processing:
-                asyncio.create_task(self._process_revenue_attribution(revenue_event))
+                safe_create_task(self._process_revenue_attribution(revenue_event))
 
             # Update daily revenue aggregates
             await self._update_daily_aggregates(revenue_event)

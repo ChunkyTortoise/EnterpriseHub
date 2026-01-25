@@ -13,7 +13,7 @@ Buyer Bot Features:
 
 import asyncio
 from typing import Dict, Any, List, Literal, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from langgraph.graph import StateGraph, END
 
 from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
@@ -236,6 +236,7 @@ class JorgeBuyerBot:
 
             return {
                 "matched_properties": matches[:5],  # Top 5 matches
+                "property_matches": matches[:5],    # Add for consistency with script expectation
                 "properties_viewed_count": len(matches),
                 "next_action": "respond" if matches else "educate_market"
             }
@@ -328,7 +329,7 @@ class JorgeBuyerBot:
                 "next_action": next_action,
                 "follow_up_scheduled": True,
                 "follow_up_hours": follow_up_hours,
-                "last_action_timestamp": datetime.now()
+                "last_action_timestamp": datetime.now(timezone.utc)
             }
 
         except Exception as e:

@@ -143,8 +143,8 @@ class BIDashboardLoadTester:
                     await asyncio.sleep(random.uniform(0.1, 2.0))
 
                 except Exception as e:
-                    test_data['error_count'] += 1
-                    logger.warning(f"User {user_id} request failed: {e}")
+                    # Error count handled in _make_request
+                    logger.debug(f"User {user_id} request failed: {e}")
 
     async def _make_request(
         self,
@@ -153,12 +153,12 @@ class BIDashboardLoadTester:
         test_data: Dict[str, Any]
     ):
         """Make a single request and record metrics."""
+        test_data['request_count'] += 1
         if self.mock_mode:
             # Simulate request with mock response time
             delay = random.uniform(0.02, 0.08)  # 20-80ms
             await asyncio.sleep(delay)
             test_data['response_times'].append(delay * 1000)
-            test_data['request_count'] += 1
             return
 
         # Real request
@@ -169,17 +169,23 @@ class BIDashboardLoadTester:
             "location_id": "default",
             "timeframe": "24h"
         }
+        
+        # Use a real token for authentication
+        token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsb2FkX3Rlc3RfdXNlciIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2OTM1NjA4MCwiZXhwIjoxNzY5NDQyNDgwLCJpc3MiOiJzZXJ2aWNlNi1sZWFkLWVuZ2luZSIsImF1ZCI6InNlcnZpY2U2LWFwaSJ9.Nh3KXe3cN-o2OZKCbKnnxgoQqVBViNTsMpE158QSiLk"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "X-API-Key": "demo_key"
+        }
 
         try:
             url = f"{self.base_url}{endpoint}"
-            async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=10)) as response:
+            async with session.get(url, params=params, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:
                 await response.text()
 
                 end_time = time.perf_counter()
                 response_time_ms = (end_time - start_time) * 1000
 
                 test_data['response_times'].append(response_time_ms)
-                test_data['request_count'] += 1
 
                 if response.status >= 400:
                     test_data['error_count'] += 1

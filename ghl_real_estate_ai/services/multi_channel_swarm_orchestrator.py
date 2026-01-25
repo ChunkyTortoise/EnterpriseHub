@@ -15,6 +15,7 @@ from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.compliance_platform.engine.policy_enforcer import PolicyEnforcer
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -92,7 +93,7 @@ class MultiChannelSwarmOrchestrator:
         await self._record_activity("Orchestrator", f"Initiating '{playbook.name}' for {lead_name}")
 
         # Start background execution of playbook steps
-        asyncio.create_task(self._execute_playbook(lead_id, lead_data, playbook, tenant_id))
+        safe_create_task(self._execute_playbook(lead_id, lead_data, playbook, tenant_id))
         
         return {
             "status": "SWARM_ACTIVE",

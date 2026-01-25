@@ -36,6 +36,7 @@ except ImportError:
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -342,7 +343,7 @@ class RequestBatcher:
         if batch_key in self._batch_timers:
             self._batch_timers[batch_key].cancel()
 
-        self._batch_timers[batch_key] = asyncio.create_task(
+        self._batch_timers[batch_key] = safe_create_task(
             self._execute_batch_after_delay(batch_key)
         )
 
@@ -603,7 +604,7 @@ class PerformanceOptimizer:
             return
 
         self._monitoring_enabled = True
-        self._monitoring_task = asyncio.create_task(self._monitor_loop())
+        self._monitoring_task = safe_create_task(self._monitor_loop())
         logger.info("Performance monitoring started")
 
     async def stop_monitoring(self):

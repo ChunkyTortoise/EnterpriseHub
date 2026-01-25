@@ -6,7 +6,7 @@ Implements Kafka-based event-driven architecture for real-time lead processing
 import asyncio
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -146,7 +146,7 @@ class EventStreamingService:
         event = StreamEvent(
             id=str(uuid.uuid4()),
             type=event_type,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             source_service='lead-intelligence',
             priority=priority,
             data=data,
@@ -281,7 +281,7 @@ class EventStreamingService:
         dlq_event = {
             'original_event': event.to_dict(),
             'error': error,
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.now(timezone.utc).isoformat()
         }
         
         try:

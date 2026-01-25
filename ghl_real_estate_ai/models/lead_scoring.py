@@ -1,6 +1,6 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, conint, confloat
-from datetime import datetime
+from datetime import datetime, timezone
 
 class MotivationSignals(BaseModel):
     """Pillar 1: Motivation Signals (Linguistic Markers)"""
@@ -47,7 +47,7 @@ class PsychologicalCommitmentScore(BaseModel):
     question_depth_score: int = Field(..., description="Score based on question specificity")
     objection_handling_score: int = Field(..., description="Score based on overcoming objections")
     call_acceptance_score: int = Field(..., description="Score based on agreeing to calls/tours")
-    last_updated: datetime = Field(default_factory=datetime.utcnow)
+    last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class LeadIntentProfile(BaseModel):
     """Complete Lead Profile for Jorge's Dashboard"""

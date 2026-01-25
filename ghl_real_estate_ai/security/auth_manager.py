@@ -18,6 +18,7 @@ from fastapi import HTTPException, status
 from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr
 
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 from .audit_logger import AuditLogger
 from .rbac import Role, Permission
 
@@ -135,13 +136,7 @@ class AuthManager:
     
     def _start_background_tasks(self):
         """Start background security tasks"""
-        try:
-            loop = asyncio.get_running_loop()
-            self._cleanup_task = loop.create_task(self._cleanup_expired_sessions())
-        except RuntimeError:
-            self._cleanup_task = None
-            # Log only if necessary, or pass silently as cleanup can happen later or manually
-            pass
+        self._cleanup_task = safe_create_task(self._cleanup_expired_sessions())
     
     async def _cleanup_expired_sessions(self):
         """Periodically clean up expired sessions and security data"""
@@ -867,7 +862,7 @@ class AuthManager:
                 }
             )
     
-        async def _update_user(self, user: User):
+    async def _update_user(self, user: User):
         """Update user in PostgreSQL"""
         from ghl_real_estate_ai.services.database_service import get_database
         db = await get_database()
@@ -882,8 +877,5 @@ class AuthManager:
                     updated_at = NOW()
                 WHERE id = $4
             """, user.last_login, user.failed_attempts, user.locked_until, uuid.UUID(user.user_id))
-            
-        # Update cache
-        self._user_cache[user.user_id] = user
     
     

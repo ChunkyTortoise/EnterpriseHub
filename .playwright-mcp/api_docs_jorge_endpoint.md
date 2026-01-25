@@ -1,0 +1,6565 @@
+- generic [ref=e3]:
+  - generic:
+    - img
+  - generic [ref=e4]:
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - heading "GHL Real Estate AI 1.0.0 OAS 3.1" [level=1] [ref=e9]:
+          - text: GHL Real Estate AI
+          - generic [ref=e10]:
+            - generic [ref=e12]: 1.0.0
+            - generic [ref=e14]: OAS 3.1
+        - link "/openapi.json" [ref=e15] [cursor=pointer]:
+          - /url: /openapi.json
+          - generic [ref=e16]: /openapi.json
+      - paragraph [ref=e19]: AI-powered real estate assistant for GoHighLevel - Mobile-First Agent Experience with AR/VR and Voice AI
+    - button "Authorize" [ref=e23] [cursor=pointer]:
+      - generic [ref=e24]: Authorize
+      - img [ref=e25]
+    - generic [ref=e29]:
+      - generic [ref=e31]:
+        - heading "Real-Time WebSocket Collapse operation" [level=3] [ref=e32] [cursor=pointer]:
+          - link "Real-Time WebSocket" [ref=e33]:
+            - /url: "#/Real-Time%20WebSocket"
+          - button "Collapse operation" [expanded] [ref=e34]:
+            - img [ref=e35]
+        - generic [ref=e38]:
+          - generic [ref=e41] [cursor=pointer]:
+            - button "GET /api/websocket/status Get Websocket Status" [ref=e42]:
+              - generic [ref=e43]: GET
+              - generic [ref=e44]:
+                - link "/api/websocket/status" [ref=e46]:
+                  - /url: "#/Real-Time%20WebSocket/get_websocket_status_api_websocket_status_get"
+                  - generic [ref=e47]:
+                    - text: /api
+                    - text: /websocket
+                    - text: /status
+                - generic [ref=e48]: Get Websocket Status
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e51]:
+              - img [ref=e52]
+            - button "get /api/websocket/status" [ref=e54]:
+              - img [ref=e55]
+          - generic [ref=e59] [cursor=pointer]:
+            - button "GET /api/websocket/connections Get Active Connections" [ref=e60]:
+              - generic [ref=e61]: GET
+              - generic [ref=e62]:
+                - link "/api/websocket/connections" [ref=e64]:
+                  - /url: "#/Real-Time%20WebSocket/get_active_connections_api_websocket_connections_get"
+                  - generic [ref=e65]:
+                    - text: /api
+                    - text: /websocket
+                    - text: /connections
+                - generic [ref=e66]: Get Active Connections
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e69]:
+              - img [ref=e70]
+            - button "get /api/websocket/connections" [ref=e72]:
+              - img [ref=e73]
+          - generic [ref=e77] [cursor=pointer]:
+            - button "POST /api/websocket/broadcast Broadcast Event" [ref=e78]:
+              - generic [ref=e79]: POST
+              - generic [ref=e80]:
+                - link "/api/websocket/broadcast" [ref=e82]:
+                  - /url: "#/Real-Time%20WebSocket/broadcast_event_api_websocket_broadcast_post"
+                  - generic [ref=e83]:
+                    - text: /api
+                    - text: /websocket
+                    - text: /broadcast
+                - generic [ref=e84]: Broadcast Event
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e87]:
+              - img [ref=e88]
+            - button "post /api/websocket/broadcast" [ref=e90]:
+              - img [ref=e91]
+          - generic [ref=e95] [cursor=pointer]:
+            - button "POST /api/websocket/test-connection Test Websocket Connection" [ref=e96]:
+              - generic [ref=e97]: POST
+              - generic [ref=e98]:
+                - link "/api/websocket/test-connection" [ref=e100]:
+                  - /url: "#/Real-Time%20WebSocket/test_websocket_connection_api_websocket_test_connection_post"
+                  - generic [ref=e101]:
+                    - text: /api
+                    - text: /websocket
+                    - text: /test-connection
+                - generic [ref=e102]: Test Websocket Connection
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e105]:
+              - img [ref=e106]
+            - button "post /api/websocket/test-connection" [ref=e108]:
+              - img [ref=e109]
+          - generic [ref=e113] [cursor=pointer]:
+            - button "POST /api/websocket/start-services Start Websocket Services" [ref=e114]:
+              - generic [ref=e115]: POST
+              - generic [ref=e116]:
+                - link "/api/websocket/start-services" [ref=e118]:
+                  - /url: "#/Real-Time%20WebSocket/start_websocket_services_api_websocket_start_services_post"
+                  - generic [ref=e119]:
+                    - text: /api
+                    - text: /websocket
+                    - text: /start-services
+                - generic [ref=e120]: Start Websocket Services
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e123]:
+              - img [ref=e124]
+            - button "post /api/websocket/start-services" [ref=e126]:
+              - img [ref=e127]
+          - generic [ref=e131] [cursor=pointer]:
+            - button "POST /api/websocket/stop-services Stop Websocket Services" [ref=e132]:
+              - generic [ref=e133]: POST
+              - generic [ref=e134]:
+                - link "/api/websocket/stop-services" [ref=e136]:
+                  - /url: "#/Real-Time%20WebSocket/stop_websocket_services_api_websocket_stop_services_post"
+                  - generic [ref=e137]:
+                    - text: /api
+                    - text: /websocket
+                    - text: /stop-services
+                - generic [ref=e138]: Stop Websocket Services
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e141]:
+              - img [ref=e142]
+            - button "post /api/websocket/stop-services" [ref=e144]:
+              - img [ref=e145]
+          - generic [ref=e149] [cursor=pointer]:
+            - button "GET /api/websocket/health Websocket Health Check" [ref=e150]:
+              - generic [ref=e151]: GET
+              - generic [ref=e152]:
+                - link "/api/websocket/health" [ref=e154]:
+                  - /url: "#/Real-Time%20WebSocket/websocket_health_check_api_websocket_health_get"
+                  - generic [ref=e155]:
+                    - text: /api
+                    - text: /websocket
+                    - text: /health
+                - generic [ref=e156]: Websocket Health Check
+            - generic "Copy to clipboard"
+            - button "get /api/websocket/health" [ref=e159]:
+              - img [ref=e160]
+      - generic [ref=e163]:
+        - heading "WebSocket Performance Collapse operation" [level=3] [ref=e164] [cursor=pointer]:
+          - link "WebSocket Performance" [ref=e165]:
+            - /url: "#/WebSocket%20Performance"
+          - button "Collapse operation" [expanded] [ref=e166]:
+            - img [ref=e167]
+        - generic [ref=e170]:
+          - generic [ref=e173] [cursor=pointer]:
+            - button "GET /api/v1/websocket-performance/latency-metrics Get Latency Metrics" [ref=e174]:
+              - generic [ref=e175]: GET
+              - generic [ref=e176]:
+                - link "/api/v1/websocket-performance/latency-metrics" [ref=e178]:
+                  - /url: "#/WebSocket%20Performance/get_latency_metrics_api_v1_websocket_performance_latency_metrics_get"
+                  - generic [ref=e179]:
+                    - text: /api
+                    - text: /v1
+                    - text: /websocket-performance
+                    - text: /latency-metrics
+                - generic [ref=e180]: Get Latency Metrics
+            - generic "Copy to clipboard"
+            - button "get /api/v1/websocket-performance/latency-metrics" [ref=e183]:
+              - img [ref=e184]
+          - generic [ref=e188] [cursor=pointer]:
+            - button "GET /api/v1/websocket-performance/throughput-metrics Get Throughput Metrics" [ref=e189]:
+              - generic [ref=e190]: GET
+              - generic [ref=e191]:
+                - link "/api/v1/websocket-performance/throughput-metrics" [ref=e193]:
+                  - /url: "#/WebSocket%20Performance/get_throughput_metrics_api_v1_websocket_performance_throughput_metrics_get"
+                  - generic [ref=e194]:
+                    - text: /api
+                    - text: /v1
+                    - text: /websocket-performance
+                    - text: /throughput-metrics
+                - generic [ref=e195]: Get Throughput Metrics
+            - generic "Copy to clipboard"
+            - button "get /api/v1/websocket-performance/throughput-metrics" [ref=e198]:
+              - img [ref=e199]
+          - generic [ref=e203] [cursor=pointer]:
+            - button "GET /api/v1/websocket-performance/connection-health Get Connection Health" [ref=e204]:
+              - generic [ref=e205]: GET
+              - generic [ref=e206]:
+                - link "/api/v1/websocket-performance/connection-health" [ref=e208]:
+                  - /url: "#/WebSocket%20Performance/get_connection_health_api_v1_websocket_performance_connection_health_get"
+                  - generic [ref=e209]:
+                    - text: /api
+                    - text: /v1
+                    - text: /websocket-performance
+                    - text: /connection-health
+                - generic [ref=e210]: Get Connection Health
+            - generic "Copy to clipboard"
+            - button "get /api/v1/websocket-performance/connection-health" [ref=e213]:
+              - img [ref=e214]
+          - generic [ref=e218] [cursor=pointer]:
+            - button "GET /api/v1/websocket-performance/optimization-status Get Optimization Status" [ref=e219]:
+              - generic [ref=e220]: GET
+              - generic [ref=e221]:
+                - link "/api/v1/websocket-performance/optimization-status" [ref=e223]:
+                  - /url: "#/WebSocket%20Performance/get_optimization_status_api_v1_websocket_performance_optimization_status_get"
+                  - generic [ref=e224]:
+                    - text: /api
+                    - text: /v1
+                    - text: /websocket-performance
+                    - text: /optimization-status
+                - generic [ref=e225]: Get Optimization Status
+            - generic "Copy to clipboard"
+            - button "get /api/v1/websocket-performance/optimization-status" [ref=e228]:
+              - img [ref=e229]
+          - generic [ref=e233] [cursor=pointer]:
+            - button "GET /api/v1/websocket-performance/live-metrics-stream Get Live Metrics Stream" [ref=e234]:
+              - generic [ref=e235]: GET
+              - generic [ref=e236]:
+                - link "/api/v1/websocket-performance/live-metrics-stream" [ref=e238]:
+                  - /url: "#/WebSocket%20Performance/get_live_metrics_stream_api_v1_websocket_performance_live_metrics_stream_get"
+                  - generic [ref=e239]:
+                    - text: /api
+                    - text: /v1
+                    - text: /websocket-performance
+                    - text: /live-metrics-stream
+                - generic [ref=e240]: Get Live Metrics Stream
+            - generic "Copy to clipboard"
+            - button "get /api/v1/websocket-performance/live-metrics-stream" [ref=e243]:
+              - img [ref=e244]
+          - generic [ref=e248] [cursor=pointer]:
+            - button "POST /api/v1/websocket-performance/trigger-performance-test Trigger Performance Test" [ref=e249]:
+              - generic [ref=e250]: POST
+              - generic [ref=e251]:
+                - link "/api/v1/websocket-performance/trigger-performance-test" [ref=e253]:
+                  - /url: "#/WebSocket%20Performance/trigger_performance_test_api_v1_websocket_performance_trigger_performance_test_post"
+                  - generic [ref=e254]:
+                    - text: /api
+                    - text: /v1
+                    - text: /websocket-performance
+                    - text: /trigger-performance-test
+                - generic [ref=e255]: Trigger Performance Test
+            - generic "Copy to clipboard"
+            - button "post /api/v1/websocket-performance/trigger-performance-test" [ref=e258]:
+              - img [ref=e259]
+      - generic [ref=e262]:
+        - heading "BI WebSocket Real-Time Collapse operation" [level=3] [ref=e263] [cursor=pointer]:
+          - link "BI WebSocket Real-Time" [ref=e264]:
+            - /url: "#/BI%20WebSocket%20Real-Time"
+          - button "Collapse operation" [expanded] [ref=e265]:
+            - img [ref=e266]
+        - generic [ref=e269]:
+          - generic [ref=e272] [cursor=pointer]:
+            - button "GET /ws/bi/health Bi Websocket Health" [ref=e273]:
+              - generic [ref=e274]: GET
+              - generic [ref=e275]:
+                - link "/ws/bi/health" [ref=e277]:
+                  - /url: "#/BI%20WebSocket%20Real-Time/bi_websocket_health_ws_bi_health_get"
+                  - generic [ref=e278]:
+                    - text: /ws
+                    - text: /bi
+                    - text: /health
+                - generic [ref=e279]: Bi Websocket Health
+            - generic "Copy to clipboard"
+            - button "get /ws/bi/health" [ref=e282]:
+              - img [ref=e283]
+          - generic [ref=e287] [cursor=pointer]:
+            - button "GET /ws/bi/metrics Bi Websocket Metrics" [ref=e288]:
+              - generic [ref=e289]: GET
+              - generic [ref=e290]:
+                - link "/ws/bi/metrics" [ref=e292]:
+                  - /url: "#/BI%20WebSocket%20Real-Time/bi_websocket_metrics_ws_bi_metrics_get"
+                  - generic [ref=e293]:
+                    - text: /ws
+                    - text: /bi
+                    - text: /metrics
+                - generic [ref=e294]: Bi Websocket Metrics
+            - generic "Copy to clipboard"
+            - button "get /ws/bi/metrics" [ref=e297]:
+              - img [ref=e298]
+      - generic [ref=e301]:
+        - heading "business_intelligence Collapse operation" [level=3] [ref=e302] [cursor=pointer]:
+          - link "business_intelligence" [ref=e303]:
+            - /url: "#/business_intelligence"
+          - button "Collapse operation" [expanded] [ref=e304]:
+            - img [ref=e305]
+        - generic [ref=e308]:
+          - generic [ref=e311] [cursor=pointer]:
+            - button "GET /api/bi/dashboard-kpis Get Dashboard Kpis" [ref=e312]:
+              - generic [ref=e313]: GET
+              - generic [ref=e314]:
+                - link "/api/bi/dashboard-kpis" [ref=e316]:
+                  - /url: "#/business_intelligence/get_dashboard_kpis_api_bi_dashboard_kpis_get"
+                  - generic [ref=e317]:
+                    - text: /api
+                    - text: /bi
+                    - text: /dashboard-kpis
+                - generic [ref=e318]: Get Dashboard Kpis
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e321]:
+              - img [ref=e322]
+            - button "get /api/bi/dashboard-kpis" [ref=e324]:
+              - img [ref=e325]
+          - generic [ref=e329] [cursor=pointer]:
+            - button "GET /api/bi/revenue-intelligence Get Revenue Intelligence" [ref=e330]:
+              - generic [ref=e331]: GET
+              - generic [ref=e332]:
+                - link "/api/bi/revenue-intelligence" [ref=e334]:
+                  - /url: "#/business_intelligence/get_revenue_intelligence_api_bi_revenue_intelligence_get"
+                  - generic [ref=e335]:
+                    - text: /api
+                    - text: /bi
+                    - text: /revenue-intelligence
+                - generic [ref=e336]: Get Revenue Intelligence
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e339]:
+              - img [ref=e340]
+            - button "get /api/bi/revenue-intelligence" [ref=e342]:
+              - img [ref=e343]
+          - generic [ref=e347] [cursor=pointer]:
+            - button "GET /api/bi/bot-performance Get Bot Performance Matrix" [ref=e348]:
+              - generic [ref=e349]: GET
+              - generic [ref=e350]:
+                - link "/api/bi/bot-performance" [ref=e352]:
+                  - /url: "#/business_intelligence/get_bot_performance_matrix_api_bi_bot_performance_get"
+                  - generic [ref=e353]:
+                    - text: /api
+                    - text: /bi
+                    - text: /bot-performance
+                - generic [ref=e354]: Get Bot Performance Matrix
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e357]:
+              - img [ref=e358]
+            - button "get /api/bi/bot-performance" [ref=e360]:
+              - img [ref=e361]
+          - generic [ref=e365] [cursor=pointer]:
+            - button "POST /api/bi/drill-down Drill Down Analytics" [ref=e366]:
+              - generic [ref=e367]: POST
+              - generic [ref=e368]:
+                - link "/api/bi/drill-down" [ref=e370]:
+                  - /url: "#/business_intelligence/drill_down_analytics_api_bi_drill_down_post"
+                  - generic [ref=e371]:
+                    - text: /api
+                    - text: /bi
+                    - text: /drill-down
+                - generic [ref=e372]: Drill Down Analytics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e375]:
+              - img [ref=e376]
+            - button "post /api/bi/drill-down" [ref=e378]:
+              - img [ref=e379]
+          - generic [ref=e383] [cursor=pointer]:
+            - button "GET /api/bi/predictive-insights Get Predictive Insights" [ref=e384]:
+              - generic [ref=e385]: GET
+              - generic [ref=e386]:
+                - link "/api/bi/predictive-insights" [ref=e388]:
+                  - /url: "#/business_intelligence/get_predictive_insights_api_bi_predictive_insights_get"
+                  - generic [ref=e389]:
+                    - text: /api
+                    - text: /bi
+                    - text: /predictive-insights
+                - generic [ref=e390]: Get Predictive Insights
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e393]:
+              - img [ref=e394]
+            - button "get /api/bi/predictive-insights" [ref=e396]:
+              - img [ref=e397]
+          - generic [ref=e401] [cursor=pointer]:
+            - button "GET /api/bi/anomaly-detection Detect Anomalies" [ref=e402]:
+              - generic [ref=e403]: GET
+              - generic [ref=e404]:
+                - link "/api/bi/anomaly-detection" [ref=e406]:
+                  - /url: "#/business_intelligence/detect_anomalies_api_bi_anomaly_detection_get"
+                  - generic [ref=e407]:
+                    - text: /api
+                    - text: /bi
+                    - text: /anomaly-detection
+                - generic [ref=e408]: Detect Anomalies
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e411]:
+              - img [ref=e412]
+            - button "get /api/bi/anomaly-detection" [ref=e414]:
+              - img [ref=e415]
+          - generic [ref=e419] [cursor=pointer]:
+            - button "GET /api/bi/real-time-metrics Get Real Time Metrics" [ref=e420]:
+              - generic [ref=e421]: GET
+              - generic [ref=e422]:
+                - link "/api/bi/real-time-metrics" [ref=e424]:
+                  - /url: "#/business_intelligence/get_real_time_metrics_api_bi_real_time_metrics_get"
+                  - generic [ref=e425]:
+                    - text: /api
+                    - text: /bi
+                    - text: /real-time-metrics
+                - generic [ref=e426]: Get Real Time Metrics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e429]:
+              - img [ref=e430]
+            - button "get /api/bi/real-time-metrics" [ref=e432]:
+              - img [ref=e433]
+          - generic [ref=e437] [cursor=pointer]:
+            - button "POST /api/bi/trigger-aggregation Trigger Manual Aggregation" [ref=e438]:
+              - generic [ref=e439]: POST
+              - generic [ref=e440]:
+                - link "/api/bi/trigger-aggregation" [ref=e442]:
+                  - /url: "#/business_intelligence/trigger_manual_aggregation_api_bi_trigger_aggregation_post"
+                  - generic [ref=e443]:
+                    - text: /api
+                    - text: /bi
+                    - text: /trigger-aggregation
+                - generic [ref=e444]: Trigger Manual Aggregation
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e447]:
+              - img [ref=e448]
+            - button "post /api/bi/trigger-aggregation" [ref=e450]:
+              - img [ref=e451]
+          - generic [ref=e455] [cursor=pointer]:
+            - button "GET /api/bi/cache-analytics Get Cache Analytics" [ref=e456]:
+              - generic [ref=e457]: GET
+              - generic [ref=e458]:
+                - link "/api/bi/cache-analytics" [ref=e460]:
+                  - /url: "#/business_intelligence/get_cache_analytics_api_bi_cache_analytics_get"
+                  - generic [ref=e461]:
+                    - text: /api
+                    - text: /bi
+                    - text: /cache-analytics
+                - generic [ref=e462]: Get Cache Analytics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e465]:
+              - img [ref=e466]
+            - button "get /api/bi/cache-analytics" [ref=e468]:
+              - img [ref=e469]
+          - generic [ref=e473] [cursor=pointer]:
+            - button "POST /api/bi/warm-cache Warm Dashboard Cache" [ref=e474]:
+              - generic [ref=e475]: POST
+              - generic [ref=e476]:
+                - link "/api/bi/warm-cache" [ref=e478]:
+                  - /url: "#/business_intelligence/warm_dashboard_cache_api_bi_warm_cache_post"
+                  - generic [ref=e479]:
+                    - text: /api
+                    - text: /bi
+                    - text: /warm-cache
+                - generic [ref=e480]: Warm Dashboard Cache
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e483]:
+              - img [ref=e484]
+            - button "post /api/bi/warm-cache" [ref=e486]:
+              - img [ref=e487]
+      - generic [ref=e490]:
+        - heading "Bot Management Collapse operation" [level=3] [ref=e491] [cursor=pointer]:
+          - link "Bot Management" [ref=e492]:
+            - /url: "#/Bot%20Management"
+          - button "Collapse operation" [expanded] [ref=e493]:
+            - img [ref=e494]
+        - generic [ref=e497]:
+          - generic [ref=e500] [cursor=pointer]:
+            - button "GET /api/bots/health Health Check" [ref=e501]:
+              - generic [ref=e502]: GET
+              - generic [ref=e503]:
+                - link "/api/bots/health" [ref=e505]:
+                  - /url: "#/Bot%20Management/health_check_api_bots_health_get"
+                  - generic [ref=e506]:
+                    - text: /api
+                    - text: /bots
+                    - text: /health
+                - generic [ref=e507]: Health Check
+            - generic "Copy to clipboard"
+            - button "get /api/bots/health" [ref=e510]:
+              - img [ref=e511]
+          - generic [ref=e515] [cursor=pointer]:
+            - button "GET /api/bots List Available Bots" [ref=e516]:
+              - generic [ref=e517]: GET
+              - generic [ref=e518]:
+                - link "/api/bots" [ref=e520]:
+                  - /url: "#/Bot%20Management/list_available_bots_api_bots_get"
+                  - generic [ref=e521]:
+                    - text: /api
+                    - text: /bots
+                - generic [ref=e522]: List Available Bots
+            - generic "Copy to clipboard"
+            - button "get /api/bots" [ref=e525]:
+              - img [ref=e526]
+          - generic [ref=e530] [cursor=pointer]:
+            - 'button "POST /api/bots/{bot_id}/chat Stream Bot Conversation" [ref=e531]':
+              - generic [ref=e532]: POST
+              - generic [ref=e533]:
+                - 'link "/api/bots/{bot_id}/chat" [ref=e535]':
+                  - /url: "#/Bot%20Management/stream_bot_conversation_api_bots__bot_id__chat_post"
+                  - generic [ref=e536]:
+                    - text: /api
+                    - text: /bots
+                    - text: "/{bot_id}"
+                    - text: /chat
+                - generic [ref=e537]: Stream Bot Conversation
+            - generic "Copy to clipboard"
+            - 'button "post /api/bots/{bot_id}/chat" [ref=e540]':
+              - img [ref=e541]
+          - generic [ref=e545] [cursor=pointer]:
+            - 'button "GET /api/bots/{bot_id}/status Get Bot Status" [ref=e546]':
+              - generic [ref=e547]: GET
+              - generic [ref=e548]:
+                - 'link "/api/bots/{bot_id}/status" [ref=e550]':
+                  - /url: "#/Bot%20Management/get_bot_status_api_bots__bot_id__status_get"
+                  - generic [ref=e551]:
+                    - text: /api
+                    - text: /bots
+                    - text: "/{bot_id}"
+                    - text: /status
+                - generic [ref=e552]: Get Bot Status
+            - generic "Copy to clipboard"
+            - 'button "get /api/bots/{bot_id}/status" [ref=e555]':
+              - img [ref=e556]
+          - generic [ref=e560] [cursor=pointer]:
+            - button "POST /api/jorge-seller/start Start Jorge Qualification" [ref=e561]:
+              - generic [ref=e562]: POST
+              - generic [ref=e563]:
+                - link "/api/jorge-seller/start" [ref=e565]:
+                  - /url: "#/Bot%20Management/start_jorge_qualification_api_jorge_seller_start_post"
+                  - generic [ref=e566]:
+                    - text: /api
+                    - text: /jorge-seller
+                    - text: /start
+                - generic [ref=e567]: Start Jorge Qualification
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-seller/start" [ref=e570]:
+              - img [ref=e571]
+          - generic [ref=e575] [cursor=pointer]:
+            - 'button "POST /api/lead-bot/{leadId}/schedule Trigger Lead Bot Sequence" [ref=e576]':
+              - generic [ref=e577]: POST
+              - generic [ref=e578]:
+                - 'link "/api/lead-bot/{leadId}/schedule" [ref=e580]':
+                  - /url: "#/Bot%20Management/trigger_lead_bot_sequence_api_lead_bot__leadId__schedule_post"
+                  - generic [ref=e581]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: "/{leadId}"
+                    - text: /schedule
+                - generic [ref=e582]: Trigger Lead Bot Sequence
+            - generic "Copy to clipboard"
+            - 'button "post /api/lead-bot/{leadId}/schedule" [ref=e585]':
+              - img [ref=e586]
+          - generic [ref=e590] [cursor=pointer]:
+            - 'button "GET /api/intent-decoder/{leadId}/score Get Lead Intent Score" [ref=e591]':
+              - generic [ref=e592]: GET
+              - generic [ref=e593]:
+                - 'link "/api/intent-decoder/{leadId}/score" [ref=e595]':
+                  - /url: "#/Bot%20Management/get_lead_intent_score_api_intent_decoder__leadId__score_get"
+                  - generic [ref=e596]:
+                    - text: /api
+                    - text: /intent-decoder
+                    - text: "/{leadId}"
+                    - text: /score
+                - generic [ref=e597]: Get Lead Intent Score
+            - generic "Copy to clipboard"
+            - 'button "get /api/intent-decoder/{leadId}/score" [ref=e600]':
+              - img [ref=e601]
+          - generic [ref=e605] [cursor=pointer]:
+            - button "POST /api/jorge-seller/process Process Seller Message" [ref=e606]:
+              - generic [ref=e607]: POST
+              - generic [ref=e608]:
+                - link "/api/jorge-seller/process" [ref=e610]:
+                  - /url: "#/Bot%20Management/process_seller_message_api_jorge_seller_process_post"
+                  - generic [ref=e611]:
+                    - text: /api
+                    - text: /jorge-seller
+                    - text: /process
+                - generic [ref=e612]: Process Seller Message
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-seller/process" [ref=e615]:
+              - img [ref=e616]
+          - generic [ref=e620] [cursor=pointer]:
+            - button "POST /api/lead-bot/automation Trigger Lead Automation" [ref=e621]:
+              - generic [ref=e622]: POST
+              - generic [ref=e623]:
+                - link "/api/lead-bot/automation" [ref=e625]:
+                  - /url: "#/Bot%20Management/trigger_lead_automation_api_lead_bot_automation_post"
+                  - generic [ref=e626]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /automation
+                - generic [ref=e627]: Trigger Lead Automation
+            - generic "Copy to clipboard"
+            - button "post /api/lead-bot/automation" [ref=e630]:
+              - img [ref=e631]
+          - generic [ref=e635] [cursor=pointer]:
+            - button "GET /api/performance/summary Get Performance Summary" [ref=e636]:
+              - generic [ref=e637]: GET
+              - generic [ref=e638]:
+                - link "/api/performance/summary" [ref=e640]:
+                  - /url: "#/Bot%20Management/get_performance_summary_api_performance_summary_get"
+                  - generic [ref=e641]:
+                    - text: /api
+                    - text: /performance
+                    - text: /summary
+                - generic [ref=e642]: Get Performance Summary
+            - generic "Copy to clipboard"
+            - button "get /api/performance/summary" [ref=e645]:
+              - img [ref=e646]
+          - generic [ref=e650] [cursor=pointer]:
+            - button "GET /api/performance/jorge Get Jorge Metrics" [ref=e651]:
+              - generic [ref=e652]: GET
+              - generic [ref=e653]:
+                - link "/api/performance/jorge" [ref=e655]:
+                  - /url: "#/Bot%20Management/get_jorge_metrics_api_performance_jorge_get"
+                  - generic [ref=e656]:
+                    - text: /api
+                    - text: /performance
+                    - text: /jorge
+                - generic [ref=e657]: Get Jorge Metrics
+            - generic "Copy to clipboard"
+            - button "get /api/performance/jorge" [ref=e660]:
+              - img [ref=e661]
+          - generic [ref=e665] [cursor=pointer]:
+            - button "GET /api/performance/lead-automation Get Lead Automation Metrics" [ref=e666]:
+              - generic [ref=e667]: GET
+              - generic [ref=e668]:
+                - link "/api/performance/lead-automation" [ref=e670]:
+                  - /url: "#/Bot%20Management/get_lead_automation_metrics_api_performance_lead_automation_get"
+                  - generic [ref=e671]:
+                    - text: /api
+                    - text: /performance
+                    - text: /lead-automation
+                - generic [ref=e672]: Get Lead Automation Metrics
+            - generic "Copy to clipboard"
+            - button "get /api/performance/lead-automation" [ref=e675]:
+              - img [ref=e676]
+          - generic [ref=e680] [cursor=pointer]:
+            - button "GET /api/performance/websocket Get Websocket Metrics" [ref=e681]:
+              - generic [ref=e682]: GET
+              - generic [ref=e683]:
+                - link "/api/performance/websocket" [ref=e685]:
+                  - /url: "#/Bot%20Management/get_websocket_metrics_api_performance_websocket_get"
+                  - generic [ref=e686]:
+                    - text: /api
+                    - text: /performance
+                    - text: /websocket
+                - generic [ref=e687]: Get Websocket Metrics
+            - generic "Copy to clipboard"
+            - button "get /api/performance/websocket" [ref=e690]:
+              - img [ref=e691]
+          - generic [ref=e695] [cursor=pointer]:
+            - button "GET /api/performance/health Get System Health" [ref=e696]:
+              - generic [ref=e697]: GET
+              - generic [ref=e698]:
+                - link "/api/performance/health" [ref=e700]:
+                  - /url: "#/Bot%20Management/get_system_health_api_performance_health_get"
+                  - generic [ref=e701]:
+                    - text: /api
+                    - text: /performance
+                    - text: /health
+                - generic [ref=e702]: Get System Health
+            - generic "Copy to clipboard"
+            - button "get /api/performance/health" [ref=e705]:
+              - img [ref=e706]
+          - generic [ref=e710] [cursor=pointer]:
+            - 'button "GET /api/jorge-seller/{lead_id}/progress Get Jorge Qualification Progress" [ref=e711]':
+              - generic [ref=e712]: GET
+              - generic [ref=e713]:
+                - 'link "/api/jorge-seller/{lead_id}/progress" [ref=e715]':
+                  - /url: "#/Bot%20Management/get_jorge_qualification_progress_api_jorge_seller__lead_id__progress_get"
+                  - generic [ref=e716]:
+                    - text: /api
+                    - text: /jorge-seller
+                    - text: "/{lead_id}"
+                    - text: /progress
+                - generic [ref=e717]: Get Jorge Qualification Progress
+            - generic "Copy to clipboard"
+            - 'button "get /api/jorge-seller/{lead_id}/progress" [ref=e720]':
+              - img [ref=e721]
+          - generic [ref=e725] [cursor=pointer]:
+            - 'button "GET /api/jorge-seller/conversations/{conversation_id} Get Jorge Conversation State" [ref=e726]':
+              - generic [ref=e727]: GET
+              - generic [ref=e728]:
+                - 'link "/api/jorge-seller/conversations/{conversation_id}" [ref=e730]':
+                  - /url: "#/Bot%20Management/get_jorge_conversation_state_api_jorge_seller_conversations__conversation_id__get"
+                  - generic [ref=e731]:
+                    - text: /api
+                    - text: /jorge-seller
+                    - text: /conversations
+                    - text: "/{conversation_id}"
+                - generic [ref=e732]: Get Jorge Conversation State
+            - generic "Copy to clipboard"
+            - 'button "get /api/jorge-seller/conversations/{conversation_id}" [ref=e735]':
+              - img [ref=e736]
+          - generic [ref=e740] [cursor=pointer]:
+            - 'button "POST /api/jorge-seller/{lead_id}/stall-breaker Apply Jorge Stall Breaker" [ref=e741]':
+              - generic [ref=e742]: POST
+              - generic [ref=e743]:
+                - 'link "/api/jorge-seller/{lead_id}/stall-breaker" [ref=e745]':
+                  - /url: "#/Bot%20Management/apply_jorge_stall_breaker_api_jorge_seller__lead_id__stall_breaker_post"
+                  - generic [ref=e746]:
+                    - text: /api
+                    - text: /jorge-seller
+                    - text: "/{lead_id}"
+                    - text: /stall-breaker
+                - generic [ref=e747]: Apply Jorge Stall Breaker
+            - generic "Copy to clipboard"
+            - 'button "post /api/jorge-seller/{lead_id}/stall-breaker" [ref=e750]':
+              - img [ref=e751]
+          - generic [ref=e755] [cursor=pointer]:
+            - 'button "POST /api/jorge-seller/{lead_id}/handoff Trigger Jorge Handoff" [ref=e756]':
+              - generic [ref=e757]: POST
+              - generic [ref=e758]:
+                - 'link "/api/jorge-seller/{lead_id}/handoff" [ref=e760]':
+                  - /url: "#/Bot%20Management/trigger_jorge_handoff_api_jorge_seller__lead_id__handoff_post"
+                  - generic [ref=e761]:
+                    - text: /api
+                    - text: /jorge-seller
+                    - text: "/{lead_id}"
+                    - text: /handoff
+                - generic [ref=e762]: Trigger Jorge Handoff
+            - generic "Copy to clipboard"
+            - 'button "post /api/jorge-seller/{lead_id}/handoff" [ref=e765]':
+              - img [ref=e766]
+      - generic [ref=e769]:
+        - heading "lead-bot-management Collapse operation" [level=3] [ref=e770] [cursor=pointer]:
+          - link "lead-bot-management" [ref=e771]:
+            - /url: "#/lead-bot-management"
+          - button "Collapse operation" [expanded] [ref=e772]:
+            - img [ref=e773]
+        - generic [ref=e776]:
+          - generic [ref=e779] [cursor=pointer]:
+            - button "POST /api/lead-bot/sequences Create Sequence" [ref=e780]:
+              - generic [ref=e781]: POST
+              - generic [ref=e782]:
+                - link "/api/lead-bot/sequences" [ref=e784]:
+                  - /url: "#/lead-bot-management/create_sequence_api_lead_bot_sequences_post"
+                  - generic [ref=e785]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /sequences
+                - generic [ref=e786]: Create Sequence
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e789]:
+              - img [ref=e790]
+            - button "post /api/lead-bot/sequences" [ref=e792]:
+              - img [ref=e793]
+          - generic [ref=e797] [cursor=pointer]:
+            - 'button "GET /api/lead-bot/sequences/{lead_id} Get Sequence Status" [ref=e798]':
+              - generic [ref=e799]: GET
+              - generic [ref=e800]:
+                - 'link "/api/lead-bot/sequences/{lead_id}" [ref=e802]':
+                  - /url: "#/lead-bot-management/get_sequence_status_api_lead_bot_sequences__lead_id__get"
+                  - generic [ref=e803]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /sequences
+                    - text: "/{lead_id}"
+                - generic [ref=e804]: Get Sequence Status
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e807]:
+              - img [ref=e808]
+            - 'button "get /api/lead-bot/sequences/{lead_id}" [ref=e810]':
+              - img [ref=e811]
+          - generic [ref=e815] [cursor=pointer]:
+            - 'button "POST /api/lead-bot/sequences/{lead_id}/pause Pause Sequence" [ref=e816]':
+              - generic [ref=e817]: POST
+              - generic [ref=e818]:
+                - 'link "/api/lead-bot/sequences/{lead_id}/pause" [ref=e820]':
+                  - /url: "#/lead-bot-management/pause_sequence_api_lead_bot_sequences__lead_id__pause_post"
+                  - generic [ref=e821]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /sequences
+                    - text: "/{lead_id}"
+                    - text: /pause
+                - generic [ref=e822]: Pause Sequence
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e825]:
+              - img [ref=e826]
+            - 'button "post /api/lead-bot/sequences/{lead_id}/pause" [ref=e828]':
+              - img [ref=e829]
+          - generic [ref=e833] [cursor=pointer]:
+            - 'button "POST /api/lead-bot/sequences/{lead_id}/resume Resume Sequence" [ref=e834]':
+              - generic [ref=e835]: POST
+              - generic [ref=e836]:
+                - 'link "/api/lead-bot/sequences/{lead_id}/resume" [ref=e838]':
+                  - /url: "#/lead-bot-management/resume_sequence_api_lead_bot_sequences__lead_id__resume_post"
+                  - generic [ref=e839]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /sequences
+                    - text: "/{lead_id}"
+                    - text: /resume
+                - generic [ref=e840]: Resume Sequence
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e843]:
+              - img [ref=e844]
+            - 'button "post /api/lead-bot/sequences/{lead_id}/resume" [ref=e846]':
+              - img [ref=e847]
+          - generic [ref=e851] [cursor=pointer]:
+            - 'button "POST /api/lead-bot/sequences/{lead_id}/cancel Cancel Sequence" [ref=e852]':
+              - generic [ref=e853]: POST
+              - generic [ref=e854]:
+                - 'link "/api/lead-bot/sequences/{lead_id}/cancel" [ref=e856]':
+                  - /url: "#/lead-bot-management/cancel_sequence_api_lead_bot_sequences__lead_id__cancel_post"
+                  - generic [ref=e857]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /sequences
+                    - text: "/{lead_id}"
+                    - text: /cancel
+                - generic [ref=e858]: Cancel Sequence
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e861]:
+              - img [ref=e862]
+            - 'button "post /api/lead-bot/sequences/{lead_id}/cancel" [ref=e864]':
+              - img [ref=e865]
+          - generic [ref=e869] [cursor=pointer]:
+            - button "GET /api/lead-bot/scheduler/status Get Scheduler Status" [ref=e870]:
+              - generic [ref=e871]: GET
+              - generic [ref=e872]:
+                - link "/api/lead-bot/scheduler/status" [ref=e874]:
+                  - /url: "#/lead-bot-management/get_scheduler_status_api_lead_bot_scheduler_status_get"
+                  - generic [ref=e875]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /scheduler
+                    - text: /status
+                - generic [ref=e876]: Get Scheduler Status
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e879]:
+              - img [ref=e880]
+            - button "get /api/lead-bot/scheduler/status" [ref=e882]:
+              - img [ref=e883]
+          - generic [ref=e887] [cursor=pointer]:
+            - button "POST /api/lead-bot/scheduler/restart Restart Scheduler" [ref=e888]:
+              - generic [ref=e889]: POST
+              - generic [ref=e890]:
+                - link "/api/lead-bot/scheduler/restart" [ref=e892]:
+                  - /url: "#/lead-bot-management/restart_scheduler_api_lead_bot_scheduler_restart_post"
+                  - generic [ref=e893]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /scheduler
+                    - text: /restart
+                - generic [ref=e894]: Restart Scheduler
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e897]:
+              - img [ref=e898]
+            - button "post /api/lead-bot/scheduler/restart" [ref=e900]:
+              - img [ref=e901]
+          - generic [ref=e905] [cursor=pointer]:
+            - button "POST /api/lead-bot/manual-trigger Manual Trigger" [ref=e906]:
+              - generic [ref=e907]: POST
+              - generic [ref=e908]:
+                - link "/api/lead-bot/manual-trigger" [ref=e910]:
+                  - /url: "#/lead-bot-management/manual_trigger_api_lead_bot_manual_trigger_post"
+                  - generic [ref=e911]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /manual-trigger
+                - generic [ref=e912]: Manual Trigger
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e915]:
+              - img [ref=e916]
+            - button "post /api/lead-bot/manual-trigger" [ref=e918]:
+              - img [ref=e919]
+          - generic [ref=e923] [cursor=pointer]:
+            - button "POST /api/lead-bot/test-sequence Test Sequence" [ref=e924]:
+              - generic [ref=e925]: POST
+              - generic [ref=e926]:
+                - link "/api/lead-bot/test-sequence" [ref=e928]:
+                  - /url: "#/lead-bot-management/test_sequence_api_lead_bot_test_sequence_post"
+                  - generic [ref=e929]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /test-sequence
+                - generic [ref=e930]: Test Sequence
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e933]:
+              - img [ref=e934]
+            - button "post /api/lead-bot/test-sequence" [ref=e936]:
+              - img [ref=e937]
+          - generic [ref=e941] [cursor=pointer]:
+            - button "GET /api/lead-bot/health Health Check" [ref=e942]:
+              - generic [ref=e943]: GET
+              - generic [ref=e944]:
+                - link "/api/lead-bot/health" [ref=e946]:
+                  - /url: "#/lead-bot-management/health_check_api_lead_bot_health_get"
+                  - generic [ref=e947]:
+                    - text: /api
+                    - text: /lead-bot
+                    - text: /health
+                - generic [ref=e948]: Health Check
+            - generic "Copy to clipboard"
+            - button "get /api/lead-bot/health" [ref=e951]:
+              - img [ref=e952]
+      - generic [ref=e955]:
+        - heading "agent-ecosystem Collapse operation" [level=3] [ref=e956] [cursor=pointer]:
+          - link "agent-ecosystem" [ref=e957]:
+            - /url: "#/agent-ecosystem"
+          - button "Collapse operation" [expanded] [ref=e958]:
+            - img [ref=e959]
+        - generic [ref=e962]:
+          - generic [ref=e965] [cursor=pointer]:
+            - button "GET /api/agents/statuses Get Agent Statuses" [ref=e966]:
+              - generic [ref=e967]: GET
+              - generic [ref=e968]:
+                - link "/api/agents/statuses" [ref=e970]:
+                  - /url: "#/agent-ecosystem/get_agent_statuses_api_agents_statuses_get"
+                  - generic [ref=e971]:
+                    - text: /api
+                    - text: /agents
+                    - text: /statuses
+                - generic [ref=e972]: Get Agent Statuses
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e975]:
+              - img [ref=e976]
+            - button "get /api/agents/statuses" [ref=e978]:
+              - img [ref=e979]
+          - generic [ref=e983] [cursor=pointer]:
+            - button "GET /api/agents/metrics Get Agent Metrics" [ref=e984]:
+              - generic [ref=e985]: GET
+              - generic [ref=e986]:
+                - link "/api/agents/metrics" [ref=e988]:
+                  - /url: "#/agent-ecosystem/get_agent_metrics_api_agents_metrics_get"
+                  - generic [ref=e989]:
+                    - text: /api
+                    - text: /agents
+                    - text: /metrics
+                - generic [ref=e990]: Get Agent Metrics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e993]:
+              - img [ref=e994]
+            - button "get /api/agents/metrics" [ref=e996]:
+              - img [ref=e997]
+          - generic [ref=e1001] [cursor=pointer]:
+            - 'button "GET /api/agents/{agent_id} Get Agent By Id" [ref=e1002]':
+              - generic [ref=e1003]: GET
+              - generic [ref=e1004]:
+                - 'link "/api/agents/{agent_id}" [ref=e1006]':
+                  - /url: "#/agent-ecosystem/get_agent_by_id_api_agents__agent_id__get"
+                  - generic [ref=e1007]:
+                    - text: /api
+                    - text: /agents
+                    - text: "/{agent_id}"
+                - generic [ref=e1008]: Get Agent By Id
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1011]:
+              - img [ref=e1012]
+            - 'button "get /api/agents/{agent_id}" [ref=e1014]':
+              - img [ref=e1015]
+          - generic [ref=e1019] [cursor=pointer]:
+            - 'button "PUT /api/agents/{agent_id}/status Update Agent Status" [ref=e1020]':
+              - generic [ref=e1021]: PUT
+              - generic [ref=e1022]:
+                - 'link "/api/agents/{agent_id}/status" [ref=e1024]':
+                  - /url: "#/agent-ecosystem/update_agent_status_api_agents__agent_id__status_put"
+                  - generic [ref=e1025]:
+                    - text: /api
+                    - text: /agents
+                    - text: "/{agent_id}"
+                    - text: /status
+                - generic [ref=e1026]: Update Agent Status
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1029]:
+              - img [ref=e1030]
+            - 'button "put /api/agents/{agent_id}/status" [ref=e1032]':
+              - img [ref=e1033]
+          - generic [ref=e1037] [cursor=pointer]:
+            - button "GET /api/agents/../platform/activities Get Platform Activities" [ref=e1038]:
+              - generic [ref=e1039]: GET
+              - generic [ref=e1040]:
+                - link "/api/agents/../platform/activities" [ref=e1042]:
+                  - /url: "#/agent-ecosystem/get_platform_activities_api_agents____platform_activities_get"
+                  - generic [ref=e1043]:
+                    - text: /api
+                    - text: /agents
+                    - text: /..
+                    - text: /platform
+                    - text: /activities
+                - generic [ref=e1044]: Get Platform Activities
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1047]:
+              - img [ref=e1048]
+            - button "get /api/agents/../platform/activities" [ref=e1050]:
+              - img [ref=e1051]
+          - generic [ref=e1055] [cursor=pointer]:
+            - button "GET /api/agents/coordinations/active Get Active Coordinations" [ref=e1056]:
+              - generic [ref=e1057]: GET
+              - generic [ref=e1058]:
+                - link "/api/agents/coordinations/active" [ref=e1060]:
+                  - /url: "#/agent-ecosystem/get_active_coordinations_api_agents_coordinations_active_get"
+                  - generic [ref=e1061]:
+                    - text: /api
+                    - text: /agents
+                    - text: /coordinations
+                    - text: /active
+                - generic [ref=e1062]: Get Active Coordinations
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1065]:
+              - img [ref=e1066]
+            - button "get /api/agents/coordinations/active" [ref=e1068]:
+              - img [ref=e1069]
+          - generic [ref=e1073] [cursor=pointer]:
+            - button "POST /api/agents/coordinations Initiate Handoff" [ref=e1074]:
+              - generic [ref=e1075]: POST
+              - generic [ref=e1076]:
+                - link "/api/agents/coordinations" [ref=e1078]:
+                  - /url: "#/agent-ecosystem/initiate_handoff_api_agents_coordinations_post"
+                  - generic [ref=e1079]:
+                    - text: /api
+                    - text: /agents
+                    - text: /coordinations
+                - generic [ref=e1080]: Initiate Handoff
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1083]:
+              - img [ref=e1084]
+            - button "post /api/agents/coordinations" [ref=e1086]:
+              - img [ref=e1087]
+          - generic [ref=e1091] [cursor=pointer]:
+            - 'button "POST /api/agents/{agent_id}/pause Pause Agent" [ref=e1092]':
+              - generic [ref=e1093]: POST
+              - generic [ref=e1094]:
+                - 'link "/api/agents/{agent_id}/pause" [ref=e1096]':
+                  - /url: "#/agent-ecosystem/pause_agent_api_agents__agent_id__pause_post"
+                  - generic [ref=e1097]:
+                    - text: /api
+                    - text: /agents
+                    - text: "/{agent_id}"
+                    - text: /pause
+                - generic [ref=e1098]: Pause Agent
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1101]:
+              - img [ref=e1102]
+            - 'button "post /api/agents/{agent_id}/pause" [ref=e1104]':
+              - img [ref=e1105]
+          - generic [ref=e1109] [cursor=pointer]:
+            - 'button "POST /api/agents/{agent_id}/resume Resume Agent" [ref=e1110]':
+              - generic [ref=e1111]: POST
+              - generic [ref=e1112]:
+                - 'link "/api/agents/{agent_id}/resume" [ref=e1114]':
+                  - /url: "#/agent-ecosystem/resume_agent_api_agents__agent_id__resume_post"
+                  - generic [ref=e1115]:
+                    - text: /api
+                    - text: /agents
+                    - text: "/{agent_id}"
+                    - text: /resume
+                - generic [ref=e1116]: Resume Agent
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1119]:
+              - img [ref=e1120]
+            - 'button "post /api/agents/{agent_id}/resume" [ref=e1122]':
+              - img [ref=e1123]
+          - generic [ref=e1127] [cursor=pointer]:
+            - 'button "POST /api/agents/{agent_id}/restart Restart Agent" [ref=e1128]':
+              - generic [ref=e1129]: POST
+              - generic [ref=e1130]:
+                - 'link "/api/agents/{agent_id}/restart" [ref=e1132]':
+                  - /url: "#/agent-ecosystem/restart_agent_api_agents__agent_id__restart_post"
+                  - generic [ref=e1133]:
+                    - text: /api
+                    - text: /agents
+                    - text: "/{agent_id}"
+                    - text: /restart
+                - generic [ref=e1134]: Restart Agent
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1137]:
+              - img [ref=e1138]
+            - 'button "post /api/agents/{agent_id}/restart" [ref=e1140]':
+              - img [ref=e1141]
+          - generic [ref=e1145] [cursor=pointer]:
+            - button "GET /api/agents/performance Get Performance Metrics" [ref=e1146]:
+              - generic [ref=e1147]: GET
+              - generic [ref=e1148]:
+                - link "/api/agents/performance" [ref=e1150]:
+                  - /url: "#/agent-ecosystem/get_performance_metrics_api_agents_performance_get"
+                  - generic [ref=e1151]:
+                    - text: /api
+                    - text: /agents
+                    - text: /performance
+                - generic [ref=e1152]: Get Performance Metrics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1155]:
+              - img [ref=e1156]
+            - button "get /api/agents/performance" [ref=e1158]:
+              - img [ref=e1159]
+          - generic [ref=e1163] [cursor=pointer]:
+            - button "GET /api/agents/../system/health Get System Health" [ref=e1164]:
+              - generic [ref=e1165]: GET
+              - generic [ref=e1166]:
+                - link "/api/agents/../system/health" [ref=e1168]:
+                  - /url: "#/agent-ecosystem/get_system_health_api_agents____system_health_get"
+                  - generic [ref=e1169]:
+                    - text: /api
+                    - text: /agents
+                    - text: /..
+                    - text: /system
+                    - text: /health
+                - generic [ref=e1170]: Get System Health
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1173]:
+              - img [ref=e1174]
+            - button "get /api/agents/../system/health" [ref=e1176]:
+              - img [ref=e1177]
+      - generic [ref=e1180]:
+        - heading "claude-concierge-integration Collapse operation" [level=3] [ref=e1181] [cursor=pointer]:
+          - link "claude-concierge-integration" [ref=e1182]:
+            - /url: "#/claude-concierge-integration"
+          - button "Collapse operation" [expanded] [ref=e1183]:
+            - img [ref=e1184]
+        - generic [ref=e1187]:
+          - generic [ref=e1190] [cursor=pointer]:
+            - button "POST /api/claude-concierge/chat Send Message" [ref=e1191]:
+              - generic [ref=e1192]: POST
+              - generic [ref=e1193]:
+                - link "/api/claude-concierge/chat" [ref=e1195]:
+                  - /url: "#/claude-concierge-integration/send_message_api_claude_concierge_chat_post"
+                  - generic [ref=e1196]:
+                    - text: /api
+                    - text: /claude-concierge
+                    - text: /chat
+                - generic [ref=e1197]: Send Message
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1200]:
+              - img [ref=e1201]
+            - button "post /api/claude-concierge/chat" [ref=e1203]:
+              - img [ref=e1204]
+          - generic [ref=e1208] [cursor=pointer]:
+            - button "GET /api/claude-concierge/insights Get Realtime Insights" [ref=e1209]:
+              - generic [ref=e1210]: GET
+              - generic [ref=e1211]:
+                - link "/api/claude-concierge/insights" [ref=e1213]:
+                  - /url: "#/claude-concierge-integration/get_realtime_insights_api_claude_concierge_insights_get"
+                  - generic [ref=e1214]:
+                    - text: /api
+                    - text: /claude-concierge
+                    - text: /insights
+                - generic [ref=e1215]: Get Realtime Insights
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1218]:
+              - img [ref=e1219]
+            - button "get /api/claude-concierge/insights" [ref=e1221]:
+              - img [ref=e1222]
+          - generic [ref=e1226] [cursor=pointer]:
+            - button "GET /api/claude-concierge/suggestions Get Proactive Suggestions" [ref=e1227]:
+              - generic [ref=e1228]: GET
+              - generic [ref=e1229]:
+                - link "/api/claude-concierge/suggestions" [ref=e1231]:
+                  - /url: "#/claude-concierge-integration/get_proactive_suggestions_api_claude_concierge_suggestions_get"
+                  - generic [ref=e1232]:
+                    - text: /api
+                    - text: /claude-concierge
+                    - text: /suggestions
+                - generic [ref=e1233]: Get Proactive Suggestions
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1236]:
+              - img [ref=e1237]
+            - button "get /api/claude-concierge/suggestions" [ref=e1239]:
+              - img [ref=e1240]
+          - generic [ref=e1244] [cursor=pointer]:
+            - 'button "POST /api/claude-concierge/suggestions/{suggestion_id}/apply Apply Suggestion" [ref=e1245]':
+              - generic [ref=e1246]: POST
+              - generic [ref=e1247]:
+                - 'link "/api/claude-concierge/suggestions/{suggestion_id}/apply" [ref=e1249]':
+                  - /url: "#/claude-concierge-integration/apply_suggestion_api_claude_concierge_suggestions__suggestion_id__apply_post"
+                  - generic [ref=e1250]:
+                    - text: /api
+                    - text: /claude-concierge
+                    - text: /suggestions
+                    - text: "/{suggestion_id}"
+                    - text: /apply
+                - generic [ref=e1251]: Apply Suggestion
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1254]:
+              - img [ref=e1255]
+            - 'button "post /api/claude-concierge/suggestions/{suggestion_id}/apply" [ref=e1257]':
+              - img [ref=e1258]
+          - generic [ref=e1262] [cursor=pointer]:
+            - 'button "POST /api/claude-concierge/suggestions/{suggestion_id}/dismiss Dismiss Suggestion" [ref=e1263]':
+              - generic [ref=e1264]: POST
+              - generic [ref=e1265]:
+                - 'link "/api/claude-concierge/suggestions/{suggestion_id}/dismiss" [ref=e1267]':
+                  - /url: "#/claude-concierge-integration/dismiss_suggestion_api_claude_concierge_suggestions__suggestion_id__dismiss_post"
+                  - generic [ref=e1268]:
+                    - text: /api
+                    - text: /claude-concierge
+                    - text: /suggestions
+                    - text: "/{suggestion_id}"
+                    - text: /dismiss
+                - generic [ref=e1269]: Dismiss Suggestion
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1272]:
+              - img [ref=e1273]
+            - 'button "post /api/claude-concierge/suggestions/{suggestion_id}/dismiss" [ref=e1275]':
+              - img [ref=e1276]
+          - generic [ref=e1280] [cursor=pointer]:
+            - button "GET /api/claude-concierge/analyze/platform Analyze Platform Performance" [ref=e1281]:
+              - generic [ref=e1282]: GET
+              - generic [ref=e1283]:
+                - link "/api/claude-concierge/analyze/platform" [ref=e1285]:
+                  - /url: "#/claude-concierge-integration/analyze_platform_performance_api_claude_concierge_analyze_platform_get"
+                  - generic [ref=e1286]:
+                    - text: /api
+                    - text: /claude-concierge
+                    - text: /analyze
+                    - text: /platform
+                - generic [ref=e1287]: Analyze Platform Performance
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1290]:
+              - img [ref=e1291]
+            - button "get /api/claude-concierge/analyze/platform" [ref=e1293]:
+              - img [ref=e1294]
+          - generic [ref=e1298] [cursor=pointer]:
+            - button "GET /api/claude-concierge/analyze/coordination Analyze Agent Coordination" [ref=e1299]:
+              - generic [ref=e1300]: GET
+              - generic [ref=e1301]:
+                - link "/api/claude-concierge/analyze/coordination" [ref=e1303]:
+                  - /url: "#/claude-concierge-integration/analyze_agent_coordination_api_claude_concierge_analyze_coordination_get"
+                  - generic [ref=e1304]:
+                    - text: /api
+                    - text: /claude-concierge
+                    - text: /analyze
+                    - text: /coordination
+                - generic [ref=e1305]: Analyze Agent Coordination
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1308]:
+              - img [ref=e1309]
+            - button "get /api/claude-concierge/analyze/coordination" [ref=e1311]:
+              - img [ref=e1312]
+          - generic [ref=e1316] [cursor=pointer]:
+            - button "GET /api/claude-concierge/analyze/journeys Analyze Customer Journeys" [ref=e1317]:
+              - generic [ref=e1318]: GET
+              - generic [ref=e1319]:
+                - link "/api/claude-concierge/analyze/journeys" [ref=e1321]:
+                  - /url: "#/claude-concierge-integration/analyze_customer_journeys_api_claude_concierge_analyze_journeys_get"
+                  - generic [ref=e1322]:
+                    - text: /api
+                    - text: /claude-concierge
+                    - text: /analyze
+                    - text: /journeys
+                - generic [ref=e1323]: Analyze Customer Journeys
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1326]:
+              - img [ref=e1327]
+            - button "get /api/claude-concierge/analyze/journeys" [ref=e1329]:
+              - img [ref=e1330]
+          - generic [ref=e1334] [cursor=pointer]:
+            - button "PUT /api/claude-concierge/context Update Context" [ref=e1335]:
+              - generic [ref=e1336]: PUT
+              - generic [ref=e1337]:
+                - link "/api/claude-concierge/context" [ref=e1339]:
+                  - /url: "#/claude-concierge-integration/update_context_api_claude_concierge_context_put"
+                  - generic [ref=e1340]:
+                    - text: /api
+                    - text: /claude-concierge
+                    - text: /context
+                - generic [ref=e1341]: Update Context
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1344]:
+              - img [ref=e1345]
+            - button "put /api/claude-concierge/context" [ref=e1347]:
+              - img [ref=e1348]
+          - generic [ref=e1352] [cursor=pointer]:
+            - 'button "GET /api/claude-concierge/context/{session_id} Get Context" [ref=e1353]':
+              - generic [ref=e1354]: GET
+              - generic [ref=e1355]:
+                - 'link "/api/claude-concierge/context/{session_id}" [ref=e1357]':
+                  - /url: "#/claude-concierge-integration/get_context_api_claude_concierge_context__session_id__get"
+                  - generic [ref=e1358]:
+                    - text: /api
+                    - text: /claude-concierge
+                    - text: /context
+                    - text: "/{session_id}"
+                - generic [ref=e1359]: Get Context
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1362]:
+              - img [ref=e1363]
+            - 'button "get /api/claude-concierge/context/{session_id}" [ref=e1365]':
+              - img [ref=e1366]
+      - generic [ref=e1369]:
+        - heading "customer-journey Collapse operation" [level=3] [ref=e1370] [cursor=pointer]:
+          - link "customer-journey" [ref=e1371]:
+            - /url: "#/customer-journey"
+          - button "Collapse operation" [expanded] [ref=e1372]:
+            - img [ref=e1373]
+        - generic [ref=e1376]:
+          - generic [ref=e1379] [cursor=pointer]:
+            - button "GET /api/customer-journey/journeys Get Journeys" [ref=e1380]:
+              - generic [ref=e1381]: GET
+              - generic [ref=e1382]:
+                - link "/api/customer-journey/journeys" [ref=e1384]:
+                  - /url: "#/customer-journey/get_journeys_api_customer_journey_journeys_get"
+                  - generic [ref=e1385]:
+                    - text: /api
+                    - text: /customer-journey
+                    - text: /journeys
+                - generic [ref=e1386]: Get Journeys
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1389]:
+              - img [ref=e1390]
+            - button "get /api/customer-journey/journeys" [ref=e1392]:
+              - img [ref=e1393]
+          - generic [ref=e1397] [cursor=pointer]:
+            - button "POST /api/customer-journey/journeys Create Journey" [ref=e1398]:
+              - generic [ref=e1399]: POST
+              - generic [ref=e1400]:
+                - link "/api/customer-journey/journeys" [ref=e1402]:
+                  - /url: "#/customer-journey/create_journey_api_customer_journey_journeys_post"
+                  - generic [ref=e1403]:
+                    - text: /api
+                    - text: /customer-journey
+                    - text: /journeys
+                - generic [ref=e1404]: Create Journey
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1407]:
+              - img [ref=e1408]
+            - button "post /api/customer-journey/journeys" [ref=e1410]:
+              - img [ref=e1411]
+          - generic [ref=e1415] [cursor=pointer]:
+            - 'button "GET /api/customer-journey/journeys/{journey_id} Get Journey" [ref=e1416]':
+              - generic [ref=e1417]: GET
+              - generic [ref=e1418]:
+                - 'link "/api/customer-journey/journeys/{journey_id}" [ref=e1420]':
+                  - /url: "#/customer-journey/get_journey_api_customer_journey_journeys__journey_id__get"
+                  - generic [ref=e1421]:
+                    - text: /api
+                    - text: /customer-journey
+                    - text: /journeys
+                    - text: "/{journey_id}"
+                - generic [ref=e1422]: Get Journey
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1425]:
+              - img [ref=e1426]
+            - 'button "get /api/customer-journey/journeys/{journey_id}" [ref=e1428]':
+              - img [ref=e1429]
+          - generic [ref=e1433] [cursor=pointer]:
+            - 'button "PUT /api/customer-journey/journeys/{journey_id} Update Journey" [ref=e1434]':
+              - generic [ref=e1435]: PUT
+              - generic [ref=e1436]:
+                - 'link "/api/customer-journey/journeys/{journey_id}" [ref=e1438]':
+                  - /url: "#/customer-journey/update_journey_api_customer_journey_journeys__journey_id__put"
+                  - generic [ref=e1439]:
+                    - text: /api
+                    - text: /customer-journey
+                    - text: /journeys
+                    - text: "/{journey_id}"
+                - generic [ref=e1440]: Update Journey
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1443]:
+              - img [ref=e1444]
+            - 'button "put /api/customer-journey/journeys/{journey_id}" [ref=e1446]':
+              - img [ref=e1447]
+          - generic [ref=e1451] [cursor=pointer]:
+            - 'button "DELETE /api/customer-journey/journeys/{journey_id} Delete Journey" [ref=e1452]':
+              - generic [ref=e1453]: DELETE
+              - generic [ref=e1454]:
+                - 'link "/api/customer-journey/journeys/{journey_id}" [ref=e1456]':
+                  - /url: "#/customer-journey/delete_journey_api_customer_journey_journeys__journey_id__delete"
+                  - generic [ref=e1457]:
+                    - text: /api
+                    - text: /customer-journey
+                    - text: /journeys
+                    - text: "/{journey_id}"
+                - generic [ref=e1458]: Delete Journey
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1461]:
+              - img [ref=e1462]
+            - 'button "delete /api/customer-journey/journeys/{journey_id}" [ref=e1464]':
+              - img [ref=e1465]
+          - generic [ref=e1469] [cursor=pointer]:
+            - 'button "PUT /api/customer-journey/journeys/{journey_id}/steps/{step_id} Update Step" [ref=e1470]':
+              - generic [ref=e1471]: PUT
+              - generic [ref=e1472]:
+                - 'link "/api/customer-journey/journeys/{journey_id}/steps/{step_id}" [ref=e1474]':
+                  - /url: "#/customer-journey/update_step_api_customer_journey_journeys__journey_id__steps__step_id__put"
+                  - generic [ref=e1475]:
+                    - text: /api
+                    - text: /customer-journey
+                    - text: /journeys
+                    - text: "/{journey_id}"
+                    - text: /steps
+                    - text: "/{step_id}"
+                - generic [ref=e1476]: Update Step
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1479]:
+              - img [ref=e1480]
+            - 'button "put /api/customer-journey/journeys/{journey_id}/steps/{step_id}" [ref=e1482]':
+              - img [ref=e1483]
+          - generic [ref=e1487] [cursor=pointer]:
+            - 'button "POST /api/customer-journey/journeys/{journey_id}/steps/{step_id}/complete Complete Step" [ref=e1488]':
+              - generic [ref=e1489]: POST
+              - generic [ref=e1490]:
+                - 'link "/api/customer-journey/journeys/{journey_id}/steps/{step_id}/complete" [ref=e1492]':
+                  - /url: "#/customer-journey/complete_step_api_customer_journey_journeys__journey_id__steps__step_id__complete_post"
+                  - generic [ref=e1493]:
+                    - text: /api
+                    - text: /customer-journey
+                    - text: /journeys
+                    - text: "/{journey_id}"
+                    - text: /steps
+                    - text: "/{step_id}"
+                    - text: /complete
+                - generic [ref=e1494]: Complete Step
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1497]:
+              - img [ref=e1498]
+            - 'button "post /api/customer-journey/journeys/{journey_id}/steps/{step_id}/complete" [ref=e1500]':
+              - img [ref=e1501]
+          - generic [ref=e1505] [cursor=pointer]:
+            - button "GET /api/customer-journey/analytics Get Analytics" [ref=e1506]:
+              - generic [ref=e1507]: GET
+              - generic [ref=e1508]:
+                - link "/api/customer-journey/analytics" [ref=e1510]:
+                  - /url: "#/customer-journey/get_analytics_api_customer_journey_analytics_get"
+                  - generic [ref=e1511]:
+                    - text: /api
+                    - text: /customer-journey
+                    - text: /analytics
+                - generic [ref=e1512]: Get Analytics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1515]:
+              - img [ref=e1516]
+            - button "get /api/customer-journey/analytics" [ref=e1518]:
+              - img [ref=e1519]
+          - generic [ref=e1523] [cursor=pointer]:
+            - button "GET /api/customer-journey/templates Get Templates" [ref=e1524]:
+              - generic [ref=e1525]: GET
+              - generic [ref=e1526]:
+                - link "/api/customer-journey/templates" [ref=e1528]:
+                  - /url: "#/customer-journey/get_templates_api_customer_journey_templates_get"
+                  - generic [ref=e1529]:
+                    - text: /api
+                    - text: /customer-journey
+                    - text: /templates
+                - generic [ref=e1530]: Get Templates
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1533]:
+              - img [ref=e1534]
+            - button "get /api/customer-journey/templates" [ref=e1536]:
+              - img [ref=e1537]
+      - generic [ref=e1540]:
+        - heading "property-intelligence Collapse operation" [level=3] [ref=e1541] [cursor=pointer]:
+          - link "property-intelligence" [ref=e1542]:
+            - /url: "#/property-intelligence"
+          - button "Collapse operation" [expanded] [ref=e1543]:
+            - img [ref=e1544]
+        - generic [ref=e1547]:
+          - generic [ref=e1550] [cursor=pointer]:
+            - button "POST /api/property-intelligence/analyze Analyze Property" [ref=e1551]:
+              - generic [ref=e1552]: POST
+              - generic [ref=e1553]:
+                - link "/api/property-intelligence/analyze" [ref=e1555]:
+                  - /url: "#/property-intelligence/analyze_property_api_property_intelligence_analyze_post"
+                  - generic [ref=e1556]:
+                    - text: /api
+                    - text: /property-intelligence
+                    - text: /analyze
+                - generic [ref=e1557]: Analyze Property
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1560]:
+              - img [ref=e1561]
+            - button "post /api/property-intelligence/analyze" [ref=e1563]:
+              - img [ref=e1564]
+          - generic [ref=e1568] [cursor=pointer]:
+            - 'button "GET /api/property-intelligence/properties/{property_id} Get Property Analysis" [ref=e1569]':
+              - generic [ref=e1570]: GET
+              - generic [ref=e1571]:
+                - 'link "/api/property-intelligence/properties/{property_id}" [ref=e1573]':
+                  - /url: "#/property-intelligence/get_property_analysis_api_property_intelligence_properties__property_id__get"
+                  - generic [ref=e1574]:
+                    - text: /api
+                    - text: /property-intelligence
+                    - text: /properties
+                    - text: "/{property_id}"
+                - generic [ref=e1575]: Get Property Analysis
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1578]:
+              - img [ref=e1579]
+            - 'button "get /api/property-intelligence/properties/{property_id}" [ref=e1581]':
+              - img [ref=e1582]
+          - generic [ref=e1586] [cursor=pointer]:
+            - 'button "DELETE /api/property-intelligence/properties/{property_id} Delete Analysis" [ref=e1587]':
+              - generic [ref=e1588]: DELETE
+              - generic [ref=e1589]:
+                - 'link "/api/property-intelligence/properties/{property_id}" [ref=e1591]':
+                  - /url: "#/property-intelligence/delete_analysis_api_property_intelligence_properties__property_id__delete"
+                  - generic [ref=e1592]:
+                    - text: /api
+                    - text: /property-intelligence
+                    - text: /properties
+                    - text: "/{property_id}"
+                - generic [ref=e1593]: Delete Analysis
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1596]:
+              - img [ref=e1597]
+            - 'button "delete /api/property-intelligence/properties/{property_id}" [ref=e1599]':
+              - img [ref=e1600]
+          - generic [ref=e1604] [cursor=pointer]:
+            - 'button "PUT /api/property-intelligence/properties/{property_id}/update Update Analysis" [ref=e1605]':
+              - generic [ref=e1606]: PUT
+              - generic [ref=e1607]:
+                - 'link "/api/property-intelligence/properties/{property_id}/update" [ref=e1609]':
+                  - /url: "#/property-intelligence/update_analysis_api_property_intelligence_properties__property_id__update_put"
+                  - generic [ref=e1610]:
+                    - text: /api
+                    - text: /property-intelligence
+                    - text: /properties
+                    - text: "/{property_id}"
+                    - text: /update
+                - generic [ref=e1611]: Update Analysis
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1614]:
+              - img [ref=e1615]
+            - 'button "put /api/property-intelligence/properties/{property_id}/update" [ref=e1617]':
+              - img [ref=e1618]
+          - generic [ref=e1622] [cursor=pointer]:
+            - button "POST /api/property-intelligence/compare Compare Properties" [ref=e1623]:
+              - generic [ref=e1624]: POST
+              - generic [ref=e1625]:
+                - link "/api/property-intelligence/compare" [ref=e1627]:
+                  - /url: "#/property-intelligence/compare_properties_api_property_intelligence_compare_post"
+                  - generic [ref=e1628]:
+                    - text: /api
+                    - text: /property-intelligence
+                    - text: /compare
+                - generic [ref=e1629]: Compare Properties
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1632]:
+              - img [ref=e1633]
+            - button "post /api/property-intelligence/compare" [ref=e1635]:
+              - img [ref=e1636]
+          - generic [ref=e1640] [cursor=pointer]:
+            - 'button "GET /api/property-intelligence/properties/{property_id}/benchmark Get Benchmark Analysis" [ref=e1641]':
+              - generic [ref=e1642]: GET
+              - generic [ref=e1643]:
+                - 'link "/api/property-intelligence/properties/{property_id}/benchmark" [ref=e1645]':
+                  - /url: "#/property-intelligence/get_benchmark_analysis_api_property_intelligence_properties__property_id__benchmark_get"
+                  - generic [ref=e1646]:
+                    - text: /api
+                    - text: /property-intelligence
+                    - text: /properties
+                    - text: "/{property_id}"
+                    - text: /benchmark
+                - generic [ref=e1647]: Get Benchmark Analysis
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1650]:
+              - img [ref=e1651]
+            - 'button "get /api/property-intelligence/properties/{property_id}/benchmark" [ref=e1653]':
+              - img [ref=e1654]
+          - generic [ref=e1658] [cursor=pointer]:
+            - button "POST /api/property-intelligence/market/insights Get Market Insights" [ref=e1659]:
+              - generic [ref=e1660]: POST
+              - generic [ref=e1661]:
+                - link "/api/property-intelligence/market/insights" [ref=e1663]:
+                  - /url: "#/property-intelligence/get_market_insights_api_property_intelligence_market_insights_post"
+                  - generic [ref=e1664]:
+                    - text: /api
+                    - text: /property-intelligence
+                    - text: /market
+                    - text: /insights
+                - generic [ref=e1665]: Get Market Insights
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1668]:
+              - img [ref=e1669]
+            - button "post /api/property-intelligence/market/insights" [ref=e1671]:
+              - img [ref=e1672]
+          - generic [ref=e1676] [cursor=pointer]:
+            - 'button "GET /api/property-intelligence/properties/{property_id}/realtime Get Realtime Market Data" [ref=e1677]':
+              - generic [ref=e1678]: GET
+              - generic [ref=e1679]:
+                - 'link "/api/property-intelligence/properties/{property_id}/realtime" [ref=e1681]':
+                  - /url: "#/property-intelligence/get_realtime_market_data_api_property_intelligence_properties__property_id__realtime_get"
+                  - generic [ref=e1682]:
+                    - text: /api
+                    - text: /property-intelligence
+                    - text: /properties
+                    - text: "/{property_id}"
+                    - text: /realtime
+                - generic [ref=e1683]: Get Realtime Market Data
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1686]:
+              - img [ref=e1687]
+            - 'button "get /api/property-intelligence/properties/{property_id}/realtime" [ref=e1689]':
+              - img [ref=e1690]
+          - generic [ref=e1694] [cursor=pointer]:
+            - button "POST /api/property-intelligence/portfolio/analyze Analyze Portfolio" [ref=e1695]:
+              - generic [ref=e1696]: POST
+              - generic [ref=e1697]:
+                - link "/api/property-intelligence/portfolio/analyze" [ref=e1699]:
+                  - /url: "#/property-intelligence/analyze_portfolio_api_property_intelligence_portfolio_analyze_post"
+                  - generic [ref=e1700]:
+                    - text: /api
+                    - text: /property-intelligence
+                    - text: /portfolio
+                    - text: /analyze
+                - generic [ref=e1701]: Analyze Portfolio
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1704]:
+              - img [ref=e1705]
+            - button "post /api/property-intelligence/portfolio/analyze" [ref=e1707]:
+              - img [ref=e1708]
+          - generic [ref=e1712] [cursor=pointer]:
+            - button "GET /api/property-intelligence/health Health Check" [ref=e1713]:
+              - generic [ref=e1714]: GET
+              - generic [ref=e1715]:
+                - link "/api/property-intelligence/health" [ref=e1717]:
+                  - /url: "#/property-intelligence/health_check_api_property_intelligence_health_get"
+                  - generic [ref=e1718]:
+                    - text: /api
+                    - text: /property-intelligence
+                    - text: /health
+                - generic [ref=e1719]: Health Check
+            - generic "Copy to clipboard"
+            - button "get /api/property-intelligence/health" [ref=e1722]:
+              - img [ref=e1723]
+      - generic [ref=e1726]:
+        - heading "error_monitoring Collapse operation" [level=3] [ref=e1727] [cursor=pointer]:
+          - link "error_monitoring" [ref=e1728]:
+            - /url: "#/error_monitoring"
+          - button "Collapse operation" [expanded] [ref=e1729]:
+            - img [ref=e1730]
+        - generic [ref=e1733]:
+          - generic [ref=e1736] [cursor=pointer]:
+            - button "GET /api/error-monitoring/metrics Get Error Metrics" [ref=e1737]:
+              - generic [ref=e1738]: GET
+              - generic [ref=e1739]:
+                - link "/api/error-monitoring/metrics" [ref=e1741]:
+                  - /url: "#/error_monitoring/get_error_metrics_api_error_monitoring_metrics_get"
+                  - generic [ref=e1742]:
+                    - text: /api
+                    - text: /error-monitoring
+                    - text: /metrics
+                - generic [ref=e1743]: Get Error Metrics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1746]:
+              - img [ref=e1747]
+            - button "get /api/error-monitoring/metrics" [ref=e1749]:
+              - img [ref=e1750]
+          - generic [ref=e1754] [cursor=pointer]:
+            - button "GET /api/error-monitoring/trends Get Error Trends" [ref=e1755]:
+              - generic [ref=e1756]: GET
+              - generic [ref=e1757]:
+                - link "/api/error-monitoring/trends" [ref=e1759]:
+                  - /url: "#/error_monitoring/get_error_trends_api_error_monitoring_trends_get"
+                  - generic [ref=e1760]:
+                    - text: /api
+                    - text: /error-monitoring
+                    - text: /trends
+                - generic [ref=e1761]: Get Error Trends
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1764]:
+              - img [ref=e1765]
+            - button "get /api/error-monitoring/trends" [ref=e1767]:
+              - img [ref=e1768]
+          - generic [ref=e1772] [cursor=pointer]:
+            - button "GET /api/error-monitoring/top-errors Get Top Errors" [ref=e1773]:
+              - generic [ref=e1774]: GET
+              - generic [ref=e1775]:
+                - link "/api/error-monitoring/top-errors" [ref=e1777]:
+                  - /url: "#/error_monitoring/get_top_errors_api_error_monitoring_top_errors_get"
+                  - generic [ref=e1778]:
+                    - text: /api
+                    - text: /error-monitoring
+                    - text: /top-errors
+                - generic [ref=e1779]: Get Top Errors
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1782]:
+              - img [ref=e1783]
+            - button "get /api/error-monitoring/top-errors" [ref=e1785]:
+              - img [ref=e1786]
+          - generic [ref=e1790] [cursor=pointer]:
+            - button "GET /api/error-monitoring/patterns Get Error Patterns" [ref=e1791]:
+              - generic [ref=e1792]: GET
+              - generic [ref=e1793]:
+                - link "/api/error-monitoring/patterns" [ref=e1795]:
+                  - /url: "#/error_monitoring/get_error_patterns_api_error_monitoring_patterns_get"
+                  - generic [ref=e1796]:
+                    - text: /api
+                    - text: /error-monitoring
+                    - text: /patterns
+                - generic [ref=e1797]: Get Error Patterns
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1800]:
+              - img [ref=e1801]
+            - button "get /api/error-monitoring/patterns" [ref=e1803]:
+              - img [ref=e1804]
+          - generic [ref=e1808] [cursor=pointer]:
+            - button "GET /api/error-monitoring/dashboard Get Error Dashboard" [ref=e1809]:
+              - generic [ref=e1810]: GET
+              - generic [ref=e1811]:
+                - link "/api/error-monitoring/dashboard" [ref=e1813]:
+                  - /url: "#/error_monitoring/get_error_dashboard_api_error_monitoring_dashboard_get"
+                  - generic [ref=e1814]:
+                    - text: /api
+                    - text: /error-monitoring
+                    - text: /dashboard
+                - generic [ref=e1815]: Get Error Dashboard
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1818]:
+              - img [ref=e1819]
+            - button "get /api/error-monitoring/dashboard" [ref=e1821]:
+              - img [ref=e1822]
+          - generic [ref=e1826] [cursor=pointer]:
+            - button "GET /api/error-monitoring/health Get System Health" [ref=e1827]:
+              - generic [ref=e1828]: GET
+              - generic [ref=e1829]:
+                - link "/api/error-monitoring/health" [ref=e1831]:
+                  - /url: "#/error_monitoring/get_system_health_api_error_monitoring_health_get"
+                  - generic [ref=e1832]:
+                    - text: /api
+                    - text: /error-monitoring
+                    - text: /health
+                - generic [ref=e1833]: Get System Health
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1836]:
+              - img [ref=e1837]
+            - button "get /api/error-monitoring/health" [ref=e1839]:
+              - img [ref=e1840]
+          - generic [ref=e1844] [cursor=pointer]:
+            - 'button "POST /api/error-monitoring/errors/{error_id}/resolve Mark Error Resolved" [ref=e1845]':
+              - generic [ref=e1846]: POST
+              - generic [ref=e1847]:
+                - 'link "/api/error-monitoring/errors/{error_id}/resolve" [ref=e1849]':
+                  - /url: "#/error_monitoring/mark_error_resolved_api_error_monitoring_errors__error_id__resolve_post"
+                  - generic [ref=e1850]:
+                    - text: /api
+                    - text: /error-monitoring
+                    - text: /errors
+                    - text: "/{error_id}"
+                    - text: /resolve
+                - generic [ref=e1851]: Mark Error Resolved
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1854]:
+              - img [ref=e1855]
+            - 'button "post /api/error-monitoring/errors/{error_id}/resolve" [ref=e1857]':
+              - img [ref=e1858]
+          - generic [ref=e1862] [cursor=pointer]:
+            - button "GET /api/error-monitoring/categories Get Error Categories" [ref=e1863]:
+              - generic [ref=e1864]: GET
+              - generic [ref=e1865]:
+                - link "/api/error-monitoring/categories" [ref=e1867]:
+                  - /url: "#/error_monitoring/get_error_categories_api_error_monitoring_categories_get"
+                  - generic [ref=e1868]:
+                    - text: /api
+                    - text: /error-monitoring
+                    - text: /categories
+                - generic [ref=e1869]: Get Error Categories
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1872]:
+              - img [ref=e1873]
+            - button "get /api/error-monitoring/categories" [ref=e1875]:
+              - img [ref=e1876]
+      - generic [ref=e1879]:
+        - heading "security Collapse operation" [level=3] [ref=e1880] [cursor=pointer]:
+          - link "security" [ref=e1881]:
+            - /url: "#/security"
+          - button "Collapse operation" [expanded] [ref=e1882]:
+            - img [ref=e1883]
+        - generic [ref=e1886]:
+          - generic [ref=e1889] [cursor=pointer]:
+            - button "GET /api/security/dashboard Get Security Dashboard" [ref=e1890]:
+              - generic [ref=e1891]: GET
+              - generic [ref=e1892]:
+                - link "/api/security/dashboard" [ref=e1894]:
+                  - /url: "#/security/get_security_dashboard_api_security_dashboard_get"
+                  - generic [ref=e1895]:
+                    - text: /api
+                    - text: /security
+                    - text: /dashboard
+                - generic [ref=e1896]: Get Security Dashboard
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1899]:
+              - img [ref=e1900]
+            - button "get /api/security/dashboard" [ref=e1902]:
+              - img [ref=e1903]
+          - generic [ref=e1907] [cursor=pointer]:
+            - button "GET /api/security/events/search Search Security Events" [ref=e1908]:
+              - generic [ref=e1909]: GET
+              - generic [ref=e1910]:
+                - link "/api/security/events/search" [ref=e1912]:
+                  - /url: "#/security/search_security_events_api_security_events_search_get"
+                  - generic [ref=e1913]:
+                    - text: /api
+                    - text: /security
+                    - text: /events
+                    - text: /search
+                - generic [ref=e1914]: Search Security Events
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1917]:
+              - img [ref=e1918]
+            - button "get /api/security/events/search" [ref=e1920]:
+              - img [ref=e1921]
+          - generic [ref=e1925] [cursor=pointer]:
+            - button "POST /api/security/events/log Log Security Event" [ref=e1926]:
+              - generic [ref=e1927]: POST
+              - generic [ref=e1928]:
+                - link "/api/security/events/log" [ref=e1930]:
+                  - /url: "#/security/log_security_event_api_security_events_log_post"
+                  - generic [ref=e1931]:
+                    - text: /api
+                    - text: /security
+                    - text: /events
+                    - text: /log
+                - generic [ref=e1932]: Log Security Event
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1935]:
+              - img [ref=e1936]
+            - button "post /api/security/events/log" [ref=e1938]:
+              - img [ref=e1939]
+          - generic [ref=e1943] [cursor=pointer]:
+            - button "GET /api/security/health Get Security Health" [ref=e1944]:
+              - generic [ref=e1945]: GET
+              - generic [ref=e1946]:
+                - link "/api/security/health" [ref=e1948]:
+                  - /url: "#/security/get_security_health_api_security_health_get"
+                  - generic [ref=e1949]:
+                    - text: /api
+                    - text: /security
+                    - text: /health
+                - generic [ref=e1950]: Get Security Health
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1953]:
+              - img [ref=e1954]
+            - button "get /api/security/health" [ref=e1956]:
+              - img [ref=e1957]
+          - generic [ref=e1961] [cursor=pointer]:
+            - button "POST /api/security/threat-response Handle Threat Response" [ref=e1962]:
+              - generic [ref=e1963]: POST
+              - generic [ref=e1964]:
+                - link "/api/security/threat-response" [ref=e1966]:
+                  - /url: "#/security/handle_threat_response_api_security_threat_response_post"
+                  - generic [ref=e1967]:
+                    - text: /api
+                    - text: /security
+                    - text: /threat-response
+                - generic [ref=e1968]: Handle Threat Response
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1971]:
+              - img [ref=e1972]
+            - button "post /api/security/threat-response" [ref=e1974]:
+              - img [ref=e1975]
+          - generic [ref=e1979] [cursor=pointer]:
+            - button "GET /api/security/compliance/report Get Compliance Report" [ref=e1980]:
+              - generic [ref=e1981]: GET
+              - generic [ref=e1982]:
+                - link "/api/security/compliance/report" [ref=e1984]:
+                  - /url: "#/security/get_compliance_report_api_security_compliance_report_get"
+                  - generic [ref=e1985]:
+                    - text: /api
+                    - text: /security
+                    - text: /compliance
+                    - text: /report
+                - generic [ref=e1986]: Get Compliance Report
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1989]:
+              - img [ref=e1990]
+            - button "get /api/security/compliance/report" [ref=e1992]:
+              - img [ref=e1993]
+          - generic [ref=e1997] [cursor=pointer]:
+            - button "GET /api/security/websocket/connections Get Websocket Connections" [ref=e1998]:
+              - generic [ref=e1999]: GET
+              - generic [ref=e2000]:
+                - link "/api/security/websocket/connections" [ref=e2002]:
+                  - /url: "#/security/get_websocket_connections_api_security_websocket_connections_get"
+                  - generic [ref=e2003]:
+                    - text: /api
+                    - text: /security
+                    - text: /websocket
+                    - text: /connections
+                - generic [ref=e2004]: Get Websocket Connections
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2007]:
+              - img [ref=e2008]
+            - button "get /api/security/websocket/connections" [ref=e2010]:
+              - img [ref=e2011]
+      - generic [ref=e2014]:
+        - heading "ghl Collapse operation" [level=3] [ref=e2015] [cursor=pointer]:
+          - link "ghl" [ref=e2016]:
+            - /url: "#/ghl"
+          - button "Collapse operation" [expanded] [ref=e2017]:
+            - img [ref=e2018]
+        - generic [ref=e2021]:
+          - generic [ref=e2024] [cursor=pointer]:
+            - button "POST /api/ghl/webhook Handle Ghl Webhook" [ref=e2025]:
+              - generic [ref=e2026]: POST
+              - generic [ref=e2027]:
+                - link "/api/ghl/webhook" [ref=e2029]:
+                  - /url: "#/ghl/handle_ghl_webhook_api_ghl_webhook_post"
+                  - generic [ref=e2030]:
+                    - text: /api
+                    - text: /ghl
+                    - text: /webhook
+                - generic [ref=e2031]: Handle Ghl Webhook
+            - generic "Copy to clipboard"
+            - button "post /api/ghl/webhook" [ref=e2034]:
+              - img [ref=e2035]
+          - generic [ref=e2039] [cursor=pointer]:
+            - button "GET /api/ghl/health Health Check" [ref=e2040]:
+              - generic [ref=e2041]: GET
+              - generic [ref=e2042]:
+                - link "/api/ghl/health" [ref=e2044]:
+                  - /url: "#/ghl/health_check_api_ghl_health_get"
+                  - generic [ref=e2045]:
+                    - text: /api
+                    - text: /ghl
+                    - text: /health
+                - generic [ref=e2046]: Health Check
+            - generic "Copy to clipboard"
+            - button "get /api/ghl/health" [ref=e2049]:
+              - img [ref=e2050]
+      - generic [ref=e2053]:
+        - heading "Advanced Analytics Collapse operation" [level=3] [ref=e2054] [cursor=pointer]:
+          - link "Advanced Analytics" [ref=e2055]:
+            - /url: "#/Advanced%20Analytics"
+          - button "Collapse operation" [expanded] [ref=e2056]:
+            - img [ref=e2057]
+        - generic [ref=e2060]:
+          - generic [ref=e2063] [cursor=pointer]:
+            - button "POST /api/api/v1/analytics/shap/waterfall Generate SHAP Waterfall Chart Data" [ref=e2064]:
+              - generic [ref=e2065]: POST
+              - generic [ref=e2066]:
+                - link "/api/api/v1/analytics/shap/waterfall" [ref=e2068]:
+                  - /url: "#/Advanced%20Analytics/generate_shap_waterfall_api_api_v1_analytics_shap_waterfall_post"
+                  - generic [ref=e2069]:
+                    - text: /api
+                    - text: /api
+                    - text: /v1
+                    - text: /analytics
+                    - text: /shap
+                    - text: /waterfall
+                - generic [ref=e2070]: Generate SHAP Waterfall Chart Data
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2073]:
+              - img [ref=e2074]
+            - button "post /api/api/v1/analytics/shap/waterfall" [ref=e2076]:
+              - img [ref=e2077]
+          - generic [ref=e2081] [cursor=pointer]:
+            - 'button "GET /api/api/v1/analytics/shap/feature-trends/{feature_name} Get Feature Value Trends Over Time" [ref=e2082]':
+              - generic [ref=e2083]: GET
+              - generic [ref=e2084]:
+                - 'link "/api/api/v1/analytics/shap/feature-trends/{feature_name}" [ref=e2086]':
+                  - /url: "#/Advanced%20Analytics/get_feature_trends_api_api_v1_analytics_shap_feature_trends__feature_name__get"
+                  - generic [ref=e2087]:
+                    - text: /api
+                    - text: /api
+                    - text: /v1
+                    - text: /analytics
+                    - text: /shap
+                    - text: /feature-trends
+                    - text: "/{feature_name}"
+                - generic [ref=e2088]: Get Feature Value Trends Over Time
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2091]:
+              - img [ref=e2092]
+            - 'button "get /api/api/v1/analytics/shap/feature-trends/{feature_name}" [ref=e2094]':
+              - img [ref=e2095]
+          - generic [ref=e2099] [cursor=pointer]:
+            - button "POST /api/api/v1/analytics/market/heatmap Generate Market Intelligence Heatmap" [ref=e2100]:
+              - generic [ref=e2101]: POST
+              - generic [ref=e2102]:
+                - link "/api/api/v1/analytics/market/heatmap" [ref=e2104]:
+                  - /url: "#/Advanced%20Analytics/generate_market_heatmap_api_api_v1_analytics_market_heatmap_post"
+                  - generic [ref=e2105]:
+                    - text: /api
+                    - text: /api
+                    - text: /v1
+                    - text: /analytics
+                    - text: /market
+                    - text: /heatmap
+                - generic [ref=e2106]: Generate Market Intelligence Heatmap
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2109]:
+              - img [ref=e2110]
+            - button "post /api/api/v1/analytics/market/heatmap" [ref=e2112]:
+              - img [ref=e2113]
+          - generic [ref=e2117] [cursor=pointer]:
+            - button "GET /api/api/v1/analytics/market/metrics Get Comprehensive Market Metrics" [ref=e2118]:
+              - generic [ref=e2119]: GET
+              - generic [ref=e2120]:
+                - link "/api/api/v1/analytics/market/metrics" [ref=e2122]:
+                  - /url: "#/Advanced%20Analytics/get_comprehensive_market_metrics_api_api_v1_analytics_market_metrics_get"
+                  - generic [ref=e2123]:
+                    - text: /api
+                    - text: /api
+                    - text: /v1
+                    - text: /analytics
+                    - text: /market
+                    - text: /metrics
+                - generic [ref=e2124]: Get Comprehensive Market Metrics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2127]:
+              - img [ref=e2128]
+            - button "get /api/api/v1/analytics/market/metrics" [ref=e2130]:
+              - img [ref=e2131]
+          - generic [ref=e2135] [cursor=pointer]:
+            - button "GET /api/api/v1/analytics/performance Get Analytics Performance Metrics" [ref=e2136]:
+              - generic [ref=e2137]: GET
+              - generic [ref=e2138]:
+                - link "/api/api/v1/analytics/performance" [ref=e2140]:
+                  - /url: "#/Advanced%20Analytics/get_analytics_performance_api_api_v1_analytics_performance_get"
+                  - generic [ref=e2141]:
+                    - text: /api
+                    - text: /api
+                    - text: /v1
+                    - text: /analytics
+                    - text: /performance
+                - generic [ref=e2142]: Get Analytics Performance Metrics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2145]:
+              - img [ref=e2146]
+            - button "get /api/api/v1/analytics/performance" [ref=e2148]:
+              - img [ref=e2149]
+          - generic [ref=e2153] [cursor=pointer]:
+            - button "POST /api/api/v1/analytics/cache/clear Clear Analytics Cache" [ref=e2154]:
+              - generic [ref=e2155]: POST
+              - generic [ref=e2156]:
+                - link "/api/api/v1/analytics/cache/clear" [ref=e2158]:
+                  - /url: "#/Advanced%20Analytics/clear_analytics_cache_api_api_v1_analytics_cache_clear_post"
+                  - generic [ref=e2159]:
+                    - text: /api
+                    - text: /api
+                    - text: /v1
+                    - text: /analytics
+                    - text: /cache
+                    - text: /clear
+                - generic [ref=e2160]: Clear Analytics Cache
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2163]:
+              - img [ref=e2164]
+            - button "post /api/api/v1/analytics/cache/clear" [ref=e2166]:
+              - img [ref=e2167]
+      - generic [ref=e2170]:
+        - heading "bulk-operations Collapse operation" [level=3] [ref=e2171] [cursor=pointer]:
+          - link "bulk-operations" [ref=e2172]:
+            - /url: "#/bulk-operations"
+          - button "Collapse operation" [expanded] [ref=e2173]:
+            - img [ref=e2174]
+        - generic [ref=e2177]:
+          - generic [ref=e2180] [cursor=pointer]:
+            - button "POST /api/bulk/import Bulk Import Leads" [ref=e2181]:
+              - generic [ref=e2182]: POST
+              - generic [ref=e2183]:
+                - link "/api/bulk/import" [ref=e2185]:
+                  - /url: "#/bulk-operations/bulk_import_leads_api_bulk_import_post"
+                  - generic [ref=e2186]:
+                    - text: /api
+                    - text: /bulk
+                    - text: /import
+                - generic [ref=e2187]: Bulk Import Leads
+            - generic "Copy to clipboard"
+            - button "post /api/bulk/import" [ref=e2190]:
+              - img [ref=e2191]
+          - generic [ref=e2195] [cursor=pointer]:
+            - button "POST /api/bulk/import/csv Bulk Import Csv" [ref=e2196]:
+              - generic [ref=e2197]: POST
+              - generic [ref=e2198]:
+                - link "/api/bulk/import/csv" [ref=e2200]:
+                  - /url: "#/bulk-operations/bulk_import_csv_api_bulk_import_csv_post"
+                  - generic [ref=e2201]:
+                    - text: /api
+                    - text: /bulk
+                    - text: /import
+                    - text: /csv
+                - generic [ref=e2202]: Bulk Import Csv
+            - generic "Copy to clipboard"
+            - button "post /api/bulk/import/csv" [ref=e2205]:
+              - img [ref=e2206]
+          - generic [ref=e2210] [cursor=pointer]:
+            - button "POST /api/bulk/export Bulk Export Leads" [ref=e2211]:
+              - generic [ref=e2212]: POST
+              - generic [ref=e2213]:
+                - link "/api/bulk/export" [ref=e2215]:
+                  - /url: "#/bulk-operations/bulk_export_leads_api_bulk_export_post"
+                  - generic [ref=e2216]:
+                    - text: /api
+                    - text: /bulk
+                    - text: /export
+                - generic [ref=e2217]: Bulk Export Leads
+            - generic "Copy to clipboard"
+            - button "post /api/bulk/export" [ref=e2220]:
+              - img [ref=e2221]
+          - generic [ref=e2225] [cursor=pointer]:
+            - button "POST /api/bulk/export/csv Bulk Export Csv" [ref=e2226]:
+              - generic [ref=e2227]: POST
+              - generic [ref=e2228]:
+                - link "/api/bulk/export/csv" [ref=e2230]:
+                  - /url: "#/bulk-operations/bulk_export_csv_api_bulk_export_csv_post"
+                  - generic [ref=e2231]:
+                    - text: /api
+                    - text: /bulk
+                    - text: /export
+                    - text: /csv
+                - generic [ref=e2232]: Bulk Export Csv
+            - generic "Copy to clipboard"
+            - button "post /api/bulk/export/csv" [ref=e2235]:
+              - img [ref=e2236]
+          - generic [ref=e2240] [cursor=pointer]:
+            - button "POST /api/bulk/sms/campaign Create Bulk Sms Campaign" [ref=e2241]:
+              - generic [ref=e2242]: POST
+              - generic [ref=e2243]:
+                - link "/api/bulk/sms/campaign" [ref=e2245]:
+                  - /url: "#/bulk-operations/create_bulk_sms_campaign_api_bulk_sms_campaign_post"
+                  - generic [ref=e2246]:
+                    - text: /api
+                    - text: /bulk
+                    - text: /sms
+                    - text: /campaign
+                - generic [ref=e2247]: Create Bulk Sms Campaign
+            - generic "Copy to clipboard"
+            - button "post /api/bulk/sms/campaign" [ref=e2250]:
+              - img [ref=e2251]
+          - generic [ref=e2255] [cursor=pointer]:
+            - button "POST /api/bulk/tags/apply Bulk Apply Tags" [ref=e2256]:
+              - generic [ref=e2257]: POST
+              - generic [ref=e2258]:
+                - link "/api/bulk/tags/apply" [ref=e2260]:
+                  - /url: "#/bulk-operations/bulk_apply_tags_api_bulk_tags_apply_post"
+                  - generic [ref=e2261]:
+                    - text: /api
+                    - text: /bulk
+                    - text: /tags
+                    - text: /apply
+                - generic [ref=e2262]: Bulk Apply Tags
+            - generic "Copy to clipboard"
+            - button "post /api/bulk/tags/apply" [ref=e2265]:
+              - img [ref=e2266]
+          - generic [ref=e2270] [cursor=pointer]:
+            - 'button "GET /api/bulk/operations/{operation_id} Get Operation Status" [ref=e2271]':
+              - generic [ref=e2272]: GET
+              - generic [ref=e2273]:
+                - 'link "/api/bulk/operations/{operation_id}" [ref=e2275]':
+                  - /url: "#/bulk-operations/get_operation_status_api_bulk_operations__operation_id__get"
+                  - generic [ref=e2276]:
+                    - text: /api
+                    - text: /bulk
+                    - text: /operations
+                    - text: "/{operation_id}"
+                - generic [ref=e2277]: Get Operation Status
+            - generic "Copy to clipboard"
+            - 'button "get /api/bulk/operations/{operation_id}" [ref=e2280]':
+              - img [ref=e2281]
+          - generic [ref=e2285] [cursor=pointer]:
+            - 'button "GET /api/bulk/operations/{location_id}/list List Operations" [ref=e2286]':
+              - generic [ref=e2287]: GET
+              - generic [ref=e2288]:
+                - 'link "/api/bulk/operations/{location_id}/list" [ref=e2290]':
+                  - /url: "#/bulk-operations/list_operations_api_bulk_operations__location_id__list_get"
+                  - generic [ref=e2291]:
+                    - text: /api
+                    - text: /bulk
+                    - text: /operations
+                    - text: "/{location_id}"
+                    - text: /list
+                - generic [ref=e2292]: List Operations
+            - generic "Copy to clipboard"
+            - 'button "get /api/bulk/operations/{location_id}/list" [ref=e2295]':
+              - img [ref=e2296]
+          - generic [ref=e2300] [cursor=pointer]:
+            - button "GET /api/bulk/health Bulk Operations Health" [ref=e2301]:
+              - generic [ref=e2302]: GET
+              - generic [ref=e2303]:
+                - link "/api/bulk/health" [ref=e2305]:
+                  - /url: "#/bulk-operations/bulk_operations_health_api_bulk_health_get"
+                  - generic [ref=e2306]:
+                    - text: /api
+                    - text: /bulk
+                    - text: /health
+                - generic [ref=e2307]: Bulk Operations Health
+            - generic "Copy to clipboard"
+            - button "get /api/bulk/health" [ref=e2310]:
+              - img [ref=e2311]
+      - generic [ref=e2314]:
+        - heading "claude-chat Collapse operation" [level=3] [ref=e2315] [cursor=pointer]:
+          - link "claude-chat" [ref=e2316]:
+            - /url: "#/claude-chat"
+          - button "Collapse operation" [expanded] [ref=e2317]:
+            - img [ref=e2318]
+        - generic [ref=e2321]:
+          - generic [ref=e2324] [cursor=pointer]:
+            - button "POST /api/claude/query Chat Query" [ref=e2325]:
+              - generic [ref=e2326]: POST
+              - generic [ref=e2327]:
+                - link "/api/claude/query" [ref=e2329]:
+                  - /url: "#/claude-chat/chat_query_api_claude_query_post"
+                  - generic [ref=e2330]:
+                    - text: /api
+                    - text: /claude
+                    - text: /query
+                - generic [ref=e2331]: Chat Query
+            - generic "Copy to clipboard"
+            - button "post /api/claude/query" [ref=e2334]:
+              - img [ref=e2335]
+          - generic [ref=e2339] [cursor=pointer]:
+            - button "POST /api/claude/query-stream Chat Query Stream" [ref=e2340]:
+              - generic [ref=e2341]: POST
+              - generic [ref=e2342]:
+                - link "/api/claude/query-stream" [ref=e2344]:
+                  - /url: "#/claude-chat/chat_query_stream_api_claude_query_stream_post"
+                  - generic [ref=e2345]:
+                    - text: /api
+                    - text: /claude
+                    - text: /query-stream
+                - generic [ref=e2346]: Chat Query Stream
+            - generic "Copy to clipboard"
+            - button "post /api/claude/query-stream" [ref=e2349]:
+              - img [ref=e2350]
+          - generic [ref=e2354] [cursor=pointer]:
+            - 'button "GET /api/claude/conversation/{contact_id} Get Conversation History" [ref=e2355]':
+              - generic [ref=e2356]: GET
+              - generic [ref=e2357]:
+                - 'link "/api/claude/conversation/{contact_id}" [ref=e2359]':
+                  - /url: "#/claude-chat/get_conversation_history_api_claude_conversation__contact_id__get"
+                  - generic [ref=e2360]:
+                    - text: /api
+                    - text: /claude
+                    - text: /conversation
+                    - text: "/{contact_id}"
+                - generic [ref=e2361]: Get Conversation History
+            - generic "Copy to clipboard"
+            - 'button "get /api/claude/conversation/{contact_id}" [ref=e2364]':
+              - img [ref=e2365]
+          - generic [ref=e2369] [cursor=pointer]:
+            - 'button "POST /api/claude/lead-analysis/{lead_id} Analyze Lead Comprehensive" [ref=e2370]':
+              - generic [ref=e2371]: POST
+              - generic [ref=e2372]:
+                - 'link "/api/claude/lead-analysis/{lead_id}" [ref=e2374]':
+                  - /url: "#/claude-chat/analyze_lead_comprehensive_api_claude_lead_analysis__lead_id__post"
+                  - generic [ref=e2375]:
+                    - text: /api
+                    - text: /claude
+                    - text: /lead-analysis
+                    - text: "/{lead_id}"
+                - generic [ref=e2376]: Analyze Lead Comprehensive
+            - generic "Copy to clipboard"
+            - 'button "post /api/claude/lead-analysis/{lead_id}" [ref=e2379]':
+              - img [ref=e2380]
+          - generic [ref=e2384] [cursor=pointer]:
+            - button "POST /api/claude/generate-script Generate Script" [ref=e2385]:
+              - generic [ref=e2386]: POST
+              - generic [ref=e2387]:
+                - link "/api/claude/generate-script" [ref=e2389]:
+                  - /url: "#/claude-chat/generate_script_api_claude_generate_script_post"
+                  - generic [ref=e2390]:
+                    - text: /api
+                    - text: /claude
+                    - text: /generate-script
+                - generic [ref=e2391]: Generate Script
+            - generic "Copy to clipboard"
+            - button "post /api/claude/generate-script" [ref=e2394]:
+              - img [ref=e2395]
+          - generic [ref=e2399] [cursor=pointer]:
+            - button "POST /api/claude/synthesize-report Synthesize Report" [ref=e2400]:
+              - generic [ref=e2401]: POST
+              - generic [ref=e2402]:
+                - link "/api/claude/synthesize-report" [ref=e2404]:
+                  - /url: "#/claude-chat/synthesize_report_api_claude_synthesize_report_post"
+                  - generic [ref=e2405]:
+                    - text: /api
+                    - text: /claude
+                    - text: /synthesize-report
+                - generic [ref=e2406]: Synthesize Report
+            - generic "Copy to clipboard"
+            - button "post /api/claude/synthesize-report" [ref=e2409]:
+              - img [ref=e2410]
+          - generic [ref=e2414] [cursor=pointer]:
+            - button "GET /api/claude/performance-metrics Get Performance Metrics" [ref=e2415]:
+              - generic [ref=e2416]: GET
+              - generic [ref=e2417]:
+                - link "/api/claude/performance-metrics" [ref=e2419]:
+                  - /url: "#/claude-chat/get_performance_metrics_api_claude_performance_metrics_get"
+                  - generic [ref=e2420]:
+                    - text: /api
+                    - text: /claude
+                    - text: /performance-metrics
+                - generic [ref=e2421]: Get Performance Metrics
+            - generic "Copy to clipboard"
+            - button "get /api/claude/performance-metrics" [ref=e2424]:
+              - img [ref=e2425]
+      - generic [ref=e2428]:
+        - heading "Leads Management Collapse operation" [level=3] [ref=e2429] [cursor=pointer]:
+          - link "Leads Management" [ref=e2430]:
+            - /url: "#/Leads%20Management"
+          - button "Collapse operation" [expanded] [ref=e2431]:
+            - img [ref=e2432]
+        - generic [ref=e2435]:
+          - generic [ref=e2438] [cursor=pointer]:
+            - button "GET /api/leads List Leads" [ref=e2439]:
+              - generic [ref=e2440]: GET
+              - generic [ref=e2441]:
+                - link "/api/leads" [ref=e2443]:
+                  - /url: "#/Leads%20Management/list_leads_api_leads_get"
+                  - generic [ref=e2444]:
+                    - text: /api
+                    - text: /leads
+                - generic [ref=e2445]: List Leads
+            - generic "Copy to clipboard"
+            - button "get /api/leads" [ref=e2448]:
+              - img [ref=e2449]
+          - generic [ref=e2453] [cursor=pointer]:
+            - 'button "PATCH /api/leads/{lead_id}/status Update Lead Status" [ref=e2454]':
+              - generic [ref=e2455]: PATCH
+              - generic [ref=e2456]:
+                - 'link "/api/leads/{lead_id}/status" [ref=e2458]':
+                  - /url: "#/Leads%20Management/update_lead_status_api_leads__lead_id__status_patch"
+                  - generic [ref=e2459]:
+                    - text: /api
+                    - text: /leads
+                    - text: "/{lead_id}"
+                    - text: /status
+                - generic [ref=e2460]: Update Lead Status
+            - generic "Copy to clipboard"
+            - 'button "patch /api/leads/{lead_id}/status" [ref=e2463]':
+              - img [ref=e2464]
+          - generic [ref=e2468] [cursor=pointer]:
+            - 'button "GET /api/leads/{lead_id}/property-matches Get Lead Property Matches" [ref=e2469]':
+              - generic [ref=e2470]: GET
+              - generic [ref=e2471]:
+                - 'link "/api/leads/{lead_id}/property-matches" [ref=e2473]':
+                  - /url: "#/Leads%20Management/get_lead_property_matches_api_leads__lead_id__property_matches_get"
+                  - generic [ref=e2474]:
+                    - text: /api
+                    - text: /leads
+                    - text: "/{lead_id}"
+                    - text: /property-matches
+                - generic [ref=e2475]: Get Lead Property Matches
+            - generic "Copy to clipboard"
+            - 'button "get /api/leads/{lead_id}/property-matches" [ref=e2478]':
+              - img [ref=e2479]
+          - generic [ref=e2483] [cursor=pointer]:
+            - 'button "GET /api/conversations/{conversation_id}/messages Get Conversation Messages" [ref=e2484]':
+              - generic [ref=e2485]: GET
+              - generic [ref=e2486]:
+                - 'link "/api/conversations/{conversation_id}/messages" [ref=e2488]':
+                  - /url: "#/Leads%20Management/get_conversation_messages_api_conversations__conversation_id__messages_get"
+                  - generic [ref=e2489]:
+                    - text: /api
+                    - text: /conversations
+                    - text: "/{conversation_id}"
+                    - text: /messages
+                - generic [ref=e2490]: Get Conversation Messages
+            - generic "Copy to clipboard"
+            - 'button "get /api/conversations/{conversation_id}/messages" [ref=e2493]':
+              - img [ref=e2494]
+      - generic [ref=e2497]:
+        - heading "lead-lifecycle Collapse operation" [level=3] [ref=e2498] [cursor=pointer]:
+          - link "lead-lifecycle" [ref=e2499]:
+            - /url: "#/lead-lifecycle"
+          - button "Collapse operation" [expanded] [ref=e2500]:
+            - img [ref=e2501]
+        - generic [ref=e2504]:
+          - generic [ref=e2507] [cursor=pointer]:
+            - button "POST /api/lifecycle/stages/transition Transition Lead Stage" [ref=e2508]:
+              - generic [ref=e2509]: POST
+              - generic [ref=e2510]:
+                - link "/api/lifecycle/stages/transition" [ref=e2512]:
+                  - /url: "#/lead-lifecycle/transition_lead_stage_api_lifecycle_stages_transition_post"
+                  - generic [ref=e2513]:
+                    - text: /api
+                    - text: /lifecycle
+                    - text: /stages
+                    - text: /transition
+                - generic [ref=e2514]: Transition Lead Stage
+            - generic "Copy to clipboard"
+            - button "post /api/lifecycle/stages/transition" [ref=e2517]:
+              - img [ref=e2518]
+          - generic [ref=e2522] [cursor=pointer]:
+            - 'button "GET /api/lifecycle/stages/{location_id}/{contact_id}/history Get Stage History" [ref=e2523]':
+              - generic [ref=e2524]: GET
+              - generic [ref=e2525]:
+                - 'link "/api/lifecycle/stages/{location_id}/{contact_id}/history" [ref=e2527]':
+                  - /url: "#/lead-lifecycle/get_stage_history_api_lifecycle_stages__location_id___contact_id__history_get"
+                  - generic [ref=e2528]:
+                    - text: /api
+                    - text: /lifecycle
+                    - text: /stages
+                    - text: "/{location_id}"
+                    - text: "/{contact_id}"
+                    - text: /history
+                - generic [ref=e2529]: Get Stage History
+            - generic "Copy to clipboard"
+            - 'button "get /api/lifecycle/stages/{location_id}/{contact_id}/history" [ref=e2532]':
+              - img [ref=e2533]
+          - generic [ref=e2537] [cursor=pointer]:
+            - 'button "GET /api/lifecycle/health/{location_id}/{contact_id} Get Lead Health" [ref=e2538]':
+              - generic [ref=e2539]: GET
+              - generic [ref=e2540]:
+                - 'link "/api/lifecycle/health/{location_id}/{contact_id}" [ref=e2542]':
+                  - /url: "#/lead-lifecycle/get_lead_health_api_lifecycle_health__location_id___contact_id__get"
+                  - generic [ref=e2543]:
+                    - text: /api
+                    - text: /lifecycle
+                    - text: /health
+                    - text: "/{location_id}"
+                    - text: "/{contact_id}"
+                - generic [ref=e2544]: Get Lead Health
+            - generic "Copy to clipboard"
+            - 'button "get /api/lifecycle/health/{location_id}/{contact_id}" [ref=e2547]':
+              - img [ref=e2548]
+          - generic [ref=e2552] [cursor=pointer]:
+            - 'button "GET /api/lifecycle/health/{location_id}/at-risk Get At Risk Leads" [ref=e2553]':
+              - generic [ref=e2554]: GET
+              - generic [ref=e2555]:
+                - 'link "/api/lifecycle/health/{location_id}/at-risk" [ref=e2557]':
+                  - /url: "#/lead-lifecycle/get_at_risk_leads_api_lifecycle_health__location_id__at_risk_get"
+                  - generic [ref=e2558]:
+                    - text: /api
+                    - text: /lifecycle
+                    - text: /health
+                    - text: "/{location_id}"
+                    - text: /at-risk
+                - generic [ref=e2559]: Get At Risk Leads
+            - generic "Copy to clipboard"
+            - 'button "get /api/lifecycle/health/{location_id}/at-risk" [ref=e2562]':
+              - img [ref=e2563]
+          - generic [ref=e2567] [cursor=pointer]:
+            - button "POST /api/lifecycle/reengage/campaign Create Reengagement Campaign" [ref=e2568]:
+              - generic [ref=e2569]: POST
+              - generic [ref=e2570]:
+                - link "/api/lifecycle/reengage/campaign" [ref=e2572]:
+                  - /url: "#/lead-lifecycle/create_reengagement_campaign_api_lifecycle_reengage_campaign_post"
+                  - generic [ref=e2573]:
+                    - text: /api
+                    - text: /lifecycle
+                    - text: /reengage
+                    - text: /campaign
+                - generic [ref=e2574]: Create Reengagement Campaign
+            - generic "Copy to clipboard"
+            - button "post /api/lifecycle/reengage/campaign" [ref=e2577]:
+              - img [ref=e2578]
+          - generic [ref=e2582] [cursor=pointer]:
+            - 'button "GET /api/lifecycle/reengage/{location_id}/eligible Get Eligible For Reengagement" [ref=e2583]':
+              - generic [ref=e2584]: GET
+              - generic [ref=e2585]:
+                - 'link "/api/lifecycle/reengage/{location_id}/eligible" [ref=e2587]':
+                  - /url: "#/lead-lifecycle/get_eligible_for_reengagement_api_lifecycle_reengage__location_id__eligible_get"
+                  - generic [ref=e2588]:
+                    - text: /api
+                    - text: /lifecycle
+                    - text: /reengage
+                    - text: "/{location_id}"
+                    - text: /eligible
+                - generic [ref=e2589]: Get Eligible For Reengagement
+            - generic "Copy to clipboard"
+            - 'button "get /api/lifecycle/reengage/{location_id}/eligible" [ref=e2592]':
+              - img [ref=e2593]
+          - generic [ref=e2597] [cursor=pointer]:
+            - 'button "GET /api/lifecycle/metrics/{location_id} Get Lifecycle Metrics" [ref=e2598]':
+              - generic [ref=e2599]: GET
+              - generic [ref=e2600]:
+                - 'link "/api/lifecycle/metrics/{location_id}" [ref=e2602]':
+                  - /url: "#/lead-lifecycle/get_lifecycle_metrics_api_lifecycle_metrics__location_id__get"
+                  - generic [ref=e2603]:
+                    - text: /api
+                    - text: /lifecycle
+                    - text: /metrics
+                    - text: "/{location_id}"
+                - generic [ref=e2604]: Get Lifecycle Metrics
+            - generic "Copy to clipboard"
+            - 'button "get /api/lifecycle/metrics/{location_id}" [ref=e2607]':
+              - img [ref=e2608]
+          - generic [ref=e2612] [cursor=pointer]:
+            - button "POST /api/lifecycle/nurture/start Start Nurture Sequence" [ref=e2613]:
+              - generic [ref=e2614]: POST
+              - generic [ref=e2615]:
+                - link "/api/lifecycle/nurture/start" [ref=e2617]:
+                  - /url: "#/lead-lifecycle/start_nurture_sequence_api_lifecycle_nurture_start_post"
+                  - generic [ref=e2618]:
+                    - text: /api
+                    - text: /lifecycle
+                    - text: /nurture
+                    - text: /start
+                - generic [ref=e2619]: Start Nurture Sequence
+            - generic "Copy to clipboard"
+            - button "post /api/lifecycle/nurture/start" [ref=e2622]:
+              - img [ref=e2623]
+          - generic [ref=e2627] [cursor=pointer]:
+            - 'button "POST /api/lifecycle/nurture/{sequence_id}/stop Stop Nurture Sequence" [ref=e2628]':
+              - generic [ref=e2629]: POST
+              - generic [ref=e2630]:
+                - 'link "/api/lifecycle/nurture/{sequence_id}/stop" [ref=e2632]':
+                  - /url: "#/lead-lifecycle/stop_nurture_sequence_api_lifecycle_nurture__sequence_id__stop_post"
+                  - generic [ref=e2633]:
+                    - text: /api
+                    - text: /lifecycle
+                    - text: /nurture
+                    - text: "/{sequence_id}"
+                    - text: /stop
+                - generic [ref=e2634]: Stop Nurture Sequence
+            - generic "Copy to clipboard"
+            - 'button "post /api/lifecycle/nurture/{sequence_id}/stop" [ref=e2637]':
+              - img [ref=e2638]
+          - generic [ref=e2642] [cursor=pointer]:
+            - button "GET /api/lifecycle/health Lifecycle Health" [ref=e2643]:
+              - generic [ref=e2644]: GET
+              - generic [ref=e2645]:
+                - link "/api/lifecycle/health" [ref=e2647]:
+                  - /url: "#/lead-lifecycle/lifecycle_health_api_lifecycle_health_get"
+                  - generic [ref=e2648]:
+                    - text: /api
+                    - text: /lifecycle
+                    - text: /health
+                - generic [ref=e2649]: Lifecycle Health
+            - generic "Copy to clipboard"
+            - button "get /api/lifecycle/health" [ref=e2652]:
+              - img [ref=e2653]
+      - generic [ref=e2656]:
+        - heading "Health Checks Collapse operation" [level=3] [ref=e2657] [cursor=pointer]:
+          - link "Health Checks" [ref=e2658]:
+            - /url: "#/Health%20Checks"
+          - button "Collapse operation" [expanded] [ref=e2659]:
+            - img [ref=e2660]
+        - generic [ref=e2663]:
+          - generic [ref=e2666] [cursor=pointer]:
+            - button "GET /api/health/ Basic Health" [ref=e2667]:
+              - generic [ref=e2668]: GET
+              - generic [ref=e2669]:
+                - link /api/health/ [ref=e2671]:
+                  - /url: "#/Health%20Checks/basic_health_api_health__get"
+                  - generic [ref=e2672]:
+                    - text: /api
+                    - text: /health
+                    - text: /
+                - generic [ref=e2673]: Basic Health
+            - generic "Copy to clipboard"
+            - button "get /api/health/" [ref=e2676]:
+              - img [ref=e2677]
+          - generic [ref=e2681] [cursor=pointer]:
+            - button "GET /api/health/live Liveness Probe" [ref=e2682]:
+              - generic [ref=e2683]: GET
+              - generic [ref=e2684]:
+                - link "/api/health/live" [ref=e2686]:
+                  - /url: "#/Health%20Checks/liveness_probe_api_health_live_get"
+                  - generic [ref=e2687]:
+                    - text: /api
+                    - text: /health
+                    - text: /live
+                - generic [ref=e2688]: Liveness Probe
+            - generic "Copy to clipboard"
+            - button "get /api/health/live" [ref=e2691]:
+              - img [ref=e2692]
+          - generic [ref=e2696] [cursor=pointer]:
+            - button "GET /api/health/ready Readiness Probe" [ref=e2697]:
+              - generic [ref=e2698]: GET
+              - generic [ref=e2699]:
+                - link "/api/health/ready" [ref=e2701]:
+                  - /url: "#/Health%20Checks/readiness_probe_api_health_ready_get"
+                  - generic [ref=e2702]:
+                    - text: /api
+                    - text: /health
+                    - text: /ready
+                - generic [ref=e2703]: Readiness Probe
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2706]:
+              - img [ref=e2707]
+            - button "get /api/health/ready" [ref=e2709]:
+              - img [ref=e2710]
+          - generic [ref=e2714] [cursor=pointer]:
+            - button "GET /api/health/deep Deep Health Check" [ref=e2715]:
+              - generic [ref=e2716]: GET
+              - generic [ref=e2717]:
+                - link "/api/health/deep" [ref=e2719]:
+                  - /url: "#/Health%20Checks/deep_health_check_api_health_deep_get"
+                  - generic [ref=e2720]:
+                    - text: /api
+                    - text: /health
+                    - text: /deep
+                - generic [ref=e2721]: Deep Health Check
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2724]:
+              - img [ref=e2725]
+            - button "get /api/health/deep" [ref=e2727]:
+              - img [ref=e2728]
+          - generic [ref=e2732] [cursor=pointer]:
+            - button "GET /api/health/metrics Performance Metrics" [ref=e2733]:
+              - generic [ref=e2734]: GET
+              - generic [ref=e2735]:
+                - link "/api/health/metrics" [ref=e2737]:
+                  - /url: "#/Health%20Checks/performance_metrics_api_health_metrics_get"
+                  - generic [ref=e2738]:
+                    - text: /api
+                    - text: /health
+                    - text: /metrics
+                - generic [ref=e2739]: Performance Metrics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2742]:
+              - img [ref=e2743]
+            - button "get /api/health/metrics" [ref=e2745]:
+              - img [ref=e2746]
+          - generic [ref=e2750] [cursor=pointer]:
+            - button "GET /api/health/dependencies Dependency Status" [ref=e2751]:
+              - generic [ref=e2752]: GET
+              - generic [ref=e2753]:
+                - link "/api/health/dependencies" [ref=e2755]:
+                  - /url: "#/Health%20Checks/dependency_status_api_health_dependencies_get"
+                  - generic [ref=e2756]:
+                    - text: /api
+                    - text: /health
+                    - text: /dependencies
+                - generic [ref=e2757]: Dependency Status
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2760]:
+              - img [ref=e2761]
+            - button "get /api/health/dependencies" [ref=e2763]:
+              - img [ref=e2764]
+          - generic [ref=e2768] [cursor=pointer]:
+            - button "POST /api/health/alerts/test Test Alerting" [ref=e2769]:
+              - generic [ref=e2770]: POST
+              - generic [ref=e2771]:
+                - link "/api/health/alerts/test" [ref=e2773]:
+                  - /url: "#/Health%20Checks/test_alerting_api_health_alerts_test_post"
+                  - generic [ref=e2774]:
+                    - text: /api
+                    - text: /health
+                    - text: /alerts
+                    - text: /test
+                - generic [ref=e2775]: Test Alerting
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2778]:
+              - img [ref=e2779]
+            - button "post /api/health/alerts/test" [ref=e2781]:
+              - img [ref=e2782]
+          - generic [ref=e2786] [cursor=pointer]:
+            - button "GET /api/health/status Service Status" [ref=e2787]:
+              - generic [ref=e2788]: GET
+              - generic [ref=e2789]:
+                - link "/api/health/status" [ref=e2791]:
+                  - /url: "#/Health%20Checks/service_status_api_health_status_get"
+                  - generic [ref=e2792]:
+                    - text: /api
+                    - text: /health
+                    - text: /status
+                - generic [ref=e2793]: Service Status
+            - generic "Copy to clipboard"
+            - button "get /api/health/status" [ref=e2796]:
+              - img [ref=e2797]
+      - generic [ref=e2800]:
+        - heading "enterprise_authentication Collapse operation" [level=3] [ref=e2801] [cursor=pointer]:
+          - link "enterprise_authentication" [ref=e2802]:
+            - /url: "#/enterprise_authentication"
+          - button "Collapse operation" [expanded] [ref=e2803]:
+            - img [ref=e2804]
+        - generic [ref=e2807]:
+          - generic [ref=e2810] [cursor=pointer]:
+            - button "POST /api/enterprise/auth/sso/initiate Initiate Enterprise Sso Login" [ref=e2811]:
+              - generic [ref=e2812]: POST
+              - generic [ref=e2813]:
+                - link "/api/enterprise/auth/sso/initiate" [ref=e2815]:
+                  - /url: "#/enterprise_authentication/initiate_enterprise_sso_login_api_enterprise_auth_sso_initiate_post"
+                  - generic [ref=e2816]:
+                    - text: /api
+                    - text: /enterprise
+                    - text: /auth
+                    - text: /sso
+                    - text: /initiate
+                - generic [ref=e2817]: Initiate Enterprise Sso Login
+            - generic "Copy to clipboard"
+            - button "post /api/enterprise/auth/sso/initiate" [ref=e2820]:
+              - img [ref=e2821]
+          - generic [ref=e2825] [cursor=pointer]:
+            - button "GET /api/enterprise/auth/sso/callback Enterprise Sso Callback" [ref=e2826]:
+              - generic [ref=e2827]: GET
+              - generic [ref=e2828]:
+                - link "/api/enterprise/auth/sso/callback" [ref=e2830]:
+                  - /url: "#/enterprise_authentication/enterprise_sso_callback_api_enterprise_auth_sso_callback_get"
+                  - generic [ref=e2831]:
+                    - text: /api
+                    - text: /enterprise
+                    - text: /auth
+                    - text: /sso
+                    - text: /callback
+                - generic [ref=e2832]: Enterprise Sso Callback
+            - generic "Copy to clipboard"
+            - button "get /api/enterprise/auth/sso/callback" [ref=e2835]:
+              - img [ref=e2836]
+          - generic [ref=e2840] [cursor=pointer]:
+            - button "POST /api/enterprise/auth/refresh Refresh Enterprise Token" [ref=e2841]:
+              - generic [ref=e2842]: POST
+              - generic [ref=e2843]:
+                - link "/api/enterprise/auth/refresh" [ref=e2845]:
+                  - /url: "#/enterprise_authentication/refresh_enterprise_token_api_enterprise_auth_refresh_post"
+                  - generic [ref=e2846]:
+                    - text: /api
+                    - text: /enterprise
+                    - text: /auth
+                    - text: /refresh
+                - generic [ref=e2847]: Refresh Enterprise Token
+            - generic "Copy to clipboard"
+            - button "post /api/enterprise/auth/refresh" [ref=e2850]:
+              - img [ref=e2851]
+      - generic [ref=e2854]:
+        - heading "authentication Collapse operation" [level=3] [ref=e2855] [cursor=pointer]:
+          - link "authentication" [ref=e2856]:
+            - /url: "#/authentication"
+          - button "Collapse operation" [expanded] [ref=e2857]:
+            - img [ref=e2858]
+        - generic [ref=e2861]:
+          - generic [ref=e2864] [cursor=pointer]:
+            - button "POST /api/auth/login Login" [ref=e2865]:
+              - generic [ref=e2866]: POST
+              - generic [ref=e2867]:
+                - link "/api/auth/login" [ref=e2869]:
+                  - /url: "#/authentication/login_api_auth_login_post"
+                  - generic [ref=e2870]:
+                    - text: /api
+                    - text: /auth
+                    - text: /login
+                - generic [ref=e2871]: Login
+            - generic "Copy to clipboard"
+            - button "post /api/auth/login" [ref=e2874]:
+              - img [ref=e2875]
+          - generic [ref=e2879] [cursor=pointer]:
+            - button "POST /api/auth/token Get Token" [ref=e2880]:
+              - generic [ref=e2881]: POST
+              - generic [ref=e2882]:
+                - link "/api/auth/token" [ref=e2884]:
+                  - /url: "#/authentication/get_token_api_auth_token_post"
+                  - generic [ref=e2885]:
+                    - text: /api
+                    - text: /auth
+                    - text: /token
+                - generic [ref=e2886]: Get Token
+            - generic "Copy to clipboard"
+            - button "post /api/auth/token" [ref=e2889]:
+              - img [ref=e2890]
+          - generic [ref=e2894] [cursor=pointer]:
+            - button "GET /api/auth/me Get Current User Info" [ref=e2895]:
+              - generic [ref=e2896]: GET
+              - generic [ref=e2897]:
+                - link "/api/auth/me" [ref=e2899]:
+                  - /url: "#/authentication/get_current_user_info_api_auth_me_get"
+                  - generic [ref=e2900]:
+                    - text: /api
+                    - text: /auth
+                    - text: /me
+                - generic [ref=e2901]: Get Current User Info
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e2904]:
+              - img [ref=e2905]
+            - button "get /api/auth/me" [ref=e2907]:
+              - img [ref=e2908]
+      - generic [ref=e2911]:
+        - heading "properties Collapse operation" [level=3] [ref=e2912] [cursor=pointer]:
+          - link "properties" [ref=e2913]:
+            - /url: "#/properties"
+          - button "Collapse operation" [expanded] [ref=e2914]:
+            - img [ref=e2915]
+        - generic [ref=e2918]:
+          - generic [ref=e2921] [cursor=pointer]:
+            - 'button "GET /api/properties/match/{location_id}/{contact_id} Match Properties" [ref=e2922]':
+              - generic [ref=e2923]: GET
+              - generic [ref=e2924]:
+                - 'link "/api/properties/match/{location_id}/{contact_id}" [ref=e2926]':
+                  - /url: "#/properties/match_properties_api_properties_match__location_id___contact_id__get"
+                  - generic [ref=e2927]:
+                    - text: /api
+                    - text: /properties
+                    - text: /match
+                    - text: "/{location_id}"
+                    - text: "/{contact_id}"
+                - generic [ref=e2928]: Match Properties
+            - generic "Copy to clipboard"
+            - 'button "get /api/properties/match/{location_id}/{contact_id}" [ref=e2931]':
+              - img [ref=e2932]
+          - generic [ref=e2936] [cursor=pointer]:
+            - button "GET /api/properties/all List All Properties" [ref=e2937]:
+              - generic [ref=e2938]: GET
+              - generic [ref=e2939]:
+                - link "/api/properties/all" [ref=e2941]:
+                  - /url: "#/properties/list_all_properties_api_properties_all_get"
+                  - generic [ref=e2942]:
+                    - text: /api
+                    - text: /properties
+                    - text: /all
+                - generic [ref=e2943]: List All Properties
+            - generic "Copy to clipboard"
+            - button "get /api/properties/all" [ref=e2946]:
+              - img [ref=e2947]
+      - generic [ref=e2950]:
+        - heading "portal Collapse operation" [level=3] [ref=e2951] [cursor=pointer]:
+          - link "portal" [ref=e2952]:
+            - /url: "#/portal"
+          - button "Collapse operation" [expanded] [ref=e2953]:
+            - img [ref=e2954]
+        - generic [ref=e2957]:
+          - generic [ref=e2960] [cursor=pointer]:
+            - button "POST /api/portal/swipe Handle Swipe" [ref=e2961]:
+              - generic [ref=e2962]: POST
+              - generic [ref=e2963]:
+                - link "/api/portal/swipe" [ref=e2965]:
+                  - /url: "#/portal/handle_swipe_api_portal_swipe_post"
+                  - generic [ref=e2966]:
+                    - text: /api
+                    - text: /portal
+                    - text: /swipe
+                - generic [ref=e2967]: Handle Swipe
+            - generic "Copy to clipboard"
+            - button "post /api/portal/swipe" [ref=e2970]:
+              - img [ref=e2971]
+          - generic [ref=e2975] [cursor=pointer]:
+            - 'button "GET /api/portal/stats/{lead_id} Get Lead Stats" [ref=e2976]':
+              - generic [ref=e2977]: GET
+              - generic [ref=e2978]:
+                - 'link "/api/portal/stats/{lead_id}" [ref=e2980]':
+                  - /url: "#/portal/get_lead_stats_api_portal_stats__lead_id__get"
+                  - generic [ref=e2981]:
+                    - text: /api
+                    - text: /portal
+                    - text: /stats
+                    - text: "/{lead_id}"
+                - generic [ref=e2982]: Get Lead Stats
+            - generic "Copy to clipboard"
+            - 'button "get /api/portal/stats/{lead_id}" [ref=e2985]':
+              - img [ref=e2986]
+          - generic [ref=e2990] [cursor=pointer]:
+            - button "GET /api/portal/feedback-categories Get Feedback Categories" [ref=e2991]:
+              - generic [ref=e2992]: GET
+              - generic [ref=e2993]:
+                - link "/api/portal/feedback-categories" [ref=e2995]:
+                  - /url: "#/portal/get_feedback_categories_api_portal_feedback_categories_get"
+                  - generic [ref=e2996]:
+                    - text: /api
+                    - text: /portal
+                    - text: /feedback-categories
+                - generic [ref=e2997]: Get Feedback Categories
+            - generic "Copy to clipboard"
+            - button "get /api/portal/feedback-categories" [ref=e3000]:
+              - img [ref=e3001]
+          - generic [ref=e3005] [cursor=pointer]:
+            - 'button "GET /api/portal/interactions/{lead_id} Get Lead Interactions" [ref=e3006]':
+              - generic [ref=e3007]: GET
+              - generic [ref=e3008]:
+                - 'link "/api/portal/interactions/{lead_id}" [ref=e3010]':
+                  - /url: "#/portal/get_lead_interactions_api_portal_interactions__lead_id__get"
+                  - generic [ref=e3011]:
+                    - text: /api
+                    - text: /portal
+                    - text: /interactions
+                    - text: "/{lead_id}"
+                - generic [ref=e3012]: Get Lead Interactions
+            - generic "Copy to clipboard"
+            - 'button "get /api/portal/interactions/{lead_id}" [ref=e3015]':
+              - img [ref=e3016]
+          - generic [ref=e3020] [cursor=pointer]:
+            - 'button "GET /api/portal/deck/{lead_id} Get Smart Deck" [ref=e3021]':
+              - generic [ref=e3022]: GET
+              - generic [ref=e3023]:
+                - 'link "/api/portal/deck/{lead_id}" [ref=e3025]':
+                  - /url: "#/portal/get_smart_deck_api_portal_deck__lead_id__get"
+                  - generic [ref=e3026]:
+                    - text: /api
+                    - text: /portal
+                    - text: /deck
+                    - text: "/{lead_id}"
+                - generic [ref=e3027]: Get Smart Deck
+            - generic "Copy to clipboard"
+            - 'button "get /api/portal/deck/{lead_id}" [ref=e3030]':
+              - img [ref=e3031]
+          - generic [ref=e3035] [cursor=pointer]:
+            - button "GET /api/portal/smart-deck Get Smart Deck Legacy" [ref=e3036]:
+              - generic [ref=e3037]: GET
+              - generic [ref=e3038]:
+                - link "/api/portal/smart-deck" [ref=e3040]:
+                  - /url: "#/portal/get_smart_deck_legacy_api_portal_smart_deck_get"
+                  - generic [ref=e3041]:
+                    - text: /api
+                    - text: /portal
+                    - text: /smart-deck
+                - generic [ref=e3042]: Get Smart Deck Legacy
+            - generic "Copy to clipboard"
+            - button "get /api/portal/smart-deck" [ref=e3045]:
+              - img [ref=e3046]
+      - generic [ref=e3049]:
+        - heading "team Collapse operation" [level=3] [ref=e3050] [cursor=pointer]:
+          - link "team" [ref=e3051]:
+            - /url: "#/team"
+          - button "Collapse operation" [expanded] [ref=e3052]:
+            - img [ref=e3053]
+        - generic [ref=e3056]:
+          - generic [ref=e3059] [cursor=pointer]:
+            - 'button "POST /api/team/{location_id}/agents Add Agent" [ref=e3060]':
+              - generic [ref=e3061]: POST
+              - generic [ref=e3062]:
+                - 'link "/api/team/{location_id}/agents" [ref=e3064]':
+                  - /url: "#/team/add_agent_api_team__location_id__agents_post"
+                  - generic [ref=e3065]:
+                    - text: /api
+                    - text: /team
+                    - text: "/{location_id}"
+                    - text: /agents
+                - generic [ref=e3066]: Add Agent
+            - generic "Copy to clipboard"
+            - 'button "post /api/team/{location_id}/agents" [ref=e3069]':
+              - img [ref=e3070]
+          - generic [ref=e3074] [cursor=pointer]:
+            - 'button "GET /api/team/{location_id}/agents List Agents" [ref=e3075]':
+              - generic [ref=e3076]: GET
+              - generic [ref=e3077]:
+                - 'link "/api/team/{location_id}/agents" [ref=e3079]':
+                  - /url: "#/team/list_agents_api_team__location_id__agents_get"
+                  - generic [ref=e3080]:
+                    - text: /api
+                    - text: /team
+                    - text: "/{location_id}"
+                    - text: /agents
+                - generic [ref=e3081]: List Agents
+            - generic "Copy to clipboard"
+            - 'button "get /api/team/{location_id}/agents" [ref=e3084]':
+              - img [ref=e3085]
+          - generic [ref=e3089] [cursor=pointer]:
+            - 'button "GET /api/team/{location_id}/leaderboard Get Leaderboard" [ref=e3090]':
+              - generic [ref=e3091]: GET
+              - generic [ref=e3092]:
+                - 'link "/api/team/{location_id}/leaderboard" [ref=e3094]':
+                  - /url: "#/team/get_leaderboard_api_team__location_id__leaderboard_get"
+                  - generic [ref=e3095]:
+                    - text: /api
+                    - text: /team
+                    - text: "/{location_id}"
+                    - text: /leaderboard
+                - generic [ref=e3096]: Get Leaderboard
+            - generic "Copy to clipboard"
+            - 'button "get /api/team/{location_id}/leaderboard" [ref=e3099]':
+              - img [ref=e3100]
+          - generic [ref=e3104] [cursor=pointer]:
+            - 'button "POST /api/team/{location_id}/assign Assign Lead" [ref=e3105]':
+              - generic [ref=e3106]: POST
+              - generic [ref=e3107]:
+                - 'link "/api/team/{location_id}/assign" [ref=e3109]':
+                  - /url: "#/team/assign_lead_api_team__location_id__assign_post"
+                  - generic [ref=e3110]:
+                    - text: /api
+                    - text: /team
+                    - text: "/{location_id}"
+                    - text: /assign
+                - generic [ref=e3111]: Assign Lead
+            - generic "Copy to clipboard"
+            - 'button "post /api/team/{location_id}/assign" [ref=e3114]':
+              - img [ref=e3115]
+          - generic [ref=e3119] [cursor=pointer]:
+            - 'button "POST /api/team/{location_id}/agents/{agent_id}/performance Update Performance" [ref=e3120]':
+              - generic [ref=e3121]: POST
+              - generic [ref=e3122]:
+                - 'link "/api/team/{location_id}/agents/{agent_id}/performance" [ref=e3124]':
+                  - /url: "#/team/update_performance_api_team__location_id__agents__agent_id__performance_post"
+                  - generic [ref=e3125]:
+                    - text: /api
+                    - text: /team
+                    - text: "/{location_id}"
+                    - text: /agents
+                    - text: "/{agent_id}"
+                    - text: /performance
+                - generic [ref=e3126]: Update Performance
+            - generic "Copy to clipboard"
+            - 'button "post /api/team/{location_id}/agents/{agent_id}/performance" [ref=e3129]':
+              - img [ref=e3130]
+      - generic [ref=e3133]:
+        - heading "crm Collapse operation" [level=3] [ref=e3134] [cursor=pointer]:
+          - link "crm" [ref=e3135]:
+            - /url: "#/crm"
+          - button "Collapse operation" [expanded] [ref=e3136]:
+            - img [ref=e3137]
+        - generic [ref=e3140]:
+          - generic [ref=e3143] [cursor=pointer]:
+            - 'button "GET /api/crm/{location_id}/config Get Crm Config" [ref=e3144]':
+              - generic [ref=e3145]: GET
+              - generic [ref=e3146]:
+                - 'link "/api/crm/{location_id}/config" [ref=e3148]':
+                  - /url: "#/crm/get_crm_config_api_crm__location_id__config_get"
+                  - generic [ref=e3149]:
+                    - text: /api
+                    - text: /crm
+                    - text: "/{location_id}"
+                    - text: /config
+                - generic [ref=e3150]: Get Crm Config
+            - generic "Copy to clipboard"
+            - 'button "get /api/crm/{location_id}/config" [ref=e3153]':
+              - img [ref=e3154]
+          - generic [ref=e3158] [cursor=pointer]:
+            - 'button "POST /api/crm/{location_id}/config/{platform} Update Crm Config" [ref=e3159]':
+              - generic [ref=e3160]: POST
+              - generic [ref=e3161]:
+                - 'link "/api/crm/{location_id}/config/{platform}" [ref=e3163]':
+                  - /url: "#/crm/update_crm_config_api_crm__location_id__config__platform__post"
+                  - generic [ref=e3164]:
+                    - text: /api
+                    - text: /crm
+                    - text: "/{location_id}"
+                    - text: /config
+                    - text: "/{platform}"
+                - generic [ref=e3165]: Update Crm Config
+            - generic "Copy to clipboard"
+            - 'button "post /api/crm/{location_id}/config/{platform}" [ref=e3168]':
+              - img [ref=e3169]
+          - generic [ref=e3173] [cursor=pointer]:
+            - 'button "POST /api/crm/{location_id}/sync/{contact_id} Sync Lead" [ref=e3174]':
+              - generic [ref=e3175]: POST
+              - generic [ref=e3176]:
+                - 'link "/api/crm/{location_id}/sync/{contact_id}" [ref=e3178]':
+                  - /url: "#/crm/sync_lead_api_crm__location_id__sync__contact_id__post"
+                  - generic [ref=e3179]:
+                    - text: /api
+                    - text: /crm
+                    - text: "/{location_id}"
+                    - text: /sync
+                    - text: "/{contact_id}"
+                - generic [ref=e3180]: Sync Lead
+            - generic "Copy to clipboard"
+            - 'button "post /api/crm/{location_id}/sync/{contact_id}" [ref=e3183]':
+              - img [ref=e3184]
+          - generic [ref=e3188] [cursor=pointer]:
+            - button "GET /api/crm/ghl/fields Get Ghl Fields" [ref=e3189]:
+              - generic [ref=e3190]: GET
+              - generic [ref=e3191]:
+                - link "/api/crm/ghl/fields" [ref=e3193]:
+                  - /url: "#/crm/get_ghl_fields_api_crm_ghl_fields_get"
+                  - generic [ref=e3194]:
+                    - text: /api
+                    - text: /crm
+                    - text: /ghl
+                    - text: /fields
+                - generic [ref=e3195]: Get Ghl Fields
+            - generic "Copy to clipboard"
+            - button "get /api/crm/ghl/fields" [ref=e3198]:
+              - img [ref=e3199]
+      - generic [ref=e3202]:
+        - heading "voice Collapse operation" [level=3] [ref=e3203] [cursor=pointer]:
+          - link "voice" [ref=e3204]:
+            - /url: "#/voice"
+          - button "Collapse operation" [expanded] [ref=e3205]:
+            - img [ref=e3206]
+        - generic [ref=e3209]:
+          - generic [ref=e3212] [cursor=pointer]:
+            - button "POST /api/voice/incoming Handle Incoming Call" [ref=e3213]:
+              - generic [ref=e3214]: POST
+              - generic [ref=e3215]:
+                - link "/api/voice/incoming" [ref=e3217]:
+                  - /url: "#/voice/handle_incoming_call_api_voice_incoming_post"
+                  - generic [ref=e3218]:
+                    - text: /api
+                    - text: /voice
+                    - text: /incoming
+                - generic [ref=e3219]: Handle Incoming Call
+            - generic "Copy to clipboard"
+            - button "post /api/voice/incoming" [ref=e3222]:
+              - img [ref=e3223]
+          - generic [ref=e3227] [cursor=pointer]:
+            - button "POST /api/voice/process Process Voice Input" [ref=e3228]:
+              - generic [ref=e3229]: POST
+              - generic [ref=e3230]:
+                - link "/api/voice/process" [ref=e3232]:
+                  - /url: "#/voice/process_voice_input_api_voice_process_post"
+                  - generic [ref=e3233]:
+                    - text: /api
+                    - text: /voice
+                    - text: /process
+                - generic [ref=e3234]: Process Voice Input
+            - generic "Copy to clipboard"
+            - button "post /api/voice/process" [ref=e3237]:
+              - img [ref=e3238]
+      - generic [ref=e3241]:
+        - heading "intelligence Collapse operation" [level=3] [ref=e3242] [cursor=pointer]:
+          - link "intelligence" [ref=e3243]:
+            - /url: "#/intelligence"
+          - button "Collapse operation" [expanded] [ref=e3244]:
+            - img [ref=e3245]
+        - generic [ref=e3248]:
+          - generic [ref=e3251] [cursor=pointer]:
+            - button "POST /api/intelligence/analyze-intent Analyze Lead Intent" [ref=e3252]:
+              - generic [ref=e3253]: POST
+              - generic [ref=e3254]:
+                - link "/api/intelligence/analyze-intent" [ref=e3256]:
+                  - /url: "#/intelligence/analyze_lead_intent_api_intelligence_analyze_intent_post"
+                  - generic [ref=e3257]:
+                    - text: /api
+                    - text: /intelligence
+                    - text: /analyze-intent
+                - generic [ref=e3258]: Analyze Lead Intent
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3261]:
+              - img [ref=e3262]
+            - button "post /api/intelligence/analyze-intent" [ref=e3264]:
+              - img [ref=e3265]
+          - generic [ref=e3269] [cursor=pointer]:
+            - button "POST /api/intelligence/score Score Lead Intelligence" [ref=e3270]:
+              - generic [ref=e3271]: POST
+              - generic [ref=e3272]:
+                - link "/api/intelligence/score" [ref=e3274]:
+                  - /url: "#/intelligence/score_lead_intelligence_api_intelligence_score_post"
+                  - generic [ref=e3275]:
+                    - text: /api
+                    - text: /intelligence
+                    - text: /score
+                - generic [ref=e3276]: Score Lead Intelligence
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3279]:
+              - img [ref=e3280]
+            - button "post /api/intelligence/score" [ref=e3282]:
+              - img [ref=e3283]
+          - generic [ref=e3287] [cursor=pointer]:
+            - button "POST /api/intelligence/trigger-recovery Trigger Agentic Recovery" [ref=e3288]:
+              - generic [ref=e3289]: POST
+              - generic [ref=e3290]:
+                - link "/api/intelligence/trigger-recovery" [ref=e3292]:
+                  - /url: "#/intelligence/trigger_agentic_recovery_api_intelligence_trigger_recovery_post"
+                  - generic [ref=e3293]:
+                    - text: /api
+                    - text: /intelligence
+                    - text: /trigger-recovery
+                - generic [ref=e3294]: Trigger Agentic Recovery
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3297]:
+              - img [ref=e3298]
+            - button "post /api/intelligence/trigger-recovery" [ref=e3300]:
+              - img [ref=e3301]
+      - generic [ref=e3304]:
+        - heading "Agent Sync Collapse operation" [level=3] [ref=e3305] [cursor=pointer]:
+          - link "Agent Sync" [ref=e3306]:
+            - /url: "#/Agent%20Sync"
+          - button "Collapse operation" [expanded] [ref=e3307]:
+            - img [ref=e3308]
+        - generic [ref=e3311]:
+          - generic [ref=e3314] [cursor=pointer]:
+            - button "GET /api/agent-sync/state Get Current State" [ref=e3315]:
+              - generic [ref=e3316]: GET
+              - generic [ref=e3317]:
+                - link "/api/agent-sync/state" [ref=e3319]:
+                  - /url: "#/Agent%20Sync/get_current_state_api_agent_sync_state_get"
+                  - generic [ref=e3320]:
+                    - text: /api
+                    - text: /agent-sync
+                    - text: /state
+                - generic [ref=e3321]: Get Current State
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3324]:
+              - img [ref=e3325]
+            - button "get /api/agent-sync/state" [ref=e3327]:
+              - img [ref=e3328]
+          - generic [ref=e3332] [cursor=pointer]:
+            - button "GET /api/agent-sync/delta Get State Delta" [ref=e3333]:
+              - generic [ref=e3334]: GET
+              - generic [ref=e3335]:
+                - link "/api/agent-sync/delta" [ref=e3337]:
+                  - /url: "#/Agent%20Sync/get_state_delta_api_agent_sync_delta_get"
+                  - generic [ref=e3338]:
+                    - text: /api
+                    - text: /agent-sync
+                    - text: /delta
+                - generic [ref=e3339]: Get State Delta
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3342]:
+              - img [ref=e3343]
+            - button "get /api/agent-sync/delta" [ref=e3345]:
+              - img [ref=e3346]
+          - generic [ref=e3350] [cursor=pointer]:
+            - button "POST /api/agent-sync/mock-update Mock Agent Update" [ref=e3351]:
+              - generic [ref=e3352]: POST
+              - generic [ref=e3353]:
+                - link "/api/agent-sync/mock-update" [ref=e3355]:
+                  - /url: "#/Agent%20Sync/mock_agent_update_api_agent_sync_mock_update_post"
+                  - generic [ref=e3356]:
+                    - text: /api
+                    - text: /agent-sync
+                    - text: /mock-update
+                - generic [ref=e3357]: Mock Agent Update
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3360]:
+              - img [ref=e3361]
+            - button "post /api/agent-sync/mock-update" [ref=e3363]:
+              - img [ref=e3364]
+          - generic [ref=e3368] [cursor=pointer]:
+            - button "POST /api/agent-sync/thought Record Thought" [ref=e3369]:
+              - generic [ref=e3370]: POST
+              - generic [ref=e3371]:
+                - link "/api/agent-sync/thought" [ref=e3373]:
+                  - /url: "#/Agent%20Sync/record_thought_api_agent_sync_thought_post"
+                  - generic [ref=e3374]:
+                    - text: /api
+                    - text: /agent-sync
+                    - text: /thought
+                - generic [ref=e3375]: Record Thought
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3378]:
+              - img [ref=e3379]
+            - button "post /api/agent-sync/thought" [ref=e3381]:
+              - img [ref=e3382]
+      - generic [ref=e3385]:
+        - heading "Agent UI Collapse operation" [level=3] [ref=e3386] [cursor=pointer]:
+          - link "Agent UI" [ref=e3387]:
+            - /url: "#/Agent%20UI"
+          - button "Collapse operation" [expanded] [ref=e3388]:
+            - img [ref=e3389]
+        - generic [ref=e3392]:
+          - generic [ref=e3395] [cursor=pointer]:
+            - button "GET /api/agent-ui/stream-ui-generation Stream Ui Generation" [ref=e3396]:
+              - generic [ref=e3397]: GET
+              - generic [ref=e3398]:
+                - link "/api/agent-ui/stream-ui-generation" [ref=e3400]:
+                  - /url: "#/Agent%20UI/stream_ui_generation_api_agent_ui_stream_ui_generation_get"
+                  - generic [ref=e3401]:
+                    - text: /api
+                    - text: /agent-ui
+                    - text: /stream-ui-generation
+                - generic [ref=e3402]: Stream Ui Generation
+            - generic "Copy to clipboard"
+            - button "get /api/agent-ui/stream-ui-generation" [ref=e3405]:
+              - img [ref=e3406]
+          - generic [ref=e3410] [cursor=pointer]:
+            - button "POST /api/agent-ui/record-feedback Record Feedback" [ref=e3411]:
+              - generic [ref=e3412]: POST
+              - generic [ref=e3413]:
+                - link "/api/agent-ui/record-feedback" [ref=e3415]:
+                  - /url: "#/Agent%20UI/record_feedback_api_agent_ui_record_feedback_post"
+                  - generic [ref=e3416]:
+                    - text: /api
+                    - text: /agent-ui
+                    - text: /record-feedback
+                - generic [ref=e3417]: Record Feedback
+            - generic "Copy to clipboard"
+            - button "post /api/agent-ui/record-feedback" [ref=e3420]:
+              - img [ref=e3421]
+          - generic [ref=e3425] [cursor=pointer]:
+            - button "GET /api/agent-ui/stream-ui-updates Stream Ui Updates" [ref=e3426]:
+              - generic [ref=e3427]: GET
+              - generic [ref=e3428]:
+                - link "/api/agent-ui/stream-ui-updates" [ref=e3430]:
+                  - /url: "#/Agent%20UI/stream_ui_updates_api_agent_ui_stream_ui_updates_get"
+                  - generic [ref=e3431]:
+                    - text: /api
+                    - text: /agent-ui
+                    - text: /stream-ui-updates
+                - generic [ref=e3432]: Stream Ui Updates
+            - generic "Copy to clipboard"
+            - button "get /api/agent-ui/stream-ui-updates" [ref=e3435]:
+              - img [ref=e3436]
+          - generic [ref=e3440] [cursor=pointer]:
+            - button "POST /api/agent-ui/trigger-ui-swarm Trigger Ui Swarm" [ref=e3441]:
+              - generic [ref=e3442]: POST
+              - generic [ref=e3443]:
+                - link "/api/agent-ui/trigger-ui-swarm" [ref=e3445]:
+                  - /url: "#/Agent%20UI/trigger_ui_swarm_api_agent_ui_trigger_ui_swarm_post"
+                  - generic [ref=e3446]:
+                    - text: /api
+                    - text: /agent-ui
+                    - text: /trigger-ui-swarm
+                - generic [ref=e3447]: Trigger Ui Swarm
+            - generic "Copy to clipboard"
+            - button "post /api/agent-ui/trigger-ui-swarm" [ref=e3450]:
+              - img [ref=e3451]
+      - generic [ref=e3454]:
+        - heading "ML Lead Scoring Collapse operation" [level=3] [ref=e3455] [cursor=pointer]:
+          - link "ML Lead Scoring" [ref=e3456]:
+            - /url: "#/ML%20Lead%20Scoring"
+          - button "Collapse operation" [expanded] [ref=e3457]:
+            - img [ref=e3458]
+        - generic [ref=e3461]:
+          - generic [ref=e3464] [cursor=pointer]:
+            - button "POST /api/v1/ml/score Score individual lead" [ref=e3465]:
+              - generic [ref=e3466]: POST
+              - generic [ref=e3467]:
+                - link "/api/v1/ml/score" [ref=e3469]:
+                  - /url: "#/ML%20Lead%20Scoring/score_lead_api_v1_ml_score_post"
+                  - generic [ref=e3470]:
+                    - text: /api
+                    - text: /v1
+                    - text: /ml
+                    - text: /score
+                - generic [ref=e3471]: Score individual lead
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3474]:
+              - img [ref=e3475]
+            - button "post /api/v1/ml/score" [ref=e3477]:
+              - img [ref=e3478]
+          - generic [ref=e3482] [cursor=pointer]:
+            - button "POST /api/v1/ml/score/optimized Score individual lead (optimized)" [ref=e3483]:
+              - generic [ref=e3484]: POST
+              - generic [ref=e3485]:
+                - link "/api/v1/ml/score/optimized" [ref=e3487]:
+                  - /url: "#/ML%20Lead%20Scoring/score_lead_optimized_api_v1_ml_score_optimized_post"
+                  - generic [ref=e3488]:
+                    - text: /api
+                    - text: /v1
+                    - text: /ml
+                    - text: /score
+                    - text: /optimized
+                - generic [ref=e3489]: Score individual lead (optimized)
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3492]:
+              - img [ref=e3493]
+            - button "post /api/v1/ml/score/optimized" [ref=e3495]:
+              - img [ref=e3496]
+          - generic [ref=e3500] [cursor=pointer]:
+            - button "POST /api/v1/ml/batch-score Score multiple leads" [ref=e3501]:
+              - generic [ref=e3502]: POST
+              - generic [ref=e3503]:
+                - link "/api/v1/ml/batch-score" [ref=e3505]:
+                  - /url: "#/ML%20Lead%20Scoring/batch_score_leads_api_v1_ml_batch_score_post"
+                  - generic [ref=e3506]:
+                    - text: /api
+                    - text: /v1
+                    - text: /ml
+                    - text: /batch-score
+                - generic [ref=e3507]: Score multiple leads
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3510]:
+              - img [ref=e3511]
+            - button "post /api/v1/ml/batch-score" [ref=e3513]:
+              - img [ref=e3514]
+          - generic [ref=e3518] [cursor=pointer]:
+            - 'button "GET /api/v1/ml/score/{lead_id} Get existing lead score" [ref=e3519]':
+              - generic [ref=e3520]: GET
+              - generic [ref=e3521]:
+                - 'link "/api/v1/ml/score/{lead_id}" [ref=e3523]':
+                  - /url: "#/ML%20Lead%20Scoring/get_lead_score_api_v1_ml_score__lead_id__get"
+                  - generic [ref=e3524]:
+                    - text: /api
+                    - text: /v1
+                    - text: /ml
+                    - text: /score
+                    - text: "/{lead_id}"
+                - generic [ref=e3525]: Get existing lead score
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3528]:
+              - img [ref=e3529]
+            - 'button "get /api/v1/ml/score/{lead_id}" [ref=e3531]':
+              - img [ref=e3532]
+          - generic [ref=e3536] [cursor=pointer]:
+            - button "GET /api/v1/ml/health ML service health check" [ref=e3537]:
+              - generic [ref=e3538]: GET
+              - generic [ref=e3539]:
+                - link "/api/v1/ml/health" [ref=e3541]:
+                  - /url: "#/ML%20Lead%20Scoring/health_check_api_v1_ml_health_get"
+                  - generic [ref=e3542]:
+                    - text: /api
+                    - text: /v1
+                    - text: /ml
+                    - text: /health
+                - generic [ref=e3543]: ML service health check
+            - generic "Copy to clipboard"
+            - button "get /api/v1/ml/health" [ref=e3546]:
+              - img [ref=e3547]
+          - generic [ref=e3551] [cursor=pointer]:
+            - button "GET /api/v1/ml/model/status ML model status" [ref=e3552]:
+              - generic [ref=e3553]: GET
+              - generic [ref=e3554]:
+                - link "/api/v1/ml/model/status" [ref=e3556]:
+                  - /url: "#/ML%20Lead%20Scoring/get_model_status_api_v1_ml_model_status_get"
+                  - generic [ref=e3557]:
+                    - text: /api
+                    - text: /v1
+                    - text: /ml
+                    - text: /model
+                    - text: /status
+                - generic [ref=e3558]: ML model status
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3561]:
+              - img [ref=e3562]
+            - button "get /api/v1/ml/model/status" [ref=e3564]:
+              - img [ref=e3565]
+          - generic [ref=e3569] [cursor=pointer]:
+            - button "GET /api/v1/ml/performance/report Performance optimization report" [ref=e3570]:
+              - generic [ref=e3571]: GET
+              - generic [ref=e3572]:
+                - link "/api/v1/ml/performance/report" [ref=e3574]:
+                  - /url: "#/ML%20Lead%20Scoring/get_performance_report_api_v1_ml_performance_report_get"
+                  - generic [ref=e3575]:
+                    - text: /api
+                    - text: /v1
+                    - text: /ml
+                    - text: /performance
+                    - text: /report
+                - generic [ref=e3576]: Performance optimization report
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3579]:
+              - img [ref=e3580]
+            - button "get /api/v1/ml/performance/report" [ref=e3582]:
+              - img [ref=e3583]
+      - generic [ref=e3586]:
+        - heading "Predictive Analytics Collapse operation" [level=3] [ref=e3587] [cursor=pointer]:
+          - link "Predictive Analytics" [ref=e3588]:
+            - /url: "#/Predictive%20Analytics"
+          - button "Collapse operation" [expanded] [ref=e3589]:
+            - img [ref=e3590]
+        - generic [ref=e3593]:
+          - generic [ref=e3596] [cursor=pointer]:
+            - button "POST /api/v1/predictive/score Get Predictive Score" [ref=e3597]:
+              - generic [ref=e3598]: POST
+              - generic [ref=e3599]:
+                - link "/api/v1/predictive/score" [ref=e3601]:
+                  - /url: "#/Predictive%20Analytics/get_predictive_score_api_v1_predictive_score_post"
+                  - generic [ref=e3602]:
+                    - text: /api
+                    - text: /v1
+                    - text: /predictive
+                    - text: /score
+                - generic [ref=e3603]: Get Predictive Score
+            - generic "Copy to clipboard"
+            - button "post /api/v1/predictive/score" [ref=e3606]:
+              - img [ref=e3607]
+          - generic [ref=e3611] [cursor=pointer]:
+            - button "POST /api/v1/predictive/insights Get Lead Insights" [ref=e3612]:
+              - generic [ref=e3613]: POST
+              - generic [ref=e3614]:
+                - link "/api/v1/predictive/insights" [ref=e3616]:
+                  - /url: "#/Predictive%20Analytics/get_lead_insights_api_v1_predictive_insights_post"
+                  - generic [ref=e3617]:
+                    - text: /api
+                    - text: /v1
+                    - text: /predictive
+                    - text: /insights
+                - generic [ref=e3618]: Get Lead Insights
+            - generic "Copy to clipboard"
+            - button "post /api/v1/predictive/insights" [ref=e3621]:
+              - img [ref=e3622]
+          - generic [ref=e3626] [cursor=pointer]:
+            - button "POST /api/v1/predictive/actions Get Action Recommendations" [ref=e3627]:
+              - generic [ref=e3628]: POST
+              - generic [ref=e3629]:
+                - link "/api/v1/predictive/actions" [ref=e3631]:
+                  - /url: "#/Predictive%20Analytics/get_action_recommendations_api_v1_predictive_actions_post"
+                  - generic [ref=e3632]:
+                    - text: /api
+                    - text: /v1
+                    - text: /predictive
+                    - text: /actions
+                - generic [ref=e3633]: Get Action Recommendations
+            - generic "Copy to clipboard"
+            - button "post /api/v1/predictive/actions" [ref=e3636]:
+              - img [ref=e3637]
+          - generic [ref=e3641] [cursor=pointer]:
+            - button "POST /api/v1/predictive/action-sequence Get Action Sequence" [ref=e3642]:
+              - generic [ref=e3643]: POST
+              - generic [ref=e3644]:
+                - link "/api/v1/predictive/action-sequence" [ref=e3646]:
+                  - /url: "#/Predictive%20Analytics/get_action_sequence_api_v1_predictive_action_sequence_post"
+                  - generic [ref=e3647]:
+                    - text: /api
+                    - text: /v1
+                    - text: /predictive
+                    - text: /action-sequence
+                - generic [ref=e3648]: Get Action Sequence
+            - generic "Copy to clipboard"
+            - button "post /api/v1/predictive/action-sequence" [ref=e3651]:
+              - img [ref=e3652]
+          - generic [ref=e3656] [cursor=pointer]:
+            - button "POST /api/v1/predictive/timing-optimization Optimize Timing" [ref=e3657]:
+              - generic [ref=e3658]: POST
+              - generic [ref=e3659]:
+                - link "/api/v1/predictive/timing-optimization" [ref=e3661]:
+                  - /url: "#/Predictive%20Analytics/optimize_timing_api_v1_predictive_timing_optimization_post"
+                  - generic [ref=e3662]:
+                    - text: /api
+                    - text: /v1
+                    - text: /predictive
+                    - text: /timing-optimization
+                - generic [ref=e3663]: Optimize Timing
+            - generic "Copy to clipboard"
+            - button "post /api/v1/predictive/timing-optimization" [ref=e3666]:
+              - img [ref=e3667]
+          - generic [ref=e3671] [cursor=pointer]:
+            - button "GET /api/v1/predictive/model-performance Get Model Performance" [ref=e3672]:
+              - generic [ref=e3673]: GET
+              - generic [ref=e3674]:
+                - link "/api/v1/predictive/model-performance" [ref=e3676]:
+                  - /url: "#/Predictive%20Analytics/get_model_performance_api_v1_predictive_model_performance_get"
+                  - generic [ref=e3677]:
+                    - text: /api
+                    - text: /v1
+                    - text: /predictive
+                    - text: /model-performance
+                - generic [ref=e3678]: Get Model Performance
+            - generic "Copy to clipboard"
+            - button "get /api/v1/predictive/model-performance" [ref=e3681]:
+              - img [ref=e3682]
+          - generic [ref=e3686] [cursor=pointer]:
+            - button "POST /api/v1/predictive/train-model Train Model" [ref=e3687]:
+              - generic [ref=e3688]: POST
+              - generic [ref=e3689]:
+                - link "/api/v1/predictive/train-model" [ref=e3691]:
+                  - /url: "#/Predictive%20Analytics/train_model_api_v1_predictive_train_model_post"
+                  - generic [ref=e3692]:
+                    - text: /api
+                    - text: /v1
+                    - text: /predictive
+                    - text: /train-model
+                - generic [ref=e3693]: Train Model
+            - generic "Copy to clipboard"
+            - button "post /api/v1/predictive/train-model" [ref=e3696]:
+              - img [ref=e3697]
+          - generic [ref=e3701] [cursor=pointer]:
+            - button "GET /api/v1/predictive/pipeline-status Get Pipeline Status" [ref=e3702]:
+              - generic [ref=e3703]: GET
+              - generic [ref=e3704]:
+                - link "/api/v1/predictive/pipeline-status" [ref=e3706]:
+                  - /url: "#/Predictive%20Analytics/get_pipeline_status_api_v1_predictive_pipeline_status_get"
+                  - generic [ref=e3707]:
+                    - text: /api
+                    - text: /v1
+                    - text: /predictive
+                    - text: /pipeline-status
+                - generic [ref=e3708]: Get Pipeline Status
+            - generic "Copy to clipboard"
+            - button "get /api/v1/predictive/pipeline-status" [ref=e3711]:
+              - img [ref=e3712]
+          - generic [ref=e3716] [cursor=pointer]:
+            - button "POST /api/v1/predictive/batch-score Batch Score Leads" [ref=e3717]:
+              - generic [ref=e3718]: POST
+              - generic [ref=e3719]:
+                - link "/api/v1/predictive/batch-score" [ref=e3721]:
+                  - /url: "#/Predictive%20Analytics/batch_score_leads_api_v1_predictive_batch_score_post"
+                  - generic [ref=e3722]:
+                    - text: /api
+                    - text: /v1
+                    - text: /predictive
+                    - text: /batch-score
+                - generic [ref=e3723]: Batch Score Leads
+            - generic "Copy to clipboard"
+            - button "post /api/v1/predictive/batch-score" [ref=e3726]:
+              - img [ref=e3727]
+      - generic [ref=e3730]:
+        - heading "pricing Collapse operation" [level=3] [ref=e3731] [cursor=pointer]:
+          - link "pricing" [ref=e3732]:
+            - /url: "#/pricing"
+          - button "Collapse operation" [expanded] [ref=e3733]:
+            - img [ref=e3734]
+        - generic [ref=e3737]:
+          - generic [ref=e3740] [cursor=pointer]:
+            - button "POST /api/pricing/calculate Calculate Lead Pricing" [ref=e3741]:
+              - generic [ref=e3742]: POST
+              - generic [ref=e3743]:
+                - link "/api/pricing/calculate" [ref=e3745]:
+                  - /url: "#/pricing/calculate_lead_pricing_api_pricing_calculate_post"
+                  - generic [ref=e3746]:
+                    - text: /api
+                    - text: /pricing
+                    - text: /calculate
+                - generic [ref=e3747]: Calculate Lead Pricing
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3750]:
+              - img [ref=e3751]
+            - button "post /api/pricing/calculate" [ref=e3753]:
+              - img [ref=e3754]
+          - generic [ref=e3758] [cursor=pointer]:
+            - 'button "GET /api/pricing/analytics/{location_id} Get Pricing Analytics" [ref=e3759]':
+              - generic [ref=e3760]: GET
+              - generic [ref=e3761]:
+                - 'link "/api/pricing/analytics/{location_id}" [ref=e3763]':
+                  - /url: "#/pricing/get_pricing_analytics_api_pricing_analytics__location_id__get"
+                  - generic [ref=e3764]:
+                    - text: /api
+                    - text: /pricing
+                    - text: /analytics
+                    - text: "/{location_id}"
+                - generic [ref=e3765]: Get Pricing Analytics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3768]:
+              - img [ref=e3769]
+            - 'button "get /api/pricing/analytics/{location_id}" [ref=e3771]':
+              - img [ref=e3772]
+          - generic [ref=e3776] [cursor=pointer]:
+            - 'button "POST /api/pricing/configure/{location_id} Update Pricing Configuration" [ref=e3777]':
+              - generic [ref=e3778]: POST
+              - generic [ref=e3779]:
+                - 'link "/api/pricing/configure/{location_id}" [ref=e3781]':
+                  - /url: "#/pricing/update_pricing_configuration_api_pricing_configure__location_id__post"
+                  - generic [ref=e3782]:
+                    - text: /api
+                    - text: /pricing
+                    - text: /configure
+                    - text: "/{location_id}"
+                - generic [ref=e3783]: Update Pricing Configuration
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3786]:
+              - img [ref=e3787]
+            - 'button "post /api/pricing/configure/{location_id}" [ref=e3789]':
+              - img [ref=e3790]
+          - generic [ref=e3794] [cursor=pointer]:
+            - 'button "GET /api/pricing/roi-report/{location_id} Generate Roi Report" [ref=e3795]':
+              - generic [ref=e3796]: GET
+              - generic [ref=e3797]:
+                - 'link "/api/pricing/roi-report/{location_id}" [ref=e3799]':
+                  - /url: "#/pricing/generate_roi_report_api_pricing_roi_report__location_id__get"
+                  - generic [ref=e3800]:
+                    - text: /api
+                    - text: /pricing
+                    - text: /roi-report
+                    - text: "/{location_id}"
+                - generic [ref=e3801]: Generate Roi Report
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3804]:
+              - img [ref=e3805]
+            - 'button "get /api/pricing/roi-report/{location_id}" [ref=e3807]':
+              - img [ref=e3808]
+          - generic [ref=e3812] [cursor=pointer]:
+            - button "POST /api/pricing/savings-calculator Calculate Savings" [ref=e3813]:
+              - generic [ref=e3814]: POST
+              - generic [ref=e3815]:
+                - link "/api/pricing/savings-calculator" [ref=e3817]:
+                  - /url: "#/pricing/calculate_savings_api_pricing_savings_calculator_post"
+                  - generic [ref=e3818]:
+                    - text: /api
+                    - text: /pricing
+                    - text: /savings-calculator
+                - generic [ref=e3819]: Calculate Savings
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3822]:
+              - img [ref=e3823]
+            - button "post /api/pricing/savings-calculator" [ref=e3825]:
+              - img [ref=e3826]
+          - generic [ref=e3830] [cursor=pointer]:
+            - 'button "GET /api/pricing/human-vs-ai/{location_id} Get Human Vs Ai Comparison" [ref=e3831]':
+              - generic [ref=e3832]: GET
+              - generic [ref=e3833]:
+                - 'link "/api/pricing/human-vs-ai/{location_id}" [ref=e3835]':
+                  - /url: "#/pricing/get_human_vs_ai_comparison_api_pricing_human_vs_ai__location_id__get"
+                  - generic [ref=e3836]:
+                    - text: /api
+                    - text: /pricing
+                    - text: /human-vs-ai
+                    - text: "/{location_id}"
+                - generic [ref=e3837]: Get Human Vs Ai Comparison
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3840]:
+              - img [ref=e3841]
+            - 'button "get /api/pricing/human-vs-ai/{location_id}" [ref=e3843]':
+              - img [ref=e3844]
+          - generic [ref=e3848] [cursor=pointer]:
+            - 'button "POST /api/pricing/optimize/{location_id} Optimize Pricing Model" [ref=e3849]':
+              - generic [ref=e3850]: POST
+              - generic [ref=e3851]:
+                - 'link "/api/pricing/optimize/{location_id}" [ref=e3853]':
+                  - /url: "#/pricing/optimize_pricing_model_api_pricing_optimize__location_id__post"
+                  - generic [ref=e3854]:
+                    - text: /api
+                    - text: /pricing
+                    - text: /optimize
+                    - text: "/{location_id}"
+                - generic [ref=e3855]: Optimize Pricing Model
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3858]:
+              - img [ref=e3859]
+            - 'button "post /api/pricing/optimize/{location_id}" [ref=e3861]':
+              - img [ref=e3862]
+          - generic [ref=e3866] [cursor=pointer]:
+            - 'button "GET /api/pricing/export/{location_id} Export Pricing Data" [ref=e3867]':
+              - generic [ref=e3868]: GET
+              - generic [ref=e3869]:
+                - 'link "/api/pricing/export/{location_id}" [ref=e3871]':
+                  - /url: "#/pricing/export_pricing_data_api_pricing_export__location_id__get"
+                  - generic [ref=e3872]:
+                    - text: /api
+                    - text: /pricing
+                    - text: /export
+                    - text: "/{location_id}"
+                - generic [ref=e3873]: Export Pricing Data
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3876]:
+              - img [ref=e3877]
+            - 'button "get /api/pricing/export/{location_id}" [ref=e3879]':
+              - img [ref=e3880]
+          - generic [ref=e3884] [cursor=pointer]:
+            - button "GET /api/pricing/health Health Check" [ref=e3885]:
+              - generic [ref=e3886]: GET
+              - generic [ref=e3887]:
+                - link "/api/pricing/health" [ref=e3889]:
+                  - /url: "#/pricing/health_check_api_pricing_health_get"
+                  - generic [ref=e3890]:
+                    - text: /api
+                    - text: /pricing
+                    - text: /health
+                - generic [ref=e3891]: Health Check
+            - generic "Copy to clipboard"
+            - button "get /api/pricing/health" [ref=e3894]:
+              - img [ref=e3895]
+      - generic [ref=e3898]:
+        - heading "golden-leads Collapse operation" [level=3] [ref=e3899] [cursor=pointer]:
+          - link "golden-leads" [ref=e3900]:
+            - /url: "#/golden-leads"
+          - button "Collapse operation" [expanded] [ref=e3901]:
+            - img [ref=e3902]
+        - generic [ref=e3905]:
+          - generic [ref=e3908] [cursor=pointer]:
+            - button "POST /api/golden-leads/analyze Analyze Lead Intelligence" [ref=e3909]:
+              - generic [ref=e3910]: POST
+              - generic [ref=e3911]:
+                - link "/api/golden-leads/analyze" [ref=e3913]:
+                  - /url: "#/golden-leads/analyze_lead_intelligence_api_golden_leads_analyze_post"
+                  - generic [ref=e3914]:
+                    - text: /api
+                    - text: /golden-leads
+                    - text: /analyze
+                - generic [ref=e3915]: Analyze Lead Intelligence
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3918]:
+              - img [ref=e3919]
+            - button "post /api/golden-leads/analyze" [ref=e3921]:
+              - img [ref=e3922]
+          - generic [ref=e3926] [cursor=pointer]:
+            - button "POST /api/golden-leads/batch Batch Detect Leads" [ref=e3927]:
+              - generic [ref=e3928]: POST
+              - generic [ref=e3929]:
+                - link "/api/golden-leads/batch" [ref=e3931]:
+                  - /url: "#/golden-leads/batch_detect_leads_api_golden_leads_batch_post"
+                  - generic [ref=e3932]:
+                    - text: /api
+                    - text: /golden-leads
+                    - text: /batch
+                - generic [ref=e3933]: Batch Detect Leads
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3936]:
+              - img [ref=e3937]
+            - button "post /api/golden-leads/batch" [ref=e3939]:
+              - img [ref=e3940]
+          - generic [ref=e3944] [cursor=pointer]:
+            - button "GET /api/golden-leads/filter Filter Golden Leads" [ref=e3945]:
+              - generic [ref=e3946]: GET
+              - generic [ref=e3947]:
+                - link "/api/golden-leads/filter" [ref=e3949]:
+                  - /url: "#/golden-leads/filter_golden_leads_api_golden_leads_filter_get"
+                  - generic [ref=e3950]:
+                    - text: /api
+                    - text: /golden-leads
+                    - text: /filter
+                - generic [ref=e3951]: Filter Golden Leads
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3954]:
+              - img [ref=e3955]
+            - button "get /api/golden-leads/filter" [ref=e3957]:
+              - img [ref=e3958]
+          - generic [ref=e3962] [cursor=pointer]:
+            - 'button "GET /api/golden-leads/lead/{lead_id} Get Lead Analysis" [ref=e3963]':
+              - generic [ref=e3964]: GET
+              - generic [ref=e3965]:
+                - 'link "/api/golden-leads/lead/{lead_id}" [ref=e3967]':
+                  - /url: "#/golden-leads/get_lead_analysis_api_golden_leads_lead__lead_id__get"
+                  - generic [ref=e3968]:
+                    - text: /api
+                    - text: /golden-leads
+                    - text: /lead
+                    - text: "/{lead_id}"
+                - generic [ref=e3969]: Get Lead Analysis
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3972]:
+              - img [ref=e3973]
+            - 'button "get /api/golden-leads/lead/{lead_id}" [ref=e3975]':
+              - img [ref=e3976]
+          - generic [ref=e3980] [cursor=pointer]:
+            - button "GET /api/golden-leads/metrics Get Performance Metrics" [ref=e3981]:
+              - generic [ref=e3982]: GET
+              - generic [ref=e3983]:
+                - link "/api/golden-leads/metrics" [ref=e3985]:
+                  - /url: "#/golden-leads/get_performance_metrics_api_golden_leads_metrics_get"
+                  - generic [ref=e3986]:
+                    - text: /api
+                    - text: /golden-leads
+                    - text: /metrics
+                - generic [ref=e3987]: Get Performance Metrics
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e3990]:
+              - img [ref=e3991]
+            - button "get /api/golden-leads/metrics" [ref=e3993]:
+              - img [ref=e3994]
+          - generic [ref=e3998] [cursor=pointer]:
+            - button "POST /api/golden-leads/circuit-breaker/reset Reset Circuit Breaker" [ref=e3999]:
+              - generic [ref=e4000]: POST
+              - generic [ref=e4001]:
+                - link "/api/golden-leads/circuit-breaker/reset" [ref=e4003]:
+                  - /url: "#/golden-leads/reset_circuit_breaker_api_golden_leads_circuit_breaker_reset_post"
+                  - generic [ref=e4004]:
+                    - text: /api
+                    - text: /golden-leads
+                    - text: /circuit-breaker
+                    - text: /reset
+                - generic [ref=e4005]: Reset Circuit Breaker
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4008]:
+              - img [ref=e4009]
+            - button "post /api/golden-leads/circuit-breaker/reset" [ref=e4011]:
+              - img [ref=e4012]
+          - generic [ref=e4016] [cursor=pointer]:
+            - button "GET /api/golden-leads/health Health Check" [ref=e4017]:
+              - generic [ref=e4018]: GET
+              - generic [ref=e4019]:
+                - link "/api/golden-leads/health" [ref=e4021]:
+                  - /url: "#/golden-leads/health_check_api_golden_leads_health_get"
+                  - generic [ref=e4022]:
+                    - text: /api
+                    - text: /golden-leads
+                    - text: /health
+                - generic [ref=e4023]: Health Check
+            - generic "Copy to clipboard"
+            - button "get /api/golden-leads/health" [ref=e4026]:
+              - img [ref=e4027]
+      - generic [ref=e4030]:
+        - heading "attribution Collapse operation" [level=3] [ref=e4031] [cursor=pointer]:
+          - link "attribution" [ref=e4032]:
+            - /url: "#/attribution"
+          - button "Collapse operation" [expanded] [ref=e4033]:
+            - img [ref=e4034]
+        - generic [ref=e4037]:
+          - generic [ref=e4040] [cursor=pointer]:
+            - button "GET /api/attribution/performance Get Source Performance" [ref=e4041]:
+              - generic [ref=e4042]: GET
+              - generic [ref=e4043]:
+                - link "/api/attribution/performance" [ref=e4045]:
+                  - /url: "#/attribution/get_source_performance_api_attribution_performance_get"
+                  - generic [ref=e4046]:
+                    - text: /api
+                    - text: /attribution
+                    - text: /performance
+                - generic [ref=e4047]: Get Source Performance
+            - generic "Copy to clipboard"
+            - button "get /api/attribution/performance" [ref=e4050]:
+              - img [ref=e4051]
+          - generic [ref=e4055] [cursor=pointer]:
+            - button "GET /api/attribution/report Generate Attribution Report" [ref=e4056]:
+              - generic [ref=e4057]: GET
+              - generic [ref=e4058]:
+                - link "/api/attribution/report" [ref=e4060]:
+                  - /url: "#/attribution/generate_attribution_report_api_attribution_report_get"
+                  - generic [ref=e4061]:
+                    - text: /api
+                    - text: /attribution
+                    - text: /report
+                - generic [ref=e4062]: Generate Attribution Report
+            - generic "Copy to clipboard"
+            - button "get /api/attribution/report" [ref=e4065]:
+              - img [ref=e4066]
+          - generic [ref=e4070] [cursor=pointer]:
+            - button "GET /api/attribution/weekly-summary Get Weekly Summary" [ref=e4071]:
+              - generic [ref=e4072]: GET
+              - generic [ref=e4073]:
+                - link "/api/attribution/weekly-summary" [ref=e4075]:
+                  - /url: "#/attribution/get_weekly_summary_api_attribution_weekly_summary_get"
+                  - generic [ref=e4076]:
+                    - text: /api
+                    - text: /attribution
+                    - text: /weekly-summary
+                - generic [ref=e4077]: Get Weekly Summary
+            - generic "Copy to clipboard"
+            - button "get /api/attribution/weekly-summary" [ref=e4080]:
+              - img [ref=e4081]
+          - generic [ref=e4085] [cursor=pointer]:
+            - button "GET /api/attribution/trends Get Monthly Trends" [ref=e4086]:
+              - generic [ref=e4087]: GET
+              - generic [ref=e4088]:
+                - link "/api/attribution/trends" [ref=e4090]:
+                  - /url: "#/attribution/get_monthly_trends_api_attribution_trends_get"
+                  - generic [ref=e4091]:
+                    - text: /api
+                    - text: /attribution
+                    - text: /trends
+                - generic [ref=e4092]: Get Monthly Trends
+            - generic "Copy to clipboard"
+            - button "get /api/attribution/trends" [ref=e4095]:
+              - img [ref=e4096]
+          - generic [ref=e4100] [cursor=pointer]:
+            - button "GET /api/attribution/alerts Get Active Alerts" [ref=e4101]:
+              - generic [ref=e4102]: GET
+              - generic [ref=e4103]:
+                - link "/api/attribution/alerts" [ref=e4105]:
+                  - /url: "#/attribution/get_active_alerts_api_attribution_alerts_get"
+                  - generic [ref=e4106]:
+                    - text: /api
+                    - text: /attribution
+                    - text: /alerts
+                - generic [ref=e4107]: Get Active Alerts
+            - generic "Copy to clipboard"
+            - button "get /api/attribution/alerts" [ref=e4110]:
+              - img [ref=e4111]
+          - generic [ref=e4115] [cursor=pointer]:
+            - button "GET /api/attribution/recommendations Get Optimization Recommendations" [ref=e4116]:
+              - generic [ref=e4117]: GET
+              - generic [ref=e4118]:
+                - link "/api/attribution/recommendations" [ref=e4120]:
+                  - /url: "#/attribution/get_optimization_recommendations_api_attribution_recommendations_get"
+                  - generic [ref=e4121]:
+                    - text: /api
+                    - text: /attribution
+                    - text: /recommendations
+                - generic [ref=e4122]: Get Optimization Recommendations
+            - generic "Copy to clipboard"
+            - button "get /api/attribution/recommendations" [ref=e4125]:
+              - img [ref=e4126]
+          - generic [ref=e4130] [cursor=pointer]:
+            - button "GET /api/attribution/sources Get Available Sources" [ref=e4131]:
+              - generic [ref=e4132]: GET
+              - generic [ref=e4133]:
+                - link "/api/attribution/sources" [ref=e4135]:
+                  - /url: "#/attribution/get_available_sources_api_attribution_sources_get"
+                  - generic [ref=e4136]:
+                    - text: /api
+                    - text: /attribution
+                    - text: /sources
+                - generic [ref=e4137]: Get Available Sources
+            - generic "Copy to clipboard"
+            - button "get /api/attribution/sources" [ref=e4140]:
+              - img [ref=e4141]
+          - generic [ref=e4145] [cursor=pointer]:
+            - button "POST /api/attribution/track-event Track Attribution Event" [ref=e4146]:
+              - generic [ref=e4147]: POST
+              - generic [ref=e4148]:
+                - link "/api/attribution/track-event" [ref=e4150]:
+                  - /url: "#/attribution/track_attribution_event_api_attribution_track_event_post"
+                  - generic [ref=e4151]:
+                    - text: /api
+                    - text: /attribution
+                    - text: /track-event
+                - generic [ref=e4152]: Track Attribution Event
+            - generic "Copy to clipboard"
+            - button "post /api/attribution/track-event" [ref=e4155]:
+              - img [ref=e4156]
+          - generic [ref=e4160] [cursor=pointer]:
+            - button "GET /api/attribution/export/csv Export Performance Csv" [ref=e4161]:
+              - generic [ref=e4162]: GET
+              - generic [ref=e4163]:
+                - link "/api/attribution/export/csv" [ref=e4165]:
+                  - /url: "#/attribution/export_performance_csv_api_attribution_export_csv_get"
+                  - generic [ref=e4166]:
+                    - text: /api
+                    - text: /attribution
+                    - text: /export
+                    - text: /csv
+                - generic [ref=e4167]: Export Performance Csv
+            - generic "Copy to clipboard"
+            - button "get /api/attribution/export/csv" [ref=e4170]:
+              - img [ref=e4171]
+      - generic [ref=e4174]:
+        - heading "jorge-advanced Collapse operation" [level=3] [ref=e4175] [cursor=pointer]:
+          - link "jorge-advanced" [ref=e4176]:
+            - /url: "#/jorge-advanced"
+          - button "Collapse operation" [expanded] [ref=e4177]:
+            - img [ref=e4178]
+        - generic [ref=e4181]:
+          - generic [ref=e4184] [cursor=pointer]:
+            - button "POST /api/jorge-advanced/voice/start-call Start Voice Call" [ref=e4185]:
+              - generic [ref=e4186]: POST
+              - generic [ref=e4187]:
+                - link "/api/jorge-advanced/voice/start-call" [ref=e4189]:
+                  - /url: "#/jorge-advanced/start_voice_call_api_jorge_advanced_voice_start_call_post"
+                  - generic [ref=e4190]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /voice
+                    - text: /start-call
+                - generic [ref=e4191]: Start Voice Call
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-advanced/voice/start-call" [ref=e4194]:
+              - img [ref=e4195]
+          - generic [ref=e4199] [cursor=pointer]:
+            - button "POST /api/jorge-advanced/voice/process-input Process Voice Input" [ref=e4200]:
+              - generic [ref=e4201]: POST
+              - generic [ref=e4202]:
+                - link "/api/jorge-advanced/voice/process-input" [ref=e4204]:
+                  - /url: "#/jorge-advanced/process_voice_input_api_jorge_advanced_voice_process_input_post"
+                  - generic [ref=e4205]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /voice
+                    - text: /process-input
+                - generic [ref=e4206]: Process Voice Input
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-advanced/voice/process-input" [ref=e4209]:
+              - img [ref=e4210]
+          - generic [ref=e4214] [cursor=pointer]:
+            - 'button "POST /api/jorge-advanced/voice/end-call/{call_id} End Voice Call" [ref=e4215]':
+              - generic [ref=e4216]: POST
+              - generic [ref=e4217]:
+                - 'link "/api/jorge-advanced/voice/end-call/{call_id}" [ref=e4219]':
+                  - /url: "#/jorge-advanced/end_voice_call_api_jorge_advanced_voice_end_call__call_id__post"
+                  - generic [ref=e4220]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /voice
+                    - text: /end-call
+                    - text: "/{call_id}"
+                - generic [ref=e4221]: End Voice Call
+            - generic "Copy to clipboard"
+            - 'button "post /api/jorge-advanced/voice/end-call/{call_id}" [ref=e4224]':
+              - img [ref=e4225]
+          - generic [ref=e4229] [cursor=pointer]:
+            - button "GET /api/jorge-advanced/voice/analytics Get Voice Analytics" [ref=e4230]:
+              - generic [ref=e4231]: GET
+              - generic [ref=e4232]:
+                - link "/api/jorge-advanced/voice/analytics" [ref=e4234]:
+                  - /url: "#/jorge-advanced/get_voice_analytics_api_jorge_advanced_voice_analytics_get"
+                  - generic [ref=e4235]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /voice
+                    - text: /analytics
+                - generic [ref=e4236]: Get Voice Analytics
+            - generic "Copy to clipboard"
+            - button "get /api/jorge-advanced/voice/analytics" [ref=e4239]:
+              - img [ref=e4240]
+          - generic [ref=e4244] [cursor=pointer]:
+            - button "POST /api/jorge-advanced/marketing/create-campaign Create Automated Campaign" [ref=e4245]:
+              - generic [ref=e4246]: POST
+              - generic [ref=e4247]:
+                - link "/api/jorge-advanced/marketing/create-campaign" [ref=e4249]:
+                  - /url: "#/jorge-advanced/create_automated_campaign_api_jorge_advanced_marketing_create_campaign_post"
+                  - generic [ref=e4250]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /marketing
+                    - text: /create-campaign
+                - generic [ref=e4251]: Create Automated Campaign
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-advanced/marketing/create-campaign" [ref=e4254]:
+              - img [ref=e4255]
+          - generic [ref=e4259] [cursor=pointer]:
+            - 'button "GET /api/jorge-advanced/marketing/campaigns/{campaign_id}/content Get Campaign Content" [ref=e4260]':
+              - generic [ref=e4261]: GET
+              - generic [ref=e4262]:
+                - 'link "/api/jorge-advanced/marketing/campaigns/{campaign_id}/content" [ref=e4264]':
+                  - /url: "#/jorge-advanced/get_campaign_content_api_jorge_advanced_marketing_campaigns__campaign_id__content_get"
+                  - generic [ref=e4265]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /marketing
+                    - text: /campaigns
+                    - text: "/{campaign_id}"
+                    - text: /content
+                - generic [ref=e4266]: Get Campaign Content
+            - generic "Copy to clipboard"
+            - 'button "get /api/jorge-advanced/marketing/campaigns/{campaign_id}/content" [ref=e4269]':
+              - img [ref=e4270]
+          - generic [ref=e4274] [cursor=pointer]:
+            - 'button "GET /api/jorge-advanced/marketing/campaigns/{campaign_id}/performance Get Campaign Performance" [ref=e4275]':
+              - generic [ref=e4276]: GET
+              - generic [ref=e4277]:
+                - 'link "/api/jorge-advanced/marketing/campaigns/{campaign_id}/performance" [ref=e4279]':
+                  - /url: "#/jorge-advanced/get_campaign_performance_api_jorge_advanced_marketing_campaigns__campaign_id__performance_get"
+                  - generic [ref=e4280]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /marketing
+                    - text: /campaigns
+                    - text: "/{campaign_id}"
+                    - text: /performance
+                - generic [ref=e4281]: Get Campaign Performance
+            - generic "Copy to clipboard"
+            - 'button "get /api/jorge-advanced/marketing/campaigns/{campaign_id}/performance" [ref=e4284]':
+              - img [ref=e4285]
+          - generic [ref=e4289] [cursor=pointer]:
+            - 'button "POST /api/jorge-advanced/marketing/ab-test/{campaign_id} Start Ab Test" [ref=e4290]':
+              - generic [ref=e4291]: POST
+              - generic [ref=e4292]:
+                - 'link "/api/jorge-advanced/marketing/ab-test/{campaign_id}" [ref=e4294]':
+                  - /url: "#/jorge-advanced/start_ab_test_api_jorge_advanced_marketing_ab_test__campaign_id__post"
+                  - generic [ref=e4295]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /marketing
+                    - text: /ab-test
+                    - text: "/{campaign_id}"
+                - generic [ref=e4296]: Start Ab Test
+            - generic "Copy to clipboard"
+            - 'button "post /api/jorge-advanced/marketing/ab-test/{campaign_id}" [ref=e4299]':
+              - img [ref=e4300]
+          - generic [ref=e4304] [cursor=pointer]:
+            - button "POST /api/jorge-advanced/retention/update-lifecycle Update Client Lifecycle" [ref=e4305]:
+              - generic [ref=e4306]: POST
+              - generic [ref=e4307]:
+                - link "/api/jorge-advanced/retention/update-lifecycle" [ref=e4309]:
+                  - /url: "#/jorge-advanced/update_client_lifecycle_api_jorge_advanced_retention_update_lifecycle_post"
+                  - generic [ref=e4310]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /retention
+                    - text: /update-lifecycle
+                - generic [ref=e4311]: Update Client Lifecycle
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-advanced/retention/update-lifecycle" [ref=e4314]:
+              - img [ref=e4315]
+          - generic [ref=e4319] [cursor=pointer]:
+            - button "POST /api/jorge-advanced/retention/track-referral Track Referral" [ref=e4320]:
+              - generic [ref=e4321]: POST
+              - generic [ref=e4322]:
+                - link "/api/jorge-advanced/retention/track-referral" [ref=e4324]:
+                  - /url: "#/jorge-advanced/track_referral_api_jorge_advanced_retention_track_referral_post"
+                  - generic [ref=e4325]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /retention
+                    - text: /track-referral
+                - generic [ref=e4326]: Track Referral
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-advanced/retention/track-referral" [ref=e4329]:
+              - img [ref=e4330]
+          - generic [ref=e4334] [cursor=pointer]:
+            - 'button "GET /api/jorge-advanced/retention/client/{client_id}/engagement Get Client Engagement" [ref=e4335]':
+              - generic [ref=e4336]: GET
+              - generic [ref=e4337]:
+                - 'link "/api/jorge-advanced/retention/client/{client_id}/engagement" [ref=e4339]':
+                  - /url: "#/jorge-advanced/get_client_engagement_api_jorge_advanced_retention_client__client_id__engagement_get"
+                  - generic [ref=e4340]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /retention
+                    - text: /client
+                    - text: "/{client_id}"
+                    - text: /engagement
+                - generic [ref=e4341]: Get Client Engagement
+            - generic "Copy to clipboard"
+            - 'button "get /api/jorge-advanced/retention/client/{client_id}/engagement" [ref=e4344]':
+              - img [ref=e4345]
+          - generic [ref=e4349] [cursor=pointer]:
+            - button "GET /api/jorge-advanced/retention/analytics Get Retention Analytics" [ref=e4350]:
+              - generic [ref=e4351]: GET
+              - generic [ref=e4352]:
+                - link "/api/jorge-advanced/retention/analytics" [ref=e4354]:
+                  - /url: "#/jorge-advanced/get_retention_analytics_api_jorge_advanced_retention_analytics_get"
+                  - generic [ref=e4355]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /retention
+                    - text: /analytics
+                - generic [ref=e4356]: Get Retention Analytics
+            - generic "Copy to clipboard"
+            - button "get /api/jorge-advanced/retention/analytics" [ref=e4359]:
+              - img [ref=e4360]
+          - generic [ref=e4364] [cursor=pointer]:
+            - button "POST /api/jorge-advanced/market/analyze Analyze Market" [ref=e4365]:
+              - generic [ref=e4366]: POST
+              - generic [ref=e4367]:
+                - link "/api/jorge-advanced/market/analyze" [ref=e4369]:
+                  - /url: "#/jorge-advanced/analyze_market_api_jorge_advanced_market_analyze_post"
+                  - generic [ref=e4370]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /market
+                    - text: /analyze
+                - generic [ref=e4371]: Analyze Market
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-advanced/market/analyze" [ref=e4374]:
+              - img [ref=e4375]
+          - generic [ref=e4379] [cursor=pointer]:
+            - button "POST /api/jorge-advanced/market/investment-opportunities Find Investment Opportunities" [ref=e4380]:
+              - generic [ref=e4381]: POST
+              - generic [ref=e4382]:
+                - link "/api/jorge-advanced/market/investment-opportunities" [ref=e4384]:
+                  - /url: "#/jorge-advanced/find_investment_opportunities_api_jorge_advanced_market_investment_opportunities_post"
+                  - generic [ref=e4385]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /market
+                    - text: /investment-opportunities
+                - generic [ref=e4386]: Find Investment Opportunities
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-advanced/market/investment-opportunities" [ref=e4389]:
+              - img [ref=e4390]
+          - generic [ref=e4394] [cursor=pointer]:
+            - 'button "GET /api/jorge-advanced/market/trends/{neighborhood} Get Market Trends" [ref=e4395]':
+              - generic [ref=e4396]: GET
+              - generic [ref=e4397]:
+                - 'link "/api/jorge-advanced/market/trends/{neighborhood}" [ref=e4399]':
+                  - /url: "#/jorge-advanced/get_market_trends_api_jorge_advanced_market_trends__neighborhood__get"
+                  - generic [ref=e4400]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /market
+                    - text: /trends
+                    - text: "/{neighborhood}"
+                - generic [ref=e4401]: Get Market Trends
+            - generic "Copy to clipboard"
+            - 'button "get /api/jorge-advanced/market/trends/{neighborhood}" [ref=e4404]':
+              - img [ref=e4405]
+          - generic [ref=e4409] [cursor=pointer]:
+            - button "GET /api/jorge-advanced/dashboard/metrics Get Dashboard Metrics" [ref=e4410]:
+              - generic [ref=e4411]: GET
+              - generic [ref=e4412]:
+                - link "/api/jorge-advanced/dashboard/metrics" [ref=e4414]:
+                  - /url: "#/jorge-advanced/get_dashboard_metrics_api_jorge_advanced_dashboard_metrics_get"
+                  - generic [ref=e4415]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /dashboard
+                    - text: /metrics
+                - generic [ref=e4416]: Get Dashboard Metrics
+            - generic "Copy to clipboard"
+            - button "get /api/jorge-advanced/dashboard/metrics" [ref=e4419]:
+              - img [ref=e4420]
+          - generic [ref=e4424] [cursor=pointer]:
+            - button "GET /api/jorge-advanced/health/modules Get Module Health" [ref=e4425]:
+              - generic [ref=e4426]: GET
+              - generic [ref=e4427]:
+                - link "/api/jorge-advanced/health/modules" [ref=e4429]:
+                  - /url: "#/jorge-advanced/get_module_health_api_jorge_advanced_health_modules_get"
+                  - generic [ref=e4430]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /health
+                    - text: /modules
+                - generic [ref=e4431]: Get Module Health
+            - generic "Copy to clipboard"
+            - button "get /api/jorge-advanced/health/modules" [ref=e4434]:
+              - img [ref=e4435]
+          - generic [ref=e4439] [cursor=pointer]:
+            - button "POST /api/jorge-advanced/integration/trigger-event Trigger Integration Event" [ref=e4440]:
+              - generic [ref=e4441]: POST
+              - generic [ref=e4442]:
+                - link "/api/jorge-advanced/integration/trigger-event" [ref=e4444]:
+                  - /url: "#/jorge-advanced/trigger_integration_event_api_jorge_advanced_integration_trigger_event_post"
+                  - generic [ref=e4445]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /integration
+                    - text: /trigger-event
+                - generic [ref=e4446]: Trigger Integration Event
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-advanced/integration/trigger-event" [ref=e4449]:
+              - img [ref=e4450]
+          - generic [ref=e4454] [cursor=pointer]:
+            - button "GET /api/jorge-advanced/health Advanced Features Health" [ref=e4455]:
+              - generic [ref=e4456]: GET
+              - generic [ref=e4457]:
+                - link "/api/jorge-advanced/health" [ref=e4459]:
+                  - /url: "#/jorge-advanced/advanced_features_health_api_jorge_advanced_health_get"
+                  - generic [ref=e4460]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /health
+                - generic [ref=e4461]: Advanced Features Health
+            - generic "Copy to clipboard"
+            - button "get /api/jorge-advanced/health" [ref=e4464]:
+              - img [ref=e4465]
+          - generic [ref=e4469] [cursor=pointer]:
+            - button "GET /api/jorge-advanced/config Get Configuration" [ref=e4470]:
+              - generic [ref=e4471]: GET
+              - generic [ref=e4472]:
+                - link "/api/jorge-advanced/config" [ref=e4474]:
+                  - /url: "#/jorge-advanced/get_configuration_api_jorge_advanced_config_get"
+                  - generic [ref=e4475]:
+                    - text: /api
+                    - text: /jorge-advanced
+                    - text: /config
+                - generic [ref=e4476]: Get Configuration
+            - generic "Copy to clipboard"
+            - button "get /api/jorge-advanced/config" [ref=e4479]:
+              - img [ref=e4480]
+      - generic [ref=e4483]:
+        - heading "jorge-followup Collapse operation" [level=3] [ref=e4484] [cursor=pointer]:
+          - link "jorge-followup" [ref=e4485]:
+            - /url: "#/jorge-followup"
+          - button "Collapse operation" [expanded] [ref=e4486]:
+            - img [ref=e4487]
+        - generic [ref=e4490]:
+          - generic [ref=e4493] [cursor=pointer]:
+            - button "POST /api/jorge-followup/webhook Trigger Followup Webhook" [ref=e4494]:
+              - generic [ref=e4495]: POST
+              - generic [ref=e4496]:
+                - link "/api/jorge-followup/webhook" [ref=e4498]:
+                  - /url: "#/jorge-followup/trigger_followup_webhook_api_jorge_followup_webhook_post"
+                  - generic [ref=e4499]:
+                    - text: /api
+                    - text: /jorge-followup
+                    - text: /webhook
+                - generic [ref=e4500]: Trigger Followup Webhook
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-followup/webhook" [ref=e4503]:
+              - img [ref=e4504]
+          - generic [ref=e4508] [cursor=pointer]:
+            - button "POST /api/jorge-followup/process-batch Process Batch Followups" [ref=e4509]:
+              - generic [ref=e4510]: POST
+              - generic [ref=e4511]:
+                - link "/api/jorge-followup/process-batch" [ref=e4513]:
+                  - /url: "#/jorge-followup/process_batch_followups_api_jorge_followup_process_batch_post"
+                  - generic [ref=e4514]:
+                    - text: /api
+                    - text: /jorge-followup
+                    - text: /process-batch
+                - generic [ref=e4515]: Process Batch Followups
+            - generic "Copy to clipboard"
+            - button "post /api/jorge-followup/process-batch" [ref=e4518]:
+              - img [ref=e4519]
+          - generic [ref=e4523] [cursor=pointer]:
+            - button "GET /api/jorge-followup/stats Get Followup Stats" [ref=e4524]:
+              - generic [ref=e4525]: GET
+              - generic [ref=e4526]:
+                - link "/api/jorge-followup/stats" [ref=e4528]:
+                  - /url: "#/jorge-followup/get_followup_stats_api_jorge_followup_stats_get"
+                  - generic [ref=e4529]:
+                    - text: /api
+                    - text: /jorge-followup
+                    - text: /stats
+                - generic [ref=e4530]: Get Followup Stats
+            - generic "Copy to clipboard"
+            - button "get /api/jorge-followup/stats" [ref=e4533]:
+              - img [ref=e4534]
+          - generic [ref=e4538] [cursor=pointer]:
+            - 'button "POST /api/jorge-followup/setup-workflows/{location_id} Setup Ghl Workflows" [ref=e4539]':
+              - generic [ref=e4540]: POST
+              - generic [ref=e4541]:
+                - 'link "/api/jorge-followup/setup-workflows/{location_id}" [ref=e4543]':
+                  - /url: "#/jorge-followup/setup_ghl_workflows_api_jorge_followup_setup_workflows__location_id__post"
+                  - generic [ref=e4544]:
+                    - text: /api
+                    - text: /jorge-followup
+                    - text: /setup-workflows
+                    - text: "/{location_id}"
+                - generic [ref=e4545]: Setup Ghl Workflows
+            - generic "Copy to clipboard"
+            - 'button "post /api/jorge-followup/setup-workflows/{location_id}" [ref=e4548]':
+              - img [ref=e4549]
+      - generic [ref=e4552]:
+        - heading "Reports Collapse operation" [level=3] [ref=e4553] [cursor=pointer]:
+          - link "Reports" [ref=e4554]:
+            - /url: "#/Reports"
+          - button "Collapse operation" [expanded] [ref=e4555]:
+            - img [ref=e4556]
+        - generic [ref=e4562] [cursor=pointer]:
+          - button "GET /api/reports/dashboard-summary Generate Dashboard Summary PDF" [ref=e4563]:
+            - generic [ref=e4564]: GET
+            - generic [ref=e4565]:
+              - link "/api/reports/dashboard-summary" [ref=e4567]:
+                - /url: "#/Reports/generate_dashboard_summary_api_reports_dashboard_summary_get"
+                - generic [ref=e4568]:
+                  - text: /api
+                  - text: /reports
+                  - text: /dashboard-summary
+              - generic [ref=e4569]: Generate Dashboard Summary PDF
+          - generic "Copy to clipboard"
+          - button "authorization button unlocked" [ref=e4572]:
+            - img [ref=e4573]
+          - button "get /api/reports/dashboard-summary" [ref=e4575]:
+            - img [ref=e4576]
+      - generic [ref=e4579]:
+        - heading "retell Collapse operation" [level=3] [ref=e4580] [cursor=pointer]:
+          - link "retell" [ref=e4581]:
+            - /url: "#/retell"
+          - button "Collapse operation" [expanded] [ref=e4582]:
+            - img [ref=e4583]
+        - generic [ref=e4589] [cursor=pointer]:
+          - button "POST /api/retell/webhook Handle Retell Webhook" [ref=e4590]:
+            - generic [ref=e4591]: POST
+            - generic [ref=e4592]:
+              - link "/api/retell/webhook" [ref=e4594]:
+                - /url: "#/retell/handle_retell_webhook_api_retell_webhook_post"
+                - generic [ref=e4595]:
+                  - text: /api
+                  - text: /retell
+                  - text: /webhook
+              - generic [ref=e4596]: Handle Retell Webhook
+          - generic "Copy to clipboard"
+          - button "post /api/retell/webhook" [ref=e4599]:
+            - img [ref=e4600]
+      - generic [ref=e4603]:
+        - heading "vapi Collapse operation" [level=3] [ref=e4604] [cursor=pointer]:
+          - link "vapi" [ref=e4605]:
+            - /url: "#/vapi"
+          - button "Collapse operation" [expanded] [ref=e4606]:
+            - img [ref=e4607]
+        - generic [ref=e4610]:
+          - generic [ref=e4613] [cursor=pointer]:
+            - button "POST /api/vapi/tools/check-availability Vapi Check Availability" [ref=e4614]:
+              - generic [ref=e4615]: POST
+              - generic [ref=e4616]:
+                - link "/api/vapi/tools/check-availability" [ref=e4618]:
+                  - /url: "#/vapi/vapi_check_availability_api_vapi_tools_check_availability_post"
+                  - generic [ref=e4619]:
+                    - text: /api
+                    - text: /vapi
+                    - text: /tools
+                    - text: /check-availability
+                - generic [ref=e4620]: Vapi Check Availability
+            - generic "Copy to clipboard"
+            - button "post /api/vapi/tools/check-availability" [ref=e4623]:
+              - img [ref=e4624]
+          - generic [ref=e4628] [cursor=pointer]:
+            - button "POST /api/vapi/tools/book-tour Vapi Book Tour" [ref=e4629]:
+              - generic [ref=e4630]: POST
+              - generic [ref=e4631]:
+                - link "/api/vapi/tools/book-tour" [ref=e4633]:
+                  - /url: "#/vapi/vapi_book_tour_api_vapi_tools_book_tour_post"
+                  - generic [ref=e4634]:
+                    - text: /api
+                    - text: /vapi
+                    - text: /tools
+                    - text: /book-tour
+                - generic [ref=e4635]: Vapi Book Tour
+            - generic "Copy to clipboard"
+            - button "post /api/vapi/tools/book-tour" [ref=e4638]:
+              - img [ref=e4639]
+      - generic [ref=e4642]:
+        - heading "external_webhooks Collapse operation" [level=3] [ref=e4643] [cursor=pointer]:
+          - link "external_webhooks" [ref=e4644]:
+            - /url: "#/external_webhooks"
+          - button "Collapse operation" [expanded] [ref=e4645]:
+            - img [ref=e4646]
+        - generic [ref=e4649]:
+          - generic [ref=e4652] [cursor=pointer]:
+            - button "POST /api/webhooks/twilio/sms-status Handle Twilio Sms Status" [ref=e4653]:
+              - generic [ref=e4654]: POST
+              - generic [ref=e4655]:
+                - link "/api/webhooks/twilio/sms-status" [ref=e4657]:
+                  - /url: "#/external_webhooks/handle_twilio_sms_status_api_webhooks_twilio_sms_status_post"
+                  - generic [ref=e4658]:
+                    - text: /api
+                    - text: /webhooks
+                    - text: /twilio
+                    - text: /sms-status
+                - generic [ref=e4659]: Handle Twilio Sms Status
+            - generic "Copy to clipboard"
+            - button "post /api/webhooks/twilio/sms-status" [ref=e4662]:
+              - img [ref=e4663]
+          - generic [ref=e4667] [cursor=pointer]:
+            - button "POST /api/webhooks/twilio/sms-incoming Handle Twilio Sms Incoming" [ref=e4668]:
+              - generic [ref=e4669]: POST
+              - generic [ref=e4670]:
+                - link "/api/webhooks/twilio/sms-incoming" [ref=e4672]:
+                  - /url: "#/external_webhooks/handle_twilio_sms_incoming_api_webhooks_twilio_sms_incoming_post"
+                  - generic [ref=e4673]:
+                    - text: /api
+                    - text: /webhooks
+                    - text: /twilio
+                    - text: /sms-incoming
+                - generic [ref=e4674]: Handle Twilio Sms Incoming
+            - generic "Copy to clipboard"
+            - button "post /api/webhooks/twilio/sms-incoming" [ref=e4677]:
+              - img [ref=e4678]
+          - generic [ref=e4682] [cursor=pointer]:
+            - button "POST /api/webhooks/sendgrid/events Handle Sendgrid Events" [ref=e4683]:
+              - generic [ref=e4684]: POST
+              - generic [ref=e4685]:
+                - link "/api/webhooks/sendgrid/events" [ref=e4687]:
+                  - /url: "#/external_webhooks/handle_sendgrid_events_api_webhooks_sendgrid_events_post"
+                  - generic [ref=e4688]:
+                    - text: /api
+                    - text: /webhooks
+                    - text: /sendgrid
+                    - text: /events
+                - generic [ref=e4689]: Handle Sendgrid Events
+            - generic "Copy to clipboard"
+            - button "post /api/webhooks/sendgrid/events" [ref=e4692]:
+              - img [ref=e4693]
+          - generic [ref=e4697] [cursor=pointer]:
+            - button "POST /api/webhooks/apollo/enrichment Handle Apollo Enrichment" [ref=e4698]:
+              - generic [ref=e4699]: POST
+              - generic [ref=e4700]:
+                - link "/api/webhooks/apollo/enrichment" [ref=e4702]:
+                  - /url: "#/external_webhooks/handle_apollo_enrichment_api_webhooks_apollo_enrichment_post"
+                  - generic [ref=e4703]:
+                    - text: /api
+                    - text: /webhooks
+                    - text: /apollo
+                    - text: /enrichment
+                - generic [ref=e4704]: Handle Apollo Enrichment
+            - generic "Copy to clipboard"
+            - button "post /api/webhooks/apollo/enrichment" [ref=e4707]:
+              - img [ref=e4708]
+      - generic [ref=e4711]:
+        - heading "Mobile API Collapse operation" [level=3] [ref=e4712] [cursor=pointer]:
+          - link "Mobile API" [ref=e4713]:
+            - /url: "#/Mobile%20API"
+          - button "Collapse operation" [expanded] [ref=e4714]:
+            - img [ref=e4715]
+        - generic [ref=e4718]:
+          - generic [ref=e4721] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/auth/login Mobile Login" [ref=e4722]:
+              - generic [ref=e4723]: POST
+              - generic [ref=e4724]:
+                - link "/api/mobile/mobile/auth/login" [ref=e4726]:
+                  - /url: "#/Mobile%20API/mobile_login_api_mobile_mobile_auth_login_post"
+                  - generic [ref=e4727]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /login
+                - generic [ref=e4728]: Mobile Login
+            - generic "Copy to clipboard"
+            - button "post /api/mobile/mobile/auth/login" [ref=e4731]:
+              - img [ref=e4732]
+          - generic [ref=e4736] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/auth/biometric/challenge Create Biometric Challenge" [ref=e4737]:
+              - generic [ref=e4738]: POST
+              - generic [ref=e4739]:
+                - link "/api/mobile/mobile/auth/biometric/challenge" [ref=e4741]:
+                  - /url: "#/Mobile%20API/create_biometric_challenge_api_mobile_mobile_auth_biometric_challenge_post"
+                  - generic [ref=e4742]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /biometric
+                    - text: /challenge
+                - generic [ref=e4743]: Create Biometric Challenge
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4746]:
+              - img [ref=e4747]
+            - button "post /api/mobile/mobile/auth/biometric/challenge" [ref=e4749]:
+              - img [ref=e4750]
+          - generic [ref=e4754] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/auth/biometric/authenticate Biometric Authenticate" [ref=e4755]:
+              - generic [ref=e4756]: POST
+              - generic [ref=e4757]:
+                - link "/api/mobile/mobile/auth/biometric/authenticate" [ref=e4759]:
+                  - /url: "#/Mobile%20API/biometric_authenticate_api_mobile_mobile_auth_biometric_authenticate_post"
+                  - generic [ref=e4760]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /biometric
+                    - text: /authenticate
+                - generic [ref=e4761]: Biometric Authenticate
+            - generic "Copy to clipboard"
+            - button "post /api/mobile/mobile/auth/biometric/authenticate" [ref=e4764]:
+              - img [ref=e4765]
+          - generic [ref=e4769] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/auth/refresh Refresh Token" [ref=e4770]:
+              - generic [ref=e4771]: POST
+              - generic [ref=e4772]:
+                - link "/api/mobile/mobile/auth/refresh" [ref=e4774]:
+                  - /url: "#/Mobile%20API/refresh_token_api_mobile_mobile_auth_refresh_post"
+                  - generic [ref=e4775]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /refresh
+                - generic [ref=e4776]: Refresh Token
+            - generic "Copy to clipboard"
+            - button "post /api/mobile/mobile/auth/refresh" [ref=e4779]:
+              - img [ref=e4780]
+          - generic [ref=e4784] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/auth/logout Mobile Logout" [ref=e4785]:
+              - generic [ref=e4786]: POST
+              - generic [ref=e4787]:
+                - link "/api/mobile/mobile/auth/logout" [ref=e4789]:
+                  - /url: "#/Mobile%20API/mobile_logout_api_mobile_mobile_auth_logout_post"
+                  - generic [ref=e4790]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /logout
+                - generic [ref=e4791]: Mobile Logout
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4794]:
+              - img [ref=e4795]
+            - button "post /api/mobile/mobile/auth/logout" [ref=e4797]:
+              - img [ref=e4798]
+          - generic [ref=e4802] [cursor=pointer]:
+            - button "GET /api/mobile/mobile/auth/device/status Get Device Status" [ref=e4803]:
+              - generic [ref=e4804]: GET
+              - generic [ref=e4805]:
+                - link "/api/mobile/mobile/auth/device/status" [ref=e4807]:
+                  - /url: "#/Mobile%20API/get_device_status_api_mobile_mobile_auth_device_status_get"
+                  - generic [ref=e4808]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /device
+                    - text: /status
+                - generic [ref=e4809]: Get Device Status
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4812]:
+              - img [ref=e4813]
+            - button "get /api/mobile/mobile/auth/device/status" [ref=e4815]:
+              - img [ref=e4816]
+          - generic [ref=e4820] [cursor=pointer]:
+            - button "DELETE /api/mobile/mobile/auth/device/unregister Unregister Device" [ref=e4821]:
+              - generic [ref=e4822]: DELETE
+              - generic [ref=e4823]:
+                - link "/api/mobile/mobile/auth/device/unregister" [ref=e4825]:
+                  - /url: "#/Mobile%20API/unregister_device_api_mobile_mobile_auth_device_unregister_delete"
+                  - generic [ref=e4826]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /device
+                    - text: /unregister
+                - generic [ref=e4827]: Unregister Device
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4830]:
+              - img [ref=e4831]
+            - button "delete /api/mobile/mobile/auth/device/unregister" [ref=e4833]:
+              - img [ref=e4834]
+          - generic [ref=e4838] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/ar/visualize/setup Setup Property Visualization" [ref=e4839]:
+              - generic [ref=e4840]: POST
+              - generic [ref=e4841]:
+                - link "/api/mobile/mobile/ar/visualize/setup" [ref=e4843]:
+                  - /url: "#/Mobile%20API/setup_property_visualization_api_mobile_mobile_ar_visualize_setup_post"
+                  - generic [ref=e4844]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /visualize
+                    - text: /setup
+                - generic [ref=e4845]: Setup Property Visualization
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4848]:
+              - img [ref=e4849]
+            - button "post /api/mobile/mobile/ar/visualize/setup" [ref=e4851]:
+              - img [ref=e4852]
+          - generic [ref=e4856] [cursor=pointer]:
+            - 'button "GET /api/mobile/mobile/ar/property/{property_id}/model Get Property 3D Model" [ref=e4857]':
+              - generic [ref=e4858]: GET
+              - generic [ref=e4859]:
+                - 'link "/api/mobile/mobile/ar/property/{property_id}/model" [ref=e4861]':
+                  - /url: "#/Mobile%20API/get_property_3d_model_api_mobile_mobile_ar_property__property_id__model_get"
+                  - generic [ref=e4862]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /property
+                    - text: "/{property_id}"
+                    - text: /model
+                - generic [ref=e4863]: Get Property 3D Model
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4866]:
+              - img [ref=e4867]
+            - 'button "get /api/mobile/mobile/ar/property/{property_id}/model" [ref=e4869]':
+              - img [ref=e4870]
+          - generic [ref=e4874] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/ar/anchors/create Create Spatial Anchor" [ref=e4875]:
+              - generic [ref=e4876]: POST
+              - generic [ref=e4877]:
+                - link "/api/mobile/mobile/ar/anchors/create" [ref=e4879]:
+                  - /url: "#/Mobile%20API/create_spatial_anchor_api_mobile_mobile_ar_anchors_create_post"
+                  - generic [ref=e4880]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /anchors
+                    - text: /create
+                - generic [ref=e4881]: Create Spatial Anchor
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4884]:
+              - img [ref=e4885]
+            - button "post /api/mobile/mobile/ar/anchors/create" [ref=e4887]:
+              - img [ref=e4888]
+          - generic [ref=e4892] [cursor=pointer]:
+            - 'button "GET /api/mobile/mobile/ar/anchors/property/{property_id} Get Property Anchors" [ref=e4893]':
+              - generic [ref=e4894]: GET
+              - generic [ref=e4895]:
+                - 'link "/api/mobile/mobile/ar/anchors/property/{property_id}" [ref=e4897]':
+                  - /url: "#/Mobile%20API/get_property_anchors_api_mobile_mobile_ar_anchors_property__property_id__get"
+                  - generic [ref=e4898]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /anchors
+                    - text: /property
+                    - text: "/{property_id}"
+                - generic [ref=e4899]: Get Property Anchors
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4902]:
+              - img [ref=e4903]
+            - 'button "get /api/mobile/mobile/ar/anchors/property/{property_id}" [ref=e4905]':
+              - img [ref=e4906]
+          - generic [ref=e4910] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/ar/mapping/upload Upload Spatial Mapping" [ref=e4911]:
+              - generic [ref=e4912]: POST
+              - generic [ref=e4913]:
+                - link "/api/mobile/mobile/ar/mapping/upload" [ref=e4915]:
+                  - /url: "#/Mobile%20API/upload_spatial_mapping_api_mobile_mobile_ar_mapping_upload_post"
+                  - generic [ref=e4916]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /mapping
+                    - text: /upload
+                - generic [ref=e4917]: Upload Spatial Mapping
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4920]:
+              - img [ref=e4921]
+            - button "post /api/mobile/mobile/ar/mapping/upload" [ref=e4923]:
+              - img [ref=e4924]
+          - generic [ref=e4928] [cursor=pointer]:
+            - 'button "GET /api/mobile/mobile/ar/tour/{property_id}/waypoints Get Vr Tour Waypoints" [ref=e4929]':
+              - generic [ref=e4930]: GET
+              - generic [ref=e4931]:
+                - 'link "/api/mobile/mobile/ar/tour/{property_id}/waypoints" [ref=e4933]':
+                  - /url: "#/Mobile%20API/get_vr_tour_waypoints_api_mobile_mobile_ar_tour__property_id__waypoints_get"
+                  - generic [ref=e4934]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /tour
+                    - text: "/{property_id}"
+                    - text: /waypoints
+                - generic [ref=e4935]: Get Vr Tour Waypoints
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4938]:
+              - img [ref=e4939]
+            - 'button "get /api/mobile/mobile/ar/tour/{property_id}/waypoints" [ref=e4941]':
+              - img [ref=e4942]
+          - generic [ref=e4946] [cursor=pointer]:
+            - button "GET /api/mobile/mobile/ar/capabilities/check Check Device Capabilities" [ref=e4947]:
+              - generic [ref=e4948]: GET
+              - generic [ref=e4949]:
+                - link "/api/mobile/mobile/ar/capabilities/check" [ref=e4951]:
+                  - /url: "#/Mobile%20API/check_device_capabilities_api_mobile_mobile_ar_capabilities_check_get"
+                  - generic [ref=e4952]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /capabilities
+                    - text: /check
+                - generic [ref=e4953]: Check Device Capabilities
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4956]:
+              - img [ref=e4957]
+            - button "get /api/mobile/mobile/ar/capabilities/check" [ref=e4959]:
+              - img [ref=e4960]
+          - generic [ref=e4964] [cursor=pointer]:
+            - button "GET /api/mobile/ Mobile Api Info" [ref=e4965]:
+              - generic [ref=e4966]: GET
+              - generic [ref=e4967]:
+                - link /api/mobile/ [ref=e4969]:
+                  - /url: "#/Mobile%20API/mobile_api_info_api_mobile__get"
+                  - generic [ref=e4970]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /
+                - generic [ref=e4971]: Mobile Api Info
+            - generic "Copy to clipboard"
+            - button "get /api/mobile/" [ref=e4974]:
+              - img [ref=e4975]
+          - generic [ref=e4979] [cursor=pointer]:
+            - button "POST /api/mobile/voice/process Process Voice Interaction" [ref=e4980]:
+              - generic [ref=e4981]: POST
+              - generic [ref=e4982]:
+                - link "/api/mobile/voice/process" [ref=e4984]:
+                  - /url: "#/Mobile%20API/process_voice_interaction_api_mobile_voice_process_post"
+                  - generic [ref=e4985]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /voice
+                    - text: /process
+                - generic [ref=e4986]: Process Voice Interaction
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e4989]:
+              - img [ref=e4990]
+            - button "post /api/mobile/voice/process" [ref=e4992]:
+              - img [ref=e4993]
+          - generic [ref=e4997] [cursor=pointer]:
+            - 'button "GET /api/mobile/voice/session/{session_id}/summary Get Voice Session Summary" [ref=e4998]':
+              - generic [ref=e4999]: GET
+              - generic [ref=e5000]:
+                - 'link "/api/mobile/voice/session/{session_id}/summary" [ref=e5002]':
+                  - /url: "#/Mobile%20API/get_voice_session_summary_api_mobile_voice_session__session_id__summary_get"
+                  - generic [ref=e5003]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /voice
+                    - text: /session
+                    - text: "/{session_id}"
+                    - text: /summary
+                - generic [ref=e5004]: Get Voice Session Summary
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5007]:
+              - img [ref=e5008]
+            - 'button "get /api/mobile/voice/session/{session_id}/summary" [ref=e5010]':
+              - img [ref=e5011]
+          - generic [ref=e5015] [cursor=pointer]:
+            - 'button "DELETE /api/mobile/voice/session/{session_id} Clear Voice Session" [ref=e5016]':
+              - generic [ref=e5017]: DELETE
+              - generic [ref=e5018]:
+                - 'link "/api/mobile/voice/session/{session_id}" [ref=e5020]':
+                  - /url: "#/Mobile%20API/clear_voice_session_api_mobile_voice_session__session_id__delete"
+                  - generic [ref=e5021]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /voice
+                    - text: /session
+                    - text: "/{session_id}"
+                - generic [ref=e5022]: Clear Voice Session
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5025]:
+              - img [ref=e5026]
+            - 'button "delete /api/mobile/voice/session/{session_id}" [ref=e5028]':
+              - img [ref=e5029]
+          - generic [ref=e5033] [cursor=pointer]:
+            - button "GET /api/mobile/properties Get Mobile Properties" [ref=e5034]:
+              - generic [ref=e5035]: GET
+              - generic [ref=e5036]:
+                - link "/api/mobile/properties" [ref=e5038]:
+                  - /url: "#/Mobile%20API/get_mobile_properties_api_mobile_properties_get"
+                  - generic [ref=e5039]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /properties
+                - generic [ref=e5040]: Get Mobile Properties
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5043]:
+              - img [ref=e5044]
+            - button "get /api/mobile/properties" [ref=e5046]:
+              - img [ref=e5047]
+          - generic [ref=e5051] [cursor=pointer]:
+            - 'button "GET /api/mobile/properties/{property_id} Get Mobile Property Details" [ref=e5052]':
+              - generic [ref=e5053]: GET
+              - generic [ref=e5054]:
+                - 'link "/api/mobile/properties/{property_id}" [ref=e5056]':
+                  - /url: "#/Mobile%20API/get_mobile_property_details_api_mobile_properties__property_id__get"
+                  - generic [ref=e5057]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /properties
+                    - text: "/{property_id}"
+                - generic [ref=e5058]: Get Mobile Property Details
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5061]:
+              - img [ref=e5062]
+            - 'button "get /api/mobile/properties/{property_id}" [ref=e5064]':
+              - img [ref=e5065]
+          - generic [ref=e5069] [cursor=pointer]:
+            - button "GET /api/mobile/leads Get Mobile Leads" [ref=e5070]:
+              - generic [ref=e5071]: GET
+              - generic [ref=e5072]:
+                - link "/api/mobile/leads" [ref=e5074]:
+                  - /url: "#/Mobile%20API/get_mobile_leads_api_mobile_leads_get"
+                  - generic [ref=e5075]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /leads
+                - generic [ref=e5076]: Get Mobile Leads
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5079]:
+              - img [ref=e5080]
+            - button "get /api/mobile/leads" [ref=e5082]:
+              - img [ref=e5083]
+          - generic [ref=e5087] [cursor=pointer]:
+            - 'button "GET /api/mobile/leads/{lead_id} Get Mobile Lead Details" [ref=e5088]':
+              - generic [ref=e5089]: GET
+              - generic [ref=e5090]:
+                - 'link "/api/mobile/leads/{lead_id}" [ref=e5092]':
+                  - /url: "#/Mobile%20API/get_mobile_lead_details_api_mobile_leads__lead_id__get"
+                  - generic [ref=e5093]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /leads
+                    - text: "/{lead_id}"
+                - generic [ref=e5094]: Get Mobile Lead Details
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5097]:
+              - img [ref=e5098]
+            - 'button "get /api/mobile/leads/{lead_id}" [ref=e5100]':
+              - img [ref=e5101]
+          - generic [ref=e5105] [cursor=pointer]:
+            - button "GET /api/mobile/analytics/summary Get Mobile Analytics Summary" [ref=e5106]:
+              - generic [ref=e5107]: GET
+              - generic [ref=e5108]:
+                - link "/api/mobile/analytics/summary" [ref=e5110]:
+                  - /url: "#/Mobile%20API/get_mobile_analytics_summary_api_mobile_analytics_summary_get"
+                  - generic [ref=e5111]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /analytics
+                    - text: /summary
+                - generic [ref=e5112]: Get Mobile Analytics Summary
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5115]:
+              - img [ref=e5116]
+            - button "get /api/mobile/analytics/summary" [ref=e5118]:
+              - img [ref=e5119]
+          - generic [ref=e5123] [cursor=pointer]:
+            - button "GET /api/mobile/settings Get Mobile App Settings" [ref=e5124]:
+              - generic [ref=e5125]: GET
+              - generic [ref=e5126]:
+                - link "/api/mobile/settings" [ref=e5128]:
+                  - /url: "#/Mobile%20API/get_mobile_app_settings_api_mobile_settings_get"
+                  - generic [ref=e5129]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /settings
+                - generic [ref=e5130]: Get Mobile App Settings
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5133]:
+              - img [ref=e5134]
+            - button "get /api/mobile/settings" [ref=e5136]:
+              - img [ref=e5137]
+          - generic [ref=e5141] [cursor=pointer]:
+            - button "PUT /api/mobile/settings Update Mobile App Settings" [ref=e5142]:
+              - generic [ref=e5143]: PUT
+              - generic [ref=e5144]:
+                - link "/api/mobile/settings" [ref=e5146]:
+                  - /url: "#/Mobile%20API/update_mobile_app_settings_api_mobile_settings_put"
+                  - generic [ref=e5147]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /settings
+                - generic [ref=e5148]: Update Mobile App Settings
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5151]:
+              - img [ref=e5152]
+            - button "put /api/mobile/settings" [ref=e5154]:
+              - img [ref=e5155]
+          - generic [ref=e5159] [cursor=pointer]:
+            - button "POST /api/mobile/sync Mobile Sync" [ref=e5160]:
+              - generic [ref=e5161]: POST
+              - generic [ref=e5162]:
+                - link "/api/mobile/sync" [ref=e5164]:
+                  - /url: "#/Mobile%20API/mobile_sync_api_mobile_sync_post"
+                  - generic [ref=e5165]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /sync
+                - generic [ref=e5166]: Mobile Sync
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5169]:
+              - img [ref=e5170]
+            - button "post /api/mobile/sync" [ref=e5172]:
+              - img [ref=e5173]
+          - generic [ref=e5177] [cursor=pointer]:
+            - button "POST /api/mobile/search Mobile Search" [ref=e5178]:
+              - generic [ref=e5179]: POST
+              - generic [ref=e5180]:
+                - link "/api/mobile/search" [ref=e5182]:
+                  - /url: "#/Mobile%20API/mobile_search_api_mobile_search_post"
+                  - generic [ref=e5183]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /search
+                - generic [ref=e5184]: Mobile Search
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5187]:
+              - img [ref=e5188]
+            - button "post /api/mobile/search" [ref=e5190]:
+              - img [ref=e5191]
+      - generic [ref=e5194]:
+        - heading "Mobile Authentication Collapse operation" [level=3] [ref=e5195] [cursor=pointer]:
+          - link "Mobile Authentication" [ref=e5196]:
+            - /url: "#/Mobile%20Authentication"
+          - button "Collapse operation" [expanded] [ref=e5197]:
+            - img [ref=e5198]
+        - generic [ref=e5201]:
+          - generic [ref=e5204] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/auth/login Mobile Login" [ref=e5205]:
+              - generic [ref=e5206]: POST
+              - generic [ref=e5207]:
+                - link "/api/mobile/mobile/auth/login" [ref=e5209]:
+                  - /url: "#/Mobile%20Authentication/mobile_login_api_mobile_mobile_auth_login_post"
+                  - generic [ref=e5210]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /login
+                - generic [ref=e5211]: Mobile Login
+            - generic "Copy to clipboard"
+            - button "post /api/mobile/mobile/auth/login" [ref=e5214]:
+              - img [ref=e5215]
+          - generic [ref=e5219] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/auth/biometric/challenge Create Biometric Challenge" [ref=e5220]:
+              - generic [ref=e5221]: POST
+              - generic [ref=e5222]:
+                - link "/api/mobile/mobile/auth/biometric/challenge" [ref=e5224]:
+                  - /url: "#/Mobile%20Authentication/create_biometric_challenge_api_mobile_mobile_auth_biometric_challenge_post"
+                  - generic [ref=e5225]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /biometric
+                    - text: /challenge
+                - generic [ref=e5226]: Create Biometric Challenge
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5229]:
+              - img [ref=e5230]
+            - button "post /api/mobile/mobile/auth/biometric/challenge" [ref=e5232]:
+              - img [ref=e5233]
+          - generic [ref=e5237] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/auth/biometric/authenticate Biometric Authenticate" [ref=e5238]:
+              - generic [ref=e5239]: POST
+              - generic [ref=e5240]:
+                - link "/api/mobile/mobile/auth/biometric/authenticate" [ref=e5242]:
+                  - /url: "#/Mobile%20Authentication/biometric_authenticate_api_mobile_mobile_auth_biometric_authenticate_post"
+                  - generic [ref=e5243]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /biometric
+                    - text: /authenticate
+                - generic [ref=e5244]: Biometric Authenticate
+            - generic "Copy to clipboard"
+            - button "post /api/mobile/mobile/auth/biometric/authenticate" [ref=e5247]:
+              - img [ref=e5248]
+          - generic [ref=e5252] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/auth/refresh Refresh Token" [ref=e5253]:
+              - generic [ref=e5254]: POST
+              - generic [ref=e5255]:
+                - link "/api/mobile/mobile/auth/refresh" [ref=e5257]:
+                  - /url: "#/Mobile%20Authentication/refresh_token_api_mobile_mobile_auth_refresh_post"
+                  - generic [ref=e5258]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /refresh
+                - generic [ref=e5259]: Refresh Token
+            - generic "Copy to clipboard"
+            - button "post /api/mobile/mobile/auth/refresh" [ref=e5262]:
+              - img [ref=e5263]
+          - generic [ref=e5267] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/auth/logout Mobile Logout" [ref=e5268]:
+              - generic [ref=e5269]: POST
+              - generic [ref=e5270]:
+                - link "/api/mobile/mobile/auth/logout" [ref=e5272]:
+                  - /url: "#/Mobile%20Authentication/mobile_logout_api_mobile_mobile_auth_logout_post"
+                  - generic [ref=e5273]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /logout
+                - generic [ref=e5274]: Mobile Logout
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5277]:
+              - img [ref=e5278]
+            - button "post /api/mobile/mobile/auth/logout" [ref=e5280]:
+              - img [ref=e5281]
+          - generic [ref=e5285] [cursor=pointer]:
+            - button "GET /api/mobile/mobile/auth/device/status Get Device Status" [ref=e5286]:
+              - generic [ref=e5287]: GET
+              - generic [ref=e5288]:
+                - link "/api/mobile/mobile/auth/device/status" [ref=e5290]:
+                  - /url: "#/Mobile%20Authentication/get_device_status_api_mobile_mobile_auth_device_status_get"
+                  - generic [ref=e5291]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /device
+                    - text: /status
+                - generic [ref=e5292]: Get Device Status
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5295]:
+              - img [ref=e5296]
+            - button "get /api/mobile/mobile/auth/device/status" [ref=e5298]:
+              - img [ref=e5299]
+          - generic [ref=e5303] [cursor=pointer]:
+            - button "DELETE /api/mobile/mobile/auth/device/unregister Unregister Device" [ref=e5304]:
+              - generic [ref=e5305]: DELETE
+              - generic [ref=e5306]:
+                - link "/api/mobile/mobile/auth/device/unregister" [ref=e5308]:
+                  - /url: "#/Mobile%20Authentication/unregister_device_api_mobile_mobile_auth_device_unregister_delete"
+                  - generic [ref=e5309]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /auth
+                    - text: /device
+                    - text: /unregister
+                - generic [ref=e5310]: Unregister Device
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5313]:
+              - img [ref=e5314]
+            - button "delete /api/mobile/mobile/auth/device/unregister" [ref=e5316]:
+              - img [ref=e5317]
+      - generic [ref=e5320]:
+        - heading "AR/VR Integration Collapse operation" [level=3] [ref=e5321] [cursor=pointer]:
+          - link "AR/VR Integration" [ref=e5322]:
+            - /url: "#/AR/VR%20Integration"
+          - button "Collapse operation" [expanded] [ref=e5323]:
+            - img [ref=e5324]
+        - generic [ref=e5327]:
+          - generic [ref=e5330] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/ar/visualize/setup Setup Property Visualization" [ref=e5331]:
+              - generic [ref=e5332]: POST
+              - generic [ref=e5333]:
+                - link "/api/mobile/mobile/ar/visualize/setup" [ref=e5335]:
+                  - /url: "#/AR/VR%20Integration/setup_property_visualization_api_mobile_mobile_ar_visualize_setup_post"
+                  - generic [ref=e5336]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /visualize
+                    - text: /setup
+                - generic [ref=e5337]: Setup Property Visualization
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5340]:
+              - img [ref=e5341]
+            - button "post /api/mobile/mobile/ar/visualize/setup" [ref=e5343]:
+              - img [ref=e5344]
+          - generic [ref=e5348] [cursor=pointer]:
+            - 'button "GET /api/mobile/mobile/ar/property/{property_id}/model Get Property 3D Model" [ref=e5349]':
+              - generic [ref=e5350]: GET
+              - generic [ref=e5351]:
+                - 'link "/api/mobile/mobile/ar/property/{property_id}/model" [ref=e5353]':
+                  - /url: "#/AR/VR%20Integration/get_property_3d_model_api_mobile_mobile_ar_property__property_id__model_get"
+                  - generic [ref=e5354]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /property
+                    - text: "/{property_id}"
+                    - text: /model
+                - generic [ref=e5355]: Get Property 3D Model
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5358]:
+              - img [ref=e5359]
+            - 'button "get /api/mobile/mobile/ar/property/{property_id}/model" [ref=e5361]':
+              - img [ref=e5362]
+          - generic [ref=e5366] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/ar/anchors/create Create Spatial Anchor" [ref=e5367]:
+              - generic [ref=e5368]: POST
+              - generic [ref=e5369]:
+                - link "/api/mobile/mobile/ar/anchors/create" [ref=e5371]:
+                  - /url: "#/AR/VR%20Integration/create_spatial_anchor_api_mobile_mobile_ar_anchors_create_post"
+                  - generic [ref=e5372]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /anchors
+                    - text: /create
+                - generic [ref=e5373]: Create Spatial Anchor
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5376]:
+              - img [ref=e5377]
+            - button "post /api/mobile/mobile/ar/anchors/create" [ref=e5379]:
+              - img [ref=e5380]
+          - generic [ref=e5384] [cursor=pointer]:
+            - 'button "GET /api/mobile/mobile/ar/anchors/property/{property_id} Get Property Anchors" [ref=e5385]':
+              - generic [ref=e5386]: GET
+              - generic [ref=e5387]:
+                - 'link "/api/mobile/mobile/ar/anchors/property/{property_id}" [ref=e5389]':
+                  - /url: "#/AR/VR%20Integration/get_property_anchors_api_mobile_mobile_ar_anchors_property__property_id__get"
+                  - generic [ref=e5390]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /anchors
+                    - text: /property
+                    - text: "/{property_id}"
+                - generic [ref=e5391]: Get Property Anchors
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5394]:
+              - img [ref=e5395]
+            - 'button "get /api/mobile/mobile/ar/anchors/property/{property_id}" [ref=e5397]':
+              - img [ref=e5398]
+          - generic [ref=e5402] [cursor=pointer]:
+            - button "POST /api/mobile/mobile/ar/mapping/upload Upload Spatial Mapping" [ref=e5403]:
+              - generic [ref=e5404]: POST
+              - generic [ref=e5405]:
+                - link "/api/mobile/mobile/ar/mapping/upload" [ref=e5407]:
+                  - /url: "#/AR/VR%20Integration/upload_spatial_mapping_api_mobile_mobile_ar_mapping_upload_post"
+                  - generic [ref=e5408]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /mapping
+                    - text: /upload
+                - generic [ref=e5409]: Upload Spatial Mapping
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5412]:
+              - img [ref=e5413]
+            - button "post /api/mobile/mobile/ar/mapping/upload" [ref=e5415]:
+              - img [ref=e5416]
+          - generic [ref=e5420] [cursor=pointer]:
+            - 'button "GET /api/mobile/mobile/ar/tour/{property_id}/waypoints Get Vr Tour Waypoints" [ref=e5421]':
+              - generic [ref=e5422]: GET
+              - generic [ref=e5423]:
+                - 'link "/api/mobile/mobile/ar/tour/{property_id}/waypoints" [ref=e5425]':
+                  - /url: "#/AR/VR%20Integration/get_vr_tour_waypoints_api_mobile_mobile_ar_tour__property_id__waypoints_get"
+                  - generic [ref=e5426]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /tour
+                    - text: "/{property_id}"
+                    - text: /waypoints
+                - generic [ref=e5427]: Get Vr Tour Waypoints
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5430]:
+              - img [ref=e5431]
+            - 'button "get /api/mobile/mobile/ar/tour/{property_id}/waypoints" [ref=e5433]':
+              - img [ref=e5434]
+          - generic [ref=e5438] [cursor=pointer]:
+            - button "GET /api/mobile/mobile/ar/capabilities/check Check Device Capabilities" [ref=e5439]:
+              - generic [ref=e5440]: GET
+              - generic [ref=e5441]:
+                - link "/api/mobile/mobile/ar/capabilities/check" [ref=e5443]:
+                  - /url: "#/AR/VR%20Integration/check_device_capabilities_api_mobile_mobile_ar_capabilities_check_get"
+                  - generic [ref=e5444]:
+                    - text: /api
+                    - text: /mobile
+                    - text: /mobile
+                    - text: /ar
+                    - text: /capabilities
+                    - text: /check
+                - generic [ref=e5445]: Check Device Capabilities
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e5448]:
+              - img [ref=e5449]
+            - button "get /api/mobile/mobile/ar/capabilities/check" [ref=e5451]:
+              - img [ref=e5452]
+      - generic [ref=e5455]:
+        - heading "default Collapse operation" [level=3] [ref=e5456] [cursor=pointer]:
+          - link "default" [ref=e5457]:
+            - /url: "#/default"
+          - button "Collapse operation" [expanded] [ref=e5458]:
+            - img [ref=e5459]
+        - generic [ref=e5465] [cursor=pointer]:
+          - button "GET / Root" [ref=e5466]:
+            - generic [ref=e5467]: GET
+            - generic [ref=e5468]:
+              - link / [ref=e5470]:
+                - /url: "#/default/root__get"
+              - generic [ref=e5471]: Root
+          - generic "Copy to clipboard"
+          - button "get /" [ref=e5474]:
+            - img [ref=e5475]
+    - generic [ref=e5479]:
+      - heading "Schemas" [level=4] [ref=e5480] [cursor=pointer]:
+        - button "Schemas" [expanded] [ref=e5481]:
+          - generic [ref=e5482]: Schemas
+          - img [ref=e5483]
+      - generic [ref=e5485]:
+        - article [ref=e5486]:
+          - generic [ref=e5487]:
+            - button "ARSpatialAnchor" [ref=e5488] [cursor=pointer]:
+              - generic [ref=e5490]: ARSpatialAnchor
+              - img [ref=e5492]
+            - button "Expand all" [ref=e5494] [cursor=pointer]
+            - strong [ref=e5495]: object
+        - article [ref=e5496]:
+          - generic [ref=e5497]:
+            - button "ActionRecommendationResponse" [ref=e5498] [cursor=pointer]:
+              - generic [ref=e5500]: ActionRecommendationResponse
+              - img [ref=e5502]
+            - button "Expand all" [ref=e5504] [cursor=pointer]
+            - strong [ref=e5505]: object
+        - article [ref=e5506]:
+          - generic [ref=e5507]:
+            - button "ActionType" [ref=e5508] [cursor=pointer]:
+              - generic [ref=e5510]: ActionType
+              - img [ref=e5512]
+            - button "Expand all" [ref=e5514] [cursor=pointer]
+            - strong [ref=e5515]: string
+        - article [ref=e5516]:
+          - generic [ref=e5517]:
+            - button "AgentCoordination" [ref=e5518] [cursor=pointer]:
+              - generic [ref=e5520]: AgentCoordination
+              - img [ref=e5522]
+            - button "Expand all" [ref=e5524] [cursor=pointer]
+            - strong [ref=e5525]: object
+        - article [ref=e5526]:
+          - generic [ref=e5527]:
+            - button "AgentCreate" [ref=e5528] [cursor=pointer]:
+              - generic [ref=e5530]: AgentCreate
+              - img [ref=e5532]
+            - button "Expand all" [ref=e5534] [cursor=pointer]
+            - strong [ref=e5535]: object
+        - article [ref=e5536]:
+          - generic [ref=e5537]:
+            - button "AgentMetrics" [ref=e5538] [cursor=pointer]:
+              - generic [ref=e5540]: AgentMetrics
+              - img [ref=e5542]
+            - button "Expand all" [ref=e5544] [cursor=pointer]
+            - strong [ref=e5545]: object
+        - article [ref=e5546]:
+          - generic [ref=e5547]:
+            - button "AgentStatus" [ref=e5548] [cursor=pointer]:
+              - generic [ref=e5550]: AgentStatus
+              - img [ref=e5552]
+            - button "Expand all" [ref=e5554] [cursor=pointer]
+            - strong [ref=e5555]: object
+        - article [ref=e5556]:
+          - generic [ref=e5557]:
+            - button "AlertResponse" [ref=e5558] [cursor=pointer]:
+              - generic [ref=e5560]: AlertResponse
+              - img [ref=e5562]
+            - button "Expand all" [ref=e5564] [cursor=pointer]
+            - strong [ref=e5565]: object
+        - article [ref=e5566]:
+          - generic [ref=e5567]:
+            - button "AnalyticsError" [ref=e5568] [cursor=pointer]:
+              - generic [ref=e5570]: AnalyticsError
+              - img [ref=e5572]
+            - button "Expand all" [ref=e5574] [cursor=pointer]
+            - strong [ref=e5575]: object
+        - article [ref=e5576]:
+          - generic [ref=e5577]:
+            - button "AnalyticsMetric" [ref=e5578] [cursor=pointer]:
+              - generic [ref=e5580]: AnalyticsMetric
+              - img [ref=e5582]
+            - button "Expand all" [ref=e5584] [cursor=pointer]
+            - strong [ref=e5585]: string
+        - article [ref=e5586]:
+          - generic [ref=e5587]:
+            - button "AttributionReportResponse" [ref=e5588] [cursor=pointer]:
+              - generic [ref=e5590]: AttributionReportResponse
+              - img [ref=e5592]
+            - button "Expand all" [ref=e5594] [cursor=pointer]
+            - strong [ref=e5595]: object
+        - article [ref=e5596]:
+          - generic [ref=e5597]:
+            - button "BatchDetectionResponse" [ref=e5598] [cursor=pointer]:
+              - generic [ref=e5600]: BatchDetectionResponse
+              - img [ref=e5602]
+            - button "Expand all" [ref=e5604] [cursor=pointer]
+            - strong [ref=e5605]: object
+        - article [ref=e5606]:
+          - generic [ref=e5607]:
+            - button "BatchLeadDetectionRequest" [ref=e5608] [cursor=pointer]:
+              - generic [ref=e5610]: BatchLeadDetectionRequest
+              - img [ref=e5612]
+            - button "Expand all" [ref=e5614] [cursor=pointer]
+            - strong [ref=e5615]: object
+        - article [ref=e5616]:
+          - generic [ref=e5617]:
+            - button "BatchScoringRequest" [ref=e5618] [cursor=pointer]:
+              - generic [ref=e5620]: BatchScoringRequest
+              - img [ref=e5622]
+            - button "Expand all" [ref=e5624] [cursor=pointer]
+            - strong [ref=e5625]: object
+        - article [ref=e5626]:
+          - generic [ref=e5627]:
+            - button "BatchScoringResponse" [ref=e5628] [cursor=pointer]:
+              - generic [ref=e5630]: BatchScoringResponse
+              - img [ref=e5632]
+            - button "Expand all" [ref=e5634] [cursor=pointer]
+            - strong [ref=e5635]: object
+        - article [ref=e5636]:
+          - generic [ref=e5637]:
+            - button "BehavioralInsightResponse" [ref=e5638] [cursor=pointer]:
+              - generic [ref=e5640]: BehavioralInsightResponse
+              - img [ref=e5642]
+            - button "Expand all" [ref=e5644] [cursor=pointer]
+            - strong [ref=e5645]: object
+        - article [ref=e5646]:
+          - generic [ref=e5647]:
+            - button "BiometricAuthRequest" [ref=e5648] [cursor=pointer]:
+              - generic [ref=e5650]: BiometricAuthRequest
+              - img [ref=e5652]
+            - button "Expand all" [ref=e5654] [cursor=pointer]
+            - strong [ref=e5655]: object
+        - article [ref=e5656]:
+          - generic [ref=e5657]:
+            - button "BiometricChallengeResponse" [ref=e5658] [cursor=pointer]:
+              - generic [ref=e5660]: BiometricChallengeResponse
+              - img [ref=e5662]
+            - button "Expand all" [ref=e5664] [cursor=pointer]
+            - strong [ref=e5665]: object
+        - article [ref=e5666]:
+          - generic [ref=e5667]:
+            - button "Body_bulk_import_csv_api_bulk_import_csv_post" [ref=e5668] [cursor=pointer]:
+              - generic [ref=e5670]: Body_bulk_import_csv_api_bulk_import_csv_post
+              - img [ref=e5672]
+            - button "Expand all" [ref=e5674] [cursor=pointer]
+            - strong [ref=e5675]: object
+        - article [ref=e5676]:
+          - generic [ref=e5677]:
+            - button "Body_create_biometric_challenge_api_mobile_mobile_auth_biometric_challenge_post" [ref=e5678] [cursor=pointer]:
+              - generic [ref=e5680]: Body_create_biometric_challenge_api_mobile_mobile_auth_biometric_challenge_post
+              - img [ref=e5682]
+            - button "Expand all" [ref=e5684] [cursor=pointer]
+            - strong [ref=e5685]: object
+        - article [ref=e5686]:
+          - generic [ref=e5687]:
+            - button "Body_mobile_logout_api_mobile_mobile_auth_logout_post" [ref=e5688] [cursor=pointer]:
+              - generic [ref=e5690]: Body_mobile_logout_api_mobile_mobile_auth_logout_post
+              - img [ref=e5692]
+            - button "Expand all" [ref=e5694] [cursor=pointer]
+            - strong [ref=e5695]: object
+        - article [ref=e5696]:
+          - generic [ref=e5697]:
+            - button "Body_record_feedback_api_agent_ui_record_feedback_post" [ref=e5698] [cursor=pointer]:
+              - generic [ref=e5700]: Body_record_feedback_api_agent_ui_record_feedback_post
+              - img [ref=e5702]
+            - button "Expand all" [ref=e5704] [cursor=pointer]
+            - strong [ref=e5705]: object
+        - article [ref=e5706]:
+          - generic [ref=e5707]:
+            - button "Body_synthesize_report_api_claude_synthesize_report_post" [ref=e5708] [cursor=pointer]:
+              - generic [ref=e5710]: Body_synthesize_report_api_claude_synthesize_report_post
+              - img [ref=e5712]
+            - button "Expand all" [ref=e5714] [cursor=pointer]
+            - strong [ref=e5715]: object
+        - article [ref=e5716]:
+          - generic [ref=e5717]:
+            - button "Body_unregister_device_api_mobile_mobile_auth_device_unregister_delete" [ref=e5718] [cursor=pointer]:
+              - generic [ref=e5720]: Body_unregister_device_api_mobile_mobile_auth_device_unregister_delete
+              - img [ref=e5722]
+            - button "Expand all" [ref=e5724] [cursor=pointer]
+            - strong [ref=e5725]: object
+        - article [ref=e5726]:
+          - generic [ref=e5727]:
+            - button "BotPerformanceResponse" [ref=e5728] [cursor=pointer]:
+              - generic [ref=e5730]: BotPerformanceResponse
+              - img [ref=e5732]
+            - button "Expand all" [ref=e5734] [cursor=pointer]
+            - strong [ref=e5735]: object
+        - article [ref=e5736]:
+          - generic [ref=e5737]:
+            - button "BotStatusResponse" [ref=e5738] [cursor=pointer]:
+              - generic [ref=e5740]: BotStatusResponse
+              - img [ref=e5742]
+            - button "Expand all" [ref=e5744] [cursor=pointer]
+            - strong [ref=e5745]: object
+        - article [ref=e5746]:
+          - generic [ref=e5747]:
+            - button "BulkExportRequest" [ref=e5748] [cursor=pointer]:
+              - generic [ref=e5750]: BulkExportRequest
+              - img [ref=e5752]
+            - button "Expand all" [ref=e5754] [cursor=pointer]
+            - strong [ref=e5755]: object
+        - article [ref=e5756]:
+          - generic [ref=e5757]:
+            - button "BulkImportRequest" [ref=e5758] [cursor=pointer]:
+              - generic [ref=e5760]: BulkImportRequest
+              - img [ref=e5762]
+            - button "Expand all" [ref=e5764] [cursor=pointer]
+            - strong [ref=e5765]: object
+        - article [ref=e5766]:
+          - generic [ref=e5767]:
+            - button "BulkSMSRequest" [ref=e5768] [cursor=pointer]:
+              - generic [ref=e5770]: BulkSMSRequest
+              - img [ref=e5772]
+            - button "Expand all" [ref=e5774] [cursor=pointer]
+            - strong [ref=e5775]: object
+        - article [ref=e5776]:
+          - generic [ref=e5777]:
+            - button "BulkTagRequest" [ref=e5778] [cursor=pointer]:
+              - generic [ref=e5780]: BulkTagRequest
+              - img [ref=e5782]
+            - button "Expand all" [ref=e5784] [cursor=pointer]
+            - strong [ref=e5785]: object
+        - article [ref=e5786]:
+          - generic [ref=e5787]:
+            - button "CRMConfigUpdate" [ref=e5788] [cursor=pointer]:
+              - generic [ref=e5790]: CRMConfigUpdate
+              - img [ref=e5792]
+            - button "Expand all" [ref=e5794] [cursor=pointer]
+            - strong [ref=e5795]: object
+        - article [ref=e5796]:
+          - generic [ref=e5797]:
+            - button "CallPriority" [ref=e5798] [cursor=pointer]:
+              - generic [ref=e5800]: CallPriority
+              - img [ref=e5802]
+            - button "Expand all" [ref=e5804] [cursor=pointer]
+            - strong [ref=e5805]: string
+        - article [ref=e5806]:
+          - generic [ref=e5807]:
+            - button "CallType" [ref=e5808] [cursor=pointer]:
+              - generic [ref=e5810]: CallType
+              - img [ref=e5812]
+            - button "Expand all" [ref=e5814] [cursor=pointer]
+            - strong [ref=e5815]: string
+        - article [ref=e5816]:
+          - generic [ref=e5817]:
+            - button "CampaignBrief" [ref=e5818] [cursor=pointer]:
+              - generic [ref=e5820]: CampaignBrief
+              - img [ref=e5822]
+            - button "Expand all" [ref=e5824] [cursor=pointer]
+            - strong [ref=e5825]: object
+        - article [ref=e5826]:
+          - generic [ref=e5827]:
+            - button "CampaignCreationRequest" [ref=e5828] [cursor=pointer]:
+              - generic [ref=e5830]: CampaignCreationRequest
+              - img [ref=e5832]
+            - button "Expand all" [ref=e5834] [cursor=pointer]
+            - strong [ref=e5835]: object
+        - article [ref=e5836]:
+          - generic [ref=e5837]:
+            - button "CampaignPriority" [ref=e5838] [cursor=pointer]:
+              - generic [ref=e5840]: CampaignPriority
+              - img [ref=e5842]
+            - button "Expand all" [ref=e5844] [cursor=pointer]
+            - strong [ref=e5845]: string
+        - article [ref=e5846]:
+          - generic [ref=e5847]:
+            - button "CampaignTrigger" [ref=e5848] [cursor=pointer]:
+              - generic [ref=e5850]: CampaignTrigger
+              - img [ref=e5852]
+            - button "Expand all" [ref=e5854] [cursor=pointer]
+            - strong [ref=e5855]: string
+        - article [ref=e5856]:
+          - generic [ref=e5857]:
+            - button "CampaignType" [ref=e5858] [cursor=pointer]:
+              - generic [ref=e5860]: CampaignType
+              - img [ref=e5862]
+            - button "Expand all" [ref=e5864] [cursor=pointer]
+            - strong [ref=e5865]: string
+        - article [ref=e5866]:
+          - generic [ref=e5867]:
+            - button "ChatMessageRequest" [ref=e5868] [cursor=pointer]:
+              - generic [ref=e5870]: ChatMessageRequest
+              - img [ref=e5872]
+            - button "Expand all" [ref=e5874] [cursor=pointer]
+            - strong [ref=e5875]: object
+        - article [ref=e5876]:
+          - generic [ref=e5877]:
+            - button "ChatQueryRequest" [ref=e5878] [cursor=pointer]:
+              - generic [ref=e5880]: ChatQueryRequest
+              - img [ref=e5882]
+            - button "Expand all" [ref=e5884] [cursor=pointer]
+            - strong [ref=e5885]: object
+        - article [ref=e5886]:
+          - generic [ref=e5887]:
+            - button "ChatQueryResponse" [ref=e5888] [cursor=pointer]:
+              - generic [ref=e5890]: ChatQueryResponse
+              - img [ref=e5892]
+            - button "Expand all" [ref=e5894] [cursor=pointer]
+            - strong [ref=e5895]: object
+        - article [ref=e5896]:
+          - generic [ref=e5897]:
+            - button "ChatRequest" [ref=e5898] [cursor=pointer]:
+              - generic [ref=e5900]: ChatRequest
+              - img [ref=e5902]
+            - button "Expand all" [ref=e5904] [cursor=pointer]
+            - strong [ref=e5905]: object
+        - article [ref=e5906]:
+          - generic [ref=e5907]:
+            - button "ClientLifecycleUpdate" [ref=e5908] [cursor=pointer]:
+              - generic [ref=e5910]: ClientLifecycleUpdate
+              - img [ref=e5912]
+            - button "Expand all" [ref=e5914] [cursor=pointer]
+            - strong [ref=e5915]: object
+        - article [ref=e5916]:
+          - generic [ref=e5917]:
+            - button "ConciergeInsight" [ref=e5918] [cursor=pointer]:
+              - generic [ref=e5920]: ConciergeInsight
+              - img [ref=e5922]
+            - button "Expand all" [ref=e5924] [cursor=pointer]
+            - strong [ref=e5925]: object
+        - article [ref=e5926]:
+          - generic [ref=e5927]:
+            - button "ConciergeResponse" [ref=e5928] [cursor=pointer]:
+              - generic [ref=e5930]: ConciergeResponse
+              - img [ref=e5932]
+            - button "Expand all" [ref=e5934] [cursor=pointer]
+            - strong [ref=e5935]: object
+        - article [ref=e5936]:
+          - generic [ref=e5937]:
+            - button "ConditionRealism" [ref=e5938] [cursor=pointer]:
+              - generic [ref=e5940]: ConditionRealism
+              - img [ref=e5942]
+            - button "Expand all" [ref=e5944] [cursor=pointer]
+            - strong [ref=e5945]: object
+        - article [ref=e5946]:
+          - generic [ref=e5947]:
+            - button "ConfidenceLevel" [ref=e5948] [cursor=pointer]:
+              - generic [ref=e5950]: ConfidenceLevel
+              - img [ref=e5952]
+            - button "Expand all" [ref=e5954] [cursor=pointer]
+            - strong [ref=e5955]: string
+        - article [ref=e5956]:
+          - generic [ref=e5957]:
+            - button "ContentFormat" [ref=e5958] [cursor=pointer]:
+              - generic [ref=e5960]: ContentFormat
+              - img [ref=e5962]
+            - button "Expand all" [ref=e5964] [cursor=pointer]
+            - strong [ref=e5965]: string
+        - article [ref=e5966]:
+          - generic [ref=e5967]:
+            - button "ConversationContextRequest" [ref=e5968] [cursor=pointer]:
+              - generic [ref=e5970]: ConversationContextRequest
+              - img [ref=e5972]
+            - button "Expand all" [ref=e5974] [cursor=pointer]
+            - strong [ref=e5975]: object
+        - article [ref=e5976]:
+          - generic [ref=e5977]:
+            - button "ConversationHistoryResponse" [ref=e5978] [cursor=pointer]:
+              - generic [ref=e5980]: ConversationHistoryResponse
+              - img [ref=e5982]
+            - button "Expand all" [ref=e5984] [cursor=pointer]
+            - strong [ref=e5985]: object
+        - article [ref=e5986]:
+          - generic [ref=e5987]:
+            - button "CreateJourneyRequest" [ref=e5988] [cursor=pointer]:
+              - generic [ref=e5990]: CreateJourneyRequest
+              - img [ref=e5992]
+            - button "Expand all" [ref=e5994] [cursor=pointer]
+            - strong [ref=e5995]: object
+        - article [ref=e5996]:
+          - generic [ref=e5997]:
+            - button "CreateSequenceRequest" [ref=e5998] [cursor=pointer]:
+              - generic [ref=e6000]: CreateSequenceRequest
+              - img [ref=e6002]
+            - button "Expand all" [ref=e6004] [cursor=pointer]
+            - strong [ref=e6005]: object
+        - article [ref=e6006]:
+          - generic [ref=e6007]:
+            - button "CustomerJourney" [ref=e6008] [cursor=pointer]:
+              - generic [ref=e6010]: CustomerJourney
+              - img [ref=e6012]
+            - button "Expand all" [ref=e6014] [cursor=pointer]
+            - strong [ref=e6015]: object
+        - article [ref=e6016]:
+          - generic [ref=e6017]:
+            - button "DashboardKPIResponse" [ref=e6018] [cursor=pointer]:
+              - generic [ref=e6020]: DashboardKPIResponse
+              - img [ref=e6022]
+            - button "Expand all" [ref=e6024] [cursor=pointer]
+            - strong [ref=e6025]: object
+        - article [ref=e6026]:
+          - generic [ref=e6027]:
+            - button "DashboardMetrics" [ref=e6028] [cursor=pointer]:
+              - generic [ref=e6030]: DashboardMetrics
+              - img [ref=e6032]
+            - button "Expand all" [ref=e6034] [cursor=pointer]
+            - strong [ref=e6035]: object
+        - article [ref=e6036]:
+          - generic [ref=e6037]:
+            - button "DetailedHealthResponse" [ref=e6038] [cursor=pointer]:
+              - generic [ref=e6040]: DetailedHealthResponse
+              - img [ref=e6042]
+            - button "Expand all" [ref=e6044] [cursor=pointer]
+            - strong [ref=e6045]: object
+        - article [ref=e6046]:
+          - generic [ref=e6047]:
+            - button "DeviceInfo" [ref=e6048] [cursor=pointer]:
+              - generic [ref=e6050]: DeviceInfo
+              - img [ref=e6052]
+            - button "Expand all" [ref=e6054] [cursor=pointer]
+            - strong [ref=e6055]: object
+        - article [ref=e6056]:
+          - generic [ref=e6057]:
+            - button "DrillDownQuery" [ref=e6058] [cursor=pointer]:
+              - generic [ref=e6060]: DrillDownQuery
+              - img [ref=e6062]
+            - button "Expand all" [ref=e6064] [cursor=pointer]
+            - strong [ref=e6065]: object
+        - article [ref=e6066]:
+          - generic [ref=e6067]:
+            - button "ErrorDashboardResponse" [ref=e6068] [cursor=pointer]:
+              - generic [ref=e6070]: ErrorDashboardResponse
+              - img [ref=e6072]
+            - button "Expand all" [ref=e6074] [cursor=pointer]
+            - strong [ref=e6075]: object
+        - article [ref=e6076]:
+          - generic [ref=e6077]:
+            - button "ErrorMetricsResponse" [ref=e6078] [cursor=pointer]:
+              - generic [ref=e6080]: ErrorMetricsResponse
+              - img [ref=e6082]
+            - button "Expand all" [ref=e6084] [cursor=pointer]
+            - strong [ref=e6085]: object
+        - article [ref=e6086]:
+          - generic [ref=e6087]:
+            - button "ErrorResolutionRequest" [ref=e6088] [cursor=pointer]:
+              - generic [ref=e6090]: ErrorResolutionRequest
+              - img [ref=e6092]
+            - button "Expand all" [ref=e6094] [cursor=pointer]
+            - strong [ref=e6095]: object
+        - article [ref=e6096]:
+          - generic [ref=e6097]:
+            - button "ErrorTrendResponse" [ref=e6098] [cursor=pointer]:
+              - generic [ref=e6100]: ErrorTrendResponse
+              - img [ref=e6102]
+            - button "Expand all" [ref=e6104] [cursor=pointer]
+            - strong [ref=e6105]: object
+        - article [ref=e6106]:
+          - generic [ref=e6107]:
+            - button "EventType" [ref=e6108] [cursor=pointer]:
+              - generic [ref=e6110]: EventType
+              - img [ref=e6112]
+            - button "Expand all" [ref=e6114] [cursor=pointer]
+            - strong [ref=e6115]: string
+        - article [ref=e6116]:
+          - generic [ref=e6117]:
+            - button "FeatureTrendPoint" [ref=e6118] [cursor=pointer]:
+              - generic [ref=e6120]: FeatureTrendPoint
+              - img [ref=e6122]
+            - button "Expand all" [ref=e6124] [cursor=pointer]
+            - strong [ref=e6125]: object
+        - article [ref=e6126]:
+          - generic [ref=e6127]:
+            - button "FeatureTrendResponse" [ref=e6128] [cursor=pointer]:
+              - generic [ref=e6130]: FeatureTrendResponse
+              - img [ref=e6132]
+            - button "Expand all" [ref=e6134] [cursor=pointer]
+            - strong [ref=e6135]: object
+        - article [ref=e6136]:
+          - generic [ref=e6137]:
+            - button "FinancialReadinessScore" [ref=e6138] [cursor=pointer]:
+              - generic [ref=e6140]: FinancialReadinessScore
+              - img [ref=e6142]
+            - button "Expand all" [ref=e6144] [cursor=pointer]
+            - strong [ref=e6145]: object
+        - article [ref=e6146]:
+          - generic [ref=e6147]:
+            - button "GHLAction" [ref=e6148] [cursor=pointer]:
+              - generic [ref=e6150]: GHLAction
+              - img [ref=e6152]
+            - button "Expand all" [ref=e6154] [cursor=pointer]
+            - strong [ref=e6155]: object
+        - article [ref=e6156]:
+          - generic [ref=e6157]:
+            - button "GHLContact" [ref=e6158] [cursor=pointer]:
+              - generic [ref=e6160]: GHLContact
+              - img [ref=e6162]
+            - button "Expand all" [ref=e6164] [cursor=pointer]
+            - strong [ref=e6165]: object
+        - article [ref=e6166]:
+          - generic [ref=e6167]:
+            - button "GHLMessage" [ref=e6168] [cursor=pointer]:
+              - generic [ref=e6170]: GHLMessage
+              - img [ref=e6172]
+            - button "Expand all" [ref=e6174] [cursor=pointer]
+            - strong [ref=e6175]: object
+        - article [ref=e6176]:
+          - generic [ref=e6177]:
+            - button "GHLWebhookEvent" [ref=e6178] [cursor=pointer]:
+              - generic [ref=e6180]: GHLWebhookEvent
+              - img [ref=e6182]
+            - button "Expand all" [ref=e6184] [cursor=pointer]
+            - strong [ref=e6185]: object
+        - article [ref=e6186]:
+          - generic [ref=e6187]:
+            - button "GHLWebhookResponse" [ref=e6188] [cursor=pointer]:
+              - generic [ref=e6190]: GHLWebhookResponse
+              - img [ref=e6192]
+            - button "Expand all" [ref=e6194] [cursor=pointer]
+            - strong [ref=e6195]: object
+        - article [ref=e6196]:
+          - generic [ref=e6197]:
+            - button "GPSCoordinate" [ref=e6198] [cursor=pointer]:
+              - generic [ref=e6200]: GPSCoordinate
+              - img [ref=e6202]
+            - button "Expand all" [ref=e6204] [cursor=pointer]
+            - strong [ref=e6205]: object
+        - article [ref=e6206]:
+          - generic [ref=e6207]:
+            - button "GoldenLeadScoreResponse" [ref=e6208] [cursor=pointer]:
+              - generic [ref=e6210]: GoldenLeadScoreResponse
+              - img [ref=e6212]
+            - button "Expand all" [ref=e6214] [cursor=pointer]
+            - strong [ref=e6215]: object
+        - article [ref=e6216]:
+          - generic [ref=e6217]:
+            - button "Granularity" [ref=e6218] [cursor=pointer]:
+              - generic [ref=e6220]: Granularity
+              - img [ref=e6222]
+            - button "Expand all" [ref=e6224] [cursor=pointer]
+            - strong [ref=e6225]: string
+        - article [ref=e6226]:
+          - generic [ref=e6227]:
+            - button "HTTPValidationError" [ref=e6228] [cursor=pointer]:
+              - generic [ref=e6230]: HTTPValidationError
+              - img [ref=e6232]
+            - button "Expand all" [ref=e6234] [cursor=pointer]
+            - strong [ref=e6235]: object
+        - article [ref=e6236]:
+          - generic [ref=e6237]:
+            - button "HealthCheckResponse" [ref=e6238] [cursor=pointer]:
+              - generic [ref=e6240]: HealthCheckResponse
+              - img [ref=e6242]
+            - button "Expand all" [ref=e6244] [cursor=pointer]
+            - strong [ref=e6245]: object
+        - article [ref=e6246]:
+          - generic [ref=e6247]:
+            - button "HealthResponse" [ref=e6248] [cursor=pointer]:
+              - generic [ref=e6250]: HealthResponse
+              - img [ref=e6252]
+            - button "Expand all" [ref=e6254] [cursor=pointer]
+            - strong [ref=e6255]: object
+        - article [ref=e6256]:
+          - generic [ref=e6257]:
+            - button "IntegrationEventType" [ref=e6258] [cursor=pointer]:
+              - generic [ref=e6260]: IntegrationEventType
+              - img [ref=e6262]
+            - button "Expand all" [ref=e6264] [cursor=pointer]
+            - strong [ref=e6265]: string
+        - article [ref=e6266]:
+          - generic [ref=e6267]:
+            - button "IntentScoreResponse" [ref=e6268] [cursor=pointer]:
+              - generic [ref=e6270]: IntentScoreResponse
+              - img [ref=e6272]
+            - button "Expand all" [ref=e6274] [cursor=pointer]
+            - strong [ref=e6275]: object
+        - article [ref=e6276]:
+          - generic [ref=e6277]:
+            - button "InvestmentMetrics" [ref=e6278] [cursor=pointer]:
+              - generic [ref=e6280]: InvestmentMetrics
+              - img [ref=e6282]
+            - button "Expand all" [ref=e6284] [cursor=pointer]
+            - strong [ref=e6285]: object
+        - article [ref=e6286]:
+          - generic [ref=e6287]:
+            - button "InvestmentOpportunityRequest" [ref=e6288] [cursor=pointer]:
+              - generic [ref=e6290]: InvestmentOpportunityRequest
+              - img [ref=e6292]
+            - button "Expand all" [ref=e6294] [cursor=pointer]
+            - strong [ref=e6295]: object
+        - article [ref=e6296]:
+          - generic [ref=e6297]:
+            - button "JorgeStartRequest" [ref=e6298] [cursor=pointer]:
+              - generic [ref=e6300]: JorgeStartRequest
+              - img [ref=e6302]
+            - button "Expand all" [ref=e6304] [cursor=pointer]
+            - strong [ref=e6305]: object
+        - article [ref=e6306]:
+          - generic [ref=e6307]:
+            - button "JourneyAnalytics" [ref=e6308] [cursor=pointer]:
+              - generic [ref=e6310]: JourneyAnalytics
+              - img [ref=e6312]
+            - button "Expand all" [ref=e6314] [cursor=pointer]
+            - strong [ref=e6315]: object
+        - article [ref=e6316]:
+          - generic [ref=e6317]:
+            - button "JourneyStep" [ref=e6318] [cursor=pointer]:
+              - generic [ref=e6320]: JourneyStep
+              - img [ref=e6322]
+            - button "Expand all" [ref=e6324] [cursor=pointer]
+            - strong [ref=e6325]: object
+        - article [ref=e6326]:
+          - generic [ref=e6327]:
+            - button "JourneyTemplate" [ref=e6328] [cursor=pointer]:
+              - generic [ref=e6330]: JourneyTemplate
+              - img [ref=e6332]
+            - button "Expand all" [ref=e6334] [cursor=pointer]
+            - strong [ref=e6335]: object
+        - article [ref=e6336]:
+          - generic [ref=e6337]:
+            - button "LeadAutomationAction" [ref=e6338] [cursor=pointer]:
+              - generic [ref=e6340]: LeadAutomationAction
+              - img [ref=e6342]
+            - button "Expand all" [ref=e6344] [cursor=pointer]
+            - strong [ref=e6345]: object
+        - article [ref=e6346]:
+          - generic [ref=e6347]:
+            - button "LeadAutomationRequest" [ref=e6348] [cursor=pointer]:
+              - generic [ref=e6350]: LeadAutomationRequest
+              - img [ref=e6352]
+            - button "Expand all" [ref=e6354] [cursor=pointer]
+            - strong [ref=e6355]: object
+        - article [ref=e6356]:
+          - generic [ref=e6357]:
+            - button "LeadAutomationResponse" [ref=e6358] [cursor=pointer]:
+              - generic [ref=e6360]: LeadAutomationResponse
+              - img [ref=e6362]
+            - button "Expand all" [ref=e6364] [cursor=pointer]
+            - strong [ref=e6365]: object
+        - article [ref=e6366]:
+          - generic [ref=e6367]:
+            - button "LeadClassification" [ref=e6368] [cursor=pointer]:
+              - generic [ref=e6370]: LeadClassification
+              - img [ref=e6372]
+            - button "Expand all" [ref=e6374] [cursor=pointer]
+            - strong [ref=e6375]: string
+        - article [ref=e6376]:
+          - generic [ref=e6377]:
+            - button "LeadHealth" [ref=e6378] [cursor=pointer]:
+              - generic [ref=e6380]: LeadHealth
+              - img [ref=e6382]
+            - button "Expand all" [ref=e6384] [cursor=pointer]
+            - strong [ref=e6385]: object
+        - article [ref=e6386]:
+          - generic [ref=e6387]:
+            - button "LeadInsightsResponse" [ref=e6388] [cursor=pointer]:
+              - generic [ref=e6390]: LeadInsightsResponse
+              - img [ref=e6392]
+            - button "Expand all" [ref=e6394] [cursor=pointer]
+            - strong [ref=e6395]: object
+        - article [ref=e6396]:
+          - generic [ref=e6397]:
+            - button "LeadIntelligenceRequest" [ref=e6398] [cursor=pointer]:
+              - generic [ref=e6400]: LeadIntelligenceRequest
+              - img [ref=e6402]
+            - button "Expand all" [ref=e6404] [cursor=pointer]
+            - strong [ref=e6405]: object
+        - article [ref=e6406]:
+          - generic [ref=e6407]:
+            - button "LeadIntentProfile" [ref=e6408] [cursor=pointer]:
+              - generic [ref=e6410]: LeadIntentProfile
+              - img [ref=e6412]
+            - button "Expand all" [ref=e6414] [cursor=pointer]
+            - strong [ref=e6415]: object
+        - article [ref=e6416]:
+          - generic [ref=e6417]:
+            - button "LeadPricingRequest" [ref=e6418] [cursor=pointer]:
+              - generic [ref=e6420]: LeadPricingRequest
+              - img [ref=e6422]
+            - button "Expand all" [ref=e6424] [cursor=pointer]
+            - strong [ref=e6425]: object
+        - article [ref=e6426]:
+          - generic [ref=e6427]:
+            - button "LeadPricingResponse" [ref=e6428] [cursor=pointer]:
+              - generic [ref=e6430]: LeadPricingResponse
+              - img [ref=e6432]
+            - button "Expand all" [ref=e6434] [cursor=pointer]
+            - strong [ref=e6435]: object
+        - article [ref=e6436]:
+          - generic [ref=e6437]:
+            - button "LeadScoringRequest" [ref=e6438] [cursor=pointer]:
+              - generic [ref=e6440]: LeadScoringRequest
+              - img [ref=e6442]
+            - button "Expand all" [ref=e6444] [cursor=pointer]
+            - strong [ref=e6445]: object
+        - article [ref=e6446]:
+          - generic [ref=e6447]:
+            - button "LeadScoringResponse" [ref=e6448] [cursor=pointer]:
+              - generic [ref=e6450]: LeadScoringResponse
+              - img [ref=e6452]
+            - button "Expand all" [ref=e6454] [cursor=pointer]
+            - strong [ref=e6455]: object
+        - article [ref=e6456]:
+          - generic [ref=e6457]:
+            - button "LifeEventType" [ref=e6458] [cursor=pointer]:
+              - generic [ref=e6460]: LifeEventType
+              - img [ref=e6462]
+            - button "Expand all" [ref=e6464] [cursor=pointer]
+            - strong [ref=e6465]: string
+        - article [ref=e6466]:
+          - generic [ref=e6467]:
+            - button "LifecycleMetrics" [ref=e6468] [cursor=pointer]:
+              - generic [ref=e6470]: LifecycleMetrics
+              - img [ref=e6472]
+            - button "Expand all" [ref=e6474] [cursor=pointer]
+            - strong [ref=e6475]: object
+        - article [ref=e6476]:
+          - generic [ref=e6477]:
+            - button "LoginRequest" [ref=e6478] [cursor=pointer]:
+              - generic [ref=e6480]: LoginRequest
+              - img [ref=e6482]
+            - button "Expand all" [ref=e6484] [cursor=pointer]
+            - strong [ref=e6485]: object
+        - article [ref=e6486]:
+          - generic [ref=e6487]:
+            - button "MLFeatureExplanation" [ref=e6488] [cursor=pointer]:
+              - generic [ref=e6490]: MLFeatureExplanation
+              - img [ref=e6492]
+            - button "Expand all" [ref=e6494] [cursor=pointer]
+            - strong [ref=e6495]: object
+        - article [ref=e6496]:
+          - generic [ref=e6497]:
+            - button "MLModelStatus" [ref=e6498] [cursor=pointer]:
+              - generic [ref=e6500]: MLModelStatus
+              - img [ref=e6502]
+            - button "Expand all" [ref=e6504] [cursor=pointer]
+            - strong [ref=e6505]: object
+        - article [ref=e6506]:
+          - generic [ref=e6507]:
+            - button "ManualTriggerRequest" [ref=e6508] [cursor=pointer]:
+              - generic [ref=e6510]: ManualTriggerRequest
+              - img [ref=e6512]
+            - button "Expand all" [ref=e6514] [cursor=pointer]
+            - strong [ref=e6515]: object
+        - article [ref=e6516]:
+          - generic [ref=e6517]:
+            - button "MarketAnalysisRequest" [ref=e6518] [cursor=pointer]:
+              - generic [ref=e6520]: MarketAnalysisRequest
+              - img [ref=e6522]
+            - button "Expand all" [ref=e6524] [cursor=pointer]
+            - strong [ref=e6525]: object
+        - article [ref=e6526]:
+          - generic [ref=e6527]:
+            - button "MarketConfidence" [ref=e6528] [cursor=pointer]:
+              - generic [ref=e6530]: MarketConfidence
+              - img [ref=e6532]
+            - button "Expand all" [ref=e6534] [cursor=pointer]
+            - strong [ref=e6535]: string
+        - article [ref=e6536]:
+          - generic [ref=e6537]:
+            - button "MarketHeatmapDataPoint" [ref=e6538] [cursor=pointer]:
+              - generic [ref=e6540]: MarketHeatmapDataPoint
+              - img [ref=e6542]
+            - button "Expand all" [ref=e6544] [cursor=pointer]
+            - strong [ref=e6545]: object
+        - article [ref=e6546]:
+          - generic [ref=e6547]:
+            - button "MarketHeatmapRequest" [ref=e6548] [cursor=pointer]:
+              - generic [ref=e6550]: MarketHeatmapRequest
+              - img [ref=e6552]
+            - button "Expand all" [ref=e6554] [cursor=pointer]
+            - strong [ref=e6555]: object
+        - article [ref=e6556]:
+          - generic [ref=e6557]:
+            - button "MarketHeatmapResponse" [ref=e6558] [cursor=pointer]:
+              - generic [ref=e6560]: MarketHeatmapResponse
+              - img [ref=e6562]
+            - button "Expand all" [ref=e6564] [cursor=pointer]
+            - strong [ref=e6565]: object
+        - article [ref=e6566]:
+          - generic [ref=e6567]:
+            - button "MarketMetricsResponse" [ref=e6568] [cursor=pointer]:
+              - generic [ref=e6570]: MarketMetricsResponse
+              - img [ref=e6572]
+            - button "Expand all" [ref=e6574] [cursor=pointer]
+            - strong [ref=e6575]: object
+        - article [ref=e6576]:
+          - generic [ref=e6577]:
+            - button "MarketPositioning" [ref=e6578] [cursor=pointer]:
+              - generic [ref=e6580]: MarketPositioning
+              - img [ref=e6582]
+            - button "Expand all" [ref=e6584] [cursor=pointer]
+            - strong [ref=e6585]: object
+        - article [ref=e6586]:
+          - generic [ref=e6587]:
+            - button "MessageDirection" [ref=e6588] [cursor=pointer]:
+              - generic [ref=e6590]: MessageDirection
+              - img [ref=e6592]
+            - button "Expand all" [ref=e6594] [cursor=pointer]
+            - strong [ref=e6595]: string
+        - article [ref=e6596]:
+          - generic [ref=e6597]:
+            - button "MessageType" [ref=e6598] [cursor=pointer]:
+              - generic [ref=e6600]: MessageType
+              - img [ref=e6602]
+            - button "Expand all" [ref=e6604] [cursor=pointer]
+            - strong [ref=e6605]: string
+        - article [ref=e6606]:
+          - generic [ref=e6607]:
+            - button "MobileAnalyticsSummary" [ref=e6608] [cursor=pointer]:
+              - generic [ref=e6610]: MobileAnalyticsSummary
+              - img [ref=e6612]
+            - button "Expand all" [ref=e6614] [cursor=pointer]
+            - strong [ref=e6615]: object
+        - article [ref=e6616]:
+          - generic [ref=e6617]:
+            - button "MobileDeviceInfo" [ref=e6618] [cursor=pointer]:
+              - generic [ref=e6620]: MobileDeviceInfo
+              - img [ref=e6622]
+            - button "Expand all" [ref=e6624] [cursor=pointer]
+            - strong [ref=e6625]: object
+        - article [ref=e6626]:
+          - generic [ref=e6627]:
+            - button "MobileLeadDetails" [ref=e6628] [cursor=pointer]:
+              - generic [ref=e6630]: MobileLeadDetails
+              - img [ref=e6632]
+            - button "Expand all" [ref=e6634] [cursor=pointer]
+            - strong [ref=e6635]: object
+        - article [ref=e6636]:
+          - generic [ref=e6637]:
+            - button "MobileListResponse" [ref=e6638] [cursor=pointer]:
+              - generic [ref=e6640]: MobileListResponse
+              - img [ref=e6642]
+            - button "Expand all" [ref=e6644] [cursor=pointer]
+            - strong [ref=e6645]: object
+        - article [ref=e6646]:
+          - generic [ref=e6647]:
+            - button "MobileLoginRequest" [ref=e6648] [cursor=pointer]:
+              - generic [ref=e6650]: MobileLoginRequest
+              - img [ref=e6652]
+            - button "Expand all" [ref=e6654] [cursor=pointer]
+            - strong [ref=e6655]: object
+        - article [ref=e6656]:
+          - generic [ref=e6657]:
+            - button "MobilePaginationMetadata" [ref=e6658] [cursor=pointer]:
+              - generic [ref=e6660]: MobilePaginationMetadata
+              - img [ref=e6662]
+            - button "Expand all" [ref=e6664] [cursor=pointer]
+            - strong [ref=e6665]: object
+        - article [ref=e6666]:
+          - generic [ref=e6667]:
+            - button "MobilePlatform" [ref=e6668] [cursor=pointer]:
+              - generic [ref=e6670]: MobilePlatform
+              - img [ref=e6672]
+            - button "Expand all" [ref=e6674] [cursor=pointer]
+            - strong [ref=e6675]: string
+        - article [ref=e6676]:
+          - generic [ref=e6677]:
+            - button "MobilePropertyDetails" [ref=e6678] [cursor=pointer]:
+              - generic [ref=e6680]: MobilePropertyDetails
+              - img [ref=e6682]
+            - button "Expand all" [ref=e6684] [cursor=pointer]
+            - strong [ref=e6685]: object
+        - article [ref=e6686]:
+          - generic [ref=e6687]:
+            - button "MobileResponseStatus" [ref=e6688] [cursor=pointer]:
+              - generic [ref=e6690]: MobileResponseStatus
+              - img [ref=e6692]
+            - button "Expand all" [ref=e6694] [cursor=pointer]
+            - strong [ref=e6695]: string
+        - article [ref=e6696]:
+          - generic [ref=e6697]:
+            - button "MobileSearchRequest" [ref=e6698] [cursor=pointer]:
+              - generic [ref=e6700]: MobileSearchRequest
+              - img [ref=e6702]
+            - button "Expand all" [ref=e6704] [cursor=pointer]
+            - strong [ref=e6705]: object
+        - article [ref=e6706]:
+          - generic [ref=e6707]:
+            - button "MobileSearchResponse" [ref=e6708] [cursor=pointer]:
+              - generic [ref=e6710]: MobileSearchResponse
+              - img [ref=e6712]
+            - button "Expand all" [ref=e6714] [cursor=pointer]
+            - strong [ref=e6715]: object
+        - article [ref=e6716]:
+          - generic [ref=e6717]:
+            - button "MobileSyncRequest" [ref=e6718] [cursor=pointer]:
+              - generic [ref=e6720]: MobileSyncRequest
+              - img [ref=e6722]
+            - button "Expand all" [ref=e6724] [cursor=pointer]
+            - strong [ref=e6725]: object
+        - article [ref=e6726]:
+          - generic [ref=e6727]:
+            - button "MobileSyncResponse" [ref=e6728] [cursor=pointer]:
+              - generic [ref=e6730]: MobileSyncResponse
+              - img [ref=e6732]
+            - button "Expand all" [ref=e6734] [cursor=pointer]
+            - strong [ref=e6735]: object
+        - article [ref=e6736]:
+          - generic [ref=e6737]:
+            - button "MobileTokenResponse" [ref=e6738] [cursor=pointer]:
+              - generic [ref=e6740]: MobileTokenResponse
+              - img [ref=e6742]
+            - button "Expand all" [ref=e6744] [cursor=pointer]
+            - strong [ref=e6745]: object
+        - article [ref=e6746]:
+          - generic [ref=e6747]:
+            - button "MobileVoiceRequest" [ref=e6748] [cursor=pointer]:
+              - generic [ref=e6750]: MobileVoiceRequest
+              - img [ref=e6752]
+            - button "Expand all" [ref=e6754] [cursor=pointer]
+            - strong [ref=e6755]: object
+        - article [ref=e6756]:
+          - generic [ref=e6757]:
+            - button "MobileVoiceResponse" [ref=e6758] [cursor=pointer]:
+              - generic [ref=e6760]: MobileVoiceResponse
+              - img [ref=e6762]
+            - button "Expand all" [ref=e6764] [cursor=pointer]
+            - strong [ref=e6765]: object
+        - article [ref=e6766]:
+          - generic [ref=e6767]:
+            - button "ModelPerformanceResponse" [ref=e6768] [cursor=pointer]:
+              - generic [ref=e6770]: ModelPerformanceResponse
+              - img [ref=e6772]
+            - button "Expand all" [ref=e6774] [cursor=pointer]
+            - strong [ref=e6775]: object
+        - article [ref=e6776]:
+          - generic [ref=e6777]:
+            - button "MotivationSignals" [ref=e6778] [cursor=pointer]:
+              - generic [ref=e6780]: MotivationSignals
+              - img [ref=e6782]
+            - button "Expand all" [ref=e6784] [cursor=pointer]
+            - strong [ref=e6785]: object
+        - article [ref=e6786]:
+          - generic [ref=e6787]:
+            - button "NeighborhoodIntelligence" [ref=e6788] [cursor=pointer]:
+              - generic [ref=e6790]: NeighborhoodIntelligence
+              - img [ref=e6792]
+            - button "Expand all" [ref=e6794] [cursor=pointer]
+            - strong [ref=e6795]: object
+        - article [ref=e6796]:
+          - generic [ref=e6797]:
+            - button "OperationStatus" [ref=e6798] [cursor=pointer]:
+              - generic [ref=e6800]: OperationStatus
+              - img [ref=e6802]
+            - button "Expand all" [ref=e6804] [cursor=pointer]
+            - strong [ref=e6805]: object
+        - article [ref=e6806]:
+          - generic [ref=e6807]:
+            - button "PerformanceMetrics" [ref=e6808] [cursor=pointer]:
+              - generic [ref=e6810]: PerformanceMetrics
+              - img [ref=e6812]
+            - button "Expand all" [ref=e6814] [cursor=pointer]
+            - strong [ref=e6815]: object
+        - article [ref=e6816]:
+          - generic [ref=e6817]:
+            - button "PerformanceMetricsResponse" [ref=e6818] [cursor=pointer]:
+              - generic [ref=e6820]: PerformanceMetricsResponse
+              - img [ref=e6822]
+            - button "Expand all" [ref=e6824] [cursor=pointer]
+            - strong [ref=e6825]: object
+        - article [ref=e6826]:
+          - generic [ref=e6827]:
+            - button "PlatformActivity" [ref=e6828] [cursor=pointer]:
+              - generic [ref=e6830]: PlatformActivity
+              - img [ref=e6832]
+            - button "Expand all" [ref=e6834] [cursor=pointer]
+            - strong [ref=e6835]: object
+        - article [ref=e6836]:
+          - generic [ref=e6837]:
+            - button "PlatformContext" [ref=e6838] [cursor=pointer]:
+              - generic [ref=e6840]: PlatformContext
+              - img [ref=e6842]
+            - button "Expand all" [ref=e6844] [cursor=pointer]
+            - strong [ref=e6845]: object
+        - article [ref=e6846]:
+          - generic [ref=e6847]:
+            - button "PredictionResult" [ref=e6848] [cursor=pointer]:
+              - generic [ref=e6850]: PredictionResult
+              - img [ref=e6852]
+            - button "Expand all" [ref=e6854] [cursor=pointer]
+            - strong [ref=e6855]: object
+        - article [ref=e6856]:
+          - generic [ref=e6857]:
+            - button "PredictionType" [ref=e6858] [cursor=pointer]:
+              - generic [ref=e6860]: PredictionType
+              - img [ref=e6862]
+            - button "Expand all" [ref=e6864] [cursor=pointer]
+            - strong [ref=e6865]: string
+        - article [ref=e6866]:
+          - generic [ref=e6867]:
+            - button "PredictiveInsight" [ref=e6868] [cursor=pointer]:
+              - generic [ref=e6870]: PredictiveInsight
+              - img [ref=e6872]
+            - button "Expand all" [ref=e6874] [cursor=pointer]
+            - strong [ref=e6875]: object
+        - article [ref=e6876]:
+          - generic [ref=e6877]:
+            - button "PredictiveScoreResponse" [ref=e6878] [cursor=pointer]:
+              - generic [ref=e6880]: PredictiveScoreResponse
+              - img [ref=e6882]
+            - button "Expand all" [ref=e6884] [cursor=pointer]
+            - strong [ref=e6885]: object
+        - article [ref=e6886]:
+          - generic [ref=e6887]:
+            - button "PriceResponsiveness" [ref=e6888] [cursor=pointer]:
+              - generic [ref=e6890]: PriceResponsiveness
+              - img [ref=e6892]
+            - button "Expand all" [ref=e6894] [cursor=pointer]
+            - strong [ref=e6895]: object
+        - article [ref=e6896]:
+          - generic [ref=e6897]:
+            - button "PricingAnalyticsResponse" [ref=e6898] [cursor=pointer]:
+              - generic [ref=e6900]: PricingAnalyticsResponse
+              - img [ref=e6902]
+            - button "Expand all" [ref=e6904] [cursor=pointer]
+            - strong [ref=e6905]: object
+        - article [ref=e6906]:
+          - generic [ref=e6907]:
+            - button "PricingConfigRequest" [ref=e6908] [cursor=pointer]:
+              - generic [ref=e6910]: PricingConfigRequest
+              - img [ref=e6912]
+            - button "Expand all" [ref=e6914] [cursor=pointer]
+            - strong [ref=e6915]: object
+        - article [ref=e6916]:
+          - generic [ref=e6917]:
+            - button "ProactiveSuggestion" [ref=e6918] [cursor=pointer]:
+              - generic [ref=e6920]: ProactiveSuggestion
+              - img [ref=e6922]
+            - button "Expand all" [ref=e6924] [cursor=pointer]
+            - strong [ref=e6925]: object
+        - article [ref=e6926]:
+          - generic [ref=e6927]:
+            - button "Property3DModel" [ref=e6928] [cursor=pointer]:
+              - generic [ref=e6930]: Property3DModel
+              - img [ref=e6932]
+            - button "Expand all" [ref=e6934] [cursor=pointer]
+            - strong [ref=e6935]: object
+        - article [ref=e6936]:
+          - generic [ref=e6937]:
+            - button "PropertyAnalysis" [ref=e6938] [cursor=pointer]:
+              - generic [ref=e6940]: PropertyAnalysis
+              - img [ref=e6942]
+            - button "Expand all" [ref=e6944] [cursor=pointer]
+            - strong [ref=e6945]: object
+        - article [ref=e6946]:
+          - generic [ref=e6947]:
+            - button "PropertyAnalysisRequest" [ref=e6948] [cursor=pointer]:
+              - generic [ref=e6950]: PropertyAnalysisRequest
+              - img [ref=e6952]
+            - button "Expand all" [ref=e6954] [cursor=pointer]
+            - strong [ref=e6955]: object
+        - article [ref=e6956]:
+          - generic [ref=e6957]:
+            - button "PropertyComparison" [ref=e6958] [cursor=pointer]:
+              - generic [ref=e6960]: PropertyComparison
+              - img [ref=e6962]
+            - button "Expand all" [ref=e6964] [cursor=pointer]
+            - strong [ref=e6965]: object
+        - article [ref=e6966]:
+          - generic [ref=e6967]:
+            - button "PropertyCondition" [ref=e6968] [cursor=pointer]:
+              - generic [ref=e6970]: PropertyCondition
+              - img [ref=e6972]
+            - button "Expand all" [ref=e6974] [cursor=pointer]
+            - strong [ref=e6975]: object
+        - article [ref=e6976]:
+          - generic [ref=e6977]:
+            - button "PropertyScoring" [ref=e6978] [cursor=pointer]:
+              - generic [ref=e6980]: PropertyScoring
+              - img [ref=e6982]
+            - button "Expand all" [ref=e6984] [cursor=pointer]
+            - strong [ref=e6985]: object
+        - article [ref=e6986]:
+          - generic [ref=e6987]:
+            - button "PropertyVisualizationRequest" [ref=e6988] [cursor=pointer]:
+              - generic [ref=e6990]: PropertyVisualizationRequest
+              - img [ref=e6992]
+            - button "Expand all" [ref=e6994] [cursor=pointer]
+            - strong [ref=e6995]: object
+        - article [ref=e6996]:
+          - generic [ref=e6997]:
+            - button "PsychologicalCommitmentScore" [ref=e6998] [cursor=pointer]:
+              - generic [ref=e7000]: PsychologicalCommitmentScore
+              - img [ref=e7002]
+            - button "Expand all" [ref=e7004] [cursor=pointer]
+            - strong [ref=e7005]: object
+        - article [ref=e7006]:
+          - generic [ref=e7007]:
+            - button "ROIReportResponse" [ref=e7008] [cursor=pointer]:
+              - generic [ref=e7010]: ROIReportResponse
+              - img [ref=e7012]
+            - button "Expand all" [ref=e7014] [cursor=pointer]
+            - strong [ref=e7015]: object
+        - article [ref=e7016]:
+          - generic [ref=e7017]:
+            - button "ReengagementRequest" [ref=e7018] [cursor=pointer]:
+              - generic [ref=e7020]: ReengagementRequest
+              - img [ref=e7022]
+            - button "Expand all" [ref=e7024] [cursor=pointer]
+            - strong [ref=e7025]: object
+        - article [ref=e7026]:
+          - generic [ref=e7027]:
+            - button "ReferralTracking" [ref=e7028] [cursor=pointer]:
+              - generic [ref=e7030]: ReferralTracking
+              - img [ref=e7032]
+            - button "Expand all" [ref=e7034] [cursor=pointer]
+            - strong [ref=e7035]: object
+        - article [ref=e7036]:
+          - generic [ref=e7037]:
+            - button "RefreshTokenRequest" [ref=e7038] [cursor=pointer]:
+              - generic [ref=e7040]: RefreshTokenRequest
+              - img [ref=e7042]
+            - button "Expand all" [ref=e7044] [cursor=pointer]
+            - strong [ref=e7045]: object
+        - article [ref=e7046]:
+          - generic [ref=e7047]:
+            - button "RevenueIntelligenceResponse" [ref=e7048] [cursor=pointer]:
+              - generic [ref=e7050]: RevenueIntelligenceResponse
+              - img [ref=e7052]
+            - button "Expand all" [ref=e7054] [cursor=pointer]
+            - strong [ref=e7055]: object
+        - article [ref=e7056]:
+          - generic [ref=e7057]:
+            - button "RiskAssessment" [ref=e7058] [cursor=pointer]:
+              - generic [ref=e7060]: RiskAssessment
+              - img [ref=e7062]
+            - button "Expand all" [ref=e7064] [cursor=pointer]
+            - strong [ref=e7065]: object
+        - article [ref=e7066]:
+          - generic [ref=e7067]:
+            - button "SHAPAnalyticsRequest" [ref=e7068] [cursor=pointer]:
+              - generic [ref=e7070]: SHAPAnalyticsRequest
+              - img [ref=e7072]
+            - button "Expand all" [ref=e7074] [cursor=pointer]
+            - strong [ref=e7075]: object
+        - article [ref=e7076]:
+          - generic [ref=e7077]:
+            - button "SHAPWaterfallData" [ref=e7078] [cursor=pointer]:
+              - generic [ref=e7080]: SHAPWaterfallData
+              - img [ref=e7082]
+            - button "Expand all" [ref=e7084] [cursor=pointer]
+            - strong [ref=e7085]: object
+        - article [ref=e7086]:
+          - generic [ref=e7087]:
+            - button "SHAPWaterfallResponse" [ref=e7088] [cursor=pointer]:
+              - generic [ref=e7090]: SHAPWaterfallResponse
+              - img [ref=e7092]
+            - button "Expand all" [ref=e7094] [cursor=pointer]
+            - strong [ref=e7095]: object
+        - article [ref=e7096]:
+          - generic [ref=e7097]:
+            - button "SavingsCalculatorRequest" [ref=e7098] [cursor=pointer]:
+              - generic [ref=e7100]: SavingsCalculatorRequest
+              - img [ref=e7102]
+            - button "Expand all" [ref=e7104] [cursor=pointer]
+            - strong [ref=e7105]: object
+        - article [ref=e7106]:
+          - generic [ref=e7107]:
+            - button "ScheduleRequest" [ref=e7108] [cursor=pointer]:
+              - generic [ref=e7110]: ScheduleRequest
+              - img [ref=e7112]
+            - button "Expand all" [ref=e7114] [cursor=pointer]
+            - strong [ref=e7115]: object
+        - article [ref=e7116]:
+          - generic [ref=e7117]:
+            - button "SchedulerHealthResponse" [ref=e7118] [cursor=pointer]:
+              - generic [ref=e7120]: SchedulerHealthResponse
+              - img [ref=e7122]
+            - button "Expand all" [ref=e7124] [cursor=pointer]
+            - strong [ref=e7125]: object
+        - article [ref=e7126]:
+          - generic [ref=e7127]:
+            - button "ScoreSource" [ref=e7128] [cursor=pointer]:
+              - generic [ref=e7130]: ScoreSource
+              - img [ref=e7132]
+            - button "Expand all" [ref=e7134] [cursor=pointer]
+            - strong [ref=e7135]: string
+        - article [ref=e7136]:
+          - generic [ref=e7137]:
+            - button "SecurityDashboardResponse" [ref=e7138] [cursor=pointer]:
+              - generic [ref=e7140]: SecurityDashboardResponse
+              - img [ref=e7142]
+            - button "Expand all" [ref=e7144] [cursor=pointer]
+            - strong [ref=e7145]: object
+        - article [ref=e7146]:
+          - generic [ref=e7147]:
+            - button "SecurityEventResponse" [ref=e7148] [cursor=pointer]:
+              - generic [ref=e7150]: SecurityEventResponse
+              - img [ref=e7152]
+            - button "Expand all" [ref=e7154] [cursor=pointer]
+            - strong [ref=e7155]: object
+        - article [ref=e7156]:
+          - generic [ref=e7157]:
+            - button "SecurityHealthResponse" [ref=e7158] [cursor=pointer]:
+              - generic [ref=e7160]: SecurityHealthResponse
+              - img [ref=e7162]
+            - button "Expand all" [ref=e7164] [cursor=pointer]
+            - strong [ref=e7165]: object
+        - article [ref=e7166]:
+          - generic [ref=e7167]:
+            - button "SellerChatRequest" [ref=e7168] [cursor=pointer]:
+              - generic [ref=e7170]: SellerChatRequest
+              - img [ref=e7172]
+            - button "Expand all" [ref=e7174] [cursor=pointer]
+            - strong [ref=e7175]: object
+        - article [ref=e7176]:
+          - generic [ref=e7177]:
+            - button "SellerChatResponse" [ref=e7178] [cursor=pointer]:
+              - generic [ref=e7180]: SellerChatResponse
+              - img [ref=e7182]
+            - button "Expand all" [ref=e7184] [cursor=pointer]
+            - strong [ref=e7185]: object
+        - article [ref=e7186]:
+          - generic [ref=e7187]:
+            - button "SequenceResponse" [ref=e7188] [cursor=pointer]:
+              - generic [ref=e7190]: SequenceResponse
+              - img [ref=e7192]
+            - button "Expand all" [ref=e7194] [cursor=pointer]
+            - strong [ref=e7195]: object
+        - article [ref=e7196]:
+          - generic [ref=e7197]:
+            - button "SequenceStatusResponse" [ref=e7198] [cursor=pointer]:
+              - generic [ref=e7200]: SequenceStatusResponse
+              - img [ref=e7202]
+            - button "Expand all" [ref=e7204] [cursor=pointer]
+            - strong [ref=e7205]: object
+        - article [ref=e7206]:
+          - generic [ref=e7207]:
+            - button "ServiceHealth" [ref=e7208] [cursor=pointer]:
+              - generic [ref=e7210]: ServiceHealth
+              - img [ref=e7212]
+            - button "Expand all" [ref=e7214] [cursor=pointer]
+            - strong [ref=e7215]: object
+        - article [ref=e7216]:
+          - generic [ref=e7217]:
+            - button "SourcePerformanceResponse" [ref=e7218] [cursor=pointer]:
+              - generic [ref=e7220]: SourcePerformanceResponse
+              - img [ref=e7222]
+            - button "Expand all" [ref=e7224] [cursor=pointer]
+            - strong [ref=e7225]: object
+        - article [ref=e7226]:
+          - generic [ref=e7227]:
+            - button "SpatialCoordinate" [ref=e7228] [cursor=pointer]:
+              - generic [ref=e7230]: SpatialCoordinate
+              - img [ref=e7232]
+            - button "Expand all" [ref=e7234] [cursor=pointer]
+            - strong [ref=e7235]: object
+        - article [ref=e7236]:
+          - generic [ref=e7237]:
+            - button "SpatialMappingData" [ref=e7238] [cursor=pointer]:
+              - generic [ref=e7240]: SpatialMappingData
+              - img [ref=e7242]
+            - button "Expand all" [ref=e7244] [cursor=pointer]
+            - strong [ref=e7245]: object
+        - article [ref=e7246]:
+          - generic [ref=e7247]:
+            - button "StageTransition" [ref=e7248] [cursor=pointer]:
+              - generic [ref=e7250]: StageTransition
+              - img [ref=e7252]
+            - button "Expand all" [ref=e7254] [cursor=pointer]
+            - strong [ref=e7255]: object
+        - article [ref=e7256]:
+          - generic [ref=e7257]:
+            - button "SwipeFeedback" [ref=e7258] [cursor=pointer]:
+              - generic [ref=e7260]: SwipeFeedback
+              - img [ref=e7262]
+            - button "Expand all" [ref=e7264] [cursor=pointer]
+            - strong [ref=e7265]: object
+        - article [ref=e7266]:
+          - generic [ref=e7267]:
+            - button "SwipeRequest" [ref=e7268] [cursor=pointer]:
+              - generic [ref=e7270]: SwipeRequest
+              - img [ref=e7272]
+            - button "Expand all" [ref=e7274] [cursor=pointer]
+            - strong [ref=e7275]: object
+        - article [ref=e7276]:
+          - generic [ref=e7277]:
+            - button "SwipeResponse" [ref=e7278] [cursor=pointer]:
+              - generic [ref=e7280]: SwipeResponse
+              - img [ref=e7282]
+            - button "Expand all" [ref=e7284] [cursor=pointer]
+            - strong [ref=e7285]: object
+        - article [ref=e7286]:
+          - generic [ref=e7287]:
+            - button "ThreatLevel" [ref=e7288] [cursor=pointer]:
+              - generic [ref=e7290]: ThreatLevel
+              - img [ref=e7292]
+            - button "Expand all" [ref=e7294] [cursor=pointer]
+            - strong [ref=e7295]: string
+        - article [ref=e7296]:
+          - generic [ref=e7297]:
+            - button "ThreatResponse" [ref=e7298] [cursor=pointer]:
+              - generic [ref=e7300]: ThreatResponse
+              - img [ref=e7302]
+            - button "Expand all" [ref=e7304] [cursor=pointer]
+            - strong [ref=e7305]: object
+        - article [ref=e7306]:
+          - generic [ref=e7307]:
+            - button "TimeHorizon" [ref=e7308] [cursor=pointer]:
+              - generic [ref=e7310]: TimeHorizon
+              - img [ref=e7312]
+            - button "Expand all" [ref=e7314] [cursor=pointer]
+            - strong [ref=e7315]: string
+        - article [ref=e7316]:
+          - generic [ref=e7317]:
+            - button "TimelineCommitment" [ref=e7318] [cursor=pointer]:
+              - generic [ref=e7320]: TimelineCommitment
+              - img [ref=e7322]
+            - button "Expand all" [ref=e7324] [cursor=pointer]
+            - strong [ref=e7325]: object
+        - article [ref=e7326]:
+          - generic [ref=e7327]:
+            - button "TokenResponse" [ref=e7328] [cursor=pointer]:
+              - generic [ref=e7330]: TokenResponse
+              - img [ref=e7332]
+            - button "Expand all" [ref=e7334] [cursor=pointer]
+            - strong [ref=e7335]: object
+        - article [ref=e7336]:
+          - generic [ref=e7337]:
+            - button "ToolCallPayload" [ref=e7338] [cursor=pointer]:
+              - generic [ref=e7340]: ToolCallPayload
+              - img [ref=e7342]
+            - button "Expand all" [ref=e7344] [cursor=pointer]
+            - strong [ref=e7345]: object
+        - article [ref=e7346]:
+          - generic [ref=e7347]:
+            - button "TrendDataResponse" [ref=e7348] [cursor=pointer]:
+              - generic [ref=e7350]: TrendDataResponse
+              - img [ref=e7352]
+            - button "Expand all" [ref=e7354] [cursor=pointer]
+            - strong [ref=e7355]: object
+        - article [ref=e7356]:
+          - generic [ref=e7357]:
+            - button "UpdateJourneyRequest" [ref=e7358] [cursor=pointer]:
+              - generic [ref=e7360]: UpdateJourneyRequest
+              - img [ref=e7362]
+            - button "Expand all" [ref=e7364] [cursor=pointer]
+            - strong [ref=e7365]: object
+        - article [ref=e7366]:
+          - generic [ref=e7367]:
+            - button "ValidationError" [ref=e7368] [cursor=pointer]:
+              - generic [ref=e7370]: ValidationError
+              - img [ref=e7372]
+            - button "Expand all" [ref=e7374] [cursor=pointer]
+            - strong [ref=e7375]: object
+        - article [ref=e7376]:
+          - generic [ref=e7377]:
+            - button "VoiceCallAnalytics" [ref=e7378] [cursor=pointer]:
+              - generic [ref=e7380]: VoiceCallAnalytics
+              - img [ref=e7382]
+            - button "Expand all" [ref=e7384] [cursor=pointer]
+            - strong [ref=e7385]: object
+        - article [ref=e7386]:
+          - generic [ref=e7387]:
+            - button "VoiceCallStartRequest" [ref=e7388] [cursor=pointer]:
+              - generic [ref=e7390]: VoiceCallStartRequest
+              - img [ref=e7392]
+            - button "Expand all" [ref=e7394] [cursor=pointer]
+            - strong [ref=e7395]: object
+        - article [ref=e7396]:
+          - generic [ref=e7397]:
+            - button "VoiceInputRequest" [ref=e7398] [cursor=pointer]:
+              - generic [ref=e7400]: VoiceInputRequest
+              - img [ref=e7402]
+            - button "Expand all" [ref=e7404] [cursor=pointer]
+            - strong [ref=e7405]: object
+        - article [ref=e7406]:
+          - generic [ref=e7407]:
+            - button "VoiceResponse" [ref=e7408] [cursor=pointer]:
+              - generic [ref=e7410]: VoiceResponse
+              - img [ref=e7412]
+            - button "Expand all" [ref=e7414] [cursor=pointer]
+            - strong [ref=e7415]: object
+        - article [ref=e7416]:
+          - generic [ref=e7417]:
+            - button "WeeklySummaryResponse" [ref=e7418] [cursor=pointer]:
+              - generic [ref=e7420]: WeeklySummaryResponse
+              - img [ref=e7422]
+            - button "Expand all" [ref=e7424] [cursor=pointer]
+            - strong [ref=e7425]: object

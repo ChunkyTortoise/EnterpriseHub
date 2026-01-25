@@ -20,6 +20,7 @@ from ghl_real_estate_ai.services.progressive_skills_manager import ProgressiveSk
 from ghl_real_estate_ai.services.mcp_client import get_mcp_client
 from ghl_real_estate_ai.services.token_tracker import TokenTracker
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -335,7 +336,7 @@ class AgentMeshCoordinator:
             logger.info(f"Task {task.task_id} assigned to agent {agent.name}")
 
             # Execute task (async)
-            asyncio.create_task(self._execute_task_on_agent(task, agent))
+            safe_create_task(self._execute_task_on_agent(task, agent))
 
             return True
 
@@ -478,15 +479,10 @@ class AgentMeshCoordinator:
 
     def _start_background_tasks(self):
         """Start background monitoring tasks"""
-        try:
-            loop = asyncio.get_running_loop()
-            self.health_monitor_task = loop.create_task(self._health_monitor())
-            self.cost_monitor_task = loop.create_task(self._cost_monitor())
-            self.performance_monitor_task = loop.create_task(self._performance_monitor())
-            self.cleanup_monitor_task = loop.create_task(self._cleanup_monitor())
-        except RuntimeError:
-            # No running event loop, tasks will not be started
-            logger.debug("No running event loop found, skipping background tasks")
+        safe_create_task(self._health_monitor())
+        safe_create_task(self._cost_monitor())
+        safe_create_task(self._performance_monitor())
+        safe_create_task(self._cleanup_monitor())
 
     async def _health_monitor(self):
         """Monitor agent health continuously"""

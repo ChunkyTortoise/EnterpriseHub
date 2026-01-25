@@ -21,6 +21,7 @@ import asyncpg
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -441,7 +442,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
             }
 
             # Log to analytics system (async, non-blocking)
-            asyncio.create_task(self._store_analytics_data(analytics_data))
+            safe_create_task(self._store_analytics_data(analytics_data))
 
         except Exception as e:
             logger.warning(f"Failed to log request analytics: {e}")

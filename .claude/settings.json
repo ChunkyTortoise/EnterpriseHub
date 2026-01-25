@@ -95,5 +95,10 @@
     "deny": [],
     "ask": []
   },
+  "commands": {
+    "audit": "Using the Security Auditor persona in .claude/agents/security-auditor.md, audit the current changes for security vulnerabilities and compliance issues.",
+    "optimize": "Using the Performance Optimizer persona in .claude/agents/performance-optimizer.md, analyze the performance of the current implementation and suggest optimizations.",
+    "document": "Using the Documentation Specialist persona in .claude/agents/documentation-specialist.md, review the code and ensure all public APIs and complex logic are documented according to project standards."
+  },
   "disableAllHooks": true
 }

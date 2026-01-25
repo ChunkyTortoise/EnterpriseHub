@@ -44,7 +44,7 @@ except ImportError:
 import sys
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add project root to sys.path with multiple fallback paths
@@ -274,7 +274,7 @@ def main():
         st.session_state.global_decisions = [
             {"action": "System Boot", "why": "Initialization of Sovereign Orchestration Phase 4.", "time": "08:00:00"},
             {"action": "Neural Link", "why": "Establishing secure handshake with GHL MOAT.", "time": "08:00:05"},
-            {"action": "Intelligence Activation", "why": "Phase 5 Intent Decoding engines online.", "time": datetime.now().strftime("%H:%M:%S")}
+            {"action": "Intelligence Activation", "why": "Phase 5 Intent Decoding engines online.", "time": datetime.now(timezone.utc).strftime("%H:%M:%S")}
         ]
     
     # Phase 4: Inter-Agent Relay Logic
@@ -301,7 +301,7 @@ def main():
             st.session_state.global_decisions.append({
                 "action": "Agent Handoff",
                 "why": f"Lead {lead_name} reached critical score (>90). Transferring to Seller Negotiation.",
-                "time": datetime.now().strftime("%H:%M:%S")
+                "time": datetime.now(timezone.utc).strftime("%H:%M:%S")
             })
             st.toast(f"SOVEREIGN RELAY: {lead_name} Dossier Transferred to Seller Hub", icon="🚀")
 
@@ -388,7 +388,7 @@ def main():
                         st.session_state.global_decisions.append({
                             "action": "Manual MOAT Sync",
                             "why": "User triggered manual intelligence layer refresh.",
-                            "time": datetime.now().strftime("%H:%M:%S")
+                            "time": datetime.now(timezone.utc).strftime("%H:%M:%S")
                         })
     
     # Phase 4: Global Decision Stream at the bottom

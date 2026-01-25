@@ -18,7 +18,7 @@ import json
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional
 import sys
 import os
@@ -255,7 +255,25 @@ def render_buyer_pipeline_section(api_client: JorgeBuyerLiveClient):
             with act1:
                 if not buyer.get('bot_analyzed'):
                     if st.button(f"🤖 Qualify with Jorge", key=f"qual_b_{buyer['id']}", type="primary"):
-                        st.info("Running consultative qualification...")
+                        if JORGE_BUYER_BOT_AVAILABLE:
+                            with st.spinner(f"Jorge is qualifying {buyer['name']}..."):
+                                # Create sample conversation history
+                                sample_history = [
+                                    {"role": "user", "content": f"Hi, I'm looking for a home in {buyer.get('intent', 'the area')}. Budget is {buyer.get('budget', 'flexible')}.", "sender_name": buyer['name']},
+                                    {"role": "assistant", "content": "I can help with that. Are you pre-approved for a mortgage?"},
+                                    {"role": "user", "content": "Yes, we have a pre-approval letter ready."}
+                                ]
+                                
+                                qualification_result = run_async(api_client.qualify_buyer(buyer['id'], buyer['name'], sample_history))
+                                
+                                if qualification_result.get('success'):
+                                    st.session_state[f'buyer_qualification_{buyer["id"]}'] = qualification_result
+                                    st.success(f"✅ Qualified! FRS: {qualification_result.get('scores', {}).get('frs_score', 0)}")
+                                    st.rerun()
+                                else:
+                                    st.error(f"❌ Qualification failed: {qualification_result.get('error', 'Unknown error')}")
+                        else:
+                            st.warning("Jorge Buyer Bot service unavailable")
                 else:
                     st.markdown(f'<div style="color: #10B981; font-weight: bold; text-align: center;">✅ ANALYZED</div>', unsafe_allow_html=True)
             
@@ -264,7 +282,13 @@ def render_buyer_pipeline_section(api_client: JorgeBuyerLiveClient):
                     st.toast("Triggering Property Matching Engine...", icon="🏠")
             
             with act3:
-                st.button("📊 Dossier", key=f"view_{buyer['id']}")
+                with st.expander("📊 Dossier"):
+                    qual_data = st.session_state.get(f'buyer_qualification_{buyer["id"]}', {})
+                    if qual_data:
+                        st.caption(f"Analysis for {buyer['name']}")
+                        st.info(qual_data.get('bot_response', 'No response'))
+                    else:
+                        st.caption("Run qualification first.")
             
             with act4:
                 status_color = "#00FF00" if "Hot" in buyer['status'] else "#FFA500" if "Warm" in buyer['status'] else "#8B949E"

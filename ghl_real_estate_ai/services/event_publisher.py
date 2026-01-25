@@ -1968,6 +1968,583 @@ class EventPublisher:
         logger.debug(f"Behavioral feedback recorded: {lead_id} ({feedback_type}, {prediction_accuracy:.1%} accuracy)")
 
     # ============================================================================
+    # Phase 2.2: Advanced Property Matching Events
+    # ============================================================================
+
+    async def publish_property_match_generated(
+        self,
+        lead_id: str,
+        location_id: str,
+        property_id: str,
+        match_score: float,
+        behavioral_fit: float,
+        engagement_prediction: float,
+        rank: int,
+        presentation_strategy: str,
+        reasoning: str,
+        user_id: Optional[str] = None
+    ) -> None:
+        """
+        Publish property match generation event with behavioral enhancement.
+
+        Args:
+            lead_id: Lead identifier
+            location_id: Location identifier for tenant scoping
+            property_id: Matched property identifier
+            match_score: Overall match score (0.0-1.0)
+            behavioral_fit: Behavioral fit score (0.0-100.0)
+            engagement_prediction: Predicted engagement probability (0.0-1.0)
+            rank: Match rank in results (1-based)
+            presentation_strategy: Optimal presentation strategy
+            reasoning: Behavioral reasoning for match
+            user_id: Optional user identifier
+        """
+        try:
+            match_quality_grade = self._calculate_match_quality_grade(match_score, behavioral_fit)
+
+            event = RealTimeEvent(
+                event_type=EventType.PROPERTY_MATCH_GENERATED,
+                data={
+                    "lead_id": lead_id,
+                    "property_id": property_id,
+                    "match_score": round(match_score, 3),
+                    "behavioral_fit": round(behavioral_fit, 1),
+                    "engagement_prediction": round(engagement_prediction, 3),
+                    "rank": rank,
+                    "presentation_strategy": presentation_strategy,
+                    "reasoning": reasoning,
+                    "quality_grade": match_quality_grade,
+                    "is_top_match": rank <= 3,
+                    "high_confidence": match_score >= 0.8 and behavioral_fit >= 75.0,
+                    "recommended_action": "schedule_showing" if engagement_prediction > 0.7 else "send_info",
+                    "match_timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                timestamp=datetime.now(timezone.utc),
+                location_id=location_id,
+                user_id=user_id,
+                priority="high" if rank <= 3 else "normal"
+            )
+
+            await self._publish_event(event)
+            logger.debug(f"Property match generated: {property_id} for {lead_id} (rank #{rank}, {match_score:.1%} score)")
+
+        except Exception as e:
+            logger.error(f"Failed to publish property match generated event: {e}")
+
+    async def publish_property_inventory_update(
+        self,
+        location_id: str,
+        property_ids: List[str],
+        update_type: str,
+        affected_leads: List[str],
+        inventory_change: str,
+        user_id: Optional[str] = None
+    ) -> None:
+        """
+        Publish property inventory update event.
+
+        Args:
+            location_id: Location identifier for tenant scoping
+            property_ids: List of property identifiers affected
+            update_type: Type of update (new_listings, price_change, status_change)
+            affected_leads: List of lead IDs that may be interested
+            inventory_change: Description of the change
+            user_id: Optional user identifier
+        """
+        try:
+            event = RealTimeEvent(
+                event_type=EventType.PROPERTY_INVENTORY_UPDATE,
+                data={
+                    "property_ids": property_ids,
+                    "property_count": len(property_ids),
+                    "update_type": update_type,
+                    "affected_leads": affected_leads,
+                    "affected_lead_count": len(affected_leads),
+                    "inventory_change": inventory_change,
+                    "requires_reanalysis": update_type in ["new_listings", "price_change"],
+                    "priority_update": len(affected_leads) > 10,
+                    "update_timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                timestamp=datetime.now(timezone.utc),
+                location_id=location_id,
+                user_id=user_id,
+                priority="high" if len(affected_leads) > 10 else "normal"
+            )
+
+            await self._publish_event(event)
+            logger.debug(f"Property inventory update: {len(property_ids)} properties, {len(affected_leads)} leads affected")
+
+        except Exception as e:
+            logger.error(f"Failed to publish property inventory update event: {e}")
+
+    async def publish_behavioral_match_improvement(
+        self,
+        lead_id: str,
+        location_id: str,
+        improvement_type: str,
+        old_score: float,
+        new_score: float,
+        behavioral_factors: Dict[str, Any],
+        recommendations: List[str],
+        user_id: Optional[str] = None
+    ) -> None:
+        """
+        Publish behavioral match improvement event.
+
+        Args:
+            lead_id: Lead identifier
+            location_id: Location identifier for tenant scoping
+            improvement_type: Type of improvement (accuracy, relevance, engagement)
+            old_score: Previous match score
+            new_score: Improved match score
+            behavioral_factors: Behavioral factors contributing to improvement
+            recommendations: Action recommendations
+            user_id: Optional user identifier
+        """
+        try:
+            improvement_magnitude = new_score - old_score
+
+            event = RealTimeEvent(
+                event_type=EventType.BEHAVIORAL_MATCH_IMPROVEMENT,
+                data={
+                    "lead_id": lead_id,
+                    "improvement_type": improvement_type,
+                    "old_score": round(old_score, 3),
+                    "new_score": round(new_score, 3),
+                    "improvement_magnitude": round(improvement_magnitude, 3),
+                    "improvement_percentage": round((improvement_magnitude / max(old_score, 0.01)) * 100, 1),
+                    "behavioral_factors": behavioral_factors,
+                    "recommendations": recommendations,
+                    "significant_improvement": improvement_magnitude >= 0.2,
+                    "suggested_actions": recommendations[:3],  # Top 3 recommendations
+                    "improvement_timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                timestamp=datetime.now(timezone.utc),
+                location_id=location_id,
+                user_id=user_id,
+                priority="high" if improvement_magnitude >= 0.3 else "normal"
+            )
+
+            await self._publish_event(event)
+            logger.debug(f"Behavioral match improvement: {lead_id} ({improvement_type}, +{improvement_magnitude:.1%})")
+
+        except Exception as e:
+            logger.error(f"Failed to publish behavioral match improvement event: {e}")
+
+    # ============================================================================
+    # Phase 2.3: Conversation Intelligence Events
+    # ============================================================================
+
+    async def publish_objection_detected(
+        self,
+        lead_id: str,
+        location_id: str,
+        objection_type: str,
+        severity: str,
+        confidence: float,
+        context: str,
+        suggested_responses: List[str],
+        user_id: Optional[str] = None
+    ) -> None:
+        """
+        Publish objection detection event.
+
+        Args:
+            lead_id: Lead identifier
+            location_id: Location identifier for tenant scoping
+            objection_type: Type of objection detected
+            severity: Objection severity (low, medium, high)
+            confidence: Detection confidence (0.0-1.0)
+            context: Context where objection was detected
+            suggested_responses: List of suggested response strategies
+            user_id: Optional user identifier
+        """
+        try:
+            severity_priority = self._determine_objection_priority(severity, confidence)
+
+            event = RealTimeEvent(
+                event_type=EventType.OBJECTION_DETECTED,
+                data={
+                    "lead_id": lead_id,
+                    "objection_type": objection_type,
+                    "severity": severity,
+                    "confidence": round(confidence, 3),
+                    "context": context,
+                    "suggested_responses": suggested_responses,
+                    "requires_immediate_action": severity in ["high", "critical"],
+                    "response_urgency": "immediate" if severity == "high" else "within_24h",
+                    "objection_category": self._categorize_objection(objection_type),
+                    "coaching_opportunity": severity in ["medium", "high"],
+                    "detection_timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                timestamp=datetime.now(timezone.utc),
+                location_id=location_id,
+                user_id=user_id,
+                priority=severity_priority
+            )
+
+            await self._publish_event(event)
+            logger.debug(f"Objection detected: {objection_type} for {lead_id} ({severity} severity)")
+
+        except Exception as e:
+            logger.error(f"Failed to publish objection detected event: {e}")
+
+    async def publish_sentiment_warning(
+        self,
+        lead_id: str,
+        location_id: str,
+        current_sentiment: float,
+        trend: str,
+        risk_level: str,
+        recommendations: List[str],
+        user_id: Optional[str] = None
+    ) -> None:
+        """
+        Publish sentiment warning event.
+
+        Args:
+            lead_id: Lead identifier
+            location_id: Location identifier for tenant scoping
+            current_sentiment: Current sentiment score (-1.0 to 1.0)
+            trend: Sentiment trend (improving, declining, stable)
+            risk_level: Risk level (low, medium, high)
+            recommendations: List of recommended actions
+            user_id: Optional user identifier
+        """
+        try:
+            event = RealTimeEvent(
+                event_type=EventType.SENTIMENT_WARNING,
+                data={
+                    "lead_id": lead_id,
+                    "current_sentiment": round(current_sentiment, 3),
+                    "sentiment_level": self._classify_sentiment_level(current_sentiment),
+                    "trend": trend,
+                    "risk_level": risk_level,
+                    "recommendations": recommendations,
+                    "requires_intervention": risk_level == "high",
+                    "suggested_timeline": "immediate" if risk_level == "high" else "within_24h",
+                    "escalation_needed": current_sentiment <= -0.5 and trend == "declining",
+                    "recovery_potential": current_sentiment > -0.3,
+                    "warning_timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                timestamp=datetime.now(timezone.utc),
+                location_id=location_id,
+                user_id=user_id,
+                priority="critical" if risk_level == "high" else "high"
+            )
+
+            await self._publish_event(event)
+            logger.debug(f"Sentiment warning: {lead_id} (sentiment: {current_sentiment:.2f}, {risk_level} risk)")
+
+        except Exception as e:
+            logger.error(f"Failed to publish sentiment warning event: {e}")
+
+    async def publish_conversation_insight_generated(
+        self,
+        lead_id: str,
+        location_id: str,
+        insight_type: str,
+        insight_summary: str,
+        confidence: float,
+        action_items: List[str],
+        processing_time_ms: float,
+        user_id: Optional[str] = None
+    ) -> None:
+        """
+        Publish conversation insight generation event.
+
+        Args:
+            lead_id: Lead identifier
+            location_id: Location identifier for tenant scoping
+            insight_type: Type of insight generated
+            insight_summary: Summary of the insight
+            confidence: Insight confidence (0.0-1.0)
+            action_items: List of actionable items
+            processing_time_ms: Processing time in milliseconds
+            user_id: Optional user identifier
+        """
+        try:
+            performance_grade = self._calculate_performance_grade(processing_time_ms)
+
+            event = RealTimeEvent(
+                event_type=EventType.CONVERSATION_INSIGHT_GENERATED,
+                data={
+                    "lead_id": lead_id,
+                    "insight_type": insight_type,
+                    "insight_summary": insight_summary,
+                    "confidence": round(confidence, 3),
+                    "action_items": action_items,
+                    "processing_time_ms": round(processing_time_ms, 1),
+                    "performance_grade": performance_grade,
+                    "high_confidence": confidence >= 0.8,
+                    "actionable_items_count": len(action_items),
+                    "requires_follow_up": len(action_items) > 0,
+                    "insight_priority": "high" if confidence >= 0.8 else "normal",
+                    "insight_timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                timestamp=datetime.now(timezone.utc),
+                location_id=location_id,
+                user_id=user_id,
+                priority="high" if confidence >= 0.8 else "normal"
+            )
+
+            await self._publish_event(event)
+            logger.debug(f"Conversation insight: {insight_type} for {lead_id} ({confidence:.1%} confidence)")
+
+        except Exception as e:
+            logger.error(f"Failed to publish conversation insight event: {e}")
+
+    # ============================================================================
+    # Phase 2.4: Preference Learning Events
+    # ============================================================================
+
+    async def publish_preference_learning_complete(
+        self,
+        client_id: str,
+        location_id: str,
+        learning_source: str,
+        signals_processed: int,
+        learning_latency_ms: float,
+        preferences_updated: List[str],
+        profile_completeness: float,
+        user_id: Optional[str] = None
+    ) -> None:
+        """
+        Publish preference learning completion event.
+
+        Args:
+            client_id: Client identifier
+            location_id: Location identifier for tenant scoping
+            learning_source: Source of learning (conversation, property_view, behavioral)
+            signals_processed: Number of preference signals processed
+            learning_latency_ms: Learning processing time in milliseconds
+            preferences_updated: List of preference names that were updated
+            profile_completeness: Updated profile completeness score (0.0-1.0)
+            user_id: Optional user identifier
+        """
+        try:
+            performance_grade = self._calculate_performance_grade(learning_latency_ms)
+
+            event = RealTimeEvent(
+                event_type=EventType.PREFERENCE_LEARNING_COMPLETE,
+                data={
+                    "client_id": client_id,
+                    "learning_source": learning_source,
+                    "signals_processed": signals_processed,
+                    "learning_latency_ms": round(learning_latency_ms, 1),
+                    "performance_grade": performance_grade,
+                    "preferences_updated": preferences_updated,
+                    "preferences_updated_count": len(preferences_updated),
+                    "profile_completeness": round(profile_completeness, 3),
+                    "profile_completeness_percentage": round(profile_completeness * 100, 1),
+                    "significant_learning": signals_processed >= 5,
+                    "high_completeness": profile_completeness >= 0.8,
+                    "learning_efficiency": round(len(preferences_updated) / max(signals_processed, 1), 2),
+                    "learning_timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                timestamp=datetime.now(timezone.utc),
+                location_id=location_id,
+                user_id=user_id,
+                priority="normal"
+            )
+
+            await self._publish_event(event)
+            logger.debug(f"Preference learning: {client_id} from {learning_source} ({signals_processed} signals)")
+
+        except Exception as e:
+            logger.error(f"Failed to publish preference learning complete event: {e}")
+
+    async def publish_preference_drift_detected(
+        self,
+        client_id: str,
+        location_id: str,
+        preference_name: str,
+        drift_magnitude: float,
+        old_value: Any,
+        new_value: Any,
+        drift_direction: str,
+        confidence: float,
+        user_id: Optional[str] = None
+    ) -> None:
+        """
+        Publish preference drift detection event.
+
+        Args:
+            client_id: Client identifier
+            location_id: Location identifier for tenant scoping
+            preference_name: Name of the preference that drifted
+            drift_magnitude: Magnitude of the drift (0.0-1.0)
+            old_value: Previous preference value
+            new_value: New preference value
+            drift_direction: Direction of drift (increasing, decreasing, changing)
+            confidence: Drift detection confidence (0.0-1.0)
+            user_id: Optional user identifier
+        """
+        try:
+            drift_significance = self._calculate_drift_significance(drift_magnitude, confidence)
+
+            event = RealTimeEvent(
+                event_type=EventType.PREFERENCE_DRIFT_DETECTED,
+                data={
+                    "client_id": client_id,
+                    "preference_name": preference_name,
+                    "drift_magnitude": round(drift_magnitude, 3),
+                    "old_value": str(old_value),
+                    "new_value": str(new_value),
+                    "drift_direction": drift_direction,
+                    "confidence": round(confidence, 3),
+                    "drift_significance": drift_significance,
+                    "requires_reanalysis": drift_significance in ["high", "critical"],
+                    "preference_category": self._categorize_preference_name(preference_name),
+                    "impact_level": "high" if preference_name in ["budget", "location", "bedrooms"] else "medium",
+                    "adaptation_needed": drift_magnitude >= 0.3,
+                    "drift_timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                timestamp=datetime.now(timezone.utc),
+                location_id=location_id,
+                user_id=user_id,
+                priority="high" if drift_magnitude >= 0.5 else "normal"
+            )
+
+            await self._publish_event(event)
+            logger.debug(f"Preference drift: {preference_name} for {client_id} (magnitude: {drift_magnitude:.2f})")
+
+        except Exception as e:
+            logger.error(f"Failed to publish preference drift event: {e}")
+
+    async def publish_preference_profile_updated(
+        self,
+        client_id: str,
+        location_id: str,
+        update_type: str,
+        updated_preferences: List[str],
+        profile_completeness: float,
+        confidence_improvement: float,
+        user_id: Optional[str] = None
+    ) -> None:
+        """
+        Publish preference profile update event.
+
+        Args:
+            client_id: Client identifier
+            location_id: Location identifier for tenant scoping
+            update_type: Type of update (learning, drift_adaptation, manual_correction)
+            updated_preferences: List of preference names that were updated
+            profile_completeness: Current profile completeness score (0.0-1.0)
+            confidence_improvement: Overall confidence improvement
+            user_id: Optional user identifier
+        """
+        try:
+            event = RealTimeEvent(
+                event_type=EventType.PREFERENCE_PROFILE_UPDATED,
+                data={
+                    "client_id": client_id,
+                    "update_type": update_type,
+                    "updated_preferences": updated_preferences,
+                    "updated_preferences_count": len(updated_preferences),
+                    "profile_completeness": round(profile_completeness, 3),
+                    "profile_completeness_percentage": round(profile_completeness * 100, 1),
+                    "confidence_improvement": round(confidence_improvement, 3),
+                    "significant_update": len(updated_preferences) >= 3,
+                    "high_completeness": profile_completeness >= 0.8,
+                    "profile_ready_for_matching": profile_completeness >= 0.6,
+                    "confidence_increased": confidence_improvement > 0,
+                    "update_timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                timestamp=datetime.now(timezone.utc),
+                location_id=location_id,
+                user_id=user_id,
+                priority="normal"
+            )
+
+            await self._publish_event(event)
+            logger.debug(f"Preference profile updated: {client_id} ({len(updated_preferences)} preferences)")
+
+        except Exception as e:
+            logger.error(f"Failed to publish preference profile updated event: {e}")
+
+    # ============================================================================
+    # Helper Methods for Phase 2 Intelligence Layer Events
+    # ============================================================================
+
+    def _calculate_match_quality_grade(self, match_score: float, behavioral_fit: float) -> str:
+        """Calculate match quality grade from scores."""
+        combined_score = (match_score + (behavioral_fit / 100.0)) / 2
+        if combined_score >= 0.9:
+            return "A+ (Exceptional)"
+        elif combined_score >= 0.8:
+            return "A (Excellent)"
+        elif combined_score >= 0.7:
+            return "B (Good)"
+        elif combined_score >= 0.6:
+            return "C (Fair)"
+        else:
+            return "D (Poor)"
+
+    def _determine_objection_priority(self, severity: str, confidence: float) -> str:
+        """Determine objection event priority."""
+        if severity == "high" and confidence >= 0.8:
+            return "critical"
+        elif severity == "high" or (severity == "medium" and confidence >= 0.9):
+            return "high"
+        elif severity == "medium":
+            return "normal"
+        else:
+            return "low"
+
+    def _categorize_objection(self, objection_type: str) -> str:
+        """Categorize objection type for reporting."""
+        financial_objections = ["pricing", "financial", "budget"]
+        process_objections = ["timing", "process", "commitment"]
+        trust_objections = ["trust", "competition"]
+
+        if objection_type in financial_objections:
+            return "financial"
+        elif objection_type in process_objections:
+            return "process"
+        elif objection_type in trust_objections:
+            return "trust"
+        else:
+            return "property"
+
+    def _classify_sentiment_level(self, sentiment: float) -> str:
+        """Classify sentiment score into levels."""
+        if sentiment >= 0.6:
+            return "very_positive"
+        elif sentiment >= 0.2:
+            return "positive"
+        elif sentiment >= -0.2:
+            return "neutral"
+        elif sentiment >= -0.6:
+            return "negative"
+        else:
+            return "very_negative"
+
+    def _calculate_drift_significance(self, magnitude: float, confidence: float) -> str:
+        """Calculate preference drift significance."""
+        weighted_drift = magnitude * confidence
+        if weighted_drift >= 0.7:
+            return "critical"
+        elif weighted_drift >= 0.5:
+            return "high"
+        elif weighted_drift >= 0.3:
+            return "medium"
+        else:
+            return "low"
+
+    def _categorize_preference_name(self, preference_name: str) -> str:
+        """Categorize preference by importance."""
+        core_prefs = ["budget", "location", "bedrooms", "bathrooms"]
+        important_prefs = ["property_type", "urgency", "timeline"]
+
+        if any(core in preference_name.lower() for core in core_prefs):
+            return "core"
+        elif any(imp in preference_name.lower() for imp in important_prefs):
+            return "important"
+        else:
+            return "lifestyle"
+
+    # ============================================================================
     # Helper Methods for Behavioral Events
     # ============================================================================
 
@@ -2256,4 +2833,160 @@ async def publish_behavioral_feedback_recorded(
     await publisher.publish_behavioral_feedback_recorded(
         lead_id, location_id, feedback_type, prediction_accuracy,
         model_version, **kwargs
+    )
+
+# ============================================================================
+# Phase 2 Intelligence Layer Convenience Functions
+# ============================================================================
+
+async def publish_property_match_generated(
+    lead_id: str,
+    location_id: str,
+    property_id: str,
+    match_score: float,
+    behavioral_fit: float,
+    engagement_prediction: float,
+    rank: int,
+    presentation_strategy: str,
+    reasoning: str,
+    **kwargs
+):
+    """Convenience function to publish property match generation."""
+    publisher = get_event_publisher()
+    await publisher.publish_property_match_generated(
+        lead_id, location_id, property_id, match_score, behavioral_fit,
+        engagement_prediction, rank, presentation_strategy, reasoning, **kwargs
+    )
+
+async def publish_property_inventory_update(
+    location_id: str,
+    property_ids: List[str],
+    update_type: str,
+    affected_leads: List[str],
+    inventory_change: str,
+    **kwargs
+):
+    """Convenience function to publish property inventory update."""
+    publisher = get_event_publisher()
+    await publisher.publish_property_inventory_update(
+        location_id, property_ids, update_type, affected_leads,
+        inventory_change, **kwargs
+    )
+
+async def publish_behavioral_match_improvement(
+    lead_id: str,
+    location_id: str,
+    improvement_type: str,
+    old_score: float,
+    new_score: float,
+    behavioral_factors: Dict[str, Any],
+    recommendations: List[str],
+    **kwargs
+):
+    """Convenience function to publish behavioral match improvement."""
+    publisher = get_event_publisher()
+    await publisher.publish_behavioral_match_improvement(
+        lead_id, location_id, improvement_type, old_score, new_score,
+        behavioral_factors, recommendations, **kwargs
+    )
+
+async def publish_objection_detected(
+    lead_id: str,
+    location_id: str,
+    objection_type: str,
+    severity: str,
+    confidence: float,
+    context: str,
+    suggested_responses: List[str],
+    **kwargs
+):
+    """Convenience function to publish objection detection."""
+    publisher = get_event_publisher()
+    await publisher.publish_objection_detected(
+        lead_id, location_id, objection_type, severity, confidence,
+        context, suggested_responses, **kwargs
+    )
+
+async def publish_sentiment_warning(
+    lead_id: str,
+    location_id: str,
+    current_sentiment: float,
+    trend: str,
+    risk_level: str,
+    recommendations: List[str],
+    **kwargs
+):
+    """Convenience function to publish sentiment warning."""
+    publisher = get_event_publisher()
+    await publisher.publish_sentiment_warning(
+        lead_id, location_id, current_sentiment, trend, risk_level,
+        recommendations, **kwargs
+    )
+
+async def publish_conversation_insight_generated(
+    lead_id: str,
+    location_id: str,
+    insight_type: str,
+    insight_summary: str,
+    confidence: float,
+    action_items: List[str],
+    processing_time_ms: float,
+    **kwargs
+):
+    """Convenience function to publish conversation insight generation."""
+    publisher = get_event_publisher()
+    await publisher.publish_conversation_insight_generated(
+        lead_id, location_id, insight_type, insight_summary, confidence,
+        action_items, processing_time_ms, **kwargs
+    )
+
+async def publish_preference_learning_complete(
+    client_id: str,
+    location_id: str,
+    learning_source: str,
+    signals_processed: int,
+    learning_latency_ms: float,
+    preferences_updated: List[str],
+    profile_completeness: float,
+    **kwargs
+):
+    """Convenience function to publish preference learning completion."""
+    publisher = get_event_publisher()
+    await publisher.publish_preference_learning_complete(
+        client_id, location_id, learning_source, signals_processed,
+        learning_latency_ms, preferences_updated, profile_completeness, **kwargs
+    )
+
+async def publish_preference_drift_detected(
+    client_id: str,
+    location_id: str,
+    preference_name: str,
+    drift_magnitude: float,
+    old_value: Any,
+    new_value: Any,
+    drift_direction: str,
+    confidence: float,
+    **kwargs
+):
+    """Convenience function to publish preference drift detection."""
+    publisher = get_event_publisher()
+    await publisher.publish_preference_drift_detected(
+        client_id, location_id, preference_name, drift_magnitude,
+        old_value, new_value, drift_direction, confidence, **kwargs
+    )
+
+async def publish_preference_profile_updated(
+    client_id: str,
+    location_id: str,
+    update_type: str,
+    updated_preferences: List[str],
+    profile_completeness: float,
+    confidence_improvement: float,
+    **kwargs
+):
+    """Convenience function to publish preference profile update."""
+    publisher = get_event_publisher()
+    await publisher.publish_preference_profile_updated(
+        client_id, location_id, update_type, updated_preferences,
+        profile_completeness, confidence_improvement, **kwargs
     )

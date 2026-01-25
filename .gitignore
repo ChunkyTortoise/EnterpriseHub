@@ -173,3 +173,4 @@ secrets/
 # Sensitive Configuration
 config/production/*.yml
 config/production/*.json
+.env.jorge

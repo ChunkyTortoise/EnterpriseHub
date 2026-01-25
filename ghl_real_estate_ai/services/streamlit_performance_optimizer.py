@@ -46,6 +46,7 @@ import numpy as np
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -250,12 +251,7 @@ class StreamlitPerformanceOptimizer:
             self.session_data_cache[key] = value
             
             # Store in distributed cache for cross-session access
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(self.cache_service.set(key, value, ttl))
-            except RuntimeError:
-                # No running loop, skip distributed cache update
-                pass
+            safe_create_task(self.cache_service.set(key, value, ttl))
         except Exception as e:
             logger.warning(f"Cache set failed for {key}: {e}")
     

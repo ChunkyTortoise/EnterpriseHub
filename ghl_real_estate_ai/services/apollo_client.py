@@ -22,6 +22,7 @@ from pydantic import BaseModel, validator
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.optimized_cache_service import cached
 
 logger = get_logger(__name__)
 
@@ -230,7 +231,7 @@ class ApolloClient:
     # Person Enrichment
     # ============================================================================
     
-    @CacheService.cached(ttl=3600, key_prefix="apollo_person_enrichment")
+    @cached(ttl=3600, key_prefix="apollo_person_enrichment")
     async def enrich_person(self, email: str = None, first_name: str = None, 
                            last_name: str = None, organization_domain: str = None) -> PersonEnrichmentResult:
         """
@@ -283,7 +284,7 @@ class ApolloClient:
             # Return empty result instead of raising exception
             return PersonEnrichmentResult()
     
-    @CacheService.cached(ttl=3600, key_prefix="apollo_email_verification")
+    @cached(ttl=3600, key_prefix="apollo_email_verification")
     async def verify_email(self, email: str) -> Dict[str, Any]:
         """
         Verify email address using Apollo.
@@ -322,7 +323,7 @@ class ApolloClient:
     # Organization Enrichment
     # ============================================================================
     
-    @CacheService.cached(ttl=7200, key_prefix="apollo_organization_enrichment")
+    @cached(ttl=7200, key_prefix="apollo_organization_enrichment")
     async def enrich_organization(self, domain: str = None, 
                                 organization_name: str = None) -> OrganizationEnrichmentResult:
         """

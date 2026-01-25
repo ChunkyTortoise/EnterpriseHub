@@ -6,13 +6,43 @@
 
 set -e  # Exit on any error
 
-VENV_PATH="/Users/cave/enterprisehub/ghl_real_estate_ai/streamlit_demo/.venv"
+# Detect script directory and set relative VENV path
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+VENV_PATH="$SCRIPT_DIR/ghl_real_estate_ai/streamlit_demo/.venv"
+
+# If venv doesn't exist at that path, try project root
+if [ ! -d "$VENV_PATH" ]; then
+    VENV_PATH="$SCRIPT_DIR/.venv"
+fi
+
+# Final fallback to standard .venv in current dir
+if [ ! -d "$VENV_PATH" ]; then
+    VENV_PATH="./.venv"
+fi
+
 PIP_CMD="$VENV_PATH/bin/python -m pip"
 
 echo "🚀 Installing ML dependencies for Enhanced Lead Intelligence System"
-echo "Python version: $($VENV_PATH/bin/python --version)"
+echo "Python version: $($VENV_PATH/bin/python --version 2>/dev/null || echo 'Python not found in venv')"
 echo "Virtual environment: $VENV_PATH"
 echo ""
+
+# macOS specific checks for XGBoost
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "🍎 macOS detected - Checking for libomp (required for XGBoost)"
+    if ! brew list libomp &>/dev/null; then
+        echo "⚠️  libomp not found. XGBoost requires it on macOS."
+        echo "Attempting to install via Homebrew..."
+        if command -v brew &>/dev/null; then
+            brew install libomp
+        else
+            echo "❌ Homebrew not found. Please install Homebrew and run: brew install libomp"
+        fi
+    else
+        echo "✅ libomp is already installed"
+    fi
+    echo ""
+fi
 
 # Function to install and verify package
 install_and_verify() {

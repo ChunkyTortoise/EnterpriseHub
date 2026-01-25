@@ -1,0 +1,33 @@
+# Gemini Conductor Configuration
+# This file configures the Conductor extension for Gemini CLI to enable context-driven development.
+
+[project]
+name = "EnterpriseHub"
+version = "5.0.1"
+description = "Enterprise-Grade Real Estate Intelligence with Mobile-First Architecture"
+
+[conductor]
+# Paths to context-defining markdown files
+context_file = ".gemini/conductor/product.md"
+goals_file = ".gemini/conductor/GOALS.md"
+architecture_file = ".gemini/conductor/techstack.md"
+journal_file = ".gemini/conductor/JOURNAL.md"
+decisions_file = ".gemini/conductor/DECISIONS.md"
+workflow_file = ".gemini/conductor/workflow.md"
+
+[orchestration]
+# Alignment with existing Swarm Orchestrator
+mode = "swarm"
+orchestrator_persona = "docs/swarm/orchestrator.md"
+swarm_manifest = "docs/swarm/strike_team_beta.md"
+
+[mcp]
+# Link to existing MCP configurations
+config = "gemini.toml"
+
+[workflow]
+# Preferences for AI-assisted development
+preferred_models = ["gemini-2.0-flash", "gemini-2.5-flash"]
+code_style = "pep8"
+test_framework = "pytest"
+linting = "ruff"

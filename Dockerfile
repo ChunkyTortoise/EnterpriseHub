@@ -10,8 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY ghl_real_estate_ai/requirements_clean.txt .
-RUN pip install --no-cache-dir -r requirements_clean.txt
+COPY requirements.txt .
+COPY ghl_real_estate_ai/requirements_clean.txt requirements_clean.txt
+RUN pip install --no-cache-dir -r requirements.txt || pip install --no-cache-dir -r requirements_clean.txt
 
 # Runtime stage
 FROM python:3.11-slim

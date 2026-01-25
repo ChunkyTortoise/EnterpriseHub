@@ -112,7 +112,7 @@ class BuyerIntentDecoder:
             )
 
         except Exception as e:
-            logger.error(f"Error analyzing buyer intent for {buyer_id}: {str(e)}")
+            logger.error(f"Error analyzing buyer intent for {buyer_id}: {str(e)}", exc_info=True)
             return self._create_default_profile(buyer_id)
 
     def _score_financial_readiness(self, text: str) -> float:
@@ -259,13 +259,13 @@ class BuyerIntentDecoder:
 
     def _classify_buyer_temperature(self, overall_score: float) -> str:
         """Classify buyer temperature based on overall score."""
-        if overall_score >= 80:
+        if overall_score >= 75:
             return "hot"
-        elif overall_score >= 65:
+        elif overall_score >= 50:
             return "warm"
-        elif overall_score >= 45:
+        elif overall_score >= 35:
             return "lukewarm"
-        elif overall_score >= 25:
+        elif overall_score >= 20:
             return "cold"
         else:
             return "ice_cold"
