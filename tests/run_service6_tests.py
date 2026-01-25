@@ -204,7 +204,7 @@ class Service6TestRunner:
     
     def get_pytest_command(self, mode: str, patterns: List[str], **kwargs) -> List[str]:
         """Build pytest command for the given mode and patterns"""
-        cmd = ["python", "-m", "pytest"]
+        cmd = [sys.executable, "-m", "pytest"]
         
         # Add test patterns
         for pattern in patterns:
@@ -277,13 +277,22 @@ class Service6TestRunner:
         
         self.print_info(f"Starting {mode} tests...")
         
+        # Prepare options for pytest command
+        parallel_enabled = kwargs.get("parallel", config.get("parallel", False))
+        coverage_enabled = kwargs.get("coverage", config.get("coverage", False))
+        
+        # Remove these from kwargs to avoid double passing
+        cmd_kwargs = kwargs.copy()
+        if "parallel" in cmd_kwargs: del cmd_kwargs["parallel"]
+        if "coverage" in cmd_kwargs: del cmd_kwargs["coverage"]
+
         # Build pytest command
         cmd = self.get_pytest_command(
             mode, 
             patterns,
-            parallel=config.get("parallel", False),
-            coverage=config.get("coverage", False) or kwargs.get("coverage", False),
-            **kwargs
+            parallel=parallel_enabled,
+            coverage=coverage_enabled,
+            **cmd_kwargs
         )
         
         print(f"{Fore.CYAN}Command: {' '.join(cmd)}{Style.RESET_ALL}")

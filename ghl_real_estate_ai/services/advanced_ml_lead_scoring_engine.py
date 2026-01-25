@@ -924,6 +924,23 @@ class AdvancedMLLeadScoringEngine:
             
             # Cache result for 30 minutes
             await self.cache.set(f"ml_score:{lead_id}", asdict(result), ttl=1800)
+
+            # --- EMIT LEAD_SCORED EVENT ---
+            try:
+                from ghl_real_estate_ai.services.event_streaming_service import get_event_streaming_service, EventType
+                streaming_service = await get_event_streaming_service()
+                await streaming_service.publish_event(
+                    event_type=EventType.LEAD_SCORED,
+                    data={
+                        "lead_id": lead_id,
+                        "score": result.final_ml_score,
+                        "classification": insights['timeline'], # Or a more direct classification
+                        "conversion_probability": result.conversion_probability,
+                        "location_id": lead_data.get('location_id', 'default')
+                    }
+                )
+            except Exception as ev_err:
+                logger.error(f"Failed to publish LEAD_SCORED event: {ev_err}")
             
             return result
             
