@@ -23,6 +23,7 @@ from ghl_real_estate_ai.api.schemas.ghl import (
     GHLWebhookEvent,
     GHLWebhookResponse,
     MessageType,
+    MessageDirection,
 )
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.ghl_utils.config import settings
@@ -79,6 +80,15 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     location_id = event.location_id
     user_message = event.message.body
     tags = event.contact.tags or []
+
+    # LOOPBACK PROTECTION: Ignore outbound messages (sent by bot or agent)
+    if event.message.direction == MessageDirection.OUTBOUND:
+        logger.info(f"Ignoring outbound message for contact {contact_id}")
+        return GHLWebhookResponse(
+            success=True,
+            message="Ignoring outbound message",
+            actions=[],
+        )
 
     # SECURITY FIX: Remove PII from logs (contact_id, message content)
     logger.info(
