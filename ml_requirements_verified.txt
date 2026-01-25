@@ -8,15 +8,15 @@
 # ==============================================================================
 redis==7.1.0                    # In-memory data store for caching and real-time data
 xgboost==3.1.2                  # Gradient boosting for lead scoring and conversion prediction
-shap==0.50.0                    # Model explainability and feature importance
+shap==0.49.1                    # Model explainability and feature importance
 
 # ==============================================================================
 # Data Science Stack
 # ==============================================================================
 numpy==2.4.0                    # Numerical computing foundation
 pandas==2.3.3                   # Data manipulation and analysis
-scipy==1.16.3                   # Scientific computing algorithms
-scikit-learn==1.8.0             # Machine learning library
+scipy==1.13.1                   # Scientific computing algorithms
+scikit-learn==1.6.1             # Machine learning library
 joblib==1.5.3                   # Parallel computing and model serialization
 
 # ==============================================================================
@@ -29,12 +29,12 @@ statsmodels==0.14.6             # Statistical modeling and time series analysis
 # ==============================================================================
 # High-Performance Computing
 # ==============================================================================
-numba==0.63.0b1                 # JIT compilation for numerical functions
+numba==0.60.0                 # JIT compilation for numerical functions
 
 # ==============================================================================
 # Data Visualization for ML
 # ==============================================================================
-matplotlib==3.10.8              # Base plotting library
+matplotlib==3.9.4              # Base plotting library
 seaborn==0.13.2                 # Statistical data visualization
 
 # ==============================================================================
