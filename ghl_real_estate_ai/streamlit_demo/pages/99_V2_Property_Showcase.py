@@ -172,12 +172,20 @@ if run_button:
                 recovery = s6.get("recovery_analysis", [])
                 if recovery:
                     for item in recovery:
-                        with st.expander(f"Lead ID: {item['lead_id']} - Priority: {item['priority']}"):
-                            st.write(f"**Unified Score:** {item['unified_score']}/100")
-                            st.write(f"**Sentiment:** {item['sentiment']}")
-                            st.write("**Recommended Actions:**")
-                            for action in item['recommended_actions']:
-                                st.write(f"- {action}")
+                        with st.expander(f"Lead ID: {item['lead_id']} - Priority: {item['priority'].upper()}"):
+                            col_rec1, col_rec2 = st.columns([2, 1])
+                            with col_rec1:
+                                st.write(f"**Unified Score:** {item['unified_score']}/100")
+                                st.write(f"**Sentiment:** {item['sentiment']}")
+                                st.write("**Recommended Actions:**")
+                                for action in item['recommended_actions']:
+                                    st.write(f"- {action}")
+                            with col_rec2:
+                                if item.get("ghl_hardened"):
+                                    st.success("⚡ GHL HARDENED")
+                                    st.caption("Automated tags & workflows triggered.")
+                                else:
+                                    st.info("Status: Monitored")
                 else:
                     st.info("No lead recovery analysis available for this property.")
                 

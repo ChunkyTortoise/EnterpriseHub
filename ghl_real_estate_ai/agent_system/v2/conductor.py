@@ -254,28 +254,45 @@ async def marketing_node(state: ConductorState):
         return {"errors": [f"Marketing Error: {str(e)}"], "status": "failed"}
 
 async def lead_recovery_node(state: ConductorState):
-    """Phase 7: Hardened Lead Recovery Engine (Service 6)."""
+    """Phase 7: Hardened Lead Recovery Engine (Service 6) with GHL Triggers."""
     if not state.get("matched_leads"):
         return {"status": "no_leads_for_recovery"}
         
-    print(f"🚀 Hardening lead recovery using Service 6 AI...")
+    print(f"🚀 Hardening lead recovery using Service 6 AI and GHL Triggers...")
     orchestrator = create_service6_ai_orchestrator()
     await orchestrator.initialize()
     
     recovery_results = []
-    # Analyze the top 3 leads deeply
+    # Analyze and trigger for the top 3 leads
     for lead in state["matched_leads"][:3]:
+        lead_id = lead.get("id") or lead.get("contactId")
+        if not lead_id: continue
+        
         try:
-            analysis = await orchestrator.analyze_lead(lead.get("id", "unknown"), lead)
+            analysis = await orchestrator.analyze_lead(lead_id, lead)
+            
+            # Automated GHL Hardening
+            if analysis.priority_level in ["critical", "high"]:
+                print(f"⚡ High priority lead detected ({lead_id}). Triggering GHL Hardening...")
+                
+                # 1. Add Recovery Tag
+                await ghl_integration_service.client.add_tags(lead_id, ["AI-Recovery-Active", f"Recovery-Priority-{analysis.priority_level.upper()}"])
+                
+                # 2. Trigger Recovery Workflow if Critical
+                if analysis.priority_level == "critical":
+                    # In a real app, these IDs would be in config
+                    await ghl_integration_service.client.trigger_workflow(lead_id, "workflow_recovery_critical_v2")
+            
             recovery_results.append({
-                "lead_id": lead.get("id"),
+                "lead_id": lead_id,
                 "unified_score": analysis.unified_lead_score,
                 "priority": analysis.priority_level,
                 "recommended_actions": analysis.immediate_actions,
-                "sentiment": analysis.predictive_insights.get("sentiment") if analysis.predictive_insights else "Neutral"
+                "sentiment": analysis.predictive_insights.get("sentiment") if analysis.predictive_insights else "Neutral",
+                "ghl_hardened": analysis.priority_level in ["critical", "high"]
             })
         except Exception as e:
-            print(f"⚠️ Service 6 Analysis failed for lead {lead.get('id')}: {e}")
+            print(f"⚠️ Service 6 Analysis failed for lead {lead_id}: {e}")
             
     return {
         "service6_insights": {"recovery_analysis": recovery_results},
