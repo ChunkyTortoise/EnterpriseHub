@@ -172,6 +172,17 @@ class Settings(BaseSettings):
     previous_context_window_hours: int = 24
     rag_top_k_results: int = 3
 
+    # Twilio Configuration
+    twilio_account_sid: str = "your_twilio_account_sid"
+    twilio_auth_token: str = "your_twilio_auth_token"
+    twilio_phone_number: str = "+15125551234"
+    webhook_base_url: str = "http://localhost:8000"
+
+    # SendGrid Configuration
+    sendgrid_api_key: str = "your_sendgrid_api_key"
+    sendgrid_sender_email: str = "agent@example.com"
+    sendgrid_sender_name: str = "GHL AI Assistant"
+
     # Security
     ghl_webhook_secret: Optional[str] = None  # For signature verification
     jwt_secret_key: str = Field(default="development-jwt-secret-key-for-testing-only-not-for-production-use")  # JWT signing secret
