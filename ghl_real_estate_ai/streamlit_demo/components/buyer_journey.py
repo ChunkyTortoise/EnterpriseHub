@@ -14,6 +14,41 @@ try:
 except ImportError:
     CLAUDE_AVAILABLE = False
 
+# Import Jorge Buyer Bot for live buyer qualification
+try:
+    from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+    from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
+    from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+    JORGE_BUYER_BOT_AVAILABLE = True
+except ImportError:
+    JORGE_BUYER_BOT_AVAILABLE = False
+
+# Import analytics for live buyer data
+try:
+    from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+    BUYER_ANALYTICS_AVAILABLE = True
+except ImportError:
+    BUYER_ANALYTICS_AVAILABLE = False
+
+# WebSocket integration for real-time buyer updates
+try:
+    from ghl_real_estate_ai.streamlit_demo.components.websocket_integration import (
+        get_buyer_qualification_updates,
+        get_property_alerts
+    )
+    WEBSOCKET_AVAILABLE = True
+except ImportError:
+    WEBSOCKET_AVAILABLE = False
+
+# Omnipresent Claude integration
+try:
+    from ghl_real_estate_ai.streamlit_demo.components.omnipresent_claude import (
+        setup_omnipresent_claude
+    )
+    OMNIPRESENT_CLAUDE_AVAILABLE = True
+except ImportError:
+    OMNIPRESENT_CLAUDE_AVAILABLE = False
+
 def render_buyer_dashboard():
     """Buyer's personal dashboard with saved properties and activity"""
     st.subheader("📅 Your Property Dashboard")
@@ -366,9 +401,226 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
             st.markdown("• Send personalized neighborhood and school reports")
             st.markdown("• Monitor response times and engagement levels")
 
+async def qualify_buyer_with_jorge_bot(buyer_id: str, buyer_name: str, conversation_history: list) -> dict:
+    """Qualify a buyer using the Jorge Buyer Bot workflow."""
+    if not JORGE_BUYER_BOT_AVAILABLE:
+        return {"error": "Jorge Buyer Bot not available", "fallback": True}
+
+    try:
+        # Initialize the buyer bot
+        buyer_bot = JorgeBuyerBot(tenant_id=f"jorge_buyer_{buyer_id}")
+
+        # Create buyer state
+        buyer_state = {
+            "buyer_id": buyer_id,
+            "buyer_name": buyer_name,
+            "conversation_history": conversation_history,
+            "buyer_profile": {},
+            "financial_readiness": {},
+            "property_preferences": {},
+            "matched_properties": [],
+            "qualification_complete": False,
+            "next_action": "analyze",
+            "buyer_temperature": "unqualified"
+        }
+
+        # Run the buyer bot workflow
+        result = await buyer_bot.workflow.ainvoke(buyer_state)
+
+        # Publish buyer qualification event if event publisher available
+        try:
+            event_publisher = get_event_publisher()
+            await event_publisher.publish_buyer_qualification_complete(
+                buyer_id=buyer_id,
+                frs_score=result.get('financial_readiness_score', 0),
+                ms_score=result.get('motivation_score', 0),
+                pfs_score=result.get('property_fit_score', 0),
+                buyer_temperature=result.get('buyer_temperature', 'unqualified'),
+                matched_properties=result.get('matched_properties', []),
+                next_actions=result.get('recommended_actions', [])
+            )
+        except Exception:
+            pass  # Event publishing is optional
+
+        return {
+            "success": True,
+            "buyer_qualification": result,
+            "frs_score": result.get('financial_readiness_score', 0),
+            "ms_score": result.get('motivation_score', 0),
+            "pfs_score": result.get('property_fit_score', 0),
+            "buyer_temperature": result.get('buyer_temperature', 'unqualified'),
+            "matched_properties": result.get('matched_properties', []),
+            "next_actions": result.get('recommended_actions', []),
+            "bot_response": result.get('response_content', 'Qualification complete'),
+            "qualification_complete": result.get('qualification_complete', False)
+        }
+
+    except Exception as e:
+        return {"error": f"Buyer qualification failed: {str(e)}", "fallback": True}
+
+def render_buyer_qualification_section(selected_lead_name: str):
+    """Render Jorge Buyer Bot qualification section."""
+    st.markdown("### 🤖 Jorge's Buyer Qualification")
+
+    if selected_lead_name == "-- Select a Lead --":
+        st.info("👆 Select a lead above to qualify them with Jorge's buyer bot")
+        return
+
+    # Check if buyer is already qualified
+    qualification_key = f"buyer_qualification_{selected_lead_name}"
+
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        if JORGE_BUYER_BOT_AVAILABLE:
+            st.success("🤖 Jorge Buyer Bot: Online and Ready")
+        else:
+            st.warning("⚠️ Jorge Buyer Bot: Service Unavailable")
+
+    with col2:
+        # Check for real-time buyer qualification updates
+        if WEBSOCKET_AVAILABLE:
+            buyer_updates = get_buyer_qualification_updates()
+            if buyer_updates:
+                recent_update = buyer_updates[0]  # Most recent
+                buyer_id = recent_update.get('buyer_id', '')
+                if selected_lead_name.lower() in buyer_id.lower():
+                    st.success("📡 Live Update!", help=f"New qualification data received")
+                    if st.button("🆕 Apply Update", help="Apply real-time qualification update"):
+                        # Apply the real-time update to session state
+                        st.session_state[qualification_key] = {
+                            'success': True,
+                            'frs_score': recent_update.get('frs_score', 0),
+                            'ms_score': recent_update.get('ms_score', 0),
+                            'pfs_score': recent_update.get('pfs_score', 0),
+                            'buyer_temperature': recent_update.get('buyer_temperature', 'unqualified'),
+                            'matched_properties': recent_update.get('matched_properties', []),
+                            'next_actions': recent_update.get('next_actions', []),
+                            'bot_response': f"Real-time qualification update: {recent_update.get('buyer_temperature', 'unqualified')} buyer",
+                            'qualification_complete': True,
+                            'realtime_update': True
+                        }
+                        st.rerun()
+
+        if st.button("🔄 Refresh Qualification", help="Re-run buyer qualification"):
+            if qualification_key in st.session_state:
+                del st.session_state[qualification_key]
+            st.rerun()
+
+    # Check if qualification exists
+    if qualification_key in st.session_state:
+        # Show existing qualification results
+        qualification = st.session_state[qualification_key]
+
+        if qualification.get('success'):
+            st.success(f"✅ {selected_lead_name} has been qualified by Jorge!")
+
+            # Display scores
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                frs_score = qualification.get('frs_score', 0)
+                st.metric("💰 Financial Readiness", f"{frs_score:.1f}%",
+                         help="Pre-approval status, budget clarity, down payment readiness")
+
+            with col2:
+                ms_score = qualification.get('ms_score', 0)
+                st.metric("🎯 Motivation Score", f"{ms_score:.1f}%",
+                         help="Timeline urgency, decision authority, buying intent")
+
+            with col3:
+                pfs_score = qualification.get('pfs_score', 0)
+                st.metric("🏠 Property Fit", f"{pfs_score:.1f}%",
+                         help="Property preferences, location, price alignment")
+
+            with col4:
+                temperature = qualification.get('buyer_temperature', 'unqualified')
+                temp_colors = {
+                    "hot": "🔴",
+                    "warm": "🟠",
+                    "lukewarm": "🟡",
+                    "cold": "🔵",
+                    "ice_cold": "⚫"
+                }
+                temp_color = temp_colors.get(temperature, "⚪")
+                st.metric("🌡️ Buyer Temperature", f"{temp_color} {temperature.title()}")
+
+            # Show matched properties
+            matched_properties = qualification.get('matched_properties', [])
+            if matched_properties:
+                st.markdown("#### 🏠 Matched Properties")
+                for i, prop in enumerate(matched_properties[:3]):  # Show top 3 matches
+                    with st.expander(f"Property Match {i+1}: {prop.get('address', 'Property')} - {prop.get('match_score', 0):.1f}% match"):
+                        st.write(f"**Price:** {prop.get('price', 'N/A')}")
+                        st.write(f"**Bedrooms:** {prop.get('beds', 'N/A')}")
+                        st.write(f"**Bathrooms:** {prop.get('baths', 'N/A')}")
+                        st.write(f"**Match Reason:** {prop.get('match_reason', 'Good fit for buyer criteria')}")
+
+            # Show next recommended actions
+            next_actions = qualification.get('next_actions', [])
+            if next_actions:
+                st.markdown("#### 🎯 Jorge's Recommendations")
+                for action in next_actions[:3]:  # Show top 3 actions
+                    st.markdown(f"• {action}")
+
+            # Show Jorge's response
+            bot_response = qualification.get('bot_response', '')
+            if bot_response:
+                st.markdown("#### 🗣️ Jorge's Analysis")
+                st.info(bot_response)
+
+        elif qualification.get('fallback'):
+            st.warning("⚠️ Using fallback mode - Jorge Bot service unavailable")
+            st.info("Sample qualification: This buyer shows moderate interest. Recommend property tour and financing pre-approval.")
+
+        else:
+            st.error(f"❌ Qualification failed: {qualification.get('error', 'Unknown error')}")
+
+    else:
+        # Show qualification button
+        st.markdown("#### Ready to Qualify")
+        st.write(f"Run Jorge's consultative buyer qualification on **{selected_lead_name}** to get:")
+        st.markdown("""
+        • **Financial Readiness Assessment** - Pre-approval, budget, down payment
+        • **Motivation Scoring** - Timeline, decision authority, urgency
+        • **Property Fit Analysis** - Preferences, location, price alignment
+        • **Automated Property Matching** - AI-powered property recommendations
+        • **Strategic Next Steps** - Jorge's proven buyer conversion tactics
+        """)
+
+        if st.button("🤖 Qualify with Jorge Buyer Bot", type="primary", use_container_width=True):
+            if JORGE_BUYER_BOT_AVAILABLE:
+                with st.spinner(f"Jorge is qualifying {selected_lead_name}..."):
+                    # Create sample conversation history for buyer qualification
+                    sample_history = [
+                        {"role": "user", "content": f"Hi, I'm looking to buy a home in Austin", "sender_name": selected_lead_name},
+                        {"role": "assistant", "content": "Great! I'd love to help you find the perfect home. What's your timeline for buying?"},
+                        {"role": "user", "content": "We're hoping to buy within the next 3 months"},
+                        {"role": "assistant", "content": "Perfect timing! Have you been pre-approved for a mortgage yet?"},
+                        {"role": "user", "content": "We're working on that. Our budget is around $450k"}
+                    ]
+
+                    # Run qualification
+                    buyer_id = f"buyer_{selected_lead_name.replace(' ', '_').lower()}"
+                    qualification_result = run_async(qualify_buyer_with_jorge_bot(
+                        buyer_id=buyer_id,
+                        buyer_name=selected_lead_name,
+                        conversation_history=sample_history
+                    ))
+
+                    # Store result and rerun
+                    st.session_state[qualification_key] = qualification_result
+                    st.rerun()
+            else:
+                st.error("Jorge Buyer Bot service is unavailable")
+
 def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_property_search, render_buyer_profile_builder, render_financing_calculator, render_neighborhood_explorer):
     """Render the complete buyer journey experience - Obsidian Command Edition"""
     from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart, render_dossier_block
+
+    # Setup Omnipresent Claude for buyer coaching
+    if OMNIPRESENT_CLAUDE_AVAILABLE:
+        setup_omnipresent_claude()
     
     st.markdown("""
         <div style="background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(20px); padding: 1.5rem 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);">
@@ -447,6 +699,10 @@ def render_buyer_journey_hub(services, selected_lead_name, render_enhanced_prope
     
     if st.button("🚀 Execute Strategic Engagement", use_container_width=True, type="primary"):
         st.toast("Syncing alerts to GHL workflows...", icon="🔔")
+
+    # Add Jorge Buyer Bot qualification section
+    st.markdown("<br>", unsafe_allow_html=True)
+    render_buyer_qualification_section(selected_lead_name)
 
     # Buyer navigation tabs
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
