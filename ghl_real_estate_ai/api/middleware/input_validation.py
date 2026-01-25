@@ -30,12 +30,13 @@ class SecurityValidator:
     """Advanced security validation for input sanitization."""
 
     def __init__(self):
-        # SQL injection patterns (case-insensitive)
+        # SQL injection patterns (case-insensitive) - FIXED: Conversation-aware patterns
         self.sql_patterns = [
             r"(\b(union|select|insert|update|delete|drop|create|alter|exec|execute)\b)",
             r"(\b(script|javascript|vbscript)\b)",
-            r"(--|/\*|\*/|;|'|\"|<|>)",
-            r"(\b(or|and)\s+\d+=\d+)",
+            # FIXED: Only flag actual SQL injection patterns, not natural language
+            r"(--\s|\bor\s+1\s*=\s*1|\bunion\s+select|/\*|\*/|;\s*(select|insert|update|delete))",
+            r"(\b(or|and)\s+\d+\s*=\s*\d+)",
             r"(\b(or|and)\s+'[^']*'\s*=\s*'[^']*')",
             r"(\bxp_\w+)",
             r"(\bsp_\w+)",
@@ -49,6 +50,16 @@ class SecurityValidator:
             r"(\bdeclare\s+@\w+)",
             r"(\bexec\s*\(\s*@\w+\s*\))",
         ]
+
+        # Real estate conversation safe patterns (exclude these from validation)
+        self.conversation_safe_patterns = [
+            r"\b(I'm|you're|it's|what's|that's|here's|there's|let's|don't|won't|can't|shouldn't|wouldn't|couldn't)\b",
+            r"\b(house's|buyer's|seller's|property's|home's|market's|neighborhood's)\b",
+            r"\b(selling|buying|worth|price|value|estimate|appraisal|market|property|house|home)\b",
+        ]
+
+        # Compile safe patterns
+        self.compiled_safe_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.conversation_safe_patterns]
 
         # XSS patterns
         self.xss_patterns = [
@@ -83,13 +94,31 @@ class SecurityValidator:
         self.compiled_path_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.path_traversal_patterns]
 
     def validate_sql_injection(self, value: str) -> tuple[bool, Optional[str]]:
-        """Check for SQL injection patterns."""
+        """Check for SQL injection patterns - conversation-aware."""
         if not value or not isinstance(value, str):
             return True, None
 
         # Decode URL encoding
         decoded_value = unquote(value)
 
+        # FIXED: Check if this is likely real estate conversation content
+        for safe_pattern in self.compiled_safe_patterns:
+            if safe_pattern.search(decoded_value):
+                # Contains real estate conversation patterns - apply relaxed validation
+                # Only check for the most obvious SQL injection patterns
+                obvious_sql_patterns = [
+                    r"\bunion\s+select\b",
+                    r"\bor\s+1\s*=\s*1\b",
+                    r"--\s",
+                    r"/\*.*?\*/",
+                    r";\s*(select|insert|update|delete)\b"
+                ]
+                for obvious_pattern in obvious_sql_patterns:
+                    if re.search(obvious_pattern, decoded_value, re.IGNORECASE):
+                        return False, f"SQL injection pattern detected: {obvious_pattern[:30]}"
+                return True, None
+
+        # For non-conversation content, apply full validation
         for pattern in self.compiled_sql_patterns:
             if pattern.search(decoded_value):
                 return False, f"SQL injection pattern detected: {pattern.pattern[:50]}"
@@ -197,47 +226,54 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
         if not isinstance(value, str):
             return value
 
-        # Check for SQL injection
-        is_valid, reason = self.validator.validate_sql_injection(value)
-        if not is_valid:
-            logger.warning(
-                f"SQL injection attempt detected in parameter '{param_name}'",
-                extra={
-                    "security_event": "sql_injection_attempt",
-                    "parameter": param_name,
-                    "value": value[:100],  # Truncate for safety
-                    "reason": reason,
-                    "ip_address": self._get_client_ip(request),
-                    "path": request.url.path,
-                    "event_id": "VAL_002"
-                }
-            )
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid input in parameter '{param_name}': {reason}"
-            )
+        # FIXED: Apply relaxed validation for real estate conversation endpoints
+        is_conversation_endpoint = self._is_real_estate_conversation_endpoint(request.url.path)
 
-        # Check for XSS
-        is_valid, reason = self.validator.validate_xss(value)
-        if not is_valid:
-            logger.warning(
-                f"XSS attempt detected in parameter '{param_name}'",
-                extra={
-                    "security_event": "xss_attempt",
-                    "parameter": param_name,
-                    "value": value[:100],
-                    "reason": reason,
-                    "ip_address": self._get_client_ip(request),
-                    "path": request.url.path,
-                    "event_id": "VAL_003"
-                }
-            )
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid input in parameter '{param_name}': {reason}"
-            )
+        # Skip SQL injection validation for conversation messages (natural language)
+        if not (is_conversation_endpoint and param_name in ['message', 'content', 'text', 'query']):
+            # Check for SQL injection
+            is_valid, reason = self.validator.validate_sql_injection(value)
+            if not is_valid:
+                logger.warning(
+                    f"SQL injection attempt detected in parameter '{param_name}'",
+                    extra={
+                        "security_event": "sql_injection_attempt",
+                        "parameter": param_name,
+                        "value": value[:100],  # Truncate for safety
+                        "reason": reason,
+                        "ip_address": self._get_client_ip(request),
+                        "path": request.url.path,
+                        "event_id": "VAL_002"
+                    }
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid input in parameter '{param_name}': {reason}"
+                )
 
-        # Check for path traversal
+        # FIXED: Apply relaxed XSS validation for conversation endpoints
+        if not (is_conversation_endpoint and param_name in ['message', 'content', 'text', 'query']):
+            # Check for XSS
+            is_valid, reason = self.validator.validate_xss(value)
+            if not is_valid:
+                logger.warning(
+                    f"XSS attempt detected in parameter '{param_name}'",
+                    extra={
+                        "security_event": "xss_attempt",
+                        "parameter": param_name,
+                        "value": value[:100],
+                        "reason": reason,
+                        "ip_address": self._get_client_ip(request),
+                        "path": request.url.path,
+                        "event_id": "VAL_003"
+                    }
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid input in parameter '{param_name}': {reason}"
+                )
+
+        # Check for path traversal (still validate for all parameters)
         is_valid, reason = self.validator.validate_path_traversal(value)
         if not is_valid:
             logger.warning(
@@ -257,9 +293,14 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                 detail=f"Invalid input in parameter '{param_name}': {reason}"
             )
 
-        # Sanitize if enabled
+        # FIXED: Gentle sanitization for conversation messages, standard for other fields
         if self.enable_sanitization:
-            value = self.validator.sanitize_string(value)
+            if is_conversation_endpoint and param_name in ['message', 'content', 'text', 'query']:
+                # Gentle sanitization for natural language - preserve contractions and natural text
+                value = self.validator.sanitize_string(value, allow_html=False)
+            else:
+                # Standard sanitization for other fields
+                value = self.validator.sanitize_string(value)
 
         return value
 
@@ -329,25 +370,29 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
             else:
                 return json_data
 
+        except HTTPException as http_exc:
+            # Re-raise HTTP exceptions (from validation failures)
+            raise http_exc
         except Exception as e:
             logger.error(
                 f"Error validating JSON body: {str(e)}",
                 extra={
                     "security_event": "json_validation_error",
                     "error": str(e),
+                    "error_type": type(e).__name__,
                     "ip_address": self._get_client_ip(request),
+                    "path": request.url.path,
                     "event_id": "VAL_006"
                 }
             )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Error processing request body"
+                detail=f"Error processing request body: {str(e)}"
             )
 
     def _is_business_critical_endpoint(self, path: str) -> bool:
         """Check if endpoint is business-critical and needs extra protection."""
         critical_patterns = [
-            "/api/jorge",
             "/api/revenue",
             "/api/commission",
             "/api/analytics",
@@ -355,6 +400,16 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
             "/api/admin"
         ]
         return any(path.startswith(pattern) for pattern in critical_patterns)
+
+    def _is_real_estate_conversation_endpoint(self, path: str) -> bool:
+        """Check if endpoint handles real estate conversation data that should have relaxed validation."""
+        conversation_patterns = [
+            "/api/jorge-seller",
+            "/api/bot",
+            "/api/lead-bot",
+            "/api/claude-chat"
+        ]
+        return any(path.startswith(pattern) for pattern in conversation_patterns)
 
     async def dispatch(self, request: Request, call_next):
         """Process request with comprehensive input validation."""

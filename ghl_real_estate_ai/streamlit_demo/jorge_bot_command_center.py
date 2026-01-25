@@ -13,17 +13,59 @@ Created: 2026-01-21
 """
 
 import streamlit as st
-from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+
+# Safe import for async utilities
+try:
+    from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+    ASYNC_UTILS_AVAILABLE = True
+except ImportError:
+    try:
+        from async_utils import run_async
+        ASYNC_UTILS_AVAILABLE = True
+    except ImportError:
+        ASYNC_UTILS_AVAILABLE = False
+        # Fallback function for async operations
+        def run_async(coro):
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # If loop is running, skip async operation
+                    return None
+                else:
+                    return loop.run_until_complete(coro)
+            except RuntimeError:
+                # Create new loop if none exists
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                result = loop.run_until_complete(coro)
+                loop.close()
+                return result
 import sys
 import os
 import time
 from datetime import datetime
 from pathlib import Path
 
-# Add project root to sys.path
-project_root = Path(__file__).resolve().parent.parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+# Add project root to sys.path with multiple fallback paths
+current_file = Path(__file__).resolve()
+
+# Try different path configurations
+paths_to_try = [
+    current_file.parent.parent.parent,  # Normal: EnterpriseHub/
+    current_file.parent.parent,         # If running from streamlit_demo/
+    current_file.parent,                # If running from current directory
+]
+
+# Add all paths and ensure ghl_real_estate_ai is accessible
+for path in paths_to_try:
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+# Also specifically add the ghl_real_estate_ai directory
+ghl_path = current_file.parent.parent
+if str(ghl_path) not in sys.path:
+    sys.path.insert(0, str(ghl_path))
 
 # Page configuration
 st.set_page_config(
@@ -40,18 +82,87 @@ try:
 except ImportError:
     ELITE_STYLING = False
 
-# Import dashboard components
-try:
-    from ghl_real_estate_ai.streamlit_demo.components.jorge_lead_bot_dashboard import render_jorge_lead_bot_dashboard
-    from ghl_real_estate_ai.streamlit_demo.components.jorge_seller_bot_dashboard import render_jorge_seller_bot_dashboard
-    from ghl_real_estate_ai.streamlit_demo.components.jorge_buyer_bot_dashboard import render_jorge_buyer_bot_dashboard
-    from ghl_real_estate_ai.streamlit_demo.components.jorge_analytics_dashboard import render_jorge_analytics_dashboard
-    from ghl_real_estate_ai.streamlit_demo.components.lifecycle_dashboard import render_full_lifecycle_dashboard
-    from ghl_real_estate_ai.streamlit_demo.components.claude_concierge_panel import render_claude_concierge_panel, render_concierge_coordination_card
-    COMPONENTS_AVAILABLE = True
-except ImportError as e:
-    st.error(f"Error loading dashboard components: {e}")
-    COMPONENTS_AVAILABLE = False
+# Import dashboard components with multiple fallback paths
+COMPONENTS_AVAILABLE = False
+component_imports = {}
+
+# Try different import paths
+import_attempts = [
+    # Full path from project root
+    {
+        'jorge_lead_bot_dashboard': 'ghl_real_estate_ai.streamlit_demo.components.jorge_lead_bot_dashboard',
+        'jorge_seller_bot_dashboard': 'ghl_real_estate_ai.streamlit_demo.components.jorge_seller_bot_dashboard',
+        'jorge_buyer_bot_dashboard': 'ghl_real_estate_ai.streamlit_demo.components.jorge_buyer_bot_dashboard',
+        'jorge_analytics_dashboard': 'ghl_real_estate_ai.streamlit_demo.components.jorge_analytics_dashboard',
+        'lifecycle_dashboard': 'ghl_real_estate_ai.streamlit_demo.components.lifecycle_dashboard',
+        'claude_concierge_panel': 'ghl_real_estate_ai.streamlit_demo.components.claude_concierge_panel'
+    },
+    # Relative path
+    {
+        'jorge_lead_bot_dashboard': 'components.jorge_lead_bot_dashboard',
+        'jorge_seller_bot_dashboard': 'components.jorge_seller_bot_dashboard',
+        'jorge_buyer_bot_dashboard': 'components.jorge_buyer_bot_dashboard',
+        'jorge_analytics_dashboard': 'components.jorge_analytics_dashboard',
+        'lifecycle_dashboard': 'components.lifecycle_dashboard',
+        'claude_concierge_panel': 'components.claude_concierge_panel'
+    }
+]
+
+# Try each import configuration
+for attempt in import_attempts:
+    try:
+        import importlib
+        component_imports['render_jorge_lead_bot_dashboard'] = getattr(
+            importlib.import_module(attempt['jorge_lead_bot_dashboard']),
+            'render_jorge_lead_bot_dashboard',
+            lambda: st.info("Lead Bot Dashboard temporarily unavailable")
+        )
+        component_imports['render_jorge_seller_bot_dashboard'] = getattr(
+            importlib.import_module(attempt['jorge_seller_bot_dashboard']),
+            'render_jorge_seller_bot_dashboard',
+            lambda: st.info("Seller Bot Dashboard temporarily unavailable")
+        )
+        component_imports['render_jorge_buyer_bot_dashboard'] = getattr(
+            importlib.import_module(attempt['jorge_buyer_bot_dashboard']),
+            'render_jorge_buyer_bot_dashboard',
+            lambda: st.info("Buyer Bot Dashboard temporarily unavailable")
+        )
+        component_imports['render_jorge_analytics_dashboard'] = getattr(
+            importlib.import_module(attempt['jorge_analytics_dashboard']),
+            'render_jorge_analytics_dashboard',
+            lambda: st.info("Analytics Dashboard temporarily unavailable")
+        )
+        component_imports['render_full_lifecycle_dashboard'] = getattr(
+            importlib.import_module(attempt['lifecycle_dashboard']),
+            'render_full_lifecycle_dashboard',
+            lambda: st.info("Lifecycle Dashboard temporarily unavailable")
+        )
+        claude_module = importlib.import_module(attempt['claude_concierge_panel'])
+        component_imports['render_claude_concierge_panel'] = getattr(
+            claude_module, 'render_claude_concierge_panel',
+            lambda: st.info("Claude Concierge temporarily unavailable")
+        )
+        component_imports['render_concierge_coordination_card'] = getattr(
+            claude_module, 'render_concierge_coordination_card',
+            lambda: st.info("Concierge Coordination temporarily unavailable")
+        )
+        COMPONENTS_AVAILABLE = True
+        break
+    except ImportError:
+        continue
+
+# Create fallback functions if imports failed
+if not COMPONENTS_AVAILABLE:
+    st.warning("⚠️ Some dashboard components are temporarily unavailable. Basic interface will be shown.")
+    component_imports = {
+        'render_jorge_lead_bot_dashboard': lambda: st.info("Lead Bot Dashboard temporarily unavailable"),
+        'render_jorge_seller_bot_dashboard': lambda: st.info("Seller Bot Dashboard temporarily unavailable"),
+        'render_jorge_buyer_bot_dashboard': lambda: st.info("Buyer Bot Dashboard temporarily unavailable"),
+        'render_jorge_analytics_dashboard': lambda: st.info("Analytics Dashboard temporarily unavailable"),
+        'render_full_lifecycle_dashboard': lambda: st.info("Lifecycle Dashboard temporarily unavailable"),
+        'render_claude_concierge_panel': lambda: st.info("Claude Concierge temporarily unavailable"),
+        'render_concierge_coordination_card': lambda: st.info("Concierge Coordination temporarily unavailable")
+    }
 
 # Import Phase 9 MOAT Service
 try:
@@ -144,7 +255,7 @@ def render_sidebar():
         st.caption("v4.2.0-ELITE | © 2026 Lyrio.io")
         
         # Omnipresent Concierge
-        render_claude_concierge_panel(hub_selection)
+        component_imports['render_claude_concierge_panel'](hub_selection)
         
         return hub_selection
 
@@ -177,9 +288,9 @@ def main():
         return
 
     if selected_hub == "🎯 Lead Command":
-        render_concierge_coordination_card(selected_hub)
-        render_jorge_lead_bot_dashboard()
-        
+        component_imports['render_concierge_coordination_card'](selected_hub)
+        component_imports['render_jorge_lead_bot_dashboard']()
+
         # Phase 4: Inter-Agent Relay Trigger (Lead Score > 90)
         # Check if a lead has been analyzed and has a high score
         latest_analysis = st.session_state.get('latest_analysis', {})
@@ -195,17 +306,17 @@ def main():
             st.toast(f"SOVEREIGN RELAY: {lead_name} Dossier Transferred to Seller Hub", icon="🚀")
 
     elif selected_hub == "⚔️ Seller Command":
-        render_concierge_coordination_card(selected_hub)
-        render_jorge_seller_bot_dashboard()
+        component_imports['render_concierge_coordination_card'](selected_hub)
+        component_imports['render_jorge_seller_bot_dashboard']()
     elif selected_hub == "🏠 Buyer Command":
-        render_concierge_coordination_card(selected_hub)
-        render_jorge_buyer_bot_dashboard()
+        component_imports['render_concierge_coordination_card'](selected_hub)
+        component_imports['render_jorge_buyer_bot_dashboard']()
     elif selected_hub == "📊 Business Analytics":
-        render_concierge_coordination_card(selected_hub)
-        render_jorge_analytics_dashboard()
+        component_imports['render_concierge_coordination_card'](selected_hub)
+        component_imports['render_jorge_analytics_dashboard']()
     elif selected_hub == "🧬 Full Lifecycle":
-        render_concierge_coordination_card(selected_hub)
-        render_full_lifecycle_dashboard()
+        component_imports['render_concierge_coordination_card'](selected_hub)
+        component_imports['render_full_lifecycle_dashboard']()
     else:
         st.header("⚙️ AI System Configuration")
         st.markdown("*Granular control over Jorge's AI bots, tone, and GHL integration MOATs*")
