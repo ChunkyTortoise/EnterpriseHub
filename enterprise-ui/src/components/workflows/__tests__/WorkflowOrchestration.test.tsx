@@ -503,10 +503,9 @@ describe('WorkflowOrchestration', () => {
 
       // All interactive elements should be focusable
       const focusableElements = screen.getAllByRole('button')
-      const tabElements = screen.getAllByRole('tab')
-
-      [...focusableElements, ...tabElements].forEach(element => {
-        expect(element).not.toHaveAttribute('tabindex', '-1')
+              const tabElements = screen.getAllByRole('tab');
+      
+              [...focusableElements, ...tabElements].forEach(element => {        expect(element).not.toHaveAttribute('tabindex', '-1')
       })
     })
   })

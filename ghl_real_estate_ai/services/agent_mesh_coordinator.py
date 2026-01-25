@@ -478,10 +478,15 @@ class AgentMeshCoordinator:
 
     def _start_background_tasks(self):
         """Start background monitoring tasks"""
-        asyncio.create_task(self._health_monitor())
-        asyncio.create_task(self._cost_monitor())
-        asyncio.create_task(self._performance_monitor())
-        asyncio.create_task(self._cleanup_monitor())
+        try:
+            loop = asyncio.get_running_loop()
+            self.health_monitor_task = loop.create_task(self._health_monitor())
+            self.cost_monitor_task = loop.create_task(self._cost_monitor())
+            self.performance_monitor_task = loop.create_task(self._performance_monitor())
+            self.cleanup_monitor_task = loop.create_task(self._cleanup_monitor())
+        except RuntimeError:
+            # No running event loop, tasks will not be started
+            logger.debug("No running event loop found, skipping background tasks")
 
     async def _health_monitor(self):
         """Monitor agent health continuously"""
@@ -536,6 +541,61 @@ class AgentMeshCoordinator:
             except Exception as e:
                 logger.error(f"Performance monitor error: {e}")
                 await asyncio.sleep(300)
+
+    async def _cleanup_monitor(self):
+        """Periodically clean up old tasks and history"""
+        while True:
+            try:
+                # Clean up history older than 24 hours
+                cutoff = datetime.now() - timedelta(hours=24)
+                self.task_history = [t for t in self.task_history if t.created_at > cutoff]
+                
+                await asyncio.sleep(3600)  # Run every hour
+            except Exception as e:
+                logger.error(f"Cleanup monitor error: {e}")
+                await asyncio.sleep(600)
+
+    async def _auto_scale_mesh(self):
+        """Placeholder for mesh auto-scaling logic"""
+        logger.info("Mesh auto-scaling triggered (stub)")
+
+    async def _rebalance_agents(self):
+        """Placeholder for agent load rebalancing logic"""
+        logger.info("Agent rebalancing triggered (stub)")
+
+    async def _reduce_mesh_activity(self):
+        """Placeholder for budget-driven activity reduction"""
+        logger.info("Budget-driven activity reduction triggered (stub)")
+
+    async def _send_emergency_alert(self, reason: str):
+        """Placeholder for emergency alerting system"""
+        logger.critical(f"EMERGENCY ALERT SENT: {reason}")
+
+    async def _handle_no_agents_available(self, task: AgentTask):
+        """Handle scenario where no agents can take the task"""
+        task.error = "No capable agents available"
+        task.completed_at = datetime.now()
+        self.task_history.append(task)
+        logger.warning(f"Task {task.task_id} failed: No agents available")
+
+    async def health_check(self) -> Dict[str, Any]:
+        """Perform comprehensive health check of the agent mesh"""
+        agent_health = {}
+        for agent_id, agent in self.agents.items():
+            is_healthy = await self._health_check_agent(agent)
+            agent_health[agent_id] = {
+                "name": agent.name,
+                "status": agent.status.value if is_healthy else "error",
+                "last_heartbeat": agent.last_heartbeat.isoformat(),
+                "healthy": is_healthy
+            }
+            
+        return {
+            "status": "healthy" if all(a["healthy"] for a in agent_health.values()) else "degraded",
+            "timestamp": datetime.now().isoformat(),
+            "agents": agent_health,
+            "coordinator": "active"
+        }
 
     # Additional helper methods
     async def _validate_agent(self, agent: MeshAgent) -> bool:
@@ -617,11 +677,15 @@ class AgentMeshCoordinator:
 
         total_success = sum(a.metrics.success_rate for a in self.agents.values())
         avg_response = sum(a.metrics.average_response_time for a in self.agents.values())
+        total_tasks = sum(a.metrics.total_tasks for a in self.agents.values())
 
         return {
             "average_success_rate": total_success / len(self.agents),
             "average_response_time": avg_response / len(self.agents),
+            "total_tasks": total_tasks,
             "total_tasks_today": sum(a.metrics.total_tasks for a in self.agents.values()),
+            "completed_tasks": sum(a.metrics.completed_tasks for a in self.agents.values()),
+            "failed_tasks": sum(a.metrics.failed_tasks for a in self.agents.values()),
             "mesh_utilization": sum(a.load_factor for a in self.agents.values()) / len(self.agents),
         }
 

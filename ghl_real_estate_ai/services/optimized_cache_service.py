@@ -105,10 +105,16 @@ class L1MemoryCache:
         self.cache: Dict[str, CacheItem] = {}
         self.access_order: List[str] = []  # LRU tracking
         self.current_memory = 0
-        self.lock = asyncio.Lock()
+        self._lock: Optional[asyncio.Lock] = None
+
+    async def _get_lock(self) -> asyncio.Lock:
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        return self._lock
 
     async def get(self, key: str) -> Optional[Any]:
-        async with self.lock:
+        lock = await self._get_lock()
+        async with lock:
             if key not in self.cache:
                 return None
             
@@ -125,7 +131,8 @@ class L1MemoryCache:
             return item.value
 
     async def set(self, key: str, value: Any, ttl: int = 300) -> bool:
-        async with self.lock:
+        lock = await self._get_lock()
+        async with lock:
             # Calculate item size
             try:
                 size_bytes = len(pickle.dumps(value))
@@ -161,14 +168,16 @@ class L1MemoryCache:
             return True
 
     async def delete(self, key: str) -> bool:
-        async with self.lock:
+        lock = await self._get_lock()
+        async with lock:
             if key in self.cache:
                 await self._remove_item(key)
                 return True
             return False
 
     async def clear(self) -> bool:
-        async with self.lock:
+        lock = await self._get_lock()
+        async with lock:
             self.cache.clear()
             self.access_order.clear()
             self.current_memory = 0
@@ -345,7 +354,12 @@ class OptimizedCacheService:
         
         # Performance tracking
         self.stats = CacheStats()
-        self.lock = asyncio.Lock()
+        self._lock: Optional[asyncio.Lock] = None
+
+    async def _get_lock(self) -> asyncio.Lock:
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        return self._lock
 
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache with fallback through layers"""
@@ -428,10 +442,10 @@ class OptimizedCacheService:
             value = await self.l1_cache.get(key)
             if value is not None:
                 results[key] = value
-                self.stats.l1_hits += 1
+                await self._update_stats('l1_hit')
             else:
                 missing_keys.append(key)
-                self.stats.l1_misses += 1
+                await self._update_stats('l1_miss')
 
         # Check L2 for missing keys
         if missing_keys and self.l2_cache:
@@ -440,11 +454,12 @@ class OptimizedCacheService:
                 results[key] = value
                 # Backfill L1
                 await self.l1_cache.set(key, value, ttl=60)
-                self.stats.l2_hits += 1
+                await self._update_stats('l2_hit')
             
             # Update missing keys
             missing_keys = [key for key in missing_keys if key not in l2_results]
-            self.stats.l2_misses += len(missing_keys)
+            for _ in missing_keys:
+                await self._update_stats('l2_miss')
 
         return results
 
@@ -497,7 +512,8 @@ class OptimizedCacheService:
 
     async def _update_stats(self, stat_type: str, start_time: Optional[float] = None):
         """Update performance statistics"""
-        async with self.lock:
+        lock = await self._get_lock()
+        async with lock:
             if stat_type == 'l1_hit':
                 self.stats.l1_hits += 1
             elif stat_type == 'l1_miss':

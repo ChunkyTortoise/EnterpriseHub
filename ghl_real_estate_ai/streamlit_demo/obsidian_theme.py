@@ -504,6 +504,32 @@ def inject_elite_css():
                 0%, 100% { opacity: 0.8; filter: brightness(1); }
                 50% { opacity: 1; filter: brightness(1.4); }
             }
+
+            /* --- Mobile Responsiveness --- */
+            @media (max-width: 768px) {
+                .stMetric {
+                    padding: 0.5rem !important;
+                }
+                h1 {
+                    font-size: 1.8rem !important;
+                }
+                .elite-card {
+                    padding: 1rem !important;
+                    margin-bottom: 1rem !important;
+                }
+                .tactical-dock {
+                    width: 90%;
+                    padding: 8px 10px;
+                    gap: 10px;
+                    bottom: 15px;
+                }
+                .dock-item span {
+                    display: none;
+                }
+                [data-testid="stSidebar"] {
+                    width: 100% !important;
+                }
+            }
         </style>
     """, unsafe_allow_html=True)
 

@@ -261,6 +261,7 @@ class TemperaturePredictionEngine:
         history = self.temperature_history[lead_id]
 
         # Predict trend
+        diff = 0
         if len(history) < 2:
             trend = "stable"
             confidence = 0.5

@@ -302,7 +302,11 @@ class MarketTimingOpportunityEngine:
         self.economic_history: Dict[str, Any] = {}
         
         # Initialize engine
-        asyncio.create_task(self._initialize_intelligence_engine())
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._initialize_intelligence_engine())
+        except RuntimeError:
+            logger.debug("No running event loop found for intelligence engine initialization")
     
     async def _initialize_intelligence_engine(self):
         """Initialize market intelligence models and data."""

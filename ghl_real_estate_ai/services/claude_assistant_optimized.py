@@ -85,7 +85,12 @@ class ClaudeAssistantOptimized:
         self._initialize_state()
 
         # PERFORMANCE: Warm demo cache on initialization
-        asyncio.create_task(self._warm_demo_cache_background())
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._warm_demo_cache_background())
+        except RuntimeError:
+            # No running event loop found during initialization, skipping background cache warming
+            logger.debug("No running event loop found during initialization, skipping background cache warming")
 
     def _initialize_state(self):
         if 'assistant_greeted' not in st.session_state:
@@ -145,7 +150,12 @@ class ClaudeAssistantOptimized:
             self._market_context_cache_minimal[target_market_id] = minimal_context
 
             # PERFORMANCE: Load full context in background (don't await)
-            asyncio.create_task(self.get_market_context_full(target_market_id))
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self.get_market_context_full(target_market_id))
+            except RuntimeError:
+                # No running event loop, full context will be loaded on demand or when loop starts
+                pass
 
             return minimal_context
 

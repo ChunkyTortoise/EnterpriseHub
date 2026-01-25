@@ -509,31 +509,30 @@ const JorgeCommandCenter: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-3 rounded-lg bg-gray-50">
-                        <p className="text-xs font-medium text-gray-600">Redis Cache</p>
-                        <Badge className={getStatusColor(healthData?.infrastructure.redis_status || 'unknown')} size="sm">
-                          {healthData?.infrastructure.redis_status || 'Unknown'}
-                        </Badge>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-gray-50">
-                        <p className="text-xs font-medium text-gray-600">GHL API</p>
-                        <Badge className={getStatusColor(healthData?.infrastructure.ghl_api_status || 'unknown')} size="sm">
-                          {healthData?.infrastructure.ghl_api_status || 'Unknown'}
-                        </Badge>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-gray-50">
-                        <p className="text-xs font-medium text-gray-600">Claude API</p>
-                        <Badge className={getStatusColor(healthData?.infrastructure.claude_api_status || 'unknown')} size="sm">
-                          {healthData?.infrastructure.claude_api_status || 'Unknown'}
-                        </Badge>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-gray-50">
-                        <p className="text-xs font-medium text-gray-600">Database</p>
-                        <Badge className={getStatusColor(healthData?.infrastructure.database_performance || 'unknown')} size="sm">
-                          {healthData?.infrastructure.database_performance || 'Unknown'}
-                        </Badge>
-                      </div>
-                    </div>
+                                              <div className="text-center p-3 rounded-lg bg-gray-50">
+                                                <p className="text-xs font-medium text-gray-600">Redis Cache</p>
+                                                <Badge className={getStatusColor(healthData?.infrastructure.redis_status || 'unknown')}>
+                                                  {healthData?.infrastructure.redis_status || 'Unknown'}
+                                                </Badge>
+                                              </div>
+                                              <div className="text-center p-3 rounded-lg bg-gray-50">
+                                                <p className="text-xs font-medium text-gray-600">GHL API</p>
+                                                <Badge className={getStatusColor(healthData?.infrastructure.ghl_api_status || 'unknown')}>
+                                                  {healthData?.infrastructure.ghl_api_status || 'Unknown'}
+                                                </Badge>
+                                              </div>
+                                              <div className="text-center p-3 rounded-lg bg-gray-50">
+                                                <p className="text-xs font-medium text-gray-600">Claude API</p>
+                                                <Badge className={getStatusColor(healthData?.infrastructure.claude_api_status || 'unknown')}>
+                                                  {healthData?.infrastructure.claude_api_status || 'Unknown'}
+                                                </Badge>
+                                              </div>
+                                              <div className="text-center p-3 rounded-lg bg-gray-50">
+                                                <p className="text-xs font-medium text-gray-600">Database</p>
+                                                <Badge className={getStatusColor(healthData?.infrastructure.database_performance || 'unknown')}>
+                                                  {healthData?.infrastructure.database_performance || 'Unknown'}
+                                                </Badge>
+                                              </div>                    </div>
                   </CardContent>
                 </Card>
               </div>

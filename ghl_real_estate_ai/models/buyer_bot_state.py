@@ -32,6 +32,7 @@ class BuyerBotState(TypedDict):
     # Decisions
     next_action: str
     response_content: str
+    matched_properties: List[Dict[str, Any]]
 
     # Metrics
     financial_readiness_score: float  # 0-100

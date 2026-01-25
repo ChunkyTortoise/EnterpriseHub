@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jorge AI - Production Readiness Dashboard</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
+        .log-container { background: #212529; color: #00ff00; height: 400px; overflow-y: auto; font-family: monospace; padding: 15px; border-radius: 5px; font-size: 12px; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-online { background-color: #28a745; box-shadow: 0 0 8px #28a745; }
+        .status-offline { background-color: #dc3545; }
+        .card { border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .metric-value { font-size: 24px; font-weight: bold; color: #0d6efd; }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h1>🚀 Diagnostic Command Center</h1>
+            <div>
+                <span id="connection-status-dot" class="status-dot status-offline"></span>
+                <span id="connection-status-text">Disconnected</span>
+            </div>
+        </header>
+
+        <div class="row">
+            <!-- Connection Config -->
+            <div class="col-md-4">
+                <div class="card p-3">
+                    <h5>Configuration</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Server URL</label>
+                        <input type="text" id="server-url" class="form-control" value="http://127.0.0.1:8002">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Auth Token</label>
+                        <input type="text" id="auth-token" class="form-control" value="demo_token">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Location ID (Tenant)</label>
+                        <input type="text" id="location-id" class="form-control" value="loc_enterprise_001">
+                    </div>
+                    <button id="connect-btn" class="btn btn-primary w-100">Initialize Connection</button>
+                </div>
+
+                <div class="card p-3">
+                    <h5>System Health</h5>
+                    <div id="health-metrics">
+                        <div class="d-flex justify-content-between">
+                            <span>Redis</span>
+                            <span id="health-redis" class="badge bg-secondary">Unknown</span>
+                        </div>
+                        <hr>
+                        <button onclick="checkHealth()" class="btn btn-outline-secondary btn-sm w-100">Refresh Health Status</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Monitor -->
+            <div class="col-md-8">
+                <div class="card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5>Live Event Stream</h5>
+                        <button onclick="clearLogs()" class="btn btn-sm btn-link text-decoration-none">Clear Logs</button>
+                    </div>
+                    <div id="event-logs" class="log-container">
+                        [System] Waiting for connection...
+                    </div>
+                </div>
+
+                <div class="card p-3">
+                    <h5>Simulate Actions</h5>
+                    <div class="btn-group">
+                        <button onclick="simulateEvent('join_dashboard')" class="btn btn-outline-primary">Join Dashboard</button>
+                        <button onclick="simulateEvent('request_bot_status', {bot_type: 'lead_bot'})" class="btn btn-outline-primary">Check Bot Status</button>
+                        <button onclick="simulateEvent('subscribe_contact', {contact_id: 'contact_123'})" class="btn btn-outline-primary">Subscribe Contact</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket;
+        const logContainer = document.getElementById('event-logs');
+
+        function addLog(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff4d4d' : (type === 'success' ? '#00ff00' : '#ffffff');
+            logContainer.innerHTML += `<div style="color: ${color}">[${time}] ${msg}</div>`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLogs() { logContainer.innerHTML = ''; }
+
+        document.getElementById('connect-btn').addEventListener('click', () => {
+            const url = document.getElementById('server-url').value;
+            const token = document.getElementById('auth-token').value;
+            const locId = document.getElementById('location-id').value;
+
+            if (socket) socket.disconnect();
+
+            addLog(`Attempting connection to ${url}...`, 'info');
+
+            socket = io(url, {
+                auth: { token: token, location_id: locId },
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                document.getElementById('connection-status-dot').className = 'status-dot status-online';
+                document.getElementById('connection-status-text').innerText = 'Connected';
+                addLog('✅ Socket.IO Connected successfully!', 'success');
+            });
+
+            socket.on('connect_error', (err) => {
+                addLog(`❌ Connection Error: ${err.message}`, 'error');
+            });
+
+            socket.on('disconnect', () => {
+                document.getElementById('connection-status-dot').className = 'status-dot status-offline';
+                document.getElementById('connection-status-text').innerText = 'Disconnected';
+                addLog('⚠️ Disconnected from server', 'error');
+            });
+
+            socket.on('connection_established', (data) => {
+                addLog(`📥 Welcome received: ${data.message}`, 'success');
+                addLog(`👤 User: ${data.user.username} (Role: ${data.user.role})`, 'info');
+            });
+
+            socket.on('lead_update', (data) => {
+                addLog(`🔔 Lead Update: ${JSON.stringify(data)}`, 'success');
+            });
+
+            socket.on('bot_status_response', (data) => {
+                addLog(`🤖 Bot Status: ${data.bot_type} is ${data.status}`, 'info');
+            });
+            
+            socket.onAny((eventName, ...args) => {
+                addLog(`📦 Event [${eventName}]: ${JSON.stringify(args)}`, 'info');
+            });
+        });
+
+        async function checkHealth() {
+            const url = document.getElementById('server-url').value;
+            try {
+                const response = await fetch(`${url}/api/health/`);
+                const data = await response.json();
+                addLog(`🏥 Health Check: ${data.status}`, 'info');
+                const redisStatus = data.details?.redis?.status || 'degraded';
+                const badge = document.getElementById('health-redis');
+                badge.innerText = redisStatus;
+                badge.className = `badge bg-${redisStatus === 'healthy' ? 'success' : 'danger'}`;
+            } catch (err) {
+                addLog(`❌ Health Check Failed: ${err.message}`, 'error');
+            }
+        }
+
+        function simulateEvent(name, data = {}) {
+            if (!socket || !socket.connected) {
+                addLog('❌ Not connected. Click "Initialize Connection" first.', 'error');
+                return;
+            }
+            addLog(`📤 Emitting [${name}]...`);
+            socket.emit(name, data);
+        }
+    </script>
+</body>
+</html>

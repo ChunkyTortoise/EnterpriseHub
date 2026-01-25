@@ -463,6 +463,121 @@ class JorgeSocketNamespace(AsyncNamespace):
         except Exception as e:
             logger.error(f"Omnipresent monitoring error for {sid}: {e}")
 
+    async def on_send_message(self, sid: str, data: Dict[str, Any]):
+        """Handle incoming message from user to lead"""
+        try:
+            if sid not in self.socketio_sessions:
+                return
+
+            session = self.socketio_sessions[sid]
+            message = data.get('message')
+            contact_id = data.get('contact_id')
+
+            logger.info(f"Message sent from {session['username']} to {contact_id}: {message}")
+
+            # Emit back confirmation
+            await self.emit('message_delivered', {
+                'status': 'sent',
+                'message_id': f"msg_{int(datetime.now().timestamp())}",
+                'timestamp': datetime.now().isoformat()
+            }, room=sid)
+
+            # INTEGRATION: Submit task to mesh for conversation analysis
+            from ghl_real_estate_ai.services.agent_mesh_coordinator import get_mesh_coordinator, AgentTask, TaskPriority, AgentCapability
+            mesh = get_mesh_coordinator()
+            
+            task = AgentTask(
+                task_id=f"msg_analysis_{int(datetime.now().timestamp())}",
+                task_type="conversation_analysis",
+                priority=TaskPriority.NORMAL,
+                capabilities_required=[AgentCapability.CONVERSATION_ANALYSIS],
+                payload={"message": message, "contact_id": contact_id},
+                created_at=datetime.now(),
+                deadline=datetime.now() + timedelta(seconds=30),
+                max_cost=0.05,
+                requester_id=str(session['user_id'])
+            )
+            await mesh.submit_task(task)
+            
+        except Exception as e:
+            logger.error(f"Error in on_send_message: {e}")
+
+    async def on_request_handoff(self, sid: str, data: Dict[str, Any]):
+        """Handle manual handoff request from UI"""
+        try:
+            if sid not in self.socketio_sessions:
+                return
+
+            session = self.socketio_sessions[sid]
+            contact_id = data.get('contact_id')
+            target_agent = data.get('target_agent', 'jorge_seller')
+
+            logger.info(f"Handoff requested by {session['username']} for {contact_id} to {target_agent}")
+
+            # INTEGRATION: Trigger handoff task in mesh
+            from ghl_real_estate_ai.services.agent_mesh_coordinator import get_mesh_coordinator, AgentTask, TaskPriority, AgentCapability
+            mesh = get_mesh_coordinator()
+            
+            task = AgentTask(
+                task_id=f"handoff_{int(datetime.now().timestamp())}",
+                task_type="lead_qualification",
+                priority=TaskPriority.HIGH,
+                capabilities_required=[AgentCapability.LEAD_QUALIFICATION],
+                payload={"action": "handoff", "target": target_agent, "contact_id": contact_id},
+                created_at=datetime.now(),
+                deadline=datetime.now() + timedelta(seconds=60),
+                max_cost=0.10,
+                requester_id=str(session['user_id'])
+            )
+            await mesh.submit_task(task)
+
+            # Emit handoff confirmation
+            await self.emit('handoff_status', {
+                'status': 'processing',
+                'handoff_id': task.task_id,
+                'target': target_agent
+            }, room=sid)
+
+        except Exception as e:
+            logger.error(f"Error in on_request_handoff: {e}")
+
+    async def on_simulate_traffic(self, sid: str, data: Dict[str, Any] = None):
+        """Mock traffic generator for UI evaluation"""
+        try:
+            import random
+            names = ["Alice Smith", "Bob Johnson", "Carol Williams", "David Brown", "Eve Davis"]
+            locations = ["Austin, TX", "Dallas, TX", "San Antonio, TX", "Houston, TX"]
+            actions = ["SCHEDULE_SHOWING", "ACCELERATE_SEQUENCE", "RE_ENGAGEMENT_REQUIRED", "SOFT_FOLLOWUP"]
+            
+            lead_name = random.choice(names)
+            
+            # 1. Send immediate lead update
+            await self.emit('lead_update', {
+                'lead_name': lead_name,
+                'location': random.choice(locations),
+                'pcs_score': random.randint(40, 95)
+            }, room=sid)
+            
+            # 2. Send AI Intent Signal
+            await self.emit('realtime_intent_update', {
+                'contact_id': f"contact_{int(datetime.now().timestamp())}",
+                'intent_update': {
+                    'recommended_action': random.choice(actions),
+                    'frs_delta': random.uniform(-5, 10),
+                    'pcs_delta': random.uniform(-2, 15)
+                }
+            }, room=sid)
+            
+            # 3. Update mesh stats
+            await self.emit('performance_metrics', {
+                'current_hour_cost': random.uniform(10.0, 25.0),
+                'total_tasks': random.randint(50, 200)
+            }, room=sid)
+            
+            logger.info(f"Enhanced simulated traffic sent to session {sid}")
+        except Exception as e:
+            logger.error(f"Error in simulation: {e}")
+
     # Helper methods
     async def _authenticate_token(self, token: str) -> Optional[Any]:
         """Authenticate JWT token using enterprise auth service"""

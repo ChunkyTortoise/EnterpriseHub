@@ -1,0 +1,1 @@
+{"timestamp": "2026-01-25T13:28:58.400518", "event_type": "concierge_guidance_generated", "contact_id": "test_session", "location_id": "enterprise_hub", "data": {"page": "Lead Command", "mode": "proactive", "scope": "platform_wide", "urgency_level": "low", "response_time_ms": 1001, "confidence_score": 0.8, "immediate_actions_count": 0, "device_type": "desktop"}}

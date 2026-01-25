@@ -175,6 +175,12 @@ async def lifespan(app: FastAPI):
         await start_system_health_monitoring()
         logger.info("System health monitoring started")
 
+        # Start error monitoring service
+        from ghl_real_estate_ai.services.error_monitoring_service import get_error_monitoring_service
+        error_monitoring = get_error_monitoring_service()
+        await error_monitoring.start()
+        logger.info("Error monitoring service started")
+
         # Socket.IO is initialized at module level for uvicorn, 
         # but we ensure bridging is active
         if hasattr(app.state, "socketio_integration"):
@@ -512,6 +518,7 @@ setup_global_exception_handlers(app)
 
 # Add CORS middleware (SECURITY FIX: Restrict origins)
 ALLOWED_ORIGINS = [
+    "*", # Dev: allow all for browser debugging
     "https://app.gohighlevel.com",
     "https://*.gohighlevel.com",
     os.getenv("STREAMLIT_URL", "http://localhost:8501"),

@@ -236,8 +236,9 @@ class StreamlitPerformanceOptimizer:
             if key in self.session_data_cache:
                 return self.session_data_cache[key]
             
-            # Try distributed cache
-            return asyncio.create_task(self.cache_service.get(key))
+            # Distributed cache access is async, cannot be awaited here in sync context
+            # Returning a Task would break the caller which expects a value
+            return None
         except Exception as e:
             logger.warning(f"Cache get failed for {key}: {e}")
             return None
@@ -249,7 +250,12 @@ class StreamlitPerformanceOptimizer:
             self.session_data_cache[key] = value
             
             # Store in distributed cache for cross-session access
-            asyncio.create_task(self.cache_service.set(key, value, ttl))
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self.cache_service.set(key, value, ttl))
+            except RuntimeError:
+                # No running loop, skip distributed cache update
+                pass
         except Exception as e:
             logger.warning(f"Cache set failed for {key}: {e}")
     

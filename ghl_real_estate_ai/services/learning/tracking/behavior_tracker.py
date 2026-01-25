@@ -63,7 +63,11 @@ class InMemoryBehaviorTracker(IBehaviorTracker):
     def _start_auto_flush(self):
         """Start background task for periodic flushing"""
         if self._flush_task is None:
-            self._flush_task = asyncio.create_task(self._auto_flush_loop())
+            try:
+                loop = asyncio.get_running_loop()
+                self._flush_task = loop.create_task(self._auto_flush_loop())
+            except RuntimeError:
+                logger.debug("No running event loop, skipping auto-flush task start")
 
     async def _auto_flush_loop(self):
         """Background loop for automatic flushing"""
@@ -440,7 +444,12 @@ class TimedBehaviorTracker(InMemoryBehaviorTracker):
         self.cleanup_interval_minutes = config.get("cleanup_interval_minutes", 60)
 
         # Start cleanup task
-        self._cleanup_task = asyncio.create_task(self._cleanup_loop())
+        try:
+            loop = asyncio.get_running_loop()
+            self._cleanup_task = loop.create_task(self._cleanup_loop())
+        except RuntimeError:
+            self._cleanup_task = None
+            logger.debug("No running event loop, skipping cleanup task start")
 
     async def _cleanup_loop(self):
         """Background loop for cleaning up expired events"""

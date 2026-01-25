@@ -44,7 +44,13 @@ class HookManager:
             try:
                 if asyncio.iscoroutinefunction(callback):
                     # For sync trigger of async function, create a task
-                    asyncio.create_task(callback(context))
+                    try:
+                        loop = asyncio.get_running_loop()
+                        loop.create_task(callback(context))
+                    except RuntimeError:
+                        # Fallback: run in a new thread or just log that it couldn't run
+                        # In a sync context where we don't have a loop, we can't easily await
+                        print(f"Warning: No running event loop found to execute async hook {event.value}")
                 else:
                     callback(context)
             except Exception as e:

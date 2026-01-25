@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnterpriseHub | Lead Engagement Portal</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .intent-bar { transition: width 1s ease-in-out; }
+        .pulse-online { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 glass m-4 rounded-3xl flex flex-col items-center py-8 space-y-8 hidden md:flex">
+        <div class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+            EnterpriseHub
+        </div>
+        <nav class="flex-1 w-full px-4 space-y-2">
+            <a href="#" class="flex items-center space-x-3 p-3 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30">
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-800 transition text-slate-400">
+                <span>Leads</span>
+            </a>
+            <a href="#" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-800 transition text-slate-400">
+                <span>Agent Mesh</span>
+            </a>
+        </nav>
+        <div class="px-4 w-full">
+            <div class="glass p-4 rounded-2xl text-xs space-y-2">
+                <div class="flex justify-between"><span>Status</span><span id="mesh-status" class="text-emerald-400">Operational</span></div>
+                <div class="flex justify-between"><span>Mesh Cost</span><span id="mesh-cost" class="text-blue-400">$0.00/hr</span></div>
+                <div class="flex justify-between"><span>Active Tasks</span><span id="mesh-tasks" class="text-slate-400">0</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col m-4 overflow-hidden">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-6 px-4">
+            <div>
+                <h1 class="text-2xl font-semibold">Lead Engagement Hub</h1>
+                <p id="agent-count" class="text-slate-400 text-sm">Monitoring AI Agents...</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2 glass px-4 py-2 rounded-full">
+                    <div id="status-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
+                    <span id="status-text" class="text-sm font-medium">Offline</span>
+                </div>
+                <button id="connect-btn" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-full font-semibold transition shadow-lg shadow-blue-600/20">
+                    Sync Platform
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 flex space-x-6 overflow-hidden">
+            
+            <!-- Lead Feed -->
+            <section class="w-1/3 flex flex-col space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                <h2 class="text-sm font-bold uppercase tracking-widest text-slate-500 px-2">Live Lead Feed</h2>
+                <div id="lead-list" class="space-y-4">
+                    <div class="text-center py-10 opacity-50 text-xs">Waiting for lead data...</div>
+                </div>
+            </section>
+
+            <!-- Active Chat & AI Insights -->
+            <section class="flex-1 glass rounded-[2.5rem] flex flex-col overflow-hidden relative border-t border-white/5">
+                <div class="p-6 border-b border-white/5 flex justify-between items-center bg-slate-800/30">
+                    <div class="flex items-center space-x-3">
+                        <div id="active-avatar" class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white">SJ</div>
+                        <div>
+                            <div id="active-lead-name" class="font-bold">Sarah Jenkins</div>
+                            <div class="text-xs text-emerald-400 flex items-center"><span class="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5 pulse-online"></span> Jorge AI Active</div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="p-2 hover:bg-slate-700 rounded-lg transition">🔍</button>
+                        <button class="p-2 hover:bg-slate-700 rounded-lg transition">⚙️</button>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div id="chat-window" class="flex-1 p-6 overflow-y-auto space-y-4 text-sm scroll-smooth">
+                    <div class="flex justify-center"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Conversation started Today</span></div>
+                </div>
+
+                <!-- Suggested Actions -->
+                <div id="action-suggestions" class="px-6 py-2 flex space-x-2 hidden">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase self-center mr-2">Suggestions:</span>
+                    <!-- Dynamic buttons injected here -->
+                </div>
+
+                <!-- Input -->
+                <div class="p-6 bg-slate-900/50">
+                    <div class="relative">
+                        <input type="text" id="chat-input" placeholder="Sarah is ready for a walkthrough. Type to intervene..." 
+                               class="w-full bg-slate-800 border border-white/10 rounded-2xl py-4 px-6 focus:outline-none focus:border-blue-500 transition pr-32">
+                        <div class="absolute right-3 top-2 flex space-x-2">
+                            <button id="handoff-btn" class="bg-slate-700 text-xs px-3 py-2 rounded-xl hover:bg-slate-600 transition font-bold uppercase tracking-tighter text-slate-300">Handoff</button>
+                            <button id="send-btn" class="bg-blue-600 text-xs px-4 py-2 rounded-xl hover:bg-blue-500 transition font-bold uppercase tracking-tighter text-white">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Debug Console -->
+    <div id="debug-console" class="fixed bottom-4 right-4 w-96 h-48 glass rounded-2xl p-4 overflow-y-auto hidden z-50 text-[10px] font-mono border-red-500/30">
+        <div class="flex justify-between items-center mb-2 border-b border-white/10 pb-1">
+            <span class="text-red-400 font-bold uppercase">System Debug Console</span>
+            <div class="flex space-x-2">
+                <button id="sim-btn" class="text-emerald-400 hover:text-white bg-emerald-500/10 px-2 rounded">Simulate</button>
+                <button onclick="document.getElementById('debug-console').classList.add('hidden')" class="text-slate-500 hover:text-white">✕</button>
+            </div>
+        </div>
+        <div id="debug-logs" class="space-y-1"></div>
+    </div>
+
+    <!-- Debug Toggle -->
+    <button onclick="document.getElementById('debug-console').classList.toggle('hidden')" 
+            class="fixed bottom-4 right-4 w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-slate-800 transition shadow-xl border border-white/5">
+        🛠️
+    </button>
+
+    <script>
+        let socket;
+        let activeContactId = 'contact_sarah_001';
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const connectBtn = document.getElementById('connect-btn');
+        const debugLogs = document.getElementById('debug-logs');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const handoffBtn = document.getElementById('handoff-btn');
+        const chatWindow = document.getElementById('chat-window');
+        const simBtn = document.getElementById('sim-btn');
+
+        function log(msg, type = 'info') {
+            const colors = { info: 'text-slate-300', error: 'text-red-400', success: 'text-emerald-400' };
+            const div = document.createElement('div');
+            div.className = colors[type];
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            debugLogs.prepend(div);
+            console.log(`[Dashboard] ${msg}`);
+        }
+
+        function selectLead(id, name) {
+            activeContactId = id;
+            log(`Switching context to: ${name}`, 'info');
+            
+            document.getElementById('active-lead-name').innerText = name;
+            document.getElementById('active-avatar').innerText = name.split(' ').map(n => n[0]).join('');
+            
+            chatWindow.innerHTML = `<div class="flex justify-center"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Loading history for ${name}...</span></div>`;
+            
+            setTimeout(() => {
+                chatWindow.innerHTML = `<div class="flex justify-center"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Conversation started Today</span></div>`;
+                appendMessage('Jorge AI', `Hello! I'm Jorge. I see you're looking at properties in ${name.includes('Sarah') ? 'Austin' : 'Texas'}. How can I help?`, true);
+            }, 500);
+        }
+
+        async function pollSystemHealth() {
+            try {
+                const res = await fetch('http://127.0.0.1:8002/api/health/');
+                const data = await res.json();
+                const meshStatus = document.getElementById('mesh-status');
+                meshStatus.innerText = data.status === 'healthy' ? 'Operational' : 'Degraded';
+                meshStatus.className = data.status === 'healthy' ? 'text-emerald-400' : 'text-amber-400';
+            } catch (e) {
+                log('Health poll failed', 'error');
+            }
+        }
+
+        function appendMessage(sender, text, isAI = false) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const html = isAI ? `
+                <div class="flex flex-col items-start max-w-[80%] animate-in fade-in slide-in-from-bottom-2">
+                    <div class="bg-slate-800 p-4 rounded-2xl rounded-bl-none border border-white/5">
+                        ${text}
+                    </div>
+                    <span class="text-[10px] text-slate-500 mt-1 ml-1">${sender} • ${time}</span>
+                </div>` : `
+                <div class="flex flex-col items-end ml-auto max-w-[80%] animate-in fade-in slide-in-from-bottom-2">
+                    <div class="bg-blue-600 p-4 rounded-2xl rounded-br-none shadow-lg shadow-blue-600/20 text-white">
+                        ${text}
+                    </div>
+                    <span class="text-[10px] text-slate-500 mt-1 mr-1">You • ${time}</span>
+                </div>`;
+            chatWindow.insertAdjacentHTML('beforeend', html);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        sendBtn.addEventListener('click', () => {
+            const msg = chatInput.value.trim();
+            if (!msg || !socket?.connected) return;
+            socket.emit('send_message', { contact_id: activeContactId, message: msg });
+            appendMessage('Manager', msg, false);
+            chatInput.value = '';
+        });
+
+        handoffBtn.addEventListener('click', () => {
+            if (!socket?.connected) return;
+            socket.emit('request_handoff', { contact_id: activeContactId, target_agent: 'jorge_seller' });
+        });
+
+        simBtn.addEventListener('click', () => {
+            if (!socket?.connected) return;
+            socket.emit('simulate_traffic');
+        });
+
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendBtn.click(); });
+
+        connectBtn.addEventListener('click', () => {
+            if (socket) socket.disconnect();
+            
+            log('Initializing Socket.IO connection...');
+            socket = io('http://127.0.0.1:8002', {
+                auth: { token: 'demo_token', location_id: 'loc_enterprise_001' },
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                log('✅ Connected to backend mesh', 'success');
+                statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 pulse-online';
+                statusText.innerText = 'Synchronized';
+                connectBtn.innerText = 'Connected';
+                connectBtn.classList.replace('bg-blue-600', 'bg-slate-700');
+                
+                socket.emit('join_dashboard', { client_type: 'chrome_eval' });
+                pollSystemHealth();
+                setInterval(pollSystemHealth, 30000);
+            });
+
+            socket.on('performance_metrics', (data) => {
+                log('Mesh telemetry updated');
+                if (data.current_hour_cost) document.getElementById('mesh-cost').innerText = `$${data.current_hour_cost.toFixed(2)}/hr`;
+                if (data.total_tasks) document.getElementById('mesh-tasks').innerText = data.total_tasks;
+            });
+
+            socket.on('lead_update', (data) => {
+                log(`Lead Update: ${data.lead_name || data.contact_id}`, 'success');
+                updateLeadList(data);
+            });
+
+            socket.on('realtime_intent_update', (data) => {
+                log(`AI Signal: ${data.intent_update.recommended_action}`, 'success');
+                updateSuggestions(data.intent_update);
+            });
+
+            function updateSuggestions(update) {
+                const container = document.getElementById('action-suggestions');
+                container.innerHTML = '<span class="text-[10px] text-slate-500 font-bold uppercase self-center mr-2">Suggestions:</span>';
+                
+                const actions = {
+                    'SCHEDULE_SHOWING': { label: '📅 Book Walkthrough', color: 'emerald' },
+                    'ACCELERATE_SEQUENCE': { label: '⚡ Fast Track', color: 'blue' },
+                    'RE_ENGAGEMENT_REQUIRED': { label: '🚨 Manual Intervene', color: 'rose' },
+                    'SOFT_FOLLOWUP': { label: '👋 Send Greeting', color: 'slate' }
+                };
+
+                const action = actions[update.recommended_action] || actions['SOFT_FOLLOWUP'];
+                const btn = `
+                    <button onclick="appendMessage('System', 'Triggered: ${action.label}', true)" 
+                            class="text-[10px] px-3 py-1 rounded-full border border-${action.color}-500/50 bg-${action.color}-500/10 text-${action.color}-400 hover:bg-${action.color}-500/20 transition animate-bounce">
+                        ${action.label}
+                    </button>`;
+                
+                container.insertAdjacentHTML('beforeend', btn);
+                container.classList.remove('hidden');
+            }
+
+            socket.on('dashboard_status', (data) => {
+                log('Dashboard synchronized', 'success');
+                document.getElementById('agent-count').innerText = `Monitoring ${data.active_agents || 4} active AI Agents`;
+            });
+
+            function updateLeadList(lead) {
+                const list = document.getElementById('lead-list');
+                const pcs = lead.pcs_score || Math.floor(Math.random() * 40) + 40;
+                const status = pcs > 75 ? 'Hot' : 'Nurture';
+                const statusColor = pcs > 75 ? 'emerald' : 'blue';
+                const leadId = lead.contact_id || `contact_${Math.random().toString(36).substr(2, 9)}`;
+                
+                const cardHtml = `
+                    <div onclick="selectLead('${leadId}', '${lead.lead_name}')" 
+                         class="lead-card glass p-5 rounded-3xl border-l-4 border-${statusColor}-500 hover:scale-[1.02] transition cursor-pointer mb-4 animate-in fade-in slide-in-from-left duration-500">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-bold text-lg">${lead.lead_name || 'New Lead'}</h3>
+                                <p class="text-xs text-slate-400">${lead.location || 'Austin, TX'}</p>
+                            </div>
+                            <span class="bg-${statusColor}-500/20 text-${statusColor}-400 text-[10px] px-2 py-1 rounded-md font-bold uppercase">${status}</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span>Psychological Commitment</span>
+                                    <span class="text-blue-400">${pcs}%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="intent-bar h-full bg-blue-500" style="width: ${pcs}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                
+                if (list.innerHTML.includes('Waiting for lead data')) list.innerHTML = '';
+                list.insertAdjacentHTML('afterbegin', cardHtml);
+                if (list.children.length > 8) list.lastElementChild.remove();
+            }
+
+            socket.on('handoff_status', (data) => {
+                log(`🤖 Agent Handoff ${data.status}: ${data.target}`, 'success');
+                appendMessage('System', `Lead handoff to ${data.target} initiated.`, true);
+            });
+
+            socket.on('disconnect', () => {
+                log(`⚠️ Disconnected`, 'error');
+                statusDot.className = 'w-2 h-2 rounded-full bg-red-500';
+                statusText.innerText = 'Offline';
+                connectBtn.innerText = 'Sync Platform';
+                connectBtn.classList.replace('bg-slate-700', 'bg-blue-600');
+            });
+
+            socket.onAny((event, data) => { log(`📥 Event [${event}]`, 'success'); });
+        });
+    </script>
+</body>
+</html>

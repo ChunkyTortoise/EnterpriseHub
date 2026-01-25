@@ -127,8 +127,25 @@ class ErrorMonitoringService:
         self.metrics_interval = 300  # 5 minutes
         self.pattern_analysis_interval = 600  # 10 minutes
 
-        # Start background monitoring
-        asyncio.create_task(self._start_monitoring())
+        # Background tasks (initialized in start())
+        self._monitoring_task = None
+
+    async def start(self):
+        """Start background monitoring tasks."""
+        if self._monitoring_task is None:
+            self._monitoring_task = asyncio.create_task(self._start_monitoring())
+            logger.info("Error monitoring service started")
+
+    async def stop(self):
+        """Stop background monitoring tasks."""
+        if self._monitoring_task:
+            self._monitoring_task.cancel()
+            try:
+                await self._monitoring_task
+            except asyncio.CancelledError:
+                pass
+            self._monitoring_task = None
+            logger.info("Error monitoring service stopped")
 
     async def record_error(
         self,

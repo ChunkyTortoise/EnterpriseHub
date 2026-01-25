@@ -338,7 +338,11 @@ class MultiTenantEnterpriseArchitecture:
         self.scaling_decisions: List[Dict[str, Any]] = []
         
         # Initialize architecture
-        asyncio.create_task(self._initialize_enterprise_architecture())
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._initialize_enterprise_architecture())
+        except RuntimeError:
+            logger.debug("No running event loop found for enterprise architecture initialization")
     
     async def _initialize_enterprise_architecture(self):
         """Initialize enterprise architecture components."""

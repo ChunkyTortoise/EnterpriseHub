@@ -536,7 +536,11 @@ class PredictiveCLVEngine:
         self.model_metadata: Dict[str, Any] = {}
         
         # Load or initialize models
-        asyncio.create_task(self._initialize_models())
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._initialize_models())
+        except RuntimeError:
+            logger.debug("No running event loop found for CLV models initialization")
     
     async def _initialize_models(self):
         """Initialize or load pre-trained CLV prediction models."""

@@ -289,8 +289,7 @@ const JorgeSellerDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                  <span className="font-medium">COLD (<50)</span>
-                </div>
+                                      <span className="font-medium">COLD (&lt;50)</span>                </div>
                 <span className="text-2xl font-bold text-blue-600">8</span>
               </div>
             </div>

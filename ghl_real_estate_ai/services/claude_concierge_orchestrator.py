@@ -8,7 +8,7 @@ import json
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Union
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, field, asdict
 from enum import Enum
 
 from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeRequest, ClaudeResponse, ClaudeTaskType
@@ -30,31 +30,31 @@ class PlatformContext:
 
     # Core Platform State
     current_page: str
-    user_role: str  # 'agent', 'executive', 'client'
-    session_id: str
-    location_context: Dict[str, Any]
+    user_role: str = "agent" # 'agent', 'executive', 'client'
+    session_id: str = "default_session"
+    location_context: Dict[str, Any] = field(default_factory=dict)
 
     # Business Intelligence
-    active_leads: List[Dict[str, Any]]
-    bot_statuses: Dict[str, Any]  # Jorge bot, Lead bot, etc.
-    user_activity: List[Dict[str, Any]]
-    business_metrics: Dict[str, Any]
-    active_properties: List[Dict[str, Any]]
+    active_leads: List[Dict[str, Any]] = field(default_factory=list)
+    bot_statuses: Dict[str, Any] = field(default_factory=dict)  # Jorge bot, Lead bot, etc.
+    user_activity: List[Dict[str, Any]] = field(default_factory=list)
+    business_metrics: Dict[str, Any] = field(default_factory=dict)
+    active_properties: List[Dict[str, Any]] = field(default_factory=list)
 
     # Real-time Context
-    market_conditions: Dict[str, Any]
-    priority_actions: List[Dict[str, Any]]
-    pending_notifications: List[Dict[str, Any]]
+    market_conditions: Dict[str, Any] = field(default_factory=dict)
+    priority_actions: List[Dict[str, Any]] = field(default_factory=list)
+    pending_notifications: List[Dict[str, Any]] = field(default_factory=list)
 
     # Jorge-specific Context
-    jorge_preferences: Dict[str, Any]
-    deal_pipeline_state: Dict[str, Any]
-    commission_opportunities: List[Dict[str, Any]]
+    jorge_preferences: Dict[str, Any] = field(default_factory=dict)
+    deal_pipeline_state: Dict[str, Any] = field(default_factory=dict)
+    commission_opportunities: List[Dict[str, Any]] = field(default_factory=list)
 
     # Technical Context
-    device_type: str  # 'desktop', 'mobile', 'tablet'
-    connection_quality: str  # 'excellent', 'good', 'poor'
-    offline_capabilities: bool
+    device_type: str = "desktop" # 'desktop', 'mobile', 'tablet'
+    connection_quality: str = "excellent" # 'excellent', 'good', 'poor'
+    offline_capabilities: bool = False
 
 @dataclass
 class ConciergeResponse:
@@ -1050,6 +1050,8 @@ class ClaudeConciergeOrchestrator:
             ConciergeMode.EXECUTIVE: "Executive intelligence active. Focus on pipeline health and revenue optimization."
         }
 
+        current_page = context.current_page if context else "Platform"
+
         return ConciergeResponse(
             primary_guidance=fallback_guidance.get(mode, "AI guidance temporarily unavailable. Platform operating normally."),
             urgency_level="low",
@@ -1062,7 +1064,7 @@ class ClaudeConciergeOrchestrator:
             }],
             background_tasks=[],
             follow_up_reminders=[],
-            page_specific_tips=[f"Continue working with {context.current_page} functionality"],
+            page_specific_tips=[f"Continue working with {current_page} functionality"],
             bot_coordination_suggestions=[],
             revenue_optimization_ideas=[],
             risk_alerts=[{

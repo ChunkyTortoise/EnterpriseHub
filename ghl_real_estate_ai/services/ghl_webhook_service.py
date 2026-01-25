@@ -28,7 +28,13 @@ except ImportError:
 try:
     from ghl_real_estate_ai.services.autonomous_integration_orchestrator import get_autonomous_integration_orchestrator
     orchestrator = get_autonomous_integration_orchestrator()
-    asyncio.create_task(orchestrator.initialize_system())
+    try:
+        loop = asyncio.get_running_loop()
+        asyncio.create_task(orchestrator.initialize_system())
+    except RuntimeError:
+        # In a synchronous context (like FastAPI/Streamlit startup), 
+        # initialization should happen when the first request arrives or the loop starts.
+        logger.debug("No running event loop found for orchestrator initialization, skipping for now")
 except ImportError:
     orchestrator = None
 

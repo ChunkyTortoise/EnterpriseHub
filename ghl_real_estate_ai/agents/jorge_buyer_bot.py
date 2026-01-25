@@ -203,7 +203,7 @@ class JorgeBuyerBot:
         Only proceed if buyer is sufficiently qualified.
         """
         try:
-            if not state.get("property_preferences") or not state.get("budget_range"):
+            if not state.get("budget_range"):
                 return {
                     "matched_properties": [],
                     "properties_viewed_count": 0,
@@ -212,7 +212,7 @@ class JorgeBuyerBot:
 
             # Use existing property matching service
             matches = await self.property_matcher.find_matches(
-                buyer_preferences=state["property_preferences"],
+                buyer_preferences=state.get("property_preferences") or {},
                 budget_range=state["budget_range"],
                 max_results=5
             )
@@ -363,9 +363,18 @@ class JorgeBuyerBot:
                 if msg.get("role") == "user"
             ])
 
-            # Find dollar amounts
-            dollar_pattern = r'\$([0-9,]+)'
-            amounts = [int(match.replace(',', '')) for match in re.findall(dollar_pattern, conversation_text)]
+            # Find dollar amounts with optional k
+            dollar_pattern = r'\$([0-9,]+)([kK]?)'
+            matches = re.findall(dollar_pattern, conversation_text)
+            
+            amounts = []
+            for val, k_suffix in matches:
+                amount = int(val.replace(',', ''))
+                if k_suffix:
+                    amount *= 1000
+                elif amount < 1000: # Handle cases like "500" meaning 500k
+                    amount *= 1000
+                amounts.append(amount)
 
             if len(amounts) >= 2:
                 return {"min": min(amounts), "max": max(amounts)}
@@ -457,6 +466,7 @@ class JorgeBuyerBot:
                 detected_objection_type=None,
                 next_action="qualify",
                 response_content="",
+                matched_properties=[],
                 financial_readiness_score=0.0,
                 buying_motivation_score=0.0,
                 is_qualified=False,

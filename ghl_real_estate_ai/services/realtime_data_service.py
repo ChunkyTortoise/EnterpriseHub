@@ -112,7 +112,12 @@ class RealtimeDataService:
         self.is_running = False
 
         if self.websocket:
-            asyncio.create_task(self.websocket.close())
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self.websocket.close())
+            except RuntimeError:
+                # No running loop, assume websocket will be closed by GC or main process exit
+                pass
 
         if self.poll_thread and self.poll_thread.is_alive():
             self.poll_thread.join(timeout=1)

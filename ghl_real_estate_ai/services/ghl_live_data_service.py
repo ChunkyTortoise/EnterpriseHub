@@ -22,8 +22,8 @@ from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
-from ghl_real_estate_ai.agents.lead_bot import LeadBot
-from ghl_real_estate_ai.agents.intent_decoder import IntentDecoder
+from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
+from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -196,8 +196,8 @@ class GHLLiveDataService:
 
         # Jorge Bots for Live Metrics
         self.jorge_seller_bot = JorgeSellerBot()
-        self.lead_bot = LeadBot()
-        self.intent_decoder = IntentDecoder()
+        self.lead_bot = LeadBotWorkflow()
+        self.intent_decoder = LeadIntentDecoder()
         self.lead_scorer = LeadScorer()
 
         # Cache Configuration
