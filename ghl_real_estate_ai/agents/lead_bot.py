@@ -1,7 +1,9 @@
 import asyncio
 import json
 import uuid
+import time
 import threading
+from uuid import uuid4
 from typing import Dict, Any, Literal, List, Optional, Tuple
 from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
@@ -33,6 +35,15 @@ try:
     TRACK3_ML_AVAILABLE = True
 except ImportError:
     TRACK3_ML_AVAILABLE = False
+
+# Phase 3.3 Bot Intelligence Middleware Integration
+try:
+    from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
+    from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
+    BOT_INTELLIGENCE_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Bot Intelligence Middleware unavailable: {e}")
+    BOT_INTELLIGENCE_AVAILABLE = False
 
 logger = get_logger(__name__)
 
@@ -66,6 +77,7 @@ class LeadBotConfig:
     enable_behavioral_optimization: bool = False
     enable_personality_adaptation: bool = False
     enable_track3_intelligence: bool = False
+    enable_bot_intelligence: bool = False
 
     # Performance settings
     default_sequence_timing: bool = True
@@ -540,13 +552,22 @@ class LeadBotWorkflow:
         elif self.config.enable_track3_intelligence:
             logger.warning("Lead Bot: Track 3.1 requested but dependencies not available")
 
+        # Phase 3.3 Bot Intelligence Middleware Integration
+        self.intelligence_middleware = None
+        if self.config.enable_bot_intelligence and BOT_INTELLIGENCE_AVAILABLE:
+            self.intelligence_middleware = get_bot_intelligence_middleware()
+            logger.info("Lead Bot: Phase 3.3 Bot Intelligence Middleware enabled")
+        elif self.config.enable_bot_intelligence:
+            logger.warning("Lead Bot: Phase 3.3 Bot Intelligence requested but dependencies not available")
+
         # Performance tracking
         self.workflow_stats = {
             "total_sequences": 0,
             "behavioral_optimizations": 0,
             "personality_adaptations": 0,
             "track3_enhancements": 0,
-            "jorge_handoffs": 0
+            "jorge_handoffs": 0,
+            "intelligence_gathering_operations": 0
         }
 
         # Build workflow based on enabled features
@@ -556,7 +577,8 @@ class LeadBotWorkflow:
         """Build workflow graph based on enabled features"""
         if (self.config.enable_predictive_analytics or
             self.config.enable_behavioral_optimization or
-            self.config.enable_track3_intelligence):
+            self.config.enable_track3_intelligence or
+            self.config.enable_bot_intelligence):
             return self._build_enhanced_graph()
         else:
             return self._build_standard_graph()
@@ -623,6 +645,8 @@ class LeadBotWorkflow:
 
         # Enhanced nodes
         workflow.add_node("analyze_intent", self.analyze_intent)
+        if self.config.enable_bot_intelligence and self.intelligence_middleware:
+            workflow.add_node("gather_lead_intelligence", self.gather_lead_intelligence)
         if self.config.enable_behavioral_optimization or self.config.enable_predictive_analytics:
             workflow.add_node("behavioral_analysis", self.analyze_behavioral_patterns)
         if self.config.enable_behavioral_optimization:
@@ -650,6 +674,10 @@ class LeadBotWorkflow:
 
         # Build flow based on enabled features
         current_node = "analyze_intent"
+
+        if self.config.enable_bot_intelligence and self.intelligence_middleware:
+            workflow.add_edge(current_node, "gather_lead_intelligence")
+            current_node = "gather_lead_intelligence"
 
         if self.config.enable_behavioral_optimization or self.config.enable_predictive_analytics:
             workflow.add_edge(current_node, "behavioral_analysis")
@@ -695,6 +723,90 @@ class LeadBotWorkflow:
     # ================================
     # ENHANCED FEATURE METHODS
     # ================================
+
+    async def gather_lead_intelligence(self, state: LeadFollowUpState) -> Dict:
+        """
+        Gather comprehensive intelligence context for Lead Bot nurture sequence optimization.
+
+        Focuses on nurture-specific intelligence:
+        - Lead preference extraction and persistence
+        - Churn risk prediction for proactive engagement
+        - Cross-bot context sharing capabilities
+        - Timing optimization for sequence effectiveness
+        """
+        logger.info(f"Gathering lead intelligence for nurture optimization: {state['lead_id']}")
+
+        # Emit bot status update
+        await self.event_publisher.publish_bot_status_update(
+            bot_type="enhanced-lead-bot",
+            contact_id=state["lead_id"],
+            status="processing",
+            current_step="gather_lead_intelligence"
+        )
+
+        # Initialize performance tracking
+        intelligence_start_time = time.time()
+        intelligence_context = None
+
+        try:
+            if self.intelligence_middleware:
+                # Use Lead Bot specific context for nurture-focused intelligence
+                intelligence_context = await self.intelligence_middleware.enhance_bot_context(
+                    lead_id=state["lead_id"],
+                    location_id="national",  # Default for lead bot
+                    bot_type="lead-bot",
+                    conversation_history=state["conversation_history"],
+                    current_context={
+                        "sequence_day": state.get("sequence_day"),
+                        "engagement_status": state.get("engagement_status"),
+                        "nurture_focus": True,
+                        "intent_profile": state.get("intent_profile").to_dict() if state.get("intent_profile") else {}
+                    }
+                )
+
+                intelligence_performance_ms = (time.time() - intelligence_start_time) * 1000
+                logger.info(
+                    f"Lead intelligence gathered for {state['lead_id']} in {intelligence_performance_ms:.1f}ms "
+                    f"(engagement: {intelligence_context.composite_engagement_score:.2f}, "
+                    f"approach: {intelligence_context.recommended_approach})"
+                )
+
+                self.workflow_stats["intelligence_gathering_operations"] += 1
+
+                # Emit lead intelligence gathered event
+                await self.event_publisher.publish_bot_status_update(
+                    bot_type="enhanced-lead-bot",
+                    contact_id=state["lead_id"],
+                    status="processing",
+                    current_step="lead_intelligence_gathered",
+                    message=f"Lead intelligence gathered: {intelligence_context.property_intelligence.match_count} properties, "
+                           f"engagement score: {intelligence_context.composite_engagement_score:.2f}"
+                )
+
+                return {
+                    "intelligence_context": intelligence_context,
+                    "intelligence_performance_ms": intelligence_performance_ms
+                }
+            else:
+                logger.warning(f"Intelligence middleware not available for lead {state['lead_id']}")
+                return {"intelligence_context": None, "intelligence_performance_ms": 0.0}
+
+        except Exception as e:
+            intelligence_performance_ms = (time.time() - intelligence_start_time) * 1000
+            logger.error(f"Failed to gather lead intelligence for {state['lead_id']}: {e}")
+
+            # Create fallback intelligence context for graceful degradation
+            fallback_context = BotIntelligenceContext.create_fallback(
+                lead_id=state["lead_id"],
+                location_id="national",
+                bot_type="lead-bot",
+                error_context=f"intelligence_gathering_failed: {str(e)}"
+            )
+
+            return {
+                "intelligence_context": fallback_context,
+                "intelligence_performance_ms": intelligence_performance_ms
+            }
 
     async def analyze_behavioral_patterns(self, state: LeadFollowUpState) -> Dict:
         """Analyze lead behavioral patterns for optimization"""
@@ -825,15 +937,39 @@ class LeadBotWorkflow:
             return {"track3_applied": False, "fallback_reason": str(e)}
 
     async def send_optimized_day_3(self, state: LeadFollowUpState) -> Dict:
-        """Day 3 with enhanced timing and personalization"""
+        """Day 3 with enhanced timing and personalization using intelligence context"""
+        logger.info(f"Sending intelligence-optimized Day 3 SMS for {state['lead_name']}")
+
         # Use enhanced optimization if available
         optimization = state.get('enhanced_optimization', state.get('sequence_optimization'))
         pattern = state.get('response_pattern')
         personality = state.get('personality_type', 'relationship')
 
+        # Phase 3.3 Intelligence Enhancement: Use intelligence context for nurture optimization
+        intelligence_context = state.get('intelligence_context')
+        churn_risk = 0.5  # Default
+        preferred_timing = None
+        personalized_insights = []
+
+        if intelligence_context:
+            # Extract nurture-specific intelligence
+            churn_risk = self._extract_churn_risk_from_intelligence(intelligence_context)
+            preferred_timing = self._extract_preferred_engagement_timing(intelligence_context)
+            personalized_insights = intelligence_context.priority_insights or []
+
+            logger.info(f"Intelligence context applied - churn risk: {churn_risk:.2f}, insights: {len(personalized_insights)}")
+
         # Use optimized timing if available
         actual_day = optimization.day_3 if optimization else 3
         preferred_channel = optimization.channel_sequence[0] if optimization and optimization.channel_sequence else "SMS"
+
+        # Intelligence-driven timing adjustment for nurture sequences
+        if churn_risk > 0.7:
+            actual_day = max(1, actual_day - 1)  # Accelerate for high churn risk
+            logger.info(f"High churn risk detected ({churn_risk:.2f}) - accelerating contact to day {actual_day}")
+        elif churn_risk < 0.3:
+            actual_day = min(5, actual_day + 1)  # Extend for low churn risk to avoid over-communication
+            logger.info(f"Low churn risk ({churn_risk:.2f}) - extending to day {actual_day} to avoid fatigue")
 
         # Check for critical scenarios
         critical_scenario = state.get('critical_scenario')
@@ -842,11 +978,10 @@ class LeadBotWorkflow:
             actual_day = 0  # Contact immediately
             preferred_channel = "Voice"  # Use most direct channel
 
-        # Base message
-        if critical_scenario:
-            base_msg = f"Hi {state['lead_name']}, following up on your property search. I have some time-sensitive information that could be valuable."
-        else:
-            base_msg = f"Hi {state['lead_name']}, checking in about your property search. Any questions about the market?"
+        # Enhanced message construction using intelligence insights
+        base_msg = self._construct_intelligent_day3_message(
+            state, intelligence_context, personalized_insights, critical_scenario
+        )
 
         # Adapt message for personality if adapter available
         adapted_msg = base_msg
@@ -855,6 +990,7 @@ class LeadBotWorkflow:
 
         logger.info(f"Enhanced Day {actual_day} {preferred_channel} to {state['lead_name']}: {adapted_msg}")
 
+        # Store intelligence-driven optimizations in state for tracking
         return {
             "engagement_status": "enhanced_nurture",
             "current_step": "day_7_call",
@@ -862,15 +998,37 @@ class LeadBotWorkflow:
             "optimized_timing_applied": bool(optimization),
             "personalization_applied": bool(self.personality_adapter),
             "track3_enhancement_applied": state.get('track3_applied', False),
-            "critical_scenario_handled": bool(critical_scenario)
+            "critical_scenario_handled": bool(critical_scenario),
+            "intelligence_enhancement_applied": bool(intelligence_context),
+            "churn_risk_score": churn_risk,
+            "sequence_optimization_applied": True,
+            "preferred_engagement_timing": preferred_timing
         }
 
     async def initiate_predictive_day_7(self, state: LeadFollowUpState) -> Dict:
-        """Day 7 with predictive timing and channel optimization"""
+        """Day 7 with predictive timing and channel optimization using intelligence context"""
+        logger.info(f"Initiating intelligence-enhanced Day 7 call for {state['lead_name']}")
+
         optimization = state.get('enhanced_optimization', state.get('sequence_optimization'))
         temperature_pred = state.get('temperature_prediction')
         journey_analysis = state.get('journey_analysis')
         conversion_analysis = state.get('conversion_analysis')
+
+        # Phase 3.3 Intelligence Enhancement: Use intelligence context for call optimization
+        intelligence_context = state.get('intelligence_context')
+        churn_risk = state.get('churn_risk_score', 0.5)
+        cross_bot_handoff_eligible = False
+
+        if intelligence_context:
+            # Intelligence-driven handoff decision
+            engagement_score = intelligence_context.composite_engagement_score
+            objections_detected = len(intelligence_context.conversation_intelligence.objections_detected)
+
+            # Enhanced Jorge handoff logic using comprehensive intelligence
+            if (engagement_score > 0.7 and churn_risk < 0.4 and objections_detected < 2):
+                cross_bot_handoff_eligible = True
+                logger.info(f"Intelligence suggests Jorge handoff eligibility for {state['lead_name']} "
+                           f"(engagement: {engagement_score:.2f}, churn_risk: {churn_risk:.2f})")
 
         # Check conversion probability for Jorge handoff consideration
         if (conversion_analysis and
@@ -879,8 +1037,18 @@ class LeadBotWorkflow:
             journey_analysis.conversion_probability > 0.6):
 
             logger.info(f"High conversion indicators for {state['lead_name']} - consider Jorge handoff")
+            cross_bot_handoff_eligible = True
             if self.config.jorge_handoff_enabled:
                 await self._publish_jorge_handoff_recommendation(state, journey_analysis, conversion_analysis)
+
+        # Intelligence-driven urgency detection
+        urgency_detected = False
+        if intelligence_context:
+            urgency_indicators = intelligence_context.conversation_intelligence.urgency_indicators
+            if urgency_indicators or churn_risk > 0.8:
+                urgency_detected = True
+                logger.warning(f"Urgency detected for {state['lead_name']}: "
+                              f"indicators={len(urgency_indicators)}, churn_risk={churn_risk:.2f}")
 
         # Check for temperature early warning
         if temperature_pred and temperature_pred.get('early_warning'):
@@ -889,27 +1057,60 @@ class LeadBotWorkflow:
         preferred_channel = optimization.channel_sequence[1] if optimization and len(optimization.channel_sequence) > 1 else "Voice"
         actual_day = optimization.day_7 if optimization else 7
 
-        msg = f"Predictive Day {actual_day} {preferred_channel} call for {state['lead_name']}"
+        # Intelligence-driven timing adjustment
+        if urgency_detected or churn_risk > 0.7:
+            actual_day = max(5, actual_day - 1)  # Accelerate call
+            logger.info(f"Accelerating Day 7 call to Day {actual_day} due to urgency/churn risk")
+
+        msg = f"Intelligence-enhanced Day {actual_day} {preferred_channel} call for {state['lead_name']}"
+        if cross_bot_handoff_eligible:
+            msg += " (Jorge handoff candidate)"
+
         logger.info(msg)
 
         return {
             "engagement_status": "enhanced_nurture",
             "current_step": "day_14_email",
             "response_content": msg,
-            "jorge_handoff_eligible": (
-                conversion_analysis and conversion_analysis.stage_conversion_probability > 0.7
-            ) if conversion_analysis else False
+            "jorge_handoff_eligible": cross_bot_handoff_eligible,
+            "intelligence_enhancement_applied": bool(intelligence_context),
+            "urgency_detected": urgency_detected,
+            "churn_risk_score": churn_risk
         }
 
     async def send_adaptive_day_14(self, state: LeadFollowUpState) -> Dict:
-        """Day 14 with adaptive messaging and channel selection"""
+        """Day 14 with adaptive messaging and channel selection using intelligence context"""
+        logger.info(f"Sending intelligence-adaptive Day 14 message for {state['lead_name']}")
+
         optimization = state.get('enhanced_optimization', state.get('sequence_optimization'))
         personality = state.get('personality_type', 'relationship')
         journey_analysis = state.get('journey_analysis')
         conversion_analysis = state.get('conversion_analysis')
 
+        # Phase 3.3 Intelligence Enhancement: Adaptive messaging based on intelligence
+        intelligence_context = state.get('intelligence_context')
+        churn_risk = state.get('churn_risk_score', 0.5)
+        content_adaptation_applied = False
+
         preferred_channel = optimization.channel_sequence[2] if optimization and len(optimization.channel_sequence) > 2 else "Email"
         actual_day = optimization.day_14 if optimization else 14
+
+        # Intelligence-driven content and channel adaptation
+        if intelligence_context:
+            # Analyze conversation intelligence for adaptive messaging
+            objections = intelligence_context.conversation_intelligence.objections_detected
+            sentiment = intelligence_context.conversation_intelligence.overall_sentiment
+
+            # Adapt channel based on engagement patterns and objections
+            if objections and sentiment < 0:
+                preferred_channel = "Voice"  # Personal call for objection handling
+                content_adaptation_applied = True
+                logger.info(f"Adapting to Voice call due to {len(objections)} objections and negative sentiment")
+
+            # Property intelligence-driven content
+            if intelligence_context.property_intelligence.match_count > 0:
+                content_adaptation_applied = True
+                logger.info(f"Incorporating {intelligence_context.property_intelligence.match_count} property matches into Day 14 message")
 
         # Check for bottlenecks requiring intervention
         intervention_needed = False
@@ -920,54 +1121,124 @@ class LeadBotWorkflow:
             logger.warning(f"Stage bottlenecks detected for {state['lead_name']}: {journey_analysis.stage_bottlenecks}")
             preferred_channel = "Voice"  # Override to voice call for bottleneck resolution
 
-        msg = f"Adaptive Day {actual_day} {preferred_channel} for {state['lead_name']}"
-        logger.info(msg)
+        # Intelligence-driven escalation for high churn risk
+        if churn_risk > 0.8:
+            preferred_channel = "Voice"
+            intervention_needed = True
+            logger.warning(f"High churn risk ({churn_risk:.2f}) - escalating Day 14 to voice call")
+
+        msg = self._construct_adaptive_day14_message(
+            state, intelligence_context, preferred_channel, content_adaptation_applied
+        )
+
+        logger.info(f"Adaptive Day {actual_day} {preferred_channel} for {state['lead_name']}: {msg[:100]}...")
 
         return {
             "engagement_status": "enhanced_nurture",
             "current_step": "day_30_nudge",
             "response_content": msg,
             "bottleneck_intervention": intervention_needed,
-            "channel_escalated": intervention_needed
+            "channel_escalated": intervention_needed,
+            "intelligence_enhancement_applied": bool(intelligence_context),
+            "content_adaptation_applied": content_adaptation_applied,
+            "churn_risk_score": churn_risk
         }
 
     async def send_intelligent_day_30(self, state: LeadFollowUpState) -> Dict:
-        """Day 30 with intelligent re-engagement strategy"""
+        """Day 30 with intelligent re-engagement strategy using comprehensive intelligence"""
+        logger.info(f"Executing intelligent Day 30 final engagement for {state['lead_name']}")
+
         optimization = state.get('enhanced_optimization', state.get('sequence_optimization'))
         temperature_pred = state.get('temperature_prediction')
         journey_analysis = state.get('journey_analysis')
         conversion_analysis = state.get('conversion_analysis')
 
+        # Phase 3.3 Intelligence Enhancement: Comprehensive final decision
+        intelligence_context = state.get('intelligence_context')
+        churn_risk = state.get('churn_risk_score', 0.5)
+
         actual_day = optimization.day_30 if optimization else 30
 
-        # Final decision point - nurture vs qualify vs disengage
+        # Intelligence-driven final decision point - nurture vs qualify vs disengage
         final_strategy = "nurture"  # Default
+        intelligence_score = 0.0
+        handoff_reasoning = []
 
-        if journey_analysis and conversion_analysis:
+        if intelligence_context:
+            # Comprehensive intelligence analysis for final strategy
+            engagement_score = intelligence_context.composite_engagement_score
+            property_matches = intelligence_context.property_intelligence.match_count
+            objections_count = len(intelligence_context.conversation_intelligence.objections_detected)
+            sentiment = intelligence_context.conversation_intelligence.overall_sentiment
+            preference_completeness = intelligence_context.preference_intelligence.profile_completeness
+
+            # Calculate comprehensive intelligence score for handoff decision
+            intelligence_score = (
+                engagement_score * 0.3 +
+                min(property_matches / 5.0, 1.0) * 0.2 +  # Normalize to 0-1
+                max(0, (5 - objections_count) / 5.0) * 0.2 +  # Fewer objections = better
+                max(0, (sentiment + 1) / 2.0) * 0.15 +  # Normalize sentiment to 0-1
+                preference_completeness * 0.15
+            )
+
+            logger.info(f"Intelligence score calculation for {state['lead_name']}: "
+                       f"engagement={engagement_score:.2f}, properties={property_matches}, "
+                       f"objections={objections_count}, sentiment={sentiment:.2f}, "
+                       f"preferences={preference_completeness:.2f} → score={intelligence_score:.2f}")
+
+            # Enhanced decision logic using comprehensive intelligence
+            if intelligence_score > 0.7 and churn_risk < 0.4:
+                final_strategy = "jorge_qualification"
+                handoff_reasoning.append(f"High intelligence score ({intelligence_score:.2f})")
+                handoff_reasoning.append(f"Low churn risk ({churn_risk:.2f})")
+
+            elif intelligence_score > 0.5 and property_matches > 2 and sentiment > 0:
+                final_strategy = "jorge_consultation"
+                handoff_reasoning.append(f"Property matches ({property_matches}) with positive sentiment")
+
+            elif intelligence_score < 0.3 or churn_risk > 0.8:
+                final_strategy = "graceful_disengage"
+                handoff_reasoning.append(f"Low intelligence score ({intelligence_score:.2f}) or high churn risk ({churn_risk:.2f})")
+
+        # Traditional Track 3.1 logic as backup
+        if journey_analysis and conversion_analysis and final_strategy == "nurture":
             # High potential - recommend Jorge qualification
             if (journey_analysis.conversion_probability > 0.5 and
                 conversion_analysis.stage_conversion_probability > 0.4):
                 final_strategy = "jorge_qualification"
-
-                if self.config.jorge_handoff_enabled:
-                    await self._publish_jorge_handoff_request(state, journey_analysis, conversion_analysis)
-                    self.workflow_stats["jorge_handoffs"] += 1
+                handoff_reasoning.append("High Track 3.1 conversion probability")
 
             # Low potential with cooling trend - disengage gracefully
             elif (journey_analysis.conversion_probability < 0.2 and
                   conversion_analysis.drop_off_risk > 0.8):
                 final_strategy = "graceful_disengage"
+                handoff_reasoning.append("Low Track 3.1 conversion probability with high drop-off risk")
 
-        msg = f"Intelligent Day {actual_day} final engagement for {state['lead_name']} - Strategy: {final_strategy}"
-        logger.info(msg)
+        # Execute Jorge handoff if recommended
+        if final_strategy in ["jorge_qualification", "jorge_consultation"] and self.config.jorge_handoff_enabled:
+            await self._publish_intelligent_jorge_handoff_request(
+                state, intelligence_context, final_strategy, intelligence_score, handoff_reasoning
+            )
+            self.workflow_stats["jorge_handoffs"] += 1
+
+        # Construct final message based on strategy
+        msg = self._construct_intelligent_day30_message(state, final_strategy, intelligence_score, handoff_reasoning)
+
+        logger.info(f"Intelligent Day {actual_day} final engagement for {state['lead_name']} - "
+                   f"Strategy: {final_strategy}, Intelligence Score: {intelligence_score:.2f}, "
+                   f"Reasoning: {'; '.join(handoff_reasoning)}")
 
         return {
             "engagement_status": "enhanced_final",
             "current_step": final_strategy,
             "response_content": msg,
-            "jorge_handoff_recommended": final_strategy == "jorge_qualification",
+            "jorge_handoff_recommended": final_strategy in ["jorge_qualification", "jorge_consultation"],
             "sequence_complete": True,
-            "final_strategy": final_strategy
+            "final_strategy": final_strategy,
+            "intelligence_score": intelligence_score,
+            "handoff_reasoning": handoff_reasoning,
+            "intelligence_enhancement_applied": bool(intelligence_context),
+            "churn_risk_score": churn_risk
         }
 
     def _route_enhanced_step(self, state: LeadFollowUpState) -> Literal["generate_cma", "day_3", "day_7", "day_14", "day_30", "schedule_showing", "post_showing", "facilitate_offer", "closing_nurture", "qualified", "nurture"]:
@@ -1614,6 +1885,178 @@ class LeadBotWorkflow:
         return self.ghost_engine.get_stall_breaker(objection_type)
 
     # ================================
+    # INTELLIGENCE HELPER METHODS
+    # ================================
+
+    def _extract_churn_risk_from_intelligence(self, intelligence_context) -> float:
+        """Extract churn risk score from intelligence context for nurture optimization."""
+        if not intelligence_context:
+            return 0.5  # Default neutral risk
+
+        # Combine multiple intelligence signals for churn risk assessment
+        risk_factors = []
+
+        # Sentiment-based risk
+        sentiment = intelligence_context.conversation_intelligence.overall_sentiment
+        if sentiment < -0.3:
+            risk_factors.append(0.8)  # High risk for negative sentiment
+        elif sentiment > 0.3:
+            risk_factors.append(0.2)  # Low risk for positive sentiment
+        else:
+            risk_factors.append(0.5)  # Neutral
+
+        # Engagement-based risk
+        engagement_score = intelligence_context.composite_engagement_score
+        risk_factors.append(1.0 - engagement_score)  # Inverse of engagement
+
+        # Preference completeness as indicator of interest
+        preference_completeness = intelligence_context.preference_intelligence.profile_completeness
+        if preference_completeness < 0.3:
+            risk_factors.append(0.7)  # Higher risk for low preference data
+        else:
+            risk_factors.append(0.3)  # Lower risk for complete preferences
+
+        # Calculate weighted average
+        return sum(risk_factors) / len(risk_factors)
+
+    def _extract_preferred_engagement_timing(self, intelligence_context) -> List[int]:
+        """Extract preferred engagement times from intelligence context."""
+        if not intelligence_context:
+            return [9, 14, 18]  # Default: 9 AM, 2 PM, 6 PM
+
+        # Extract from conversation patterns if available
+        urgency_level = intelligence_context.preference_intelligence.urgency_level
+
+        if urgency_level > 0.7:
+            # High urgency - morning and evening
+            return [8, 17, 19]
+        elif urgency_level < 0.3:
+            # Low urgency - business hours only
+            return [10, 14, 16]
+        else:
+            # Standard timing
+            return [9, 14, 18]
+
+    def _construct_intelligent_day3_message(self, state, intelligence_context,
+                                           personalized_insights: List[str],
+                                           critical_scenario) -> str:
+        """Construct Day 3 message using intelligence insights."""
+        lead_name = state['lead_name']
+
+        # Base message logic
+        if critical_scenario:
+            base_msg = f"Hi {lead_name}, following up on your property search. I have some time-sensitive information that could be valuable."
+        else:
+            # Standard nurture message with intelligence enhancements
+            if intelligence_context and personalized_insights:
+                # Use intelligence insights to personalize the message
+                if "property matches" in ' '.join(personalized_insights).lower():
+                    base_msg = f"Hi {lead_name}, I found some properties that match what you're looking for. Any questions about the market?"
+                elif "objections" in ' '.join(personalized_insights).lower():
+                    base_msg = f"Hi {lead_name}, checking in about your property search. Happy to address any concerns you might have."
+                elif "positive sentiment" in ' '.join(personalized_insights).lower():
+                    base_msg = f"Hi {lead_name}, hope you're doing well! Any updates on your property search?"
+                else:
+                    base_msg = f"Hi {lead_name}, checking in about your property search. Any questions about the market?"
+            else:
+                # Fallback to standard message
+                base_msg = f"Hi {lead_name}, checking in about your property search. Any questions about the market?"
+
+        return base_msg
+
+    def _construct_adaptive_day14_message(self, state, intelligence_context,
+                                         preferred_channel: str, content_adaptation_applied: bool) -> str:
+        """Construct adaptive Day 14 message using intelligence insights."""
+        lead_name = state['lead_name']
+
+        if intelligence_context and content_adaptation_applied:
+            property_matches = intelligence_context.property_intelligence.match_count
+            objections = intelligence_context.conversation_intelligence.objections_detected
+            sentiment = intelligence_context.conversation_intelligence.overall_sentiment
+
+            if property_matches > 0 and sentiment >= 0:
+                msg = f"Hi {lead_name}, I found {property_matches} properties that might interest you based on our conversations. "
+                if preferred_channel == "Voice":
+                    msg += "I'd love to walk you through them on a quick call. When works best for you?"
+                else:
+                    msg += "I'll send you the details shortly. Let me know what you think!"
+
+            elif objections and sentiment < 0:
+                msg = f"Hi {lead_name}, I wanted to follow up and address any concerns you might have about the market. "
+                if preferred_channel == "Voice":
+                    msg += "Sometimes it's easier to discuss these things over the phone. Would you be open to a brief call?"
+                else:
+                    msg += "I'm here to help clarify anything that's on your mind."
+
+            else:
+                # Standard follow-up with intelligence hints
+                msg = f"Hi {lead_name}, hope you're doing well! I've been keeping an eye on the market for opportunities that match your interests. Any updates on your search?"
+        else:
+            # Fallback standard message
+            msg = f"Hi {lead_name}, checking in on your property search. I've been monitoring the market for good opportunities. Any questions or updates?"
+
+        return msg
+
+    def _construct_intelligent_day30_message(self, state, final_strategy: str,
+                                            intelligence_score: float, handoff_reasoning: List[str]) -> str:
+        """Construct intelligent Day 30 message based on final strategy."""
+        lead_name = state['lead_name']
+
+        if final_strategy == "jorge_qualification":
+            msg = f"Hi {lead_name}, it's been 30 days since we connected about your property search. Based on our conversations, I think you're ready to take the next step. I'd like to connect you with Jorge, our senior advisor, who can provide you with the detailed market analysis and guidance you need. Would you be open to a consultation call this week?"
+
+        elif final_strategy == "jorge_consultation":
+            msg = f"Hi {lead_name}, I've been following the market developments that align with your interests. At this point, I think you'd benefit from a more detailed consultation with Jorge, our market specialist. He can provide insights that might help accelerate your search. Interested in a brief call?"
+
+        elif final_strategy == "graceful_disengage":
+            msg = f"Hi {lead_name}, I wanted to check in one more time about your property search. I understand timing and priorities can change. If you'd like to keep receiving market updates, just let me know. Otherwise, I'll give you some space and you can reach out whenever you're ready to continue the search. Thanks for your time!"
+
+        else:  # nurture
+            msg = f"Hi {lead_name}, it's been a month since we connected. I wanted to check if anything has changed with your property search timeline or if there's anything specific I can help you with. I'm here whenever you're ready to move forward."
+
+        return msg
+
+    async def _publish_intelligent_jorge_handoff_request(self, state, intelligence_context,
+                                                       handoff_type: str, intelligence_score: float,
+                                                       handoff_reasoning: List[str]):
+        """Publish enhanced Jorge handoff request with comprehensive intelligence context."""
+        handoff_data = {
+            "handoff_type": handoff_type,
+            "intelligence_score": intelligence_score,
+            "handoff_reasoning": handoff_reasoning,
+            "sequence_completion": "day_30_reached",
+            "recommendation": f"Jorge {handoff_type} recommended based on comprehensive intelligence analysis"
+        }
+
+        # Add intelligence context details if available
+        if intelligence_context:
+            handoff_data.update({
+                "engagement_score": intelligence_context.composite_engagement_score,
+                "property_matches": intelligence_context.property_intelligence.match_count,
+                "objections_count": len(intelligence_context.conversation_intelligence.objections_detected),
+                "sentiment": intelligence_context.conversation_intelligence.overall_sentiment,
+                "preference_completeness": intelligence_context.preference_intelligence.profile_completeness,
+                "recommended_approach": intelligence_context.recommended_approach,
+                "priority_insights": intelligence_context.priority_insights
+            })
+
+        # Add traditional analytics if available
+        churn_risk = state.get('churn_risk_score')
+        if churn_risk:
+            handoff_data["churn_risk_score"] = churn_risk
+
+        await self.event_publisher.publish_bot_handoff_request(
+            handoff_id=str(uuid4()),
+            from_bot="enhanced-lead-bot",
+            to_bot="jorge-seller-bot",
+            contact_id=state["lead_id"],
+            data=handoff_data
+        )
+
+        logger.info(f"Intelligent Jorge handoff request published for {state['lead_name']} "
+                   f"(type: {handoff_type}, score: {intelligence_score:.2f})")
+
+    # ================================
     # UNIFIED PROCESSING METHODS
     # ================================
 
@@ -1645,7 +2088,15 @@ class LeadBotWorkflow:
             "touchpoint_analysis": None,
             "enhanced_optimization": None,
             "critical_scenario": None,
-            "track3_applied": False
+            "track3_applied": False,
+
+            # Phase 3.3 Intelligence Enhancement fields
+            "intelligence_context": None,
+            "intelligence_performance_ms": 0.0,
+            "preferred_engagement_timing": None,
+            "churn_risk_score": None,
+            "cross_bot_preferences": None,
+            "sequence_optimization_applied": False
         }
 
         return await self.workflow.ainvoke(initial_state)
@@ -1661,7 +2112,8 @@ class LeadBotWorkflow:
                 "behavioral_optimization": self.config.enable_behavioral_optimization,
                 "personality_adaptation": self.config.enable_personality_adaptation,
                 "track3_intelligence": self.config.enable_track3_intelligence,
-                "jorge_handoff": self.config.jorge_handoff_enabled
+                "jorge_handoff": self.config.jorge_handoff_enabled,
+                "bot_intelligence": self.config.enable_bot_intelligence
             }
         }
 
@@ -1693,6 +2145,19 @@ class LeadBotWorkflow:
                 "handoff_rate": self.workflow_stats["jorge_handoffs"] / max(self.workflow_stats["total_sequences"], 1)
             }
 
+        # Bot Intelligence metrics
+        if self.config.enable_bot_intelligence:
+            metrics["bot_intelligence"] = {
+                "intelligence_operations": self.workflow_stats["intelligence_gathering_operations"],
+                "intelligence_rate": self.workflow_stats["intelligence_gathering_operations"] / max(self.workflow_stats["total_sequences"], 1),
+                "middleware_available": self.intelligence_middleware is not None
+            }
+
+            # Include middleware metrics if available
+            if self.intelligence_middleware:
+                middleware_metrics = self.intelligence_middleware.get_metrics()
+                metrics["bot_intelligence"]["middleware_metrics"] = middleware_metrics
+
         return metrics
 
     async def health_check(self) -> Dict[str, Any]:
@@ -1703,6 +2168,7 @@ class LeadBotWorkflow:
             "behavioral_optimization": "disabled",
             "personality_adaptation": "disabled",
             "track3_intelligence": "disabled",
+            "bot_intelligence": "disabled",
             "overall_status": "healthy"
         }
 
@@ -1723,6 +2189,13 @@ class LeadBotWorkflow:
             health_status["track3_intelligence"] = "healthy" if self.ml_analytics else "dependencies_missing"
             if not TRACK3_ML_AVAILABLE:
                 health_status["track3_intelligence"] = "dependencies_missing"
+                health_status["overall_status"] = "degraded"
+
+        # Check Bot Intelligence
+        if self.config.enable_bot_intelligence:
+            health_status["bot_intelligence"] = "healthy" if self.intelligence_middleware else "dependencies_missing"
+            if not BOT_INTELLIGENCE_AVAILABLE:
+                health_status["bot_intelligence"] = "dependencies_missing"
                 health_status["overall_status"] = "degraded"
 
         return health_status
@@ -1755,6 +2228,16 @@ class LeadBotWorkflow:
             enable_behavioral_optimization=True,
             enable_personality_adaptation=True,
             enable_track3_intelligence=True,
+            enable_bot_intelligence=True,
+            jorge_handoff_enabled=True
+        )
+        return cls(ghl_client=ghl_client, config=config)
+
+    @classmethod
+    def create_intelligence_enhanced_lead_bot(cls, ghl_client=None) -> 'LeadBotWorkflow':
+        """Factory method: Create lead bot with Phase 3.3 Intelligence Middleware"""
+        config = LeadBotConfig(
+            enable_bot_intelligence=True,
             jorge_handoff_enabled=True
         )
         return cls(ghl_client=ghl_client, config=config)
