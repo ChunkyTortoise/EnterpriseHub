@@ -126,10 +126,10 @@ AdvancedAnalytics:
 
 ### **Jorge-Specific Features**
 - **6% Commission System**: Automatic calculation with ML-predicted sale prices
-- **4 Core Questions**: Hardcoded from Jorge's proven qualification process
+- **4 Core Questions**: Delivered with friendly, consultative approach
 - **Temperature Classification**: Hot (75+), Warm (50-74), Lukewarm (25-49), Cold (<25)
-- **Confrontational Tone**: No-BS approach targeting motivated sellers only
-- **SMS Compliance**: 160 char max, no emojis, direct professional tone
+- **Friendly Consultation**: Warm, helpful approach supporting all sellers
+- **SMS Compliance**: 160 char max, warm professional tone with supportive guidance
 
 ### **Next Phase: Production Deployment & Scale Optimization**
 ✅ **Phase 8 Frontend Excellence Complete** - Professional Next.js interfaces for AI Concierge and Advanced Analytics with enterprise-grade UI/UX and real-time WebSocket streaming. Next: Production deployment optimization, advanced Deck.gl geospatial visualization, voice integration enhancement, and large-scale performance testing.

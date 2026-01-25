@@ -1,0 +1,26 @@
+{
+  "deployment_timestamp": "2026-01-25T11:42:02.946489+00:00",
+  "validation_duration_seconds": 3.0552821159362793,
+  "events_processed": 170,
+  "performance_targets": {
+    "average_latency_ms": 50,
+    "p95_latency_ms": 100,
+    "events_under_50ms": 70,
+    "events_under_100ms": 90
+  },
+  "measured_performance": {
+    "average_latency_ms": 0.02852047190946691,
+    "p95_latency_ms": 0.06858110427856445,
+    "events_under_50ms_percent": 100.0,
+    "events_under_100ms_percent": 100.0
+  },
+  "improvement_factor": 17531.266719118805,
+  "system_metrics": {
+    "total_events_processed": 170,
+    "avg_latency_ms": 5.302,
+    "p95_latency_ms": 12.988,
+    "p99_latency_ms": 17.687,
+    "max_latency_ms": 19.872
+  },
+  "status": "VALIDATED"
+}
