@@ -28,6 +28,11 @@ export interface ConciergeResponse {
   botHandoff?: BotHandoffRecommendation
   memoryUpdates?: MemoryUpdate[]
   advancedIntelligence?: AdvancedIntelligenceResult
+  leadIntelligence?: {
+    frs_score?: number
+    pcs_score?: number
+    lead_score?: number
+  }
 }
 
 export interface SuggestedAction {
@@ -216,7 +221,7 @@ export class ClaudeConciergeService {
       const analysisPrompt = this.promptEngine.buildContextAnalysisPrompt(platformState)
 
       // Use fast model for quick analysis with robust retry
-      const response = await errorService.withRetry(
+      const result = await errorService.withRetry(
         () => this.queryClaude({
           systemPrompt: analysisPrompt,
           userMessage: JSON.stringify(activityPatterns),
@@ -233,7 +238,9 @@ export class ClaudeConciergeService {
       )
 
       // Parse suggestions from response with validation
-      const suggestions = this.parseSuggestionsFromResponse(response)
+      // Support both raw JSON response and structured model
+      const content = typeof result === 'string' ? result : (result.content || result.primary_guidance)
+      const suggestions = this.parseSuggestionsFromResponse(content)
 
       // Validate suggestions quality
       const validSuggestions = suggestions.filter(s =>
@@ -409,7 +416,7 @@ export class ClaudeConciergeService {
       const handoffPrompt = this.promptEngine.buildHandoffPrompt()
 
       // Use fast model for routing decisions with retry
-      const response = await errorService.withRetry(
+      const result = await errorService.withRetry(
         () => this.queryClaude({
           systemPrompt: handoffPrompt,
           userMessage: this.formatHandoffAnalysisInput(recentMessages, message),
@@ -426,7 +433,8 @@ export class ClaudeConciergeService {
       )
 
       // Parse handoff decision with validation
-      const handoffDecision = this.parseHandoffDecision(response)
+      const content = typeof result === 'string' ? result : (result.content || result.primary_guidance)
+      const handoffDecision = this.parseHandoffDecision(content)
 
       // Track handoff evaluation with detailed metadata
       this.contextManager.trackBotInteraction('concierge', 'handoff_evaluation', {
@@ -605,13 +613,14 @@ export class ClaudeConciergeService {
 
   /**
    * Direct Claude query without streaming (for routing/analysis)
+   * ENHANCED: Now handles structured ConciergeResponseModel
    */
   private async queryClaude(params: {
     systemPrompt: string
     userMessage: string
     model?: string
     maxTokens?: number
-  }): Promise<string> {
+  }): Promise<any> {
     const response = await fetch(`${this.baseApiUrl}/claude-concierge/chat`, {
       method: 'POST',
       headers: {
@@ -631,8 +640,7 @@ export class ClaudeConciergeService {
       throw new Error(`Claude query failed: ${response.status} ${response.statusText}`)
     }
 
-    const result = await response.json()
-    return result.content
+    return await response.json()
   }
 
   /**
@@ -707,7 +715,8 @@ export class ClaudeConciergeService {
         metadata: {
           reasoning,
           suggestedActions,
-          botHandoff
+          botHandoff,
+          leadIntelligence: parsedResponse.leadIntelligence
         }
       })
 
@@ -716,14 +725,16 @@ export class ClaudeConciergeService {
         conversationId,
         responseLength: fullContent.length,
         hasActions: suggestedActions.length > 0,
-        hasHandoff: !!botHandoff
+        hasHandoff: !!botHandoff,
+        hasLeadIntelligence: !!parsedResponse.leadIntelligence
       })
 
       return {
         content: parsedResponse.cleanContent,
         reasoning,
         suggestedActions,
-        botHandoff
+        botHandoff,
+        leadIntelligence: parsedResponse.leadIntelligence
       }
     } catch (error) {
       console.error('Stream processing failed:', error)
@@ -735,6 +746,7 @@ export class ClaudeConciergeService {
 
   /**
    * Parse structured response elements from Claude output
+   * ENHANCED: Now handles real orchestrator tags including immediate_actions and bot_coordination
    */
   private parseStructuredResponse(content: string): {
     cleanContent: string
@@ -746,8 +758,9 @@ export class ClaudeConciergeService {
     let reasoning = ''
     const suggestedActions: SuggestedAction[] = []
     let botHandoff: BotHandoffRecommendation | null = null
+    const leadIntelligence: any = {}
 
-    // Extract handoff recommendation
+    // 1. Extract handoff recommendation (Full tag set)
     const handoffMatch = content.match(/<handoff>\s*<bot>(.*?)<\/bot>\s*<confidence>(.*?)<\/confidence>\s*<reasoning>(.*?)<\/reasoning>\s*(?:<context>(.*?)<\/context>)?\s*<\/handoff>/s)
     if (handoffMatch) {
       botHandoff = {
@@ -756,10 +769,44 @@ export class ClaudeConciergeService {
         reasoning: handoffMatch[3].trim(),
         contextToTransfer: this.parseContextString(handoffMatch[4] || '{}')
       }
-      cleanContent = cleanContent.replace(handoffMatch[0], '').trim()
+      cleanContent = cleanContent.replace(handoffMatch[0], '')
     }
 
-    // Extract suggestions
+    // 1.5 Extract Lead Intelligence Scores
+    const frsMatch = content.match(/<frs_score>(.*?)<\/frs_score>/i)
+    if (frsMatch) {
+      leadIntelligence.frs_score = parseFloat(frsMatch[1].trim())
+      cleanContent = cleanContent.replace(frsMatch[0], '')
+    }
+    const pcsMatch = content.match(/<pcs_score>(.*?)<\/pcs_score>/i)
+    if (pcsMatch) {
+      leadIntelligence.pcs_score = parseFloat(pcsMatch[1].trim())
+      cleanContent = cleanContent.replace(pcsMatch[0], '')
+    }
+    const leadScoreMatch = content.match(/<lead_score>(.*?)<\/lead_score>/i)
+    if (leadScoreMatch) {
+      leadIntelligence.lead_score = parseFloat(leadScoreMatch[1].trim())
+      cleanContent = cleanContent.replace(leadScoreMatch[0], '')
+    }
+
+    // 2. Extract immediate actions (New tag format from real orchestrator)
+    const actionsBlockMatch = content.match(/<immediate_actions>(.*?)<\/immediate_actions>/s)
+    if (actionsBlockMatch) {
+      const actionRegex = /<action\s+priority="(.*?)"\s+category="(.*?)">(.*?)<\/action>/gs
+      let actionMatch
+      while ((actionMatch = actionRegex.exec(actionsBlockMatch[1])) !== null) {
+        suggestedActions.push({
+          type: 'bot_start', // Map to bot_start for execution
+          label: actionMatch[3].trim(),
+          description: `Action Priority: ${actionMatch[1]}`,
+          priority: actionMatch[1] as any,
+          data: { category: actionMatch[2] }
+        })
+      }
+      cleanContent = cleanContent.replace(actionsBlockMatch[0], '')
+    }
+
+    // 3. Extract suggestions (Original tag format)
     const suggestionRegex = /<suggestion type="(.*?)">\s*<title>(.*?)<\/title>\s*<description>(.*?)<\/description>\s*<priority>(.*?)<\/priority>\s*<\/suggestion>/gs
     let suggestionMatch
     while ((suggestionMatch = suggestionRegex.exec(content)) !== null) {
@@ -770,21 +817,46 @@ export class ClaudeConciergeService {
         priority: suggestionMatch[4].trim() as any,
         data: {}
       })
-      cleanContent = cleanContent.replace(suggestionMatch[0], '').trim()
+      cleanContent = cleanContent.replace(suggestionMatch[0], '')
     }
 
-    // Extract reasoning (if any structured reasoning blocks exist)
+    // 4. Extract bot coordination suggestions
+    const botCoordMatch = content.match(/<bot_coordination>(.*?)<\/bot_coordination>/s)
+    if (botCoordMatch) {
+      const coordRegex = /<suggestion\s+bot_type="(.*?)">(.*?)<\/suggestion>/gs
+      let coordMatch
+      while ((coordMatch = coordRegex.exec(botCoordMatch[1])) !== null) {
+        suggestedActions.push({
+          type: 'bot_start',
+          label: `Handoff to ${coordMatch[1]}`,
+          description: coordMatch[2].trim(),
+          priority: 'medium',
+          data: { botId: coordMatch[1] }
+        })
+      }
+      cleanContent = cleanContent.replace(botCoordMatch[0], '')
+    }
+
+    // 5. Extract reasoning
     const reasoningMatch = content.match(/<reasoning>(.*?)<\/reasoning>/s)
     if (reasoningMatch) {
       reasoning = reasoningMatch[1].trim()
-      cleanContent = cleanContent.replace(reasoningMatch[0], '').trim()
+      cleanContent = cleanContent.replace(reasoningMatch[0], '')
+    }
+
+    // 6. Clean up remaining metadata tags
+    const metadataTags = ['primary_guidance', 'urgency_level', 'risk_alerts'];
+    for (const tag of metadataTags) {
+      const tagRegex = new RegExp(`<${tag}>(.*?)<\/${tag}>`, 'gs');
+      cleanContent = cleanContent.replace(tagRegex, '');
     }
 
     return {
       cleanContent: cleanContent.trim(),
       reasoning,
       suggestedActions,
-      botHandoff
+      botHandoff,
+      leadIntelligence: Object.keys(leadIntelligence).length > 0 ? leadIntelligence : undefined
     }
   }
 

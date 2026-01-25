@@ -3,7 +3,7 @@ Jorge Seller Bot - Unified Enterprise Implementation
 Combines all research enhancements into production-ready unified implementation.
 
 UNIFIED FEATURES:
-- LangGraph confrontational qualification (Jorge's proven methodology)
+- LangGraph friendly qualification (Jorge's helpful customer service methodology)
 - Track 3.1 Predictive Intelligence (ML-enhanced decision making)
 - Progressive Skills (68% token reduction, optional)
 - Agent Mesh Integration (enterprise orchestration, optional)
@@ -11,6 +11,7 @@ UNIFIED FEATURES:
 - Adaptive Intelligence (conversation memory & dynamic questioning, optional)
 
 Feature flags allow selective enablement for different deployment scenarios.
+Jorge now focuses on building relationships and helping customers succeed.
 """
 import asyncio
 import time
@@ -155,7 +156,9 @@ class AdaptiveQuestionEngine:
         self.high_intent_accelerators = [
             "It sounds like you're ready to move forward! I'd love to see your property. Would tomorrow afternoon or this week work better for a visit?",
             "Based on what you've shared, it sounds like we have a great opportunity here. Would you like to schedule a time to discuss your options in detail?",
-            "I'm excited to help you with this! What timeline would work best for your situation?"
+            "I'm excited to help you with this! What timeline would work best for your situation?",
+            "You seem ready to take the next step - that's wonderful! When would be a good time to meet and go over your options?",
+            "I can see this is important to you. Let's find a time to sit down and create a plan that works for your situation."
         ]
 
         self.supportive_clarifiers = {
@@ -228,10 +231,10 @@ class AdaptiveQuestionEngine:
 class JorgeSellerBot:
     """
     Unified Jorge Seller Bot - Production-ready with optional enhancements
-    Designed to expose 'Lookers' and prioritize 'Motivated Sellers'.
+    Designed to help sellers succeed while identifying 'Serious Sellers'.
 
     CORE FEATURES (always enabled):
-    - LangGraph confrontational qualification workflow
+    - LangGraph friendly qualification workflow
     - Track 3.1 Predictive Intelligence integration
     - Real-time event publishing and coordination
 
@@ -486,7 +489,7 @@ class JorgeSellerBot:
                 intelligence_context = await self.intelligence_middleware.enhance_bot_context(
                     bot_type="jorge-seller",
                     lead_id=state["lead_id"],
-                    location_id=state.get("location_id", "austin"),  # Default to Austin market
+                    location_id=state.get("location_id", "rancho_cucamonga"),  # Default to Rancho Cucamonga market
                     conversation_context=state.get("conversation_history", []),
                     preferences=preferences
                 )
@@ -536,12 +539,12 @@ class JorgeSellerBot:
         # Basic budget extraction (simple keyword matching)
         budget_keywords = {
             "under 400": {"budget_max": 400000},
-            "under 500": {"budget_max": 500000},
+            "under 500": {"budget_max": 700000},
             "under 600": {"budget_max": 600000},
             "under 700": {"budget_max": 700000},
             "under 800": {"budget_max": 800000},
-            "under 1m": {"budget_max": 1000000},
-            "under 1 million": {"budget_max": 1000000}
+            "under 1m": {"budget_max": 1200000},
+            "under 1 million": {"budget_max": 1200000}
         }
 
         for keyword, budget_info in budget_keywords.items():
@@ -629,12 +632,15 @@ class JorgeSellerBot:
 
         # FRIENDLY APPROACH: Jorge's helpful consultation foundation
         if state['stall_detected']:
-            base_strategy = {"current_tone": "CONSULTATIVE", "next_action": "respond"}
+            base_strategy = {"current_tone": "UNDERSTANDING", "next_action": "respond"}
         elif pcs < 30:
             # Low commitment = Supportive approach (help them understand)
-            base_strategy = {"current_tone": "SUPPORTIVE", "next_action": "respond"}
+            base_strategy = {"current_tone": "EDUCATIONAL", "next_action": "respond"}
+        elif pcs >= 70:
+            # High commitment = Enthusiastic support
+            base_strategy = {"current_tone": "ENTHUSIASTIC", "next_action": "respond"}
         else:
-            base_strategy = {"current_tone": "FRIENDLY", "next_action": "respond"}
+            base_strategy = {"current_tone": "CONSULTATIVE", "next_action": "respond"}
 
         try:
             # TRACK 3.1 ENHANCEMENT: Predictive Intelligence Layer
@@ -726,28 +732,39 @@ class JorgeSellerBot:
             "thinking": "I completely understand you need time to consider this important decision. What specific aspects would be most helpful for me to clarify for you? I'm here to provide any information that might be useful.",
             "get_back": "No problem at all - everyone's timeline is different. I'm happy to provide information whenever you're ready. Would it be helpful if I shared some resources about the current market conditions?",
             "zestimate": "Great question about online estimates! Those algorithms can't see the unique features and updates in your home. I'd be happy to show you what similar homes in your neighborhood have actually sold for recently.",
-            "agent": "That's wonderful that you're working with someone! I'd be glad to share some market insights that might be helpful for your team to consider. Would that be useful for you?"
+            "agent": "That's wonderful that you're working with someone! I'd be glad to share some market insights that might be helpful for your team to consider. Would that be useful for you?",
+            "price": "I understand pricing can feel overwhelming. Let me share some recent sales data that might help you see the full picture and make the best decision for your situation.",
+            "timeline": "Timing is so important, and I want to help you find what works best for you. What factors are most important in your timeline?"
         }
 
         tone_instructions = {
             "consultative": "Be helpful and supportive. Understand their concerns and provide guidance.",
-            "supportive": "Show empathy and patience. Help them feel comfortable making decisions.",
-            "friendly": "Warm and professional. Focus on building trust and providing value."
+            "educational": "Share knowledge patiently. Help them understand their options without pressure.",
+            "understanding": "Show empathy and patience. Address their concerns with care and expertise.",
+            "enthusiastic": "Share their excitement while staying professional. Guide them toward success.",
+            "supportive": "Provide comfort and reassurance. Help them feel confident in their decisions."
         }
 
         # Base prompt for Jorge Persona
         prompt = f"""
-        You are Jorge Salas, a successful and helpful real estate professional.
-        Your tone is: FRIENDLY, CONSULTATIVE, and SUPPORTIVE.
-        You genuinely want to help sellers find the best solutions for their situations.
+        You are Jorge Salas, a caring and knowledgeable real estate professional.
+        Your approach is: HELPFUL, CONSULTATIVE, and RELATIONSHIP-FOCUSED.
+        You genuinely want to help sellers achieve their goals and make great decisions.
+
+        CORE VALUES:
+        - Put the seller's success first
+        - Build trust through expertise and care
+        - Provide valuable insights and education
+        - Be patient and understanding
+        - Focus on long-term relationships
 
         CURRENT CONTEXT:
         Lead: {state['lead_name']}
-        Tone Mode: {state['current_tone']} ({tone_instructions.get(state['current_tone'])})
+        Tone Mode: {state['current_tone']} ({tone_instructions.get(state['current_tone'], 'Be helpful and professional')})
         Conversation Context: {state['detected_stall_type'] or 'None'}
         FRS Classification: {state['intent_profile'].frs.classification}
 
-        TASK: Generate a helpful, friendly response to the lead's last message.
+        TASK: Generate a helpful, friendly response that builds trust and provides value.
         """
         
         if state['stall_detected'] and state['detected_stall_type'] in friendly_responses:
@@ -877,19 +894,19 @@ class JorgeSellerBot:
             }
         elif state['stall_detected']:
             strategy = {
-                "current_tone": "CONFRONTATIONAL",
+                "current_tone": "UNDERSTANDING",
                 "next_action": "respond",
-                "adaptive_mode": "objection_handling"
+                "adaptive_mode": "supportive_guidance"
             }
         elif context.get('adaptation_count', 0) > 2:  # Multiple adaptations
             strategy = {
-                "current_tone": "TAKE-AWAY",
+                "current_tone": "HONEST",
                 "next_action": "respond",
-                "adaptive_mode": "qualification_focused"
+                "adaptive_mode": "clarity_focused"
             }
         else:
             strategy = {
-                "current_tone": "DIRECT",
+                "current_tone": "CONSULTATIVE",
                 "next_action": "respond",
                 "adaptive_mode": "standard_qualification"
             }
@@ -914,7 +931,7 @@ class JorgeSellerBot:
 
         # Enhanced prompt with adaptive context
         prompt = f"""
-        You are Jorge Salas, confrontational real estate investor.
+        You are Jorge Salas, helpful real estate advisor and relationship builder.
 
         CURRENT CONTEXT:
         Lead: {state['lead_name']}
@@ -926,7 +943,7 @@ class JorgeSellerBot:
 
         RECOMMENDED QUESTION: {next_question}
 
-        TASK: Deliver the question in Jorge's direct, no-BS style.
+        TASK: Deliver the question in Jorge's helpful, consultative style that builds trust and rapport.
         """
 
         response = await self.claude.analyze_with_context(prompt)
@@ -979,7 +996,7 @@ class JorgeSellerBot:
 
         start_time = time.time()
 
-        # Enhanced discovery context with Austin market intelligence
+        # Enhanced discovery context with Rancho Cucamonga market intelligence
         discovery_context = {
             "lead_name": lead_data.get("lead_name"),
             "last_message": lead_data.get("last_message", ""),
@@ -992,10 +1009,10 @@ class JorgeSellerBot:
             "stall_history": lead_data.get("stall_count", 0)
         }
 
-        # Austin market context injection (68% token reduction enhancement)
-        if self._is_austin_property(lead_data.get("property_address")):
-            discovery_context["market_context"] = "austin"
-            discovery_context["austin_neighborhood"] = self._detect_austin_neighborhood(
+        # Rancho Cucamonga market context injection (68% token reduction enhancement)
+        if self._is_rancho_cucamonga_property(lead_data.get("property_address")):
+            discovery_context["market_context"] = "rancho_cucamonga"
+            discovery_context["rancho_cucamonga_neighborhood"] = self._detect_rancho_cucamonga_neighborhood(
                 lead_data.get("property_address")
             )
 
@@ -1044,52 +1061,52 @@ class JorgeSellerBot:
             "seller_temperature": self._confidence_to_temperature(confidence),
             "execution_time": execution_time,
             "market_context": discovery_context.get("market_context"),
-            "austin_neighborhood": discovery_context.get("austin_neighborhood")
+            "rancho_cucamonga_neighborhood": discovery_context.get("rancho_cucamonga_neighborhood")
         }
 
-    def _is_austin_property(self, address: Optional[str]) -> bool:
-        """Detect if property is in Austin market for progressive skills enhancement."""
+    def _is_rancho_cucamonga_property(self, address: Optional[str]) -> bool:
+        """Detect if property is in Rancho Cucamonga market for progressive skills enhancement."""
         if not address:
             return False
         address_lower = address.lower()
         return any([
-            "austin" in address_lower,
+            "rancho_cucamonga" in address_lower,
             "tx 78" in address_lower,
             " atx" in address_lower,
-            "austin, tx" in address_lower
+            "rancho_cucamonga, ca" in address_lower
         ])
 
-    def _detect_austin_neighborhood(self, address: Optional[str]) -> Optional[str]:
-        """Extract Austin neighborhood from address for market-specific skills."""
+    def _detect_rancho_cucamonga_neighborhood(self, address: Optional[str]) -> Optional[str]:
+        """Extract Rancho Cucamonga neighborhood from address for market-specific skills."""
         if not address:
             return None
 
-        austin_neighborhoods = {
-            "westlake": ["westlake", "west lake hills"],
+        rancho_cucamonga_neighborhoods = {
+            "alta_loma": ["alta_loma", "west lake hills"],
             "tarrytown": ["tarrytown"],
             "mueller": ["mueller"],
-            "downtown": ["downtown", "west 6th", "rainey"],
+            "central_rc": ["central_rc", "west 6th", "rainey"],
             "south_congress": ["soco", "south congress", "zilker"],
-            "east_austin": ["east austin", "cherrywood"],
-            "cedar_park": ["cedar park"],
-            "round_rock": ["round rock"],
-            "pflugerville": ["pflugerville"],
+            "east_rancho_cucamonga": ["east rancho_cucamonga", "cherrywood"],
+            "etiwanda": ["cedar park"],
+            "victoria_gardens": ["round rock"],
+            "day_creek": ["day_creek"],
             "lakeway": ["lakeway"],
             "bee_cave": ["bee cave"]
         }
 
         address_lower = address.lower()
-        for neighborhood, keywords in austin_neighborhoods.items():
+        for neighborhood, keywords in rancho_cucamonga_neighborhoods.items():
             if any(keyword in address_lower for keyword in keywords):
                 return neighborhood
 
-        return "central_austin"  # Default for Austin addresses
+        return "central_rancho_cucamonga"  # Default for Rancho Cucamonga addresses
 
     async def _execute_traditional_qualification(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Traditional full-context qualification"""
         qualification_prompt = f"""
-        You are Jorge Salas analyzing a seller lead.
-        Use confrontational qualification to determine motivation.
+        You are Jorge Salas analyzing a seller lead with a helpful, consultative approach.
+        Use friendly qualification to understand motivation and provide guidance.
 
         Lead Information:
         - Name: {lead_data.get('lead_name')}
@@ -1101,7 +1118,7 @@ class JorgeSellerBot:
         1. Seller motivation (1-10 scale)
         2. Timeline urgency
         3. Price sensitivity
-        4. Jorge's recommended approach (CONFRONTATIONAL/DIRECT/TAKE-AWAY)
+        4. Jorge's recommended approach (CONSULTATIVE/EDUCATIONAL/SUPPORTIVE)
         """
 
         response = await self.claude.analyze_with_context(
@@ -1324,42 +1341,42 @@ class JorgeSellerBot:
 
         # ENHANCEMENT 1: Response Pattern Optimization
         if response_pattern == "fast" and conversion_prob > 0.6:
-            # Fast responders with high conversion probability = MORE AGGRESSIVE
-            if enhanced_strategy["current_tone"] == "DIRECT":
-                enhanced_strategy["current_tone"] = "CONFRONTATIONAL"
+            # Fast responders with high conversion probability = MORE ENTHUSIASTIC
+            if enhanced_strategy["current_tone"] == "CONSULTATIVE":
+                enhanced_strategy["current_tone"] = "ENTHUSIASTIC"
                 enhanced_strategy["enhancement_reason"] = "fast_responder_high_conversion"
-            elif enhanced_strategy["current_tone"] == "CONFRONTATIONAL":
-                enhanced_strategy["intensity"] = "AGGRESSIVE"
-                enhanced_strategy["enhancement_reason"] = "fast_responder_escalation"
+            elif enhanced_strategy["current_tone"] == "EDUCATIONAL":
+                enhanced_strategy["current_tone"] = "CONSULTATIVE"
+                enhanced_strategy["enhancement_reason"] = "fast_responder_upgrade"
 
         elif response_pattern == "slow" and conversion_prob < 0.3:
-            # Slow responders with low conversion = CUT LOSSES FASTER
-            if enhanced_strategy["current_tone"] == "DIRECT":
-                enhanced_strategy["current_tone"] = "TAKE-AWAY"
-                enhanced_strategy["enhancement_reason"] = "slow_responder_low_conversion"
-            elif enhanced_strategy["current_tone"] == "CONFRONTATIONAL":
-                enhanced_strategy["current_tone"] = "TAKE-AWAY"
-                enhanced_strategy["enhancement_reason"] = "unresponsive_cut_losses"
+            # Slow responders with low conversion = MORE EDUCATIONAL
+            if enhanced_strategy["current_tone"] == "CONSULTATIVE":
+                enhanced_strategy["current_tone"] = "EDUCATIONAL"
+                enhanced_strategy["enhancement_reason"] = "slow_responder_education_needed"
+            elif enhanced_strategy["current_tone"] == "ENTHUSIASTIC":
+                enhanced_strategy["current_tone"] = "CONSULTATIVE"
+                enhanced_strategy["enhancement_reason"] = "slow_responder_gentle_approach"
 
         # ENHANCEMENT 2: Stage Progression Velocity
         if stage_velocity > 0.8:
-            # Fast-moving leads = MAINTAIN MOMENTUM
-            enhanced_strategy["urgency_boost"] = True
+            # Fast-moving leads = MAINTAIN MOMENTUM WITH ENTHUSIASM
+            enhanced_strategy["enthusiasm_boost"] = True
             enhanced_strategy["momentum_factor"] = "high"
         elif stage_velocity < 0.3:
-            # Stalled progression = INCREASE PRESSURE
-            if enhanced_strategy["current_tone"] != "TAKE-AWAY":
-                enhanced_strategy["pressure_increase"] = True
-                enhanced_strategy["stall_breaking"] = True
+            # Stalled progression = PROVIDE MORE SUPPORT
+            if enhanced_strategy["current_tone"] != "EDUCATIONAL":
+                enhanced_strategy["support_increase"] = True
+                enhanced_strategy["educational_focus"] = True
 
         # ENHANCEMENT 3: Conversion Probability Context
         if conversion_prob > 0.7:
             # High conversion probability = MAINTAIN CURRENT APPROACH
             enhanced_strategy["confidence_level"] = "high"
             enhanced_strategy["approach_validation"] = "maintain_course"
-        elif conversion_prob < 0.3 and enhanced_strategy["current_tone"] != "TAKE-AWAY":
-            # Low conversion probability = DISQUALIFY FASTER
-            enhanced_strategy["disqualification_urgency"] = True
+        elif conversion_prob < 0.3 and enhanced_strategy["current_tone"] != "EDUCATIONAL":
+            # Low conversion probability = PROVIDE MORE EDUCATION
+            enhanced_strategy["education_emphasis"] = True
 
         # Track behavioral intelligence application
         enhanced_strategy["track3_behavioral_applied"] = True
@@ -1387,57 +1404,57 @@ class JorgeSellerBot:
         optimal_action = conversion_analysis.optimal_action
         stage_bottlenecks = journey_analysis.stage_bottlenecks
 
-        # MARKET TIMING ENHANCEMENT 1: Urgency-Based Intensity
+        # MARKET TIMING ENHANCEMENT 1: Urgency-Based Support
         if urgency_score > 0.8:
-            # HIGH URGENCY = MAXIMUM PRESSURE
+            # HIGH URGENCY = MAXIMUM SUPPORT AND ENTHUSIASM
             final_strategy["market_urgency"] = "high"
 
-            if final_strategy["current_tone"] == "DIRECT":
-                final_strategy["current_tone"] = "CONFRONTATIONAL"
+            if final_strategy["current_tone"] == "CONSULTATIVE":
+                final_strategy["current_tone"] = "ENTHUSIASTIC"
                 final_strategy["timing_reason"] = "high_market_urgency"
-            elif final_strategy["current_tone"] == "CONFRONTATIONAL":
-                final_strategy["intensity"] = "MAXIMUM"
-                final_strategy["timing_reason"] = "peak_urgency_escalation"
+            elif final_strategy["current_tone"] == "EDUCATIONAL":
+                final_strategy["current_tone"] = "CONSULTATIVE"
+                final_strategy["timing_reason"] = "urgency_upgrade_support"
 
         elif urgency_score < 0.3:
-            # LOW URGENCY = PATIENT DISQUALIFICATION
-            if final_strategy["current_tone"] == "CONFRONTATIONAL":
-                final_strategy["current_tone"] = "DIRECT"
-                final_strategy["timing_reason"] = "low_urgency_de_escalation"
+            # LOW URGENCY = PATIENT EDUCATION
+            if final_strategy["current_tone"] == "ENTHUSIASTIC":
+                final_strategy["current_tone"] = "CONSULTATIVE"
+                final_strategy["timing_reason"] = "low_urgency_patience"
 
         # MARKET TIMING ENHANCEMENT 2: Optimal Action Integration
         jorge_action_mapping = {
-            "schedule_qualification_call": "DIRECT",
-            "schedule_appointment": "DIRECT",
-            "clarify_requirements": "CONFRONTATIONAL",
-            "nurture_relationship": "TAKE-AWAY",  # If nurture needed, they're not ready
-            "follow_up_contact": "DIRECT"
+            "schedule_qualification_call": "CONSULTATIVE",
+            "schedule_appointment": "ENTHUSIASTIC",
+            "clarify_requirements": "EDUCATIONAL",
+            "nurture_relationship": "SUPPORTIVE",  # Build relationships over time
+            "follow_up_contact": "CONSULTATIVE"
         }
 
         suggested_tone = jorge_action_mapping.get(optimal_action)
         if suggested_tone and suggested_tone != final_strategy["current_tone"]:
-            # Only adjust if it increases intensity (Jorge doesn't back down)
-            tone_intensity = {"TAKE-AWAY": 3, "CONFRONTATIONAL": 2, "DIRECT": 1}
+            # Adjust to maintain helpfulness while being effective
+            tone_helpfulness = {"EDUCATIONAL": 1, "CONSULTATIVE": 2, "ENTHUSIASTIC": 3, "SUPPORTIVE": 2}
 
-            current_intensity = tone_intensity.get(final_strategy["current_tone"], 1)
-            suggested_intensity = tone_intensity.get(suggested_tone, 1)
+            current_helpfulness = tone_helpfulness.get(final_strategy["current_tone"], 2)
+            suggested_helpfulness = tone_helpfulness.get(suggested_tone, 2)
 
-            if suggested_intensity >= current_intensity:
-                final_strategy["current_tone"] = suggested_tone
-                final_strategy["action_alignment"] = True
-                final_strategy["optimal_action_applied"] = optimal_action
+            # Always use the suggested tone that best serves the customer
+            final_strategy["current_tone"] = suggested_tone
+            final_strategy["action_alignment"] = True
+            final_strategy["optimal_action_applied"] = optimal_action
 
         # MARKET TIMING ENHANCEMENT 3: Bottleneck-Based Strategy
         if "stalled_in_stage" in stage_bottlenecks or "slow_response_time" in stage_bottlenecks:
-            # STALLS = CONFRONTATIONAL BREAKTHROUGH
-            if final_strategy["current_tone"] == "DIRECT":
-                final_strategy["current_tone"] = "CONFRONTATIONAL"
+            # STALLS = SUPPORTIVE BREAKTHROUGH
+            if final_strategy["current_tone"] == "CONSULTATIVE":
+                final_strategy["current_tone"] = "UNDERSTANDING"
                 final_strategy["bottleneck_reason"] = "stage_stall_detected"
 
         elif "price_misalignment" in stage_bottlenecks:
-            # PRICE ISSUES = IMMEDIATE TAKE-AWAY
-            final_strategy["current_tone"] = "TAKE-AWAY"
-            final_strategy["bottleneck_reason"] = "price_reality_check_needed"
+            # PRICE ISSUES = GENTLE EDUCATION
+            final_strategy["current_tone"] = "EDUCATIONAL"
+            final_strategy["bottleneck_reason"] = "price_education_needed"
 
         # Track market timing intelligence application
         final_strategy["track3_timing_applied"] = True
@@ -1447,11 +1464,11 @@ class JorgeSellerBot:
             "stage_bottlenecks": stage_bottlenecks
         }
 
-        # JORGE PHILOSOPHY: Never compromise on confrontational approach
-        # If Track 3.1 suggests backing down, Jorge doubles down instead
+        # JORGE PHILOSOPHY: Always prioritize customer success and relationship building
+        # If Track 3.1 suggests being less helpful, Jorge maintains his caring approach
         if final_strategy.get("suggested_de_escalation"):
-            final_strategy["current_tone"] = "CONFRONTATIONAL"
-            final_strategy["jorge_override"] = "never_back_down"
+            final_strategy["current_tone"] = "SUPPORTIVE"
+            final_strategy["jorge_override"] = "always_helpful"
 
         logger.info(f"Applied market timing intelligence for {state['lead_id']}: "
                    f"urgency={urgency_score:.2f}, action={optimal_action}")
@@ -1592,7 +1609,7 @@ class JorgeSellerBot:
         actions = []
 
         if is_return_lead:
-            actions.append("Apply return lead confrontational script")
+            actions.append("Apply return lead relationship-building script")
 
         if temperature == "hot" and qualification_score >= 75:
             actions.extend([
@@ -1628,39 +1645,39 @@ class JorgeSellerBot:
         Apply conversation intelligence to refine Jorge's strategy.
 
         Uses objection detection and sentiment analysis to adjust approach while
-        maintaining Jorge's confrontational methodology.
+        maintaining Jorge's friendly, relationship-focused methodology.
         """
         try:
             conversation_intel = intelligence_context.conversation_intelligence
 
-            # Analyze objections for confrontational breakthrough opportunities
+            # Analyze objections for supportive breakthrough opportunities
             if conversation_intel.objections_detected:
                 primary_objection = conversation_intel.objections_detected[0]
                 objection_type = primary_objection.get('type', 'unknown')
                 severity = primary_objection.get('severity', 0.5)
 
-                logger.info(f"Jorge confronting {objection_type} objection (severity: {severity})")
+                logger.info(f"Jorge addressing {objection_type} concern with care (severity: {severity})")
 
-                # Jorge's confrontational response to common objections
+                # Jorge's helpful response to common concerns
                 if objection_type in ['price', 'pricing'] and severity > 0.6:
-                    # Strong price objection - use consultative confrontation
-                    strategy['confrontation_angle'] = 'price_reality_check'
+                    # Strong price objection - provide education and support
+                    strategy['support_angle'] = 'price_education_with_care'
                     strategy['talking_points'] = primary_objection.get('suggested_responses', [])
                 elif objection_type in ['timing', 'timeline'] and severity > 0.5:
-                    # Timeline objection - challenge their urgency
-                    strategy['confrontation_angle'] = 'timeline_commitment_test'
+                    # Timeline concern - understand their needs
+                    strategy['support_angle'] = 'timeline_understanding'
                 elif objection_type in ['trust', 'agent']:
-                    # Trust/agent objection - friendly competitive approach
-                    strategy['current_tone'] = 'FRIENDLY'  # Stay friendly for trust building
+                    # Trust/agent concern - build relationships
+                    strategy['current_tone'] = 'SUPPORTIVE'  # Build trust through care
 
-            # Adjust intensity based on sentiment
+            # Adjust approach based on sentiment
             sentiment = conversation_intel.overall_sentiment
             if sentiment < -0.3:
-                # Negative sentiment - ease up slightly but maintain authority
-                strategy['intensity_modifier'] = 'gentle_confrontation'
+                # Negative sentiment - provide more care and understanding
+                strategy['care_modifier'] = 'extra_supportive'
             elif sentiment > 0.3:
-                # Positive sentiment - opportunity for stronger engagement
-                strategy['intensity_modifier'] = 'confident_advancement'
+                # Positive sentiment - opportunity for enthusiastic engagement
+                strategy['enthusiasm_modifier'] = 'confident_partnership'
 
             # Use response recommendations for coaching opportunities
             if conversation_intel.response_recommendations:
@@ -1747,30 +1764,32 @@ class JorgeSellerBot:
 
     @classmethod
     def create_standard_jorge(cls, tenant_id: str = "jorge_seller") -> 'JorgeSellerBot':
-        """Factory method: Create standard Jorge bot (Track 3.1 only)"""
-        config = JorgeFeatureConfig(enable_track3_intelligence=True)
+        """Factory method: Create standard friendly Jorge bot (Track 3.1 only)"""
+        config = JorgeFeatureConfig(enable_track3_intelligence=True, friendly_approach_enabled=True)
         return cls(tenant_id=tenant_id, config=config)
 
     @classmethod
     def create_progressive_jorge(cls, tenant_id: str = "jorge_seller") -> 'JorgeSellerBot':
-        """Factory method: Create Jorge bot with progressive skills (68% token reduction)"""
+        """Factory method: Create friendly Jorge bot with progressive skills (68% token reduction)"""
         config = JorgeFeatureConfig(
             enable_track3_intelligence=True,
             enable_progressive_skills=True,
-            enable_bot_intelligence=True  # Phase 3.3 enabled
+            enable_bot_intelligence=True,  # Phase 3.3 enabled
+            friendly_approach_enabled=True
         )
         return cls(tenant_id=tenant_id, config=config)
 
     @classmethod
     def create_enterprise_jorge(cls, tenant_id: str = "jorge_seller") -> 'JorgeSellerBot':
-        """Factory method: Create fully-enhanced enterprise Jorge bot"""
+        """Factory method: Create fully-enhanced friendly enterprise Jorge bot"""
         config = JorgeFeatureConfig(
             enable_track3_intelligence=True,
             enable_progressive_skills=True,
             enable_agent_mesh=True,
             enable_mcp_integration=True,
             enable_adaptive_questioning=True,
-            enable_bot_intelligence=True  # Phase 3.3 enabled
+            enable_bot_intelligence=True,  # Phase 3.3 enabled
+            friendly_approach_enabled=True
         )
         return cls(tenant_id=tenant_id, config=config)
 

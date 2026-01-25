@@ -230,7 +230,7 @@ def sample_lead_data():
                 "questions_answered": random.randint(0, 7),
                 "engagement_score": random.uniform(0.5, 1.0),
                 "source": random.choice(["website_form", "referral", "cold_call", "social_media"]),
-                "budget": random.randint(200000, 1500000),
+                "budget": random.randint(200000, 1700000),
                 "timeline": random.choice(["immediate", "30_days", "60_days", "90_days"])
             }
         }

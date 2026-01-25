@@ -1,0 +1,22 @@
+{
+  "validation_timestamp": 1769373294.9143622,
+  "friendly_approach_validated": true,
+  "scenario_results": [
+    "FriendlyValidationResult(scenario_id='friendly_qualification_1', tone_score=0.3, effectiveness_score=0.8, customer_satisfaction=0.4, maintains_qualification=True, response_analysis={'friendly_language_detected': True, 'helpful_tone': True, 'consultative_approach': True, 'no_aggressive_language': True, 'builds_trust': True})",
+    "FriendlyValidationResult(scenario_id='friendly_concern_handling', tone_score=0.3, effectiveness_score=0.7, customer_satisfaction=0.6000000000000001, maintains_qualification=False, response_analysis={'friendly_language_detected': False, 'helpful_tone': True, 'consultative_approach': True, 'no_aggressive_language': True, 'builds_trust': True})",
+    "FriendlyValidationResult(scenario_id='friendly_price_discussion', tone_score=0.3, effectiveness_score=0.5, customer_satisfaction=0.4, maintains_qualification=False, response_analysis={'friendly_language_detected': True, 'helpful_tone': False, 'consultative_approach': True, 'no_aggressive_language': True, 'builds_trust': False})"
+  ],
+  "overall_metrics": {
+    "average_friendliness_score": 0.3,
+    "average_effectiveness_score": 0.6666666666666666,
+    "average_satisfaction_score": 0.46666666666666673,
+    "qualification_maintenance_rate": 0.3333333333333333,
+    "friendly_approach_success": false,
+    "customer_experience_positive": false
+  },
+  "recommendations": [
+    "\u26a0\ufe0f Friendly tone needs improvement - add more caring, helpful language",
+    "\u26a0\ufe0f Qualification effectiveness below target - optimize questioning approach",
+    "\ud83d\udfe1 Customer satisfaction could improve - add more supportive language"
+  ]
+}

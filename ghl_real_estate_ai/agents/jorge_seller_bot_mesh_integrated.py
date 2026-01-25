@@ -559,10 +559,10 @@ async def example_jorge_mesh_qualification():
         "name": "Sarah Johnson",
         "phone": "+1555123456",
         "email": "sarah.j@email.com",
-        "property_address": "123 Main St, Downtown",
+        "property_address": "123 Main St, Central RC",
         "conversation_history": [
             "Hi, I'm thinking about selling my house",
-            "It's a 3 bedroom in downtown, bought it 5 years ago",
+            "It's a 3 bedroom in central_rc, bought it 5 years ago",
             "I need to move for a job opportunity",
             "I'm hoping to get around $450K for it"
         ],

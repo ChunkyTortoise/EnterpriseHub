@@ -459,11 +459,11 @@ class JorgeLeadEngineOptimized:
 
         # Budget extraction with improved patterns
         budget_patterns = [
-            r'\$([0-9,]+)k',  # $500k
+            r'\$([0-9,]+)k',  # $700k
             r'\$([0-9,]+),000',  # $500,000
-            r'([0-9]+)k budget',  # 500k budget
-            r'under \$([0-9,]+)',  # under $500k
-            r'up to \$([0-9,]+)'  # up to $500k
+            r'([0-9]+)k budget',  # 700k budget
+            r'under \$([0-9,]+)',  # under $700k
+            r'up to \$([0-9,]+)'  # up to $700k
         ]
 
         budget_max = None
@@ -496,15 +496,15 @@ class JorgeLeadEngineOptimized:
                 break
 
         # Location extraction
-        austin_areas = [
-            "west lake", "westlake", "bee cave", "lakeway", "dripping springs",
-            "round rock", "cedar park", "leander", "georgetown", "pflugerville",
-            "north austin", "south austin", "east austin", "central austin",
-            "downtown", "mueller", "domain", "arboretum"
+        rancho_cucamonga_areas = [
+            "west lake", "alta_loma", "bee cave", "lakeway", "dripping springs",
+            "round rock", "cedar park", "leander", "georgetown", "day_creek",
+            "north rancho_cucamonga", "south rancho_cucamonga", "east rancho_cucamonga", "central rancho_cucamonga",
+            "central_rc", "mueller", "domain", "arboretum"
         ]
 
         location_preferences = []
-        for area in austin_areas:
+        for area in rancho_cucamonga_areas:
             if area in message_lower:
                 location_preferences.append(area.title())
 
@@ -571,7 +571,7 @@ class JorgeLeadEngineOptimized:
             if not lead_data["budget_max"]:
                 response_parts.append("What's your budget range?")
             if not lead_data["location"]:
-                response_parts.append("Which areas of Austin interest you most?")
+                response_parts.append("Which areas of Rancho Cucamonga interest you most?")
             if lead_data["financing_status"] == "unknown":
                 response_parts.append("Are you pre-approved for financing or paying cash?")
 
@@ -581,7 +581,7 @@ class JorgeLeadEngineOptimized:
 
         else:
             # Lower-quality lead - still helpful but more qualifying
-            response_text = "I'd love to help you find the right home in Austin! To make sure I show you properties that fit your needs, can you tell me more about your budget range and which areas you're considering?"
+            response_text = "I'd love to help you find the right home in Rancho Cucamonga! To make sure I show you properties that fit your needs, can you tell me more about your budget range and which areas you're considering?"
             confidence = 0.6
             tone_quality = "qualifying"
 
@@ -600,9 +600,9 @@ class JorgeLeadEngineOptimized:
 
             # Budget score
             if lead_data.get("budget_max"):
-                if lead_data["budget_max"] >= 500000:
+                if lead_data["budget_max"] >= 700000:
                     score += 20  # High budget
-                elif lead_data["budget_max"] >= 300000:
+                elif lead_data["budget_max"] >= 700000:
                     score += 15  # Medium budget
                 else:
                     score += 10  # Any budget mentioned
@@ -667,9 +667,9 @@ class JorgeLeadEngineOptimized:
 
         # Budget-based tagging
         if lead_data.get("budget_max"):
-            if lead_data["budget_max"] >= 500000:
+            if lead_data["budget_max"] >= 700000:
                 actions.append({"type": "add_tag", "tag": "High-Budget"})
-            elif lead_data["budget_max"] >= 300000:
+            elif lead_data["budget_max"] >= 700000:
                 actions.append({"type": "add_tag", "tag": "Medium-Budget"})
             else:
                 actions.append({"type": "add_tag", "tag": "Budget-Conscious"})
@@ -739,7 +739,7 @@ class JorgeLeadEngineOptimized:
         """Fallback lead response when everything fails"""
 
         return {
-            "message": "Thanks for your interest in buying a home in Austin! I'd love to help you find the perfect property. Let me connect you with our team to discuss your needs in detail.",
+            "message": "Thanks for your interest in buying a home in Rancho Cucamonga! I'd love to help you find the perfect property. Let me connect you with our team to discuss your needs in detail.",
             "lead_score": 50.0,
             "lead_temperature": "warm",
             "budget_max": None,

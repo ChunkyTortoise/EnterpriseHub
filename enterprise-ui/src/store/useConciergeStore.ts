@@ -41,6 +41,11 @@ export interface ConciergeMessage {
     suggestedActions?: SuggestedAction[]
     handoffRecommendation?: BotHandoffRecommendation
     processingTime?: number
+    leadIntelligence?: {
+      frs_score?: number
+      pcs_score?: number
+      lead_score?: number
+    }
   }
 }
 
@@ -177,7 +182,7 @@ export const useConciergeStore = create<ConciergeState>()(
         try {
           set({ initializationError: null })
 
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+          const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + '/api'
           const service = new ClaudeConciergeService(apiUrl)
           const contextMgr = new ContextManager()
 

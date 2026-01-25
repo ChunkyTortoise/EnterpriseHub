@@ -445,7 +445,7 @@ validate_performance() {
         local start_time=$(date +%s%N)
         if curl -f -s "$service_url/health" > /dev/null; then
             local end_time=$(date +%s%N)
-            local response_time=$(( (end_time - start_time) / 1000000 )) # Convert to milliseconds
+            local response_time=$(( (end_time - start_time) / 1200000 )) # Convert to milliseconds
             response_times+=("$response_time")
         fi
     done

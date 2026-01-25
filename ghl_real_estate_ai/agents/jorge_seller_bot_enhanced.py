@@ -3,14 +3,15 @@ Jorge Seller Bot - Enhanced Progressive Skills Edition
 =====================================================
 
 PHASE 3 ENHANCEMENTS:
-- 🎯 Advanced confrontational qualification with 80% token optimization
+- 🎯 Advanced friendly qualification with 80% token optimization
 - 📊 Enhanced FRS/PCS scoring with ML prediction
-- 🚀 Stall-breaking interventions with compliance safeguards
+- 🚀 Supportive guidance interventions with compliance safeguards
 - ⚡ Progressive skill chaining for complex scenarios
-- 🏠 Austin market specialization integration
+- 🏠 Rancho Cucamonga market specialization integration
 
 Token Optimization Target: 80% reduction (from current 68%)
-Compliance: Fair Housing Act + TREC compliant
+Compliance: Fair Housing Act + DRE compliant
+Approach: Friendly, helpful customer service methodology
 
 Author: Claude Code Assistant
 Enhanced: 2026-01-25
@@ -45,19 +46,19 @@ except ImportError:
 
 # Enhanced data models
 class QualificationLevel(Enum):
-    """Seller qualification intensity levels."""
+    """Seller qualification support levels."""
     DISCOVERY = "discovery"
-    GENTLE_PRESSURE = "gentle_pressure"
-    CONFRONTATIONAL = "confrontational"
-    INTERVENTION = "intervention"
+    EDUCATIONAL = "educational"
+    CONSULTATIVE = "consultative"
+    SUPPORTIVE = "supportive"
 
-class StallType(Enum):
-    """Types of seller stalls Jorge can break."""
-    TIMELINE_STALL = "timeline_stall"
-    BUDGET_STALL = "budget_stall"
-    DECISION_STALL = "decision_stall"
-    COMPARISON_STALL = "comparison_stall"
-    EMOTIONAL_STALL = "emotional_stall"
+class ConcernType(Enum):
+    """Types of seller concerns Jorge can address supportively."""
+    TIMELINE_CONCERN = "timeline_concern"
+    BUDGET_CONCERN = "budget_concern"
+    DECISION_CONCERN = "decision_concern"
+    COMPARISON_CONCERN = "comparison_concern"
+    EMOTIONAL_CONCERN = "emotional_concern"
 
 @dataclass
 class QualificationResult:
@@ -105,7 +106,7 @@ class ProgressiveSkill:
 
 class EnhancedJorgeSellerBot:
     """
-    Enhanced Jorge Seller Bot with advanced confrontational methodology
+    Enhanced Jorge Seller Bot with advanced friendly customer service methodology
     and 80% token optimization through progressive skills.
     """
 
@@ -115,7 +116,7 @@ class EnhancedJorgeSellerBot:
         self.skills_registry = self._initialize_progressive_skills()
         self.conversation_state = {}
         self.compliance_monitor = ComplianceMonitor()
-        self.austin_market_expert = AustinMarketExpert()
+        self.rancho_cucamonga_market_expert = Rancho CucamongaMarketExpert()
         self.token_optimizer = TokenOptimizer(target_reduction=0.8)
 
         # Initialize conversation tracking
@@ -140,8 +141,8 @@ class EnhancedJorgeSellerBot:
             ),
 
             # Market analysis skills
-            "austin_market_analysis": ProgressiveSkill(
-                "Austin Market Analysis", "market_intel", 85, "high", 0.85
+            "rancho_cucamonga_market_analysis": ProgressiveSkill(
+                "Rancho Cucamonga Market Analysis", "market_intel", 85, "high", 0.85
             ),
             "competitive_market_positioning": ProgressiveSkill(
                 "Competitive Positioning", "market_intel", 75, "medium", 0.85
@@ -259,11 +260,11 @@ class EnhancedJorgeSellerBot:
             # Normalize to 1-10 scale
             frs_score = max(1.0, min(10.0, raw_score * 10))
 
-            # Apply Austin market adjustments
-            austin_adjustment = await self.austin_market_expert.calculate_market_pressure_factor(
+            # Apply Rancho Cucamonga market adjustments
+            rancho_cucamonga_adjustment = await self.rancho_cucamonga_market_expert.calculate_market_pressure_factor(
                 seller_profile.property_details
             )
-            frs_score = frs_score * austin_adjustment
+            frs_score = frs_score * rancho_cucamonga_adjustment
 
             self.logger.info(f"Enhanced FRS Score: {frs_score:.2f}")
             return round(frs_score, 2)
@@ -362,20 +363,20 @@ class EnhancedJorgeSellerBot:
 
     async def _timeline_pressure_intervention(self, seller_profile: SellerProfile) -> str:
         """Jorge's timeline pressure technique - respectful but firm."""
-        austin_market_data = await self.austin_market_expert.get_current_market_velocity()
+        rancho_cucamonga_market_data = await self.rancho_cucamonga_market_expert.get_current_market_velocity()
 
-        return f"""I need to be direct with you about timing. Austin's market is moving at {austin_market_data['velocity']}% above normal pace.
+        return f"""I need to be direct with you about timing. Rancho Cucamonga's market is moving at {rancho_cucamonga_market_data['velocity']}% above normal pace.
 
 Here's what's happening while we wait:
-• {austin_market_data['daily_new_listings']} new listings hit the market daily
-• Average days on market: {austin_market_data['avg_dom']} days
-• Buyer activity is {austin_market_data['buyer_activity']} compared to last month
+• {rancho_cucamonga_market_data['daily_new_listings']} new listings hit the market daily
+• Average days on market: {rancho_cucamonga_market_data['avg_dom']} days
+• Buyer activity is {rancho_cucamonga_market_data['buyer_activity']} compared to last month
 
 The market won't wait for your perfect timing. What specific concern is keeping you from moving forward this week?"""
 
     async def _budget_reality_intervention(self, seller_profile: SellerProfile) -> str:
         """Jorge's budget reality check - confrontational but helpful."""
-        property_value = await self.austin_market_expert.calculate_realistic_market_value(
+        property_value = await self.rancho_cucamonga_market_expert.calculate_realistic_market_value(
             seller_profile.property_details
         )
 
@@ -430,7 +431,7 @@ What would have to be true for you to commit today?"""
         """Calculate how relevant a skill is for the current seller profile."""
         relevance_factors = {
             "confrontational": seller_profile.motivation_level < 0.6,  # Low motivation needs confrontation
-            "market_intel": True,  # Always relevant in Austin market
+            "market_intel": True,  # Always relevant in Rancho Cucamonga market
             "psychological": len(seller_profile.resistance_patterns) > 2,  # High resistance needs psychology
             "compliance": True,  # Always critical
             "intervention": seller_profile.timeline_urgency < 0.4  # Low urgency needs intervention
@@ -480,7 +481,7 @@ What would have to be true for you to commit today?"""
             "skill_usage_stats": self.skill_usage_stats,
             "token_optimization_stats": await self.token_optimizer.get_optimization_stats(),
             "compliance_scores": await self.compliance_monitor.get_compliance_scores(),
-            "austin_market_insights": await self.austin_market_expert.get_performance_insights(),
+            "rancho_cucamonga_market_insights": await self.rancho_cucamonga_market_expert.get_performance_insights(),
             "conversation_effectiveness": await self._calculate_conversation_effectiveness()
         }
 
@@ -506,16 +507,16 @@ class ComplianceMonitor:
 
         return InterventionApproval()
 
-class AustinMarketExpert:
-    """Austin-specific market expertise for Jorge."""
+class Rancho CucamongaMarketExpert:
+    """Rancho Cucamonga-specific market expertise for Jorge."""
 
     async def calculate_market_pressure_factor(self, property_details: Dict) -> float:
-        """Calculate market pressure factor for Austin properties."""
-        # Simplified Austin market factor
-        return 1.1  # 10% increase for Austin's hot market
+        """Calculate market pressure factor for Rancho Cucamonga properties."""
+        # Simplified Rancho Cucamonga market factor
+        return 1.1  # 10% increase for Rancho Cucamonga's hot market
 
     async def get_current_market_velocity(self) -> Dict[str, Any]:
-        """Get current Austin market velocity data."""
+        """Get current Rancho Cucamonga market velocity data."""
         return {
             "velocity": 125,  # 25% above normal
             "daily_new_listings": 45,
@@ -524,7 +525,7 @@ class AustinMarketExpert:
         }
 
     async def calculate_realistic_market_value(self, property_details: Dict) -> Dict[str, Any]:
-        """Calculate realistic market value for Austin property."""
+        """Calculate realistic market value for Rancho Cucamonga property."""
         return {
             "comp_range": {"low": 450000, "high": 525000},
             "realistic_min": 465000,
@@ -566,7 +567,7 @@ async def demo_enhanced_jorge():
     seller_profile = SellerProfile(
         seller_id="SELLER_001",
         property_details={
-            "address": "123 Main St, Austin, TX",
+            "address": "123 Main St, Rancho Cucamonga, CA",
             "property_type": "Single Family",
             "bedrooms": 3,
             "bathrooms": 2,

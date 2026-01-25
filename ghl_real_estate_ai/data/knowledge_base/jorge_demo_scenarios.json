@@ -1,13 +1,13 @@
 {
   "demo_package": {
     "title": "Jorge's Real Estate AI - Live Demo Scenarios",
-    "subtitle": "Austin, TX Market-Specific Demo Package",
+    "subtitle": "Rancho Cucamonga, CA Market-Specific Demo Package",
     "description": "Realistic demo scenarios showing Jorge's business transformed by AI - designed to create immediate 'I need this NOW' response",
-    "target_audience": "Jorge - Real Estate Professional, Austin, TX",
+    "target_audience": "Jorge - Real Estate Professional, Rancho Cucamonga, CA",
     "demo_duration": "5 minutes to ROI realization"
   },
 
-  "austin_buyer_personas": [
+  "rancho_cucamonga_buyer_personas": [
     {
       "persona_id": "tech_professional_sarah",
       "name": "Sarah Chen",
@@ -16,23 +16,23 @@
       "income": "$165k",
       "location_current": "San Francisco, CA",
       "pain_points": [
-        "Relocating to Austin for Apple's campus expansion",
+        "Relocating to Rancho Cucamonga for Apple's campus expansion",
         "Needs to close before lease expires in 45 days",
         "Never bought a house outside of California",
-        "Worried about Austin market knowledge gap",
+        "Worried about Rancho Cucamonga market knowledge gap",
         "Working 60+ hour weeks, no time for house hunting"
       ],
-      "austin_specific_needs": [
-        "Close to Apple campus (North Austin)",
+      "rancho_cucamonga_specific_needs": [
+        "Close to Apple campus (North Rancho Cucamonga)",
         "Good internet for remote work days",
         "Walkable neighborhood with coffee shops",
-        "Under $600k (Austin prices still shock SF buyers)",
+        "Under $600k (Rancho Cucamonga prices still shock SF buyers)",
         "Modern home with home office space"
       ],
       "timeline": "URGENT - 45 days",
       "budget": "$550k",
-      "likely_areas": ["Round Rock", "Cedar Park", "North Austin"],
-      "demo_conversation_trigger": "Incoming text: 'Hi, I'm relocating from SF to Austin for work. Need to find a house quickly!'",
+      "likely_areas": ["Victoria Gardens", "Etiwanda", "North Rancho Cucamonga"],
+      "demo_conversation_trigger": "Incoming text: 'Hi, I'm relocating from SF to Rancho Cucamonga for work. Need to find a house quickly!'",
       "jorge_roi_moment": "This lead books a showing within 8 minutes, saves Jorge 2 hours of back-and-forth"
     },
 
@@ -42,7 +42,7 @@
       "age": "35 & 33",
       "occupation": "He: Construction Manager, She: Nurse at Dell Seton",
       "income": "$145k combined",
-      "location_current": "East Austin Apartment",
+      "location_current": "East Rancho Cucamonga Apartment",
       "pain_points": [
         "Outgrowing 2-bedroom apartment with new baby",
         "Need 3+ bedrooms but budget is tight",
@@ -50,7 +50,7 @@
         "Want good schools for growing family",
         "First-time homebuyers, intimidated by process"
       ],
-      "austin_specific_needs": [
+      "rancho_cucamonga_specific_needs": [
         "Good school districts (8+ rating)",
         "Safe neighborhood for kids",
         "Close to Dell Seton Medical Center",
@@ -59,7 +59,7 @@
       ],
       "timeline": "3-4 months (lease ends)",
       "budget": "$380k max",
-      "likely_areas": ["Pflugerville", "Manor", "Del Valle"],
+      "likely_areas": ["Day Creek", "Manor", "Del Valle"],
       "demo_conversation_trigger": "Web form: 'First time buyers, need help finding family home under $400k'",
       "jorge_roi_moment": "AI instantly identifies first-time buyer needs, books them with Jorge's first-time buyer specialist"
     },
@@ -69,16 +69,16 @@
       "name": "David Kim",
       "age": 45,
       "occupation": "Real Estate Investor",
-      "income": "$300k+ portfolio income",
-      "location_current": "Dallas, TX",
+      "income": "$700k+ portfolio income",
+      "location_current": "Dallas, CA",
       "pain_points": [
         "Managing 12 rental properties in Dallas",
-        "Wants to expand to Austin market",
+        "Wants to expand to Rancho Cucamonga market",
         "Needs cash-flowing properties ($200+ per month)",
         "Looking for emerging neighborhoods before prices spike",
         "Time is money - no patience for non-qualified leads"
       ],
-      "austin_specific_needs": [
+      "rancho_cucamonga_specific_needs": [
         "Properties under $350k that rent for $1800+",
         "Areas with development/growth potential",
         "Quick closing (cash buyer)",
@@ -87,8 +87,8 @@
       ],
       "timeline": "Ready to close immediately",
       "budget": "$300-350k per property",
-      "likely_areas": ["Manor", "Del Valle", "East Austin"],
-      "demo_conversation_trigger": "Phone inquiry: 'Looking for investment properties in Austin, cash buyer'",
+      "likely_areas": ["Manor", "Del Valle", "East Rancho Cucamonga"],
+      "demo_conversation_trigger": "Phone inquiry: 'Looking for investment properties in Rancho Cucamonga, cash buyer'",
       "jorge_roi_moment": "AI identifies investor, connects to Jorge's investment specialist, leads to 3-property purchase"
     },
 
@@ -106,8 +106,8 @@
         "Worried about selling large home in current market",
         "Want personal service, not junior agents"
       ],
-      "austin_specific_needs": [
-        "Luxury condo or townhome downtown",
+      "rancho_cucamonga_specific_needs": [
+        "Luxury condo or townhome central_rc",
         "Walking distance to restaurants/arts",
         "High-end finishes and amenities",
         "$800k-1.2M range",
@@ -115,7 +115,7 @@
       ],
       "timeline": "Flexible but decisive when right property appears",
       "budget": "$900k-1.2M",
-      "likely_areas": ["Downtown", "West Campus", "Clarksville"],
+      "likely_areas": ["Central RC", "West Campus", "Clarksville"],
       "demo_conversation_trigger": "Referral call: 'Friends said you could help us downsize from Steiner Ranch'",
       "jorge_roi_moment": "AI recognizes luxury seller + buyer combo, books Jorge personally for $2M+ transaction value"
     }
@@ -131,13 +131,13 @@
           {
             "time": "0:00",
             "speaker": "Sarah (Text)",
-            "message": "Hi, I'm relocating from SF to Austin for work. Need to find a house quickly!",
+            "message": "Hi, I'm relocating from SF to Rancho Cucamonga for work. Need to find a house quickly!",
             "ai_thinking": "Relocation detected → High urgency → Qualify quickly"
           },
           {
             "time": "0:05",
             "speaker": "AI Assistant",
-            "message": "Welcome to Austin! I'm here to help. What's your timeline?",
+            "message": "Welcome to Rancho Cucamonga! I'm here to help. What's your timeline?",
             "jorge_note": "AI immediately recognizes relocation urgency pattern"
           },
           {
@@ -149,13 +149,13 @@
           {
             "time": "0:50",
             "speaker": "AI Assistant",
-            "message": "Got it. What's your budget? Austin prices are different from SF.",
+            "message": "Got it. What's your budget? Rancho Cucamonga prices are different from SF.",
             "jorge_note": "AI knows to address SF price expectations"
           },
           {
             "time": "1:20",
             "speaker": "Sarah",
-            "message": "$550k. Is that realistic in Austin?",
+            "message": "$550k. Is that realistic in Rancho Cucamonga?",
             "ai_thinking": "Budget confirmed → Area recommendations incoming"
           },
           {
@@ -167,13 +167,13 @@
           {
             "time": "2:00",
             "speaker": "Sarah",
-            "message": "Apple campus in North Austin",
-            "ai_thinking": "Apple campus → Round Rock/Cedar Park optimal"
+            "message": "Apple campus in North Rancho Cucamonga",
+            "ai_thinking": "Apple campus → Victoria Gardens/Etiwanda optimal"
           },
           {
             "time": "2:05",
             "speaker": "AI Assistant",
-            "message": "Round Rock has great options for Apple employees. 3br/2ba homes, new construction, 15-min commute. Need home office space?",
+            "message": "Victoria Gardens has great options for Apple employees. 3br/2ba homes, new construction, 15-min commute. Need home office space?",
             "jorge_note": "AI knows Apple employee patterns and suggests perfect areas"
           },
           {
@@ -239,13 +239,13 @@
             "time": "1:20",
             "speaker": "Mike",
             "message": "Yes, definitely want good schools. And my wife works at Dell Seton so can't be too far.",
-            "ai_thinking": "Dell Seton + schools + $400k = Pflugerville perfect"
+            "ai_thinking": "Dell Seton + schools + $400k = Day Creek perfect"
           },
           {
             "time": "1:25",
             "speaker": "AI Assistant",
-            "message": "Perfect! Pflugerville has excellent schools (8/10 ratings) and quick drive to Dell Seton. Homes in your budget with yards. Have you talked to a lender yet?",
-            "jorge_note": "AI knows Austin geography + provides school ratings + checks financing"
+            "message": "Perfect! Day Creek has excellent schools (8/10 ratings) and quick drive to Dell Seton. Homes in your budget with yards. Have you talked to a lender yet?",
+            "jorge_note": "AI knows Rancho Cucamonga geography + provides school ratings + checks financing"
           },
           {
             "time": "2:10",
@@ -284,7 +284,7 @@
           {
             "time": "0:00",
             "speaker": "David (Phone)",
-            "message": "Looking for investment properties in Austin, cash buyer",
+            "message": "Looking for investment properties in Rancho Cucamonga, cash buyer",
             "ai_thinking": "INVESTOR ALERT → Fast track → Skip basic qualifying"
           },
           {
@@ -326,7 +326,7 @@
         ],
         "outcome": {
           "time_to_close": "1 minute 10 seconds",
-          "lead_value": "$1M-1.75M potential (3-5 properties)",
+          "lead_value": "$1.2M-1.75M potential (3-5 properties)",
           "path": "Direct to Jorge - no delays",
           "jorge_roi": "Captures major investor before they call competition"
         }
@@ -337,8 +337,8 @@
   "seller_scenarios": [
     {
       "scenario_id": "inherited_property_wholesale",
-      "title": "Jennifer's Inherited Property - East Austin",
-      "setup": "Jennifer inherited her mother's 1960s home in East Austin. Needs major repairs but great location.",
+      "title": "Jennifer's Inherited Property - East Rancho Cucamonga",
+      "setup": "Jennifer inherited her mother's 1960s home in East Rancho Cucamonga. Needs major repairs but great location.",
       "conversation_flow": {
         "intro": "DEMO: Watch AI identify wholesale opportunity instantly",
         "messages": [
@@ -357,8 +357,8 @@
           {
             "time": "0:35",
             "speaker": "Jennifer",
-            "message": "East Austin, near 6th Street. It's a mess though.",
-            "ai_thinking": "East Austin + mess = potential wholesale"
+            "message": "East Rancho Cucamonga, near 6th Street. It's a mess though.",
+            "ai_thinking": "East Rancho Cucamonga + mess = potential wholesale"
           },
           {
             "time": "0:40",
@@ -396,7 +396,7 @@
     {
       "scenario_id": "luxury_listing_steiner",
       "title": "Robert's Luxury Steiner Ranch Listing",
-      "setup": "Empty nesters want to downsize from 4,500 sq ft Steiner Ranch home to luxury downtown condo",
+      "setup": "Empty nesters want to downsize from 4,500 sq ft Steiner Ranch home to luxury central_rc condo",
       "conversation_flow": {
         "intro": "DEMO: AI recognizes luxury seller + buyer combination",
         "messages": [
@@ -415,8 +415,8 @@
           {
             "time": "0:40",
             "speaker": "Robert",
-            "message": "Kids are grown, house is too big. Want something downtown, walkable to restaurants.",
-            "ai_thinking": "Empty nester downsize + luxury + downtown = high-value combo deal"
+            "message": "Kids are grown, house is too big. Want something central_rc, walkable to restaurants.",
+            "ai_thinking": "Empty nester downsize + luxury + central_rc = high-value combo deal"
           },
           {
             "time": "0:45",
@@ -428,12 +428,12 @@
             "time": "1:20",
             "speaker": "Robert",
             "message": "4 bed, 3.5 bath, about 4,500 sq ft. Pool, outdoor kitchen, lake views.",
-            "ai_thinking": "High-value listing + needs downtown buyer match"
+            "ai_thinking": "High-value listing + needs central_rc buyer match"
           },
           {
             "time": "1:25",
             "speaker": "AI Assistant",
-            "message": "Beautiful! That'll be in high demand. For downtown, are you thinking condo or townhome? What's your budget?",
+            "message": "Beautiful! That'll be in high demand. For central_rc, are you thinking condo or townhome? What's your budget?",
             "jorge_note": "AI developing buyer profile while securing listing"
           },
           {
@@ -445,7 +445,7 @@
           {
             "time": "2:05",
             "speaker": "AI Assistant",
-            "message": "Perfect! Jorge specializes in luxury properties and knows the downtown condo market well. He can help with both selling Steiner and finding your downtown home. Can you meet this week?",
+            "message": "Perfect! Jorge specializes in luxury properties and knows the central_rc condo market well. He can help with both selling Steiner and finding your central_rc home. Can you meet this week?",
             "jorge_note": "AI bundles both transactions, presents Jorge as luxury specialist"
           },
           {
@@ -457,7 +457,7 @@
         ],
         "outcome": {
           "time_to_close": "2 minutes 35 seconds",
-          "transaction_value": "$2M+ combined (sell $1.1M + buy $1M)",
+          "transaction_value": "$2M+ combined (sell $1.1M + buy $1.2M)",
           "jorge_roi": "Double-ended luxury transaction - Jorge's highest profit scenario"
         }
       }
@@ -474,7 +474,7 @@
         "AI immediately recognized relocation urgency",
         "Instantly connected to Jorge within 8 minutes",
         "AI pre-qualified: budget, timeline, work location, home office needs",
-        "Suggested Round Rock before Sarah even knew the area"
+        "Suggested Victoria Gardens before Sarah even knew the area"
       ],
       "outcome": {
         "days_to_contract": 3,
@@ -491,7 +491,7 @@
       "story_id": "investor_portfolio_success",
       "title": "David's Investment Portfolio - 4 Properties in 30 Days",
       "client": "David Kim - Dallas Investor",
-      "situation": "Expanding to Austin market, cash buyer, looking for cash-flowing properties",
+      "situation": "Expanding to Rancho Cucamonga market, cash buyer, looking for cash-flowing properties",
       "ai_intervention": [
         "AI recognized investor language immediately",
         "Bypassed standard qualifying for direct Jorge connection",
@@ -533,7 +533,7 @@
 
   "roi_calculator": {
     "title": "Jorge's 30-Day AI ROI Projection",
-    "assumptions": "Based on current Austin market and Jorge's typical transaction volume",
+    "assumptions": "Based on current Rancho Cucamonga market and Jorge's typical transaction volume",
     "metrics": {
       "current_monthly_leads": 15,
       "current_conversion_rate": "20%",
@@ -559,7 +559,7 @@
 
   "demo_script": {
     "title": "5-Minute Demo Script for Jorge",
-    "opening": "Jorge, I'm going to show you exactly how AI will transform your business. Watch these real Austin scenarios...",
+    "opening": "Jorge, I'm going to show you exactly how AI will transform your business. Watch these real Rancho Cucamonga scenarios...",
     "scenario_1": "First, Sarah from San Francisco - relocating for Apple [Run Sarah demo] - Jorge, this lead books with you in 3 minutes. No phone tag, no wasted time.",
     "scenario_2": "Next, David the investor from Dallas [Run David demo] - Cash buyer, multiple properties, books immediately. This is a $1.3M month for you.",
     "scenario_3": "Finally, the Rodriguez family [Run Mike demo] - First-time buyers who become raving fans and refer 3 more families.",

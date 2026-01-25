@@ -138,7 +138,7 @@ def test_helper_methods():
 
     # Test preference extraction with sample data
     sample_conversation = [
-        {"role": "user", "content": "I need to sell under 500k"},
+        {"role": "user", "content": "I need to sell under 700k"},
         {"role": "assistant", "content": "I can help with that"},
         {"role": "user", "content": "I need to sell quickly in 3 months"}
     ]
@@ -166,7 +166,7 @@ async def test_intelligence_integration_graceful_fallback():
             {"role": "user", "content": "I want to sell my house"},
             {"role": "assistant", "content": "I can help you with that"}
         ],
-        "location_id": "austin"
+        "location_id": "rancho_cucamonga"
     }
 
     try:

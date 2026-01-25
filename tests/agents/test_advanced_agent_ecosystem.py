@@ -196,7 +196,7 @@ class TestPropertyIntelligenceAgent:
         collector = PropertyDataCollector()
 
         property_data = await collector.collect_property_data(
-            "123 Test St, Austin, TX",
+            "123 Test St, Rancho Cucamonga, CA",
             PropertyIntelligenceLevel.STANDARD
         )
 
@@ -212,7 +212,7 @@ class TestPropertyIntelligenceAgent:
 
         # Test premium data inclusion
         premium_data = await collector.collect_property_data(
-            "123 Test St, Austin, TX",
+            "123 Test St, Rancho Cucamonga, CA",
             PropertyIntelligenceLevel.PREMIUM
         )
 
@@ -264,7 +264,7 @@ class TestPropertyIntelligenceAgent:
         property_data = {
             "basic_info": {
                 "square_footage": 2000,
-                "current_list_price": 300000
+                "current_list_price": 700000
             },
             "market_data": {
                 "price_per_sqft": 200,
@@ -288,7 +288,7 @@ class TestPropertyIntelligenceAgent:
     async def test_complete_property_analysis(self, property_agent):
         """Test complete property intelligence analysis."""
         request = PropertyIntelligenceRequest(
-            property_address="123 Investment Ave, Austin, TX",
+            property_address="123 Investment Ave, Rancho Cucamonga, CA",
             property_type=PropertyType.SINGLE_FAMILY,
             intelligence_level=PropertyIntelligenceLevel.STANDARD,
             investment_strategy=InvestmentStrategy.BUY_AND_HOLD,
@@ -430,7 +430,7 @@ class TestCustomerJourneyOrchestrator:
         initial_context = {
             "priority": JourneyPriority.HIGH,
             "communication_preference": "sms",
-            "budget_range": (300000, 500000)
+            "budget_range": (700000, 700000)
         }
 
         result = await journey_orchestrator.start_customer_journey(

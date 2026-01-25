@@ -46,8 +46,8 @@ class MockConversationManager:
         # Mock motivation extraction
         if "relocation" in message or "moving to" in message:
             extracted["motivation"] = "relocation"
-            if "austin" in message:
-                extracted["relocation_destination"] = "Austin, TX"
+            if "rancho_cucamonga" in message:
+                extracted["relocation_destination"] = "Rancho Cucamonga, CA"
 
         # Mock timeline extraction
         if "yes" in message and "30" in message or "45" in message:
@@ -180,7 +180,7 @@ async def test_seller_profile():
     # Create test profile
     profile = SellerProfile(
         motivation=MotivationType.RELOCATION,
-        relocation_destination="Austin, TX",
+        relocation_destination="Rancho Cucamonga, CA",
         timeline_urgency=TimelineUrgency.URGENT_30_45_DAYS,
         timeline_acceptable=True,
         property_condition=PropertyCondition.MOVE_IN_READY,
@@ -247,7 +247,7 @@ async def test_full_conversation_flow():
 
         # Simulate conversation sequence
         test_responses = [
-            "I'm thinking about selling because we're relocating to Austin",
+            "I'm thinking about selling because we're relocating to Rancho Cucamonga",
             "Yes, 30-45 days would work fine for us",
             "The home is move-in ready, we just updated everything",
             "$450,000 would be our target price"

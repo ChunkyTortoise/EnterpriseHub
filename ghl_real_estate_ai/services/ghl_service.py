@@ -39,6 +39,27 @@ class GHLService:
 
         return await self.client.trigger_workflow(contact_id, workflow_id)
 
+    async def get_contacts(self, **kwargs) -> Dict[str, Any]:
+        """Fetch contacts from GHL."""
+        # Use search_contacts since GHLClient has that
+        contacts = await self.client.search_contacts(
+            query=kwargs.get("query", ""),
+            limit=kwargs.get("limit", 50)
+        )
+        return {"contacts": contacts}
+
+    async def get_contact(self, contact_id: str) -> Dict[str, Any]:
+        """Fetch a single contact from GHL."""
+        return await self.client.get_contact(contact_id)
+
+    async def get_conversations(self, **kwargs) -> Dict[str, Any]:
+        """Fetch conversations from GHL."""
+        conversations = await self.client.get_conversations(
+            limit=kwargs.get("limit", 20),
+            contact_id=kwargs.get("contact_id")
+        )
+        return {"conversations": conversations}
+
     async def health_check(self) -> bool:
         """
         Check if the service is healthy.

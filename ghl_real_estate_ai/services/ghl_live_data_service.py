@@ -11,6 +11,7 @@ Features:
 
 import asyncio
 import json
+import os
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, AsyncGenerator
@@ -334,18 +335,26 @@ class GHLLiveDataService:
             )
 
     async def _get_jorge_custom_field(self, lead_id: str, field_name: str) -> Optional[Any]:
-        """Get Jorge-specific custom field value from GHL."""
+        """Get Jorge-specific custom field value from GHL using tenant-specific mapping."""
         try:
-            # Map field names to GHL custom field IDs (these would be configured)
+            # Map field names to GHL custom field IDs with environment variable support
+            # Priority: 1. Environment Variable, 2. Config Class, 3. Standard Fallback
+            from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+            
             field_mapping = {
-                "jorge_lead_score": "lead_score",
-                "temperature_classification": "temperature",
-                "frs_score": "financial_readiness",
-                "pcs_score": "psychological_commitment",
-                "stall_breaker_count": "stall_breakers"
+                "jorge_lead_score": os.getenv("CUSTOM_FIELD_LEAD_SCORE", "lead_score"),
+                "temperature_classification": os.getenv("CUSTOM_FIELD_TEMPERATURE", "temperature"),
+                "frs_score": os.getenv("CUSTOM_FIELD_FRS_SCORE", "financial_readiness"),
+                "pcs_score": os.getenv("CUSTOM_FIELD_PCS_SCORE", "psychological_commitment"),
+                "stall_breaker_count": os.getenv("CUSTOM_FIELD_STALL_BREAKERS", "stall_breakers")
             }
 
             ghl_field_id = field_mapping.get(field_name)
+            
+            # If not found in our mapping, try the central config helper
+            if not ghl_field_id:
+                ghl_field_id = JorgeSellerConfig.get_ghl_custom_field_id(field_name)
+                
             if not ghl_field_id:
                 return None
 
@@ -354,13 +363,19 @@ class GHLLiveDataService:
             custom_fields = contact_data.get("customFields", [])
 
             for field in custom_fields:
-                if field.get("key") == ghl_field_id:
+                if field.get("key") == ghl_field_id or field.get("id") == ghl_field_id:
                     value = field.get("value")
                     # Convert to appropriate type
                     if field_name in ["jorge_lead_score", "frs_score", "pcs_score"]:
-                        return float(value) if value else None
+                        try:
+                            return float(value) if value else None
+                        except (ValueError, TypeError):
+                            return None
                     elif field_name == "stall_breaker_count":
-                        return int(value) if value else None
+                        try:
+                            return int(value) if value else None
+                        except (ValueError, TypeError):
+                            return None
                     else:
                         return value
 
@@ -726,10 +741,14 @@ class GHLLiveDataService:
         Replaces demo data with actual GHL intelligence.
         """
         try:
-            # Get all live data sources
-            leads_data = await self.get_live_leads_context(limit=50)
-            bot_metrics = await self.get_live_bot_metrics()
-            business_metrics = await self.get_live_business_metrics()
+            # Parallelize data fetching for minimum latency (Track 3.5 Optimization)
+            leads_task = self.get_live_leads_context(limit=50)
+            bots_task = self.get_live_bot_metrics()
+            business_task = self.get_live_business_metrics()
+            
+            leads_data, bot_metrics, business_metrics = await asyncio.gather(
+                leads_task, bots_task, business_task
+            )
 
             # Convert to Track 2 PlatformContext format
             platform_context = {
@@ -745,6 +764,8 @@ class GHLLiveDataService:
                         "id": lead.lead_id,
                         "name": lead.name,
                         "score": lead.jorge_score or 0,
+                        "frs_score": lead.frs_score or 0,
+                        "pcs_score": lead.pcs_score or 0,
                         "temperature": lead.temperature_classification or "unknown",
                         "value": f"${(lead.estimated_commission or 0) / 0.06:,.0f}",
                         "commission": lead.estimated_commission or 0,

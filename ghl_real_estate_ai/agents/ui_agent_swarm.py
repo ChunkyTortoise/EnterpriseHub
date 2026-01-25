@@ -193,10 +193,10 @@ class UIAgentSwarm:
         try:
             # Simple mapping: if location_id or spec mentions a market, use it
             market_id = None
-            if "austin" in self.location_id.lower():
-                market_id = "austin"
+            if "rancho_cucamonga" in self.location_id.lower():
+                market_id = "rancho_cucamonga"
             elif "demo" in self.location_id.lower():
-                market_id = "austin" # Default for demo
+                market_id = "rancho_cucamonga" # Default for demo
                 
             if not market_id:
                 return "The UI is optimized for general lead engagement patterns."

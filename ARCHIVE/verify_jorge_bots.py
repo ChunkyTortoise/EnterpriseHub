@@ -52,8 +52,8 @@ class MockConversationManager:
         
         if "relocating" in message or "moving" in message:
             data["motivation"] = "relocation"
-            if "austin" in message:
-                data["relocation_destination"] = "Austin, TX"
+            if "rancho_cucamonga" in message:
+                data["relocation_destination"] = "Rancho Cucamonga, CA"
         
         if "30" in message or "45" in message:
             if "yes" in message or "works" in message:
@@ -92,9 +92,9 @@ async def verify_lead_bot():
     # 1. Verify Scoring (Jorge's 7 questions)
     print("\n--- 1. Question Counting Logic ---")
     test_cases = [
-        ({"budget": 500000}, 1),
-        ({"budget": 500000, "location": "Rancho Cucamonga"}, 2),
-        ({"budget": 500000, "location": "RC", "timeline": "ASAP"}, 3), # Hot Lead Threshold
+        ({"budget": 700000}, 1),
+        ({"budget": 700000, "location": "Rancho Cucamonga"}, 2),
+        ({"budget": 700000, "location": "RC", "timeline": "ASAP"}, 3), # Hot Lead Threshold
         ({"budget": 500, "location": "RC", "timeline": "ASAP", "bedrooms": 3}, 4),
         ({"budget": 500, "location": "RC", "timeline": "ASAP", "bedrooms": 3, "financing": "Pre-approved"}, 5), # 70% threshold
     ]
@@ -132,7 +132,7 @@ async def verify_seller_bot():
     print("\n--- 1. Question Sequence and Confrontational Tone ---")
     
     responses = [
-        "I'm relocating to Austin for my job next month",
+        "I'm relocating to Rancho Cucamonga for my job next month",
         "Yes, 30 to 45 days works for us",
         "The home is move in ready, we just painted",
         "I'd want at least $550,000 for it"

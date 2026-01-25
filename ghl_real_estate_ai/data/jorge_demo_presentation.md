@@ -1,10 +1,10 @@
 # Jorge's Real Estate AI - Live Demo Experience
 
-## "Watch Your Austin Business Transform in 5 Minutes"
+## "Watch Your Rancho Cucamonga Business Transform in 5 Minutes"
 
 ### Pre-Demo Setup
 **Duration**: 5 minutes to "I need this NOW"
-**Objective**: Show Jorge his exact business scenarios with realistic Austin leads
+**Objective**: Show Jorge his exact business scenarios with realistic Rancho Cucamonga leads
 **Outcome**: Jorge sees immediate, tangible ROI that compels action
 
 ---
@@ -12,11 +12,11 @@
 ## Demo Flow: "Jorge, This Is Your Business Tomorrow"
 
 ### **Minute 1: Sarah - The Apple Engineer**
-*"Jorge, this is happening right now in Austin..."*
+*"Jorge, this is happening right now in Rancho Cucamonga..."*
 
 **[Live conversation simulation]**
-- **Sarah (SMS)**: "Hi, I'm relocating from San Francisco to Austin for Apple. I need to find a house quickly!"
-- **AI (7 seconds later)**: "Welcome to Austin, Sarah! I help Apple employees find homes all the time. What's your timeline?"
+- **Sarah (SMS)**: "Hi, I'm relocating from San Francisco to Rancho Cucamonga for Apple. I need to find a house quickly!"
+- **AI (7 seconds later)**: "Welcome to Rancho Cucamonga, Sarah! I help Apple employees find homes all the time. What's your timeline?"
 
 **Jorge's Reaction Moment**: *"Wait, how did it respond so fast?"*
 
@@ -34,7 +34,7 @@
 *"Now watch this one - he's on the phone right now..."*
 
 **[Live phone conversation simulation]**
-- **David**: "Looking for investment properties in Austin, cash buyer"
+- **David**: "Looking for investment properties in Rancho Cucamonga, cash buyer"
 - **AI (immediate)**: "Great! What's your target cash flow per property?"
 
 **The Fast Track**: Show how AI skips to investor-specific questions
@@ -153,9 +153,9 @@
 - "While we're talking, another agent is setting up this AI"
 - "Every day you wait, that's more Sarahs calling someone else"
 - "That's more Davids giving $1.4M to competitors"
-- "Austin's hot market won't wait for you to catch up"
+- "Rancho Cucamonga's hot market won't wait for you to catch up"
 
-### "The First Agent in Austin With This AI..."
+### "The First Agent in Rancho Cucamonga With This AI..."
 - "Gets ALL the Apple relocations"
 - "Becomes THE investor specialist"
 - "Captures the luxury market"
@@ -169,7 +169,7 @@
 
 *"Can you afford to let your biggest competitor get this AI first?"*
 
-*"Because someone's going to be THE Austin agent that all the tech relocations call..."*
+*"Because someone's going to be THE Rancho Cucamonga agent that all the tech relocations call..."*
 
 *"Someone's going to capture all the investor deals..."*
 
@@ -203,7 +203,7 @@
 
 *"Choice 2: Let AI handle the first conversation with every lead. Only talk to qualified, motivated prospects. Close more deals while working less."*
 
-*"Sarah is relocating to Austin next month. She WILL buy a house."*
+*"Sarah is relocating to Rancho Cucamonga next month. She WILL buy a house."*
 
 *"The question is: Will she buy it through you, or through the agent who calls her back first?"*
 
@@ -222,7 +222,7 @@
 ### If Jorge Hesitates:
 1. **Leave demo access**: "Play with it for 24 hours"
 2. **Follow-up scheduled**: "Let's talk tomorrow at 2pm"
-3. **Scarcity reminder**: "I can only onboard 3 Austin agents this month"
+3. **Scarcity reminder**: "I can only onboard 3 Rancho Cucamonga agents this month"
 4. **Competition pressure**: "Your biggest competitor already called me"
 
 ---

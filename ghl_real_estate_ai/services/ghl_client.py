@@ -69,7 +69,7 @@ class GHLClient:
                 status_code = 500
             return ErrorResponse()
 
-    def get_conversations(self, limit: int = 20) -> List[Dict[str, Any]]:
+    async def get_conversations(self, limit: int = 20, contact_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Fetch recent conversations from GHL.
         
@@ -78,6 +78,7 @@ class GHLClient:
         
         Args:
             limit: Maximum number of conversations to fetch
+            contact_id: Optional filter by contact ID
             
         Returns:
             List of conversation dictionaries
@@ -98,10 +99,12 @@ class GHLClient:
             
         endpoint = f"{self.base_url}/conversations/search"
         params = {"locationId": self.location_id, "limit": limit}
+        if contact_id:
+            params["contactId"] = contact_id
         
         try:
-            with httpx.Client() as client:
-                response = client.get(endpoint, params=params, headers=self.headers, timeout=30.0)
+            async with httpx.AsyncClient() as client:
+                response = await client.get(endpoint, params=params, headers=self.headers, timeout=30.0)
                 response.raise_for_status()
                 
                 data = response.json()

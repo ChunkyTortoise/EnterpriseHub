@@ -55,7 +55,7 @@ class TestJorgeWebhookSecurity:
             "contact_id": "contact_12345",
             "message": {
                 "type": "SMS",
-                "body": "I'm looking to sell my house in Austin",
+                "body": "I'm looking to sell my house in Rancho Cucamonga",
                 "direction": "inbound"
             },
             "contact": {

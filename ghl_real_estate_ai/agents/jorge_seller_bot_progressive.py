@@ -319,18 +319,18 @@ class JorgeSellerBotProgressive:
         if self.enable_progressive and "progressive_skills" in state:
             detected_pattern = state["progressive_skills"].get("detected_pattern", "none")
 
-            # Map skill patterns to stall types
-            pattern_to_stall = {
+            # Map skill patterns to concern types
+            pattern_to_concern = {
                 "stalling": "thinking",
-                "disqualification": "unserious",
-                "confrontational": None,  # No stall
+                "disqualification": "uninterested",
+                "consultative": None,  # No concern
                 "fallback": "unknown"
             }
 
-            stall_detected = detected_pattern in ["stalling", "disqualification"]
-            stall_type = pattern_to_stall.get(detected_pattern)
+            concern_detected = detected_pattern in ["stalling", "disqualification"]
+            concern_type = pattern_to_concern.get(detected_pattern)
 
-            logger.info(f"[Progressive] Stall detection: {detected_pattern} -> {'stall' if stall_detected else 'no stall'}")
+            logger.info(f"[Progressive] Concern detection: {detected_pattern} -> {'concern' if concern_detected else 'no concern'}")
 
         else:
             # Original stall detection logic
@@ -349,7 +349,7 @@ class JorgeSellerBotProgressive:
                     stall_type = stall_name
                     break
 
-            stall_detected = stall_type is not None
+            concern_detected = concern_type is not None
 
         # Emit conversation event for stall detection
         if stall_detected:
@@ -458,12 +458,12 @@ class JorgeSellerBotProgressive:
     async def _generate_current_response(self, state: JorgeSellerState) -> str:
         """Generate response using current (non-progressive) approach"""
 
-        # This is the original Jorge response generation logic
-        stall_breakers = {
-            "thinking": "What specifically are you thinking about? The timeline, the price, or whether you actually want to sell? Because if it's exploration, you're wasting both our time.",
-            "get_back": "I appreciate it, but I need to know: are you *actually* selling, or just exploring? If you're serious, we talk today. If not, let's not pretend.",
-            "zestimate": "Zillow's algorithm doesn't know your kitchen was just renovated. It's a guess. I deal in reality. Want to see real comps?",
-            "agent": "Cool. Quick question: has your agent actually *toured* those comps? If not, they're just reading a screen. I've been inside them."
+        # This is the friendly Jorge response generation logic
+        supportive_responses = {
+            "thinking": "I completely understand this is a big decision. What specific aspects would help you feel more confident? I'm here to provide any information that would be useful.",
+            "get_back": "No problem at all - everyone needs time to process. Would it be helpful if I shared some resources about current market conditions while you think it over?",
+            "zestimate": "Online estimates are a great starting point! They can't see the unique features and updates in your home though. I'd love to show you what similar homes have actually sold for.",
+            "agent": "That's wonderful that you're working with someone! I'd be happy to share some market insights that might be helpful for your team to consider."
         }
 
         tone_instructions = {
@@ -486,8 +486,8 @@ class JorgeSellerBotProgressive:
         TASK: Generate a response to the lead's last message.
         """
 
-        if state.get('stall_detected') and state.get('detected_stall_type') in stall_breakers:
-            prompt += f"\nINCORPORATE THIS STALL-BREAKER: {stall_breakers[state['detected_stall_type']]}"
+        if state.get('concern_detected') and state.get('detected_concern_type') in supportive_responses:
+            prompt += f"\nINCORPORATE THIS HELPFUL RESPONSE: {supportive_responses[state['detected_concern_type']]}"
 
         response = await self.claude.analyze_with_context(prompt)
         return response.get('content') or response.get('analysis') or "Are we selling this property or just talking about it?"

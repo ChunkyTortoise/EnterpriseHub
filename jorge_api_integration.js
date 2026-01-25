@@ -152,7 +152,7 @@ class JorgeBotAPI {
                 },
                 body: JSON.stringify({
                     contact_id: contactId,
-                    location_id: 'austin_office',
+                    location_id: 'rancho_cucamonga_office',
                     message: message,
                     contact_info: contactInfo || {
                         name: 'Demo Client',

@@ -46,7 +46,7 @@ Jorge's bot system is already performing brilliantly:
 
 ### **The Problem We're Solving:**
 
-Your current system uses **rule-based scoring** (if budget > $500k, add 15 points). This works well, but:
+Your current system uses **rule-based scoring** (if budget > $700k, add 15 points). This works well, but:
 - ❌ Can't learn from historical outcomes
 - ❌ Misses subtle patterns (e.g., "looking around" phrasing)
 - ❌ Can't predict which leads will actually close
@@ -159,7 +159,7 @@ POST /api/v1/score_lead_ml
 Request:
 {
     "lead_id": "abc123",
-    "message": "Looking for a $600k home in Austin...",
+    "message": "Looking for a $600k home in Rancho Cucamonga...",
     "budget_max": 600000,
     "timeline": "immediate",
     "financing": "pre_approved"
@@ -244,7 +244,7 @@ ls -lh models/
 We're not replacing what works - we're enhancing it. Your 80% success rate becomes the baseline we improve upon.
 
 ### **2. Learns from YOUR Data**
-The model trains on your specific leads, your market (Austin), your conversion patterns. Not generic AI.
+The model trains on your specific leads, your market (Rancho Cucamonga), your conversion patterns. Not generic AI.
 
 ### **3. Explainable AI**
 Every prediction comes with reasoning:
@@ -291,7 +291,7 @@ The model retrains monthly on new data. Gets smarter over time automatically.
 ### **Q: Can we customize the features?**
 **A:** Yes! Easy to add Jorge-specific signals:
 - "Are they mentioning investment properties?"
-- "Do they know specific Austin neighborhoods?"
+- "Do they know specific Rancho Cucamonga neighborhoods?"
 - "Are they relocating from California?"
 
 ---
@@ -353,7 +353,7 @@ The model retrains monthly on new data. Gets smarter over time automatically.
 
 ---
 
-**Ready to proceed? Let's make Jorge's bot system the smartest in Austin! 🚀**
+**Ready to proceed? Let's make Jorge's bot system the smartest in Rancho Cucamonga! 🚀**
 
 ---
 

@@ -44,7 +44,7 @@ async def test_jorge_track3_integration():
             "state": {
                 "lead_id": "hot_seller_001",
                 "lead_name": "Sarah Wilson",
-                "property_address": "123 Austin St",
+                "property_address": "123 Rancho Cucamonga St",
                 "conversation_history": [
                     {"sender": "lead", "content": "I need to sell ASAP. Job transfer in 30 days.", "timestamp": datetime.now().isoformat()},
                     {"sender": "agent", "content": "What's your timeline?", "timestamp": datetime.now().isoformat()},

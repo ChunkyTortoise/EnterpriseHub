@@ -30,7 +30,7 @@ class CMAGenerator:
         
         # 3. Market Context (Mock)
         market = MarketContext(
-            market_name="Austin, TX",
+            market_name="Rancho Cucamonga, CA",
             price_trend=12.5,
             dom_average=28,
             inventory_level=1450,
@@ -124,7 +124,7 @@ class CMAGenerator:
             "zillow_variance_percent": defense.variance_percent,
             "zillow_explanation": defense.recommended_script,
             "market_narrative": (
-                "The Austin market is tightening. While inventory has ticked up to 1,450 units, "
+                "The Rancho Cucamonga market is tightening. While inventory has ticked up to 1,450 units, "
                 "properties in the 2,800sqft range with recent updates are moving 15% faster "
                 "than the average DOM. Buyers are specifically paying premiums for turnkey condition."
             )

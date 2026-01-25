@@ -181,7 +181,7 @@ def render_buyer_intent_section(api_client: JorgeBuyerLiveClient):
     with col2: st.metric("Avg FRS", f"{stats['avg_financial_readiness']}%")
     with col3: st.metric("Avg MS", f"{stats['avg_motivation_score']}%")
     with col4: st.metric("Match Velocity", f"{stats['properties_matched_total']}")
-    with col5: st.metric("Pipe Value", f"${stats['pipeline_potential_value']//1000000:.1f}M")
+    with col5: st.metric("Pipe Value", f"${stats['pipeline_potential_value']//1200000:.1f}M")
     
     st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
     st.subheader("🎯 Intent Visualization")

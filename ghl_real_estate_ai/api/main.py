@@ -228,8 +228,9 @@ def _setup_routers(app: FastAPI):
         voice, webhook, auth, lead_intelligence, agent_sync, agent_ui,
         reports, jorge_followup, retell_webhook, vapi, websocket_routes,
         websocket_performance, external_webhooks, agent_ecosystem,
-        claude_concierge_integration, customer_journey, property_intelligence,
-        business_intelligence, bi_websocket_routes, error_monitoring, security
+        claude_concierge, claude_concierge_integration, customer_journey,
+        property_intelligence, business_intelligence, bi_websocket_routes,
+        error_monitoring, security
     )
     from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 
@@ -241,6 +242,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(bot_management.router, prefix="/api")
     app.include_router(lead_bot_management.router)
     app.include_router(agent_ecosystem.router)
+    app.include_router(claude_concierge.router)
     app.include_router(claude_concierge_integration.router)
     app.include_router(customer_journey.router)
     app.include_router(property_intelligence.router)

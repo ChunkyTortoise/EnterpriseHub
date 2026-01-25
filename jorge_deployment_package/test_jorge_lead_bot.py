@@ -13,7 +13,7 @@ async def test_tesla_vp_lead():
     # Tesla VP test case
     test_message = "Sarah Martinez, VP at Tesla, $750k budget, Westlake Hills, pre-approved, 45 days"
     test_contact_id = "test_sarah_martinez"
-    test_location_id = "test_austin"
+    test_location_id = "test_rancho_cucamonga"
 
     print("=== JORGE LEAD BOT OPTIMIZATION TEST ===")
     print(f"Input: {test_message}")

@@ -83,7 +83,7 @@ curl -X POST "http://localhost:8000/api/bulk/sms/campaign?location_id=demo" \\
   -H "Content-Type: application/json" \\
   -d '{
     "contact_ids": ["C1", "C2", "C3"],
-    "message": "New 3BR in downtown just listed! Reply YES for details."
+    "message": "New 3BR in central_rc just listed! Reply YES for details."
   }'
 ```
 

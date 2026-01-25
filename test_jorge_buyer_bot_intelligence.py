@@ -140,17 +140,17 @@ class TestJorgeBuyerBotIntelligence:
 
             # Create test buyer state
             test_conversation = [
-                {"role": "user", "content": "I'm looking for a 3 bedroom house under 500k in Austin"},
+                {"role": "user", "content": "I'm looking for a 3 bedroom house under 700k in Rancho Cucamonga"},
                 {"role": "assistant", "content": "Great! Let me help you find the perfect home."}
             ]
 
             test_state = BuyerBotState(
                 buyer_id="test_buyer_001",
                 buyer_name="Test Buyer",
-                target_areas=["Austin"],
+                target_areas=["Rancho Cucamonga"],
                 conversation_history=test_conversation,
                 intent_profile=None,
-                budget_range={"min": 400000, "max": 500000},
+                budget_range={"min": 400000, "max": 700000},
                 financing_status="pre_approved",
                 urgency_level="3_months",
                 property_preferences={"bedrooms": 3, "property_type": "house"},
@@ -203,7 +203,7 @@ class TestJorgeBuyerBotIntelligence:
 
             # Test conversation scenario
             test_conversation = [
-                {"role": "user", "content": "Hi, I'm looking to buy a home in Austin"},
+                {"role": "user", "content": "Hi, I'm looking to buy a home in Rancho Cucamonga"},
                 {"role": "assistant", "content": "Hi! I'd love to help you find your perfect home."},
                 {"role": "user", "content": "I need a 3 bedroom house, budget is around 450k"}
             ]

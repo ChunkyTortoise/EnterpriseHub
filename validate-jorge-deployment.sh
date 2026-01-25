@@ -289,7 +289,7 @@ AUTO_DEACTIVATE_PAYLOAD='{
   "contact_id": "test_qualified_123",
   "location_id": "jorge_location",
   "message": {
-    "body": "My budget is $400k, looking in Austin, need to move ASAP, want 3 bedrooms, and I am pre-approved",
+    "body": "My budget is $400k, looking in Rancho Cucamonga, need to move ASAP, want 3 bedrooms, and I am pre-approved",
     "type": "SMS"
   },
   "contact": {
