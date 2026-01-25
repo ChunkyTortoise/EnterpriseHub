@@ -58,6 +58,15 @@ from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from bots.shared.ml_analytics_engine import get_ml_analytics_engine
 
+# Phase 3.3 Bot Intelligence Middleware Integration
+try:
+    from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
+    from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
+    BOT_INTELLIGENCE_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Bot Intelligence Middleware unavailable: {e}")
+    BOT_INTELLIGENCE_AVAILABLE = False
+
 logger = get_logger(__name__)
 
 class JorgeBuyerBot:
@@ -74,19 +83,41 @@ class JorgeBuyerBot:
     6. Schedule follow-up actions based on qualification level
     """
 
-    def __init__(self, tenant_id: str = "jorge_buyer"):
+    def __init__(self, tenant_id: str = "jorge_buyer", enable_bot_intelligence: bool = True):
         self.intent_decoder = BuyerIntentDecoder()
         self.claude = ClaudeAssistant()
         self.event_publisher = get_event_publisher()
         self.property_matcher = PropertyMatcher()
         self.ml_analytics = get_ml_analytics_engine(tenant_id)
+
+        # Phase 3.3 Bot Intelligence Middleware Integration
+        self.enable_bot_intelligence = enable_bot_intelligence
+        self.intelligence_middleware = None
+        if self.enable_bot_intelligence and BOT_INTELLIGENCE_AVAILABLE:
+            self.intelligence_middleware = get_bot_intelligence_middleware()
+            logger.info("Jorge Buyer Bot: Bot Intelligence Middleware enabled (Phase 3.3)")
+        elif self.enable_bot_intelligence:
+            logger.warning("Jorge Buyer Bot: Bot Intelligence requested but dependencies not available")
+
+        # Performance tracking for intelligence enhancements
+        self.workflow_stats = {
+            "total_interactions": 0,
+            "intelligence_enhancements": 0,
+            "intelligence_cache_hits": 0,
+        }
+
         self.workflow = self._build_graph()
 
     def _build_graph(self) -> StateGraph:
         workflow = StateGraph(BuyerBotState)
 
-        # 6-Node Buyer Workflow (mirrors seller's 5-node pattern + property matching)
+        # 6-Node Buyer Workflow + Intelligence Enhancement (mirrors seller's pattern)
         workflow.add_node("analyze_buyer_intent", self.analyze_buyer_intent)
+
+        # Add intelligence gathering node if enabled
+        if self.enable_bot_intelligence and self.intelligence_middleware:
+            workflow.add_node("gather_buyer_intelligence", self.gather_buyer_intelligence)
+
         workflow.add_node("assess_financial_readiness", self.assess_financial_readiness)
         workflow.add_node("qualify_property_needs", self.qualify_property_needs)
         workflow.add_node("match_properties", self.match_properties)
@@ -95,7 +126,13 @@ class JorgeBuyerBot:
 
         # Define edges (linear with conditional routing)
         workflow.set_entry_point("analyze_buyer_intent")
-        workflow.add_edge("analyze_buyer_intent", "assess_financial_readiness")
+
+        # Conditional routing for intelligence gathering
+        if self.enable_bot_intelligence and self.intelligence_middleware:
+            workflow.add_edge("analyze_buyer_intent", "gather_buyer_intelligence")
+            workflow.add_edge("gather_buyer_intelligence", "assess_financial_readiness")
+        else:
+            workflow.add_edge("analyze_buyer_intent", "assess_financial_readiness")
         workflow.add_edge("assess_financial_readiness", "qualify_property_needs")
         workflow.add_edge("qualify_property_needs", "match_properties")
 
@@ -190,6 +227,142 @@ class JorgeBuyerBot:
             # Don't hide system failures - let them bubble up
             raise BuyerQualificationError(f"System failure in intent analysis: {str(e)}",
                                         recoverable=False, escalate=True)
+
+    async def gather_buyer_intelligence(self, state: BuyerBotState) -> Dict:
+        """
+        Phase 3.3: Gather buyer intelligence context for enhanced property matching.
+
+        Integrates with Bot Intelligence Middleware to provide:
+        - Property matching intelligence for consultative recommendations
+        - Conversation intelligence for preference detection
+        - Market intelligence for realistic buyer education
+
+        Designed for buyer bot's consultative workflow - graceful fallback on failures.
+        """
+        import time
+
+        # Update bot status
+        await self.event_publisher.publish_bot_status_update(
+            bot_type="jorge-buyer",
+            contact_id=state["buyer_id"],
+            status="processing",
+            current_step="gather_buyer_intelligence"
+        )
+
+        intelligence_context = None
+        intelligence_performance_ms = 0.0
+
+        try:
+            if self.intelligence_middleware:
+                logger.info(f"Gathering intelligence context for buyer {state['buyer_id']}")
+
+                # Extract buyer preferences from conversation for intelligence gathering
+                preferences = self._extract_buyer_preferences_from_conversation(
+                    state.get("conversation_history", [])
+                )
+
+                # Get intelligence context with <200ms target (buyer-focused)
+                start_time = time.time()
+                intelligence_context = await self.intelligence_middleware.enhance_bot_context(
+                    bot_type="jorge-buyer",
+                    lead_id=state["buyer_id"],
+                    location_id=state.get("location_id", "austin"),  # Default to Austin market
+                    conversation_context=state.get("conversation_history", []),
+                    preferences=preferences
+                )
+                intelligence_performance_ms = (time.time() - start_time) * 1000
+
+                # Update performance statistics
+                self.workflow_stats["intelligence_enhancements"] += 1
+                if intelligence_context.cache_hit:
+                    self.workflow_stats["intelligence_cache_hits"] += 1
+
+                # Log performance metrics
+                logger.info(
+                    f"Buyer intelligence gathered for {state['buyer_id']} in {intelligence_performance_ms:.1f}ms "
+                    f"(cache_hit: {intelligence_context.cache_hit})"
+                )
+
+                # Emit intelligence gathering event for monitoring (buyer-specific)
+                await self.event_publisher.publish_conversation_update(
+                    conversation_id=f"jorge_buyer_{state['buyer_id']}",
+                    lead_id=state['buyer_id'],
+                    stage="buyer_intelligence_enhanced",
+                    message=f"Buyer intelligence gathered: {intelligence_context.property_intelligence.match_count} properties, "
+                           f"sentiment {intelligence_context.conversation_intelligence.overall_sentiment:.2f}"
+                )
+
+        except Exception as e:
+            logger.warning(f"Buyer intelligence enhancement unavailable for {state['buyer_id']}: {e}")
+            # Don't let intelligence failures block buyer workflow
+            intelligence_context = None
+
+        return {
+            "intelligence_context": intelligence_context,
+            "intelligence_performance_ms": intelligence_performance_ms,
+            "intelligence_available": intelligence_context is not None
+        }
+
+    def _extract_buyer_preferences_from_conversation(self, conversation_history: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Extract buyer preferences from conversation for intelligence gathering."""
+        preferences = {}
+
+        if not conversation_history:
+            return preferences
+
+        # Look for buyer signals in conversation
+        conversation_text = " ".join([msg.get("content", "") for msg in conversation_history]).lower()
+
+        # Budget extraction (buyer-focused)
+        budget_keywords = {
+            "under 300": {"budget_max": 300000, "buyer_type": "first_time"},
+            "under 400": {"budget_max": 400000, "buyer_type": "entry_level"},
+            "under 500": {"budget_max": 500000, "buyer_type": "mid_market"},
+            "under 600": {"budget_max": 600000, "buyer_type": "mid_market"},
+            "under 700": {"budget_max": 700000, "buyer_type": "move_up"},
+            "under 800": {"budget_max": 800000, "buyer_type": "move_up"},
+            "under 1m": {"budget_max": 1000000, "buyer_type": "luxury"},
+            "under 1 million": {"budget_max": 1000000, "buyer_type": "luxury"},
+            "over 1m": {"budget_min": 1000000, "buyer_type": "luxury_plus"}
+        }
+
+        for keyword, budget_info in budget_keywords.items():
+            if keyword in conversation_text:
+                preferences.update(budget_info)
+                break
+
+        # Timeline extraction (buyer urgency)
+        urgency_keywords = {
+            "asap": {"urgency": "immediate", "timeline": "1_month"},
+            "quickly": {"urgency": "high", "timeline": "2_months"},
+            "urgent": {"urgency": "high", "timeline": "1_month"},
+            "3 months": {"urgency": "medium", "timeline": "3_months"},
+            "6 months": {"urgency": "low", "timeline": "6_months"},
+            "next year": {"urgency": "very_low", "timeline": "12_months"},
+            "no rush": {"urgency": "browsing", "timeline": "flexible"}
+        }
+
+        for keyword, urgency_info in urgency_keywords.items():
+            if keyword in conversation_text:
+                preferences.update(urgency_info)
+                break
+
+        # Property type preferences (buyer-specific)
+        property_keywords = {
+            "condo": {"property_type": "condo"},
+            "house": {"property_type": "house"},
+            "townhouse": {"property_type": "townhouse"},
+            "single family": {"property_type": "single_family"},
+            "new construction": {"property_type": "new_construction"},
+            "investment": {"buyer_intent": "investment"}
+        }
+
+        for keyword, prop_info in property_keywords.items():
+            if keyword in conversation_text:
+                preferences.update(prop_info)
+                break
+
+        return preferences
 
     async def assess_financial_readiness(self, state: BuyerBotState) -> Dict:
         """
@@ -345,15 +518,16 @@ class JorgeBuyerBot:
     async def generate_buyer_response(self, state: BuyerBotState) -> Dict:
         """
         Generate strategic buyer response based on qualification and property matches.
-        Uses Claude for contextual, educational responses.
+        Enhanced with Phase 3.3 intelligence context for consultative recommendations.
         """
         try:
             profile = state.get("intent_profile")
             matches = state.get("matched_properties", [])
+            intelligence_context = state.get("intelligence_context")
 
-            # Generate strategic response using Claude
+            # Base prompt for buyer consultation
             response_prompt = f"""
-            As Jorge's Buyer Bot, generate a response for this buyer:
+            As Jorge's Buyer Bot, generate a consultative response for this buyer:
 
             Buyer Temperature: {profile.buyer_temperature if profile else 'cold'}
             Financial Readiness: {state.get('financial_readiness_score', 25)}/100
@@ -371,6 +545,12 @@ class JorgeBuyerBot:
 
             Keep under 160 characters for SMS compliance.
             """
+
+            # Enhance prompt with intelligence context if available (Phase 3.3)
+            if intelligence_context:
+                response_prompt = await self._enhance_buyer_prompt_with_intelligence(
+                    response_prompt, intelligence_context, state
+                )
 
             response = await self.claude.generate_response(response_prompt)
 
@@ -582,6 +762,9 @@ class JorgeBuyerBot:
             # Execute buyer workflow
             result = await self.workflow.ainvoke(initial_state)
 
+            # Update performance statistics
+            self.workflow_stats["total_interactions"] += 1
+
             # Mark as qualified if scores are high enough
             is_qualified = (
                 result.get("financial_readiness_score", 0) >= 50 and
@@ -609,3 +792,170 @@ class JorgeBuyerBot:
                 "qualification_status": "error",
                 "response_content": "I'm having technical difficulties. Let me connect you with Jorge directly."
             }
+
+    # ================================
+    # PHASE 3.3 INTELLIGENCE ENHANCEMENT METHODS
+    # ================================
+
+    async def _enhance_buyer_prompt_with_intelligence(
+        self,
+        base_prompt: str,
+        intelligence_context: "BotIntelligenceContext",
+        state: BuyerBotState
+    ) -> str:
+        """
+        Enhance Claude prompt with buyer intelligence context for consultative responses.
+
+        Adds property recommendations, preference insights, and market intelligence
+        while maintaining the buyer bot's consultative and educational approach.
+        """
+        try:
+            enhanced_prompt = base_prompt
+
+            # Add property intelligence if available
+            property_intel = intelligence_context.property_intelligence
+            if property_intel.match_count > 0:
+                enhanced_prompt += f"\n\nPROPERTY INTELLIGENCE:"
+                enhanced_prompt += f"\n- Found {property_intel.match_count} properties matching buyer preferences"
+                enhanced_prompt += f"\n- Best match score: {property_intel.best_match_score:.1f}%"
+                if property_intel.behavioral_reasoning:
+                    enhanced_prompt += f"\n- Match reasoning: {property_intel.behavioral_reasoning}"
+
+            # Add conversation intelligence insights for buyer consultation
+            conversation_intel = intelligence_context.conversation_intelligence
+            if conversation_intel.objections_detected:
+                enhanced_prompt += f"\n\nBUYER CONCERNS DETECTED:"
+                for objection in conversation_intel.objections_detected[:2]:  # Top 2 concerns
+                    concern_type = objection.get('type', 'unknown')
+                    confidence = objection.get('confidence', 0.0)
+                    context = objection.get('context', '')
+                    enhanced_prompt += f"\n- {concern_type.upper()} concern detected ({confidence:.0%}): {context}"
+
+                    # Add consultative suggestions for buyer concerns
+                    suggestions = objection.get('suggested_responses', [])
+                    if suggestions:
+                        enhanced_prompt += f"\n  Consultative approach: {suggestions[0]}"
+
+            # Add preference intelligence insights for personalization
+            preference_intel = intelligence_context.preference_intelligence
+            if preference_intel.profile_completeness > 0.3:
+                enhanced_prompt += f"\n\nBUYER PREFERENCE INTELLIGENCE:"
+                enhanced_prompt += f"\n- Preference profile completeness: {preference_intel.profile_completeness:.0%}"
+
+                # Add learned preferences for better consultation
+                if hasattr(preference_intel, 'learned_preferences') and preference_intel.learned_preferences:
+                    preferences = preference_intel.learned_preferences
+                    enhanced_prompt += f"\n- Key preferences: {', '.join(preferences.keys())}"
+
+            # Add market intelligence for buyer education
+            enhanced_prompt += f"\n\nMARKET GUIDANCE:"
+            enhanced_prompt += f"\n- Use this intelligence to provide specific, helpful property guidance"
+            enhanced_prompt += f"\n- Maintain consultative tone - educate and guide, don't push"
+            enhanced_prompt += f"\n- If concerns detected, address them with market reality and alternatives"
+
+            return enhanced_prompt
+
+        except Exception as e:
+            logger.warning(f"Buyer prompt enhancement failed: {e}")
+            return base_prompt
+
+    async def _apply_buyer_conversation_intelligence(
+        self,
+        conversation_strategy: Dict[str, Any],
+        intelligence_context: "BotIntelligenceContext",
+        state: BuyerBotState
+    ) -> Dict[str, Any]:
+        """
+        Apply conversation intelligence to refine buyer consultation strategy.
+
+        Uses buyer-specific signals to adjust consultative approach while
+        maintaining educational and supportive methodology.
+        """
+        try:
+            conversation_intel = intelligence_context.conversation_intelligence
+
+            # Analyze buyer concerns for consultative opportunities
+            if conversation_intel.objections_detected:
+                primary_concern = conversation_intel.objections_detected[0]
+                concern_type = primary_concern.get('type', 'unknown')
+                severity = primary_concern.get('severity', 0.5)
+
+                logger.info(f"Jorge Buyer Bot addressing {concern_type} concern (severity: {severity})")
+
+                # Buyer-specific consultative responses to common concerns
+                if concern_type in ['price', 'pricing', 'budget'] and severity > 0.6:
+                    # Budget concern - provide market education
+                    conversation_strategy['approach'] = 'budget_reality_education'
+                    conversation_strategy['talking_points'] = primary_concern.get('suggested_responses', [])
+                elif concern_type in ['timing', 'timeline'] and severity > 0.5:
+                    # Timeline concern - guide urgency understanding
+                    conversation_strategy['approach'] = 'timeline_market_guidance'
+                elif concern_type in ['location', 'area']:
+                    # Location concern - expand area options
+                    conversation_strategy['approach'] = 'area_expansion_education'
+
+            # Adjust consultation intensity based on sentiment
+            sentiment = conversation_intel.overall_sentiment
+            if sentiment < -0.2:
+                # Negative sentiment - provide more reassurance and education
+                conversation_strategy['tone_modifier'] = 'supportive_education'
+            elif sentiment > 0.4:
+                # Positive sentiment - opportunity for deeper engagement
+                conversation_strategy['tone_modifier'] = 'confident_guidance'
+
+            # Use response recommendations for buyer education
+            if conversation_intel.response_recommendations:
+                best_response = conversation_intel.response_recommendations[0]
+                conversation_strategy['recommended_response'] = best_response.get('response_text')
+                conversation_strategy['recommended_education'] = best_response.get('education_points', [])
+
+            conversation_strategy['intelligence_enhanced'] = True
+            return conversation_strategy
+
+        except Exception as e:
+            logger.warning(f"Buyer conversation intelligence application failed: {e}")
+            return conversation_strategy
+
+    # ================================
+    # FACTORY METHODS & PERFORMANCE METRICS
+    # ================================
+
+    @classmethod
+    def create_enhanced_buyer_bot(cls, tenant_id: str = "jorge_buyer") -> 'JorgeBuyerBot':
+        """Factory method: Create buyer bot with Phase 3.3 intelligence enhancements enabled"""
+        return cls(tenant_id=tenant_id, enable_bot_intelligence=True)
+
+    async def get_performance_metrics(self) -> Dict[str, Any]:
+        """Get comprehensive performance metrics for buyer bot intelligence features"""
+
+        # Base metrics
+        metrics = {
+            "workflow_statistics": self.workflow_stats,
+            "features_enabled": {
+                "bot_intelligence": self.enable_bot_intelligence
+            }
+        }
+
+        # Phase 3.3 Bot intelligence metrics
+        if self.enable_bot_intelligence:
+            intelligence_enhancements = self.workflow_stats["intelligence_enhancements"]
+            cache_hits = self.workflow_stats["intelligence_cache_hits"]
+
+            metrics["bot_intelligence"] = {
+                "total_enhancements": intelligence_enhancements,
+                "cache_hits": cache_hits,
+                "cache_hit_rate": (cache_hits / max(intelligence_enhancements, 1)) * 100,
+                "enhancement_rate": intelligence_enhancements / max(self.workflow_stats["total_interactions"], 1),
+                "middleware_available": self.intelligence_middleware is not None
+            }
+
+            # Get middleware performance metrics if available
+            if self.intelligence_middleware:
+                middleware_metrics = self.intelligence_middleware.get_metrics()
+                metrics["bot_intelligence"]["middleware_performance"] = {
+                    "avg_latency_ms": middleware_metrics.get("avg_latency_ms", 0),
+                    "performance_status": middleware_metrics.get("performance_status", "unknown"),
+                    "service_failures": middleware_metrics.get("service_failures", {})
+                }
+
+        return metrics
