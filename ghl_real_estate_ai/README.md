@@ -7,7 +7,9 @@
 
 ## 🎯 Features
 
-### Core Services (62+ Implemented)
+### Core Services (64+ Implemented)
+- **MLOps Retraining Automation** (Continuous learning for XGBoost models)
+- **Autonomous Handoff Agent** (Real-time cross-bot coordination)
 - **Predictive Lead Intelligence** (Behavioral forecasting & conversion probability)
 - **Agentic Property Matching** (Claude-powered precision engine with ROI reasoning)
 - **Self-Service Architectural Portal** (Mobile-optimized lead environment)
