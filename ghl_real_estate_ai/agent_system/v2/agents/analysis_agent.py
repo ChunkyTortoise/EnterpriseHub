@@ -11,6 +11,7 @@ from pydantic_ai.models.gemini import GeminiModel
 
 from ghl_real_estate_ai.models.jorge_property_models import MatchReasoning, ConfidenceLevel
 from ghl_real_estate_ai.services.roi_calculator_service import roi_calculator
+from ghl_real_estate_ai.services.competitive_intelligence_hub import get_competitive_intelligence_hub, IntelligenceType
 
 # 1. Define the Analysis Result Schema
 class FinancialProjections(BaseModel):
@@ -29,10 +30,18 @@ class RiskAssessment(BaseModel):
     liquidity_risk: int = Field(ge=0, le=10)
     mitigation_strategies: List[str]
 
+class CompetitiveLandscape(BaseModel):
+    competitor_count: int
+    threat_level: str # e.g., "Low", "Medium", "High"
+    market_share_delta: float
+    competitor_pricing_avg: float
+    strategic_advantage: str
+
 class AnalysisResult(BaseModel):
     investment_score: int = Field(ge=0, le=100)
     financials: FinancialProjections
     risk: RiskAssessment
+    competitive_landscape: Optional[CompetitiveLandscape] = None
     reasoning: MatchReasoning
     confidence: ConfidenceLevel
     verdict: str # e.g., "Strong Buy", "Hold", "Pass"
@@ -41,6 +50,7 @@ class AnalysisResult(BaseModel):
 class AnalysisDeps:
     def __init__(self):
         self.roi_calc = roi_calculator
+        self.competitive_hub = get_competitive_intelligence_hub()
 
 # 3. Initialize Gemini Model
 model = GeminiModel('gemini-2.0-flash')
@@ -56,7 +66,8 @@ analysis_agent = Agent(
         "Calculate Cap Rate, ROI, and Cash-on-Cash returns accurately. "
         "Use the 10-year projection tool for long-term equity estimates. "
         "Assess risks objectively and provide actionable investment reasoning. "
-        "Always output structured financial data."
+        "Integrate competitive intelligence to understand market positioning. "
+        "Always output structured financial and competitive data."
     )
 )
 
@@ -95,3 +106,20 @@ def estimate_rental_income(ctx: RunContext[AnalysisDeps], neighborhood: str, sqf
 def assess_market_stability(ctx: RunContext[AnalysisDeps], city: str) -> str:
     """Get a qualitative assessment of market stability for a city."""
     return f"Market in {city} is currently stable with a 4.2% annual growth rate."
+
+@analysis_agent.tool
+async def get_competitive_intelligence(ctx: RunContext[AnalysisDeps], market: str) -> Dict[str, Any]:
+    """Fetch competitive intelligence for a specific market or area."""
+    # In a real scenario, this would search for competitors in the market
+    # For now we use the hub to get performance metrics as a proxy
+    metrics = await ctx.deps.competitive_hub.get_performance_metrics()
+    
+    # Simulate a benchmark for the market
+    benchmark = {
+        "market": market,
+        "competitor_count": metrics.get("total_competitors", 5),
+        "avg_market_share": 15.5,
+        "threat_level": "Medium",
+        "recent_alerts": metrics.get("active_alerts", 2)
+    }
+    return benchmark

@@ -30,6 +30,9 @@ from ghl_real_estate_ai.services.market_sentiment_radar import (
 from ghl_real_estate_ai.services.emergency_deal_rescue import (
     get_emergency_deal_rescue, RescueUrgencyLevel
 )
+from ghl_real_estate_ai.services.ghl_deal_intelligence_service import (
+    get_ghl_deal_intelligence_service
+)
 
 # Core service imports
 from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator
@@ -337,41 +340,73 @@ class EnhancedIntelligenceCoordinator:
             return []
 
     async def _get_active_deals(self) -> List[Dict[str, Any]]:
-        """Get active deals from CRM (mock implementation)."""
+        """Get active deals from GHL CRM."""
+        try:
+            ghl_service = await get_ghl_deal_intelligence_service()
 
-        # Mock active deals - in production, integrate with actual CRM
-        return [
-            {
-                "deal_id": "deal_001",
-                "deal_value": 750000,
-                "commission_value": 45000,
-                "days_active": 18,
-                "buyer_type": "first_time",
-                "property_type": "single_family",
-                "conversation_context": {
-                    "messages": [
-                        {"content": "Still thinking about it...", "timestamp": (datetime.now() - timedelta(hours=36)).isoformat()},
-                        {"content": "Found another property we like", "timestamp": (datetime.now() - timedelta(hours=12)).isoformat()}
-                    ]
+            # Get high-value active deals (prioritize deals worth monitoring)
+            deals = await ghl_service.get_active_deals(
+                limit=50,
+                min_value=300000  # $300K minimum for intelligence analysis
+            )
+
+            # Convert to format expected by intelligence coordinator
+            active_deals = []
+
+            for deal in deals:
+                # Prepare conversation context
+                conversation_context = {
+                    "messages": []
                 }
-            },
-            {
-                "deal_id": "deal_002",
-                "deal_value": 520000,
-                "commission_value": 31200,
-                "days_active": 25,
-                "buyer_type": "investor",
-                "property_type": "condo"
-            },
-            {
-                "deal_id": "deal_003",
-                "deal_value": 925000,
-                "commission_value": 55500,
-                "days_active": 12,
-                "buyer_type": "relocating",
-                "property_type": "single_family"
-            }
-        ]
+
+                # Format recent messages for analysis
+                for message in deal.recent_messages[:10]:  # Last 10 messages
+                    conversation_context["messages"].append({
+                        "content": message.get('content', ''),
+                        "timestamp": message.get('timestamp', ''),
+                        "direction": message.get('direction', 'unknown')
+                    })
+
+                # Classify buyer type
+                buyer_type = "first_time"
+                tags = [tag.lower() for tag in deal.tags]
+                if any(tag in tags for tag in ['investor', 'investment']):
+                    buyer_type = "investor"
+                elif any(tag in tags for tag in ['relocating', 'relocation']):
+                    buyer_type = "relocating"
+                elif deal.deal_value > 1000000:
+                    buyer_type = "luxury"
+
+                deal_dict = {
+                    "deal_id": deal.deal_id,
+                    "deal_value": deal.deal_value,
+                    "commission_value": deal.commission_value,
+                    "days_active": deal.days_since_creation,
+                    "buyer_type": buyer_type,
+                    "property_type": deal.property_type or "single_family",
+                    "conversation_context": conversation_context,
+                    "deal_stage": deal.deal_stage,
+                    "last_contact_date": deal.last_contact_date,
+                    "expected_close_date": deal.expected_close_date,
+                    "contact_name": deal.contact_name,
+                    "contact_id": deal.contact_id,
+                    "pipeline_id": deal.pipeline_id,
+                    "property_address": deal.property_address,
+                    "deal_source": deal.deal_source,
+                    "tags": deal.tags
+                }
+
+                active_deals.append(deal_dict)
+
+            logger.info(f"Retrieved {len(active_deals)} active deals from GHL for intelligence analysis")
+            return active_deals
+
+        except Exception as e:
+            logger.error(f"Error retrieving active deals from GHL: {e}")
+
+            # Fallback to empty list if GHL integration fails
+            logger.warning("GHL integration unavailable, using empty deals list")
+            return []
 
     async def _get_rescue_recommendations(self) -> List[Dict[str, Any]]:
         """Get rescue recommendations for at-risk deals."""
