@@ -81,7 +81,7 @@ async def simulate_traffic():
     service = AnalyticsService()
     
     locations = [
-        ("loc_austin_001", "Austin Main"),
+        ("loc_rancho_cucamonga_001", "Rancho Cucamonga Main"),
         ("loc_dallas_002", "Dallas Luxury"),
         ("loc_houston_003", "Houston Heights")
     ]

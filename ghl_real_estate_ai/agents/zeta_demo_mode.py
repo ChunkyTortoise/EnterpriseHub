@@ -91,7 +91,7 @@ class DemoDataGenerator:
         ]
         
         self.property_interests = [
-            "3 bedroom house in downtown",
+            "3 bedroom house in central_rc",
             "Condo with lake view",
             "Family home with large yard",
             "Modern townhouse near schools",
@@ -212,7 +212,7 @@ class DemoDataGenerator:
         ]
         
         warm_lead_messages = [
-            "Looking for information about homes in Austin",
+            "Looking for information about homes in Rancho Cucamonga",
             "What's the market like right now?",
             "I'm thinking about buying in the next few months",
             "Can you tell me more about the area?",

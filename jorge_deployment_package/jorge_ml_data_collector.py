@@ -305,10 +305,10 @@ class JorgeMLDataCollector:
         """Generate realistic lead message text"""
 
         templates = [
-            f"Hi, I'm looking for a home in Austin. Budget is around ${budget//1000}k. {timeline.replace('_', ' ')} timeline. {financing.replace('_', ' ')}.",
-            f"Interested in buying in the Austin area. Price range ${budget//1000}k. Need help with {financing.replace('_', ' ')}. Timeline: {timeline.replace('_', ' ')}.",
+            f"Hi, I'm looking for a home in Rancho Cucamonga. Budget is around ${budget//1000}k. {timeline.replace('_', ' ')} timeline. {financing.replace('_', ' ')}.",
+            f"Interested in buying in the Rancho Cucamonga area. Price range ${budget//1000}k. Need help with {financing.replace('_', ' ')}. Timeline: {timeline.replace('_', ' ')}.",
             f"Looking to purchase. Budget ${budget//1000}k. How soon can we start? {timeline.replace('_', ' ')}.",
-            f"Want to see homes around ${budget//1000}k in Austin. {financing.replace('_', ' ')}. {timeline.replace('_', ' ')}."
+            f"Want to see homes around ${budget//1000}k in Rancho Cucamonga. {financing.replace('_', ' ')}. {timeline.replace('_', ' ')}."
         ]
 
         return np.random.choice(templates)
@@ -319,7 +319,7 @@ class JorgeMLDataCollector:
         score = 50  # Base score
 
         # Budget impact
-        if features['budget_max'] >= 500000:
+        if features['budget_max'] >= 700000:
             score += 15
         elif features['budget_max'] >= 400000:
             score += 10

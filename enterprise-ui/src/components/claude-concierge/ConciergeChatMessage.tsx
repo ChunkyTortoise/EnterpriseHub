@@ -93,6 +93,29 @@ export function ConciergeChatMessage({ message }: Props) {
           </div>
         </div>
 
+        {/* Lead Intelligence Scores */}
+        {message.metadata?.leadIntelligence && !isUser && (
+          <Card className="p-3 bg-slate-50 border-slate-200 max-w-sm w-full">
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Lead Intelligence Metrics
+            </div>
+            <div className="flex justify-between items-center gap-2">
+              <div className="flex flex-col items-center flex-1 p-1.5 bg-white rounded border border-slate-100">
+                <span className="text-[10px] text-slate-500 uppercase">Score</span>
+                <span className="text-sm font-bold text-slate-900">{message.metadata.leadIntelligence.lead_score || 0}</span>
+              </div>
+              <div className="flex flex-col items-center flex-1 p-1.5 bg-white rounded border border-slate-100">
+                <span className="text-[10px] text-slate-500 uppercase">FRS</span>
+                <span className="text-sm font-bold text-blue-600">{message.metadata.leadIntelligence.frs_score || 0}</span>
+              </div>
+              <div className="flex flex-col items-center flex-1 p-1.5 bg-white rounded border border-slate-100">
+                <span className="text-[10px] text-slate-500 uppercase">PCS</span>
+                <span className="text-sm font-bold text-green-600">{message.metadata.leadIntelligence.pcs_score || 0}</span>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Reasoning Section */}
         {message.metadata?.reasoning && !isUser && (
           <Card className="p-3 bg-purple-25 border-purple-100 max-w-sm">

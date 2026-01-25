@@ -298,7 +298,7 @@ class JorgeAPIClient:
                     "lead_name": lead_data.get("name", "Demo Lead"),
                     "contact_phone": lead_data.get("phone", "+15551234567"),
                     "contact_email": lead_data.get("email", "demo@example.com"),
-                    "property_address": lead_data.get("property", "123 Main St, Austin, TX"),
+                    "property_address": lead_data.get("property", "123 Main St, Rancho Cucamonga, CA"),
                     "conversation_history": lead_data.get("history", []),
                     "intent_profile": None,
                     "current_step": step,

@@ -44,7 +44,7 @@ class NetworkError(BuyerQualificationError):
     pass
 
 class ComplianceValidationError(BuyerQualificationError):
-    """Raised when compliance validation fails (Fair Housing, TREC)"""
+    """Raised when compliance validation fails (Fair Housing, DRE)"""
     pass
 
 # Error IDs for monitoring and alerting
@@ -266,7 +266,7 @@ class JorgeBuyerBot:
                 intelligence_context = await self.intelligence_middleware.enhance_bot_context(
                     bot_type="jorge-buyer",
                     lead_id=state["buyer_id"],
-                    location_id=state.get("location_id", "austin"),  # Default to Austin market
+                    location_id=state.get("location_id", "rancho_cucamonga"),  # Default to Rancho Cucamonga market
                     conversation_context=state.get("conversation_history", []),
                     preferences=preferences
                 )
@@ -315,15 +315,15 @@ class JorgeBuyerBot:
 
         # Budget extraction (buyer-focused)
         budget_keywords = {
-            "under 300": {"budget_max": 300000, "buyer_type": "first_time"},
+            "under 300": {"budget_max": 700000, "buyer_type": "first_time"},
             "under 400": {"budget_max": 400000, "buyer_type": "entry_level"},
-            "under 500": {"budget_max": 500000, "buyer_type": "mid_market"},
+            "under 500": {"budget_max": 700000, "buyer_type": "mid_market"},
             "under 600": {"budget_max": 600000, "buyer_type": "mid_market"},
             "under 700": {"budget_max": 700000, "buyer_type": "move_up"},
             "under 800": {"budget_max": 800000, "buyer_type": "move_up"},
-            "under 1m": {"budget_max": 1000000, "buyer_type": "luxury"},
-            "under 1 million": {"budget_max": 1000000, "buyer_type": "luxury"},
-            "over 1m": {"budget_min": 1000000, "buyer_type": "luxury_plus"}
+            "under 1m": {"budget_max": 1200000, "buyer_type": "luxury"},
+            "under 1 million": {"budget_max": 1200000, "buyer_type": "luxury"},
+            "over 1m": {"budget_min": 1200000, "buyer_type": "luxury_plus"}
         }
 
         for keyword, budget_info in budget_keywords.items():
@@ -527,7 +527,7 @@ class JorgeBuyerBot:
 
             # Base prompt for buyer consultation
             response_prompt = f"""
-            As Jorge's Buyer Bot, generate a consultative response for this buyer:
+            As Jorge's Buyer Bot, generate a helpful and supportive response for this buyer:
 
             Buyer Temperature: {profile.buyer_temperature if profile else 'cold'}
             Financial Readiness: {state.get('financial_readiness_score', 25)}/100
@@ -537,11 +537,12 @@ class JorgeBuyerBot:
             Conversation Context: {state['conversation_history'][-2:] if state['conversation_history'] else []}
 
             Response should be:
-            - Educational and consultative (not pushy)
-            - Focused on next qualification step if not fully qualified
+            - Warm, helpful and genuinely caring
+            - Educational and patient (never pushy)
+            - Focused on understanding their needs first
             - Property-focused if qualified with matches
             - Market education if qualified but no matches
-            - Professional and direct (Jorge's style)
+            - Professional, friendly and relationship-focused (Jorge's style)
 
             Keep under 160 characters for SMS compliance.
             """
@@ -555,16 +556,16 @@ class JorgeBuyerBot:
             response = await self.claude.generate_response(response_prompt)
 
             return {
-                "response_content": response.get("content", "Let me help you find the right property."),
-                "response_tone": "consultative",
+                "response_content": response.get("content", "I'd love to help you find the perfect property for your needs."),
+                "response_tone": "friendly_consultative",
                 "next_action": "send_response"
             }
 
         except Exception as e:
             logger.error(f"Error generating buyer response for {state['buyer_id']}: {str(e)}")
             return {
-                "response_content": "Let me help you find the right property for your needs.",
-                "response_tone": "neutral",
+                "response_content": "I'd love to help you find the perfect property for your needs.",
+                "response_tone": "friendly_supportive",
                 "next_action": "send_response"
             }
 
@@ -656,7 +657,7 @@ class JorgeBuyerBot:
                 amount = int(val.replace(',', ''))
                 if k_suffix:
                     amount *= 1000
-                elif amount < 1000: # Handle cases like "500" meaning 500k
+                elif amount < 1000: # Handle cases like "500" meaning 700k
                     amount *= 1000
                 amounts.append(amount)
 
@@ -850,8 +851,8 @@ class JorgeBuyerBot:
             # Add market intelligence for buyer education
             enhanced_prompt += f"\n\nMARKET GUIDANCE:"
             enhanced_prompt += f"\n- Use this intelligence to provide specific, helpful property guidance"
-            enhanced_prompt += f"\n- Maintain consultative tone - educate and guide, don't push"
-            enhanced_prompt += f"\n- If concerns detected, address them with market reality and alternatives"
+            enhanced_prompt += f"\n- Maintain warm, friendly tone - educate and guide with care"
+            enhanced_prompt += f"\n- If concerns detected, address them with understanding and helpful alternatives"
 
             return enhanced_prompt
 
@@ -880,28 +881,28 @@ class JorgeBuyerBot:
                 concern_type = primary_concern.get('type', 'unknown')
                 severity = primary_concern.get('severity', 0.5)
 
-                logger.info(f"Jorge Buyer Bot addressing {concern_type} concern (severity: {severity})")
+                logger.info(f"Jorge Buyer Bot addressing {concern_type} concern with care (severity: {severity})")
 
-                # Buyer-specific consultative responses to common concerns
+                # Buyer-specific caring responses to common concerns
                 if concern_type in ['price', 'pricing', 'budget'] and severity > 0.6:
-                    # Budget concern - provide market education
-                    conversation_strategy['approach'] = 'budget_reality_education'
+                    # Budget concern - provide gentle education with understanding
+                    conversation_strategy['approach'] = 'budget_understanding_education'
                     conversation_strategy['talking_points'] = primary_concern.get('suggested_responses', [])
                 elif concern_type in ['timing', 'timeline'] and severity > 0.5:
-                    # Timeline concern - guide urgency understanding
-                    conversation_strategy['approach'] = 'timeline_market_guidance'
+                    # Timeline concern - understand their needs patiently
+                    conversation_strategy['approach'] = 'timeline_patient_guidance'
                 elif concern_type in ['location', 'area']:
-                    # Location concern - expand area options
-                    conversation_strategy['approach'] = 'area_expansion_education'
+                    # Location concern - explore options together
+                    conversation_strategy['approach'] = 'area_collaborative_exploration'
 
-            # Adjust consultation intensity based on sentiment
+            # Adjust approach based on sentiment
             sentiment = conversation_intel.overall_sentiment
             if sentiment < -0.2:
-                # Negative sentiment - provide more reassurance and education
-                conversation_strategy['tone_modifier'] = 'supportive_education'
+                # Negative sentiment - provide extra care and reassurance
+                conversation_strategy['tone_modifier'] = 'extra_caring_support'
             elif sentiment > 0.4:
-                # Positive sentiment - opportunity for deeper engagement
-                conversation_strategy['tone_modifier'] = 'confident_guidance'
+                # Positive sentiment - opportunity for enthusiastic partnership
+                conversation_strategy['tone_modifier'] = 'enthusiastic_partnership'
 
             # Use response recommendations for buyer education
             if conversation_intel.response_recommendations:

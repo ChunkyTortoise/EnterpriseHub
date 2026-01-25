@@ -7,7 +7,7 @@ Demonstrates the Phase 3 enhancements to Jorge's confrontational methodology:
 - 🎯 80% token optimization through progressive skills
 - 📊 Enhanced FRS/PCS scoring with ML prediction
 - 🚀 Advanced stall-breaking interventions
-- ⚡ Austin market specialization
+- ⚡ Rancho Cucamonga market specialization
 - 🏠 Compliance-first approach
 
 Usage:
@@ -50,7 +50,7 @@ async def demo_seller_scenarios():
     high_resistance_seller = SellerProfile(
         seller_id="HR001",
         property_details={
-            "address": "456 Tech Ridge Blvd, Austin, TX 78741",
+            "address": "456 Tech Ridge Blvd, Rancho Cucamonga, CA 78741",
             "property_type": "Single Family",
             "bedrooms": 4,
             "bathrooms": 3,
@@ -94,7 +94,7 @@ async def demo_seller_scenarios():
     motivated_seller = SellerProfile(
         seller_id="MH002",
         property_details={
-            "address": "789 South Austin Pkwy, Austin, TX 78704",
+            "address": "789 South Rancho Cucamonga Pkwy, Rancho Cucamonga, CA 78704",
             "property_type": "Condo",
             "bedrooms": 2,
             "bathrooms": 2,
@@ -130,7 +130,7 @@ async def demo_seller_scenarios():
     budget_focused_seller = SellerProfile(
         seller_id="BF003",
         property_details={
-            "address": "321 Cedar Park Dr, Austin, TX 78613",
+            "address": "321 Etiwanda Dr, Rancho Cucamonga, CA 78613",
             "property_type": "Single Family",
             "bedrooms": 3,
             "bathrooms": 2.5,
@@ -181,7 +181,7 @@ async def demo_seller_scenarios():
     print(f"   • Progressive Skills Available: {skills_count}")
     print(f"   • Skills Used in Demo: {len(analytics['skill_usage_stats'])}")
 
-    print(f"\n🏠 Austin Market Integration:")
+    print(f"\n🏠 Rancho Cucamonga Market Integration:")
     print(f"   • Market-specific adjustments: Applied")
     print(f"   • Local expertise integration: Active")
     print(f"   • Compliance monitoring: 100% compliant")
@@ -196,7 +196,7 @@ async def demo_seller_scenarios():
         "Enhanced FRS/PCS scoring with ML prediction",
         "Progressive skills with 80% token optimization",
         "Stall-breaking interventions (3 types shown)",
-        "Austin market specialization integration",
+        "Rancho Cucamonga market specialization integration",
         "Compliance-first approach with safeguards",
         "Real-time analytics and performance tracking"
     ]
@@ -226,7 +226,7 @@ async def interactive_jorge_demo():
     custom_seller = SellerProfile(
         seller_id="CUSTOM_001",
         property_details={
-            "address": "Custom Property, Austin, TX",
+            "address": "Custom Property, Rancho Cucamonga, CA",
             "property_type": "Single Family",
             "estimated_value": 550000
         },

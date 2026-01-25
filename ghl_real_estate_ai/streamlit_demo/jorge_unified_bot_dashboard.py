@@ -273,7 +273,7 @@ class UnifiedBotManager:
                     "lead_name": "Demo Lead",
                     "contact_phone": "+15551234567",
                     "contact_email": "demo@example.com",
-                    "property_address": "123 Main St, Austin, TX",
+                    "property_address": "123 Main St, Rancho Cucamonga, CA",
                     "conversation_history": [{"role": "user", "content": message}],
                     "current_step": step,
                     "engagement_status": "ghosted"
@@ -301,8 +301,8 @@ class UnifiedBotManager:
                 state = {
                     "buyer_id": buyer_id,
                     "buyer_name": "Demo Buyer",
-                    "budget_range": {"min": 500000, "max": 750000},
-                    "target_areas": ["Austin", "Round Rock"],
+                    "budget_range": {"min": 700000, "max": 750000},
+                    "target_areas": ["Rancho Cucamonga", "Victoria Gardens"],
                     "conversation_history": [{"role": "user", "content": message}]
                 }
 
@@ -690,7 +690,7 @@ def render_buyer_bot_chat(manager: UnifiedBotManager):
 
         st.markdown("**Buyer Profile**")
         st.write("Budget: $600K-$800K")
-        st.write("Areas: Austin, Round Rock")
+        st.write("Areas: Rancho Cucamonga, Victoria Gardens")
         st.write("Timeline: 60 days")
 
     with col2:
@@ -799,9 +799,9 @@ def render_buyer_properties():
 
     with col1:
         st.markdown("**Search Criteria**")
-        price_range = st.slider("Price Range", 300000, 1200000, (600000, 800000))
+        price_range = st.slider("Price Range", 700000, 1200000, (600000, 800000))
         bedrooms = st.selectbox("Bedrooms", [2, 3, 4, 5])
-        location = st.multiselect("Areas", ["Austin", "Round Rock", "Cedar Park", "Pflugerville"])
+        location = st.multiselect("Areas", ["Rancho Cucamonga", "Victoria Gardens", "Etiwanda", "Day Creek"])
 
         if st.button("🔍 Find Matches", use_container_width=True):
             st.session_state['property_search_triggered'] = True
@@ -811,9 +811,9 @@ def render_buyer_properties():
 
         # Mock property data
         properties = [
-            {"address": "123 Oak St, Austin", "price": "$725K", "beds": 3, "match": 92},
-            {"address": "456 Pine Ave, Round Rock", "price": "$685K", "beds": 4, "match": 87},
-            {"address": "789 Elm Dr, Cedar Park", "price": "$750K", "beds": 3, "match": 84}
+            {"address": "123 Oak St, Rancho Cucamonga", "price": "$725K", "beds": 3, "match": 92},
+            {"address": "456 Pine Ave, Victoria Gardens", "price": "$685K", "beds": 4, "match": 87},
+            {"address": "789 Elm Dr, Etiwanda", "price": "$750K", "beds": 3, "match": 84}
         ]
 
         for prop in properties:

@@ -1,0 +1,104 @@
+# Jorge's Friendly Customer Service Bots - Requirements
+# Rancho Cucamonga Edition - Customer Service Excellence
+
+# ===== CORE FRAMEWORK =====
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# ===== DATABASE & CACHING =====
+asyncpg>=0.29.0
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+redis>=5.0.0
+psycopg2-binary>=2.9.0
+
+# ===== AI & NLP =====
+openai>=1.3.0
+anthropic>=0.7.0
+langchain>=0.1.0
+tiktoken>=0.5.0
+
+# ===== DASHBOARD & VISUALIZATION =====
+streamlit>=1.29.0
+plotly>=5.17.0
+pandas>=2.1.0
+numpy>=1.24.0
+
+# ===== GHL INTEGRATION =====
+aiohttp>=3.9.0
+requests>=2.31.0
+httpx>=0.25.0
+
+# ===== CUSTOMER SERVICE FEATURES =====
+twilio>=8.10.0  # SMS customer service
+sendgrid>=6.10.0  # Email customer service
+python-dateutil>=2.8.0
+
+# ===== MONITORING & ANALYTICS =====
+prometheus-client>=0.19.0
+structlog>=23.2.0
+sentry-sdk[fastapi]>=1.38.0
+
+# ===== CALIFORNIA COMPLIANCE =====
+cryptography>=41.0.0  # Data encryption for customer privacy
+python-jose[cryptography]>=3.3.0  # JWT tokens
+bcrypt>=4.0.0  # Password security
+
+# ===== RANCHO CUCAMONGA MARKET DATA =====
+geopy>=2.4.0  # Location services
+pytz>=2023.3  # Timezone handling for CA market
+
+# ===== DEVELOPMENT & TESTING =====
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.9.0
+isort>=5.12.0
+mypy>=1.6.0
+
+# ===== FRIENDLY APPROACH UTILITIES =====
+nltk>=3.8.0  # Natural language processing for sentiment
+textstat>=0.7.0  # Readability analysis for customer-friendly messages
+python-dotenv>=1.0.0  # Environment configuration
+
+# ===== RELATIONSHIP TRACKING =====
+python-slugify>=8.0.0
+pydantic-settings>=2.0.0
+
+# ===== CUSTOMER EXPERIENCE =====
+jinja2>=3.1.0  # Template engine for personalized messages
+markupsafe>=2.1.0
+
+# ===== PRODUCTION DEPLOYMENT =====
+gunicorn>=21.2.0
+supervisor>=4.2.0
+
+# ===== SECURITY & PRIVACY =====
+python-decouple>=3.8
+certifi>=2023.7.22
+
+# ===== API UTILITIES =====
+pyyaml>=6.0.1
+click>=8.1.0
+
+# ===== FAMILY-FOCUSED FEATURES =====
+phonenumbers>=8.13.0  # Phone number validation and formatting
+email-validator>=2.0.0  # Email validation for families
+
+# ===== CUSTOMER SATISFACTION TRACKING =====
+scipy>=1.11.0  # Statistical analysis for satisfaction metrics
+scikit-learn>=1.3.0  # ML for relationship quality prediction
+
+# ===== RANCHO CUCAMONGA SPECIFIC =====
+uszipcode>=1.0.0  # US ZIP code information for local insights
+timezonefinder>=6.2.0  # Timezone detection for CA market
+
+# ===== PERFORMANCE OPTIMIZATION =====
+cachetools>=5.3.0
+memory-profiler>=0.61.0
+
+# ===== VERSION COMPATIBILITY =====
+# Ensure compatibility with Python 3.9+
+python-requires = ">=3.9"

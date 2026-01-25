@@ -4,7 +4,7 @@ Test script to verify all Jorge's enhanced lead bot fixes are working.
 
 This script tests:
 1. Updated requirements.txt dependencies
-2. Fixed Austin → Rancho Cucamonga references
+2. Fixed Rancho Cucamonga → Rancho Cucamonga references
 3. Fixed import path issues
 4. Enhanced services functionality
 """
@@ -33,7 +33,7 @@ def test_imports():
 
 
 def test_market_references():
-    """Test that Austin references have been replaced with Rancho Cucamonga."""
+    """Test that Rancho Cucamonga references have been replaced with Rancho Cucamonga."""
     print("\n🧪 Testing market reference fixes...")
 
     # Test competitive responses system
@@ -42,7 +42,7 @@ def test_market_references():
 
         response_system = get_competitive_response_system()
 
-        # Check if RC expertise is loaded instead of Austin
+        # Check if RC expertise is loaded instead of Rancho Cucamonga
         rc_value_props = response_system.jorge_value_props.get("rc_expertise")
         if rc_value_props:
             print("✅ Competitive responses uses RC expertise")
@@ -120,7 +120,7 @@ def main():
     print("\n" + "=" * 60)
     print("🎯 Fix Summary:")
     print("✅ Updated requirements.txt with missing dependencies")
-    print("✅ Fixed Austin → Rancho Cucamonga market references")
+    print("✅ Fixed Rancho Cucamonga → Rancho Cucamonga market references")
     print("✅ Updated Apple/tech focus → Amazon/logistics focus")
     print("✅ Fixed import path issues in enhanced services")
     print("✅ Created Rancho Cucamonga AI Assistant")

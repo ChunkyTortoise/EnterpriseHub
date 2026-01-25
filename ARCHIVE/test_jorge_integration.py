@@ -76,7 +76,7 @@ class TestJorgeIntegration:
         # Test case: 5 questions answered = 75% = Should auto-deactivate
         extracted_data = {
             "budget": "$400k",
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "timeline": "ASAP",
             "bedrooms": "3",
             "financing": "pre-approved"  # 5 questions answered
@@ -105,7 +105,7 @@ class TestJorgeIntegration:
         # Test case: 4 questions answered = 65% = Should NOT auto-deactivate
         extracted_data = {
             "budget": "$400k",
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "timeline": "ASAP",
             "bedrooms": "3"  # 4 questions answered
         }
@@ -138,22 +138,22 @@ class TestJorgeIntegration:
             ({"budget": "$400k"}, 1),
 
             # 2 questions: Budget + Location (Warm lead)
-            ({"budget": "$400k", "location": "Austin"}, 2),
+            ({"budget": "$400k", "location": "Rancho Cucamonga"}, 2),
 
             # 3 questions: Budget + Location + Timeline (Hot lead)
-            ({"budget": "$400k", "location": "Austin", "timeline": "ASAP"}, 3),
+            ({"budget": "$400k", "location": "Rancho Cucamonga", "timeline": "ASAP"}, 3),
 
             # 4 questions: Above + Property details
-            ({"budget": "$400k", "location": "Austin", "timeline": "ASAP", "bedrooms": "3"}, 4),
+            ({"budget": "$400k", "location": "Rancho Cucamonga", "timeline": "ASAP", "bedrooms": "3"}, 4),
 
             # 5 questions: Above + Financing (70% threshold - auto-deactivate)
-            ({"budget": "$400k", "location": "Austin", "timeline": "ASAP", "bedrooms": "3", "financing": "pre-approved"}, 5),
+            ({"budget": "$400k", "location": "Rancho Cucamonga", "timeline": "ASAP", "bedrooms": "3", "financing": "pre-approved"}, 5),
 
             # 6 questions: Above + Motivation
-            ({"budget": "$400k", "location": "Austin", "timeline": "ASAP", "bedrooms": "3", "financing": "pre-approved", "motivation": "job relocation"}, 6),
+            ({"budget": "$400k", "location": "Rancho Cucamonga", "timeline": "ASAP", "bedrooms": "3", "financing": "pre-approved", "motivation": "job relocation"}, 6),
 
             # 7 questions: Above + Home condition (sellers)
-            ({"budget": "$400k", "location": "Austin", "timeline": "ASAP", "bedrooms": "3", "financing": "pre-approved", "motivation": "job relocation", "home_condition": "excellent"}, 7),
+            ({"budget": "$400k", "location": "Rancho Cucamonga", "timeline": "ASAP", "bedrooms": "3", "financing": "pre-approved", "motivation": "job relocation", "home_condition": "excellent"}, 7),
         ]
 
         for preferences, expected_score in test_cases:
@@ -257,21 +257,21 @@ class TestJorgeIntegration:
         assert "Cold-Lead" in stage1_tags, "Stage 1: Should tag as Cold-Lead"
 
         # Stage 2: Getting warmer
-        stage2_data = {"budget": "$400k", "location": "Austin"}  # 2 questions = Warm
+        stage2_data = {"budget": "$400k", "location": "Rancho Cucamonga"}  # 2 questions = Warm
         stage2_score = 2
         stage2_actions = await prepare_ghl_actions(stage2_data, stage2_score, self.base_event)
         stage2_tags = [action.tag for action in stage2_actions if hasattr(action, 'tag')]
         assert "Warm-Lead" in stage2_tags, "Stage 2: Should tag as Warm-Lead"
 
         # Stage 3: Hot lead
-        stage3_data = {"budget": "$400k", "location": "Austin", "timeline": "ASAP"}  # 3 questions = Hot
+        stage3_data = {"budget": "$400k", "location": "Rancho Cucamonga", "timeline": "ASAP"}  # 3 questions = Hot
         stage3_score = 3
         stage3_actions = await prepare_ghl_actions(stage3_data, stage3_score, self.base_event)
         stage3_tags = [action.tag for action in stage3_actions if hasattr(action, 'tag')]
         assert "Hot-Lead" in stage3_tags, "Stage 3: Should tag as Hot-Lead"
 
         # Stage 4: Continue qualifying (still AI active)
-        stage4_data = {"budget": "$400k", "location": "Austin", "timeline": "ASAP", "bedrooms": "3"}  # 4 questions = 65%
+        stage4_data = {"budget": "$400k", "location": "Rancho Cucamonga", "timeline": "ASAP", "bedrooms": "3"}  # 4 questions = 65%
         stage4_score = 4
         stage4_actions = await prepare_ghl_actions(stage4_data, stage4_score, self.base_event)
         # Should NOT auto-deactivate yet
@@ -282,7 +282,7 @@ class TestJorgeIntegration:
         # Stage 5: Auto-deactivation (Jorge's 70% threshold)
         stage5_data = {
             "budget": "$400k",
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "timeline": "ASAP",
             "bedrooms": "3",
             "financing": "pre-approved"  # 5 questions = 75% = AUTO-DEACTIVATE
@@ -321,7 +321,7 @@ class TestJorgeIntegration:
             # 5 questions = auto-deactivation
             extracted_data = {
                 "budget": "$400k",
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "timeline": "ASAP",
                 "bedrooms": "3",
                 "financing": "pre-approved"

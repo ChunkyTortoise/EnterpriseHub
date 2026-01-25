@@ -296,8 +296,16 @@ async def send_message(
         # Map backend suggestions to frontend model
         suggestions = []
         for coord_suggestion in guidance.bot_coordination_suggestions:
+            suggestion_id = str(uuid.uuid4())
+            # Store in orchestrator for later application
+            orchestrator.generated_suggestions[suggestion_id] = {
+                **coord_suggestion,
+                "type": "optimization",
+                "title": coord_suggestion.get("suggestion", "Bot Optimization")
+            }
+            
             suggestions.append(ProactiveSuggestion(
-                id=str(uuid.uuid4()),
+                id=suggestion_id,
                 type="optimization",
                 title=coord_suggestion.get("suggestion", "Bot Optimization"),
                 description=f"Actionable step for {coord_suggestion.get('bot_type', 'agent')}",
@@ -306,6 +314,27 @@ async def send_message(
                 actionable=True,
                 relatedAgents=[coord_suggestion.get("bot_type", "adaptive-jorge")],
                 priority="medium",
+                createdAt=datetime.now().isoformat()
+            ))
+
+        # Add risk alerts as suggestions too
+        for alert in guidance.risk_alerts:
+            suggestion_id = str(uuid.uuid4())
+            orchestrator.generated_suggestions[suggestion_id] = {
+                **alert,
+                "type": "escalation",
+                "title": alert.get("description", "Risk Alert")[:50]
+            }
+            suggestions.append(ProactiveSuggestion(
+                id=suggestion_id,
+                type="escalation",
+                title=f"Alert: {alert.get('severity', 'high').capitalize()}",
+                description=alert.get("description", "Potential platform risk detected"),
+                impact="high",
+                confidence=0.9,
+                actionable=True,
+                relatedAgents=["claude-concierge"],
+                priority="urgent",
                 createdAt=datetime.now().isoformat()
             ))
 
@@ -435,8 +464,14 @@ async def get_proactive_suggestions(
 
         suggestions = []
         for coord_suggestion in guidance.bot_coordination_suggestions:
+            suggestion_id = str(uuid.uuid4())
+            orchestrator.generated_suggestions[suggestion_id] = {
+                **coord_suggestion,
+                "type": "optimization",
+                "title": coord_suggestion.get("suggestion", "Bot Optimization")
+            }
             suggestions.append(ProactiveSuggestion(
-                id=str(uuid.uuid4()),
+                id=suggestion_id,
                 type="optimization",
                 title=coord_suggestion.get("suggestion", "Bot Optimization"),
                 description=f"Automated orchestration: {coord_suggestion.get('suggestion', '')}",
@@ -450,8 +485,14 @@ async def get_proactive_suggestions(
 
         # Add risk alerts as urgent suggestions
         for alert in guidance.risk_alerts:
+            suggestion_id = str(uuid.uuid4())
+            orchestrator.generated_suggestions[suggestion_id] = {
+                **alert,
+                "type": "escalation",
+                "title": alert.get("type", "Risk Alert")
+            }
             suggestions.append(ProactiveSuggestion(
-                id=str(uuid.uuid4()),
+                id=suggestion_id,
                 type="escalation",
                 title=alert.get("type", "Risk Alert"),
                 description=alert.get("description", "Potential platform risk detected"),
@@ -482,13 +523,17 @@ async def apply_suggestion(
     try:
         logger.info(f"Applying suggestion: {suggestion_id}")
 
-        # TODO: Implement actual suggestion application logic
-        # This would vary based on suggestion type (optimization, automation, etc.)
+        orchestrator = get_claude_concierge_orchestrator()
+        apply_result = await orchestrator.apply_suggestion(suggestion_id)
 
-        # Mock successful application
+        if not apply_result.get("success"):
+            raise HTTPException(status_code=400, detail=apply_result.get("error", "Failed to apply suggestion"))
+
+        # Build response matching frontend expectations
         result = {
             "success": True,
-            "result": f"Suggestion {suggestion_id} applied successfully",
+            "result": f"Successfully applied: {suggestion_id}",
+            "actions_taken": apply_result.get("actions_taken", []),
             "followUpActions": [
                 "Monitor performance metrics for 24 hours",
                 "Review impact on lead conversion rates",

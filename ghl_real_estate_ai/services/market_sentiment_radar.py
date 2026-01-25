@@ -24,39 +24,19 @@ from abc import ABC, abstractmethod
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.sentiment_drift_engine import SentimentDriftEngine
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.travis_county_permits import get_travis_county_permit_service
 from ghl_real_estate_ai.services.economic_indicators_service import get_economic_indicators_service
+from ghl_real_estate_ai.services.sentiment_types import (
+    SentimentSignal, SentimentTriggerType, AlertPriority,
+    DataSourceInterface, MarketSentiment
+)
+from ghl_real_estate_ai.utils.json_utils import safe_json_dumps
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+
+# Import after sentiment_types to avoid circular dependency
+from ghl_real_estate_ai.services.san_bernardino_county_permits import get_san_bernardino_county_permit_service
 
 logger = get_logger(__name__)
 
-class SentimentTriggerType(Enum):
-    """Types of sentiment triggers that indicate selling motivation."""
-    NEIGHBORHOOD_DECLINE = "neighborhood_decline"
-    PERMIT_DISRUPTION = "permit_disruption"
-    ECONOMIC_STRESS = "economic_stress"
-    LIFESTYLE_CHANGE = "lifestyle_change"
-    INVESTMENT_PRESSURE = "investment_pressure"
-    INFRASTRUCTURE_CONCERN = "infrastructure_concern"
-
-class AlertPriority(Enum):
-    """Priority levels for sentiment alerts."""
-    CRITICAL = "critical"    # Act within 24 hours
-    HIGH = "high"           # Act within 3 days
-    MEDIUM = "medium"       # Act within 1 week
-    LOW = "low"             # Monitor for trends
-
-@dataclass
-class SentimentSignal:
-    """Individual sentiment signal from a data source."""
-    source: str                # "twitter", "nextdoor", "permits", "news"
-    signal_type: SentimentTriggerType
-    location: str              # ZIP code or neighborhood
-    sentiment_score: float     # -100 to +100
-    confidence: float          # 0.0 to 1.0
-    raw_content: Optional[str] # Original text/data
-    detected_at: datetime
-    urgency_multiplier: float  # 1.0-5.0 for timing urgency
 
 @dataclass
 class MarketSentimentProfile:
@@ -95,13 +75,6 @@ class SentimentAlert:
     expected_lead_quality: float  # 0-100
     generated_at: datetime
 
-class DataSourceInterface(ABC):
-    """Abstract interface for sentiment data sources."""
-
-    @abstractmethod
-    async def fetch_sentiment_data(self, location: str, timeframe_days: int = 30) -> List[SentimentSignal]:
-        """Fetch sentiment signals for a location and timeframe."""
-        pass
 
 class MockTwitterSentimentSource(DataSourceInterface):
     """Mock Twitter/X sentiment analysis - replace with real Twitter Academic API."""
@@ -112,14 +85,14 @@ class MockTwitterSentimentSource(DataSourceInterface):
         signals = []
 
         # Simulate some negative sentiment about traffic/development
-        if "austin" in location.lower() or "78" in location:
+        if "rancho cucamonga" in location.lower() or "91" in location:
             signals.append(SentimentSignal(
                 source="twitter",
                 signal_type=SentimentTriggerType.INFRASTRUCTURE_CONCERN,
                 location=location,
                 sentiment_score=-45,
                 confidence=0.82,
-                raw_content="Traffic on I-35 getting worse every month... thinking about moving further out",
+                raw_content="Traffic on I-10 getting worse every month... LA commute taking forever",
                 detected_at=datetime.now() - timedelta(hours=2),
                 urgency_multiplier=1.8
             ))
@@ -145,14 +118,14 @@ class MockPermitDataSource(DataSourceInterface):
         signals = []
 
         # Simulate permit activity creating neighborhood uncertainty
-        if "78731" in location or "west lake hills" in location.lower():
+        if "91737" in location or "east rancho" in location.lower():
             signals.append(SentimentSignal(
                 source="permits",
                 signal_type=SentimentTriggerType.PERMIT_DISRUPTION,
                 location=location,
                 sentiment_score=-60,
                 confidence=0.95,
-                raw_content="15 multi-family permits filed in 2-block radius, 8 denied by city council",
+                raw_content="12 commercial permits filed on Haven Ave, traffic study required",
                 detected_at=datetime.now() - timedelta(days=3),
                 urgency_multiplier=3.2  # High urgency - development pressure
             ))
@@ -173,7 +146,7 @@ class MockNewsSource(DataSourceInterface):
             location=location,
             sentiment_score=-35,
             confidence=0.78,
-            raw_content="Travis County appraisal notices show average 18% increase in property taxes",
+            raw_content="California homeowner insurance rates increase 15% due to wildfire risk",
             detected_at=datetime.now() - timedelta(hours=6),
             urgency_multiplier=2.1
         ))
@@ -188,14 +161,14 @@ class MockHOADataSource(DataSourceInterface):
         signals = []
 
         # Simulate HOA disputes and fees
-        if any(keyword in location.lower() for keyword in ['lakeway', 'bee cave', 'west lake']):
+        if any(keyword in location.lower() for keyword in ['victoria', 'terra vista', '91737', '91739']):
             signals.append(SentimentSignal(
                 source="hoa_records",
                 signal_type=SentimentTriggerType.ECONOMIC_STRESS,
                 location=location,
                 sentiment_score=-42,
                 confidence=0.89,
-                raw_content="HOA special assessment approved: $8,500 per property for pool renovation",
+                raw_content="HOA special assessment approved: $6,200 per property for earthquake retrofitting",
                 detected_at=datetime.now() - timedelta(days=2),
                 urgency_multiplier=2.8
             ))
@@ -268,8 +241,8 @@ class MarketSentimentRadar:
 
         # Get real data sources dynamically
         try:
-            # Travis County permit data (real data)
-            permit_service = await get_travis_county_permit_service()
+            # San Bernardino County permit data (real data)
+            permit_service = await get_san_bernardino_county_permit_service()
             permit_signals = await permit_service.fetch_sentiment_data(location, timeframe_days)
             all_signals.extend(permit_signals)
             logger.info(f"Collected {len(permit_signals)} real permit signals for {location}")
@@ -289,7 +262,7 @@ class MarketSentimentRadar:
         profile = await self._build_sentiment_profile(location, all_signals)
 
         # Cache result
-        await self.cache.set(cache_key, json.dumps(asdict(profile)), expire=self.cache_ttl)
+        await self.cache.set(cache_key, safe_json_dumps(asdict(profile)), ttl=self.cache_ttl)
 
         return profile
 
@@ -315,8 +288,8 @@ class MarketSentimentRadar:
 
         # Categorize signals by type (updated to include real data sources)
         social_signals = [s for s in signals if s.source in ['twitter', 'nextdoor', 'facebook']]
-        permit_signals = [s for s in signals if s.source in ['permits', 'travis_county_permits', 'williamson_county_permits']]
-        economic_signals = [s for s in signals if s.source in ['local_news', 'austin_american', 'economic_indicators'] or s.signal_type == SentimentTriggerType.ECONOMIC_STRESS]
+        permit_signals = [s for s in signals if s.source in ['permits', 'san_bernardino_county_permits']]
+        economic_signals = [s for s in signals if s.source in ['local_news', 'economic_indicators'] or s.signal_type == SentimentTriggerType.ECONOMIC_STRESS]
         infrastructure_signals = [s for s in signals if s.signal_type == SentimentTriggerType.INFRASTRUCTURE_CONCERN]
 
         # Calculate category scores

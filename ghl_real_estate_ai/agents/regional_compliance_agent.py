@@ -18,7 +18,7 @@ class RegionalComplianceAgent:
                 "data_privacy": "CCPA",
                 "sms_consent_required": True
             },
-            "TX": {
+            "CA": {
                 "disclosures": ["Information About Brokerage Services (IABS)"],
                 "data_privacy": "Standard US",
                 "sms_consent_required": True
@@ -35,7 +35,7 @@ class RegionalComplianceAgent:
         """Fetch guardrails for a specific region."""
         # Normalize region
         norm_region = region.upper() if len(region) == 2 else region
-        return self.rules.get(norm_region, self.rules.get("TX")) # Default to TX rules
+        return self.rules.get(norm_region, self.rules.get("CA")) # Default to CA rules
 
     def audit_message(self, message: str, region: str) -> List[str]:
         """Audit an AI-generated message for compliance issues."""

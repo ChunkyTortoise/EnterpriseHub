@@ -382,7 +382,7 @@ class AgentSwarmOrchestratorV2:
     async def run_expander(self, tenant_id: str = "default_tenant"):
         """
         The Expander: Dynamic Market Expansion & Cross-Market Intelligence.
-        Phase 4: Uses "Hive Mind" to share insights between markets (e.g., Austin -> Miami).
+        Phase 4: Uses "Hive Mind" to share insights between markets (e.g., Rancho Cucamonga -> Miami).
         """
         agent = self.agents["expander"]
         agent.status = "working"

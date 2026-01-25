@@ -1407,7 +1407,7 @@ async def main():
         "form_submissions": [
             {"message": "Interested in scheduling a viewing", "timestamp": "2026-01-17T09:00:00Z"}
         ],
-        "search_patterns": ["3 bedroom", "good schools", "commute to downtown"],
+        "search_patterns": ["3 bedroom", "good schools", "commute to central_rc"],
         "response_times": [2, 4, 1.5]  # hours
     }
 

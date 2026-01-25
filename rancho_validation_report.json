@@ -1,0 +1,66 @@
+{
+  "validation_date": "2026-01-25",
+  "market_transition": "Austin TX \u2192 Rancho Cucamonga CA",
+  "total_tests": 11,
+  "passed_tests": 11,
+  "failed_tests": 0,
+  "pass_rate": 100.0,
+  "status": "SUCCESS",
+  "test_results": [
+    {
+      "test": "Current Market Setting",
+      "passed": true,
+      "details": "Market set to Rancho Cucamonga"
+    },
+    {
+      "test": "Market Config Loaded",
+      "passed": true,
+      "details": "Market configuration available"
+    },
+    {
+      "test": "Rancho Config Details",
+      "passed": true,
+      "details": "All market details correct"
+    },
+    {
+      "test": "California Price Ranges",
+      "passed": true,
+      "details": "All price ranges updated for CA market"
+    },
+    {
+      "test": "Neighborhood Configuration",
+      "passed": true,
+      "details": "All neighborhoods properly configured"
+    },
+    {
+      "test": "California Compliance",
+      "passed": true,
+      "details": "All compliance requirements correct"
+    },
+    {
+      "test": "Market Intelligence",
+      "passed": true,
+      "details": "Market context properly configured"
+    },
+    {
+      "test": "Transform: ghl_real_estate_ai/agents/jorge_seller_bot.py",
+      "passed": true,
+      "details": "Successfully updated to Rancho"
+    },
+    {
+      "test": "Transform: ghl_real_estate_ai/agents/jorge_buyer_bot.py",
+      "passed": true,
+      "details": "Successfully updated to Rancho"
+    },
+    {
+      "test": "Transform: ghl_real_estate_ai/ghl_utils/jorge_config.py",
+      "passed": true,
+      "details": "Successfully updated to Rancho"
+    },
+    {
+      "test": "Transform: CLAUDE.md",
+      "passed": true,
+      "details": "Successfully updated to Rancho"
+    }
+  ]
+}

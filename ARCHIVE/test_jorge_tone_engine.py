@@ -339,7 +339,7 @@ def test_complete_conversation_simulation():
     # Simulate seller conversation progression
     conversation_stages = [
         (1, None, "Initial qualification start"),
-        (2, "We're relocating to Austin for my job", "Good response to Q1"),
+        (2, "We're relocating to Rancho Cucamonga for my job", "Good response to Q1"),
         (3, "Yes that timeline would work", "Positive response to Q2"),
         (4, "The home is move in ready", "Good response to Q3"),
         ("handoff", "$450,000 would be our target", "Price given - trigger handoff")

@@ -15,14 +15,14 @@
         {
           "timestamp": "14:23:15",
           "speaker": "Sarah (SMS)",
-          "message": "Hi, I'm relocating from San Francisco to Austin for Apple. I need to find a house quickly!",
+          "message": "Hi, I'm relocating from San Francisco to Rancho Cucamonga for Apple. I need to find a house quickly!",
           "ai_analysis": "🚨 HOT LEAD DETECTED: Relocation + Timeline urgency + Tech company",
           "jorge_note": "AI immediately flags this as priority - no waiting in queue"
         },
         {
           "timestamp": "14:23:22",
           "speaker": "AI Assistant",
-          "message": "Welcome to Austin, Sarah! I help Apple employees find homes all the time. What's your timeline?",
+          "message": "Welcome to Rancho Cucamonga, Sarah! I help Apple employees find homes all the time. What's your timeline?",
           "ai_strategy": "Instant rapport + expertise positioning + urgency qualification",
           "jorge_note": "AI knows Apple = high-value client, responds within 7 seconds"
         },
@@ -36,35 +36,35 @@
         {
           "timestamp": "14:24:05",
           "speaker": "AI Assistant",
-          "message": "Got it! Austin prices will be a nice surprise vs SF. What's your budget?",
+          "message": "Got it! Rancho Cucamonga prices will be a nice surprise vs SF. What's your budget?",
           "ai_strategy": "Address SF price shock preemptively + budget qualification",
-          "jorge_note": "AI knows SF buyers are often shocked by Austin affordability"
+          "jorge_note": "AI knows SF buyers are often shocked by Rancho Cucamonga affordability"
         },
         {
           "timestamp": "14:24:32",
           "speaker": "Sarah",
           "message": "Around $550k. Is that realistic?",
-          "ai_analysis": "Budget confirmed: $550k = excellent buying power in Austin",
+          "ai_analysis": "Budget confirmed: $550k = excellent buying power in Rancho Cucamonga",
           "jorge_note": "AI knows this budget gets great homes in tech areas"
         },
         {
           "timestamp": "14:24:38",
           "speaker": "AI Assistant",
-          "message": "Absolutely! That's a strong budget here. Which Apple campus - north or downtown?",
+          "message": "Absolutely! That's a strong budget here. Which Apple campus - north or central_rc?",
           "ai_strategy": "Confirm budget adequacy + location qualification for commute",
           "jorge_note": "AI knows Apple has multiple locations, asks smart follow-up"
         },
         {
           "timestamp": "14:25:12",
           "speaker": "Sarah",
-          "message": "The main campus in north Austin",
-          "ai_analysis": "North campus = Round Rock/Cedar Park optimal areas",
+          "message": "The main campus in north Rancho Cucamonga",
+          "ai_analysis": "North campus = Victoria Gardens/Etiwanda optimal areas",
           "jorge_note": "AI immediately knows best neighborhoods for her commute"
         },
         {
           "timestamp": "14:25:18",
           "speaker": "AI Assistant",
-          "message": "Perfect! Round Rock is ideal - 15 min commute, great tech community, homes with offices. Need home office space?",
+          "message": "Perfect! Victoria Gardens is ideal - 15 min commute, great tech community, homes with offices. Need home office space?",
           "ai_strategy": "Location recommendation + lifestyle match + office qualification",
           "jorge_note": "AI anticipates tech worker needs (home office) before asked"
         },
@@ -78,7 +78,7 @@
         {
           "timestamp": "14:25:52",
           "speaker": "AI Assistant",
-          "message": "Excellent! I'm connecting you with Jorge - he's helped 50+ Apple employees and knows the best homes in Round Rock. Can you speak in 10 minutes?",
+          "message": "Excellent! I'm connecting you with Jorge - he's helped 50+ Apple employees and knows the best homes in Victoria Gardens. Can you speak in 10 minutes?",
           "ai_strategy": "Credibility building + immediate booking + urgency respect",
           "jorge_note": "AI books YOU immediately - knows this is hot lead that can't wait"
         },
@@ -99,7 +99,7 @@
       "demo_talking_points": [
         "Jorge, you just watched a $550k buyer book with you in 3 minutes",
         "While you're showing houses, AI captured this lead instantly",
-        "Notice how AI knew Apple employees prefer Round Rock?",
+        "Notice how AI knew Apple employees prefer Victoria Gardens?",
         "Sarah never talked to your competition - AI was too fast"
       ]
     },
@@ -113,7 +113,7 @@
         {
           "timestamp": "11:30:12",
           "speaker": "David (Phone)",
-          "message": "I'm looking for investment properties in Austin. Cash buyer.",
+          "message": "I'm looking for investment properties in Rancho Cucamonga. Cash buyer.",
           "ai_analysis": "🔥 INVESTOR ALERT: Cash buyer = highest priority + multiple transactions",
           "jorge_note": "AI immediately recognizes investor language - fast-tracks to you"
         },
@@ -129,20 +129,20 @@
           "speaker": "David",
           "message": "Need at least $200 positive cash flow, under $350k purchase price",
           "ai_analysis": "Specific metrics = sophisticated investor, knows market",
-          "jorge_note": "AI recognizes these are realistic Austin investment criteria"
+          "jorge_note": "AI recognizes these are realistic Rancho Cucamonga investment criteria"
         },
         {
           "timestamp": "11:30:42",
           "speaker": "AI Assistant",
           "message": "Perfect! Manor and Del Valle have properties hitting those numbers. How many are you looking to acquire?",
           "ai_strategy": "Location knowledge + scale qualification",
-          "jorge_note": "AI knows exactly which Austin areas cash flow at his targets"
+          "jorge_note": "AI knows exactly which Rancho Cucamonga areas cash flow at his targets"
         },
         {
           "timestamp": "11:31:05",
           "speaker": "David",
           "message": "Could do 3-5 if the deals are right",
-          "ai_analysis": "MAJOR CLIENT: $1M+ total investment potential",
+          "ai_analysis": "MAJOR CLIENT: $1.2M+ total investment potential",
           "jorge_note": "AI calculates: 4 properties x $350k = $1.4M total business"
         },
         {
@@ -204,7 +204,7 @@
         {
           "timestamp": "16:46:25",
           "speaker": "AI Assistant",
-          "message": "That's wonderful! Are good schools important? Austin has amazing family neighborhoods under $400k.",
+          "message": "That's wonderful! Are good schools important? Rancho Cucamonga has amazing family neighborhoods under $400k.",
           "ai_strategy": "Anticipate family priorities + budget reassurance",
           "jorge_note": "AI addresses budget concerns proactively - shows achievable goals"
         },
@@ -212,13 +212,13 @@
           "timestamp": "16:47:02",
           "speaker": "Mike",
           "message": "Yes, definitely schools matter. My wife works at Dell Seton medical, so can't be too far from there.",
-          "ai_analysis": "Schools + Dell Seton location = Pflugerville perfect match",
-          "jorge_note": "AI knows Austin geography - Dell Seton + schools = specific areas"
+          "ai_analysis": "Schools + Dell Seton location = Day Creek perfect match",
+          "jorge_note": "AI knows Rancho Cucamonga geography - Dell Seton + schools = specific areas"
         },
         {
           "timestamp": "16:47:09",
           "speaker": "AI Assistant",
-          "message": "Perfect! Pflugerville has top-rated schools (8/10) and quick drive to Dell Seton. Great family community, homes in your budget. Have you connected with a lender yet?",
+          "message": "Perfect! Day Creek has top-rated schools (8/10) and quick drive to Dell Seton. Great family community, homes in your budget. Have you connected with a lender yet?",
           "ai_strategy": "Area recommendation + school ratings + financing check",
           "jorge_note": "AI provides specific data (school ratings) + checks process step"
         },
@@ -261,7 +261,7 @@
     {
       "id": "jennifer_wholesale_opportunity",
       "scenario": "Inherited Property - Wholesale Path",
-      "persona": "Jennifer Martinez - Inherited East Austin Property",
+      "persona": "Jennifer Martinez - Inherited East Rancho Cucamonga Property",
       "demo_setup": "Jennifer inherited a fixer-upper. Watch AI identify the wholesale opportunity...",
       "conversation": [
         {
@@ -281,8 +281,8 @@
         {
           "timestamp": "11:31:28",
           "speaker": "Jennifer",
-          "message": "East Austin, near 6th Street. It's in rough shape though.",
-          "ai_analysis": "East Austin = valuable location + rough shape = wholesale confirmed",
+          "message": "East Rancho Cucamonga, near 6th Street. It's in rough shape though.",
+          "ai_analysis": "East Rancho Cucamonga = valuable location + rough shape = wholesale confirmed",
           "jorge_note": "AI recognizes prime location + condition = perfect wholesale scenario"
         },
         {
@@ -325,20 +325,20 @@
     {
       "id": "robert_luxury_double_ender",
       "scenario": "Luxury Seller + Buyer Combo",
-      "persona": "Robert & Linda Williams - Steiner Ranch to Downtown",
+      "persona": "Robert & Linda Williams - Steiner Ranch to Central RC",
       "demo_setup": "Robert wants to sell luxury and buy luxury. Watch AI capture both transactions...",
       "conversation": [
         {
           "timestamp": "09:45:40",
           "speaker": "Robert (Referral)",
-          "message": "Friends recommended Jorge for selling our Steiner Ranch home and finding a downtown condo",
+          "message": "Friends recommended Jorge for selling our Steiner Ranch home and finding a central_rc condo",
           "ai_analysis": "Luxury seller + luxury buyer + referral = Double-ended transaction",
           "jorge_note": "AI recognizes this could be your biggest commission this month"
         },
         {
           "timestamp": "09:45:47",
           "speaker": "AI Assistant",
-          "message": "We'd be honored to help! Steiner Ranch is such a prestigious community. What's drawing you to downtown living?",
+          "message": "We'd be honored to help! Steiner Ranch is such a prestigious community. What's drawing you to central_rc living?",
           "ai_strategy": "Honor luxury positioning + motivation discovery",
           "jorge_note": "AI speaks the language of luxury clients"
         },
@@ -346,13 +346,13 @@
           "timestamp": "09:46:32",
           "speaker": "Robert",
           "message": "We're empty nesters now. Want something elegant but walkable to restaurants and culture.",
-          "ai_analysis": "Empty nester downsize + luxury lifestyle = Perfect downtown client",
+          "ai_analysis": "Empty nester downsize + luxury lifestyle = Perfect central_rc client",
           "jorge_note": "AI understands this is lifestyle upgrade, not downgrade"
         },
         {
           "timestamp": "09:46:39",
           "speaker": "AI Assistant",
-          "message": "That sounds perfect! Austin's downtown luxury market is thriving. What's your Steiner Ranch home like? Beds, baths, square footage?",
+          "message": "That sounds perfect! Rancho Cucamonga's central_rc luxury market is thriving. What's your Steiner Ranch home like? Beds, baths, square footage?",
           "ai_strategy": "Market confidence + listing information gathering",
           "jorge_note": "AI gathering listing details while building buyer profile"
         },
@@ -360,13 +360,13 @@
           "timestamp": "09:47:25",
           "speaker": "Robert",
           "message": "4 bed, 3.5 bath, about 4,500 sq ft. Pool, outdoor kitchen, hill country views.",
-          "ai_analysis": "High-value listing ($1M+) confirmed",
+          "ai_analysis": "High-value listing ($1.2M+) confirmed",
           "jorge_note": "AI calculating: This listing alone is $30k+ commission"
         },
         {
           "timestamp": "09:47:32",
           "speaker": "AI Assistant",
-          "message": "Beautiful! That will be very attractive to buyers. For downtown, are you thinking condo or townhome? What's your budget range?",
+          "message": "Beautiful! That will be very attractive to buyers. For central_rc, are you thinking condo or townhome? What's your budget range?",
           "ai_strategy": "Listing confidence + buyer qualification",
           "jorge_note": "AI developing both sides of transaction simultaneously"
         },
@@ -374,8 +374,8 @@
           "timestamp": "09:48:15",
           "speaker": "Robert",
           "message": "Probably luxury condo, $900k to $1.2M range. Want high-end finishes and amenities.",
-          "ai_analysis": "Luxury buyer confirmed - $1M+ budget",
-          "jorge_note": "AI confirms: Sell $1.1M + Buy $1M = $63k total commission"
+          "ai_analysis": "Luxury buyer confirmed - $1.2M+ budget",
+          "jorge_note": "AI confirms: Sell $1.1M + Buy $1.2M = $63k total commission"
         },
         {
           "timestamp": "09:48:22",
@@ -394,7 +394,7 @@
       ],
       "outcome": {
         "time_to_appointment": "3 minutes 18 seconds",
-        "transaction_value": "$2.1M combined (sell $1.1M + buy $1M)",
+        "transaction_value": "$2.1M combined (sell $1.1M + buy $1.2M)",
         "jorge_commission": "$63,000 total",
         "lead_quality": "A++ (Luxury double-ender + referral)",
         "jorge_roi": "$63k commission in 3 minutes of AI work"

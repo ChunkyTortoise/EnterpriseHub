@@ -98,7 +98,7 @@ class TestJorgeRevenuePlatformE2E:
             contact_id="contact_golden_001",
             location_id=jorge_location_id,
             message=MessageData(
-                body="Hi, I need to buy a house ASAP. Budget is $400k, pre-approved financing, looking in Austin downtown. 3BR minimum. Can we talk today?",
+                body="Hi, I need to buy a house ASAP. Budget is $400k, pre-approved financing, looking in Rancho Cucamonga central_rc. 3BR minimum. Can we talk today?",
                 type="SMS",
                 direction="inbound"
             ),
@@ -124,7 +124,7 @@ class TestJorgeRevenuePlatformE2E:
             contact_id="contact_warm_002",
             location_id=jorge_location_id,
             message=MessageData(
-                body="Looking to buy a house in the next 6 months. Budget around $300k.",
+                body="Looking to buy a house in the next 6 months. Budget around $700k.",
                 type="SMS",
                 direction="inbound"
             ),
@@ -361,7 +361,7 @@ class TestJorgeRevenuePlatformE2E:
                 "response": "Great! Let me help you find the perfect property.",
                 "extracted_data": {
                     "budget": "$400,000",
-                    "location": "Austin downtown",
+                    "location": "Rancho Cucamonga central_rc",
                     "bedrooms": 3,
                     "timeline": "immediate",
                     "financing": "pre-approved"

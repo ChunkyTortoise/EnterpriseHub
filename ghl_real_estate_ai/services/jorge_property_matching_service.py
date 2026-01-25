@@ -306,7 +306,7 @@ class JorgePropertyMatchingService:
         elif lead_context.financial_readiness >= 60:
             budget_max = 650000  # Mid-range
         else:
-            budget_max = 500000  # Entry-level
+            budget_max = 700000  # Entry-level
 
         # Set urgency from timeline score
         if lead_context.timeline_urgency >= 80:

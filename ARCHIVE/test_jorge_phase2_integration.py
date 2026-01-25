@@ -92,7 +92,7 @@ TEST_SELLERS = {
     "hot_seller": TestSeller(
         name="Sarah (Hot Seller)",
         responses={
-            1: "We're relocating to Austin for my husband's job, need to sell quickly",
+            1: "We're relocating to Rancho Cucamonga for my husband's job, need to sell quickly",
             2: "Yes, 30-45 days would actually be perfect for our timeline",
             3: "The home is move-in ready, we just updated the kitchen and bathrooms last year",
             4: "$475,000 would be our target, maybe a little negotiable"
@@ -177,10 +177,10 @@ class MockLLMClient:
             value = "claude"
 
         # Simulate extraction based on common patterns
-        if "relocating to austin" in prompt.lower():
+        if "relocating to rancho_cucamonga" in prompt.lower():
             extracted = {
                 "motivation": "relocation",
-                "relocation_destination": "Austin, TX",
+                "relocation_destination": "Rancho Cucamonga, CA",
                 "response_quality": 0.9,
                 "questions_answered": 1
             }
@@ -257,7 +257,7 @@ async def test_seller_scoring_integration():
     # Test hot seller data
     hot_seller_data = {
         "motivation": "relocation",
-        "relocation_destination": "Austin, TX",
+        "relocation_destination": "Rancho Cucamonga, CA",
         "timeline_acceptable": True,
         "timeline_urgency": "urgent",
         "property_condition": "move-in ready",
@@ -301,7 +301,7 @@ async def test_conversation_manager_seller_extraction():
     conversation_manager = IntegratedConversationManager()
 
     # Test seller data extraction
-    test_message = "We're relocating to Austin for my husband's job"
+    test_message = "We're relocating to Rancho Cucamonga for my husband's job"
     current_data = {}
 
     extracted = await conversation_manager.extract_seller_data(

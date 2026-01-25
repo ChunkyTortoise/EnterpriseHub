@@ -1,0 +1,72 @@
+{
+  "test_start": "2026-01-25T12:41:57.630877",
+  "individual_sources": true,
+  "market_integration": {
+    "91737": {
+      "seller_motivation_index": 95,
+      "overall_sentiment": -27.62276395364077,
+      "trend_direction": "declining",
+      "economic_stress": 39.46353610814657,
+      "permit_pressure": 0.0,
+      "optimal_window": "1-week",
+      "confidence": 0.2015,
+      "signal_count": 5
+    },
+    "91701": {
+      "seller_motivation_index": 95,
+      "overall_sentiment": -37.6786865409962,
+      "trend_direction": "declining",
+      "economic_stress": 35.762711864406775,
+      "permit_pressure": 40.00000000000001,
+      "optimal_window": "1-week",
+      "confidence": 0.197,
+      "signal_count": 5
+    },
+    "91729": {
+      "seller_motivation_index": 95,
+      "overall_sentiment": -28.791730666281147,
+      "trend_direction": "declining",
+      "economic_stress": 35.762711864406775,
+      "permit_pressure": 15.0,
+      "optimal_window": "1-week",
+      "confidence": 0.1895,
+      "signal_count": 5
+    },
+    "91730": {
+      "seller_motivation_index": 95,
+      "overall_sentiment": -26.915957625693625,
+      "trend_direction": "declining",
+      "economic_stress": 37.44408945686901,
+      "permit_pressure": 0.0,
+      "optimal_window": "1-week",
+      "confidence": 0.157,
+      "signal_count": 4
+    },
+    "Rancho Cucamonga, CA 91739": {
+      "seller_motivation_index": 95,
+      "overall_sentiment": -27.62276395364077,
+      "trend_direction": "declining",
+      "economic_stress": 39.46353610814657,
+      "permit_pressure": 0.0,
+      "optimal_window": "1-week",
+      "confidence": 0.2015,
+      "signal_count": 5
+    },
+    "Ontario, CA 91762": {
+      "seller_motivation_index": 95,
+      "overall_sentiment": -27.810526315789474,
+      "trend_direction": "declining",
+      "economic_stress": 40.0,
+      "permit_pressure": 0.0,
+      "optimal_window": "1-week",
+      "confidence": 0.11699999999999998,
+      "signal_count": 3
+    }
+  },
+  "alerts_generated": 1,
+  "recommendations": [],
+  "errors": [],
+  "success_rate": 1.0,
+  "test_duration": 3.93184,
+  "test_end": "2026-01-25T12:42:01.562726"
+}

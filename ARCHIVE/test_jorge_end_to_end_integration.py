@@ -312,8 +312,8 @@ class MockConversationManager:
 
         if "relocating" in message or "moving" in message:
             extracted["motivation"] = "relocation"
-            if "austin" in message:
-                extracted["relocation_destination"] = "Austin, TX"
+            if "rancho_cucamonga" in message:
+                extracted["relocation_destination"] = "Rancho Cucamonga, CA"
 
         if "30" in message and "45" in message:
             if "yes" in message or "work" in message:
@@ -392,7 +392,7 @@ async def test_hot_seller_journey():
 
     # Simulate ideal seller responses (should result in hot classification)
     conversation_responses = [
-        "We're relocating to Austin for my husband's job next month",
+        "We're relocating to Rancho Cucamonga for my husband's job next month",
         "Yes, 30 to 45 days would actually be perfect for our timeline",
         "The home is move in ready, we just updated everything last year",
         "$475,000 would be our target price"

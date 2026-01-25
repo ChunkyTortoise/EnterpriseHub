@@ -451,7 +451,7 @@ def main():
         # Location selector
         location_id = st.selectbox(
             "Select GHL Location",
-            ["austin_office", "downtown_branch", "west_austin"],
+            ["rancho_cucamonga_office", "central_rc_branch", "west_rancho_cucamonga"],
             index=0
         )
         
