@@ -351,6 +351,51 @@ class MonitoringService:
             timeout=15,
             interval=60
         ))
+
+    def register_graph_health_check(self):
+        """Register RedisGraph/FalkorDB health check."""
+        async def check_graph():
+            try:
+                from falkordb import FalkorDB
+                from ghl_real_estate_ai.ghl_utils.config import settings
+                
+                # Extract host/port from redis_url
+                host = "localhost"
+                port = 6379
+                if settings.redis_url:
+                    from urllib.parse import urlparse
+                    url = urlparse(settings.redis_url)
+                    host = url.hostname or host
+                    port = url.port or port
+                
+                db = FalkorDB(host=host, port=port)
+                graph = db.select_graph("health_check_graph")
+                
+                start_time = time.time()
+                await graph.query("RETURN 1")
+                response_time = (time.time() - start_time) * 1000
+                
+                return {
+                    "status": "healthy",
+                    "response_time_ms": response_time,
+                    "module": "FalkorDB/RedisGraph"
+                }
+            except Exception as e:
+                status = "degraded" if "unknown command" in str(e).lower() else "unhealthy"
+                return {
+                    "status": status,
+                    "error": str(e),
+                    "module": "FalkorDB/RedisGraph",
+                    "remediation": "Ensure RedisGraph/FalkorDB module is loaded in Redis server" if status == "degraded" else "Check Redis connectivity"
+                }
+        
+        self.register_health_check(HealthCheck(
+            service_name="graph_db",
+            service_type=ServiceType.REDIS,
+            check_function=check_graph,
+            timeout=5,
+            interval=60
+        ))
     
     def register_redis_health_check(self, cache_service):
         """Register Redis health check."""

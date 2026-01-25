@@ -36,7 +36,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool, NullPool
 from sqlalchemy import text, event
-from sqlalchemy.engine.events import PoolEvents
+from sqlalchemy.events import PoolEvents
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings

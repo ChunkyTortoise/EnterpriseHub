@@ -441,40 +441,6 @@ class EnterpriseAuthService:
         Returns:
             Validated user and tenant information
         """
-        # PRODUCTION SECURITY: Demo token bypass disabled by default
-        # Only allow demo bypass when EXPLICITLY enabled in development
-        demo_bypass_enabled = (
-            settings.environment == "development" and 
-            os.getenv("ENABLE_DEMO_BYPASS", "false").lower() == "true"
-        )
-        
-        if token == "demo_token":
-            if demo_bypass_enabled:
-                logger.warning(
-                    "SECURITY: demo_token bypass used - this should NEVER happen in production. "
-                    "Set ENABLE_DEMO_BYPASS=false to disable."
-                )
-                return {
-                    "user": {
-                        "user_id": "demo_user_id",
-                        "email": "demo@lyrio.io",
-                        "roles": ["tenant_admin"]
-                    },
-                    "tenant": {"status": "active", "tenant_id": "demo_tenant"},
-                    "session": {"permissions": ["manage_tenant"]},
-                    "permissions": ["manage_tenant"]
-                }
-            else:
-                # Production mode or bypass disabled - reject demo token
-                logger.error(
-                    f"SECURITY VIOLATION: Attempt to use demo_token rejected. "
-                    f"Environment: {settings.environment}, ENABLE_DEMO_BYPASS: {os.getenv('ENABLE_DEMO_BYPASS', 'not_set')}"
-                )
-                raise EnterpriseAuthError(
-                    "Invalid authentication token",
-                    error_code="INVALID_TOKEN"
-                )
-
         try:
             # Decode JWT token
             payload = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])

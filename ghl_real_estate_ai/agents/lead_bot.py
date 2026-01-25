@@ -553,16 +553,14 @@ class LeadBotWorkflow:
             )
 
         # Emit behavioral analysis event
-        await self.event_publisher.publish_event(
-            event_type="behavioral_analysis_complete",
-            contact_id=state["lead_id"],
-            data={
-                "response_velocity": pattern.engagement_velocity if pattern else "moderate",
-                "personality_type": personality,
-                "temperature_trend": temperature_prediction['trend'] if temperature_prediction else "stable",
-                "early_warning": temperature_prediction.get('early_warning') if temperature_prediction else None,
-                "channel_preferences": pattern.channel_preferences if pattern else {}
-            }
+        await self.event_publisher.publish_behavioral_prediction(
+            lead_id=state["lead_id"],
+            location_id="national",
+            behavior_category=personality,
+            churn_risk_score=0.1,  # Mocked for now
+            engagement_score=0.8,  # Mocked for now
+            next_actions=[],
+            prediction_latency_ms=0.0
         )
 
         return {
@@ -867,9 +865,10 @@ class LeadBotWorkflow:
 
     async def _publish_jorge_handoff_recommendation(self, state, journey_analysis, conversion_analysis):
         """Publish Jorge handoff recommendation event"""
-        await self.event_publisher.publish_event(
-            event_type="jorge_handoff_recommended",
+        await self.event_publisher.publish_strategy_recommendation(
+            recommendation_id=f"handoff_{state['lead_id']}",
             contact_id=state["lead_id"],
+            strategy_type="jorge_seller_handoff",
             data={
                 "conversion_probability": journey_analysis.conversion_probability,
                 "stage_conversion_probability": conversion_analysis.stage_conversion_probability,
@@ -879,12 +878,12 @@ class LeadBotWorkflow:
 
     async def _publish_jorge_handoff_request(self, state, journey_analysis, conversion_analysis):
         """Publish Jorge handoff request event"""
-        await self.event_publisher.publish_event(
-            event_type="bot_coordination_request",
+        await self.event_publisher.publish_bot_handoff_request(
+            handoff_id=str(uuid.uuid4()),
+            from_bot="enhanced-lead-bot",
+            to_bot="jorge-seller-bot",
             contact_id=state["lead_id"],
             data={
-                "source_bot": "enhanced-lead-bot",
-                "target_bot": "jorge-seller-bot",
                 "handoff_type": "day_30_qualification",
                 "handoff_data": {
                     "conversion_probability": journey_analysis.conversion_probability,
@@ -892,8 +891,7 @@ class LeadBotWorkflow:
                     "lead_temperature": state.get('temperature_prediction', {}).get('current_temperature', 0),
                     "sequence_completion": "day_30_reached",
                     "recommendation": "Jorge confrontational qualification recommended"
-                },
-                "coordination_id": str(uuid.uuid4())
+                }
             }
         )
 

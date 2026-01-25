@@ -316,6 +316,9 @@ async def deep_health_check(current_user: dict = Depends(enterprise_auth_service
             await db.initialize()
             monitoring.register_database_health_check(db)
             
+            # Register Graph DB health check
+            monitoring.register_graph_health_check()
+            
             # Add other services if credentials are available
             if settings.apollo_api_key and not settings.apollo_api_key.startswith("your_"):
                 from ghl_real_estate_ai.services.apollo_client import ApolloClient
