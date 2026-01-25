@@ -1,0 +1,267 @@
+{
+  "security_assessment": {
+    "total_tests": 10,
+    "passed_tests": 5,
+    "failed_tests": 4,
+    "warning_tests": 1,
+    "security_score": 35.0,
+    "security_posture": "\ud83d\udd34 CRITICAL SECURITY ISSUES"
+  },
+  "severity_breakdown": {
+    "critical": 0,
+    "high": 1,
+    "medium": 4,
+    "low": 5
+  },
+  "test_results": [
+    {
+      "test_name": "Authentication Bypass",
+      "status": "PASS",
+      "severity": "LOW",
+      "description": "No authentication bypass vulnerabilities found",
+      "details": {
+        "protected_endpoints": []
+      },
+      "recommendations": [
+        "Continue monitoring authentication effectiveness"
+      ]
+    },
+    {
+      "test_name": "Authorization",
+      "status": "PASS",
+      "severity": "LOW",
+      "description": "Authorization working correctly",
+      "details": {},
+      "recommendations": [
+        "Continue monitoring token validation"
+      ]
+    },
+    {
+      "test_name": "SQL Injection",
+      "status": "PASS",
+      "severity": "LOW",
+      "description": "No SQL injection vulnerabilities detected",
+      "details": {},
+      "recommendations": [
+        "Continue using parameterized queries",
+        "Regular security testing"
+      ]
+    },
+    {
+      "test_name": "XSS Protection",
+      "status": "PASS",
+      "severity": "LOW",
+      "description": "No XSS vulnerabilities detected",
+      "details": {},
+      "recommendations": [
+        "Continue input validation practices",
+        "Implement CSP headers"
+      ]
+    },
+    {
+      "test_name": "Input Validation",
+      "status": "FAIL",
+      "severity": "HIGH",
+      "description": "Input validation issues found in 5 tests",
+      "details": {
+        "validation_issues": [
+          {
+            "test": "Negative numbers",
+            "params": {
+              "limit": "-1",
+              "timeframe": "-24h"
+            },
+            "issue": "server_error_on_invalid_input",
+            "status_code": 500
+          },
+          {
+            "test": "Special characters",
+            "params": {
+              "location_id": "!@#$%^&*()"
+            },
+            "issue": "server_error_on_invalid_input",
+            "status_code": 500
+          },
+          {
+            "test": "Path traversal",
+            "params": {
+              "location_id": "../../../etc/passwd"
+            },
+            "issue": "server_error_on_invalid_input",
+            "status_code": 500
+          },
+          {
+            "test": "Format string",
+            "params": {
+              "location_id": "%s%s%s%s"
+            },
+            "issue": "server_error_on_invalid_input",
+            "status_code": 500
+          },
+          {
+            "test": "Null bytes",
+            "params": {
+              "location_id": "test\u0000admin"
+            },
+            "issue": "server_error_on_invalid_input",
+            "status_code": 500
+          }
+        ]
+      },
+      "recommendations": [
+        "Implement comprehensive input validation",
+        "Add parameter type checking",
+        "Set reasonable limits on input length",
+        "Sanitize all user inputs",
+        "Return appropriate error codes for invalid input"
+      ]
+    },
+    {
+      "test_name": "Rate Limiting",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "description": "No rate limiting detected - potential DoS vulnerability",
+      "details": {
+        "rapid_requests_sent": 50,
+        "all_requests_processed": 0
+      },
+      "recommendations": [
+        "Implement rate limiting on all API endpoints",
+        "Configure appropriate rate limit thresholds",
+        "Add rate limiting middleware",
+        "Consider using Redis for distributed rate limiting"
+      ]
+    },
+    {
+      "test_name": "Information Disclosure",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "description": "Information disclosure found in 2 locations",
+      "details": {
+        "disclosure_issues": [
+          {
+            "url": "/api/bi/nonexistent-endpoint",
+            "status_code": 500,
+            "disclosed_info": [
+              "internal server error"
+            ],
+            "response_snippet": "Internal Server Error"
+          },
+          {
+            "url": "/api/bi/revenue-intelligence?timeframe=invalid",
+            "status_code": 500,
+            "disclosed_info": [
+              "internal server error"
+            ],
+            "response_snippet": "Internal Server Error"
+          }
+        ]
+      },
+      "recommendations": [
+        "Configure custom error pages",
+        "Remove debug information from production",
+        "Disable debug endpoints in production",
+        "Implement proper logging without sensitive data"
+      ]
+    },
+    {
+      "test_name": "Security Headers",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "description": "Missing 6 important security headers",
+      "details": {
+        "missing_headers": [
+          {
+            "header": "Content-Security-Policy",
+            "description": "CSP protection against XSS"
+          },
+          {
+            "header": "X-Frame-Options",
+            "description": "Clickjacking protection"
+          },
+          {
+            "header": "X-Content-Type-Options",
+            "description": "MIME type sniffing protection"
+          },
+          {
+            "header": "Strict-Transport-Security",
+            "description": "HTTPS enforcement"
+          },
+          {
+            "header": "X-XSS-Protection",
+            "description": "Browser XSS protection"
+          },
+          {
+            "header": "Referrer-Policy",
+            "description": "Referrer information control"
+          }
+        ],
+        "present_headers": [],
+        "insecure_headers": [
+          {
+            "header": "Server",
+            "value": "uvicorn",
+            "issue": "server_disclosure"
+          }
+        ]
+      },
+      "recommendations": [
+        "Implement Content Security Policy (CSP)",
+        "Add X-Frame-Options to prevent clickjacking",
+        "Set X-Content-Type-Options to nosniff",
+        "Configure Strict-Transport-Security for HTTPS",
+        "Remove or obscure Server header information"
+      ]
+    },
+    {
+      "test_name": "CORS Configuration",
+      "status": "PASS",
+      "severity": "LOW",
+      "description": "CORS configuration appears secure",
+      "details": {
+        "cors_headers": {
+          "Access-Control-Allow-Origin": null,
+          "Access-Control-Allow-Methods": null,
+          "Access-Control-Allow-Headers": null,
+          "Access-Control-Allow-Credentials": null
+        }
+      },
+      "recommendations": [
+        "Continue monitoring CORS configuration"
+      ]
+    },
+    {
+      "test_name": "File Upload Security",
+      "status": "WARNING",
+      "severity": "MEDIUM",
+      "description": "File upload endpoints detected - manual security review needed",
+      "details": {
+        "detected_endpoints": [
+          "/api/bi/upload",
+          "/api/upload",
+          "/upload"
+        ]
+      },
+      "recommendations": [
+        "Implement file type validation",
+        "Scan uploaded files for malware",
+        "Limit file size and count",
+        "Store uploads outside web root",
+        "Validate file content, not just extension"
+      ]
+    }
+  ],
+  "top_recommendations": [
+    "Implement comprehensive input validation",
+    "Add parameter type checking",
+    "Set reasonable limits on input length",
+    "Sanitize all user inputs",
+    "Return appropriate error codes for invalid input",
+    "Implement rate limiting on all API endpoints",
+    "Configure appropriate rate limit thresholds",
+    "Add rate limiting middleware",
+    "Consider using Redis for distributed rate limiting",
+    "Configure custom error pages"
+  ],
+  "generated_at": "2026-01-25T11:50:42.602374+00:00"
+}

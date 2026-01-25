@@ -217,7 +217,7 @@ async def generate_shap_waterfall(
 async def get_feature_trends(
     feature_name: str = Path(..., description="Feature name to analyze"),
     time_range_days: int = Query(30, ge=1, le=365, description="Time range in days"),
-    granularity: str = Query("daily", regex="^(hourly|daily|weekly)$", description="Time granularity"),
+    granularity: str = Query("daily", pattern="^(hourly|daily|weekly)$", description="Time granularity"),
     current_user: Dict = Depends(get_current_user)
 ) -> FeatureTrendResponse:
     """

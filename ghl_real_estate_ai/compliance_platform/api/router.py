@@ -963,7 +963,7 @@ async def get_report(report_id: str) -> Dict[str, Any]:
     description="Export compliance data in CSV or JSON format."
 )
 async def export_data(
-    format: str = Query("json", regex="^(Union[json, csv])$"),
+    format: str = Query("json", pattern="^(Union[json, csv])$"),
     service: ComplianceService = Depends(get_compliance_service)
 ):
     """

@@ -1,0 +1,502 @@
+# ==============================================================================
+# JORGE'S BI DASHBOARD - PRODUCTION DOCKER COMPOSE
+# Enterprise-Grade Business Intelligence Platform Deployment
+# ==============================================================================
+
+version: '3.8'
+
+# ==============================================================================
+# NETWORKS
+# ==============================================================================
+networks:
+  jorge-bi-production:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+    labels:
+      - "jorge.service=bi-dashboard"
+      - "jorge.environment=production"
+
+  jorge-bi-monitoring:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.0.0/24
+
+# ==============================================================================
+# VOLUMES
+# ==============================================================================
+volumes:
+  postgres_bi_data:
+    driver: local
+  postgres_bi_logs:
+    driver: local
+  redis_bi_data:
+    driver: local
+  nginx_bi_logs:
+    driver: local
+  app_bi_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+# ==============================================================================
+# SERVICES
+# ==============================================================================
+services:
+
+  # ============================================================================
+  # LOAD BALANCER (NGINX)
+  # ============================================================================
+  nginx-bi:
+    image: nginx:1.25-alpine
+    container_name: jorge-bi-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - NGINX_WORKER_PROCESSES=auto
+      - NGINX_WORKER_CONNECTIONS=1024
+    volumes:
+      - ./nginx/nginx-bi.production.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_bi_logs:/var/log/nginx
+    depends_on:
+      - bi-backend-1
+      - bi-backend-2
+    networks:
+      - jorge-bi-production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "jorge.service=bi-dashboard"
+      - "jorge.component=load-balancer"
+      - "jorge.environment=production"
+
+  # ============================================================================
+  # BI BACKEND SERVICES (HORIZONTAL SCALING)
+  # ============================================================================
+  bi-backend-1:
+    build:
+      context: .
+      dockerfile: docker/production/Dockerfile.bi-backend
+      target: runtime
+      args:
+        BUILD_DATE: "${BUILD_DATE}"
+        VCS_REF: "${VCS_REF}"
+        VERSION: "${VERSION:-2.0.0}"
+    image: jorge/bi-backend:${VERSION:-latest}
+    container_name: jorge-bi-backend-1
+    restart: unless-stopped
+    expose:
+      - "8000"
+    environment:
+      # Application Configuration
+      - ENVIRONMENT=production
+      - SERVICE_NAME=jorge-bi-dashboard
+      - VERSION=${VERSION:-2.0.0}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG=false
+
+      # Worker Configuration
+      - WORKERS=4
+      - WORKER_ID=1
+      - WORKER_CLASS=uvicorn.workers.UvicornWorker
+      - MAX_REQUESTS=1000
+      - MAX_REQUESTS_JITTER=100
+      - TIMEOUT=30
+      - KEEPALIVE=5
+
+      # Database Configuration (from secrets)
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_READ_URL=${DATABASE_READ_URL}
+      - DB_POOL_SIZE=20
+      - DB_MAX_OVERFLOW=30
+
+      # Cache Configuration (from secrets)
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_MAX_CONNECTIONS=50
+      - CACHE_TTL_DASHBOARD=300
+      - CACHE_TTL_REVENUE=600
+      - CACHE_TTL_BOT_PERFORMANCE=180
+
+      # AI Services (from secrets)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_MODEL=claude-3-sonnet-20241022
+      - ANTHROPIC_MAX_TOKENS=4096
+      - ANTHROPIC_TIMEOUT=30
+
+      # GHL Integration (from secrets)
+      - GHL_LOCATION_ID=${GHL_LOCATION_ID}
+      - GHL_API_KEY=${GHL_API_KEY}
+      - GHL_WEBHOOK_SECRET=${GHL_WEBHOOK_SECRET}
+
+      # Security (from secrets)
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - DATA_ENCRYPTION_KEY=${DATA_ENCRYPTION_KEY}
+      - CORS_ORIGINS=https://bi.jorge-platform.com,https://dashboard.jorge-platform.com
+
+      # Performance
+      - WS_MAX_CONNECTIONS=1000
+      - API_RATE_LIMIT=1000
+      - ML_PREDICTION_TIMEOUT=5
+      - BACKGROUND_WORKER_CONCURRENCY=10
+
+      # Monitoring
+      - ENABLE_METRICS=true
+      - PROMETHEUS_ENABLED=true
+      - LOG_FORMAT=json
+      - LOG_RETENTION_DAYS=30
+
+      # Feature Flags
+      - ENABLE_PREDICTIVE_INSIGHTS=true
+      - ENABLE_ANOMALY_DETECTION=true
+      - ENABLE_REAL_TIME_STREAMING=true
+      - ENABLE_AI_CONCIERGE=true
+
+      # Jorge Business Rules
+      - JORGE_COMMISSION_RATE=0.06
+      - JORGE_QUALIFICATION_THRESHOLD=70
+      - JORGE_HOT_LEAD_THRESHOLD=3
+
+    depends_on:
+      - postgres-bi
+      - redis-bi
+    networks:
+      - jorge-bi-production
+      - jorge-bi-monitoring
+    volumes:
+      - app_bi_logs:/app/logs
+      - ./data:/app/data:ro
+    healthcheck:
+      test: ["CMD", "./healthcheck.sh", "comprehensive"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "jorge.service=bi-dashboard"
+      - "jorge.component=backend"
+      - "jorge.instance=1"
+      - "jorge.environment=production"
+
+  bi-backend-2:
+    build:
+      context: .
+      dockerfile: docker/production/Dockerfile.bi-backend
+      target: runtime
+    image: jorge/bi-backend:${VERSION:-latest}
+    container_name: jorge-bi-backend-2
+    restart: unless-stopped
+    expose:
+      - "8000"
+    environment:
+      # Same as bi-backend-1 but with different WORKER_ID
+      - ENVIRONMENT=production
+      - SERVICE_NAME=jorge-bi-dashboard
+      - VERSION=${VERSION:-2.0.0}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG=false
+      - WORKERS=4
+      - WORKER_ID=2
+      - WORKER_CLASS=uvicorn.workers.UvicornWorker
+      - MAX_REQUESTS=1000
+      - MAX_REQUESTS_JITTER=100
+      - TIMEOUT=30
+      - KEEPALIVE=5
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_READ_URL=${DATABASE_READ_URL}
+      - DB_POOL_SIZE=20
+      - DB_MAX_OVERFLOW=30
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_MAX_CONNECTIONS=50
+      - CACHE_TTL_DASHBOARD=300
+      - CACHE_TTL_REVENUE=600
+      - CACHE_TTL_BOT_PERFORMANCE=180
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_MODEL=claude-3-sonnet-20241022
+      - ANTHROPIC_MAX_TOKENS=4096
+      - ANTHROPIC_TIMEOUT=30
+      - GHL_LOCATION_ID=${GHL_LOCATION_ID}
+      - GHL_API_KEY=${GHL_API_KEY}
+      - GHL_WEBHOOK_SECRET=${GHL_WEBHOOK_SECRET}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - DATA_ENCRYPTION_KEY=${DATA_ENCRYPTION_KEY}
+      - CORS_ORIGINS=https://bi.jorge-platform.com,https://dashboard.jorge-platform.com
+      - WS_MAX_CONNECTIONS=1000
+      - API_RATE_LIMIT=1000
+      - ML_PREDICTION_TIMEOUT=5
+      - BACKGROUND_WORKER_CONCURRENCY=10
+      - ENABLE_METRICS=true
+      - PROMETHEUS_ENABLED=true
+      - LOG_FORMAT=json
+      - LOG_RETENTION_DAYS=30
+      - ENABLE_PREDICTIVE_INSIGHTS=true
+      - ENABLE_ANOMALY_DETECTION=true
+      - ENABLE_REAL_TIME_STREAMING=true
+      - ENABLE_AI_CONCIERGE=true
+      - JORGE_COMMISSION_RATE=0.06
+      - JORGE_QUALIFICATION_THRESHOLD=70
+      - JORGE_HOT_LEAD_THRESHOLD=3
+    depends_on:
+      - postgres-bi
+      - redis-bi
+    networks:
+      - jorge-bi-production
+      - jorge-bi-monitoring
+    volumes:
+      - app_bi_logs:/app/logs
+      - ./data:/app/data:ro
+    healthcheck:
+      test: ["CMD", "./healthcheck.sh", "comprehensive"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "jorge.service=bi-dashboard"
+      - "jorge.component=backend"
+      - "jorge.instance=2"
+      - "jorge.environment=production"
+
+  # ============================================================================
+  # DATABASE (POSTGRESQL WITH OLAP OPTIMIZATION)
+  # ============================================================================
+  postgres-bi:
+    image: postgres:15
+    container_name: jorge-bi-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-jorge_bi_production}
+      - POSTGRES_USER=${POSTGRES_USER:-jorge_bi}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_bi_data:/var/lib/postgresql/data
+      - postgres_bi_logs:/var/log/postgresql
+      - ./database/init-scripts:/docker-entrypoint-initdb.d:ro
+      - ./database/olap_schema.sql:/docker-entrypoint-initdb.d/01-olap-schema.sql:ro
+    networks:
+      - jorge-bi-production
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=512MB
+      -c effective_cache_size=2GB
+      -c maintenance_work_mem=128MB
+      -c checkpoint_completion_target=0.7
+      -c wal_buffers=32MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=8MB
+      -c min_wal_size=2GB
+      -c max_wal_size=8GB
+      -c log_destination=stderr
+      -c logging_collector=on
+      -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql-%Y-%m-%d_%H%M%S.log
+      -c log_statement=mod
+      -c log_min_duration_statement=1000
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jorge_bi}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      - "jorge.service=bi-dashboard"
+      - "jorge.component=database"
+      - "jorge.environment=production"
+
+  # ============================================================================
+  # CACHE (REDIS CLUSTER)
+  # ============================================================================
+  redis-bi:
+    image: redis:7-alpine
+    container_name: jorge-bi-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --tcp-keepalive 60
+      --timeout 300
+      --requirepass ${REDIS_PASSWORD}
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    volumes:
+      - redis_bi_data:/data
+    networks:
+      - jorge-bi-production
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      - "jorge.service=bi-dashboard"
+      - "jorge.component=cache"
+      - "jorge.environment=production"
+
+  # ============================================================================
+  # MONITORING: PROMETHEUS
+  # ============================================================================
+  prometheus-bi:
+    image: prom/prometheus:latest
+    container_name: jorge-bi-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus-bi.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert-rules-bi.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - jorge-bi-monitoring
+    labels:
+      - "jorge.service=bi-dashboard"
+      - "jorge.component=monitoring"
+      - "jorge.environment=production"
+
+  # ============================================================================
+  # MONITORING: GRAFANA
+  # ============================================================================
+  grafana-bi:
+    image: grafana/grafana:latest
+    container_name: jorge-bi-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/dashboards/jorge-bi-overview.json
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards-bi:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources-bi:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus-bi
+    networks:
+      - jorge-bi-monitoring
+    labels:
+      - "jorge.service=bi-dashboard"
+      - "jorge.component=monitoring"
+      - "jorge.environment=production"
+
+  # ============================================================================
+  # LOG AGGREGATION: ELASTICSEARCH
+  # ============================================================================
+  elasticsearch-bi:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: jorge-bi-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - xpack.security.enabled=false
+      - cluster.name=jorge-bi-logs
+      - node.name=jorge-bi-node-1
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - jorge-bi-monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      - "jorge.service=bi-dashboard"
+      - "jorge.component=logging"
+      - "jorge.environment=production"
+
+  # ============================================================================
+  # LOG VISUALIZATION: KIBANA
+  # ============================================================================
+  kibana-bi:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: jorge-bi-kibana
+    restart: unless-stopped
+    ports:
+      - "${KIBANA_PORT:-5601}:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch-bi:9200
+      - SERVER_NAME=jorge-bi-kibana
+    depends_on:
+      - elasticsearch-bi
+    networks:
+      - jorge-bi-monitoring
+    labels:
+      - "jorge.service=bi-dashboard"
+      - "jorge.component=logging"
+      - "jorge.environment=production"
+
+# ==============================================================================
+# PRODUCTION DEPLOYMENT COMMANDS
+# ==============================================================================
+#
+# 1. Environment Setup:
+#    cp .env.bi.production.template .env.bi.production
+#    # Fill in all required values in .env.bi.production
+#
+# 2. Validate Configuration:
+#    python scripts/validate-bi-production-config.py -c .env.bi.production
+#
+# 3. Build Images:
+#    docker-compose -f docker-compose.bi.production.yml build
+#
+# 4. Deploy Stack:
+#    docker-compose -f docker-compose.bi.production.yml up -d
+#
+# 5. Verify Deployment:
+#    docker-compose -f docker-compose.bi.production.yml ps
+#    docker-compose -f docker-compose.bi.production.yml logs -f bi-backend-1
+#
+# 6. Health Checks:
+#    curl http://localhost/health
+#    curl http://localhost/api/bi/health
+#
+# 7. Access Monitoring:
+#    - Grafana: http://localhost:3001 (admin/password)
+#    - Prometheus: http://localhost:9090
+#    - Kibana: http://localhost:5601
+#
+# 8. Scale Services:
+#    docker-compose -f docker-compose.bi.production.yml up -d --scale bi-backend-1=3
+#
+# 9. Rolling Updates:
+#    docker-compose -f docker-compose.bi.production.yml up -d --no-deps bi-backend-1
+#
+# 10. Graceful Shutdown:
+#     docker-compose -f docker-compose.bi.production.yml down --timeout 30
+#
+# ==============================================================================

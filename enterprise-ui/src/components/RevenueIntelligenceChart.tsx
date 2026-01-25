@@ -18,8 +18,6 @@ import {
   TabPanel,
   Select,
   SelectItem,
-  Toggle,
-  ToggleItem,
   DonutChart,
   CategoryBar
 } from '@tremor/react';
@@ -96,7 +94,7 @@ export function RevenueIntelligenceChart({
       setIsLoading(true);
       try {
         const response = await fetch(
-          `http://localhost:8000/api/bi/revenue-intelligence?location_id=${locationId}&timeframe=${timeframe}&include_forecast=${showForecasting}`
+          `${process.env.NEXT_PUBLIC_API_BASE}/api/bi/revenue-intelligence?location_id=${locationId}&timeframe=${timeframe}&include_forecast=${showForecasting}`
         );
         const data = await response.json();
 
@@ -249,11 +247,31 @@ export function RevenueIntelligenceChart({
               </Select>
             </div>
 
-            <Toggle value={viewMode} onValueChange={setViewMode}>
-              <ToggleItem value="overview" icon={Activity}>Overview</ToggleItem>
-              <ToggleItem value="breakdown" icon={PieChart}>Breakdown</ToggleItem>
-              <ToggleItem value="forecast" icon={TrendingUp}>Forecast</ToggleItem>
-            </Toggle>
+            <TabGroup>
+              <TabList>
+                <Tab
+                  className={viewMode === 'overview' ? 'bg-blue-500 text-white' : 'bg-gray-200'}
+                  onClick={() => setViewMode('overview')}
+                  icon={Activity}
+                >
+                  Overview
+                </Tab>
+                <Tab
+                  className={viewMode === 'breakdown' ? 'bg-blue-500 text-white' : 'bg-gray-200'}
+                  onClick={() => setViewMode('breakdown')}
+                  icon={PieChart}
+                >
+                  Breakdown
+                </Tab>
+                <Tab
+                  className={viewMode === 'forecast' ? 'bg-blue-500 text-white' : 'bg-gray-200'}
+                  onClick={() => setViewMode('forecast')}
+                  icon={TrendingUp}
+                >
+                  Forecast
+                </Tab>
+              </TabList>
+            </TabGroup>
           </div>
 
           <div className="flex items-center space-x-4">

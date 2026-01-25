@@ -18,6 +18,7 @@ Performance: <100ms response time, caching enabled
 """
 
 from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
+from fastapi.security import HTTPBearer
 from fastapi.responses import JSONResponse
 from typing import Dict, List, Any, Optional, Union
 from datetime import datetime, timedelta, timezone
@@ -31,6 +32,7 @@ from ghl_real_estate_ai.services.bi_stream_processor import get_bi_stream_proces
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.auth_service import UserRole
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
+from ghl_real_estate_ai.services.simple_db_service import get_simple_db_service
 
 logger = get_logger(__name__)
 
@@ -105,6 +107,12 @@ async def get_dashboard_kpis(
     Includes real-time metrics, comparisons, and trend data.
     """
     try:
+        # Input validation
+        if not validate_timeframe(timeframe):
+            raise HTTPException(status_code=422, detail="Invalid timeframe parameter")
+        if not validate_location_id(location_id):
+            raise HTTPException(status_code=422, detail="Invalid location_id parameter")
+
         logger.info(f"Dashboard KPIs requested: {timeframe}, location: {location_id}")
 
         # Get cached data with intelligent TTL
@@ -171,6 +179,14 @@ async def get_revenue_intelligence(
     Includes Jorge's 6% commission tracking and predictive insights.
     """
     try:
+        # Input validation
+        if not validate_timeframe(timeframe):
+            raise HTTPException(status_code=422, detail="Invalid timeframe parameter")
+        if not validate_location_id(location_id):
+            raise HTTPException(status_code=422, detail="Invalid location_id parameter")
+        if not validate_numeric_params(forecast_days, 30, 365):
+            raise HTTPException(status_code=422, detail="Invalid forecast_days parameter")
+
         logger.info(f"Revenue intelligence requested: {timeframe}, location: {location_id}")
 
         # Get revenue analytics data
@@ -327,6 +343,14 @@ async def get_predictive_insights(
     Includes revenue forecasting, performance predictions, and anomaly detection.
     """
     try:
+        # Input validation
+        if not validate_location_id(location_id):
+            raise HTTPException(status_code=422, detail="Invalid location_id parameter")
+        if not validate_numeric_params(confidence_threshold, 0.0, 1.0):
+            raise HTTPException(status_code=422, detail="Invalid confidence_threshold parameter")
+        if not validate_numeric_params(limit, 1, 100):
+            raise HTTPException(status_code=422, detail="Invalid limit parameter")
+
         logger.info(f"Predictive insights requested for location: {location_id}")
 
         # Parse insight types filter
@@ -498,22 +522,54 @@ async def warm_dashboard_cache(
         logger.error(f"Cache warming error: {e}")
         raise HTTPException(status_code=500, detail=f"Cache warming failed: {str(e)}")
 
+# Input Validation Helpers
+
+def validate_timeframe(timeframe: str) -> bool:
+    """Validate timeframe parameter."""
+    allowed_timeframes = ['24h', '7d', '30d', '90d', '1y']
+    return timeframe in allowed_timeframes
+
+def validate_location_id(location_id: str) -> bool:
+    """Validate location_id parameter."""
+    if not location_id or len(location_id) > 100:
+        return False
+    # Check for SQL injection patterns
+    dangerous_patterns = ['drop', 'delete', 'update', 'insert', 'select', ';', '--', '/*', '*/', 'union', 'script']
+    location_lower = location_id.lower()
+    return not any(pattern in location_lower for pattern in dangerous_patterns)
+
+def validate_numeric_params(value: Any, min_val: float = None, max_val: float = None) -> bool:
+    """Validate numeric parameters."""
+    try:
+        num_val = float(value)
+        if min_val is not None and num_val < min_val:
+            return False
+        if max_val is not None and num_val > max_val:
+            return False
+        return True
+    except (ValueError, TypeError):
+        return False
+
 # Helper Functions
 
 async def _compute_dashboard_kpis(location_id: str, timeframe: str, include_comparisons: bool) -> Dict[str, Any]:
     """Compute dashboard KPIs from OLAP data."""
-    # In production, this would query the OLAP database
-    # For now, return mock data that matches the expected structure
-    return {
-        "total_revenue": 452652,
-        "total_leads": 2345,
-        "conversion_rate": 4.2,
-        "hot_leads": 98,
-        "jorge_commission": 27159.12,
-        "avg_response_time_ms": 42.3,
-        "bot_success_rate": 94.2,
-        "pipeline_value": 2840000
-    }
+    try:
+        db_service = await get_simple_db_service()
+        return await db_service.get_dashboard_kpis(location_id, timeframe)
+    except Exception as e:
+        logger.error(f"Failed to compute dashboard KPIs: {e}")
+        # Return fallback data on error
+        return {
+            "total_revenue": 0,
+            "total_leads": 0,
+            "conversion_rate": 0,
+            "hot_leads": 0,
+            "jorge_commission": 0,
+            "avg_response_time_ms": 0,
+            "bot_success_rate": 0,
+            "pipeline_value": 0
+        }
 
 async def _get_kpi_trends(location_id: str, timeframe: str) -> Dict[str, List[Dict[str, Any]]]:
     """Get KPI trend data for sparklines."""
@@ -579,34 +635,23 @@ def _calculate_jorge_commission(kpi_data: Dict[str, Any]) -> Dict[str, Any]:
 
 async def _generate_revenue_timeseries(location_id: str, timeframe: str) -> List[Dict[str, Any]]:
     """Generate revenue time series data."""
-    days = {'7d': 7, '30d': 30, '90d': 90, '1y': 365}[timeframe]
-    data = []
-
-    for i in range(days):
-        date = datetime.now() - timedelta(days=days-i)
-        base_revenue = 15000 + (i * 100)
-
-        data.append({
-            "date": date.strftime("%Y-%m-%d"),
-            "total_revenue": base_revenue,
-            "jorge_commission": base_revenue * 0.06,
-            "pipeline_value": base_revenue * 1.8,
-            "forecasted_revenue": base_revenue * 1.1,
-            "deals_closed": max(1, (i % 5) + 1),
-            "confidence_interval_upper": base_revenue * 1.15,
-            "confidence_interval_lower": base_revenue * 0.85
-        })
-
-    return data
+    try:
+        db_service = await get_simple_db_service()
+        revenue_data = await db_service.get_revenue_intelligence_data(location_id, timeframe)
+        return revenue_data.get("revenue_timeseries", [])
+    except Exception as e:
+        logger.error(f"Failed to generate revenue timeseries: {e}")
+        return []
 
 async def _get_commission_breakdown(location_id: str, timeframe: str) -> List[Dict[str, Any]]:
     """Get commission breakdown by category."""
-    return [
-        {"category": "Jorge's Direct Commission", "amount": 27159, "percentage": 60, "color": "blue"},
-        {"category": "Team Override", "amount": 9053, "percentage": 20, "color": "emerald"},
-        {"category": "Performance Bonus", "amount": 4526, "percentage": 10, "color": "amber"},
-        {"category": "Pipeline Incentive", "amount": 4526, "percentage": 10, "color": "rose"}
-    ]
+    try:
+        db_service = await get_simple_db_service()
+        revenue_data = await db_service.get_revenue_intelligence_data(location_id, timeframe)
+        return revenue_data.get("commission_breakdown", [])
+    except Exception as e:
+        logger.error(f"Failed to get commission breakdown: {e}")
+        return []
 
 async def _generate_revenue_forecast(location_id: str, forecast_days: int) -> List[Dict[str, Any]]:
     """Generate ML-powered revenue forecast."""
@@ -626,18 +671,29 @@ async def _generate_revenue_forecast(location_id: str, forecast_days: int) -> Li
 
 def _calculate_revenue_summary(timeseries: List[Dict[str, Any]], commission_breakdown: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Calculate revenue summary metrics."""
-    total_revenue = sum(item["total_revenue"] for item in timeseries)
-    total_commission = sum(item["jorge_commission"] for item in timeseries)
-    total_deals = sum(item["deals_closed"] for item in timeseries)
+    try:
+        total_revenue = sum(item.get("total_revenue", 0) for item in timeseries)
+        total_commission = sum(item.get("jorge_commission", 0) for item in timeseries)
+        total_deals = sum(item.get("deals_closed", 0) for item in timeseries)
 
-    return {
-        "total_revenue": total_revenue,
-        "total_jorge_commission": total_commission,
-        "avg_deal_size": total_revenue / max(1, total_deals),
-        "total_deals": total_deals,
-        "avg_daily_revenue": total_revenue / max(1, len(timeseries)),
-        "commission_rate": 0.06
-    }
+        return {
+            "total_revenue": total_revenue,
+            "total_jorge_commission": total_commission,
+            "avg_deal_size": total_revenue / max(1, total_deals),
+            "total_deals": total_deals,
+            "avg_daily_revenue": total_revenue / max(1, len(timeseries)),
+            "commission_rate": 0.06
+        }
+    except Exception as e:
+        logger.error(f"Failed to calculate revenue summary: {e}")
+        return {
+            "total_revenue": 0,
+            "total_jorge_commission": 0,
+            "avg_deal_size": 0,
+            "total_deals": 0,
+            "avg_daily_revenue": 0,
+            "commission_rate": 0.06
+        }
 
 async def _calculate_forecast_accuracy(location_id: str) -> float:
     """Calculate historical forecast accuracy."""
@@ -646,64 +702,13 @@ async def _calculate_forecast_accuracy(location_id: str) -> float:
 
 async def _format_bot_metrics(bot_metrics: Dict[str, Any], timeframe: str) -> List[Dict[str, Any]]:
     """Format bot metrics for API response."""
-    # Mock bot metrics - in production, this would come from OLAP
-    return [
-        {
-            "bot_type": "jorge-seller",
-            "display_name": "Jorge Seller Bot",
-            "interactions": 324,
-            "avg_response_time_ms": 38.2,
-            "success_rate": 0.92,
-            "confidence_score": 0.89,
-            "hot_rate": 0.15,
-            "handoff_rate": 0.08,
-            "error_rate": 0.02,
-            "daily_trend": [],
-            "current_status": "healthy",
-            "performance_tier": "excellent"
-        },
-        {
-            "bot_type": "jorge-buyer",
-            "display_name": "Jorge Buyer Bot",
-            "interactions": 156,
-            "avg_response_time_ms": 42.1,
-            "success_rate": 0.89,
-            "confidence_score": 0.85,
-            "qualification_rate": 0.28,
-            "handoff_rate": 0.12,
-            "error_rate": 0.03,
-            "daily_trend": [],
-            "current_status": "healthy",
-            "performance_tier": "excellent"
-        },
-        {
-            "bot_type": "lead-bot",
-            "display_name": "Lead Lifecycle Bot",
-            "interactions": 89,
-            "avg_response_time_ms": 125.3,
-            "success_rate": 0.85,
-            "confidence_score": 0.82,
-            "completion_rate": 0.67,
-            "handoff_rate": 0.05,
-            "error_rate": 0.04,
-            "daily_trend": [],
-            "current_status": "warning",
-            "performance_tier": "good"
-        },
-        {
-            "bot_type": "intent-decoder",
-            "display_name": "Intent Analysis Engine",
-            "interactions": 567,
-            "avg_response_time_ms": 24.1,
-            "success_rate": 0.94,
-            "confidence_score": 0.87,
-            "handoff_rate": 0.15,
-            "error_rate": 0.01,
-            "daily_trend": [],
-            "current_status": "healthy",
-            "performance_tier": "excellent"
-        }
-    ]
+    try:
+        db_service = await get_simple_db_service()
+        return await db_service.get_bot_performance_data('default', timeframe)
+    except Exception as e:
+        logger.error(f"Failed to get bot metrics: {e}")
+        # Return empty list on error
+        return []
 
 async def _get_coordination_metrics(location_id: str, timeframe: str) -> Dict[str, Any]:
     """Get bot coordination metrics."""

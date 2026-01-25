@@ -1153,7 +1153,12 @@ with st.sidebar:
     journey_hubs = [
         "Buyer Journey Hub",
         "Seller Journey Hub",
-        "Automation Studio"
+        "Automation Studio",
+        "SMS Compliance Dashboard",
+        "Bot Health Monitoring",
+        "Bot Coordination Flow",
+        "Lead Bot Sequences",
+        "Bot Testing & Validation"
     ]
     
     hub_options = bi_hubs + agent_hubs + journey_hubs
@@ -1261,6 +1266,11 @@ with st.sidebar:
         "Buyer Journey Hub": "We have 3 buyers ready for pre-approval. Syncing with financing partners now.",
         "Seller Journey Hub": "The Maple Ave listing is hitting peak interest. I recommend an open house this Sunday.",
         "Automation Studio": "3 new workflow templates are ready for deployment. Your time savings is currently 42h/week.",
+        "SMS Compliance Dashboard": "TCPA compliance at 98.2%. 23 opted-out contacts, 0 violations today. All systems operational.",
+        "Bot Health Monitoring": "All three Jorge bots healthy. 99.8% uptime, 1.2s avg response. 45 active conversations, 0 alerts.",
+        "Bot Coordination Flow": "25 successful handoffs today. 94% success rate, 1.2s avg handoff time. Smart routing optimized.",
+        "Lead Bot Sequences": "42 active 3-7-30 sequences. Day 7 voice calls at 73% success. 12 CMAs generated, automation optimized.",
+        "Bot Testing & Validation": "All integration tests passing. 98.5% system health. Demo-ready with full end-to-end validation complete.",
         "Sales Copilot": "Preparing talking points for your 2pm call. Client prefers a direct, data-driven approach.",
         "Ops & Optimization": "System health is optimal. Recommend scaling to the Miami market next month.",
         "Deep Research": "Perplexity-powered search is active. Ask me to research any market or property."
@@ -2312,6 +2322,46 @@ elif selected_hub == "Seller Journey Hub":
 elif selected_hub == "Automation Studio":
     studio_hub = AutomationStudioHub(services, claude)
     studio_hub.render_hub()
+elif selected_hub == "SMS Compliance Dashboard":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.components.sms_compliance_dashboard import render_sms_compliance_dashboard
+        render_sms_compliance_dashboard()
+    except Exception as e:
+        st.error("⚠️ SMS Compliance Dashboard Temporarily Unavailable")
+        st.info(f"Error: {str(e)}")
+        st.info("SMS compliance monitoring is being optimized. Please try again shortly.")
+elif selected_hub == "Bot Health Monitoring":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.components.bot_health_monitoring_dashboard import render_bot_health_dashboard
+        render_bot_health_dashboard()
+    except Exception as e:
+        st.error("⚠️ Bot Health Monitoring Dashboard Temporarily Unavailable")
+        st.info(f"Error: {str(e)}")
+        st.info("Bot health monitoring is being optimized. Please try again shortly.")
+elif selected_hub == "Bot Coordination Flow":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.components.bot_coordination_flow_dashboard import render_bot_coordination_dashboard
+        render_bot_coordination_dashboard()
+    except Exception as e:
+        st.error("⚠️ Bot Coordination Flow Dashboard Temporarily Unavailable")
+        st.info(f"Error: {str(e)}")
+        st.info("Bot coordination visualization is being optimized. Please try again shortly.")
+elif selected_hub == "Lead Bot Sequences":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.components.lead_bot_sequence_dashboard import render_lead_bot_sequence_dashboard
+        render_lead_bot_sequence_dashboard()
+    except Exception as e:
+        st.error("⚠️ Lead Bot Sequence Dashboard Temporarily Unavailable")
+        st.info(f"Error: {str(e)}")
+        st.info("Lead bot sequence visualization is being optimized. Please try again shortly.")
+elif selected_hub == "Bot Testing & Validation":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.components.bot_testing_dashboard import render_bot_testing_dashboard
+        render_bot_testing_dashboard()
+    except Exception as e:
+        st.error("⚠️ Bot Testing Dashboard Temporarily Unavailable")
+        st.info(f"Error: {str(e)}")
+        st.info("Bot testing interface is being optimized. Please try again shortly.")
 elif selected_hub == "Sales Copilot":
     copilot_hub = SalesCopilotHub(services, claude)
     copilot_hub.render_hub()

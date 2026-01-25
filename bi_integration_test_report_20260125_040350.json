@@ -1,0 +1,255 @@
+{
+  "summary": {
+    "total_tests": 25,
+    "passed_tests": 5,
+    "failed_tests": 17,
+    "warning_tests": 3,
+    "success_rate": 20.0,
+    "readiness_score": 14.0,
+    "readiness_status": "\ud83d\udd34 NOT READY FOR PRODUCTION"
+  },
+  "performance_results": {},
+  "security_results": {},
+  "test_results": [
+    {
+      "test_name": "Service Imports",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "bi_websocket_manager": "imported",
+        "bi_cache_service": "imported",
+        "bi_stream_processor": "imported",
+        "bi_websocket_routes": "imported",
+        "business_intelligence_routes": "imported"
+      },
+      "timestamp": "2026-01-25T12:03:25.859533+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "Service Instantiation",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "websocket_manager": "instantiated",
+        "cache_service": "instantiated",
+        "stream_processor": "instantiated"
+      },
+      "timestamp": "2026-01-25T12:03:25.861677+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "API Router Registration",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "websocket_routes": 8,
+        "api_routes": 10
+      },
+      "timestamp": "2026-01-25T12:03:25.861683+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "FastAPI Integration",
+      "status": "FAIL",
+      "duration_ms": 0,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.395511+00:00",
+      "error_message": "STRIPE_SECRET_KEY environment variable required"
+    },
+    {
+      "test_name": "System Health",
+      "status": "FAIL",
+      "duration_ms": 0,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.400991+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "API /api/bi/dashboard-kpis",
+      "status": "FAIL",
+      "duration_ms": 2.129793167114258,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.406900+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "API /api/bi/revenue-intelligence",
+      "status": "FAIL",
+      "duration_ms": 0.7088184356689453,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.407624+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "API /api/bi/bot-performance",
+      "status": "FAIL",
+      "duration_ms": 0.6639957427978516,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.408297+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "API /api/bi/real-time-metrics",
+      "status": "FAIL",
+      "duration_ms": 0.705718994140625,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.409011+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "API /api/bi/predictive-insights",
+      "status": "FAIL",
+      "duration_ms": 0.675201416015625,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.409691+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "API /api/bi/anomaly-detection",
+      "status": "FAIL",
+      "duration_ms": 0.6458759307861328,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.410343+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "API /api/bi/cache-analytics",
+      "status": "FAIL",
+      "duration_ms": 0.6091594696044922,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.410957+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "API /api/bi/drill-down",
+      "status": "FAIL",
+      "duration_ms": 0.698089599609375,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.411660+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "API /api/bi/trigger-aggregation",
+      "status": "FAIL",
+      "duration_ms": 0.6690025329589844,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.412333+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "API /api/bi/warm-cache",
+      "status": "FAIL",
+      "duration_ms": 0.6499290466308594,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.412987+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "Authentication & Security",
+      "status": "FAIL",
+      "duration_ms": 0,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:35.417044+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "Concurrent Load Performance",
+      "status": "FAIL",
+      "duration_ms": 10.491132736206055,
+      "details": {
+        "concurrent_users": 20,
+        "all_failed": true
+      },
+      "timestamp": "2026-01-25T12:03:35.440019+00:00",
+      "error_message": "All concurrent requests failed"
+    },
+    {
+      "test_name": "Sustained Load Performance",
+      "status": "FAIL",
+      "duration_ms": 15000,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:50.489205+00:00",
+      "error_message": "No successful requests"
+    },
+    {
+      "test_name": "Jorge Commission Rate",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "expected_rate": 0.06,
+        "validation": "rate_configured_correctly"
+      },
+      "timestamp": "2026-01-25T12:03:50.489315+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "Jorge Performance Targets",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "ml_response_time_target": 25,
+        "bot_success_rate_target": 0.94,
+        "conversion_rate_target": 0.04
+      },
+      "timestamp": "2026-01-25T12:03:50.489331+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "Database Integration",
+      "status": "WARNING",
+      "duration_ms": 0,
+      "details": {
+        "olap_endpoints_responsive": 0,
+        "total_endpoints": 3,
+        "success_rate": 0.0
+      },
+      "timestamp": "2026-01-25T12:03:50.503441+00:00",
+      "error_message": "Low database integration success rate: 0.0%"
+    },
+    {
+      "test_name": "Real-time Metrics API",
+      "status": "FAIL",
+      "duration_ms": 0,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:50.518824+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "WebSocket Health",
+      "status": "FAIL",
+      "duration_ms": 0,
+      "details": {},
+      "timestamp": "2026-01-25T12:03:50.520415+00:00",
+      "error_message": "All connection attempts failed"
+    },
+    {
+      "test_name": "Error Handling",
+      "status": "WARNING",
+      "duration_ms": 0,
+      "details": {
+        "scenarios_handled": 0,
+        "total_scenarios": 6,
+        "success_rate": 0.0
+      },
+      "timestamp": "2026-01-25T12:03:50.544980+00:00",
+      "error_message": "Error handling success rate: 0.0%"
+    },
+    {
+      "test_name": "End-to-End Workflows",
+      "status": "WARNING",
+      "duration_ms": 0,
+      "details": {
+        "successful_workflows": 0,
+        "total_workflows": 4,
+        "success_rate": 0.0
+      },
+      "timestamp": "2026-01-25T12:03:50.591955+00:00",
+      "error_message": null
+    }
+  ],
+  "recommendations": [
+    "Address 17 failing tests for production stability",
+    "Review 3 tests with warnings for potential issues"
+  ],
+  "generated_at": "2026-01-25T12:03:50.592333+00:00"
+}

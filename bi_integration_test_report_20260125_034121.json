@@ -1,0 +1,329 @@
+{
+  "summary": {
+    "total_tests": 25,
+    "passed_tests": 15,
+    "failed_tests": 5,
+    "warning_tests": 5,
+    "success_rate": 60.0,
+    "readiness_score": 74.5,
+    "readiness_status": "\ud83d\udfe0 NEEDS SIGNIFICANT IMPROVEMENTS"
+  },
+  "performance_results": {
+    "response_time": {
+      "avg_response_time_ms": 4.3121337890625,
+      "p95_response_time_ms": 12.340068817138672,
+      "p99_response_time_ms": 12.340068817138672,
+      "throughput_rps": 0,
+      "error_rate": 0,
+      "concurrent_users": 1
+    },
+    "concurrent_load": {
+      "avg_response_time_ms": 72.2232460975647,
+      "p95_response_time_ms": 79.57717180252075,
+      "p99_response_time_ms": 79.61297035217285,
+      "throughput_rps": 223.9111680546658,
+      "error_rate": 0.0,
+      "concurrent_users": 20
+    }
+  },
+  "security_results": {
+    "auth_validation": true,
+    "rate_limiting": false,
+    "input_validation": false,
+    "sql_injection_protection": false,
+    "https_enforcement": false,
+    "cors_configuration": false
+  },
+  "test_results": [
+    {
+      "test_name": "Service Imports",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "bi_websocket_manager": "imported",
+        "bi_cache_service": "imported",
+        "bi_stream_processor": "imported",
+        "bi_websocket_routes": "imported",
+        "business_intelligence_routes": "imported"
+      },
+      "timestamp": "2026-01-25T11:40:50.913871+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "Service Instantiation",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "websocket_manager": "instantiated",
+        "cache_service": "instantiated",
+        "stream_processor": "instantiated"
+      },
+      "timestamp": "2026-01-25T11:40:50.914056+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "API Router Registration",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "websocket_routes": 8,
+        "api_routes": 10
+      },
+      "timestamp": "2026-01-25T11:40:50.914061+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "FastAPI Integration",
+      "status": "FAIL",
+      "duration_ms": 0,
+      "details": {},
+      "timestamp": "2026-01-25T11:41:03.756046+00:00",
+      "error_message": "STRIPE_SECRET_KEY environment variable required"
+    },
+    {
+      "test_name": "System Health",
+      "status": "WARNING",
+      "duration_ms": 0,
+      "details": {
+        "server_status": "degraded",
+        "response_code": 404
+      },
+      "timestamp": "2026-01-25T11:41:05.874472+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "API /api/bi/dashboard-kpis",
+      "status": "PASS",
+      "duration_ms": 23.38719367980957,
+      "details": {
+        "status": "auth_required_as_expected",
+        "response_code": 401
+      },
+      "timestamp": "2026-01-25T11:41:05.911391+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "API /api/bi/revenue-intelligence",
+      "status": "PASS",
+      "duration_ms": 11.614084243774414,
+      "details": {
+        "status": "auth_required_as_expected",
+        "response_code": 401
+      },
+      "timestamp": "2026-01-25T11:41:05.923042+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "API /api/bi/bot-performance",
+      "status": "PASS",
+      "duration_ms": 4.998207092285156,
+      "details": {
+        "status": "auth_required_as_expected",
+        "response_code": 401
+      },
+      "timestamp": "2026-01-25T11:41:05.928074+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "API /api/bi/real-time-metrics",
+      "status": "PASS",
+      "duration_ms": 127.94995307922363,
+      "details": {
+        "status": "auth_required_as_expected",
+        "response_code": 401
+      },
+      "timestamp": "2026-01-25T11:41:06.056047+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "API /api/bi/predictive-insights",
+      "status": "PASS",
+      "duration_ms": 3.587961196899414,
+      "details": {
+        "status": "auth_required_as_expected",
+        "response_code": 401
+      },
+      "timestamp": "2026-01-25T11:41:06.059676+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "API /api/bi/anomaly-detection",
+      "status": "PASS",
+      "duration_ms": 4.26483154296875,
+      "details": {
+        "status": "auth_required_as_expected",
+        "response_code": 401
+      },
+      "timestamp": "2026-01-25T11:41:06.063958+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "API /api/bi/cache-analytics",
+      "status": "PASS",
+      "duration_ms": 107.17606544494629,
+      "details": {
+        "status": "auth_required_as_expected",
+        "response_code": 401
+      },
+      "timestamp": "2026-01-25T11:41:06.171170+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "API /api/bi/drill-down",
+      "status": "FAIL",
+      "duration_ms": 6.003856658935547,
+      "details": {
+        "status": "unexpected_status",
+        "response_code": 405
+      },
+      "timestamp": "2026-01-25T11:41:06.177208+00:00",
+      "error_message": "Unexpected status code: 405"
+    },
+    {
+      "test_name": "API /api/bi/trigger-aggregation",
+      "status": "FAIL",
+      "duration_ms": 4.8122406005859375,
+      "details": {
+        "status": "unexpected_status",
+        "response_code": 405
+      },
+      "timestamp": "2026-01-25T11:41:06.182040+00:00",
+      "error_message": "Unexpected status code: 405"
+    },
+    {
+      "test_name": "API /api/bi/warm-cache",
+      "status": "FAIL",
+      "duration_ms": 3.3347606658935547,
+      "details": {
+        "status": "unexpected_status",
+        "response_code": 405
+      },
+      "timestamp": "2026-01-25T11:41:06.185401+00:00",
+      "error_message": "Unexpected status code: 405"
+    },
+    {
+      "test_name": "Security Integration",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "auth_validation": true,
+        "rate_limiting": false,
+        "input_validation": false
+      },
+      "timestamp": "2026-01-25T11:41:06.244507+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "Concurrent Load Performance",
+      "status": "PASS",
+      "duration_ms": 89.32113647460938,
+      "details": {
+        "throughput_rps": 223.9111680546658,
+        "error_rate": 0.0,
+        "concurrent_users": 20,
+        "avg_response_time_ms": 72.2232460975647
+      },
+      "timestamp": "2026-01-25T11:41:06.384008+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "Sustained Load Performance",
+      "status": "PASS",
+      "duration_ms": 15000,
+      "details": {
+        "duration_seconds": 15,
+        "total_requests": 31,
+        "successful_requests": 30,
+        "avg_response_time_ms": 9.66329574584961,
+        "throughput_rps": 2.066666666666667,
+        "error_rate": 3.225806451612903
+      },
+      "timestamp": "2026-01-25T11:41:21.445843+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "Jorge Commission Rate",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "expected_rate": 0.06,
+        "validation": "rate_configured_correctly"
+      },
+      "timestamp": "2026-01-25T11:41:21.445976+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "Jorge Performance Targets",
+      "status": "PASS",
+      "duration_ms": 0,
+      "details": {
+        "ml_response_time_target": 25,
+        "bot_success_rate_target": 0.94,
+        "conversion_rate_target": 0.04
+      },
+      "timestamp": "2026-01-25T11:41:21.445985+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "Database Integration",
+      "status": "WARNING",
+      "duration_ms": 0,
+      "details": {
+        "olap_endpoints_responsive": 1,
+        "total_endpoints": 3,
+        "success_rate": 0.3333333333333333
+      },
+      "timestamp": "2026-01-25T11:41:21.463419+00:00",
+      "error_message": "Low database integration success rate: 33.3%"
+    },
+    {
+      "test_name": "Real-time Metrics API",
+      "status": "WARNING",
+      "duration_ms": 0,
+      "details": {
+        "status_code": 500
+      },
+      "timestamp": "2026-01-25T11:41:21.474077+00:00",
+      "error_message": null
+    },
+    {
+      "test_name": "WebSocket Health",
+      "status": "FAIL",
+      "duration_ms": 0,
+      "details": {},
+      "timestamp": "2026-01-25T11:41:21.477121+00:00",
+      "error_message": ""
+    },
+    {
+      "test_name": "Error Handling",
+      "status": "WARNING",
+      "duration_ms": 0,
+      "details": {
+        "scenarios_handled": 0,
+        "total_scenarios": 3,
+        "success_rate": 0.0
+      },
+      "timestamp": "2026-01-25T11:41:21.502528+00:00",
+      "error_message": "Error handling success rate: 0.0%"
+    },
+    {
+      "test_name": "End-to-End Workflows",
+      "status": "WARNING",
+      "duration_ms": 0,
+      "details": {
+        "successful_workflows": 1,
+        "total_workflows": 4,
+        "success_rate": 0.25
+      },
+      "timestamp": "2026-01-25T11:41:21.857914+00:00",
+      "error_message": null
+    }
+  ],
+  "recommendations": [
+    "Address 5 failing tests for production stability",
+    "Configure rate limiting for API protection",
+    "Strengthen input validation and sanitization",
+    "Review 5 tests with warnings for potential issues"
+  ],
+  "generated_at": "2026-01-25T11:41:21.858315+00:00"
+}

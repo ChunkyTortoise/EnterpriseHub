@@ -255,7 +255,7 @@ class CoachingOpportunity(BaseModel):
     )
     skill_level_required: str = Field(
         ...,
-        regex="^(beginner|intermediate|advanced)$",
+        pattern="^(beginner|intermediate|advanced)$",
         description="Skill level needed to implement this coaching"
     )
 
@@ -341,7 +341,7 @@ class StrategyRecommendation(BaseModel):
     impact_score: float = Field(..., ge=0.0, le=1.0, description="Expected impact on conversion (0.0-1.0)")
     urgency_level: str = Field(
         ...,
-        regex="^(immediate|soon|when_appropriate)$",
+        pattern="^(immediate|soon|when_appropriate)$",
         description="When to implement this strategy"
     )
 
@@ -362,7 +362,7 @@ class StrategyRecommendation(BaseModel):
     # Risk and alternatives
     risk_level: str = Field(
         ...,
-        regex="^(low|medium|high)$",
+        pattern="^(low|medium|high)$",
         description="Risk level of implementing this strategy"
     )
     fallback_strategy: Optional[str] = Field(
@@ -441,7 +441,7 @@ class ConversationQualityScore(BaseModel):
     overall_score: float = Field(..., ge=0.0, le=100.0, description="Overall conversation quality (0-100)")
     quality_grade: str = Field(
         ...,
-        regex="^(A|B|C|D|F)$",
+        pattern="^(A|B|C|D|F)$",
         description="Letter grade for conversation quality"
     )
 
@@ -466,7 +466,7 @@ class ConversationQualityScore(BaseModel):
     # Trend and context
     quality_trend: str = Field(
         ...,
-        regex="^(improving|declining|stable)$",
+        pattern="^(improving|declining|stable)$",
         description="Quality trend compared to recent conversations"
     )
     stage_appropriateness: float = Field(..., ge=0.0, le=1.0, description="How well approach matches conversation stage")
@@ -569,7 +569,7 @@ class ConversationTrajectory(BaseModel):
     # Prediction outcomes
     predicted_outcome: str = Field(
         ...,
-        regex="^(conversion|nurture|disqualify|schedule_meeting|request_callback)$",
+        pattern="^(conversion|nurture|disqualify|schedule_meeting|request_callback)$",
         description="Most likely conversation outcome"
     )
     outcome_confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in predicted outcome")
@@ -603,7 +603,7 @@ class ConversationTrajectory(BaseModel):
     momentum_score: float = Field(..., ge=0.0, le=1.0, description="Current conversation momentum (0-1)")
     momentum_trend: str = Field(
         ...,
-        regex="^(accelerating|stable|decelerating|stalled)$",
+        pattern="^(accelerating|stable|decelerating|stalled)$",
         description="Momentum trend"
     )
 

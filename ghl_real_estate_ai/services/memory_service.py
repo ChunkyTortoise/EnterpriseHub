@@ -77,11 +77,39 @@ class MemoryService:
         
         return self.memory_dir / f"{contact_id}.json"
 
+    def _resolve_location_id(self, location_id: Optional[str]) -> str:
+        """
+        Resolve location_id with strict enforcement.
+        
+        Args:
+            location_id: The location_id passed to the method
+            
+        Returns:
+            Resolved location_id string
+            
+        Raises:
+            ValueError: If location_id cannot be resolved and strict mode is on
+        """
+        if location_id:
+            return location_id
+            
+        # Fallback to global settings if available
+        if settings.ghl_location_id:
+            # logger.debug(f"Using default location_id from settings: {settings.ghl_location_id}")
+            return settings.ghl_location_id
+            
+        # In production, we MUST have a location_id
+        if settings.environment == "production":
+            logger.error("CRITICAL: Operation attempted without location_id in production")
+            raise ValueError("location_id is required for all memory operations in production")
+            
+        return "default"
+
     async def get_context(
         self, contact_id: str, location_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Retrieve conversation context for a contact with multitenant support.
+        Retrieve conversation context for a contact with strict tenant isolation.
 
         Args:
             contact_id: GHL contact ID
@@ -90,11 +118,18 @@ class MemoryService:
         Returns:
             Conversation context dict
         """
+        resolved_loc = self._resolve_location_id(location_id)
+
         # 1. Try Redis first for production/multitenant isolation
-        if self._should_use_redis(location_id):
-            cache_key = f"ctx:{location_id or 'global'}:{contact_id}"
+        if self._should_use_redis(resolved_loc):
+            cache_key = f"ctx:{resolved_loc}:{contact_id}"
             context = await self.cache_service.get(cache_key)
             if context:
+                # Security Verification: Ensure retrieved context belongs to this location_id
+                if context.get("location_id") != resolved_loc:
+                    logger.error(f"TENANT LEAK PREVENTED: Contact {contact_id} context for location {context.get('location_id')} accessed with location {resolved_loc}")
+                    return self._get_default_context(contact_id, resolved_loc)
+
                 # Graphiti Integration: Inject Semantic Context
                 if graphiti_manager.enabled:
                     try:
@@ -106,18 +141,27 @@ class MemoryService:
 
         # 2. Fallback to Memory cache
         if self.storage_type == "memory":
-            cache_key = f"{location_id}:{contact_id}" if location_id else contact_id
-            return self._memory_cache.get(
-                cache_key, self._get_default_context(contact_id, location_id)
-            )
+            cache_key = f"{resolved_loc}:{contact_id}"
+            context = self._memory_cache.get(cache_key)
+            if context:
+                if context.get("location_id") != resolved_loc:
+                    logger.error(f"TENANT LEAK PREVENTED (Memory): {contact_id} leak from {context.get('location_id')} to {resolved_loc}")
+                    return self._get_default_context(contact_id, resolved_loc)
+                return context
+            return self._get_default_context(contact_id, resolved_loc)
 
         # 3. Fallback to File storage
-        file_path = self._get_file_path(contact_id, location_id)
+        file_path = self._get_file_path(contact_id, resolved_loc)
         if file_path.exists():
             try:
                 with open(file_path, "r") as f:
                     context = json.load(f)
                     
+                    # Security Verification
+                    if context.get("location_id") != resolved_loc:
+                        logger.error(f"TENANT LEAK PREVENTED (File): {contact_id} leak from {context.get('location_id')} to {resolved_loc}")
+                        return self._get_default_context(contact_id, resolved_loc)
+
                     # Graphiti Integration: Inject Semantic Context
                     if graphiti_manager.enabled:
                         try:
@@ -130,7 +174,7 @@ class MemoryService:
             except Exception as e:
                 logger.error(f"Failed to read memory file for {contact_id}: {e}")
 
-        return self._get_default_context(contact_id, location_id)
+        return self._get_default_context(contact_id, resolved_loc)
 
     async def add_interaction(
         self,
@@ -140,10 +184,12 @@ class MemoryService:
         location_id: Optional[str] = None
     ) -> None:
         """
-        Record a new interaction to preferred storage and Graphiti.
+        Record a new interaction to preferred storage and Graphiti with strict isolation.
         """
+        resolved_loc = self._resolve_location_id(location_id)
+
         # 1. Update Context (handles Redis/File/Memory internally)
-        context = await self.get_context(contact_id, location_id)
+        context = await self.get_context(contact_id, resolved_loc)
         
         interaction = {
             "role": role,
@@ -157,11 +203,12 @@ class MemoryService:
         context["conversation_history"].append(interaction)
         context["last_interaction_at"] = interaction["timestamp"]
         
-        await self.save_context(contact_id, context, location_id)
+        await self.save_context(contact_id, context, resolved_loc)
         
         # 2. Update Graphiti (Episodic Memory)
         if graphiti_manager.enabled:
             try:
+                # NOTE: Graphiti should also be scoped, but for now we use contact_id
                 await graphiti_manager.save_interaction(contact_id, message, role)
             except Exception as e:
                 logger.warning(f"Failed to save interaction to Graphiti for {contact_id}: {e}")
@@ -173,26 +220,27 @@ class MemoryService:
         location_id: Optional[str] = None,
     ) -> None:
         """
-        Save conversation context for a contact.
+        Save conversation context for a contact with strict tenant isolation.
 
         Args:
             contact_id: GHL contact ID
             context: Conversation context to save
             location_id: Optional GHL location ID for tenant isolation
         """
+        resolved_loc = self._resolve_location_id(location_id)
+
         context["updated_at"] = datetime.utcnow().isoformat()
-        if location_id:
-            context["location_id"] = location_id
+        context["location_id"] = resolved_loc
 
         # 1. Save to Redis for production/multitenant isolation
-        if self._should_use_redis(location_id):
-            cache_key = f"ctx:{location_id or 'global'}:{contact_id}"
+        if self._should_use_redis(resolved_loc):
+            cache_key = f"ctx:{resolved_loc}:{contact_id}"
             # Context lasts 7 days in Redis
             await self.cache_service.set(cache_key, context, ttl=604800)
             
             # If we are in transition/backup mode, also save to file
             if settings.environment != "production":
-                file_path = self._get_file_path(contact_id, location_id)
+                file_path = self._get_file_path(contact_id, resolved_loc)
                 try:
                     with open(file_path, "w") as f:
                         json.dump(context, f, indent=2)
@@ -202,12 +250,12 @@ class MemoryService:
 
         # 2. Save to Memory
         if self.storage_type == "memory":
-            cache_key = f"{location_id}:{contact_id}" if location_id else contact_id
+            cache_key = f"{resolved_loc}:{contact_id}"
             self._memory_cache[cache_key] = context
             return
 
         # 3. Save to File
-        file_path = self._get_file_path(contact_id, location_id)
+        file_path = self._get_file_path(contact_id, resolved_loc)
         try:
             with open(file_path, "w") as f:
                 json.dump(context, f, indent=2)
@@ -220,7 +268,7 @@ class MemoryService:
         """Return default context for new conversations."""
         return {
             "contact_id": contact_id,
-            "location_id": location_id,
+            "location_id": location_id or self._resolve_location_id(location_id),
             "conversation_history": [],
             "extracted_preferences": {},
             "lead_score": 0,
@@ -287,17 +335,18 @@ class MemoryService:
         location_id: Optional[str] = None,
     ) -> None:
         """
-        Update lead intelligence data for a contact.
+        Update lead intelligence data for a contact with strict tenant isolation.
 
         Args:
             contact_id: GHL contact ID
             intelligence_data: Lead intelligence data to update
             location_id: Optional GHL location ID for tenant isolation
         """
-        context = await self.get_context(contact_id, location_id)
+        resolved_loc = self._resolve_location_id(location_id)
+        context = await self.get_context(contact_id, resolved_loc)
 
         if "lead_intelligence" not in context:
-            context["lead_intelligence"] = self._get_default_context(contact_id, location_id)["lead_intelligence"]
+            context["lead_intelligence"] = self._get_default_context(contact_id, resolved_loc)["lead_intelligence"]
 
         # Deep merge intelligence data
         for category, data in intelligence_data.items():
@@ -309,14 +358,14 @@ class MemoryService:
             else:
                 context["lead_intelligence"][category] = data
 
-        await self.save_context(contact_id, context, location_id)
-        logger.info(f"Updated lead intelligence for contact {contact_id}")
+        await self.save_context(contact_id, context, resolved_loc)
+        logger.info(f"Updated lead intelligence for contact {contact_id} in location {resolved_loc}")
 
     async def get_lead_intelligence(
         self, contact_id: str, location_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Get lead intelligence data for a contact.
+        Get lead intelligence data for a contact with strict tenant isolation.
 
         Args:
             contact_id: GHL contact ID
@@ -325,22 +374,35 @@ class MemoryService:
         Returns:
             Lead intelligence data dict
         """
-        context = await self.get_context(contact_id, location_id)
+        resolved_loc = self._resolve_location_id(location_id)
+        context = await self.get_context(contact_id, resolved_loc)
         return context.get("lead_intelligence", {})
 
-    async def clear_context(self, contact_id: str) -> None:
-        """Clear context for a contact."""
+    async def clear_context(self, contact_id: str, location_id: Optional[str] = None) -> None:
+        """
+        Clear context for a contact with strict tenant isolation.
+        """
+        resolved_loc = self._resolve_location_id(location_id)
+
+        # 1. Clear from Redis
+        if self._should_use_redis(resolved_loc):
+            cache_key = f"ctx:{resolved_loc}:{contact_id}"
+            await self.cache_service.delete(cache_key)
+
+        # 2. Clear from Memory
         if self.storage_type == "memory":
-            if contact_id in self._memory_cache:
-                del self._memory_cache[contact_id]
+            cache_key = f"{resolved_loc}:{contact_id}"
+            if cache_key in self._memory_cache:
+                del self._memory_cache[cache_key]
             return
 
-        file_path = self._get_file_path(contact_id)
+        # 3. Clear from File
+        file_path = self._get_file_path(contact_id, resolved_loc)
         if file_path.exists():
             try:
                 file_path.unlink()
             except Exception as e:
-                logger.error(f"Failed to delete memory file for {contact_id}: {e}")
+                logger.error(f"Failed to delete memory file for {contact_id} in {resolved_loc}: {e}")
 
     async def store_conversation_memory(
         self,

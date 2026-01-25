@@ -777,7 +777,7 @@ async def restart_agent(
 
 @router.get("/performance")
 async def get_performance_metrics(
-    timeframe: str = Query(default="hour", regex="^(Union[hour, day]|week)$"),
+    timeframe: str = Query(default="hour", pattern="^(Union[hour, day]|week)$"),
     current_user = Depends(get_current_user)
 ):
     """

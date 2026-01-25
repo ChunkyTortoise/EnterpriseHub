@@ -1,0 +1,651 @@
+# =========================================================================
+# JORGE'S AI EMPIRE - INTELLIGENT AUTO-SCALING SYSTEM
+# =========================================================================
+# Purpose: A+ Enterprise Grade auto-scaling with Jorge-specific metrics
+# Features: Predictive scaling, ML-based demand forecasting, performance-aware scaling
+# Target: Scale 2,500 → 10,000+ users seamlessly with <35ms Jorge response times
+# Author: Claude Code Enterprise Optimization Team
+# Created: January 25, 2026
+# =========================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jorge-autoscaling
+  labels:
+    app: jorge-autoscaling
+    purpose: intelligent-scaling
+
+---
+# =========================================================================
+# CUSTOM METRICS SERVER CONFIGURATION
+# =========================================================================
+
+# ServiceAccount for custom metrics
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jorge-metrics-adapter
+  namespace: jorge-autoscaling
+
+---
+# ClusterRole for metrics access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jorge-metrics-adapter
+rules:
+- apiGroups: [""]
+  resources: ["pods", "nodes", "namespaces"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups: ["custom.metrics.k8s.io"]
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups: ["external.metrics.k8s.io"]
+  resources: ["*"]
+  verbs: ["*"]
+
+---
+# ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jorge-metrics-adapter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jorge-metrics-adapter
+subjects:
+- kind: ServiceAccount
+  name: jorge-metrics-adapter
+  namespace: jorge-autoscaling
+
+---
+# =========================================================================
+# JORGE PERFORMANCE METRICS CONFIGMAP
+# =========================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jorge-scaling-config
+  namespace: jorge-autoscaling
+data:
+  # Jorge-specific performance targets
+  jorge_response_time_target_ms: "35"
+  lead_automation_target_ms: "400"
+  websocket_delivery_target_ms: "8"
+
+  # Scaling thresholds
+  scale_up_response_time_ms: "30"    # Scale up when approaching target
+  scale_down_response_time_ms: "20"  # Scale down when well below target
+
+  # Business metrics
+  peak_hours: "9-17"  # 9 AM to 5 PM (business hours)
+  timezone: "America/Chicago"  # Jorge's timezone (Austin, TX)
+
+  # Predictive scaling parameters
+  enable_predictive_scaling: "true"
+  prediction_window_minutes: "15"
+  historical_lookback_days: "7"
+
+  # Auto-scaling behavior
+  min_replicas_api: "10"
+  max_replicas_api: "100"
+  min_replicas_ml: "8"
+  max_replicas_ml: "50"
+  min_replicas_websocket: "5"
+  max_replicas_websocket: "30"
+
+  # Performance-based scaling
+  cpu_scale_threshold: "70"
+  memory_scale_threshold: "80"
+  jorge_conversations_per_pod: "50"
+  websocket_connections_per_pod: "500"
+
+---
+# =========================================================================
+# INTELLIGENT AUTOSCALING CONTROLLER DEPLOYMENT
+# =========================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jorge-intelligent-autoscaler
+  namespace: jorge-autoscaling
+  labels:
+    app: jorge-intelligent-autoscaler
+spec:
+  replicas: 2  # HA deployment
+  selector:
+    matchLabels:
+      app: jorge-intelligent-autoscaler
+  template:
+    metadata:
+      labels:
+        app: jorge-intelligent-autoscaler
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: jorge-metrics-adapter
+
+      containers:
+      - name: autoscaler
+        image: jorge/intelligent-autoscaler:latest  # Custom autoscaler with ML
+        ports:
+        - name: metrics
+          containerPort: 8080
+        - name: health
+          containerPort: 8081
+
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+
+        envFrom:
+        - configMapRef:
+            name: jorge-scaling-config
+
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: health
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: health
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+        # Volume for ML model cache
+        volumeMounts:
+        - name: model-cache
+          mountPath: /app/models
+        - name: config
+          mountPath: /app/config
+
+      volumes:
+      - name: model-cache
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: config
+        configMap:
+          name: jorge-scaling-config
+
+---
+# =========================================================================
+# CUSTOM HPA FOR JORGE API TIER
+# =========================================================================
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: jorge-api-intelligent-hpa
+  namespace: jorge-platform
+  labels:
+    component: jorge-api
+    scaling-type: intelligent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: jorge-revenue-api
+
+  minReplicas: 10
+  maxReplicas: 100
+
+  metrics:
+  # Standard resource metrics
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+  # Custom metrics: Jorge bot response time
+  - type: Pods
+    pods:
+      metric:
+        name: jorge_bot_response_time_p95_ms
+      target:
+        type: AverageValue
+        averageValue: "35"  # Target: <35ms P95
+
+  # Custom metrics: Jorge conversations per pod
+  - type: Pods
+    pods:
+      metric:
+        name: jorge_conversations_per_pod
+      target:
+        type: AverageValue
+        averageValue: "50"  # Max 50 conversations per pod
+
+  # Custom metrics: API request latency
+  - type: Pods
+    pods:
+      metric:
+        name: api_request_latency_p95_ms
+      target:
+        type: AverageValue
+        averageValue: "50"  # Target: <50ms P95
+
+  # External metrics: Business hours multiplier
+  - type: External
+    external:
+      metric:
+        name: jorge_business_hours_multiplier
+      target:
+        type: Value
+        value: "1.5"  # Scale up 50% during business hours
+
+  # Intelligent scaling behavior
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # 5 minutes
+      policies:
+      - type: Percent
+        value: 10      # Max 10% scale down
+        periodSeconds: 60
+      - type: Pods
+        value: 2       # Max 2 pods scale down
+        periodSeconds: 60
+      selectPolicy: Min
+
+    scaleUp:
+      stabilizationWindowSeconds: 60   # 1 minute
+      policies:
+      - type: Percent
+        value: 50      # Scale up 50% when needed
+        periodSeconds: 30
+      - type: Pods
+        value: 10      # Max 10 pods scale up
+        periodSeconds: 30
+      selectPolicy: Max
+
+---
+# =========================================================================
+# ML INFERENCE TIER HPA (GPU-Optimized)
+# =========================================================================
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: jorge-ml-intelligent-hpa
+  namespace: jorge-platform
+  labels:
+    component: jorge-ml
+    scaling-type: intelligent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: jorge-ml-inference
+
+  minReplicas: 8
+  maxReplicas: 50
+
+  metrics:
+  # GPU utilization
+  - type: Pods
+    pods:
+      metric:
+        name: gpu_utilization_percent
+      target:
+        type: AverageValue
+        averageValue: "75"  # Target: 75% GPU utilization
+
+  # ML inference latency
+  - type: Pods
+    pods:
+      metric:
+        name: ml_inference_latency_p95_ms
+      target:
+        type: AverageValue
+        averageValue: "25"  # Target: <25ms ML inference
+
+  # FRS/PCS scoring throughput
+  - type: Pods
+    pods:
+      metric:
+        name: frs_pcs_scores_per_minute
+      target:
+        type: AverageValue
+        averageValue: "1000"  # 1000 scores per minute per pod
+
+  # Model memory usage (ONNX models)
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70  # Lower threshold for GPU pods
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 600  # 10 minutes (GPU pods are expensive)
+      policies:
+      - type: Percent
+        value: 20
+        periodSeconds: 120
+
+    scaleUp:
+      stabilizationWindowSeconds: 30   # Fast scale up for ML
+      policies:
+      - type: Percent
+        value: 100   # Double capacity quickly
+        periodSeconds: 30
+
+---
+# =========================================================================
+# WEBSOCKET TIER HPA (Connection-Aware)
+# =========================================================================
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: jorge-websocket-intelligent-hpa
+  namespace: jorge-platform
+  labels:
+    component: jorge-websocket
+    scaling-type: intelligent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: jorge-websocket-server
+
+  minReplicas: 5
+  maxReplicas: 30
+
+  metrics:
+  # WebSocket connections per pod
+  - type: Pods
+    pods:
+      metric:
+        name: websocket_connections_per_pod
+      target:
+        type: AverageValue
+        averageValue: "500"  # 500 connections per pod
+
+  # WebSocket delivery latency
+  - type: Pods
+    pods:
+      metric:
+        name: websocket_delivery_latency_p95_ms
+      target:
+        type: AverageValue
+        averageValue: "8"  # Target: <8ms delivery
+
+  # Event throughput
+  - type: Pods
+    pods:
+      metric:
+        name: websocket_events_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"  # 1000 events/sec per pod
+
+  # Connection churn rate
+  - type: Pods
+    pods:
+      metric:
+        name: websocket_connection_churn_rate
+      target:
+        type: AverageValue
+        averageValue: "50"  # Max 50 connects/disconnects per minute
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 180  # 3 minutes
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+
+    scaleUp:
+      stabilizationWindowSeconds: 30   # Fast scale up for real-time
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+
+---
+# =========================================================================
+# PREDICTIVE SCALING CRONJOB
+# =========================================================================
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: jorge-predictive-scaling
+  namespace: jorge-autoscaling
+  labels:
+    component: predictive-scaling
+spec:
+  # Run every 5 minutes during business hours
+  schedule: "*/5 9-17 * * 1-5"  # Every 5 min, 9-5 PM, Mon-Fri
+  timeZone: "America/Chicago"   # Jorge's timezone
+
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: jorge-metrics-adapter
+
+          containers:
+          - name: predictive-scaler
+            image: jorge/predictive-scaler:latest
+
+            env:
+            - name: PREDICTION_WINDOW
+              value: "15"  # 15 minute prediction window
+            - name: HISTORICAL_DAYS
+              value: "7"   # Use 7 days of historical data
+
+            envFrom:
+            - configMapRef:
+                name: jorge-scaling-config
+
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "200m"
+              limits:
+                memory: "1Gi"
+                cpu: "500m"
+
+            # ML model for demand prediction
+            volumeMounts:
+            - name: prediction-models
+              mountPath: /app/models
+
+          volumes:
+          - name: prediction-models
+            persistentVolumeClaim:
+              claimName: jorge-ml-models
+
+          restartPolicy: OnFailure
+
+---
+# =========================================================================
+# PERFORMANCE MONITORING SERVICE
+# =========================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jorge-autoscaler-metrics
+  namespace: jorge-autoscaling
+  labels:
+    app: jorge-intelligent-autoscaler
+spec:
+  selector:
+    app: jorge-intelligent-autoscaler
+  ports:
+  - name: metrics
+    port: 8080
+    targetPort: metrics
+  - name: health
+    port: 8081
+    targetPort: health
+
+---
+# =========================================================================
+# SERVICEMONITOR FOR PROMETHEUS
+# =========================================================================
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: jorge-autoscaler-monitoring
+  namespace: jorge-autoscaling
+  labels:
+    app: jorge-intelligent-autoscaler
+spec:
+  selector:
+    matchLabels:
+      app: jorge-intelligent-autoscaler
+  endpoints:
+  - port: metrics
+    interval: 15s
+    path: /metrics
+
+---
+# =========================================================================
+# CUSTOM METRICS FOR PROMETHEUS
+# =========================================================================
+
+# PrometheusRule for Jorge-specific metrics
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: jorge-autoscaling-rules
+  namespace: jorge-autoscaling
+  labels:
+    app: jorge-autoscaling
+spec:
+  groups:
+  - name: jorge.autoscaling.rules
+    interval: 30s
+    rules:
+
+    # Jorge bot response time P95
+    - record: jorge:bot_response_time:p95_ms
+      expr: |
+        histogram_quantile(0.95,
+          rate(jorge_bot_response_time_bucket[5m])
+        ) * 1000
+
+    # Jorge conversations per pod
+    - record: jorge:conversations_per_pod
+      expr: |
+        sum(rate(jorge_conversations_total[5m])) by (pod) /
+        count(up{job="jorge-api"}) by (pod)
+
+    # API request latency P95
+    - record: jorge:api_latency:p95_ms
+      expr: |
+        histogram_quantile(0.95,
+          rate(http_request_duration_seconds_bucket{job="jorge-api"}[5m])
+        ) * 1000
+
+    # WebSocket connections per pod
+    - record: jorge:websocket_connections_per_pod
+      expr: |
+        sum(websocket_connections_active) by (pod) /
+        count(up{job="jorge-websocket"}) by (pod)
+
+    # WebSocket delivery latency P95
+    - record: jorge:websocket_delivery:p95_ms
+      expr: |
+        histogram_quantile(0.95,
+          rate(websocket_delivery_time_bucket[5m])
+        ) * 1000
+
+    # Business hours multiplier
+    - record: jorge:business_hours_multiplier
+      expr: |
+        (
+          (hour() >= 9 and hour() < 17) and
+          (day_of_week() >= 1 and day_of_week() <= 5)
+        ) * 1.5 +
+        (
+          not (
+            (hour() >= 9 and hour() < 17) and
+            (day_of_week() >= 1 and day_of_week() <= 5)
+          )
+        ) * 1.0
+
+    # ML inference latency P95
+    - record: jorge:ml_inference:p95_ms
+      expr: |
+        histogram_quantile(0.95,
+          rate(ml_inference_duration_seconds_bucket[5m])
+        ) * 1000
+
+    # GPU utilization percentage
+    - record: jorge:gpu_utilization_percent
+      expr: |
+        avg(nvidia_gpu_duty_cycle) by (pod) * 100
+
+---
+# =========================================================================
+# DEPLOYMENT INSTRUCTIONS
+# =========================================================================
+
+# To deploy the intelligent auto-scaling system:
+#
+# 1. Apply the configuration:
+#    kubectl apply -f intelligent-autoscaling.yaml
+#
+# 2. Verify deployment:
+#    kubectl get pods -n jorge-autoscaling
+#    kubectl get hpa -n jorge-platform
+#
+# 3. Check custom metrics:
+#    kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" | jq
+#
+# 4. Monitor scaling events:
+#    kubectl describe hpa jorge-api-intelligent-hpa -n jorge-platform
+#
+# 5. Verify predictive scaling:
+#    kubectl logs -n jorge-autoscaling -l component=predictive-scaling
+#
+# Expected results:
+# - Automatic scaling based on Jorge-specific performance metrics
+# - Predictive scaling during business hours
+# - <35ms Jorge response times maintained under load
+# - Intelligent resource allocation based on actual demand
+# - 10,000+ concurrent user capacity with optimal resource utilization
+#
+# =========================================================================

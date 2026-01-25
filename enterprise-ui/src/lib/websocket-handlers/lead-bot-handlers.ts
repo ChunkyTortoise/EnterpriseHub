@@ -7,7 +7,7 @@
 
 import { useEffect } from 'react';
 import { useAgentEcosystemStore } from '@/store/agentEcosystemStore';
-import { useConciergeStore } from '@/store/claudeConciergeStore';
+import { useConciergeStore } from '@/store/useConciergeStore';
 import type { SequenceStatusResponse } from '@/lib/api/lead-bot-api';
 
 // Lead Bot WebSocket Event Types

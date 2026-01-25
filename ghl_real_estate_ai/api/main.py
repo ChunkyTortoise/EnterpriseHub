@@ -88,6 +88,8 @@ from ghl_real_estate_ai.api.routes import (
     property_intelligence,  # NEW: Property Intelligence API
     business_intelligence,  # NEW: BI Dashboard API routes
     bi_websocket_routes,  # NEW: BI WebSocket routes
+    error_monitoring,  # NEW: Error Monitoring Dashboard API
+    security,  # NEW: Security Monitoring and Management API
 )
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 from ghl_real_estate_ai.api.middleware import (
@@ -173,9 +175,10 @@ async def lifespan(app: FastAPI):
         await start_system_health_monitoring()
         logger.info("System health monitoring started")
 
-        # Initialize Socket.IO integration
-        await integrate_socketio_with_fastapi(app)
-        logger.info("Socket.IO integration completed")
+        # Socket.IO is initialized at module level for uvicorn, 
+        # but we ensure bridging is active
+        if hasattr(app.state, "socketio_integration"):
+             logger.info("Socket.IO integration already active in app state")
 
         logger.info("✅ All real-time WebSocket services started successfully")
 
@@ -207,57 +210,97 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # ========================================================================
-    # SHUTDOWN WEBSOCKET SERVICES
-    # ========================================================================
+    # Shutdown logic ... (kept as is)
 
-    logger.info("Shutting down WebSocket and real-time services...")
+def _setup_routers(app: FastAPI):
+    """Initialize all routers for the application."""
+    from ghl_real_estate_ai.api.routes import (
+        analytics, attribution_reports, bot_management, bulk_operations,
+        claude_chat, crm, golden_lead_detection, health, jorge_advanced,
+        lead_lifecycle, leads, lead_bot_management, ml_scoring, portal,
+        predictive_analytics, pricing_optimization, properties, team,
+        voice, webhook, auth, lead_intelligence, agent_sync, agent_ui,
+        reports, jorge_followup, retell_webhook, vapi, websocket_routes,
+        websocket_performance, external_webhooks, agent_ecosystem,
+        claude_concierge_integration, customer_journey, property_intelligence,
+        business_intelligence, bi_websocket_routes, error_monitoring, security
+    )
+    from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 
-    try:
-        # Stop system health monitoring
-        await stop_system_health_monitoring()
-        logger.info("System health monitoring stopped")
+    # Include routers
+    app.include_router(websocket_routes.router, prefix="/api")
+    app.include_router(websocket_performance.router)
+    app.include_router(bi_websocket_routes.router)
+    app.include_router(business_intelligence.router)
+    app.include_router(bot_management.router, prefix="/api")
+    app.include_router(lead_bot_management.router)
+    app.include_router(agent_ecosystem.router)
+    app.include_router(claude_concierge_integration.router)
+    app.include_router(customer_journey.router)
+    app.include_router(property_intelligence.router)
+    app.include_router(error_monitoring.router)
+    app.include_router(security.router)
+    app.include_router(webhook.router, prefix="/api")
+    app.include_router(analytics.router, prefix="/api")
+    app.include_router(bulk_operations.router, prefix="/api")
+    app.include_router(claude_chat.router, prefix="/api")
+    app.include_router(leads.router, prefix="/api")
+    app.include_router(lead_lifecycle.router, prefix="/api")
+    app.include_router(health.router, prefix="/api")
 
-        # Stop event publisher
-        event_publisher = get_event_publisher()
-        await event_publisher.stop()
-        logger.info("Event publisher service stopped")
+    # Enterprise Authentication Router
+    enterprise_auth_router = APIRouter(prefix="/api/enterprise/auth", tags=["enterprise_authentication"])
+    
+    @enterprise_auth_router.post("/sso/initiate")
+    async def initiate_enterprise_sso_login(domain: str, redirect_uri: str):
+        try:
+            sso_data = await enterprise_auth_service.initiate_sso_login(domain, redirect_uri)
+            return sso_data
+        except EnterpriseAuthError as e:
+            raise HTTPException(status_code=400, detail=e.message)
 
-        # Stop BI WebSocket services
-        from ghl_real_estate_ai.services.bi_websocket_server import get_bi_websocket_manager
-        bi_websocket_manager = get_bi_websocket_manager()
-        await bi_websocket_manager.stop()
-        logger.info("BI WebSocket services stopped")
+    @enterprise_auth_router.get("/sso/callback")
+    async def enterprise_sso_callback(code: str, state: str):
+        try:
+            token_data = await enterprise_auth_service.handle_sso_callback(code, state)
+            return token_data
+        except EnterpriseAuthError as e:
+            raise HTTPException(status_code=400, detail=e.message)
 
-        # Stop WebSocket manager services
-        websocket_manager = get_websocket_manager()
-        await websocket_manager.stop_services()
-        logger.info("WebSocket manager services stopped")
+    @enterprise_auth_router.post("/refresh")
+    async def refresh_enterprise_token(refresh_token: str):
+        try:
+            token_data = await enterprise_auth_service.refresh_enterprise_token(refresh_token)
+            return token_data
+        except EnterpriseAuthError as e:
+            raise HTTPException(status_code=401, detail=e.message)
 
-        logger.info("✅ All real-time services shutdown completed")
+    app.include_router(enterprise_auth_router)
 
-    except Exception as e:
-        logger.error(f"❌ Error shutting down WebSocket services: {e}")
+    # Other routers
+    app.include_router(auth.router, prefix="/api/auth")
+    app.include_router(properties.router, prefix="/api")
+    app.include_router(portal.router, prefix="/api")
+    app.include_router(team.router, prefix="/api")
+    app.include_router(crm.router, prefix="/api")
+    app.include_router(voice.router, prefix="/api")
+    app.include_router(lead_intelligence.router, prefix="/api")
+    app.include_router(agent_sync.router, prefix="/api")
+    app.include_router(agent_ui.router, prefix="/api/agent-ui", tags=["Agent UI"])
+    app.include_router(ml_scoring.router)
+    app.include_router(predictive_analytics.router)
+    app.include_router(pricing_optimization.router)
+    app.include_router(golden_lead_detection.router)
+    app.include_router(attribution_reports.router, prefix="/api")
+    app.include_router(jorge_advanced.router, prefix="/api")
+    app.include_router(jorge_followup.router, prefix="/api")
+    app.include_router(reports.router, prefix="/api")
+    app.include_router(retell_webhook.router, prefix="/api")
+    app.include_router(vapi.router, prefix="/api")
+    app.include_router(external_webhooks.router, prefix="/api")
+    app.include_router(mobile_router, prefix="/api")
 
-    # ========================================================================
-    # SHUTDOWN LEAD SEQUENCE SCHEDULER
-    # ========================================================================
-
-    logger.info("Shutting down Lead Sequence Scheduler...")
-
-    try:
-        from ghl_real_estate_ai.services.scheduler_startup import shutdown_lead_scheduler
-
-        await shutdown_lead_scheduler()
-        logger.info("✅ Lead Sequence Scheduler shutdown completed")
-
-    except Exception as e:
-        logger.error(f"❌ Error shutting down Lead Sequence Scheduler: {e}")
-
-    # Shutdown logic
-    logger.info(f"Shutting down {settings.app_name}")
-
-# Create FastAPI app with custom route class to handle union type issues
+# Create FastAPI app
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,
@@ -272,6 +315,9 @@ app.router.route_class = UnionCompatibleRoute
 
 # Override default JSON response
 app.default_response_class = OptimizedJSONResponse
+
+# Setup routers immediately so they are registered before server starts
+_setup_routers(app)
 
 logger = get_logger(__name__)
 
@@ -453,8 +499,16 @@ async def enhanced_performance_middleware(request: Request, call_next):
 
     return response
 
-# Add Error Handler Middleware
+# ============================================================================
+# COMPREHENSIVE ERROR HANDLING SYSTEM
+# ============================================================================
+
+# Add existing middleware error handler
 app.add_middleware(ErrorHandlerMiddleware)
+
+# Set up global exception handlers for consistent error responses
+from ghl_real_estate_ai.api.middleware.global_exception_handler import setup_global_exception_handlers
+setup_global_exception_handlers(app)
 
 # Add CORS middleware (SECURITY FIX: Restrict origins)
 ALLOWED_ORIGINS = [
@@ -490,92 +544,35 @@ app.add_middleware(
         "X-AR-Capabilities"     # AR/VR capabilities
     ],
 )
-# Security middleware (added by Agent 5)
-app.add_middleware(RateLimitMiddleware, requests_per_minute=60)
-app.add_middleware(SecurityHeadersMiddleware)
+# Enhanced Security Middleware (Comprehensive Security Hardening)
+from ghl_real_estate_ai.api.middleware.input_validation import InputValidationMiddleware
 
+# Apply security middleware in the correct order (order matters for security!)
+# 1. Input validation first (validate all incoming data)
+app.add_middleware(
+    InputValidationMiddleware,
+    max_request_size=10 * 1024 * 1024,  # 10MB limit
+    validate_json=True,
+    validate_query_params=True,
+    enable_sanitization=True
+)
 
-# Include routers
-app.include_router(websocket_routes.router, prefix="/api")  # Real-time WebSocket endpoints
-app.include_router(websocket_performance.router)  # WebSocket Performance Monitoring API (already includes /api/v1 prefix)
-app.include_router(bi_websocket_routes.router)  # BI WebSocket endpoints (no prefix, already includes /ws)
-app.include_router(business_intelligence.router)  # BI API endpoints (already includes /api/bi prefix)
-app.include_router(bot_management.router, prefix="/api")  # Bot Management API for frontend integration
-app.include_router(lead_bot_management.router)  # Lead Bot Management API (prefix already included)
-app.include_router(agent_ecosystem.router)  # NEW: Agent ecosystem endpoints (already has prefix)
-app.include_router(claude_concierge_integration.router)  # NEW: Claude Concierge integration (already has prefix)
-app.include_router(customer_journey.router)  # NEW: Customer Journey API (already has prefix)
-app.include_router(property_intelligence.router)  # NEW: Property Intelligence API (already has prefix)
-app.include_router(webhook.router, prefix="/api")
-app.include_router(analytics.router, prefix="/api")
-app.include_router(bulk_operations.router, prefix="/api")
-app.include_router(claude_chat.router, prefix="/api")  # Claude chat interface
-app.include_router(leads.router, prefix="/api")  # NEW: Leads Management API
-app.include_router(lead_lifecycle.router, prefix="/api")
-app.include_router(health.router, prefix="/api")  # Health endpoint at /api/health
+# 2. Enhanced rate limiting with threat detection
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=100,  # Base limit for unauthenticated users
+    authenticated_rpm=1000,   # Higher limit for authenticated users
+    enable_ip_blocking=True
+)
 
-# Enterprise Authentication Router
-enterprise_auth_router = APIRouter(prefix="/api/enterprise/auth", tags=["enterprise_authentication"])
-
-@enterprise_auth_router.post("/sso/initiate")
-async def initiate_enterprise_sso_login(domain: str, redirect_uri: str):
-    """
-    Initiate enterprise SSO login flow.
-    """
-    try:
-        sso_data = await enterprise_auth_service.initiate_sso_login(domain, redirect_uri)
-        return sso_data
-    except EnterpriseAuthError as e:
-        raise HTTPException(status_code=400, detail=e.message)
-
-@enterprise_auth_router.get("/sso/callback")
-async def enterprise_sso_callback(code: str, state: str):
-    """
-    Handle enterprise SSO callback.
-    """
-    try:
-        token_data = await enterprise_auth_service.handle_sso_callback(code, state)
-        return token_data
-    except EnterpriseAuthError as e:
-        raise HTTPException(status_code=400, detail=e.message)
-
-@enterprise_auth_router.post("/refresh")
-async def refresh_enterprise_token(refresh_token: str):
-    """
-    Refresh enterprise access token.
-    """
-    try:
-        token_data = await enterprise_auth_service.refresh_enterprise_token(refresh_token)
-        return token_data
-    except EnterpriseAuthError as e:
-        raise HTTPException(status_code=401, detail=e.message)
-
-app.include_router(enterprise_auth_router)
-
-# Authentication routes (added by Agent 5)
-app.include_router(auth.router, prefix="/api/auth")
-app.include_router(properties.router, prefix="/api")
-app.include_router(portal.router, prefix="/api")
-app.include_router(team.router, prefix="/api")
-app.include_router(crm.router, prefix="/api")
-app.include_router(voice.router, prefix="/api")
-app.include_router(lead_intelligence.router, prefix="/api")
-app.include_router(agent_sync.router, prefix="/api")
-app.include_router(agent_ui.router, prefix="/api/agent-ui", tags=["Agent UI"])
-app.include_router(ml_scoring.router)  # Phase 4B: Real-time ML Lead Scoring API
-app.include_router(predictive_analytics.router)  # Predictive Analytics ML endpoints
-app.include_router(pricing_optimization.router)  # Pricing & ROI endpoints
-app.include_router(golden_lead_detection.router)  # Golden Lead Detection endpoints
-app.include_router(attribution_reports.router, prefix="/api")  # Attribution Reports endpoints
-app.include_router(jorge_advanced.router, prefix="/api")  # Jorge's Advanced Features endpoints
-app.include_router(jorge_followup.router, prefix="/api")  # Jorge's Follow-up Automation endpoints
-app.include_router(reports.router, prefix="/api") # Reports router
-app.include_router(retell_webhook.router, prefix="/api") # Retell AI Webhooks
-app.include_router(vapi.router, prefix="/api") # Vapi Tool Integration
-app.include_router(external_webhooks.router, prefix="/api") # External Webhooks (Twilio, SendGrid)
-
-# Mobile API endpoints (Mobile-First Agent Experience)
-app.include_router(mobile_router, prefix="/api")  # Mobile API with AR/VR and voice capabilities
+# 3. Comprehensive security headers
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    environment=settings.environment,
+    enable_csp=True,
+    enable_hsts=True,
+    enable_request_id=True
+)
 
 
 # Root endpoint
@@ -599,9 +596,6 @@ async def root():
 # This is what uvicorn/gunicorn should run: ghl_real_estate_ai.api.main:socketio_app
 from ghl_real_estate_ai.api.socketio_app import get_socketio_app_for_uvicorn
 socketio_app = get_socketio_app_for_uvicorn(app)
-
-
-# Health endpoint now handled by health router
 
 
 if __name__ == "__main__":

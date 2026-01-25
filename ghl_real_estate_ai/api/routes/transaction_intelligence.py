@@ -69,7 +69,7 @@ class TransactionCreateRequest(BaseModel):
     property_id: str = Field(..., min_length=1, description="Property identifier")
     property_address: str = Field(..., min_length=10, description="Full property address")
     buyer_name: str = Field(..., min_length=2, description="Buyer full name")
-    buyer_email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$', description="Buyer email")
+    buyer_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$', description="Buyer email")
     purchase_price: float = Field(..., gt=0, description="Purchase price in USD")
     contract_date: datetime = Field(..., description="Contract signing date")
     expected_closing_date: datetime = Field(..., description="Expected closing date")

@@ -37,7 +37,7 @@ class SystemHealth(str, Enum):
 class User(BaseModel):
     """User model with security context"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
+    email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
     role: UserRole
     created_at: datetime = Field(default_factory=datetime.utcnow)
     last_login: Optional[datetime] = None

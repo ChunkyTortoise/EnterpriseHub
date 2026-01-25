@@ -316,6 +316,8 @@ function EcosystemStats() {
 function CoordinationVisualization() {
   const agents = useAgents()
   const primaryAgents = Object.values(agents).filter(a => a.type === 'primary').slice(0, 6)
+  const agentList = Object.values(agents)
+  const totalHandoffs = agentList.reduce((sum, agent) => sum + (agent.coordination?.activeHandoffs || 0), 0)
 
   return (
     <Card className="bg-gradient-to-br from-white/5 to-white/[0.02] border-white/10">

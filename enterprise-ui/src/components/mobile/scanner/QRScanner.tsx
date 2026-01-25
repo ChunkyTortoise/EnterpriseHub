@@ -3,12 +3,12 @@
  * High-performance QR code and barcode scanning for property intelligence
  *
  * Features:
- * - Real-time QR code detection
- * - Barcode scanning support
- * - Multiple format support (QR, Code128, EAN, etc.)
- * - Torch/flashlight control
- * - Scan area targeting
- * - Performance optimizations for mobile
+ * - Real-time QR code detection using html5-qrcode library
+ * - Barcode scanning support (Code128, Code39, EAN, UPC)
+ * - Multiple format support optimized for real estate
+ * - Torch/flashlight control for low-light scanning
+ * - Professional UI integrated with Jorge's design system
+ * - Battery-optimized scanning performance
  */
 
 'use client';
@@ -23,8 +23,7 @@ import {
   CheckCircleIcon,
   BoltIcon
 } from '@heroicons/react/24/outline';
-
-// Mock QR scanner - In production, use a library like @zxing/library or html5-qrcode
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats, Html5QrcodeResult } from 'html5-qrcode';
 interface QRScannerProps {
   onScanComplete: (data: string) => void;
   onClose: () => void;
@@ -42,7 +41,8 @@ export function QRScanner({ onScanComplete, onClose, mode = 'qr' }: QRScannerPro
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const animationRef = useRef<number>();
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerDivRef = useRef<HTMLDivElement>(null);
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -52,188 +52,170 @@ export function QRScanner({ onScanComplete, onClose, mode = 'qr' }: QRScannerPro
   const [isScanning, setIsScanning] = useState(true);
   const [lastScanTime, setLastScanTime] = useState(0);
 
-  // Camera constraints for optimal scanning
-  const getCameraConstraints = useCallback(() => {
-    return {
-      video: {
-        facingMode: 'environment', // Prefer rear camera
-        width: { ideal: 1280, min: 640 },
-        height: { ideal: 720, min: 480 },
-        frameRate: { ideal: 30, min: 15 },
-        focusMode: 'continuous',
-        zoom: 1
-      },
-      audio: false
-    };
-  }, []);
+  // Get supported formats based on mode
+  const getSupportedFormats = useCallback(() => {
+    if (mode === 'barcode') {
+      return [
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.QR_CODE // Include QR for hybrid scanning
+      ];
+    } else {
+      return [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128, // Include common barcodes
+        Html5QrcodeSupportedFormats.CODE_39
+      ];
+    }
+  }, [mode]);
 
-  // Initialize camera
-  const initializeCamera = useCallback(async () => {
+  // Scanner configuration optimized for real estate field agents
+  const getScannerConfig = useCallback(() => {
+    return {
+      fps: 10, // Conservative for battery life
+      qrbox: { width: 250, height: 250 }, // Adequate scan area
+      aspectRatio: 1.0, // Square scan area
+      disableFlip: false, // Allow scanning flipped codes
+      supportedScanTypes: getSupportedFormats(),
+      videoConstraints: {
+        facingMode: 'environment', // Prefer rear camera
+        advanced: [
+          {
+            focusMode: 'continuous',
+            zoom: 1.0
+          }
+        ]
+      }
+    };
+  }, [getSupportedFormats]);
+
+  // Initialize real QR/barcode scanner
+  const initializeScanner = useCallback(async () => {
     try {
       setError('');
 
-      const constraints = getCameraConstraints();
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-
-        // Wait for video to load
-        await new Promise<void>((resolve, reject) => {
-          if (!videoRef.current) return reject(new Error('Video element not available'));
-
-          videoRef.current.onloadedmetadata = () => {
-            videoRef.current?.play()
-              .then(() => resolve())
-              .catch(reject);
-          };
-
-          videoRef.current.onerror = () => reject(new Error('Video load failed'));
-        });
-
-        setHasPermission(true);
-        setIsInitialized(true);
-
-        // Check torch capability
-        const track = stream.getVideoTracks()[0];
-        const capabilities = track.getCapabilities?.();
-        if (capabilities?.torch) {
-          // Torch is supported
-        }
+      if (!scannerDivRef.current) {
+        setError('Scanner container not available');
+        return;
       }
+
+      const config = getScannerConfig();
+      const scanner = new Html5QrcodeScanner('qr-scanner-container', config, false);
+
+      scannerRef.current = scanner;
+
+      // Handle successful scan
+      const onScanSuccess = (decodedText: string, decodedResult: Html5QrcodeResult) => {
+        const result: ScanResult = {
+          data: decodedText,
+          format: decodedResult.result.format?.formatName || 'Unknown',
+          timestamp: Date.now(),
+          confidence: 0.95 // html5-qrcode doesn't provide confidence scores
+        };
+
+        setLastScanTime(Date.now());
+        setScanHistory(prev => [result, ...prev.slice(0, 4)]);
+        setIsScanning(false);
+
+        // Brief success feedback, then report result
+        setTimeout(() => {
+          onScanComplete(decodedText);
+        }, 500);
+      };
+
+      // Handle scan errors (mostly "No QR code found", which is normal)
+      const onScanError = (errorMessage: string) => {
+        // Only show actual errors, not "No QR code found" messages
+        if (!errorMessage.includes('No QR code found') &&
+            !errorMessage.includes('No barcode found') &&
+            !errorMessage.includes('NotFoundException')) {
+          console.warn('QR Scanner error:', errorMessage);
+        }
+      };
+
+      // Start scanning
+      scanner.render(onScanSuccess, onScanError);
+
+      setHasPermission(true);
+      setIsInitialized(true);
+
     } catch (error: any) {
-      console.error('Camera initialization failed:', error);
+      console.error('Scanner initialization failed:', error);
       setHasPermission(false);
-      setError(error.message || 'Camera access denied');
+      setError(error.message || 'Scanner initialization failed');
     }
-  }, [getCameraConstraints]);
+  }, [getScannerConfig, onScanComplete]);
 
-  // Cleanup camera
-  const cleanup = useCallback(() => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+  // Cleanup scanner
+  const cleanup = useCallback(async () => {
+    try {
+      if (scannerRef.current) {
+        await scannerRef.current.clear();
+        scannerRef.current = null;
+      }
+    } catch (error) {
+      console.warn('Scanner cleanup warning:', error);
     }
 
     setIsInitialized(false);
+    setIsScanning(true); // Reset for next use
   }, []);
 
-  // Mock QR code detection - Replace with actual scanner library
-  const detectQRCode = useCallback((): ScanResult | null => {
-    if (!videoRef.current || !canvasRef.current || !isScanning) return null;
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx || video.readyState !== 4) return null;
-
-    // Set canvas size to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    // Draw current video frame to canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Mock QR detection with sample data
-    // In production, use a real QR detection library here
-    const mockDetection = Math.random() < 0.01; // 1% chance per frame
-
-    if (mockDetection) {
-      // Simulate different types of scanned data
-      const sampleData = [
-        'https://jorge.ai/property/12345',
-        'LOCKBOX:9874',
-        'MLS:RE0012345',
-        'PROPERTY:123 Main St, City, State 12345',
-        '{"propertyId":"prop_123","address":"456 Oak Ave","price":450000}'
-      ];
-
-      const randomData = sampleData[Math.floor(Math.random() * sampleData.length)];
-
-      return {
-        data: randomData,
-        format: mode === 'barcode' ? 'Code128' : 'QR_CODE',
-        timestamp: Date.now(),
-        confidence: 0.85 + Math.random() * 0.15 // 85-100% confidence
-      };
+  // Get current camera stream for torch control
+  const getCameraStream = useCallback(async (): Promise<MediaStream | null> => {
+    try {
+      // The Html5QrcodeScanner manages its own video stream
+      // We need to access it for torch control
+      const video = document.querySelector('#qr-scanner-container video') as HTMLVideoElement;
+      if (video && video.srcObject) {
+        return video.srcObject as MediaStream;
+      }
+    } catch (error) {
+      console.warn('Could not access camera stream for torch control:', error);
     }
-
     return null;
-  }, [isScanning, mode]);
-
-  // Scanning loop
-  const scan = useCallback(() => {
-    if (!isInitialized || !isScanning) return;
-
-    const now = Date.now();
-
-    // Rate limiting - prevent too frequent scans
-    if (now - lastScanTime < 100) {
-      animationRef.current = requestAnimationFrame(scan);
-      return;
-    }
-
-    const result = detectQRCode();
-
-    if (result) {
-      setLastScanTime(now);
-      setScanHistory(prev => [result, ...prev.slice(0, 4)]); // Keep last 5 results
-
-      // Success feedback
-      setIsScanning(false);
-
-      // Brief delay for user feedback, then report result
-      setTimeout(() => {
-        onScanComplete(result.data);
-      }, 500);
-
-      return;
-    }
-
-    // Continue scanning
-    animationRef.current = requestAnimationFrame(scan);
-  }, [detectQRCode, isInitialized, isScanning, lastScanTime, onScanComplete]);
+  }, []);
 
   // Toggle torch
   const toggleTorch = useCallback(async () => {
-    if (!streamRef.current) return;
-
     try {
-      const track = streamRef.current.getVideoTracks()[0];
+      const stream = await getCameraStream();
+      if (!stream) {
+        console.warn('Camera stream not available for torch control');
+        return;
+      }
+
+      const track = stream.getVideoTracks()[0];
+      if (!track) {
+        console.warn('Video track not available for torch control');
+        return;
+      }
+
+      const capabilities = track.getCapabilities?.();
+      if (!capabilities?.torch) {
+        console.warn('Torch not supported on this device');
+        return;
+      }
+
       await track.applyConstraints({
         advanced: [{ torch: !torchEnabled } as any]
       });
       setTorchEnabled(!torchEnabled);
     } catch (error) {
       console.error('Torch toggle failed:', error);
+      setError('Torch control not available');
     }
-  }, [torchEnabled]);
+  }, [torchEnabled, getCameraStream]);
 
-  // Initialize on mount
+  // Initialize scanner on mount
   useEffect(() => {
-    initializeCamera();
+    initializeScanner();
     return cleanup;
-  }, [initializeCamera, cleanup]);
-
-  // Start scanning when initialized
-  useEffect(() => {
-    if (isInitialized && isScanning) {
-      animationRef.current = requestAnimationFrame(scan);
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isInitialized, isScanning, scan]);
+  }, [initializeScanner, cleanup]);
 
   const getScannerTitle = () => {
     switch (mode) {
@@ -254,12 +236,43 @@ export function QRScanner({ onScanComplete, onClose, mode = 'qr' }: QRScannerPro
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="relative bg-black rounded-xl overflow-hidden border border-jorge-electric/30"
-    >
+    <>
+      {/* Custom styles to override html5-qrcode defaults and integrate with Jorge theme */}
+      <style jsx>{`
+        #qr-scanner-container {
+          border: none !important;
+          border-radius: 0 !important;
+        }
+
+        #qr-scanner-container video {
+          border-radius: 0 !important;
+          object-fit: cover !important;
+        }
+
+        #qr-scanner-container div[id*="qr-shaded-region"] {
+          background: rgba(0, 0, 0, 0.6) !important;
+        }
+
+        #qr-scanner-container div[id*="qr-scanner"] {
+          border: 2px solid #0052FF !important;
+          border-radius: 12px !important;
+        }
+
+        #qr-scanner-container button {
+          display: none !important; /* Hide html5-qrcode buttons */
+        }
+
+        #qr-scanner-container select {
+          display: none !important; /* Hide camera selection */
+        }
+      `}</style>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative bg-black rounded-xl overflow-hidden border border-jorge-electric/30"
+      >
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 bg-black/80 backdrop-blur-sm p-4">
         <div className="flex items-center justify-between">
@@ -308,7 +321,7 @@ export function QRScanner({ onScanComplete, onClose, mode = 'qr' }: QRScannerPro
                 {error}
               </p>
               <button
-                onClick={initializeCamera}
+                onClick={initializeScanner}
                 className="bg-jorge-gradient text-white py-2 px-4 rounded-lg jorge-code font-semibold jorge-haptic"
               >
                 Retry Access
@@ -327,22 +340,20 @@ export function QRScanner({ onScanComplete, onClose, mode = 'qr' }: QRScannerPro
           </div>
         ) : (
           <>
-            {/* Video feed */}
-            <video
-              ref={videoRef}
-              className="w-full h-full object-cover"
-              playsInline
-              muted
-            />
-
-            {/* Hidden canvas for image processing */}
-            <canvas
-              ref={canvasRef}
-              className="hidden"
+            {/* QR Scanner Container */}
+            <div
+              id="qr-scanner-container"
+              ref={scannerDivRef}
+              className="w-full h-full"
+              style={{
+                // Override html5-qrcode default styles
+                border: 'none',
+                borderRadius: '0',
+              }}
             />
 
             {/* Scanning overlay */}
-            <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 pointer-events-none z-10">
               {/* Scan area frame */}
               <div className="absolute inset-8 border-2 border-jorge-electric rounded-lg">
                 {/* Animated scanning line */}
@@ -455,5 +466,6 @@ export function QRScanner({ onScanComplete, onClose, mode = 'qr' }: QRScannerPro
         </motion.div>
       )}
     </motion.div>
+    </>
   );
 }

@@ -1,0 +1,629 @@
+# =========================================================================
+# JORGE'S AI EMPIRE - PROGRESSIVE DELIVERY PIPELINE
+# =========================================================================
+# Purpose: Zero-downtime deployments with automatic rollback for A+ uptime
+# Features: Canary deployment, traffic shifting, performance monitoring, auto-rollback
+# Target: 99.99% uptime with <35ms Jorge response times during deployments
+# Author: Claude Code Enterprise Optimization Team
+# Created: January 25, 2026
+# =========================================================================
+
+name: Progressive Delivery - Production
+
+on:
+  push:
+    branches: [main]
+    tags: [v*]
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+  workflow_dispatch:
+    inputs:
+      deployment_strategy:
+        description: 'Deployment strategy'
+        required: true
+        default: 'progressive'
+        type: choice
+        options:
+        - progressive
+        - canary-only
+        - blue-green
+        - hotfix
+
+      traffic_ramp_speed:
+        description: 'Traffic ramp speed'
+        required: true
+        default: 'normal'
+        type: choice
+        options:
+        - slow      # 1% → 5% → 10% → 25% → 50% → 100% (30 min)
+        - normal    # 1% → 10% → 25% → 50% → 100% (15 min)
+        - fast      # 1% → 25% → 100% (5 min)
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: jorge-salas/jorge-ai-empire
+  ENVIRONMENT: production
+
+# =========================================================================
+# SECURITY AND PERMISSIONS
+# =========================================================================
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  deployments: write
+
+jobs:
+  # =========================================================================
+  # COMPREHENSIVE TESTING PHASE
+  # =========================================================================
+  comprehensive-testing:
+    name: Comprehensive Testing Suite
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+
+    strategy:
+      matrix:
+        test-type: [unit, integration, performance, security]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        pip install -e .
+        pip install -r requirements-test.txt
+
+    - name: Run Unit Tests
+      if: matrix.test-type == 'unit'
+      run: |
+        pytest tests/unit/ -v --cov=ghl_real_estate_ai --cov-report=xml
+        echo "UNIT_TEST_COVERAGE=$(python -c 'import xml.etree.ElementTree as ET; print(ET.parse(\"coverage.xml\").getroot().get(\"line-rate\"))')" >> $GITHUB_ENV
+
+    - name: Run Integration Tests
+      if: matrix.test-type == 'integration'
+      run: |
+        pytest tests/integration/ -v --maxfail=3
+        python test_api_endpoints.py --url http://localhost:8000
+
+    - name: Run Performance Tests
+      if: matrix.test-type == 'performance'
+      run: |
+        python scripts/performance_benchmark.py --target-jorge-ms 35 --target-lead-ms 400 --target-websocket-ms 8
+        echo "PERFORMANCE_BASELINE=$(cat performance-results.json | jq .jorge_response_time_p95)" >> $GITHUB_ENV
+
+    - name: Run Security Scans
+      if: matrix.test-type == 'security'
+      run: |
+        bandit -r ghl_real_estate_ai/ -f json -o security-report.json
+        safety check --json --output safety-report.json
+        echo "SECURITY_ISSUES=$(cat security-report.json | jq '.results | length')" >> $GITHUB_ENV
+
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.test-type }}
+        path: |
+          coverage.xml
+          performance-results.json
+          security-report.json
+          safety-report.json
+
+  # =========================================================================
+  # BUILD AND SECURITY SCANNING
+  # =========================================================================
+  build-and-scan:
+    name: Build Container & Security Scan
+    runs-on: ubuntu-latest
+    needs: comprehensive-testing
+    outputs:
+      image-digest: ${{ steps.build.outputs.digest }}
+      security-passed: ${{ steps.security-check.outputs.passed }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push container
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          ENVIRONMENT=production
+          OPTIMIZATION_LEVEL=enterprise
+
+    - name: Container Security Scan
+      id: security-check
+      run: |
+        # Install Trivy
+        sudo apt-get update
+        sudo apt-get install wget apt-transport-https gnupg lsb-release
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install trivy
+
+        # Scan container image
+        trivy image --format json --output trivy-report.json ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+        # Check for critical vulnerabilities
+        CRITICAL_VULNS=$(cat trivy-report.json | jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length')
+        echo "Critical vulnerabilities found: $CRITICAL_VULNS"
+
+        if [ "$CRITICAL_VULNS" -gt 0 ]; then
+          echo "passed=false" >> $GITHUB_OUTPUT
+          echo "❌ Critical vulnerabilities found, blocking deployment"
+          exit 1
+        else
+          echo "passed=true" >> $GITHUB_OUTPUT
+          echo "✅ Security scan passed"
+        fi
+
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-scan-results
+        path: trivy-report.json
+
+  # =========================================================================
+  # PROGRESSIVE DEPLOYMENT TO PRODUCTION
+  # =========================================================================
+  deploy-canary:
+    name: Deploy Canary (1% Traffic)
+    runs-on: ubuntu-latest
+    needs: build-and-scan
+    if: github.ref == 'refs/heads/main' && needs.build-and-scan.outputs.security-passed == 'true'
+    environment: production-canary
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure kubectl
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+
+    - name: Deploy canary version
+      id: canary-deploy
+      run: |
+        # Update canary deployment with new image
+        kubectl set image deployment/jorge-revenue-api-canary \
+          api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          -n jorge-platform
+
+        # Wait for rollout completion
+        kubectl rollout status deployment/jorge-revenue-api-canary -n jorge-platform --timeout=300s
+
+        # Configure Istio traffic routing (1% to canary)
+        kubectl apply -f - <<EOF
+        apiVersion: networking.istio.io/v1beta1
+        kind: VirtualService
+        metadata:
+          name: jorge-api-traffic
+          namespace: jorge-platform
+        spec:
+          hosts:
+          - jorge-api.jorge-ai-empire.com
+          http:
+          - match:
+            - headers:
+                canary-test:
+                  exact: "true"
+            route:
+            - destination:
+                host: jorge-revenue-api-canary
+              weight: 100
+          - route:
+            - destination:
+                host: jorge-revenue-api-stable
+              weight: 99
+            - destination:
+                host: jorge-revenue-api-canary
+              weight: 1
+        EOF
+
+        echo "canary-deployed=true" >> $GITHUB_OUTPUT
+
+    - name: Canary Health Check
+      run: |
+        # Wait for canary pods to be ready
+        sleep 30
+
+        # Health check with retry
+        for i in {1..10}; do
+          if kubectl exec -n jorge-platform deployment/jorge-revenue-api-canary -- curl -f http://localhost:8000/health; then
+            echo "✅ Canary health check passed"
+            break
+          else
+            echo "⚠️ Canary health check failed, attempt $i/10"
+            sleep 10
+            if [ $i -eq 10 ]; then
+              echo "❌ Canary health check failed after 10 attempts"
+              exit 1
+            fi
+          fi
+        done
+
+    - name: Initial Canary Analysis (2 minutes)
+      id: initial-analysis
+      run: |
+        python scripts/canary_analysis.py \
+          --duration=120 \
+          --canary-deployment=jorge-revenue-api-canary \
+          --stable-deployment=jorge-revenue-api-stable \
+          --metrics="jorge_response_time,error_rate,throughput" \
+          --threshold-response-time=35 \
+          --threshold-error-rate=0.01 \
+          --threshold-throughput-ratio=0.95 \
+          --traffic-percentage=1
+
+        if [ $? -eq 0 ]; then
+          echo "analysis-passed=true" >> $GITHUB_OUTPUT
+        else
+          echo "analysis-passed=false" >> $GITHUB_OUTPUT
+        fi
+
+  # =========================================================================
+  # PROGRESSIVE TRAFFIC INCREASE
+  # =========================================================================
+  progressive-rollout:
+    name: Progressive Rollout
+    runs-on: ubuntu-latest
+    needs: deploy-canary
+    if: success()
+
+    strategy:
+      matrix:
+        traffic_percentage: [5, 10, 25, 50, 100]
+      max-parallel: 1  # Sequential deployment
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure kubectl
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+
+    - name: Determine ramp speed
+      id: ramp-config
+      run: |
+        case "${{ github.event.inputs.traffic_ramp_speed || 'normal' }}" in
+          "slow")
+            ANALYSIS_DURATION=600    # 10 minutes
+            SOAK_TIME=300           # 5 minutes
+            ;;
+          "fast")
+            ANALYSIS_DURATION=120    # 2 minutes
+            SOAK_TIME=60            # 1 minute
+            ;;
+          *)
+            ANALYSIS_DURATION=300    # 5 minutes
+            SOAK_TIME=180           # 3 minutes
+            ;;
+        esac
+
+        echo "analysis-duration=$ANALYSIS_DURATION" >> $GITHUB_OUTPUT
+        echo "soak-time=$SOAK_TIME" >> $GITHUB_OUTPUT
+
+    - name: Increase traffic to ${{ matrix.traffic_percentage }}%
+      run: |
+        STABLE_WEIGHT=$((100 - ${{ matrix.traffic_percentage }}))
+        CANARY_WEIGHT=${{ matrix.traffic_percentage }}
+
+        echo "🚦 Shifting traffic: Stable ${STABLE_WEIGHT}% → Canary ${CANARY_WEIGHT}%"
+
+        kubectl patch virtualservice jorge-api-traffic \
+          -n jorge-platform \
+          --type merge \
+          -p "{\"spec\":{\"http\":[{\"route\":[{\"destination\":{\"host\":\"jorge-revenue-api-stable\"},\"weight\":${STABLE_WEIGHT}},{\"destination\":{\"host\":\"jorge-revenue-api-canary\"},\"weight\":${CANARY_WEIGHT}}]}]}}"
+
+    - name: Performance Analysis (${{ matrix.traffic_percentage }}% traffic)
+      id: performance-analysis
+      run: |
+        echo "📊 Analyzing performance with ${{ matrix.traffic_percentage }}% traffic for ${{ steps.ramp-config.outputs.analysis-duration }}s"
+
+        python scripts/canary_analysis.py \
+          --duration=${{ steps.ramp-config.outputs.analysis-duration }} \
+          --canary-deployment=jorge-revenue-api-canary \
+          --stable-deployment=jorge-revenue-api-stable \
+          --traffic-percentage=${{ matrix.traffic_percentage }} \
+          --auto-rollback=true \
+          --jorge-target-ms=35 \
+          --lead-automation-target-ms=400 \
+          --websocket-target-ms=8 \
+          --success-rate-target=99.5 \
+          --performance-degradation-threshold=5 \
+          --output=analysis-${{ matrix.traffic_percentage }}.json
+
+        if [ $? -eq 0 ]; then
+          echo "✅ Performance analysis passed for ${{ matrix.traffic_percentage }}% traffic"
+          echo "analysis-passed=true" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Performance analysis failed for ${{ matrix.traffic_percentage }}% traffic"
+          echo "analysis-passed=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+    - name: Soak time before next increase
+      if: matrix.traffic_percentage < 100 && steps.performance-analysis.outputs.analysis-passed == 'true'
+      run: |
+        echo "⏱️ Soaking for ${{ steps.ramp-config.outputs.soak-time }}s before next traffic increase"
+        sleep ${{ steps.ramp-config.outputs.soak-time }}
+
+    - name: Upload performance analysis
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-analysis-${{ matrix.traffic_percentage }}-percent
+        path: analysis-${{ matrix.traffic_percentage }}.json
+
+  # =========================================================================
+  # FINALIZE DEPLOYMENT
+  # =========================================================================
+  finalize-deployment:
+    name: Finalize Production Deployment
+    runs-on: ubuntu-latest
+    needs: progressive-rollout
+    if: success()
+
+    steps:
+    - name: Configure kubectl
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+
+    - name: Promote canary to stable
+      run: |
+        echo "🎯 Promoting canary to stable deployment"
+
+        # Update stable deployment with canary image
+        CANARY_IMAGE=$(kubectl get deployment jorge-revenue-api-canary -n jorge-platform -o jsonpath='{.spec.template.spec.containers[0].image}')
+
+        kubectl set image deployment/jorge-revenue-api-stable \
+          api=$CANARY_IMAGE \
+          -n jorge-platform
+
+        # Wait for stable rollout
+        kubectl rollout status deployment/jorge-revenue-api-stable -n jorge-platform --timeout=600s
+
+    - name: Route all traffic to stable
+      run: |
+        echo "🔄 Routing 100% traffic to stable deployment"
+
+        kubectl patch virtualservice jorge-api-traffic \
+          -n jorge-platform \
+          --type merge \
+          -p '{"spec":{"http":[{"route":[{"destination":{"host":"jorge-revenue-api-stable"},"weight":100}]}]}}'
+
+    - name: Scale down canary
+      run: |
+        echo "📉 Scaling down canary deployment"
+        kubectl scale deployment jorge-revenue-api-canary --replicas=1 -n jorge-platform
+
+    - name: Final health validation
+      run: |
+        echo "🔍 Final production health validation"
+
+        # Wait for traffic to stabilize
+        sleep 60
+
+        # Comprehensive health check
+        python scripts/production_health_check.py \
+          --jorge-target-ms=35 \
+          --lead-automation-target-ms=400 \
+          --websocket-target-ms=8 \
+          --min-success-rate=99.5 \
+          --duration=300
+
+        if [ $? -eq 0 ]; then
+          echo "✅ Production deployment successful"
+        else
+          echo "❌ Production health check failed"
+          exit 1
+        fi
+
+    - name: Update deployment status
+      run: |
+        # Create deployment record
+        kubectl create deployment-record \
+          --name="jorge-ai-empire-${{ github.sha }}" \
+          --image="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" \
+          --status="SUCCESS" \
+          --environment="production" \
+          --strategy="progressive"
+
+  # =========================================================================
+  # AUTOMATIC ROLLBACK
+  # =========================================================================
+  automatic-rollback:
+    name: Automatic Rollback
+    runs-on: ubuntu-latest
+    needs: [deploy-canary, progressive-rollout]
+    if: failure() && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Configure kubectl
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+
+    - name: Emergency rollback
+      run: |
+        echo "🚨 AUTOMATIC ROLLBACK INITIATED"
+
+        # Revert all traffic to stable
+        kubectl patch virtualservice jorge-api-traffic \
+          -n jorge-platform \
+          --type merge \
+          -p '{"spec":{"http":[{"route":[{"destination":{"host":"jorge-revenue-api-stable"},"weight":100}]}]}}'
+
+        # Rollback canary deployment
+        kubectl rollout undo deployment/jorge-revenue-api-canary -n jorge-platform
+
+        # Scale down canary
+        kubectl scale deployment jorge-revenue-api-canary --replicas=0 -n jorge-platform
+
+        echo "✅ Automatic rollback completed"
+
+    - name: Validate rollback success
+      run: |
+        # Wait for rollback to complete
+        sleep 30
+
+        # Verify stable deployment health
+        for i in {1..5}; do
+          if kubectl exec -n jorge-platform deployment/jorge-revenue-api-stable -- curl -f http://localhost:8000/health; then
+            echo "✅ Rollback validation passed"
+            break
+          else
+            echo "⚠️ Rollback validation attempt $i/5"
+            sleep 10
+          fi
+        done
+
+    - name: Send rollback notification
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        text: |
+          🚨 AUTOMATIC ROLLBACK EXECUTED
+          Repository: ${{ github.repository }}
+          Commit: ${{ github.sha }}
+          Author: ${{ github.actor }}
+          Reason: Deployment quality gates failed
+          Action: Traffic reverted to stable version
+          Status: System stable, investigate deployment issues
+
+  # =========================================================================
+  # POST-DEPLOYMENT ANALYTICS
+  # =========================================================================
+  deployment-analytics:
+    name: Deployment Analytics & Reporting
+    runs-on: ubuntu-latest
+    needs: [finalize-deployment, automatic-rollback]
+    if: always()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Generate deployment report
+      run: |
+        python scripts/deployment_analytics.py \
+          --deployment-id=${{ github.run_id }} \
+          --version=${{ github.sha }} \
+          --environment=production \
+          --strategy=progressive \
+          --outcome=${{ job.status }} \
+          --output=deployment-report.json
+
+    - name: Calculate DORA metrics
+      run: |
+        python scripts/calculate_dora_metrics.py \
+          --deployment-report=deployment-report.json \
+          --update-baseline=true
+
+    - name: Upload to monitoring platforms
+      run: |
+        # Send deployment markers to DataDog
+        curl -X POST "https://api.datadoghq.com/api/v1/events" \
+          -H "Content-Type: application/json" \
+          -H "DD-API-KEY: ${{ secrets.DATADOG_API_KEY }}" \
+          -d @deployment-report.json
+
+        # Send to New Relic
+        curl -X POST "https://api.newrelic.com/v2/applications/${{ secrets.NEWRELIC_APP_ID }}/deployments.json" \
+          -H "X-Api-Key: ${{ secrets.NEWRELIC_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d @deployment-report.json
+
+    - name: Update deployment dashboard
+      run: |
+        # Update Grafana annotations
+        curl -X POST "${{ secrets.GRAFANA_URL }}/api/annotations" \
+          -H "Authorization: Bearer ${{ secrets.GRAFANA_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "dashboardId": 1,
+            "time": '$(date +%s000)',
+            "text": "Production deployment: ${{ github.sha }}",
+            "tags": ["deployment", "production", "${{ job.status }}"]
+          }'
+
+    - name: Upload deployment artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-analytics
+        path: |
+          deployment-report.json
+          dora-metrics.json
+
+# =========================================================================
+# DEPLOYMENT QUALITY GATES
+# =========================================================================
+
+# Quality gates that must pass for deployment to continue:
+#
+# 1. ✅ All tests pass (unit, integration, performance, security)
+# 2. ✅ Security scan passes (no critical vulnerabilities)
+# 3. ✅ Container builds successfully
+# 4. ✅ Canary deployment is healthy
+# 5. ✅ Performance analysis passes at each traffic level
+# 6. ✅ Jorge response time < 35ms maintained
+# 7. ✅ Error rate < 1% maintained
+# 8. ✅ No performance degradation > 5%
+#
+# Automatic rollback triggers:
+# - ❌ Canary deployment health check fails
+# - ❌ Performance analysis fails at any traffic level
+# - ❌ Jorge response time > 42ms for 2+ minutes
+# - ❌ Error rate > 2% for 1+ minute
+# - ❌ 5xx error rate > 0.5%
+# - ❌ WebSocket delivery latency > 15ms
+# - ❌ Manual rollback trigger
+#
+# =========================================================================

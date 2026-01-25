@@ -600,7 +600,7 @@ async def get_mobile_lead_details(
 
 @router.get("/analytics/summary", response_model=MobileAnalyticsSummary)
 async def get_mobile_analytics_summary(
-    period: str = Query("week", regex="^(Union[day, week]|month)$"),
+    period: str = Query("week", pattern="^(Union[day, week]|month)$"),
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """

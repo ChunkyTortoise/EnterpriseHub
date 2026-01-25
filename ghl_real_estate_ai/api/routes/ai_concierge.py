@@ -118,7 +118,7 @@ class InsightDismissalRequest(BaseModel):
 
     dismissal_reason: str = Field(
         ...,
-        regex="^(not_relevant|already_handled|poor_timing|low_quality|other)$",
+        pattern="^(not_relevant|already_handled|poor_timing|low_quality|other)$",
         description="Reason for dismissing the insight"
     )
     feedback_notes: Optional[str] = Field(None, max_length=300, description="Optional feedback for improvement")
@@ -135,7 +135,7 @@ class InsightDismissalRequest(BaseModel):
 class MonitoringControlRequest(BaseModel):
     """Request model for controlling conversation monitoring."""
 
-    action: str = Field(..., regex="^(start|stop|pause|resume)$", description="Monitoring action to take")
+    action: str = Field(..., pattern="^(start|stop|pause|resume)$", description="Monitoring action to take")
     monitoring_preferences: Optional[Dict[str, Any]] = Field(
         None,
         description="Optional preferences for monitoring behavior"
@@ -228,7 +228,7 @@ class InsightActionResponse(BaseModel):
 async def get_conversation_insights(
     conversation_id: str = Path(..., description="Unique conversation identifier"),
     include_historical: bool = Query(True, description="Include historical insights"),
-    priority_filter: Optional[str] = Query(None, regex="^(critical|high|medium|low)$", description="Filter by priority"),
+    priority_filter: Optional[str] = Query(None, pattern="^(critical|high|medium|low)$", description="Filter by priority"),
     current_user: Dict = Depends(get_current_user)
 ) -> ConversationInsightsResponse:
     """

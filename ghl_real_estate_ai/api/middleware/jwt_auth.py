@@ -3,12 +3,13 @@ JWT Authentication Middleware
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, Union
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 import bcrypt
 import os
+import uuid
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -36,16 +37,126 @@ security = HTTPBearer()
 
 
 class JWTAuth:
-    """JWT Authentication handler."""
-    
+    """Enhanced JWT Authentication handler with token rotation and security features."""
+
     @staticmethod
-    def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-        """Create a new JWT token."""
+    def create_access_token(
+        data: dict,
+        expires_delta: Optional[timedelta] = None,
+        include_refresh_token: bool = False
+    ) -> Union[str, tuple[str, str]]:
+        """
+        Create a new JWT token with enhanced security.
+
+        Args:
+            data: Token payload data
+            expires_delta: Custom expiration time
+            include_refresh_token: Whether to return refresh token as well
+
+        Returns:
+            Access token string, or tuple of (access_token, refresh_token)
+        """
+        # Add security metadata
         to_encode = data.copy()
-        expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-        to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        return encoded_jwt
+        now = datetime.now(timezone.utc)
+        expire = now + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+
+        # Enhanced payload with security features
+        to_encode.update({
+            "exp": expire,
+            "iat": now,  # Issued at time
+            "nbf": now,  # Not before time
+            "jti": uuid.uuid4().hex[:16],  # JWT ID for revocation tracking
+            "token_type": "access"
+        })
+
+        access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+        if include_refresh_token:
+            # Create refresh token with longer expiration
+            refresh_data = {
+                "sub": data.get("sub"),
+                "exp": now + timedelta(days=7),  # 7 days for refresh
+                "iat": now,
+                "jti": uuid.uuid4().hex[:16],
+                "token_type": "refresh"
+            }
+            refresh_token = jwt.encode(refresh_data, SECRET_KEY, algorithm=ALGORITHM)
+            return access_token, refresh_token
+
+        return access_token
+
+    @staticmethod
+    def create_refresh_token(user_id: str) -> str:
+        """Create a dedicated refresh token."""
+        now = datetime.now(timezone.utc)
+        refresh_data = {
+            "sub": user_id,
+            "exp": now + timedelta(days=7),
+            "iat": now,
+            "jti": uuid.uuid4().hex[:16],
+            "token_type": "refresh"
+        }
+        return jwt.encode(refresh_data, SECRET_KEY, algorithm=ALGORITHM)
+
+    @staticmethod
+    def refresh_access_token(refresh_token: str) -> str:
+        """
+        Create new access token from valid refresh token.
+
+        Args:
+            refresh_token: Valid refresh token
+
+        Returns:
+            New access token
+
+        Raises:
+            HTTPException: If refresh token is invalid or expired
+        """
+        try:
+            payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+
+            # Validate token type
+            if payload.get("token_type") != "refresh":
+                logger.error("Invalid token type for refresh", extra={"security_event": "invalid_refresh_token_type", "error_id": "JWT_006"})
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid refresh token type",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            # Create new access token
+            user_id = payload.get("sub")
+            if not user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid refresh token payload"
+                )
+
+            new_access_token = JWTAuth.create_access_token({"sub": user_id})
+
+            logger.info("Access token refreshed successfully", extra={
+                "security_event": "token_refreshed",
+                "user_id": user_id,
+                "event_id": "JWT_007"
+            })
+
+            return new_access_token
+
+        except jwt.ExpiredSignatureError:
+            logger.warning("Expired refresh token used", extra={"security_event": "expired_refresh_token", "error_id": "JWT_008"})
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token has expired",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        except JWTError as e:
+            logger.error(f"Invalid refresh token: {str(e)}", extra={"security_event": "invalid_refresh_token", "error_id": "JWT_009"})
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
     
     @staticmethod
     def verify_token(token: str) -> dict:
