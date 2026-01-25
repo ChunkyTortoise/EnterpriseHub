@@ -1,0 +1,108 @@
+{
+  "user_request": "full_pipeline",
+  "property_address": "123 Maple St, Austin, TX",
+  "market": "Austin, TX",
+  "intent": "FULL_PIPELINE",
+  "research_data": {
+    "subject_property": null,
+    "comparables": [],
+    "market_context": {
+      "neighborhood": "a",
+      "median_price": 0.0,
+      "price_trend": "a",
+      "inventory_level": "a",
+      "days_on_market_avg": 0,
+      "investment_score": 0,
+      "top_selling_points": [
+        "a"
+      ]
+    },
+    "summary": "a",
+    "raw_research_notes": null
+  },
+  "analysis_results": {
+    "investment_score": 0,
+    "financials": {
+      "estimated_monthly_rent": 0.0,
+      "annual_gross_income": 0.0,
+      "estimated_expenses": 0.0,
+      "net_operating_income": 0.0,
+      "cap_rate": 0.0,
+      "cash_on_cash_return": 0.0,
+      "appreciation_projection_5yr": 0.0
+    },
+    "risk": {
+      "market_risk": 0,
+      "property_risk": 0,
+      "liquidity_risk": 0,
+      "mitigation_strategies": [
+        "a"
+      ]
+    },
+    "reasoning": {
+      "primary_reasons": [
+        "a"
+      ],
+      "financial_fit": "a",
+      "lifestyle_fit": "a",
+      "market_timing": "a",
+      "potential_concerns": [],
+      "jorge_talking_points": [],
+      "client_script_suggestions": []
+    },
+    "confidence": "very_high",
+    "verdict": "a"
+  },
+  "design_data": {
+    "theme_name": "a",
+    "staged_rooms": [
+      {
+        "room_name": "a",
+        "style": "a",
+        "description": "a",
+        "image_prompt": "a",
+        "color_palette": [
+          "a"
+        ]
+      }
+    ],
+    "ui_specs": [
+      {
+        "component_name": "a",
+        "style_attributes": {
+          "additionalProperty": "a"
+        },
+        "interaction_model": "a"
+      }
+    ],
+    "digital_twin_enabled": false,
+    "presentation_style": "a"
+  },
+  "executive_summary": {
+    "theme_name": "a",
+    "staged_rooms": [
+      {
+        "room_name": "a",
+        "style": "a",
+        "description": "a",
+        "image_prompt": "a",
+        "color_palette": [
+          "a"
+        ]
+      }
+    ],
+    "ui_specs": [
+      {
+        "component_name": "a",
+        "style_attributes": {
+          "additionalProperty": "a"
+        },
+        "interaction_model": "a"
+      }
+    ],
+    "digital_twin_enabled": false,
+    "presentation_style": "a"
+  },
+  "errors": [],
+  "status": "complete_cached"
+}

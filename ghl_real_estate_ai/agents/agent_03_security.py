@@ -19,6 +19,9 @@ class SecurityAgent:
         """Generate JWT authentication middleware."""
         return '''"""
 JWT Authentication Middleware
+
+SECURITY: This module enforces fail-fast validation for JWT secrets.
+No weak fallback secrets are permitted in any environment.
 """
 
 from datetime import datetime, timedelta
@@ -28,9 +31,22 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 import os
+import sys
 
-# Configuration
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+# Configuration - SECURITY: Fail-fast validation, no weak fallbacks
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    print("=" * 60)
+    print("CRITICAL SECURITY ERROR: JWT_SECRET_KEY must be set")
+    print("=" * 60)
+    print("Generate a secure secret: openssl rand -hex 32")
+    print("Set via environment: export JWT_SECRET_KEY='your-secret'")
+    print("=" * 60)
+    sys.exit(1)
+if len(SECRET_KEY) < 32:
+    print(f"SECURITY ERROR: JWT_SECRET_KEY must be >= 32 characters (got {len(SECRET_KEY)})")
+    sys.exit(1)
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

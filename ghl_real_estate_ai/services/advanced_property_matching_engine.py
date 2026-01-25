@@ -751,13 +751,45 @@ class AdvancedPropertyMatchingEngine:
             )
 
             if cached_data:
-                # Reconstruct AdvancedPropertyMatch objects
+                # Reconstruct AdvancedPropertyMatch objects from cached dictionaries
                 matches = []
                 for data in cached_data:
-                    # This would require proper deserialization
-                    # For now, return None to force fresh matching
-                    pass
-                return None  # TODO: Implement proper deserialization
+                    try:
+                        # Recreate PropertyMatch from cached property data
+                        from ghl_real_estate_ai.models.matching_models import PropertyMatch
+                        property_match = PropertyMatch(
+                            property_id=data['property_id'],
+                            property=data['property_data'],
+                            overall_score=data['overall_score'],
+                            factor_scores=data['factor_scores'],
+                            match_reasons=data['match_reasons']
+                        )
+
+                        # Reconstruct AdvancedPropertyMatch
+                        advanced_match = AdvancedPropertyMatch(
+                            property_match=property_match,
+                            behavioral_fit_score=data['behavioral_fit_score'],
+                            engagement_prediction=data['engagement_prediction'],
+                            conversion_likelihood=data['conversion_likelihood'],
+                            optimal_presentation_time=data['optimal_presentation_time'],
+                            presentation_strategy=PresentationStrategy(data['presentation_strategy']),
+                            behavioral_reasoning=data['behavioral_reasoning'],
+                            confidence_score=data['confidence_score'],
+                            calculation_time_ms=data['calculation_time_ms'],
+                            calculated_at=datetime.fromisoformat(data['calculated_at'])
+                        )
+                        matches.append(advanced_match)
+
+                    except Exception as deserialization_error:
+                        logger.warning(f"Failed to deserialize cached match: {deserialization_error}")
+                        continue
+
+                if matches:
+                    logger.debug(f"Successfully retrieved {len(matches)} cached matches for lead {lead_id}")
+                    return matches
+                else:
+                    logger.warning("All cached matches failed deserialization, forcing fresh calculation")
+                    return None
 
             return None
 

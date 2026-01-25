@@ -277,7 +277,7 @@ class LeadSequenceStateService:
                 return LeadSequenceState.from_dict(state_data)
             return None
         except Exception as e:
-            logger.error(f"Failed to get sequence state for lead {lead_id}: {e}")
+            logger.error(f"Failed to get sequence state for lead {lead_id}: {e}", exc_info=True)
             return None
 
     async def save_state(self, state: LeadSequenceState) -> bool:
@@ -292,7 +292,7 @@ class LeadSequenceStateService:
             logger.debug(f"Saved sequence state for lead {state.lead_id}: {state.current_day.value}")
             return True
         except Exception as e:
-            logger.error(f"Failed to save sequence state for lead {state.lead_id}: {e}")
+            logger.error(f"Failed to save sequence state for lead {state.lead_id}: {e}", exc_info=True)
             return False
 
     async def advance_to_next_day(self, lead_id: str, force: bool = False) -> Optional[LeadSequenceState]:
@@ -577,7 +577,7 @@ class LeadSequenceStateService:
             await self.cache.set(key, current_active, self.state_ttl)
             return True
         except Exception as e:
-            logger.error(f"Failed to add {lead_id} to active sequences: {e}")
+            logger.error(f"Failed to add {lead_id} to active sequences: {e}", exc_info=True)
             return False
 
     async def _remove_from_active_sequences(self, lead_id: str) -> bool:
@@ -589,7 +589,7 @@ class LeadSequenceStateService:
             await self.cache.set(key, current_active, self.state_ttl)
             return True
         except Exception as e:
-            logger.error(f"Failed to remove {lead_id} from active sequences: {e}")
+            logger.error(f"Failed to remove {lead_id} from active sequences: {e}", exc_info=True)
             return False
 
     async def _get_active_sequences(self) -> set:
@@ -598,7 +598,7 @@ class LeadSequenceStateService:
             key = self._get_active_sequences_key()
             return await self.cache.get(key) or set()
         except Exception as e:
-            logger.error(f"Failed to get active sequences: {e}")
+            logger.error(f"Failed to get active sequences: {e}", exc_info=True)
             return set()
 
     async def get_all_active_sequences(self) -> List[LeadSequenceState]:

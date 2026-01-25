@@ -343,3 +343,17 @@ timestamp,model,provider,task_type,input_tokens,output_tokens,cache_creation_inp
 2026-01-22T08:11:19.800786,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
 2026-01-22T08:11:19.800855,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
 2026-01-22T08:11:19.800888,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-01-25T10:17:39.972450,claude-3-5-haiku-20241022,claude,general,1401,151,0,0,1552,0.006468,N/A,system,False
+2026-01-25T10:17:39.973684,claude-3-5-haiku-20241022,claude,general,1401,151,0,0,1552,0.006468,N/A,system,False
+2026-01-25T10:17:57.649951,claude-3-5-haiku-20241022,claude,general,1401,150,0,0,1551,0.006453,N/A,system,False
+2026-01-25T10:17:57.650213,claude-3-5-haiku-20241022,claude,general,1401,150,0,0,1551,0.006453,N/A,system,False
+2026-01-25T10:18:19.657558,claude-3-5-haiku-20241022,claude,general,1401,131,0,0,1532,0.006168,N/A,system,False
+2026-01-25T10:18:19.658647,claude-3-5-haiku-20241022,claude,general,1401,131,0,0,1532,0.006168,N/A,system,False
+2026-01-25T10:18:37.436951,claude-3-5-haiku-20241022,claude,general,1401,128,0,0,1529,0.006123,N/A,system,False
+2026-01-25T10:18:37.437278,claude-3-5-haiku-20241022,claude,general,1401,128,0,0,1529,0.006123,N/A,system,False
+2026-01-25T10:19:10.374747,claude-3-5-haiku-20241022,claude,general,1401,146,0,0,1547,0.006393,N/A,system,False
+2026-01-25T10:19:10.375110,claude-3-5-haiku-20241022,claude,general,1401,146,0,0,1547,0.006393,N/A,system,False
+2026-01-25T10:20:57.097954,claude-3-5-haiku-20241022,claude,general,1401,116,0,0,1517,0.005943,N/A,system,False
+2026-01-25T10:20:57.098273,claude-3-5-haiku-20241022,claude,general,1401,116,0,0,1517,0.005943,N/A,system,False
+2026-01-25T10:33:38.186804,claude-3-5-haiku-20241022,claude,general,1401,140,0,0,1541,0.006303,N/A,system,False
+2026-01-25T10:33:38.189444,claude-3-5-haiku-20241022,claude,general,1401,140,0,0,1541,0.006303,N/A,system,False

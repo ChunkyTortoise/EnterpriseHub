@@ -140,11 +140,11 @@ for attempt in import_attempts:
         claude_module = importlib.import_module(attempt['claude_concierge_panel'])
         component_imports['render_claude_concierge_panel'] = getattr(
             claude_module, 'render_claude_concierge_panel',
-            lambda: st.info("Claude Concierge temporarily unavailable")
+            lambda hub=None: st.info("Claude Concierge temporarily unavailable")
         )
         component_imports['render_concierge_coordination_card'] = getattr(
             claude_module, 'render_concierge_coordination_card',
-            lambda: st.info("Concierge Coordination temporarily unavailable")
+            lambda hub=None: st.info("Concierge Coordination temporarily unavailable")
         )
         COMPONENTS_AVAILABLE = True
         break
@@ -160,8 +160,8 @@ if not COMPONENTS_AVAILABLE:
         'render_jorge_buyer_bot_dashboard': lambda: st.info("Buyer Bot Dashboard temporarily unavailable"),
         'render_jorge_analytics_dashboard': lambda: st.info("Analytics Dashboard temporarily unavailable"),
         'render_full_lifecycle_dashboard': lambda: st.info("Lifecycle Dashboard temporarily unavailable"),
-        'render_claude_concierge_panel': lambda: st.info("Claude Concierge temporarily unavailable"),
-        'render_concierge_coordination_card': lambda: st.info("Concierge Coordination temporarily unavailable")
+        'render_claude_concierge_panel': lambda hub=None: st.info("Claude Concierge temporarily unavailable"),
+        'render_concierge_coordination_card': lambda hub=None: st.info("Concierge Coordination temporarily unavailable")
     }
 
 # Import Phase 9 MOAT Service

@@ -1,0 +1,83 @@
+- generic [ref=e2]:
+  - generic [ref=e7]:
+    - button "keyboard_double_arrow_left" [ref=e10] [cursor=pointer]:
+      - generic [ref=e12]: keyboard_double_arrow_left
+    - list [ref=e14]:
+      - listitem [ref=e15]:
+        - link "jorge bot command center" [ref=e17] [cursor=pointer]:
+          - /url: http://localhost:8503/
+          - generic [ref=e18]: jorge bot command center
+      - listitem [ref=e19]:
+        - link "Performance ROI" [ref=e21] [cursor=pointer]:
+          - /url: http://localhost:8503/Performance_ROI
+          - generic [ref=e22]: Performance ROI
+      - listitem [ref=e23]:
+        - link "Compliance Platform" [ref=e25] [cursor=pointer]:
+          - /url: http://localhost:8503/Compliance_Platform
+          - generic [ref=e26]: Compliance Platform
+      - listitem [ref=e27]:
+        - link "Prompt Testing Lab" [ref=e29] [cursor=pointer]:
+          - /url: http://localhost:8503/Prompt_Testing_Lab
+          - generic [ref=e30]: Prompt Testing Lab
+      - listitem [ref=e31]:
+        - link "Gemini Stack Metrics" [ref=e33] [cursor=pointer]:
+          - /url: http://localhost:8503/Gemini_Stack_Metrics
+          - generic [ref=e34]: Gemini Stack Metrics
+      - listitem [ref=e35]:
+        - link "live conversation demo" [ref=e37] [cursor=pointer]:
+          - /url: http://localhost:8503/live_conversation_demo
+          - generic [ref=e38]: live conversation demo
+      - listitem [ref=e39]:
+        - link "portal" [ref=e41] [cursor=pointer]:
+          - /url: http://localhost:8503/portal
+          - generic [ref=e42]: portal
+    - generic [ref=e46]:
+      - generic [ref=e51]:
+        - heading "JORGE AI" [level=2] [ref=e52]
+        - paragraph [ref=e53]: ELITE COMMAND CENTER
+      - separator [ref=e58]
+      - generic [ref=e60]:
+        - paragraph [ref=e64]: "Select Intelligence Hub:"
+        - radiogroup "Select Intelligence Hub:" [ref=e65] [cursor=pointer]:
+          - generic [ref=e66]:
+            - radio "🎯 Lead Command" [checked]
+            - paragraph [ref=e71]: 🎯 Lead Command
+          - generic [ref=e72]:
+            - radio "⚔️ Seller Command"
+            - paragraph [ref=e77]: ⚔️ Seller Command
+          - generic [ref=e78]:
+            - radio "🏠 Buyer Command"
+            - paragraph [ref=e83]: 🏠 Buyer Command
+          - generic [ref=e84]:
+            - radio "📊 Business Analytics"
+            - paragraph [ref=e89]: 📊 Business Analytics
+          - generic [ref=e90]:
+            - radio "🧬 Full Lifecycle"
+            - paragraph [ref=e95]: 🧬 Full Lifecycle
+          - generic [ref=e96]:
+            - radio "⚙️ System Config"
+            - paragraph [ref=e101]: ⚙️ System Config
+      - separator [ref=e106]
+      - heading "📡 Neural Uplink" [level=3] [ref=e111]
+      - alert [ref=e114]:
+        - paragraph [ref=e119]: "Lead Bot: ONLINE"
+      - alert [ref=e122]:
+        - paragraph [ref=e127]: "Seller Bot: ONLINE"
+      - alert [ref=e130]:
+        - paragraph [ref=e135]: "Vapi Voice AI: READY"
+      - separator [ref=e140]
+      - paragraph [ref=e145]: v4.2.0-ELITE | © 2026 Lyrio.io
+      - alert [ref=e148]:
+        - paragraph [ref=e153]: Claude Concierge temporarily unavailable
+  - generic [ref=e3]:
+    - banner [ref=e156]:
+      - generic [ref=e159]:
+        - button "Deploy" [ref=e161] [cursor=pointer]:
+          - generic [ref=e163]: Deploy
+        - button [ref=e165] [cursor=pointer]:
+          - img [ref=e166]
+    - generic [ref=e169]:
+      - alert [ref=e172]:
+        - paragraph [ref=e177]: ⚠️ Some dashboard components are temporarily unavailable. Basic interface will be shown.
+      - alert [ref=e180]:
+        - paragraph [ref=e185]: Dashboards unavailable. Please check installation.

@@ -11,7 +11,8 @@ Supports $240K ARR foundation with usage-based billing integration.
 """
 
 import os
-from datetime import datetime
+import asyncio
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Request, BackgroundTasks, Query, status
@@ -22,6 +23,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager, SubscriptionManagerError
+from ghl_real_estate_ai.services.monitoring_service import MonitoringService, AlertSeverity
 from ghl_real_estate_ai.api.schemas.billing import (
     CreateSubscriptionRequest,
     ModifySubscriptionRequest,
@@ -47,6 +49,85 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 # Initialize services (singletons)
 billing_service = BillingService()
 subscription_manager = SubscriptionManager()
+monitoring_service = MonitoringService()
+
+
+# Revenue Protection: Retry logic with exponential backoff
+async def retry_with_exponential_backoff(
+    func,
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+    max_delay: float = 60.0,
+    *args,
+    **kwargs
+):
+    """
+    Retry function with exponential backoff for revenue protection.
+
+    Args:
+        func: Async function to retry
+        max_retries: Maximum number of retry attempts
+        base_delay: Base delay in seconds for first retry
+        max_delay: Maximum delay between retries
+        *args, **kwargs: Arguments for the function
+
+    Returns:
+        Function result or raises final exception
+    """
+    last_exception = None
+
+    for attempt in range(max_retries + 1):
+        try:
+            return await func(*args, **kwargs)
+        except BillingServiceError as e:
+            last_exception = e
+            if not e.recoverable or attempt == max_retries:
+                # Non-recoverable error or final attempt
+                await monitoring_service.create_alert(
+                    service_name="billing_api",
+                    severity=AlertSeverity.CRITICAL,
+                    message=f"Billing operation failed after {attempt + 1} attempts: {e.message}",
+                    metadata={
+                        "function": func.__name__,
+                        "attempt": attempt + 1,
+                        "recoverable": e.recoverable,
+                        "stripe_error_code": e.stripe_error_code
+                    }
+                )
+                raise
+
+            # Calculate next retry delay
+            delay = min(base_delay * (2 ** attempt), max_delay)
+            logger.warning(
+                f"Billing operation failed (attempt {attempt + 1}/{max_retries + 1}). "
+                f"Retrying in {delay}s: {e.message}",
+                extra={
+                    "function": func.__name__,
+                    "attempt": attempt + 1,
+                    "delay": delay,
+                    "recoverable": e.recoverable
+                }
+            )
+
+            await asyncio.sleep(delay)
+
+        except Exception as e:
+            # Unexpected error - don't retry, escalate immediately
+            last_exception = e
+            await monitoring_service.create_alert(
+                service_name="billing_api",
+                severity=AlertSeverity.CRITICAL,
+                message=f"Unexpected billing system error: {str(e)}",
+                metadata={
+                    "function": func.__name__,
+                    "attempt": attempt + 1,
+                    "error_type": type(e).__name__
+                }
+            )
+            raise
+
+    # Should not reach here, but handle gracefully
+    raise last_exception
 
 
 # ===================================================================
@@ -421,8 +502,14 @@ async def record_usage(
             }
         )
 
-        # Record usage through billing service
-        stripe_usage_record = await billing_service.add_usage_record(request)
+        # Record usage through billing service with retry logic for revenue protection
+        stripe_usage_record = await retry_with_exponential_backoff(
+            billing_service.add_usage_record,
+            max_retries=3,
+            base_delay=1.0,
+            max_delay=10.0,
+            request
+        )
 
         # TODO: Store in database
         # usage_record = await db.usage_records.insert({
@@ -459,26 +546,41 @@ async def record_usage(
         }
 
     except BillingServiceError as e:
-        logger.error(f"Billing service error recording usage: {e}")
+        # Retry logic handled by retry_with_exponential_backoff
+        # This should only be reached for non-recoverable errors
+        logger.error(f"REVENUE PROTECTION: Usage recording failed after retries: {e.message}",
+                    extra={
+                        "subscription_id": request.subscription_id,
+                        "lead_id": request.lead_id,
+                        "amount": float(request.amount),
+                        "stripe_error_code": e.stripe_error_code,
+                        "revenue_impact": "CRITICAL"
+                    })
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "error_code": "usage_recording_failed",
-                "error_message": e.message,
+                "error_message": f"Revenue recording failed after retries: {e.message}",
                 "error_type": "billing_service",
                 "recoverable": e.recoverable,
                 "stripe_error_code": e.stripe_error_code
             }
         )
     except Exception as e:
-        logger.error(f"Error recording usage: {e}", exc_info=True)
+        # System errors escalated by retry function
+        logger.error(f"REVENUE PROTECTION: System error in usage recording: {e}",
+                    extra={
+                        "subscription_id": request.subscription_id,
+                        "error_type": type(e).__name__,
+                        "revenue_impact": "CRITICAL"
+                    })
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
-                "error_code": "usage_recording_error",
-                "error_message": "Failed to record usage",
+                "error_code": "usage_recording_system_error",
+                "error_message": "Critical system error in revenue recording",
                 "error_type": "internal_error",
-                "recoverable": True
+                "recoverable": False
             }
         )
 

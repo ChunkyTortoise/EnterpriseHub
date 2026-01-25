@@ -232,14 +232,29 @@ class StreamlitPerformanceOptimizer:
         return f"component:{name}:{key_hash}"
     
     def _get_from_cache(self, key: str) -> Any:
-        """Get component result from cache."""
+        """Get component result from cache with async bridge pattern."""
         try:
+            # First try session cache (fastest)
             if key in self.session_data_cache:
                 return self.session_data_cache[key]
-            
-            # Distributed cache access is async, cannot be awaited here in sync context
-            # Returning a Task would break the caller which expects a value
-            return None
+
+            # Try distributed cache with async bridge pattern
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Use run_coroutine_threadsafe for running event loops
+                    future = asyncio.run_coroutine_threadsafe(
+                        self.cache_service.get(key), loop
+                    )
+                    # Short timeout to avoid blocking Streamlit
+                    return future.result(timeout=0.1)
+                else:
+                    # Event loop not running - use asyncio.run
+                    return asyncio.run(self.cache_service.get(key))
+            except (RuntimeError, TimeoutError, asyncio.TimeoutError):
+                # Fall back gracefully on async bridge failure
+                logger.debug(f"Distributed cache access failed for key {key}, using session cache only")
+                return None
         except Exception as e:
             logger.warning(f"Cache get failed for {key}: {e}")
             return None

@@ -106,4 +106,44 @@ class ReportGeneratorService:
         buffer.seek(0)
         return buffer
 
+    async def generate_v2_investor_report(self, data: Dict[str, Any]) -> io.BytesIO:
+        """
+        Generates a professional investor report from V2 Multi-Agent data.
+        """
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        story = []
+
+        # Title
+        address = data.get('address', 'Property')
+        story.append(Paragraph(f"INVESTMENT_INTEL: {address.upper()}", self.styles['CenteredTitle']))
+        story.append(Spacer(1, 0.2 * inch))
+
+        # 1. Executive Summary
+        exec_data = data.get('executive', {})
+        story.append(Paragraph("1. EXECUTIVE STRATEGY", self.styles['h1']))
+        story.append(Paragraph(f"<b>Verdict:</b> {exec_data.get('investment_verdict', 'N/A')}", self.styles['Normal']))
+        story.append(Paragraph(exec_data.get('executive_summary', 'No summary provided.'), self.styles['Normal']))
+        story.append(Spacer(1, 0.2 * inch))
+
+        # 2. Financial Analysis
+        analysis_data = data.get('analysis', {})
+        story.append(Paragraph("2. FINANCIAL PROJECTIONS", self.styles['h1']))
+        financials = analysis_data.get('financials', {})
+        for k, v in financials.items():
+            story.append(Paragraph(f"<b>{k.replace('_', ' ').title()}:</b> {v}", self.styles['Normal']))
+        story.append(Spacer(1, 0.2 * inch))
+
+        # 3. Design & Staging
+        design_data = data.get('design', {})
+        story.append(Paragraph("3. VISUAL STAGING CONCEPTS", self.styles['h1']))
+        rooms = design_data.get('staged_rooms', [])
+        for room in rooms:
+            story.append(Paragraph(f"<b>{room.get('room_name')}:</b> {room.get('description')}", self.styles['Normal']))
+            story.append(Paragraph(f"<i>Palette:</i> {', '.join(room.get('color_palette', []))}", self.styles['NormalSmall']))
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer
+
 report_generator_service = ReportGeneratorService()
