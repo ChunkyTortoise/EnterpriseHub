@@ -271,7 +271,7 @@ class ClaudeConciergeOrchestrator:
                                          session_id: str = None) -> ConciergeResponse:
         """
         Generate intelligent guidance based on current platform state.
-        This is the main entry point for omnipresent concierge intelligence.
+        This is the main entry point for Track 2 omnipresent intelligence.
 
         Track 3 Enhancement: Now supports live GHL data integration.
         """
@@ -356,6 +356,54 @@ class ClaudeConciergeOrchestrator:
 
             # Fallback response to ensure platform reliability
             return self._generate_fallback_response(context, mode, str(e))
+
+    async def generate_contextual_guidance_stream(self,
+                                                context: Optional[PlatformContext] = None,
+                                                mode: ConciergeMode = ConciergeMode.PROACTIVE,
+                                                scope: Optional[IntelligenceScope] = None,
+                                                use_live_data: bool = True,
+                                                current_page: str = None,
+                                                user_role: str = "agent",
+                                                session_id: str = None) -> AsyncGenerator[str, None]:
+        """
+        Streaming version of generate_contextual_guidance.
+        Provides real-time feedback for better UX.
+        """
+        try:
+            # Generate live context if not provided
+            if context is None and use_live_data:
+                context = await self.generate_live_platform_context(
+                    current_page=current_page or "Unknown",
+                    user_role=user_role,
+                    session_id=session_id
+                )
+
+            scope = scope or self.intelligence_config[mode]["intelligence_depth"]
+            jorge_preferences = await self.jorge_memory.get_preferences_for_context(context)
+            intelligence_prompt = self._build_intelligence_prompt(context, mode, scope, jorge_preferences)
+
+            request = ClaudeRequest(
+                task_type=ClaudeTaskType.OMNIPOTENT_ASSISTANT,
+                context={
+                    "platform_context": asdict(context),
+                    "jorge_preferences": jorge_preferences,
+                    "concierge_mode": mode.value,
+                    "intelligence_scope": scope.value
+                },
+                prompt=intelligence_prompt,
+                max_tokens=4000,
+                temperature=0.6,
+                system_prompt=self._get_concierge_system_prompt(mode),
+                streaming=True
+            )
+
+            # Stream from orchestrator
+            async for chunk in self.claude.process_request_stream(request):
+                yield chunk
+
+        except Exception as e:
+            logger.error(f"Error in streaming contextual guidance: {e}")
+            yield f"Error: {str(e)}"
 
     async def generate_live_guidance(self,
                                    current_page: str,
