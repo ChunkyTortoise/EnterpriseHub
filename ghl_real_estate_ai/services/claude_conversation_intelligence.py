@@ -137,7 +137,7 @@ class ConversationIntelligenceEngine:
             self.enabled = True
             logger.info("ConversationIntelligenceEngine initialized successfully")
         except Exception as e:
-            logger.error(f"Failed to initialize Claude client: {e}")
+            logger.error(f"Failed to initialize Claude client: {e}", exc_info=True)
             self.claude_client = None
             self.enabled = False
 
@@ -228,7 +228,7 @@ class ConversationIntelligenceEngine:
             return analysis
 
         except Exception as e:
-            logger.error(f"Error in conversation analysis: {e}")
+            logger.error(f"Error in conversation analysis: {e}", exc_info=True)
             return self._get_fallback_analysis()
 
     async def extract_intent_signals(self, conversation_history: List[str], lead_profile: Dict = None) -> IntentSignals:
@@ -273,7 +273,7 @@ class ConversationIntelligenceEngine:
             return intent_signals
 
         except Exception as e:
-            logger.error(f"Error extracting intent signals: {e}")
+            logger.error(f"Error extracting intent signals: {e}", exc_info=True)
             return self._get_fallback_intent_signals()
 
     async def generate_response_suggestions(self, context: Dict, conversation_analysis: ConversationAnalysis) -> List[str]:
@@ -315,7 +315,7 @@ class ConversationIntelligenceEngine:
             return suggestions
 
         except Exception as e:
-            logger.error(f"Error generating suggestions: {e}")
+            logger.error(f"Error generating suggestions: {e}", exc_info=True)
             return self._get_fallback_suggestions()
 
     async def predict_conversation_outcome(self, history: List[Dict], lead_context: Dict = None) -> Dict:
@@ -357,7 +357,7 @@ class ConversationIntelligenceEngine:
             return prediction
 
         except Exception as e:
-            logger.error(f"Error predicting conversation outcome: {e}")
+            logger.error(f"Error predicting conversation outcome: {e}", exc_info=True)
             return self._get_fallback_prediction()
 
     async def analyze_conversation_thread(self, thread_id: str, messages: List[Dict],
@@ -404,7 +404,7 @@ class ConversationIntelligenceEngine:
             return analysis_results
 
         except Exception as e:
-            logger.error(f"Error in thread analysis for {thread_id}: {e}")
+            logger.error(f"Error in thread analysis for {thread_id}: {e}", exc_info=True)
             return self._get_fallback_thread_analysis()
 
     async def analyze_emotional_progression(self, thread_id: str) -> EmotionalState:
@@ -449,7 +449,7 @@ class ConversationIntelligenceEngine:
             return emotional_state
 
         except Exception as e:
-            logger.error(f"Error analyzing emotional progression: {e}")
+            logger.error(f"Error analyzing emotional progression: {e}", exc_info=True)
             return self._get_fallback_emotional_state()
 
     async def analyze_trust_metrics(self, thread_id: str) -> TrustMetrics:
@@ -494,7 +494,7 @@ class ConversationIntelligenceEngine:
             return trust_metrics
 
         except Exception as e:
-            logger.error(f"Error analyzing trust metrics: {e}")
+            logger.error(f"Error analyzing trust metrics: {e}", exc_info=True)
             return self._get_fallback_trust_metrics()
 
     async def detect_closing_signals(self, thread_id: str) -> ClosingSignals:
@@ -540,7 +540,7 @@ class ConversationIntelligenceEngine:
             return closing_signals
 
         except Exception as e:
-            logger.error(f"Error detecting closing signals: {e}")
+            logger.error(f"Error detecting closing signals: {e}", exc_info=True)
             return self._get_fallback_closing_signals()
 
     async def monitor_conversation_health(self, thread_id: str) -> Dict:
@@ -579,7 +579,7 @@ class ConversationIntelligenceEngine:
             }
 
         except Exception as e:
-            logger.error(f"Error monitoring conversation health: {e}")
+            logger.error(f"Error monitoring conversation health: {e}", exc_info=True)
             return {"health": "unknown", "engagement_trend": "unknown"}
 
     # ========== ENHANCED THREAD MANAGEMENT METHODS ==========
@@ -671,7 +671,7 @@ class ConversationIntelligenceEngine:
             return comprehensive_analysis
 
         except Exception as e:
-            logger.error(f"Error in comprehensive thread analysis: {e}")
+            logger.error(f"Error in comprehensive thread analysis: {e}", exc_info=True)
             return self._get_fallback_thread_analysis()
 
     def _update_thread_state(self, thread: ConversationThread, analysis_results: Dict) -> None:
@@ -693,7 +693,7 @@ class ConversationIntelligenceEngine:
             thread.last_updated = datetime.now()
 
         except Exception as e:
-            logger.error(f"Error updating thread state: {e}")
+            logger.error(f"Error updating thread state: {e}", exc_info=True)
 
     def _update_emotional_journey(self, thread: ConversationThread,
                                  emotional_state: EmotionalState) -> None:
@@ -762,7 +762,7 @@ class ConversationIntelligenceEngine:
             }
 
         except Exception as e:
-            logger.error(f"Error calculating health metrics: {e}")
+            logger.error(f"Error calculating health metrics: {e}", exc_info=True)
             return {
                 "overall_health": "unknown",
                 "health_score": 0.5,
@@ -822,7 +822,7 @@ class ConversationIntelligenceEngine:
             }
 
         except Exception as e:
-            logger.error(f"Error analyzing engagement trends: {e}")
+            logger.error(f"Error analyzing engagement trends: {e}", exc_info=True)
             return {"trend": "unknown", "indicators": []}
 
     def _generate_health_recommendations(self, health_status: str, metrics: Dict) -> List[str]:
@@ -1222,7 +1222,7 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                 analysis_timestamp=datetime.now()
             )
         except Exception as e:
-            logger.error(f"Error parsing Claude analysis: {e}")
+            logger.error(f"Error parsing Claude analysis: {e}", exc_info=True)
             return self._get_fallback_analysis()
 
     def _parse_intent_signals(self, response_content: str) -> IntentSignals:
@@ -1248,7 +1248,7 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                 }
             )
         except Exception as e:
-            logger.error(f"Error parsing intent signals: {e}")
+            logger.error(f"Error parsing intent signals: {e}", exc_info=True)
             return self._get_fallback_intent_signals()
 
     def _parse_response_suggestions(self, response_content: str) -> List[str]:
@@ -1269,7 +1269,7 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                         suggestions.append(line.strip())
                 return suggestions[:5]  # Limit to 5 suggestions
         except Exception as e:
-            logger.error(f"Error parsing response suggestions: {e}")
+            logger.error(f"Error parsing response suggestions: {e}", exc_info=True)
             return self._get_fallback_suggestions()
 
     def _parse_outcome_prediction(self, response_content: str) -> Dict:
@@ -1287,7 +1287,7 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                     "conversation_health": "good"
                 }
         except Exception as e:
-            logger.error(f"Error parsing outcome prediction: {e}")
+            logger.error(f"Error parsing outcome prediction: {e}", exc_info=True)
             return self._get_fallback_prediction()
 
     # ========== ENHANCED PARSING METHODS ==========
@@ -1317,7 +1317,7 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                 "risk_factors": data.get("risk_factors", [])
             }
         except Exception as e:
-            logger.error(f"Error parsing thread analysis: {e}")
+            logger.error(f"Error parsing thread analysis: {e}", exc_info=True)
             return self._get_fallback_thread_analysis()
 
     def _parse_emotional_state(self, response_content: str) -> EmotionalState:
@@ -1351,7 +1351,7 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                 decision_readiness=float(data.get("decision_readiness", 0.5))
             )
         except Exception as e:
-            logger.error(f"Error parsing emotional state: {e}")
+            logger.error(f"Error parsing emotional state: {e}", exc_info=True)
             return self._get_fallback_emotional_state()
 
     def _parse_trust_metrics(self, response_content: str) -> TrustMetrics:
@@ -1375,7 +1375,7 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                 rapport_risks=data.get("rapport_risks", [])
             )
         except Exception as e:
-            logger.error(f"Error parsing trust metrics: {e}")
+            logger.error(f"Error parsing trust metrics: {e}", exc_info=True)
             return self._get_fallback_trust_metrics()
 
     def _parse_closing_signals(self, response_content: str) -> ClosingSignals:
@@ -1401,7 +1401,7 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                 timing_recommendation=data.get("timing_recommendation", "Continue qualifying")
             )
         except Exception as e:
-            logger.error(f"Error parsing closing signals: {e}")
+            logger.error(f"Error parsing closing signals: {e}", exc_info=True)
             return self._get_fallback_closing_signals()
 
     # ========== ENHANCED FALLBACK METHODS ==========

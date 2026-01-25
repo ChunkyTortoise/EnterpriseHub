@@ -1,0 +1,119 @@
+{
+  "validation_summary": {
+    "overall_status": "\u274c CRITICAL ISSUES DETECTED - NOT PRODUCTION READY",
+    "timestamp": "2026-01-25T10:32:36.416066",
+    "test_duration": 30,
+    "concurrent_workers": 50,
+    "total_operations": 100,
+    "successful_operations": 100,
+    "failed_operations": 4,
+    "success_rate": 1.0,
+    "race_conditions_detected": 0,
+    "memory_growth_mb": 34.1875,
+    "tests_passed": 1,
+    "tests_failed": 4,
+    "tests_warning": 0
+  },
+  "individual_test_results": [
+    {
+      "test_name": "FileCache Race Conditions",
+      "duration_seconds": 0,
+      "total_operations": 0,
+      "successful_operations": 0,
+      "failed_operations": 1,
+      "operations_per_second": 0,
+      "avg_response_time_ms": 0,
+      "p95_response_time_ms": 0,
+      "p99_response_time_ms": 0,
+      "memory_peak_mb": 0,
+      "memory_growth_mb": 0,
+      "race_conditions_detected": 0,
+      "errors": [
+        "module 'statistics' has no attribute 'quantile'"
+      ],
+      "success_rate": 0,
+      "status": "FAIL"
+    },
+    {
+      "test_name": "MemoryCache LRU Eviction",
+      "duration_seconds": 0,
+      "total_operations": 0,
+      "successful_operations": 0,
+      "failed_operations": 1,
+      "operations_per_second": 0,
+      "avg_response_time_ms": 0,
+      "p95_response_time_ms": 0,
+      "p99_response_time_ms": 0,
+      "memory_peak_mb": 0,
+      "memory_growth_mb": 0,
+      "race_conditions_detected": 0,
+      "errors": [
+        "module 'statistics' has no attribute 'quantile'"
+      ],
+      "success_rate": 0,
+      "status": "FAIL"
+    },
+    {
+      "test_name": "Lock Initialization Fix",
+      "duration_seconds": 0,
+      "total_operations": 0,
+      "successful_operations": 0,
+      "failed_operations": 1,
+      "operations_per_second": 0,
+      "avg_response_time_ms": 0,
+      "p95_response_time_ms": 0,
+      "p99_response_time_ms": 0,
+      "memory_peak_mb": 0,
+      "memory_growth_mb": 0,
+      "race_conditions_detected": 0,
+      "errors": [
+        "module 'statistics' has no attribute 'quantile'"
+      ],
+      "success_rate": 0,
+      "status": "FAIL"
+    },
+    {
+      "test_name": "WebSocket Singleton Thread Safety",
+      "duration_seconds": 0.027138948440551758,
+      "total_operations": 100,
+      "successful_operations": 100,
+      "failed_operations": 0,
+      "operations_per_second": 3684.7411468079313,
+      "avg_response_time_ms": 0,
+      "p95_response_time_ms": 0,
+      "p99_response_time_ms": 0,
+      "memory_peak_mb": 63.40625,
+      "memory_growth_mb": 0,
+      "race_conditions_detected": 0,
+      "errors": [],
+      "success_rate": 1.0,
+      "status": "PASS"
+    },
+    {
+      "test_name": "Infrastructure Monitoring Alerts",
+      "duration_seconds": 0,
+      "total_operations": 0,
+      "successful_operations": 0,
+      "failed_operations": 1,
+      "operations_per_second": 0,
+      "avg_response_time_ms": 0,
+      "p95_response_time_ms": 0,
+      "p99_response_time_ms": 0,
+      "memory_peak_mb": 0,
+      "memory_growth_mb": 0,
+      "race_conditions_detected": 0,
+      "errors": [
+        "EventStreamingService.__init__() got an unexpected keyword argument 'kafka_bootstrap_servers'"
+      ],
+      "success_rate": 0,
+      "status": "FAIL"
+    }
+  ],
+  "production_readiness_assessment": {
+    "filecache_race_conditions": "\u274c CRITICAL ISSUES - FIX REQUIRED",
+    "memorycache_lru_eviction": "\u274c CRITICAL ISSUES - FIX REQUIRED",
+    "lock_initialization_fix": "\u274c CRITICAL ISSUES - FIX REQUIRED",
+    "websocket_singleton_thread_safety": "\u2705 PRODUCTION READY",
+    "infrastructure_monitoring_alerts": "\u274c CRITICAL ISSUES - FIX REQUIRED"
+  }
+}

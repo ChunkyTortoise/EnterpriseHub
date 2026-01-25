@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-01-25T10:33:46.749782",
+  "overall_score": 65.0,
+  "deployment_ready": false,
+  "category_scores": {
+    "ai_providers": 100.0,
+    "ghl_integration": 40.0,
+    "database": 80.0,
+    "security": 50.0,
+    "optimizations": 100.0,
+    "optional_services": 20.0
+  },
+  "critical_missing": [
+    "GHL_API_KEY"
+  ],
+  "errors": [
+    "Critical variable GHL_API_KEY invalid: Invalid format (should be JWT starting with 'eyJ')"
+  ],
+  "warnings": [],
+  "status": "\u26a0\ufe0f FAIR - Needs configuration updates"
+}

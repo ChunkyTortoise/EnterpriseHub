@@ -7,7 +7,7 @@
         "@modelcontextprotocol/server-github"
       ],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_f0Vme0ef5fhPZx7DReuJ85evq52Qwu94eDWiE"
       }
     },
     "postgres": {
@@ -43,7 +43,7 @@
         "@firecrawl/mcp-server"
       ],
       "env": {
-        "FIRECRAWL_API_KEY": "your_firecrawl_api_key_here"
+        "FIRECRAWL_API_KEY": "fc-7c4b0b8adfd24001a96d8aab401bab4f"
       }
     },
     "sequential-thinking": {

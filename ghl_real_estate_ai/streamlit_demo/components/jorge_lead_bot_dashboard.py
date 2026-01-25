@@ -15,6 +15,7 @@ import streamlit as st
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 import asyncio
 import json
+import time
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -1001,8 +1002,24 @@ def render_analytics_integration_section():
 def render_lead_pipeline_section(api_client: JorgeAPIClient):
     """Render the Lead Pipeline section with Journey Glow Mapping."""
     st.markdown(f'### {get_svg_icon("referral")} Tactical Lead Pipeline', unsafe_allow_html=True)
-    
-    pipeline = run_async(api_client.get_lead_pipeline())
+
+    # Cache pipeline in session state to avoid redundant API calls (Performance optimization)
+    cache_key = 'cached_lead_pipeline'
+    cache_timestamp_key = 'lead_pipeline_cache_timestamp'
+    cache_duration = 300  # 5 minutes cache duration
+
+    current_time = time.time()
+
+    # Check if cache is valid
+    if (cache_key in st.session_state and
+        cache_timestamp_key in st.session_state and
+        current_time - st.session_state[cache_timestamp_key] < cache_duration):
+        pipeline = st.session_state[cache_key]
+    else:
+        # Fetch fresh data and cache it
+        pipeline = run_async(api_client.get_lead_pipeline())
+        st.session_state[cache_key] = pipeline
+        st.session_state[cache_timestamp_key] = current_time
     
     col_list, col_details = st.columns([3, 2])
     

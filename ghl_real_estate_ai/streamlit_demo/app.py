@@ -1130,63 +1130,124 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # Sidebar Navigation with Sectioning
-    st.markdown("<div style='font-size: 0.7rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; font-weight: 700;'>Business Intelligence</div>", unsafe_allow_html=True)
-    bi_hubs = [
-        "Executive Command Center",
-        "Lead Intelligence Hub",
-        "Data Arbitrage Hub",
-        "Jorge War Room",
-        "Agent ROI Dashboard",
-        "Real-Time Intelligence",
-        "Billing Analytics",
-        "Marketplace Management",
-        "Ops & Optimization",
-        "Claude Cost Tracking"
-    ]
-    
-    st.markdown("<div style='font-size: 0.7rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.15em; margin-top: 15px; margin-bottom: 8px; font-weight: 700;'>Autonomous Agents</div>", unsafe_allow_html=True)
-    agent_hubs = [
-        "Swarm Intelligence",
-        "Proactive Intelligence",
-        "Voice Claude",
-        "Voice AI Assistant",
-        "Sales Copilot",
-        "Deep Research"
-    ]
-    
-    st.markdown("<div style='font-size: 0.7rem; color: #8B949E; text-transform: uppercase; letter-spacing: 0.15em; margin-top: 15px; margin-bottom: 8px; font-weight: 700;'>Customer Journey</div>", unsafe_allow_html=True)
-    journey_hubs = [
-        "Buyer Journey Hub",
-        "Seller Journey Hub",
-        "Automation Studio",
-        "SMS Compliance Dashboard",
-        "Bot Health Monitoring",
-        "Bot Coordination Flow",
-        "Lead Bot Sequences",
-        "Bot Testing & Validation"
-    ]
-    
-    hub_options = bi_hubs + agent_hubs + journey_hubs
-    
+    # Enhanced Sidebar Navigation with Organized Categories
+
+    # Initialize hub categories with icons and improved organization
+    hub_categories = {
+        "🎯 Core Operations": [
+            "Executive Command Center",
+            "Lead Intelligence Hub",
+            "Jorge War Room",
+            "Real-Time Intelligence"
+        ],
+        "📊 Analytics & Insights": [
+            "Data Arbitrage Hub",
+            "Agent ROI Dashboard",
+            "Billing Analytics",
+            "Marketplace Management",
+            "Ops & Optimization",
+            "Claude Cost Tracking"
+        ],
+        "🤖 AI & Automation": [
+            "Swarm Intelligence",
+            "Proactive Intelligence",
+            "Voice Claude",
+            "Voice AI Assistant",
+            "Sales Copilot",
+            "Deep Research",
+            "Automation Studio"
+        ],
+        "🛠️ Bot Management": [
+            "Bot Health Monitoring",
+            "Bot Coordination Flow",
+            "Lead Bot Sequences",
+            "Bot Testing & Validation",
+            "SMS Compliance Dashboard"
+        ],
+        "🏡 Customer Journey": [
+            "Buyer Journey Hub",
+            "Seller Journey Hub"
+        ]
+    }
+
+    # Combine all hubs for backward compatibility
+    hub_options = []
+    for category_hubs in hub_categories.values():
+        hub_options.extend(category_hubs)
+
     # Initialize Copilot (Greeting & Guidance)
     try:
         render_project_copilot()
     except Exception as e:
         st.sidebar.error(f"Copilot initialization failed: {e}")
 
-    # Calculate index safely
-    try:
-        default_index = hub_options.index(st.session_state.current_hub)
-    except ValueError:
-        default_index = 0
-    
-    selected_hub = st.radio(
-        "Select Hub:",
-        hub_options,
-        index=default_index,
-        label_visibility="collapsed"
-    )
+    # Navigation header
+    st.markdown("""
+    <div style='
+        font-size: 0.8rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin: 20px 0 15px 0;
+        font-weight: 700;
+        text-align: center;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 8px;
+    '>
+        🚀 Hub Navigator
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Initialize selected hub from session state or default
+    current_hub = st.session_state.get('current_hub', 'Executive Command Center')
+
+    # Find which category contains the current hub and determine which should be expanded by default
+    current_category = None
+    for category_name, category_hubs in hub_categories.items():
+        if current_hub in category_hubs:
+            current_category = category_name
+            break
+
+    # Render categorized navigation using expanders
+    selected_hub = current_hub  # Initialize selected_hub
+
+    for category_name, category_hubs in hub_categories.items():
+        # Auto-expand the category containing the current hub
+        expanded = (category_name == current_category)
+
+        with st.expander(f"{category_name} ({len(category_hubs)})", expanded=expanded):
+            # Add category description
+            descriptions = {
+                "🎯 Core Operations": "Executive dashboards and strategic intelligence",
+                "📊 Analytics & Insights": "Business intelligence and performance tracking",
+                "🤖 AI & Automation": "Intelligent agents and automation systems",
+                "🛠️ Bot Management": "Bot monitoring, testing and compliance",
+                "🏡 Customer Journey": "Buyer and seller experience optimization"
+            }
+
+            st.markdown(f"*{descriptions.get(category_name, '')}*")
+
+            # Create radio buttons for hubs in this category
+            if current_hub in category_hubs:
+                default_index = category_hubs.index(current_hub)
+            else:
+                default_index = 0
+
+            category_selection = st.radio(
+                f"Select from {category_name}:",
+                category_hubs,
+                index=default_index if current_hub in category_hubs else None,
+                key=f"category_{category_name}",
+                label_visibility="collapsed"
+            )
+
+            # Update selected_hub if this category's selection changed
+            if category_selection != current_hub and category_selection in category_hubs:
+                selected_hub = category_selection
+
+    # Fallback: if no selection made, maintain current hub
+    if selected_hub not in hub_options:
+        selected_hub = current_hub
     
     # Update session state and notify Claude of context change
     if st.session_state.current_hub != selected_hub:

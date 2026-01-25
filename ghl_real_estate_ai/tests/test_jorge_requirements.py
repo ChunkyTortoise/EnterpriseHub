@@ -14,20 +14,22 @@ class TestJorgeLeadScoring:
         """Set up test fixtures."""
         self.scorer = LeadScorer()
 
-    def test_cold_lead_zero_questions(self):
+    @pytest.mark.asyncio
+    async def test_cold_lead_zero_questions(self):
         """Test that 0 questions answered = cold lead."""
         context = {
             "extracted_preferences": {},
             "conversation_history": []
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         classification = self.scorer.classify(score)
         
         assert score == 0, "Should have 0 questions answered"
         assert classification == "cold", "0 questions should be classified as cold"
 
-    def test_cold_lead_one_question(self):
+    @pytest.mark.asyncio
+    async def test_cold_lead_one_question(self):
         """Test that 1 question answered = cold lead."""
         context = {
             "extracted_preferences": {
@@ -36,13 +38,14 @@ class TestJorgeLeadScoring:
             "conversation_history": []
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         classification = self.scorer.classify(score)
         
         assert score == 1, "Should have 1 question answered"
         assert classification == "cold", "1 question should be classified as cold"
 
-    def test_warm_lead_two_questions(self):
+    @pytest.mark.asyncio
+    async def test_warm_lead_two_questions(self):
         """Test that 2 questions answered = warm lead."""
         context = {
             "extracted_preferences": {
@@ -52,13 +55,14 @@ class TestJorgeLeadScoring:
             "conversation_history": []
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         classification = self.scorer.classify(score)
         
         assert score == 2, "Should have 2 questions answered"
         assert classification == "warm", "2 questions should be classified as warm"
 
-    def test_hot_lead_three_questions(self):
+    @pytest.mark.asyncio
+    async def test_hot_lead_three_questions(self):
         """Test that 3 questions answered = hot lead."""
         context = {
             "extracted_preferences": {
@@ -69,13 +73,14 @@ class TestJorgeLeadScoring:
             "conversation_history": []
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         classification = self.scorer.classify(score)
         
         assert score == 3, "Should have 3 questions answered"
         assert classification == "hot", "3 questions should be classified as hot"
 
-    def test_hot_lead_four_questions(self):
+    @pytest.mark.asyncio
+    async def test_hot_lead_four_questions(self):
         """Test that 4+ questions answered = hot lead."""
         context = {
             "extracted_preferences": {
@@ -87,13 +92,14 @@ class TestJorgeLeadScoring:
             "conversation_history": []
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         classification = self.scorer.classify(score)
         
         assert score == 4, "Should have 4 questions answered"
         assert classification == "hot", "4 questions should be classified as hot"
 
-    def test_all_seven_questions(self):
+    @pytest.mark.asyncio
+    async def test_all_seven_questions(self):
         """Test that all 7 questions can be counted."""
         context = {
             "extracted_preferences": {
@@ -108,13 +114,14 @@ class TestJorgeLeadScoring:
             "conversation_history": []
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         classification = self.scorer.classify(score)
         
         assert score == 7, "Should have all 7 questions answered"
         assert classification == "hot", "7 questions should be classified as hot"
 
-    def test_property_requirements_bedrooms_only(self):
+    @pytest.mark.asyncio
+    async def test_property_requirements_bedrooms_only(self):
         """Test that bedrooms alone counts as property requirement."""
         context = {
             "extracted_preferences": {
@@ -122,10 +129,11 @@ class TestJorgeLeadScoring:
             }
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         assert score == 1, "Bedrooms should count as 1 question"
 
-    def test_property_requirements_bathrooms_only(self):
+    @pytest.mark.asyncio
+    async def test_property_requirements_bathrooms_only(self):
         """Test that bathrooms alone counts as property requirement."""
         context = {
             "extracted_preferences": {
@@ -133,10 +141,11 @@ class TestJorgeLeadScoring:
             }
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         assert score == 1, "Bathrooms should count as 1 question"
 
-    def test_property_requirements_must_haves_only(self):
+    @pytest.mark.asyncio
+    async def test_property_requirements_must_haves_only(self):
         """Test that must_haves alone counts as property requirement."""
         context = {
             "extracted_preferences": {
@@ -144,10 +153,11 @@ class TestJorgeLeadScoring:
             }
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         assert score == 1, "Must-haves should count as 1 question"
 
-    def test_property_requirements_combined_counts_once(self):
+    @pytest.mark.asyncio
+    async def test_property_requirements_combined_counts_once(self):
         """Test that beds + baths + must-haves only counts as 1 question."""
         context = {
             "extracted_preferences": {
@@ -157,10 +167,11 @@ class TestJorgeLeadScoring:
             }
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         assert score == 1, "Combined property requirements should count as 1 question"
 
-    def test_calculate_with_reasoning_includes_question_count(self):
+    @pytest.mark.asyncio
+    async def test_calculate_with_reasoning_includes_question_count(self):
         """Test that calculate_with_reasoning includes question count."""
         context = {
             "extracted_preferences": {
@@ -170,7 +181,7 @@ class TestJorgeLeadScoring:
             }
         }
         
-        result = self.scorer.calculate_with_reasoning(context)
+        result = await self.scorer.calculate_with_reasoning(context)
         
         assert result["score"] == 3
         assert result["questions_answered"] == 3
@@ -179,13 +190,14 @@ class TestJorgeLeadScoring:
         assert "Location" in result["reasoning"]
         assert "Timeline" in result["reasoning"]
 
-    def test_no_questions_answered_reasoning(self):
+    @pytest.mark.asyncio
+    async def test_no_questions_answered_reasoning(self):
         """Test reasoning when no questions are answered."""
         context = {
             "extracted_preferences": {}
         }
         
-        result = self.scorer.calculate_with_reasoning(context)
+        result = await self.scorer.calculate_with_reasoning(context)
         
         assert result["score"] == 0
         assert result["classification"] == "cold"
@@ -247,7 +259,8 @@ class TestJorgeScenarios:
         """Set up test fixtures."""
         self.scorer = LeadScorer()
 
-    def test_seller_with_home_condition(self):
+    @pytest.mark.asyncio
+    async def test_seller_with_home_condition(self):
         """Test seller scenario with home condition question."""
         context = {
             "extracted_preferences": {
@@ -258,11 +271,12 @@ class TestJorgeScenarios:
             }
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         assert score == 4, "Should count home_condition question"
         assert self.scorer.classify(score) == "hot"
 
-    def test_buyer_without_home_condition(self):
+    @pytest.mark.asyncio
+    async def test_buyer_without_home_condition(self):
         """Test buyer scenario (no home condition)."""
         context = {
             "extracted_preferences": {
@@ -274,11 +288,12 @@ class TestJorgeScenarios:
             }
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         assert score == 5, "Should count 5 questions (no home_condition for buyer)"
         assert self.scorer.classify(score) == "hot"
 
-    def test_engaged_lead_with_motivation(self):
+    @pytest.mark.asyncio
+    async def test_engaged_lead_with_motivation(self):
         """Test lead who shares motivation."""
         context = {
             "extracted_preferences": {
@@ -288,7 +303,7 @@ class TestJorgeScenarios:
             }
         }
         
-        score = self.scorer.calculate(context)
+        score = await self.scorer.calculate(context)
         assert score == 3, "Should count motivation question"
         assert self.scorer.classify(score) == "hot"
 
