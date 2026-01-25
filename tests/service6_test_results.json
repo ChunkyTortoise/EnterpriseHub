@@ -1,0 +1,32 @@
+{
+  "total_tests": 0,
+  "total_passed": 0,
+  "total_failed": 0,
+  "total_skipped": 0,
+  "total_duration_seconds": 0.6016771793365479,
+  "overall_coverage_percentage": null,
+  "test_results": [
+    {
+      "mode": "unit",
+      "test_file": "unit_tests",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "duration_seconds": 0.6015059947967529,
+      "coverage_percentage": null,
+      "errors": [
+        "ERROR: usage: python -m pytest [options] [file_or_dir] [file_or_dir] [...]",
+        "python -m pytest: error: unrecognized arguments: --timeout"
+      ],
+      "warnings": []
+    }
+  ],
+  "performance_metrics": {
+    "total_execution_time": 0.6015059947967529,
+    "average_test_time": 0.6015059947967529,
+    "fastest_mode": "unit",
+    "slowest_mode": "unit",
+    "tests_per_second": 0.0
+  },
+  "security_findings": null
+}

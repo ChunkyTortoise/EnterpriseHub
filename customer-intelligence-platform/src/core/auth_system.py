@@ -512,11 +512,49 @@ class AuthService:
 auth_service = None
 
 def get_auth_service() -> AuthService:
-    """Get auth service instance."""
+    """
+    Get auth service instance.
+
+    SECURITY: Enforces fail-fast validation for JWT secrets.
+    No weak fallback secrets are permitted in any environment.
+    """
     global auth_service
     if auth_service is None:
         import os
-        secret_key = os.getenv("JWT_SECRET_KEY", "development-secret-key-change-in-production")
+        import sys
+
+        secret_key = os.getenv("JWT_SECRET_KEY")
+        environment = os.getenv("ENVIRONMENT", "development").lower()
+
+        # Production: Fail fast if no secret or weak secret
+        if environment == "production":
+            if not secret_key:
+                logger.critical("SECURITY: JWT_SECRET_KEY required in production")
+                print("=" * 60)
+                print("CRITICAL SECURITY ERROR: JWT_SECRET_KEY must be set in production")
+                print("=" * 60)
+                print("Generate a secure secret: openssl rand -hex 32")
+                print("=" * 60)
+                sys.exit(1)
+            if len(secret_key) < 32:
+                logger.critical(f"SECURITY: JWT_SECRET_KEY too weak ({len(secret_key)} chars)")
+                print(f"SECURITY ERROR: JWT_SECRET_KEY must be >= 32 characters (got {len(secret_key)})")
+                sys.exit(1)
+        else:
+            # Development: Allow missing secret but generate temporary one with warning
+            if not secret_key:
+                import secrets as secrets_module
+                secret_key = secrets_module.token_urlsafe(32)
+                logger.warning(
+                    "JWT_SECRET_KEY not set - using temporary secret for development. "
+                    "This secret will change on restart. Set JWT_SECRET_KEY in .env for persistence."
+                )
+            elif len(secret_key) < 32:
+                logger.warning(
+                    f"JWT_SECRET_KEY is only {len(secret_key)} characters. "
+                    "For security, use at least 32 characters (openssl rand -hex 32)"
+                )
+
         auth_service = AuthService(secret_key)
     return auth_service
 
