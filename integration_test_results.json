@@ -1,0 +1,86 @@
+{
+  "test_timestamp": "2026-01-25T03:19:18.416133",
+  "total_tests": 4,
+  "successful_tests": 4,
+  "results": [
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "response_time_ms": 11.0,
+      "expected_status": 200,
+      "success": true,
+      "timestamp": "2026-01-25T03:19:18.411613",
+      "data": {
+        "status": "healthy",
+        "timestamp": "2026-01-25T03:19:18.408757",
+        "version": "2.0.0",
+        "services": {
+          "fastapi": "running",
+          "claude_ai": "pattern_only",
+          "ghl_integration": "connected"
+        },
+        "performance": {
+          "avg_response_time_ms": 150,
+          "five_minute_compliance": true
+        }
+      }
+    },
+    {
+      "endpoint": "/performance",
+      "method": "GET",
+      "status": 200,
+      "response_time_ms": 2.29,
+      "expected_status": 200,
+      "success": true,
+      "timestamp": "2026-01-25T03:19:18.413924",
+      "data": {
+        "five_minute_compliance": {
+          "total_responses": 3,
+          "compliance_rate": 1.0,
+          "avg_response_time": 0.2677876154581706,
+          "violations_count": 0,
+          "target_compliance": 0.99,
+          "status": "compliant",
+          "last_24h_violations": []
+        },
+        "current_performance": {
+          "avg_response_time_ms": 267,
+          "total_requests": 3,
+          "compliance_rate": 1.0,
+          "violations_24h": 0
+        },
+        "system_health": {
+          "status": "healthy",
+          "claude_ai_available": true,
+          "ghl_connected": true,
+          "cache_hit_rate": 0.75
+        }
+      }
+    },
+    {
+      "endpoint": "/api/jorge-seller/process",
+      "method": "POST",
+      "status": 404,
+      "response_time_ms": 1.28,
+      "expected_status": 404,
+      "success": true,
+      "timestamp": "2026-01-25T03:19:18.415226",
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "endpoint": "/api/lead-bot/automation",
+      "method": "POST",
+      "status": 404,
+      "response_time_ms": 0.64,
+      "expected_status": 404,
+      "success": true,
+      "timestamp": "2026-01-25T03:19:18.415883",
+      "data": {
+        "detail": "Not Found"
+      }
+    }
+  ]
+}

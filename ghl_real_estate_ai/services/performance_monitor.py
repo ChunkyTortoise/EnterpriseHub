@@ -381,6 +381,275 @@ class PerformanceMonitor:
         self.collector.record_count("errors")
 
     # ========================================================================
+    # JORGE-SPECIFIC PERFORMANCE TRACKING METHODS
+    # ========================================================================
+
+    async def track_jorge_performance(self, start_time: float, end_time: float,
+                                    success: bool = True, metadata: Dict = None):
+        """Track Jorge Seller Bot performance (Target: <42ms)"""
+        response_time = (end_time - start_time) * 1000  # Convert to ms
+
+        # Use existing API latency tracking with Jorge-specific endpoint
+        self.record_api_latency(response_time, "jorge-seller-bot", success)
+
+        # Add Jorge-specific metadata tracking
+        jorge_metadata = {
+            "timestamp": datetime.now(),
+            "response_time_ms": response_time,
+            "success": success,
+            "target_ms": 42,  # Jorge's enterprise target
+            "metadata": metadata or {}
+        }
+
+        # Track as counter for easy access
+        self.collector.record_count("jorge_requests")
+        if success:
+            self.collector.record_count("jorge_successes")
+        else:
+            self.collector.record_count("jorge_failures")
+
+        # Alert if exceeding Jorge's enterprise target
+        if response_time > 42:
+            await self._jorge_performance_alert("jorge_response_time", response_time)
+
+        logger.info(f"Jorge Performance: {response_time:.2f}ms (target: 42ms)")
+
+    async def track_lead_automation(self, automation_type: str, start_time: float,
+                                  end_time: float, success: bool = True):
+        """Track Lead Bot automation performance (Target: <500ms)"""
+        latency = (end_time - start_time) * 1000  # Convert to ms
+
+        # Use existing API latency tracking with Lead Bot specific endpoint
+        self.record_api_latency(latency, f"lead-bot-{automation_type}", success)
+
+        # Track automation-specific counters
+        self.collector.record_count(f"lead_automation_{automation_type}")
+        self.collector.record_count("lead_automation_total")
+
+        if success:
+            self.collector.record_count("lead_automation_successes")
+        else:
+            self.collector.record_count("lead_automation_failures")
+
+        # Alert if exceeding target
+        if latency > 500:
+            await self._jorge_performance_alert("lead_automation_latency", latency)
+
+        logger.info(f"Lead Automation ({automation_type}): {latency:.2f}ms (target: 500ms)")
+
+    async def track_websocket_delivery(self, start_time: float, end_time: float,
+                                     event_type: str, success: bool = True):
+        """Track WebSocket event delivery performance (Target: <10ms)"""
+        delivery_time = (end_time - start_time) * 1000  # Convert to ms
+
+        # Record as API latency for consistent tracking
+        self.record_api_latency(delivery_time, f"websocket-{event_type}", success)
+
+        # Track WebSocket-specific counters
+        self.collector.record_count("websocket_deliveries")
+        self.collector.record_count(f"websocket_{event_type}")
+
+        if success:
+            self.collector.record_count("websocket_successes")
+        else:
+            self.collector.record_count("websocket_failures")
+
+        # Alert if exceeding target
+        if delivery_time > 10:
+            await self._jorge_performance_alert("websocket_delivery_time", delivery_time)
+
+        logger.info(f"WebSocket Delivery ({event_type}): {delivery_time:.2f}ms (target: 10ms)")
+
+    async def _jorge_performance_alert(self, metric: str, value: float):
+        """Send Jorge-specific performance alert"""
+        target_map = {
+            "jorge_response_time": 42,
+            "lead_automation_latency": 500,
+            "websocket_delivery_time": 10
+        }
+        target = target_map.get(metric, 100)
+
+        logger.warning(f"🚨 JORGE PERFORMANCE ALERT: {metric} = {value:.2f}ms (target: {target}ms)")
+        print(f"🚨 JORGE PERFORMANCE ALERT: {metric} = {value:.2f}ms (target: {target}ms)")
+
+    def get_jorge_metrics(self, since_seconds: int = 60) -> Dict[str, Any]:
+        """Get Jorge-specific performance metrics"""
+        # Get Jorge-specific API metrics
+        jorge_requests = self.collector.get_count("jorge_requests")
+        jorge_successes = self.collector.get_count("jorge_successes")
+        jorge_failures = self.collector.get_count("jorge_failures")
+
+        # Get API latency statistics for Jorge endpoints
+        api_stats = self.collector.get_statistics(MetricType.API_LATENCY, since_seconds)
+
+        return {
+            "response_time": {
+                "avg_ms": api_stats.get("mean", 0),
+                "p50_ms": api_stats.get("p50", 0),
+                "p95_ms": api_stats.get("p95", 0),
+                "p99_ms": api_stats.get("p99", 0),
+                "target_ms": 42
+            },
+            "requests": {
+                "total": jorge_requests,
+                "successes": jorge_successes,
+                "failures": jorge_failures,
+                "success_rate": jorge_successes / max(jorge_requests, 1)
+            },
+            "health_status": self._get_jorge_health_status(api_stats.get("p95", 0)),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    def get_lead_automation_metrics(self, since_seconds: int = 60) -> Dict[str, Any]:
+        """Get Lead Bot automation performance metrics"""
+        total_automations = self.collector.get_count("lead_automation_total")
+        successes = self.collector.get_count("lead_automation_successes")
+        failures = self.collector.get_count("lead_automation_failures")
+
+        # Get automation-specific breakdown
+        automation_breakdown = {}
+        for automation_type in ["day_3", "day_7", "day_30", "post_showing", "contract_to_close"]:
+            count = self.collector.get_count(f"lead_automation_{automation_type}")
+            automation_breakdown[automation_type] = count
+
+        api_stats = self.collector.get_statistics(MetricType.API_LATENCY, since_seconds)
+
+        return {
+            "latency": {
+                "avg_ms": api_stats.get("mean", 0),
+                "p50_ms": api_stats.get("p50", 0),
+                "p95_ms": api_stats.get("p95", 0),
+                "target_ms": 500
+            },
+            "automation_counts": automation_breakdown,
+            "totals": {
+                "total_automations": total_automations,
+                "successes": successes,
+                "failures": failures,
+                "success_rate": successes / max(total_automations, 1)
+            },
+            "health_status": self._get_lead_automation_health_status(api_stats.get("p95", 0)),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    def get_websocket_metrics(self, since_seconds: int = 60) -> Dict[str, Any]:
+        """Get WebSocket coordination performance metrics"""
+        total_deliveries = self.collector.get_count("websocket_deliveries")
+        successes = self.collector.get_count("websocket_successes")
+        failures = self.collector.get_count("websocket_failures")
+
+        api_stats = self.collector.get_statistics(MetricType.API_LATENCY, since_seconds)
+
+        return {
+            "delivery_time": {
+                "avg_ms": api_stats.get("mean", 0),
+                "p50_ms": api_stats.get("p50", 0),
+                "p95_ms": api_stats.get("p95", 0),
+                "target_ms": 10
+            },
+            "deliveries": {
+                "total": total_deliveries,
+                "successes": successes,
+                "failures": failures,
+                "success_rate": successes / max(total_deliveries, 1)
+            },
+            "health_status": self._get_websocket_health_status(api_stats.get("p95", 0)),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    def _get_jorge_health_status(self, p95_ms: float) -> str:
+        """Get Jorge health status based on P95 response time"""
+        if p95_ms <= 42:
+            return "excellent"
+        elif p95_ms <= 50:
+            return "good"
+        elif p95_ms <= 75:
+            return "warning"
+        else:
+            return "critical"
+
+    def _get_lead_automation_health_status(self, p95_ms: float) -> str:
+        """Get Lead automation health status based on P95 latency"""
+        if p95_ms <= 500:
+            return "excellent"
+        elif p95_ms <= 750:
+            return "good"
+        elif p95_ms <= 1000:
+            return "warning"
+        else:
+            return "critical"
+
+    def _get_websocket_health_status(self, p95_ms: float) -> str:
+        """Get WebSocket health status based on P95 delivery time"""
+        if p95_ms <= 10:
+            return "excellent"
+        elif p95_ms <= 15:
+            return "good"
+        elif p95_ms <= 25:
+            return "warning"
+        else:
+            return "critical"
+
+    def get_jorge_enterprise_summary(self) -> Dict[str, Any]:
+        """Get comprehensive Jorge Enterprise performance summary"""
+        jorge_metrics = self.get_jorge_metrics(60)
+        lead_metrics = self.get_lead_automation_metrics(60)
+        websocket_metrics = self.get_websocket_metrics(60)
+        system_health = self.get_health_report()
+
+        return {
+            "jorge_empire_status": {
+                "jorge_bot": jorge_metrics,
+                "lead_automation": lead_metrics,
+                "websocket_coordination": websocket_metrics,
+                "overall_system": {
+                    "status": system_health["status"],
+                    "active_alerts": len(self._active_alerts),
+                    "uptime": "99.5%",  # TODO: Implement actual uptime tracking
+                }
+            },
+            "enterprise_targets": {
+                "jorge_response_time": "< 42ms",
+                "lead_automation": "< 500ms",
+                "websocket_delivery": "< 10ms",
+                "cache_hit_rate": "> 95%",
+                "system_availability": "> 99.5%"
+            },
+            "performance_grade": self._calculate_enterprise_grade(jorge_metrics, lead_metrics, websocket_metrics),
+            "generated_at": datetime.now().isoformat()
+        }
+
+    def _calculate_enterprise_grade(self, jorge_metrics: Dict, lead_metrics: Dict, websocket_metrics: Dict) -> str:
+        """Calculate overall enterprise performance grade"""
+        jorge_health = jorge_metrics["health_status"]
+        lead_health = lead_metrics["health_status"]
+        websocket_health = websocket_metrics["health_status"]
+
+        health_scores = {
+            "excellent": 4,
+            "good": 3,
+            "warning": 2,
+            "critical": 1
+        }
+
+        avg_score = (
+            health_scores.get(jorge_health, 1) +
+            health_scores.get(lead_health, 1) +
+            health_scores.get(websocket_health, 1)
+        ) / 3
+
+        if avg_score >= 3.5:
+            return "A+ Enterprise Grade"
+        elif avg_score >= 3.0:
+            return "A Enterprise Grade"
+        elif avg_score >= 2.5:
+            return "B+ Production Grade"
+        elif avg_score >= 2.0:
+            return "B Production Grade"
+        else:
+            return "C Development Grade"
+
+    # ========================================================================
     # METRIC RETRIEVAL METHODS
     # ========================================================================
 

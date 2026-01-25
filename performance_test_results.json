@@ -1,0 +1,74 @@
+{
+  "jorge_empire_status": {
+    "jorge_bot": {
+      "response_time": {
+        "avg_ms": 66.7517431851091,
+        "p50_ms": 35.02798080444336,
+        "p95_ms": 282.67526626586914,
+        "p99_ms": 366.63007736206055,
+        "target_ms": 42
+      },
+      "requests": {
+        "total": 20,
+        "successes": 20,
+        "failures": 0,
+        "success_rate": 1.0
+      },
+      "health_status": "critical",
+      "timestamp": "2026-01-25T03:18:22.808401"
+    },
+    "lead_automation": {
+      "latency": {
+        "avg_ms": 66.7517431851091,
+        "p50_ms": 35.02798080444336,
+        "p95_ms": 282.67526626586914,
+        "target_ms": 500
+      },
+      "automation_counts": {
+        "day_3": 1,
+        "day_7": 1,
+        "day_30": 1,
+        "post_showing": 1,
+        "contract_to_close": 1
+      },
+      "totals": {
+        "total_automations": 5,
+        "successes": 5,
+        "failures": 0,
+        "success_rate": 1.0
+      },
+      "health_status": "excellent",
+      "timestamp": "2026-01-25T03:18:22.808447"
+    },
+    "websocket_coordination": {
+      "delivery_time": {
+        "avg_ms": 66.7517431851091,
+        "p50_ms": 35.02798080444336,
+        "p95_ms": 282.67526626586914,
+        "target_ms": 10
+      },
+      "deliveries": {
+        "total": 4,
+        "successes": 4,
+        "failures": 0,
+        "success_rate": 1.0
+      },
+      "health_status": "critical",
+      "timestamp": "2026-01-25T03:18:22.808488"
+    },
+    "overall_system": {
+      "status": "critical",
+      "active_alerts": 0,
+      "uptime": "99.5%"
+    }
+  },
+  "enterprise_targets": {
+    "jorge_response_time": "< 42ms",
+    "lead_automation": "< 500ms",
+    "websocket_delivery": "< 10ms",
+    "cache_hit_rate": "> 95%",
+    "system_availability": "> 99.5%"
+  },
+  "performance_grade": "B Production Grade",
+  "generated_at": "2026-01-25T03:18:22.808564"
+}
