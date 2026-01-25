@@ -21,6 +21,7 @@ from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -85,12 +86,7 @@ class ClaudeAssistantOptimized:
         self._initialize_state()
 
         # PERFORMANCE: Warm demo cache on initialization
-        try:
-            loop = asyncio.get_running_loop()
-            loop.create_task(self._warm_demo_cache_background())
-        except RuntimeError:
-            # No running event loop found during initialization, skipping background cache warming
-            logger.debug("No running event loop found during initialization, skipping background cache warming")
+        safe_create_task(self._warm_demo_cache_background())
 
     def _initialize_state(self):
         if 'assistant_greeted' not in st.session_state:
@@ -150,12 +146,7 @@ class ClaudeAssistantOptimized:
             self._market_context_cache_minimal[target_market_id] = minimal_context
 
             # PERFORMANCE: Load full context in background (don't await)
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(self.get_market_context_full(target_market_id))
-            except RuntimeError:
-                # No running event loop, full context will be loaded on demand or when loop starts
-                pass
+            safe_create_task(self.get_market_context_full(target_market_id))
 
             return minimal_context
 

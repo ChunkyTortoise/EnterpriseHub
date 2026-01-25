@@ -18,7 +18,7 @@ import json
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional
 import sys
 import os
@@ -83,9 +83,8 @@ except ImportError:
 
 # Import Phase 8 Property Visualizer
 try:
-    import streamlit
-from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
-.components.v1 as components
+    import streamlit.components.v1 as components
+    from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
     from ghl_real_estate_ai.services.property_visualizer import PropertyVisualizer
     PROPERTY_VISUALIZER_AVAILABLE = True
 except ImportError:
@@ -155,7 +154,7 @@ class JorgeAPIClient:
                     "claude_status": "healthy",
                     "overall_uptime": 99.2
                 },
-                "last_updated": datetime.now().isoformat()
+                "last_updated": datetime.now(timezone.utc).isoformat()
             }
         except Exception as e:
             # Fallback to defaults
@@ -165,7 +164,7 @@ class JorgeAPIClient:
                 "client_retention": {"total_clients": 0, "engagement_score": 0, "retention_rate": 0, "referrals_this_month": 0, "lifetime_value": 0},
                 "market_predictions": {"active_markets": 0, "prediction_accuracy": 0, "opportunities_found": 0, "avg_roi_potential": 0},
                 "integration_health": {"ghl_status": "error", "claude_status": "healthy", "overall_uptime": 0},
-                "last_updated": datetime.now().isoformat()
+                "last_updated": datetime.now(timezone.utc).isoformat()
             }
     
     async def get_voice_analytics(self, days: int = 7) -> Dict[str, Any]:
@@ -224,7 +223,7 @@ class JorgeAPIClient:
     async def start_voice_call(self, phone_number: str, caller_name: str = None) -> Dict[str, str]:
         """Start a new voice call."""
         return {
-            "call_id": f"call_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            "call_id": f"call_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
             "status": "active",
             "message": "Voice AI call started successfully"
         }
@@ -303,20 +302,22 @@ class JorgeAPIClient:
                     "intent_profile": None,
                     "current_step": step,
                     "engagement_status": "ghosted",
-                    "last_interaction_time": datetime.now() - timedelta(days=3),
+                    "last_interaction_time": datetime.now(timezone.utc) - timedelta(days=3),
                     "stall_breaker_attempted": False,
                     "cma_generated": False
                 }
                 
                 # We invoke the workflow. Since it's a LangGraph, we can run it 
                 # (simplified here since we want to see a specific node result)
-                # For simulation, we'll manually call the node matching the step
+                # simulation, we'll manually call the node matching the step
                 if step == "day_3":
-                    result = bot.send_day_3_sms(state)
+                    result = await bot.send_day_3_sms(state)
                 elif step == "day_7":
                     result = await bot.initiate_day_7_call(state)
                 elif step == "day_14":
-                    result = bot.send_day_14_email(state)
+                    result = await bot.send_day_14_email(state)
+                elif step == "day_30":
+                    result = await bot.send_day_30_nudge(state)
                 else:
                     result = {"current_step": step}
                 
@@ -368,7 +369,7 @@ class JorgeAPIClient:
                 "question_depth_score": 60,
                 "objection_handling_score": 50,
                 "call_acceptance_score": 100,
-                "last_updated": datetime.now().isoformat()
+                "last_updated": datetime.now(timezone.utc).isoformat()
             },
             "next_best_action": "Route to Jorge (Voice Call)",
             "stall_breaker_suggested": None
@@ -568,7 +569,14 @@ def render_followup_orchestrator(api_client: JorgeAPIClient):
         
         if st.button("🚀 EXECUTE CURRENT STEP", type="primary", use_container_width=True):
             with st.spinner(f"Executing {simulation_step} for {target_lead}..."):
-                # In production, this would call LeadBotWorkflow().workflow.ainvoke(...)
+                # Get lead details for simulation
+                pipeline = run_async(api_client.get_lead_pipeline())
+                lead_data = next((l for l in pipeline if l['name'] == target_lead), {"name": target_lead})
+                
+                # Run the simulation
+                result = run_async(api_client.run_followup_simulation(lead_data, simulation_step))
+                st.session_state['followup_simulation_result'] = result
+                
                 st.success(f"✅ {simulation_step.upper()} successfully executed!")
                 st.toast(f"Sequence advanced for {target_lead}", icon="👻")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -577,15 +585,30 @@ def render_followup_orchestrator(api_client: JorgeAPIClient):
         st.markdown('<div class="elite-card" style="padding: 1.5rem;">', unsafe_allow_html=True)
         st.subheader("📊 Sequence Logic & Content")
         
-        if simulation_step == "day_3":
-            st.markdown("**Channel:** SMS // **Tone:** Soft Check-in")
-            st.info("💬 'Hi {Name}—just following up on your property. No pressure, but we have qualified buyers interested...'")
-        elif simulation_step == "day_7":
-            st.markdown("**Channel:** Voice AI // **Tone:** Jorge Stall-Breaker")
-            st.warning("🔊 'Hey {Name}, I know I've reached out, but market conditions are shifting. Would 15 mins make sense?'")
-        elif simulation_step == "day_14":
-            st.markdown("**Channel:** Email // **Tone:** Value Injection")
-            st.success("📄 [CMA Snapshot] 'Zillow's estimate is off by $50K. Here is the real analysis...'")
+        sim_result = st.session_state.get('followup_simulation_result')
+        
+        if sim_result and 'response_content' in sim_result:
+            st.markdown(f"**Generated Response (Real-Time AI):**")
+            st.info(sim_result['response_content'])
+            
+            # Display metadata if available
+            if sim_result.get('optimized_timing_applied'):
+                st.caption("✅ Behavioral timing optimization applied")
+            if sim_result.get('personalization_applied'):
+                st.caption("✅ Personality adaptation applied")
+        else:
+            if simulation_step == "day_3":
+                st.markdown("**Channel:** SMS // **Tone:** Soft Check-in")
+                st.info("💬 'Hi {Name}—just following up on your property. No pressure, but we have qualified buyers interested...'")
+            elif simulation_step == "day_7":
+                st.markdown("**Channel:** Voice AI // **Tone:** Jorge Stall-Breaker")
+                st.warning("🔊 'Hey {Name}, I know I've reached out, but market conditions are shifting. Would 15 mins make sense?'")
+            elif simulation_step == "day_14":
+                st.markdown("**Channel:** Email // **Tone:** Value Injection")
+                st.success("📄 [CMA Snapshot] 'Zillow's estimate is off by $50K. Here is the real analysis...'")
+            elif simulation_step == "day_30":
+                st.markdown("**Channel:** SMS // **Tone:** Final Nudge")
+                st.error("💬 'Hi {Name}, still interested in selling or should I close the file?'")
         
         # Timeline view
         st.divider()
@@ -649,7 +672,7 @@ def render_whisper_mode():
                 st.session_state.global_decisions.append({
                     "action": "CMA Injection",
                     "why": "Countering price objection with real-time comp data.",
-                    "time": datetime.now().strftime("%H:%M:%S")
+                    "time": datetime.now(timezone.utc).strftime("%H:%M:%S")
                 })
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1079,7 +1102,7 @@ def render_phase1_intent_analysis(api_client: JorgeAPIClient):
                      st.session_state.global_decisions.append({
                          "action": "Stall-Breaker Executed",
                          "why": f"Detected stall marker in message. Triggering Jorge-Style response.",
-                         "time": datetime.now().strftime("%H:%M:%S")
+                         "time": datetime.now(timezone.utc).strftime("%H:%M:%S")
                      })
                      st.toast("STALL-BREAKER SENT: Engaging no-BS protocol.", icon="🧠")
             
@@ -1095,7 +1118,7 @@ def render_phase1_intent_analysis(api_client: JorgeAPIClient):
                         st.session_state.global_decisions.append({
                             "action": "CMA Generated",
                             "why": "Zillow-Defense protocol activated for lead valuation.",
-                            "time": datetime.now().strftime("%H:%M:%S")
+                            "time": datetime.now(timezone.utc).strftime("%H:%M:%S")
                         })
                         st.success("✅ Zillow-Defense CMA Ready!")
                 else:

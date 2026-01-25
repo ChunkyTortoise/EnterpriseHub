@@ -319,8 +319,8 @@ async def update_subscription(
 @router.delete("/subscriptions/{subscription_id}", response_model=Dict[str, Any])
 async def cancel_subscription(
     subscription_id: int,
-    immediate: bool = Query(False, description="Cancel immediately vs at period end"),
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
+    immediate: bool = Query(False, description="Cancel immediately vs at period end")
 ):
     """
     Cancel a subscription.

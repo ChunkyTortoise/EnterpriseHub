@@ -80,6 +80,8 @@ def render_journey_orchestrator(lead_id: str, lead_name: str, lead_profile: dict
                             if dispatch_res.get("action") == "priority_handoff":
                                 st.success("✅ PRIORITY HANDOFF DISPATCHED!")
                                 st.balloons()
+                        except Exception as e:
+                            st.error(f"Dispatch failed: {str(e)}")
             else:
                 st.success("🟢 Monitoring Nurture Path")
                 st.caption("Next check in 2.5 hours")

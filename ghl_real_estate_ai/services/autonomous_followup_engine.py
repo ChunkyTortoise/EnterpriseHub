@@ -33,6 +33,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
 from ghl_real_estate_ai.services.database_service import get_database
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -1104,7 +1105,7 @@ class AutonomousFollowUpEngine:
             return
 
         self.is_running = True
-        self.monitor_task = asyncio.create_task(self._monitoring_loop())
+        self.monitor_task = safe_create_task(self._monitoring_loop())
 
         logger.info(
             f"✅ Autonomous Follow-Up Engine started (interval: {self.monitoring_interval_seconds}s)"

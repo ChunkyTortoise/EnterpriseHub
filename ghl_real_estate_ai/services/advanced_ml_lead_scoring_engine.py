@@ -204,7 +204,7 @@ class XGBoostConversionModel(BaseMLModel):
                 
         # Fallback to rule-based prediction (with alerting)
         logger.warning("Using fallback rule-based prediction - ML model not available")
-        await self._alert_ml_degradation("fallback_mode", "Using rule-based scoring instead of ML")
+        await self._alert_ml_degradation("fallback_mode", "Using rule-based scoring instead of ML", 0.0)
         return await self._fallback_prediction(features)
         
     async def explain(self, features: MLFeatureVector) -> Dict[str, float]:
@@ -453,7 +453,7 @@ class FeatureEngineeringPipeline:
             
             # Financial
             budget_clarity_score=financial_features.get('budget_clarity', 0.0),
-            financing_readiness=financial_features.get('financing_readiness', 0.0),
+            financial_readiness=financial_features.get('financing_readiness', 0.0),
             price_sensitivity=financial_features.get('price_sensitivity', 0.0),
             affordability_ratio=financial_features.get('affordability_ratio', 0.0),
             

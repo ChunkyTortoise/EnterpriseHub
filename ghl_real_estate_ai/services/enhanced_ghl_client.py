@@ -24,6 +24,7 @@ from pydantic import BaseModel, validator
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.optimized_cache_service import cached
 from ghl_real_estate_ai.services.database_service import DatabaseService, log_communication
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 
@@ -291,7 +292,7 @@ class EnhancedGHLClient(GHLClient):
     # Enhanced Contact Management
     # ============================================================================
     
-    @CacheService.cached(ttl=300, key_prefix="ghl_contact")
+    @cached(ttl=300, key_prefix="ghl_contact")
     async def get_contact(self, contact_id: str) -> Optional[GHLContact]:
         """Get contact by ID with caching."""
         try:

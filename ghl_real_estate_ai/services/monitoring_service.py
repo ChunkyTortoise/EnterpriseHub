@@ -25,6 +25,7 @@ from pydantic import BaseModel, validator
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -255,7 +256,7 @@ class MonitoringService:
             return
         
         self.monitoring_enabled = True
-        self._monitoring_task = asyncio.create_task(self._monitoring_loop())
+        self._monitoring_task = safe_create_task(self._monitoring_loop())
         logger.info("Monitoring service started")
     
     async def stop_monitoring(self):

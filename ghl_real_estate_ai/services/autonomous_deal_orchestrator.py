@@ -1168,7 +1168,7 @@ class AutonomousDealOrchestrator:
                 "stages": ["contract", "financing", "diligence", "appraisal", "closing"],
                 "critical_milestones": ["investment_financing_approval", "inspection_completion", "appraisal_completion"]
             }
-        ]
+        }
 
     async def _log_orchestration_event(self, transaction_id: str, event_type: str, description: str):
         """Log orchestration events for audit and debugging."""

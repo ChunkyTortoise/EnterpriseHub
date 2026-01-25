@@ -16,6 +16,7 @@ from ghl_real_estate_ai.services.sentiment_drift_engine import SentimentDriftEng
 from ghl_real_estate_ai.services.psychographic_segmentation_engine import PsychographicSegmentationEngine
 from ghl_real_estate_ai.services.market_context_injector import MarketContextInjector
 from ghl_real_estate_ai.services.skill_registry import SkillCategory, skill_registry
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 
 class ClaudeTaskType(Enum):
@@ -347,7 +348,7 @@ class ClaudeOrchestrator:
                     
                     if category == SkillCategory.ACTION:
                         # Trigger background sync to GHL
-                        asyncio.create_task(self._sync_action_to_ghl(
+                        safe_create_task(self._sync_action_to_ghl(
                             tool_name, 
                             tool_call.get("args", {}), 
                             result_text,

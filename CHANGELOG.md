@@ -5,6 +5,19 @@ All notable changes to EnterpriseHub will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.1.0] - 2026-01-25
+
+### Added
+- **Buyer Bot Qualification**: Implemented functional consultative qualification logic in the Buyer Dashboard, enabling real-time lead analysis and "Dossier" generation.
+- **Event Streaming Verification**: Added targeted validation for the `EventStreamingService`, confirming robust Kafka detection and memory-fallback capabilities.
+
+### Fixed
+- **Python 3.14 Compatibility**: Migrated all bot dashboards (`Lead`, `Seller`, `Buyer`) from naive `datetime.now()` to timezone-aware `datetime.now(timezone.utc)`, eliminating runtime warnings.
+- **Advanced ML Lead Scoring Engine**:
+  - Fixed a critical `TypeError` caused by incorrect argument naming (`financing_readiness` -> `financial_readiness`).
+  - Corrected `_alert_ml_degradation` signature to prevent crashes during performance monitoring.
+- **System Stability**: Resolved several logic errors in the ML engine's ensemble combination logic, improving scoring reliability.
+
 ## [6.0.0] - 2026-01-06
 
 ### Added

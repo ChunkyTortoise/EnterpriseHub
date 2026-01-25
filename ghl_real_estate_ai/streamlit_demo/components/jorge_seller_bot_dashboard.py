@@ -18,7 +18,7 @@ import json
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional
 import sys
 import os
@@ -367,7 +367,7 @@ def render_negotiation_simulator():
                 st.session_state.global_decisions.append({
                     "action": "Strategy Pivot",
                     "why": "High aggression detected. Pivoting to empathy-first protocol.",
-                    "time": datetime.now().strftime("%H:%M:%S")
+                    "time": datetime.now(timezone.utc).strftime("%H:%M:%S")
                 })
                 st.toast("PIVOT EXECUTED: Tone recalibrated to 'Empathy-High'", icon="🧠")
     
@@ -458,7 +458,7 @@ def render_seller_negotiation_section(api_client: JorgeSellerAPIClient):
                         st.session_state.global_decisions.append({
                             "action": "Zillow-Defense Active",
                             "why": "Generating competitive CMA to justify higher list price.",
-                            "time": datetime.now().strftime("%H:%M:%S")
+                            "time": datetime.now(timezone.utc).strftime("%H:%M:%S")
                         })
                     st.success("✅ CMA Generated Successfully")
             else:

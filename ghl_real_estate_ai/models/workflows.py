@@ -20,6 +20,7 @@ class LeadFollowUpState(TypedDict):
     # Workflow Status
     current_step: str  # "initial", "day_3_sms", "day_7_call", "day_14_email", "day_30_nudge", "showing_scheduled", "offer_stage", "closing_nurture", "handed_off", "nurture"
     engagement_status: str # "new", "ghosted", "re_engaged", "qualified", "showing_booked", "offer_sent", "under_contract", "closed"
+    response_content: Optional[str]
     
     # Logic Tracking
     last_interaction_time: Optional[datetime]

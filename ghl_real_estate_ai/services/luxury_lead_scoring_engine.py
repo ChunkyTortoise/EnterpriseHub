@@ -26,6 +26,7 @@ import re
 import asyncio
 
 from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.optimized_cache_service import cached
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.core.llm_client import LLMClient
@@ -843,7 +844,7 @@ class LuxuryLeadScoringEngine:
         else:
             return "standard"
 
-    @CacheService.cached(ttl=1800, key_prefix="luxury_lead_batch")
+    @cached(ttl=1800, key_prefix="luxury_lead_batch")
     async def score_lead_batch(self, leads_data: List[Dict[str, Any]]) -> List[LuxuryLead]:
         """Score multiple leads efficiently"""
 

@@ -16,6 +16,13 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any
 import json
 
+# Try to load .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # Add project root to Python path
 sys.path.insert(0, '.')
 

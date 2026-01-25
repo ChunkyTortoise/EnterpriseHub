@@ -30,6 +30,7 @@ import aiohttp
 from abc import ABC, abstractmethod
 
 from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.optimized_cache_service import cached
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.core.llm_client import LLMClient
 
@@ -419,7 +420,7 @@ class LuxuryMarketDataIntegrator:
         except Exception as e:
             print(f"Warning: Could not initialize all data providers: {e}")
 
-    @CacheService.cached(ttl=1800, key_prefix="luxury_property_data")
+    @cached(ttl=1800, key_prefix="luxury_property_data")
     async def get_comprehensive_property_data(self, property_id: str) -> LuxuryPropertyData:
         """Get comprehensive property data from all available sources"""
 
@@ -551,8 +552,8 @@ class LuxuryMarketDataIntegrator:
         Analyze this luxury property for investment potential and provide a score 0-100:
 
         Property Details:
-        - Price: ${property_data.list_price:,.0f} if property_data.list_price else 'Unknown'}
-        - Price/SqFt: ${property_data.price_per_sqft} if property_data.price_per_sqft else 'Unknown'}
+        - Price: {f"${property_data.list_price:,.0f}" if property_data.list_price else "Unknown"}
+        - Price/SqFt: {f"${property_data.price_per_sqft:,.2f}" if property_data.price_per_sqft else "Unknown"}
         - Neighborhood: {property_data.neighborhood}
         - Property Tier: {property_data.property_tier.value if property_data.property_tier else 'Unknown'}
         - Luxury Score: {property_data.luxury_score}/100
@@ -602,7 +603,7 @@ class LuxuryMarketDataIntegrator:
 
         return min(sum(factors), 100) if factors else 50.0
 
-    @CacheService.cached(ttl=3600, key_prefix="luxury_market_analytics")
+    @cached(ttl=3600, key_prefix="luxury_market_analytics")
     async def get_luxury_market_analytics(self, zip_codes: List[str] = None) -> List[MarketAnalytics]:
         """Get comprehensive luxury market analytics"""
 

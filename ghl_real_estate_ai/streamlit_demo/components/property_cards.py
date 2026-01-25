@@ -137,9 +137,8 @@ def render_property_card(property: dict):
     sqft = property.get('sqft', 0)
     match_score = property.get('match_score', 0)
 
-        # Enhanced card styling - Obsidian Edition
-
-        st.markdown(f"""
+    # Enhanced card styling - Obsidian Edition
+    st.markdown(f"""
 
         <div class="holographic-card" style='
 

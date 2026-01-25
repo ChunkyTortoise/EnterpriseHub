@@ -24,9 +24,8 @@ def render_chat_interface(api_base_url: str = "http://localhost:8000/api"):
     """
     st.markdown("### 💬 Claude Intelligence Chat")
 
-        # Enhanced CSS for production chat - Obsidian Edition
-
-        st.markdown("""
+    # Enhanced CSS for production chat - Obsidian Edition
+    st.markdown("""
 
         <style>
 

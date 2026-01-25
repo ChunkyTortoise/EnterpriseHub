@@ -38,102 +38,163 @@ class PropertyVisualizer:
     def generate_threejs_html(self, address: str) -> str:
         """
         Generates the HTML/JS for a Three.js component with interactive controls.
+        Supports GLTF loading with fallback to a procedurally generated house.
         """
         meta = self.get_digital_twin_metadata(address)
         stats = meta.get('stats', {})
+        model_url = meta.get('model_url')
         
         html_template = f"""
 <!DOCTYPE html>
 <html>
 <head>
     <style>
-        body {{ margin: 0; background: transparent; overflow: hidden; font-family: 'Inter', sans-serif; }}
+        body {{ margin: 0; background: transparent; overflow: hidden; font-family: 'Space Grotesk', sans-serif; }}
         #container {{ width: 100%; height: 350px; cursor: move; border-radius: 12px; }}
-        .label {{ position: absolute; top: 10px; left: 10px; color: #00E5FF; font-family: monospace; font-size: 10px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(0,229,255,0.5); }}
-        .stats {{ position: absolute; bottom: 10px; right: 10px; color: white; font-size: 10px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 4px; backdrop-filter: blur(4px); }}
+        .label {{ position: absolute; top: 10px; left: 10px; color: #00E5FF; font-family: monospace; font-size: 10px; letter-spacing: 2px; text-shadow: 0 0 8px rgba(0,229,255,0.6); }}
+        .stats {{ position: absolute; bottom: 10px; right: 10px; color: white; font-size: 10px; background: rgba(0,0,0,0.7); padding: 6px 12px; border-radius: 4px; backdrop-filter: blur(8px); border: 1px solid rgba(0,229,255,0.2); }}
+        .loading {{ position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #00E5FF; font-size: 12px; letter-spacing: 4px; animation: pulse 1.5s infinite; }}
+        @keyframes pulse {{ 0% {{ opacity: 0.3; }} 50% {{ opacity: 1; }} 100% {{ opacity: 0.3; }} }}
     </style>
 </head>
 <body>
+    <div id="loading" class="loading">INITIALIZING_NEURAL_MESH...</div>
     <div id="container"></div>
     <div class="label">// DIGITAL_TWIN_RENDER: {address.upper()}</div>
     <div class="stats">{stats.get('beds', 0)} BD | {stats.get('baths', 0)} BA | {stats.get('sqft', 0)} SQFT</div>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    
     <script>
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 350, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({{ antialias: true, alpha: true }});
         renderer.setSize(window.innerWidth, 350);
         renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.outputEncoding = THREE.sRGBEncoding;
         document.getElementById('container').appendChild(renderer.domElement);
 
-        // Group for the house
-        const houseGroup = new THREE.Group();
-        scene.add(houseGroup);
-
-        // Main body
-        const geometry = new THREE.BoxGeometry(1.5, 1, 1.2);
-        const material = new THREE.MeshPhongMaterial({{ color: '{meta['base_color']}', flatShading: true }});
-        const house = new THREE.Mesh(geometry, material);
-        houseGroup.add(house);
-        
-        // Roof
-        const roofGeom = new THREE.CylinderGeometry(0, 1.1, 0.6, 4);
-        const roofMat = new THREE.MeshPhongMaterial({{ color: '#1A1A1A' }});
-        const roof = new THREE.Mesh(roofGeom, roofMat);
-        roof.position.y = 0.8;
-        roof.rotation.y = Math.PI / 4;
-        houseGroup.add(roof);
-
-        // Door
-        const doorGeom = new THREE.PlaneGeometry(0.3, 0.5);
-        const doorMat = new THREE.MeshPhongMaterial({{ color: '#3E2723' }});
-        const door = new THREE.Mesh(doorGeom, doorMat);
-        door.position.set(0, -0.25, 0.601);
-        houseGroup.add(door);
-
-        // Windows
-        const winGeom = new THREE.PlaneGeometry(0.2, 0.2);
-        const winMat = new THREE.MeshPhongMaterial({{ color: '#00E5FF', emissive: '#00E5FF', emissiveIntensity: 0.5 }});
-        
-        const win1 = new THREE.Mesh(winGeom, winMat);
-        win1.position.set(-0.4, 0.1, 0.601);
-        houseGroup.add(win1);
-        
-        const win2 = new THREE.Mesh(winGeom, winMat);
-        win2.position.set(0.4, 0.1, 0.601);
-        houseGroup.add(win2);
-
-        // Ground reflection / Grid
-        const grid = new THREE.GridHelper(10, 20, 0x00E5FF, 0x1A1A1A);
-        grid.position.y = -0.5;
-        grid.material.opacity = 0.2;
-        grid.material.transparent = true;
-        scene.add(grid);
-
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-        scene.add(ambientLight);
-        
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(5, 5, 5);
-        scene.add(dirLight);
-        
-        const pointLight = new THREE.PointLight(0x00E5FF, 1, 10);
-        pointLight.position.set(0, 2, 2);
-        scene.add(pointLight);
-
-        camera.position.set(3, 2, 3);
-        
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 2.0;
+        controls.autoRotateSpeed = 1.0;
         controls.enableZoom = true;
         controls.minDistance = 2;
-        controls.maxDistance = 6;
+        controls.maxDistance = 8;
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        dirLight.position.set(5, 10, 7.5);
+        scene.add(dirLight);
+        
+        const pointLight = new THREE.PointLight(0x00E5FF, 2, 20);
+        pointLight.position.set(0, 5, 5);
+        scene.add(pointLight);
+
+        // Ground reflection / Grid
+        const grid = new THREE.GridHelper(20, 40, 0x00E5FF, 0x1A1A1A);
+        grid.position.y = -0.5;
+        grid.material.opacity = 0.15;
+        grid.material.transparent = true;
+        scene.add(grid);
+
+        const loader = new THREE.GLTFLoader();
+        const modelUrl = "{model_url if model_url else ''}";
+        const loadingEl = document.getElementById('loading');
+
+        function createFallbackHouse() {{
+            const houseGroup = new THREE.Group();
+            
+            // Foundation
+            const baseGeom = new THREE.BoxGeometry(2, 1.2, 1.5);
+            const baseMat = new THREE.MeshPhongMaterial({{ color: '{meta['base_color']}', shininess: 100, flatShading: false }});
+            const base = new THREE.Mesh(baseGeom, baseMat);
+            base.position.y = 0.1;
+            houseGroup.add(base);
+            
+            // Roof (Detailed)
+            const roofGeom = new THREE.ConeGeometry(1.6, 1, 4);
+            const roofMat = new THREE.MeshPhongMaterial({{ color: '#1A1A1A', shininess: 50 }});
+            const roof = new THREE.Mesh(roofGeom, roofMat);
+            roof.position.y = 1.2;
+            roof.rotation.y = Math.PI / 4;
+            houseGroup.add(roof);
+
+            // Door with frame
+            const doorGroup = new THREE.Group();
+            const doorGeom = new THREE.PlaneGeometry(0.4, 0.7);
+            const doorMat = new THREE.MeshPhongMaterial({{ color: '#3E2723' }});
+            const door = new THREE.Mesh(doorGeom, doorMat);
+            door.position.set(0, -0.15, 0.751);
+            doorGroup.add(door);
+            houseGroup.add(doorGroup);
+
+            // Glowing Windows
+            const winGeom = new THREE.PlaneGeometry(0.3, 0.3);
+            const winMat = new THREE.MeshStandardMaterial({{ 
+                color: '#00E5FF', 
+                emissive: '#00E5FF', 
+                emissiveIntensity: 1.5,
+                metalness: 0.9,
+                roughness: 0.1
+            }});
+            
+            const positions = [
+                [-0.6, 0.2, 0.751], [0.6, 0.2, 0.751],
+                [-0.6, 0.2, -0.751], [0.6, 0.2, -0.751]
+            ];
+            
+            positions.forEach(pos => {{
+                const win = new THREE.Mesh(winGeom, winMat);
+                win.position.set(...pos);
+                if (pos[2] < 0) win.rotation.y = Math.PI;
+                houseGroup.add(win);
+            }});
+
+            scene.add(houseGroup);
+            loadingEl.style.display = 'none';
+        }}
+
+        if (modelUrl && modelUrl.length > 0) {{
+            loader.load(modelUrl, 
+                (gltf) => {{
+                    const model = gltf.scene;
+                    // Center model
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.sub(center);
+                    model.position.y += (box.max.y - box.min.y) / 2;
+                    
+                    scene.add(model);
+                    loadingEl.style.display = 'none';
+                    
+                    // Adjust camera to fit model
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    camera.position.set(maxDim * 1.5, maxDim, maxDim * 1.5);
+                    controls.target.set(0, size.y / 2, 0);
+                }},
+                (xhr) => {{
+                    const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                    loadingEl.innerText = `LOADING_MESH: ${{percent}}%`;
+                }},
+                (error) => {{
+                    console.error('Error loading GLTF:', error);
+                    createFallbackHouse();
+                }}
+            );
+        }} else {{
+            createFallbackHouse();
+        }}
+
+        camera.position.set(4, 3, 5);
+        controls.target.set(0, 0.5, 0);
 
         function animate() {{
             requestAnimationFrame(animate);

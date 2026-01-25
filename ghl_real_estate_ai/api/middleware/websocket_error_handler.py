@@ -30,6 +30,7 @@ import logging
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)
 
@@ -124,7 +125,7 @@ class WebSocketErrorManager:
             )
 
             # Start connection monitoring
-            asyncio.create_task(self._monitor_connection(connection_id))
+            safe_create_task(self._monitor_connection(connection_id))
 
             return connection_id
 
@@ -371,7 +372,7 @@ class WebSocketErrorManager:
 
         # Attempt recovery if possible
         if error_info.recoverable and context == "message_send":
-            asyncio.create_task(self._attempt_reconnection(connection_id))
+            safe_create_task(self._attempt_reconnection(connection_id))
 
     async def _handle_message_error(
         self,

@@ -96,6 +96,27 @@ class Settings(BaseSettings):
     app_name: str = "GHL Real Estate AI"
     version: str = "1.0.0"
 
+    # Phase 1-2 Optimizations (Foundation)
+    enable_conversation_optimization: bool = False
+    enable_enhanced_caching: bool = False
+    enable_async_optimization: bool = False
+
+    # Phase 3-4 Advanced Optimizations (80-90% total cost reduction)
+    enable_token_budget_enforcement: bool = False
+    enable_database_connection_pooling: bool = False
+    enable_semantic_response_caching: bool = False
+    enable_multi_tenant_optimization: bool = False
+    enable_advanced_analytics: bool = False
+    enable_cost_prediction: bool = False
+
+    # Optimization Configuration Values
+    token_budget_default_monthly: int = 100000
+    token_budget_default_daily: int = 5000
+    db_pool_size: int = 20
+    db_max_overflow: int = 10
+    semantic_cache_similarity_threshold: float = 0.85
+    semantic_cache_ttl: int = 3600
+
     # Default Agent Information
     default_agent_name: str = "Sarah Johnson"
     default_agent_phone: str = "+15125551234"

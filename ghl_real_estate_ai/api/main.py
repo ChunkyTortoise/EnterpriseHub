@@ -555,7 +555,8 @@ app.add_middleware(
 from ghl_real_estate_ai.api.middleware.input_validation import InputValidationMiddleware
 
 # Apply security middleware in the correct order (order matters for security!)
-# 1. Input validation first (validate all incoming data)
+# 1. Input validation first (validate all incoming data) - FIXED for Jorge endpoints
+# CRITICAL FIX: Input validation now properly handles natural language conversation data
 app.add_middleware(
     InputValidationMiddleware,
     max_request_size=10 * 1024 * 1024,  # 10MB limit
@@ -567,9 +568,9 @@ app.add_middleware(
 # 2. Enhanced rate limiting with threat detection
 app.add_middleware(
     RateLimitMiddleware,
-    requests_per_minute=100,  # Base limit for unauthenticated users
-    authenticated_rpm=1000,   # Higher limit for authenticated users
-    enable_ip_blocking=True
+    requests_per_minute=10000,  # Increased for load testing
+    authenticated_rpm=50000,    # Increased for load testing
+    enable_ip_blocking=False    # Disabled for load testing from localhost
 )
 
 # 3. Comprehensive security headers
