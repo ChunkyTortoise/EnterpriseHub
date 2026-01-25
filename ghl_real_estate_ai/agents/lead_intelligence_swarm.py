@@ -1363,8 +1363,23 @@ class LeadIntelligenceSwarm:
             except Exception as e:
                 logger.error(f"Failed to adjust agent weight: {e}")
 
-# Global swarm instance
-lead_intelligence_swarm = LeadIntelligenceSwarm()
+# Lazy initialization to avoid circular dependencies
+_lead_intelligence_swarm_instance = None
+
+def get_lead_intelligence_swarm() -> LeadIntelligenceSwarm:
+    """Get the global lead intelligence swarm instance with lazy initialization."""
+    global _lead_intelligence_swarm_instance
+    if _lead_intelligence_swarm_instance is None:
+        _lead_intelligence_swarm_instance = LeadIntelligenceSwarm()
+    return _lead_intelligence_swarm_instance
+
+# For backwards compatibility - use the factory function
+class _SwarmProxy:
+    """Proxy object that delegates calls to the lazily initialized swarm."""
+    def __getattr__(self, name):
+        return getattr(get_lead_intelligence_swarm(), name)
+
+lead_intelligence_swarm = _SwarmProxy()
 
 
 async def main():
