@@ -85,6 +85,8 @@ from ghl_real_estate_ai.api.routes import (
     claude_concierge_integration,  # NEW: Claude Concierge integration API
     customer_journey,  # NEW: Customer Journey API
     property_intelligence,  # NEW: Property Intelligence API
+    business_intelligence,  # NEW: BI Dashboard API routes
+    bi_websocket_routes,  # NEW: BI WebSocket routes
 )
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 from ghl_real_estate_ai.api.middleware import (
@@ -158,6 +160,14 @@ async def lifespan(app: FastAPI):
         await event_publisher.start()
         logger.info("Event publisher service started")
 
+        # Start BI WebSocket services
+        from ghl_real_estate_ai.api.routes.bi_websocket_routes import initialize_bi_websocket_services
+        bi_started = await initialize_bi_websocket_services()
+        if bi_started:
+            logger.info("✅ BI WebSocket services started successfully")
+        else:
+            logger.warning("⚠️ BI WebSocket services failed to start - dashboard may have limited real-time features")
+
         # Start system health monitoring
         await start_system_health_monitoring()
         logger.info("System health monitoring started")
@@ -211,6 +221,12 @@ async def lifespan(app: FastAPI):
         event_publisher = get_event_publisher()
         await event_publisher.stop()
         logger.info("Event publisher service stopped")
+
+        # Stop BI WebSocket services
+        from ghl_real_estate_ai.services.bi_websocket_server import get_bi_websocket_manager
+        bi_websocket_manager = get_bi_websocket_manager()
+        await bi_websocket_manager.stop()
+        logger.info("BI WebSocket services stopped")
 
         # Stop WebSocket manager services
         websocket_manager = get_websocket_manager()
@@ -480,6 +496,8 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 # Include routers
 app.include_router(websocket_routes.router, prefix="/api")  # Real-time WebSocket endpoints
+app.include_router(bi_websocket_routes.router)  # BI WebSocket endpoints (no prefix, already includes /ws)
+app.include_router(business_intelligence.router)  # BI API endpoints (already includes /api/bi prefix)
 app.include_router(bot_management.router, prefix="/api")  # Bot Management API for frontend integration
 app.include_router(lead_bot_management.router)  # Lead Bot Management API (prefix already included)
 app.include_router(agent_ecosystem.router)  # NEW: Agent ecosystem endpoints (already has prefix)

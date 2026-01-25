@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { Card, Title, Text, Flex, Button, Badge, TabGroup, TabList, Tab, TabPanels, TabPanel } from '@tremor/react';
-import { Brain, Home, TrendingUp, Activity } from 'lucide-react';
+import { Brain, Home, TrendingUp, Activity, MessageSquare, BarChart3 } from 'lucide-react';
 import { PropertyIntelligenceDashboard } from '@/components/property-intelligence/PropertyIntelligenceDashboard';
 import { BusinessIntelligenceDashboard } from '@/components/BusinessIntelligenceDashboard';
+import { AIConciergePanel } from '@/components/ai-concierge/AIConciergePanel';
+import { AdvancedAnalyticsInterface } from '@/components/analytics/AdvancedAnalyticsInterface';
 
 export default function IntelligencePage() {
   const [selectedTab, setSelectedTab] = useState(0);
@@ -26,7 +28,7 @@ export default function IntelligencePage() {
             </div>
             <Badge color="blue" size="lg">
               <Activity className="h-4 w-4 mr-1" />
-              Phase 7 Active
+              Phase 8 Active
             </Badge>
           </Flex>
         </Card>
@@ -35,11 +37,29 @@ export default function IntelligencePage() {
         <Card className="bg-slate-900 border-slate-800">
           <TabGroup selectedIndex={selectedTab} onIndexChange={setSelectedTab}>
             <TabList className="mb-6">
-              <Tab icon={TrendingUp}>Advanced Business Intelligence</Tab>
+              <Tab icon={MessageSquare}>AI Concierge</Tab>
+              <Tab icon={BarChart3}>Advanced Analytics</Tab>
+              <Tab icon={TrendingUp}>Business Intelligence</Tab>
               <Tab icon={Home}>Property Intelligence</Tab>
             </TabList>
 
             <TabPanels>
+              {/* AI Concierge - Phase 8 */}
+              <TabPanel>
+                <AIConciergePanel
+                  conversationId="demo-conversation"
+                  className="w-full"
+                />
+              </TabPanel>
+
+              {/* Advanced Analytics - Phase 8 */}
+              <TabPanel>
+                <AdvancedAnalyticsInterface
+                  locationId="jorge-platform"
+                  className="w-full"
+                />
+              </TabPanel>
+
               {/* Advanced Business Intelligence */}
               <TabPanel>
                 <BusinessIntelligenceDashboard

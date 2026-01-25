@@ -49,7 +49,7 @@ async def run_smoke_test():
     token = await generate_test_token()
     print(f"✅ Generated Test Token")
     
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as client:
+    async with httpx.AsyncClient(base_url="http://localhost:8001") as client:
         # 1. Test Health Deep
         print("🔍 Checking /api/health/deep...")
         try:

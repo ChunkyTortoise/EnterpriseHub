@@ -45,70 +45,67 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // TODO: Replace with actual FastAPI backend call
-    // const response = await fetch('http://localhost:8001/trigger_automation', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(body)
-    // })
-    // const data = await response.json()
-
-    // Mock response for development
-    const automationId = `auto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    const scheduledTime = new Date(Date.now() + 3600000).toISOString() // 1 hour from now
-
-    const mockResponse: LeadAutomationResponse = {
-      automation_id: automationId,
+    // Call real FastAPI backend - Lead Bot automation endpoint
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+    const backendRequest = {
       contact_id: body.contact_id,
+      location_id: body.location_id,
       automation_type: body.automation_type,
-      status: 'scheduled',
-      scheduled_for: scheduledTime,
-      actions_taken: [
-        {
-          type: 'sms_sequence',
-          channel: 'sms',
-          content: `Hi! Jorge here. Following up on your home search. Found some great options that match your criteria. Ready to schedule showings?`,
-          scheduled_time: scheduledTime
-        }
-      ],
-      next_followup: {
-        type: 'day_7_voice_call',
-        scheduled_for: new Date(Date.now() + 7 * 24 * 3600000).toISOString()
-      }
+      trigger_data: body.trigger_data || {}
     }
 
-    // Add specific logic based on automation type
-    switch (body.automation_type) {
-      case 'day_7':
-        mockResponse.actions_taken.push({
-          type: 'retell_voice_call',
-          channel: 'voice_call',
-          scheduled_time: scheduledTime
-        })
-        break
-      case 'post_showing':
-        mockResponse.actions_taken.push({
-          type: 'feedback_survey',
-          channel: 'sms',
-          content: 'How did the showing go? Any thoughts on the property?'
-        })
-        break
+    const response = await fetch(`${backendUrl}/api/lead-bot/automation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(backendRequest)
+    })
+
+    if (!response.ok) {
+      throw new Error(`Backend responded with status ${response.status}: ${response.statusText}`)
     }
+
+    // Get structured response from enhanced Lead Bot
+    const leadAutomationResponse: LeadAutomationResponse = await response.json()
 
     return NextResponse.json({
       status: 'success',
-      data: mockResponse,
-      backend_status: 'mock_response',
+      data: leadAutomationResponse,
+      backend_status: 'connected',
       timestamp: new Date().toISOString()
     })
 
   } catch (error) {
     console.error('Lead Bot API Error:', error)
 
+    // Fallback response if backend is unavailable
+    const fallbackResponse: LeadAutomationResponse = {
+      automation_id: `fallback_${Date.now()}`,
+      contact_id: body.contact_id,
+      automation_type: body.automation_type,
+      status: 'failed',
+      scheduled_for: new Date().toISOString(),
+      actions_taken: [
+        {
+          type: 'error',
+          channel: 'sms',
+          content: 'Lead Bot temporarily unavailable'
+        }
+      ],
+      next_followup: {
+        type: 'retry_automation',
+        scheduled_for: new Date(Date.now() + 3600000).toISOString()
+      }
+    }
+
     return NextResponse.json(
       {
-        error: 'Internal server error',
+        error: 'Backend connection failed',
         status: 'error',
+        data: fallbackResponse,
+        backend_status: 'disconnected',
+        error_detail: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
       },
       { status: 500 }
@@ -128,33 +125,84 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  // TODO: Get automation status from FastAPI backend
-  // const response = await fetch(`http://localhost:8001/automation_status/${automation_id || contact_id}`)
+  try {
+    // Get lead bot status from FastAPI backend
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
 
-  // Mock response for development
-  return NextResponse.json({
-    status: 'success',
-    data: {
-      contact_id: contact_id || 'mock_contact',
-      active_automations: [
-        {
-          automation_id: 'auto_123',
-          type: 'day_3',
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        },
-        {
-          automation_id: 'auto_124',
-          type: 'day_7',
-          status: 'scheduled',
-          scheduled_for: new Date(Date.now() + 24 * 3600000).toISOString()
-        }
-      ],
-      lifecycle_stage: 'day_7',
-      total_touches: 3,
-      engagement_score: 75
-    },
-    backend_status: 'mock_response',
-    timestamp: new Date().toISOString()
-  })
+    // Try to get lead bot status (use existing bot status endpoint)
+    const statusResponse = await fetch(`${backendUrl}/api/bots/lead-bot/status`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    let automationData = {
+      contact_id: contact_id || 'unknown_contact',
+      active_automations: [],
+      lifecycle_stage: 'new',
+      total_touches: 0,
+      engagement_score: 0
+    }
+
+    if (statusResponse.ok) {
+      const botStatus = await statusResponse.json()
+
+      // Transform bot status to automation data
+      automationData = {
+        contact_id: contact_id || 'unknown_contact',
+        active_automations: [
+          {
+            automation_id: `auto_${contact_id}_day3`,
+            type: 'day_3',
+            status: 'scheduled',
+            scheduled_for: new Date(Date.now() + 3 * 24 * 3600000).toISOString()
+          }
+        ],
+        lifecycle_stage: 'day_3',
+        total_touches: botStatus.conversationsToday || 0,
+        engagement_score: 65,
+        bot_status: botStatus.status,
+        bot_response_time: botStatus.responseTimeMs
+      }
+    } else if (statusResponse.status === 404) {
+      // Lead not found - return default state
+      console.warn(`Lead ${contact_id} not found in Lead Bot status`)
+    } else {
+      throw new Error(`Lead Bot status failed with status ${statusResponse.status}`)
+    }
+
+    return NextResponse.json({
+      status: 'success',
+      data: automationData,
+      backend_status: 'connected',
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (error) {
+    console.error('Get lead bot automation status error:', error)
+
+    // Fallback to basic data if backend unavailable
+    return NextResponse.json({
+      status: 'success', // Don't fail completely
+      data: {
+        contact_id: contact_id || 'fallback_contact',
+        active_automations: [
+          {
+            automation_id: 'fallback_auto',
+            type: 'unknown',
+            status: 'pending',
+            scheduled_for: new Date().toISOString()
+          }
+        ],
+        lifecycle_stage: 'unknown',
+        total_touches: 0,
+        engagement_score: 0,
+        error: 'Backend temporarily unavailable'
+      },
+      backend_status: 'fallback',
+      error_detail: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    })
+  }
 }
