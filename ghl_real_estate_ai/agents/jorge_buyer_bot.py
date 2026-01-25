@@ -136,11 +136,14 @@ class JorgeBuyerBot:
                 return {"financing_status": "unknown", "budget_range": None}
 
             # Determine financing status based on intent analysis
-            if profile.financing_status_score >= 75:
+            financing_score = float(profile.financing_status_score or 0)
+            budget_score = float(profile.budget_clarity or 0)
+            
+            if financing_score >= 75:
                 financing_status = "pre_approved"
-            elif profile.financing_status_score >= 50:
+            elif financing_score >= 50:
                 financing_status = "needs_approval"
-            elif profile.budget_clarity >= 70:
+            elif budget_score >= 70:
                 financing_status = "cash"
             else:
                 financing_status = "unknown"
@@ -175,11 +178,12 @@ class JorgeBuyerBot:
             preferences = await self._extract_property_preferences(state['conversation_history'])
 
             # Determine urgency level
-            if profile.urgency_score >= 75:
+            urgency_score = float(profile.urgency_score or 0)
+            if urgency_score >= 75:
                 urgency_level = "immediate"
-            elif profile.urgency_score >= 50:
+            elif urgency_score >= 50:
                 urgency_level = "3_months"
-            elif profile.urgency_score >= 30:
+            elif urgency_score >= 30:
                 urgency_level = "6_months"
             else:
                 urgency_level = "browsing"
@@ -211,11 +215,17 @@ class JorgeBuyerBot:
                 }
 
             # Use existing property matching service
-            matches = await self.property_matcher.find_matches(
-                buyer_preferences=state.get("property_preferences") or {},
-                budget_range=state["budget_range"],
-                max_results=5
-            )
+            # Handle both sync and async property matcher (for tests/mocks)
+            if asyncio.iscoroutinefunction(self.property_matcher.find_matches):
+                matches = await self.property_matcher.find_matches(
+                    preferences=state.get("property_preferences") or {},
+                    limit=5
+                )
+            else:
+                matches = self.property_matcher.find_matches(
+                    preferences=state.get("property_preferences") or {},
+                    limit=5
+                )
 
             # Emit property match event
             await self.event_publisher.publish_property_match_update(

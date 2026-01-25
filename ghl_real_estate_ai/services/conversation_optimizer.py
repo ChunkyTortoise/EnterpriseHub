@@ -230,12 +230,14 @@ class ConversationOptimizer:
             logger.warning(f"Must-keep messages ({must_keep_tokens}) exceed budget ({available_tokens})")
             # Emergency pruning: keep only most recent messages that fit
             optimized_history = []
+            keep_indices = set()
             current_tokens = 0
 
             for i in reversed(range(len(conversation_history))):
                 analysis = analyzed_messages[i][1]
                 if current_tokens + analysis.token_count <= available_tokens:
                     optimized_history.insert(0, conversation_history[i])
+                    keep_indices.add(i)
                     current_tokens += analysis.token_count
                 else:
                     break

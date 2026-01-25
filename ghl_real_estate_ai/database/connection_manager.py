@@ -97,7 +97,6 @@ class DatabaseConnectionManager:
             'server_settings': {
                 'application_name': 'service6-enterprise',
                 'jit': 'off',
-                'shared_preload_libraries': 'pg_stat_statements',
                 'log_statement': 'all',
                 'log_min_duration_statement': '1000'  # Log queries > 1s
             }
@@ -363,7 +362,7 @@ class DatabaseConnectionManager:
                 
                 # Check table counts
                 table_stats = await conn.fetch("""
-                    SELECT schemaname, tablename, n_tup_ins, n_tup_upd, n_tup_del
+                    SELECT schemaname, relname as tablename, n_tup_ins, n_tup_upd, n_tup_del
                     FROM pg_stat_user_tables
                     ORDER BY n_tup_ins + n_tup_upd + n_tup_del DESC
                     LIMIT 10
