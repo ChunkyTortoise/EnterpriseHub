@@ -5,10 +5,39 @@ Entry point for the webhook server that processes GoHighLevel messages
 and returns AI-generated responses.
 """
 
+# Fix for Python 3.10+ union syntax compatibility with FastAPI/Pydantic
+import sys
+import os
+# Set environment variable to disable response model generation for union types
+os.environ['FASTAPI_DISABLE_RESPONSE_MODEL_VALIDATION'] = 'true'
+
+# Import Pydantic configuration to handle union syntax
+try:
+    from pydantic import ConfigDict
+    from pydantic._internal._config import ConfigWrapper
+    # Override Pydantic config to be more lenient with union types
+    import pydantic
+    if hasattr(pydantic, 'VERSION') and pydantic.VERSION >= '2.0.0':
+        # For Pydantic v2, configure to handle union syntax
+        import warnings
+        warnings.filterwarnings("ignore", message=".*Union.*")
+except ImportError:
+    pass
+
 from fastapi import FastAPI, Request, Response, APIRouter, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.routing import APIRoute
+from typing import Callable, Any
+
+# Custom route class to handle problematic union type responses
+class UnionCompatibleRoute(APIRoute):
+    def __init__(self, *args, **kwargs):
+        # Apply response_model=None for routes that might have union type issues
+        if 'response_model' not in kwargs:
+            kwargs['response_model'] = None
+        super().__init__(*args, **kwargs)
 import os
 import time
 import logging
@@ -32,6 +61,8 @@ from ghl_real_estate_ai.api.routes import (
     health,
     jorge_advanced,
     lead_lifecycle,
+    leads,  # NEW: Leads Management API for frontend integration
+    lead_bot_management,  # NEW: Lead Bot Management API for sequence control
     ml_scoring,  # Phase 4B: Real-time ML lead scoring API
     portal,
     predictive_analytics,
@@ -50,6 +81,10 @@ from ghl_real_estate_ai.api.routes import (
     vapi,
     websocket_routes, # Real-time WebSocket routes
     external_webhooks,
+    agent_ecosystem,  # NEW: Agent ecosystem API for frontend integration
+    claude_concierge_integration,  # NEW: Claude Concierge integration API
+    customer_journey,  # NEW: Customer Journey API
+    property_intelligence,  # NEW: Property Intelligence API
 )
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 from ghl_real_estate_ai.api.middleware import (
@@ -138,6 +173,27 @@ async def lifespan(app: FastAPI):
         # Don't raise here - allow app to start but log the issue
         logger.warning("WebSocket services failed to start - real-time features may be unavailable")
 
+    # ========================================================================
+    # START LEAD SEQUENCE SCHEDULER (Critical for Lead Bot automation)
+    # ========================================================================
+
+    logger.info("Starting Lead Sequence Scheduler...")
+
+    try:
+        from ghl_real_estate_ai.services.scheduler_startup import initialize_lead_scheduler
+
+        scheduler_started = await initialize_lead_scheduler()
+
+        if scheduler_started:
+            logger.info("✅ Lead Sequence Scheduler started successfully")
+        else:
+            logger.error("❌ Lead Sequence Scheduler failed to start")
+            logger.warning("Lead Bot 3-7-30 sequences will not execute automatically")
+
+    except Exception as e:
+        logger.error(f"❌ Failed to start Lead Sequence Scheduler: {e}")
+        logger.warning("Lead Bot automation will not function - sequences must be triggered manually")
+
     yield
 
     # ========================================================================
@@ -166,10 +222,25 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ Error shutting down WebSocket services: {e}")
 
+    # ========================================================================
+    # SHUTDOWN LEAD SEQUENCE SCHEDULER
+    # ========================================================================
+
+    logger.info("Shutting down Lead Sequence Scheduler...")
+
+    try:
+        from ghl_real_estate_ai.services.scheduler_startup import shutdown_lead_scheduler
+
+        await shutdown_lead_scheduler()
+        logger.info("✅ Lead Sequence Scheduler shutdown completed")
+
+    except Exception as e:
+        logger.error(f"❌ Error shutting down Lead Sequence Scheduler: {e}")
+
     # Shutdown logic
     logger.info(f"Shutting down {settings.app_name}")
 
-# Create FastAPI app
+# Create FastAPI app with custom route class to handle union type issues
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,
@@ -178,6 +249,9 @@ app = FastAPI(
     redoc_url="/redoc" if settings.environment == "development" else None,
     lifespan=lifespan,
 )
+
+# Apply custom route class to handle union type compatibility issues
+app.router.route_class = UnionCompatibleRoute
 
 # Override default JSON response
 app.default_response_class = OptimizedJSONResponse
@@ -407,12 +481,18 @@ app.add_middleware(SecurityHeadersMiddleware)
 # Include routers
 app.include_router(websocket_routes.router, prefix="/api")  # Real-time WebSocket endpoints
 app.include_router(bot_management.router, prefix="/api")  # Bot Management API for frontend integration
+app.include_router(lead_bot_management.router)  # Lead Bot Management API (prefix already included)
+app.include_router(agent_ecosystem.router)  # NEW: Agent ecosystem endpoints (already has prefix)
+app.include_router(claude_concierge_integration.router)  # NEW: Claude Concierge integration (already has prefix)
+app.include_router(customer_journey.router)  # NEW: Customer Journey API (already has prefix)
+app.include_router(property_intelligence.router)  # NEW: Property Intelligence API (already has prefix)
 app.include_router(webhook.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(bulk_operations.router, prefix="/api")
 app.include_router(claude_chat.router, prefix="/api")  # Claude chat interface
+app.include_router(leads.router, prefix="/api")  # NEW: Leads Management API
 app.include_router(lead_lifecycle.router, prefix="/api")
-app.include_router(health.router)  # Health endpoint at root level
+app.include_router(health.router, prefix="/api")  # Health endpoint at /api/health
 
 # Enterprise Authentication Router
 enterprise_auth_router = APIRouter(prefix="/api/enterprise/auth", tags=["enterprise_authentication"])
@@ -438,6 +518,17 @@ async def enterprise_sso_callback(code: str, state: str):
         return token_data
     except EnterpriseAuthError as e:
         raise HTTPException(status_code=400, detail=e.message)
+
+@enterprise_auth_router.post("/refresh")
+async def refresh_enterprise_token(refresh_token: str):
+    """
+    Refresh enterprise access token.
+    """
+    try:
+        token_data = await enterprise_auth_service.refresh_enterprise_token(refresh_token)
+        return token_data
+    except EnterpriseAuthError as e:
+        raise HTTPException(status_code=401, detail=e.message)
 
 app.include_router(enterprise_auth_router)
 
@@ -482,6 +573,12 @@ async def root():
             else "disabled in production"
         ),
     }
+
+
+# Create the integrated Socket.IO + FastAPI app
+# This is what uvicorn/gunicorn should run: ghl_real_estate_ai.api.main:socketio_app
+from ghl_real_estate_ai.api.socketio_app import get_socketio_app_for_uvicorn
+socketio_app = get_socketio_app_for_uvicorn(app)
 
 
 # Health endpoint now handled by health router

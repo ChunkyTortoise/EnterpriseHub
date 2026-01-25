@@ -10,7 +10,7 @@ Created: 2026-01-19
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from enum import Enum
 import asyncio
 import json
@@ -20,7 +20,7 @@ from datetime import datetime
 
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine, MessageType
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
-from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
+# Lazy import to avoid circular dependency - imported where used
 
 logger = logging.getLogger(__name__)
 
@@ -257,6 +257,9 @@ class JorgeSellerEngine:
             
             # 5b. Swarm Intelligence (Parallel Analysis)
             # Deploy the swarm to analyze the lead while we process other ML models
+            # Lazy import to avoid circular dependency
+            from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
+
             swarm_task = asyncio.create_task(
                 lead_intelligence_swarm.analyze_lead_comprehensive(
                     contact_id,
@@ -494,13 +497,13 @@ class JorgeSellerEngine:
 
             # 1. Timeline (30-45 days)
             if extracted_data.get("timeline_acceptable") is None:
-                if re.search(r'(yes|yeah|sure|fine|ok|works|doable)', msg_lower):
+                if re.search(r'(Union[yes, yeah]|Union[sure, fine]|Union[ok, works]|doable)', msg_lower):
                     # Check if context implies agreement to timeline
                     # (This assumes the bot just asked Q2)
                     pass  # Hard to be sure without knowing previous question context explicitly here, rely on flow
-                if re.search(r'(no|nope|cant|impossible|too fast)', msg_lower):
+                if re.search(r'(Union[no, nope]|Union[cant, impossible]|too fast)', msg_lower):
                     extracted_data["timeline_acceptable"] = False
-                elif re.search(r'(30|45|thirty|forty)', msg_lower) and not re.search(r'(no|not)', msg_lower):
+                elif re.search(r'(Union[30, 45]|Union[thirty, forty])', msg_lower) and not re.search(r'(Union[no, not])', msg_lower):
                     extracted_data["timeline_acceptable"] = True
 
             # 2. Price
@@ -511,9 +514,9 @@ class JorgeSellerEngine:
 
             # 3. Condition
             if not extracted_data.get("property_condition"):
-                if re.search(r'(move.?in.?ready|perfect|great|good|excellent)', msg_lower):
+                if re.search(r'(move.?in.?Union[ready, perfect]|Union[great, good]|excellent)', msg_lower):
                     extracted_data["property_condition"] = "Move-in Ready"
-                elif re.search(r'(needs?.?work|fixer|repairs|bad|rough)', msg_lower):
+                elif re.search(r'(needs?.?Union[work, fixer]|Union[repairs, bad]|rough)', msg_lower):
                     extracted_data["property_condition"] = "Needs Work"
 
             # --- VAGUE ANSWER TRACKING (Pillar 1: NLP Optimization) ---
