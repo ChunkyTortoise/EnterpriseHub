@@ -682,8 +682,8 @@ class EventPublisher:
         from_bot: str,
         to_bot: str,
         contact_id: str,
-        handoff_reason: str,
-        context_transfer: Dict[str, Any],
+        handoff_reason: str = "qualification_ready",
+        context_transfer: Dict[str, Any] = None,
         urgency: str = "normal",
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
@@ -704,6 +704,9 @@ class EventPublisher:
             location_id: Location/tenant ID (optional)
             **kwargs: Additional event data
         """
+        if context_transfer is None:
+            context_transfer = {}
+            
         event = RealTimeEvent(
             event_type=EventType.BOT_HANDOFF_REQUEST,
             data={
@@ -712,14 +715,8 @@ class EventPublisher:
                 "to_bot": to_bot,
                 "contact_id": contact_id,
                 "handoff_reason": handoff_reason,
-                "context_summary": {
-                    "conversation_length": len(context_transfer.get("conversation_history", [])),
-                    "qualification_scores": context_transfer.get("qualification_scores", {}),
-                    "lead_temperature": context_transfer.get("lead_temperature", "unknown")
-                },
+                "context_transfer": context_transfer,
                 "urgency": urgency,
-                "context_size_kb": round(len(str(context_transfer)) / 1024, 2),
-                "summary": f"Handoff request: {from_bot} → {to_bot} ({handoff_reason})",
                 **kwargs
             },
             timestamp=datetime.now(timezone.utc),
@@ -727,9 +724,6 @@ class EventPublisher:
             location_id=location_id,
             priority="high" if urgency == "immediate" else "normal"
         )
-
-        await self._publish_event(event)
-        logger.info(f"Published bot handoff request: {from_bot} → {to_bot} (ID: {handoff_id}, contact: {contact_id})")
 
     async def publish_system_health_update(
         self,
@@ -1080,11 +1074,11 @@ class EventPublisher:
         recommendation_id: str,
         contact_id: str,
         strategy_type: str,
-        recommendation_text: str,
-        reasoning: str,
-        confidence_score: float,
-        expected_impact: str,
-        implementation_steps: List[str],
+        recommendation_text: str = "",
+        reasoning: str = "",
+        confidence_score: float = 0.0,
+        expected_impact: str = "medium",
+        implementation_steps: List[str] = None,
         urgency: str = "normal",
         user_id: Optional[int] = None,
         location_id: Optional[str] = None,
@@ -1107,6 +1101,9 @@ class EventPublisher:
             location_id: Location/tenant ID (optional)
             **kwargs: Additional event data
         """
+        if implementation_steps is None:
+            implementation_steps = []
+            
         event = RealTimeEvent(
             event_type=EventType.STRATEGY_RECOMMENDATION,
             data={
@@ -1721,15 +1718,15 @@ class EventPublisher:
     # Phase 2.1: Behavioral Prediction Event Publishers
     # ============================================================================
 
-    async def publish_behavioral_prediction_complete(
+    async def publish_behavioral_prediction(
         self,
         lead_id: str,
         location_id: str,
-        behavior_category: str,
-        churn_risk_score: float,
-        engagement_score: float,
-        next_actions: List[Dict[str, Any]],
-        prediction_latency_ms: float,
+        behavior_category: str = "moderate",
+        churn_risk_score: float = 0.0,
+        engagement_score: float = 0.5,
+        next_actions: List[Dict[str, Any]] = None,
+        prediction_latency_ms: float = 0.0,
         user_id: Optional[int] = None,
         **kwargs
     ):
@@ -1738,6 +1735,9 @@ class EventPublisher:
 
         Real-time notification when new behavioral prediction is available.
         """
+        if next_actions is None:
+            next_actions = []
+            
         event = RealTimeEvent(
             event_type=EventType.BEHAVIORAL_PREDICTION_COMPLETE,
             data={
