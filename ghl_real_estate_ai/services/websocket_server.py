@@ -61,6 +61,12 @@ class EventType(Enum):
     SMS_OPT_OUT_PROCESSED = "sms_opt_out_processed"
     SMS_FREQUENCY_LIMIT_HIT = "sms_frequency_limit_hit"
 
+    # AI Concierge Events
+    PROACTIVE_INSIGHT = "proactive_insight"
+    STRATEGY_RECOMMENDATION = "strategy_recommendation"
+    COACHING_OPPORTUNITY = "coaching_opportunity"
+    AI_CONCIERGE_STATUS = "ai_concierge_status"
+
     # Bot Coordination Events
     BOT_HANDOFF_REQUEST = "bot_handoff_request"
     BOT_HANDOFF_ACCEPTED = "bot_handoff_accepted"

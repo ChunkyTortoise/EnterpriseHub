@@ -951,6 +951,227 @@ class EventPublisher:
         await self._publish_event(event)
         logger.info(f"Published SMS frequency limit hit: {limit_type} {current_count}/{limit_value} (phone: ***{phone_number[-4:] if phone_number else '****'})")
 
+    # === AI CONCIERGE EVENT PUBLISHERS ===
+
+    async def publish_proactive_insight(
+        self,
+        insight_id: str,
+        contact_id: str,
+        insight_type: str,
+        confidence_score: float,
+        title: str,
+        description: str,
+        suggested_actions: List[str],
+        priority_level: str = "normal",
+        context_data: Optional[Dict[str, Any]] = None,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish proactive conversation insight event.
+
+        Args:
+            insight_id: Unique insight identifier
+            contact_id: Contact/lead identifier
+            insight_type: Type of insight (opportunity, risk, coaching, strategy)
+            confidence_score: AI confidence in the insight (0-1)
+            title: Brief insight title
+            description: Detailed insight description
+            suggested_actions: List of suggested actions
+            priority_level: Insight priority (low, normal, high, critical)
+            context_data: Additional insight context (optional)
+            user_id: User associated with insight (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        event = RealTimeEvent(
+            event_type=EventType.PROACTIVE_INSIGHT,
+            data={
+                "insight_id": insight_id,
+                "contact_id": contact_id,
+                "insight_type": insight_type,
+                "confidence_score": round(confidence_score, 3),
+                "title": title,
+                "description": description,
+                "suggested_actions": suggested_actions,
+                "priority_level": priority_level,
+                "context_data": context_data or {},
+                "requires_action": priority_level in ["high", "critical"],
+                "expires_at": (datetime.now(timezone.utc).timestamp() + 3600),  # 1 hour expiry
+                "summary": f"AI Insight: {title} ({confidence_score:.1%} confidence)"
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="critical" if priority_level == "critical" else "high" if priority_level == "high" else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published proactive insight: {insight_type} - {title} ({confidence_score:.1%} confidence - contact: {contact_id})")
+
+    async def publish_strategy_recommendation(
+        self,
+        recommendation_id: str,
+        contact_id: str,
+        strategy_type: str,
+        recommendation_text: str,
+        reasoning: str,
+        confidence_score: float,
+        expected_impact: str,
+        implementation_steps: List[str],
+        urgency: str = "normal",
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish AI strategy recommendation event.
+
+        Args:
+            recommendation_id: Unique recommendation identifier
+            contact_id: Contact/lead identifier
+            strategy_type: Type of strategy (negotiation, timing, communication)
+            recommendation_text: Core recommendation
+            reasoning: AI reasoning for the recommendation
+            confidence_score: AI confidence in recommendation (0-1)
+            expected_impact: Expected impact description
+            implementation_steps: Step-by-step implementation guide
+            urgency: Recommendation urgency (low, normal, high, immediate)
+            user_id: User associated with recommendation (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        event = RealTimeEvent(
+            event_type=EventType.STRATEGY_RECOMMENDATION,
+            data={
+                "recommendation_id": recommendation_id,
+                "contact_id": contact_id,
+                "strategy_type": strategy_type,
+                "recommendation_text": recommendation_text,
+                "reasoning": reasoning,
+                "confidence_score": round(confidence_score, 3),
+                "expected_impact": expected_impact,
+                "implementation_steps": implementation_steps,
+                "urgency": urgency,
+                "requires_immediate_action": urgency == "immediate",
+                "estimated_implementation_time": len(implementation_steps) * 5,  # 5 min per step estimate
+                "summary": f"Strategy: {strategy_type.title()} ({confidence_score:.1%} confidence)"
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="critical" if urgency == "immediate" else "high" if urgency == "high" else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published strategy recommendation: {strategy_type} - {urgency} urgency ({confidence_score:.1%} confidence - contact: {contact_id})")
+
+    async def publish_coaching_opportunity(
+        self,
+        opportunity_id: str,
+        contact_id: str,
+        coaching_area: str,
+        opportunity_description: str,
+        suggested_approach: str,
+        learning_objectives: List[str],
+        difficulty_level: str,
+        estimated_time_minutes: int,
+        resources: Optional[List[Dict[str, str]]] = None,
+        user_id: Optional[int] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish AI coaching opportunity event.
+
+        Args:
+            opportunity_id: Unique opportunity identifier
+            contact_id: Contact/lead identifier
+            coaching_area: Area for coaching (objection_handling, negotiation, follow_up)
+            opportunity_description: Description of the coaching opportunity
+            suggested_approach: Suggested coaching approach
+            learning_objectives: List of learning objectives
+            difficulty_level: Difficulty (beginner, intermediate, advanced)
+            estimated_time_minutes: Estimated coaching time in minutes
+            resources: Optional learning resources list
+            user_id: User associated with coaching (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        # Calculate priority based on difficulty and objectives
+        priority = "high" if difficulty_level == "advanced" and len(learning_objectives) >= 3 else "normal"
+
+        event = RealTimeEvent(
+            event_type=EventType.COACHING_OPPORTUNITY,
+            data={
+                "opportunity_id": opportunity_id,
+                "contact_id": contact_id,
+                "coaching_area": coaching_area,
+                "opportunity_description": opportunity_description,
+                "suggested_approach": suggested_approach,
+                "learning_objectives": learning_objectives,
+                "difficulty_level": difficulty_level,
+                "estimated_time_minutes": estimated_time_minutes,
+                "resources": resources or [],
+                "skill_development_focus": coaching_area.replace('_', ' ').title(),
+                "completion_tracking_enabled": True,
+                "summary": f"Coaching: {coaching_area.replace('_', ' ').title()} ({difficulty_level}, {estimated_time_minutes}min)"
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority=priority
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published coaching opportunity: {coaching_area} - {difficulty_level} level ({estimated_time_minutes}min - contact: {contact_id})")
+
+    async def publish_ai_concierge_status_update(
+        self,
+        concierge_id: str,
+        status: str,
+        active_insights: int,
+        monitoring_contacts: int,
+        processing_time_ms: float,
+        performance_metrics: Optional[Dict[str, Any]] = None,
+        location_id: Optional[str] = None
+    ):
+        """
+        Publish AI Concierge service status update.
+
+        Args:
+            concierge_id: Concierge service identifier
+            status: Service status (active, idle, processing, error)
+            active_insights: Number of active insights
+            monitoring_contacts: Number of contacts being monitored
+            processing_time_ms: Average processing time in milliseconds
+            performance_metrics: Additional performance data (optional)
+            location_id: Location/tenant ID (optional)
+        """
+        event = RealTimeEvent(
+            event_type=EventType.AI_CONCIERGE_STATUS,
+            data={
+                "concierge_id": concierge_id,
+                "status": status,
+                "active_insights": active_insights,
+                "monitoring_contacts": monitoring_contacts,
+                "processing_time_ms": round(processing_time_ms, 2),
+                "performance_metrics": performance_metrics or {},
+                "efficiency_score": self._calculate_concierge_efficiency(processing_time_ms, active_insights),
+                "status_timestamp": datetime.now(timezone.utc).isoformat(),
+                "summary": f"AI Concierge: {status} - {active_insights} insights, {monitoring_contacts} contacts"
+            },
+            timestamp=datetime.now(timezone.utc),
+            location_id=location_id,
+            priority="high" if status == "error" else "low"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published AI Concierge status: {status} - {active_insights} insights, {monitoring_contacts} contacts")
+
+    def _calculate_concierge_efficiency(self, processing_time_ms: float, active_insights: int) -> float:
+        """Calculate AI Concierge efficiency score."""
+        # Target: <2000ms processing time, efficient insight generation
+        time_score = max(0, 1.0 - (processing_time_ms - 1000) / 3000) if processing_time_ms > 1000 else 1.0
+        insight_score = min(1.0, active_insights / 10)  # Optimal around 10 insights
+
+        return round((time_score * 0.7) + (insight_score * 0.3), 2)
+
     def _calculate_sequence_progress(self, sequence_day: int) -> Dict[str, Any]:
         """Calculate lead bot sequence progress information."""
         progress_map = {
@@ -1227,3 +1448,41 @@ async def publish_system_health_update(component: str, status: str, response_tim
     """Convenience function to publish system health update."""
     publisher = get_event_publisher()
     await publisher.publish_system_health_update(component, status, response_time_ms, **kwargs)
+
+# AI Concierge Convenience Functions
+
+async def publish_proactive_insight(insight_id: str, contact_id: str, insight_type: str,
+                                  confidence_score: float, title: str, description: str,
+                                  suggested_actions: List[str], **kwargs):
+    """Convenience function to publish proactive insight."""
+    publisher = get_event_publisher()
+    await publisher.publish_proactive_insight(insight_id, contact_id, insight_type,
+                                            confidence_score, title, description,
+                                            suggested_actions, **kwargs)
+
+async def publish_strategy_recommendation(recommendation_id: str, contact_id: str, strategy_type: str,
+                                        recommendation_text: str, reasoning: str, confidence_score: float,
+                                        expected_impact: str, implementation_steps: List[str], **kwargs):
+    """Convenience function to publish strategy recommendation."""
+    publisher = get_event_publisher()
+    await publisher.publish_strategy_recommendation(recommendation_id, contact_id, strategy_type,
+                                                  recommendation_text, reasoning, confidence_score,
+                                                  expected_impact, implementation_steps, **kwargs)
+
+async def publish_coaching_opportunity(opportunity_id: str, contact_id: str, coaching_area: str,
+                                     opportunity_description: str, suggested_approach: str,
+                                     learning_objectives: List[str], difficulty_level: str,
+                                     estimated_time_minutes: int, **kwargs):
+    """Convenience function to publish coaching opportunity."""
+    publisher = get_event_publisher()
+    await publisher.publish_coaching_opportunity(opportunity_id, contact_id, coaching_area,
+                                               opportunity_description, suggested_approach,
+                                               learning_objectives, difficulty_level,
+                                               estimated_time_minutes, **kwargs)
+
+async def publish_ai_concierge_status_update(concierge_id: str, status: str, active_insights: int,
+                                           monitoring_contacts: int, processing_time_ms: float, **kwargs):
+    """Convenience function to publish AI Concierge status update."""
+    publisher = get_event_publisher()
+    await publisher.publish_ai_concierge_status_update(concierge_id, status, active_insights,
+                                                     monitoring_contacts, processing_time_ms, **kwargs)
