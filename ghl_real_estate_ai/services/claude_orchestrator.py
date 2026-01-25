@@ -404,6 +404,31 @@ class ClaudeOrchestrator:
                 metadata={"error": True, "error_type": type(e).__name__}
             )
 
+    async def process_request_stream(self, request: ClaudeRequest) -> AsyncGenerator[str, None]:
+        """
+        Streaming version of process_request. 
+        Note: Currently bypasses tool-use loop for maximum speed.
+        """
+        try:
+            complexity = self._get_complexity_for_task(request.task_type)
+            system_prompt = request.system_prompt or self._get_system_prompt(request.task_type)
+            enhanced_context = await self._enhance_context(request.context)
+            full_prompt = self._build_prompt(request.prompt, enhanced_context)
+
+            async for chunk in self.llm.astream(
+                prompt=full_prompt,
+                system_prompt=system_prompt,
+                max_tokens=request.max_tokens,
+                temperature=request.temperature,
+                complexity=complexity,
+                tenant_id=request.tenant_id
+            ):
+                yield chunk
+
+        except Exception as e:
+            logger.error(f"Error in streaming Claude request: {e}")
+            yield f"Error: {str(e)}"
+
     async def _get_tools_for_request(self, categories: Optional[List[SkillCategory]] = None) -> List[Dict[str, Any]]:
         """Gather tool definitions from MCP servers based on allowed categories."""
         tools = []

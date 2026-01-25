@@ -177,7 +177,8 @@ export const useConciergeStore = create<ConciergeState>()(
         try {
           set({ initializationError: null })
 
-          const service = new ClaudeConciergeService('/api')
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+          const service = new ClaudeConciergeService(apiUrl)
           const contextMgr = new ContextManager()
 
           set({
