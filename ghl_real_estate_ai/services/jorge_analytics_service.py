@@ -113,7 +113,7 @@ class JorgeAnalyticsService:
             # Business targets
             "monthly_revenue_target": 125000,
             "quarterly_revenue_target": 375000,
-            "annual_revenue_target": 1500000,
+            "annual_revenue_target": 1700000,
 
             # Market context
             "primary_market": "Rancho Cucamonga",

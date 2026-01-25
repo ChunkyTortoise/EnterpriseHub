@@ -71,11 +71,17 @@ class LiveGuidanceRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     """Request model for chat interactions."""
-    message: str = Field(..., max_length=1000, description="User message")
+    message: Optional[str] = Field(None, max_length=1000, description="User message")
+    messages: Optional[List[Dict[str, str]]] = Field(None, description="Message history")
+    system_prompt: Optional[str] = Field(None, alias="systemPrompt")
     conversation_id: Optional[str] = None
     platform_context: PlatformContextRequest
     mode: str = "reactive"  # proactive, reactive, presentation, field_work, executive
     streaming: bool = True
+    stream: Optional[bool] = None # Support both names
+
+    class Config:
+        allow_population_by_field_name = True
 
 class CoachingRequest(BaseModel):
     """Request model for real-time coaching."""
@@ -111,9 +117,11 @@ class LearningRequest(BaseModel):
 
 class ConciergeResponseModel(BaseModel):
     """Response model for concierge responses."""
+    content: str # Added for compatibility
     primary_guidance: str
     urgency_level: str
     confidence_score: float
+    reasoning: Optional[str] = None
 
     immediate_actions: List[Dict[str, Any]]
     background_tasks: List[Dict[str, Any]]
@@ -126,6 +134,8 @@ class ConciergeResponseModel(BaseModel):
     risk_alerts: List[Dict[str, Any]]
     opportunity_highlights: List[Dict[str, Any]]
     learning_insights: List[Dict[str, Any]]
+    
+    handoff_recommendation: Optional[Dict[str, Any]] = None
 
     response_time_ms: int
     data_sources_used: List[str]
@@ -170,9 +180,11 @@ def convert_platform_context(request: PlatformContextRequest) -> PlatformContext
 def convert_concierge_response(response: ConciergeResponse) -> ConciergeResponseModel:
     """Convert internal response to API model."""
     return ConciergeResponseModel(
+        content=response.primary_guidance,
         primary_guidance=response.primary_guidance,
         urgency_level=response.urgency_level,
         confidence_score=response.confidence_score,
+        reasoning=response.reasoning,
         immediate_actions=response.immediate_actions,
         background_tasks=response.background_tasks,
         follow_up_reminders=response.follow_up_reminders,
@@ -182,6 +194,7 @@ def convert_concierge_response(response: ConciergeResponse) -> ConciergeResponse
         risk_alerts=response.risk_alerts,
         opportunity_highlights=response.opportunity_highlights,
         learning_insights=response.learning_insights,
+        handoff_recommendation=response.handoff_recommendation,
         response_time_ms=response.response_time_ms,
         data_sources_used=response.data_sources_used,
         generated_at=response.generated_at
@@ -250,20 +263,7 @@ async def generate_live_guidance(
         )
 
         # Convert to API response
-        return ConciergeResponseModel(
-            primary_guidance=response.primary_guidance,
-            immediate_actions=response.immediate_actions,
-            risk_alerts=response.risk_alerts,
-            revenue_opportunities=response.revenue_opportunities,
-            coaching_insights=response.coaching_insights,
-            bot_coordination=response.bot_coordination,
-            mobile_assistance=response.mobile_assistance,
-            presentation_mode=response.presentation_mode,
-            confidence_score=response.confidence_score,
-            response_time_ms=response.response_time_ms,
-            mode=response.mode.value,
-            scope=response.scope.value
-        )
+        return convert_concierge_response(response)
 
     except Exception as e:
         logger.error(f"Error generating live guidance: {e}")
@@ -283,8 +283,16 @@ async def chat_with_concierge(
     try:
         platform_context = convert_platform_context(request.platform_context)
         concierge_mode = ConciergeMode(request.mode)
+        
+        # Determine if streaming is requested (support both 'streaming' and 'stream')
+        should_stream = request.stream if request.stream is not None else request.streaming
 
-        if request.streaming:
+        # Build prompt from single message or message list
+        prompt = request.message or ""
+        if not prompt and request.messages:
+            prompt = request.messages[-1].get("content", "")
+
+        if should_stream:
             # Return true streaming response
             async def generate_stream() -> AsyncGenerator[str, None]:
                 try:
@@ -292,7 +300,10 @@ async def chat_with_concierge(
                     async for chunk in orchestrator.generate_contextual_guidance_stream(
                         context=platform_context,
                         mode=concierge_mode,
-                        scope=IntelligenceScope.WORKFLOW
+                        scope=IntelligenceScope.WORKFLOW,
+                        current_page=platform_context.current_page,
+                        user_role=platform_context.user_role,
+                        session_id=platform_context.session_id
                     ):
                         chunk_data = StreamChunk(
                             type="content",
@@ -314,7 +325,7 @@ async def chat_with_concierge(
 
             return StreamingResponse(
                 generate_stream(),
-                media_type="text/stream-events",
+                media_type="text/event-stream", # Standard SSE media type
                 headers={
                     "Cache-Control": "no-cache",
                     "Connection": "keep-alive",
@@ -326,7 +337,10 @@ async def chat_with_concierge(
             response = await orchestrator.generate_contextual_guidance(
                 context=platform_context,
                 mode=concierge_mode,
-                scope=IntelligenceScope.WORKFLOW
+                scope=IntelligenceScope.WORKFLOW,
+                current_page=platform_context.current_page,
+                user_role=platform_context.user_role,
+                session_id=platform_context.session_id
             )
             return convert_concierge_response(response)
 

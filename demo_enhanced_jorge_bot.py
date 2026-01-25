@@ -54,7 +54,7 @@ class EnhancedJorgeBotDemo:
                 "name": "🔥 Hot Motivated Seller - Maria Santos",
                 "description": "Job transfer, needs to sell in 30 days, highly motivated",
                 "context": {
-                    "situation": "Job relocation to Dallas, must sell Austin home quickly",
+                    "situation": "Job relocation to Dallas, must sell Rancho Cucamonga home quickly",
                     "timeline": "30 days maximum",
                     "motivation": "Already bought new home, carrying two mortgages"
                 },

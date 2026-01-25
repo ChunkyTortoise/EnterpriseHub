@@ -52,7 +52,7 @@ async def test_jorge_buyer_bot_qualification_flow(mock_buyer_deps):
     bot = JorgeBuyerBot()
     
     history = [
-        {"role": "user", "content": "I want to buy a house in Austin for $500k. I am pre-approved."}
+        {"role": "user", "content": "I want to buy a house in Rancho Cucamonga for $700k. I am pre-approved."}
     ]
     
     result = await bot.process_buyer_conversation("buyer_123", "Jane Doe", history)

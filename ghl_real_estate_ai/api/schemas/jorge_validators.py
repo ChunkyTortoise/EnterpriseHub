@@ -71,7 +71,7 @@ class JorgePropertyValidator:
     MIN_VALUE = 100_000      # $100K
     MAX_VALUE = 2_000_000    # $2M
     SUPPORTED_TYPES = ["single_family", "condo", "townhouse", "duplex"]
-    SUPPORTED_MARKETS = ["austin", "san_antonio", "houston", "dallas"]
+    SUPPORTED_MARKETS = ["rancho_cucamonga", "san_antonio", "houston", "dallas"]
 
     @classmethod
     def validate_property_value(cls, value: Union[int, float, Decimal]) -> int:
@@ -230,9 +230,9 @@ class JorgePropertyRequest(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "address": "123 Main St, Austin, TX 78701",
+                "address": "123 Main St, Rancho Cucamonga, CA 78701",
                 "property_type": "single_family",
-                "market": "austin",
+                "market": "rancho_cucamonga",
                 "estimated_value": 450000,
                 "commission_rate": 0.06
             }
@@ -320,7 +320,7 @@ class JorgeCommissionCalculation(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "property_value": 500000,
+                "property_value": 700000,
                 "commission_rate": 0.06,
                 "split_percentage": 1.0
             }
@@ -361,7 +361,7 @@ class JorgeBotMessage(BaseModel):
         json_schema_extra = {
             "example": {
                 "message_type": "sms",
-                "content": "Hi John! Jorge here. Saw your interest in Austin properties. Free to chat about your home search? Quick 5-min call.",
+                "content": "Hi John! Jorge here. Saw your interest in Rancho Cucamonga properties. Free to chat about your home search? Quick 5-min call.",
                 "lead_id": "123e4567-e89b-12d3-a456-426614174000",
                 "bot_type": "buyer",
                 "temperature": "warm"
@@ -399,7 +399,7 @@ class JorgeAnalyticsQuery(BaseModel):
             "example": {
                 "timeframe": "7d",
                 "metrics": ["revenue", "leads", "conversion", "commission"],
-                "location_id": "jorge_austin",
+                "location_id": "jorge_rancho_cucamonga",
                 "include_commission": True
             }
         }

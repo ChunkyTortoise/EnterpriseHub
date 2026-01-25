@@ -141,7 +141,7 @@ class JorgeSellerConfig:
 
     # ========== HOT SELLER HANDOFF MESSAGES ==========
     HOT_SELLER_HANDOFF_MESSAGES = [
-        "Based on your answers, you're exactly who we help. Let me get you scheduled with our team to discuss your options. When works better for you, morning or afternoon?",
+        "Based on what you've shared, it sounds like we can really help you achieve your goals. I'd love to schedule a time to discuss your options in detail. What would work better for you, morning or afternoon?",
         "Perfect. You're a great fit for our program. I'm connecting you with our team now. Are mornings or afternoons better for a quick call?",
         "You answered all my questions, which tells me you're serious. Let me get you scheduled with our team today. Morning or afternoon?"
     ]
@@ -387,21 +387,91 @@ class JorgeEnvironmentSettings:
         return self.deactivation_tags
 
 
+# ========== MARKET CONFIGURATION ==========
+
+class JorgeMarketManager:
+    """Market configuration manager for Jorge bots"""
+
+    def __init__(self):
+        """Initialize with default market (Rancho Cucamonga)"""
+        self.current_market = os.getenv("JORGE_MARKET", "rancho_cucamonga")
+        self._rancho_config = None
+
+    def get_market_config(self):
+        """Get configuration for current market"""
+        if self.current_market == "rancho_cucamonga":
+            return self._get_rancho_config()
+        elif self.current_market == "rancho_cucamonga":
+            return self._get_rancho_cucamonga_config()
+        else:
+            # Default to Rancho Cucamonga
+            return self._get_rancho_config()
+
+    def _get_rancho_config(self):
+        """Get Rancho Cucamonga configuration"""
+        if self._rancho_config is None:
+            try:
+                from .jorge_rancho_config import rancho_config
+                self._rancho_config = rancho_config
+            except ImportError:
+                # Fallback configuration
+                self._rancho_config = self._create_fallback_config()
+        return self._rancho_config
+
+    def _get_rancho_cucamonga_config(self):
+        """Legacy Rancho Cucamonga configuration (maintained for compatibility)"""
+        return {
+            "market_name": "Rancho Cucamonga",
+            "state": "CA",
+            "price_ranges": {
+                "entry_level": {"min": 700000, "max": 700000},
+                "mid_market": {"min": 700000, "max": 1200000},
+                "luxury": {"min": 1200000, "max": 7000000}
+            },
+            "regulatory": {
+                "license_authority": "DRE",
+                "state_regulations": "California Real Estate Commission"
+            }
+        }
+
+    def _create_fallback_config(self):
+        """Create fallback Rancho configuration if import fails"""
+        return {
+            "market_name": "Rancho Cucamonga",
+            "state": "CA",
+            "price_ranges": {
+                "entry_level": {"min": 700000, "max": 700000},
+                "mid_market": {"min": 700000, "max": 1200000},
+                "luxury": {"min": 1200000, "max": 7000000}
+            },
+            "regulatory": {
+                "license_authority": "DRE",
+                "state_regulations": "California Department of Real Estate"
+            }
+        }
+
 # ========== EXPORTS ==========
 
 # Create global settings instance
 settings = JorgeEnvironmentSettings()
+market_manager = JorgeMarketManager()
 
 # Export commonly used values
 JORGE_SELLER_MODE = settings.JORGE_SELLER_MODE
 ACTIVATION_TAGS = settings.ACTIVATION_TAGS
 DEACTIVATION_TAGS = settings.DEACTIVATION_TAGS
+CURRENT_MARKET = market_manager.current_market
+MARKET_CONFIG = market_manager.get_market_config()
 
 __all__ = [
     "JorgeSellerConfig",
     "JorgeEnvironmentSettings",
+    "JorgeMarketManager",
     "settings",
+    "market_manager",
     "JORGE_SELLER_MODE",
     "ACTIVATION_TAGS",
-    "DEACTIVATION_TAGS"
+    "DEACTIVATION_TAGS",
+    "CURRENT_MARKET",
+    "MARKET_CONFIG"
 ]

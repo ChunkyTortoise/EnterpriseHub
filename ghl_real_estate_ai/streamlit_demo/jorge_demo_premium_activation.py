@@ -338,7 +338,7 @@ if __name__ == "__main__":
 - [ ] Predictive deal scoring and win/loss analysis
 
 ### Business Impact
-- [ ] Austin market scenarios worth $136,700 in commissions
+- [ ] Rancho Cucamonga market scenarios worth $136,700 in commissions
 - [ ] 25% improvement in conversion rates
 - [ ] 40% increase in agent productivity
 - [ ] $700K+ annual value across 31 AI services
@@ -428,7 +428,7 @@ if __name__ == "__main__":
         print("   1. Run: python3 launch_jorge_demo.py")
         print("   2. Navigate through tabs to verify premium components")
         print("   3. Use JORGE_DEMO_CHECKLIST.md for presentation flow")
-        print("   4. Practice demo scenarios with Austin market data")
+        print("   4. Practice demo scenarios with Rancho Cucamonga market data")
 
         print()
         print("🎨 PREMIUM FEATURES ACTIVATED:")

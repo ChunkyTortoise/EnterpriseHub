@@ -69,7 +69,7 @@ class JorgeAnalyticsAPIClient:
                 "forecasted_revenue": random.randint(220000, 280000),
                 "confidence_level": random.uniform(0.82, 0.94),
                 "confidence_lower": random.randint(200000, 240000),
-                "confidence_upper": random.randint(260000, 300000),
+                "confidence_upper": random.randint(260000, 700000),
                 "predicted_conversions": random.randint(45, 65),
                 "model_accuracy": random.uniform(0.85, 0.92),
                 "growth_rate": random.uniform(0.12, 0.28)

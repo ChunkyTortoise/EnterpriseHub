@@ -461,7 +461,7 @@ async def schedule_follow_up(contact_id: str, follow_up_data: Dict):
 
 # Development/testing endpoints
 @app.post("/test/analyze", tags=["Testing"])
-async def test_lead_analysis(message: str = "I want to buy a house for $500k in Plano"):
+async def test_lead_analysis(message: str = "I want to buy a house for $700k in Plano"):
     """Test endpoint for lead analysis (development only)"""
 
     return await analyze_lead_for_jorge(

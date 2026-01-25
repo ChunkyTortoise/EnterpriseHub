@@ -79,8 +79,8 @@ class JorgePropertyMatchingAPIClient:
                 "avg_days_on_market": random.randint(18, 28),
                 "inventory_turnover_rate": random.uniform(0.65, 0.82),
                 "price_range_distribution": {
-                    "under_500k": random.randint(45, 75),
-                    "500k_750k": random.randint(85, 125),
+                    "under_700k": random.randint(45, 75),
+                    "700k_750k": random.randint(85, 125),
                     "750k_1m": random.randint(65, 95),
                     "1m_plus": random.randint(35, 55)
                 }
@@ -220,8 +220,8 @@ class JorgePropertyMatchingAPIClient:
             "price_distribution": {
                 "$400K-$600K": random.randint(25, 45),
                 "$600K-$800K": random.randint(85, 115),
-                "$800K-$1M": random.randint(65, 85),
-                "$1M+": random.randint(35, 55)
+                "$800K-$1.2M": random.randint(65, 85),
+                "$1.2M+": random.randint(35, 55)
             },
             "by_city": {
                 "Rancho Cucamonga": random.randint(95, 125),
@@ -525,7 +525,7 @@ def render_property_search_section(api_client: JorgePropertyMatchingAPIClient):
             with col_budget1:
                 min_budget = st.number_input("Min Budget ($)", min_value=200000, value=650000, step=25000)
             with col_budget2:
-                max_budget = st.number_input("Max Budget ($)", min_value=300000, value=850000, step=25000)
+                max_budget = st.number_input("Max Budget ($)", min_value=700000, value=850000, step=25000)
 
             col_bed, col_bath = st.columns(2)
             with col_bed:

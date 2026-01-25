@@ -33,7 +33,7 @@ class TestJorgeLeadScoring:
         """Test that 1 question answered = cold lead."""
         context = {
             "extracted_preferences": {
-                "budget": "300000"
+                "budget": "700000"
             },
             "conversation_history": []
         }
@@ -49,8 +49,8 @@ class TestJorgeLeadScoring:
         """Test that 2 questions answered = warm lead."""
         context = {
             "extracted_preferences": {
-                "budget": "300000",
-                "location": "Austin, TX"
+                "budget": "700000",
+                "location": "Rancho Cucamonga, CA"
             },
             "conversation_history": []
         }
@@ -66,8 +66,8 @@ class TestJorgeLeadScoring:
         """Test that 3 questions answered = hot lead."""
         context = {
             "extracted_preferences": {
-                "budget": "300000",
-                "location": "Austin, TX",
+                "budget": "700000",
+                "location": "Rancho Cucamonga, CA",
                 "timeline": "3 months"
             },
             "conversation_history": []
@@ -84,8 +84,8 @@ class TestJorgeLeadScoring:
         """Test that 4+ questions answered = hot lead."""
         context = {
             "extracted_preferences": {
-                "budget": "300000",
-                "location": "Austin, TX",
+                "budget": "700000",
+                "location": "Rancho Cucamonga, CA",
                 "timeline": "3 months",
                 "bedrooms": 3
             },
@@ -103,8 +103,8 @@ class TestJorgeLeadScoring:
         """Test that all 7 questions can be counted."""
         context = {
             "extracted_preferences": {
-                "budget": "300000",
-                "location": "Austin, TX",
+                "budget": "700000",
+                "location": "Rancho Cucamonga, CA",
                 "timeline": "3 months",
                 "bedrooms": 3,
                 "financing": "pre-approved",
@@ -175,8 +175,8 @@ class TestJorgeLeadScoring:
         """Test that calculate_with_reasoning includes question count."""
         context = {
             "extracted_preferences": {
-                "budget": "300000",
-                "location": "Austin, TX",
+                "budget": "700000",
+                "location": "Rancho Cucamonga, CA",
                 "timeline": "3 months"
             }
         }
@@ -265,7 +265,7 @@ class TestJorgeScenarios:
         context = {
             "extracted_preferences": {
                 "budget": "400000",  # Selling price
-                "location": "Downtown Austin",
+                "location": "Central RC Rancho Cucamonga",
                 "timeline": "ASAP",
                 "home_condition": "needs repairs"  # Seller-specific
             }
@@ -281,7 +281,7 @@ class TestJorgeScenarios:
         context = {
             "extracted_preferences": {
                 "budget": "400000",
-                "location": "Downtown Austin",
+                "location": "Central RC Rancho Cucamonga",
                 "timeline": "3-6 months",
                 "bedrooms": 3,
                 "financing": "pre-approved"
@@ -297,7 +297,7 @@ class TestJorgeScenarios:
         """Test lead who shares motivation."""
         context = {
             "extracted_preferences": {
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "timeline": "soon",
                 "motivation": "relocating for new job"
             }

@@ -268,7 +268,7 @@ class PropertyDataCollector:
             "school_ratings": {"elementary": 8, "middle": 7, "high": 9},
             "crime_index": 15,  # Lower is better
             "amenities": ["parks", "shopping", "restaurants", "gym"],
-            "employment_centers": ["downtown", "tech_park", "medical_center"]
+            "employment_centers": ["central_rc", "tech_park", "medical_center"]
         }
 
     async def _collect_comparable_sales(self, address: str) -> List[Dict]:

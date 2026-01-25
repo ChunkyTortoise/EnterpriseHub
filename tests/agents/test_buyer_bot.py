@@ -165,14 +165,14 @@ class TestJorgeBuyerBot:
 
         # Set up qualified buyer state
         mock_buyer_state["property_preferences"] = {"bedrooms": 3}
-        mock_buyer_state["budget_range"] = {"min": 300000, "max": 400000}
+        mock_buyer_state["budget_range"] = {"min": 700000, "max": 400000}
 
         result = await buyer_bot.match_properties(mock_buyer_state)
 
         # Verify property matcher was called correctly
         buyer_bot.property_matcher.find_matches.assert_called_once_with(
             buyer_preferences={"bedrooms": 3},
-            budget_range={"min": 300000, "max": 400000},
+            budget_range={"min": 700000, "max": 400000},
             max_results=5
         )
 
@@ -276,7 +276,7 @@ class TestJorgeBuyerBot:
             {"role": "user", "content": "Looking for something between $300,000 and $450,000"}
         ]
         budget = await buyer_bot._extract_budget_range(conversation)
-        assert budget == {"min": 300000, "max": 450000}
+        assert budget == {"min": 700000, "max": 450000}
 
         # Test with single amount
         conversation = [

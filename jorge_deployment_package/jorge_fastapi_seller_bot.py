@@ -303,7 +303,7 @@ async def generate_mock_seller_response(
         questions_answered = 1
 
     # Business rules validation
-    budget_keywords = ["200k", "300k", "400k", "500k", "600k", "700k", "800k"]
+    budget_keywords = ["200k", "700k", "400k", "700k", "600k", "700k", "800k"]
     location_keywords = ["dallas", "plano", "frisco", "mckinney", "allen"]
 
     meets_budget = any(keyword in message_lower for keyword in budget_keywords)

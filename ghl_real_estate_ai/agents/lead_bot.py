@@ -1523,7 +1523,7 @@ class LeadBotWorkflow:
         """Generate Zillow-Defense CMA and inject into conversation."""
         logger.info(f"Generating CMA for {state['lead_name']}")
         
-        address = state.get('property_address', '123 Main St, Austin, TX') # Fallback if missing
+        address = state.get('property_address', '123 Main St, Rancho Cucamonga, CA') # Fallback if missing
         
         await sync_service.record_lead_event(state['lead_id'], "AI", f"Generating CMA for {address}", "thought")
 
