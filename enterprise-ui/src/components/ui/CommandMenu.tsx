@@ -19,7 +19,8 @@ import {
   Target,
   Activity,
   Brain,
-  BarChart3
+  BarChart3,
+  MessageSquare
 } from 'lucide-react'
 
 export function CommandMenu() {
@@ -97,8 +98,8 @@ export function CommandMenu() {
                 <div className="p-1.5 bg-blue-500/10 rounded-md text-blue-400">
                   <Brain size={16} />
                 </div>
-                <span className="text-sm font-medium text-gray-300">Business Intelligence</span>
-                <span className="text-[10px] text-gray-600 font-mono bg-amber-500/10 text-amber-400 px-1.5 rounded">PHASE 7</span>
+                <span className="text-sm font-medium text-gray-300">Intelligence Center</span>
+                <span className="text-[10px] text-gray-600 font-mono bg-emerald-500/10 text-emerald-400 px-1.5 rounded">PHASE 8</span>
               </CommandItem>
 
               <CommandItem
@@ -117,6 +118,26 @@ export function CommandMenu() {
 
             <CommandGroup heading="Lead Intelligence" className="px-2 py-3">
               <div className="text-[10px] text-gray-500 font-mono uppercase tracking-[0.2em] mb-2 px-2">Analytics</div>
+              <CommandItem
+                onSelect={() => runCommand(() => router.push('/intelligence'))}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer aria-selected:bg-white/10 transition-colors"
+              >
+                <div className="p-1.5 bg-purple-500/10 rounded-md text-purple-400">
+                  <MessageSquare size={16} />
+                </div>
+                <span className="text-sm font-medium text-gray-300">AI Concierge</span>
+                <span className="text-[10px] text-gray-600 font-mono bg-purple-500/10 text-purple-400 px-1.5 rounded">NEW</span>
+              </CommandItem>
+              <CommandItem
+                onSelect={() => runCommand(() => router.push('/intelligence'))}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer aria-selected:bg-white/10 transition-colors"
+              >
+                <div className="p-1.5 bg-orange-500/10 rounded-md text-orange-400">
+                  <BarChart3 size={16} />
+                </div>
+                <span className="text-sm font-medium text-gray-300">SHAP Analytics</span>
+                <span className="text-[10px] text-gray-600 font-mono bg-orange-500/10 text-orange-400 px-1.5 rounded">PHASE 8</span>
+              </CommandItem>
               <CommandItem className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer aria-selected:bg-white/10 transition-colors">
                 <div className="p-1.5 bg-jorge-glow/10 rounded-md text-jorge-glow">
                   <Target size={16} />

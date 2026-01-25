@@ -47,7 +47,42 @@ export function ExecutiveKpiGrid({
   locationId = 'default'
 }: EnhancedKPIGridProps) {
   const router = useRouter();
-  const { addEntry } = useAgentStore();
+  const { addEntry, connectBIWebSockets, getBIConnectionHealth } = useAgentStore();
+
+  // Drill-down navigation handlers
+  const handleDrillDown = useCallback((metric: string, data: any) => {
+    if (!drillDownEnabled) return;
+
+    addEntry({
+      timestamp: new Date().toISOString(),
+      agent: 'executive_kpi_grid',
+      key: 'drill_down_navigation',
+      value: `Navigating to detailed ${metric} analytics`
+    });
+
+    switch (metric) {
+      case 'revenue':
+        router.push(`/bi-dashboard?tab=revenue&timeframe=${timeframe}&focus=pipeline`);
+        break;
+      case 'leads':
+        router.push(`/analytics/leads?timeframe=${timeframe}&filter=active`);
+        break;
+      case 'conversion':
+        router.push(`/analytics/conversion?timeframe=${timeframe}&bot=jorge-seller`);
+        break;
+      case 'commission':
+        router.push(`/bi-dashboard?tab=revenue&timeframe=${timeframe}&focus=commission`);
+        break;
+      case 'performance':
+        router.push(`/bi-dashboard?tab=bots&timeframe=${timeframe}&focus=response_time`);
+        break;
+      case 'success_rate':
+        router.push(`/bi-dashboard?tab=bots&timeframe=${timeframe}&focus=success_metrics`);
+        break;
+      default:
+        router.push(`/analytics/detailed?metric=${metric}&timeframe=${timeframe}`);
+    }
+  }, [drillDownEnabled, timeframe, router, addEntry]);
 
   const [metrics, setMetrics] = useState<KPIMetrics>({
     total_revenue: 452652,

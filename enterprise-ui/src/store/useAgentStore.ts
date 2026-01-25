@@ -55,6 +55,11 @@ interface IntelligenceState extends AgentState {
   addPredictiveInsight: (insight: Omit<PredictiveInsight, 'id'>) => void;
   subscribeToIntelligence: (components: string[]) => () => void;
 
+  // Enhanced BI WebSocket Subscriptions (Phase 7)
+  connectBIWebSockets: (locationId: string) => void;
+  disconnectBIWebSockets: () => void;
+  getBIConnectionHealth: () => { connected: number; total: number; status: string };
+
   // WebSocket Management
   connectWebSocket: (endpoint: string, identifier: string) => void;
   disconnectWebSocket: (identifier: string) => void;
@@ -91,7 +96,13 @@ const intelligenceEventTypes = [
   'JORGE_QUALIFICATION_PROGRESS', // Jorge bot progress
   'LEAD_BOT_SEQUENCE_UPDATE', // Lead bot lifecycle updates
   'SMS_COMPLIANCE',         // Compliance events
-  'SYSTEM_HEALTH_UPDATE'    // Component health status
+  'SYSTEM_HEALTH_UPDATE',   // Component health status
+
+  // Phase 8: AI Concierge Events
+  'AI_CONCIERGE_INSIGHT',   // New proactive insight generated
+  'COACHING_OPPORTUNITY',   // Coaching opportunity detected
+  'STRATEGY_RECOMMENDATION', // Strategy recommendation
+  'CONVERSATION_QUALITY'    // Conversation quality assessment
 ];
 
 export const useAgentStore = create<IntelligenceState>()(
@@ -403,6 +414,78 @@ export const useAgentStore = create<IntelligenceState>()(
           insights: state.predictiveInsights.length
         }
       };
+    },
+
+    // Enhanced BI WebSocket Management (Phase 7 Integration)
+    connectBIWebSockets: (locationId) => {
+      const biEndpoints = [
+        { id: 'bi_dashboard', endpoint: `ws://localhost:8000/ws/dashboard/${locationId}` },
+        { id: 'bi_revenue_intelligence', endpoint: `ws://localhost:8000/ws/bi/revenue-intelligence/${locationId}` },
+        { id: 'bi_bot_performance', endpoint: `ws://localhost:8000/ws/bot-performance/${locationId}` },
+        { id: 'bi_business_intelligence', endpoint: `ws://localhost:8000/ws/business-intelligence/${locationId}` },
+        { id: 'ai_concierge_insights', endpoint: `ws://localhost:8000/ws/ai-concierge/${locationId}` },
+        { id: 'advanced_analytics', endpoint: `ws://localhost:8000/ws/analytics/advanced/${locationId}` }
+      ];
+
+      biEndpoints.forEach(({ id, endpoint }) => {
+        get().connectWebSocket(endpoint, id);
+      });
+
+      get().addEntry({
+        timestamp: new Date().toISOString(),
+        agent: 'bi_websocket_manager',
+        key: 'bi_connections_initialized',
+        value: `Connected to ${biEndpoints.length} BI WebSocket endpoints for location: ${locationId}`
+      });
+    },
+
+    disconnectBIWebSockets: () => {
+      const biIdentifiers = [
+        'bi_dashboard',
+        'bi_revenue_intelligence',
+        'bi_bot_performance',
+        'bi_business_intelligence',
+        'ai_concierge_insights',
+        'advanced_analytics'
+      ];
+
+      biIdentifiers.forEach(identifier => {
+        get().disconnectWebSocket(identifier);
+      });
+
+      get().addEntry({
+        timestamp: new Date().toISOString(),
+        agent: 'bi_websocket_manager',
+        key: 'bi_connections_terminated',
+        value: `Disconnected from all BI WebSocket endpoints`
+      });
+    },
+
+    getBIConnectionHealth: () => {
+      const biIdentifiers = [
+        'bi_dashboard',
+        'bi_revenue_intelligence',
+        'bi_bot_performance',
+        'bi_business_intelligence',
+        'ai_concierge_insights',
+        'advanced_analytics'
+      ];
+
+      const connectionStatus = get().connectionStatus;
+      const connected = biIdentifiers.filter(id => connectionStatus[id] === 'connected').length;
+      const total = biIdentifiers.length;
+
+      const healthStatus =
+        connected === total ? 'excellent' :
+        connected >= total * 0.8 ? 'good' :
+        connected >= total * 0.5 ? 'warning' : 'critical';
+
+      return {
+        connected,
+        total,
+        status: healthStatus,
+        percentage: Math.round((connected / total) * 100)
+      };
     }
   }))
 );
@@ -458,6 +541,100 @@ function handleIntelligenceEvent(eventData: any) {
           severity: 'high',
           title: 'Bot Coordination Issue',
           message: `${eventData.data.bot_type} coordination failed: ${eventData.data.summary}`,
+          timestamp: eventData.timestamp || new Date().toISOString(),
+          data: eventData.data
+        });
+      }
+      break;
+
+    // Phase 8: AI Concierge Event Handlers
+    case 'AI_CONCIERGE_INSIGHT':
+      store.addPredictiveInsight({
+        type: 'trend_prediction',
+        confidence: eventData.data.confidence_score || 0.8,
+        title: `${eventData.data.insight_type}: ${eventData.data.title}`,
+        description: eventData.data.description,
+        recommended_action: eventData.data.recommended_actions?.[0],
+        timestamp: eventData.timestamp || new Date().toISOString(),
+        relevance_score: eventData.data.expected_impact || 0.7
+      });
+
+      // High priority insights also generate alerts
+      if (eventData.data.priority === 'critical' || eventData.data.priority === 'high') {
+        store.addIntelligenceAlert({
+          type: 'performance',
+          severity: eventData.data.priority === 'critical' ? 'critical' : 'high',
+          title: `AI Concierge: ${eventData.data.title}`,
+          message: eventData.data.description,
+          timestamp: eventData.timestamp || new Date().toISOString(),
+          data: eventData.data
+        });
+      }
+      break;
+
+    case 'COACHING_OPPORTUNITY':
+      store.addIntelligenceAlert({
+        type: 'performance',
+        severity: 'medium',
+        title: 'Coaching Opportunity Available',
+        message: `${eventData.data.coaching_category}: ${eventData.data.coaching_insight}`,
+        timestamp: eventData.timestamp || new Date().toISOString(),
+        data: eventData.data
+      });
+
+      store.addPredictiveInsight({
+        type: 'performance_warning',
+        confidence: eventData.data.success_probability || 0.8,
+        title: `Coaching: ${eventData.data.coaching_category}`,
+        description: eventData.data.coaching_insight,
+        recommended_action: eventData.data.recommended_technique,
+        timestamp: eventData.timestamp || new Date().toISOString(),
+        relevance_score: eventData.data.success_probability || 0.7
+      });
+      break;
+
+    case 'STRATEGY_RECOMMENDATION':
+      store.addPredictiveInsight({
+        type: 'trend_prediction',
+        confidence: eventData.data.impact_score || 0.8,
+        title: `Strategy: ${eventData.data.strategy_title}`,
+        description: eventData.data.strategy_description,
+        recommended_action: eventData.data.conversation_pivot,
+        timestamp: eventData.timestamp || new Date().toISOString(),
+        relevance_score: eventData.data.impact_score || 0.8
+      });
+
+      // Urgent strategies generate alerts
+      if (eventData.data.urgency_level === 'immediate') {
+        store.addIntelligenceAlert({
+          type: 'performance',
+          severity: 'high',
+          title: `Immediate Strategy: ${eventData.data.strategy_title}`,
+          message: eventData.data.rationale,
+          timestamp: eventData.timestamp || new Date().toISOString(),
+          data: eventData.data
+        });
+      }
+      break;
+
+    case 'CONVERSATION_QUALITY':
+      // Track conversation quality metrics
+      if (eventData.data.component && eventData.data.quality_score) {
+        store.updateDashboardMetric('conversation_quality', {
+          overall_score: eventData.data.quality_score,
+          quality_grade: eventData.data.quality_grade,
+          conversation_id: eventData.data.conversation_id,
+          timestamp: eventData.timestamp
+        });
+      }
+
+      // Low quality scores trigger alerts
+      if (eventData.data.quality_score && eventData.data.quality_score < 60) {
+        store.addIntelligenceAlert({
+          type: 'performance',
+          severity: 'medium',
+          title: 'Conversation Quality Alert',
+          message: `Quality score dropped to ${eventData.data.quality_score}% (Grade: ${eventData.data.quality_grade})`,
           timestamp: eventData.timestamp || new Date().toISOString(),
           data: eventData.data
         });

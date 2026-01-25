@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional, Literal, AsyncGenerator
-from datetime import datetime
+from datetime import datetime, timedelta
 import asyncio
 import json
 import uuid
@@ -520,6 +520,164 @@ async def get_lead_intent_score(leadId: str):
         logger.error(f"Intent analysis failed for lead {leadId}: {e}")
         raise HTTPException(status_code=500, detail="Intent analysis failed")
 
+# --- FRONTEND INTEGRATION ENDPOINTS ---
+
+# Pydantic Models for Frontend Compatibility
+class SellerChatRequest(BaseModel):
+    """Request format expected by the frontend Jorge Seller route"""
+    contact_id: str
+    location_id: str
+    message: str
+    contact_info: Optional[Dict[str, str]] = None
+
+class SellerChatResponse(BaseModel):
+    """Response format expected by the frontend Jorge Seller route"""
+    response_message: str
+    seller_temperature: Literal["hot", "warm", "cold"]
+    questions_answered: int
+    qualification_complete: bool
+    actions_taken: List[Dict[str, Any]]
+    next_steps: str
+    analytics: Dict[str, Any]
+
+# --- ENDPOINT 8: POST /api/jorge-seller/process ---
+@router.post("/jorge-seller/process", response_model=SellerChatResponse)
+async def process_seller_message(request: SellerChatRequest):
+    """
+    Process seller message using unified Jorge Seller Bot with enterprise features.
+
+    This endpoint provides frontend compatibility by matching the exact interface
+    expected by enterprise-ui/src/app/api/bots/jorge-seller/route.ts
+
+    Frontend Integration: Replace mock responses with real Jorge bot processing
+    """
+    try:
+        start_time = time.time()
+
+        # Create enterprise Jorge bot with all unified features
+        jorge_bot = JorgeSellerBot.create_enterprise_jorge()
+        logger.info(f"Created enterprise Jorge bot for contact {request.contact_id}")
+
+        # Build contact information for bot processing
+        lead_info = {
+            "contact_id": request.contact_id,
+            "location_id": request.location_id,
+            "name": request.contact_info.get("name", "Unknown Lead") if request.contact_info else "Unknown Lead",
+            "phone": request.contact_info.get("phone") if request.contact_info else None,
+            "email": request.contact_info.get("email") if request.contact_info else None,
+        }
+
+        # TODO: Get conversation history from ConversationSessionManager
+        conversation_history = [{"role": "user", "content": request.message}]
+
+        # Process seller message using unified bot with enhancements
+        result = await jorge_bot.process_seller_with_enhancements({
+            "contact_id": request.contact_id,
+            "message": request.message,
+            "conversation_history": conversation_history,
+            "lead_info": lead_info
+        })
+
+        processing_time = (time.time() - start_time) * 1000
+
+        # Transform bot result to match frontend expectations
+        response = SellerChatResponse(
+            response_message=result.get("response_content", "I'm analyzing your situation..."),
+            seller_temperature=_map_temperature(result.get("seller_temperature", "cold")),
+            questions_answered=result.get("questions_answered", 0),
+            qualification_complete=result.get("qualification_complete", False),
+            actions_taken=_transform_actions(result.get("actions", [])),
+            next_steps=result.get("next_steps", "Continue qualification process"),
+            analytics={
+                "seller_temperature": result.get("seller_temperature", "cold"),
+                "questions_answered": result.get("questions_answered", 0),
+                "qualification_progress": result.get("qualification_progress", "0/4"),
+                "qualification_complete": result.get("qualification_complete", False),
+                "property_condition": result.get("property_condition", "unknown"),
+                "price_expectation": result.get("price_expectation"),
+                "motivation": result.get("motivation"),
+                "urgency": result.get("urgency"),
+                "processing_time_ms": round(processing_time, 2),
+                "bot_version": "unified_enterprise",
+                "enhancement_features": result.get("enhancement_features", [])
+            }
+        )
+
+        # Track metrics and publish events
+        await _track_conversation_metrics("jorge-seller-bot", processing_time)
+
+        event_publisher = get_event_publisher()
+        await event_publisher.publish_seller_bot_message_processed(
+            contact_id=request.contact_id,
+            message_content=request.message,
+            bot_response=response.response_message,
+            seller_temperature=response.seller_temperature,
+            processing_time_ms=processing_time,
+            questions_answered=response.questions_answered,
+            qualification_complete=response.qualification_complete
+        )
+
+        logger.info(f"Processed seller message for {request.contact_id}: {response.seller_temperature} temperature, {processing_time:.2f}ms")
+
+        return response
+
+    except Exception as e:
+        logger.error(f"Jorge seller bot processing failed: {e}")
+
+        # Return error response in expected format
+        return SellerChatResponse(
+            response_message="I'm having technical difficulties right now. Let me connect you with Jorge directly.",
+            seller_temperature="cold",
+            questions_answered=0,
+            qualification_complete=False,
+            actions_taken=[{"type": "error", "description": "Technical issue encountered"}],
+            next_steps="Manual follow-up required",
+            analytics={
+                "seller_temperature": "cold",
+                "questions_answered": 0,
+                "qualification_progress": "0/4",
+                "qualification_complete": False,
+                "error": str(e),
+                "processing_time_ms": 0
+            }
+        )
+
+def _map_temperature(bot_temperature: str) -> Literal["hot", "warm", "cold"]:
+    """Map bot temperature to frontend expected values"""
+    if bot_temperature.lower() in ["hot", "warm", "cold"]:
+        return bot_temperature.lower()
+    return "cold"
+
+def _transform_actions(bot_actions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Transform bot actions to frontend expected format"""
+    transformed_actions = []
+
+    for action in bot_actions:
+        if action.get("type") == "ghl_tag":
+            transformed_actions.append({
+                "type": "add_tag",
+                "tag": action.get("tag_name", "seller_qualified")
+            })
+        elif action.get("type") == "ghl_field":
+            transformed_actions.append({
+                "type": "update_custom_field",
+                "field": action.get("field_name", "seller_temperature"),
+                "value": action.get("field_value")
+            })
+        else:
+            # Pass through other action types
+            transformed_actions.append(action)
+
+    # Ensure at least one action for frontend
+    if not transformed_actions:
+        transformed_actions.append({
+            "type": "update_custom_field",
+            "field": "last_jorge_contact",
+            "value": datetime.now().isoformat()
+        })
+
+    return transformed_actions
+
 # --- HELPER FUNCTIONS ---
 
 def _format_sse(data: dict) -> str:
@@ -601,3 +759,168 @@ async def _execute_lead_sequence(lead_bot, lead_id: str, sequence_day: int) -> N
 
     except Exception as e:
         logger.error(f"Lead bot sequence failed for {lead_id}: {e}")
+
+
+# Lead Bot Automation Models
+class LeadAutomationRequest(BaseModel):
+    """Request model for Lead Bot automation - Frontend Interface"""
+    contact_id: str = Field(..., description="Lead contact ID")
+    location_id: str = Field(..., description="GHL location ID")
+    automation_type: Literal["day_3", "day_7", "day_30", "post_showing", "contract_to_close"] = Field(..., description="Type of automation to trigger")
+    trigger_data: Optional[Dict[str, Any]] = Field(None, description="Additional trigger data")
+
+class LeadAutomationAction(BaseModel):
+    """Lead automation action model"""
+    type: str
+    channel: Literal["sms", "email", "voice_call"]
+    content: Optional[str] = None
+    scheduled_time: Optional[str] = None
+
+class LeadAutomationResponse(BaseModel):
+    """Response model for Lead Bot automation - Frontend Interface"""
+    automation_id: str
+    contact_id: str
+    automation_type: str
+    status: Literal["scheduled", "sent", "completed", "failed"]
+    scheduled_for: str
+    actions_taken: List[LeadAutomationAction]
+    next_followup: Optional[Dict[str, Any]] = None
+
+# --- ENDPOINT 9: POST /api/lead-bot/automation ---
+@router.post("/lead-bot/automation", response_model=LeadAutomationResponse)
+async def trigger_lead_automation(request: LeadAutomationRequest):
+    """
+    Trigger Lead Bot automation for specific lead.
+    Frontend Integration Endpoint - connects Next.js to enhanced lead bot backend.
+    """
+    try:
+        start_time = time.time()
+
+        # Create enhanced Lead Bot with enterprise features
+        lead_bot = LeadBotWorkflow.create_enterprise_lead_bot()
+        automation_id = f"auto_{int(time.time())}_{request.contact_id[:8]}"
+
+        # Map automation type to sequence day
+        automation_mapping = {
+            "day_3": 3,
+            "day_7": 7,
+            "day_30": 30,
+            "post_showing": 1,  # Immediate
+            "contract_to_close": 1  # Immediate
+        }
+
+        sequence_day = automation_mapping.get(request.automation_type, 3)
+
+        # Execute lead bot sequence in background
+        background_tasks = BackgroundTasks()
+        background_tasks.add_task(
+            _execute_lead_sequence,
+            lead_bot,
+            request.contact_id,
+            sequence_day
+        )
+
+        processing_time = (time.time() - start_time) * 1000
+
+        # Build response actions based on automation type
+        actions_taken = []
+        scheduled_time = datetime.now() + timedelta(minutes=5)
+
+        if request.automation_type == "day_3":
+            actions_taken = [
+                LeadAutomationAction(
+                    type="sms_sequence",
+                    channel="sms",
+                    content="Hi! Jorge here. Just checking in on your home search. Found some great options that match what you're looking for. Ready to schedule showings?",
+                    scheduled_time=scheduled_time.isoformat()
+                )
+            ]
+        elif request.automation_type == "day_7":
+            actions_taken = [
+                LeadAutomationAction(
+                    type="retell_voice_call",
+                    channel="voice_call",
+                    scheduled_time=scheduled_time.isoformat()
+                ),
+                LeadAutomationAction(
+                    type="follow_up_sms",
+                    channel="sms",
+                    content="Jorge here - tried calling but wanted to follow up. Have you had a chance to think about those properties I sent? What questions can I answer?",
+                    scheduled_time=(scheduled_time + timedelta(hours=2)).isoformat()
+                )
+            ]
+        elif request.automation_type == "day_30":
+            actions_taken = [
+                LeadAutomationAction(
+                    type="market_update",
+                    channel="email",
+                    content="Market Update: New properties matching your criteria",
+                    scheduled_time=scheduled_time.isoformat()
+                )
+            ]
+        elif request.automation_type == "post_showing":
+            actions_taken = [
+                LeadAutomationAction(
+                    type="feedback_survey",
+                    channel="sms",
+                    content="How did the showing go? Any thoughts on the property? I'm here to answer any questions!",
+                    scheduled_time=(scheduled_time + timedelta(hours=1)).isoformat()
+                )
+            ]
+        elif request.automation_type == "contract_to_close":
+            actions_taken = [
+                LeadAutomationAction(
+                    type="closing_checklist",
+                    channel="email",
+                    content="Here's your closing checklist and next steps",
+                    scheduled_time=scheduled_time.isoformat()
+                )
+            ]
+
+        # Publish automation event
+        event_publisher = get_event_publisher()
+        await event_publisher.publish_lead_bot_sequence_update(
+            contact_id=request.contact_id,
+            sequence_day=sequence_day,
+            action_type=f"automation_{request.automation_type}",
+            success=True
+        )
+
+        # Build response
+        response = LeadAutomationResponse(
+            automation_id=automation_id,
+            contact_id=request.contact_id,
+            automation_type=request.automation_type,
+            status="scheduled",
+            scheduled_for=scheduled_time.isoformat(),
+            actions_taken=actions_taken,
+            next_followup={
+                "type": f"next_{request.automation_type}",
+                "scheduled_for": (datetime.now() + timedelta(days=7)).isoformat()
+            } if request.automation_type in ["day_3", "day_7"] else None
+        )
+
+        logger.info(f"Triggered lead automation {automation_id} for {request.contact_id}: {request.automation_type}")
+
+        return response
+
+    except Exception as e:
+        logger.error(f"Lead automation failed for {request.contact_id}: {e}")
+
+        # Return error response in expected format
+        error_response = LeadAutomationResponse(
+            automation_id=f"error_{int(time.time())}",
+            contact_id=request.contact_id,
+            automation_type=request.automation_type,
+            status="failed",
+            scheduled_for=datetime.now().isoformat(),
+            actions_taken=[
+                LeadAutomationAction(
+                    type="error",
+                    channel="sms",
+                    content=f"Automation failed: {str(e)}"
+                )
+            ]
+        )
+
+        return error_response

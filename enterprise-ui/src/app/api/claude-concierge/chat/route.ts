@@ -1,114 +1,144 @@
 /**
- * Claude Concierge Streaming Chat API
- * Handles streaming conversations with Claude for the Concierge service
+ * Claude Concierge Chat API - Frontend Bridge
+ * Connects to the unified Claude Concierge Agent backend
  *
- * Security: ANTHROPIC_API_KEY stays server-side only
+ * Provides omnipresent AI guidance with platform-wide agent coordination
  */
 
-import { NextRequest } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { NextRequest, NextResponse } from 'next/server'
 
-// Initialize Claude client
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-})
+interface ChatRequest {
+  message: string
+  sessionId: string
+  context: {
+    currentPage: string
+    userRole?: string
+    locationContext?: any
+    activeLeads?: any[]
+    botStatuses?: any
+    userActivity?: any[]
+    businessMetrics?: any
+    activeProperties?: any[]
+    marketConditions?: any
+    priorityActions?: any[]
+    pendingNotifications?: any[]
+  }
+}
 
-// Type for message structure
-interface ClaudeMessage {
-  role: 'user' | 'assistant'
-  content: string
+interface ConciergeResponse {
+  response: string
+  insights?: Array<{
+    category: string
+    title: string
+    value: string
+    trend: 'up' | 'down' | 'stable'
+    trendValue: number
+    description: string
+    timestamp: string
+  }>
+  suggestions?: Array<{
+    id: string
+    type: string
+    title: string
+    description: string
+    impact: string
+    confidence: number
+    actionable: boolean
+    estimatedBenefit?: string
+    relatedAgents: string[]
+    priority: string
+    createdAt: string
+  }>
+  actions?: any[]
+  confidence: number
+  processingTime: number
+  agentContext: string[]
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate API key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return new Response('Claude API not configured', {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
-
-    // Parse request body
-    const {
-      systemPrompt,
-      messages = [],
-      model = 'claude-3-5-sonnet-20241022',
-      maxTokens = 4096,
-      temperature = 0.7,
-      stream: enableStreaming = true
-    } = await request.json()
+    const body: ChatRequest = await request.json()
 
     // Validate required fields
-    if (!systemPrompt || !Array.isArray(messages)) {
-      return new Response('Missing required fields: systemPrompt, messages', {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      })
+    if (!body.message || !body.sessionId) {
+      return NextResponse.json(
+        {
+          error: 'Missing required fields: message, sessionId',
+          status: 'error'
+        },
+        { status: 400 }
+      )
     }
 
-    // Create Claude stream
-    const claudeStream = await anthropic.messages.create({
-      model,
-      max_tokens: maxTokens,
-      temperature,
-      system: systemPrompt,
-      messages: messages.map((msg: ClaudeMessage) => ({
-        role: msg.role,
-        content: msg.content
-      })) as Anthropic.MessageParam[],
-      stream: enableStreaming
-    })
+    // Call unified Claude Concierge Agent backend
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
 
-    // Create a readable stream to pipe Claude's response
-    const readable = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of claudeStream) {
-            const sseData = `data: ${JSON.stringify(chunk)}\n\n`
-            controller.enqueue(new TextEncoder().encode(sseData))
-          }
-
-          // Send completion marker
-          controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'))
-          controller.close()
-        } catch (error) {
-          console.error('Claude streaming error:', error)
-
-          // Send error as SSE
-          const errorData = `data: ${JSON.stringify({
-            type: 'error',
-            error: error instanceof Error ? error.message : 'Streaming failed'
-          })}\n\n`
-
-          controller.enqueue(new TextEncoder().encode(errorData))
-          controller.close()
-        }
-      }
-    })
-
-    // Return streaming response with proper headers
-    return new Response(readable, {
+    const response = await fetch(`${backendUrl}/api/claude-concierge/chat`, {
+      method: 'POST',
       headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
+      body: JSON.stringify({
+        message: body.message,
+        sessionId: body.sessionId,
+        context: {
+          currentPage: body.context?.currentPage || 'unknown',
+          userRole: body.context?.userRole || 'agent',
+          sessionId: body.sessionId,
+          locationContext: body.context?.locationContext || {},
+          activeLeads: body.context?.activeLeads || [],
+          botStatuses: body.context?.botStatuses || {},
+          userActivity: body.context?.userActivity || [],
+          businessMetrics: body.context?.businessMetrics || {},
+          activeProperties: body.context?.activeProperties || [],
+          marketConditions: body.context?.marketConditions || {},
+          priorityActions: body.context?.priorityActions || [],
+          pendingNotifications: body.context?.pendingNotifications || []
+        }
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`Backend responded with status ${response.status}: ${response.statusText}`)
+    }
+
+    // Get structured response from unified Claude Concierge Agent
+    const conciergeResponse: ConciergeResponse = await response.json()
+
+    return NextResponse.json({
+      status: 'success',
+      data: conciergeResponse,
+      backend_status: 'connected',
+      backend_version: 'unified_claude_concierge_agent',
+      timestamp: new Date().toISOString()
     })
 
   } catch (error) {
     console.error('Claude Concierge chat error:', error)
 
-    return new Response(JSON.stringify({
-      error: 'Claude API request failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    // Fallback response if backend is unavailable
+    const fallbackResponse: ConciergeResponse = {
+      response: "I'm temporarily experiencing some connectivity issues. Let me get back to you in a moment with my full platform intelligence.",
+      insights: [],
+      suggestions: [],
+      actions: [],
+      confidence: 0.5,
+      processingTime: 0,
+      agentContext: ['fallback_mode']
+    }
+
+    return NextResponse.json(
+      {
+        error: 'Backend connection failed',
+        status: 'error',
+        data: fallbackResponse,
+        backend_status: 'disconnected',
+        error_detail: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      },
+      { status: 500 }
+    )
   }
 }
 

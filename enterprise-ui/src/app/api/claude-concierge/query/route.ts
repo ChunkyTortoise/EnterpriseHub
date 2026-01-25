@@ -1,108 +1,128 @@
 /**
- * Claude Concierge Direct Query API
- * Handles direct (non-streaming) queries to Claude for routing and analysis
+ * Claude Concierge Query API - Frontend Bridge
+ * Connects to the unified Claude Concierge Agent backend for direct queries
  *
  * Used for: handoff evaluation, context analysis, quick decisions
  */
 
-import { NextRequest } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { NextRequest, NextResponse } from 'next/server'
 
-// Initialize Claude client
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-})
+interface QueryRequest {
+  message: string
+  sessionId: string
+  queryType?: 'handoff_evaluation' | 'context_analysis' | 'quick_decision' | 'general'
+  context?: any
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate API key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return new Response(JSON.stringify({
-        error: 'Claude API not configured'
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
-
-    // Parse request body
-    const {
-      systemPrompt,
-      message,
-      model = 'claude-3-5-sonnet-20241022',
-      maxTokens = 1024
-    } = await request.json()
+    const body: QueryRequest = await request.json()
 
     // Validate required fields
-    if (!systemPrompt || !message) {
-      return new Response(JSON.stringify({
-        error: 'Missing required fields: systemPrompt, message'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      })
+    if (!body.message || !body.sessionId) {
+      return NextResponse.json(
+        {
+          error: 'Missing required fields: message, sessionId',
+          status: 'error'
+        },
+        { status: 400 }
+      )
     }
 
-    // Query Claude directly
-    const response = await anthropic.messages.create({
-      model,
-      max_tokens: maxTokens,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user' as const,
-          content: message
+    // Call unified Claude Concierge Agent backend chat endpoint
+    // (The query endpoint reuses the chat functionality with specific context)
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+
+    const response = await fetch(`${backendUrl}/api/claude-concierge/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        message: body.message,
+        sessionId: body.sessionId,
+        context: {
+          currentPage: body.context?.currentPage || 'query_interface',
+          userRole: body.context?.userRole || 'agent',
+          sessionId: body.sessionId,
+          queryType: body.queryType || 'general',
+          locationContext: body.context?.locationContext || {},
+          activeLeads: body.context?.activeLeads || [],
+          botStatuses: body.context?.botStatuses || {},
+          userActivity: body.context?.userActivity || [],
+          businessMetrics: body.context?.businessMetrics || {},
+          activeProperties: body.context?.activeProperties || [],
+          marketConditions: body.context?.marketConditions || {},
+          priorityActions: body.context?.priorityActions || [],
+          pendingNotifications: body.context?.pendingNotifications || []
         }
-      ] as Anthropic.MessageParam[]
+      })
     })
 
-    // Extract content from response
-    const content = response.content[0]
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude')
+    if (!response.ok) {
+      throw new Error(`Backend responded with status ${response.status}: ${response.statusText}`)
     }
 
-    // Return the response content
-    return new Response(JSON.stringify({
-      content: content.text,
-      usage: response.usage,
-      model: response.model
-    }), {
-      headers: { 'Content-Type': 'application/json' }
+    // Get structured response from unified Claude Concierge Agent
+    const conciergeResponse = await response.json()
+
+    // Transform response to match original query API format
+    return NextResponse.json({
+      status: 'success',
+      content: conciergeResponse.response,
+      insights: conciergeResponse.insights,
+      suggestions: conciergeResponse.suggestions,
+      confidence: conciergeResponse.confidence,
+      processingTime: conciergeResponse.processingTime,
+      agentContext: conciergeResponse.agentContext,
+      queryType: body.queryType || 'general',
+      backend_status: 'connected',
+      backend_version: 'unified_claude_concierge_agent',
+      timestamp: new Date().toISOString()
     })
 
   } catch (error) {
     console.error('Claude Concierge query error:', error)
 
-    // Handle specific Claude API errors
+    // Handle specific error types with appropriate responses
     if (error instanceof Error) {
-      if (error.message.includes('rate_limit_exceeded')) {
-        return new Response(JSON.stringify({
+      if (error.message.includes('rate_limit_exceeded') || error.message.includes('429')) {
+        return NextResponse.json({
           error: 'Rate limit exceeded',
-          details: 'Please try again in a moment'
-        }), {
-          status: 429,
-          headers: { 'Content-Type': 'application/json' }
-        })
+          details: 'Please try again in a moment',
+          status: 'rate_limited',
+          backend_status: 'rate_limited',
+          timestamp: new Date().toISOString()
+        }, { status: 429 })
       }
 
-      if (error.message.includes('invalid_api_key')) {
-        return new Response(JSON.stringify({
-          error: 'Invalid API key'
-        }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        })
+      if (error.message.includes('invalid_api_key') || error.message.includes('401')) {
+        return NextResponse.json({
+          error: 'Invalid API configuration',
+          details: 'Authentication failed',
+          status: 'auth_error',
+          backend_status: 'auth_failed',
+          timestamp: new Date().toISOString()
+        }, { status: 401 })
       }
     }
 
-    return new Response(JSON.stringify({
-      error: 'Claude API request failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    // Fallback response for general errors
+    return NextResponse.json(
+      {
+        error: 'Query processing failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        status: 'error',
+        content: "I'm experiencing technical difficulties. Let me try to reconnect with my systems.",
+        confidence: 0.0,
+        processingTime: 0,
+        agentContext: ['fallback_mode'],
+        backend_status: 'disconnected',
+        timestamp: new Date().toISOString()
+      },
+      { status: 500 }
+    )
   }
 }
 

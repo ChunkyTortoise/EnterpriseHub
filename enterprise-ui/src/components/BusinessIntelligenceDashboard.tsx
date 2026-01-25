@@ -87,7 +87,7 @@ export function BusinessIntelligenceDashboard({
   autoRefresh = true,
   showRealTimeAlerts = true
 }: BusinessIntelligenceDashboardProps) {
-  const { addEntry } = useAgentStore();
+  const { addEntry, connectBIWebSockets } = useAgentStore();
 
   const [selectedTab, setSelectedTab] = useState(0);
   const [timeframe, setTimeframe] = useState<'24h' | '7d' | '30d' | '90d'>('30d');
@@ -142,9 +142,12 @@ export function BusinessIntelligenceDashboard({
     }
   }, [locationId, timeframe, isLoading, addEntry]);
 
-  // Real-time WebSocket connection for strategic alerts
+  // Enhanced Real-time WebSocket connection via useAgentStore
   useEffect(() => {
     if (!showRealTimeAlerts) return;
+
+    // Use enhanced useAgentStore BI WebSocket management
+    connectBIWebSockets(locationId);
 
     const ws = new WebSocket(`ws://localhost:8000/ws/business-intelligence/${locationId}`);
 
