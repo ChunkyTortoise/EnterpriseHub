@@ -21,6 +21,7 @@ from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 # Service imports
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.performance_monitor import get_performance_monitor
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -578,7 +579,17 @@ async def process_seller_message(request: SellerChatRequest):
             "lead_info": lead_info
         })
 
-        processing_time = (time.time() - start_time) * 1000
+        end_time = time.time()
+        processing_time = (end_time - start_time) * 1000
+
+        # Track Jorge performance metrics
+        performance_monitor = get_performance_monitor()
+        await performance_monitor.track_jorge_performance(
+            start_time=start_time,
+            end_time=end_time,
+            success=True,
+            metadata={"contact_id": request.contact_id, "message_length": len(request.message)}
+        )
 
         # Transform bot result to match frontend expectations
         response = SellerChatResponse(
@@ -622,7 +633,17 @@ async def process_seller_message(request: SellerChatRequest):
         return response
 
     except Exception as e:
+        end_time = time.time()
         logger.error(f"Jorge seller bot processing failed: {e}")
+
+        # Track Jorge performance metrics for failures
+        performance_monitor = get_performance_monitor()
+        await performance_monitor.track_jorge_performance(
+            start_time=start_time,
+            end_time=end_time,
+            success=False,
+            metadata={"error": str(e), "contact_id": request.contact_id}
+        )
 
         # Return error response in expected format
         return SellerChatResponse(
@@ -793,8 +814,8 @@ async def trigger_lead_automation(request: LeadAutomationRequest):
     Trigger Lead Bot automation for specific lead.
     Frontend Integration Endpoint - connects Next.js to enhanced lead bot backend.
     """
+    start_time = time.time()
     try:
-        start_time = time.time()
 
         # Create enhanced Lead Bot with enterprise features
         lead_bot = LeadBotWorkflow.create_enterprise_lead_bot()
@@ -820,7 +841,17 @@ async def trigger_lead_automation(request: LeadAutomationRequest):
             sequence_day
         )
 
-        processing_time = (time.time() - start_time) * 1000
+        end_time = time.time()
+        processing_time = (end_time - start_time) * 1000
+
+        # Track Lead Bot automation performance
+        performance_monitor = get_performance_monitor()
+        await performance_monitor.track_lead_automation(
+            automation_type=request.automation_type,
+            start_time=start_time,
+            end_time=end_time,
+            success=True
+        )
 
         # Build response actions based on automation type
         actions_taken = []
@@ -905,7 +936,17 @@ async def trigger_lead_automation(request: LeadAutomationRequest):
         return response
 
     except Exception as e:
+        end_time = time.time()
         logger.error(f"Lead automation failed for {request.contact_id}: {e}")
+
+        # Track Lead Bot automation performance for failures
+        performance_monitor = get_performance_monitor()
+        await performance_monitor.track_lead_automation(
+            automation_type=request.automation_type,
+            start_time=start_time,
+            end_time=end_time,
+            success=False
+        )
 
         # Return error response in expected format
         error_response = LeadAutomationResponse(
@@ -924,3 +965,42 @@ async def trigger_lead_automation(request: LeadAutomationRequest):
         )
 
         return error_response
+
+
+# ========================================================================
+# PERFORMANCE MONITORING ENDPOINTS
+# ========================================================================
+
+@router.get("/performance/summary")
+async def get_performance_summary():
+    """Get comprehensive Jorge Enterprise performance summary"""
+    performance_monitor = get_performance_monitor()
+    return performance_monitor.get_jorge_enterprise_summary()
+
+
+@router.get("/performance/jorge")
+async def get_jorge_metrics():
+    """Get Jorge Seller Bot specific performance metrics"""
+    performance_monitor = get_performance_monitor()
+    return performance_monitor.get_jorge_metrics()
+
+
+@router.get("/performance/lead-automation")
+async def get_lead_automation_metrics():
+    """Get Lead Bot automation performance metrics"""
+    performance_monitor = get_performance_monitor()
+    return performance_monitor.get_lead_automation_metrics()
+
+
+@router.get("/performance/websocket")
+async def get_websocket_metrics():
+    """Get WebSocket coordination performance metrics"""
+    performance_monitor = get_performance_monitor()
+    return performance_monitor.get_websocket_metrics()
+
+
+@router.get("/performance/health")
+async def get_system_health():
+    """Get comprehensive system health report"""
+    performance_monitor = get_performance_monitor()
+    return performance_monitor.get_health_report()
