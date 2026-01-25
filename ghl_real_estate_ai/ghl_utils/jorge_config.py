@@ -86,10 +86,10 @@ class JorgeSellerConfig:
     }
 
     # ========== MESSAGE SETTINGS ==========
-    # Jorge's strict SMS requirements
+    # Jorge's friendly SMS requirements
     MAX_SMS_LENGTH = 160
-    CONFRONTATIONAL_TONE = True
-    NO_EMOJIS = True
+    FRIENDLY_APPROACH = True
+    USE_WARM_LANGUAGE = True
     NO_HYPHENS = True
     NO_ROBOTIC_LANGUAGE = True
 
@@ -114,28 +114,28 @@ class JorgeSellerConfig:
         4: {"field": "price_expectation", "secondary": "price_flexibility"}
     }
 
-    # ========== CONFRONTATIONAL TONE TEMPLATES ==========
-    # Jorge's direct messaging style
-    CONFRONTATIONAL_PROMPTS = {
-        "evasive_response": [
-            "Are you actually serious about selling or just wasting our time?",
-            "Should we close your file or are you still interested?",
-            "Last chance, are you ready to get serious about selling?"
+    # ========== FRIENDLY CONSULTATION TEMPLATES ==========
+    # Jorge's helpful messaging style
+    FRIENDLY_CONSULTATION_PROMPTS = {
+        "clarification_needed": [
+            "I'd love to better understand your situation. Could you help me with that?",
+            "I want to make sure I'm giving you the best advice. Can we clarify a few details?",
+            "To help you make the best decision, I'd like to understand your priorities better."
         ],
-        "vague_answer": [
-            "Let me be direct: {question}",
-            "I need a straight answer: {question}",
-            "Be honest: {question}"
+        "supportive_follow_up": [
+            "I'd be happy to help clarify: {question}",
+            "Let me ask this in a helpful way: {question}",
+            "To give you the best guidance: {question}"
         ],
-        "timeline_pressure": [
-            "Can you actually close in 30-45 days or not?",
-            "Is this timeline realistic for your situation?",
-            "Are you ready to move that quickly?"
+        "timeline_discussion": [
+            "What timeline would work best for your situation?",
+            "Is this timeline something that feels comfortable for you?",
+            "I want to make sure this works with your schedule and needs."
         ],
-        "price_reality_check": [
-            "What's the absolute minimum you'd accept?",
-            "Are you being realistic about the price?",
-            "What number would make you say yes today?"
+        "price_conversation": [
+            "What price range would feel right for you?",
+            "I'd love to help you understand realistic market values.",
+            "What outcome would make this feel like a great decision?"
         ]
     }
 
@@ -170,7 +170,7 @@ class JorgeSellerConfig:
         """Get environment-specific configuration"""
         return {
             "jorge_seller_mode": os.getenv("JORGE_SELLER_MODE", "false").lower() == "true",
-            "confrontational_tone": os.getenv("CONFRONTATIONAL_TONE", "true").lower() == "true",
+            "friendly_approach": os.getenv("FRIENDLY_APPROACH", "true").lower() == "true",
             "max_sms_length": int(os.getenv("MAX_SMS_LENGTH", "160")),
             "hot_seller_threshold": float(os.getenv("HOT_SELLER_THRESHOLD", "1.0")),
             "warm_seller_threshold": float(os.getenv("WARM_SELLER_THRESHOLD", "0.75")),
@@ -195,21 +195,21 @@ class JorgeSellerConfig:
             "is_valid": True,
             "quality_score": 1.0,
             "issues": [],
-            "escalate_tone": False
+            "provide_support": False
         }
 
-        # Check for very short responses (evasive)
+        # Check for very short responses (need more info)
         if len(response) < 10:
             validation_result["quality_score"] = 0.2
-            validation_result["escalate_tone"] = True
-            validation_result["issues"].append("Response too short")
+            validation_result["provide_support"] = True
+            validation_result["issues"].append("Could use more detail")
 
-        # Check for vague indicators
-        vague_words = ["maybe", "not sure", "idk", "i don't know", "thinking about it", "unsure"]
-        if any(word in response.lower() for word in vague_words):
+        # Check for uncertain indicators (opportunity to help)
+        uncertain_words = ["maybe", "not sure", "idk", "i don't know", "thinking about it", "unsure"]
+        if any(word in response.lower() for word in uncertain_words):
             validation_result["quality_score"] *= 0.5
-            validation_result["escalate_tone"] = True
-            validation_result["issues"].append("Vague response")
+            validation_result["provide_support"] = True
+            validation_result["issues"].append("Could use guidance")
 
         # Check for good quality indicators
         specific_indicators = ["definitely", "yes", "no", "exactly", "specifically", "$", "days", "weeks"]
@@ -224,9 +224,10 @@ class JorgeSellerConfig:
         """Sanitize message for Jorge's requirements"""
         import re
 
-        # Remove emojis (Jorge requirement)
-        if cls.NO_EMOJIS:
-            message = re.sub(r'[^\w\s,.!?]', '', message)
+        # Keep warm, professional language
+        if cls.USE_WARM_LANGUAGE:
+            # Allow basic punctuation and keep friendly tone
+            message = re.sub(r'[^\w\s,.!?😊👍]', '', message)
 
         # Remove hyphens (Jorge requirement)
         if cls.NO_HYPHENS:
@@ -344,8 +345,8 @@ class JorgeEnvironmentSettings:
 
         # Message settings
         self.max_sms_length = int(os.getenv("MAX_SMS_LENGTH", "160"))
-        self.confrontational_tone = os.getenv("CONFRONTATIONAL_TONE", "true").lower() == "true"
-        self.no_emojis = os.getenv("NO_EMOJIS", "true").lower() == "true"
+        self.friendly_approach = os.getenv("FRIENDLY_APPROACH", "true").lower() == "true"
+        self.use_warm_language = os.getenv("USE_WARM_LANGUAGE", "true").lower() == "true"
         self.no_hyphens = os.getenv("NO_HYPHENS", "true").lower() == "true"
 
         # Follow-up settings
