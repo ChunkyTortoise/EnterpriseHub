@@ -1717,6 +1717,311 @@ class EventPublisher:
         )
         await self._publish_event(event)
 
+    # ============================================================================
+    # Phase 2.1: Behavioral Prediction Event Publishers
+    # ============================================================================
+
+    async def publish_behavioral_prediction_complete(
+        self,
+        lead_id: str,
+        location_id: str,
+        behavior_category: str,
+        churn_risk_score: float,
+        engagement_score: float,
+        next_actions: List[Dict[str, Any]],
+        prediction_latency_ms: float,
+        user_id: Optional[int] = None,
+        **kwargs
+    ):
+        """
+        Publish behavioral prediction completion event.
+
+        Real-time notification when new behavioral prediction is available.
+        """
+        event = RealTimeEvent(
+            event_type=EventType.BEHAVIORAL_PREDICTION_COMPLETE,
+            data={
+                "lead_id": lead_id,
+                "behavior_category": behavior_category,
+                "churn_risk_score": round(churn_risk_score, 2),
+                "engagement_score_7d": round(engagement_score, 2),
+                "next_actions": next_actions[:3],  # Top 3 actions
+                "prediction_latency_ms": round(prediction_latency_ms, 2),
+                "performance_grade": self._calculate_performance_grade(prediction_latency_ms),
+                "urgency_level": "high" if churn_risk_score > 70 else "normal",
+                "summary": f"Behavioral prediction: {behavior_category} (churn risk: {churn_risk_score:.0f}%)",
+                **kwargs
+            },
+            timestamp=datetime.now(timezone.utc),
+            user_id=user_id,
+            location_id=location_id,
+            priority="high" if churn_risk_score > 70 else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Published behavioral prediction: {lead_id} ({behavior_category}, {churn_risk_score:.0f}% churn risk)")
+
+    async def publish_churn_risk_alert(
+        self,
+        lead_id: str,
+        location_id: str,
+        churn_risk_score: float,
+        risk_factors: List[str],
+        prevention_strategies: List[str],
+        urgency: str = "high",
+        user_id: Optional[int] = None,
+        **kwargs
+    ):
+        """
+        Publish high churn risk alert for immediate action.
+
+        Critical priority for leads at risk of churning.
+        """
+        event = RealTimeEvent(
+            event_type=EventType.CHURN_RISK_ALERT,
+            data={
+                "lead_id": lead_id,
+                "churn_risk_score": round(churn_risk_score, 2),
+                "risk_factors": risk_factors,
+                "prevention_strategies": prevention_strategies[:5],  # Top 5 strategies
+                "urgency": urgency,
+                "requires_immediate_action": churn_risk_score > 80,
+                "escalation_level": self._calculate_churn_escalation_level(churn_risk_score),
+                "time_sensitive": True,
+                "summary": f"Churn Risk Alert: {churn_risk_score:.0f}% - {len(risk_factors)} factors identified",
+                **kwargs
+            },
+            timestamp=datetime.now(timezone.utc),
+            location_id=location_id,
+            user_id=user_id,
+            priority="critical" if churn_risk_score > 80 else "high"
+        )
+
+        await self._publish_event(event)
+        logger.warning(f"Churn risk alert: {lead_id} ({churn_risk_score:.0f}%) - {len(risk_factors)} risk factors")
+
+    async def publish_behavior_category_change(
+        self,
+        lead_id: str,
+        location_id: str,
+        previous_category: str,
+        new_category: str,
+        change_reason: str,
+        confidence: float,
+        user_id: Optional[int] = None,
+        **kwargs
+    ):
+        """
+        Publish behavior category change notification.
+
+        Alerts when lead behavior significantly changes categories.
+        """
+        # Determine if this is a positive or negative change
+        positive_changes = [
+            ("dormant", "low_engagement"),
+            ("low_engagement", "moderately_engaged"),
+            ("moderately_engaged", "highly_engaged"),
+            ("churning", "low_engagement"),
+            ("churning", "moderately_engaged")
+        ]
+
+        change_type = "improvement" if (previous_category, new_category) in positive_changes else "decline"
+
+        event = RealTimeEvent(
+            event_type=EventType.BEHAVIOR_CATEGORY_CHANGE,
+            data={
+                "lead_id": lead_id,
+                "previous_category": previous_category,
+                "new_category": new_category,
+                "change_reason": change_reason,
+                "change_type": change_type,
+                "confidence": round(confidence, 4),
+                "significant_change": confidence > 0.8,
+                "requires_action": change_type == "decline",
+                "summary": f"Behavior change: {previous_category} → {new_category} ({change_type})",
+                **kwargs
+            },
+            timestamp=datetime.now(timezone.utc),
+            location_id=location_id,
+            user_id=user_id,
+            priority="high" if change_type == "decline" else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Behavior category change: {lead_id} ({previous_category} → {new_category}) - {change_type}")
+
+    async def publish_engagement_trend_change(
+        self,
+        lead_id: str,
+        location_id: str,
+        trend_direction: str,
+        velocity: float,
+        current_score: float,
+        projected_score: float,
+        time_window_hours: int,
+        user_id: Optional[int] = None,
+        **kwargs
+    ):
+        """
+        Publish engagement trend change notification.
+
+        Alerts when lead engagement patterns shift significantly.
+        """
+        event = RealTimeEvent(
+            event_type=EventType.ENGAGEMENT_TREND_CHANGE,
+            data={
+                "lead_id": lead_id,
+                "trend_direction": trend_direction,
+                "velocity": round(velocity, 3),
+                "current_engagement_score": round(current_score, 2),
+                "projected_engagement_score": round(projected_score, 2),
+                "time_window_hours": time_window_hours,
+                "trend_strength": self._calculate_trend_strength(velocity),
+                "significant_change": abs(velocity) > 0.5,
+                "needs_intervention": trend_direction == "decreasing" and velocity < -0.3,
+                "summary": f"Engagement trend: {trend_direction} ({current_score:.0f}% → {projected_score:.0f}%)",
+                **kwargs
+            },
+            timestamp=datetime.now(timezone.utc),
+            location_id=location_id,
+            user_id=user_id,
+            priority="high" if trend_direction == "decreasing" else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Engagement trend change: {lead_id} ({trend_direction}, velocity: {velocity:.2f})")
+
+    async def publish_optimal_contact_window(
+        self,
+        lead_id: str,
+        location_id: str,
+        contact_window: Dict[str, Any],
+        contact_channel: str,
+        probability_success: float,
+        user_id: Optional[int] = None,
+        **kwargs
+    ):
+        """
+        Publish optimal contact window recommendation.
+
+        Notifies when optimal contact timing is identified.
+        """
+        event = RealTimeEvent(
+            event_type=EventType.OPTIMAL_CONTACT_WINDOW,
+            data={
+                "lead_id": lead_id,
+                "contact_window": contact_window,
+                "recommended_channel": contact_channel,
+                "success_probability": round(probability_success, 4),
+                "window_start": contact_window.get("start"),
+                "window_end": contact_window.get("end"),
+                "timezone": contact_window.get("timezone", "America/Chicago"),
+                "confidence_level": contact_window.get("confidence", 0.7),
+                "time_sensitive": probability_success > 0.8,
+                "summary": f"Optimal contact: {contact_window.get('start')}-{contact_window.get('end')} via {contact_channel} ({probability_success:.1%} success)",
+                **kwargs
+            },
+            timestamp=datetime.now(timezone.utc),
+            location_id=location_id,
+            user_id=user_id,
+            priority="high" if probability_success > 0.8 else "normal"
+        )
+
+        await self._publish_event(event)
+        logger.info(f"Optimal contact window: {lead_id} ({contact_channel}, {probability_success:.1%} success)")
+
+    async def publish_behavioral_feedback_recorded(
+        self,
+        lead_id: str,
+        location_id: str,
+        feedback_type: str,
+        prediction_accuracy: float,
+        model_version: str = "v1.0",
+        user_id: Optional[int] = None,
+        **kwargs
+    ):
+        """
+        Publish feedback recording event for learning loop.
+
+        Confirms when prediction feedback has been recorded for model improvement.
+        """
+        event = RealTimeEvent(
+            event_type=EventType.BEHAVIORAL_FEEDBACK_RECORDED,
+            data={
+                "lead_id": lead_id,
+                "feedback_type": feedback_type,
+                "prediction_accuracy": round(prediction_accuracy, 4),
+                "model_version": model_version,
+                "accuracy_grade": self._calculate_accuracy_grade(prediction_accuracy),
+                "learning_value": "high" if prediction_accuracy < 0.7 else "medium",
+                "contributes_to_improvement": prediction_accuracy != 1.0,  # Perfect predictions don't teach much
+                "summary": f"Feedback recorded: {feedback_type} ({prediction_accuracy:.1%} accuracy)",
+                **kwargs
+            },
+            timestamp=datetime.now(timezone.utc),
+            location_id=location_id,
+            user_id=user_id,
+            priority="low"  # Feedback is informational, not urgent
+        )
+
+        await self._publish_event(event)
+        logger.debug(f"Behavioral feedback recorded: {lead_id} ({feedback_type}, {prediction_accuracy:.1%} accuracy)")
+
+    # ============================================================================
+    # Helper Methods for Behavioral Events
+    # ============================================================================
+
+    def _calculate_performance_grade(self, latency_ms: float) -> str:
+        """Calculate performance grade based on prediction latency."""
+        if latency_ms <= 25:
+            return "A+ (Excellent)"
+        elif latency_ms <= 50:
+            return "A (Good)"
+        elif latency_ms <= 100:
+            return "B (Acceptable)"
+        elif latency_ms <= 200:
+            return "C (Slow)"
+        else:
+            return "D (Poor)"
+
+    def _calculate_churn_escalation_level(self, churn_risk_score: float) -> str:
+        """Calculate churn risk escalation level."""
+        if churn_risk_score >= 90:
+            return "critical"
+        elif churn_risk_score >= 80:
+            return "urgent"
+        elif churn_risk_score >= 70:
+            return "high"
+        elif churn_risk_score >= 50:
+            return "moderate"
+        else:
+            return "low"
+
+    def _calculate_trend_strength(self, velocity: float) -> str:
+        """Calculate trend strength from velocity."""
+        abs_velocity = abs(velocity)
+        if abs_velocity >= 1.0:
+            return "very_strong"
+        elif abs_velocity >= 0.5:
+            return "strong"
+        elif abs_velocity >= 0.2:
+            return "moderate"
+        else:
+            return "weak"
+
+    def _calculate_accuracy_grade(self, accuracy: float) -> str:
+        """Calculate accuracy grade for feedback."""
+        if accuracy >= 0.9:
+            return "A (Excellent)"
+        elif accuracy >= 0.8:
+            return "B (Good)"
+        elif accuracy >= 0.7:
+            return "C (Fair)"
+        elif accuracy >= 0.5:
+            return "D (Poor)"
+        else:
+            return "F (Failed)"
+
 # Global event publisher instance
 _event_publisher = None
 
@@ -1852,3 +2157,103 @@ async def publish_ai_concierge_status_update(concierge_id: str, status: str, act
     publisher = get_event_publisher()
     await publisher.publish_ai_concierge_status_update(concierge_id, status, active_insights,
                                                      monitoring_contacts, processing_time_ms, **kwargs)
+
+# ============================================================================
+# Phase 2.1: Behavioral Prediction Convenience Functions
+# ============================================================================
+
+async def publish_behavioral_prediction_complete(
+    lead_id: str,
+    location_id: str,
+    behavior_category: str,
+    churn_risk_score: float,
+    engagement_score: float,
+    next_actions: List[Dict[str, Any]],
+    prediction_latency_ms: float,
+    **kwargs
+):
+    """Convenience function to publish behavioral prediction completion."""
+    publisher = get_event_publisher()
+    await publisher.publish_behavioral_prediction_complete(
+        lead_id, location_id, behavior_category, churn_risk_score,
+        engagement_score, next_actions, prediction_latency_ms, **kwargs
+    )
+
+async def publish_churn_risk_alert(
+    lead_id: str,
+    location_id: str,
+    churn_risk_score: float,
+    risk_factors: List[str],
+    prevention_strategies: List[str],
+    urgency: str = "high",
+    **kwargs
+):
+    """Convenience function to publish churn risk alert."""
+    publisher = get_event_publisher()
+    await publisher.publish_churn_risk_alert(
+        lead_id, location_id, churn_risk_score, risk_factors,
+        prevention_strategies, urgency, **kwargs
+    )
+
+async def publish_behavior_category_change(
+    lead_id: str,
+    location_id: str,
+    previous_category: str,
+    new_category: str,
+    change_reason: str,
+    confidence: float,
+    **kwargs
+):
+    """Convenience function to publish behavior category change."""
+    publisher = get_event_publisher()
+    await publisher.publish_behavior_category_change(
+        lead_id, location_id, previous_category, new_category,
+        change_reason, confidence, **kwargs
+    )
+
+async def publish_engagement_trend_change(
+    lead_id: str,
+    location_id: str,
+    trend_direction: str,
+    velocity: float,
+    current_score: float,
+    projected_score: float,
+    time_window_hours: int,
+    **kwargs
+):
+    """Convenience function to publish engagement trend change."""
+    publisher = get_event_publisher()
+    await publisher.publish_engagement_trend_change(
+        lead_id, location_id, trend_direction, velocity,
+        current_score, projected_score, time_window_hours, **kwargs
+    )
+
+async def publish_optimal_contact_window(
+    lead_id: str,
+    location_id: str,
+    contact_window: Dict[str, Any],
+    contact_channel: str,
+    probability_success: float,
+    **kwargs
+):
+    """Convenience function to publish optimal contact window."""
+    publisher = get_event_publisher()
+    await publisher.publish_optimal_contact_window(
+        lead_id, location_id, contact_window, contact_channel,
+        probability_success, **kwargs
+    )
+
+async def publish_behavioral_feedback_recorded(
+    lead_id: str,
+    location_id: str,
+    feedback_type: str,
+    prediction_accuracy: float,
+    model_version: str = "v1.0",
+    **kwargs
+):
+    """Convenience function to publish behavioral feedback recording."""
+    publisher = get_event_publisher()
+    await publisher.publish_behavioral_feedback_recorded(
+        lead_id, location_id, feedback_type, prediction_accuracy,
+        model_version, **kwargs
+    )

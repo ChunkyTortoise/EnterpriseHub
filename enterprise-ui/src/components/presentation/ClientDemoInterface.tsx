@@ -306,28 +306,28 @@ export function ClientDemoInterface() {
 
   if (!demoSession) {
     return (
-      <div className=\"min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 p-6\">
-        <div className=\"mx-auto max-w-6xl\">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 p-6">
+        <div className="mx-auto max-w-6xl">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className=\"text-center mb-12\"
+            className="text-center mb-12"
           >
-            <h1 className=\"text-4xl font-bold text-white mb-4\">
+            <h1 className="text-4xl font-bold text-white mb-4">
               Jorge's AI Platform
-              <span className=\"block text-2xl text-blue-400 font-normal mt-2\">
+              <span className="block text-2xl text-blue-400 font-normal mt-2">
                 Client Demonstration Center
               </span>
             </h1>
-            <p className=\"text-gray-300 text-lg max-w-3xl mx-auto\">
+            <p className="text-gray-300 text-lg max-w-3xl mx-auto">
               Professional real estate AI demonstrations with realistic data,
               ROI calculations, and performance benchmarks
             </p>
           </motion.div>
 
           {/* Scenario Selection */}
-          <div className=\"grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8\">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {Object.entries(scenarios).map(([key, scenario]) => (
               <motion.div
                 key={key}
@@ -348,22 +348,22 @@ export function ClientDemoInterface() {
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${scenario.color} opacity-10`} />
 
-                  <CardHeader className=\"relative\">
-                    <div className=\"flex items-center space-x-3\">
-                      <span className=\"text-2xl\">{scenario.icon}</span>
+                  <CardHeader className="relative">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{scenario.icon}</span>
                       <div>
-                        <CardTitle className=\"text-white text-lg\">{scenario.name}</CardTitle>
-                        <p className=\"text-gray-400 text-sm mt-1\">{scenario.description}</p>
+                        <CardTitle className="text-white text-lg">{scenario.name}</CardTitle>
+                        <p className="text-gray-400 text-sm mt-1">{scenario.description}</p>
                       </div>
                     </div>
                   </CardHeader>
 
-                  <CardContent className=\"relative\">
-                    <div className=\"space-y-2\">
+                  <CardContent className="relative">
+                    <div className="space-y-2">
                       {scenario.highlights.map((highlight, idx) => (
-                        <div key={idx} className=\"flex items-center space-x-2\">
-                          <CheckCircle2 className=\"w-4 h-4 text-green-400\" />
-                          <span className=\"text-gray-300 text-sm\">{highlight}</span>
+                        <div key={idx} className="flex items-center space-x-2">
+                          <CheckCircle2 className="w-4 h-4 text-green-400" />
+                          <span className="text-gray-300 text-sm">{highlight}</span>
                         </div>
                       ))}
                     </div>
@@ -377,28 +377,28 @@ export function ClientDemoInterface() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className=\"text-center\"
+            className="text-center"
           >
             <Button
               onClick={createDemoSession}
               disabled={loading}
-              size=\"lg\"
-              className=\"bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg\"
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
             >
               {loading ? (
                 <>
-                  <RefreshCw className=\"w-5 h-5 mr-2 animate-spin\" />
+                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
                   Creating Demo...
                 </>
               ) : (
                 <>
-                  <Play className=\"w-5 h-5 mr-2\" />
+                  <Play className="w-5 h-5 mr-2" />
                   Start {scenarios[selectedScenario].name} Demo
                 </>
               )}
             </Button>
 
-            <p className=\"text-gray-400 text-sm mt-4\">
+            <p className="text-gray-400 text-sm mt-4">
               Demo includes realistic lead data, property inventory,
               Jorge bot conversations, and comprehensive ROI analysis
             </p>
@@ -410,47 +410,47 @@ export function ClientDemoInterface() {
 
   // Demo session interface
   return (
-    <div className=\"min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 p-6\">
-      <div className=\"mx-auto max-w-7xl\">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 p-6">
+      <div className="mx-auto max-w-7xl">
         {/* Demo Session Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className=\"bg-slate-800 rounded-xl p-6 mb-8\"
+          className="bg-slate-800 rounded-xl p-6 mb-8"
         >
-          <div className=\"flex items-center justify-between\">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className=\"text-3xl font-bold text-white flex items-center\">
-                <span className=\"mr-3\">{scenarios[selectedScenario].icon}</span>
+              <h1 className="text-3xl font-bold text-white flex items-center">
+                <span className="mr-3">{scenarios[selectedScenario].icon}</span>
                 {demoSession.client_profile.name}
-                <Badge variant=\"secondary\" className=\"ml-3\">
+                <Badge variant="secondary" className="ml-3">
                   {scenarios[selectedScenario].name}
                 </Badge>
               </h1>
-              <p className=\"text-gray-400 mt-2\">
+              <p className="text-gray-400 mt-2">
                 {demoSession.client_profile.agency_name} • {demoSession.client_profile.geographic_market}
               </p>
             </div>
 
-            <div className=\"flex items-center space-x-3\">
-              <div className=\"text-right text-sm\">
-                <div className=\"text-gray-400\">Time Remaining</div>
-                <div className=\"text-white font-mono\">{getTimeRemaining()}</div>
+            <div className="flex items-center space-x-3">
+              <div className="text-right text-sm">
+                <div className="text-gray-400">Time Remaining</div>
+                <div className="text-white font-mono">{getTimeRemaining()}</div>
               </div>
 
               <Button
                 onClick={extendSession}
-                variant=\"outline\"
-                size=\"sm\"
+                variant="outline"
+                size="sm"
               >
-                <Clock className=\"w-4 h-4 mr-1\" />
+                <Clock className="w-4 h-4 mr-1" />
                 Extend
               </Button>
 
               <Button
                 onClick={resetDemoSession}
-                variant=\"outline\"
-                size=\"sm\"
+                variant="outline"
+                size="sm"
                 disabled={loading}
               >
                 <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
@@ -459,52 +459,52 @@ export function ClientDemoInterface() {
 
               <Button
                 onClick={exportResults}
-                variant=\"outline\"
-                size=\"sm\"
+                variant="outline"
+                size="sm"
               >
-                <Download className=\"w-4 h-4 mr-1\" />
+                <Download className="w-4 h-4 mr-1" />
                 Export
               </Button>
             </div>
           </div>
 
           {/* Key Metrics Overview */}
-          <div className=\"grid md:grid-cols-4 gap-4 mt-6\">
-            <Card className=\"bg-slate-700 border-slate-600\">
-              <CardContent className=\"p-4 text-center\">
-                <Users className=\"w-6 h-6 text-blue-400 mx-auto mb-2\" />
-                <div className=\"text-2xl font-bold text-white\">{demoSession.client_profile.monthly_leads}</div>
-                <div className=\"text-gray-400 text-sm\">Monthly Leads</div>
+          <div className="grid md:grid-cols-4 gap-4 mt-6">
+            <Card className="bg-slate-700 border-slate-600">
+              <CardContent className="p-4 text-center">
+                <Users className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-white">{demoSession.client_profile.monthly_leads}</div>
+                <div className="text-gray-400 text-sm">Monthly Leads</div>
               </CardContent>
             </Card>
 
-            <Card className=\"bg-slate-700 border-slate-600\">
-              <CardContent className=\"p-4 text-center\">
-                <DollarSign className=\"w-6 h-6 text-green-400 mx-auto mb-2\" />
-                <div className=\"text-2xl font-bold text-white\">
+            <Card className="bg-slate-700 border-slate-600">
+              <CardContent className="p-4 text-center">
+                <DollarSign className="w-6 h-6 text-green-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-white">
                   ${(demoSession.client_profile.avg_deal_size / 1000).toFixed(0)}K
                 </div>
-                <div className=\"text-gray-400 text-sm\">Avg Deal Size</div>
+                <div className="text-gray-400 text-sm">Avg Deal Size</div>
               </CardContent>
             </Card>
 
-            <Card className=\"bg-slate-700 border-slate-600\">
-              <CardContent className=\"p-4 text-center\">
-                <Zap className=\"w-6 h-6 text-yellow-400 mx-auto mb-2\" />
-                <div className=\"text-2xl font-bold text-white\">
+            <Card className="bg-slate-700 border-slate-600">
+              <CardContent className="p-4 text-center">
+                <Zap className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-white">
                   {demoSession.performance_metrics.response_times.jorge_avg}
                 </div>
-                <div className=\"text-gray-400 text-sm\">Response Time</div>
+                <div className="text-gray-400 text-sm">Response Time</div>
               </CardContent>
             </Card>
 
-            <Card className=\"bg-slate-700 border-slate-600\">
-              <CardContent className=\"p-4 text-center\">
-                <TrendingUp className=\"w-6 h-6 text-purple-400 mx-auto mb-2\" />
-                <div className=\"text-2xl font-bold text-white\">
+            <Card className="bg-slate-700 border-slate-600">
+              <CardContent className="p-4 text-center">
+                <TrendingUp className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-white">
                   {demoSession.performance_metrics.business_impact.roi}
                 </div>
-                <div className=\"text-gray-400 text-sm\">ROI</div>
+                <div className="text-gray-400 text-sm">ROI</div>
               </CardContent>
             </Card>
           </div>
@@ -512,56 +512,56 @@ export function ClientDemoInterface() {
 
         {/* Demo Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className=\"mb-6\">
-            <TabsTrigger value=\"overview\">Overview</TabsTrigger>
-            <TabsTrigger value=\"roi\">ROI Analysis</TabsTrigger>
-            <TabsTrigger value=\"performance\">Performance</TabsTrigger>
-            <TabsTrigger value=\"leads\">Lead Management</TabsTrigger>
-            <TabsTrigger value=\"conversations\">Jorge Conversations</TabsTrigger>
-            <TabsTrigger value=\"properties\">Property Matching</TabsTrigger>
+          <TabsList className="mb-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="roi">ROI Analysis</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="leads">Lead Management</TabsTrigger>
+            <TabsTrigger value="conversations">Jorge Conversations</TabsTrigger>
+            <TabsTrigger value="properties">Property Matching</TabsTrigger>
           </TabsList>
 
-          <AnimatePresence mode=\"wait\">
-            <TabsContent value=\"overview\" className=\"space-y-6\">
+          <AnimatePresence mode="wait">
+            <TabsContent value="overview" className="space-y-6">
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
                 {/* Overview content with client challenges, goals, etc. */}
-                <div className=\"grid md:grid-cols-2 gap-6\">
-                  <Card className=\"bg-slate-800 border-slate-600\">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card className="bg-slate-800 border-slate-600">
                     <CardHeader>
-                      <CardTitle className=\"text-white flex items-center\">
-                        <Target className=\"w-5 h-5 mr-2\" />
+                      <CardTitle className="text-white flex items-center">
+                        <Target className="w-5 h-5 mr-2" />
                         Current Challenges
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className=\"space-y-3\">
+                      <div className="space-y-3">
                         {demoSession.client_profile.current_challenges.map((challenge, idx) => (
-                          <div key={idx} className=\"flex items-start space-x-3\">
-                            <div className=\"w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0\" />
-                            <span className=\"text-gray-300\">{challenge}</span>
+                          <div key={idx} className="flex items-start space-x-3">
+                            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0" />
+                            <span className="text-gray-300">{challenge}</span>
                           </div>
                         ))}
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className=\"bg-slate-800 border-slate-600\">
+                  <Card className="bg-slate-800 border-slate-600">
                     <CardHeader>
-                      <CardTitle className=\"text-white flex items-center\">
-                        <CheckCircle2 className=\"w-5 h-5 mr-2\" />
+                      <CardTitle className="text-white flex items-center">
+                        <CheckCircle2 className="w-5 h-5 mr-2" />
                         Goals with Jorge AI
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className=\"space-y-3\">
+                      <div className="space-y-3">
                         {demoSession.client_profile.goals.map((goal, idx) => (
-                          <div key={idx} className=\"flex items-start space-x-3\">
-                            <div className=\"w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0\" />
-                            <span className=\"text-gray-300\">{goal}</span>
+                          <div key={idx} className="flex items-start space-x-3">
+                            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0" />
+                            <span className="text-gray-300">{goal}</span>
                           </div>
                         ))}
                       </div>
@@ -571,52 +571,52 @@ export function ClientDemoInterface() {
               </motion.div>
             </TabsContent>
 
-            <TabsContent value=\"roi\">
+            <TabsContent value="roi">
               {/* ROI Analysis content */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <Card className=\"bg-slate-800 border-slate-600\">
+                <Card className="bg-slate-800 border-slate-600">
                   <CardHeader>
-                    <CardTitle className=\"text-white flex items-center\">
-                      <BarChart3 className=\"w-5 h-5 mr-2\" />
+                    <CardTitle className="text-white flex items-center">
+                      <BarChart3 className="w-5 h-5 mr-2" />
                       ROI Analysis: Traditional vs Jorge AI
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className=\"grid md:grid-cols-3 gap-6\">
-                      <div className=\"text-center\">
-                        <div className=\"text-3xl font-bold text-red-400 mb-2\">
+                    <div className="grid md:grid-cols-3 gap-6">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-red-400 mb-2">
                           ${(demoSession.roi_calculation.summary?.traditional_total_cost || 0).toLocaleString()}
                         </div>
-                        <div className=\"text-gray-400\">Traditional Annual Cost</div>
+                        <div className="text-gray-400">Traditional Annual Cost</div>
                       </div>
 
-                      <div className=\"text-center\">
-                        <div className=\"text-3xl font-bold text-blue-400 mb-2\">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-blue-400 mb-2">
                           ${(demoSession.roi_calculation.summary?.jorge_total_cost || 0).toLocaleString()}
                         </div>
-                        <div className=\"text-gray-400\">Jorge AI Annual Cost</div>
+                        <div className="text-gray-400">Jorge AI Annual Cost</div>
                       </div>
 
-                      <div className=\"text-center\">
-                        <div className=\"text-3xl font-bold text-green-400 mb-2\">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-green-400 mb-2">
                           ${(demoSession.roi_calculation.summary?.net_savings || 0).toLocaleString()}
                         </div>
-                        <div className=\"text-gray-400\">Annual Savings</div>
+                        <div className="text-gray-400">Annual Savings</div>
                       </div>
                     </div>
 
-                    <div className=\"mt-8\">
-                      <div className=\"flex justify-between text-sm text-gray-400 mb-2\">
+                    <div className="mt-8">
+                      <div className="flex justify-between text-sm text-gray-400 mb-2">
                         <span>Cost Reduction</span>
                         <span>{(demoSession.roi_calculation.summary?.cost_reduction_percentage || 0).toFixed(1)}%</span>
                       </div>
                       <Progress
                         value={demoSession.roi_calculation.summary?.cost_reduction_percentage || 0}
-                        className=\"h-2\"
+                        className="h-2"
                       />
                     </div>
                   </CardContent>

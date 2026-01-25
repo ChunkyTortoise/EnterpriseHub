@@ -78,6 +78,14 @@ class EventType(Enum):
     OMNIPRESENT_INTELLIGENCE_UPDATE = "omnipresent_intelligence_update"
     COORDINATION_PERFORMANCE_METRICS = "coordination_performance_metrics"
 
+    # Phase 2.1: Behavioral Prediction Events
+    BEHAVIORAL_PREDICTION_COMPLETE = "behavioral_prediction_complete"
+    BEHAVIOR_CATEGORY_CHANGE = "behavior_category_change"
+    CHURN_RISK_ALERT = "churn_risk_alert"
+    ENGAGEMENT_TREND_CHANGE = "engagement_trend_change"
+    OPTIMAL_CONTACT_WINDOW = "optimal_contact_window"
+    BEHAVIORAL_FEEDBACK_RECORDED = "behavioral_feedback_recorded"
+
 class ConnectionStatus(Enum):
     """WebSocket connection status."""
     CONNECTING = "connecting"

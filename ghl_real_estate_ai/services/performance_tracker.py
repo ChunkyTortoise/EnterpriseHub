@@ -88,7 +88,7 @@ class MetricsCollector:
         self.leads_processed = 0
         
         # Performance tracking
-        self._lock = asyncio.Lock()
+        self._lock: Optional[asyncio.Lock] = None
         self._collecting = False
         self._collection_task: Optional[asyncio.Task] = None
         
@@ -279,6 +279,9 @@ class MetricsCollector:
     @asynccontextmanager
     async def track_request(self, request_id: str, endpoint: str = "", lead_id: Optional[str] = None):
         """Context manager to track individual request performance"""
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+            
         request_metrics = RequestMetrics(
             request_id=request_id,
             start_time=time.time(),

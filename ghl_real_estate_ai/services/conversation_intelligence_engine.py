@@ -315,7 +315,11 @@ class ConversationIntelligenceEngine:
         self.coaching_queue: deque = deque(maxlen=1000)
         
         # Initialize pattern recognition models
-        asyncio.create_task(self._initialize_models())
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._initialize_models())
+        except RuntimeError:
+            logger.debug("No running event loop found for conversation intelligence models initialization")
     
     async def _initialize_models(self):
         """Initialize conversation analysis models and patterns."""

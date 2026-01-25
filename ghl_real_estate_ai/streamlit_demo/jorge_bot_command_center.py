@@ -44,8 +44,10 @@ except ImportError:
 try:
     from ghl_real_estate_ai.streamlit_demo.components.jorge_lead_bot_dashboard import render_jorge_lead_bot_dashboard
     from ghl_real_estate_ai.streamlit_demo.components.jorge_seller_bot_dashboard import render_jorge_seller_bot_dashboard
+    from ghl_real_estate_ai.streamlit_demo.components.jorge_buyer_bot_dashboard import render_jorge_buyer_bot_dashboard
     from ghl_real_estate_ai.streamlit_demo.components.jorge_analytics_dashboard import render_jorge_analytics_dashboard
     from ghl_real_estate_ai.streamlit_demo.components.lifecycle_dashboard import render_full_lifecycle_dashboard
+    from ghl_real_estate_ai.streamlit_demo.components.claude_concierge_panel import render_claude_concierge_panel, render_concierge_coordination_card
     COMPONENTS_AVAILABLE = True
 except ImportError as e:
     st.error(f"Error loading dashboard components: {e}")
@@ -121,7 +123,7 @@ def render_sidebar():
 
         hub_selection = st.radio(
             "Select Intelligence Hub:",
-            ["🎯 Lead Command", "⚔️ Seller Command", "📊 Business Analytics", "🧬 Full Lifecycle", "⚙️ System Config"],
+            ["🎯 Lead Command", "⚔️ Seller Command", "🏠 Buyer Command", "📊 Business Analytics", "🧬 Full Lifecycle", "⚙️ System Config"],
             index=0
         )
         
@@ -140,6 +142,9 @@ def render_sidebar():
         
         st.markdown("---")
         st.caption("v4.2.0-ELITE | © 2026 Lyrio.io")
+        
+        # Omnipresent Concierge
+        render_claude_concierge_panel(hub_selection)
         
         return hub_selection
 
@@ -172,6 +177,7 @@ def main():
         return
 
     if selected_hub == "🎯 Lead Command":
+        render_concierge_coordination_card(selected_hub)
         render_jorge_lead_bot_dashboard()
         
         # Phase 4: Inter-Agent Relay Trigger (Lead Score > 90)
@@ -189,10 +195,16 @@ def main():
             st.toast(f"SOVEREIGN RELAY: {lead_name} Dossier Transferred to Seller Hub", icon="🚀")
 
     elif selected_hub == "⚔️ Seller Command":
+        render_concierge_coordination_card(selected_hub)
         render_jorge_seller_bot_dashboard()
+    elif selected_hub == "🏠 Buyer Command":
+        render_concierge_coordination_card(selected_hub)
+        render_jorge_buyer_bot_dashboard()
     elif selected_hub == "📊 Business Analytics":
+        render_concierge_coordination_card(selected_hub)
         render_jorge_analytics_dashboard()
     elif selected_hub == "🧬 Full Lifecycle":
+        render_concierge_coordination_card(selected_hub)
         render_full_lifecycle_dashboard()
     else:
         st.header("⚙️ AI System Configuration")

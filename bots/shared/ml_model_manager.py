@@ -316,7 +316,12 @@ class MLModelManager:
             return
 
         self._is_monitoring = True
-        self._performance_monitor_task = asyncio.create_task(self._performance_monitor_loop())
+        try:
+            loop = asyncio.get_running_loop()
+            self._performance_monitor_task = loop.create_task(self._performance_monitor_loop())
+        except RuntimeError:
+            self._performance_monitor_task = None
+            logger.debug("No running event loop found, performance monitor task not started")
         logger.info("Started background performance monitoring")
 
     async def stop_monitoring(self):

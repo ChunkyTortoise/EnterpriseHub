@@ -177,7 +177,14 @@ class AuditLogger:
         self._setup_logging()
         
         # Start background flush task
-        self._flush_task = asyncio.create_task(self._periodic_flush())
+        try:
+            loop = asyncio.get_running_loop()
+            self._flush_task = loop.create_task(self._periodic_flush())
+        except RuntimeError:
+            self._flush_task = None
+            # No running loop, flush task will not start automatically
+            # This is acceptable for scripts or testing environments
+            pass
     
     def _setup_logging(self):
         """Setup standard Python logging for audit events"""

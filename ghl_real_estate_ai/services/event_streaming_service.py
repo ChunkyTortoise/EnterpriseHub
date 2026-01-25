@@ -337,6 +337,11 @@ def event_handler(event_type: EventType):
             service.register_handler(event_type, func)
         
         # Register immediately
-        asyncio.create_task(wrapper())
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(wrapper())
+        except RuntimeError:
+            # No loop running, cannot register handler immediately
+            pass
         return func
     return decorator

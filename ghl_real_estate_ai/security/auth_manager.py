@@ -135,7 +135,13 @@ class AuthManager:
     
     def _start_background_tasks(self):
         """Start background security tasks"""
-        self._cleanup_task = asyncio.create_task(self._cleanup_expired_sessions())
+        try:
+            loop = asyncio.get_running_loop()
+            self._cleanup_task = loop.create_task(self._cleanup_expired_sessions())
+        except RuntimeError:
+            self._cleanup_task = None
+            # Log only if necessary, or pass silently as cleanup can happen later or manually
+            pass
     
     async def _cleanup_expired_sessions(self):
         """Periodically clean up expired sessions and security data"""

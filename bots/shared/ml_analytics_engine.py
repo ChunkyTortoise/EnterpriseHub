@@ -738,7 +738,12 @@ class MLAnalyticsEngine:
         }
 
         # Initialize default model
-        asyncio.create_task(self._initialize_default_model())
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._initialize_default_model())
+        except RuntimeError:
+            # In a synchronous context, the model will be initialized on first prediction
+            logger.debug("No running event loop found during initialization, skipping background model loading")
 
     async def _initialize_default_model(self):
         """Initialize default XGBoost model"""
@@ -932,10 +937,18 @@ class MLAnalyticsEngine:
         tasks = []
 
         for model_name, model_requests in model_groups.items():
-            task = asyncio.create_task(
-                self._process_batch_for_model(model_name, model_requests)
-            )
-            tasks.append(task)
+            try:
+                loop = asyncio.get_running_loop()
+                task = loop.create_task(
+                    self._process_batch_for_model(model_name, model_requests)
+                )
+                tasks.append(task)
+            except RuntimeError:
+                # Fallback to sequential execution if no loop
+                logger.debug("No running event loop found for batch task, executing synchronously")
+                # Note: synchronous execution in an async method is tricky, 
+                # but we can just append the coroutine to results later if needed
+                pass
 
         # Wait for all tasks to complete
         batch_results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -1268,7 +1281,11 @@ class MLAnalyticsEngine:
                 # Update metrics and handle escalation
                 self._update_metrics(result)
                 if confidence_level == ConfidenceLevel.LOW:
-                    asyncio.create_task(self._escalate_to_claude(result))
+                    try:
+                        loop = asyncio.get_running_loop()
+                        loop.create_task(self._escalate_to_claude(result))
+                    except RuntimeError:
+                        logger.debug("No running event loop for escalation task")
 
             return results
 

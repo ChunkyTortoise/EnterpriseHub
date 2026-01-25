@@ -16,7 +16,6 @@ from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.agent_system.memory import memory_manager as graphiti_manager
 
 logger = get_logger(__name__)
 
@@ -131,6 +130,7 @@ class MemoryService:
                     return self._get_default_context(contact_id, resolved_loc)
 
                 # Graphiti Integration: Inject Semantic Context
+                from ghl_real_estate_ai.agent_system.memory import memory_manager as graphiti_manager
                 if graphiti_manager.enabled:
                     try:
                         graphiti_context = await graphiti_manager.retrieve_context(contact_id)
@@ -163,6 +163,7 @@ class MemoryService:
                         return self._get_default_context(contact_id, resolved_loc)
 
                     # Graphiti Integration: Inject Semantic Context
+                    from ghl_real_estate_ai.agent_system.memory import memory_manager as graphiti_manager
                     if graphiti_manager.enabled:
                         try:
                             graphiti_context = await graphiti_manager.retrieve_context(contact_id)
@@ -206,6 +207,7 @@ class MemoryService:
         await self.save_context(contact_id, context, resolved_loc)
         
         # 2. Update Graphiti (Episodic Memory)
+        from ghl_real_estate_ai.agent_system.memory import memory_manager as graphiti_manager
         if graphiti_manager.enabled:
             try:
                 # NOTE: Graphiti should also be scoped, but for now we use contact_id
