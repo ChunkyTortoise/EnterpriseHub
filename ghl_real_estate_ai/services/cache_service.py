@@ -11,7 +11,8 @@ import json
 import pickle
 import time
 import asyncio
-from typing import Any, Optional, Union, Dict
+import functools
+from typing import Any, Optional, Union, Dict, List
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging
@@ -46,46 +47,120 @@ class AbstractCache(ABC):
         pass
 
 class MemoryCache(AbstractCache):
-    """In-memory cache using a dictionary."""
-    
-    def __init__(self):
+    """In-memory cache using a dictionary with LRU eviction."""
+
+    def __init__(self, max_size: int = 1000, max_memory_mb: int = 50):
         self._cache: Dict[str, Any] = {}
         self._expiry: Dict[str, float] = {}
-        logger.info("Initialized MemoryCache")
+        self._access_order: List[str] = []  # LRU tracking
+        self._max_size = max_size
+        self._max_memory_bytes = max_memory_mb * 1024 * 1024
+        self._current_memory = 0
+        self._memory_lock = asyncio.Lock()
+        logger.info(f"Initialized MemoryCache (max_size={max_size}, max_memory={max_memory_mb}MB)")
         
     async def get(self, key: str) -> Optional[Any]:
-        if key not in self._cache:
-            return None
-            
-        if time.time() > self._expiry.get(key, 0):
-            await self.delete(key)
-            return None
-            
-        return self._cache[key]
+        async with self._memory_lock:
+            if key not in self._cache:
+                return None
+
+            if time.time() > self._expiry.get(key, 0):
+                await self._remove_item_internal(key)
+                return None
+
+            # Update LRU order
+            if key in self._access_order:
+                self._access_order.remove(key)
+            self._access_order.append(key)
+
+            return self._cache[key]
         
     async def set(self, key: str, value: Any, ttl: int = 300) -> bool:
-        self._cache[key] = value
-        self._expiry[key] = time.time() + ttl
-        return True
+        async with self._memory_lock:
+            try:
+                # Estimate memory usage
+                import sys
+                value_size = sys.getsizeof(value)
+
+                # Check if item is too large
+                if value_size > self._max_memory_bytes:
+                    logger.warning(f"Item too large for MemoryCache: {value_size} bytes")
+                    return False
+
+                # Remove existing item if present
+                if key in self._cache:
+                    await self._remove_item_internal(key)
+
+                # Evict items if necessary
+                while (len(self._cache) >= self._max_size or
+                       self._current_memory + value_size > self._max_memory_bytes):
+                    if not self._access_order:
+                        break  # No items to evict
+                    await self._evict_lru()
+
+                # Add new item
+                self._cache[key] = value
+                self._expiry[key] = time.time() + ttl
+                self._access_order.append(key)
+                self._current_memory += value_size
+
+                return True
+            except Exception as e:
+                logger.error(f"MemoryCache set error: {e}", exc_info=True)
+                return False
         
     async def delete(self, key: str) -> bool:
-        if key in self._cache:
-            del self._cache[key]
-            del self._expiry[key]
-            return True
-        return False
+        async with self._memory_lock:
+            return await self._remove_item_internal(key)
         
     async def clear(self) -> bool:
-        self._cache.clear()
-        self._expiry.clear()
-        return True
+        async with self._memory_lock:
+            self._cache.clear()
+            self._expiry.clear()
+            self._access_order.clear()
+            self._current_memory = 0
+            return True
+
+    async def _remove_item_internal(self, key: str) -> bool:
+        """Internal method to remove item (assumes lock is held)"""
+        if key in self._cache:
+            # Estimate memory freed
+            import sys
+            value_size = sys.getsizeof(self._cache[key])
+            self._current_memory = max(0, self._current_memory - value_size)
+
+            del self._cache[key]
+            del self._expiry[key]
+            if key in self._access_order:
+                self._access_order.remove(key)
+            return True
+        return False
+
+    async def _evict_lru(self):
+        """Evict least recently used item (assumes lock is held)"""
+        if self._access_order:
+            lru_key = self._access_order[0]
+            await self._remove_item_internal(lru_key)
+            logger.debug(f"Evicted LRU item: {lru_key}")
+
+    def get_memory_stats(self) -> Dict[str, Any]:
+        """Get memory usage statistics"""
+        return {
+            'current_items': len(self._cache),
+            'max_items': self._max_size,
+            'current_memory_bytes': self._current_memory,
+            'max_memory_bytes': self._max_memory_bytes,
+            'memory_usage_percent': (self._current_memory / self._max_memory_bytes) * 100 if self._max_memory_bytes > 0 else 0
+        }
 
 class FileCache(AbstractCache):
     """File-based cache using pickle for persistence."""
-    
+
     def __init__(self, cache_dir: str = ".cache"):
         self.cache_dir = cache_dir
         os.makedirs(cache_dir, exist_ok=True)
+        # Fix race condition: Initialize lock as instance attribute
+        self._file_lock = asyncio.Lock()
         logger.info(f"Initialized FileCache at {cache_dir}")
         
     def _get_path(self, key: str) -> str:
@@ -101,7 +176,7 @@ class FileCache(AbstractCache):
             return None
             
         try:
-            async with asyncio.Lock():
+            async with self._file_lock:
                 with open(path, 'rb') as f:
                     data = pickle.load(f)
                     
@@ -121,12 +196,12 @@ class FileCache(AbstractCache):
             'expiry': time.time() + ttl
         }
         try:
-            async with asyncio.Lock():
+            async with self._file_lock:
                 with open(path, 'wb') as f:
                     pickle.dump(data, f)
             return True
         except Exception as e:
-            logger.error(f"FileCache write error for {key}: {e}")
+            logger.error(f"FileCache write error for {key}: {e}", exc_info=True)
             return False
             
     async def delete(self, key: str) -> bool:
@@ -146,7 +221,7 @@ class FileCache(AbstractCache):
                     os.remove(os.path.join(self.cache_dir, f))
             return True
         except Exception as e:
-            logger.error(f"FileCache clear error: {e}")
+            logger.error(f"FileCache clear error: {e}", exc_info=True)
             return False
 
 class RedisCache(AbstractCache):
@@ -208,7 +283,7 @@ class RedisCache(AbstractCache):
                 self.metrics['misses'] += 1
                 return None
         except Exception as e:
-            logger.error(f"Redis get error for key {key}: {e}")
+            logger.error(f"Redis get error for key {key}: {e}", exc_info=True)
             self.metrics['misses'] += 1
             return None
         finally:
@@ -227,7 +302,7 @@ class RedisCache(AbstractCache):
             self.metrics['sets'] += 1
             return True
         except Exception as e:
-            logger.error(f"Redis set error for key {key}: {e}")
+            logger.error(f"Redis set error for key {key}: {e}", exc_info=True)
             return False
         finally:
             self.metrics['total_time_ms'] += (time.time() - start_time) * 1000
@@ -244,7 +319,7 @@ class RedisCache(AbstractCache):
             self.metrics['deletes'] += 1
             return result > 0
         except Exception as e:
-            logger.error(f"Redis delete error for key {key}: {e}")
+            logger.error(f"Redis delete error for key {key}: {e}", exc_info=True)
             return False
         finally:
             self.metrics['total_time_ms'] += (time.time() - start_time) * 1000
@@ -256,7 +331,7 @@ class RedisCache(AbstractCache):
             await self.redis.flushdb()
             return True
         except Exception as e:
-            logger.error(f"Redis clear error: {e}")
+            logger.error(f"Redis clear error: {e}", exc_info=True)
             return False
 
     async def close(self):
@@ -298,7 +373,7 @@ class RedisCache(AbstractCache):
             self.metrics['misses'] += len(keys) - hits
             return output
         except Exception as e:
-            logger.error(f"Redis get_many error: {e}")
+            logger.error(f"Redis get_many error: {e}", exc_info=True)
             self.metrics['misses'] += len(keys)
             return {}
         finally:
@@ -331,7 +406,7 @@ class RedisCache(AbstractCache):
                 return True
             return False
         except Exception as e:
-            logger.error(f"Redis set_many error: {e}")
+            logger.error(f"Redis set_many error: {e}", exc_info=True)
             return False
         finally:
             self.metrics['total_time_ms'] += (time.time() - start_time) * 1000
@@ -344,7 +419,7 @@ class RedisCache(AbstractCache):
             result = await self.redis.exists(key)
             return result > 0
         except Exception as e:
-            logger.error(f"Redis exists error for key {key}: {e}")
+            logger.error(f"Redis exists error for key {key}: {e}", exc_info=True)
             return False
 
     async def expire(self, key: str, ttl: int) -> bool:
@@ -353,7 +428,7 @@ class RedisCache(AbstractCache):
         try:
             return await self.redis.expire(key, int(ttl))
         except Exception as e:
-            logger.error(f"Redis expire error for key {key}: {e}")
+            logger.error(f"Redis expire error for key {key}: {e}", exc_info=True)
             return False
 
     async def ttl(self, key: str) -> int:
@@ -362,7 +437,7 @@ class RedisCache(AbstractCache):
         try:
             return await self.redis.ttl(key)
         except Exception as e:
-            logger.error(f"Redis TTL error for key {key}: {e}")
+            logger.error(f"Redis TTL error for key {key}: {e}", exc_info=True)
             return -1
 
     async def increment(self, key: str, amount: int = 1) -> int:
@@ -371,7 +446,7 @@ class RedisCache(AbstractCache):
         try:
             return await self.redis.incrby(key, int(amount))
         except Exception as e:
-            logger.error(f"Redis increment error for key {key}: {e}")
+            logger.error(f"Redis increment error for key {key}: {e}", exc_info=True)
             return 0
 
     async def zadd(self, key: str, mapping: dict[str, float], ttl: Optional[int] = None) -> bool:
@@ -385,7 +460,7 @@ class RedisCache(AbstractCache):
             await pipeline.execute()
             return True
         except Exception as e:
-            logger.error(f"Redis zadd error for key {key}: {e}")
+            logger.error(f"Redis zadd error for key {key}: {e}", exc_info=True)
             return False
 
     async def zrange(self, key: str, start: int = 0, end: int = -1, desc: bool = True) -> list[str]:
@@ -394,7 +469,7 @@ class RedisCache(AbstractCache):
         try:
             return await self.redis.zrange(key, start, end, desc=desc)
         except Exception as e:
-            logger.error(f"Redis zrange error for key {key}: {e}")
+            logger.error(f"Redis zrange error for key {key}: {e}", exc_info=True)
             return []
 
     async def get_memory_usage(self) -> dict[str, Any]:
@@ -411,7 +486,7 @@ class RedisCache(AbstractCache):
                 'maxmemory_human': info.get('maxmemory_human', '0B'),
             }
         except Exception as e:
-            logger.error(f"Redis memory usage error: {e}")
+            logger.error(f"Redis memory usage error: {e}", exc_info=True)
             return {}
 
     async def get_performance_metrics(self) -> dict[str, Any]:
@@ -466,7 +541,7 @@ class RedisCache(AbstractCache):
             
             logger.info(f"Cache warming completed for pattern {pattern}, processed {len(keys)} keys")
         except Exception as e:
-            logger.error(f"Cache warming error for pattern {pattern}: {e}")
+            logger.error(f"Cache warming error for pattern {pattern}: {e}", exc_info=True)
 
     async def preload_customer_data(self, customer_ids: list[str], ttl: int = 600):
         """Preload customer data into cache."""
@@ -512,7 +587,7 @@ class RedisCache(AbstractCache):
         try:
             return await self.redis.expire(key, ttl)
         except Exception as e:
-            logger.error(f"Redis touch error for key {key}: {e}")
+            logger.error(f"Redis touch error for key {key}: {e}", exc_info=True)
             return False
 
 class CacheService:
@@ -594,14 +669,14 @@ class CacheService:
                 self.circuit_breaker['open'] = True
                 logger.warning("Cache circuit breaker opened due to repeated failures")
             
-            logger.error(f"Cache operation {operation.__name__} failed: {e}")
+            logger.error(f"Cache operation {operation.__name__} failed: {e}", exc_info=True)
             
             # Try fallback if available
             if self.fallback_backend:
                 try:
                     return await getattr(self.fallback_backend, operation.__name__)(*args, **kwargs)
                 except Exception as fallback_error:
-                    logger.error(f"Fallback cache operation failed: {fallback_error}")
+                    logger.error(f"Fallback cache operation failed: {fallback_error}", exc_info=True)
             
             return None
 
@@ -727,7 +802,7 @@ class CacheService:
             
             return result
         except Exception as e:
-            logger.error(f"Computation failed for key {key}: {e}")
+            logger.error(f"Computation failed for key {key}: {e}", exc_info=True)
             raise
 
     # ADVANCED CACHING FEATURES
@@ -764,13 +839,13 @@ class CacheService:
             await self.set(key, new_value, ttl)
             logger.debug(f"Background refresh completed for key: {key}")
         except Exception as e:
-            logger.error(f"Background refresh failed for key {key}: {e}")
+            logger.error(f"Background refresh failed for key {key}: {e}", exc_info=True)
 
     async def memoize_function(self, func, ttl: int = 300, key_prefix: str = None):
         """Memoize function results with caching."""
         cache_prefix = key_prefix or f"memo:{func.__name__}"
         
-        @wraps(func)
+        @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             # Create cache key from function arguments
             import hashlib
@@ -805,7 +880,7 @@ class CacheService:
             try:
                 stats['performance_metrics'] = await self.backend.get_performance_metrics()
             except Exception as e:
-                logger.error(f"Failed to get performance metrics: {e}")
+                logger.error(f"Failed to get performance metrics: {e}", exc_info=True)
         
         return stats
 
@@ -930,7 +1005,7 @@ class CacheService:
             # Cache for 1 hour
             await self.set(cache_key, context, 3600)
         except Exception as e:
-            logger.error(f"Prefetch failed for {question}: {e}")
+            logger.error(f"Prefetch failed for {question}: {e}", exc_info=True)
 
 class TenantScopedCache:
     """

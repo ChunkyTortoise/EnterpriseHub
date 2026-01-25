@@ -105,11 +105,11 @@ class L1MemoryCache:
         self.cache: Dict[str, CacheItem] = {}
         self.access_order: List[str] = []  # LRU tracking
         self.current_memory = 0
-        self._lock: Optional[asyncio.Lock] = None
+        # Fix race condition: Initialize lock in constructor
+        self._lock = asyncio.Lock()
 
     async def _get_lock(self) -> asyncio.Lock:
-        if self._lock is None:
-            self._lock = asyncio.Lock()
+        # Lock is now always initialized in __init__
         return self._lock
 
     async def get(self, key: str) -> Optional[Any]:
@@ -351,14 +351,14 @@ class OptimizedCacheService:
         self.l1_cache = L1MemoryCache(max_size=1000, max_memory_mb=100)
         self.l2_cache = L2RedisCache(redis_url) if redis_url else None
         self.l3_cache = L3DatabaseCache()
-        
+
         # Performance tracking
         self.stats = CacheStats()
-        self._lock: Optional[asyncio.Lock] = None
+        # Fix race condition: Initialize lock in constructor
+        self._lock = asyncio.Lock()
 
     async def _get_lock(self) -> asyncio.Lock:
-        if self._lock is None:
-            self._lock = asyncio.Lock()
+        # Lock is now always initialized in __init__
         return self._lock
 
     async def get(self, key: str) -> Optional[Any]:
@@ -789,7 +789,8 @@ class EnhancedCacheService(OptimizedCacheService):
 
     async def reset_metrics(self):
         """Reset performance metrics"""
-        async with self.lock:
+        lock = await self._get_lock()
+        async with lock:
             self.stats = CacheStats()
         logger.info("Cache metrics reset")
 
