@@ -274,7 +274,37 @@ export const useAgentStore = create<IntelligenceState>()(
 
         ws.onmessage = (event) => {
           try {
+            const eventReceiveTime = Date.now();
             const data = JSON.parse(event.data);
+
+            // 📊 ENHANCED LATENCY TRACKING (Phase 8+ Optimization)
+            if (data._server_timestamp) {
+              const endToEndLatency = eventReceiveTime - data._server_timestamp;
+
+              // Track performance in agent store
+              get().addEntry({
+                timestamp: new Date().toISOString(),
+                agent: 'websocket_performance',
+                key: 'event_latency_measurement',
+                value: {
+                  event_type: data.event_type,
+                  latency_ms: endToEndLatency,
+                  target_10ms_met: endToEndLatency < 10,
+                  server_timestamp: data._server_timestamp,
+                  client_timestamp: eventReceiveTime
+                }
+              });
+
+              // Alert on high latency for UI responsiveness
+              if (endToEndLatency > 50) {
+                console.warn(`🚨 High event latency: ${endToEndLatency}ms for ${data.event_type}`);
+              } else if (endToEndLatency < 10) {
+                console.debug(`✅ Excellent latency: ${endToEndLatency}ms for ${data.event_type}`);
+              }
+
+              // Clean up server timestamp before processing
+              delete data._server_timestamp;
+            }
 
             // Route message based on event type
             if (intelligenceEventTypes.includes(data.event_type)) {

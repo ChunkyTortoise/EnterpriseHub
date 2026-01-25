@@ -1,0 +1,102 @@
+{
+  "results": {
+    "bi_dashboard": {
+      "endpoint_id": "bi_dashboard",
+      "url": "ws://localhost:8001/ws/dashboard/default",
+      "connected": false,
+      "messages_received": 0,
+      "connection_time": null,
+      "first_message_time": null,
+      "sample_messages": [],
+      "error": "server rejected WebSocket connection: HTTP 403"
+    },
+    "bi_revenue_intelligence": {
+      "endpoint_id": "bi_revenue_intelligence",
+      "url": "ws://localhost:8001/ws/bi/revenue-intelligence/default",
+      "connected": false,
+      "messages_received": 0,
+      "connection_time": null,
+      "first_message_time": null,
+      "sample_messages": [],
+      "error": "server rejected WebSocket connection: HTTP 403"
+    },
+    "bi_bot_performance": {
+      "endpoint_id": "bi_bot_performance",
+      "url": "ws://localhost:8001/ws/bot-performance/default",
+      "connected": false,
+      "messages_received": 0,
+      "connection_time": null,
+      "first_message_time": null,
+      "sample_messages": [],
+      "error": "server rejected WebSocket connection: HTTP 403"
+    },
+    "bi_business_intelligence": {
+      "endpoint_id": "bi_business_intelligence",
+      "url": "ws://localhost:8001/ws/business-intelligence/default",
+      "connected": false,
+      "messages_received": 0,
+      "connection_time": null,
+      "first_message_time": null,
+      "sample_messages": [],
+      "error": "server rejected WebSocket connection: HTTP 403"
+    },
+    "ai_concierge_insights": {
+      "endpoint_id": "ai_concierge_insights",
+      "url": "ws://localhost:8001/ws/ai-concierge/default",
+      "connected": false,
+      "messages_received": 0,
+      "connection_time": null,
+      "first_message_time": null,
+      "sample_messages": [],
+      "error": "server rejected WebSocket connection: HTTP 403"
+    },
+    "advanced_analytics": {
+      "endpoint_id": "advanced_analytics",
+      "url": "ws://localhost:8001/ws/analytics/advanced/default",
+      "connected": false,
+      "messages_received": 0,
+      "connection_time": null,
+      "first_message_time": null,
+      "sample_messages": [],
+      "error": "server rejected WebSocket connection: HTTP 403"
+    }
+  },
+  "analysis": {
+    "total_endpoints": 6,
+    "connected_endpoints": 0,
+    "endpoints_with_messages": 0,
+    "failed_endpoints": [
+      {
+        "endpoint": "bi_dashboard",
+        "error": "server rejected WebSocket connection: HTTP 403"
+      },
+      {
+        "endpoint": "bi_revenue_intelligence",
+        "error": "server rejected WebSocket connection: HTTP 403"
+      },
+      {
+        "endpoint": "bi_bot_performance",
+        "error": "server rejected WebSocket connection: HTTP 403"
+      },
+      {
+        "endpoint": "bi_business_intelligence",
+        "error": "server rejected WebSocket connection: HTTP 403"
+      },
+      {
+        "endpoint": "ai_concierge_insights",
+        "error": "server rejected WebSocket connection: HTTP 403"
+      },
+      {
+        "endpoint": "advanced_analytics",
+        "error": "server rejected WebSocket connection: HTTP 403"
+      }
+    ],
+    "successful_endpoints": [],
+    "avg_connection_time": 0,
+    "total_messages": 0,
+    "recommendations": [
+      "Fix connection issues for 6 endpoints"
+    ]
+  },
+  "timestamp": "2026-01-25T03:16:27.058214"
+}

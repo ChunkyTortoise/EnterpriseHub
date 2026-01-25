@@ -80,6 +80,7 @@ from ghl_real_estate_ai.api.routes import (
     retell_webhook, # Added Retell Webhook
     vapi,
     websocket_routes, # Real-time WebSocket routes
+    websocket_performance,  # WebSocket Performance Monitoring API
     external_webhooks,
     agent_ecosystem,  # NEW: Agent ecosystem API for frontend integration
     claude_concierge_integration,  # NEW: Claude Concierge integration API
@@ -496,6 +497,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 # Include routers
 app.include_router(websocket_routes.router, prefix="/api")  # Real-time WebSocket endpoints
+app.include_router(websocket_performance.router)  # WebSocket Performance Monitoring API (already includes /api/v1 prefix)
 app.include_router(bi_websocket_routes.router)  # BI WebSocket endpoints (no prefix, already includes /ws)
 app.include_router(business_intelligence.router)  # BI API endpoints (already includes /api/bi prefix)
 app.include_router(bot_management.router, prefix="/api")  # Bot Management API for frontend integration

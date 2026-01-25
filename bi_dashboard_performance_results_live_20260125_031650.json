@@ -1,0 +1,111 @@
+{
+  "validation_start_time": "2026-01-25T11:16:22.024046+00:00",
+  "test_mode": "live",
+  "targets": {
+    "websocket_latency_ms": 10.0,
+    "api_response_ms": 500.0,
+    "dashboard_load_ms": 2000.0,
+    "concurrent_connections": 1000,
+    "commission_calc_ms": 50.0,
+    "cache_hit_rate": 0.95
+  },
+  "test_results": {
+    "API Response Times": {
+      "target_met": false,
+      "error": "No successful API responses",
+      "endpoint_details": {
+        "dashboard-kpis": {
+          "error": "No successful responses",
+          "target_met": false
+        },
+        "revenue-intelligence": {
+          "error": "No successful responses",
+          "target_met": false
+        },
+        "bot-performance": {
+          "error": "No successful responses",
+          "target_met": false
+        },
+        "real-time-metrics": {
+          "error": "No successful responses",
+          "target_met": false
+        }
+      },
+      "test_mode": "live"
+    },
+    "Commission Calculations": {
+      "target_met": false,
+      "error": "No successful commission calculations",
+      "test_mode": "live"
+    },
+    "Dashboard Load Performance": {
+      "target_met": false,
+      "error": "No successful dashboard loads",
+      "test_mode": "live"
+    },
+    "Concurrent Connections": {
+      "max_successful_connections": 0,
+      "target_connections": 1000,
+      "target_met": false,
+      "connection_test_results": {
+        "50": {
+          "total_connections": 50,
+          "successful_connections": 0,
+          "failed_connections": 50,
+          "success_rate": 0.0,
+          "total_test_time_s": 0.027981207997072488,
+          "avg_response_time_ms": 0,
+          "p95_response_time_ms": 0,
+          "target_met": false
+        }
+      },
+      "test_mode": "live",
+      "summary": "Max concurrent: 0, Target: 1000 (\u274c NOT MET)"
+    },
+    "Cache Performance": {
+      "cache_hit_rate": 0.0,
+      "cache_hits": 0,
+      "cache_misses": 100,
+      "total_requests": 100,
+      "avg_cached_response_ms": 0,
+      "avg_uncached_response_ms": 2.1585550101008266,
+      "target_hit_rate": 0.95,
+      "target_met": false,
+      "test_mode": "live",
+      "summary": "Cache Hit Rate: 0.0% (target: \u226595.0%), Cached avg: 0.0ms"
+    },
+    "End-to-End Workflow": {
+      "target_met": false,
+      "error": "No successful end-to-end workflows",
+      "test_mode": "live"
+    },
+    "Performance Regression": {
+      "target_met": false,
+      "error": "Insufficient data for regression analysis",
+      "test_mode": "live"
+    }
+  },
+  "overall_assessment": {
+    "overall_status": "POOR",
+    "performance_grade": "F",
+    "performance_score": 0.0,
+    "tests_passed": 0,
+    "total_tests": 7,
+    "pass_rate": 0.0,
+    "critical_failures": [
+      "API Response Times",
+      "Commission Calculations",
+      "Dashboard Load Performance"
+    ],
+    "enterprise_ready": false,
+    "recommendations": [
+      "Implement API response caching and database query optimization",
+      "Cache commission calculation results and optimize computation logic",
+      "Optimize dashboard component lazy loading and data pagination",
+      "Scale server infrastructure and implement load balancing",
+      "Tune cache TTL settings and implement intelligent prefetching",
+      "Investigate memory leaks and optimize resource cleanup"
+    ]
+  },
+  "validation_end_time": "2026-01-25T11:16:50.174886+00:00"
+}
