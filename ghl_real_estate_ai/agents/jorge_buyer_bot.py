@@ -12,7 +12,7 @@ Buyer Bot Features:
 """
 
 import asyncio
-from typing import Dict, Any, List, Literal
+from typing import Dict, Any, List, Literal, Optional
 from datetime import datetime
 from langgraph.graph import StateGraph, END
 
