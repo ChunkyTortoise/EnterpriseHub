@@ -1,0 +1,265 @@
+{
+  "validation_start_time": "2026-01-25T11:16:56.145313+00:00",
+  "test_mode": "mock",
+  "targets": {
+    "websocket_latency_ms": 10.0,
+    "api_response_ms": 500.0,
+    "dashboard_load_ms": 2000.0,
+    "concurrent_connections": 1000,
+    "commission_calc_ms": 50.0,
+    "cache_hit_rate": 0.95
+  },
+  "test_results": {
+    "API Response Times": {
+      "overall_metrics": {
+        "test_name": "All BI APIs",
+        "total_requests": 80,
+        "successful_requests": 80,
+        "failed_requests": 0,
+        "avg_response_time_ms": 25.124883067658388,
+        "p50_response_time_ms": 25.166658896472633,
+        "p95_response_time_ms": 31.483604435524313,
+        "p99_response_time_ms": 32.4891530167092,
+        "min_response_time_ms": 17.807547550507856,
+        "max_response_time_ms": 32.4891530167092,
+        "requests_per_second": 2462.3602824873865,
+        "success_rate": 1.0,
+        "target_met": true,
+        "target_threshold_ms": 500.0,
+        "error_details": []
+      },
+      "endpoint_details": {
+        "dashboard-kpis": {
+          "test_name": "dashboard-kpis",
+          "total_requests": 20,
+          "successful_requests": 20,
+          "failed_requests": 0,
+          "avg_response_time_ms": 24.98413621877582,
+          "p50_response_time_ms": 24.774044474576847,
+          "p95_response_time_ms": 29.86905291452649,
+          "p99_response_time_ms": 29.86905291452649,
+          "min_response_time_ms": 20.552722043814587,
+          "max_response_time_ms": 29.86905291452649,
+          "requests_per_second": 669.5893591682385,
+          "success_rate": 1.0,
+          "target_met": true,
+          "target_threshold_ms": 500.0,
+          "error_details": []
+        },
+        "revenue-intelligence": {
+          "test_name": "revenue-intelligence",
+          "total_requests": 20,
+          "successful_requests": 20,
+          "failed_requests": 0,
+          "avg_response_time_ms": 25.517749570128238,
+          "p50_response_time_ms": 25.84539948136643,
+          "p95_response_time_ms": 27.46084499940615,
+          "p99_response_time_ms": 27.46084499940615,
+          "min_response_time_ms": 22.851155334956168,
+          "max_response_time_ms": 27.46084499940615,
+          "requests_per_second": 728.3097078925468,
+          "success_rate": 1.0,
+          "target_met": true,
+          "target_threshold_ms": 500.0,
+          "error_details": []
+        },
+        "bot-performance": {
+          "test_name": "bot-performance",
+          "total_requests": 20,
+          "successful_requests": 20,
+          "failed_requests": 0,
+          "avg_response_time_ms": 24.48229689964674,
+          "p50_response_time_ms": 24.625214662445693,
+          "p95_response_time_ms": 27.88279247902453,
+          "p99_response_time_ms": 27.88279247902453,
+          "min_response_time_ms": 21.29758263787486,
+          "max_response_time_ms": 27.88279247902453,
+          "requests_per_second": 717.2882707155483,
+          "success_rate": 1.0,
+          "target_met": true,
+          "target_threshold_ms": 500.0,
+          "error_details": []
+        },
+        "real-time-metrics": {
+          "test_name": "real-time-metrics",
+          "total_requests": 20,
+          "successful_requests": 20,
+          "failed_requests": 0,
+          "avg_response_time_ms": 25.515349582082756,
+          "p50_response_time_ms": 26.878961331722994,
+          "p95_response_time_ms": 32.4891530167092,
+          "p99_response_time_ms": 32.4891530167092,
+          "min_response_time_ms": 17.807547550507856,
+          "max_response_time_ms": 32.4891530167092,
+          "requests_per_second": 615.5900706218466,
+          "success_rate": 1.0,
+          "target_met": true,
+          "target_threshold_ms": 500.0,
+          "error_details": []
+        }
+      },
+      "target_met": true,
+      "test_mode": "mock",
+      "summary": "Overall API Avg: 25.1ms, P95: 31.5ms (target: <500.0ms)"
+    },
+    "Commission Calculations": {
+      "metrics": {
+        "test_name": "Commission Calculation",
+        "total_requests": 50,
+        "successful_requests": 50,
+        "failed_requests": 0,
+        "avg_response_time_ms": 25.949025327844048,
+        "p50_response_time_ms": 26.813193020375316,
+        "p95_response_time_ms": 29.696197663624474,
+        "p99_response_time_ms": 29.873391907520023,
+        "min_response_time_ms": 20.244694667949386,
+        "max_response_time_ms": 29.873391907520023,
+        "requests_per_second": 1673.7302598508577,
+        "success_rate": 1.0,
+        "target_met": true,
+        "target_threshold_ms": 50.0,
+        "error_details": []
+      },
+      "target_met": true,
+      "test_mode": "mock",
+      "summary": "Commission Calc Avg: 25.9ms, P95: 29.7ms (target: <50.0ms)"
+    },
+    "Dashboard Load Performance": {
+      "metrics": {
+        "test_name": "Dashboard Load",
+        "total_requests": 10,
+        "successful_requests": 10,
+        "failed_requests": 0,
+        "avg_response_time_ms": 26.66789159993641,
+        "p50_response_time_ms": 27.143833984155208,
+        "p95_response_time_ms": 27.239832968916744,
+        "p99_response_time_ms": 27.239832968916744,
+        "min_response_time_ms": 25.354292010888457,
+        "max_response_time_ms": 27.239832968916744,
+        "requests_per_second": 367.1094463542033,
+        "success_rate": 1.0,
+        "target_met": true,
+        "target_threshold_ms": 2000.0,
+        "error_details": []
+      },
+      "target_met": true,
+      "test_mode": "mock",
+      "summary": "Dashboard Load Avg: 26.7ms, P95: 27.2ms (target: <2000.0ms)"
+    },
+    "Concurrent Connections": {
+      "max_successful_connections": 1500,
+      "target_connections": 1000,
+      "target_met": true,
+      "connection_test_results": {
+        "100": {
+          "total_connections": 100,
+          "successful_connections": 100,
+          "failed_connections": 0,
+          "success_rate": 1.0,
+          "total_test_time_s": 0.02767483302159235,
+          "avg_response_time_ms": 25.498500351425527,
+          "p95_response_time_ms": 29.632152940246957,
+          "target_met": true
+        },
+        "250": {
+          "total_connections": 250,
+          "successful_connections": 250,
+          "failed_connections": 0,
+          "success_rate": 1.0,
+          "total_test_time_s": 0.02702316700015217,
+          "avg_response_time_ms": 25.04960673809757,
+          "p95_response_time_ms": 29.525325175318564,
+          "target_met": true
+        },
+        "500": {
+          "total_connections": 500,
+          "successful_connections": 500,
+          "failed_connections": 0,
+          "success_rate": 1.0,
+          "total_test_time_s": 0.02821700001368299,
+          "avg_response_time_ms": 25.054609086208487,
+          "p95_response_time_ms": 29.52013441672044,
+          "target_met": true
+        },
+        "750": {
+          "total_connections": 750,
+          "successful_connections": 750,
+          "failed_connections": 0,
+          "success_rate": 1.0,
+          "total_test_time_s": 0.029471374989952892,
+          "avg_response_time_ms": 25.034301609268056,
+          "p95_response_time_ms": 29.37422470638894,
+          "target_met": true
+        },
+        "1000": {
+          "total_connections": 1000,
+          "successful_connections": 1000,
+          "failed_connections": 0,
+          "success_rate": 1.0,
+          "total_test_time_s": 0.030246582988183945,
+          "avg_response_time_ms": 25.061816743618518,
+          "p95_response_time_ms": 29.477947053841653,
+          "target_met": true
+        },
+        "1500": {
+          "total_connections": 1500,
+          "successful_connections": 1500,
+          "failed_connections": 0,
+          "success_rate": 1.0,
+          "total_test_time_s": 0.0988937090151012,
+          "avg_response_time_ms": 25.00669571276422,
+          "p95_response_time_ms": 29.51055912195685,
+          "target_met": true
+        }
+      },
+      "test_mode": "mock",
+      "summary": "Max concurrent: 1500, Target: 1000 (\u2705 MET)"
+    },
+    "Cache Performance": {
+      "cache_hit_rate": 0.98,
+      "cache_hits": 98,
+      "cache_misses": 2,
+      "total_requests": 100,
+      "avg_cached_response_ms": 7.5379852272996395,
+      "avg_uncached_response_ms": 23.454361167977233,
+      "target_hit_rate": 0.95,
+      "target_met": true,
+      "test_mode": "mock",
+      "summary": "Cache Hit Rate: 98.0% (target: \u226595.0%), Cached avg: 7.5ms"
+    },
+    "End-to-End Workflow": {
+      "avg_workflow_time_ms": 27.204574993811548,
+      "p95_workflow_time_ms": 32.883542007766664,
+      "min_workflow_time_ms": 25.36795800551772,
+      "max_workflow_time_ms": 32.883542007766664,
+      "total_workflows": 10,
+      "target_time_ms": 3000,
+      "target_met": true,
+      "test_mode": "mock",
+      "summary": "E2E Workflow Avg: 27.2ms, P95: 32.9ms (target: <3000ms)"
+    },
+    "Performance Regression": {
+      "baseline_avg_ms": 26.853357539134073,
+      "regression_avg_ms": 25.61269082207958,
+      "performance_change_percent": -4.62015491078328,
+      "regression_threshold_percent": 10.0,
+      "target_met": true,
+      "test_mode": "mock",
+      "summary": "Performance change: -4.6% (threshold: \u226410.0%)"
+    }
+  },
+  "overall_assessment": {
+    "overall_status": "EXCELLENT",
+    "performance_grade": "A+",
+    "performance_score": 100.0,
+    "tests_passed": 7,
+    "total_tests": 7,
+    "pass_rate": 1.0,
+    "critical_failures": [],
+    "enterprise_ready": true,
+    "recommendations": [
+      "All performance targets met - consider stress testing with higher loads"
+    ]
+  },
+  "validation_end_time": "2026-01-25T11:17:37.900537+00:00"
+}

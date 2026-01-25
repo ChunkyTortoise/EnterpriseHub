@@ -10,7 +10,7 @@ Cache TTL: 5-15 minutes depending on data volatility
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Literal
 
 from pydantic import BaseModel, Field, validator
 
@@ -274,7 +274,7 @@ class AnalyticsWebSocketEvent(BaseModel):
 class SHAPUpdateEvent(AnalyticsWebSocketEvent):
     """WebSocket event for SHAP analysis updates."""
 
-    event_type: EventType = Field(default=EventType.SHAP_UPDATE, const=True)
+    event_type: Literal[EventType.SHAP_UPDATE] = EventType.SHAP_UPDATE
 
     class Config:
         schema_extra = {
@@ -297,7 +297,7 @@ class SHAPUpdateEvent(AnalyticsWebSocketEvent):
 class MarketChangeEvent(AnalyticsWebSocketEvent):
     """WebSocket event for market condition changes."""
 
-    event_type: EventType = Field(default=EventType.MARKET_CHANGE, const=True)
+    event_type: Literal[EventType.MARKET_CHANGE] = EventType.MARKET_CHANGE
 
     class Config:
         schema_extra = {
@@ -322,7 +322,7 @@ class MarketChangeEvent(AnalyticsWebSocketEvent):
 class HotZoneDetectionEvent(AnalyticsWebSocketEvent):
     """WebSocket event for hot zone detection alerts."""
 
-    event_type: EventType = Field(default=EventType.HOT_ZONE_DETECTION, const=True)
+    event_type: Literal[EventType.HOT_ZONE_DETECTION] = EventType.HOT_ZONE_DETECTION
 
     class Config:
         schema_extra = {

@@ -54,14 +54,20 @@ class EventPublisher:
         self.cache_service = get_cache_service()
         self.metrics = EventMetrics()
         
-        # Event batching configuration
-        self.batch_interval = 0.5  # seconds
-        self.max_batch_size = 10
+        # 🚀 ENHANCED EVENT BATCHING CONFIGURATION (Phase 8+ Optimization)
+        self.batch_interval = 0.01  # 10ms micro-batching (vs 500ms previous)
+        self.max_batch_size = 50    # Increased capacity for enterprise throughput
         self._event_batch = []
         self._batch_timer = None
-        
-        # Performance tracking
+
+        # 🎯 PRIORITY LANES FOR <10MS LATENCY TARGET
+        self.critical_bypass = True  # Critical events skip batching entirely
+
+        # 📊 ENHANCED PERFORMANCE TRACKING
         self._processing_times = []
+        self._latency_measurements = []
+        self._events_under_10ms = 0
+        self._total_events_processed = 0
         
         logger.info("Event Publisher initialized")
 
@@ -1207,47 +1213,79 @@ class EventPublisher:
 
     async def _publish_event(self, event: RealTimeEvent):
         """
-        Publish event with performance tracking and batching.
-        
+        OPTIMIZED event publishing with <10ms latency target.
+
+        Phase 8+ Enhancement:
+        - Micro-batching (10ms max vs 500ms previous)
+        - Priority bypass for critical events (<1ms)
+        - Real-time latency tracking and alerting
+        - Performance compliance monitoring
+
         Args:
             event: Event to publish
         """
-        start_time = time.time()
-        
+        start_time = time.perf_counter()  # High precision timing
+
         try:
-            # Add to batch
+            # Add processing timestamp for latency tracking
+            event.data['_processing_start'] = start_time
+
+            # 🚀 CRITICAL EVENT BYPASS (<1ms target)
+            if (self.critical_bypass and
+                (event.priority == "critical" or
+                 event.event_type in {EventType.SYSTEM_ALERT, EventType.SMS_COMPLIANCE})):
+
+                # Immediate processing - no batching
+                await self.websocket_manager.publish_event(event)
+                await self._track_event_latency(event, start_time, 1, target_ms=1.0)
+                return
+
+            # 🎯 MICRO-BATCHING WITH PRIORITY ROUTING
             self._event_batch.append(event)
-            
-            # Check if batch should be processed immediately
+
+            # Enhanced batch processing criteria
             should_process_immediately = (
                 len(self._event_batch) >= self.max_batch_size or
-                event.priority == "critical" or
-                (event.priority == "high" and len(self._event_batch) >= 3)
+                event.priority == "high" or
+                (time.perf_counter() - start_time) > self.batch_interval
             )
-            
+
             if should_process_immediately:
-                await self._process_event_batch()
+                await self._process_event_batch_optimized()
             else:
-                # Schedule batch processing if not already scheduled
+                # Schedule micro-batch processing if not already scheduled
                 if self._batch_timer is None:
-                    self._batch_timer = asyncio.create_task(self._schedule_batch_processing())
-            
-            # Update metrics
-            processing_time = (time.time() - start_time) * 1000  # ms
-            self._processing_times.append(processing_time)
-            
-            # Keep only recent processing times (last 100)
-            if len(self._processing_times) > 100:
-                self._processing_times = self._processing_times[-100:]
-                
+                    self._batch_timer = asyncio.create_task(self._schedule_micro_batch_processing())
+
+            # 📊 ENHANCED PERFORMANCE TRACKING
+            processing_time_ms = (time.perf_counter() - start_time) * 1000
+            self._processing_times.append(processing_time_ms)
+
+            # Keep only recent processing times (last 1000 for better statistics)
+            if len(self._processing_times) > 1000:
+                self._processing_times = self._processing_times[-1000:]
+
+            # Update enhanced metrics
             self.metrics.average_processing_time_ms = sum(self._processing_times) / len(self._processing_times)
             self.metrics.total_events_published += 1
             self.metrics.last_event_time = datetime.now(timezone.utc)
-            
+            self._total_events_processed += 1
+
+            # Track 10ms compliance
+            if processing_time_ms < 10:
+                self._events_under_10ms += 1
+
+            # Alert on high latency
+            if processing_time_ms > 15:  # 15ms warning threshold
+                logger.warning(
+                    f"⚠️ High event latency: {processing_time_ms:.2f}ms for {event.event_type.value} "
+                    f"(target: <10ms)"
+                )
+
             # Track events by type
             event_type_name = event.event_type.value
             self.metrics.events_by_type[event_type_name] = self.metrics.events_by_type.get(event_type_name, 0) + 1
-            
+
         except Exception as e:
             logger.error(f"Error publishing event {event.event_type.value}: {e}")
             self.metrics.failed_publishes += 1
@@ -1257,6 +1295,16 @@ class EventPublisher:
         try:
             await asyncio.sleep(self.batch_interval)
             await self._process_event_batch()
+        except asyncio.CancelledError:
+            pass
+        finally:
+            self._batch_timer = None
+
+    async def _schedule_micro_batch_processing(self):
+        """OPTIMIZED: Schedule micro-batch processing with 10ms maximum delay."""
+        try:
+            await asyncio.sleep(self.batch_interval)  # 10ms micro-batch interval
+            await self._process_event_batch_optimized()
         except asyncio.CancelledError:
             pass
         finally:
@@ -1298,20 +1346,155 @@ class EventPublisher:
         
         logger.debug(f"Processed event batch: {len(batch)} events ({len(critical_events)} critical, {len(high_events)} high, {len(normal_events)} normal)")
 
-    def _aggregate_similar_events(self, events: List[RealTimeEvent]) -> List[RealTimeEvent]:
+    async def _process_event_batch_optimized(self):
+        """OPTIMIZED: Process event batch with priority lanes and concurrent publishing."""
+        if not self._event_batch:
+            return
+
+        # Cancel existing timer
+        if self._batch_timer:
+            self._batch_timer.cancel()
+            self._batch_timer = None
+
+        # Process events
+        batch = self._event_batch.copy()
+        self._event_batch.clear()
+
+        processing_start = time.perf_counter()
+
+        # 🎯 PRIORITY LANE PROCESSING
+        critical_events = [e for e in batch if e.priority == "critical"]
+        high_events = [e for e in batch if e.priority == "high"]
+        normal_events = [e for e in batch if e.priority in ["normal", "low"]]
+
+        # Process critical events first (should be rare due to bypass)
+        for event in critical_events:
+            await self.websocket_manager.publish_event(event)
+
+        # Concurrent processing for high and normal priority events
+        if high_events:
+            await asyncio.gather(*[
+                self.websocket_manager.publish_event(event)
+                for event in high_events
+            ])
+
+        # Apply intelligent aggregation for normal events to reduce volume
+        if normal_events:
+            aggregated_events = self._aggregate_similar_events_optimized(normal_events)
+            await asyncio.gather(*[
+                self.websocket_manager.publish_event(event)
+                for event in aggregated_events
+            ])
+
+        # Track latency for all events in batch
+        for event in batch:
+            await self._track_event_latency(event, processing_start, len(batch), target_ms=10.0)
+
+        logger.debug(
+            f"📊 Optimized batch processed: {len(batch)} events "
+            f"({len(critical_events)} critical, {len(high_events)} high, {len(normal_events)} normal)"
+        )
+
+    def _aggregate_similar_events_optimized(self, events: List[RealTimeEvent]) -> List[RealTimeEvent]:
         """
-        Aggregate similar events to reduce WebSocket message volume.
-        
+        ENHANCED: Intelligent event aggregation to reduce WebSocket message volume.
+
         Args:
             events: List of events to potentially aggregate
-            
+
         Returns:
-            List of events (some potentially aggregated)
+            List of events (with intelligent aggregation applied)
         """
-        # For now, return events as-is
-        # In the future, we could aggregate multiple dashboard_refresh events
-        # for the same component, or multiple performance_updates for the same metric
-        return events
+        if len(events) <= 1:
+            return events
+
+        # Group events by aggregation key
+        aggregable_groups = {}
+        standalone_events = []
+
+        for event in events:
+            # Events that can be aggregated to reduce volume
+            if event.event_type in {EventType.DASHBOARD_REFRESH, EventType.PERFORMANCE_UPDATE,
+                                    EventType.AI_CONCIERGE_STATUS}:
+                key = f"{event.event_type.value}_{event.user_id}_{event.location_id}"
+
+                if key not in aggregable_groups:
+                    aggregable_groups[key] = []
+                aggregable_groups[key].append(event)
+            else:
+                standalone_events.append(event)
+
+        # Create aggregated events for groups with multiple events
+        result_events = standalone_events.copy()
+
+        for group_events in aggregable_groups.values():
+            if len(group_events) > 1:
+                # Create aggregated event
+                base_event = group_events[0]
+                aggregated_event = RealTimeEvent(
+                    event_type=base_event.event_type,
+                    data={
+                        'aggregated_events': len(group_events),
+                        'time_span_ms': (
+                            max(e.timestamp for e in group_events) -
+                            min(e.timestamp for e in group_events)
+                        ).total_seconds() * 1000,
+                        'combined_data': [e.data for e in group_events]
+                    },
+                    timestamp=max(e.timestamp for e in group_events),
+                    user_id=base_event.user_id,
+                    location_id=base_event.location_id,
+                    priority=base_event.priority
+                )
+                result_events.append(aggregated_event)
+            else:
+                result_events.extend(group_events)
+
+        return result_events
+
+    async def _track_event_latency(self, event: RealTimeEvent, processing_start: float,
+                                   batch_size: int, target_ms: float):
+        """Track individual event latency for performance optimization."""
+        processing_end = time.perf_counter()
+        event_start = event.data.get('_processing_start', processing_start)
+
+        # Calculate end-to-end latency
+        latency_ms = (processing_end - event_start) * 1000
+        target_met = latency_ms <= target_ms
+
+        # Store measurement
+        measurement = {
+            'event_type': event.event_type.value,
+            'priority': event.priority,
+            'latency_ms': latency_ms,
+            'target_met': target_met,
+            'batch_size': batch_size,
+            'timestamp': datetime.now(timezone.utc)
+        }
+
+        self._latency_measurements.append(measurement)
+
+        # Keep only recent measurements (last 1000)
+        if len(self._latency_measurements) > 1000:
+            self._latency_measurements = self._latency_measurements[-1000:]
+
+        # Alert on target miss
+        if not target_met:
+            logger.warning(
+                f"⚠️ Latency target missed: {latency_ms:.2f}ms (target: {target_ms}ms) "
+                f"for {event.event_type.value} [batch_size: {batch_size}]"
+            )
+
+        # Clean up processing timestamp
+        if '_processing_start' in event.data:
+            del event.data['_processing_start']
+
+    def _aggregate_similar_events(self, events: List[RealTimeEvent]) -> List[RealTimeEvent]:
+        """
+        Legacy method - maintained for backward compatibility.
+        Use _aggregate_similar_events_optimized for enhanced performance.
+        """
+        return self._aggregate_similar_events_optimized(events)
 
     async def create_decorator(self, event_type: EventType, **event_kwargs):
         """
@@ -1351,8 +1534,8 @@ class EventPublisher:
         return decorator
 
     def get_metrics(self) -> Dict[str, Any]:
-        """Get event publishing metrics."""
-        return {
+        """Get enhanced event publishing metrics with optimization tracking."""
+        base_metrics = {
             "total_events_published": self.metrics.total_events_published,
             "events_by_type": self.metrics.events_by_type,
             "last_event_time": self.metrics.last_event_time.isoformat() if self.metrics.last_event_time else None,
@@ -1361,6 +1544,78 @@ class EventPublisher:
             "batch_queue_size": len(self._event_batch),
             "websocket_metrics": self.websocket_manager.get_metrics()
         }
+
+        # 📊 ENHANCED OPTIMIZATION METRICS
+        if self._total_events_processed > 0:
+            compliance_10ms = (self._events_under_10ms / self._total_events_processed) * 100
+
+            optimization_metrics = {
+                "optimization_status": "enabled",
+                "micro_batch_interval_ms": self.batch_interval * 1000,
+                "events_under_10ms_count": self._events_under_10ms,
+                "total_events_processed": self._total_events_processed,
+                "latency_compliance_10ms_percentage": round(compliance_10ms, 2),
+                "target_achievement": "✅ ACHIEVED" if compliance_10ms >= 95 else "🎯 IN PROGRESS",
+            }
+
+            # Recent latency statistics
+            if self._latency_measurements:
+                recent_latencies = [m['latency_ms'] for m in self._latency_measurements[-100:]]
+                optimization_metrics.update({
+                    "recent_avg_latency_ms": round(sum(recent_latencies) / len(recent_latencies), 3),
+                    "recent_max_latency_ms": round(max(recent_latencies), 3),
+                    "recent_min_latency_ms": round(min(recent_latencies), 3),
+                })
+
+                # Calculate percentiles
+                sorted_latencies = sorted(recent_latencies)
+                optimization_metrics.update({
+                    "p95_latency_ms": round(sorted_latencies[int(len(sorted_latencies) * 0.95)], 3),
+                    "p99_latency_ms": round(sorted_latencies[int(len(sorted_latencies) * 0.99)], 3),
+                })
+
+            base_metrics["optimization_metrics"] = optimization_metrics
+
+        return base_metrics
+
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """Get performance summary for optimization monitoring."""
+        if self._total_events_processed == 0:
+            return {
+                "status": "no_data",
+                "message": "No events processed yet - performance data unavailable"
+            }
+
+        compliance_10ms = (self._events_under_10ms / self._total_events_processed) * 100
+
+        return {
+            "status": "optimized",
+            "optimization_level": "micro_batching_enabled",
+            "performance_grade": self._get_performance_grade(compliance_10ms),
+            "target_compliance_10ms": round(compliance_10ms, 1),
+            "total_events_processed": self._total_events_processed,
+            "average_processing_time_ms": round(self.metrics.average_processing_time_ms, 3),
+            "batch_configuration": {
+                "interval_ms": self.batch_interval * 1000,
+                "max_batch_size": self.max_batch_size,
+                "critical_bypass_enabled": self.critical_bypass
+            }
+        }
+
+    def _get_performance_grade(self, compliance_percentage: float) -> str:
+        """Get performance grade based on 10ms compliance."""
+        if compliance_percentage >= 99:
+            return "A+ (Exceptional)"
+        elif compliance_percentage >= 95:
+            return "A (Excellent - Target Achieved)"
+        elif compliance_percentage >= 90:
+            return "B+ (Very Good)"
+        elif compliance_percentage >= 80:
+            return "B (Good)"
+        elif compliance_percentage >= 70:
+            return "C+ (Acceptable)"
+        else:
+            return "C (Needs Optimization)"
 
 # Global event publisher instance
 _event_publisher = None

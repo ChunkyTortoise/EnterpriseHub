@@ -29,7 +29,8 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.bi_cache_service import get_bi_cache_service
 from ghl_real_estate_ai.services.bi_stream_processor import get_bi_stream_processor
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.services.auth_service import get_current_user, UserRole
+from ghl_real_estate_ai.services.auth_service import UserRole
+from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 
 logger = get_logger(__name__)
 
@@ -38,7 +39,7 @@ router = APIRouter(prefix="/api/bi", tags=["business_intelligence"])
 
 # Pydantic Models
 class TimeframeQuery(BaseModel):
-    timeframe: str = Field(default='24h', regex='^(24h|7d|30d|90d|1y)$')
+    timeframe: str = Field(default='24h', pattern='^(24h|7d|30d|90d|1y)$')
     location_id: str = Field(default='default')
     include_comparisons: bool = Field(default=True)
     include_trends: bool = Field(default=True)
@@ -92,7 +93,7 @@ event_publisher = get_event_publisher()
 
 @router.get("/dashboard-kpis", response_model=DashboardKPIResponse)
 async def get_dashboard_kpis(
-    timeframe: str = Query(default='24h', regex='^(24h|7d|30d|90d|1y)$'),
+    timeframe: str = Query(default='24h', pattern='^(24h|7d|30d|90d|1y)$'),
     location_id: str = Query(default='default'),
     include_comparisons: bool = Query(default=True),
     include_trends: bool = Query(default=True),
@@ -159,7 +160,7 @@ async def get_dashboard_kpis(
 
 @router.get("/revenue-intelligence", response_model=RevenueIntelligenceResponse)
 async def get_revenue_intelligence(
-    timeframe: str = Query(default='30d', regex='^(7d|30d|90d|1y)$'),
+    timeframe: str = Query(default='30d', pattern='^(7d|30d|90d|1y)$'),
     location_id: str = Query(default='default'),
     include_forecast: bool = Query(default=True),
     forecast_days: int = Query(default=90, ge=30, le=365),
@@ -212,7 +213,7 @@ async def get_revenue_intelligence(
 
 @router.get("/bot-performance", response_model=BotPerformanceResponse)
 async def get_bot_performance_matrix(
-    timeframe: str = Query(default='7d', regex='^(24h|7d|30d|90d)$'),
+    timeframe: str = Query(default='7d', pattern='^(24h|7d|30d|90d)$'),
     location_id: str = Query(default='default'),
     include_coordination: bool = Query(default=True),
     include_alerts: bool = Query(default=True),
@@ -348,7 +349,7 @@ async def get_predictive_insights(
 @router.get("/anomaly-detection")
 async def detect_anomalies(
     location_id: str = Query(default='default'),
-    timeframe: str = Query(default='24h', regex='^(24h|7d|30d)$'),
+    timeframe: str = Query(default='24h', pattern='^(24h|7d|30d)$'),
     sensitivity: float = Query(default=0.8, ge=0.1, le=1.0),
     current_user: Any = Depends(get_current_user)
 ):
@@ -423,7 +424,7 @@ async def get_real_time_metrics(
 @router.post("/trigger-aggregation")
 async def trigger_manual_aggregation(
     location_id: str = Query(default='default'),
-    window_name: str = Query(default='5min', regex='^(5min|1hr|24hr)$'),
+    window_name: str = Query(default='5min', pattern='^(5min|1hr|24hr)$'),
     current_user: Any = Depends(get_current_user)
 ):
     """

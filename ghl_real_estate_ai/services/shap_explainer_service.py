@@ -75,10 +75,10 @@ class SHAPExplanation:
     # Interactive data for UI
     waterfall_data: Dict[str, Any]  # Data for waterfall chart
     feature_impact_data: Dict[str, Any]  # Data for feature impact visualization
-    what_if_ready: bool = True  # Whether what-if analysis is available
     
     # Performance metrics
     explanation_time_ms: float
+    what_if_ready: bool = True  # Whether what-if analysis is available
     cached: bool = False
 
 @dataclass 

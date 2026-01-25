@@ -197,11 +197,15 @@ export function useAIConcierge(
       setIsConnected(false);
       console.log('AI Concierge WebSocket disconnected');
 
-      // Auto-reconnect after delay
+      // 🚀 OPTIMIZED AUTO-RECONNECT (Phase 8+ Enhancement)
+      // Faster reconnection for real-time AI insights
       if (connected) {
+        const reconnectDelay = 2000; // Reduced from 5s to 2s for AI responsiveness
+        console.log(`🔄 AI Concierge WebSocket reconnecting in ${reconnectDelay}ms`);
+
         setTimeout(() => {
           setupWebSocket();
-        }, 5000);
+        }, reconnectDelay);
       }
     };
   }, [connected, conversationId, getAuthToken, addEntry]);
