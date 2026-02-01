@@ -10,11 +10,18 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, SearchResult
 from src.retrieval.sparse.bm25_index import BM25Index, BM25Config
+# Try importing production DenseRetriever, fallback to mock
+try:
+    from src.retrieval.dense.dense_retriever import DenseRetriever
+except Exception:
+    # Fallback to mock version for development/testing
+    from src.retrieval.dense.dense_retriever_mock import MockDenseRetriever as DenseRetriever
+    print("⚠️  Using mock dense retriever due to dependency issues")
 from src.retrieval.hybrid.fusion import (
     FusionConfig,
     ReciprocalRankFusion,
@@ -50,47 +57,6 @@ class HybridSearchConfig:
     sparse_threshold: float = 0.0
 
 
-class DenseRetrieverStub:
-    """Stub for dense retrieval - to be replaced with actual implementation.
-
-    This is a placeholder that will be replaced when dense retrieval
-    is implemented in a later phase.
-    """
-
-    def __init__(self):
-        """Initialize stub dense retriever."""
-        self._documents: List[DocumentChunk] = []
-
-    def add_documents(self, chunks: List[DocumentChunk]) -> None:
-        """Add documents to the stub index.
-
-        Args:
-            chunks: List of document chunks to index
-        """
-        self._documents.extend(chunks)
-
-    async def search(self, query: str, top_k: int = 10) -> List[SearchResult]:
-        """Stub search method - returns empty results.
-
-        Args:
-            query: Search query
-            top_k: Number of results to return
-
-        Returns:
-            Empty list (stub implementation)
-        """
-        # Simulate processing delay
-        await asyncio.sleep(0.01)
-        return []
-
-    def clear(self) -> None:
-        """Clear the stub index."""
-        self._documents.clear()
-
-    @property
-    def document_count(self) -> int:
-        """Get number of documents in stub index."""
-        return len(self._documents)
 
 
 class HybridSearcher:
@@ -118,18 +84,35 @@ class HybridSearcher:
         self.fusion_config = fusion_config or FusionConfig()
 
         # Initialize retrievers
-        self.dense_retriever = DenseRetrieverStub() if self.hybrid_config.enable_dense else None
+        self.dense_retriever = DenseRetriever() if self.hybrid_config.enable_dense else None
         self.sparse_retriever = BM25Index(self.bm25_config) if self.hybrid_config.enable_sparse else None
 
         # Initialize fusion algorithm
         if self.hybrid_config.fusion_method == "rrf":
-            self.fusion_algorithm = ReciprocalRankFusion(self.fusion_config)
+            self.fusion_algorithm: Union[ReciprocalRankFusion, WeightedScoreFusion] = ReciprocalRankFusion(self.fusion_config)
         elif self.hybrid_config.fusion_method == "weighted":
             self.fusion_algorithm = WeightedScoreFusion(self.fusion_config)
         else:
             raise ValueError(f"Unknown fusion method: {self.hybrid_config.fusion_method}")
 
-    def add_documents(self, chunks: List[DocumentChunk]) -> None:
+    async def initialize(self) -> None:
+        """Initialize async components (dense retriever).
+
+        This method must be called before using the searcher.
+
+        Raises:
+            RetrievalError: If initialization fails
+        """
+        try:
+            if self.dense_retriever:
+                await self.dense_retriever.initialize()
+        except Exception as e:
+            raise RetrievalError(
+                message=f"Failed to initialize hybrid searcher: {str(e)}",
+                error_code="INITIALIZATION_ERROR"
+            ) from e
+
+    async def add_documents(self, chunks: List[DocumentChunk]) -> None:
         """Add documents to both dense and sparse indices.
 
         Args:
@@ -142,13 +125,22 @@ class HybridSearcher:
             return
 
         try:
-            # Add to dense index
-            if self.dense_retriever:
-                self.dense_retriever.add_documents(chunks)
+            # Add to indices in parallel for better performance
+            tasks = []
 
-            # Add to sparse index
+            # Add to dense index (async)
+            if self.dense_retriever:
+                tasks.append(self.dense_retriever.add_documents(chunks))
+
+            # Add to sparse index (sync - wrap in coroutine)
             if self.sparse_retriever:
-                self.sparse_retriever.add_documents(chunks)
+                async def add_sparse():
+                    self.sparse_retriever.add_documents(chunks)
+                tasks.append(add_sparse())
+
+            # Execute all indexing operations in parallel
+            if tasks:
+                await asyncio.gather(*tasks)
 
         except Exception as e:
             raise RetrievalError(
@@ -232,14 +224,14 @@ class HybridSearcher:
         Returns:
             Tuple of (dense_results, sparse_results)
         """
-        tasks = []
+        tasks: List[asyncio.Task[List[SearchResult]]] = []
 
         # Dense search task
         if self.dense_retriever:
-            dense_task = self.dense_retriever.search(query, self.hybrid_config.top_k_dense)
+            dense_task = asyncio.create_task(self.dense_retriever.search(query, self.hybrid_config.top_k_dense))
             tasks.append(dense_task)
         else:
-            tasks.append(self._create_empty_results_task())
+            tasks.append(asyncio.create_task(self._create_empty_results_task()))
 
         # Sparse search task
         if self.sparse_retriever:
@@ -247,14 +239,27 @@ class HybridSearcher:
             sparse_task = asyncio.create_task(self._async_sparse_search(query))
             tasks.append(sparse_task)
         else:
-            tasks.append(self._create_empty_results_task())
+            tasks.append(asyncio.create_task(self._create_empty_results_task()))
 
         # Execute in parallel
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results: List[Any] = list(await asyncio.gather(*tasks, return_exceptions=True))
 
         # Handle any exceptions
-        dense_results = results[0] if not isinstance(results[0], Exception) else []
-        sparse_results = results[1] if not isinstance(results[1], Exception) else []
+        dense_results: List[SearchResult]
+        sparse_results: List[SearchResult]
+
+        result0 = results[0]
+        result1 = results[1]
+
+        if isinstance(result0, Exception):
+            dense_results = []
+        else:
+            dense_results = result0
+
+        if isinstance(result1, Exception):
+            sparse_results = []
+        else:
+            sparse_results = result1
 
         return dense_results, sparse_results
 
@@ -289,6 +294,8 @@ class HybridSearcher:
         Returns:
             List of sparse search results
         """
+        if self.sparse_retriever is None:
+            return []
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None,
@@ -327,7 +334,59 @@ class HybridSearcher:
             count = max(count, self.dense_retriever.document_count)
         return count
 
-    def get_retriever_status(self) -> dict:
+    async def close(self) -> None:
+        """Close and cleanup resources.
+
+        Should be called when done using the searcher.
+        """
+        if self.dense_retriever:
+            await self.dense_retriever.close()
+
+    async def get_stats(self) -> Dict[str, Any]:
+        """Get comprehensive search statistics.
+
+        Returns:
+            Dictionary with detailed statistics
+        """
+        stats = {
+            "hybrid_config": {
+                "fusion_method": self.hybrid_config.fusion_method,
+                "enable_dense": self.hybrid_config.enable_dense,
+                "enable_sparse": self.hybrid_config.enable_sparse,
+                "parallel_execution": self.hybrid_config.parallel_execution,
+                "top_k_dense": self.hybrid_config.top_k_dense,
+                "top_k_sparse": self.hybrid_config.top_k_sparse,
+                "top_k_final": self.hybrid_config.top_k_final,
+            },
+            "document_count": self.document_count,
+            "retrievers": {}
+        }
+
+        # Get dense retriever stats
+        if self.dense_retriever:
+            try:
+                dense_stats = await self.dense_retriever.get_stats()
+                stats["retrievers"]["dense"] = dense_stats
+            except Exception:
+                stats["retrievers"]["dense"] = {"error": "Unable to get stats"}
+
+        # Get sparse retriever stats
+        if self.sparse_retriever:
+            try:
+                stats["retrievers"]["sparse"] = {
+                    "document_count": self.sparse_retriever.document_count,
+                    "config": {
+                        "k1": self.sparse_retriever.config.k1,
+                        "b": self.sparse_retriever.config.b,
+                        "epsilon": self.sparse_retriever.config.epsilon,
+                    }
+                }
+            except Exception:
+                stats["retrievers"]["sparse"] = {"error": "Unable to get stats"}
+
+        return stats
+
+    def get_retriever_status(self) -> Dict[str, Union[bool, int, str]]:
         """Get status information about the retrievers.
 
         Returns:

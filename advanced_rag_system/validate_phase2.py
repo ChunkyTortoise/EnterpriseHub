@@ -67,7 +67,12 @@ async def main():
     print("\n✅ Testing Hybrid Search (RRF)...")
     rrf_config = HybridSearchConfig(fusion_method="rrf")
     hybrid_searcher = HybridSearcher(hybrid_config=rrf_config)
-    hybrid_searcher.add_documents(test_corpus)
+
+    # Initialize async components
+    await hybrid_searcher.initialize()
+
+    # Add documents (now async)
+    await hybrid_searcher.add_documents(test_corpus)
 
     start_time = time.perf_counter()
     hybrid_results = await hybrid_searcher.search("machine learning data")
@@ -102,6 +107,9 @@ async def main():
 
     print(f"   🔄 RRF Fusion: {len(rrf_results)} fused results")
     print(f"   ⚖️ Weighted Fusion: {len(weighted_results)} fused results")
+
+    # Cleanup
+    await hybrid_searcher.close()
 
     # Summary
     print("\n" + "=" * 50)
