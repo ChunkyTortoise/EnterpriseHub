@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import structlog
 from structlog.processors import JSONRenderer
@@ -41,7 +41,7 @@ def configure_logging(
     )
 
     # Configure structlog
-    shared_processors: list = [
+    shared_processors: List[Any] = [
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
@@ -87,7 +87,7 @@ def get_logger(name: str) -> BoundLogger:
     Returns:
         Configured structlog logger
     """
-    return structlog.get_logger(name)
+    return structlog.get_logger(name)  # type: ignore[no-any-return]
 
 
 class ContextualLogger:
@@ -141,7 +141,7 @@ class ContextualLogger:
             New ContextualLogger with merged context
         """
         return ContextualLogger(
-            self._logger._logger.name,  # type: ignore
+            self._logger._logger.name,
             **context,
         )
 

@@ -160,6 +160,7 @@ class WeightedScoreFusion:
 
             # Use the first available result for chunk data
             source_result = dense_map.get(chunk_id) or sparse_map.get(chunk_id)
+            assert source_result is not None, f"Chunk {chunk_id} not found in either result set"
 
             weighted_result = SearchResult(
                 chunk=source_result.chunk,

@@ -192,12 +192,19 @@ class RetrievalError(RAGException):
         self,
         message: str,
         details: Optional[Dict[str, Any]] = None,
+        error_code: str = "RETRIEVAL_ERROR",
     ) -> None:
-        """Initialize retrieval error."""
+        """Initialize retrieval error.
+
+        Args:
+            message: Human-readable error message
+            details: Additional context about the error
+            error_code: Machine-readable error identifier
+        """
         super().__init__(
             message=message,
             details=details,
-            error_code="RETRIEVAL_ERROR",
+            error_code=error_code,
         )
 
 
@@ -307,3 +314,33 @@ class DuplicateError(RAGException):
         )
         self.resource_type = resource_type
         self.resource_id = resource_id
+
+
+class QueryEnhancementError(RAGException):
+    """Exception raised for query enhancement operations.
+
+    This includes query expansion failures, HyDE generation errors,
+    or query classification issues.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        details: Optional[Dict[str, Any]] = None,
+        enhancement_type: Optional[str] = None,
+        error_code: str = "QUERY_ENHANCEMENT_ERROR",
+    ) -> None:
+        """Initialize query enhancement error.
+
+        Args:
+            message: Error message
+            details: Additional details
+            enhancement_type: Type of enhancement that failed (expansion, hyde, classification)
+            error_code: Optional custom error code
+        """
+        super().__init__(
+            message=message,
+            details=details,
+            error_code=error_code,
+        )
+        self.enhancement_type = enhancement_type
