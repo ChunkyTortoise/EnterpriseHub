@@ -199,18 +199,27 @@ class BM25Index:
             doc_scores.sort(key=lambda x: x[1], reverse=True)
             doc_scores = doc_scores[:top_k]
 
-            # Filter out zero scores
-            doc_scores = [(idx, score) for idx, score in doc_scores if score > 0]
+            # Filter out very low scores (keep negative scores as they may be meaningful)
+            min_score = max(-1.0, min(scores) * 0.1) if scores.size > 0 else -1.0
+            doc_scores = [(idx, score) for idx, score in doc_scores if score > min_score]
 
             # Convert to SearchResult objects
             results = []
+            max_score = max(scores) if scores.size > 0 else 1.0
+            min_score = min(scores) if scores.size > 0 else 0.0
+            score_range = max_score - min_score if max_score != min_score else 1.0
+
             for rank, (doc_idx, score) in enumerate(doc_scores, 1):
                 if doc_idx < len(self._documents):
+                    # Normalize score to 0-1 range
+                    normalized_score = (score - min_score) / score_range if score_range > 0 else 0.5
+                    normalized_score = max(0.0, min(1.0, normalized_score))
+
                     result = SearchResult(
                         chunk=self._documents[doc_idx],
-                        score=min(score / 10.0, 1.0),  # Normalize BM25 score to 0-1
+                        score=normalized_score,
                         rank=rank,
-                        distance=1.0 - min(score / 10.0, 1.0),  # Distance is inverse of score
+                        distance=1.0 - normalized_score,
                         explanation=f"BM25 score: {score:.4f}, matched tokens: {len(query_tokens)}"
                     )
                     results.append(result)
