@@ -1,0 +1,44 @@
+# Advanced RAG System - Phase 1 Dependencies
+# Production-grade dependencies for Principal AI Engineer portfolio project
+
+# Core Framework
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# OpenAI SDK
+openai>=1.6.0
+
+# Vector Store
+chromadb>=0.4.18
+
+# Caching
+redis>=5.0.0
+
+# Async Support
+aiohttp>=3.9.0
+aioredis>=2.0.1
+
+# Type Hints & Validation
+typing-extensions>=4.9.0
+
+# Logging & Observability
+structlog>=23.2.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+
+# Type Checking
+mypy>=1.7.0
+
+# Linting & Formatting
+ruff>=0.1.8
+black>=23.12.0
+
+# Pre-commit
+pre-commit>=3.6.0
+
+# Development Tools
+ipython>=8.19.0

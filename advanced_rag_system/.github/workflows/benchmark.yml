@@ -1,0 +1,531 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'advanced_rag_system/**'
+      - 'ai_ml_showcase/rag_excellence/**'
+      - '.github/workflows/benchmark.yml'
+
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'advanced_rag_system/**'
+      - 'ai_ml_showcase/rag_excellence/**'
+
+  schedule:
+    # Run benchmarks daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+  workflow_dispatch:
+    inputs:
+      benchmark_type:
+        description: 'Type of benchmark to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - performance
+          - quality
+          - load
+      baseline_comparison:
+        description: 'Compare against baseline'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+  POETRY_VERSION: '1.7.1'
+  BENCHMARK_RESULTS_DIR: 'benchmark_results'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      benchmark_types: ${{ steps.determine_benchmarks.outputs.benchmark_types }}
+      should_run_load_tests: ${{ steps.determine_benchmarks.outputs.should_run_load_tests }}
+    steps:
+      - name: Determine benchmark types
+        id: determine_benchmarks
+        run: |
+          if [ "${{ github.event.inputs.benchmark_type }}" == "all" ] || [ -z "${{ github.event.inputs.benchmark_type }}" ]; then
+            echo "benchmark_types=[\"performance\", \"quality\"]" >> $GITHUB_OUTPUT
+            echo "should_run_load_tests=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.inputs.benchmark_type }}" == "load" ]; then
+            echo "benchmark_types=[\"load\"]" >> $GITHUB_OUTPUT
+            echo "should_run_load_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "benchmark_types=[\"${{ github.event.inputs.benchmark_type }}\"]" >> $GITHUB_OUTPUT
+            echo "should_run_load_tests=false" >> $GITHUB_OUTPUT
+          fi
+
+  performance_benchmarks:
+    needs: setup
+    if: contains(fromJson(needs.setup.outputs.benchmark_types), 'performance')
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_rag_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need history for baseline comparison
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: |
+          poetry install --with dev,test
+
+      - name: Setup environment variables
+        run: |
+          echo "POSTGRES_URL=postgresql://test_user:test_password@localhost:5432/test_rag_db" >> $GITHUB_ENV
+          echo "REDIS_URL=redis://localhost:6379" >> $GITHUB_ENV
+          echo "TEST_ENV=ci" >> $GITHUB_ENV
+
+      - name: Initialize test database
+        run: |
+          poetry run python -c "
+          import asyncio
+          import asyncpg
+
+          async def setup_db():
+              conn = await asyncpg.connect('postgresql://test_user:test_password@localhost:5432/test_rag_db')
+              await conn.execute('CREATE EXTENSION IF NOT EXISTS vector;')
+              await conn.close()
+
+          asyncio.run(setup_db())
+          "
+
+      - name: Generate test data
+        run: |
+          mkdir -p ${{ env.BENCHMARK_RESULTS_DIR }}
+          poetry run python advanced_rag_system/tests/fixtures/generate_test_data.py
+
+      - name: Run embedding performance benchmarks
+        run: |
+          poetry run pytest advanced_rag_system/tests/benchmarks/test_embedding_perf.py \
+            -v \
+            --benchmark-only \
+            --benchmark-json=${{ env.BENCHMARK_RESULTS_DIR }}/embedding_perf.json \
+            --tb=short
+
+      - name: Run retrieval performance benchmarks
+        run: |
+          poetry run pytest advanced_rag_system/tests/benchmarks/test_retrieval_perf.py \
+            -v \
+            --benchmark-only \
+            --benchmark-json=${{ env.BENCHMARK_RESULTS_DIR }}/retrieval_perf.json \
+            --tb=short
+
+      - name: Run API performance benchmarks
+        run: |
+          poetry run pytest advanced_rag_system/tests/benchmarks/test_api_perf.py \
+            -v \
+            --benchmark-only \
+            --benchmark-json=${{ env.BENCHMARK_RESULTS_DIR }}/api_perf.json \
+            --tb=short
+
+      - name: Combine performance results
+        run: |
+          poetry run python -c "
+          import json
+          import glob
+
+          results = {}
+          for file in glob.glob('${{ env.BENCHMARK_RESULTS_DIR }}/*_perf.json'):
+              with open(file) as f:
+                  data = json.load(f)
+                  filename = file.split('/')[-1].replace('.json', '')
+                  results[filename] = data
+
+          with open('${{ env.BENCHMARK_RESULTS_DIR }}/performance_combined.json', 'w') as f:
+              json.dump(results, f, indent=2)
+          "
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-benchmark-results
+          path: ${{ env.BENCHMARK_RESULTS_DIR }}/performance_combined.json
+          retention-days: 30
+
+  quality_benchmarks:
+    needs: setup
+    if: contains(fromJson(needs.setup.outputs.benchmark_types), 'quality')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --with dev,test
+
+      - name: Generate evaluation datasets
+        run: |
+          mkdir -p ${{ env.BENCHMARK_RESULTS_DIR }}
+          poetry run python advanced_rag_system/src/evaluation/datasets.py
+
+      - name: Run retrieval quality benchmarks
+        run: |
+          poetry run pytest advanced_rag_system/tests/benchmarks/test_retrieval_quality.py \
+            -v \
+            --json-report \
+            --json-report-file=${{ env.BENCHMARK_RESULTS_DIR }}/retrieval_quality.json \
+            --tb=short
+
+      - name: Run answer quality benchmarks
+        run: |
+          poetry run pytest advanced_rag_system/tests/benchmarks/test_answer_quality.py \
+            -v \
+            --json-report \
+            --json-report-file=${{ env.BENCHMARK_RESULTS_DIR }}/answer_quality.json \
+            --tb=short
+
+      - name: Combine quality results
+        run: |
+          poetry run python -c "
+          import json
+          import glob
+
+          results = {}
+          for file in glob.glob('${{ env.BENCHMARK_RESULTS_DIR }}/*_quality.json'):
+              with open(file) as f:
+                  data = json.load(f)
+                  filename = file.split('/')[-1].replace('.json', '')
+                  results[filename] = data
+
+          with open('${{ env.BENCHMARK_RESULTS_DIR }}/quality_combined.json', 'w') as f:
+              json.dump(results, f, indent=2)
+          "
+
+      - name: Upload quality results
+        uses: actions/upload-artifact@v3
+        with:
+          name: quality-benchmark-results
+          path: ${{ env.BENCHMARK_RESULTS_DIR }}/quality_combined.json
+          retention-days: 30
+
+  load_tests:
+    needs: setup
+    if: needs.setup.outputs.should_run_load_tests == 'true' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_rag_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --with dev,test
+
+      - name: Install K6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Setup environment for load testing
+        run: |
+          echo "POSTGRES_URL=postgresql://test_user:test_password@localhost:5432/test_rag_db" >> $GITHUB_ENV
+          mkdir -p ${{ env.BENCHMARK_RESULTS_DIR }}
+
+      - name: Start RAG API server
+        run: |
+          poetry run python ghl_real_estate_ai/api/main.py &
+          echo $! > api_server.pid
+          sleep 10  # Wait for server to start
+        env:
+          PORT: 8000
+
+      - name: Wait for API to be ready
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
+
+      - name: Run Locust load test
+        run: |
+          poetry run locust -f advanced_rag_system/tests/load/locustfile.py \
+            --host=http://localhost:8000 \
+            --users 50 \
+            --spawn-rate 5 \
+            --run-time 2m \
+            --html ${{ env.BENCHMARK_RESULTS_DIR }}/locust_report.html \
+            --csv ${{ env.BENCHMARK_RESULTS_DIR }}/locust_results \
+            --headless
+
+      - name: Run K6 load test
+        run: |
+          k6 run advanced_rag_system/tests/load/k6_script.js \
+            --out json=${{ env.BENCHMARK_RESULTS_DIR }}/k6_results.json
+        env:
+          BASE_URL: http://localhost:8000
+
+      - name: Stop API server
+        run: |
+          if [ -f api_server.pid ]; then
+            kill $(cat api_server.pid)
+            rm api_server.pid
+          fi
+
+      - name: Upload load test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: load-test-results
+          path: |
+            ${{ env.BENCHMARK_RESULTS_DIR }}/locust_report.html
+            ${{ env.BENCHMARK_RESULTS_DIR }}/locust_results_stats.csv
+            ${{ env.BENCHMARK_RESULTS_DIR }}/k6_results.json
+          retention-days: 30
+
+  generate_report:
+    needs: [performance_benchmarks, quality_benchmarks]
+    if: always() && (needs.performance_benchmarks.result == 'success' || needs.quality_benchmarks.result == 'success')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Download performance results
+        if: needs.performance_benchmarks.result == 'success'
+        uses: actions/download-artifact@v3
+        with:
+          name: performance-benchmark-results
+          path: results/
+
+      - name: Download quality results
+        if: needs.quality_benchmarks.result == 'success'
+        uses: actions/download-artifact@v3
+        with:
+          name: quality-benchmark-results
+          path: results/
+
+      - name: Download baseline results
+        if: github.event.inputs.baseline_comparison == 'true' || github.event_name == 'schedule'
+        continue-on-error: true
+        run: |
+          # Download baseline from previous successful run
+          gh run list --workflow=benchmark.yml --status=success --limit=1 --json=databaseId | \
+          jq -r '.[0].databaseId' | \
+          xargs -I {} gh run download {} --name performance-benchmark-results --dir baseline/ || true
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Install report dependencies
+        run: |
+          pip install jinja2 matplotlib seaborn pandas
+
+      - name: Generate benchmark report
+        run: |
+          python advanced_rag_system/scripts/generate_benchmark_report.py \
+            --results-dir results/ \
+            --baseline-dir baseline/ \
+            --output benchmark_report.md
+
+      - name: Upload benchmark report
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-report
+          path: |
+            benchmark_report.md
+            benchmark_report.html
+          retention-days: 90
+
+      - name: Comment benchmark results on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            try {
+              const report = fs.readFileSync('benchmark_report.md', 'utf8');
+
+              // Find existing benchmark comment
+              const comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+
+              const benchmarkComment = comments.data.find(
+                comment => comment.body.includes('## 📊 Benchmark Results')
+              );
+
+              const body = `## 📊 Benchmark Results\n\n${report}\n\n---\n*Generated by GitHub Actions*`;
+
+              if (benchmarkComment) {
+                // Update existing comment
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: benchmarkComment.id,
+                  body: body
+                });
+              } else {
+                // Create new comment
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: body
+                });
+              }
+            } catch (error) {
+              console.log('Could not post benchmark results:', error);
+            }
+
+  update_baseline:
+    needs: [performance_benchmarks, quality_benchmarks, generate_report]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download benchmark results
+        uses: actions/download-artifact@v3
+        with:
+          name: performance-benchmark-results
+          path: baseline/
+
+      - name: Commit baseline results
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          mkdir -p .github/benchmark_baselines
+          cp baseline/*.json .github/benchmark_baselines/
+
+          git add .github/benchmark_baselines/
+          git commit -m "Update benchmark baseline [skip ci]" || exit 0
+          git push
+
+  failure_notification:
+    needs: [performance_benchmarks, quality_benchmarks, load_tests]
+    if: failure() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notify on benchmark failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'Benchmark Failure on Main Branch';
+            const body = `
+            ## ⚠️ Benchmark Tests Failed
+
+            The benchmark tests failed on the main branch.
+
+            **Commit**: ${context.sha}
+            **Workflow**: ${context.workflow}
+            **Run**: ${context.runNumber}
+
+            Please check the workflow logs and investigate.
+            `;
+
+            // Create an issue for benchmark failures
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'benchmark-failure', 'high-priority']
+            });
