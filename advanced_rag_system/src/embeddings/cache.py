@@ -299,21 +299,21 @@ class EmbeddingCache:
         key = self._generate_key(text)
 
         # Try L1 first
-        value = await self.l1.get(key)
-        if value is not None:
+        l1_value: Optional[List[float]] = await self.l1.get(key)
+        if l1_value is not None:
             self._stats.hits += 1
             self._update_hit_rate()
-            return value
+            return l1_value
 
         # Try L2 if configured
         if self.l2 is not None:
-            value = await self.l2.get(key)
-            if value is not None:
+            l2_value: Optional[List[float]] = await self.l2.get(key)
+            if l2_value is not None:
                 # Promote to L1
-                await self.l1.set(key, value, self.default_ttl)
+                await self.l1.set(key, l2_value, self.default_ttl)
                 self._stats.hits += 1
                 self._update_hit_rate()
-                return value
+                return l2_value
 
         self._stats.misses += 1
         self._update_hit_rate()
@@ -377,8 +377,8 @@ class EmbeddingCache:
         """
         if len(texts) != len(embeddings):
             raise CacheError(
-                message="Texts and embeddings must have same length",
-                error_code="LENGTH_MISMATCH",
+                "Texts and embeddings must have same length",
+                details={"texts_count": len(texts), "embeddings_count": len(embeddings)},
             )
 
         for text, embedding in zip(texts, embeddings):

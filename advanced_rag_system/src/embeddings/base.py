@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from src.core.exceptions import EmbeddingError
 
@@ -116,7 +116,7 @@ class EmbeddingProvider(ABC):
         """
         self._initialized = False
 
-    def get_model_info(self) -> dict:
+    def get_model_info(self) -> dict[str, Any]:
         """Get information about the embedding model.
 
         Returns:

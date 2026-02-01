@@ -8,17 +8,22 @@ This module provides various retrieval strategies including:
 - Query expansion and enhancement
 """
 
-from .dense import DenseRetriever
-from .sparse import BM25Retriever, TFIDFRetriever
-from .hybrid import HybridRetriever, RRFusion
-from .query import QueryExpander, HyDEGenerator
+# Phase 2 imports - sparse retrieval
+from .sparse import BM25Index, BM25Config, TextPreprocessor
+
+# Planned imports for future phases (commented out until implemented)
+# from .dense import DenseRetriever
+# from .hybrid import HybridRetriever, RRFusion
+# from .query import QueryExpander, HyDEGenerator
 
 __all__ = [
-    "DenseRetriever",
-    "BM25Retriever",
-    "TFIDFRetriever",
-    "HybridRetriever",
-    "RRFusion",
-    "QueryExpander",
-    "HyDEGenerator",
+    "BM25Index",
+    "BM25Config",
+    "TextPreprocessor",
+    # Future exports:
+    # "DenseRetriever",
+    # "HybridRetriever",
+    # "RRFusion",
+    # "QueryExpander",
+    # "HyDEGenerator",
 ]
