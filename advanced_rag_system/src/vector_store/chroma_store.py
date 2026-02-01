@@ -240,7 +240,7 @@ class ChromaVectorStore(VectorStore):
             )
 
             # Convert to SearchResult objects
-            search_results = []
+            search_results: List[SearchResult] = []
 
             if not results["ids"] or not results["ids"][0]:
                 return search_results
@@ -407,7 +407,8 @@ class ChromaVectorStore(VectorStore):
             if self._collection is None:
                 return 0
 
-            return self._collection.count()
+            count_result = self._collection.count()
+            return int(count_result) if count_result is not None else 0
 
         except Exception:
             return 0

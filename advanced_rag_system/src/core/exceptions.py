@@ -105,6 +105,7 @@ class EmbeddingError(RAGException):
         message: str,
         details: Optional[Dict[str, Any]] = None,
         provider: Optional[str] = None,
+        error_code: str = "EMBEDDING_ERROR",
     ) -> None:
         """Initialize embedding error.
 
@@ -112,11 +113,12 @@ class EmbeddingError(RAGException):
             message: Error message
             details: Additional details
             provider: Name of the embedding provider that failed
+            error_code: Optional custom error code
         """
         super().__init__(
             message=message,
             details=details,
-            error_code="EMBEDDING_ERROR",
+            error_code=error_code,
         )
         self.provider = provider
 
@@ -133,6 +135,7 @@ class VectorStoreError(RAGException):
         message: str,
         details: Optional[Dict[str, Any]] = None,
         store_type: Optional[str] = None,
+        error_code: str = "VECTOR_STORE_ERROR",
     ) -> None:
         """Initialize vector store error.
 
@@ -140,11 +143,12 @@ class VectorStoreError(RAGException):
             message: Error message
             details: Additional details
             store_type: Type of vector store (e.g., 'chroma', 'pinecone')
+            error_code: Optional custom error code
         """
         super().__init__(
             message=message,
             details=details,
-            error_code="VECTOR_STORE_ERROR",
+            error_code=error_code,
         )
         self.store_type = store_type
 
