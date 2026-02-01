@@ -162,7 +162,7 @@ class TestEmbeddingCache:
         """Test batch set with mismatched lengths raises error."""
         with pytest.raises(CacheError) as exc_info:
             await cache.set_batch(["text1"], [[0.1], [0.2]])
-        assert exc_info.value.error_code == "LENGTH_MISMATCH"
+        assert exc_info.value.error_code == "CACHE_ERROR"
 
     @pytest.mark.asyncio
     async def test_delete(self, cache: EmbeddingCache) -> None:

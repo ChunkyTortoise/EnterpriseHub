@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -191,7 +191,7 @@ class Settings(BaseSettings):
         """
         return custom_ttl if custom_ttl is not None else self.cache_ttl_seconds
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert settings to dictionary (excluding secrets).
 
         Returns:
