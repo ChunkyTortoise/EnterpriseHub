@@ -18,7 +18,7 @@ from src.core.exceptions import RetrievalError
 from src.core.types import SearchResult
 from src.retrieval.hybrid.hybrid_searcher import HybridSearcher, HybridSearchConfig
 from src.retrieval.query import QueryExpander, ExpansionConfig, HyDEGenerator, HyDEConfig, QueryClassifier, QueryType
-from src.reranking import MockReRanker, ReRankingConfig, ReRankingStrategy
+from src.reranking import BaseReRanker, MockReRanker, ReRankingConfig, ReRankingStrategy
 
 
 @dataclass
@@ -95,11 +95,17 @@ class AdvancedHybridSearcher:
         ```
     """
 
-    def __init__(self, config: Optional[AdvancedSearchConfig] = None):
+    def __init__(
+        self,
+        config: Optional[AdvancedSearchConfig] = None,
+        reranker: Optional[BaseReRanker] = None,
+    ):
         """Initialize advanced hybrid searcher.
 
         Args:
             config: Advanced search configuration
+            reranker: Optional pre-configured reranker. If not provided,
+                will try CrossEncoderReRanker then fall back to MockReRanker.
         """
         self.config = config or AdvancedSearchConfig()
 
@@ -113,8 +119,9 @@ class AdvancedHybridSearcher:
         self.hyde_generator: Optional[HyDEGenerator] = None
         self.query_classifier: Optional[QueryClassifier] = None
 
-        # Initialize re-ranker
-        self.reranker: Optional[MockReRanker] = None
+        # Store injected reranker (will be initialized in initialize())
+        self._injected_reranker = reranker
+        self.reranker: Optional[BaseReRanker] = None
 
         # Performance tracking
         self._search_stats = {
@@ -158,8 +165,12 @@ class AdvancedHybridSearcher:
                     strategy=ReRankingStrategy.WEIGHTED,
                     top_k=50
                 )
-                self.reranker = MockReRanker(reranking_config)
-                await self.reranker.initialize()
+                if self._injected_reranker is not None:
+                    self.reranker = self._injected_reranker
+                    await self.reranker.initialize()
+                else:
+                    self.reranker = MockReRanker(reranking_config)
+                    await self.reranker.initialize()
 
             self._initialized = True
 
