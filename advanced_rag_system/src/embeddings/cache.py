@@ -197,33 +197,137 @@ class MemoryCacheBackend:
 
 
 class RedisCacheBackend:
-    """Redis cache backend (placeholder for future implementation)."""
+    """Redis cache backend using redis.asyncio for async operations.
 
-    def __init__(self, redis_url: str) -> None:
+    Requires the ``redis`` package (``pip install redis``).
+    Degrades gracefully when the package is not installed or the
+    server is unreachable — operations log warnings but do not raise.
+    """
+
+    def __init__(
+        self,
+        redis_url: str,
+        key_prefix: str = "rag:emb:",
+        default_ttl: int = 3600,
+    ) -> None:
         """Initialize Redis cache.
 
         Args:
-            redis_url: Redis connection URL
+            redis_url: Redis connection URL (e.g. ``redis://localhost:6379/0``)
+            key_prefix: Prefix applied to all cache keys
+            default_ttl: Default TTL in seconds when none is specified
         """
         self.redis_url = redis_url
+        self.key_prefix = key_prefix
+        self.default_ttl = default_ttl
         self._client: Optional[Any] = None
+        self._available = False
+        self._logger = __import__("logging").getLogger(__name__)
+
+    async def initialize(self) -> None:
+        """Establish connection to Redis."""
+        try:
+            import redis.asyncio as aioredis
+            self._client = aioredis.from_url(
+                self.redis_url,
+                decode_responses=False,
+            )
+            # Verify connectivity
+            await self._client.ping()
+            self._available = True
+        except ImportError:
+            self._logger.warning("redis package not installed — RedisCacheBackend disabled")
+            self._available = False
+        except Exception as exc:
+            self._logger.warning("Could not connect to Redis at %s: %s", self.redis_url, exc)
+            self._available = False
+
+    async def close(self) -> None:
+        """Close the Redis connection."""
+        if self._client is not None:
+            try:
+                await self._client.aclose()
+            except Exception:
+                pass
+            self._client = None
+        self._available = False
+
+    def _make_key(self, key: str) -> str:
+        return f"{self.key_prefix}{key}"
 
     async def get(self, key: str) -> Optional[Any]:
-        """Get value from Redis (placeholder)."""
-        # Placeholder - would use aioredis in production
-        return None
+        """Get value from Redis.
 
-    async def set(self, key: str, value: Any, ttl: int) -> None:
-        """Set value in Redis (placeholder)."""
-        pass
+        Args:
+            key: Cache key
+
+        Returns:
+            Deserialized value or ``None``
+        """
+        if not self._available or self._client is None:
+            return None
+        try:
+            raw = await self._client.get(self._make_key(key))
+            if raw is None:
+                return None
+            return pickle.loads(raw)
+        except Exception as exc:
+            self._logger.warning("Redis GET failed for key %s: %s", key, exc)
+            return None
+
+    async def set(self, key: str, value: Any, ttl: int = 0) -> None:
+        """Set value in Redis with expiry.
+
+        Args:
+            key: Cache key
+            value: Value to cache (will be pickled)
+            ttl: Time-to-live in seconds (0 uses default_ttl)
+        """
+        if not self._available or self._client is None:
+            return
+        try:
+            effective_ttl = ttl if ttl > 0 else self.default_ttl
+            await self._client.setex(
+                self._make_key(key),
+                effective_ttl,
+                pickle.dumps(value),
+            )
+        except Exception as exc:
+            self._logger.warning("Redis SET failed for key %s: %s", key, exc)
 
     async def delete(self, key: str) -> bool:
-        """Delete from Redis (placeholder)."""
-        return False
+        """Delete a key from Redis.
+
+        Args:
+            key: Cache key
+
+        Returns:
+            True if the key was deleted, False otherwise
+        """
+        if not self._available or self._client is None:
+            return False
+        try:
+            result = await self._client.delete(self._make_key(key))
+            return result > 0
+        except Exception as exc:
+            self._logger.warning("Redis DELETE failed for key %s: %s", key, exc)
+            return False
 
     async def clear(self) -> None:
-        """Clear Redis cache (placeholder)."""
-        pass
+        """Clear all keys with the configured prefix using SCAN."""
+        if not self._available or self._client is None:
+            return
+        try:
+            cursor = 0
+            pattern = f"{self.key_prefix}*"
+            while True:
+                cursor, keys = await self._client.scan(cursor, match=pattern, count=100)
+                if keys:
+                    await self._client.delete(*keys)
+                if cursor == 0:
+                    break
+        except Exception as exc:
+            self._logger.warning("Redis CLEAR failed: %s", exc)
 
 
 class EmbeddingCache:

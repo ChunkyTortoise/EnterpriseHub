@@ -22,9 +22,11 @@ from .hybrid import (
     normalize_scores,
 )
 
-# Planned imports for future phases (commented out until implemented)
-# from .dense import DenseRetriever
-# from .query import QueryExpander, HyDEGenerator
+# Phase 2/3 imports - dense retrieval
+from .dense import DenseRetriever
+
+# Phase 3 imports - query enhancement
+from .query import QueryExpander, HyDEGenerator
 
 __all__ = [
     "BM25Index",
@@ -37,8 +39,7 @@ __all__ = [
     "WeightedScoreFusion",
     "deduplicate_results",
     "normalize_scores",
-    # Future exports:
-    # "DenseRetriever",
-    # "QueryExpander",
-    # "HyDEGenerator",
+    "DenseRetriever",
+    "QueryExpander",
+    "HyDEGenerator",
 ]

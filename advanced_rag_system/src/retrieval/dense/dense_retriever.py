@@ -142,8 +142,10 @@ class DenseRetriever:
             # Generate embeddings in batches
             embeddings = await self._embedding_provider.embed(texts)
 
-            # Store in vector database
-            await self._vector_store.add_documents(chunks, embeddings)
+            # Set embeddings on chunks and store in vector database
+            for chunk, embedding in zip(chunks, embeddings):
+                chunk.embedding = embedding
+            await self._vector_store.add_chunks(chunks)
 
             # Update document count
             self._document_count += len(chunks)
@@ -181,7 +183,7 @@ class DenseRetriever:
 
             # Search vector store
             search_options = SearchOptions(
-                limit=top_k,
+                top_k=top_k,
                 threshold=0.0,  # No threshold filtering for now
                 include_metadata=True
             )

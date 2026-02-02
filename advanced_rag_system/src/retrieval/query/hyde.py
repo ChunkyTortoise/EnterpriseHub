@@ -9,10 +9,33 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Protocol, runtime_checkable
 from dataclasses import dataclass
 
 from src.core.exceptions import RetrievalError
+
+
+@runtime_checkable
+class LLMProvider(Protocol):
+    """Protocol for LLM providers used by HyDE generation.
+
+    Any object implementing this interface can be used as the LLM backend
+    for hypothetical document generation. The ``MockLLMProvider`` class
+    provides a concrete implementation for testing.
+    """
+
+    async def generate(self, prompt: str, max_length: int = 512, temperature: float = 0.3) -> str:
+        """Generate text from a prompt.
+
+        Args:
+            prompt: Input prompt text
+            max_length: Maximum response length
+            temperature: Sampling temperature (0.0-1.0)
+
+        Returns:
+            Generated text string
+        """
+        ...
 
 
 @dataclass
@@ -145,12 +168,13 @@ class HyDEGenerator:
         ```
     """
 
-    def __init__(self, config: Optional[HyDEConfig] = None, llm_provider=None):
+    def __init__(self, config: Optional[HyDEConfig] = None, llm_provider: Optional[LLMProvider] = None):
         """Initialize HyDE generator.
 
         Args:
             config: HyDE configuration settings
-            llm_provider: Optional LLM provider (defaults to mock)
+            llm_provider: Optional LLM provider implementing the LLMProvider protocol.
+                Defaults to MockLLMProvider.
         """
         self.config = config or HyDEConfig()
         self.llm_provider = llm_provider or MockLLMProvider(self.config.model)

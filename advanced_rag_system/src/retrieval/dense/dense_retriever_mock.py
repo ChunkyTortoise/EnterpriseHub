@@ -156,18 +156,15 @@ class MockDenseRetriever:
 
             # Create search results
             results = []
-            for similarity, doc_idx in top_similarities:
+            for rank_idx, (similarity, doc_idx) in enumerate(top_similarities):
                 if similarity > 0.0:  # Only include positive similarities
                     chunk = self._documents[doc_idx]
                     result = SearchResult(
                         chunk=chunk,
                         score=float(similarity),
-                        retrieval_method="mock_dense",
-                        metadata={
-                            "similarity": similarity,
-                            "embedding_model": self._embedding_model,
-                            "mock_retriever": True
-                        }
+                        rank=rank_idx + 1,
+                        distance=float(1.0 - similarity),
+                        explanation=f"mock_dense | model={self._embedding_model}"
                     )
                     results.append(result)
 

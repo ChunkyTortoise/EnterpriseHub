@@ -172,13 +172,13 @@ class BaseReRanker(ABC):
         for result in results:
             normalized_score = (result.score - min_score) / score_range
             # Create new result with normalized score
+            original_explanation = result.explanation or ""
             normalized_result = SearchResult(
                 chunk=result.chunk,
                 score=normalized_score,
                 rank=result.rank,
                 distance=result.distance,
-                retrieval_method=result.retrieval_method,
-                metadata={**result.metadata, "original_score": result.score}
+                explanation=f"{original_explanation} | original_score={result.score:.4f}".strip(" |")
             )
             normalized_results.append(normalized_result)
 

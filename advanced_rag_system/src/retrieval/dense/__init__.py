@@ -4,12 +4,17 @@ This module provides dense (semantic) retrieval capabilities using
 vector embeddings and similarity search through ChromaDB.
 """
 
-# Try importing production DenseRetriever, fallback to mock
+import logging
+
+from .dense_retriever_mock import MockDenseRetriever
+
+logger = logging.getLogger(__name__)
+
+# Try importing production DenseRetriever, fallback to mock on ImportError only
 try:
     from .dense_retriever import DenseRetriever
-    __all__ = ["DenseRetriever"]
-except Exception:
-    # Fallback to mock version
-    from .dense_retriever_mock import MockDenseRetriever as DenseRetriever
-    __all__ = ["DenseRetriever"]
-    print("⚠️  Dense retrieval module using mock implementation")
+except ImportError as e:
+    logger.warning("Production DenseRetriever unavailable (missing dependency: %s). Using MockDenseRetriever.", e)
+    DenseRetriever = MockDenseRetriever  # type: ignore[misc,assignment]
+
+__all__ = ["DenseRetriever", "MockDenseRetriever"]

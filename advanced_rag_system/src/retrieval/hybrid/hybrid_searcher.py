@@ -15,13 +15,7 @@ from typing import Any, Dict, List, Optional, Union
 from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, SearchResult
 from src.retrieval.sparse.bm25_index import BM25Index, BM25Config
-# Try importing production DenseRetriever, fallback to mock
-try:
-    from src.retrieval.dense.dense_retriever import DenseRetriever
-except Exception:
-    # Fallback to mock version for development/testing
-    from src.retrieval.dense.dense_retriever_mock import MockDenseRetriever as DenseRetriever
-    print("⚠️  Using mock dense retriever due to dependency issues")
+from src.retrieval.dense import DenseRetriever
 from src.retrieval.hybrid.fusion import (
     FusionConfig,
     ReciprocalRankFusion,

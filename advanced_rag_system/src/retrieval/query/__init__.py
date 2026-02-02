@@ -7,7 +7,7 @@ This module provides comprehensive query enhancement features including:
 """
 
 from .expansion import QueryExpander, ExpansionConfig
-from .hyde import HyDEGenerator, HyDEConfig, MockLLMProvider
+from .hyde import HyDEGenerator, HyDEConfig, MockLLMProvider, LLMProvider
 from .classifier import QueryClassifier, ClassifierConfig, QueryType, ClassificationResult
 
 __all__ = [
@@ -19,6 +19,7 @@ __all__ = [
     "HyDEGenerator",
     "HyDEConfig",
     "MockLLMProvider",
+    "LLMProvider",
 
     # Query Classification
     "QueryClassifier",
