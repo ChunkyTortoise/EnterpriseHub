@@ -263,6 +263,78 @@
       "required_capabilities": ["FOLLOWUP_AUTOMATION"],
       "max_wait_time_seconds": 20,
       "priority_escalation_enabled": false
+    },
+
+    "prompt_optimization": {
+      "primary_agents": ["prompt_engineering_specialist"],
+      "fallback_agents": [],
+      "required_capabilities": ["PROMPT_OPTIMIZATION"],
+      "max_wait_time_seconds": 30,
+      "priority_escalation_enabled": false,
+      "description": "LLM prompt design, few-shot optimization, injection prevention"
+    },
+
+    "rag_pipeline": {
+      "primary_agents": ["rag_pipeline_optimizer"],
+      "fallback_agents": ["prompt_engineering_specialist"],
+      "required_capabilities": ["RAG_OPTIMIZATION"],
+      "max_wait_time_seconds": 30,
+      "priority_escalation_enabled": false,
+      "description": "Query enhancement, retrieval tuning, re-ranking, fusion parameters"
+    },
+
+    "cost_analysis": {
+      "primary_agents": ["llm_cost_optimizer"],
+      "fallback_agents": [],
+      "required_capabilities": ["COST_OPTIMIZATION"],
+      "max_wait_time_seconds": 30,
+      "priority_escalation_enabled": false,
+      "description": "Token cost routing, caching strategies, budget governance"
+    },
+
+    "proposal_generation": {
+      "primary_agents": ["technical_proposal_writer"],
+      "fallback_agents": ["project_scope_analyst"],
+      "required_capabilities": ["PROPOSAL_WRITING"],
+      "max_wait_time_seconds": 60,
+      "priority_escalation_enabled": false,
+      "description": "Upwork proposals, SOWs, freelance bids, pricing strategy"
+    },
+
+    "scope_analysis": {
+      "primary_agents": ["project_scope_analyst"],
+      "fallback_agents": ["technical_proposal_writer"],
+      "required_capabilities": ["SCOPE_ANALYSIS"],
+      "max_wait_time_seconds": 60,
+      "priority_escalation_enabled": false,
+      "description": "Requirements decomposition, effort estimation, risk identification"
+    },
+
+    "dashboard_design": {
+      "primary_agents": ["dashboard_design_specialist"],
+      "fallback_agents": [],
+      "required_capabilities": ["DASHBOARD_DESIGN"],
+      "max_wait_time_seconds": 30,
+      "priority_escalation_enabled": false,
+      "description": "Streamlit BI dashboard architecture, Plotly visualization, session state"
+    },
+
+    "kpi_definition": {
+      "primary_agents": ["kpi_definition_agent"],
+      "fallback_agents": [],
+      "required_capabilities": ["KPI_FRAMEWORK"],
+      "max_wait_time_seconds": 30,
+      "priority_escalation_enabled": false,
+      "description": "Business metrics, alert thresholds, conversion funnel KPIs"
+    },
+
+    "data_pipeline": {
+      "primary_agents": ["data_pipeline_architect"],
+      "fallback_agents": [],
+      "required_capabilities": ["DATA_ENGINEERING"],
+      "max_wait_time_seconds": 30,
+      "priority_escalation_enabled": false,
+      "description": "ETL/ELT design, data quality, schema evolution, pipeline monitoring"
     }
   },
 
