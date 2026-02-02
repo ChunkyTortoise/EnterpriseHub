@@ -305,19 +305,22 @@ class TestHybridSearcher:
         with pytest.raises(ValueError, match="Unknown fusion method"):
             HybridSearcher(hybrid_config=config)
 
-    def test_add_documents(self, sample_chunks: List[DocumentChunk]):
+    @pytest.mark.asyncio
+    async def test_add_documents(self, sample_chunks: List[DocumentChunk]):
         """Test adding documents to hybrid searcher."""
         searcher = HybridSearcher()
-        searcher.add_documents(sample_chunks)
+        await searcher.initialize()
+        await searcher.add_documents(sample_chunks)
 
         assert searcher.document_count == 3
         assert searcher.sparse_retriever.document_count == 3
         assert searcher.dense_retriever.document_count == 3
 
-    def test_add_empty_documents(self):
+    @pytest.mark.asyncio
+    async def test_add_empty_documents(self):
         """Test adding empty document list."""
         searcher = HybridSearcher()
-        searcher.add_documents([])  # Should not raise error
+        await searcher.add_documents([])  # Should not raise error
         assert searcher.document_count == 0
 
     @pytest.mark.asyncio
@@ -367,10 +370,12 @@ class TestHybridSearcher:
         # Should be empty since dense retriever is stubbed
         assert len(results) == 0
 
-    def test_clear_index(self, sample_chunks: List[DocumentChunk]):
+    @pytest.mark.asyncio
+    async def test_clear_index(self, sample_chunks: List[DocumentChunk]):
         """Test clearing the hybrid index."""
         searcher = HybridSearcher()
-        searcher.add_documents(sample_chunks)
+        await searcher.initialize()
+        await searcher.add_documents(sample_chunks)
 
         assert searcher.document_count > 0
 
