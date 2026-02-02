@@ -1,12 +1,15 @@
 """Production dense retrieval using vector embeddings and similarity search.
 
 This module provides the DenseRetriever class that performs semantic search
-using OpenAI embeddings and ChromaDB vector storage.
+using OpenAI embeddings and vector storage. Uses ChromaDB when available,
+falls back to InMemoryVectorStore when ChromaDB has dependency conflicts
+(e.g. pydantic v2 on Python 3.14).
 """
 
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from typing import List, Optional
 
@@ -15,8 +18,40 @@ from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, SearchResult
 from src.embeddings.openai_provider import OpenAIEmbeddingProvider
 from src.embeddings.base import EmbeddingConfig
-from src.vector_store.chroma_store import ChromaVectorStore
-from src.vector_store.base import VectorStoreConfig, SearchOptions
+from src.vector_store.base import VectorStoreConfig, SearchOptions, VectorStore
+from src.vector_store.in_memory_store import InMemoryVectorStore
+
+logger = logging.getLogger(__name__)
+
+# Lazy ChromaDB availability check
+_CHROMADB_AVAILABLE: Optional[bool] = None
+
+
+def _check_chromadb() -> bool:
+    """Check if ChromaDB can be imported without triggering pydantic errors."""
+    global _CHROMADB_AVAILABLE
+    if _CHROMADB_AVAILABLE is None:
+        try:
+            from src.vector_store.chroma_store import ChromaVectorStore  # noqa: F401
+            _CHROMADB_AVAILABLE = True
+        except (ImportError, Exception):
+            _CHROMADB_AVAILABLE = False
+    return _CHROMADB_AVAILABLE
+
+
+def _create_vector_store(config: VectorStoreConfig, persist_directory: Optional[str] = None) -> VectorStore:
+    """Create the best available vector store.
+
+    Tries ChromaDB first for persistence, falls back to InMemoryVectorStore.
+    """
+    if _check_chromadb():
+        try:
+            from src.vector_store.chroma_store import ChromaVectorStore
+            return ChromaVectorStore(config, persist_directory=persist_directory)
+        except Exception as e:
+            logger.warning("ChromaDB store creation failed (%s), using InMemoryVectorStore.", e)
+
+    return InMemoryVectorStore(config)
 
 
 class DenseRetriever:
@@ -24,7 +59,7 @@ class DenseRetriever:
 
     Provides semantic search capabilities using:
     - OpenAI embeddings for text-to-vector conversion
-    - ChromaDB for vector storage and similarity search
+    - ChromaDB or InMemoryVectorStore for vector storage
     - Async operations for optimal performance
 
     Example:
@@ -67,7 +102,7 @@ class DenseRetriever:
 
         # Initialize components (will be set in initialize())
         self._embedding_provider: Optional[OpenAIEmbeddingProvider] = None
-        self._vector_store: Optional[ChromaVectorStore] = None
+        self._vector_store: Optional[VectorStore] = None
         self._initialized = False
 
         # Document tracking
@@ -84,25 +119,24 @@ class DenseRetriever:
             embedding_config = EmbeddingConfig(
                 model=self._embedding_model,
                 dimensions=self._dimensions,
-                batch_size=100  # Optimize for batching
+                batch_size=100
             )
             self._embedding_provider = OpenAIEmbeddingProvider(embedding_config)
             await self._embedding_provider.initialize()
 
-            # Initialize vector store
+            # Initialize vector store (ChromaDB or InMemory fallback)
             vector_config = VectorStoreConfig(
                 collection_name=self._collection_name,
                 dimension=self._dimensions,
                 distance_metric=self._distance_metric
             )
-            self._vector_store = ChromaVectorStore(vector_config)
+            self._vector_store = _create_vector_store(vector_config)
             await self._vector_store.initialize()
 
             # Get current document count
             try:
                 self._document_count = await self._vector_store.count()
             except Exception:
-                # Collection might not exist yet
                 self._document_count = 0
 
             self._initialized = True
@@ -151,7 +185,7 @@ class DenseRetriever:
             self._document_count += len(chunks)
 
             elapsed_time = time.time() - start_time
-            print(f"Added {len(chunks)} documents in {elapsed_time:.3f}s")
+            logger.debug("Added %d documents in %.3fs", len(chunks), elapsed_time)
 
         except Exception as e:
             raise RetrievalError(f"Failed to add documents: {str(e)}") from e
@@ -184,7 +218,7 @@ class DenseRetriever:
             # Search vector store
             search_options = SearchOptions(
                 top_k=top_k,
-                threshold=0.0,  # No threshold filtering for now
+                threshold=0.0,
                 include_metadata=True
             )
 
@@ -195,9 +229,8 @@ class DenseRetriever:
 
             elapsed_time = time.time() - start_time
 
-            # Log performance metrics
-            if elapsed_time > 0.05:  # Log if >50ms
-                print(f"Dense search took {elapsed_time:.3f}s for {len(results)} results")
+            if elapsed_time > 0.05:
+                logger.debug("Dense search took %.3fs for %d results", elapsed_time, len(results))
 
             return results
 
@@ -211,19 +244,14 @@ class DenseRetriever:
         For async operations, use async_clear().
         """
         if self._initialized and self._vector_store:
-            # Note: This creates an event loop if none exists
-            # In production, prefer using async_clear() directly
             try:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
-                    # If we're in an async context, schedule the task
                     task = loop.create_task(self.async_clear())
                     return task
                 else:
-                    # Run in the current loop
                     loop.run_until_complete(self.async_clear())
             except RuntimeError:
-                # No event loop, create one
                 asyncio.run(self.async_clear())
 
         self._document_count = 0
@@ -240,27 +268,14 @@ class DenseRetriever:
 
     @property
     def document_count(self) -> int:
-        """Get number of documents in the dense index.
-
-        Returns:
-            Number of indexed documents
-        """
         return self._document_count
 
     @property
     def is_initialized(self) -> bool:
-        """Check if the retriever is initialized.
-
-        Returns:
-            True if initialized, False otherwise
-        """
         return self._initialized
 
     async def close(self) -> None:
-        """Close and cleanup resources.
-
-        Should be called when done using the retriever.
-        """
+        """Close and cleanup resources."""
         if self._embedding_provider:
             await self._embedding_provider.close()
 
@@ -270,31 +285,26 @@ class DenseRetriever:
         self._initialized = False
 
     async def get_stats(self) -> dict:
-        """Get retriever statistics.
-
-        Returns:
-            Dictionary with statistics
-        """
+        """Get retriever statistics."""
         stats = {
             "document_count": self._document_count,
             "collection_name": self._collection_name,
             "embedding_model": self._embedding_model,
             "dimensions": self._dimensions,
             "distance_metric": self._distance_metric,
-            "initialized": self._initialized
+            "initialized": self._initialized,
+            "vector_store_type": type(self._vector_store).__name__ if self._vector_store else None,
         }
 
         if self._initialized and self._vector_store:
             try:
-                # Get additional stats from vector store
                 vector_stats = await self._vector_store.get_stats()
                 stats.update(vector_stats)
             except Exception:
-                # Stats not available
                 pass
 
         return stats
 
 
 # For backward compatibility with stub interface
-DenseRetrieverStub = DenseRetriever  # Can be removed after migration
+DenseRetrieverStub = DenseRetriever
