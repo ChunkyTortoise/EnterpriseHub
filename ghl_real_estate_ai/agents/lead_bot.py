@@ -14,7 +14,7 @@ from ghl_real_estate_ai.models.workflows import LeadFollowUpState
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
 from ghl_real_estate_ai.services.ghost_followup_engine import get_ghost_followup_engine, GhostState
-from ghl_real_estate_ai.utils.pdf_renderer import PDFRenderer
+from ghl_real_estate_ai.utils.pdf_renderer import PDFRenderer, PDFGenerationError
 from ghl_real_estate_ai.integrations.retell import RetellClient
 from ghl_real_estate_ai.integrations.lyrio import LyrioClient
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -513,7 +513,7 @@ class LeadBotWorkflow:
     - Jorge Bot handoff coordination
     """
 
-    def __init__(self, ghl_client=None, config: Optional[LeadBotConfig] = None):
+    def __init__(self, ghl_client=None, config: Optional[LeadBotConfig] = None, sendgrid_client=None):
         # Core components (always initialized)
         self.config = config or LeadBotConfig()
         self.intent_decoder = LeadIntentDecoder()
@@ -521,6 +521,7 @@ class LeadBotWorkflow:
         self.cma_generator = CMAGenerator()
         self.ghost_engine = get_ghost_followup_engine()
         self.ghl_client = ghl_client
+        self.sendgrid_client = sendgrid_client
         self.event_publisher = get_event_publisher()
         self.sequence_service = get_sequence_service()
         self.scheduler = get_lead_scheduler()
@@ -1689,7 +1690,7 @@ class LeadBotWorkflow:
             frs_score=state['intent_profile'].frs.total_score
         )
         action = await self.ghost_engine.process_lead_step(ghost_state, state['conversation_history'])
-        
+
         logger.info(f"Sending Day 14 Email to {state['contact_email']}: {action['content']}")
         await sync_service.record_lead_event(state['lead_id'], "AI", "Sent Day 14 Email with value injection.", "email")
 
@@ -1702,7 +1703,7 @@ class LeadBotWorkflow:
         # Advance sequence to next day
         await self.sequence_service.advance_to_next_day(state['lead_id'])
 
-        # Send email via GHL API
+        # Send email via GHL API (CRM tracking copy)
         if self.ghl_client:
             try:
                 await self.ghl_client.send_message(
@@ -1714,13 +1715,103 @@ class LeadBotWorkflow:
             except Exception as e:
                 logger.error(f"Failed to send email via GHL: {e}")
 
-        # TODO: Generate and attach CMA PDF
+        # Generate CMA PDF and send rich email via SendGrid
+        cma_attached = False
+        contact_email = state.get('contact_email')
+        property_address = state.get('property_address')
+        if contact_email and property_address and self.sendgrid_client:
+            cma_attached = await self._send_cma_email_with_attachment(
+                lead_id=state['lead_id'],
+                contact_email=contact_email,
+                property_address=property_address,
+            )
 
         return {
-            "engagement_status": "ghosted", 
+            "engagement_status": "ghosted",
             "current_step": "day_30_nudge",
-            "response_content": action['content']
+            "response_content": action['content'],
+            "cma_attached": cma_attached,
         }
+
+    async def _send_cma_email_with_attachment(
+        self, lead_id: str, contact_email: str, property_address: str
+    ) -> bool:
+        """Generate a CMA PDF and email it as an attachment via SendGrid.
+
+        Returns True on success, False on any failure.  Never raises.
+        """
+        import re
+        try:
+            report = await self.cma_generator.generate_report(property_address)
+            pdf_bytes = PDFRenderer.generate_pdf_bytes(report)
+
+            import base64
+            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+
+            # Build a filesystem-safe filename from the address
+            safe_addr = re.sub(r'[^A-Za-z0-9]+', '_', property_address).strip('_')[:60]
+            filename = f"CMA_{safe_addr}.pdf"
+
+            email_html = self._build_cma_email_html(property_address)
+
+            await self.sendgrid_client.send_email(
+                to_email=contact_email,
+                subject=f"Your Personalized CMA for {property_address}",
+                html_content=email_html,
+                lead_id=lead_id,
+                attachments=[{
+                    "content": b64_pdf,
+                    "filename": filename,
+                    "type": "application/pdf",
+                }],
+            )
+
+            await sync_service.record_lead_event(
+                lead_id, "AI", f"CMA PDF emailed to {contact_email}", "email"
+            )
+            await self.sequence_service.set_cma_generated(lead_id)
+
+            logger.info(f"CMA PDF attachment sent to {contact_email} for lead {lead_id}")
+            return True
+
+        except PDFGenerationError as exc:
+            logger.error(f"PDF generation failed for lead {lead_id}: {exc}")
+            return False
+        except Exception as exc:
+            logger.error(f"CMA email attachment failed for lead {lead_id}: {exc}")
+            return False
+
+    @staticmethod
+    def _build_cma_email_html(property_address: str) -> str:
+        """Return branded HTML email body referencing the attached CMA PDF."""
+        return f"""
+<html>
+<body style="font-family: Arial, sans-serif; color: #2c3e50; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: #2d5a7a; color: white; padding: 20px; text-align: center;">
+        <h1 style="margin: 0; font-size: 22px;">Your Personalized Market Analysis</h1>
+    </div>
+    <div style="padding: 20px;">
+        <p>Hi there,</p>
+        <p>I put together a <strong>Comparative Market Analysis (CMA)</strong> for
+        <strong>{property_address}</strong> so you can see exactly how the market
+        stacks up right now.</p>
+        <p>The full report is attached as a PDF. Here's what you'll find inside:</p>
+        <ul>
+            <li>Current estimated market value with confidence range</li>
+            <li>Comparable sales analysis with adjustments</li>
+            <li>Zillow Zestimate vs. our AI-powered valuation</li>
+            <li>Local market narrative and trends</li>
+        </ul>
+        <p>Have questions about the numbers? Just reply to this email and I'll
+        walk you through everything.</p>
+        <p style="margin-top: 25px;">Best regards,<br><strong>Jorge</strong><br>
+        EnterpriseHub Real Estate Intelligence</p>
+    </div>
+    <div style="border-top: 1px solid #e0e0e0; padding-top: 12px; font-size: 11px; color: #999; text-align: center;">
+        Powered by EnterpriseHub AI &bull; Rancho Cucamonga, CA
+    </div>
+</body>
+</html>"""
 
     async def send_day_30_nudge(self, state: LeadFollowUpState) -> Dict:
         """Day 30: Final qualification attempt via GhostEngine."""

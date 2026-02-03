@@ -73,6 +73,7 @@ python-dotenv==1.0.0  # Environment variable management
 openpyxl==3.1.2  # Excel file support for data export
 PyGithub>=2.1.1 # GitHub API interactions
 qrcode[pil]>=7.4.2
+reportlab>=4.0  # PDF generation for CMA reports (already pulled by other deps)
 fastmcp
 graphiti-core>=0.5.0
 redis>=5.0.0
