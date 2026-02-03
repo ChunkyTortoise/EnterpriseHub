@@ -646,16 +646,19 @@ class LLMClient:
                             "input_schema": t["parameters"]
                         })
 
-                response = await self._async_client.messages.create(
+                # Build kwargs, only including tools when actually present
+                create_kwargs = dict(
                     model=target_model,
                     max_tokens=max_tokens,
                     temperature=temperature,
                     system=system_blocks if system_blocks else "You are a helpful AI assistant.",
                     messages=messages,
-                    tools=anthropic_tools if anthropic_tools else None,
-                    # Ensure beta headers are sent for caching if required by the version
-                    extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"}
+                    extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
                 )
+                if anthropic_tools:
+                    create_kwargs["tools"] = anthropic_tools
+
+                response = await self._async_client.messages.create(**create_kwargs)
                 
                 input_tokens = response.usage.input_tokens if hasattr(response, 'usage') else None
                 output_tokens = response.usage.output_tokens if hasattr(response, 'usage') else None

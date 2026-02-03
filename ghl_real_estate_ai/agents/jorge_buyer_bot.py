@@ -12,6 +12,7 @@ Buyer Bot Features:
 """
 
 import asyncio
+import inspect
 import random
 import uuid
 from typing import Dict, Any, List, Literal, Optional
@@ -576,7 +577,7 @@ class JorgeBuyerBot:
 
             # Use existing property matching service
             # Handle both sync and async property matcher (for tests/mocks)
-            if asyncio.iscoroutinefunction(self.property_matcher.find_matches):
+            if inspect.iscoroutinefunction(self.property_matcher.find_matches):
                 matches = await self.property_matcher.find_matches(
                     preferences=state.get("property_preferences") or {},
                     limit=5
