@@ -67,9 +67,11 @@ Content-Type: application/json
 {
   "access_token": "eyJhbGc...",
   "token_type": "bearer",
-  "expires_in": 3600
+  "expires_in": 1800
 }
 ```
+
+Token expires in 30 minutes (`ACCESS_TOKEN_EXPIRE_MINUTES = 30`). Refresh tokens last 7 days.
 
 Use the token in subsequent requests:
 
@@ -126,39 +128,75 @@ X-RateLimit-Reset: 1706900400
 
 ### Rate Limited Response (429)
 
+From `EnhancedRateLimitMiddleware` (`ghl_real_estate_ai/api/middleware/rate_limiter.py`):
+
 ```json
 {
-  "error": "rate_limit_exceeded",
-  "message": "100 requests per minute limit exceeded",
-  "retry_after": 30
+  "error": "Rate limit exceeded",
+  "message": "Too many requests. Please try again later.",
+  "retry_after": 60,
+  "type": "rate_limit_error"
 }
 ```
+
+Response headers: `Retry-After: 60`, `X-Rate-Limit-Remaining: 0`, `X-Rate-Limit-Reset: <timestamp>`.
+
+Bot traffic (detected by user-agent) receives 1/4 the normal rate limit. IPs are blocked for 15 minutes after repeated violations or >50 requests in 10 seconds. Health check endpoints (`/health`, `/api/health`, `/ping`) are exempt from rate limiting.
 
 ---
 
 ## Health & Status
 
-### GET /api/health
+Endpoints defined in `ghl_real_estate_ai/api/routes/health.py`, mounted at prefix `/api/health`.
 
-System health check endpoint.
+### GET /api/health/
 
-**Response** (200 OK):
+Basic liveness probe. No authentication required. Returns database and cache status.
+
+**Response** (200 OK) -- `HealthResponse`:
 ```json
 {
   "status": "healthy",
+  "timestamp": "2026-02-02T10:00:00",
   "version": "1.0.0",
   "environment": "production",
-  "services": {
-    "database": "connected",
-    "redis": "connected",
-    "claude_api": "available",
-    "ghl_api": "available",
-    "websocket": "active"
-  },
   "uptime_seconds": 86400,
-  "timestamp": "2026-02-02T10:00:00Z"
+  "checks": {
+    "database": "healthy",
+    "cache": "healthy"
+  }
 }
 ```
+
+Status values: `healthy`, `degraded`, `unhealthy`, `critical`.
+
+### GET /api/health/live
+
+Kubernetes-style liveness probe. Very lightweight -- only verifies the process is responsive.
+
+### GET /api/health/ready (Authenticated)
+
+Kubernetes-style readiness probe. Checks database, cache, and security framework. Returns `DetailedHealthResponse` with per-service health details.
+
+### GET /api/health/deep (Authenticated)
+
+Comprehensive deep health check including external services (Apollo, Twilio, SendGrid, GHL). Includes system metrics (CPU, memory, disk) via `psutil`. Should not be called frequently.
+
+### GET /api/health/metrics (Authenticated)
+
+Performance and operational metrics including SLA compliance data.
+
+### GET /api/health/dependencies (Authenticated)
+
+Status of all external dependencies with response times.
+
+### GET /api/health/status
+
+Human-readable service status page suitable for monitoring dashboards. Returns 200 for healthy/degraded, 503 for unhealthy/critical.
+
+### POST /api/health/alerts/test (Authenticated)
+
+Test the alerting system by creating a test alert.
 
 ### GET /
 
@@ -390,46 +428,196 @@ Analyze property and generate CMA.
 
 ## Bot Management
 
-### GET /api/bot-management/status
+Endpoints defined in `ghl_real_estate_ai/api/routes/bot_management.py`, mounted at prefix `/api`.
 
-Get Jorge bot status and metrics.
+### GET /api/bots/health
+
+Bot management system health check.
 
 **Response** (200 OK):
 ```json
 {
+  "status": "healthy",
+  "timestamp": "2026-02-02T10:00:00",
   "bots": {
-    "jorge_lead_bot": {
-      "status": "active",
-      "conversations_today": 47,
-      "avg_response_time_ms": 380,
-      "qualification_rate": 0.68
-    },
-    "jorge_buyer_bot": {
-      "status": "active",
-      "matches_today": 23,
-      "avg_match_score": 0.87
-    },
-    "jorge_seller_bot": {
-      "status": "active",
-      "analyses_today": 12,
-      "avg_confidence": 0.91
-    }
+    "jorge-seller-bot": "initialized",
+    "lead-bot": "initialized",
+    "intent-decoder": "initialized"
   },
-  "system_health": "healthy"
+  "services": {
+    "cache": "connected",
+    "event_publisher": "available"
+  }
 }
 ```
 
-### POST /api/bot-management/toggle
+### GET /api/bots
 
-Enable or disable a specific bot.
+List all available bots with real-time status metrics.
 
-**Request**:
+**Response** (200 OK) -- `List[BotStatusResponse]`:
+```json
+[
+  {
+    "id": "jorge-seller-bot",
+    "name": "Jorge Seller Bot",
+    "status": "online",
+    "lastActivity": "2026-02-02T10:00:00",
+    "responseTimeMs": 42.0,
+    "conversationsToday": 12,
+    "leadsQualified": 5
+  },
+  {
+    "id": "lead-bot",
+    "name": "Lead Bot",
+    "status": "online",
+    "lastActivity": "2026-02-02T10:00:00",
+    "responseTimeMs": 150.0,
+    "conversationsToday": 8
+  },
+  {
+    "id": "intent-decoder",
+    "name": "Intent Decoder",
+    "status": "online",
+    "lastActivity": "2026-02-02T10:00:00",
+    "responseTimeMs": 8.0,
+    "conversationsToday": 20
+  }
+]
+```
+
+### POST /api/bots/{bot_id}/chat
+
+Stream bot conversation responses with Server-Sent Events. Returns `text/event-stream`.
+
+**Path Parameters**: `bot_id` -- one of `jorge-seller-bot`, `lead-bot`, `intent-decoder`
+
+**Request** (`ChatMessageRequest`):
 ```json
 {
-  "bot_name": "jorge_buyer_bot",
-  "enabled": true
+  "content": "I want to sell my home in Victoria",
+  "leadId": "lead-001",
+  "leadName": "John Smith",
+  "conversationId": "conv-abc123"
 }
 ```
+
+**SSE Events**:
+```
+data: {"type": "start", "conversationId": "conv-abc123", "botType": "jorge-seller-bot"}
+data: {"type": "chunk", "content": "Hey", "chunk": "Hey", "progress": 0.1}
+data: {"type": "complete", "full_response": "...", "metadata": {"processingTimeMs": 142.5}}
+data: {"type": "done"}
+```
+
+### GET /api/bots/{bot_id}/status
+
+Get individual bot health metrics.
+
+### POST /api/jorge-seller/start
+
+Start Jorge Seller Bot qualification conversation.
+
+**Request** (`JorgeStartRequest`):
+```json
+{
+  "leadId": "lead-001",
+  "leadName": "John Smith",
+  "phone": "+15550100",
+  "propertyAddress": "456 Oak Ave, Rancho Cucamonga, CA 91730"
+}
+```
+
+### POST /api/jorge-seller/process
+
+Process seller message using unified Jorge Seller Bot with enterprise features. Frontend-compatible endpoint matching `enterprise-ui/src/app/api/bots/jorge-seller/route.ts`.
+
+**Request** (`SellerChatRequest`):
+```json
+{
+  "contact_id": "contact-001",
+  "location_id": "loc-001",
+  "message": "I want to sell my home",
+  "contact_info": {"name": "John Smith", "phone": "+15550100"}
+}
+```
+
+**Response** (`SellerChatResponse`):
+```json
+{
+  "response_message": "Based on our conversation...",
+  "seller_temperature": "warm",
+  "questions_answered": 1,
+  "qualification_complete": false,
+  "actions_taken": [{"type": "qualification", "description": "Assessed as warm lead"}],
+  "next_steps": "Continue qualification process",
+  "analytics": {
+    "seller_temperature": "warm",
+    "qualification_progress": "1/4",
+    "processing_time_ms": 142.5,
+    "bot_version": "unified_enterprise"
+  }
+}
+```
+
+### GET /api/intent-decoder/{leadId}/score
+
+Get FRS/PCS scores and intent analysis for a lead. Cached for 5 minutes.
+
+**Response** (`IntentScoreResponse`):
+```json
+{
+  "leadId": "lead-001",
+  "frsScore": 72.5,
+  "pcsScore": 65.0,
+  "temperature": "warm",
+  "classification": "motivated_seller",
+  "nextBestAction": "Schedule property walkthrough",
+  "processingTimeMs": 12.5,
+  "breakdown": {
+    "motivation": {"score": 80, "category": "high"},
+    "timeline": {"score": 70, "category": "medium"},
+    "condition": {"score": 65, "category": "medium"},
+    "price": {"score": 75, "category": "high"}
+  }
+}
+```
+
+### POST /api/lead-bot/{leadId}/schedule
+
+Trigger lead bot 3-7-30 sequence. Sequence day must be 3, 7, 14, or 30.
+
+### POST /api/lead-bot/automation
+
+Trigger Lead Bot automation for specific lead. Automation types: `day_3`, `day_7`, `day_30`, `post_showing`, `contract_to_close`.
+
+### GET /api/performance/summary
+
+Get comprehensive Jorge Enterprise performance summary.
+
+### GET /api/performance/jorge
+
+Get Jorge Seller Bot specific performance metrics.
+
+### GET /api/performance/lead-automation
+
+Get Lead Bot automation performance metrics.
+
+### GET /api/performance/health
+
+Get comprehensive system health report.
+
+### GET /api/jorge-seller/{lead_id}/progress
+
+Get Jorge Seller Bot qualification progress for a lead.
+
+### POST /api/jorge-seller/{lead_id}/stall-breaker
+
+Apply Jorge's confrontational stall-breaker script. Stall types: `generic`, `price`, `timeline`, `thinking`.
+
+### POST /api/jorge-seller/{lead_id}/handoff
+
+Trigger handoff from Jorge Seller Bot to Lead Bot or another bot.
 
 ---
 
@@ -784,17 +972,38 @@ Get security monitoring status.
 
 ### Error Response Format
 
-All errors return a consistent JSON structure:
+All errors return a consistent JSON structure from `BulletproofErrorHandler` middleware (`ghl_real_estate_ai/api/middleware/error_handler.py`):
 
 ```json
 {
-  "error": "error_code",
-  "message": "Human-readable description",
-  "field": "specific_field (if applicable)",
-  "code": "MACHINE_READABLE_CODE",
-  "request_id": "req-abc123"
+  "success": false,
+  "error": {
+    "code": "ConnectionError",
+    "category": "connection",
+    "message": "Service temporarily unavailable. We're working on it.",
+    "retryable": true,
+    "severity": "high"
+  },
+  "correlation_id": "jorge_1706900000_abc12345",
+  "timestamp": 1706900000.0,
+  "endpoint": "POST /api/bots/jorge-seller-bot/chat",
+  "guidance": {
+    "action": "Check connectivity",
+    "description": "Unable to connect to external services."
+  },
+  "retry": {
+    "recommended": true,
+    "suggested_delay_seconds": 5,
+    "max_retries": 3
+  }
 }
 ```
+
+Error categories: `http`, `timeout`, `connection`, `auth`, `claude_api`, `ghl_api`, `database`, `system`.
+
+Response headers include: `X-Correlation-ID`, `X-Error-Category`, `X-Error-Retryable`.
+
+Circuit breaker activates after 5 consecutive failures per endpoint (60s timeout), returning 503 with `CIRCUIT_BREAKER_OPEN`.
 
 ### Common Error Codes
 
@@ -852,4 +1061,4 @@ These endpoints are disabled in production for security.
 
 ---
 
-**Version**: 1.0.0 | **Last Updated**: February 2, 2026
+**Version**: 1.1.0 | **Last Updated**: February 2, 2026

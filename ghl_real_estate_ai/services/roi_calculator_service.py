@@ -7,6 +7,11 @@ Calculates cash flow, tax benefits, and long-term appreciation.
 from typing import Dict, List, Any
 from pydantic import BaseModel
 
+# Re-export ClientROIReport from its canonical location so that existing
+# imports (e.g. pricing_optimization, dynamic_value_justification_engine)
+# continue to work.
+from ghl_real_estate_ai.services.client_success_scoring_service import ClientROIReport
+
 class InvestmentProjection(BaseModel):
     year: int
     cash_flow: float

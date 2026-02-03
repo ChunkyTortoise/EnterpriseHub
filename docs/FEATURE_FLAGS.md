@@ -9,9 +9,11 @@
 
 Feature flags allow runtime control of optional platform capabilities without redeployment. All flags are configured via environment variables and loaded by Pydantic settings at application startup.
 
-**Configuration source**: `ghl_real_estate_ai/ghl_utils/config.py`
+**Configuration sources**:
+- Platform flags: `ghl_real_estate_ai/ghl_utils/config.py` (Pydantic `Settings` class)
+- Jorge bot flags: `ghl_real_estate_ai/config/feature_config.py` (centralized `FeatureConfig` dataclass)
 
-**Important**: Feature flag changes require a pod restart to take effect, since settings are loaded once at import time.
+**Important**: Feature flag changes require a pod restart to take effect, since settings are loaded once at import time. The Jorge bot feature config is loaded via `load_feature_config_from_env()` and bridged to `JorgeFeatureConfig` kwargs via `feature_config_to_jorge_kwargs()`.
 
 ---
 
@@ -385,4 +387,4 @@ kubectl exec -it jorge-api-pod -- python -c \
 
 ---
 
-**Version**: 1.0 | **Last Updated**: February 2, 2026
+**Version**: 1.1 | **Last Updated**: February 2, 2026
