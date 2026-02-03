@@ -218,6 +218,22 @@ async def lifespan(app: FastAPI):
 
     # Shutdown logic ... (kept as is)
 
+def _verify_admin_api_key():
+    """Dependency that guards admin endpoints with an API key in production."""
+    from fastapi import Depends, Header
+
+    async def _check(x_admin_key: str = Header(alias="X-Admin-Key")):
+        expected = os.getenv("ADMIN_API_KEY")
+        if not expected:
+            # No key configured → admin routes disabled in production
+            if settings.environment == "production":
+                raise HTTPException(status_code=403, detail="Admin API disabled — set ADMIN_API_KEY")
+            return  # Allow in dev/demo/test
+        if x_admin_key != expected:
+            raise HTTPException(status_code=401, detail="Invalid admin API key")
+    return Depends(_check)
+
+
 def _setup_routers(app: FastAPI):
     """Initialize all routers for the application."""
     from ghl_real_estate_ai.api.routes import (
@@ -234,12 +250,14 @@ def _setup_routers(app: FastAPI):
     )
     from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 
+    admin_guard = _verify_admin_api_key()
+
     # Include routers
     app.include_router(websocket_routes.router, prefix="/api")
     app.include_router(websocket_performance.router)
     app.include_router(bi_websocket_routes.router)
     app.include_router(business_intelligence.router)
-    app.include_router(bot_management.router, prefix="/api")
+    app.include_router(bot_management.router, prefix="/api", dependencies=[admin_guard])
     app.include_router(lead_bot_management.router)
     app.include_router(agent_ecosystem.router)
     app.include_router(claude_concierge.router)
@@ -250,7 +268,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(security.router)
     app.include_router(webhook.router, prefix="/api")
     app.include_router(analytics.router, prefix="/api")
-    app.include_router(bulk_operations.router, prefix="/api")
+    app.include_router(bulk_operations.router, prefix="/api", dependencies=[admin_guard])
     app.include_router(claude_chat.router, prefix="/api")
     app.include_router(leads.router, prefix="/api")
     app.include_router(lead_lifecycle.router, prefix="/api")
@@ -290,7 +308,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(properties.router, prefix="/api")
     app.include_router(portal.router, prefix="/api")
     app.include_router(team.router, prefix="/api")
-    app.include_router(crm.router, prefix="/api")
+    app.include_router(crm.router, prefix="/api", dependencies=[admin_guard])
     app.include_router(voice.router, prefix="/api")
     app.include_router(lead_intelligence.router, prefix="/api")
     app.include_router(agent_sync.router, prefix="/api")
