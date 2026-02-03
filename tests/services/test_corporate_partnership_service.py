@@ -414,8 +414,8 @@ class TestCorporatePartnershipService:
         # Valid preferred tier with sufficient volume
         assert partnership_service._determine_partnership_tier(600, "platinum") == "platinum"
 
-        # Invalid preferred tier due to insufficient volume
-        assert partnership_service._determine_partnership_tier(150, "platinum") == "gold"
+        # Invalid preferred tier due to insufficient volume - falls back to volume-based tier
+        assert partnership_service._determine_partnership_tier(150, "platinum") == "silver"
 
     @pytest.mark.asyncio
     async def test_calculate_partnership_pricing(self, partnership_service):

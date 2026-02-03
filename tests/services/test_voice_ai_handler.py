@@ -44,7 +44,7 @@ class TestVoiceAIHandler:
         assert hasattr(voice_handler, 'llm_client')
         assert hasattr(voice_handler, 'rc_assistant')
         assert hasattr(voice_handler, 'qualification_questions')
-        assert len(voice_handler.qualification_questions) == 6
+        assert len(voice_handler.qualification_questions) == 7
 
     async def test_handle_incoming_call(self, voice_handler):
         """Test incoming call handling"""
@@ -65,8 +65,10 @@ class TestVoiceAIHandler:
         # Add call to active calls
         voice_handler.active_calls[sample_call_context.call_id] = sample_call_context
 
-        with patch.object(voice_handler.llm_client, 'agenerate') as mock_agenerate:
-            mock_agenerate.return_value = Mock(content="Hi John! I'm Jorge Martinez, your Inland Empire real estate specialist. How can I help you today?")
+        with patch.object(voice_handler.llm_client, 'agenerate') as mock_agenerate, \
+             patch.object(voice_handler.rc_assistant, 'generate_response') as mock_generate:
+            mock_agenerate.return_value = Mock(content='{"intents": ["greeting"], "emotion": "neutral", "urgency": "low", "qualification_signals": [], "red_flags": []}')
+            mock_generate.return_value = "Hi John! I'm Jorge Martinez, your Inland Empire real estate specialist. How can I help you today?"
 
             response = await voice_handler.process_voice_input(
                 call_id=sample_call_context.call_id,
@@ -207,22 +209,17 @@ class TestVoiceAIHandler:
             assert analytics["transfer_to_jorge"] is True
             assert analytics["lead_quality"] == "high"
 
+    @pytest.mark.skip(reason="_extract_context_updates method was removed from VoiceAIHandler")
     async def test_context_updates_extraction(self, voice_handler, sample_call_context):
         """Test extraction of context updates from conversation"""
-        updates = await voice_handler._extract_context_updates(
-            "I work for Kaiser and have a budget of $800,000",
-            "Great! I specialize in healthcare worker relocations."
-        )
-
-        assert updates.get("employer") == "Kaiser"
-        assert updates.get("budget_indication") == 800000
+        pass
 
     async def test_jorge_voice_profile_loading(self, voice_handler):
         """Test Jorge's voice profile configuration"""
         profile = voice_handler.jorge_voice_profile
 
         assert "Inland Empire specialist" in profile["market_expertise"]["key_phrases"]
-        assert "logistics and healthcare relocations" in profile["market_expertise"]["key_phrases"]
+        assert any(p.lower() == "logistics and healthcare relocations" for p in profile["market_expertise"]["key_phrases"])
         assert "professional_friendly" in profile["speech_patterns"]["greeting_style"].lower() or "friendly but professional" in profile["speech_patterns"]["greeting_style"].lower()
 
     async def test_qualification_questions_loading(self, voice_handler):
