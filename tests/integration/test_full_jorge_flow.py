@@ -1584,3 +1584,95 @@ class TestCrossBotCommunication:
         # Buyer bot qualified the lead independently
         assert buyer_result.get("financial_readiness_score") == 70.0
         assert buyer_result.get("is_qualified") is True
+
+
+# ===========================================================================
+# 6. TestCrossBotHandoffService
+# ===========================================================================
+
+@pytest.mark.integration
+class TestCrossBotHandoffService:
+    """End-to-end: handoff service evaluates intent and generates tag swap actions."""
+
+    @pytest.mark.asyncio
+    async def test_lead_qualifies_as_buyer_full_flow(self):
+        """Lead bot -> handoff service detects buyer intent -> tag swap to buyer bot."""
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
+            JorgeHandoffService,
+        )
+
+        mock_analytics = AsyncMock()
+        mock_analytics.track_event = AsyncMock()
+        service = JorgeHandoffService(analytics_service=mock_analytics)
+
+        # Step 1: Extract intent signals from a buyer-intent message
+        # Message must trigger 3+ patterns to exceed 0.7 threshold
+        msg = "I want to buy a 3BR house, I'm pre-approved with budget around $680k"
+        signals = JorgeHandoffService.extract_intent_signals(msg)
+        assert signals["buyer_intent_score"] >= 0.7
+
+        # Step 2: Evaluate handoff from lead bot
+        decision = await service.evaluate_handoff(
+            current_bot="lead",
+            contact_id="flow_lead_001",
+            conversation_history=[
+                {"role": "user", "content": msg},
+            ],
+            intent_signals=signals,
+        )
+        assert decision is not None
+        assert decision.source_bot == "lead"
+        assert decision.target_bot == "buyer"
+
+        # Step 3: Execute handoff and verify tag actions
+        actions = await service.execute_handoff(decision, contact_id="flow_lead_001")
+
+        remove_tags = [a["tag"] for a in actions if a["type"] == "remove_tag"]
+        add_tags = [a["tag"] for a in actions if a["type"] == "add_tag"]
+
+        assert "Needs Qualifying" in remove_tags
+        assert "Buyer-Lead" in add_tags
+        assert "Handoff-Lead-to-Buyer" in add_tags
+
+        # Step 4: Analytics event was logged
+        mock_analytics.track_event.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_seller_also_buying_full_flow(self):
+        """Seller bot -> handoff service detects buyer intent -> tag swap to buyer bot."""
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
+            JorgeHandoffService,
+        )
+
+        mock_analytics = AsyncMock()
+        mock_analytics.track_event = AsyncMock()
+        service = JorgeHandoffService(analytics_service=mock_analytics)
+
+        # Seller mentions they also need to find a new place (threshold 0.6)
+        signals = {
+            "buyer_intent_score": 0.7,
+            "seller_intent_score": 0.2,
+            "detected_intent_phrases": ["also looking to buy", "need to find a new place"],
+        }
+
+        decision = await service.evaluate_handoff(
+            current_bot="seller",
+            contact_id="flow_seller_001",
+            conversation_history=[
+                {"role": "user", "content": "Selling my house but also need to find a new place in Victoria"},
+            ],
+            intent_signals=signals,
+        )
+        assert decision is not None
+        assert decision.source_bot == "seller"
+        assert decision.target_bot == "buyer"
+
+        actions = await service.execute_handoff(decision, contact_id="flow_seller_001")
+
+        remove_tags = [a["tag"] for a in actions if a["type"] == "remove_tag"]
+        add_tags = [a["tag"] for a in actions if a["type"] == "add_tag"]
+
+        assert "Needs Qualifying" in remove_tags  # seller's tag
+        assert "Buyer-Lead" in add_tags
+        assert "Handoff-Seller-to-Buyer" in add_tags
+        mock_analytics.track_event.assert_called_once()
