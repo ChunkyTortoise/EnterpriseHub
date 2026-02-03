@@ -104,7 +104,8 @@ class TestRateLimiter:
         """Test that rate limiter allows first request."""
         limiter = RateLimiter(requests_per_minute=60)
         
-        allowed = await limiter.is_allowed("test_key")
+        result = await limiter.is_allowed("test_key")
+        allowed = result[0] if isinstance(result, tuple) else result
         assert allowed is True
     
     @pytest.mark.asyncio
@@ -114,7 +115,8 @@ class TestRateLimiter:
         
         # Should allow burst number of requests
         for i in range(5):
-            allowed = await limiter.is_allowed("test_key")
+            result = await limiter.is_allowed("test_key")
+            allowed = result[0] if isinstance(result, tuple) else result
             assert allowed is True
     
     @pytest.mark.asyncio
@@ -127,7 +129,8 @@ class TestRateLimiter:
             await limiter.is_allowed("test_key")
         
         # Next request should be denied
-        allowed = await limiter.is_allowed("test_key")
+        result = await limiter.is_allowed("test_key")
+        allowed = result[0] if isinstance(result, tuple) else result
         assert allowed is False
     
     @pytest.mark.asyncio
@@ -136,8 +139,10 @@ class TestRateLimiter:
         limiter = RateLimiter(requests_per_minute=60, burst=3)
         
         # Different keys should have independent limits
-        allowed1 = await limiter.is_allowed("key1")
-        allowed2 = await limiter.is_allowed("key2")
+        result1 = await limiter.is_allowed("key1")
+        result2 = await limiter.is_allowed("key2")
+        allowed1 = result1[0] if isinstance(result1, tuple) else result1
+        allowed2 = result2[0] if isinstance(result2, tuple) else result2
         
         assert allowed1 is True
         assert allowed2 is True
@@ -158,8 +163,14 @@ class TestSecurityHeaders:
         from starlette.responses import Response
         from starlette.requests import Request
         
-        # Create mock request and response
+        # Create mock request with realistic headers
         mock_request = Mock(spec=Request)
+        mock_request.headers = {"user-agent": "TestAgent", "host": "localhost"}
+        mock_request.client = Mock()
+        mock_request.client.host = "127.0.0.1"
+        mock_request.url = Mock()
+        mock_request.url.path = "/api/test"
+        mock_request.method = "GET"
         mock_response = Response()
         
         # Create middleware instance
