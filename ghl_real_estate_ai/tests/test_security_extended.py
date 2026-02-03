@@ -34,7 +34,11 @@ class TestAuthManager:
 
     @pytest.fixture
     def mock_redis(self):
-        return MagicMock()
+        mock = AsyncMock()
+        mock.set = AsyncMock()
+        mock.get = AsyncMock(return_value=None)
+        mock.delete = AsyncMock()
+        return mock
 
     @pytest.fixture
     def auth_manager(self, config, mock_redis):
@@ -61,6 +65,18 @@ class TestAuthManager:
         auth_manager._get_user_by_username = AsyncMock(return_value=user)
         auth_manager._verify_password = Mock(return_value=True)
         auth_manager._update_user = AsyncMock()
+        # Mock _create_session to bypass Redis/PostgreSQL dependency
+        from ghl_real_estate_ai.security.auth_manager import Session, SessionStatus
+        mock_session = Session(
+            session_id="test_session_123",
+            user_id="user_123",
+            ip_address="127.0.0.1",
+            user_agent="TestAgent",
+            created_at=datetime.utcnow(),
+            last_active=datetime.utcnow(),
+            status=SessionStatus.ACTIVE,
+        )
+        auth_manager._create_session = AsyncMock(return_value=mock_session)
         
         result = await auth_manager.authenticate_user(
             "testuser", "password", "127.0.0.1", "TestAgent"
