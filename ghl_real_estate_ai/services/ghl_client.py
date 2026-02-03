@@ -312,32 +312,39 @@ class GHLClient:
             return {"status": "mocked", "tags": tags}
 
         endpoint = f"{self.base_url}/contacts/{contact_id}"
-
         payload = {"tags": tags}
+        max_retries = 3
+        last_error = None
 
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.put(
-                    endpoint,
-                    json=payload,
-                    headers=self.headers,
-                    timeout=settings.webhook_timeout_seconds,
-                )
-                response.raise_for_status()
+        for attempt in range(1, max_retries + 1):
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.put(
+                        endpoint,
+                        json=payload,
+                        headers=self.headers,
+                        timeout=settings.webhook_timeout_seconds,
+                    )
+                    response.raise_for_status()
 
-                logger.info(
-                    f"Added tags to contact {contact_id}: {tags}",
-                    extra={"contact_id": contact_id, "tags": tags},
-                )
+                    logger.info(
+                        f"Added tags to contact {contact_id}: {tags}",
+                        extra={"contact_id": contact_id, "tags": tags},
+                    )
+                    return response.json()
 
-                return response.json()
+            except httpx.HTTPError as e:
+                last_error = e
+                if attempt < max_retries:
+                    wait = 0.5 * (2 ** (attempt - 1))
+                    logger.warning(f"add_tags attempt {attempt}/{max_retries} failed for {contact_id}, retrying in {wait}s: {e}")
+                    await asyncio.sleep(wait)
 
-        except httpx.HTTPError as e:
-            logger.error(
-                f"Failed to add tags to contact {contact_id}: {str(e)}",
-                extra={"contact_id": contact_id, "error": str(e)},
-            )
-            raise
+        logger.error(
+            f"Failed to add tags to contact {contact_id} after {max_retries} attempts: {last_error}",
+            extra={"contact_id": contact_id, "error": str(last_error)},
+        )
+        raise last_error
 
     async def remove_tags(self, contact_id: str, tags: List[str]) -> Dict[str, Any]:
         """

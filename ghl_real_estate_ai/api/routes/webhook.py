@@ -262,8 +262,19 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 }
             )
 
-            # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
+            # SMS length guard (seller mode)
             final_seller_msg = seller_result["message"]
+            SMS_MAX_CHARS = 320
+            if len(final_seller_msg) > SMS_MAX_CHARS:
+                truncated = final_seller_msg[:SMS_MAX_CHARS]
+                for sep in (". ", "! ", "? "):
+                    idx = truncated.rfind(sep)
+                    if idx > SMS_MAX_CHARS // 2:
+                        truncated = truncated[: idx + 1]
+                        break
+                final_seller_msg = truncated.rstrip()
+
+            # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
             status, reason, violations = await compliance_guard.audit_message(
                 final_seller_msg, 
                 contact_context={"contact_id": contact_id, "mode": "seller"}
@@ -575,6 +586,19 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         # Step 5: Send response and apply actions in background
         # Combine AI response with appointment message if booking was attempted
         final_message = ai_response.message + appointment_message_addition
+
+        # SMS length guard: truncate at sentence boundary to stay within 320 chars
+        # (2 SMS segments max — preserves readability while avoiding carrier splits)
+        SMS_MAX_CHARS = 320
+        if len(final_message) > SMS_MAX_CHARS:
+            truncated = final_message[:SMS_MAX_CHARS]
+            # Try to cut at last sentence boundary
+            for sep in (". ", "! ", "? "):
+                idx = truncated.rfind(sep)
+                if idx > SMS_MAX_CHARS // 2:
+                    truncated = truncated[: idx + 1]
+                    break
+            final_message = truncated.rstrip()
 
         # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
         compliance_status, reason, violations = await compliance_guard.audit_message(
