@@ -482,6 +482,75 @@
         "company_name": "TestValue"
       },
       "installed_at": "2026-01-20T13:45:13.181790"
+    },
+    {
+      "installation_id": "bf2340c9-8d1a-4e95-bd9b-dde61375e5dc",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "518470f3-ec25-4fd3-9e91-eb497e9b1c35",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-02-03T15:32:08.478672"
+    },
+    {
+      "installation_id": "e6d64276-448a-4cb6-ada4-94881bd40179",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "989c6bec-ddf4-42c6-962c-7d052fb70342",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-02-03T15:32:08.503381"
+    },
+    {
+      "installation_id": "da395de0-fb00-4802-896b-2c83f97a8aff",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "af15139a-dee3-46eb-95ff-38b10a9c87ca",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-02-03T15:43:28.170990"
+    },
+    {
+      "installation_id": "9f1dd024-cba0-4d49-98b4-55b9d5d0df66",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "65a998fc-6955-4ec6-96c8-311bde65d1a8",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-02-03T15:43:28.177112"
+    },
+    {
+      "installation_id": "606a5acf-f4b4-44ec-9c04-592767bfd88a",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "18dbba36-dd51-4734-9fbb-263035dca79b",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-02-03T15:46:14.035826"
+    },
+    {
+      "installation_id": "3f515d07-013b-41c1-b821-6748110131af",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "a6fc7fa1-612c-47ed-bc5b-74105e179c12",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-02-03T15:46:14.043135"
     }
   ]
 }
