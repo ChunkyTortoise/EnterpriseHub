@@ -44,11 +44,13 @@ Complete all items before deploying to any environment.
 
 ### Testing
 
-- [ ] Unit tests passing
-- [ ] Integration tests passing (GHL mock, Claude mock)
-- [ ] Load test: 100 concurrent users, <5% error rate
+- [ ] Unit tests passing: `pytest tests/agents/ -v`
+- [ ] Integration tests passing: `pytest tests/integration/test_full_jorge_flow.py -v` (18/18)
+- [ ] Performance baselines: `pytest tests/performance/test_response_times.py -v`
+- [ ] Load test: `pytest tests/load/test_concurrent_load.py -v` (100 concurrent users, <5% error rate)
 - [ ] Smoke test: Core flows (lead qualification, buyer matching, seller analysis)
-- [ ] API endpoints responding: `/api/health` returns 200
+- [ ] API endpoints responding: `/api/health/` returns 200
+- [ ] Full Stream D validation: `pytest tests/load/ tests/performance/test_response_times.py tests/integration/test_full_jorge_flow.py -v`
 
 ### Documentation
 
@@ -415,16 +417,17 @@ python3 validate_environment.py
 5. **WebSocket**: Open BI dashboard, verify real-time updates
 6. **Scheduler**: Check lead sequence scheduler is running
 
-### Performance Baselines
+### Performance Baselines (from `docs/PERFORMANCE_BASELINE.md`)
 
-| Metric | Target | Alert Threshold |
-|--------|--------|-----------------|
-| API p95 response time | <200ms | >300ms |
-| Bot response time | <500ms | >750ms |
-| Database query p95 | <50ms | >100ms |
-| Error rate | <1% | >5% |
-| WebSocket latency | <100ms | >200ms |
-| Cache hit rate | >70% | <60% |
+| Metric | Target | Measured (Stream D) | Alert Threshold |
+|--------|--------|---------------------|-----------------|
+| API p95 response time | <200ms | 14.67ms @ 100 users | >300ms |
+| API throughput | >1,000 req/s | 5,118 req/s | <50 req/s |
+| Buyer bot p95 | <400ms | 179ms @ 50 concurrent | >400ms |
+| Seller bot p95 | <500ms | 139ms @ 50 concurrent | >600ms |
+| Memory under load | <2GB | 294 MB peak | >1.5GB |
+| Error rate | <1% | 0.00% | >5% |
+| Cache hit rate | >70% | >70% | <60% |
 
 ---
 
@@ -447,4 +450,4 @@ open https://grafana.example.com/d/jorge-bots
 
 ---
 
-**Version**: 2.0 | **Last Updated**: February 2, 2026
+**Version**: 2.1 | **Last Updated**: February 2, 2026
