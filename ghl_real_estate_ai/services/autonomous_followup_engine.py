@@ -135,8 +135,8 @@ class FollowUpAgent:
 class TimingOptimizerAgent(FollowUpAgent):
     """Optimizes follow-up timing based on lead behavior patterns."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.TIMING_OPTIMIZER, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.TIMING_OPTIMIZER, llm_client, blackboard)
 
     async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
         """Analyze optimal timing for follow-up."""
@@ -201,8 +201,8 @@ class TimingOptimizerAgent(FollowUpAgent):
 class ContentPersonalizerAgent(FollowUpAgent):
     """Personalizes follow-up content based on lead profile and behavior."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.CONTENT_PERSONALIZER, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.CONTENT_PERSONALIZER, llm_client, blackboard)
 
     async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
         """Generate personalized follow-up content."""
@@ -285,8 +285,8 @@ class ContentPersonalizerAgent(FollowUpAgent):
 class ChannelStrategistAgent(FollowUpAgent):
     """Determines optimal communication channel based on lead preferences and context."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.CHANNEL_STRATEGIST, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.CHANNEL_STRATEGIST, llm_client, blackboard)
 
     async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
         """Determine optimal communication channel."""
@@ -342,8 +342,8 @@ class ChannelStrategistAgent(FollowUpAgent):
 class ResponseAnalyzerAgent(FollowUpAgent):
     """Analyzes follow-up responses and adjusts strategy accordingly."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.RESPONSE_ANALYZER, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.RESPONSE_ANALYZER, llm_client, blackboard)
 
     async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
         """Analyze response patterns and recommend strategy adjustments."""
@@ -398,8 +398,8 @@ class ResponseAnalyzerAgent(FollowUpAgent):
 class EscalationManagerAgent(FollowUpAgent):
     """Manages escalation and de-escalation decisions."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.ESCALATION_MANAGER, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.ESCALATION_MANAGER, llm_client, blackboard)
 
     async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
         """Determine if escalation or de-escalation is needed."""
@@ -450,8 +450,8 @@ class EscalationManagerAgent(FollowUpAgent):
 class SentimentAnalystAgent(FollowUpAgent):
     """Analyzes emotional tone and sentiment for appropriate follow-up approach."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.SENTIMENT_ANALYST, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.SENTIMENT_ANALYST, llm_client, blackboard)
 
     async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
         """Analyze sentiment to guide follow-up approach."""
@@ -528,8 +528,8 @@ class SentimentAnalystAgent(FollowUpAgent):
 class ObjectionHandlerAgent(FollowUpAgent):
     """Detects objections and recommends appropriate handling strategies."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.OBJECTION_HANDLER, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.OBJECTION_HANDLER, llm_client, blackboard)
 
     async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
         """Detect objections and recommend handling approach."""
@@ -611,8 +611,8 @@ class ObjectionHandlerAgent(FollowUpAgent):
 class ConversionOptimizerAgent(FollowUpAgent):
     """Optimizes follow-up strategy for maximum conversion probability."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.CONVERSION_OPTIMIZER, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.CONVERSION_OPTIMIZER, llm_client, blackboard)
 
     async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
         """Optimize approach for maximum conversion probability."""
@@ -703,8 +703,8 @@ class ConversionOptimizerAgent(FollowUpAgent):
 class MarketContextAgent(FollowUpAgent):
     """Incorporates market conditions and timing into follow-up strategy."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.MARKET_CONTEXT_AGENT, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.MARKET_CONTEXT_AGENT, llm_client, blackboard)
         try:
             from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
             self.market_engine = MarketTimingOpportunityEngine()
@@ -804,8 +804,8 @@ class MarketContextAgent(FollowUpAgent):
 class PerformanceTrackerAgent(FollowUpAgent):
     """Tracks and optimizes follow-up performance based on historical data."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.PERFORMANCE_TRACKER, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.PERFORMANCE_TRACKER, llm_client, blackboard)
 
     async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
         """Analyze historical performance to optimize future follow-ups."""
@@ -918,8 +918,8 @@ class PerformanceTrackerAgent(FollowUpAgent):
 class SchedulingAgent(FollowUpAgent):
     """Phase 7: Autonomous Scheduling Agent. Coordinates with CalendarScheduler."""
 
-    def __init__(self, llm_client):
-        super().__init__(AgentType.SCHEDULING_AGENT, llm_client)
+    def __init__(self, llm_client, blackboard=None):
+        super().__init__(AgentType.SCHEDULING_AGENT, llm_client, blackboard)
         try:
             from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
             self.scheduler = get_smart_scheduler()

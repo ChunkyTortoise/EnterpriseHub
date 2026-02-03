@@ -25,11 +25,29 @@ from ghl_real_estate_ai.services.enterprise_tenant_service import (
 
 @pytest_asyncio.fixture
 async def enterprise_service():
-    """Create enterprise tenant service for testing."""
+    """Create enterprise tenant service for testing with mocked database."""
+    from unittest.mock import AsyncMock, MagicMock
+
     service = EnterpriseTenantService()
-    await service.initialize()
+
+    # Mock database service
+    mock_db = AsyncMock()
+    mock_conn = AsyncMock()
+    mock_conn.execute = AsyncMock()
+    mock_conn.fetchval = AsyncMock(return_value=None)
+    mock_conn.fetchrow = AsyncMock(return_value=None)
+    mock_conn.fetch = AsyncMock(return_value=[])
+
+    # Context manager for get_connection
+    mock_db.get_connection = MagicMock()
+    mock_db.get_connection.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_db.get_connection.return_value.__aexit__ = AsyncMock(return_value=None)
+
+    service.db = mock_db
+    service._initialized = True
+    service._mock_conn = mock_conn
+
     yield service
-    # Cleanup would go here if needed
 
 
 @pytest.fixture

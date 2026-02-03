@@ -142,9 +142,9 @@ class DomainConfigurationService:
         self.dns_resolver.lifetime = 30
 
         # Provider configurations (from environment)
-        self.cloudflare_token = settings.get("CLOUDFLARE_API_TOKEN")
-        self.aws_access_key = settings.get("AWS_ACCESS_KEY_ID")
-        self.aws_secret_key = settings.get("AWS_SECRET_ACCESS_KEY")
+        self.cloudflare_token = getattr(settings, "CLOUDFLARE_API_TOKEN", None)
+        self.aws_access_key = getattr(settings, "AWS_ACCESS_KEY_ID", None)
+        self.aws_secret_key = getattr(settings, "AWS_SECRET_ACCESS_KEY", None)
 
         logger.info("Domain configuration service initialized")
 

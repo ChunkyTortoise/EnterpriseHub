@@ -137,8 +137,8 @@ class TestVendorCoordinationEngine:
         """Create mock dependencies for vendor engine."""
         return {
             'cache_service': AsyncMock(),
-            'ghl_service': AsyncMock(),
-            'claude_service': AsyncMock(),
+            'ghl_client': AsyncMock(),
+            'claude_assistant': AsyncMock(),
             'calendar_service': AsyncMock(),
             'notification_service': AsyncMock()
         }
@@ -148,8 +148,8 @@ class TestVendorCoordinationEngine:
         """Create vendor engine instance with mocked dependencies."""
         return VendorCoordinationEngine(
             cache_service=mock_dependencies['cache_service'],
-            ghl_service=mock_dependencies['ghl_service'],
-            claude_service=mock_dependencies['claude_service']
+            ghl_client=mock_dependencies['ghl_client'],
+            claude_assistant=mock_dependencies['claude_assistant']
         )
 
     @pytest.mark.asyncio
@@ -440,7 +440,7 @@ class TestVendorCoordinationEngine:
         }
 
         # Mock AI-powered conflict resolution
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies['claude_assistant'].generate_response.return_value = {
             "resolution_strategy": "reschedule_with_alternative",
             "recommended_time": "2024-01-26T10:00:00",
             "communication_message": "Due to an emergency inspection, we need to reschedule..."
@@ -519,7 +519,7 @@ class TestVendorCoordinationEngine:
         }
 
         # Mock license verification
-        mock_dependencies['claude_service'].verify_vendor_credentials.return_value = {
+        mock_dependencies['claude_assistant'].verify_vendor_credentials.return_value = {
             "license_valid": True,
             "license_expiry": "2025-12-31",
             "verification_score": 0.92
