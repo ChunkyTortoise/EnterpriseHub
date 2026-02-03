@@ -811,45 +811,45 @@ def _make_webhook_event(message_body: str, tags: List[str], contact_id: str = "t
 ## 9. Acceptance Criteria
 
 ### Phase 1: Lead Bot Routing & Compliance
-- [ ] `JORGE_LEAD_MODE` env var controls lead bot routing
-- [ ] `LEAD_ACTIVATION_TAG` configurable (default: "Needs Qualifying")
-- [ ] Compliance guard intercepts lead bot responses before sending
-- [ ] Lead bot fallback message is neutral (not buyer/seller specific)
-- [ ] Seller mode still takes priority over lead when both could match
-- [ ] Buyer mode still takes priority over lead when buyer tag present
-- [ ] 9 new routing tests passing
-- [ ] All 128 existing tests still passing
+- [x] `JORGE_LEAD_MODE` env var controls lead bot routing
+- [x] `LEAD_ACTIVATION_TAG` configurable (default: "Needs Qualifying")
+- [x] Compliance guard intercepts lead bot responses before sending
+- [x] Lead bot fallback message is neutral (not buyer/seller specific)
+- [x] Seller mode still takes priority over lead when both could match
+- [x] Buyer mode still takes priority over lead when buyer tag present
+- [x] 9 new routing tests passing
+- [x] All 128 existing tests still passing
 
 ### Phase 2: Configurable GHL IDs
-- [ ] All workflow IDs default to empty string (not placeholder)
-- [ ] All custom field IDs default to empty string (not placeholder)
-- [ ] Startup validation logs warnings for missing GHL config
-- [ ] `.env.example` documents all GHL variables with instructions
-- [ ] `railway.jorge.toml` includes all workflow ID variables
-- [ ] Buyer workflow IDs added to JorgeEnvironmentSettings
-- [ ] 7 new config validation tests passing
+- [x] All workflow IDs default to empty string (not placeholder)
+- [x] All custom field IDs default to empty string (not placeholder)
+- [x] Startup validation logs warnings for missing GHL config
+- [x] `.env.example` documents all GHL variables with instructions
+- [x] `railway.jorge.toml` includes all workflow ID variables
+- [x] Buyer workflow IDs added to JorgeEnvironmentSettings
+- [x] 7 new config validation tests passing
 
 ### Phase 3: Cross-Bot Handoff
-- [ ] JorgeHandoffService evaluates intent signals
-- [ ] Tag swap executes correctly (remove source tag, add target tag)
-- [ ] Handoff tracking tag added for analytics
-- [ ] Confidence threshold prevents false handoffs
-- [ ] All three handoff directions work (lead->buyer, lead->seller, buyer<->seller)
-- [ ] 8 new handoff service tests + 2 integration tests passing
+- [x] JorgeHandoffService evaluates intent signals
+- [x] Tag swap executes correctly (remove source tag, add target tag)
+- [x] Handoff tracking tag added for analytics
+- [x] Confidence threshold prevents false handoffs
+- [x] All three handoff directions work (lead->buyer, lead->seller, buyer<->seller)
+- [x] 8 new handoff service tests + 2 integration tests passing
 
 ### Phase 4: Real MLS Data Integration
-- [ ] MLSClient interfaces defined
-- [ ] Seller engine uses real listing data when available
-- [ ] Graceful fallback to mock data on MLS failure
-- [ ] Environment variables for Attom API configuration
-- [ ] 4 new MLS integration tests passing
+- [x] MLSClient interfaces defined
+- [x] Seller engine uses real listing data when available
+- [x] Graceful fallback to mock data on MLS failure
+- [x] Environment variables for Attom API configuration
+- [x] 4 new MLS integration tests passing
 
 ### Phase 5: Integration Tests & Load Testing
-- [ ] 10 comprehensive webhook routing tests covering all modes
-- [ ] Load tests validate <2s p99 for each mode
-- [ ] Mixed mode load test validates <3s p99
-- [ ] Deployment readiness tests validate config consistency
-- [ ] All tests across all phases passing (target: 170+ total bot tests)
+- [x] 10 comprehensive webhook routing tests covering all modes
+- [x] Load tests validate <2s p99 for each mode
+- [x] Mixed mode load test validates <3s p99
+- [x] Deployment readiness tests validate config consistency
+- [x] All tests across all phases passing (target: 170+ total bot tests)
 
 ---
 
