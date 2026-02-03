@@ -381,6 +381,13 @@ class SecurityFramework:
             # SECURITY FIX: Use constant-time comparison
             is_valid = hmac.compare_digest(signature, expected_signature)
 
+            # Fallback: GHL Custom Webhook actions send a static shared
+            # secret (not a per-request HMAC).  Accept the raw secret as
+            # a valid signature so both Marketplace HMAC webhooks and
+            # workflow Custom Webhook actions are supported.
+            if not is_valid:
+                is_valid = hmac.compare_digest(signature, secret)
+
             if not is_valid:
                 logger.warning(
                     "GHL webhook signature verification failed",
