@@ -249,9 +249,25 @@ class TestToneCompliance:
 ## Dependencies
 
 ```
-Stream A (tasks A1-A7) ─── no dependencies, start immediately
-Stream B (tasks B1-B6) ─── no dependencies, start immediately
-Stream C (tasks C1-C6) ─── no dependencies, start immediately
-Stream D (tasks D1-D4) ─── blocked by Streams A + B completion
-Stream D (task D5-D6)  ─── blocked by all other streams
+Stream A (tasks A1-A7) ─── DONE
+Stream B (tasks B1-B6) ─── DONE
+Stream C (tasks C1-C6) ─── DONE
+Stream D (tasks D1-D6) ─── DONE
 ```
+
+---
+
+## Next Phase: Integration Verification & Polish
+
+> **All 25 build tasks complete. Remaining work is verification and live testing.**
+> **Delivery checklist: 9/10 done. Only "responses sound human" needs live review.**
+
+| ID | Task | Status | Files |
+|----|------|--------|-------|
+| E1 | Review seller bot system prompt for Jorge's tone | `TODO` | `ghl_real_estate_ai/prompts/system_prompts.py` |
+| E2 | Trace full webhook → seller engine → tone engine path in SIMPLE_MODE | `TODO` | `webhook.py`, `jorge_seller_engine.py`, `jorge_tone_engine.py` |
+| E3 | Generate 10 sample seller responses and verify human tone | `TODO` | `jorge_seller_engine.py`, `jorge_tone_engine.py` |
+| E4 | Test PropertyMatcher filters (price, beds, neighborhood) | `TODO` | `property_matcher.py`, `sample_properties.json` |
+| E5 | Wire dashboard to live data if AnalyticsService available | `TODO` | `jorge_delivery_dashboard.py` |
+| E6 | Walk through JORGE_DEPLOYMENT_GUIDE.md steps end-to-end | `TODO` | `JORGE_DEPLOYMENT_GUIDE.md` |
+| E7 | Run full test suite and fix any failures | `TODO` | `tests/test_jorge_delivery.py`, `tests/test_buyer_bot_e2e.py` |
