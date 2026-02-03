@@ -21,7 +21,7 @@ ANTHROPIC_API_KEY = { description = "Jorge's Claude API Key" }
 
 # Jorge's Auto-Deactivation Settings
 AUTO_DEACTIVATE_THRESHOLD = "70"
-ACTIVATION_TAGS = '["Needs Qualifying"]'
+ACTIVATION_TAGS = '["Needs Qualifying", "Buyer-Lead"]'
 DEACTIVATION_TAGS = '["AI-Off","Qualified","Stop-Bot","AI-Qualified"]'
 
 # Lead Scoring Configuration
