@@ -507,7 +507,7 @@ class InvestmentAnalysisEngine:
 
     async def _calculate_rental_income(self, property_data: Dict) -> float:
         """Calculate estimated rental income."""
-        rental_comps = property_data["rental_comps"]
+        rental_comps = property_data.get("rental_comps", [])
         if rental_comps:
             avg_rent_per_sqft = sum(comp["rent_per_sqft"] for comp in rental_comps) / len(rental_comps)
             sqft = property_data["basic_info"]["square_footage"]
@@ -516,7 +516,7 @@ class InvestmentAnalysisEngine:
 
     async def _calculate_operating_expenses(self, property_data: Dict) -> float:
         """Calculate annual operating expenses."""
-        property_tax = property_data["basic_info"]["property_tax"]
+        property_tax = property_data["basic_info"].get("property_tax", 0)
         insurance = property_tax * 0.5  # Rough estimate
         maintenance = property_tax * 0.8  # Maintenance and repairs
         management = property_tax * 0.3   # Property management

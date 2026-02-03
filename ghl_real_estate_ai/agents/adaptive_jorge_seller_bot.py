@@ -272,7 +272,7 @@ class AdaptiveJorgeBot(JorgeSellerBot):
             questions_answered=min(questions_answered, 4),
             seller_temperature=state.get('seller_temperature', 'cold'),
             qualification_scores={
-                "frs_score": state.get('intent_profile', {}).get('frs', {}).get('total_score', 0),
+                "frs_score": state["intent_profile"].frs.total_score if state.get("intent_profile") else 0,
                 "pcs_score": state.get('psychological_commitment', 0)
             },
             next_action="await_adaptive_response",

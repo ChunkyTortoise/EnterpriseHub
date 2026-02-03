@@ -64,7 +64,7 @@ class LeadIntentDecoder:
 
     def detect_lead_type(self, conversation_history: List[Dict[str, str]]) -> str:
         """Detect whether lead is a buyer, seller, or unknown based on conversation."""
-        all_text = " ".join([m.get("content", "").lower() for m in conversation_history])
+        all_text = " ".join([m.get("content", "").lower() for m in (conversation_history or [])])
 
         buyer_score = sum(1 for m in self.buyer_markers if m in all_text)
         seller_score = sum(1 for m in self.seller_markers if m in all_text)
@@ -81,7 +81,7 @@ class LeadIntentDecoder:
         """
         logger.info(f"Decoding intent for lead {contact_id}")
         
-        all_text = " ".join([m.get("content", "").lower() for m in conversation_history])
+        all_text = " ".join([m.get("content", "").lower() for m in (conversation_history or [])])
         
         # 1. Calculate Pillars
         motivation_data = self._analyze_motivation(all_text)
