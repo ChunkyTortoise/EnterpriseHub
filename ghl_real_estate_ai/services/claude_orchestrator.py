@@ -7,7 +7,7 @@ import json
 import re
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union, Tuple
+from typing import AsyncGenerator, Dict, List, Any, Optional, Union, Tuple
 from dataclasses import dataclass, asdict
 from enum import Enum
 
