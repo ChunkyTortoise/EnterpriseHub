@@ -2811,6 +2811,228 @@
       "started_at": null,
       "completed_at": null,
       "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260203_073154",
+      "location_id": "test",
+      "operation_type": "invalid_type",
+      "created_at": "2026-02-03T07:31:54.635745",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 1,
+      "target_leads": [
+        "lead1"
+      ],
+      "parameters": {},
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260203_073154",
+      "location_id": "test",
+      "operation_type": "tag",
+      "created_at": "2026-02-03T07:31:54.638157",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 1,
+      "target_leads": [
+        "lead1"
+      ],
+      "parameters": null,
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260203_073154",
+      "location_id": "test",
+      "operation_type": "tag",
+      "created_at": "2026-02-03T07:31:54.640286",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead@#$%",
+        "lead!@#"
+      ],
+      "parameters": {
+        "tags": [
+          "test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260203_074322",
+      "location_id": "test",
+      "operation_type": "invalid_type",
+      "created_at": "2026-02-03T07:43:22.858878",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 1,
+      "target_leads": [
+        "lead1"
+      ],
+      "parameters": {},
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260203_074322",
+      "location_id": "test",
+      "operation_type": "tag",
+      "created_at": "2026-02-03T07:43:22.860940",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 1,
+      "target_leads": [
+        "lead1"
+      ],
+      "parameters": null,
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260203_074322",
+      "location_id": "test",
+      "operation_type": "tag",
+      "created_at": "2026-02-03T07:43:22.862894",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead@#$%",
+        "lead!@#"
+      ],
+      "parameters": {
+        "tags": [
+          "test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260203_074609",
+      "location_id": "test",
+      "operation_type": "invalid_type",
+      "created_at": "2026-02-03T07:46:09.156997",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 1,
+      "target_leads": [
+        "lead1"
+      ],
+      "parameters": {},
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260203_074609",
+      "location_id": "test",
+      "operation_type": "tag",
+      "created_at": "2026-02-03T07:46:09.159392",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 1,
+      "target_leads": [
+        "lead1"
+      ],
+      "parameters": null,
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260203_074609",
+      "location_id": "test",
+      "operation_type": "tag",
+      "created_at": "2026-02-03T07:46:09.161464",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead@#$%",
+        "lead!@#"
+      ],
+      "parameters": {
+        "tags": [
+          "test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
     }
   ],
   "templates": {}
