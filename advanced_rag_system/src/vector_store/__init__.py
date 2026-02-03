@@ -21,3 +21,34 @@ try:
     __all__.append("ChromaVectorStore")
 except (ImportError, Exception):
     pass
+
+# Production ChromaDB with enterprise features
+try:
+    from src.vector_store.chroma_production import (
+        ProductionChromaStore,
+        ProductionVectorStoreConfig,
+        ConnectionPool,
+        ConnectionPoolConfig,
+        RetryManager,
+        RetryConfig,
+        BackupManager,
+        BackupConfig,
+        BackupType,
+        MigrationManager,
+        MigrationConfig,
+    )
+    __all__.extend([
+        "ProductionChromaStore",
+        "ProductionVectorStoreConfig",
+        "ConnectionPool",
+        "ConnectionPoolConfig",
+        "RetryManager",
+        "RetryConfig",
+        "BackupManager",
+        "BackupConfig",
+        "BackupType",
+        "MigrationManager",
+        "MigrationConfig",
+    ])
+except (ImportError, Exception):
+    pass

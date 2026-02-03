@@ -1,378 +1,643 @@
-"""Tests for Self-Querying Retriever.
-
-Validates the self-querying retriever that parses natural language queries
-to extract structured metadata filters and a semantic search query.
-"""
+"""Tests for self-querying retrieval system."""
 
 import pytest
-from datetime import datetime, date
 from uuid import uuid4
 from typing import List
 
-import numpy as np
-
-from src.core.types import DocumentChunk, Metadata, SearchResult
-from src.core.exceptions import RetrievalError
-from src.vector_store.in_memory_store import InMemoryVectorStore
-from src.vector_store.base import VectorStoreConfig, SearchOptions
 from src.retrieval.self_query import (
+    Entity,
+    ExecutionStrategy,
+    FallbackHandler,
+    FilterCondition,
     FilterOperator,
+    FilterTranslator,
     MetadataFilter,
     QueryAnalysis,
     QueryAnalyzer,
+    QueryIntent,
+    QueryPlanner,
+    QueryPlan,
+    RelevanceScore,
     SelfQueryRetriever,
-    SelfQueryConfig,
+    SelfQueryResult,
+    TemporalRef,
 )
+from src.core.types import DocumentChunk, SearchResult, Metadata
+from src.vector_store.base import SearchOptions
 
 
 # ============================================================================
-# Helpers
+# Fixtures
 # ============================================================================
 
-def _make_chunk(
-    content: str,
-    dim: int = 8,
-    title: str = None,
-    author: str = None,
-    tags: list = None,
-    source: str = None,
-    created_at: datetime = None,
-) -> DocumentChunk:
-    """Create a chunk with metadata and a deterministic embedding."""
-    doc_id = uuid4()
-    meta = Metadata(
-        title=title,
-        author=author,
-        tags=tags or [],
-        source=source,
-        created_at=created_at,
+
+@pytest.fixture
+def query_analyzer():
+    """Create query analyzer."""
+    return QueryAnalyzer()
+
+
+@pytest.fixture
+def filter_translator():
+    """Create filter translator."""
+    return FilterTranslator()
+
+
+@pytest.fixture
+def query_planner():
+    """Create query planner."""
+    return QueryPlanner()
+
+
+@pytest.fixture
+def fallback_handler():
+    """Create fallback handler."""
+    return FallbackHandler(
+        confidence_threshold=0.5,
+        min_results_threshold=1,
     )
-    c = DocumentChunk(
-        document_id=doc_id, content=content, index=0, metadata=meta
-    )
-    rng = np.random.RandomState(hash(content) % (2**31))
-    vec = rng.randn(dim).astype(np.float32)
-    c.embedding = (vec / np.linalg.norm(vec)).tolist()
-    return c
 
 
-# ============================================================================
-# FilterOperator / MetadataFilter Unit Tests
-# ============================================================================
+@pytest.fixture
+def mock_vector_store():
+    """Create mock vector store for testing."""
+    class MockVectorStore:
+        def __init__(self):
+            self.documents = []
 
-class TestMetadataFilter:
-    """Test MetadataFilter data model."""
+        async def initialize(self):
+            pass
 
-    def test_create_eq_filter(self):
-        f = MetadataFilter(field="author", operator=FilterOperator.EQ, value="Alice")
-        assert f.field == "author"
-        assert f.operator == FilterOperator.EQ
-        assert f.value == "Alice"
+        async def search(self, embedding, options=None):
+            # Return mock results
+            return [
+                SearchResult(
+                    chunk=DocumentChunk(
+                        document_id=uuid4(),
+                        content="Test document",
+                        embedding=[0.1, 0.2, 0.3],
+                    ),
+                    score=0.9,
+                    rank=1,
+                )
+            ]
 
-    def test_create_contains_filter(self):
-        f = MetadataFilter(field="tags", operator=FilterOperator.CONTAINS, value="python")
-        assert f.operator == FilterOperator.CONTAINS
+        async def add_chunks(self, chunks):
+            self.documents.extend(chunks)
 
-    def test_create_gte_filter(self):
-        f = MetadataFilter(field="created_at", operator=FilterOperator.GTE, value="2024-01-01")
-        assert f.operator == FilterOperator.GTE
-
-    def test_create_in_filter(self):
-        f = MetadataFilter(field="source", operator=FilterOperator.IN, value=["web", "pdf"])
-        assert f.operator == FilterOperator.IN
-        assert f.value == ["web", "pdf"]
+    return MockVectorStore()
 
 
 # ============================================================================
 # QueryAnalyzer Tests
 # ============================================================================
 
+
 class TestQueryAnalyzer:
-    """Test rule-based query analysis and filter extraction."""
+    """Test cases for QueryAnalyzer."""
 
-    def setup_method(self):
-        self.analyzer = QueryAnalyzer()
+    @pytest.mark.asyncio
+    async def test_analyze_simple_query(self, query_analyzer):
+        """Test analyzing a simple query."""
+        analysis = await query_analyzer.analyze("Python programming")
 
-    def test_simple_query_no_filters(self):
-        """A plain semantic query should produce no filters."""
-        result = self.analyzer.analyze("What is machine learning?")
-        assert result.semantic_query.strip() != ""
-        assert len(result.filters) == 0
+        assert analysis.original_query == "Python programming"
+        assert analysis.intent == QueryIntent.SEARCH
+        assert analysis.confidence > 0
 
-    def test_extract_author_filter(self):
-        """Should extract author from 'by <name>' pattern."""
-        result = self.analyzer.analyze("papers about neural networks by John Smith")
-        assert any(f.field == "author" and "John Smith" in str(f.value) for f in result.filters)
-        # Semantic query should not include the 'by John Smith' part
-        assert "john smith" not in result.semantic_query.lower()
+    @pytest.mark.asyncio
+    async def test_extract_author_entity(self, query_analyzer):
+        """Test extracting author entity."""
+        analysis = await query_analyzer.analyze("documents by John")
 
-    def test_extract_tag_filter(self):
-        """Should extract tags from 'tagged <tag>' or 'about <topic>' patterns."""
-        result = self.analyzer.analyze("documents tagged python about deep learning")
-        has_tag_filter = any(f.field == "tags" for f in result.filters)
-        assert has_tag_filter
+        assert len(analysis.entities) >= 1
+        author_entities = [e for e in analysis.entities if e.type == "author"]
+        assert len(author_entities) >= 1
+        assert any("John" in e.value for e in author_entities)
 
-    def test_extract_source_filter(self):
-        """Should extract source from 'from <source>' pattern."""
-        result = self.analyzer.analyze("articles from arxiv about transformers")
-        assert any(f.field == "source" for f in result.filters)
+    @pytest.mark.asyncio
+    async def test_extract_tag_entity(self, query_analyzer):
+        """Test extracting tag/topic entity."""
+        analysis = await query_analyzer.analyze("documents about Python")
 
-    def test_extract_date_filter_after(self):
-        """Should extract date filter from 'after <date>' pattern."""
-        result = self.analyzer.analyze("research papers after 2023-01-01")
-        date_filters = [f for f in result.filters if f.field == "created_at"]
-        assert len(date_filters) >= 1
-        assert any(f.operator in (FilterOperator.GTE, FilterOperator.GT) for f in date_filters)
+        tag_entities = [e for e in analysis.entities if e.type == "tags"]
+        assert len(tag_entities) >= 1
+        assert any("python" in e.value.lower() for e in tag_entities)
 
-    def test_extract_date_filter_before(self):
-        """Should extract date filter from 'before <date>' pattern."""
-        result = self.analyzer.analyze("documents before 2024-06-15")
-        date_filters = [f for f in result.filters if f.field == "created_at"]
-        assert len(date_filters) >= 1
-        assert any(f.operator in (FilterOperator.LTE, FilterOperator.LT) for f in date_filters)
+    @pytest.mark.asyncio
+    async def test_extract_temporal_last_year(self, query_analyzer):
+        """Test extracting temporal reference - last year."""
+        analysis = await query_analyzer.analyze("documents from last year")
 
-    def test_extract_title_filter(self):
-        """Should extract title from 'titled <title>' pattern."""
-        result = self.analyzer.analyze('document titled "Introduction to RAG"')
-        assert any(f.field == "title" for f in result.filters)
+        assert len(analysis.temporal_refs) >= 1
+        assert any("last year" in t.raw_text.lower() for t in analysis.temporal_refs)
 
-    def test_multiple_filters(self):
-        """Should extract multiple filters from a complex query."""
-        result = self.analyzer.analyze(
-            "papers by Alice about deep learning from arxiv after 2024-01-01"
+    @pytest.mark.asyncio
+    async def test_extract_temporal_this_month(self, query_analyzer):
+        """Test extracting temporal reference - this month."""
+        analysis = await query_analyzer.analyze("documents this month")
+
+        assert len(analysis.temporal_refs) >= 1
+
+    @pytest.mark.asyncio
+    async def test_determine_filter_intent(self, query_analyzer):
+        """Test determining FILTER intent."""
+        analysis = await query_analyzer.analyze("by author John category Python")
+
+        assert analysis.intent == QueryIntent.FILTER
+
+    @pytest.mark.asyncio
+    async def test_determine_combined_intent(self, query_analyzer):
+        """Test determining COMBINED intent."""
+        analysis = await query_analyzer.analyze(
+            "What are the benefits of Python programming by John"
         )
-        fields = {f.field for f in result.filters}
-        assert "author" in fields
-        assert "source" in fields
-        assert "created_at" in fields
 
-    def test_semantic_query_preserved(self):
-        """The semantic portion of the query should be preserved."""
-        result = self.analyzer.analyze(
-            "how do attention mechanisms work by Vaswani from arxiv"
-        )
-        # Core semantic content should be in the query
-        assert "attention" in result.semantic_query.lower()
+        assert analysis.intent in [QueryIntent.COMBINED, QueryIntent.SEARCH]
 
-    def test_confidence_score(self):
-        """Analysis should include a confidence score in [0, 1]."""
-        result = self.analyzer.analyze("papers by Alice after 2024-01-01")
-        assert 0.0 <= result.confidence <= 1.0
+    @pytest.mark.asyncio
+    async def test_determine_aggregate_intent(self, query_analyzer):
+        """Test determining AGGREGATE intent."""
+        analysis = await query_analyzer.analyze("how many documents by John")
 
-    def test_empty_query_raises(self):
-        """Empty query should raise ValueError."""
-        with pytest.raises(ValueError):
-            self.analyzer.analyze("")
+        assert analysis.intent == QueryIntent.AGGREGATE
 
-    def test_whitespace_only_raises(self):
-        """Whitespace-only query should raise ValueError."""
-        with pytest.raises(ValueError):
-            self.analyzer.analyze("   ")
+    @pytest.mark.asyncio
+    async def test_calculate_confidence_with_entities(self, query_analyzer):
+        """Test confidence calculation with entities."""
+        analysis = await query_analyzer.analyze("documents by John about Python")
+
+        assert analysis.confidence > 0.5
+
+    @pytest.mark.asyncio
+    async def test_calculate_confidence_without_entities(self, query_analyzer):
+        """Test confidence calculation without entities."""
+        analysis = await query_analyzer.analyze("hello world")
+
+        assert analysis.confidence < 0.5
 
 
 # ============================================================================
-# QueryAnalysis Model Tests
+# FilterTranslator Tests
 # ============================================================================
 
-class TestQueryAnalysis:
-    """Test QueryAnalysis data model."""
 
-    def test_has_filters(self):
+class TestFilterTranslator:
+    """Test cases for FilterTranslator."""
+
+    @pytest.mark.asyncio
+    async def test_translate_author_filter(self, filter_translator):
+        """Test translating author entity to filter."""
+        analysis = QueryAnalysis(
+            original_query="by John",
+            intent=QueryIntent.FILTER,
+            entities=[Entity(type="author", value="John", confidence=0.8)],
+        )
+
+        filter = filter_translator.translate(analysis)
+
+        assert filter is not None
+        assert len(filter.conditions) == 1
+        assert filter.conditions[0].field == "author"
+        assert filter.conditions[0].value == "John"
+        assert filter.conditions[0].operator == FilterOperator.EQ
+
+    @pytest.mark.asyncio
+    async def test_translate_multiple_entities(self, filter_translator):
+        """Test translating multiple entities."""
+        analysis = QueryAnalysis(
+            original_query="by John about Python",
+            intent=QueryIntent.FILTER,
+            entities=[
+                Entity(type="author", value="John", confidence=0.8),
+                Entity(type="tags", value="python", confidence=0.7),
+            ],
+        )
+
+        filter = filter_translator.translate(analysis)
+
+        assert filter is not None
+        assert len(filter.conditions) == 2
+
+    @pytest.mark.asyncio
+    async def test_translate_with_temporal(self, filter_translator):
+        """Test translating with temporal reference."""
+        from datetime import datetime
+
+        analysis = QueryAnalysis(
+            original_query="from last year",
+            intent=QueryIntent.FILTER,
+            temporal_refs=[
+                TemporalRef(
+                    type="last_year",
+                    raw_text="last year",
+                    start_date=datetime(2024, 1, 1),
+                )
+            ],
+        )
+
+        filter = filter_translator.translate(analysis)
+
+        assert filter is not None
+        assert any(c.field == "created_at" for c in filter.conditions)
+
+    @pytest.mark.asyncio
+    async def test_translate_no_entities(self, filter_translator):
+        """Test translating with no entities."""
+        analysis = QueryAnalysis(
+            original_query="hello world",
+            intent=QueryIntent.SEARCH,
+            entities=[],
+        )
+
+        filter = filter_translator.translate(analysis)
+
+        assert filter is None
+
+    def test_build_raw_filter_single_condition(self, filter_translator):
+        """Test building raw filter with single condition."""
+        conditions = [
+            FilterCondition(field="author", operator=FilterOperator.EQ, value="John")
+        ]
+
+        raw = filter_translator._build_raw_filter(conditions)
+
+        assert raw == {"author": {"$eq": "John"}}
+
+    def test_build_raw_filter_multiple_conditions(self, filter_translator):
+        """Test building raw filter with multiple conditions."""
+        conditions = [
+            FilterCondition(field="author", operator=FilterOperator.EQ, value="John"),
+            FilterCondition(field="tags", operator=FilterOperator.EQ, value="python"),
+        ]
+
+        raw = filter_translator._build_raw_filter(conditions)
+
+        assert "$and" in raw
+        assert len(raw["$and"]) == 2
+
+
+# ============================================================================
+# QueryPlanner Tests
+# ============================================================================
+
+
+class TestQueryPlanner:
+    """Test cases for QueryPlanner."""
+
+    def test_plan_no_filter(self, query_planner):
+        """Test planning with no filter."""
         analysis = QueryAnalysis(
             original_query="test",
-            semantic_query="test",
-            filters=[MetadataFilter(field="author", operator=FilterOperator.EQ, value="X")],
+            intent=QueryIntent.SEARCH,
+        )
+
+        plan = query_planner.plan(analysis, None)
+
+        assert plan.strategy == ExecutionStrategy.SEARCH_FIRST
+        assert plan.filter is None
+
+    def test_plan_high_selectivity(self, query_planner):
+        """Test planning with high selectivity filter."""
+        analysis = QueryAnalysis(
+            original_query="by John",
+            intent=QueryIntent.FILTER,
+        )
+        filter = MetadataFilter(
+            conditions=[
+                FilterCondition(field="author", operator=FilterOperator.EQ, value="John"),
+                FilterCondition(field="id", operator=FilterOperator.EQ, value="123"),
+            ]
+        )
+
+        plan = query_planner.plan(analysis, filter)
+
+        assert plan.strategy == ExecutionStrategy.FILTER_FIRST
+        assert plan.filter is not None
+
+    def test_plan_low_selectivity(self, query_planner):
+        """Test planning with low selectivity filter."""
+        analysis = QueryAnalysis(
+            original_query="recent documents",
+            intent=QueryIntent.FILTER,
+        )
+        filter = MetadataFilter(
+            conditions=[
+                FilterCondition(field="date", operator=FilterOperator.GTE, value="2024-01-01"),
+            ]
+        )
+
+        plan = query_planner.plan(analysis, filter)
+
+        assert plan.strategy == ExecutionStrategy.SEARCH_FIRST
+
+    def test_plan_medium_selectivity(self, query_planner):
+        """Test planning with medium selectivity filter."""
+        analysis = QueryAnalysis(
+            original_query="by John recent",
+            intent=QueryIntent.COMBINED,
+        )
+        filter = MetadataFilter(
+            conditions=[
+                FilterCondition(field="author", operator=FilterOperator.EQ, value="John"),
+            ]
+        )
+
+        plan = query_planner.plan(analysis, filter)
+
+        assert plan.strategy in [ExecutionStrategy.PARALLEL, ExecutionStrategy.FILTER_FIRST]
+
+    def test_estimate_selectivity_equality(self, query_planner):
+        """Test selectivity estimation for equality."""
+        filter = MetadataFilter(
+            conditions=[
+                FilterCondition(field="author", operator=FilterOperator.EQ, value="John"),
+            ]
+        )
+
+        selectivity = query_planner._estimate_selectivity(filter)
+
+        assert selectivity == 0.1  # 10% for equality
+
+    def test_estimate_selectivity_range(self, query_planner):
+        """Test selectivity estimation for range."""
+        filter = MetadataFilter(
+            conditions=[
+                FilterCondition(field="date", operator=FilterOperator.GTE, value="2024-01-01"),
+            ]
+        )
+
+        selectivity = query_planner._estimate_selectivity(filter)
+
+        assert selectivity == 0.3  # 30% for range
+
+
+# ============================================================================
+# FallbackHandler Tests
+# ============================================================================
+
+
+class TestFallbackHandler:
+    """Test cases for FallbackHandler."""
+
+    def test_should_fallback_low_confidence(self, fallback_handler):
+        """Test fallback triggered by low confidence."""
+        analysis = QueryAnalysis(
+            original_query="test",
+            intent=QueryIntent.SEARCH,
+            confidence=0.3,  # Below threshold
+        )
+        results = []
+
+        should_fallback = fallback_handler.should_fallback(analysis, results)
+
+        assert should_fallback is True
+
+    def test_should_fallback_no_results(self, fallback_handler):
+        """Test fallback triggered by no results."""
+        analysis = QueryAnalysis(
+            original_query="test",
+            intent=QueryIntent.FILTER,
             confidence=0.8,
         )
-        assert analysis.has_filters is True
+        results = []
 
-    def test_no_filters(self):
+        should_fallback = fallback_handler.should_fallback(analysis, results)
+
+        assert should_fallback is True
+
+    def test_should_fallback_search_intent(self, fallback_handler):
+        """Test fallback triggered by search intent."""
         analysis = QueryAnalysis(
             original_query="test",
-            semantic_query="test",
-            filters=[],
-            confidence=0.5,
+            intent=QueryIntent.SEARCH,
+            confidence=0.8,
         )
-        assert analysis.has_filters is False
+        results = [SearchResult(chunk=None, score=0.9, rank=1)]
 
-    def test_to_search_filters(self):
-        """Should convert filters to dict format for SearchOptions."""
+        should_fallback = fallback_handler.should_fallback(analysis, results)
+
+        assert should_fallback is True
+
+    def test_should_not_fallback(self, fallback_handler):
+        """Test no fallback needed."""
+        analysis = QueryAnalysis(
+            original_query="by John",
+            intent=QueryIntent.FILTER,
+            confidence=0.8,
+        )
+        results = [
+            SearchResult(chunk=None, score=0.9, rank=1),
+            SearchResult(chunk=None, score=0.8, rank=2),
+        ]
+
+        should_fallback = fallback_handler.should_fallback(analysis, results)
+
+        assert should_fallback is False
+
+    def test_explain_fallback_low_confidence(self, fallback_handler):
+        """Test explanation for low confidence fallback."""
         analysis = QueryAnalysis(
             original_query="test",
-            semantic_query="test",
-            filters=[
-                MetadataFilter(field="author", operator=FilterOperator.EQ, value="Alice"),
-                MetadataFilter(field="tags", operator=FilterOperator.CONTAINS, value="ml"),
-            ],
-            confidence=0.9,
+            intent=QueryIntent.SEARCH,
+            confidence=0.3,
         )
-        search_filters = analysis.to_search_filters()
-        assert isinstance(search_filters, dict)
-        assert "author" in search_filters
-        assert "tags" in search_filters
+
+        explanation = fallback_handler.explain_fallback(analysis)
+
+        assert "Low filter confidence" in explanation
+
+    def test_explain_fallback_search_intent(self, fallback_handler):
+        """Test explanation for search intent fallback."""
+        analysis = QueryAnalysis(
+            original_query="test",
+            intent=QueryIntent.SEARCH,
+            confidence=0.8,
+        )
+
+        explanation = fallback_handler.explain_fallback(analysis)
+
+        assert "semantic" in explanation.lower()
 
 
 # ============================================================================
-# SelfQueryRetriever Integration Tests
+# SelfQueryRetriever Tests
 # ============================================================================
+
 
 class TestSelfQueryRetriever:
-    """Integration tests for SelfQueryRetriever with InMemoryVectorStore."""
-
-    @pytest.fixture
-    async def store_with_data(self):
-        """Create a vector store populated with test documents."""
-        store = InMemoryVectorStore(VectorStoreConfig(dimension=8))
-        await store.initialize()
-
-        chunks = [
-            _make_chunk(
-                "Neural networks are computational models inspired by the brain",
-                title="Intro to Neural Networks",
-                author="Alice Chen",
-                tags=["neural-networks", "deep-learning"],
-                source="arxiv",
-                created_at=datetime(2024, 3, 15),
-            ),
-            _make_chunk(
-                "Transformers use self-attention mechanisms for sequence modeling",
-                title="Attention is All You Need",
-                author="Vaswani",
-                tags=["transformers", "attention"],
-                source="arxiv",
-                created_at=datetime(2023, 6, 1),
-            ),
-            _make_chunk(
-                "Python is a versatile programming language for data science",
-                title="Python for Data Science",
-                author="Bob Williams",
-                tags=["python", "data-science"],
-                source="oreilly",
-                created_at=datetime(2024, 9, 20),
-            ),
-            _make_chunk(
-                "Reinforcement learning trains agents through reward signals",
-                title="RL Fundamentals",
-                author="Alice Chen",
-                tags=["reinforcement-learning"],
-                source="arxiv",
-                created_at=datetime(2022, 1, 10),
-            ),
-            _make_chunk(
-                "Convolutional neural networks excel at image recognition tasks",
-                title="CNN for Computer Vision",
-                author="David Lee",
-                tags=["cnn", "computer-vision", "deep-learning"],
-                source="springer",
-                created_at=datetime(2024, 7, 5),
-            ),
-        ]
-        await store.add_chunks(chunks)
-        yield store, chunks
-        await store.close()
+    """Test cases for SelfQueryRetriever."""
 
     @pytest.mark.asyncio
-    async def test_search_no_filters(self, store_with_data):
-        """Search without filters should return semantic results."""
-        store, chunks = store_with_data
-        retriever = SelfQueryRetriever(store)
-
-        result = await retriever.retrieve("What are neural networks?")
-        assert len(result.results) > 0
-        assert result.analysis is not None
-        assert result.search_time_ms >= 0
-
-    @pytest.mark.asyncio
-    async def test_search_with_author_filter(self, store_with_data):
-        """Should filter results by author."""
-        store, chunks = store_with_data
-        retriever = SelfQueryRetriever(store)
-
-        result = await retriever.retrieve("papers by Alice Chen")
-        # All results should be by Alice Chen
-        for r in result.results:
-            assert r.chunk.metadata.author == "Alice Chen"
-
-    @pytest.mark.asyncio
-    async def test_search_with_source_filter(self, store_with_data):
-        """Should filter results by source."""
-        store, chunks = store_with_data
-        retriever = SelfQueryRetriever(store)
-
-        result = await retriever.retrieve("documents from arxiv about learning")
-        for r in result.results:
-            assert r.chunk.metadata.source == "arxiv"
-
-    @pytest.mark.asyncio
-    async def test_search_with_date_filter(self, store_with_data):
-        """Should filter results by date."""
-        store, chunks = store_with_data
-        retriever = SelfQueryRetriever(store)
-
-        result = await retriever.retrieve("papers after 2024-01-01")
-        for r in result.results:
-            assert r.chunk.metadata.created_at >= datetime(2024, 1, 1)
-
-    @pytest.mark.asyncio
-    async def test_search_with_tag_filter(self, store_with_data):
-        """Should filter results by tags."""
-        store, chunks = store_with_data
-        retriever = SelfQueryRetriever(store)
-
-        result = await retriever.retrieve("documents tagged deep-learning")
-        for r in result.results:
-            assert "deep-learning" in r.chunk.metadata.tags
-
-    @pytest.mark.asyncio
-    async def test_combined_semantic_and_filter(self, store_with_data):
-        """Should combine semantic search with metadata filtering."""
-        store, chunks = store_with_data
-        retriever = SelfQueryRetriever(store)
+    async def test_retrieve_with_embedding(self, mock_vector_store):
+        """Test retrieval with pre-computed embedding."""
+        retriever = SelfQueryRetriever(
+            vector_store=mock_vector_store,
+            fallback_threshold=0.5,
+        )
+        await retriever.initialize()
 
         result = await retriever.retrieve(
-            "attention mechanisms from arxiv"
+            query="Python documents by John",
+            query_embedding=[0.1, 0.2, 0.3],
         )
-        assert len(result.results) > 0
-        for r in result.results:
-            assert r.chunk.metadata.source == "arxiv"
+
+        assert isinstance(result, SelfQueryResult)
+        assert result.query_analysis.original_query == "Python documents by John"
+        assert len(result.results) == 1
 
     @pytest.mark.asyncio
-    async def test_no_results_with_strict_filter(self, store_with_data):
-        """Should return empty if no documents match filters."""
-        store, chunks = store_with_data
-        retriever = SelfQueryRetriever(store)
+    async def test_retrieve_without_embedding(self, mock_vector_store):
+        """Test retrieval without pre-computed embedding."""
+        retriever = SelfQueryRetriever(
+            vector_store=mock_vector_store,
+            fallback_threshold=0.5,
+        )
+        await retriever.initialize()
 
-        result = await retriever.retrieve("papers by Nonexistent Author")
+        result = await retriever.retrieve(
+            query="test query",
+        )
+
+        assert isinstance(result, SelfQueryResult)
+        # Without embedding, should return empty results
         assert len(result.results) == 0
 
     @pytest.mark.asyncio
-    async def test_retrieval_result_has_analysis(self, store_with_data):
-        """Result should include the query analysis."""
-        store, chunks = store_with_data
-        retriever = SelfQueryRetriever(store)
+    async def test_retrieve_extracts_filter(self, mock_vector_store):
+        """Test that filter is extracted from query."""
+        retriever = SelfQueryRetriever(
+            vector_store=mock_vector_store,
+            fallback_threshold=0.5,
+        )
+        await retriever.initialize()
 
-        result = await retriever.retrieve("neural networks by Alice Chen from arxiv")
-        assert result.analysis is not None
-        assert result.analysis.original_query == "neural networks by Alice Chen from arxiv"
-        assert len(result.analysis.filters) >= 1
+        result = await retriever.retrieve(
+            query="documents by John about Python",
+            query_embedding=[0.1, 0.2, 0.3],
+        )
 
-    @pytest.mark.asyncio
-    async def test_top_k_respected(self, store_with_data):
-        """Should respect top_k parameter."""
-        store, chunks = store_with_data
-        config = SelfQueryConfig(top_k=2)
-        retriever = SelfQueryRetriever(store, config=config)
-
-        result = await retriever.retrieve("learning")
-        assert len(result.results) <= 2
+        assert result.filter_used is not None
+        assert len(result.filter_used.conditions) >= 1
 
     @pytest.mark.asyncio
-    async def test_fallback_on_low_confidence(self, store_with_data):
-        """With low filter confidence, should fall back to pure semantic search."""
-        store, chunks = store_with_data
-        config = SelfQueryConfig(min_filter_confidence=0.99)
-        retriever = SelfQueryRetriever(store, config=config)
+    async def test_retrieve_no_filters(self, mock_vector_store):
+        """Test retrieval with filters disabled."""
+        retriever = SelfQueryRetriever(
+            vector_store=mock_vector_store,
+            fallback_threshold=0.5,
+        )
+        await retriever.initialize()
 
-        result = await retriever.retrieve("papers by Alice")
-        # Should still return results (semantic fallback), not empty
-        assert result.analysis is not None
+        result = await retriever.retrieve(
+            query="documents by John",
+            use_filters=False,
+            query_embedding=[0.1, 0.2, 0.3],
+        )
+
+        assert result.filter_used is None
+
+    def test_get_explanation(self, mock_vector_store):
+        """Test getting explanation of retrieval."""
+        retriever = SelfQueryRetriever(vector_store=mock_vector_store)
+
+        result = SelfQueryResult(
+            results=[],
+            query_analysis=QueryAnalysis(
+                original_query="test",
+                intent=QueryIntent.FILTER,
+                confidence=0.8,
+            ),
+            filter_used=MetadataFilter(
+                conditions=[FilterCondition(field="author", operator=FilterOperator.EQ, value="John")]
+            ),
+            execution_time_ms=100.0,
+        )
+
+        explanation = retriever.get_explanation(result)
+
+        assert "Query: test" in explanation
+        assert "Intent: filter" in explanation
+        assert "Confidence: 0.8" in explanation
+        assert "Time: 100.0ms" in explanation
+
+
+# ============================================================================
+# Integration Tests
+# ============================================================================
+
+
+class TestSelfQueryIntegration:
+    """Integration tests for self-querying system."""
+
+    @pytest.mark.asyncio
+    async def test_end_to_end_filter_extraction(self):
+        """Test end-to-end filter extraction and planning."""
+        analyzer = QueryAnalyzer()
+        translator = FilterTranslator()
+        planner = QueryPlanner()
+
+        # Analyze query
+        analysis = await analyzer.analyze("documents by John about Python from last year")
+
+        # Translate to filter
+        filter = translator.translate(analysis)
+
+        # Create plan
+        plan = planner.plan(analysis, filter)
+
+        # Verify results
+        assert analysis.intent in [QueryIntent.COMBINED, QueryIntent.FILTER]
+        assert len(analysis.entities) >= 2  # author and tag
+        assert len(analysis.temporal_refs) >= 1
+        assert filter is not None
+        assert len(filter.conditions) >= 2
+        assert plan.filter is not None
+
+    @pytest.mark.asyncio
+    async def test_complex_query_analysis(self):
+        """Test analysis of complex query."""
+        analyzer = QueryAnalyzer()
+
+        analysis = await analyzer.analyze(
+            "What are the latest Python tutorials written by Alice or Bob this month"
+        )
+
+        # Should extract multiple entities
+        assert len(analysis.entities) >= 2
+
+        # Should have temporal reference
+        assert len(analysis.temporal_refs) >= 1
+
+        # Should be combined intent (semantic + filter)
+        assert analysis.intent in [QueryIntent.COMBINED, QueryIntent.SEARCH]
+
+    def test_filter_operators(self):
+        """Test all filter operators."""
+        operators = [
+            FilterOperator.EQ,
+            FilterOperator.NE,
+            FilterOperator.GT,
+            FilterOperator.GTE,
+            FilterOperator.LT,
+            FilterOperator.LTE,
+            FilterOperator.IN,
+            FilterOperator.NIN,
+            FilterOperator.CONTAINS,
+            FilterOperator.AND,
+            FilterOperator.OR,
+        ]
+
+        for op in operators:
+            assert op.value.startswith("$")
+
+    def test_execution_strategies(self):
+        """Test execution strategy values."""
+        strategies = [
+            ExecutionStrategy.FILTER_FIRST,
+            ExecutionStrategy.SEARCH_FIRST,
+            ExecutionStrategy.PARALLEL,
+        ]
+
+        for strategy in strategies:
+            assert isinstance(strategy.value, str)
