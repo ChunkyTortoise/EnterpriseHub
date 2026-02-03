@@ -25,13 +25,15 @@ class MemoryService:
     Persistent memory service for storing conversation context.
     Uses singleton pattern to avoid redundant initialization across modules.
     """
-    _instance: Optional['MemoryService'] = None
+    _instances: dict = {}
 
     def __new__(cls, storage_type: Optional[str] = None):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
+        key = storage_type or "_default"
+        if key not in cls._instances:
+            instance = super().__new__(cls)
+            instance._initialized = False
+            cls._instances[key] = instance
+        return cls._instances[key]
 
     def __init__(self, storage_type: Optional[str] = None):
         """
