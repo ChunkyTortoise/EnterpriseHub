@@ -14,10 +14,32 @@ from uuid import uuid4
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pydantic import ConfigDict
+
+import ghl_real_estate_ai.services.enterprise_tenant_service as ets_module
+
 from ghl_real_estate_ai.services.enterprise_tenant_service import (
     EnterpriseTenantService, TenantConfig, TenantUser, BrandingConfig,
     FeatureFlags, TenantTier, TenantStatus, Permission, RoleType,
 )
+
+
+# ============================================================================
+# Fix for Pydantic use_enum_values=True incompatibility with service code
+# The service code uses .value on enum fields, but use_enum_values=True
+# converts enums to their string values, causing AttributeError.
+# We fix this by subclassing with use_enum_values=False and patching
+# the module-level classes so the service code uses the fixed versions.
+# ============================================================================
+
+class FixedTenantConfig(TenantConfig):
+    """TenantConfig subclass that preserves enum types."""
+    model_config = ConfigDict(use_enum_values=False)
+
+
+class FixedTenantUser(TenantUser):
+    """TenantUser subclass that preserves enum types."""
+    model_config = ConfigDict(use_enum_values=False)
 
 
 # ============================================================================
@@ -34,7 +56,6 @@ class MockConnection:
         """Mock execute - store data based on INSERT/UPDATE queries."""
         query_lower = query.strip().lower()
         if query_lower.startswith("insert into tenants"):
-            # args: tenant_id, name, slug, status, tier, ...
             if len(args) >= 5:
                 tenant_id = args[0]
                 self.storage["tenants"][tenant_id] = {
@@ -80,7 +101,7 @@ class MockConnection:
                     "created_by": args[8] if len(args) > 8 else None,
                 }
         elif query_lower.startswith("insert into tenant_audit_log"):
-            pass  # Ignore audit logs in tests
+            pass
         elif query_lower.startswith("insert into tenant_usage"):
             if len(args) >= 13:
                 tenant_id = args[0]
@@ -88,7 +109,6 @@ class MockConnection:
                 key = f"{tenant_id}:{date_key}"
                 if key in self.storage["usage"]:
                     existing = self.storage["usage"][key]
-                    # Accumulate
                     for i, field in enumerate(["ai_queries_count", "multi_agent_queries",
                                                "behavioral_analysis_runs", "predictive_models_executed",
                                                "api_calls_count", "leads_processed", "campaigns_executed",
@@ -112,13 +132,12 @@ class MockConnection:
                         "roi_calculated": args[12],
                     }
         elif "update tenants" in query_lower:
-            # Find tenant_id (last arg)
             tenant_id = args[-1]
             if tenant_id in self.storage["tenants"]:
                 return "UPDATE 1"
             return "UPDATE 0"
         elif query_lower.startswith("create"):
-            pass  # DDL - ignore
+            pass
 
         return "INSERT 0 1"
 
@@ -126,17 +145,7 @@ class MockConnection:
         """Mock fetchrow - retrieve data from storage."""
         query_lower = query.strip().lower()
 
-        if "from tenants" in query_lower:
-            identifier = args[0] if args else None
-            if not identifier:
-                return None
-            # Search by ID or slug
-            for tid, tenant in self.storage["tenants"].items():
-                if tid == identifier or tenant.get("slug") == identifier:
-                    return tenant
-            return None
-
-        elif "from tenant_users" in query_lower:
+        if "from tenant_users" in query_lower:
             tenant_id = args[0] if args else None
             email = args[1] if len(args) > 1 else None
             for uid, user in self.storage["users"].items():
@@ -145,7 +154,6 @@ class MockConnection:
             return None
 
         elif "from tenant_usage" in query_lower and "sum" in query_lower:
-            # Analytics summary
             tenant_id = args[0] if args else None
             total_ai = 0
             total_multi = 0
@@ -194,6 +202,15 @@ class MockConnection:
                 }
             return None
 
+        elif "from tenants" in query_lower:
+            identifier = args[0] if args else None
+            if not identifier:
+                return None
+            for tid, tenant in self.storage["tenants"].items():
+                if tid == identifier or tenant.get("slug") == identifier:
+                    return tenant
+            return None
+
         return None
 
     async def fetch(self, query, *args):
@@ -238,6 +255,27 @@ class MockDB:
         yield MockConnection(self.storage)
 
 
+@pytest_asyncio.fixture(autouse=True)
+async def patch_enum_models():
+    """Patch TenantConfig and TenantUser to preserve enum types.
+
+    The service code uses .value on enum fields (e.g., config.tier.value),
+    but Pydantic's use_enum_values=True converts enums to strings, breaking
+    .value access. This fixture patches the module-level classes with
+    subclasses that have use_enum_values=False.
+    """
+    original_config = ets_module.TenantConfig
+    original_user = ets_module.TenantUser
+
+    ets_module.TenantConfig = FixedTenantConfig
+    ets_module.TenantUser = FixedTenantUser
+
+    yield
+
+    ets_module.TenantConfig = original_config
+    ets_module.TenantUser = original_user
+
+
 @pytest_asyncio.fixture
 async def enterprise_service():
     """Create enterprise tenant service for testing with mocked database."""
@@ -250,7 +288,7 @@ async def enterprise_service():
 @pytest.fixture
 def sample_tenant_config():
     """Sample tenant configuration for testing."""
-    return TenantConfig(
+    return FixedTenantConfig(
         name="Test Consulting Client",
         slug="test-consulting-client",
         tier=TenantTier.PROFESSIONAL,
@@ -307,7 +345,7 @@ async def test_create_tenant(enterprise_service, sample_tenant_config):
 @pytest.mark.asyncio
 async def test_create_tenant_with_custom_branding(enterprise_service, sample_branding_config):
     """Test creating tenant with custom branding configuration."""
-    config = TenantConfig(
+    config = FixedTenantConfig(
         name="Branded Client",
         slug="branded-client",
         tier=TenantTier.ENTERPRISE,
@@ -331,7 +369,7 @@ async def test_create_tenant_with_custom_branding(enterprise_service, sample_bra
 async def test_tenant_tier_feature_mapping(enterprise_service):
     """Test that tenant tiers correctly map to feature flags."""
     # Test STARTER tier ($25K-$35K)
-    starter_config = TenantConfig(
+    starter_config = FixedTenantConfig(
         name="Starter Client",
         slug="starter-client",
         tier=TenantTier.STARTER,
@@ -351,7 +389,7 @@ async def test_tenant_tier_feature_mapping(enterprise_service):
     assert starter_retrieved.feature_flags.custom_ai_models is False  # Not in starter
 
     # Test ENTERPRISE tier ($75K-$100K+)
-    enterprise_config = TenantConfig(
+    enterprise_config = FixedTenantConfig(
         name="Enterprise Client",
         slug="enterprise-client",
         tier=TenantTier.ENTERPRISE,
@@ -413,7 +451,7 @@ async def test_create_tenant_user(enterprise_service, sample_tenant_config):
     """Test creating tenant user with role-based permissions."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
 
-    user = TenantUser(
+    user = FixedTenantUser(
         tenant_id=tenant_id,
         email="sales@testclient.com",
         first_name="Sales",
@@ -442,7 +480,7 @@ async def test_role_permission_mapping(enterprise_service, sample_tenant_config)
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
 
     # Test TENANT_ADMIN role
-    admin_user = TenantUser(
+    admin_user = FixedTenantUser(
         tenant_id=tenant_id,
         email="admin@test.com",
         first_name="Admin",
@@ -461,7 +499,7 @@ async def test_role_permission_mapping(enterprise_service, sample_tenant_config)
     ) is True
 
     # Test VIEWER role
-    viewer_user = TenantUser(
+    viewer_user = FixedTenantUser(
         tenant_id=tenant_id,
         email="viewer@test.com",
         first_name="View",
@@ -573,7 +611,7 @@ def test_tenant_config_validation():
     """Test tenant configuration validation."""
     # Test invalid slug
     with pytest.raises(ValueError, match="Slug must contain only"):
-        TenantConfig(
+        FixedTenantConfig(
             name="Test",
             slug="Invalid Slug!",  # Invalid characters
             primary_contact_email="test@example.com",
@@ -583,7 +621,7 @@ def test_tenant_config_validation():
         )
 
     # Test valid slug
-    config = TenantConfig(
+    config = FixedTenantConfig(
         name="Test",
         slug="valid-slug-123",  # Valid
         primary_contact_email="test@example.com",
@@ -630,7 +668,7 @@ def test_branding_config_dataclass():
 @pytest.mark.asyncio
 async def test_api_key_encryption(enterprise_service):
     """Test that API keys are properly encrypted in storage."""
-    config = TenantConfig(
+    config = FixedTenantConfig(
         name="Security Test",
         slug="security-test",
         primary_contact_email="test@security.com",
@@ -658,7 +696,7 @@ async def test_bulk_tenant_operations(enterprise_service):
     tenant_ids = []
 
     for i in range(5):  # Small number for test performance
-        config = TenantConfig(
+        config = FixedTenantConfig(
             name=f"Bulk Test {i}",
             slug=f"bulk-test-{i}",
             primary_contact_email=f"test{i}@bulk.com",

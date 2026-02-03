@@ -24,6 +24,7 @@ Author: Claude Code Agent
 Created: 2026-01-18
 """
 
+import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Union
@@ -662,19 +663,24 @@ class ValueCommunicationTemplates:
         personalization_data: Dict[str, Any]
     ) -> str:
         """Generate message content from template"""
-        
+
         try:
             # Combine template sections
             content = template.opening + "\n\n" + template.main_content + "\n\n" + template.closing
-            
+
             # Add call to action
             content += f"\n\n---\n\n{template.call_to_action}"
-            
+
+            # Strip numeric format specifiers (e.g. {:,} or {:,.0f}) from template
+            # placeholders because personalization data values are pre-formatted strings.
+            import re
+            content = re.sub(r'\{([a-zA-Z_][a-zA-Z0-9_]*):[^}]+\}', r'{\1}', content)
+
             # Apply personalization
             content = content.format(**personalization_data)
-            
+
             return content
-            
+
         except KeyError as e:
             logger.error(f"Missing personalization variable: {e}")
             # Return template with placeholder for missing variables

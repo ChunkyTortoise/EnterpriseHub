@@ -743,8 +743,8 @@ class CompetitiveDataPipeline:
 
             # Check for PII in raw data
             pii_patterns = [
-                r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Union[Z, a]-z]{2,}\b',  # Email
-                r'\b\d{3}-\d{3}-\d{4}\b',  # Phone number
+                r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}',  # Email
+                r'\+?\d[\d\-]{7,}\d',  # Phone number (various formats)
                 r'\b\d{3}-\d{2}-\d{4}\b'   # SSN
             ]
 

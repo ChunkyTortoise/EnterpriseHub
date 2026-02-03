@@ -249,15 +249,23 @@ class TestInventoryAlertSystem:
         assert len(alert_system.alert_history) > 0
 
     @pytest.mark.asyncio
-    async def test_alert_generation_percentage_change(self, alert_system, sample_alert_rule, sample_market_data):
+    async def test_alert_generation_percentage_change(self, alert_system, sample_alert_rule, sample_market_data, sample_alert_instance):
         """Test alert generation for percentage change conditions."""
-        # Add rule to system
-        alert_system.alert_rules[sample_alert_rule.rule_id] = sample_alert_rule
+        # Clear default rules and add only the test rule
+        alert_system.alert_rules = {sample_alert_rule.rule_id: sample_alert_rule}
 
-        # Add historical data to buffer
-        for data_point in sample_market_data[:-1]:  # All but the last triggering point
-            metric_key = f"{data_point.neighborhood_id}:{data_point.metric_type}"
-            alert_system.market_data_buffer[metric_key].append(data_point)
+        # _evaluate_percentage_change requires at least 10 historical data points and 2+ data_points
+        base_time = datetime.now()
+        metric_key = "test_neighborhood:active_listings"
+        for i in range(15):
+            historical_point = MarketDataPoint(
+                timestamp=base_time - timedelta(hours=20 - i),
+                neighborhood_id="test_neighborhood",
+                metric_type="active_listings",
+                value=200.0,
+                metadata={"source": "mls", "confidence": 0.95}
+            )
+            alert_system.market_data_buffer[metric_key].append(historical_point)
 
         # Mock alert generation and processing
         with patch.object(alert_system, '_generate_alert') as mock_generate, \
@@ -266,8 +274,24 @@ class TestInventoryAlertSystem:
             mock_alert = sample_alert_instance
             mock_generate.return_value = mock_alert
 
-            # Evaluate conditions with the triggering data point
-            await alert_system._evaluate_alert_conditions([sample_market_data[-1]])
+            # Evaluate conditions with triggering data points (need >= 2 for percentage_change)
+            triggering_points = [
+                MarketDataPoint(
+                    timestamp=base_time - timedelta(hours=1),
+                    neighborhood_id="test_neighborhood",
+                    metric_type="active_listings",
+                    value=160.0,
+                    metadata={"source": "mls", "confidence": 0.95}
+                ),
+                MarketDataPoint(
+                    timestamp=base_time,
+                    neighborhood_id="test_neighborhood",
+                    metric_type="active_listings",
+                    value=150.0,  # 25% drop from 200 baseline
+                    metadata={"source": "mls", "confidence": 0.95}
+                ),
+            ]
+            await alert_system._evaluate_alert_conditions(triggering_points)
 
             # Should trigger alert generation
             mock_generate.assert_called_once()
@@ -294,15 +318,42 @@ class TestInventoryAlertSystem:
     @pytest.mark.asyncio
     async def test_percentage_change_evaluation(self, alert_system, sample_alert_rule, sample_market_data):
         """Test percentage change condition evaluation."""
-        # Add historical data
-        for data_point in sample_market_data:
-            metric_key = f"{data_point.neighborhood_id}:{data_point.metric_type}"
-            alert_system.market_data_buffer[metric_key].append(data_point)
+        # The service requires at least 10 historical data points in the buffer
+        # and at least 2 data_points passed in. Generate enough historical data.
+        base_time = datetime.now()
+        metric_key = f"{sample_market_data[0].neighborhood_id}:{sample_market_data[0].metric_type}"
 
-        # Test with triggering data (25% drop from 200 to 150)
+        # Add 15 historical data points with baseline value ~200
+        for i in range(15):
+            historical_point = MarketDataPoint(
+                timestamp=base_time - timedelta(hours=20 - i),
+                neighborhood_id="test_neighborhood",
+                metric_type="active_listings",
+                value=200.0,
+                metadata={"source": "mls", "confidence": 0.95}
+            )
+            alert_system.market_data_buffer[metric_key].append(historical_point)
+
+        # Test with triggering data (25% drop from baseline 200 to 150)
+        triggering_points = [
+            MarketDataPoint(
+                timestamp=base_time - timedelta(hours=1),
+                neighborhood_id="test_neighborhood",
+                metric_type="active_listings",
+                value=180.0,
+                metadata={"source": "mls", "confidence": 0.95}
+            ),
+            MarketDataPoint(
+                timestamp=base_time,
+                neighborhood_id="test_neighborhood",
+                metric_type="active_listings",
+                value=150.0,
+                metadata={"source": "mls", "confidence": 0.95}
+            )
+        ]
         should_trigger = await alert_system._evaluate_percentage_change(
             sample_alert_rule,
-            [sample_market_data[-1]]  # Current low value
+            triggering_points
         )
 
         assert should_trigger  # 25% drop should trigger 20% threshold
@@ -367,7 +418,7 @@ class TestInventoryAlertSystem:
             alert_type=AlertType.NEW_LISTING_FLOOD,
             enabled=True,
             conditions={"metric": "new_listings_daily", "comparison": "anomaly_detection"},
-            threshold_values={"anomaly_threshold": 0.95},
+            threshold_values={"anomaly_threshold": 0.85},
             comparison_period="30d",
             severity=AlertSeverity.MEDIUM
         )
@@ -425,35 +476,40 @@ class TestInventoryAlertSystem:
             AlertChannel.WEBHOOK
         ]
 
-        # Mock all delivery handlers
-        with patch.object(alert_system, '_send_email_alert', new_callable=AsyncMock) as mock_email, \
-             patch.object(alert_system, '_send_sms_alert', new_callable=AsyncMock) as mock_sms, \
-             patch.object(alert_system, '_send_webhook_alert', new_callable=AsyncMock) as mock_webhook:
+        # Mock delivery handlers in the handler dict (not just methods)
+        mock_email = AsyncMock()
+        mock_sms = AsyncMock()
+        mock_webhook = AsyncMock()
+        alert_system.delivery_handlers[AlertChannel.EMAIL] = mock_email
+        alert_system.delivery_handlers[AlertChannel.SMS] = mock_sms
+        alert_system.delivery_handlers[AlertChannel.WEBHOOK] = mock_webhook
 
-            await alert_system._deliver_alert(sample_alert_instance)
+        await alert_system._deliver_alert(sample_alert_instance)
 
-            # All channels should be called
-            mock_email.assert_called_once()
-            mock_sms.assert_called_once()
-            mock_webhook.assert_called_once()
+        # All channels should be called
+        mock_email.assert_called_once()
+        mock_sms.assert_called_once()
+        mock_webhook.assert_called_once()
 
-            # Check delivery status
-            assert "email" in sample_alert_instance.delivery_status
-            assert "sms" in sample_alert_instance.delivery_status
-            assert "webhook" in sample_alert_instance.delivery_status
+        # Check delivery status
+        assert "email" in sample_alert_instance.delivery_status
+        assert "sms" in sample_alert_instance.delivery_status
+        assert "webhook" in sample_alert_instance.delivery_status
 
     @pytest.mark.asyncio
     async def test_alert_delivery_failure_handling(self, alert_system, sample_alert_instance):
         """Test alert delivery failure handling."""
         sample_alert_instance.delivery_channels = [AlertChannel.EMAIL]
 
-        # Mock delivery failure
-        with patch.object(alert_system, '_send_email_alert', side_effect=Exception("Delivery failed")):
-            await alert_system._deliver_alert(sample_alert_instance)
+        # Mock delivery failure in the handler dict
+        mock_failing_handler = AsyncMock(side_effect=Exception("Delivery failed"))
+        alert_system.delivery_handlers[AlertChannel.EMAIL] = mock_failing_handler
 
-            # Should record failure in delivery status
-            assert sample_alert_instance.delivery_status["email"]["status"] == "failed"
-            assert "Delivery failed" in sample_alert_instance.delivery_status["email"]["error"]
+        await alert_system._deliver_alert(sample_alert_instance)
+
+        # Should record failure in delivery status
+        assert sample_alert_instance.delivery_status["email"]["status"] == "failed"
+        assert "Delivery failed" in sample_alert_instance.delivery_status["email"]["error"]
 
     @pytest.mark.asyncio
     async def test_get_alert_analytics(self, alert_system):

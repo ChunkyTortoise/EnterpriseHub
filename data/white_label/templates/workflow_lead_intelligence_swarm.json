@@ -40,6 +40,6 @@
     "report_format",
     "notification_channels"
   ],
-  "consulting_tier": "BrandingTier.PROFESSIONAL",
+  "consulting_tier": "professional",
   "estimated_value": "85+ hours/month automation savings"
 }

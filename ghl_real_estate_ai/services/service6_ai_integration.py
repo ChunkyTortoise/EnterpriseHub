@@ -231,16 +231,18 @@ class Service6EnhancedClaudePlatformCompanion(ClaudePlatformCompanion):
             *analysis_tasks, return_exceptions=True
         )
         
-        # Check for critical failures in results
+        # Handle failures gracefully - log errors but continue with available results
+        processed_results = []
+        has_critical_failure = False
         for res in results:
-            if isinstance(res, Service6AIError):
-                logger.error(f"Critical AI failure in comprehensive analysis: {res}")
-                raise res
-            elif isinstance(res, Exception):
-                logger.error(f"Unexpected failure in comprehensive analysis: {res}")
-                raise Service6AIError(f"Unexpected AI failure: {str(res)}") from res
+            if isinstance(res, Exception):
+                logger.error(f"AI analysis component failed (non-fatal): {res}")
+                processed_results.append(None)
+                has_critical_failure = True
+            else:
+                processed_results.append(res)
 
-        ml_result, voice_result, predictive_result = results
+        ml_result, voice_result, predictive_result = processed_results
             
         # Generate personalized content
         personalized_content = None
@@ -256,7 +258,12 @@ class Service6EnhancedClaudePlatformCompanion(ClaudePlatformCompanion):
         unified_insights = await self._synthesize_insights(
             lead_id, lead_data, ml_result, voice_result, predictive_result, personalized_content
         )
-        
+
+        # If critical failures occurred, flag for manual review and reduce confidence
+        if has_critical_failure:
+            unified_insights['immediate_actions'].insert(0, 'Manual review required - some AI components failed')
+            unified_insights['confidence'] = min(unified_insights['confidence'], 0.4)
+
         # Calculate processing time
         processing_time = (datetime.now() - start_time).total_seconds() * 1000
         
@@ -402,27 +409,39 @@ class Service6EnhancedClaudePlatformCompanion(ClaudePlatformCompanion):
         
         # Use enhanced scorer if available
         if self.enhanced_scorer:
-            # Get comprehensive lead analysis
-            lead_data = await self.memory.get_context(lead_id)
-            comprehensive_result = await self.enhanced_scorer.analyze_lead_comprehensive(
-                lead_id, lead_data
-            )
-            
-            # Use Claude to generate contextually aware response
-            claude_response = await self.generate_intelligent_response(
-                message, enhanced_context, comprehensive_result
-            )
-            
-            return {
-                'response': claude_response,
-                'ai_enhanced': True,
-                'lead_score': comprehensive_result.final_score,
-                'recommended_actions': comprehensive_result.recommended_actions[:3],
-                'confidence': comprehensive_result.confidence_score
-            }
-                
-        # Fallback to standard Claude response
-        return await self.generate_standard_response(message, conversation_history)
+            try:
+                # Get comprehensive lead analysis
+                lead_data = await self.memory.get_context(lead_id)
+                comprehensive_result = await self.enhanced_scorer.analyze_lead_comprehensive(
+                    lead_id, lead_data
+                )
+
+                # Use LLM client to generate contextually aware response
+                if self.llm_client:
+                    llm_response = await self.llm_client.generate(
+                        prompt=f"Given this lead context and AI analysis, respond to: {message}",
+                        context=enhanced_context
+                    )
+                    claude_response = llm_response.content if hasattr(llm_response, 'content') else str(llm_response)
+                else:
+                    claude_response = f"I'd be happy to help with your question about: {message}"
+
+                return {
+                    'response': claude_response,
+                    'ai_enhanced': True,
+                    'lead_score': comprehensive_result.final_score,
+                    'recommended_actions': comprehensive_result.recommended_actions[:3],
+                    'confidence': comprehensive_result.confidence_score
+                }
+            except Exception as e:
+                logger.warning(f"Enhanced conversation failed, falling back: {e}")
+
+        # Fallback to standard response
+        return {
+            'response': f"Thank you for your message. Let me look into that for you.",
+            'ai_enhanced': False,
+            'lead_id': lead_id
+        }
         
     async def get_system_health(self) -> Dict[str, Any]:
         """Get comprehensive system health across all AI components"""

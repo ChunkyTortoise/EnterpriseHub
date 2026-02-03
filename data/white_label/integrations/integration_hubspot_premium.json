@@ -19,6 +19,6 @@
     "advanced_analytics",
     "email_sequences"
   ],
-  "consulting_tier": "BrandingTier.PROFESSIONAL",
+  "consulting_tier": "professional",
   "implementation_complexity": "moderate"
 }

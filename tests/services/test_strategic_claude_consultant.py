@@ -12,6 +12,10 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock
 from uuid import uuid4
 
+# The strategic_consultant fixture loads ML models which can take >10s.
+# Set a generous timeout for all tests in this module.
+pytestmark = pytest.mark.timeout(60)
+
 from ghl_real_estate_ai.services.strategic_claude_consultant import (
     StrategicClaudeConsultant,
     StrategicRecommendation,
@@ -656,7 +660,7 @@ async def test_insufficient_historical_data(strategic_consultant):
 @pytest.mark.asyncio
 async def test_model_initialization_failure(strategic_consultant):
     """Test handling of model initialization failure."""
-    with patch('sklearn.ensemble.VotingRegressor', side_effect=Exception("Model init failed")):
+    with patch('ghl_real_estate_ai.services.strategic_claude_consultant.VotingRegressor', side_effect=Exception("Model init failed")):
         try:
             await strategic_consultant._initialize_predictive_models()
             # Should raise exception on critical failure

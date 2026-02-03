@@ -656,13 +656,27 @@ class TestEnhancedLeadIntelligence:
 class TestEnhancedLeadIntelligenceIntegration:
     """Integration tests for enhanced lead intelligence service."""
 
+    def _reset_shared_resources(self):
+        """Reset class-level shared resources so patches take effect."""
+        EnhancedLeadIntelligence._claude = None
+        EnhancedLeadIntelligence._enhanced_scorer = None
+        EnhancedLeadIntelligence._automation_engine = None
+        EnhancedLeadIntelligence._memory = None
+        EnhancedLeadIntelligence._attom_client = None
+        EnhancedLeadIntelligence._latex_gen = None
+        EnhancedLeadIntelligence._heygen = None
+
     @pytest.mark.asyncio
     async def test_full_intelligence_workflow(self):
         """Test complete intelligence workflow from lead data to actionable insights."""
+        self._reset_shared_resources()
         with patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_claude_orchestrator') as mock_claude_orch, \
              patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.ClaudeEnhancedLeadScorer') as mock_scorer_cls, \
              patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.ClaudeAutomationEngine') as mock_engine, \
-             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.MemoryService') as mock_memory:
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.MemoryService') as mock_memory, \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_attom_client'), \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_latex_report_generator'), \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_heygen_service'):
 
             # Setup mocks
             mock_claude = Mock()
@@ -707,10 +721,14 @@ class TestEnhancedLeadIntelligenceIntegration:
     @pytest.mark.asyncio
     async def test_property_psychological_fit_workflow(self):
         """Test property psychological fit analysis workflow."""
+        self._reset_shared_resources()
         with patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_claude_orchestrator') as mock_claude_orch, \
              patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.ClaudeEnhancedLeadScorer'), \
              patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.ClaudeAutomationEngine'), \
-             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.MemoryService'):
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.MemoryService'), \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_attom_client'), \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_latex_report_generator'), \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_heygen_service'):
 
             # Setup Claude mock for chat_query (used by get_psychological_property_fit)
             mock_claude = Mock()
@@ -741,10 +759,14 @@ class TestEnhancedLeadIntelligenceIntegration:
     @pytest.mark.asyncio
     async def test_performance_under_load(self):
         """Test service performance under high load conditions."""
+        self._reset_shared_resources()
         with patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_claude_orchestrator'), \
              patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.ClaudeEnhancedLeadScorer') as mock_scorer_cls, \
              patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.ClaudeAutomationEngine') as mock_engine, \
-             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.MemoryService'):
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.MemoryService'), \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_attom_client'), \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_latex_report_generator'), \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_heygen_service'):
 
             # Setup fast-responding mocks
             mock_scorer_instance = Mock()
@@ -790,10 +812,14 @@ class TestEnhancedLeadIntelligenceIntegration:
     @pytest.mark.asyncio
     async def test_memory_integration(self):
         """Test integration with memory service for lead history."""
+        self._reset_shared_resources()
         with patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_claude_orchestrator') as mock_claude_orch, \
              patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.ClaudeEnhancedLeadScorer'), \
              patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.ClaudeAutomationEngine'), \
-             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.MemoryService') as mock_memory_service:
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.MemoryService') as mock_memory_service, \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_attom_client'), \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_latex_report_generator'), \
+             patch('ghl_real_estate_ai.services.enhanced_lead_intelligence.get_heygen_service'):
 
             # Setup Claude mock for chat_query (used by get_cognitive_dossier)
             mock_claude = Mock()
