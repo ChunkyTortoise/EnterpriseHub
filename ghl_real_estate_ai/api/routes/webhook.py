@@ -48,7 +48,15 @@ router = APIRouter(prefix="/ghl", tags=["ghl"])
 # Initialize dependencies (singletons)
 conversation_manager = ConversationManager()
 ghl_client_default = GHLClient()
-lead_scorer = LeadScorer()
+# Lazy singleton — defer initialization until first request
+_lead_scorer = None
+
+
+def _get_lead_scorer():
+    global _lead_scorer
+    if _lead_scorer is None:
+        _lead_scorer = LeadScorer()
+    return _lead_scorer
 tenant_service = TenantService()
 analytics_service = AnalyticsService()
 pricing_optimizer = DynamicPricingOptimizer()
@@ -270,6 +278,22 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 }
             )
 
+            # Send the seller response via GHL API (background task)
+            background_tasks.add_task(
+                current_ghl_client.send_message,
+                contact_id=contact_id,
+                message=final_seller_msg,
+                channel=event.message.type,
+            )
+
+            # Apply tags and actions via GHL API (background task)
+            if actions:
+                background_tasks.add_task(
+                    current_ghl_client.apply_actions,
+                    contact_id=contact_id,
+                    actions=actions,
+                )
+
             return GHLWebhookResponse(
                 success=True,
                 message=final_seller_msg,
@@ -395,7 +419,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         # Track lead scoring with source attribution
         lead_scored_data = {
             "score": ai_response.lead_score,
-            "classification": lead_scorer.classify(ai_response.lead_score),
+            "classification": _get_lead_scorer().classify(ai_response.lead_score),
         }
 
         # Add source attribution context if available
@@ -425,7 +449,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "lead_scored",
                 {
                     "score": ai_response.lead_score,
-                    "classification": lead_scorer.classify(ai_response.lead_score),
+                    "classification": _get_lead_scorer().classify(ai_response.lead_score),
                     "contact_id": contact_id,
                     "location_id": location_id
                 }
@@ -440,7 +464,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "questions_answered": ai_response.lead_score,
                 "message_content": user_message,
                 "extracted_data": ai_response.extracted_data,
-                "classification": lead_scorer.classify(ai_response.lead_score)
+                "classification": _get_lead_scorer().classify(ai_response.lead_score)
             }
         )
 
@@ -451,7 +475,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             location_id=location_id,
             lead_score=ai_response.lead_score,
             extracted_data=ai_response.extracted_data,
-            classification=lead_scorer.classify(ai_response.lead_score)
+            classification=_get_lead_scorer().classify(ai_response.lead_score)
         )
 
         # Step 3: Update conversation context
@@ -632,7 +656,7 @@ async def prepare_ghl_actions(
     actions = []
 
     # Convert question count to percentage for Jorge's auto-deactivation logic
-    percentage_score = lead_scorer.get_percentage_score(lead_score)
+    percentage_score = _get_lead_scorer().get_percentage_score(lead_score)
 
     # Jorge's Auto-Deactivation Logic: If score >= 70%, deactivate AI and hand off
     if percentage_score >= settings.auto_deactivate_threshold:
@@ -658,7 +682,7 @@ async def prepare_ghl_actions(
             )
 
     # Standard lead classification based on question count
-    classification = lead_scorer.classify(lead_score)
+    classification = _get_lead_scorer().classify(lead_score)
 
     if classification == "hot":
         actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Hot-Lead"))
@@ -758,7 +782,7 @@ async def prepare_ghl_actions(
     # Tag based on timeline urgency
     timeline = extracted_data.get("timeline", "")
     if timeline:
-        if lead_scorer._is_urgent_timeline(timeline):
+        if _get_lead_scorer()._is_urgent_timeline(timeline):
             actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Timeline-Urgent"))
 
         # Update Timeline Custom Field if configured
