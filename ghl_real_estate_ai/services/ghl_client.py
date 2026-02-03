@@ -10,6 +10,7 @@ Handles communication with GHL API for:
 API Documentation: https://highlevel.stoplight.io/
 """
 
+import asyncio
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -261,29 +262,42 @@ class GHLClient:
             "message": message,
         }
 
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    endpoint,
-                    json=payload,
-                    headers=self.headers,
-                    timeout=settings.webhook_timeout_seconds,
-                )
-                response.raise_for_status()
+        max_retries = 3
+        last_error = None
 
-                logger.info(
-                    f"Sent {channel.value} message to contact {contact_id}",
-                    extra={"contact_id": contact_id, "channel": channel.value},
-                )
+        for attempt in range(1, max_retries + 1):
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        endpoint,
+                        json=payload,
+                        headers=self.headers,
+                        timeout=settings.webhook_timeout_seconds,
+                    )
+                    response.raise_for_status()
 
-                return response.json()
+                    logger.info(
+                        f"Sent {channel.value} message to contact {contact_id}",
+                        extra={"contact_id": contact_id, "channel": channel.value},
+                    )
 
-        except httpx.HTTPError as e:
-            logger.error(
-                f"Failed to send message to contact {contact_id}: {str(e)}",
-                extra={"contact_id": contact_id, "error": str(e)},
-            )
-            raise
+                    return response.json()
+
+            except httpx.HTTPError as e:
+                last_error = e
+                if attempt < max_retries:
+                    wait = 0.5 * (2 ** (attempt - 1))  # 0.5s, 1s backoff
+                    logger.warning(
+                        f"Send message attempt {attempt}/{max_retries} failed for {contact_id}, retrying in {wait}s: {e}",
+                        extra={"contact_id": contact_id, "attempt": attempt},
+                    )
+                    await asyncio.sleep(wait)
+
+        logger.error(
+            f"Failed to send message to contact {contact_id} after {max_retries} attempts: {last_error}",
+            extra={"contact_id": contact_id, "error": str(last_error)},
+        )
+        raise last_error
 
     async def add_tags(self, contact_id: str, tags: List[str]) -> Dict[str, Any]:
         """
