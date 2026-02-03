@@ -45,7 +45,7 @@ class TestLifeEventDetection:
     @pytest.mark.asyncio
     async def test_probate_detected(self, engine, mock_attom_dna, mock_attom_triggers):
         with patch(
-            "ghl_real_estate_ai.services.xgboost_propensity_engine.get_attom_client"
+            "ghl_real_estate_ai.services.attom_client.get_attom_client"
         ) as mock_get:
             client = MagicMock()
             client.get_property_dna = AsyncMock(return_value=mock_attom_dna)
@@ -60,7 +60,7 @@ class TestLifeEventDetection:
     @pytest.mark.asyncio
     async def test_absentee_owner_detected(self, engine, mock_attom_dna, mock_attom_triggers):
         with patch(
-            "ghl_real_estate_ai.services.xgboost_propensity_engine.get_attom_client"
+            "ghl_real_estate_ai.services.attom_client.get_attom_client"
         ) as mock_get:
             client = MagicMock()
             client.get_property_dna = AsyncMock(return_value=mock_attom_dna)
@@ -74,7 +74,7 @@ class TestLifeEventDetection:
     @pytest.mark.asyncio
     async def test_long_ownership_detected(self, engine, mock_attom_dna, mock_attom_triggers):
         with patch(
-            "ghl_real_estate_ai.services.xgboost_propensity_engine.get_attom_client"
+            "ghl_real_estate_ai.services.attom_client.get_attom_client"
         ) as mock_get:
             client = MagicMock()
             client.get_property_dna = AsyncMock(return_value=mock_attom_dna)
@@ -92,7 +92,7 @@ class TestLifeEventDetection:
         triggers = {"probate": False, "tax_delinquent": False, "liens": 3}
 
         with patch(
-            "ghl_real_estate_ai.services.xgboost_propensity_engine.get_attom_client"
+            "ghl_real_estate_ai.services.attom_client.get_attom_client"
         ) as mock_get:
             client = MagicMock()
             client.get_property_dna = AsyncMock(return_value=dna)
@@ -118,7 +118,7 @@ class TestPropensityScoring:
     @pytest.mark.asyncio
     async def test_score_with_life_events(self, engine, mock_attom_dna, mock_attom_triggers):
         with patch(
-            "ghl_real_estate_ai.services.xgboost_propensity_engine.get_attom_client"
+            "ghl_real_estate_ai.services.attom_client.get_attom_client"
         ) as mock_get:
             client = MagicMock()
             client.get_property_dna = AsyncMock(return_value=mock_attom_dna)
