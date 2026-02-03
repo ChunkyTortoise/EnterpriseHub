@@ -5,6 +5,7 @@ Provides lifecycle hooks for the Agent system, allowing for
 custom logic before/after LLM interactions and Tool execution.
 """
 import asyncio
+import inspect
 from typing import Callable, List, Optional, Any, Dict, Union, Awaitable
 from dataclasses import dataclass
 from enum import Enum
@@ -42,7 +43,7 @@ class HookManager:
         """Trigger all hooks for an event (synchronous)."""
         for callback in self._hooks[event]:
             try:
-                if asyncio.iscoroutinefunction(callback):
+                if inspect.iscoroutinefunction(callback):
                     # For sync trigger of async function, create a task
                     try:
                         loop = asyncio.get_running_loop()
@@ -61,7 +62,7 @@ class HookManager:
         """Trigger all hooks for an event (asynchronous)."""
         for callback in self._hooks[event]:
             try:
-                if asyncio.iscoroutinefunction(callback):
+                if inspect.iscoroutinefunction(callback):
                     await callback(context)
                 else:
                     callback(context)
