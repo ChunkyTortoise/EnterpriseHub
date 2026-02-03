@@ -630,12 +630,25 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             exc_info=True,
         )
 
+        # Best-effort: send a human-sounding fallback so the contact isn't left on read
+        if contact_id:
+            fallback_msg = "Hey, give me just a moment — I want to make sure I get you the right info. I'll circle back shortly!"
+            try:
+                background_tasks.add_task(
+                    ghl_client_default.send_message,
+                    contact_id=contact_id,
+                    message=fallback_msg,
+                    channel=event.message.type if event and event.message else "SMS",
+                )
+            except Exception:
+                logger.warning(f"Failed to send fallback message for {contact_id}")
+
         # SECURITY FIX: Return minimal error to GHL (no PII, trackable error ID)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
                 "success": False,
-                "message": "Sorry, I'm experiencing a technical issue. A team member will follow up with you shortly!",
+                "message": "Processing error — fallback message sent to contact",
                 "error_id": error_id,
                 "retry_allowed": True
             }
