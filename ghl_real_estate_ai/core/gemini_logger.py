@@ -52,6 +52,8 @@ def calculate_cost(
             "default": {"input": 0.125 / 1_000_000, "output": 0.375 / 1_000_000}
         },
         "claude": {
+            "claude-sonnet-4-5-20250514": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000, "cache_write": 3.75 / 1_000_000, "cache_read": 0.30 / 1_000_000},
+            "claude-opus-4-5-20251101": {"input": 15.0 / 1_000_000, "output": 75.0 / 1_000_000, "cache_write": 18.75 / 1_000_000, "cache_read": 1.50 / 1_000_000},
             "claude-3-5-sonnet-20241022": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000, "cache_write": 3.75 / 1_000_000, "cache_read": 0.30 / 1_000_000},
             "claude-3-5-sonnet-latest": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000, "cache_write": 3.75 / 1_000_000, "cache_read": 0.30 / 1_000_000},
             "claude-3-5-haiku-latest": {"input": 0.80 / 1_000_000, "output": 4.00 / 1_000_000, "cache_write": 1.00 / 1_000_000, "cache_read": 0.08 / 1_000_000},

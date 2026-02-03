@@ -41,7 +41,7 @@ class ClaudeRequest:
     context: Dict[str, Any]
     prompt: str
     tenant_id: Optional[str] = None
-    model: str = "claude-3-5-sonnet-20241022"
+    model: str = "claude-sonnet-4-5-20250514"
     max_tokens: int = 4000
     temperature: float = 0.7
     system_prompt: Optional[str] = None

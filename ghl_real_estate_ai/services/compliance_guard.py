@@ -36,7 +36,7 @@ class ComplianceGuard:
     MAX_INPUT_LENGTH = 10_000
 
     def __init__(self):
-        self.llm_client = LLMClient(provider="claude", model="claude-3-5-haiku-20241022")
+        self.llm_client = LLMClient(provider="claude", model="claude-sonnet-4-5-20250514")
 
     async def audit_message(self, message: str, contact_context: Dict[str, Any] = None) -> Tuple[ComplianceStatus, str, List[str]]:
         """
