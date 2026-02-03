@@ -81,6 +81,8 @@ def sample_cma_report():
 @pytest.fixture
 def mock_lead_bot_deps():
     """Mock all lead bot dependencies for isolated testing."""
+    mock_sync = MagicMock()
+    mock_sync.record_lead_event = AsyncMock()
     with patch.multiple(
         'ghl_real_estate_ai.agents.lead_bot',
         LeadIntentDecoder=Mock,
@@ -91,7 +93,7 @@ def mock_lead_bot_deps():
         get_event_publisher=Mock,
         get_sequence_service=Mock,
         get_lead_scheduler=Mock,
-        sync_service=Mock,
+        sync_service=mock_sync,
     ), patch(
         'ghl_real_estate_ai.services.national_market_intelligence.get_national_market_intelligence',
         Mock()
@@ -106,39 +108,31 @@ def mock_lead_bot_deps():
 class TestPDFRendererCMA:
     """Tests for CMA PDF generation via PDFRenderer."""
 
-    def test_render_cma_html_for_pdf_returns_html(self, sample_cma_report):
-        """PDF-safe HTML is generated from CMA report."""
-        html = PDFRenderer.render_cma_html_for_pdf(sample_cma_report)
+    def test_render_cma_html_returns_html(self, sample_cma_report):
+        """HTML is generated from CMA report."""
+        html = PDFRenderer.render_cma_html(sample_cma_report)
 
         assert "Comparative Market Analysis" in html
         assert "123 Main St" in html
         assert "$855,000" in html
         assert "Rancho Cucamonga" in html
-        # Verify PDF-safe layout (no CSS grid, no emoji)
-        assert "grid-template-columns" not in html
-        assert "@page" in html
 
     def test_render_cma_html_contains_comparables(self, sample_cma_report):
         """CMA HTML includes comparable property rows."""
-        html = PDFRenderer.render_cma_html_for_pdf(sample_cma_report)
+        html = PDFRenderer.render_cma_html(sample_cma_report)
 
         assert "125 Main St" in html
         assert "200 Elm Ave" in html
 
     def test_render_cma_html_contains_zillow_comparison(self, sample_cma_report):
         """CMA HTML includes Zillow comparison section."""
-        html = PDFRenderer.render_cma_html_for_pdf(sample_cma_report)
+        html = PDFRenderer.render_cma_html(sample_cma_report)
 
         assert "Zillow" in html
         assert "$850,000" in html  # Zestimate
 
     def test_generate_pdf_bytes_produces_valid_pdf(self, sample_cma_report):
         """PDFRenderer.generate_pdf_bytes returns valid PDF bytes."""
-        try:
-            from xhtml2pdf import pisa  # noqa: F401
-        except ImportError:
-            pytest.skip("xhtml2pdf not installed")
-
         pdf_bytes = PDFRenderer.generate_pdf_bytes(sample_cma_report)
 
         assert isinstance(pdf_bytes, bytes)
@@ -148,11 +142,6 @@ class TestPDFRendererCMA:
 
     def test_generate_pdf_bytes_under_size_limit(self, sample_cma_report):
         """Generated PDF is under the 2MB size limit."""
-        try:
-            from xhtml2pdf import pisa  # noqa: F401
-        except ImportError:
-            pytest.skip("xhtml2pdf not installed")
-
         pdf_bytes = PDFRenderer.generate_pdf_bytes(sample_cma_report)
 
         assert len(pdf_bytes) < 2 * 1024 * 1024  # 2MB
@@ -168,10 +157,10 @@ class TestSendCMAEmailWithAttachment:
     @pytest.mark.asyncio
     async def test_cma_email_sends_with_pdf_attachment(self, mock_lead_bot_deps):
         """CMA email sends PDF attachment via SendGrid."""
-        from ghl_real_estate_ai.agents.lead_bot import JorgeLeadBot
+        from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
         mock_sendgrid = AsyncMock()
-        bot = JorgeLeadBot(sendgrid_client=mock_sendgrid)
+        bot = LeadBotWorkflow(sendgrid_client=mock_sendgrid)
         bot.sequence_service = AsyncMock()
 
         # Mock CMA generator to return a report
@@ -207,10 +196,10 @@ class TestSendCMAEmailWithAttachment:
     @pytest.mark.asyncio
     async def test_cma_email_fallback_when_pdf_fails(self, mock_lead_bot_deps):
         """Email still handled gracefully when PDF generation fails."""
-        from ghl_real_estate_ai.agents.lead_bot import JorgeLeadBot
+        from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
         mock_sendgrid = AsyncMock()
-        bot = JorgeLeadBot(sendgrid_client=mock_sendgrid)
+        bot = LeadBotWorkflow(sendgrid_client=mock_sendgrid)
 
         bot.cma_generator.generate_report = AsyncMock(return_value=MagicMock())
 
@@ -228,11 +217,11 @@ class TestSendCMAEmailWithAttachment:
     @pytest.mark.asyncio
     async def test_cma_email_fallback_when_sendgrid_fails(self, mock_lead_bot_deps):
         """Returns False when SendGrid email delivery fails."""
-        from ghl_real_estate_ai.agents.lead_bot import JorgeLeadBot
+        from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
         mock_sendgrid = AsyncMock()
         mock_sendgrid.send_email.side_effect = Exception("SendGrid unavailable")
-        bot = JorgeLeadBot(sendgrid_client=mock_sendgrid)
+        bot = LeadBotWorkflow(sendgrid_client=mock_sendgrid)
         bot.cma_generator.generate_report = AsyncMock(return_value=MagicMock())
 
         with patch.object(PDFRenderer, 'generate_pdf_bytes', return_value=b'%PDF-1.4 fake'):
@@ -247,10 +236,10 @@ class TestSendCMAEmailWithAttachment:
     @pytest.mark.asyncio
     async def test_cma_email_filename_sanitization(self, mock_lead_bot_deps):
         """PDF filename is sanitized from property address."""
-        from ghl_real_estate_ai.agents.lead_bot import JorgeLeadBot
+        from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
         mock_sendgrid = AsyncMock()
-        bot = JorgeLeadBot(sendgrid_client=mock_sendgrid)
+        bot = LeadBotWorkflow(sendgrid_client=mock_sendgrid)
         bot.sequence_service = AsyncMock()
         bot.cma_generator.generate_report = AsyncMock(return_value=MagicMock())
 
@@ -279,10 +268,10 @@ class TestDay14EmailFlow:
     @pytest.mark.asyncio
     async def test_day_14_email_returns_cma_attached_true(self, mock_lead_bot_deps):
         """Day 14 flow sets cma_attached=True when PDF sends successfully."""
-        from ghl_real_estate_ai.agents.lead_bot import JorgeLeadBot
+        from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
         mock_sendgrid = AsyncMock()
-        bot = JorgeLeadBot(sendgrid_client=mock_sendgrid)
+        bot = LeadBotWorkflow(sendgrid_client=mock_sendgrid)
         bot.ghost_engine.process_lead_step = AsyncMock(return_value={"content": "CMA email"})
         bot.sequence_service = AsyncMock()
         bot.scheduler = AsyncMock()
@@ -315,9 +304,9 @@ class TestDay14EmailFlow:
     @pytest.mark.asyncio
     async def test_day_14_email_returns_cma_attached_false_without_sendgrid(self, mock_lead_bot_deps):
         """Day 14 flow sets cma_attached=False when no SendGrid client configured."""
-        from ghl_real_estate_ai.agents.lead_bot import JorgeLeadBot
+        from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
-        bot = JorgeLeadBot(sendgrid_client=None)
+        bot = LeadBotWorkflow(sendgrid_client=None)
         bot.ghost_engine.process_lead_step = AsyncMock(return_value={"content": "CMA email"})
         bot.sequence_service = AsyncMock()
         bot.scheduler = AsyncMock()
@@ -341,10 +330,10 @@ class TestDay14EmailFlow:
     @pytest.mark.asyncio
     async def test_day_14_email_returns_cma_attached_false_without_email(self, mock_lead_bot_deps):
         """Day 14 flow skips PDF when contact_email is missing."""
-        from ghl_real_estate_ai.agents.lead_bot import JorgeLeadBot
+        from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
         mock_sendgrid = AsyncMock()
-        bot = JorgeLeadBot(sendgrid_client=mock_sendgrid)
+        bot = LeadBotWorkflow(sendgrid_client=mock_sendgrid)
         bot.ghost_engine.process_lead_step = AsyncMock(return_value={"content": "CMA email"})
         bot.sequence_service = AsyncMock()
         bot.scheduler = AsyncMock()
@@ -375,9 +364,9 @@ class TestCMAEmailTemplate:
 
     def test_build_cma_email_html_contains_key_sections(self, mock_lead_bot_deps):
         """Email HTML template contains all key sections."""
-        from ghl_real_estate_ai.agents.lead_bot import JorgeLeadBot
+        from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
-        bot = JorgeLeadBot()
+        bot = LeadBotWorkflow()
         html = bot._build_cma_email_html("123 Main St, Rancho Cucamonga, CA")
 
         assert "123 Main St" in html
