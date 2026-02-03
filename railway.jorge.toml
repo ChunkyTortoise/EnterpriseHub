@@ -35,6 +35,8 @@ NOTIFY_AGENT_WORKFLOW_ID = { description = "Jorge's GHL Workflow ID for agent no
 GHL_WEBHOOK_SECRET = { description = "Jorge's GHL Webhook Secret for signature verification" }
 JWT_SECRET_KEY = { description = "Secret key for JWT token signing (min 32 chars)" }
 STRIPE_SECRET_KEY = { description = "Stripe secret key for billing (set to 'sk_test_disabled' if not using billing)" }
+ADMIN_API_KEY = { description = "API key for admin routes (CRM config, bulk ops, bot mgmt)" }
+REDIS_PASSWORD = { description = "Redis password (Railway auto-sets if using Redis plugin)" }
 
 # Application Settings
 ENVIRONMENT = "production"
