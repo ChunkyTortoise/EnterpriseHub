@@ -136,14 +136,14 @@ class TestDynamicValueJustificationEngine:
         cached_metrics = [
             {
                 "metric_id": "test_metric_001",
-                "dimension": ValueDimension.FINANCIAL_VALUE.value,
+                "dimension": ValueDimension.FINANCIAL_VALUE,
                 "description": "Test financial metric",
-                "value_amount": "10000.00",
-                "tracking_status": ValueTrackingStatus.VERIFIED.value,
+                "value_amount": Decimal("10000.00"),
+                "tracking_status": ValueTrackingStatus.VERIFIED,
                 "verification_confidence": 0.95,
                 "supporting_evidence": ["test_evidence"],
                 "calculation_method": "test_method",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(timezone.utc),
                 "client_id": "test_client",
                 "transaction_id": "test_transaction"
             }

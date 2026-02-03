@@ -72,8 +72,8 @@ class TestAutonomousDealOrchestrator:
         """Create mock dependencies for orchestrator."""
         return {
             'cache_service': AsyncMock(),
-            'ghl_service': AsyncMock(),
-            'claude_service': AsyncMock(),
+            'ghl_client': AsyncMock(),
+            'claude_assistant': AsyncMock(),
             'document_engine': AsyncMock(),
             'vendor_engine': AsyncMock(),
             'communication_engine': AsyncMock(),
@@ -85,8 +85,8 @@ class TestAutonomousDealOrchestrator:
         """Create orchestrator instance with mocked dependencies."""
         return AutonomousDealOrchestrator(
             cache_service=mock_dependencies['cache_service'],
-            ghl_service=mock_dependencies['ghl_service'],
-            claude_service=mock_dependencies['claude_service']
+            ghl_client=mock_dependencies['ghl_client'],
+            claude_assistant=mock_dependencies['claude_assistant']
         )
 
     @pytest.mark.asyncio
@@ -105,7 +105,7 @@ class TestAutonomousDealOrchestrator:
         mock_dependencies['cache_service'].set.return_value = True
 
         # Mock Claude AI response for workflow planning
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies['claude_assistant'].generate_response.return_value = {
             "workflow_plan": "Standard purchase workflow with inspections",
             "key_milestones": ["contract_review", "inspections", "financing"],
             "estimated_duration": "30 days"
@@ -120,7 +120,7 @@ class TestAutonomousDealOrchestrator:
 
         # Verify cache operations
         mock_dependencies['cache_service'].set.assert_called()
-        mock_dependencies['claude_service'].generate_response.assert_called_once()
+        mock_dependencies['claude_assistant'].generate_response.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_initiate_deal_workflow_duplicate(self, orchestrator, mock_dependencies):
@@ -137,7 +137,7 @@ class TestAutonomousDealOrchestrator:
 
         assert result["success"] is False
         assert "already exists" in result["error"]
-        mock_dependencies['claude_service'].generate_response.assert_not_called()
+        mock_dependencies['claude_assistant'].generate_response.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_process_active_tasks(self, orchestrator, mock_dependencies):

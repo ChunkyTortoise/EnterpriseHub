@@ -114,8 +114,8 @@ class TestDocumentOrchestrationEngine:
         """Create mock dependencies for document engine."""
         return {
             'cache_service': AsyncMock(),
-            'ghl_service': AsyncMock(),
-            'claude_service': AsyncMock(),
+            'ghl_client': AsyncMock(),
+            'claude_assistant': AsyncMock(),
             'file_storage': AsyncMock(),
             'notification_service': AsyncMock()
         }
@@ -125,8 +125,8 @@ class TestDocumentOrchestrationEngine:
         """Create document engine instance with mocked dependencies."""
         return DocumentOrchestrationEngine(
             cache_service=mock_dependencies['cache_service'],
-            ghl_service=mock_dependencies['ghl_service'],
-            claude_service=mock_dependencies['claude_service']
+            ghl_client=mock_dependencies['ghl_client'],
+            claude_assistant=mock_dependencies['claude_assistant']
         )
 
     @pytest.mark.asyncio
@@ -146,7 +146,7 @@ class TestDocumentOrchestrationEngine:
         mock_dependencies['cache_service'].get.return_value = None
 
         # Mock GHL portal creation
-        mock_dependencies['ghl_service'].create_document_portal.return_value = {
+        mock_dependencies['ghl_client'].create_document_portal.return_value = {
             "success": True,
             "portal_url": "https://secure.example.com/upload/xyz123",
             "portal_id": "portal_789"
@@ -160,7 +160,7 @@ class TestDocumentOrchestrationEngine:
         assert "portal_url" in result
 
         # Verify service calls
-        mock_dependencies['ghl_service'].create_document_portal.assert_called_once()
+        mock_dependencies['ghl_client'].create_document_portal.assert_called_once()
         mock_dependencies['cache_service'].set.assert_called()
 
     @pytest.mark.asyncio
@@ -181,7 +181,7 @@ class TestDocumentOrchestrationEngine:
 
         assert result["success"] is False
         assert "already exists" in result["error"]
-        mock_dependencies['ghl_service'].create_document_portal.assert_not_called()
+        mock_dependencies['ghl_client'].create_document_portal.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_receive_document_success(self, engine, mock_dependencies):
@@ -298,7 +298,7 @@ class TestDocumentOrchestrationEngine:
         }
 
         # Mock Claude AI template generation
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies['claude_assistant'].generate_response.return_value = {
             "template_content": "CLOSING DISCLOSURE\n\nProperty: 456 Oak Street...",
             "fillable_fields": ["buyer_signature", "date_signed"],
             "template_version": "v2.1"
@@ -319,7 +319,7 @@ class TestDocumentOrchestrationEngine:
         assert len(result["fillable_fields"]) == 2
 
         # Verify AI and storage calls
-        mock_dependencies['claude_service'].generate_response.assert_called_once()
+        mock_dependencies['claude_assistant'].generate_response.assert_called_once()
         mock_dependencies['file_storage'].store_template.assert_called_once()
 
     @pytest.mark.asyncio
@@ -329,7 +329,7 @@ class TestDocumentOrchestrationEngine:
         document_type = DocumentType.PURCHASE_AGREEMENT
 
         # Mock Claude AI validation response
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies['claude_assistant'].generate_response.return_value = {
             "validation_analysis": {
                 "is_valid": True,
                 "confidence_score": 0.88,
@@ -358,7 +358,7 @@ class TestDocumentOrchestrationEngine:
         assert len(result.required_actions) > 0  # Should have recommendations
         assert "appears_compliant" in result.ai_analysis
 
-        mock_dependencies['claude_service'].generate_response.assert_called_once()
+        mock_dependencies['claude_assistant'].generate_response.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_get_collection_status(self, engine, mock_dependencies):
@@ -511,7 +511,7 @@ class TestDocumentOrchestrationEngine:
         }
 
         # Mock service failure
-        mock_dependencies['ghl_service'].create_document_portal.side_effect = Exception("API Error")
+        mock_dependencies['ghl_client'].create_document_portal.side_effect = Exception("API Error")
 
         # Should handle gracefully and return error
         result = await engine.initiate_document_collection(collection_data)
@@ -526,7 +526,7 @@ class TestDocumentOrchestrationEngine:
         document_content = "CONFIDENTIAL PURCHASE AGREEMENT..."
 
         # Mock security analysis
-        mock_dependencies['claude_service'].generate_response.return_value = {
+        mock_dependencies['claude_assistant'].generate_response.return_value = {
             "security_analysis": {
                 "contains_pii": True,
                 "sensitive_fields": ["ssn", "account_number"],
