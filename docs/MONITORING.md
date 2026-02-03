@@ -380,15 +380,26 @@ PAGERDUTY_API_KEY=your-pagerduty-key
 
 ## Built-in Application Monitoring
 
-The FastAPI application includes built-in monitoring capabilities:
+The FastAPI application includes built-in monitoring capabilities defined in `ghl_real_estate_ai/api/main.py`.
 
 ### Performance Middleware
 
-Every request is tracked with headers (see `ghl_real_estate_ai/api/main.py`):
+Every request is tracked with response headers:
 
 - `X-Process-Time`: Processing duration in seconds
 - `X-Performance`: Tier classification (`excellent` <100ms, `good` <300ms, `acceptable` <500ms, `slow` >500ms)
 - `X-Avg-Response-Time`: Rolling average response time
+- `X-Content-Optimized`: Whether response was optimized
+- `X-Request-ID`: Unique request identifier for tracing
+
+### Error Handler Middleware
+
+The `BulletproofErrorHandler` (`ghl_real_estate_ai/api/middleware/error_handler.py`) provides:
+
+- Per-endpoint circuit breakers (5 failures = 60s open)
+- Error classification by category (http, timeout, connection, auth, claude_api, ghl_api, database, system)
+- Correlation ID tracking via `X-Correlation-ID` header
+- Automatic slow request logging (>2s info, >5s warning, >10s error)
 
 ### Slow Request Logging
 
@@ -400,7 +411,7 @@ Requests exceeding thresholds are automatically logged:
 
 ### System Health Monitor
 
-The `system_health_monitor` service runs continuous background checks on:
+The `system_health_monitor` service (`ghl_real_estate_ai/services/system_health_monitor.py`) runs continuous background checks on:
 
 - Database connectivity
 - Redis connectivity
@@ -416,6 +427,16 @@ The `error_monitoring_service` provides:
 - Top error type tracking
 - Dashboard API at `GET /api/error-monitoring/dashboard`
 
+### Bot Performance Monitor
+
+The `performance_monitor` (`ghl_real_estate_ai/services/performance_monitor.py`) exposes:
+
+- `GET /api/performance/summary` -- Comprehensive Jorge Enterprise summary
+- `GET /api/performance/jorge` -- Jorge Seller Bot metrics
+- `GET /api/performance/lead-automation` -- Lead Bot automation metrics
+- `GET /api/performance/websocket` -- WebSocket coordination metrics
+- `GET /api/performance/health` -- System health report
+
 ### WebSocket Performance
 
 Monitor WebSocket health at `GET /api/websocket/performance`:
@@ -425,6 +446,19 @@ Monitor WebSocket health at `GET /api/websocket/performance`:
 - Connection latency
 - Reconnection rate
 
+### Stream D Performance Baselines
+
+Reference baselines from `docs/PERFORMANCE_BASELINE.md`:
+
+| Metric | Warning | Critical | Measured |
+|--------|---------|----------|----------|
+| API response p95 | >150ms | >300ms | 14.67ms |
+| Bot response p95 | >400ms | >600ms | 179ms (buyer), 139ms (seller) |
+| Error rate | >3% | >5% | 0.00% |
+| Cache hit rate | <70% | <60% | >70% |
+| Memory usage | >1.5GB | >2GB | 294 MB peak |
+| CPU utilization | >70% | >85% | 75% avg |
+
 ---
 
-**Version**: 1.0 | **Last Updated**: February 2, 2026
+**Version**: 1.1 | **Last Updated**: February 2, 2026

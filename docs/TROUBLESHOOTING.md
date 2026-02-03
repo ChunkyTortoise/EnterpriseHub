@@ -424,4 +424,44 @@ kubectl top nodes
 
 ---
 
-**Version**: 1.0 | **Last Updated**: February 2, 2026
+## Key Files for Debugging
+
+| File | Purpose |
+|------|---------|
+| `ghl_real_estate_ai/api/main.py` | FastAPI app entry point, middleware stack, router registration |
+| `ghl_real_estate_ai/api/middleware/error_handler.py` | Error classification, circuit breakers |
+| `ghl_real_estate_ai/api/middleware/rate_limiter.py` | Rate limiting, IP blocking, threat detection |
+| `ghl_real_estate_ai/api/middleware/jwt_auth.py` | JWT verification, token refresh |
+| `ghl_real_estate_ai/ghl_utils/config.py` | All settings (Pydantic-based, env vars) |
+| `ghl_real_estate_ai/config/feature_config.py` | Jorge bot feature flag config |
+| `ghl_real_estate_ai/api/routes/bot_management.py` | Bot management API (all bot endpoints) |
+| `ghl_real_estate_ai/api/routes/health.py` | Health check endpoints |
+| `ghl_real_estate_ai/services/system_health_monitor.py` | Background health monitoring |
+
+---
+
+## Quick Health Check Commands
+
+```bash
+# Basic health (no auth required)
+curl http://localhost:8000/api/health/
+
+# Bot system health
+curl http://localhost:8000/api/bots/health
+
+# Performance summary
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/performance/summary
+
+# System health report
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/performance/health
+
+# Error monitoring dashboard
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/error-monitoring/dashboard
+
+# Run Stream D validation suite
+pytest tests/load/ tests/performance/test_response_times.py tests/integration/test_full_jorge_flow.py -v
+```
+
+---
+
+**Version**: 1.1 | **Last Updated**: February 2, 2026

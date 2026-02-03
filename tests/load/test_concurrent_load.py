@@ -205,6 +205,12 @@ class LoadTestMetrics:
             print(f"  ---")
             print(f"  Errors:           {rl['error_count']}")
             print(f"  Status Codes:     {rl['status_code_distribution']}")
+        errs = report.get("errors", {})
+        if errs.get("samples"):
+            print(f"  ---")
+            print(f"  Error Samples ({errs['unique']} unique):")
+            for sample in errs["samples"][:5]:
+                print(f"    - {sample}")
         print(f"{'=' * 70}\n")
 
 
@@ -274,10 +280,10 @@ def _get_endpoint_rotation() -> List[Dict[str, Any]]:
             "method": "POST",
             "path": "/api/bots/jorge-seller-bot/chat",
             "json": {
-                "message": "I want to sell my 4BR house in Rancho Cucamonga",
+                "content": "I want to sell my 4BR house in Rancho Cucamonga",
                 "conversationId": None,
-                "contactId": f"load_test_{uuid.uuid4().hex[:8]}",
-                "locationId": "3xt4qayAh35BlDLaUv7P",
+                "leadId": f"load_test_{uuid.uuid4().hex[:8]}",
+                "leadName": "Load Test Lead",
             },
         },
         {"method": "GET", "path": "/api/bots/jorge-seller-bot/status", "json": None},
@@ -387,19 +393,35 @@ def _build_seller_bot_patches():
     """
     Build mock patches for JorgeSellerBot dependencies.
     """
+    # Build a realistic intent profile that matches what analyze_intent expects:
+    # profile.frs.total_score, profile.pcs.total_score, profile.frs.classification
+    mock_frs = MagicMock()
+    mock_frs.total_score = 72.0
+    mock_frs.classification = "Warm Lead"
+
+    mock_pcs = MagicMock()
+    mock_pcs.total_score = 68.0
+
+    mock_profile = MagicMock()
+    mock_profile.frs = mock_frs
+    mock_profile.pcs = mock_pcs
+    mock_profile.frs_score = 72.0
+    mock_profile.pcs_score = 68.0
+    mock_profile.overall_score = 70.0
+    mock_profile.temperature = "warm"
+    mock_profile.next_step = "assess_property"
+
     mock_intent_decoder = MagicMock()
-    mock_intent_decoder.score_lead = MagicMock(
-        return_value=MagicMock(
-            frs_score=72.0,
-            pcs_score=68.0,
-            overall_score=70.0,
-            temperature="warm",
-            next_step="assess_property",
-        )
-    )
+    mock_intent_decoder.analyze_lead = MagicMock(return_value=mock_profile)
+    mock_intent_decoder.score_lead = MagicMock(return_value=mock_profile)
 
     mock_claude = MagicMock()
     mock_claude.generate_response = AsyncMock(
+        return_value={
+            "content": "I'd be happy to help you understand your property's value!",
+        }
+    )
+    mock_claude.analyze_with_context = AsyncMock(
         return_value={
             "content": "I'd be happy to help you understand your property's value!",
         }
@@ -409,6 +431,7 @@ def _build_seller_bot_patches():
     mock_event_publisher.publish_bot_status_update = AsyncMock()
     mock_event_publisher.publish_conversation_update = AsyncMock()
     mock_event_publisher.publish_qualification_complete = AsyncMock()
+    mock_event_publisher.publish_jorge_qualification_progress = AsyncMock()
 
     mock_ml_analytics = MagicMock()
     mock_ml_analytics.predict_churn_risk = MagicMock(
@@ -456,6 +479,32 @@ def _make_seller_conversation_history() -> List[Dict[str, Any]]:
         {"role": "user", "content": messages[i]}
         for i in range(idx + 1)
     ]
+
+
+def _make_seller_initial_state(lead_id: str, lead_name: str) -> Dict[str, Any]:
+    """Build a complete JorgeSellerState for workflow invocation."""
+    conversation = _make_seller_conversation_history()
+    return {
+        "lead_id": lead_id,
+        "lead_name": lead_name,
+        "property_address": "1234 Haven Ave, Rancho Cucamonga, CA 91730",
+        "conversation_history": conversation,
+        "intent_profile": None,
+        "current_tone": "direct",
+        "stall_detected": False,
+        "detected_stall_type": None,
+        "next_action": "respond",
+        "response_content": "",
+        "psychological_commitment": 50.0,
+        "is_qualified": False,
+        "current_journey_stage": "qualification",
+        "follow_up_count": 0,
+        "last_action_timestamp": None,
+        # Intelligence fields (Phase 3.3)
+        "intelligence_context": None,
+        "intelligence_performance_ms": 0.0,
+        "intelligence_available": False,
+    }
 
 
 # ============================================================================
@@ -792,23 +841,14 @@ class TestBotConcurrentProcessing:
             )
 
             async def invoke_seller_bot(invocation_id: int):
-                conversation = _make_seller_conversation_history()
                 lead_id = f"seller_load_{invocation_id}_{uuid.uuid4().hex[:6]}"
                 await asyncio.sleep(random.uniform(0.005, 0.020))
                 start = time.time()
                 try:
-                    # Build initial state and invoke the workflow directly
-                    initial_state = {
-                        "lead_id": lead_id,
-                        "contact_id": lead_id,
-                        "message": conversation[-1]["content"],
-                        "conversation_history": conversation,
-                        "lead_info": {
-                            "contact_id": lead_id,
-                            "name": f"Test Seller {invocation_id}",
-                            "location_id": "3xt4qayAh35BlDLaUv7P",
-                        },
-                    }
+                    initial_state = _make_seller_initial_state(
+                        lead_id=lead_id,
+                        lead_name=f"Test Seller {invocation_id}",
+                    )
                     result = await bot.workflow.ainvoke(initial_state)
                     elapsed_ms = (time.time() - start) * 1000
                     metrics.record_request(
@@ -902,22 +942,14 @@ class TestBotConcurrentProcessing:
                     )
 
             async def invoke_seller(idx: int):
-                conversation = _make_seller_conversation_history()
                 lead_id = f"mixed_seller_{idx}_{uuid.uuid4().hex[:6]}"
                 await asyncio.sleep(random.uniform(0.005, 0.020))
                 start = time.time()
                 try:
-                    initial_state = {
-                        "lead_id": lead_id,
-                        "contact_id": lead_id,
-                        "message": conversation[-1]["content"],
-                        "conversation_history": conversation,
-                        "lead_info": {
-                            "contact_id": lead_id,
-                            "name": f"Mixed Seller {idx}",
-                            "location_id": "3xt4qayAh35BlDLaUv7P",
-                        },
-                    }
+                    initial_state = _make_seller_initial_state(
+                        lead_id=lead_id,
+                        lead_name=f"Mixed Seller {idx}",
+                    )
                     result = await seller_bot.workflow.ainvoke(initial_state)
                     elapsed_ms = (time.time() - start) * 1000
                     metrics.record_request(
@@ -1103,10 +1135,16 @@ class TestResourceUtilization:
                 print(f"  Std Dev:          {statistics.stdev(cpu_samples):.1f}%")
             print(f"------------------\n")
 
-            # Average CPU should stay under 80%
-            assert avg_cpu < 80, (
-                f"Average CPU utilization {avg_cpu:.1f}% exceeds 80% threshold"
-            )
+            # Need at least 3 samples for a meaningful CPU measurement;
+            # with mocked I/O the load test can finish faster than the
+            # 200ms sampling interval, producing unreliable data.
+            if len(cpu_samples) >= 3:
+                assert avg_cpu < 80, (
+                    f"Average CPU utilization {avg_cpu:.1f}% exceeds 80% threshold"
+                )
+            else:
+                print(f"  WARNING: Only {len(cpu_samples)} CPU sample(s) collected; "
+                      f"skipping assertion (test completed too quickly)")
         else:
             # If no samples were collected (extremely fast test), skip assertion
             print("  WARNING: No CPU samples collected (test completed too quickly)")
