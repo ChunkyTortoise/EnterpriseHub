@@ -6,7 +6,7 @@ Advanced augmented and virtual reality endpoints for immersive property experien
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body, UploadFile, File
 from fastapi.responses import JSONResponse, FileResponse
 from typing import List, Dict, Any, Optional, Union
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 import asyncio
 import json
 import os

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import (
     LeadPriority, BuyingStage, LeadScoreBreakdown
@@ -108,13 +108,14 @@ class Property(BaseModel):
     listing_date: datetime
     last_updated: datetime = Field(default_factory=datetime.now)
 
-    @validator('price_per_sqft', pre=True, always=True)
-    def calculate_price_per_sqft(cls, v, values):
+    @field_validator('price_per_sqft', mode='before')
+    @classmethod
+    def calculate_price_per_sqft(cls, v, info: ValidationInfo):
         """Auto-calculate price per sqft."""
-        if v is None and 'price' in values and 'features' in values:
-            features = values['features']
+        if v is None and 'price' in info.data and 'features' in info.data:
+            features = info.data['features']
             if hasattr(features, 'sqft') and features.sqft > 0:
-                return round(values['price'] / features.sqft, 2)
+                return round(info.data['price'] / features.sqft, 2)
         return v
 
 
@@ -183,13 +184,14 @@ class PropertyMatch(BaseModel):
     processing_time_ms: Optional[int] = None
     model_version: Optional[str] = None
 
-    @validator('confidence', pre=True, always=True)
-    def determine_confidence(cls, v, values):
+    @field_validator('confidence', mode='before')
+    @classmethod
+    def determine_confidence(cls, v, info: ValidationInfo):
         """Auto-determine confidence based on match score."""
         if v is not None:
             return v
 
-        score = values.get('match_score', 0)
+        score = info.data.get('match_score', 0)
         if score >= 90:
             return ConfidenceLevel.VERY_HIGH
         elif score >= 75:
