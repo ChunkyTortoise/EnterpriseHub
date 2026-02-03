@@ -92,6 +92,129 @@ registerRoute(
   })
 )
 
+// ========================================================================
+// Week 5-8 ROI Enhancement API Caching
+// ========================================================================
+
+// Market intelligence + commission forecast — field agents need this offline
+registerRoute(
+  ({ request }) =>
+    request.url.includes('/api/v1/rc-market') ||
+    request.url.includes('/api/v1/commission-forecast'),
+  new NetworkFirst({
+    cacheName: 'jorge-market-intelligence',
+    networkTimeoutSeconds: 5,
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 100,
+        maxAgeSeconds: 4 * 60 * 60, // 4 hours
+        purgeOnQuotaError: true,
+      }),
+    ],
+  })
+)
+
+// Propensity scoring + SHAP explanations — cache for offline lead review
+registerRoute(
+  ({ request }) =>
+    request.url.includes('/api/v1/propensity') &&
+    request.method === 'GET',
+  new NetworkFirst({
+    cacheName: 'jorge-propensity-cache',
+    networkTimeoutSeconds: 5,
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 200,
+        maxAgeSeconds: 2 * 60 * 60, // 2 hours
+      }),
+    ],
+  })
+)
+
+// Sentiment + behavioral analysis — read-heavy, cache aggressively
+registerRoute(
+  ({ request }) =>
+    (request.url.includes('/api/v1/sentiment') ||
+     request.url.includes('/api/v1/behavioral')) &&
+    request.method === 'GET',
+  new NetworkFirst({
+    cacheName: 'jorge-sentiment-behavioral',
+    networkTimeoutSeconds: 3,
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 100,
+        maxAgeSeconds: 1 * 60 * 60, // 1 hour
+      }),
+    ],
+  })
+)
+
+// Export engine — cache generated reports for offline viewing
+registerRoute(
+  ({ request }) => request.url.includes('/api/v1/exports'),
+  new NetworkFirst({
+    cacheName: 'jorge-export-reports',
+    networkTimeoutSeconds: 10,
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 24 * 60 * 60, // 24 hours
+      }),
+    ],
+  })
+)
+
+// Background sync queue for Week 5-8 POST operations
+const fieldOpsQueue = new Queue('field-ops-queue', {
+  onSync: async ({ queue }) => {
+    console.log('Syncing field operations queue')
+    let entry
+    while ((entry = await queue.shiftRequest())) {
+      try {
+        await fetch(entry.request)
+        console.log('Field operation synced:', entry.request.url)
+      } catch (error) {
+        console.error('Field operation sync failed:', error)
+        await queue.unshiftRequest(entry)
+        throw error
+      }
+    }
+  }
+})
+
+// Queue Week 5-8 POST requests when offline
+registerRoute(
+  ({ request }) =>
+    request.method === 'POST' &&
+    (request.url.includes('/api/v1/propensity/score') ||
+     request.url.includes('/api/v1/propensity/explain') ||
+     request.url.includes('/api/v1/sentiment/analyze') ||
+     request.url.includes('/api/v1/behavioral/analyze') ||
+     request.url.includes('/api/v1/compliance-enforcement/enforce') ||
+     request.url.includes('/api/v1/channels/send')),
+  async ({ request }) => {
+    try {
+      const response = await fetch(request.clone())
+      return response
+    } catch (error) {
+      console.log('Field ops request failed, queuing for background sync')
+      await fieldOpsQueue.pushRequest({ request: request.clone() })
+
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Request queued for sync when connection is restored',
+        queued: true,
+        offline: true,
+        timestamp: Date.now()
+      }), {
+        status: 202,
+        statusText: 'Queued for Background Sync',
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+  }
+)
+
 // Bot conversation caching with background sync
 registerRoute(
   ({ request }) => request.url.includes('/api/bots') && request.method === 'POST',
@@ -269,6 +392,25 @@ self.addEventListener('push', (event) => {
       options.body = data.body || 'System notification'
       options.tag = 'system-alert'
       break
+
+    case 'market_alert':
+      title = '📊 Market Alert'
+      options.body = `${data.neighborhood}: ${data.alertMessage || 'Market condition change detected'}`
+      options.tag = 'market-alert'
+      break
+
+    case 'compliance_block':
+      title = '🛡️ Compliance Alert'
+      options.body = `Message blocked: ${data.violationType || 'Compliance violation detected'}`
+      options.tag = 'compliance-block'
+      options.requireInteraction = true
+      break
+
+    case 'propensity_update':
+      title = '🎯 Lead Score Update'
+      options.body = `${data.leadName}: Score changed to ${data.temperature} (${data.probability}%)`
+      options.tag = 'propensity-update'
+      break
   }
 
   event.waitUntil(
@@ -332,6 +474,8 @@ self.addEventListener('sync', (event) => {
     event.waitUntil(doPropertyAnalysisSync())
   } else if (event.tag === 'lead-capture-sync') {
     event.waitUntil(doLeadCaptureSync())
+  } else if (event.tag === 'field-ops-sync') {
+    event.waitUntil(doFieldOpsSync())
   }
 })
 
@@ -401,10 +545,42 @@ async function doLeadCaptureSync() {
   }
 }
 
+async function doFieldOpsSync() {
+  console.log('Performing field operations background sync')
+
+  try {
+    const db = await openDB('jorge-offline-queue', 2)
+    const tx = db.transaction('field-ops', 'readwrite')
+    const store = tx.objectStore('field-ops')
+    const requests = await store.getAll()
+
+    for (const request of requests) {
+      try {
+        const response = await fetch(request.url, {
+          method: request.method,
+          headers: request.headers,
+          body: request.body
+        })
+
+        if (response.ok) {
+          console.log('Synced field operation:', request.id)
+          await store.delete(request.id)
+        }
+      } catch (error) {
+        console.error('Failed to sync field operation:', request.id, error)
+      }
+    }
+
+    await tx.complete
+  } catch (error) {
+    console.error('Field operations sync failed:', error)
+  }
+}
+
 // Simple IndexedDB helper
 async function openDB(name, version) {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(name, version)
+    const request = indexedDB.open(name, version || 2)
 
     request.onerror = () => reject(request.error)
     request.onsuccess = () => resolve(request.result)
@@ -418,6 +594,28 @@ async function openDB(name, version) {
 
       if (!db.objectStoreNames.contains('lead-capture')) {
         db.createObjectStore('lead-capture', { keyPath: 'id', autoIncrement: true })
+      }
+
+      // Week 5-8 field operations stores
+      if (!db.objectStoreNames.contains('field-ops')) {
+        db.createObjectStore('field-ops', { keyPath: 'id', autoIncrement: true })
+      }
+
+      if (!db.objectStoreNames.contains('market-snapshots')) {
+        const store = db.createObjectStore('market-snapshots', { keyPath: 'neighborhood' })
+        store.createIndex('timestamp', 'timestamp', { unique: false })
+      }
+
+      if (!db.objectStoreNames.contains('propensity-scores')) {
+        const store = db.createObjectStore('propensity-scores', { keyPath: 'contact_id' })
+        store.createIndex('temperature', 'temperature', { unique: false })
+        store.createIndex('timestamp', 'timestamp', { unique: false })
+      }
+
+      if (!db.objectStoreNames.contains('compliance-results')) {
+        const store = db.createObjectStore('compliance-results', { keyPath: 'id', autoIncrement: true })
+        store.createIndex('contact_id', 'contact_id', { unique: false })
+        store.createIndex('status', 'status', { unique: false })
       }
     }
   })

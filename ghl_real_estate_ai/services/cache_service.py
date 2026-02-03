@@ -56,11 +56,17 @@ class MemoryCache(AbstractCache):
         self._max_size = max_size
         self._max_memory_bytes = max_memory_mb * 1024 * 1024
         self._current_memory = 0
-        self._memory_lock = asyncio.Lock()
+        self._memory_lock: Optional[asyncio.Lock] = None
         logger.info(f"Initialized MemoryCache (max_size={max_size}, max_memory={max_memory_mb}MB)")
+
+    def _get_lock(self) -> asyncio.Lock:
+        """Lazily create lock bound to current event loop to avoid cross-loop errors."""
+        if self._memory_lock is None:
+            self._memory_lock = asyncio.Lock()
+        return self._memory_lock
         
     async def get(self, key: str) -> Optional[Any]:
-        async with self._memory_lock:
+        async with self._get_lock():
             if key not in self._cache:
                 return None
 
@@ -76,7 +82,7 @@ class MemoryCache(AbstractCache):
             return self._cache[key]
         
     async def set(self, key: str, value: Any, ttl: int = 300) -> bool:
-        async with self._memory_lock:
+        async with self._get_lock():
             try:
                 # Estimate memory usage
                 import sys
@@ -110,11 +116,11 @@ class MemoryCache(AbstractCache):
                 return False
         
     async def delete(self, key: str) -> bool:
-        async with self._memory_lock:
+        async with self._get_lock():
             return await self._remove_item_internal(key)
         
     async def clear(self) -> bool:
-        async with self._memory_lock:
+        async with self._get_lock():
             self._cache.clear()
             self._expiry.clear()
             self._access_order.clear()
@@ -159,9 +165,14 @@ class FileCache(AbstractCache):
     def __init__(self, cache_dir: str = ".cache"):
         self.cache_dir = cache_dir
         os.makedirs(cache_dir, exist_ok=True)
-        # Fix race condition: Initialize lock as instance attribute
-        self._file_lock = asyncio.Lock()
+        self._file_lock: Optional[asyncio.Lock] = None
         logger.info(f"Initialized FileCache at {cache_dir}")
+
+    def _get_lock(self) -> asyncio.Lock:
+        """Lazily create lock bound to current event loop to avoid cross-loop errors."""
+        if self._file_lock is None:
+            self._file_lock = asyncio.Lock()
+        return self._file_lock
         
     def _get_path(self, key: str) -> str:
         # Sanitize key to be safe for filenames
@@ -176,7 +187,7 @@ class FileCache(AbstractCache):
             return None
             
         try:
-            async with self._file_lock:
+            async with self._get_lock():
                 with open(path, 'rb') as f:
                     data = pickle.load(f)
                     
@@ -196,7 +207,7 @@ class FileCache(AbstractCache):
             'expiry': time.time() + ttl
         }
         try:
-            async with self._file_lock:
+            async with self._get_lock():
                 with open(path, 'wb') as f:
                     pickle.dump(data, f)
             return True
@@ -1046,9 +1057,22 @@ class TenantScopedCache:
         return await self.cache.exists(self._scope_key(key))
 
 
-# Global accessor with enhanced functionality
+# Global accessor — singleton to avoid redundant initialization on startup
+_CACHE_SERVICE_INSTANCE: Optional[CacheService] = None
+
+
 def get_cache_service() -> CacheService:
-    return CacheService()
+    global _CACHE_SERVICE_INSTANCE
+    if _CACHE_SERVICE_INSTANCE is None:
+        _CACHE_SERVICE_INSTANCE = CacheService()
+    return _CACHE_SERVICE_INSTANCE
+
+
+def reset_cache_service() -> None:
+    """Reset the cache singleton. Used in tests to avoid cross-loop lock errors."""
+    global _CACHE_SERVICE_INSTANCE
+    _CACHE_SERVICE_INSTANCE = None
+    CacheService._instance = None
 
 def get_tenant_cache(location_id: str) -> TenantScopedCache:
     """Factory method for getting a tenant-isolated cache."""

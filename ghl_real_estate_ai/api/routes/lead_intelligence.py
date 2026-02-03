@@ -13,11 +13,39 @@ from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
 
 router = APIRouter(prefix="/intelligence", tags=["intelligence"])
 
-# Initialize Services
-scorer = PredictiveLeadScorer()
-memory = MemoryService()
-reengage = ReengagementEngine()
-intent_decoder = LeadIntentDecoder()
+# Lazy service singletons — defer initialization until first request
+_scorer = None
+_memory = None
+_reengage = None
+_intent_decoder = None
+
+
+def _get_scorer():
+    global _scorer
+    if _scorer is None:
+        _scorer = PredictiveLeadScorer()
+    return _scorer
+
+
+def _get_memory():
+    global _memory
+    if _memory is None:
+        _memory = MemoryService()
+    return _memory
+
+
+def _get_reengage():
+    global _reengage
+    if _reengage is None:
+        _reengage = ReengagementEngine()
+    return _reengage
+
+
+def _get_intent_decoder():
+    global _intent_decoder
+    if _intent_decoder is None:
+        _intent_decoder = LeadIntentDecoder()
+    return _intent_decoder
 
 @router.post("/analyze-intent", response_model=LeadIntentProfile)
 async def analyze_lead_intent(
@@ -32,17 +60,17 @@ async def analyze_lead_intent(
     if not contact_id:
         raise HTTPException(status_code=400, detail="contact_id is required")
     
-    # Get history from memory or payload
+    # Get history from _get_memory() or payload
     history = payload.get("conversation_history")
     if not history:
-        context = await memory.get_context(contact_id)
+        context = await _get_memory().get_context(contact_id)
         history = context.get("conversation_history", [])
         
     if not history:
         # Return empty/neutral profile if no history
-        return intent_decoder.analyze_lead(contact_id, [])
+        return _get_intent_decoder().analyze_lead(contact_id, [])
         
-    profile = intent_decoder.analyze_lead(contact_id, history)
+    profile = _get_intent_decoder().analyze_lead(contact_id, history)
     return profile
 
 @router.post("/score")
@@ -58,8 +86,8 @@ async def score_lead_intelligence(
     if not contact_id:
         raise HTTPException(status_code=400, detail="contact_id is required")
         
-    # Retrieve context from memory
-    context = await memory.get_context(contact_id)
+    # Retrieve context from _get_memory()
+    context = await _get_memory().get_context(contact_id)
     if not context.get("conversation_history"):
         # If no history, we can't do predictive scoring yet
         return {
@@ -68,7 +96,7 @@ async def score_lead_intelligence(
         }
         
     # Calculate Predictive Score
-    prediction = scorer.predict_conversion(context)
+    prediction = _get_scorer().predict_conversion(context)
     
     return {
         "success": True,
@@ -87,9 +115,9 @@ async def trigger_agentic_recovery(
     contact_id = payload.get("contact_id")
     contact_name = payload.get("contact_name", "there")
     
-    context = await memory.get_context(contact_id)
+    context = await _get_memory().get_context(contact_id)
     
-    message = await reengage.agentic_reengagement(contact_name, context)
+    message = await _get_reengage().agentic_reengagement(contact_name, context)
     
     return {
         "success": True,

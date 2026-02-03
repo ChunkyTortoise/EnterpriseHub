@@ -53,7 +53,17 @@ logger = logging.getLogger(__name__)
 
 def pytest_configure(config):
     """Configure pytest with custom markers and options"""
-    
+
+    # Set required env vars before module collection to prevent import-time errors
+    _test_env_defaults = {
+        'JWT_SECRET_KEY': 'test-jwt-secret-key-for-testing-only',
+        'STRIPE_SECRET_KEY': 'sk_test_fake_key_for_testing',
+        'STRIPE_WEBHOOK_SECRET': 'whsec_test_fake_secret',
+    }
+    for key, value in _test_env_defaults.items():
+        if key not in os.environ:
+            os.environ[key] = value
+
     # Register custom markers
     config.addinivalue_line("markers", "unit: Unit tests - fast, isolated tests")
     config.addinivalue_line("markers", "integration: Integration tests - cross-service tests")
@@ -342,12 +352,15 @@ def security_test_config():
 @pytest_asyncio.fixture(autouse=True)
 async def cleanup_test_data():
     """Automatically clean up test data after each test"""
+    # Reset cache singleton before each test to avoid cross-loop lock errors
+    from ghl_real_estate_ai.services.cache_service import reset_cache_service
+    reset_cache_service()
+
     yield
-    
-    # Cleanup operations would go here
-    # For mocked services, this is handled automatically
-    # For real services, we would clean up test data
-    
+
+    # Reset again after test to ensure clean state
+    reset_cache_service()
+
     logger.debug("Test data cleanup completed")
 
 
@@ -421,7 +434,11 @@ pytest_plugins = ['pytest_asyncio']
 @pytest.fixture(scope="session")
 def event_loop_policy():
     """Set event loop policy for async tests"""
-    return asyncio.DefaultEventLoopPolicy()
+    try:
+        return asyncio.DefaultEventLoopPolicy()
+    except DeprecationWarning:
+        # Python 3.16+ removes DefaultEventLoopPolicy
+        return None
 
 
 # Test report generation hooks removed to avoid dependency on pytest-html

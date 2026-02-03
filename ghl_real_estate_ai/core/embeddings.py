@@ -24,19 +24,23 @@ class EmbeddingModel:
 
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
         """
-        Initialize the embedding model.
+        Initialize the embedding model (lazy-loaded on first use).
 
         Args:
             model_name: Name of the sentence-transformers model to use
         """
         self.model_name = model_name
-        if SENTENCE_TRANSFORMERS_AVAILABLE:
-            logger.info(f"Loading embedding model: {model_name}")
-            self.model = SentenceTransformer(model_name)
-            logger.info("Embedding model loaded successfully")
-        else:
-            self.model = None
+        self._model = None
+        if not SENTENCE_TRANSFORMERS_AVAILABLE:
             logger.warning("Embedding model initialized in DUMMY mode")
+
+    @property
+    def model(self):
+        if self._model is None and SENTENCE_TRANSFORMERS_AVAILABLE:
+            logger.info(f"Loading embedding model: {self.model_name}")
+            self._model = SentenceTransformer(self.model_name)
+            logger.info("Embedding model loaded successfully")
+        return self._model
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """

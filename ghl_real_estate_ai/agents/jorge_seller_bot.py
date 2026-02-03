@@ -729,12 +729,12 @@ class JorgeSellerBot:
         )
 
         friendly_responses = {
-            "thinking": "I completely understand you need time to consider this important decision. What specific aspects would be most helpful for me to clarify for you? I'm here to provide any information that might be useful.",
-            "get_back": "No problem at all - everyone's timeline is different. I'm happy to provide information whenever you're ready. Would it be helpful if I shared some resources about the current market conditions?",
-            "zestimate": "Great question about online estimates! Those algorithms can't see the unique features and updates in your home. I'd be happy to show you what similar homes in your neighborhood have actually sold for recently.",
-            "agent": "That's wonderful that you're working with someone! I'd be glad to share some market insights that might be helpful for your team to consider. Would that be useful for you?",
-            "price": "I understand pricing can feel overwhelming. Let me share some recent sales data that might help you see the full picture and make the best decision for your situation.",
-            "timeline": "Timing is so important, and I want to help you find what works best for you. What factors are most important in your timeline?"
+            "thinking": "Totally get it—big decision. What's the main thing holding you back? Happy to pull numbers if that helps.",
+            "get_back": "No rush! Has anything changed with your timeline? I can send fresh comps if useful.",
+            "zestimate": "Zillow can't walk through your house! Want to see what neighbors actually sold for? Real numbers might surprise you.",
+            "agent": "Great you have someone! Happy to share comps from your area—could be useful for your agent too.",
+            "price": "Pricing is tricky. Want me to pull recent sales nearby? Real data beats guessing every time.",
+            "timeline": "Makes sense. What's driving your timeline—market, a move, or something else?"
         }
 
         tone_instructions = {
@@ -1927,15 +1927,30 @@ class JorgeSellerBot:
 
 def get_jorge_seller_bot(enhancement_level: str = "standard", tenant_id: str = "jorge_seller") -> JorgeSellerBot:
     """
-    Factory function to get Jorge Seller Bot with specified enhancement level
+    Factory function to get Jorge Seller Bot with env-based feature configuration.
+
+    Loads feature flags from environment variables via load_feature_config_from_env(),
+    then bridges them to JorgeFeatureConfig kwargs. Falls back to factory presets
+    if the feature config module is unavailable.
 
     Args:
-        enhancement_level: "standard", "progressive", or "enterprise"
+        enhancement_level: "standard", "progressive", or "enterprise" (used as fallback)
         tenant_id: Tenant identifier
     """
-    if enhancement_level == "progressive":
-        return JorgeSellerBot.create_progressive_jorge(tenant_id)
-    elif enhancement_level == "enterprise":
-        return JorgeSellerBot.create_enterprise_jorge(tenant_id)
-    else:
-        return JorgeSellerBot.create_standard_jorge(tenant_id)
+    try:
+        from ghl_real_estate_ai.config.feature_config import (
+            load_feature_config_from_env,
+            feature_config_to_jorge_kwargs,
+        )
+        feature_cfg = load_feature_config_from_env()
+        jorge_kwargs = feature_config_to_jorge_kwargs(feature_cfg)
+        config = JorgeFeatureConfig(**jorge_kwargs)
+        return JorgeSellerBot(tenant_id=tenant_id, config=config)
+    except ImportError:
+        logger.warning("feature_config module unavailable, falling back to factory presets")
+        if enhancement_level == "progressive":
+            return JorgeSellerBot.create_progressive_jorge(tenant_id)
+        elif enhancement_level == "enterprise":
+            return JorgeSellerBot.create_enterprise_jorge(tenant_id)
+        else:
+            return JorgeSellerBot.create_standard_jorge(tenant_id)

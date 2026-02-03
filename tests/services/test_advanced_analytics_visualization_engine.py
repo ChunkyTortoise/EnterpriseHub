@@ -4,6 +4,7 @@ Comprehensive test suite for analytics and visualization capabilities
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime, timedelta
@@ -24,7 +25,7 @@ except ImportError as e:
 class TestAdvancedAnalyticsVisualizationEngine:
     """Test suite for Advanced Analytics Visualization Engine"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def engine(self):
         """Create engine instance for testing"""
         with patch('ghl_real_estate_ai.services.advanced_analytics_visualization_engine.CacheService'):

@@ -27,7 +27,15 @@ from ghl_real_estate_ai.services.cache_service import CacheService
 
 
 router = APIRouter(prefix="/api/v1/market-intelligence-phase7", tags=["Phase 7 Market Intelligence"])
-cache = CacheService()
+# Lazy singleton — defer initialization until first request
+_cache = None
+
+
+def _get_cache():
+    global _cache
+    if _cache is None:
+        _cache = CacheService()
+    return _cache
 
 # Global automation instance
 market_intelligence: Optional[EnhancedMarketIntelligenceAutomation] = None

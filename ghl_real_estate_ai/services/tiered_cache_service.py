@@ -428,7 +428,7 @@ class TieredCacheService:
         self._initialized = True
 
         # Cache layers
-        self.l1_cache: LRUCache = LRUCache(max_size=10000, default_ttl=300)
+        self.l1_cache: LRUCache = LRUCache(max_size=10000, default_ttl=1800)  # 30min for better hit rates
         self.l2_backend = RedisBackend()
 
         # Metrics and monitoring

@@ -11,7 +11,7 @@ from typing import Dict, List, Any, Optional
 import json
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import numpy as np
 import pandas as pd
 
@@ -58,7 +58,8 @@ class ConversationContextRequest(BaseModel):
         default=None, description="Unique lead identifier"
     )
 
-    @validator('created_at')
+    @field_validator('created_at')
+    @classmethod
     def validate_created_at(cls, v):
         if v is None:
             return datetime.now().isoformat()

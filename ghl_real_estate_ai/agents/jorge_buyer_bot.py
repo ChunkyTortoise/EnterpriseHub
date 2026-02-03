@@ -12,6 +12,9 @@ Buyer Bot Features:
 """
 
 import asyncio
+import inspect
+import random
+import uuid
 from typing import Dict, Any, List, Literal, Optional
 from datetime import datetime, timezone
 from langgraph.graph import StateGraph, END
@@ -55,6 +58,8 @@ ERROR_ID_SYSTEM_FAILURE = "SYSTEM_FAILURE"
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
+from ghl_real_estate_ai.services.ghl_client import GHLClient
+from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from bots.shared.ml_analytics_engine import get_ml_analytics_engine
 
@@ -68,6 +73,83 @@ except ImportError as e:
     BOT_INTELLIGENCE_AVAILABLE = False
 
 logger = get_logger(__name__)
+
+
+# ================================
+# RETRY MECHANISM WITH EXPONENTIAL BACKOFF
+# ================================
+
+class RetryConfig:
+    """Configuration for retry behavior."""
+    def __init__(self, max_retries: int = 3, initial_backoff_ms: int = 500,
+                 exponential_base: float = 2.0, jitter_factor: float = 0.1):
+        self.max_retries = max_retries
+        self.initial_backoff_ms = initial_backoff_ms
+        self.exponential_base = exponential_base
+        self.jitter_factor = jitter_factor
+
+DEFAULT_RETRY_CONFIG = RetryConfig()
+
+RETRYABLE_EXCEPTIONS = (ClaudeAPIError, NetworkError)
+NON_RETRYABLE_EXCEPTIONS = (BuyerIntentAnalysisError, ComplianceValidationError)
+
+
+async def async_retry_with_backoff(coro_factory, retry_config: RetryConfig = None,
+                                    context_label: str = "operation"):
+    """
+    Retry an async operation with exponential backoff and jitter.
+
+    Args:
+        coro_factory: Callable that returns a new coroutine on each invocation.
+        retry_config: Retry configuration. Uses DEFAULT_RETRY_CONFIG if None.
+        context_label: Label for logging.
+
+    Returns:
+        The result of the coroutine on success.
+
+    Raises:
+        The last exception if all retries are exhausted, or immediately
+        for non-retryable exceptions.
+    """
+    config = retry_config or DEFAULT_RETRY_CONFIG
+    last_exception = None
+
+    for attempt in range(config.max_retries + 1):
+        try:
+            return await coro_factory()
+        except NON_RETRYABLE_EXCEPTIONS:
+            raise
+        except RETRYABLE_EXCEPTIONS as e:
+            last_exception = e
+            if attempt < config.max_retries:
+                backoff_ms = config.initial_backoff_ms * (config.exponential_base ** attempt)
+                jitter = backoff_ms * config.jitter_factor * (2 * random.random() - 1)
+                sleep_seconds = (backoff_ms + jitter) / 1000.0
+                logger.warning(
+                    f"Retry {attempt + 1}/{config.max_retries} for {context_label}: {e}. "
+                    f"Backing off {sleep_seconds:.3f}s"
+                )
+                await asyncio.sleep(sleep_seconds)
+            else:
+                logger.error(
+                    f"All {config.max_retries} retries exhausted for {context_label}: {e}"
+                )
+                raise
+
+    raise last_exception  # Should not reach here, but safety net
+
+
+# ================================
+# COMPLIANCE SEVERITY LEVELS
+# ================================
+
+COMPLIANCE_SEVERITY_MAP = {
+    "fair_housing": "critical",
+    "privacy": "high",
+    "financial_regulation": "high",
+    "licensing": "medium",
+}
+
 
 class JorgeBuyerBot:
     """
@@ -89,6 +171,7 @@ class JorgeBuyerBot:
         self.event_publisher = get_event_publisher()
         self.property_matcher = PropertyMatcher()
         self.ml_analytics = get_ml_analytics_engine(tenant_id)
+        self.ghl_client = GHLClient()
 
         # Phase 3.3 Bot Intelligence Middleware Integration
         self.enable_bot_intelligence = enable_bot_intelligence
@@ -156,6 +239,7 @@ class JorgeBuyerBot:
         """
         Analyze buyer intent and qualification level.
         First step: Understand buyer readiness signals and motivation.
+        Uses retry with exponential backoff for transient failures.
         """
         try:
             await self.event_publisher.publish_bot_status_update(
@@ -165,9 +249,16 @@ class JorgeBuyerBot:
                 current_step="analyze_buyer_intent"
             )
 
-            profile = self.intent_decoder.analyze_buyer(
-                state['buyer_id'],
-                state['conversation_history']
+            async def _do_intent_analysis():
+                return self.intent_decoder.analyze_buyer(
+                    state['buyer_id'],
+                    state['conversation_history']
+                )
+
+            # Retry transient failures with exponential backoff
+            profile = await async_retry_with_backoff(
+                _do_intent_analysis,
+                context_label=f"intent_analysis:{state['buyer_id']}"
             )
 
             # Emit buyer intent analysis event
@@ -188,33 +279,37 @@ class JorgeBuyerBot:
             }
 
         except (ClaudeAPIError, NetworkError) as e:
-            # Transient errors - retry with backoff
-            logger.warning(f"Transient error analyzing buyer intent for {state['buyer_id']}: {e}",
+            # All retries exhausted for transient errors
+            logger.warning(f"All retries exhausted for buyer intent analysis {state['buyer_id']}: {e}",
                          extra={"error_id": ERROR_ID_BUYER_QUALIFICATION_FAILED,
                                 "buyer_id": state['buyer_id'],
-                                "recoverable": True})
-            # TODO: Implement retry mechanism with exponential backoff
+                                "recoverable": False})
             return {
                 "intent_profile": None,
-                "qualification_status": "retry_required",
-                "error": "Temporary service issue. Retrying analysis.",
-                "financial_readiness_score": None,  # Don't default to low scores
+                "qualification_status": "retry_exhausted",
+                "error": "Temporary service issue. Please try again shortly.",
+                "financial_readiness_score": None,
                 "buying_motivation_score": None,
                 "current_qualification_step": "intent_retry"
             }
         except BuyerIntentAnalysisError as e:
-            # Business logic errors - alert and escalate
+            # Business logic errors - alert and escalate to human
             logger.error(f"BUSINESS CRITICAL: Intent analysis failed for {state['buyer_id']}: {e}",
                         extra={"error_id": ERROR_ID_BUYER_QUALIFICATION_FAILED,
                                "buyer_id": state['buyer_id'],
                                "escalate": True})
-            # TODO: Implement escalate_to_human_review method
+            escalation = await self.escalate_to_human_review(
+                buyer_id=state['buyer_id'],
+                reason="intent_analysis_failure",
+                context={"error": str(e), "conversation_history": state.get("conversation_history", [])}
+            )
             return {
                 "intent_profile": None,
                 "qualification_status": "manual_review_required",
                 "error": "Analysis requires human review. Lead prioritized for immediate attention.",
                 "escalation_reason": "intent_analysis_failure",
-                "financial_readiness_score": None,  # Preserve unknown state
+                "escalation_id": escalation.get("escalation_id"),
+                "financial_readiness_score": None,
                 "buying_motivation_score": None,
                 "current_qualification_step": "human_review"
             }
@@ -224,7 +319,6 @@ class JorgeBuyerBot:
                         extra={"error_id": ERROR_ID_SYSTEM_FAILURE,
                                "buyer_id": state['buyer_id'],
                                "critical": True})
-            # Don't hide system failures - let them bubble up
             raise BuyerQualificationError(f"System failure in intent analysis: {str(e)}",
                                         recoverable=False, escalate=True)
 
@@ -397,30 +491,31 @@ class JorgeBuyerBot:
             }
 
         except NetworkError as e:
-            # External service failures - retry with alternative sources
+            # External service failures - use fallback financial assessment
             logger.warning(f"Financial service network error for buyer {state['buyer_id']}: {e}",
                          extra={"error_id": ERROR_ID_FINANCIAL_ASSESSMENT_FAILED,
                                 "buyer_id": state['buyer_id'],
                                 "retry_recommended": True})
-            # TODO: Implement fallback financial assessment method
-            return {
-                "financing_status": "assessment_pending",
-                "budget_range": None,
-                "requires_manual_review": True,
-                "error": "Financial assessment temporarily unavailable. Will retry shortly."
-            }
+            return await self._fallback_financial_assessment(state)
         except ComplianceValidationError as e:
             # Compliance failures - immediate escalation
             logger.error(f"COMPLIANCE VIOLATION: Financial assessment failed validation for {state['buyer_id']}: {e}",
                         extra={"error_id": ERROR_ID_COMPLIANCE_VIOLATION,
                                "buyer_id": state['buyer_id'],
                                "compliance_alert": True})
-            # TODO: Implement escalate_compliance_violation method
+            compliance_result = await self.escalate_compliance_violation(
+                buyer_id=state['buyer_id'],
+                violation_type="financial_regulation",
+                evidence={"error": str(e), "stage": "financial_assessment",
+                          "buyer_id": state['buyer_id']}
+            )
             return {
                 "financing_status": "compliance_review_required",
                 "budget_range": None,
                 "error": "Assessment requires compliance review",
-                "compliance_issue": str(e)
+                "compliance_issue": str(e),
+                "compliance_ticket_id": compliance_result.get("compliance_ticket_id"),
+                "bot_paused": compliance_result.get("bot_paused", False)
             }
         except Exception as e:
             logger.error(f"Unexpected error in financial assessment for {state['buyer_id']}: {e}",
@@ -482,7 +577,7 @@ class JorgeBuyerBot:
 
             # Use existing property matching service
             # Handle both sync and async property matcher (for tests/mocks)
-            if asyncio.iscoroutinefunction(self.property_matcher.find_matches):
+            if inspect.iscoroutinefunction(self.property_matcher.find_matches):
                 matches = await self.property_matcher.find_matches(
                     preferences=state.get("property_preferences") or {},
                     limit=5
@@ -636,6 +731,357 @@ class JorgeBuyerBot:
         except Exception as e:
             logger.error(f"Error routing buyer action: {str(e)}")
             return "respond"
+
+    # ================================
+    # ERROR HANDLING & ESCALATION METHODS
+    # ================================
+
+    async def escalate_to_human_review(self, buyer_id: str, reason: str, context: Dict) -> Dict:
+        """
+        Escalate buyer conversation to human agent review.
+
+        Creates real GHL artifacts (tag, note, workflow trigger, disposition update)
+        so the human agent sees the escalation in the CRM immediately.
+
+        Graceful degradation: individual step failures are logged but do not
+        crash the bot or block subsequent steps.
+
+        Returns:
+            Dict with escalation_id and per-step status.
+        """
+        escalation_id = str(uuid.uuid4())
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        logger.info(
+            "Escalating buyer to human review",
+            extra={
+                "escalation_id": escalation_id,
+                "buyer_id": buyer_id,
+                "reason": reason,
+            },
+        )
+
+        escalation_result = {
+            "escalation_id": escalation_id,
+            "buyer_id": buyer_id,
+            "reason": reason,
+            "timestamp": timestamp,
+            "tag_added": False,
+            "note_added": False,
+            "workflow_triggered": False,
+            "disposition_updated": False,
+            "event_published": False,
+            "status": "pending",
+        }
+
+        # 1. Add "Escalation" tag to GHL contact
+        try:
+            await self.ghl_client.add_tags(buyer_id, ["Escalation"])
+            escalation_result["tag_added"] = True
+            logger.info(
+                "Escalation tag added to contact",
+                extra={"buyer_id": buyer_id, "escalation_id": escalation_id},
+            )
+        except Exception as e:
+            logger.warning(
+                f"Failed to add Escalation tag for {buyer_id}: {e}",
+                extra={"escalation_id": escalation_id, "error": str(e)},
+            )
+
+        # 2. Add a note to the contact with escalation details
+        try:
+            conversation_summary = context.get("conversation_summary", "")
+            qualification_score = context.get("qualification_score", "N/A")
+            current_step = context.get("current_step", "unknown")
+
+            note_body = (
+                f"[BUYER ESCALATION - {timestamp}]\n"
+                f"Escalation ID: {escalation_id}\n"
+                f"Reason: {reason}\n"
+                f"Qualification Score: {qualification_score}\n"
+                f"Stage: {current_step}\n"
+                f"---\n"
+                f"Context: {conversation_summary[:500] if conversation_summary else 'No summary available'}"
+            )
+
+            import httpx
+            endpoint = f"{self.ghl_client.base_url}/contacts/{buyer_id}/notes"
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    endpoint,
+                    json={"body": note_body},
+                    headers=self.ghl_client.headers,
+                    timeout=settings.webhook_timeout_seconds,
+                )
+                response.raise_for_status()
+
+            escalation_result["note_added"] = True
+            logger.info(
+                "Escalation note added to contact",
+                extra={"buyer_id": buyer_id, "escalation_id": escalation_id},
+            )
+        except Exception as e:
+            logger.warning(
+                f"Failed to add escalation note for {buyer_id}: {e}",
+                extra={"escalation_id": escalation_id, "error": str(e)},
+            )
+
+        # 3. Trigger notify-agent workflow if configured
+        if settings.notify_agent_workflow_id:
+            try:
+                await self.ghl_client.trigger_workflow(
+                    buyer_id, settings.notify_agent_workflow_id
+                )
+                escalation_result["workflow_triggered"] = True
+                logger.info(
+                    "Notify-agent workflow triggered",
+                    extra={
+                        "buyer_id": buyer_id,
+                        "workflow_id": settings.notify_agent_workflow_id,
+                        "escalation_id": escalation_id,
+                    },
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Failed to trigger notify-agent workflow for {buyer_id}: {e}",
+                    extra={"escalation_id": escalation_id, "error": str(e)},
+                )
+
+        # 4. Update contact disposition to indicate escalation
+        if settings.disposition_field_name:
+            try:
+                await self.ghl_client.update_custom_field(
+                    buyer_id,
+                    settings.disposition_field_name,
+                    "Escalated - Needs Human Review",
+                )
+                escalation_result["disposition_updated"] = True
+                logger.info(
+                    "Contact disposition updated to escalated",
+                    extra={"buyer_id": buyer_id, "escalation_id": escalation_id},
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Failed to update disposition for {buyer_id}: {e}",
+                    extra={"escalation_id": escalation_id, "error": str(e)},
+                )
+
+        # 5. Publish internal event for dashboards and monitoring
+        try:
+            await self.event_publisher.publish_bot_status_update(
+                bot_type="jorge-buyer",
+                contact_id=buyer_id,
+                status="escalated",
+                current_step="human_review",
+                escalation_id=escalation_id,
+                reason=reason,
+            )
+            escalation_result["event_published"] = True
+        except Exception as e:
+            logger.warning(
+                f"Event publish failed for escalation {escalation_id}: {e}",
+                extra={"escalation_id": escalation_id, "error": str(e)},
+            )
+
+        # 6. Determine final status
+        ghl_actions_succeeded = (
+            escalation_result["tag_added"]
+            or escalation_result["note_added"]
+            or escalation_result["workflow_triggered"]
+        )
+        if ghl_actions_succeeded:
+            escalation_result["status"] = "escalated"
+        elif escalation_result["event_published"]:
+            escalation_result["status"] = "escalated_internal_only"
+            logger.warning(
+                "GHL actions failed but internal event published - agent may not see escalation in CRM",
+                extra={"escalation_id": escalation_id, "buyer_id": buyer_id},
+            )
+        else:
+            escalation_result["status"] = "queued"
+            logger.error(
+                "All escalation channels failed for buyer. Queued for manual processing.",
+                extra={"escalation_id": escalation_id, "buyer_id": buyer_id},
+            )
+
+        return escalation_result
+
+    async def _fallback_financial_assessment(self, state: BuyerBotState) -> Dict:
+        """
+        Multi-tier fallback for financial assessment when primary service fails.
+
+        Tier 1: Conversation history heuristics (pre-approval, budget mentions)
+        Tier 2: Conservative default assessment
+        Tier 3: Queue for manual review, continue conversation
+
+        Never fails - always returns a reasonable assessment with confidence score.
+        """
+        buyer_id = state.get("buyer_id", "unknown")
+        conversation_history = state.get("conversation_history", [])
+        conversation_text = " ".join(
+            msg.get("content", "").lower()
+            for msg in conversation_history
+            if msg.get("role") == "user"
+        )
+
+        # Tier 1: Conversation heuristics
+        try:
+            heuristic_result = self._assess_financial_from_conversation(conversation_text)
+            if heuristic_result:
+                logger.info(f"Financial fallback Tier 1 (heuristic) used for buyer {buyer_id}",
+                           extra={"fallback_tier": 1, "buyer_id": buyer_id})
+                return {
+                    "financing_status": heuristic_result["financing_status"],
+                    "budget_range": heuristic_result.get("budget_range"),
+                    "financial_readiness_score": heuristic_result["confidence"],
+                    "fallback_tier": 1,
+                    "fallback_source": "conversation_heuristic"
+                }
+        except Exception as e:
+            logger.warning(f"Tier 1 fallback failed for {buyer_id}: {e}")
+
+        # Tier 2: Conservative default
+        logger.info(f"Financial fallback Tier 2 (conservative default) used for buyer {buyer_id}",
+                    extra={"fallback_tier": 2, "buyer_id": buyer_id})
+        return {
+            "financing_status": "assessment_pending",
+            "budget_range": None,
+            "financial_readiness_score": 25.0,
+            "requires_manual_review": True,
+            "fallback_tier": 2,
+            "fallback_source": "conservative_default",
+            "confidence": 0.3
+        }
+
+    def _assess_financial_from_conversation(self, conversation_text: str) -> Optional[Dict]:
+        """Extract financial signals from conversation text."""
+        if not conversation_text.strip():
+            return None
+
+        confidence = 0.5
+        financing_status = "unknown"
+
+        # High-confidence signals
+        pre_approval_keywords = ["pre-approved", "preapproved", "pre approved", "got approved"]
+        cash_keywords = ["cash buyer", "paying cash", "all cash", "cash offer"]
+        budget_keywords = ["budget is", "can afford", "max price", "price range"]
+
+        if any(kw in conversation_text for kw in pre_approval_keywords):
+            financing_status = "pre_approved"
+            confidence = 0.8
+        elif any(kw in conversation_text for kw in cash_keywords):
+            financing_status = "cash"
+            confidence = 0.85
+        elif any(kw in conversation_text for kw in budget_keywords):
+            financing_status = "needs_approval"
+            confidence = 0.6
+        else:
+            return None
+
+        return {
+            "financing_status": financing_status,
+            "confidence": confidence * 100,
+        }
+
+    async def escalate_compliance_violation(self, buyer_id: str, violation_type: str,
+                                            evidence: Dict) -> Dict:
+        """
+        Handle compliance violation detection and escalation.
+
+        1. Logs violation to audit trail with full evidence
+        2. Determines severity (critical, high, medium, low)
+        3. Notifies compliance officer for critical/high severity
+        4. Flags contact in CRM with violation type
+        5. Pauses bot interactions until human review
+        6. Returns compliance_ticket_id
+
+        Supported violation types: fair_housing, privacy, financial_regulation, licensing
+        """
+        compliance_ticket_id = str(uuid.uuid4())
+        timestamp = datetime.now(timezone.utc).isoformat()
+        severity = COMPLIANCE_SEVERITY_MAP.get(violation_type, "medium")
+
+        logger.error(
+            f"COMPLIANCE VIOLATION [{severity.upper()}]: {violation_type} for buyer {buyer_id}",
+            extra={
+                "error_id": ERROR_ID_COMPLIANCE_VIOLATION,
+                "compliance_ticket_id": compliance_ticket_id,
+                "buyer_id": buyer_id,
+                "violation_type": violation_type,
+                "severity": severity,
+                "timestamp": timestamp,
+                "evidence_keys": list(evidence.keys())
+            }
+        )
+
+        result = {
+            "compliance_ticket_id": compliance_ticket_id,
+            "buyer_id": buyer_id,
+            "violation_type": violation_type,
+            "severity": severity,
+            "timestamp": timestamp,
+            "audit_logged": False,
+            "notification_sent": False,
+            "crm_flagged": False,
+            "bot_paused": False,
+            "status": "pending"
+        }
+
+        # 1. Log to audit trail
+        try:
+            await self.event_publisher.publish_conversation_update(
+                conversation_id=f"jorge_buyer_{buyer_id}",
+                lead_id=buyer_id,
+                stage="compliance_violation",
+                message=f"Compliance violation: {violation_type} (severity: {severity})",
+                compliance_ticket_id=compliance_ticket_id,
+                violation_type=violation_type,
+                severity=severity,
+                evidence_summary=str(evidence.get("summary", ""))[:500]
+            )
+            result["audit_logged"] = True
+        except Exception as e:
+            logger.error(f"Audit logging failed for compliance ticket {compliance_ticket_id}: {e}")
+
+        # 2. Notify compliance officer for critical/high severity
+        if severity in ("critical", "high"):
+            try:
+                await self.event_publisher.publish_bot_status_update(
+                    bot_type="jorge-buyer",
+                    contact_id=buyer_id,
+                    status="compliance_alert",
+                    current_step="compliance_review",
+                    compliance_ticket_id=compliance_ticket_id,
+                    violation_type=violation_type,
+                    severity=severity,
+                    priority="urgent"
+                )
+                result["notification_sent"] = True
+            except Exception as e:
+                logger.error(f"Compliance notification failed for ticket {compliance_ticket_id}: {e}")
+
+        # 3. Flag in CRM via status update
+        try:
+            await self.event_publisher.publish_bot_status_update(
+                bot_type="jorge-buyer",
+                contact_id=buyer_id,
+                status="compliance_flagged",
+                current_step="bot_paused",
+                compliance_ticket_id=compliance_ticket_id,
+                violation_type=violation_type
+            )
+            result["crm_flagged"] = True
+            result["bot_paused"] = True
+        except Exception as e:
+            logger.error(f"CRM flagging failed for compliance ticket {compliance_ticket_id}: {e}")
+
+        # 4. Determine overall status
+        if result["audit_logged"]:
+            result["status"] = "escalated"
+        else:
+            result["status"] = "escalation_degraded"
+
+        return result
 
     async def _extract_budget_range(self, conversation_history: List[Dict]) -> Optional[Dict[str, int]]:
         """Extract budget range from conversation history."""

@@ -226,7 +226,6 @@ class TestSMSComplianceService:
         # Mock return values
         mock_cache_service.exists.return_value = False  # Not opted out
         mock_cache_service.get.side_effect = [
-            None,  # No opt-out data
             "2",   # Daily count
             "15",  # Monthly count
             datetime.now().isoformat()  # Last sent timestamp

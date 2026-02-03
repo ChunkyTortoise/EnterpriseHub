@@ -14,7 +14,8 @@ import uuid
 import time
 
 # Backend bot imports (use existing classes)
-from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
+from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot, JorgeFeatureConfig
+from ghl_real_estate_ai.config.feature_config import load_feature_config_from_env, feature_config_to_jorge_kwargs
 from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 
@@ -69,11 +70,14 @@ _lead_bot: Optional[LeadBotWorkflow] = None
 _intent_decoder: Optional[LeadIntentDecoder] = None
 
 def get_jorge_bot() -> JorgeSellerBot:
-    """Get or create Jorge Seller Bot instance"""
+    """Get or create Jorge Seller Bot instance with env-based feature config"""
     global _jorge_bot
     if _jorge_bot is None:
-        _jorge_bot = JorgeSellerBot()
-        logger.info("Initialized Jorge Seller Bot singleton")
+        feature_cfg = load_feature_config_from_env()
+        jorge_kwargs = feature_config_to_jorge_kwargs(feature_cfg)
+        config = JorgeFeatureConfig(**jorge_kwargs)
+        _jorge_bot = JorgeSellerBot(config=config)
+        logger.info(f"Initialized Jorge Seller Bot singleton with feature config: {jorge_kwargs}")
     return _jorge_bot
 
 def get_lead_bot() -> LeadBotWorkflow:
@@ -576,8 +580,11 @@ async def process_seller_message(request: SellerChatRequest):
     try:
         start_time = time.time()
 
-        # Create enterprise Jorge bot with all unified features
-        jorge_bot = JorgeSellerBot.create_enterprise_jorge()
+        # Create enterprise Jorge bot with env-based feature config
+        feature_cfg = load_feature_config_from_env()
+        jorge_kwargs = feature_config_to_jorge_kwargs(feature_cfg)
+        config = JorgeFeatureConfig(**jorge_kwargs)
+        jorge_bot = JorgeSellerBot(config=config)
         logger.info(f"Created enterprise Jorge bot for contact {request.contact_id}")
 
         # Build contact information for bot processing

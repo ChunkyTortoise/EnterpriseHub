@@ -67,10 +67,10 @@ class CustomerProfile:
     priority_level: JourneyPriority
 
     # Preferences and characteristics
-    communication_preference: str  # "sms", "email", "phone", "chat"
-    response_speed_preference: str  # "immediate", "same_day", "flexible"
-    information_depth_preference: str  # "brief", "moderate", "detailed"
-    decision_making_style: str  # "analytical", "intuitive", "collaborative"
+    communication_preference: str = "sms"  # "sms", "email", "phone", "chat"
+    response_speed_preference: str = "same_day"  # "immediate", "same_day", "flexible"
+    information_depth_preference: str = "moderate"  # "brief", "moderate", "detailed"
+    decision_making_style: str = "analytical"  # "analytical", "intuitive", "collaborative"
 
     # Financial profile
     budget_range: Optional[Tuple[int, int]] = None

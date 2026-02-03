@@ -29,7 +29,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, Path
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 import json
 
 from ghl_real_estate_ai.services.transaction_service import (
@@ -78,9 +78,10 @@ class TransactionCreateRequest(BaseModel):
     loan_amount: Optional[float] = Field(None, ge=0, description="Loan amount")
     down_payment: Optional[float] = Field(None, ge=0, description="Down payment amount")
     
-    @validator('expected_closing_date')
-    def validate_closing_date(cls, v, values):
-        if 'contract_date' in values and v <= values['contract_date']:
+    @field_validator('expected_closing_date')
+    @classmethod
+    def validate_closing_date(cls, v, info: ValidationInfo):
+        if 'contract_date' in info.data and v <= info.data['contract_date']:
             raise ValueError('Expected closing date must be after contract date')
         return v
 
@@ -772,19 +773,8 @@ async def get_system_status() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Failed to get system status: {str(e)}")
 
 
-# ============================================================================
-# ERROR HANDLERS
-# ============================================================================
-
-@router.exception_handler(ValueError)
-async def value_error_handler(request, exc):
-    return HTTPException(status_code=400, detail=str(exc))
-
-
-@router.exception_handler(Exception)
-async def general_exception_handler(request, exc):
-    logger.error(f"Unexpected error in transaction API: {exc}")
-    return HTTPException(status_code=500, detail="Internal server error")
+# Error handling is managed by the global exception handler in
+# ghl_real_estate_ai.api.middleware.global_exception_handler
 
 
 # ============================================================================
