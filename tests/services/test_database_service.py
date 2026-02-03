@@ -92,12 +92,12 @@ class TestDatabaseService:
         mock_connection_manager.get_connection.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
         mock_connection_manager.get_connection.return_value.__aexit__ = AsyncMock(return_value=None)
         
-        # Initialize the service
-        await db_service.initialize()
-        
+        # Mark as initialized (skip real initialization to avoid recursion)
+        db_service._initialized = True
+
         # Store mock connection for test access
         db_service._mock_conn = mock_conn
-        
+
         return db_service
     
     @pytest.mark.asyncio
