@@ -23,7 +23,7 @@ from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query, Body
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 # Import revenue optimization services
@@ -95,11 +95,10 @@ class PricingOptimizationResponse(BaseModel):
     roi_justification: str
     calculated_at: datetime
     
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             Decimal: lambda v: float(v),
             datetime: lambda v: v.isoformat()
-        }
+        })
 
 
 class CampaignCreationRequest(BaseModel):
@@ -127,11 +126,10 @@ class CampaignResponse(BaseModel):
     roi: float
     created_at: datetime
     
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             Decimal: lambda v: float(v),
             datetime: lambda v: v.isoformat()
-        }
+        })
 
 
 class MLModelTrainingRequest(BaseModel):
@@ -154,10 +152,9 @@ class MLModelTrainingResponse(BaseModel):
     started_at: Optional[datetime] = None
     estimated_completion: Optional[datetime] = None
     
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat() if v else None
-        }
+        })
 
 
 class CompetitiveIntelligenceRequest(BaseModel):
