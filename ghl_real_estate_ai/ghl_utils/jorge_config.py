@@ -239,7 +239,7 @@ class JorgeSellerConfig:
         # Keep warm, professional language
         if cls.USE_WARM_LANGUAGE:
             # Allow basic punctuation and keep friendly tone
-            message = re.sub(r'[^\w\s,.!?😊👍]', '', message)
+            message = re.sub(r'[^\w\s,.!?]', '', message)
 
         # Remove hyphens (Jorge requirement)
         if cls.NO_HYPHENS:
