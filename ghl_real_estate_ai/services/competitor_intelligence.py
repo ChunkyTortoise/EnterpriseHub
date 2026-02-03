@@ -187,12 +187,12 @@ class CompetitorIntelligenceService:
         return {
             "direct_mentions": [
                 {
-                    "pattern": r"(working with|dealing with|talking to|meeting with).*\b(agent|realtor|broker|representative)\b",
+                    "pattern": r"(working with|dealing with|talking to|meeting with).{0,20}\b(agent|realtor|broker|representative)\b",
                     "weight": 0.8,
                     "risk_level": RiskLevel.HIGH
                 },
                 {
-                    "pattern": r"(already have|currently have|got an?|under contract with).*\b(agent|realtor|broker)\b",
+                    "pattern": r"(already have|currently have|got an?|under contract with).{0,20}\b(agent|realtor|broker)\b",
                     "weight": 0.9,
                     "risk_level": RiskLevel.CRITICAL
                 },
@@ -381,9 +381,15 @@ class CompetitorIntelligenceService:
         # Competitor name detection
         mentions.extend(await self._name_detection(text))
 
-        # Sentiment analysis for each mention
+        # Deduplicate: prefer named competitor mentions over generic pattern matches
+        named_found = any(m.competitor_type == "named_competitor" for m in mentions)
+        if named_found:
+            mentions = [m for m in mentions if m.competitor_type != "direct_mentions"]
+
+        # Sentiment analysis using full context for accuracy
         for mention in mentions:
-            mention.sentiment_score = self._analyze_sentiment(mention.mention_text)
+            sentiment_text = mention.context if mention.context else mention.mention_text
+            mention.sentiment_score = self._analyze_sentiment(sentiment_text)
 
         return mentions
 
