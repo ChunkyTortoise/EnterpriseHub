@@ -115,6 +115,37 @@ class TestSendMessageRetry:
             assert call_count == 3
 
     @pytest.mark.asyncio
+    async def test_send_message_succeeds_on_second_try(self, ghl_client):
+        """send_message fails once then succeeds on the second attempt."""
+        success_response = _make_response(200, {"messageId": "msg_ok"})
+
+        call_count = 0
+
+        async def mock_post(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise httpx.HTTPError("Temporary failure")
+            return success_response
+
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings, \
+             patch("httpx.AsyncClient") as mock_client_cls, \
+             patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            mock_settings.test_mode = False
+            mock_settings.webhook_timeout_seconds = 10
+
+            mock_client = AsyncMock()
+            mock_client.post = mock_post
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=False)
+            mock_client_cls.return_value = mock_client
+
+            result = await ghl_client.send_message("contact_ok", "Retry me")
+            assert result == {"messageId": "msg_ok"}
+            assert call_count == 2
+            mock_sleep.assert_called_once_with(0.5)
+
+    @pytest.mark.asyncio
     async def test_send_message_gives_up_after_3_retries(self, ghl_client):
         """send_message raises after exhausting all 3 attempts."""
         async def mock_post(*args, **kwargs):

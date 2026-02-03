@@ -28,6 +28,7 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 )
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics
@@ -128,6 +129,9 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     )  # e.g., ["AI-Off", "Qualified", "Stop-Bot"]
 
     should_activate = any(tag in tags for tag in activation_tags)
+    # Buyer-Lead tag also counts as activation when buyer mode is enabled
+    if jorge_settings.JORGE_BUYER_MODE and jorge_settings.BUYER_ACTIVATION_TAG in tags:
+        should_activate = True
     should_deactivate = any(tag in tags for tag in deactivation_tags)
 
     if not should_activate:
@@ -188,8 +192,6 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         )
 
     # Step -0.5: Check for Jorge's Seller Mode (Needs Qualifying tag + JORGE_SELLER_MODE)
-    from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
-
     jorge_seller_mode = (
         "Needs Qualifying" in tags and
         jorge_settings.JORGE_SELLER_MODE and
@@ -321,6 +323,146 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         except Exception as e:
             logger.error(f"Jorge seller mode processing failed: {str(e)}", exc_info=True)
             # Fall back to normal processing if Jorge mode fails
+
+    # Step -0.4: Check for Jorge's Buyer Mode (Buyer-Lead tag + JORGE_BUYER_MODE)
+    jorge_buyer_mode = (
+        jorge_settings.BUYER_ACTIVATION_TAG in tags and
+        jorge_settings.JORGE_BUYER_MODE and
+        not should_deactivate
+    )
+
+    if jorge_buyer_mode:
+        logger.info(f"Jorge buyer mode activated for contact {contact_id}")
+        try:
+            from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+            from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+            # Get tenant configuration
+            tenant_config = await tenant_service.get_tenant_config(location_id)
+
+            # Initialize GHL client
+            current_ghl_client = ghl_client_default
+            if tenant_config and tenant_config.get("ghl_api_key"):
+                current_ghl_client = GHLClient(
+                    api_key=tenant_config["ghl_api_key"], location_id=location_id
+                )
+
+            # Build conversation history from context
+            context = await conversation_manager.get_context(
+                contact_id, location_id=location_id
+            )
+            conversation_history = context.get("messages", []) if context else []
+
+            first_name = event.contact.first_name or "there"
+
+            # Initialize and call buyer bot
+            buyer_bot = JorgeBuyerBot()
+            buyer_result = await buyer_bot.process_buyer_conversation(
+                buyer_id=contact_id,
+                buyer_name=first_name,
+                conversation_history=conversation_history,
+            )
+
+            # Build response actions
+            actions = []
+
+            # Derive temperature from scores: hot (both ≥70), warm (avg ≥50), cold (else)
+            fin_score = buyer_result.get("financial_readiness_score", 0)
+            mot_score = buyer_result.get("buying_motivation_score", 0)
+            avg_score = (fin_score + mot_score) / 2
+
+            if fin_score >= 70 and mot_score >= 70:
+                buyer_temp = "hot"
+            elif avg_score >= 50:
+                buyer_temp = "warm"
+            else:
+                buyer_temp = "cold"
+
+            temp_tags = JorgeSellerConfig.BUYER_TEMPERATURE_TAGS
+            actions.append(GHLAction(
+                type=ActionType.ADD_TAG,
+                tag=temp_tags.get(buyer_temp, "Cold-Buyer"),
+            ))
+
+            if buyer_result.get("is_qualified"):
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Buyer-Qualified"))
+
+            # SMS length guard (buyer mode)
+            final_buyer_msg = buyer_result.get("response_content", "")
+            SMS_MAX_CHARS = 320
+            if len(final_buyer_msg) > SMS_MAX_CHARS:
+                truncated = final_buyer_msg[:SMS_MAX_CHARS]
+                for sep in (". ", "! ", "? "):
+                    idx = truncated.rfind(sep)
+                    if idx > SMS_MAX_CHARS // 2:
+                        truncated = truncated[: idx + 1]
+                        break
+                final_buyer_msg = truncated.rstrip()
+
+            # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
+            status, reason, violations = await compliance_guard.audit_message(
+                final_buyer_msg,
+                contact_context={"contact_id": contact_id, "mode": "buyer"}
+            )
+
+            if status == ComplianceStatus.BLOCKED:
+                logger.warning(f"Compliance BLOCKED buyer message for {contact_id}: {reason}. Violations: {violations}")
+                final_buyer_msg = "I'm looking forward to helping you find the right home. What's your top priority in a neighborhood?"
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
+            logger.info(
+                f"Jorge buyer processing completed for {contact_id}",
+                extra={
+                    "contact_id": contact_id,
+                    "buyer_temperature": buyer_temp,
+                    "financial_readiness": fin_score,
+                    "buying_motivation": mot_score,
+                    "is_qualified": buyer_result.get("is_qualified", False),
+                    "actions_count": len(actions),
+                    "compliance_status": status.value,
+                }
+            )
+
+            # Send the buyer response via GHL API (background task)
+            background_tasks.add_task(
+                current_ghl_client.send_message,
+                contact_id=contact_id,
+                message=final_buyer_msg,
+                channel=event.message.type,
+            )
+
+            # Apply tags and actions via GHL API (background task)
+            if actions:
+                background_tasks.add_task(
+                    current_ghl_client.apply_actions,
+                    contact_id=contact_id,
+                    actions=actions,
+                )
+
+            # Track Jorge buyer analytics
+            background_tasks.add_task(
+                analytics_service.track_event,
+                event_type="jorge_buyer_interaction",
+                location_id=location_id,
+                contact_id=contact_id,
+                data={
+                    "buyer_temperature": buyer_temp,
+                    "financial_readiness": fin_score,
+                    "buying_motivation": mot_score,
+                    "is_qualified": buyer_result.get("is_qualified", False),
+                    "message_length": len(final_buyer_msg),
+                }
+            )
+
+            return GHLWebhookResponse(
+                success=True,
+                message=final_buyer_msg,
+                actions=actions,
+            )
+
+        except Exception as e:
+            logger.error(f"Jorge buyer mode processing failed: {str(e)}", exc_info=True)
+            # Fall back to normal processing if buyer mode fails
 
     try:
         # Step 0: Get tenant configuration

@@ -10,7 +10,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_serializer, field_validator
 
 
 # ===================================================================
@@ -52,10 +52,10 @@ class BaseModelWithTimestamp(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = None
 
-    model_config = ConfigDict(json_encoders={
-        datetime: lambda v: v.isoformat(),
-        Decimal: lambda v: float(v),
-    })
+    @field_serializer('created_at', 'updated_at')
+    @classmethod
+    def serialize_datetime(cls, v: Optional[datetime]) -> Optional[str]:
+        return v.isoformat() if v else None
 
 
 # ===================================================================
