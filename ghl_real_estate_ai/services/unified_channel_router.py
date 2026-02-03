@@ -152,7 +152,7 @@ class UnifiedChannelRouter:
 
         # 1. Compliance check
         compliance_status = await self._check_compliance(message)
-        if compliance_status == "BLOCKED":
+        if compliance_status.upper() == "BLOCKED":
             self._compliance_blocks += 1
             result = DeliveryResult(
                 contact_id=contact_id,
