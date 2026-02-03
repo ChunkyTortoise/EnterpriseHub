@@ -659,13 +659,18 @@ def verify_webhook(provider: str):
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            # Extract request
+            # Extract request from args or kwargs
             request = None
             for arg in args:
                 if isinstance(arg, Request):
                     request = arg
                     break
-            
+            if not request:
+                for val in kwargs.values():
+                    if isinstance(val, Request):
+                        request = val
+                        break
+
             if not request:
                 raise HTTPException(status_code=500, detail="Request object not found")
             
