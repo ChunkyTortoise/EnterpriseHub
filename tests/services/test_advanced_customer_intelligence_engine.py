@@ -19,6 +19,7 @@ Status: Production-Ready Test Suite
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 import json
 from datetime import datetime, timedelta
@@ -48,7 +49,7 @@ except (ImportError, TypeError, AttributeError):
 class TestAdvancedCustomerIntelligenceEngine:
     """Test cases for Advanced Customer Intelligence Engine"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def intelligence_engine(self):
         """Create intelligence engine instance for testing"""
         engine = AdvancedCustomerIntelligenceEngine()

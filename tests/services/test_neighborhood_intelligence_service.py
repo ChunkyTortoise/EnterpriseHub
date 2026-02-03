@@ -13,6 +13,7 @@ Test coverage:
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock
@@ -35,7 +36,7 @@ from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
 class TestNeighborhoodIntelligenceService:
     """Test suite for NeighborhoodIntelligenceService."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def service(self):
         """Create service instance for testing."""
         service = NeighborhoodIntelligenceService()

@@ -14,6 +14,7 @@ Target Coverage: 85%+ on realtime_behavioral_network.py
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 import time
 import queue
@@ -73,7 +74,7 @@ def sample_behavioral_signal():
         }
     )
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_services():
     """Mock external services."""
     return {
@@ -83,7 +84,7 @@ async def mock_services():
         "claude_client": AsyncMock()
     }
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def behavioral_network(mock_services):
     """Create behavioral network with mocked services."""
     network = RealTimeBehavioralNetwork()

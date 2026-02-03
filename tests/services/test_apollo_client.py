@@ -19,6 +19,7 @@ Coverage Target: 85%+ for all Apollo operations
 import asyncio
 import json
 import pytest
+import pytest_asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from typing import Dict, Any
@@ -76,7 +77,7 @@ class TestApolloConfig:
 class TestApolloClient:
     """Test Apollo API client operations"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def apollo_client(self):
         """Create Apollo client with mocked dependencies"""
         config = ApolloConfig(
@@ -252,7 +253,7 @@ class TestApolloClient:
 class TestPersonEnrichment:
     """Test person enrichment functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def apollo_client(self):
         """Create Apollo client for person enrichment testing"""
         config = ApolloConfig(api_key="test_key")
@@ -380,7 +381,7 @@ class TestPersonEnrichment:
 class TestEmailVerification:
     """Test email verification functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def apollo_client(self):
         """Create Apollo client for email verification testing"""
         config = ApolloConfig(api_key="test_key")
@@ -454,7 +455,7 @@ class TestEmailVerification:
 class TestOrganizationEnrichment:
     """Test organization enrichment functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def apollo_client(self):
         """Create Apollo client for organization testing"""
         config = ApolloConfig(api_key="test_key")
@@ -545,7 +546,7 @@ class TestOrganizationEnrichment:
 class TestLeadScoring:
     """Test Apollo lead scoring algorithms"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def apollo_client(self):
         """Create Apollo client for scoring tests"""
         config = ApolloConfig(api_key="test_key")
@@ -678,7 +679,7 @@ class TestLeadScoring:
 class TestBatchOperations:
     """Test batch enrichment operations"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def apollo_client(self):
         """Create Apollo client for batch testing"""
         config = ApolloConfig(api_key="test_key", batch_size=5)
@@ -778,7 +779,7 @@ class TestBatchOperations:
 class TestSearchOperations:
     """Test Apollo search functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def apollo_client(self):
         """Create Apollo client for search testing"""
         config = ApolloConfig(api_key="test_key")
@@ -885,7 +886,7 @@ class TestSearchOperations:
 class TestHealthAndMonitoring:
     """Test health check and monitoring functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def apollo_client(self):
         """Create Apollo client for health testing"""
         config = ApolloConfig(api_key="test_key")

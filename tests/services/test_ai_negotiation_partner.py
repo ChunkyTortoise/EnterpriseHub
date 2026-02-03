@@ -24,76 +24,82 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
 )
 
 
-class TestAINegotiationPartner:
-    """Test suite for AI Negotiation Partner"""
-    
-    @pytest.fixture
-    def negotiation_partner(self):
-        """Create AI negotiation partner instance for testing"""
-        return AINegotiationPartner()
-    
-    @pytest.fixture
-    def mock_analysis_request(self):
-        """Mock negotiation analysis request"""
-        return NegotiationAnalysisRequest(
-            property_id="PROP_12345",
-            lead_id="LEAD_67890",
-            buyer_preferences={
-                "cash_offer": False,
-                "flexible_timeline": True,
-                "pre_approved": True
-            }
-        )
-    
-    @pytest.fixture
-    def mock_listing_history(self):
-        """Mock listing history data"""
-        return ListingHistory(
-            original_list_price=Decimal("800000"),
-            current_price=Decimal("750000"),
-            price_drops=[
-                {"date": "2024-10-15", "old_price": 800000, "new_price": 750000, "percentage": 6.25}
-            ],
-            days_on_market=45,
-            listing_views=350,
-            showing_requests=22,
-            offers_received=1,
-            previous_listing_attempts=0
-        )
-    
-    @pytest.fixture
-    def mock_property_data(self):
-        """Mock property data"""
-        return {
-            "property_id": "PROP_12345",
-            "list_price": 750000,
-            "sqft": 2800,
-            "bedrooms": 4,
-            "bathrooms": 3,
-            "property_type": "single_family",
-            "zip_code": "78701",
-            "days_on_market": 45,
-            "year_built": 2015,
-            "price_drops": 1
-        }
-    
-    @pytest.fixture
-    def mock_buyer_data(self):
-        """Mock buyer profile data"""
-        return {
-            "lead_id": "LEAD_67890",
-            "credit_score": 780,
-            "debt_to_income": 0.25,
-            "down_payment_percent": 20,
-            "pre_approved": True,
+@pytest.fixture
+def negotiation_partner():
+    """Create AI negotiation partner instance for testing"""
+    return AINegotiationPartner()
+
+
+@pytest.fixture
+def mock_analysis_request():
+    """Mock negotiation analysis request"""
+    return NegotiationAnalysisRequest(
+        property_id="PROP_12345",
+        lead_id="LEAD_67890",
+        buyer_preferences={
             "cash_offer": False,
             "flexible_timeline": True,
-            "first_time_buyer": False,
-            "communication_data": {
-                "avg_response_time_hours": 3.5,
-                "communication_tone": "professional"
-            }
+            "pre_approved": True
         }
+    )
+
+
+@pytest.fixture
+def mock_listing_history():
+    """Mock listing history data"""
+    return ListingHistory(
+        original_list_price=Decimal("800000"),
+        current_price=Decimal("750000"),
+        price_drops=[
+            {"date": "2024-10-15", "old_price": 800000, "new_price": 750000, "percentage": 6.25}
+        ],
+        days_on_market=45,
+        listing_views=350,
+        showing_requests=22,
+        offers_received=1,
+        previous_listing_attempts=0
+    )
+
+
+@pytest.fixture
+def mock_property_data():
+    """Mock property data"""
+    return {
+        "property_id": "PROP_12345",
+        "list_price": 750000,
+        "sqft": 2800,
+        "bedrooms": 4,
+        "bathrooms": 3,
+        "property_type": "single_family",
+        "zip_code": "78701",
+        "days_on_market": 45,
+        "year_built": 2015,
+        "price_drops": 1
+    }
+
+
+@pytest.fixture
+def mock_buyer_data():
+    """Mock buyer profile data"""
+    return {
+        "lead_id": "LEAD_67890",
+        "credit_score": 780,
+        "debt_to_income": 0.25,
+        "down_payment_percent": 20,
+        "pre_approved": True,
+        "cash_offer": False,
+        "flexible_timeline": True,
+        "first_time_buyer": False,
+        "communication_data": {
+            "avg_response_time_hours": 3.5,
+            "communication_tone": "professional"
+        }
+    }
+
+
+class TestAINegotiationPartner:
+    """Test suite for AI Negotiation Partner"""
+    pass
 
 
 class TestSellerPsychologyAnalyzer:

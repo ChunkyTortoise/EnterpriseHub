@@ -13,6 +13,7 @@ Test coverage:
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock
@@ -36,7 +37,7 @@ from ghl_real_estate_ai.services.inventory_alert_system import (
 class TestInventoryAlertSystem:
     """Test suite for InventoryAlertSystem."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def alert_system(self):
         """Create alert system instance for testing."""
         system = InventoryAlertSystem()

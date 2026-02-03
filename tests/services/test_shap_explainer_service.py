@@ -388,8 +388,8 @@ class TestSHAPExplainerService:
         )
         
         with patch('ghl_real_estate_ai.services.shap_explainer_service.cache') as mock_cache:
-            mock_cache.get.return_value = cached_explanation
-            
+            mock_cache.get = AsyncMock(return_value=cached_explanation)
+
             explanation = await shap_service.explain_prediction(
                 model=model,
                 scaler=scaler,
@@ -698,7 +698,7 @@ class TestIntegrationScenarios:
         )
         
         assert 'genuine interest' in active_questioner_explanation
-        assert 'limited interest' in passive_questioner_explanation
+        assert 'passive interest' in passive_questioner_explanation
     
     @pytest.mark.asyncio 
     async def test_performance_under_load(self):

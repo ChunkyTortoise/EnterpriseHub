@@ -5,6 +5,7 @@ for the white-label platform.
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -23,14 +24,14 @@ from ghl_real_estate_ai.services.domain_configuration_service import (
 from ghl_real_estate_ai.services.cache_service import CacheService
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_db_pool():
     """Mock database pool."""
     pool = AsyncMock(spec=asyncpg.Pool)
     return pool
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_cache_service():
     """Mock cache service."""
     cache = AsyncMock(spec=CacheService)
@@ -40,7 +41,7 @@ async def mock_cache_service():
     return cache
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def domain_service(mock_db_pool, mock_cache_service):
     """Create domain configuration service instance."""
     return DomainConfigurationService(mock_db_pool, mock_cache_service)

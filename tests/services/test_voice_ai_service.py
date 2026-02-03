@@ -9,6 +9,7 @@ Comprehensive test suite for Jorge's voice AI capabilities:
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
@@ -22,7 +23,7 @@ from ghl_real_estate_ai.services.voice_ai_service import (
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def voice_ai_service():
     """Create a VoiceAIService instance for testing."""
     service = VoiceAIService()

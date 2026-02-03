@@ -5,6 +5,7 @@ Ensures reliability for high-ticket consulting platform ($25K-$100K engagements)
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 import json
 from datetime import datetime, date, timedelta
@@ -22,7 +23,7 @@ from ghl_real_estate_ai.services.enterprise_tenant_service import (
 # Test Fixtures
 # ============================================================================
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def enterprise_service():
     """Create enterprise tenant service for testing."""
     service = EnterpriseTenantService()

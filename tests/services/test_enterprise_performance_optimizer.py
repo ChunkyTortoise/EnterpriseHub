@@ -4,6 +4,7 @@ Comprehensive test suite for performance optimization and caching capabilities
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime, timedelta
@@ -24,7 +25,7 @@ except ImportError as e:
 class TestEnterprisePerformanceOptimizer:
     """Test suite for Enterprise Performance Optimizer"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def optimizer(self):
         """Create optimizer instance for testing"""
         with patch('ghl_real_estate_ai.services.enterprise_performance_optimizer.redis.Redis'):
