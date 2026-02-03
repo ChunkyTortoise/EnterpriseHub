@@ -173,10 +173,17 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     msg_lower = user_message.lower().strip()
     if any(phrase in msg_lower for phrase in OPT_OUT_PHRASES):
         logger.info(f"Opt-out detected for contact {contact_id}")
+        opt_out_msg = "No problem at all, reach out whenever you're ready"
+        background_tasks.add_task(
+            ghl_client_default.send_message,
+            contact_id=contact_id,
+            message=opt_out_msg,
+            channel=event.message.type,
+        )
         background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["AI-Off"])
         return GHLWebhookResponse(
             success=True,
-            message="No problem at all, reach out whenever you're ready",
+            message=opt_out_msg,
             actions=[GHLAction(type=ActionType.ADD_TAG, tag="AI-Off")],
         )
 
