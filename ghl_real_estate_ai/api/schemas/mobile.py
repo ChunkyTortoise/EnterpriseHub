@@ -5,7 +5,7 @@ Optimized response formats and validation for iOS/Android applications.
 
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Union
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 from enum import Enum
 import re
 
@@ -51,8 +51,7 @@ class MobileErrorResponse(BaseModel):
     support_id: Optional[str] = Field(None, description="Support reference ID")
     timestamp: datetime = Field(default_factory=datetime.now)
     
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "status": "error",
                 "error_code": "AUTH_REQUIRED",
@@ -62,7 +61,7 @@ class MobileErrorResponse(BaseModel):
                 "support_id": "ERR_20240118_001",
                 "timestamp": "2024-01-18T10:30:00Z"
             }
-        }
+        })
 
 class MobileSuccessResponse(BaseModel):
     """Standardized success response wrapper."""
@@ -117,7 +116,8 @@ class MobileDeviceInfo(BaseModel):
     camera_available: bool = Field(default=True)
     location_services: bool = Field(default=False)
     
-    @validator('device_id')
+    @field_validator('device_id')
+    @classmethod
     def validate_device_id(cls, v):
         if not v or len(v) < 10:
             raise ValueError('Device ID must be at least 10 characters')
@@ -149,10 +149,11 @@ class MobilePropertySummary(BaseModel):
     favorite: bool = Field(default=False)
     viewed_at: Optional[datetime] = Field(None)
     
-    @validator('price_formatted')
-    def format_price(cls, v, values):
-        if 'price' in values:
-            return f"${values['price']:,}"
+    @field_validator('price_formatted')
+    @classmethod
+    def format_price(cls, v, info: ValidationInfo):
+        if 'price' in info.data:
+            return f"${info.data['price']:,}"
         return v
 
 class MobilePropertyDetails(BaseModel):
@@ -228,7 +229,8 @@ class MobileLeadSummary(BaseModel):
     distance_miles: Optional[float] = Field(None)
     unread_messages: int = Field(default=0)
     
-    @validator('priority')
+    @field_validator('priority')
+    @classmethod
     def validate_priority(cls, v):
         valid_priorities = ['low', 'medium', 'high', 'urgent']
         if v.lower() not in valid_priorities:
@@ -291,7 +293,8 @@ class MobileVoiceRequest(BaseModel):
     location: Optional[GPSCoordinate] = Field(None)
     device_info: MobileDeviceInfo = Field(...)
     
-    @validator('audio_data')
+    @field_validator('audio_data')
+    @classmethod
     def validate_audio_data(cls, v):
         try:
             # Basic base64 validation
@@ -438,7 +441,8 @@ class MobileSearchRequest(BaseModel):
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=20, ge=1, le=100)
     
-    @validator('query')
+    @field_validator('query')
+    @classmethod
     def validate_query(cls, v):
         # Remove extra whitespace and validate length
         cleaned = re.sub(r'\s+', ' ', v.strip())
