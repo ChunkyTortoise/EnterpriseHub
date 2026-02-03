@@ -308,14 +308,14 @@ Simulate 5-message conversation:
 ## 10. DELIVERY CHECKLIST
 
 ```
-[ ] "Hit List" removed from activation_tags in config.py
-[ ] Opt-out message detection added to webhook
-[ ] Enterprise response branches gated behind JORGE_SIMPLE_MODE
-[ ] Duplicate arbitrage code removed from seller_engine
-[ ] Initiate-qualification endpoint created
-[ ] Buyer bot verified end-to-end
-[ ] Focused 4-tab dashboard created
-[ ] Integration tests pass
-[ ] Deployment guide written
-[ ] All responses sound human in testing
+[x] "Hit List" removed from activation_tags in config.py (A1)
+[x] Opt-out message detection added to webhook (A5)
+[x] Enterprise response branches gated behind JORGE_SIMPLE_MODE (A3)
+[x] Duplicate arbitrage code removed from seller_engine (A4)
+[x] Initiate-qualification endpoint created (A6)
+[x] Buyer bot verified end-to-end (B2)
+[x] Focused 4-tab dashboard created (C1-C6)
+[x] Integration tests pass — 19/19 (D1-D4, D6)
+[x] Deployment guide written (D5)
+[ ] All responses sound human in testing — NEEDS LIVE REVIEW
 ```
