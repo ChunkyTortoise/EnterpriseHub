@@ -11,7 +11,10 @@ Created: 2026-01-19
 
 from typing import Dict, List, Optional
 from dataclasses import dataclass
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -69,26 +72,26 @@ class JorgeSellerConfig:
 
     # ========== GHL INTEGRATION ==========
     # Workflow IDs for different seller temperatures
-    HOT_SELLER_WORKFLOW_ID = "jorge_hot_seller_workflow"
-    WARM_SELLER_WORKFLOW_ID = "jorge_warm_seller_workflow"
-    AGENT_NOTIFICATION_WORKFLOW = "jorge_agent_notification"
+    HOT_SELLER_WORKFLOW_ID = ""   # Set via HOT_SELLER_WORKFLOW_ID env var
+    WARM_SELLER_WORKFLOW_ID = ""  # Set via WARM_SELLER_WORKFLOW_ID env var
+    AGENT_NOTIFICATION_WORKFLOW = ""  # Set via NOTIFY_AGENT_WORKFLOW_ID env var
 
     # Custom field mapping for GHL
     CUSTOM_FIELDS = {
-        "seller_temperature": "seller_temp_field_id",
-        "seller_motivation": "seller_motivation_field_id",
-        "relocation_destination": "relocation_dest_field_id",
-        "timeline_urgency": "timeline_urgency_field_id",
-        "property_condition": "property_condition_field_id",
-        "price_expectation": "price_expectation_field_id",
-        "questions_answered": "questions_answered_field_id",
-        "qualification_score": "qualification_score_field_id",
-        "expected_roi": "expected_roi_field_id",
-        "lead_value_tier": "lead_value_tier_field_id",
-        "ai_valuation_price": "ai_valuation_price_field_id",
-        "detected_persona": "detected_persona_field_id",
-        "psychology_type": "psychology_type_field_id",
-        "urgency_level": "urgency_level_field_id"
+        "seller_temperature": "",
+        "seller_motivation": "",
+        "relocation_destination": "",
+        "timeline_urgency": "",
+        "property_condition": "",
+        "price_expectation": "",
+        "questions_answered": "",
+        "qualification_score": "",
+        "expected_roi": "",
+        "lead_value_tier": "",
+        "ai_valuation_price": "",
+        "detected_persona": "",
+        "psychology_type": "",
+        "urgency_level": ""
     }
 
     # ========== MESSAGE SETTINGS ==========
@@ -370,6 +373,8 @@ class JorgeEnvironmentSettings:
         # GHL integration
         self.hot_seller_workflow_id = os.getenv("HOT_SELLER_WORKFLOW_ID")
         self.warm_seller_workflow_id = os.getenv("WARM_SELLER_WORKFLOW_ID")
+        self.hot_buyer_workflow_id = os.getenv("HOT_BUYER_WORKFLOW_ID")
+        self.warm_buyer_workflow_id = os.getenv("WARM_BUYER_WORKFLOW_ID")
 
         # Analytics
         self.analytics_enabled = os.getenv("JORGE_ANALYTICS_ENABLED", "true").lower() == "true"
@@ -423,6 +428,25 @@ class JorgeEnvironmentSettings:
     def LEAD_ACTIVATION_TAG(self) -> str:
         """Tag that activates lead mode routing"""
         return self.lead_activation_tag
+
+    def validate_ghl_integration(self) -> List[str]:
+        """Return warnings for missing GHL configuration."""
+        warnings = []
+        if self.jorge_seller_mode:
+            if not os.getenv("HOT_SELLER_WORKFLOW_ID"):
+                warnings.append("HOT_SELLER_WORKFLOW_ID not set — hot seller workflows disabled")
+            if not os.getenv("WARM_SELLER_WORKFLOW_ID"):
+                warnings.append("WARM_SELLER_WORKFLOW_ID not set — warm seller workflows disabled")
+        if self.jorge_buyer_mode:
+            if not os.getenv("HOT_BUYER_WORKFLOW_ID"):
+                warnings.append("HOT_BUYER_WORKFLOW_ID not set — hot buyer workflows disabled")
+            if not os.getenv("WARM_BUYER_WORKFLOW_ID"):
+                warnings.append("WARM_BUYER_WORKFLOW_ID not set — warm buyer workflows disabled")
+        critical_fields = ["LEAD_SCORE", "SELLER_TEMPERATURE", "BUDGET"]
+        for field in critical_fields:
+            if not os.getenv(f"CUSTOM_FIELD_{field}"):
+                warnings.append(f"CUSTOM_FIELD_{field} not set — field updates will use semantic names")
+        return warnings
 
 
 # ========== MARKET CONFIGURATION ==========
@@ -490,6 +514,8 @@ class JorgeMarketManager:
 
 # Create global settings instance
 settings = JorgeEnvironmentSettings()
+for _warning in settings.validate_ghl_integration():
+    logger.warning(f"GHL Config: {_warning}")
 market_manager = JorgeMarketManager()
 
 # Export commonly used values

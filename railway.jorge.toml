@@ -35,6 +35,10 @@ JORGE_LEAD_MODE = "true"
 
 # GHL Workflow Integration
 NOTIFY_AGENT_WORKFLOW_ID = { description = "Jorge's GHL Workflow ID for agent notifications" }
+HOT_SELLER_WORKFLOW_ID = { description = "GHL workflow for hot seller agent notification" }
+WARM_SELLER_WORKFLOW_ID = { description = "GHL workflow for warm seller nurture" }
+HOT_BUYER_WORKFLOW_ID = { description = "GHL workflow for hot buyer showing coordination" }
+WARM_BUYER_WORKFLOW_ID = { description = "GHL workflow for warm buyer nurture" }
 
 # Security
 GHL_WEBHOOK_SECRET = { description = "Jorge's GHL Webhook Secret for signature verification" }
