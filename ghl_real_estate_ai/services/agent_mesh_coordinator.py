@@ -342,6 +342,10 @@ class AgentMeshCoordinator:
 
         except Exception as e:
             logger.error(f"Task assignment failed: {e}")
+            # Ensure agent capacity is restored if incremented before failure
+            agent.current_tasks = max(0, agent.current_tasks - 1)
+            if agent.current_tasks == 0:
+                agent.status = AgentStatus.IDLE
             return False
 
     async def _execute_task_on_agent(self, task: AgentTask, agent: MeshAgent):
