@@ -1791,10 +1791,8 @@ class LeadBotWorkflow:
         <h1 style="margin: 0; font-size: 22px;">Your Personalized Market Analysis</h1>
     </div>
     <div style="padding: 20px;">
-        <p>Hi there,</p>
-        <p>I put together a <strong>Comparative Market Analysis (CMA)</strong> for
-        <strong>{property_address}</strong> so you can see exactly how the market
-        stacks up right now.</p>
+        <p>Hey,</p>
+        <p>I went through the comps myself and put together a <strong>Comparative Market Analysis (CMA)</strong> for <strong>{property_address}</strong> so you can see exactly how the market stacks up right now.</p>
         <p>The full report is attached as a PDF. Here's what you'll find inside:</p>
         <ul>
             <li>Current estimated market value with confidence range</li>
@@ -1804,7 +1802,7 @@ class LeadBotWorkflow:
         </ul>
         <p>Have questions about the numbers? Just reply to this email and I'll
         walk you through everything.</p>
-        <p style="margin-top: 25px;">Best regards,<br><strong>Jorge</strong><br>
+        <p style="margin-top: 25px;">Talk soon,<br><strong>Jorge</strong><br>
         EnterpriseHub Real Estate Intelligence</p>
     </div>
     <div style="border-top: 1px solid #e0e0e0; padding-top: 12px; font-size: 11px; color: #999; text-align: center;">
@@ -2066,25 +2064,23 @@ class LeadBotWorkflow:
             sentiment = intelligence_context.conversation_intelligence.overall_sentiment
 
             if property_matches > 0 and sentiment >= 0:
-                msg = f"Hi {lead_name}, I found {property_matches} properties that might interest you based on our conversations. "
                 if preferred_channel == "Voice":
-                    msg += "I'd love to walk you through them on a quick call. When works best for you?"
+                    msg = f"Hey {lead_name}, found {property_matches} places matching what you described. Quick call to go over them?"
                 else:
-                    msg += "I'll send you the details shortly. Let me know what you think!"
+                    msg = f"Hey {lead_name}, found {property_matches} places matching what you described. Sending details—let me know your thoughts!"
 
             elif objections and sentiment < 0:
-                msg = f"Hi {lead_name}, I wanted to follow up and address any concerns you might have about the market. "
                 if preferred_channel == "Voice":
-                    msg += "Sometimes it's easier to discuss these things over the phone. Would you be open to a brief call?"
+                    msg = f"Hey {lead_name}, I hear you on the concerns. Easier to talk it through—open to a quick call?"
                 else:
-                    msg += "I'm here to help clarify anything that's on your mind."
+                    msg = f"Hey {lead_name}, totally understand the hesitation. Happy to answer questions—what's on your mind?"
 
             else:
                 # Standard follow-up with intelligence hints
-                msg = f"Hi {lead_name}, hope you're doing well! I've been keeping an eye on the market for opportunities that match your interests. Any updates on your search?"
+                msg = f"Hey {lead_name}, been watching the market for you. Anything new on your end?"
         else:
             # Fallback standard message
-            msg = f"Hi {lead_name}, checking in on your property search. I've been monitoring the market for good opportunities. Any questions or updates?"
+            msg = f"Hey {lead_name}, checking in on your search. Spotted some good inventory lately—interested?"
 
         return msg
 
@@ -2094,16 +2090,16 @@ class LeadBotWorkflow:
         lead_name = state['lead_name']
 
         if final_strategy == "jorge_qualification":
-            msg = f"Hi {lead_name}, it's been 30 days since we connected about your property search. Based on our conversations, I think you're ready to take the next step. I'd like to connect you with Jorge, our senior advisor, who can provide you with the detailed market analysis and guidance you need. Would you be open to a consultation call this week?"
+            msg = f"Hey {lead_name}, been 30 days—sounds like you're getting serious. Want me to connect you with Jorge for a deeper market breakdown?"
 
         elif final_strategy == "jorge_consultation":
-            msg = f"Hi {lead_name}, I've been following the market developments that align with your interests. At this point, I think you'd benefit from a more detailed consultation with Jorge, our market specialist. He can provide insights that might help accelerate your search. Interested in a brief call?"
+            msg = f"Hey {lead_name}, market's moving in your area. Jorge can give you the full picture—want me to set up a quick call?"
 
         elif final_strategy == "graceful_disengage":
-            msg = f"Hi {lead_name}, I wanted to check in one more time about your property search. I understand timing and priorities can change. If you'd like to keep receiving market updates, just let me know. Otherwise, I'll give you some space and you can reach out whenever you're ready to continue the search. Thanks for your time!"
+            msg = f"Hey {lead_name}, just checking—still looking or should I pause the updates? No pressure either way."
 
         else:  # nurture
-            msg = f"Hi {lead_name}, it's been a month since we connected. I wanted to check if anything has changed with your property search timeline or if there's anything specific I can help you with. I'm here whenever you're ready to move forward."
+            msg = f"Hey {lead_name}, it's been a month. Anything change with your timeline? I'm here when you're ready."
 
         return msg
 
