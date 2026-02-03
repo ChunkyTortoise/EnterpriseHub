@@ -207,9 +207,9 @@ class TestIntelligenceContextService:
         assert preservation_latency < 50, f"Preservation took {preservation_latency}ms (target: <50ms)"
         assert result.preservation_latency_ms < 50
 
-        # Verify cache was called with correct parameters
-        context_service.cache.set.assert_called_once()
-        cache_call = context_service.cache.set.call_args
+        # Verify cache was called with correct parameters (snapshot + history)
+        assert context_service.cache.set.call_count >= 1
+        cache_call = context_service.cache.set.call_args_list[0]
         assert cache_call[1]['ttl'] == 7200  # 2-hour TTL for handoffs
 
         # Verify event publishing
