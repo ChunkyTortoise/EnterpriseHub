@@ -91,6 +91,15 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     user_message = event.message.body
     tags = event.contact.tags or []
 
+    # INPUT LENGTH GUARD: Cap inbound messages to prevent token abuse
+    MAX_INBOUND_LENGTH = 2_000  # No legitimate SMS/chat exceeds this
+    if len(user_message) > MAX_INBOUND_LENGTH:
+        logger.warning(
+            f"Oversized inbound message truncated ({len(user_message)} chars)",
+            extra={"original_length": len(user_message), "contact_id": contact_id},
+        )
+        user_message = user_message[:MAX_INBOUND_LENGTH]
+
     # LOOPBACK PROTECTION: Ignore outbound messages (sent by bot or agent)
     if event.message.direction == MessageDirection.OUTBOUND:
         logger.info(f"Ignoring outbound message for contact {contact_id}")

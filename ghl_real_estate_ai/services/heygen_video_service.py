@@ -208,6 +208,7 @@ class HeyGenVideoService:
         self._cost_tracker = CostTracker()
         self._requests: Dict[str, VideoRequest] = {}
         self._results: Dict[str, VideoResult] = {}
+        self._request_counter = 0
 
         if not self.api_key:
             logger.warning("HEYGEN_API_KEY not set. Video generation will use mock mode.")
@@ -235,7 +236,8 @@ class HeyGenVideoService:
             template_enum, lead_name, lead_profile, variables or {}
         )
 
-        request_id = f"vid_{lead_id}_{int(time.time())}"
+        self._request_counter += 1
+        request_id = f"vid_{lead_id}_{int(time.time())}_{self._request_counter}"
         avatar_id = self._select_avatar(avatar_style)
 
         request = VideoRequest(
