@@ -7,7 +7,7 @@ Version: 2.0.0
 from fastapi import APIRouter, HTTPException, Depends, Query, Path
 from fastapi.responses import JSONResponse
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 import logging
 
@@ -39,8 +39,7 @@ class DemoSessionRequest(BaseModel):
     agency_name: Optional[str] = Field(None, description="Custom agency name")
     custom_params: Optional[Dict[str, Any]] = Field(None, description="Custom parameters to override defaults")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "scenario": "luxury_agent",
                 "client_name": "Patricia Williams",
@@ -50,7 +49,7 @@ class DemoSessionRequest(BaseModel):
                     "avg_deal_size": 950000
                 }
             }
-        }
+        })
 
 
 class DemoSessionResponse(BaseModel):

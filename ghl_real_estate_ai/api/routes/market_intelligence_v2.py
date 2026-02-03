@@ -27,7 +27,7 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Union
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 import logging
 
 # ENHANCED: Import market registry and configuration schemas

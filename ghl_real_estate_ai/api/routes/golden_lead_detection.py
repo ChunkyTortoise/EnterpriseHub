@@ -15,7 +15,7 @@ from typing import Dict, List, Optional, Any, Union
 import json
 
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query, Path
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 from ghl_real_estate_ai.services.golden_lead_detector import (
@@ -57,8 +57,7 @@ class LeadIntelligenceRequest(BaseModel):
     lead_data: Dict[str, Any] = Field(..., description="Complete lead data including preferences and conversation history")
     include_optimization: bool = Field(True, description="Include optimization recommendations")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "lead_id": "lead_abc123",
                 "contact_id": "contact_abc123",
@@ -78,7 +77,7 @@ class LeadIntelligenceRequest(BaseModel):
                 },
                 "include_optimization": True
             }
-        }
+        })
 
 
 class BatchLeadDetectionRequest(BaseModel):
@@ -87,14 +86,14 @@ class BatchLeadDetectionRequest(BaseModel):
     batch_size: int = Field(50, description="Processing batch size for performance", ge=1, le=100)
     sort_by_probability: bool = Field(True, description="Sort results by conversion probability")
 
-    @validator('leads_data')
+    @field_validator('leads_data')
+    @classmethod
     def validate_leads_data(cls, v):
         if len(v) > 500:
             raise ValueError("Maximum 500 leads per batch request")
         return v
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "leads_data": [
                     {
@@ -111,7 +110,7 @@ class BatchLeadDetectionRequest(BaseModel):
                 "batch_size": 25,
                 "sort_by_probability": True
             }
-        }
+        })
 
 
 class GoldenLeadFilterRequest(BaseModel):
@@ -123,9 +122,10 @@ class GoldenLeadFilterRequest(BaseModel):
     min_jorge_score: int = Field(0, description="Minimum Jorge score (questions answered)", ge=0, le=7)
     hours_since_analysis: int = Field(24, description="Hours since analysis (for freshness)", ge=1, le=168)
 
-    @validator('max_conversion_probability')
-    def validate_probability_range(cls, v, values):
-        if 'min_conversion_probability' in values and v <= values['min_conversion_probability']:
+    @field_validator('max_conversion_probability')
+    @classmethod
+    def validate_probability_range(cls, v, info: ValidationInfo):
+        if 'min_conversion_probability' in info.data and v <= info.data['min_conversion_probability']:
             raise ValueError("max_conversion_probability must be greater than min_conversion_probability")
         return v
 
