@@ -18,6 +18,7 @@ Coverage Target: 85%+ for all SendGrid operations
 import asyncio
 import json
 import pytest
+import pytest_asyncio
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from typing import Dict, Any, List
@@ -85,7 +86,7 @@ class TestSendGridConfig:
 class TestSendGridClient:
     """Test SendGrid client operations"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def sendgrid_client(self):
         """Create SendGrid client with mocked dependencies"""
         config = SendGridConfig(
@@ -169,7 +170,7 @@ class TestSendGridClient:
 class TestEmailSending:
     """Test email sending functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def sendgrid_client(self):
         """Create SendGrid client for email testing"""
         config = SendGridConfig(
@@ -338,7 +339,7 @@ class TestEmailSending:
 class TestTemplatedEmails:
     """Test templated email functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def sendgrid_client(self):
         """Create SendGrid client for template testing"""
         config = SendGridConfig(
@@ -486,7 +487,7 @@ class TestTemplatedEmails:
 class TestSuppressionManagement:
     """Test suppression list management and CAN-SPAM compliance"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def sendgrid_client(self):
         """Create SendGrid client for suppression testing"""
         config = SendGridConfig(api_key="test_key")
@@ -615,7 +616,7 @@ class TestSuppressionManagement:
 class TestWebhookProcessing:
     """Test webhook event processing"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def sendgrid_client(self):
         """Create SendGrid client for webhook testing"""
         config = SendGridConfig(api_key="test_key")
@@ -805,7 +806,7 @@ class TestWebhookProcessing:
 class TestBulkEmailOperations:
     """Test bulk email operations"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def sendgrid_client(self):
         """Create SendGrid client for bulk email testing"""
         config = SendGridConfig(
@@ -976,7 +977,7 @@ class TestBulkEmailOperations:
 class TestEmailAnalytics:
     """Test email analytics and statistics"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def sendgrid_client(self):
         """Create SendGrid client for analytics testing"""
         config = SendGridConfig(api_key="test_key")
@@ -1107,7 +1108,7 @@ class TestEmailAnalytics:
 class TestHealthAndMonitoring:
     """Test health check and monitoring functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def sendgrid_client(self):
         """Create SendGrid client for health testing"""
         config = SendGridConfig(api_key="test_key")

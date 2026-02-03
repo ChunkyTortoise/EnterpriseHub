@@ -23,6 +23,7 @@ Date: 2026-01-17
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 import json
 from datetime import datetime, timedelta
@@ -149,12 +150,12 @@ class TestDatabaseServiceModels:
 class TestDatabaseService:
     """Test the main DatabaseService class"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def db_service(self):
         """Create database service instance for testing"""
         return DatabaseService()
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def mock_db_service(self):
         """Create mock database service for testing"""
         service = MockEnhancedDatabaseService()
@@ -338,7 +339,7 @@ class TestDatabaseService:
 class TestDatabaseServicePerformance:
     """Test database service performance and optimization"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def performance_db(self):
         """Create optimized database service for performance testing"""
         return MockEnhancedDatabaseService()

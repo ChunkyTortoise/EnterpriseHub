@@ -18,6 +18,7 @@ Status: Production-Ready Test Suite
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 import json
 import time
@@ -53,7 +54,7 @@ except (ImportError, TypeError, AttributeError):
 class TestRealtimeNotificationEngine:
     """Test cases for Real-Time Notification Engine"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def notification_engine(self):
         """Create notification engine instance for testing"""
         engine = RealtimeNotificationEngine()

@@ -175,6 +175,9 @@ config/production/*.yml
 config/production/*.json
 .env.jorge
 
+# Runtime data (conversation memory, session state)
+data/memory/
+
 # Test-generated data artifacts
 data/analytics/*/events_*.jsonl
 data/workflows/*.json
