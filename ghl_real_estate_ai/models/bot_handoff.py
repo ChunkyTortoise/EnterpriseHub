@@ -22,7 +22,7 @@ Author: Jorge's Real Estate AI Platform - Phase 3.2 Implementation
 
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from enum import Enum
 import json
 import uuid
@@ -411,7 +411,7 @@ class ContextHandoff:
             cache_ttl_seconds=cache_ttl_seconds,
             handoff_completed_at=datetime.now(timezone.utc),
             context_expires_at=datetime.now(timezone.utc).replace(second=0, microsecond=0) +
-                             datetime.timedelta(seconds=cache_ttl_seconds)
+                             timedelta(seconds=cache_ttl_seconds)
         )
 
     @classmethod
