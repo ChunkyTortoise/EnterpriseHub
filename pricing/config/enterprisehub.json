@@ -1,0 +1,128 @@
+{
+    "platform": "EnterpriseHub",
+    "version": "1.0",
+    "effective_date": "2026-02-01",
+    "pricing_models": {
+        "subscription": {
+            "basic": {
+                "price": 99,
+                "period": "monthly",
+                "features": [
+                    "Core CRM functionality",
+                    "Lead management",
+                    "Basic reporting",
+                    "Email support",
+                    "Up to 5 users"
+                ],
+                "limits": {
+                    "leads": 5000,
+                    "contacts": 10000,
+                    "storage": "5GB"
+                }
+            },
+            "professional": {
+                "price": 299,
+                "period": "monthly",
+                "features": [
+                    "Advanced CRM features",
+                    "Lead scoring",
+                    "Custom reporting",
+                    "Priority support",
+                    "Up to 20 users",
+                    "Integration with 3rd party tools"
+                ],
+                "limits": {
+                    "leads": 20000,
+                    "contacts": 50000,
+                    "storage": "20GB"
+                }
+            },
+            "enterprise": {
+                "price": 999,
+                "period": "monthly",
+                "features": [
+                    "Unlimited CRM features",
+                    "Advanced lead scoring",
+                    "Custom dashboards",
+                    "24/7 support",
+                    "Unlimited users",
+                    "Custom integrations",
+                    "Dedicated account manager"
+                ],
+                "limits": {
+                    "leads": "unlimited",
+                    "contacts": "unlimited",
+                    "storage": "100GB"
+                }
+            }
+        },
+        "usage_based": {
+            "leads": {
+                "price_per_unit": 0.01,
+                "unit": "lead"
+            },
+            "storage": {
+                "price_per_unit": 0.05,
+                "unit": "GB"
+            }
+        },
+        "addons": {
+            "ai_assistant": {
+                "price": 49,
+                "period": "monthly",
+                "features": [
+                    "AI-powered lead qualification",
+                    "Automated follow-ups",
+                    "Smart suggestions"
+                ]
+            },
+            "advanced_analytics": {
+                "price": 99,
+                "period": "monthly",
+                "features": [
+                    "Predictive analytics",
+                    "Custom AI models",
+                    "Advanced reporting"
+                ]
+            }
+        }
+    },
+    "discounts": {
+        "annual": {
+            "discount_percentage": 20,
+            "description": "20% discount for annual subscriptions"
+        },
+        "volume": {
+            "10-50": {
+                "discount_percentage": 10
+            },
+            "50-100": {
+                "discount_percentage": 15
+            },
+            "100+": {
+                "discount_percentage": 25
+            }
+        }
+    },
+    "billing": {
+        "currency": "USD",
+        "payment_methods": [
+            "credit_card",
+            "bank_transfer",
+            "paypal"
+        ],
+        "invoicing": {
+            "frequency": "monthly",
+            "net_terms": 30
+        }
+    },
+    "support": {
+        "email": "support@enterprisehub.com",
+        "phone": "+1-800-123-4567",
+        "response_time": {
+            "basic": "24 hours",
+            "professional": "8 hours",
+            "enterprise": "2 hours"
+        }
+    }
+}

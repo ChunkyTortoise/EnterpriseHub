@@ -94,7 +94,7 @@ class LeadScoringRequest(BaseModel):
 
 class BatchScoringRequest(BaseModel):
     """Request schema for batch lead scoring"""
-    leads: List[LeadScoringRequest] = Field(..., max_items=100, description="List of leads to score")
+    leads: List[LeadScoringRequest] = Field(..., max_length=100, description="List of leads to score")
     parallel_processing: bool = Field(True, description="Process leads in parallel")
     include_summary: bool = Field(True, description="Include batch processing summary")
     timeout_ms: Optional[int] = Field(15000, ge=1000, le=60000, description="Total batch timeout in ms")
