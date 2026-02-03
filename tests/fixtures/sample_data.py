@@ -293,7 +293,7 @@ class ConversationHistories:
             {
                 'timestamp': '2026-01-14T10:30:00Z',
                 'role': 'assistant',
-                'content': 'Perfect! I have set you up for monthly East Austin market reports. The area is seeing great development with new restaurants and art studios. Here is this month\\'s report...',
+                'content': "Perfect! I have set you up for monthly East Austin market reports. The area is seeing great development with new restaurants and art studios. Here is this month's report...",
                 'channel': 'email'
             }
         ]
