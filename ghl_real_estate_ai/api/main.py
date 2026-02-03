@@ -90,6 +90,18 @@ from ghl_real_estate_ai.api.routes import (
     bi_websocket_routes,  # NEW: BI WebSocket routes
     error_monitoring,  # NEW: Error Monitoring Dashboard API
     security,  # NEW: Security Monitoring and Management API
+    # Week 5-8 ROI Enhancement Routes
+    langgraph_orchestration,
+    behavioral_triggers,
+    fha_respa_compliance,
+    voice_intelligence,
+    propensity_scoring,
+    heygen_video,
+    sentiment_analysis,
+    channel_routing,
+    rc_market_intelligence,
+    export_engine,
+    commission_forecast,
 )
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 from ghl_real_estate_ai.api.middleware import (
@@ -325,6 +337,19 @@ def _setup_routers(app: FastAPI):
     app.include_router(vapi.router, prefix="/api")
     app.include_router(external_webhooks.router, prefix="/api")
     app.include_router(mobile_router, prefix="/api")
+
+    # Week 5-8 ROI Enhancement Routes
+    app.include_router(langgraph_orchestration.router)
+    app.include_router(behavioral_triggers.router)
+    app.include_router(fha_respa_compliance.router)
+    app.include_router(voice_intelligence.router)
+    app.include_router(propensity_scoring.router)
+    app.include_router(heygen_video.router)
+    app.include_router(sentiment_analysis.router)
+    app.include_router(channel_routing.router)
+    app.include_router(rc_market_intelligence.router)
+    app.include_router(export_engine.router)
+    app.include_router(commission_forecast.router)
 
 # Create FastAPI app
 app = FastAPI(
