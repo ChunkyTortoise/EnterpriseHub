@@ -1046,9 +1046,15 @@ class TenantScopedCache:
         return await self.cache.exists(self._scope_key(key))
 
 
-# Global accessor with enhanced functionality
+# Global accessor — singleton to avoid redundant initialization on startup
+_CACHE_SERVICE_INSTANCE: Optional[CacheService] = None
+
+
 def get_cache_service() -> CacheService:
-    return CacheService()
+    global _CACHE_SERVICE_INSTANCE
+    if _CACHE_SERVICE_INSTANCE is None:
+        _CACHE_SERVICE_INSTANCE = CacheService()
+    return _CACHE_SERVICE_INSTANCE
 
 def get_tenant_cache(location_id: str) -> TenantScopedCache:
     """Factory method for getting a tenant-isolated cache."""
