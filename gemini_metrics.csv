@@ -357,3 +357,7 @@ timestamp,model,provider,task_type,input_tokens,output_tokens,cache_creation_inp
 2026-01-25T10:20:57.098273,claude-3-5-haiku-20241022,claude,general,1401,116,0,0,1517,0.005943,N/A,system,False
 2026-01-25T10:33:38.186804,claude-3-5-haiku-20241022,claude,general,1401,140,0,0,1541,0.006303,N/A,system,False
 2026-01-25T10:33:38.189444,claude-3-5-haiku-20241022,claude,general,1401,140,0,0,1541,0.006303,N/A,system,False
+2026-02-03T07:10:41.421173,claude-3-5-haiku-20241022,claude,general,284,54,0,0,338,0.001662,N/A,system,False
+2026-02-03T07:10:41.422991,claude-3-5-haiku-20241022,claude,general,284,54,0,0,338,0.001662,N/A,system,False
+2026-02-03T07:10:42.254245,claude-3-5-haiku-20241022,claude,general,284,54,0,0,338,0.001662,N/A,system,False
+2026-02-03T07:10:42.254850,claude-3-5-haiku-20241022,claude,general,284,54,0,0,338,0.001662,N/A,system,False
