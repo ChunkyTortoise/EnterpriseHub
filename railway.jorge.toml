@@ -28,6 +28,10 @@ DEACTIVATION_TAGS = '["AI-Off","Qualified","Stop-Bot","AI-Qualified"]'
 HOT_LEAD_THRESHOLD = "3"
 WARM_LEAD_THRESHOLD = "2"
 
+# Bot Mode Flags
+JORGE_SELLER_MODE = "true"
+JORGE_BUYER_MODE = "true"
+
 # GHL Workflow Integration
 NOTIFY_AGENT_WORKFLOW_ID = { description = "Jorge's GHL Workflow ID for agent notifications" }
 
