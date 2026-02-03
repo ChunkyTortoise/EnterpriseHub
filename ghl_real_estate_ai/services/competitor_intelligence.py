@@ -508,6 +508,10 @@ class CompetitorIntelligenceService:
         # Look for patterns across multiple messages
         full_conversation = " ".join([msg.get("content", "") for msg in conversation_history])
 
+        # Detect competitor mentions in history text
+        history_mentions = await self._detect_competitor_mentions(full_conversation)
+        context_mentions.extend(history_mentions)
+
         # Detect relationship building patterns
         if self._detect_relationship_progression(conversation_history):
             mention = CompetitorMention(
@@ -528,15 +532,17 @@ class CompetitorIntelligenceService:
 
     def _detect_relationship_progression(self, conversation_history: List[Dict]) -> bool:
         """Detect if lead is building relationship with another agent"""
-        progression_indicators = [
-            "meeting tomorrow",
-            "showed me properties",
-            "sent me listings",
-            "we've been working together"
+        progression_patterns = [
+            r"meeting.{0,10}(tomorrow|again|next)",
+            r"showed me.{0,15}propert",
+            r"sent me.{0,10}listing",
+            r"we'?ve been working",
+            r"(they|she|he)\s+showed me",
+            r"sign(ed|ing)?\s+with\s+them",
         ]
 
         full_text = " ".join([msg.get("content", "").lower() for msg in conversation_history])
-        return any(indicator in full_text for indicator in progression_indicators)
+        return any(re.search(p, full_text, re.IGNORECASE) for p in progression_patterns)
 
     def _assess_overall_risk(self, mentions: List[CompetitorMention]) -> RiskLevel:
         """Assess overall competitive risk level"""
