@@ -141,6 +141,9 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     # Buyer-mode tag also counts as activation when buyer mode is enabled
     if not should_activate and jorge_settings.JORGE_BUYER_MODE:
         should_activate = jorge_settings.BUYER_ACTIVATION_TAG in tags
+    # Lead-mode tag also counts as activation when lead mode is enabled
+    if not should_activate and jorge_settings.JORGE_LEAD_MODE:
+        should_activate = jorge_settings.LEAD_ACTIVATION_TAG in tags
     should_deactivate = any(tag in tags for tag in deactivation_tags)
 
     if not should_activate:
@@ -459,6 +462,22 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             logger.error(f"Jorge buyer mode processing failed: {str(e)}", exc_info=True)
             # Fall back to normal processing if Jorge buyer mode fails
 
+    # Step -0.3: Check for Jorge's Lead Mode (LEAD_ACTIVATION_TAG + JORGE_LEAD_MODE)
+    jorge_lead_mode = (
+        jorge_settings.LEAD_ACTIVATION_TAG in tags and
+        jorge_settings.JORGE_LEAD_MODE and
+        not should_deactivate
+    )
+
+    if not jorge_lead_mode:
+        # Raw fallback — no bot mode matched
+        logger.info(f"No bot mode matched for contact {contact_id}")
+        return GHLWebhookResponse(
+            success=True,
+            message="Thanks for reaching out! How can I help you today?",
+            actions=[],
+        )
+
     try:
         # Step 0: Get tenant configuration
         tenant_config = await tenant_service.get_tenant_config(location_id)
@@ -739,13 +758,13 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
 
         # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
         compliance_status, reason, violations = await compliance_guard.audit_message(
-            final_message, 
-            contact_context={"contact_id": contact_id, "lead_score": ai_response.lead_score}
+            final_message,
+            contact_context={"contact_id": contact_id, "mode": "lead", "lead_score": ai_response.lead_score}
         )
-        
+
         if compliance_status == ComplianceStatus.BLOCKED:
-            logger.warning(f"Compliance BLOCKED standard message for {contact_id}: {reason}")
-            final_message = "I'm looking forward to helping you find the right home. What's your top priority in a neighborhood?"
+            logger.warning(f"Compliance BLOCKED lead message for {contact_id}: {reason}. Violations: {violations}")
+            final_message = "Thanks for reaching out! I'd love to help. What are you looking for in your next home?"
             actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
         background_tasks.add_task(

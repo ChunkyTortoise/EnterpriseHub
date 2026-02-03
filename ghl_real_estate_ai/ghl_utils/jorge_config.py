@@ -374,6 +374,10 @@ class JorgeEnvironmentSettings:
         # Analytics
         self.analytics_enabled = os.getenv("JORGE_ANALYTICS_ENABLED", "true").lower() == "true"
 
+        # Lead bot mode
+        self.jorge_lead_mode = os.getenv("JORGE_LEAD_MODE", "true").lower() == "true"
+        self.lead_activation_tag = os.getenv("LEAD_ACTIVATION_TAG", "Needs Qualifying")
+
     def _parse_list_env(self, env_var: str, default: List[str]) -> List[str]:
         """Parse environment variable as list"""
         value = os.getenv(env_var)
@@ -409,6 +413,16 @@ class JorgeEnvironmentSettings:
     def DEACTIVATION_TAGS(self) -> List[str]:
         """Get deactivation tags"""
         return self.deactivation_tags
+
+    @property
+    def JORGE_LEAD_MODE(self) -> bool:
+        """Compatibility property for lead mode routing"""
+        return self.jorge_lead_mode
+
+    @property
+    def LEAD_ACTIVATION_TAG(self) -> str:
+        """Tag that activates lead mode routing"""
+        return self.lead_activation_tag
 
 
 # ========== MARKET CONFIGURATION ==========
@@ -480,6 +494,7 @@ market_manager = JorgeMarketManager()
 
 # Export commonly used values
 JORGE_SELLER_MODE = settings.JORGE_SELLER_MODE
+JORGE_LEAD_MODE = settings.JORGE_LEAD_MODE
 ACTIVATION_TAGS = settings.ACTIVATION_TAGS
 DEACTIVATION_TAGS = settings.DEACTIVATION_TAGS
 CURRENT_MARKET = market_manager.current_market
@@ -492,6 +507,7 @@ __all__ = [
     "settings",
     "market_manager",
     "JORGE_SELLER_MODE",
+    "JORGE_LEAD_MODE",
     "ACTIVATION_TAGS",
     "DEACTIVATION_TAGS",
     "CURRENT_MARKET",

@@ -80,6 +80,28 @@ class TrainingMetricsResponse(BaseModel):
     validation_samples: int
 
 
+class FeatureExplanationResponse(BaseModel):
+    feature_name: str
+    display_name: str
+    category: str
+    shap_value: float
+    feature_value: float
+    business_explanation: str
+    actionable_insight: str
+
+
+class PropensityExplanationResponse(BaseModel):
+    contact_id: str
+    conversion_probability: float
+    base_value: float
+    feature_explanations: List[FeatureExplanationResponse]
+    key_drivers: List[Dict[str, Any]]
+    risk_factors: List[str]
+    opportunities: List[str]
+    waterfall_data: Dict[str, Any]
+    explanation_time_ms: float
+
+
 class BatchScoreRequest(BaseModel):
     leads: List[ScoreLeadRequest] = Field(..., min_length=1, max_length=50)
 
@@ -123,6 +145,44 @@ async def score_lead(request: ScoreLeadRequest):
     except Exception as e:
         logger.error("Propensity scoring failed for %s: %s", request.contact_id, e)
         raise HTTPException(500, f"Propensity scoring error: {e}")
+
+
+@router.post("/explain", response_model=PropensityExplanationResponse)
+async def explain_propensity(request: ScoreLeadRequest):
+    """Generate SHAP explanation for a lead's propensity score."""
+    try:
+        engine = get_propensity_engine()
+        result = await engine.explain_score(
+            contact_id=request.contact_id,
+            address=request.address,
+            conversation_context=request.conversation_context,
+            behavioral_signals=request.behavioral_signals,
+        )
+        return PropensityExplanationResponse(
+            contact_id=result.contact_id,
+            conversion_probability=result.conversion_probability,
+            base_value=result.base_value,
+            feature_explanations=[
+                FeatureExplanationResponse(
+                    feature_name=e.feature_name,
+                    display_name=e.display_name,
+                    category=e.category,
+                    shap_value=e.shap_value,
+                    feature_value=e.feature_value,
+                    business_explanation=e.business_explanation,
+                    actionable_insight=e.actionable_insight,
+                )
+                for e in result.feature_explanations
+            ],
+            key_drivers=result.key_drivers,
+            risk_factors=result.risk_factors,
+            opportunities=result.opportunities,
+            waterfall_data=result.waterfall_data,
+            explanation_time_ms=result.explanation_time_ms,
+        )
+    except Exception as e:
+        logger.error("Propensity explanation failed for %s: %s", request.contact_id, e)
+        raise HTTPException(500, f"Propensity explanation error: {e}")
 
 
 @router.post("/score/batch")

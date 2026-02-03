@@ -45,35 +45,31 @@ logger = logging.getLogger(__name__)
 
 
 class RiskLevel(Enum):
-    """Risk level for competitive situations"""
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    CRITICAL = "critical"
-
-    @staticmethod
-    def _rank(value: str) -> int:
-        return {"low": 0, "medium": 1, "high": 2, "critical": 3}[value]
+    """Risk level for competitive situations (int values enable .value ordering)"""
+    LOW = 0
+    MEDIUM = 1
+    HIGH = 2
+    CRITICAL = 3
 
     def __lt__(self, other):
         if not isinstance(other, RiskLevel):
             return NotImplemented
-        return self._rank(self.value) < self._rank(other.value)
+        return self.value < other.value
 
     def __le__(self, other):
         if not isinstance(other, RiskLevel):
             return NotImplemented
-        return self._rank(self.value) <= self._rank(other.value)
+        return self.value <= other.value
 
     def __gt__(self, other):
         if not isinstance(other, RiskLevel):
             return NotImplemented
-        return self._rank(self.value) > self._rank(other.value)
+        return self.value > other.value
 
     def __ge__(self, other):
         if not isinstance(other, RiskLevel):
             return NotImplemented
-        return self._rank(self.value) >= self._rank(other.value)
+        return self.value >= other.value
 
 
 @dataclass

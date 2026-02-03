@@ -88,6 +88,32 @@ class PropensityScore:
 
 
 @dataclass
+class FeatureExplanation:
+    """SHAP-style explanation for a single feature."""
+    feature_name: str
+    display_name: str
+    category: str  # life_event, conversation, behavioral
+    shap_value: float
+    feature_value: float
+    business_explanation: str
+    actionable_insight: str
+
+
+@dataclass
+class PropensityExplanation:
+    """Complete SHAP explanation for a propensity score."""
+    contact_id: str
+    conversion_probability: float
+    base_value: float
+    feature_explanations: List[FeatureExplanation]
+    key_drivers: List[Dict[str, Any]]
+    risk_factors: List[str]
+    opportunities: List[str]
+    waterfall_data: Dict[str, Any]
+    explanation_time_ms: float
+
+
+@dataclass
 class TrainingMetrics:
     """Metrics from a model training run."""
     accuracy: float
@@ -140,6 +166,196 @@ BEHAVIORAL_FEATURES = [
 ]
 
 ALL_FEATURES = LIFE_EVENT_FEATURES + CONVERSATION_FEATURES + BEHAVIORAL_FEATURES
+
+
+# Business-context mapping for all 26 features
+FEATURE_DISPLAY: Dict[str, Dict[str, str]] = {
+    # Life event features
+    "probate_detected": {
+        "display": "Probate Detected",
+        "category": "life_event",
+        "positive": "Probate situation creates strong seller motivation",
+        "negative": "No probate situation detected",
+        "insight": "Use empathetic outreach; offer estate sale expertise",
+    },
+    "job_relocation_detected": {
+        "display": "Job Relocation",
+        "category": "life_event",
+        "positive": "Active job relocation drives urgent housing need",
+        "negative": "No relocation signals detected",
+        "insight": "Coordinate with relocation timeline; offer remote closing",
+    },
+    "divorce_detected": {
+        "display": "Divorce Proceedings",
+        "category": "life_event",
+        "positive": "Divorce proceedings driving property disposition",
+        "negative": "No divorce proceedings detected",
+        "insight": "Neutral facilitation; present quick-sale options",
+    },
+    "tax_delinquent": {
+        "display": "Tax Delinquency",
+        "category": "life_event",
+        "positive": "Tax delinquency creates urgency to sell",
+        "negative": "Taxes current; no financial distress signal",
+        "insight": "Frame equity preservation; emphasize timeline urgency",
+    },
+    "pre_foreclosure": {
+        "display": "Pre-Foreclosure",
+        "category": "life_event",
+        "positive": "Pre-foreclosure status signals high motivation",
+        "negative": "No foreclosure risk detected",
+        "insight": "Position as rescue partner; highlight short-sale expertise",
+    },
+    "long_ownership": {
+        "display": "Long-Term Owner",
+        "category": "life_event",
+        "positive": "Long ownership suggests significant equity buildup",
+        "negative": "Recent purchase; less equity motivation",
+        "insight": "Highlight equity gains and downsizing opportunities",
+    },
+    "absentee_owner": {
+        "display": "Absentee Owner",
+        "category": "life_event",
+        "positive": "Absentee ownership suggests investment property potential",
+        "negative": "Owner-occupied property",
+        "insight": "Approach as investment property management opportunity",
+    },
+    "recent_permit": {
+        "display": "Recent Permit Activity",
+        "category": "life_event",
+        "positive": "Recent permits indicate property improvement and readiness",
+        "negative": "No recent improvement activity",
+        "insight": "Highlight improved property value in listing strategy",
+    },
+    "years_owned": {
+        "display": "Ownership Duration",
+        "category": "life_event",
+        "positive": "Extended ownership correlates with higher equity",
+        "negative": "Short ownership period limits equity growth",
+        "insight": "Calculate and present equity appreciation gains",
+    },
+    "liens_count": {
+        "display": "Liens Outstanding",
+        "category": "life_event",
+        "positive": "Multiple liens increase urgency to resolve",
+        "negative": "Clear title with no outstanding liens",
+        "insight": "Coordinate with title company on resolution",
+    },
+    "market_value_norm": {
+        "display": "Property Market Value",
+        "category": "life_event",
+        "positive": "Higher value property increases commission opportunity",
+        "negative": "Lower value reduces immediate revenue potential",
+        "insight": "Align commission expectations with property value tier",
+    },
+    "tax_amount_norm": {
+        "display": "Property Tax Burden",
+        "category": "life_event",
+        "positive": "High tax burden may motivate downsizing",
+        "negative": "Low tax burden reduces financial pressure",
+        "insight": "Present tax reduction through strategic relocation",
+    },
+    # Conversation features
+    "message_count_norm": {
+        "display": "Conversation Volume",
+        "category": "conversation",
+        "positive": "Active conversation indicates strong engagement",
+        "negative": "Limited interaction suggests passive interest",
+        "insight": "Increase touchpoint frequency to build rapport",
+    },
+    "avg_response_time_norm": {
+        "display": "Response Speed",
+        "category": "conversation",
+        "positive": "Quick responses signal high interest and availability",
+        "negative": "Slow responses suggest competing priorities",
+        "insight": "Match their response cadence; follow up within 2 hours",
+    },
+    "sentiment_norm": {
+        "display": "Conversation Sentiment",
+        "category": "conversation",
+        "positive": "Positive sentiment reflects enthusiasm and readiness",
+        "negative": "Negative sentiment may indicate objections or hesitation",
+        "insight": "Address concerns directly; reinforce value proposition",
+    },
+    "urgency_score": {
+        "display": "Urgency Level",
+        "category": "conversation",
+        "positive": "High urgency drives faster conversion timeline",
+        "negative": "Low urgency signals longer sales cycle ahead",
+        "insight": "Prioritize immediate response for urgent leads",
+    },
+    "engagement_score": {
+        "display": "Engagement Depth",
+        "category": "conversation",
+        "positive": "Deep engagement shows serious buying/selling intent",
+        "negative": "Surface-level engagement needs nurturing",
+        "insight": "Provide detailed market insights to deepen engagement",
+    },
+    "qualification_completeness": {
+        "display": "Qualification Progress",
+        "category": "conversation",
+        "positive": "High qualification completeness; ready to convert",
+        "negative": "Incomplete qualification requires more discovery",
+        "insight": "Ask targeted questions to fill qualification gaps",
+    },
+    "budget_confidence": {
+        "display": "Budget Clarity",
+        "category": "conversation",
+        "positive": "Clear budget signals financial readiness",
+        "negative": "Budget uncertainty may delay transaction",
+        "insight": "Connect with pre-approval process early",
+    },
+    "price_mentions_norm": {
+        "display": "Price Discussion",
+        "category": "conversation",
+        "positive": "Active price discussion shows transaction readiness",
+        "negative": "Avoiding price talk may indicate early-stage interest",
+        "insight": "Introduce pricing context through market comparisons",
+    },
+    "location_specificity": {
+        "display": "Location Clarity",
+        "category": "conversation",
+        "positive": "Specific location preference narrows search effectively",
+        "negative": "Broad location interest needs area education",
+        "insight": "Provide neighborhood tours and area comparisons",
+    },
+    # Behavioral features
+    "commitment_score": {
+        "display": "Commitment Level",
+        "category": "behavioral",
+        "positive": "Strong commitment language indicates decision readiness",
+        "negative": "Weak commitment signals suggest indecision",
+        "insight": "Present clear next steps to convert commitment into action",
+    },
+    "hedging_score": {
+        "display": "Hedging Language",
+        "category": "behavioral",
+        "positive": "Low hedging indicates decisive communication",
+        "negative": "High hedging language suggests unresolved concerns",
+        "insight": "Address hidden objections with direct, empathetic questions",
+    },
+    "urgency_signal": {
+        "display": "Urgency Signals",
+        "category": "behavioral",
+        "positive": "Urgency language signals time-sensitive motivation",
+        "negative": "No urgency cues; browsing at leisure",
+        "insight": "Create soft urgency through market timing insights",
+    },
+    "composite_score": {
+        "display": "Overall Behavioral Score",
+        "category": "behavioral",
+        "positive": "Strong overall behavioral profile for conversion",
+        "negative": "Mixed behavioral signals need further engagement",
+        "insight": "Combine multiple outreach strategies for engagement",
+    },
+    "latency_factor": {
+        "display": "Decision Latency",
+        "category": "behavioral",
+        "positive": "Quick decision-making indicates readiness to act",
+        "negative": "Slow decision pace may need patience and nurturing",
+        "insight": "Provide decision-support materials and comparison tools",
+    },
+}
 
 
 # ---------------------------------------------------------------------------
@@ -318,6 +534,177 @@ class XGBoostPropensityEngine:
     def clear_cache(self) -> None:
         """Flush the in-memory score cache."""
         self._cache.clear()
+
+    async def explain_score(
+        self,
+        contact_id: str,
+        address: Optional[str] = None,
+        conversation_context: Optional[Dict[str, Any]] = None,
+        behavioral_signals: Optional[Dict[str, Any]] = None,
+    ) -> PropensityExplanation:
+        """
+        Generate SHAP-based explanation for a propensity score.
+
+        Uses TreeExplainer when a trained XGBoost model is available,
+        falls back to heuristic feature-contribution analysis otherwise.
+        """
+        start = time.time()
+
+        life_events = await self._detect_life_events(address)
+        features = self._build_feature_vector(
+            life_events, conversation_context or {}, behavioral_signals or {}
+        )
+
+        if self._is_trained and self._model is not None:
+            shap_values, base_value, probability = self._shap_with_model(features)
+        else:
+            shap_values, base_value, probability = self._shap_heuristic(
+                life_events, features
+            )
+
+        # Build per-feature explanations
+        explanations: List[FeatureExplanation] = []
+        for i, fname in enumerate(self._feature_names):
+            meta = FEATURE_DISPLAY.get(fname, {})
+            sv = shap_values[i]
+            fv = float(features[i])
+            biz = meta.get("positive" if sv > 0 else "negative", fname)
+            explanations.append(FeatureExplanation(
+                feature_name=fname,
+                display_name=meta.get("display", fname),
+                category=meta.get("category", "other"),
+                shap_value=round(sv, 4),
+                feature_value=round(fv, 4),
+                business_explanation=biz,
+                actionable_insight=meta.get("insight", ""),
+            ))
+
+        # Sort by absolute impact for key drivers
+        sorted_exp = sorted(explanations, key=lambda e: abs(e.shap_value), reverse=True)
+        key_drivers = [
+            {
+                "feature": e.display_name,
+                "impact": e.shap_value,
+                "direction": "positive" if e.shap_value > 0 else "negative",
+                "explanation": e.business_explanation,
+            }
+            for e in sorted_exp[:5]
+        ]
+
+        risk_factors = [
+            e.business_explanation
+            for e in sorted_exp
+            if e.shap_value < -0.01
+        ][:3]
+
+        opportunities = [
+            e.actionable_insight
+            for e in sorted_exp
+            if e.shap_value > 0.01 and e.actionable_insight
+        ][:3]
+
+        # Waterfall chart data (Recharts-compatible)
+        waterfall_data = self._build_waterfall(base_value, probability, sorted_exp[:10])
+
+        elapsed_ms = round((time.time() - start) * 1000, 2)
+
+        return PropensityExplanation(
+            contact_id=contact_id,
+            conversion_probability=round(probability, 4),
+            base_value=round(base_value, 4),
+            feature_explanations=explanations,
+            key_drivers=key_drivers,
+            risk_factors=risk_factors,
+            opportunities=opportunities,
+            waterfall_data=waterfall_data,
+            explanation_time_ms=elapsed_ms,
+        )
+
+    def _shap_with_model(
+        self, features: np.ndarray
+    ) -> tuple:
+        """Compute SHAP values using TreeExplainer on the trained model."""
+        try:
+            import shap as shap_lib
+
+            scaled = self._scaler.transform(features.reshape(1, -1))
+            explainer = shap_lib.TreeExplainer(self._model)
+            sv = explainer.shap_values(scaled)
+
+            # Handle different SHAP output formats
+            if isinstance(sv, list):
+                shap_vals = sv[1][0]  # class 1 (converted)
+            else:
+                shap_vals = sv[0]
+
+            base_value = float(explainer.expected_value)
+            if isinstance(explainer.expected_value, (list, np.ndarray)):
+                base_value = float(explainer.expected_value[1])
+
+            probability = float(self._model.predict_proba(scaled)[0, 1])
+            return [float(v) for v in shap_vals], base_value, probability
+        except Exception:
+            logger.debug("SHAP TreeExplainer unavailable, using heuristic")
+            return self._shap_heuristic([], features)
+
+    def _shap_heuristic(
+        self,
+        life_events: List[LifeEventSignal],
+        features: np.ndarray,
+    ) -> tuple:
+        """Approximate SHAP values using weighted feature contributions."""
+        base_value = 0.15  # population baseline conversion rate
+
+        # Weight vectors for each feature group
+        life_weights = np.array([
+            0.12, 0.08, 0.09, 0.07, 0.10, 0.04, 0.05, 0.03,
+            0.04, 0.06, 0.02, 0.02,
+        ])
+        conv_weights = np.array([
+            0.03, 0.04, 0.05, 0.06, 0.05, 0.06, 0.05, 0.03, 0.04,
+        ])
+        behav_weights = np.array([
+            0.06, -0.04, 0.05, 0.08, 0.03,
+        ])
+
+        all_weights = np.concatenate([life_weights, conv_weights, behav_weights])
+
+        # SHAP-like contributions: weight × (feature - mean) for continuous,
+        # weight × feature for binary
+        mean_features = np.full_like(features, 0.5)
+        mean_features[:8] = 0.1  # binary life-event base rates
+        shap_vals = all_weights * (features - mean_features)
+
+        probability = float(base_value + np.sum(shap_vals))
+        probability = max(0.01, min(probability, 0.99))
+
+        return [float(v) for v in shap_vals], base_value, probability
+
+    @staticmethod
+    def _build_waterfall(
+        base: float,
+        prediction: float,
+        top_features: list,
+    ) -> Dict[str, Any]:
+        """Build Recharts-compatible waterfall chart data."""
+        entries = [{"name": "Baseline", "value": round(base, 4), "type": "base"}]
+        running = base
+        for feat in top_features:
+            sv = feat.shap_value
+            entries.append({
+                "name": feat.display_name,
+                "value": round(sv, 4),
+                "start": round(running, 4),
+                "end": round(running + sv, 4),
+                "type": "positive" if sv > 0 else "negative",
+            })
+            running += sv
+        entries.append({
+            "name": "Prediction",
+            "value": round(prediction, 4),
+            "type": "total",
+        })
+        return {"entries": entries, "base_value": round(base, 4), "prediction": round(prediction, 4)}
 
     # ------------------------------------------------------------------
     # Life-event detection

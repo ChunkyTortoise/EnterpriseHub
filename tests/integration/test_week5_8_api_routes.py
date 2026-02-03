@@ -20,9 +20,34 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture(scope="module")
 def client():
-    """Create a test client for the FastAPI app."""
-    from ghl_real_estate_ai.api.main import create_app
-    app = create_app()
+    """Create a lightweight test client with only Week 5-8 routes."""
+    from fastapi import FastAPI
+    from ghl_real_estate_ai.api.routes import (
+        langgraph_orchestration,
+        behavioral_triggers,
+        fha_respa_compliance,
+        voice_intelligence,
+        propensity_scoring,
+        heygen_video,
+        sentiment_analysis,
+        channel_routing,
+        rc_market_intelligence,
+        export_engine,
+        commission_forecast,
+    )
+
+    app = FastAPI(title="Week 5-8 Integration Tests")
+    app.include_router(langgraph_orchestration.router)
+    app.include_router(behavioral_triggers.router)
+    app.include_router(fha_respa_compliance.router)
+    app.include_router(voice_intelligence.router)
+    app.include_router(propensity_scoring.router)
+    app.include_router(heygen_video.router)
+    app.include_router(sentiment_analysis.router)
+    app.include_router(channel_routing.router)
+    app.include_router(rc_market_intelligence.router)
+    app.include_router(export_engine.router)
+    app.include_router(commission_forecast.router)
     return TestClient(app)
 
 
@@ -32,6 +57,7 @@ def _reset_singletons():
     import ghl_real_estate_ai.services.langgraph_orchestrator as lgo
     import ghl_real_estate_ai.services.behavioral_trigger_detector as btd
     import ghl_real_estate_ai.services.compliance_middleware as cm
+    import ghl_real_estate_ai.services.vapi_voice_integration as vvi
     import ghl_real_estate_ai.services.sentiment_analysis_engine as sae
     import ghl_real_estate_ai.services.unified_channel_router as ucr
     import ghl_real_estate_ai.services.real_time_market_intelligence as rtmi
@@ -43,6 +69,7 @@ def _reset_singletons():
     lgo._orchestrator = None
     btd._detector = None
     cm._middleware = None
+    vvi._intelligence = None
     sae._engine = None
     ucr._router = None
     rtmi._intel = None
@@ -475,6 +502,42 @@ class TestVoiceSentimentPropensityFlow:
         assert data["temperature"] in ("hot", "warm", "cold")
         assert data["recommended_approach"]
 
+    def test_propensity_shap_explanation(self, client):
+        """Get SHAP explanation for a propensity score."""
+        resp = client.post("/api/v1/propensity/explain", json={
+            "contact_id": "c_explain_001",
+            "conversation_context": {
+                "message_count": 15,
+                "avg_response_time": 45,
+                "sentiment": 0.6,
+                "urgency_score": 0.7,
+                "engagement_score": 0.8,
+                "qualification_completeness": 0.9,
+                "budget_confidence": 0.85,
+                "price_mentions": 3,
+                "location_specificity": 0.7,
+            },
+            "behavioral_signals": {
+                "commitment_score": 0.7,
+                "hedging_score": 0.2,
+                "urgency_signal": 0.6,
+                "composite_score": 0.65,
+                "latency_factor": 0.3,
+            },
+        })
+        assert resp.status_code == 200
+        data = resp.json()
+        assert 0 < data["conversion_probability"] <= 1
+        assert data["base_value"] > 0
+        assert len(data["feature_explanations"]) == 26
+        assert len(data["key_drivers"]) > 0
+        assert data["waterfall_data"]["entries"]
+        # Verify feature categories
+        categories = {e["category"] for e in data["feature_explanations"]}
+        assert "life_event" in categories
+        assert "conversation" in categories
+        assert "behavioral" in categories
+
     def test_voice_to_propensity_flow(self, client):
         """End-to-end: voice transcript → sentiment → propensity."""
         # Step 1: Analyze voice transcript
@@ -550,7 +613,7 @@ class TestHeyGenVideoFlow:
         assert data["status"] in ("completed", "processing")
         assert data["video_url"]
         assert data["lead_id"] == "l_video_001"
-        return data["request_id"]
+        assert data["request_id"]
 
     def test_video_lifecycle(self, client):
         """Full video lifecycle: create → status → deliver → view."""
