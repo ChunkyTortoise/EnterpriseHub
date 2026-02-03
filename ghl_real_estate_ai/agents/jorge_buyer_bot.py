@@ -57,6 +57,8 @@ ERROR_ID_SYSTEM_FAILURE = "SYSTEM_FAILURE"
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
+from ghl_real_estate_ai.services.ghl_client import GHLClient
+from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from bots.shared.ml_analytics_engine import get_ml_analytics_engine
 
@@ -168,6 +170,7 @@ class JorgeBuyerBot:
         self.event_publisher = get_event_publisher()
         self.property_matcher = PropertyMatcher()
         self.ml_analytics = get_ml_analytics_engine(tenant_id)
+        self.ghl_client = GHLClient()
 
         # Phase 3.3 Bot Intelligence Middleware Integration
         self.enable_bot_intelligence = enable_bot_intelligence
@@ -736,32 +739,133 @@ class JorgeBuyerBot:
         """
         Escalate buyer conversation to human agent review.
 
-        1. Creates escalation ticket in GHL CRM
-        2. Sends notification to human agent via event publisher
-        3. Flags conversation as needs_human_review
-        4. Logs escalation with timestamp and reason
-        5. Graceful degradation if notification service fails
+        Creates real GHL artifacts (tag, note, workflow trigger, disposition update)
+        so the human agent sees the escalation in the CRM immediately.
+
+        Graceful degradation: individual step failures are logged but do not
+        crash the bot or block subsequent steps.
 
         Returns:
-            Dict with escalation_id and status.
+            Dict with escalation_id and per-step status.
         """
         escalation_id = str(uuid.uuid4())
         timestamp = datetime.now(timezone.utc).isoformat()
 
-        logger.info(f"Escalating buyer {buyer_id} to human review: {reason}",
-                    extra={"escalation_id": escalation_id, "buyer_id": buyer_id})
+        logger.info(
+            "Escalating buyer to human review",
+            extra={
+                "escalation_id": escalation_id,
+                "buyer_id": buyer_id,
+                "reason": reason,
+            },
+        )
 
         escalation_result = {
             "escalation_id": escalation_id,
             "buyer_id": buyer_id,
             "reason": reason,
             "timestamp": timestamp,
-            "crm_ticket_created": False,
-            "notification_sent": False,
-            "status": "pending"
+            "tag_added": False,
+            "note_added": False,
+            "workflow_triggered": False,
+            "disposition_updated": False,
+            "event_published": False,
+            "status": "pending",
         }
 
-        # 1. Create CRM escalation ticket via event publisher
+        # 1. Add "Escalation" tag to GHL contact
+        try:
+            await self.ghl_client.add_tags(buyer_id, ["Escalation"])
+            escalation_result["tag_added"] = True
+            logger.info(
+                "Escalation tag added to contact",
+                extra={"buyer_id": buyer_id, "escalation_id": escalation_id},
+            )
+        except Exception as e:
+            logger.warning(
+                f"Failed to add Escalation tag for {buyer_id}: {e}",
+                extra={"escalation_id": escalation_id, "error": str(e)},
+            )
+
+        # 2. Add a note to the contact with escalation details
+        try:
+            conversation_summary = context.get("conversation_summary", "")
+            qualification_score = context.get("qualification_score", "N/A")
+            current_step = context.get("current_step", "unknown")
+
+            note_body = (
+                f"[BUYER ESCALATION - {timestamp}]\n"
+                f"Escalation ID: {escalation_id}\n"
+                f"Reason: {reason}\n"
+                f"Qualification Score: {qualification_score}\n"
+                f"Stage: {current_step}\n"
+                f"---\n"
+                f"Context: {conversation_summary[:500] if conversation_summary else 'No summary available'}"
+            )
+
+            import httpx
+            endpoint = f"{self.ghl_client.base_url}/contacts/{buyer_id}/notes"
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    endpoint,
+                    json={"body": note_body},
+                    headers=self.ghl_client.headers,
+                    timeout=settings.webhook_timeout_seconds,
+                )
+                response.raise_for_status()
+
+            escalation_result["note_added"] = True
+            logger.info(
+                "Escalation note added to contact",
+                extra={"buyer_id": buyer_id, "escalation_id": escalation_id},
+            )
+        except Exception as e:
+            logger.warning(
+                f"Failed to add escalation note for {buyer_id}: {e}",
+                extra={"escalation_id": escalation_id, "error": str(e)},
+            )
+
+        # 3. Trigger notify-agent workflow if configured
+        if settings.notify_agent_workflow_id:
+            try:
+                await self.ghl_client.trigger_workflow(
+                    buyer_id, settings.notify_agent_workflow_id
+                )
+                escalation_result["workflow_triggered"] = True
+                logger.info(
+                    "Notify-agent workflow triggered",
+                    extra={
+                        "buyer_id": buyer_id,
+                        "workflow_id": settings.notify_agent_workflow_id,
+                        "escalation_id": escalation_id,
+                    },
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Failed to trigger notify-agent workflow for {buyer_id}: {e}",
+                    extra={"escalation_id": escalation_id, "error": str(e)},
+                )
+
+        # 4. Update contact disposition to indicate escalation
+        if settings.disposition_field_name:
+            try:
+                await self.ghl_client.update_custom_field(
+                    buyer_id,
+                    settings.disposition_field_name,
+                    "Escalated - Needs Human Review",
+                )
+                escalation_result["disposition_updated"] = True
+                logger.info(
+                    "Contact disposition updated to escalated",
+                    extra={"buyer_id": buyer_id, "escalation_id": escalation_id},
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Failed to update disposition for {buyer_id}: {e}",
+                    extra={"escalation_id": escalation_id, "error": str(e)},
+                )
+
+        # 5. Publish internal event for dashboards and monitoring
         try:
             await self.event_publisher.publish_bot_status_update(
                 bot_type="jorge-buyer",
@@ -769,34 +873,35 @@ class JorgeBuyerBot:
                 status="escalated",
                 current_step="human_review",
                 escalation_id=escalation_id,
-                reason=reason
+                reason=reason,
             )
-            escalation_result["crm_ticket_created"] = True
+            escalation_result["event_published"] = True
         except Exception as e:
-            logger.warning(f"CRM ticket creation failed for escalation {escalation_id}: {e}")
-
-        # 2. Send notification to human agent
-        try:
-            await self.event_publisher.publish_conversation_update(
-                conversation_id=f"jorge_buyer_{buyer_id}",
-                lead_id=buyer_id,
-                stage="needs_human_review",
-                message=f"Buyer escalation: {reason}",
-                escalation_id=escalation_id,
-                priority="high"
+            logger.warning(
+                f"Event publish failed for escalation {escalation_id}: {e}",
+                extra={"escalation_id": escalation_id, "error": str(e)},
             )
-            escalation_result["notification_sent"] = True
-        except Exception as e:
-            logger.warning(f"Notification failed for escalation {escalation_id}: {e}")
 
-        # 3. Determine final status
-        if escalation_result["crm_ticket_created"] or escalation_result["notification_sent"]:
+        # 6. Determine final status
+        ghl_actions_succeeded = (
+            escalation_result["tag_added"]
+            or escalation_result["note_added"]
+            or escalation_result["workflow_triggered"]
+        )
+        if ghl_actions_succeeded:
             escalation_result["status"] = "escalated"
+        elif escalation_result["event_published"]:
+            escalation_result["status"] = "escalated_internal_only"
+            logger.warning(
+                "GHL actions failed but internal event published - agent may not see escalation in CRM",
+                extra={"escalation_id": escalation_id, "buyer_id": buyer_id},
+            )
         else:
-            # Both failed - queue for manual processing
             escalation_result["status"] = "queued"
-            logger.error(f"All escalation channels failed for {buyer_id}. Queued for manual processing.",
-                        extra={"escalation_id": escalation_id})
+            logger.error(
+                "All escalation channels failed for buyer. Queued for manual processing.",
+                extra={"escalation_id": escalation_id, "buyer_id": buyer_id},
+            )
 
         return escalation_result
 

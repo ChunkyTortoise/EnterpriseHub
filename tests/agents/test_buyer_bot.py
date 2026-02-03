@@ -7,7 +7,7 @@ Follows proven testing patterns from seller bot tests.
 import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import Mock, MagicMock, AsyncMock, patch
 
 from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
 from ghl_real_estate_ai.agents.buyer_intent_decoder import BuyerIntentDecoder
@@ -626,10 +626,17 @@ class TestEscalateToHumanReview:
 
     @pytest.mark.asyncio
     async def test_escalate_creates_ticket_and_sends_notification(self, mock_dependencies):
-        """Escalation creates CRM ticket and sends human agent notification."""
+        """Escalation creates CRM tag and publishes internal event."""
         buyer_bot = JorgeBuyerBot()
+        # Mock GHL client so CRM actions succeed
+        buyer_bot.ghl_client = MagicMock()
+        buyer_bot.ghl_client.add_tags = AsyncMock()
+        buyer_bot.ghl_client.trigger_workflow = AsyncMock()
+        buyer_bot.ghl_client.update_custom_field = AsyncMock()
+        buyer_bot.ghl_client.base_url = "https://test.api"
+        buyer_bot.ghl_client.headers = {"Authorization": "Bearer test"}
+        # Mock event publisher
         buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
-        buyer_bot.event_publisher.publish_conversation_update = AsyncMock()
 
         result = await buyer_bot.escalate_to_human_review(
             buyer_id="buyer_123",
@@ -639,28 +646,30 @@ class TestEscalateToHumanReview:
 
         assert result["escalation_id"] is not None
         assert result["status"] == "escalated"
-        assert result["crm_ticket_created"] is True
-        assert result["notification_sent"] is True
+        assert result["tag_added"] is True
+        assert result["event_published"] is True
         assert result["buyer_id"] == "buyer_123"
         assert result["reason"] == "intent_analysis_failure"
 
-        # Verify CRM status update was called
+        # Verify internal event was published
         buyer_bot.event_publisher.publish_bot_status_update.assert_called_once()
         call_kwargs = buyer_bot.event_publisher.publish_bot_status_update.call_args
         assert call_kwargs.kwargs["status"] == "escalated"
 
-        # Verify notification was sent
-        buyer_bot.event_publisher.publish_conversation_update.assert_called_once()
-
     @pytest.mark.asyncio
     async def test_escalate_graceful_degradation_when_services_fail(self, mock_dependencies):
-        """Escalation queues request when all notification channels fail."""
+        """Escalation queues request when all channels fail."""
         buyer_bot = JorgeBuyerBot()
+        # GHL client methods all fail
+        buyer_bot.ghl_client = MagicMock()
+        buyer_bot.ghl_client.add_tags = AsyncMock(side_effect=Exception("GHL unavailable"))
+        buyer_bot.ghl_client.trigger_workflow = AsyncMock(side_effect=Exception("GHL unavailable"))
+        buyer_bot.ghl_client.update_custom_field = AsyncMock(side_effect=Exception("GHL unavailable"))
+        buyer_bot.ghl_client.base_url = "https://test.api"
+        buyer_bot.ghl_client.headers = {"Authorization": "Bearer test"}
+        # Event publisher also fails
         buyer_bot.event_publisher.publish_bot_status_update = AsyncMock(
             side_effect=Exception("CRM unavailable")
-        )
-        buyer_bot.event_publisher.publish_conversation_update = AsyncMock(
-            side_effect=Exception("Notification service down")
         )
 
         result = await buyer_bot.escalate_to_human_review(
@@ -670,8 +679,8 @@ class TestEscalateToHumanReview:
         )
 
         assert result["status"] == "queued"
-        assert result["crm_ticket_created"] is False
-        assert result["notification_sent"] is False
+        assert result["tag_added"] is False
+        assert result["event_published"] is False
         assert result["escalation_id"] is not None
 
 
@@ -855,6 +864,291 @@ class TestComplianceViolationEscalation:
 
         assert result["severity"] == "medium"
         assert result["notification_sent"] is False  # Medium severity doesn't auto-notify
+
+
+class TestStreamARequiredCoverage:
+    """
+    Required test coverage for Stream A error handling TODOs.
+    Uses the exact test names specified in the delivery requirements.
+    """
+
+    @pytest.fixture
+    def mock_dependencies(self):
+        with patch.multiple(
+            'ghl_real_estate_ai.agents.jorge_buyer_bot',
+            BuyerIntentDecoder=AsyncMock,
+            ClaudeAssistant=AsyncMock,
+            get_event_publisher=Mock,
+            PropertyMatcher=AsyncMock,
+            get_ml_analytics_engine=Mock
+        ) as mocks:
+            yield mocks
+
+    # ---- TODO 1: Retry Mechanism ----
+
+    @pytest.mark.asyncio
+    async def test_retry_mechanism_succeeds_on_second_attempt(self, mock_dependencies):
+        """Retry recovers from a transient NetworkError on the second call."""
+        from ghl_real_estate_ai.agents.jorge_buyer_bot import (
+            async_retry_with_backoff, RetryConfig, NetworkError
+        )
+
+        attempts = 0
+
+        async def transient_failure():
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise NetworkError("Connection reset by peer")
+            return {"status": "ok", "data": [1, 2, 3]}
+
+        config = RetryConfig(max_retries=3, initial_backoff_ms=5)
+        result = await async_retry_with_backoff(transient_failure, config, "test_retry_second")
+
+        assert result == {"status": "ok", "data": [1, 2, 3]}
+        assert attempts == 2
+
+    @pytest.mark.asyncio
+    async def test_retry_mechanism_fails_after_max_retries(self, mock_dependencies):
+        """All retries exhausted raises the final exception."""
+        from ghl_real_estate_ai.agents.jorge_buyer_bot import (
+            async_retry_with_backoff, RetryConfig, ClaudeAPIError
+        )
+
+        attempts = 0
+
+        async def persistent_failure():
+            nonlocal attempts
+            attempts += 1
+            raise ClaudeAPIError("Upstream 503")
+
+        config = RetryConfig(max_retries=2, initial_backoff_ms=5)
+        with pytest.raises(ClaudeAPIError, match="Upstream 503"):
+            await async_retry_with_backoff(persistent_failure, config, "test_retry_exhaust")
+
+        assert attempts == 3  # 1 initial + 2 retries
+
+    @pytest.mark.asyncio
+    async def test_retry_mechanism_respects_backoff_timing(self, mock_dependencies):
+        """Backoff sleep is called with increasing delay between retries."""
+        from ghl_real_estate_ai.agents.jorge_buyer_bot import (
+            async_retry_with_backoff, RetryConfig, NetworkError
+        )
+        import time
+
+        timestamps = []
+
+        async def timed_failure():
+            timestamps.append(time.monotonic())
+            raise NetworkError("Timeout")
+
+        config = RetryConfig(max_retries=2, initial_backoff_ms=50, jitter_factor=0.0)
+        with pytest.raises(NetworkError):
+            await async_retry_with_backoff(timed_failure, config, "test_timing")
+
+        assert len(timestamps) == 3
+        # Second attempt should be at least 40ms after first (50ms backoff minus tolerance)
+        gap_1 = timestamps[1] - timestamps[0]
+        gap_2 = timestamps[2] - timestamps[1]
+        assert gap_1 >= 0.03  # ~50ms first backoff (with tolerance)
+        assert gap_2 >= gap_1 * 0.8  # Second gap should be larger (exponential)
+
+    # ---- TODO 2: Escalate to Human Review ----
+
+    @pytest.mark.asyncio
+    async def test_escalate_to_human_review_creates_ticket(self, mock_dependencies):
+        """Human escalation returns a valid ticket with CRM actions and event published."""
+        buyer_bot = JorgeBuyerBot()
+        buyer_bot.ghl_client = MagicMock()
+        buyer_bot.ghl_client.add_tags = AsyncMock()
+        buyer_bot.ghl_client.trigger_workflow = AsyncMock()
+        buyer_bot.ghl_client.update_custom_field = AsyncMock()
+        buyer_bot.ghl_client.base_url = "https://mock.api"
+        buyer_bot.ghl_client.headers = {"Authorization": "Bearer mock"}
+        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
+
+        result = await buyer_bot.escalate_to_human_review(
+            buyer_id="buyer_ticket_test",
+            reason="high_value_lead_confusion",
+            context={"conversation_summary": "Buyer asked complex questions about financing."}
+        )
+
+        assert result["escalation_id"] is not None
+        assert len(result["escalation_id"]) == 36  # UUID format
+        assert result["buyer_id"] == "buyer_ticket_test"
+        assert result["reason"] == "high_value_lead_confusion"
+        assert result["status"] == "escalated"
+        assert result["tag_added"] is True
+        assert result["timestamp"] is not None
+
+        # Verify GHL tag was applied
+        buyer_bot.ghl_client.add_tags.assert_called_once_with(
+            "buyer_ticket_test", ["Escalation"]
+        )
+
+    @pytest.mark.asyncio
+    async def test_escalate_to_human_review_queues_on_total_failure(self, mock_dependencies):
+        """When both GHL and event publisher fail, escalation is queued for manual processing."""
+        buyer_bot = JorgeBuyerBot()
+        buyer_bot.ghl_client = MagicMock()
+        buyer_bot.ghl_client.add_tags = AsyncMock(side_effect=Exception("GHL down"))
+        buyer_bot.ghl_client.trigger_workflow = AsyncMock(side_effect=Exception("GHL down"))
+        buyer_bot.ghl_client.update_custom_field = AsyncMock(side_effect=Exception("GHL down"))
+        buyer_bot.ghl_client.base_url = "https://mock.api"
+        buyer_bot.ghl_client.headers = {"Authorization": "Bearer mock"}
+        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock(
+            side_effect=Exception("Event bus down")
+        )
+
+        result = await buyer_bot.escalate_to_human_review(
+            buyer_id="buyer_total_fail",
+            reason="system_failure",
+            context={}
+        )
+
+        assert result["status"] == "queued"
+        assert result["tag_added"] is False
+        assert result["note_added"] is False
+        assert result["event_published"] is False
+        assert result["escalation_id"] is not None
+
+    # ---- TODO 3: Fallback Financial Assessment ----
+
+    @pytest.mark.asyncio
+    async def test_fallback_financial_assessment_uses_heuristic(self, mock_dependencies):
+        """Tier 1 fallback detects pre-approval keywords and returns heuristic assessment."""
+        buyer_bot = JorgeBuyerBot()
+
+        state = {
+            "buyer_id": "buyer_heuristic",
+            "conversation_history": [
+                {"role": "user", "content": "I got pre-approved last week for $500k"}
+            ]
+        }
+
+        result = await buyer_bot._fallback_financial_assessment(state)
+
+        assert result["fallback_tier"] == 1
+        assert result["fallback_source"] == "conversation_heuristic"
+        assert result["financing_status"] == "pre_approved"
+        assert result["financial_readiness_score"] >= 70
+
+    @pytest.mark.asyncio
+    async def test_fallback_financial_assessment_uses_conservative_default(self, mock_dependencies):
+        """Tier 2 fallback returns conservative defaults when no financial signals found."""
+        buyer_bot = JorgeBuyerBot()
+
+        state = {
+            "buyer_id": "buyer_no_signal",
+            "conversation_history": [
+                {"role": "user", "content": "I might want to look at some neighborhoods."}
+            ]
+        }
+
+        result = await buyer_bot._fallback_financial_assessment(state)
+
+        assert result["fallback_tier"] == 2
+        assert result["fallback_source"] == "conservative_default"
+        assert result["financing_status"] == "assessment_pending"
+        assert result["requires_manual_review"] is True
+        assert result["confidence"] == 0.3
+        assert result["budget_range"] is None
+
+    @pytest.mark.asyncio
+    async def test_fallback_financial_assessment_budget_keyword_detection(self, mock_dependencies):
+        """Tier 1 detects budget keyword signals (needs_approval) from conversation."""
+        buyer_bot = JorgeBuyerBot()
+
+        state = {
+            "buyer_id": "buyer_budget",
+            "conversation_history": [
+                {"role": "user", "content": "Our budget is around $600k, max price we can do"}
+            ]
+        }
+
+        result = await buyer_bot._fallback_financial_assessment(state)
+
+        assert result["fallback_tier"] == 1
+        assert result["financing_status"] == "needs_approval"
+        assert result["financial_readiness_score"] >= 50
+
+    # ---- TODO 4: Compliance Violation Escalation ----
+
+    @pytest.mark.asyncio
+    async def test_escalate_compliance_violation_fair_housing(self, mock_dependencies):
+        """Fair housing violation is escalated as critical with full audit trail and bot paused."""
+        buyer_bot = JorgeBuyerBot()
+        buyer_bot.event_publisher.publish_conversation_update = AsyncMock()
+        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
+
+        result = await buyer_bot.escalate_compliance_violation(
+            buyer_id="buyer_fh_test",
+            violation_type="fair_housing",
+            evidence={
+                "summary": "Discriminatory language about neighborhood demographics",
+                "message_id": "msg_fair_001"
+            }
+        )
+
+        assert result["compliance_ticket_id"] is not None
+        assert len(result["compliance_ticket_id"]) == 36  # UUID format
+        assert result["severity"] == "critical"
+        assert result["violation_type"] == "fair_housing"
+        assert result["audit_logged"] is True
+        assert result["notification_sent"] is True  # Critical severity sends notification
+        assert result["crm_flagged"] is True
+        assert result["bot_paused"] is True
+        assert result["status"] == "escalated"
+
+        # Verify audit trail was logged via conversation update
+        buyer_bot.event_publisher.publish_conversation_update.assert_called_once()
+        audit_kwargs = buyer_bot.event_publisher.publish_conversation_update.call_args
+        assert audit_kwargs.kwargs["violation_type"] == "fair_housing"
+        assert audit_kwargs.kwargs["severity"] == "critical"
+
+    @pytest.mark.asyncio
+    async def test_compliance_violation_pauses_bot(self, mock_dependencies):
+        """Any compliance violation flags contact and pauses bot interactions."""
+        buyer_bot = JorgeBuyerBot()
+        buyer_bot.event_publisher.publish_conversation_update = AsyncMock()
+        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
+
+        result = await buyer_bot.escalate_compliance_violation(
+            buyer_id="buyer_pause_test",
+            violation_type="privacy",
+            evidence={"summary": "Unauthorized PII disclosure to third party"}
+        )
+
+        assert result["bot_paused"] is True
+        assert result["crm_flagged"] is True
+        assert result["severity"] == "high"
+
+        # Verify bot_paused step was published
+        status_calls = buyer_bot.event_publisher.publish_bot_status_update.call_args_list
+        paused_calls = [
+            c for c in status_calls
+            if c.kwargs.get("current_step") == "bot_paused"
+        ]
+        assert len(paused_calls) >= 1
+
+    @pytest.mark.asyncio
+    async def test_compliance_violation_degraded_when_audit_fails(self, mock_dependencies):
+        """Compliance escalation reports degraded status when audit logging fails."""
+        buyer_bot = JorgeBuyerBot()
+        buyer_bot.event_publisher.publish_conversation_update = AsyncMock(
+            side_effect=Exception("Audit service unavailable")
+        )
+        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
+
+        result = await buyer_bot.escalate_compliance_violation(
+            buyer_id="buyer_audit_fail",
+            violation_type="fair_housing",
+            evidence={"summary": "Test audit failure"}
+        )
+
+        assert result["audit_logged"] is False
+        assert result["status"] == "escalation_degraded"
+        assert result["compliance_ticket_id"] is not None
 
 
 @pytest.mark.integration

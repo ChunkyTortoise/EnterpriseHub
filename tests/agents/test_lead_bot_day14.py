@@ -146,6 +146,16 @@ class TestPDFRendererCMA:
 
         assert len(pdf_bytes) < 2 * 1024 * 1024  # 2MB
 
+    def test_pdf_generation_performance(self, sample_cma_report):
+        """PDF generation completes within 200ms budget."""
+        import time
+
+        start = time.perf_counter()
+        PDFRenderer.generate_pdf_bytes(sample_cma_report)
+        elapsed_ms = (time.perf_counter() - start) * 1000
+
+        assert elapsed_ms < 200, f"PDF generation took {elapsed_ms:.1f}ms, exceeds 200ms budget"
+
 
 # ================================
 # CMA EMAIL ATTACHMENT TESTS

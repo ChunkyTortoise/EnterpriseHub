@@ -1,0 +1,945 @@
+"""
+Integration tests for Jorge Seller Bot
+
+Covers:
+- Factory method creation (standard, progressive, enterprise)
+- Feature config wiring (flags on/off)
+- Seller intent classification (pricing inquiry, timeline, motivation, objection)
+- CMA / pricing discussion handling
+- Confrontational qualification flow
+- PCS score calculation via intent decoder
+- Temperature assessment (hot / warm / cold seller)
+- Error handling (Claude API failures, missing data)
+- Edge cases (empty messages, very long messages)
+
+Uses unittest.mock for all external services (Claude API, GHL client, event publisher,
+ML analytics engine). Follows patterns from test_buyer_bot.py.
+"""
+
+import pytest
+import asyncio
+from datetime import datetime, timezone
+import os
+from unittest.mock import Mock, AsyncMock, MagicMock, patch
+
+from ghl_real_estate_ai.agents.jorge_seller_bot import (
+    JorgeSellerBot,
+    JorgeFeatureConfig,
+    QualificationResult,
+    ConversationMemory,
+    AdaptiveQuestionEngine,
+    get_jorge_seller_bot,
+)
+from ghl_real_estate_ai.models.lead_scoring import (
+    LeadIntentProfile,
+    FinancialReadinessScore,
+    PsychologicalCommitmentScore,
+    MotivationSignals,
+    TimelineCommitment,
+    ConditionRealism,
+    PriceResponsiveness,
+)
+
+
+# ---------------------------------------------------------------------------
+# Helpers to build mock intent profiles at various temperature levels
+# ---------------------------------------------------------------------------
+
+def _make_frs(total: float, classification: str) -> FinancialReadinessScore:
+    return FinancialReadinessScore(
+        total_score=total,
+        motivation=MotivationSignals(score=int(total), detected_markers=[], category="Mixed Intent"),
+        timeline=TimelineCommitment(score=int(total), category="Flexible"),
+        condition=ConditionRealism(score=int(total), category="Negotiable"),
+        price=PriceResponsiveness(score=int(total), zestimate_mentioned=False, category="Price-Flexible"),
+        classification=classification,
+    )
+
+
+def _make_pcs(total: float) -> PsychologicalCommitmentScore:
+    return PsychologicalCommitmentScore(
+        total_score=total,
+        response_velocity_score=int(total * 0.2),
+        message_length_score=int(total * 0.2),
+        question_depth_score=int(total * 0.2),
+        objection_handling_score=int(total * 0.2),
+        call_acceptance_score=int(total * 0.2),
+    )
+
+
+def _make_profile(
+    lead_id: str = "seller_001",
+    frs_total: float = 50.0,
+    pcs_total: float = 50.0,
+    classification: str = "Warm Lead",
+) -> LeadIntentProfile:
+    return LeadIntentProfile(
+        lead_id=lead_id,
+        frs=_make_frs(frs_total, classification),
+        pcs=_make_pcs(pcs_total),
+        lead_type="seller",
+        next_best_action="Send Soft Check-in SMS",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Shared fixtures
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def mock_dependencies():
+    """Patch core external service constructors so JorgeSellerBot can instantiate."""
+    with patch(
+        "ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder"
+    ) as mock_intent, patch(
+        "ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant"
+    ) as mock_claude, patch(
+        "ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher"
+    ) as mock_events, patch(
+        "ghl_real_estate_ai.agents.jorge_seller_bot.get_ml_analytics_engine"
+    ) as mock_ml:
+        mock_intent_instance = MagicMock()
+        mock_intent.return_value = mock_intent_instance
+
+        mock_claude_instance = MagicMock()
+        mock_claude_instance.analyze_with_context = AsyncMock(
+            return_value={"content": "Jorge says hello, how can I help you today?"}
+        )
+        mock_claude.return_value = mock_claude_instance
+
+        mock_events_instance = MagicMock()
+        mock_events_instance.publish_bot_status_update = AsyncMock()
+        mock_events_instance.publish_jorge_qualification_progress = AsyncMock()
+        mock_events_instance.publish_conversation_update = AsyncMock()
+        mock_events.return_value = mock_events_instance
+
+        mock_ml_instance = MagicMock()
+        mock_ml.return_value = mock_ml_instance
+
+        yield {
+            "intent_decoder_cls": mock_intent,
+            "intent_decoder": mock_intent_instance,
+            "claude_cls": mock_claude,
+            "claude": mock_claude_instance,
+            "event_publisher": mock_events_instance,
+            "ml_analytics": mock_ml_instance,
+        }
+
+
+@pytest.fixture
+def disabled_config():
+    """Feature config with all optional features turned off."""
+    return JorgeFeatureConfig(
+        enable_progressive_skills=False,
+        enable_agent_mesh=False,
+        enable_mcp_integration=False,
+        enable_adaptive_questioning=False,
+        enable_track3_intelligence=False,
+        enable_bot_intelligence=False,
+    )
+
+
+@pytest.fixture
+def seller_state_warm():
+    """A warm-seller JorgeSellerState dict for workflow node tests."""
+    return {
+        "lead_id": "seller_001",
+        "lead_name": "Jane Smith",
+        "property_address": "123 Main St, Rancho Cucamonga, CA",
+        "conversation_history": [
+            {"role": "user", "content": "I need to sell my home quickly, relocating in 30 days"},
+            {"role": "assistant", "content": "I understand the urgency. What price range are you thinking?"},
+            {"role": "user", "content": "I saw the zestimate is around $750k. Is that realistic?"},
+        ],
+        "intent_profile": None,
+        "current_tone": "direct",
+        "stall_detected": False,
+        "detected_stall_type": None,
+        "next_action": "respond",
+        "response_content": "",
+        "psychological_commitment": 0.0,
+        "is_qualified": False,
+        "current_journey_stage": "qualification",
+        "follow_up_count": 0,
+        "last_action_timestamp": None,
+        "seller_temperature": "cold",
+    }
+
+
+# =========================================================================
+# 1. Factory method creation
+# =========================================================================
+
+
+class TestFactoryMethods:
+    """Verify the three factory methods produce bots with correct configs."""
+
+    def test_create_standard_jorge(self, mock_dependencies):
+        bot = JorgeSellerBot.create_standard_jorge(tenant_id="test_std")
+        assert bot.tenant_id == "test_std"
+        assert bot.config.enable_track3_intelligence is True
+        assert bot.config.friendly_approach_enabled is True
+        assert bot.config.enable_progressive_skills is False
+        assert bot.config.enable_agent_mesh is False
+        assert bot.config.enable_mcp_integration is False
+        assert bot.config.enable_adaptive_questioning is False
+
+    def test_create_progressive_jorge(self, mock_dependencies):
+        bot = JorgeSellerBot.create_progressive_jorge(tenant_id="test_prog")
+        assert bot.tenant_id == "test_prog"
+        assert bot.config.enable_track3_intelligence is True
+        assert bot.config.enable_progressive_skills is True
+        assert bot.config.enable_bot_intelligence is True
+
+    def test_create_enterprise_jorge(self, mock_dependencies):
+        bot = JorgeSellerBot.create_enterprise_jorge(tenant_id="test_ent")
+        assert bot.tenant_id == "test_ent"
+        assert bot.config.enable_track3_intelligence is True
+        assert bot.config.enable_progressive_skills is True
+        assert bot.config.enable_agent_mesh is True
+        assert bot.config.enable_mcp_integration is True
+        assert bot.config.enable_adaptive_questioning is True
+        assert bot.config.enable_bot_intelligence is True
+
+    def test_get_jorge_seller_bot_standard(self, mock_dependencies):
+        bot = get_jorge_seller_bot("standard")
+        assert bot.config.enable_progressive_skills is False
+
+    @patch.dict("os.environ", {"ENABLE_PROGRESSIVE_SKILLS": "true"}, clear=False)
+    def test_get_jorge_seller_bot_progressive(self, mock_dependencies):
+        """get_jorge_seller_bot loads from env vars, so set the env flag."""
+        bot = get_jorge_seller_bot("progressive")
+        assert bot.config.enable_progressive_skills is True
+
+    @patch.dict("os.environ", {
+        "ENABLE_PROGRESSIVE_SKILLS": "true",
+        "ENABLE_AGENT_MESH": "true",
+        "ENABLE_MCP_INTEGRATION": "true",
+        "ENABLE_ADAPTIVE_QUESTIONING": "true",
+    }, clear=False)
+    def test_get_jorge_seller_bot_enterprise(self, mock_dependencies):
+        """get_jorge_seller_bot loads from env vars, so set all flags."""
+        bot = get_jorge_seller_bot("enterprise")
+        assert bot.config.enable_adaptive_questioning is True
+
+
+# =========================================================================
+# 2. Feature config dataclass wiring
+# =========================================================================
+
+
+class TestFeatureConfigWiring:
+    """Ensure feature flags translate into correct component initialisation."""
+
+    def test_default_config_values(self):
+        config = JorgeFeatureConfig()
+        assert config.enable_progressive_skills is False
+        assert config.enable_agent_mesh is False
+        assert config.enable_mcp_integration is False
+        assert config.enable_adaptive_questioning is False
+        assert config.enable_track3_intelligence is True
+        assert config.enable_bot_intelligence is True
+        assert config.max_concurrent_tasks == 5
+        assert config.sla_response_time == 15
+        assert config.cost_per_token == 0.000015
+        assert config.commission_rate == 0.06
+        assert config.friendly_approach_enabled is True
+        assert config.temperature_thresholds == {"hot": 75, "warm": 50, "lukewarm": 25}
+
+    def test_custom_temperature_thresholds(self):
+        config = JorgeFeatureConfig(temperature_thresholds={"hot": 90, "warm": 70, "lukewarm": 40})
+        assert config.temperature_thresholds["hot"] == 90
+
+    def test_all_disabled_produces_no_optional_services(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        assert bot.skills_manager is None
+        assert bot.token_tracker is None
+        assert bot.mesh_coordinator is None
+        assert bot.mcp_client is None
+        assert bot.conversation_memory is None
+        assert bot.question_engine is None
+        assert bot.ml_analytics is None
+        assert bot.intelligence_middleware is None
+
+    def test_adaptive_questioning_creates_memory_and_engine(self, mock_dependencies):
+        config = JorgeFeatureConfig(
+            enable_adaptive_questioning=True,
+            enable_track3_intelligence=False,
+            enable_bot_intelligence=False,
+        )
+        bot = JorgeSellerBot(config=config)
+        assert isinstance(bot.conversation_memory, ConversationMemory)
+        assert isinstance(bot.question_engine, AdaptiveQuestionEngine)
+
+    def test_workflow_stats_initialised_to_zero(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        for key, val in bot.workflow_stats.items():
+            assert val == 0, f"Expected 0 for workflow_stats['{key}'], got {val}"
+
+
+# =========================================================================
+# 3. Temperature classification
+# =========================================================================
+
+
+class TestTemperatureClassification:
+    """Verify _classify_temperature maps combined scores correctly."""
+
+    def test_hot_seller_temperature(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        profile = _make_profile(frs_total=50, pcs_total=50)  # combined = 100
+        assert bot._classify_temperature(profile) == "hot"
+
+    def test_warm_seller_temperature(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        profile = _make_profile(frs_total=30, pcs_total=25)  # combined = 55
+        assert bot._classify_temperature(profile) == "warm"
+
+    def test_cold_seller_temperature(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        profile = _make_profile(frs_total=15, pcs_total=15)  # combined = 30
+        assert bot._classify_temperature(profile) == "cold"
+
+    def test_boundary_hot_threshold(self, mock_dependencies, disabled_config):
+        """Score of exactly 75 should classify as hot."""
+        bot = JorgeSellerBot(config=disabled_config)
+        profile = _make_profile(frs_total=40, pcs_total=35)  # combined = 75
+        assert bot._classify_temperature(profile) == "hot"
+
+    def test_boundary_warm_threshold(self, mock_dependencies, disabled_config):
+        """Score of exactly 50 should classify as warm."""
+        bot = JorgeSellerBot(config=disabled_config)
+        profile = _make_profile(frs_total=25, pcs_total=25)  # combined = 50
+        assert bot._classify_temperature(profile) == "warm"
+
+
+# =========================================================================
+# 4. Stall detection node
+# =========================================================================
+
+
+class TestStallDetection:
+    """Verify the detect_stall workflow node identifies stalling language."""
+
+    @pytest.fixture
+    def bot(self, mock_dependencies, disabled_config):
+        return JorgeSellerBot(config=disabled_config)
+
+    @pytest.mark.asyncio
+    async def test_detects_thinking_stall(self, bot, seller_state_warm):
+        seller_state_warm["conversation_history"] = [
+            {"role": "user", "content": "I'm still thinking about it"}
+        ]
+        result = await bot.detect_stall(seller_state_warm)
+        assert result["stall_detected"] is True
+        assert result["detected_stall_type"] == "thinking"
+
+    @pytest.mark.asyncio
+    async def test_detects_get_back_stall(self, bot, seller_state_warm):
+        seller_state_warm["conversation_history"] = [
+            {"role": "user", "content": "I'll get back to you later"}
+        ]
+        result = await bot.detect_stall(seller_state_warm)
+        assert result["stall_detected"] is True
+        assert result["detected_stall_type"] == "get_back"
+
+    @pytest.mark.asyncio
+    async def test_detects_zestimate_stall(self, bot, seller_state_warm):
+        seller_state_warm["conversation_history"] = [
+            {"role": "user", "content": "The Zestimate says my home is worth 800k"}
+        ]
+        result = await bot.detect_stall(seller_state_warm)
+        assert result["stall_detected"] is True
+        assert result["detected_stall_type"] == "zestimate"
+
+    @pytest.mark.asyncio
+    async def test_detects_agent_stall(self, bot, seller_state_warm):
+        seller_state_warm["conversation_history"] = [
+            {"role": "user", "content": "I already have an agent"}
+        ]
+        result = await bot.detect_stall(seller_state_warm)
+        assert result["stall_detected"] is True
+        assert result["detected_stall_type"] == "agent"
+
+    @pytest.mark.asyncio
+    async def test_no_stall_when_genuine_interest(self, bot, seller_state_warm):
+        seller_state_warm["conversation_history"] = [
+            {"role": "user", "content": "What can you tell me about pricing in my neighborhood?"}
+        ]
+        result = await bot.detect_stall(seller_state_warm)
+        assert result["stall_detected"] is False
+        assert result["detected_stall_type"] is None
+
+    @pytest.mark.asyncio
+    async def test_stall_with_empty_conversation(self, bot, seller_state_warm):
+        seller_state_warm["conversation_history"] = []
+        result = await bot.detect_stall(seller_state_warm)
+        assert result["stall_detected"] is False
+
+
+# =========================================================================
+# 5. Analyze intent node
+# =========================================================================
+
+
+class TestAnalyzeIntent:
+    """Verify the analyze_intent workflow node wires through to the decoder."""
+
+    @pytest.mark.asyncio
+    async def test_analyze_intent_returns_profile_and_temperature(
+        self, mock_dependencies, disabled_config, seller_state_warm
+    ):
+        profile = _make_profile(frs_total=80, pcs_total=70, classification="Hot Lead")
+        mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
+
+        bot = JorgeSellerBot(config=disabled_config)
+        result = await bot.analyze_intent(seller_state_warm)
+
+        assert result["intent_profile"] is profile
+        assert result["psychological_commitment"] == 70.0
+        assert result["is_qualified"] is True
+        assert result["seller_temperature"] == "hot"
+        assert result["last_action_timestamp"] is not None
+
+    @pytest.mark.asyncio
+    async def test_analyze_intent_cold_seller_not_qualified(
+        self, mock_dependencies, disabled_config, seller_state_warm
+    ):
+        profile = _make_profile(frs_total=15, pcs_total=10, classification="Cold")
+        mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
+
+        bot = JorgeSellerBot(config=disabled_config)
+        result = await bot.analyze_intent(seller_state_warm)
+
+        assert result["is_qualified"] is False
+        assert result["seller_temperature"] == "cold"
+
+    @pytest.mark.asyncio
+    async def test_analyze_intent_emits_events(
+        self, mock_dependencies, disabled_config, seller_state_warm
+    ):
+        profile = _make_profile(frs_total=60, pcs_total=60, classification="Warm Lead")
+        mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
+
+        bot = JorgeSellerBot(config=disabled_config)
+        await bot.analyze_intent(seller_state_warm)
+
+        mock_dependencies["event_publisher"].publish_bot_status_update.assert_called()
+        mock_dependencies["event_publisher"].publish_jorge_qualification_progress.assert_called()
+
+
+# =========================================================================
+# 6. Strategy selection
+# =========================================================================
+
+
+class TestStrategySelection:
+    """Verify select_strategy chooses tone based on PCS and stall state."""
+
+    @pytest.fixture
+    def bot(self, mock_dependencies, disabled_config):
+        return JorgeSellerBot(config=disabled_config)
+
+    def _state_with(self, seller_state_warm, pcs, stall=False, stall_type=None):
+        s = dict(seller_state_warm)
+        s["psychological_commitment"] = pcs
+        s["stall_detected"] = stall
+        s["detected_stall_type"] = stall_type
+        s["intent_profile"] = _make_profile(pcs_total=pcs)
+        return s
+
+    @pytest.mark.asyncio
+    async def test_understanding_tone_on_stall(self, bot, seller_state_warm):
+        state = self._state_with(seller_state_warm, pcs=50, stall=True, stall_type="thinking")
+        result = await bot.select_strategy(state)
+        assert result["current_tone"] == "UNDERSTANDING"
+
+    @pytest.mark.asyncio
+    async def test_educational_tone_for_low_commitment(self, bot, seller_state_warm):
+        state = self._state_with(seller_state_warm, pcs=20)
+        result = await bot.select_strategy(state)
+        assert result["current_tone"] == "EDUCATIONAL"
+
+    @pytest.mark.asyncio
+    async def test_enthusiastic_tone_for_high_commitment(self, bot, seller_state_warm):
+        state = self._state_with(seller_state_warm, pcs=80)
+        result = await bot.select_strategy(state)
+        assert result["current_tone"] == "ENTHUSIASTIC"
+
+    @pytest.mark.asyncio
+    async def test_consultative_tone_for_mid_commitment(self, bot, seller_state_warm):
+        state = self._state_with(seller_state_warm, pcs=50)
+        result = await bot.select_strategy(state)
+        assert result["current_tone"] == "CONSULTATIVE"
+
+
+# =========================================================================
+# 7. Generate Jorge response
+# =========================================================================
+
+
+class TestGenerateJorgeResponse:
+    """Verify response generation calls Claude and returns content."""
+
+    @pytest.mark.asyncio
+    async def test_response_generated_from_claude(
+        self, mock_dependencies, disabled_config, seller_state_warm
+    ):
+        bot = JorgeSellerBot(config=disabled_config)
+        seller_state_warm["intent_profile"] = _make_profile()
+        seller_state_warm["current_tone"] = "CONSULTATIVE"
+        seller_state_warm["stall_detected"] = False
+        seller_state_warm["detected_stall_type"] = None
+        seller_state_warm["seller_temperature"] = "warm"
+
+        result = await bot.generate_jorge_response(seller_state_warm)
+        assert "response_content" in result
+        assert len(result["response_content"]) > 0
+        mock_dependencies["claude"].analyze_with_context.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_response_uses_stall_template_when_stall(
+        self, mock_dependencies, disabled_config, seller_state_warm
+    ):
+        bot = JorgeSellerBot(config=disabled_config)
+        seller_state_warm["intent_profile"] = _make_profile()
+        seller_state_warm["current_tone"] = "UNDERSTANDING"
+        seller_state_warm["stall_detected"] = True
+        seller_state_warm["detected_stall_type"] = "zestimate"
+        seller_state_warm["seller_temperature"] = "cold"
+
+        await bot.generate_jorge_response(seller_state_warm)
+
+        # The prompt sent to Claude should contain the zestimate stall template
+        call_args = mock_dependencies["claude"].analyze_with_context.call_args
+        prompt_text = call_args[0][0] if call_args[0] else call_args[1].get("prompt", "")
+        assert "zestimate" in prompt_text.lower() or "online estimates" in prompt_text.lower()
+
+    @pytest.mark.asyncio
+    async def test_response_fallback_on_claude_empty(
+        self, mock_dependencies, disabled_config, seller_state_warm
+    ):
+        """When Claude returns empty content/analysis, fallback message is used."""
+        mock_dependencies["claude"].analyze_with_context = AsyncMock(return_value={})
+
+        bot = JorgeSellerBot(config=disabled_config)
+        seller_state_warm["intent_profile"] = _make_profile()
+        seller_state_warm["current_tone"] = "CONSULTATIVE"
+        seller_state_warm["stall_detected"] = False
+        seller_state_warm["detected_stall_type"] = None
+        seller_state_warm["seller_temperature"] = "warm"
+
+        result = await bot.generate_jorge_response(seller_state_warm)
+        # Should fall back to the hardcoded default
+        assert result["response_content"] == "Are we selling this property or just talking about it?"
+
+
+# =========================================================================
+# 8. Execute follow-up
+# =========================================================================
+
+
+class TestExecuteFollowUp:
+    """Verify follow-up execution increments counter and uses correct template."""
+
+    @pytest.mark.asyncio
+    async def test_follow_up_increments_count(
+        self, mock_dependencies, disabled_config, seller_state_warm
+    ):
+        bot = JorgeSellerBot(config=disabled_config)
+        seller_state_warm["follow_up_count"] = 2
+        result = await bot.execute_follow_up(seller_state_warm)
+        assert result["follow_up_count"] == 3
+
+    @pytest.mark.asyncio
+    async def test_follow_up_uses_stage_template(
+        self, mock_dependencies, disabled_config, seller_state_warm
+    ):
+        bot = JorgeSellerBot(config=disabled_config)
+        seller_state_warm["current_journey_stage"] = "listing_prep"
+        result = await bot.execute_follow_up(seller_state_warm)
+        assert "photographer" in result["response_content"].lower()
+
+
+# =========================================================================
+# 9. Process seller message (end-to-end workflow invocation)
+# =========================================================================
+
+
+class TestProcessSellerMessage:
+    """Integration test: the full LangGraph workflow invocation."""
+
+    @pytest.mark.asyncio
+    async def test_process_seller_message_returns_response(
+        self, mock_dependencies, disabled_config
+    ):
+        profile = _make_profile(frs_total=60, pcs_total=55, classification="Warm Lead")
+        mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
+
+        bot = JorgeSellerBot(config=disabled_config)
+        result = await bot.process_seller_message(
+            lead_id="seller_001",
+            lead_name="Jane Smith",
+            history=[
+                {"role": "user", "content": "I want to sell my home in Victoria"}
+            ],
+        )
+
+        assert result["response_content"]
+        assert result["intent_profile"] is not None
+
+    @pytest.mark.asyncio
+    async def test_process_seller_message_with_stall(
+        self, mock_dependencies, disabled_config
+    ):
+        profile = _make_profile(frs_total=30, pcs_total=20, classification="Lukewarm")
+        mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
+
+        bot = JorgeSellerBot(config=disabled_config)
+        result = await bot.process_seller_message(
+            lead_id="seller_002",
+            lead_name="Bob Jones",
+            history=[
+                {"role": "user", "content": "Let me think about it, I'll get back to you later"},
+            ],
+        )
+
+        assert result["stall_detected"] is True
+        assert result["response_content"]
+
+
+# =========================================================================
+# 10. Routing helpers
+# =========================================================================
+
+
+class TestRouting:
+    """Verify _route_seller_action and _route_adaptive_action."""
+
+    @pytest.fixture
+    def bot(self, mock_dependencies, disabled_config):
+        return JorgeSellerBot(config=disabled_config)
+
+    def test_route_respond(self, bot):
+        assert bot._route_seller_action({"next_action": "respond"}) == "respond"
+
+    def test_route_follow_up(self, bot):
+        assert bot._route_seller_action({"next_action": "follow_up"}) == "follow_up"
+
+    def test_route_end(self, bot):
+        assert bot._route_seller_action({"next_action": "end"}) == "end"
+
+    def test_adaptive_route_fast_track(self, mock_dependencies):
+        config = JorgeFeatureConfig(
+            enable_adaptive_questioning=True,
+            enable_track3_intelligence=False,
+            enable_bot_intelligence=False,
+        )
+        bot = JorgeSellerBot(config=config)
+        assert bot._route_adaptive_action(
+            {"adaptive_mode": "calendar_focused", "next_action": "respond"}
+        ) == "fast_track"
+
+    def test_adaptive_route_end(self, mock_dependencies):
+        config = JorgeFeatureConfig(
+            enable_adaptive_questioning=True,
+            enable_track3_intelligence=False,
+            enable_bot_intelligence=False,
+        )
+        bot = JorgeSellerBot(config=config)
+        assert bot._route_adaptive_action(
+            {"adaptive_mode": "standard_qualification", "next_action": "end"}
+        ) == "end"
+
+
+# =========================================================================
+# 11. PCS score wiring (intent decoder integration)
+# =========================================================================
+
+
+class TestPCSScoreCalculation:
+    """Verify that PCS scores from the intent decoder propagate correctly."""
+
+    @pytest.mark.asyncio
+    async def test_high_pcs_qualifies_lead(self, mock_dependencies, disabled_config, seller_state_warm):
+        profile = _make_profile(frs_total=80, pcs_total=85, classification="Hot Lead")
+        mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
+
+        bot = JorgeSellerBot(config=disabled_config)
+        result = await bot.analyze_intent(seller_state_warm)
+        assert result["psychological_commitment"] == 85.0
+        assert result["is_qualified"] is True
+
+    @pytest.mark.asyncio
+    async def test_low_pcs_does_not_qualify(self, mock_dependencies, disabled_config, seller_state_warm):
+        profile = _make_profile(frs_total=10, pcs_total=5, classification="Cold")
+        mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
+
+        bot = JorgeSellerBot(config=disabled_config)
+        result = await bot.analyze_intent(seller_state_warm)
+        assert result["psychological_commitment"] == 5.0
+        assert result["is_qualified"] is False
+
+
+# =========================================================================
+# 12. Conversation memory (adaptive feature)
+# =========================================================================
+
+
+class TestConversationMemory:
+    """Unit tests for the ConversationMemory helper class."""
+
+    @pytest.mark.asyncio
+    async def test_empty_context_returns_defaults(self):
+        memory = ConversationMemory()
+        ctx = await memory.get_context("new_convo")
+        assert ctx["last_scores"] is None
+        assert ctx["question_history"] == []
+        assert ctx["adaptation_count"] == 0
+
+    @pytest.mark.asyncio
+    async def test_update_and_retrieve_context(self):
+        memory = ConversationMemory()
+        await memory.update_context("c1", {"adaptation_count": 3, "last_scores": {"frs": 80}})
+        ctx = await memory.get_context("c1")
+        assert ctx["adaptation_count"] == 3
+        assert ctx["last_scores"]["frs"] == 80
+
+
+# =========================================================================
+# 13. Adaptive question engine
+# =========================================================================
+
+
+class TestAdaptiveQuestionEngine:
+    """Unit tests for the AdaptiveQuestionEngine helper class."""
+
+    @pytest.fixture
+    def engine(self):
+        return AdaptiveQuestionEngine()
+
+    def test_core_questions_populated(self, engine):
+        assert len(engine.jorge_core_questions) == 4
+
+    def test_high_intent_accelerators_populated(self, engine):
+        assert len(engine.high_intent_accelerators) > 0
+
+    def test_supportive_clarifiers_has_keys(self, engine):
+        assert "zestimate" in engine.supportive_clarifiers
+        assert "thinking" in engine.supportive_clarifiers
+        assert "agent" in engine.supportive_clarifiers
+
+    @pytest.mark.asyncio
+    async def test_select_standard_question_first(self, engine):
+        state = {"current_question": 1, "intent_profile": _make_profile(pcs_total=30)}
+        question = await engine._select_standard_question(state)
+        assert question == engine.jorge_core_questions[0]
+
+    @pytest.mark.asyncio
+    async def test_select_standard_question_overflow(self, engine):
+        state = {"current_question": 10, "intent_profile": _make_profile(pcs_total=30)}
+        question = await engine._select_standard_question(state)
+        assert "property goals" in question.lower()
+
+
+# =========================================================================
+# 14. Error handling
+# =========================================================================
+
+
+class TestErrorHandling:
+    """Verify graceful degradation on external service failures."""
+
+    @pytest.mark.asyncio
+    async def test_claude_api_exception_in_response_generation(
+        self, mock_dependencies, disabled_config, seller_state_warm
+    ):
+        mock_dependencies["claude"].analyze_with_context = AsyncMock(
+            side_effect=Exception("Claude API rate limit")
+        )
+        bot = JorgeSellerBot(config=disabled_config)
+        seller_state_warm["intent_profile"] = _make_profile()
+        seller_state_warm["current_tone"] = "CONSULTATIVE"
+        seller_state_warm["stall_detected"] = False
+        seller_state_warm["detected_stall_type"] = None
+        seller_state_warm["seller_temperature"] = "warm"
+
+        with pytest.raises(Exception, match="Claude API rate limit"):
+            await bot.generate_jorge_response(seller_state_warm)
+
+    @pytest.mark.asyncio
+    async def test_strategy_fallback_when_ml_fails(
+        self, mock_dependencies, disabled_config, seller_state_warm
+    ):
+        """When Track 3.1 ML calls fail, strategy falls back to base logic."""
+        # Enable Track 3.1 but make it fail
+        config = JorgeFeatureConfig(
+            enable_track3_intelligence=True,
+            enable_progressive_skills=False,
+            enable_agent_mesh=False,
+            enable_mcp_integration=False,
+            enable_adaptive_questioning=False,
+            enable_bot_intelligence=False,
+        )
+        bot = JorgeSellerBot(config=config)
+
+        # Make ML analytics calls throw
+        bot.ml_analytics.predict_lead_journey = AsyncMock(side_effect=Exception("ML down"))
+
+        state = dict(seller_state_warm)
+        state["psychological_commitment"] = 50
+        state["stall_detected"] = False
+        state["detected_stall_type"] = None
+        state["intent_profile"] = _make_profile(pcs_total=50)
+
+        result = await bot.select_strategy(state)
+        # Should still return a valid strategy via fallback
+        assert result["current_tone"] == "CONSULTATIVE"
+        assert result["next_action"] == "respond"
+
+
+# =========================================================================
+# 15. Edge cases
+# =========================================================================
+
+
+class TestEdgeCases:
+    """Edge cases: empty messages, very long messages, missing data."""
+
+    @pytest.mark.asyncio
+    async def test_empty_message_history(self, mock_dependencies, disabled_config):
+        profile = _make_profile(frs_total=20, pcs_total=10, classification="Cold")
+        mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
+
+        bot = JorgeSellerBot(config=disabled_config)
+        result = await bot.process_seller_message(
+            lead_id="seller_empty",
+            lead_name="Empty User",
+            history=[],
+        )
+        assert result["response_content"]
+
+    @pytest.mark.asyncio
+    async def test_very_long_message(self, mock_dependencies, disabled_config):
+        long_text = "I want to sell my house " * 500
+        profile = _make_profile(frs_total=50, pcs_total=50, classification="Warm Lead")
+        mock_dependencies["intent_decoder"].analyze_lead.return_value = profile
+
+        bot = JorgeSellerBot(config=disabled_config)
+        result = await bot.process_seller_message(
+            lead_id="seller_long",
+            lead_name="Verbose User",
+            history=[{"role": "user", "content": long_text}],
+        )
+        assert result["response_content"]
+
+    def test_confidence_to_temperature_boundaries(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        assert bot._confidence_to_temperature(0.9) == "hot"
+        assert bot._confidence_to_temperature(0.8) == "hot"
+        assert bot._confidence_to_temperature(0.7) == "warm"
+        assert bot._confidence_to_temperature(0.6) == "warm"
+        assert bot._confidence_to_temperature(0.5) == "lukewarm"
+        assert bot._confidence_to_temperature(0.4) == "lukewarm"
+        assert bot._confidence_to_temperature(0.3) == "cold"
+        assert bot._confidence_to_temperature(0.0) == "cold"
+
+    def test_extract_city_from_full_address(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        assert bot._extract_city("123 Main St, Rancho Cucamonga, CA 91730") == "Rancho Cucamonga"
+
+    def test_extract_city_fallback(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        # With fewer than 3 parts, should default to Phoenix
+        assert bot._extract_city("some address") == "Phoenix"
+
+    def test_is_rancho_cucamonga_property(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        assert bot._is_rancho_cucamonga_property("123 Main St, Rancho_Cucamonga, CA") is True
+        assert bot._is_rancho_cucamonga_property(None) is False
+        assert bot._is_rancho_cucamonga_property("456 Oak Ave, Phoenix, AZ") is False
+
+
+# =========================================================================
+# 16. Health check and performance metrics
+# =========================================================================
+
+
+class TestHealthCheckAndMetrics:
+    """Verify health check and performance metrics return valid structures."""
+
+    @pytest.mark.asyncio
+    async def test_health_check_all_disabled(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        health = await bot.health_check()
+        assert health["jorge_bot"] == "healthy"
+        assert health["overall_status"] == "healthy"
+        assert health["track3_intelligence"] == "disabled"
+        assert health["progressive_skills"] == "disabled"
+
+    @pytest.mark.asyncio
+    async def test_health_check_adaptive_healthy(self, mock_dependencies):
+        config = JorgeFeatureConfig(
+            enable_adaptive_questioning=True,
+            enable_track3_intelligence=False,
+            enable_bot_intelligence=False,
+        )
+        bot = JorgeSellerBot(config=config)
+        health = await bot.health_check()
+        assert health["adaptive_questioning"] == "healthy"
+
+    @pytest.mark.asyncio
+    async def test_performance_metrics_structure(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        metrics = await bot.get_performance_metrics()
+        assert "workflow_statistics" in metrics
+        assert "features_enabled" in metrics
+        assert metrics["features_enabled"]["track3_intelligence"] is False
+
+    @pytest.mark.asyncio
+    async def test_shutdown_no_error(self, mock_dependencies, disabled_config):
+        bot = JorgeSellerBot(config=disabled_config)
+        await bot.shutdown()  # Should not raise
+
+
+# =========================================================================
+# 17. QualificationResult dataclass
+# =========================================================================
+
+
+class TestQualificationResult:
+    """Verify QualificationResult defaults and post_init."""
+
+    def test_defaults(self):
+        qr = QualificationResult(
+            lead_id="lead_1",
+            qualification_score=80.0,
+            frs_score=70.0,
+            pcs_score=75.0,
+            temperature="hot",
+            next_actions=["call now"],
+            confidence=0.9,
+            tokens_used=200,
+            cost_incurred=0.003,
+        )
+        assert qr.progressive_skills_applied is False
+        assert qr.mesh_task_id is None
+        assert qr.orchestrated_tasks == []
+        assert qr.mcp_enrichment_applied is False
+        assert qr.adaptive_questioning_used is False
+        assert qr.timeline_ms == {}
+
+    def test_custom_orchestrated_tasks(self):
+        qr = QualificationResult(
+            lead_id="lead_2",
+            qualification_score=50.0,
+            frs_score=40.0,
+            pcs_score=45.0,
+            temperature="warm",
+            next_actions=[],
+            confidence=0.6,
+            tokens_used=100,
+            cost_incurred=0.001,
+            orchestrated_tasks=["task_1", "task_2"],
+        )
+        assert len(qr.orchestrated_tasks) == 2

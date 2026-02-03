@@ -3,10 +3,13 @@ from io import BytesIO
 from ghl_real_estate_ai.models.cma import CMAReport
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 import base64
+import os
+import re
 
 logger = get_logger(__name__)
 
 MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024  # 2 MB
+DEFAULT_PDF_OUTPUT_DIR = os.path.join("data", "pdfs")
 
 
 class PDFGenerationError(Exception):
@@ -363,14 +366,64 @@ class PDFRenderer:
         return pdf_bytes
 
     @staticmethod
-    def generate_pdf_url(report: CMAReport) -> str:
+    def save_pdf_to_file(
+        pdf_bytes: bytes,
+        filename: str,
+        output_dir: str = None,
+    ) -> str:
         """
-        Mock generation of a PDF URL.
-        In production, this would upload the rendered PDF to S3/GCS and return the link.
+        Save PDF bytes to a local file.
+
+        Args:
+            pdf_bytes: Raw PDF content.
+            filename: Desired filename (will be sanitized).
+            output_dir: Target directory. Defaults to ``data/pdfs/``.
+
+        Returns:
+            Absolute path to the saved file.
+
+        Raises:
+            PDFGenerationError: If the write fails.
         """
-        # For prototype: Create a data URL with the HTML content?
-        # Or just a static mock link.
-        # Let's try to return a data URL of the HTML for immediate preview.
+        if output_dir is None:
+            output_dir = DEFAULT_PDF_OUTPUT_DIR
+
+        # Sanitize filename: keep alphanumerics, hyphens, underscores, dots
+        safe_name = re.sub(r"[^\w.\-]", "_", filename)
+        if not safe_name.lower().endswith(".pdf"):
+            safe_name += ".pdf"
+
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+            dest = os.path.join(output_dir, safe_name)
+            with open(dest, "wb") as fh:
+                fh.write(pdf_bytes)
+        except OSError as exc:
+            raise PDFGenerationError(f"Failed to save PDF to {dest}: {exc}") from exc
+
+        abs_path = os.path.abspath(dest)
+        logger.info(f"Saved PDF to disk: {abs_path} ({len(pdf_bytes)} bytes)")
+        return abs_path
+
+    @staticmethod
+    def generate_pdf_url(report: CMAReport, save_to_disk: bool = False) -> str:
+        """
+        Generate a consumable reference for the CMA PDF.
+
+        Args:
+            report: The CMA report to render.
+            save_to_disk: When *True*, persist the PDF to local storage and
+                return the absolute file path.  When *False* (default), return
+                a base64 data URL for immediate in-browser preview.
+
+        Returns:
+            File path (``save_to_disk=True``) or data-URL string.
+        """
+        if save_to_disk:
+            pdf_bytes = PDFRenderer.generate_pdf_bytes(report)
+            filename = re.sub(r"[^\w.\-]", "_", report.subject_property.address)
+            filename = f"CMA_{filename}"
+            return PDFRenderer.save_pdf_to_file(pdf_bytes, filename)
 
         html = PDFRenderer.render_cma_html(report)
         b64_html = base64.b64encode(html.encode('utf-8')).decode('utf-8')
