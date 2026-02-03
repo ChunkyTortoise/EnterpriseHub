@@ -276,7 +276,7 @@ class RelocationRequest(BaseModel):
 
 class BulkRelocationRequest(BaseModel):
     """Request for bulk employee relocations."""
-    relocations: List[RelocationRequest] = Field(..., min_items=1, max_items=100)
+    relocations: List[RelocationRequest] = Field(..., min_length=1, max_length=100)
     batch_priority: Optional[str] = Field("normal", description="normal, high, urgent")
     notification_email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
 

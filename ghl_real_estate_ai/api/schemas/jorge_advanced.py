@@ -171,8 +171,8 @@ class CampaignCreationRequest(BaseModel):
     """Request to create automated marketing campaign."""
     trigger_type: CampaignTriggerAPI = Field(..., description="Campaign trigger type")
     target_audience: Dict[str, Any] = Field(..., description="Target audience criteria")
-    campaign_objectives: List[str] = Field(..., min_items=1, description="Campaign objectives")
-    content_formats: List[ContentFormatAPI] = Field(..., min_items=1, description="Desired content formats")
+    campaign_objectives: List[str] = Field(..., min_length=1, description="Campaign objectives")
+    content_formats: List[ContentFormatAPI] = Field(..., min_length=1, description="Desired content formats")
     budget_range: Optional[tuple[float, float]] = Field(None, description="Budget range (min, max)")
     timeline: Optional[str] = Field(None, description="Campaign timeline", max_length=500)
     brand_voice: Optional[str] = Field("jorge_professional", description="Brand voice to use")
@@ -365,7 +365,7 @@ class InvestmentOpportunityRequest(BaseModel):
     """Request for investment opportunity analysis."""
     client_budget: float = Field(..., gt=0, description="Client's investment budget")
     risk_tolerance: str = Field(..., description="Risk tolerance: low, medium, high")
-    investment_goals: List[str] = Field(..., min_items=1, description="Investment objectives")
+    investment_goals: List[str] = Field(..., min_length=1, description="Investment objectives")
     time_horizon: TimeHorizonAPI = Field(..., description="Investment time horizon")
     preferred_property_types: Optional[List[str]] = Field(None, description="Preferred property types")
     geographic_preferences: Optional[List[str]] = Field(None, description="Preferred areas")
@@ -549,12 +549,9 @@ class FilterParams(BaseModel):
     search: Optional[str] = Field(None, description="Search query", max_length=200)
 
 
-# Configuration for all schemas
-class Config:
-    """Common configuration for all Pydantic models."""
-    json_encoders = {
-        datetime: lambda v: v.isoformat()
-    }
-    use_enum_values = True
-    validate_assignment = True
-    extra = "forbid"  # Prevent extra fields
+# Common model configuration for all schemas (Pydantic V2)
+COMMON_MODEL_CONFIG = ConfigDict(
+    use_enum_values=True,
+    validate_assignment=True,
+    extra="forbid",
+)
