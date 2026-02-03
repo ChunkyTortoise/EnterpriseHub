@@ -114,17 +114,19 @@ class JorgeSellerEngine:
     Handles the 4-question sequence with confrontational tone.
     """
 
-    def __init__(self, conversation_manager, ghl_client, config: Optional[JorgeSellerConfig] = None):
+    def __init__(self, conversation_manager, ghl_client, config: Optional[JorgeSellerConfig] = None, mls_client=None):
         """Initialize with existing conversation manager and GHL client
 
         Args:
             conversation_manager: ConversationManager instance
             ghl_client: GHL API client
             config: Optional JorgeSellerConfig instance for configuration overrides
+            mls_client: Optional MLSClient for real property data lookups
         """
         self.conversation_manager = conversation_manager
         self.ghl_client = ghl_client
         self.tone_engine = JorgeToneEngine()
+        self.mls_client = mls_client
         self.logger = logging.getLogger(__name__)
 
         # Store config for threshold access
@@ -220,24 +222,32 @@ class JorgeSellerEngine:
                     # This uses DOM, price drops, and tone to determine negotiation stance
                     from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory
                     
-                    # Mocking ListingHistory for now - in production this comes from MLS/Attom integration
-                    # We'll use what we've extracted so far
-                    mock_history = ListingHistory(
-                        property_id=contact_id, # Simplified
-                        days_on_market=context.get("days_since_first_contact", 0),
-                        original_list_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
-                        current_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
-                        price_drops=[]
-                    )
-                    
+                    # Attempt real listing history lookup via MLS/Attom
+                    listing_history = None
+                    property_address = extracted_seller_data.get("property_address") or context.get("property_address")
+                    if property_address and self.mls_client:
+                        try:
+                            listing_history = await self.mls_client.get_listing_history(property_address)
+                        except Exception as mls_err:
+                            self.logger.warning(f"MLS lookup failed for {property_address}: {mls_err}")
+
+                    # Fallback to contact-provided data
+                    if not listing_history:
+                        listing_history = ListingHistory(
+                            days_on_market=context.get("days_since_first_contact", 0),
+                            original_list_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
+                            current_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
+                            price_drops=[]
+                        )
+
                     comm_data = {
                         "avg_response_time_hours": context.get("avg_response_time", 24),
                         "communication_tone": context.get("last_ai_message_type", "professional")
                     }
-                    
+
                     psychology_profile = await self.psychology_analyzer.analyze_seller_psychology(
                         property_id=contact_id,
-                        listing_history=mock_history,
+                        listing_history=listing_history,
                         communication_data=comm_data
                     )
                     self.logger.info(f"Psychology Profile detected for {contact_id}: {psychology_profile.motivation_type}")

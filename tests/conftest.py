@@ -352,12 +352,15 @@ def security_test_config():
 @pytest_asyncio.fixture(autouse=True)
 async def cleanup_test_data():
     """Automatically clean up test data after each test"""
+    # Reset cache singleton before each test to avoid cross-loop lock errors
+    from ghl_real_estate_ai.services.cache_service import reset_cache_service
+    reset_cache_service()
+
     yield
-    
-    # Cleanup operations would go here
-    # For mocked services, this is handled automatically
-    # For real services, we would clean up test data
-    
+
+    # Reset again after test to ensure clean state
+    reset_cache_service()
+
     logger.debug("Test data cleanup completed")
 
 

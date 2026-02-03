@@ -41,6 +41,8 @@ from ghl_real_estate_ai.services.security_framework import verify_webhook
 from ghl_real_estate_ai.services.tenant_service import TenantService
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
 from ghl_real_estate_ai.services.compliance_guard import compliance_guard, ComplianceStatus
+from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+from ghl_real_estate_ai.services.mls_client import MLSClient
 from ghl_real_estate_ai.api.schemas.billing import UsageRecordRequest
 
 logger = get_logger(__name__)
@@ -65,6 +67,8 @@ calendar_scheduler = CalendarScheduler()
 lead_source_tracker = LeadSourceTracker()
 attribution_analytics = AttributionAnalytics()
 subscription_manager = SubscriptionManager()
+handoff_service = JorgeHandoffService(analytics_service=analytics_service)
+mls_client = MLSClient()
 
 
 @router.post("/webhook", response_model=GHLWebhookResponse)
@@ -227,7 +231,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 )
 
             # Initialize Jorge's seller engine
-            jorge_engine = JorgeSellerEngine(conversation_manager, current_ghl_client)
+            jorge_engine = JorgeSellerEngine(conversation_manager, current_ghl_client, mls_client=mls_client)
 
             # Process seller response
             seller_result = await jorge_engine.process_seller_response(
@@ -298,6 +302,22 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 logger.warning(f"Compliance BLOCKED message for {contact_id}: {reason}. Violations: {violations}")
                 final_seller_msg = "Let's stick to the facts about your property. What price are you looking to get?"
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
+            # --- CROSS-BOT HANDOFF CHECK ---
+            if seller_result.get("handoff_signals"):
+                handoff = await handoff_service.evaluate_handoff(
+                    current_bot="seller",
+                    contact_id=contact_id,
+                    conversation_history=[],
+                    intent_signals=seller_result["handoff_signals"],
+                )
+                if handoff:
+                    handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
+                    for ha in handoff_actions:
+                        if ha["type"] == "add_tag":
+                            actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
+                        elif ha["type"] == "remove_tag":
+                            actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
 
             logger.info(
                 f"Jorge seller processing completed for {contact_id}",
@@ -424,6 +444,22 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 logger.warning(f"Compliance BLOCKED buyer message for {contact_id}: {reason}. Violations: {violations}")
                 final_buyer_msg = "I'd love to help you find your next home. What's most important to you in a property?"
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
+            # --- CROSS-BOT HANDOFF CHECK ---
+            if buyer_result.get("handoff_signals"):
+                handoff = await handoff_service.evaluate_handoff(
+                    current_bot="buyer",
+                    contact_id=contact_id,
+                    conversation_history=conversation_history,
+                    intent_signals=buyer_result["handoff_signals"],
+                )
+                if handoff:
+                    handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
+                    for ha in handoff_actions:
+                        if ha["type"] == "add_tag":
+                            actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
+                        elif ha["type"] == "remove_tag":
+                            actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
 
             logger.info(
                 f"Jorge buyer processing completed for {contact_id}",
@@ -766,6 +802,23 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             logger.warning(f"Compliance BLOCKED lead message for {contact_id}: {reason}. Violations: {violations}")
             final_message = "Thanks for reaching out! I'd love to help. What are you looking for in your next home?"
             actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
+        # --- CROSS-BOT HANDOFF CHECK ---
+        lead_intent_signals = JorgeHandoffService.extract_intent_signals(user_message)
+        if lead_intent_signals.get("buyer_intent_score", 0) > 0 or lead_intent_signals.get("seller_intent_score", 0) > 0:
+            handoff = await handoff_service.evaluate_handoff(
+                current_bot="lead",
+                contact_id=contact_id,
+                conversation_history=[],
+                intent_signals=lead_intent_signals,
+            )
+            if handoff:
+                handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
+                for ha in handoff_actions:
+                    if ha["type"] == "add_tag":
+                        actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
+                    elif ha["type"] == "remove_tag":
+                        actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
 
         background_tasks.add_task(
             current_ghl_client.send_message,
