@@ -51,6 +51,30 @@ class RiskLevel(Enum):
     HIGH = "high"
     CRITICAL = "critical"
 
+    @staticmethod
+    def _rank(value: str) -> int:
+        return {"low": 0, "medium": 1, "high": 2, "critical": 3}[value]
+
+    def __lt__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        return self._rank(self.value) < self._rank(other.value)
+
+    def __le__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        return self._rank(self.value) <= self._rank(other.value)
+
+    def __gt__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        return self._rank(self.value) > self._rank(other.value)
+
+    def __ge__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        return self._rank(self.value) >= self._rank(other.value)
+
 
 @dataclass
 class CompetitorMention:
