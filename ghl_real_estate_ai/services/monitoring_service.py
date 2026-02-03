@@ -20,7 +20,7 @@ from statistics import mean, median
 from typing import Any, Dict, List, Optional, Callable, Union
 
 import aiohttp
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -77,8 +77,7 @@ class HealthCheck(BaseModel):
     success_threshold: int = 2
     enabled: bool = True
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class MetricPoint(BaseModel):

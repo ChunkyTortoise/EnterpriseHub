@@ -39,7 +39,7 @@ import asyncio
 
 from fastapi import APIRouter, HTTPException, Query, Path, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import pandas as pd
 
 # Enterprise Analytics imports
@@ -90,7 +90,8 @@ class TouchpointRequest(BaseModel):
     session_duration: Optional[float] = Field(None, description="Session duration in seconds")
     custom_attributes: Optional[Dict[str, Any]] = Field({}, description="Custom attributes")
 
-    @validator('touchpoint_type')
+    @field_validator('touchpoint_type')
+    @classmethod
     def validate_touchpoint_type(cls, v):
         valid_types = [t.value for t in TouchpointType]
         if v not in valid_types:
@@ -110,7 +111,8 @@ class RevenueEventRequest(BaseModel):
     commission_rate: Optional[float] = Field(None, ge=0, le=1, description="Commission rate")
     custom_attributes: Optional[Dict[str, Any]] = Field({}, description="Custom attributes")
 
-    @validator('event_type')
+    @field_validator('event_type')
+    @classmethod
     def validate_event_type(cls, v):
         valid_types = [t.value for t in RevenueEventType]
         if v not in valid_types:
@@ -126,7 +128,8 @@ class AttributionReportRequest(BaseModel):
     channels: Optional[List[str]] = Field(None, description="Channels to analyze")
     include_customer_journeys: bool = Field(False, description="Include individual customer journeys")
 
-    @validator('attribution_models')
+    @field_validator('attribution_models')
+    @classmethod
     def validate_attribution_models(cls, v):
         if v is not None:
             valid_models = [m.value for m in AttributionModel]
@@ -144,7 +147,8 @@ class CLVAnalysisRequest(BaseModel):
     include_predictions: bool = Field(True, description="Include ML predictions")
     prediction_horizon_days: int = Field(365, ge=30, le=1095, description="Prediction horizon in days")
 
-    @validator('segment_filter')
+    @field_validator('segment_filter')
+    @classmethod
     def validate_segment_filter(cls, v):
         if v is not None:
             valid_segments = [s.value for s in CustomerSegment]

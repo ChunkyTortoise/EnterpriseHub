@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
 from aiohttp import ClientTimeout
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, ValidationInfo, field_validator
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -77,11 +77,12 @@ class GHLConfig(BaseModel):
     retry_delay: float = 1.0
     rate_limit_requests_per_minute: int = 300
     
-    @validator('api_key', 'location_id')
-    def validate_required_fields(cls, v, field):
+    @field_validator('api_key', 'location_id')
+    @classmethod
+    def validate_required_fields(cls, v, info: ValidationInfo):
         if not v or v in ["dummy", "your_ghl_api_key_here", "your_location_id_here"]:
             if not settings.test_mode:
-                raise ValueError(f"Valid GHL {field.name} is required for production")
+                raise ValueError(f"Valid GHL {info.field_name} is required for production")
         return v
 
 
@@ -102,8 +103,7 @@ class GHLContact(BaseModel):
     updated_at: Optional[datetime] = None
     last_activity_at: Optional[datetime] = None
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class GHLOpportunity(BaseModel):
@@ -122,8 +122,7 @@ class GHLOpportunity(BaseModel):
     updated_at: Optional[datetime] = None
     close_date: Optional[datetime] = None
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class GHLWorkflow(BaseModel):
@@ -136,8 +135,7 @@ class GHLWorkflow(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class GHLAPIException(Exception):

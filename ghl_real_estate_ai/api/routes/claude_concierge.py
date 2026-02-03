@@ -6,7 +6,7 @@ Provides RESTful API endpoints for the enhanced Claude Concierge system.
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from typing import Dict, List, Any, Optional, AsyncGenerator
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 import json
 import asyncio
@@ -80,8 +80,7 @@ class ChatRequest(BaseModel):
     streaming: bool = True
     stream: Optional[bool] = None # Support both names
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class CoachingRequest(BaseModel):
     """Request model for real-time coaching."""

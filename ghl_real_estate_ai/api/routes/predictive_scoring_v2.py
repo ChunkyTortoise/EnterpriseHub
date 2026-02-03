@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Union
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query, Header
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import json
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -98,7 +98,8 @@ class LeadScoringRequest(BaseModel):
         default="real_time", description="Inference processing mode"
     )
 
-    @validator('inference_mode')
+    @field_validator('inference_mode')
+    @classmethod
     def validate_inference_mode(cls, v):
         valid_modes = ["real_time", "batch_fast", "batch_bulk", "background"]
         if v not in valid_modes:

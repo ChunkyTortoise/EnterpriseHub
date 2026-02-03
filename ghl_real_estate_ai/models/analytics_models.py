@@ -7,7 +7,7 @@ from datetime import datetime, date
 from typing import Dict, List, Optional, Any, Union, Tuple
 from dataclasses import dataclass
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import LeadPriority
 
