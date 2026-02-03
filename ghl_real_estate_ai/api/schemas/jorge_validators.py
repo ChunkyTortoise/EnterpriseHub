@@ -17,7 +17,7 @@ import re
 from typing import Any, Dict, List, Optional, Union
 from decimal import Decimal
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 try:
     from pydantic.types import EmailStr
 except ImportError:
@@ -211,24 +211,27 @@ class JorgePropertyRequest(BaseModel):
     commission_rate: Optional[Decimal] = Field(default=JorgeCommissionValidator.STANDARD_RATE)
 
     # Validation
-    @validator("property_type")
+    @field_validator("property_type")
+    @classmethod
     def validate_property_type(cls, v):
         return JorgePropertyValidator.validate_property_type(v)
 
-    @validator("market")
+    @field_validator("market")
+    @classmethod
     def validate_market(cls, v):
         return JorgePropertyValidator.validate_market(v)
 
-    @validator("estimated_value")
+    @field_validator("estimated_value")
+    @classmethod
     def validate_value(cls, v):
         return JorgePropertyValidator.validate_property_value(v)
 
-    @validator("commission_rate")
+    @field_validator("commission_rate")
+    @classmethod
     def validate_commission(cls, v):
         return JorgeCommissionValidator.validate_commission_rate(v)
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "address": "123 Main St, Rancho Cucamonga, CA 78701",
                 "property_type": "single_family",
@@ -236,7 +239,7 @@ class JorgePropertyRequest(BaseModel):
                 "estimated_value": 450000,
                 "commission_rate": 0.06
             }
-        }
+        })
 
 
 class JorgeLeadRequest(BaseModel):
@@ -252,26 +255,29 @@ class JorgeLeadRequest(BaseModel):
     lead_source: str = Field(default="website")
 
     # Validation
-    @validator("phone")
+    @field_validator("phone")
+    @classmethod
     def validate_phone(cls, v):
         return JorgeLeadValidator.validate_phone_number(v)
 
-    @validator("credit_score")
+    @field_validator("credit_score")
+    @classmethod
     def validate_credit_score(cls, v):
         return JorgeLeadValidator.validate_credit_score(v)
 
-    @validator("annual_income")
+    @field_validator("annual_income")
+    @classmethod
     def validate_income(cls, v):
         return JorgeLeadValidator.validate_annual_income(v)
 
-    @validator("preapproval_amount")
+    @field_validator("preapproval_amount")
+    @classmethod
     def validate_preapproval(cls, v):
         if v is not None and v <= 0:
             raise ValueError("Preapproval amount must be positive")
         return v
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "first_name": "John",
                 "last_name": "Smith",
@@ -282,7 +288,7 @@ class JorgeLeadRequest(BaseModel):
                 "preapproval_amount": 400000,
                 "lead_source": "website"
             }
-        }
+        })
 
 
 class JorgeCommissionCalculation(BaseModel):
@@ -292,15 +298,18 @@ class JorgeCommissionCalculation(BaseModel):
     commission_rate: Optional[Decimal] = Field(default=JorgeCommissionValidator.STANDARD_RATE)
     split_percentage: Optional[Decimal] = Field(default=Decimal("1.0"))  # 100% to Jorge by default
 
-    @validator("property_value")
+    @field_validator("property_value")
+    @classmethod
     def validate_property_value(cls, v):
         return JorgePropertyValidator.validate_property_value(v)
 
-    @validator("commission_rate")
+    @field_validator("commission_rate")
+    @classmethod
     def validate_commission_rate(cls, v):
         return JorgeCommissionValidator.validate_commission_rate(v)
 
-    @validator("split_percentage")
+    @field_validator("split_percentage")
+    @classmethod
     def validate_split(cls, v):
         decimal_v = Decimal(str(v))
         if decimal_v < 0 or decimal_v > 1:
@@ -317,14 +326,13 @@ class JorgeCommissionCalculation(BaseModel):
         """Calculate Jorge's commission amount."""
         return self.total_commission * self.split_percentage
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "property_value": 700000,
                 "commission_rate": 0.06,
                 "split_percentage": 1.0
             }
-        }
+        })
 
 
 class JorgeBotMessage(BaseModel):
@@ -336,10 +344,11 @@ class JorgeBotMessage(BaseModel):
     bot_type: str = Field(..., pattern="^(seller|buyer|lead|claude)$")
     temperature: str = Field(default="warm", pattern="^(hot|warm|lukewarm|cold|ice_cold)$")
 
-    @validator("content")
-    def validate_content(cls, v, values):
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v, info: ValidationInfo):
         """Validate content based on message type."""
-        message_type = values.get("message_type")
+        message_type = info.data.get("message_type")
 
         if message_type == "sms" and len(v) > 160:
             raise ValueError(
@@ -357,8 +366,7 @@ class JorgeBotMessage(BaseModel):
 
         return v
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "message_type": "sms",
                 "content": "Hi John! Jorge here. Saw your interest in Rancho Cucamonga properties. Free to chat about your home search? Quick 5-min call.",
@@ -366,7 +374,7 @@ class JorgeBotMessage(BaseModel):
                 "bot_type": "buyer",
                 "temperature": "warm"
             }
-        }
+        })
 
 
 class JorgeAnalyticsQuery(BaseModel):
@@ -377,7 +385,8 @@ class JorgeAnalyticsQuery(BaseModel):
     location_id: str = Field(default="default")
     include_commission: bool = Field(default=True)
 
-    @validator("metrics")
+    @field_validator("metrics")
+    @classmethod
     def validate_metrics(cls, v):
         """Validate metrics are supported."""
         supported_metrics = [
@@ -394,15 +403,14 @@ class JorgeAnalyticsQuery(BaseModel):
 
         return v
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "timeframe": "7d",
                 "metrics": ["revenue", "leads", "conversion", "commission"],
                 "location_id": "jorge_rancho_cucamonga",
                 "include_commission": True
             }
-        }
+        })
 
 
 # Error response models
@@ -417,8 +425,7 @@ class JorgeValidationError(BaseModel):
     correlation_id: str
     timestamp: datetime
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "success": False,
                 "error": {
@@ -431,7 +438,7 @@ class JorgeValidationError(BaseModel):
                 "correlation_id": "jorge_1234567890_abc123",
                 "timestamp": "2026-01-25T12:00:00Z"
             }
-        }
+        })
 
 
 # Convenience functions for validation
