@@ -10,7 +10,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 
 # ===================================================================
@@ -52,11 +52,10 @@ class BaseModelWithTimestamp(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = None
 
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+    model_config = ConfigDict(json_encoders={
+        datetime: lambda v: v.isoformat(),
+        Decimal: lambda v: float(v),
+    })
 
 
 # ===================================================================
@@ -73,7 +72,8 @@ class CreateSubscriptionRequest(BaseModel):
     name: Optional[str] = Field(None, description="Customer name for billing")
     currency: str = Field(default="usd", description="Billing currency (usd, eur, gbp, etc.)")
 
-    @validator('email')
+    @field_validator('email')
+    @classmethod
     def validate_email(cls, v):
         if v and '@' not in v:
             raise ValueError('Invalid email format')
@@ -110,15 +110,16 @@ class SubscriptionResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    @validator('usage_percentage', pre=True, always=True)
-    def calculate_usage_percentage(cls, v, values):
+    @field_validator('usage_percentage', mode='before')
+    @classmethod
+    def calculate_usage_percentage(cls, v, info: ValidationInfo):
         """Auto-calculate usage percentage from current/allowance."""
-        if 'usage_allowance' in values and values['usage_allowance'] > 0:
-            return round((values.get('usage_current', 0) / values['usage_allowance']) * 100, 2)
+        data = info.data
+        if 'usage_allowance' in data and data['usage_allowance'] > 0:
+            return round((data.get('usage_current', 0) / data['usage_allowance']) * 100, 2)
         return 0.0
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SubscriptionSummary(BaseModel):
@@ -150,7 +151,8 @@ class UsageRecordRequest(BaseModel):
     billing_period_start: datetime
     billing_period_end: datetime
 
-    @validator('amount')
+    @field_validator('amount')
+    @classmethod
     def validate_amount(cls, v):
         if v <= 0:
             raise ValueError('Amount must be positive')
@@ -172,8 +174,7 @@ class UsageRecordResponse(BaseModel):
     billing_period_start: datetime
     billing_period_end: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UsageSummary(BaseModel):
@@ -211,8 +212,7 @@ class InvoiceDetails(BaseModel):
     invoice_pdf: Optional[str]
     line_items: List[Dict[str, Any]] = Field(default_factory=list)
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BillingHistoryResponse(BaseModel):
@@ -305,7 +305,8 @@ class TierConfiguration(BaseModel):
     stripe_price_id: str
     currency: str = "usd"
 
-    @validator('price_monthly', 'overage_rate')
+    @field_validator('price_monthly', 'overage_rate')
+    @classmethod
     def validate_positive_price(cls, v):
         if v <= 0:
             raise ValueError('Price must be positive')
