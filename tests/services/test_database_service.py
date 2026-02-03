@@ -18,6 +18,7 @@ Coverage Target: 85%+ for all database operations
 import asyncio
 import json
 import pytest
+import pytest_asyncio
 import uuid
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -46,7 +47,7 @@ from tests.mocks.external_services import MockDatabaseService
 class TestDatabaseService:
     """Test Database Service operations"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def db_service(self):
         """Create database service with mocked dependencies"""
         # Mock the connection manager
@@ -148,7 +149,7 @@ class TestDatabaseService:
 class TestLeadManagement:
     """Test lead CRUD operations"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def db_service(self):
         """Create database service for lead testing"""
         # Use mock database service for lead operations
@@ -270,7 +271,7 @@ class TestLeadManagement:
 class TestCommunicationLogging:
     """Test communication logging functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def db_service_real(self):
         """Create real database service for communication tests"""
         db_service = DatabaseService("postgresql://test:test@localhost/test")
@@ -419,7 +420,7 @@ class TestCommunicationLogging:
 class TestNurtureCampaigns:
     """Test nurture campaign functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def db_service_campaigns(self):
         """Create database service for campaign testing"""
         db_service = DatabaseService("postgresql://test:test@localhost/test")
@@ -565,7 +566,7 @@ class TestNurtureCampaigns:
 class TestSearchAndFiltering:
     """Test search and filtering functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def db_service_search(self):
         """Create database service for search testing"""
         db_service = DatabaseService("postgresql://test:test@localhost/test")
@@ -698,7 +699,7 @@ class TestSearchAndFiltering:
 class TestHealthAndMonitoring:
     """Test health check and monitoring functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def db_service_health(self):
         """Create database service for health testing"""
         db_service = DatabaseService("postgresql://test:test@localhost/test")

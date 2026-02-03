@@ -5,6 +5,7 @@ Ensures reliability for high-ticket consulting capabilities ($25K-$100K engageme
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 import numpy as np
 from datetime import datetime, timedelta
@@ -41,7 +42,7 @@ def mock_tenant_service():
     return tenant_mock
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def strategic_consultant():
     """Create strategic consultant for testing."""
     with patch('ghl_real_estate_ai.services.strategic_claude_consultant.get_database', return_value=AsyncMock()), \

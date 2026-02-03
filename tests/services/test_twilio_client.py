@@ -18,6 +18,7 @@ Coverage Target: 85%+ for all Twilio operations
 import asyncio
 import json
 import pytest
+import pytest_asyncio
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from typing import Dict, Any
@@ -82,7 +83,7 @@ class TestTwilioConfig:
 class TestTwilioClient:
     """Test Twilio client operations"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client with mocked dependencies"""
         config = TwilioConfig(
@@ -166,7 +167,7 @@ class TestTwilioClient:
 class TestPhoneNumberValidation:
     """Test phone number validation and formatting"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for phone validation testing"""
         config = TwilioConfig(
@@ -244,7 +245,7 @@ class TestPhoneNumberValidation:
 class TestSMSSending:
     """Test SMS message sending functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for SMS testing"""
         config = TwilioConfig(
@@ -386,7 +387,7 @@ class TestSMSSending:
 class TestTemplatedSMS:
     """Test templated SMS functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for template testing"""
         config = TwilioConfig(
@@ -504,7 +505,7 @@ class TestTemplatedSMS:
 class TestOptOutManagement:
     """Test opt-out/opt-in management functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for opt-out testing"""
         config = TwilioConfig(
@@ -601,7 +602,7 @@ class TestOptOutManagement:
 class TestWebhookProcessing:
     """Test webhook processing functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for webhook testing"""
         config = TwilioConfig(
@@ -737,7 +738,7 @@ class TestWebhookProcessing:
 class TestBulkOperations:
     """Test bulk SMS operations"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for bulk operations testing"""
         config = TwilioConfig(
@@ -853,7 +854,7 @@ class TestBulkOperations:
 class TestHealthAndMonitoring:
     """Test health check and monitoring functionality"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for health testing"""
         config = TwilioConfig(
@@ -946,7 +947,7 @@ class TestHealthAndMonitoring:
 class TestComplianceFeatures:
     """Test TCPA compliance features"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def twilio_client(self):
         """Create Twilio client for compliance testing"""
         config = TwilioConfig(

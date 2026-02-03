@@ -14,6 +14,7 @@ Target Coverage: 90%+ on service6_ai_integration.py
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -45,7 +46,7 @@ SAMPLE_LEAD_DATA = {
     "created_at": datetime.now().isoformat()
 }
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_claude_client():
     """Mock Claude client for AI responses."""
     client = AsyncMock()
@@ -66,7 +67,7 @@ async def mock_claude_client():
     }
     return client
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_database_service():
     """Mock database service."""
     db = AsyncMock()
@@ -81,7 +82,7 @@ async def mock_database_service():
     ]
     return db
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_cache_service():
     """Mock cache service."""
     cache = AsyncMock()
@@ -89,7 +90,7 @@ async def mock_cache_service():
     cache.set.return_value = True
     return cache
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_memory_service():
     """Mock memory service."""
     memory = AsyncMock()
@@ -102,7 +103,7 @@ async def mock_memory_service():
     memory.update_lead_intelligence.return_value = True
     return memory
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_ml_scoring_engine():
     """Mock ML scoring engine."""
     engine = AsyncMock()
@@ -116,7 +117,7 @@ async def mock_ml_scoring_engine():
     engine.get_performance_metrics.return_value = {"success_rate": 0.95, "avg_latency": 120}
     return engine
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_enhanced_scorer():
     """Mock enhanced Claude scorer."""
     scorer = AsyncMock()
@@ -134,7 +135,7 @@ async def mock_enhanced_scorer():
     )
     return scorer
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def ai_integration_service(mock_claude_client, mock_database_service, mock_cache_service, 
                                mock_memory_service, mock_ml_scoring_engine, mock_enhanced_scorer):
     """Create AI integration service with mocked dependencies."""
