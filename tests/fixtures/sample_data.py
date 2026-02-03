@@ -251,7 +251,7 @@ class ConversationHistories:
             {
                 'timestamp': '2026-01-14T10:15:00Z',
                 'role': 'assistant',
-                'content': 'Based on current market data, homes in this price range and location are averaging 12 days on market. Given your timeline and budget alignment, I'd recommend viewing this property within the next 2-3 days.',
+                'content': 'Based on current market data, homes in this price range and location are averaging 12 days on market. Given your timeline and budget alignment, I\'d recommend viewing this property within the next 2-3 days.',
                 'channel': 'website_chat'
             },
             {

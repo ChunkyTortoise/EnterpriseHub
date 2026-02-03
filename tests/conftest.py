@@ -53,7 +53,17 @@ logger = logging.getLogger(__name__)
 
 def pytest_configure(config):
     """Configure pytest with custom markers and options"""
-    
+
+    # Set required env vars before module collection to prevent import-time errors
+    _test_env_defaults = {
+        'JWT_SECRET_KEY': 'test-jwt-secret-key-for-testing-only',
+        'STRIPE_SECRET_KEY': 'sk_test_fake_key_for_testing',
+        'STRIPE_WEBHOOK_SECRET': 'whsec_test_fake_secret',
+    }
+    for key, value in _test_env_defaults.items():
+        if key not in os.environ:
+            os.environ[key] = value
+
     # Register custom markers
     config.addinivalue_line("markers", "unit: Unit tests - fast, isolated tests")
     config.addinivalue_line("markers", "integration: Integration tests - cross-service tests")
