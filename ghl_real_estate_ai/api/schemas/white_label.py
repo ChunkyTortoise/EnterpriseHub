@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional, Union
 from enum import Enum
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, EmailStr, validator, root_validator
+from pydantic import BaseModel, ConfigDict, Field, EmailStr, ValidationInfo, field_validator
 
 
 # ===================================================================
@@ -100,13 +100,15 @@ class AgencyCreateRequest(BaseModel):
     max_custom_domains: int = Field(10, gt=0, le=100)
     metadata: Dict[str, Any] = {}
 
-    @validator('contract_end_date')
-    def validate_contract_dates(cls, v, values):
-        if 'contract_start_date' in values and v <= values['contract_start_date']:
+    @field_validator('contract_end_date')
+    @classmethod
+    def validate_contract_dates(cls, v, info: ValidationInfo):
+        if 'contract_start_date' in info.data and v <= info.data['contract_start_date']:
             raise ValueError('Contract end date must be after start date')
         return v
 
-    @validator('agency_slug')
+    @field_validator('agency_slug')
+    @classmethod
     def validate_agency_slug(cls, v):
         if len(v) < 3:
             raise ValueError('Agency slug must be at least 3 characters')
@@ -183,7 +185,8 @@ class ClientCreateRequest(BaseModel):
 
     client_metadata: Dict[str, Any] = {}
 
-    @validator('client_slug')
+    @field_validator('client_slug')
+    @classmethod
     def validate_client_slug(cls, v):
         if len(v) < 3:
             raise ValueError('Client slug must be at least 3 characters')
@@ -265,7 +268,8 @@ class DomainCreateRequest(BaseModel):
 
     configuration_metadata: Dict[str, Any] = {}
 
-    @validator('domain_name')
+    @field_validator('domain_name')
+    @classmethod
     def validate_domain_name(cls, v):
         import re
         domain_regex = re.compile(
@@ -275,12 +279,13 @@ class DomainCreateRequest(BaseModel):
             raise ValueError('Invalid domain name format')
         return v.lower()
 
-    @validator('client_id')
-    def validate_client_domain_type(cls, v, values):
-        if 'domain_type' in values:
-            if values['domain_type'] == DomainType.CLIENT and not v:
+    @field_validator('client_id')
+    @classmethod
+    def validate_client_domain_type(cls, v, info: ValidationInfo):
+        if 'domain_type' in info.data:
+            if info.data['domain_type'] == DomainType.CLIENT and not v:
                 raise ValueError('Client ID required for client domain type')
-            if values['domain_type'] == DomainType.AGENCY and v:
+            if info.data['domain_type'] == DomainType.AGENCY and v:
                 raise ValueError('Client ID should not be provided for agency domain type')
         return v
 

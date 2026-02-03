@@ -10,7 +10,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional, Dict, Any, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 from ghl_real_estate_ai.api.enterprise.auth import SSOProvider, TenantRole
 
 
@@ -80,11 +80,9 @@ class TimestampedModel(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 # ===================================================================
@@ -105,12 +103,13 @@ class TenantConfigurationRequest(BaseModel):
     require_mfa: bool = True
     auto_provision_users: bool = True
 
-    @validator('allowed_domains', pre=True, always=True)
-    def ensure_domain_in_allowed(cls, v, values):
+    @field_validator('allowed_domains', mode='before')
+    @classmethod
+    def ensure_domain_in_allowed(cls, v, info: ValidationInfo):
         """Ensure primary domain is in allowed domains list."""
         if v is None:
             v = []
-        domain = values.get('domain')
+        domain = info.data.get('domain')
         if domain and domain not in v:
             v.append(domain)
         return v
@@ -131,8 +130,7 @@ class TenantResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserProvisioningRequest(BaseModel):
@@ -164,8 +162,7 @@ class EnterpriseUserResponse(BaseModel):
     mfa_enabled: bool
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SSOLoginRequest(BaseModel):
@@ -204,7 +201,8 @@ class PartnershipCreationRequest(BaseModel):
     expected_volume: int = Field(..., ge=10, le=10000, description="Expected annual relocation volume")
     preferred_tier: Optional[PartnershipTier] = None
 
-    @validator('company_size')
+    @field_validator('company_size')
+    @classmethod
     def validate_company_size(cls, v):
         if v and v not in ['Small', 'Medium', 'Large', 'Enterprise']:
             raise ValueError('Company size must be Small, Medium, Large, or Enterprise')
@@ -233,11 +231,9 @@ class PartnershipSummary(BaseModel):
     created_at: datetime
     last_activity: Optional[datetime] = None
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 class PartnershipDetail(PartnershipSummary):
@@ -270,7 +266,8 @@ class RelocationRequest(BaseModel):
     start_date: datetime = Field(..., description="Desired relocation start date")
     special_requirements: Optional[str] = Field(None, max_length=500)
 
-    @validator('housing_budget')
+    @field_validator('housing_budget')
+    @classmethod
     def validate_housing_budget(cls, v):
         if v <= 0 or v > Decimal('50000'):
             raise ValueError('Housing budget must be between $1 and $50,000')
@@ -296,11 +293,9 @@ class RelocationResponse(BaseModel):
     created_at: datetime
     last_updated: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 class RelocationTracking(BaseModel):
@@ -318,11 +313,9 @@ class RelocationTracking(BaseModel):
     real_time_status: Dict[str, Any]
     last_updated: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 # ===================================================================
@@ -345,7 +338,8 @@ class ContractCreationRequest(BaseModel):
     revenue_share_percentage: Optional[Decimal] = Field(Decimal('0.30'), ge=0, le=1)
     minimum_revenue_guarantee: Optional[Decimal] = Field(Decimal('0.00'), ge=0)
 
-    @validator('currency')
+    @field_validator('currency')
+    @classmethod
     def validate_currency(cls, v):
         valid_currencies = ['USD', 'EUR', 'GBP', 'CAD']
         if v not in valid_currencies:
@@ -369,11 +363,9 @@ class ContractResponse(BaseModel):
     last_billing_date: Optional[datetime] = None
     created_at: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 class VolumeDiscountTierInfo(BaseModel):
@@ -385,10 +377,8 @@ class VolumeDiscountTierInfo(BaseModel):
     base_rate: Decimal
     setup_fee: Decimal
 
-    class Config:
-        json_encoders = {
-            Decimal: lambda v: float(v)
-        }
+    model_config = ConfigDict(json_encoders={
+            Decimal: lambda v: float(v))
 
 
 class BillingPeriodRequest(BaseModel):
@@ -409,11 +399,9 @@ class VolumeBillingResponse(BaseModel):
     payment_result: Dict[str, Any]
     processed_at: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 class RevenueShareCalculation(BaseModel):
@@ -431,11 +419,9 @@ class RevenueShareCalculation(BaseModel):
     payout_status: str
     calculated_at: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 # ===================================================================
@@ -456,10 +442,8 @@ class PerformanceMetrics(BaseModel):
     efficiency_metrics: Dict[str, Any]
     quality_metrics: Dict[str, Any]
 
-    class Config:
-        json_encoders = {
-            Decimal: lambda v: float(v)
-        }
+    model_config = ConfigDict(json_encoders={
+            Decimal: lambda v: float(v))
 
 
 class TrendAnalysis(BaseModel):
@@ -496,11 +480,9 @@ class PartnershipAnalyticsResponse(BaseModel):
     analysis_confidence: float
     generated_at: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 class RevenueAttributionResponse(BaseModel):
@@ -516,11 +498,9 @@ class RevenueAttributionResponse(BaseModel):
     attribution_confidence: Dict[str, Any]
     calculated_at: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 class ForecastRequest(BaseModel):
@@ -544,11 +524,9 @@ class PartnershipForecast(BaseModel):
     forecast_assumptions: List[str]
     generated_at: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 class CompetitiveAnalysisResponse(BaseModel):
@@ -565,11 +543,9 @@ class CompetitiveAnalysisResponse(BaseModel):
     competitive_score: float
     analysis_date: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 class ExecutiveDashboardResponse(BaseModel):
@@ -588,11 +564,9 @@ class ExecutiveDashboardResponse(BaseModel):
     kpi_trends: Dict[str, Any]
     generated_at: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)
-        }
+            Decimal: lambda v: float(v))
 
 
 # ===================================================================
@@ -609,10 +583,8 @@ class EnterpriseError(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     correlation_id: Optional[str] = None
 
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict(json_encoders={
+            datetime: lambda v: v.isoformat())
 
 
 # ===================================================================
@@ -633,10 +605,8 @@ class HealthCheckResponse(BaseModel):
     services: Dict[str, str]
     version_info: Optional[Dict[str, str]] = None
 
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict(json_encoders={
+            datetime: lambda v: v.isoformat())
 
 
 # ===================================================================
@@ -654,7 +624,5 @@ class EnterpriseConfiguration(BaseModel):
     default_revenue_share_percentage: Decimal = Decimal('0.30')
     analytics_retention_days: int = 730
 
-    class Config:
-        json_encoders = {
-            Decimal: lambda v: float(v)
-        }
+    model_config = ConfigDict(json_encoders={
+            Decimal: lambda v: float(v))
