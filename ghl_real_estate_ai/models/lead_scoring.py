@@ -54,6 +54,7 @@ class LeadIntentProfile(BaseModel):
     lead_id: str
     frs: FinancialReadinessScore
     pcs: PsychologicalCommitmentScore
+    lead_type: str = Field("unknown", description="'buyer', 'seller', or 'unknown'")
     market_context: Optional[str] = None
     next_best_action: str = Field(..., description="Recommended next step for Jorge or Bot")
     stall_breaker_suggested: Optional[str] = None

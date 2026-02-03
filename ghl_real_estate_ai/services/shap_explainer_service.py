@@ -276,7 +276,8 @@ class SHAPVisualizationBuilder:
         
         # Feature contributions
         for i, (feature, shap_val) in enumerate(zip(features, shap_vals)):
-            display_name = self.feature_mapper.feature_contexts.get(feature, {}).get('display_name', feature)
+            context = self.feature_mapper.feature_contexts.get(feature)
+            display_name = context.display_name if context else feature
             cumulative += shap_val
             x_vals.append(display_name)
             y_vals.append(cumulative)
@@ -343,7 +344,8 @@ class SHAPVisualizationBuilder:
             if category not in categories:
                 categories[category] = []
             
-            display_name = self.feature_mapper.feature_contexts.get(feature, {}).get('display_name', feature)
+            context = self.feature_mapper.feature_contexts.get(feature)
+            display_name = context.display_name if context else feature
             categories[category].append({
                 'feature': display_name,
                 'impact': abs(shap_val),
@@ -452,6 +454,10 @@ class WhatIfAnalyzer:
         if isinstance(original_shap, list):
             original_shap = original_shap[1][0]  # Get positive class
             modified_shap = modified_shap[1][0]
+        elif isinstance(original_shap, np.ndarray) and original_shap.ndim == 3:
+            # Binary classification (numpy 3D array: samples x features x classes)
+            original_shap = original_shap[0, :, 1]
+            modified_shap = modified_shap[0, :, 1]
         else:
             original_shap = original_shap[0]
             modified_shap = modified_shap[0]
@@ -595,23 +601,28 @@ class SHAPExplainerService:
             
             # Handle different SHAP output formats
             if isinstance(shap_values, list):
-                # Binary classification - use positive class
+                # Binary classification (list format) - use positive class
                 shap_vals = shap_values[1][0]
                 base_value = shap_explainer.expected_value[1]
+            elif isinstance(shap_values, np.ndarray) and shap_values.ndim == 3:
+                # Binary classification (numpy 3D array: samples x features x classes)
+                shap_vals = shap_values[0, :, 1]
+                expected = shap_explainer.expected_value
+                base_value = expected[1] if isinstance(expected, (list, np.ndarray)) else expected
             else:
                 # Single output
                 shap_vals = shap_values[0]
                 base_value = shap_explainer.expected_value
             
-            # Map SHAP values to feature names
-            shap_dict = dict(zip(feature_names, shap_vals))
-            
+            # Map SHAP values to feature names (convert numpy scalars to Python floats)
+            shap_dict = {name: float(val) for name, val in zip(feature_names, shap_vals)}
+
             # Calculate feature importance (absolute SHAP values)
             importance_dict = {name: abs(val) for name, val in shap_dict.items()}
-            
+
             # Generate business explanations
             business_explanations = {}
-            feature_values = dict(zip(feature_names, features))
+            feature_values = {name: float(val) for name, val in zip(feature_names, features)}
             
             for feature, shap_val in shap_dict.items():
                 business_explanations[feature] = self.feature_mapper.get_business_explanation(
@@ -736,7 +747,7 @@ class SHAPExplainerService:
         return {
             'base_value': base_value,
             'final_prediction': prediction,
-            'features': [self.feature_mapper.feature_contexts.get(f, {}).get('display_name', f) for f, _ in sorted_features],
+            'features': [(self.feature_mapper.feature_contexts[f].display_name if f in self.feature_mapper.feature_contexts else f) for f, _ in sorted_features],
             'shap_values': [v for _, v in sorted_features],
             'cumulative_values': self._calculate_cumulative_values(base_value, [v for _, v in sorted_features])
         }

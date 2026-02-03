@@ -5,6 +5,7 @@ Provides comprehensive authentication, session management, and security features
 
 import asyncio
 import hashlib
+import json
 import secrets
 import time
 from datetime import datetime, timedelta

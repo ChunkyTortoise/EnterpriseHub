@@ -45,11 +45,31 @@ logger = logging.getLogger(__name__)
 
 
 class RiskLevel(Enum):
-    """Risk level for competitive situations"""
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    CRITICAL = "critical"
+    """Risk level for competitive situations (int values enable .value ordering)"""
+    LOW = 0
+    MEDIUM = 1
+    HIGH = 2
+    CRITICAL = 3
+
+    def __lt__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        return self.value < other.value
+
+    def __le__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        return self.value <= other.value
+
+    def __gt__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        return self.value > other.value
+
+    def __ge__(self, other):
+        if not isinstance(other, RiskLevel):
+            return NotImplemented
+        return self.value >= other.value
 
 
 @dataclass
@@ -167,42 +187,57 @@ class CompetitorIntelligenceService:
         return {
             "direct_mentions": [
                 {
-                    "pattern": r"\b(working Union[with, dealing] Union[with, talking] Union[to, meeting] with)\b.*\b(Union[agent, realtor]|Union[broker, representative])\b",
+                    "pattern": r"(working with|dealing with|talking to|meeting with).{0,20}\b(agent|realtor|broker|representative)\b",
                     "weight": 0.8,
                     "risk_level": RiskLevel.HIGH
                 },
                 {
-                    "pattern": r"\b(already Union[have, currently] Union[have, got] an?)\b.*\b(Union[agent, realtor]|broker)\b",
+                    "pattern": r"(already have|currently have|got an?|under contract with).{0,20}\b(agent|realtor|broker)\b",
                     "weight": 0.9,
                     "risk_level": RiskLevel.CRITICAL
                 },
                 {
-                    "pattern": r"\b(Union[another, different]|other)\b.*\b(Union[agent, realtor]|Union[broker, company])\b",
+                    "pattern": r"\b(another|different|my other|my current|other)\b.{0,20}\b(agent|realtor|broker|company)\b",
                     "weight": 0.7,
                     "risk_level": RiskLevel.MEDIUM
+                },
+                {
+                    "pattern": r"\b(sign|signed|signing)\b.{0,20}\b(with them|with another|with her|with him|agreement)\b",
+                    "weight": 0.9,
+                    "risk_level": RiskLevel.CRITICAL
                 }
             ],
             "indirect_indicators": [
                 {
-                    "pattern": r"\b(shopping Union[around, comparing]|looking at Union[options, getting] quotes)\b",
+                    "pattern": r"(shopping around|comparing.{0,20}agent|compare)",
                     "weight": 0.5,
                     "risk_level": RiskLevel.MEDIUM
                 },
                 {
-                    "pattern": r"\b(not ready to Union[commit, still] Union[deciding, need] to think)\b",
+                    "pattern": r"(not ready to commit|still deciding|need to think)",
+                    "weight": 0.4,
+                    "risk_level": RiskLevel.LOW
+                },
+                {
+                    "pattern": r"\bmight\b.{0,20}\b(look|other|option|elsewhere)\b",
                     "weight": 0.4,
                     "risk_level": RiskLevel.LOW
                 }
             ],
             "urgency_indicators": [
                 {
-                    "pattern": r"\b(Union[deadline, urgent]|Union[ASAP, immediately]|closing soon)\b",
+                    "pattern": r"\b(deadline|urgent|ASAP|immediately|closing soon|closing next)\b",
                     "weight": 0.6,
                     "risk_level": RiskLevel.HIGH
                 },
                 {
-                    "pattern": r"\b(other Union[offers, multiple] Union[bids, time] sensitive)\b",
+                    "pattern": r"\b(other offers|multiple bids|time sensitive)\b",
                     "weight": 0.7,
+                    "risk_level": RiskLevel.HIGH
+                },
+                {
+                    "pattern": r"\bneed to decide\b",
+                    "weight": 0.5,
                     "risk_level": RiskLevel.HIGH
                 }
             ]
@@ -346,9 +381,15 @@ class CompetitorIntelligenceService:
         # Competitor name detection
         mentions.extend(await self._name_detection(text))
 
-        # Sentiment analysis for each mention
+        # Deduplicate: prefer named competitor mentions over generic pattern matches
+        named_found = any(m.competitor_type == "named_competitor" for m in mentions)
+        if named_found:
+            mentions = [m for m in mentions if m.competitor_type != "direct_mentions"]
+
+        # Sentiment analysis using full context for accuracy
         for mention in mentions:
-            mention.sentiment_score = self._analyze_sentiment(mention.mention_text)
+            sentiment_text = mention.context if mention.context else mention.mention_text
+            mention.sentiment_score = self._analyze_sentiment(sentiment_text)
 
         return mentions
 
@@ -445,9 +486,9 @@ class CompetitorIntelligenceService:
     def _extract_urgency_indicators(self, text: str) -> List[str]:
         """Extract urgency indicators from text"""
         urgency_patterns = [
-            r"\b(Union[urgent, ASAP]|Union[immediately, deadline]|closing soon)\b",
-            r"\b(this Union[week, today]|Union[tomorrow, right] away)\b",
-            r"\b(time Union[sensitive, running] out of Union[time, need] to decide)\b"
+            r"\b(urgent|ASAP|immediately|deadline|closing soon)\b",
+            r"\b(this week|today|tomorrow|right away)\b",
+            r"\b(time sensitive|running out of time|need to decide)\b"
         ]
 
         indicators = []
@@ -473,6 +514,10 @@ class CompetitorIntelligenceService:
         # Look for patterns across multiple messages
         full_conversation = " ".join([msg.get("content", "") for msg in conversation_history])
 
+        # Detect competitor mentions in history text
+        history_mentions = await self._detect_competitor_mentions(full_conversation)
+        context_mentions.extend(history_mentions)
+
         # Detect relationship building patterns
         if self._detect_relationship_progression(conversation_history):
             mention = CompetitorMention(
@@ -493,15 +538,17 @@ class CompetitorIntelligenceService:
 
     def _detect_relationship_progression(self, conversation_history: List[Dict]) -> bool:
         """Detect if lead is building relationship with another agent"""
-        progression_indicators = [
-            "meeting tomorrow",
-            "showed me properties",
-            "sent me listings",
-            "we've been working together"
+        progression_patterns = [
+            r"meeting.{0,10}(tomorrow|again|next)",
+            r"showed me.{0,15}propert",
+            r"sent me.{0,10}listing",
+            r"we'?ve been working",
+            r"(they|she|he)\s+showed me",
+            r"sign(ed|ing)?\s+with\s+them",
         ]
 
         full_text = " ".join([msg.get("content", "").lower() for msg in conversation_history])
-        return any(indicator in full_text for indicator in progression_indicators)
+        return any(re.search(p, full_text, re.IGNORECASE) for p in progression_patterns)
 
     def _assess_overall_risk(self, mentions: List[CompetitorMention]) -> RiskLevel:
         """Assess overall competitive risk level"""

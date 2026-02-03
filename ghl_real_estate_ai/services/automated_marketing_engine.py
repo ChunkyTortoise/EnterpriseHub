@@ -646,14 +646,14 @@ CONTENT REQUIREMENTS:
 7. Suggest image/visual requirements
 
 Return in this JSON format:
-{
+{{
   "title": "Compelling headline/title",
   "body": "Main content text",
   "hashtags": ["hashtag1", "hashtag2", "hashtag3"],
   "call_to_action": "Specific actionable CTA",
   "image_description": "Description of required image/visual",
   "design_elements": ["element1", "element2"]
-}
+}}
 """
 
         return base_prompt
@@ -859,9 +859,13 @@ Return in this JSON format:
     ) -> CampaignPerformance:
         """Track and analyze campaign performance"""
 
+        # Filter performance_data to only include fields defined on CampaignPerformance
+        valid_fields = {f.name for f in CampaignPerformance.__dataclass_fields__.values()}
+        filtered_data = {k: v for k, v in performance_data.items() if k in valid_fields}
+
         performance = CampaignPerformance(
             campaign_id=campaign_id,
-            **performance_data
+            **filtered_data
         )
 
         # Analyze A/B test results if applicable
@@ -912,10 +916,14 @@ Return in this JSON format:
 
         recommendations = []
 
-        if performance.click_through_rate < 0.02:  # Less than 2% CTR
+        # Compute click-through rate from available fields
+        click_through_rate = (performance.clicks / performance.impressions) if performance.impressions > 0 else 0
+        if click_through_rate < 0.02:  # Less than 2% CTR
             recommendations.append("Consider more compelling headlines or imagery")
 
-        if performance.conversion_rate < 0.05:  # Less than 5% conversion
+        # Compute conversion rate from available fields
+        conversion_rate = (performance.leads_generated / performance.clicks) if performance.clicks > 0 else 0
+        if conversion_rate < 0.05:  # Less than 5% conversion
             recommendations.append("Review landing page experience and call-to-action")
 
         if performance.cost_per_lead > 50:  # High cost per lead

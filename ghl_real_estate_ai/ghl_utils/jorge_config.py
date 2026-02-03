@@ -11,12 +11,21 @@ Created: 2026-01-19
 
 from typing import Dict, List, Optional
 from dataclasses import dataclass
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
 class JorgeSellerConfig:
     """Central configuration for Jorge's seller bot"""
+
+    # ========== SIMPLE MODE ==========
+    # Simple mode: disables enterprise features (investor arbitrage, loss aversion,
+    # psychology profiling, Voss negotiation, drift detection, market insights)
+    # When True, bot follows strict 4-question flow only
+    JORGE_SIMPLE_MODE: bool = True
 
     # ========== ACTIVATION/DEACTIVATION TAGS ==========
     ACTIVATION_TAGS = ["Needs Qualifying"]
@@ -63,26 +72,26 @@ class JorgeSellerConfig:
 
     # ========== GHL INTEGRATION ==========
     # Workflow IDs for different seller temperatures
-    HOT_SELLER_WORKFLOW_ID = "jorge_hot_seller_workflow"
-    WARM_SELLER_WORKFLOW_ID = "jorge_warm_seller_workflow"
-    AGENT_NOTIFICATION_WORKFLOW = "jorge_agent_notification"
+    HOT_SELLER_WORKFLOW_ID = ""   # Set via HOT_SELLER_WORKFLOW_ID env var
+    WARM_SELLER_WORKFLOW_ID = ""  # Set via WARM_SELLER_WORKFLOW_ID env var
+    AGENT_NOTIFICATION_WORKFLOW = ""  # Set via NOTIFY_AGENT_WORKFLOW_ID env var
 
     # Custom field mapping for GHL
     CUSTOM_FIELDS = {
-        "seller_temperature": "seller_temp_field_id",
-        "seller_motivation": "seller_motivation_field_id",
-        "relocation_destination": "relocation_dest_field_id",
-        "timeline_urgency": "timeline_urgency_field_id",
-        "property_condition": "property_condition_field_id",
-        "price_expectation": "price_expectation_field_id",
-        "questions_answered": "questions_answered_field_id",
-        "qualification_score": "qualification_score_field_id",
-        "expected_roi": "expected_roi_field_id",
-        "lead_value_tier": "lead_value_tier_field_id",
-        "ai_valuation_price": "ai_valuation_price_field_id",
-        "detected_persona": "detected_persona_field_id",
-        "psychology_type": "psychology_type_field_id",
-        "urgency_level": "urgency_level_field_id"
+        "seller_temperature": "",
+        "seller_motivation": "",
+        "relocation_destination": "",
+        "timeline_urgency": "",
+        "property_condition": "",
+        "price_expectation": "",
+        "questions_answered": "",
+        "qualification_score": "",
+        "expected_roi": "",
+        "lead_value_tier": "",
+        "ai_valuation_price": "",
+        "detected_persona": "",
+        "psychology_type": "",
+        "urgency_level": ""
     }
 
     # ========== MESSAGE SETTINGS ==========
@@ -145,6 +154,12 @@ class JorgeSellerConfig:
         "Perfect. You're a great fit for our program. I'm connecting you with our team now. Are mornings or afternoons better for a quick call?",
         "You answered all my questions, which tells me you're serious. Let me get you scheduled with our team today. Morning or afternoon?"
     ]
+
+    # ========== BUYER BOT SETTINGS ==========
+    # Buyer follow-up schedule (mirrors seller pattern per spec)
+    BUYER_FOLLOWUP_SCHEDULE = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29]
+    BUYER_LONGTERM_INTERVAL = 14
+    BUYER_TEMPERATURE_TAGS = {"hot": "Hot-Buyer", "warm": "Warm-Buyer", "cold": "Cold-Buyer"}
 
     # ========== ANALYTICS & MONITORING ==========
     # Success metrics and KPIs
@@ -227,7 +242,7 @@ class JorgeSellerConfig:
         # Keep warm, professional language
         if cls.USE_WARM_LANGUAGE:
             # Allow basic punctuation and keep friendly tone
-            message = re.sub(r'[^\w\s,.!?😊👍]', '', message)
+            message = re.sub(r'[^\w\s,.!?]', '', message)
 
         # Remove hyphens (Jorge requirement)
         if cls.NO_HYPHENS:
@@ -330,6 +345,8 @@ class JorgeEnvironmentSettings:
     def __init__(self):
         """Initialize with environment variables"""
         self.jorge_seller_mode = os.getenv("JORGE_SELLER_MODE", "false").lower() == "true"
+        self.jorge_buyer_mode = os.getenv("JORGE_BUYER_MODE", "false").lower() == "true"
+        self.buyer_activation_tag = os.getenv("BUYER_LEAD_TAG", "Buyer-Lead")
         self.activation_tags = self._parse_list_env("ACTIVATION_TAGS", JorgeSellerConfig.ACTIVATION_TAGS)
         self.deactivation_tags = self._parse_list_env("DEACTIVATION_TAGS", JorgeSellerConfig.DEACTIVATION_TAGS)
 
@@ -356,9 +373,15 @@ class JorgeEnvironmentSettings:
         # GHL integration
         self.hot_seller_workflow_id = os.getenv("HOT_SELLER_WORKFLOW_ID")
         self.warm_seller_workflow_id = os.getenv("WARM_SELLER_WORKFLOW_ID")
+        self.hot_buyer_workflow_id = os.getenv("HOT_BUYER_WORKFLOW_ID")
+        self.warm_buyer_workflow_id = os.getenv("WARM_BUYER_WORKFLOW_ID")
 
         # Analytics
         self.analytics_enabled = os.getenv("JORGE_ANALYTICS_ENABLED", "true").lower() == "true"
+
+        # Lead bot mode
+        self.jorge_lead_mode = os.getenv("JORGE_LEAD_MODE", "true").lower() == "true"
+        self.lead_activation_tag = os.getenv("LEAD_ACTIVATION_TAG", "Needs Qualifying")
 
     def _parse_list_env(self, env_var: str, default: List[str]) -> List[str]:
         """Parse environment variable as list"""
@@ -377,6 +400,16 @@ class JorgeEnvironmentSettings:
         return self.jorge_seller_mode
 
     @property
+    def JORGE_BUYER_MODE(self) -> bool:
+        """Compatibility property for buyer mode routing"""
+        return self.jorge_buyer_mode
+
+    @property
+    def BUYER_ACTIVATION_TAG(self) -> str:
+        """Tag that activates buyer mode routing"""
+        return self.buyer_activation_tag
+
+    @property
     def ACTIVATION_TAGS(self) -> List[str]:
         """Get activation tags"""
         return self.activation_tags
@@ -385,6 +418,35 @@ class JorgeEnvironmentSettings:
     def DEACTIVATION_TAGS(self) -> List[str]:
         """Get deactivation tags"""
         return self.deactivation_tags
+
+    @property
+    def JORGE_LEAD_MODE(self) -> bool:
+        """Compatibility property for lead mode routing"""
+        return self.jorge_lead_mode
+
+    @property
+    def LEAD_ACTIVATION_TAG(self) -> str:
+        """Tag that activates lead mode routing"""
+        return self.lead_activation_tag
+
+    def validate_ghl_integration(self) -> List[str]:
+        """Return warnings for missing GHL configuration."""
+        warnings = []
+        if self.jorge_seller_mode:
+            if not os.getenv("HOT_SELLER_WORKFLOW_ID"):
+                warnings.append("HOT_SELLER_WORKFLOW_ID not set — hot seller workflows disabled")
+            if not os.getenv("WARM_SELLER_WORKFLOW_ID"):
+                warnings.append("WARM_SELLER_WORKFLOW_ID not set — warm seller workflows disabled")
+        if self.jorge_buyer_mode:
+            if not os.getenv("HOT_BUYER_WORKFLOW_ID"):
+                warnings.append("HOT_BUYER_WORKFLOW_ID not set — hot buyer workflows disabled")
+            if not os.getenv("WARM_BUYER_WORKFLOW_ID"):
+                warnings.append("WARM_BUYER_WORKFLOW_ID not set — warm buyer workflows disabled")
+        critical_fields = ["LEAD_SCORE", "SELLER_TEMPERATURE", "BUDGET"]
+        for field in critical_fields:
+            if not os.getenv(f"CUSTOM_FIELD_{field}"):
+                warnings.append(f"CUSTOM_FIELD_{field} not set — field updates will use semantic names")
+        return warnings
 
 
 # ========== MARKET CONFIGURATION ==========
@@ -401,8 +463,6 @@ class JorgeMarketManager:
         """Get configuration for current market"""
         if self.current_market == "rancho_cucamonga":
             return self._get_rancho_config()
-        elif self.current_market == "rancho_cucamonga":
-            return self._get_rancho_cucamonga_config()
         else:
             # Default to Rancho Cucamonga
             return self._get_rancho_config()
@@ -424,13 +484,13 @@ class JorgeMarketManager:
             "market_name": "Rancho Cucamonga",
             "state": "CA",
             "price_ranges": {
-                "entry_level": {"min": 700000, "max": 700000},
+                "entry_level": {"min": 500000, "max": 700000},
                 "mid_market": {"min": 700000, "max": 1200000},
                 "luxury": {"min": 1200000, "max": 7000000}
             },
             "regulatory": {
                 "license_authority": "DRE",
-                "state_regulations": "California Real Estate Commission"
+                "state_regulations": "California Department of Real Estate"
             }
         }
 
@@ -440,7 +500,7 @@ class JorgeMarketManager:
             "market_name": "Rancho Cucamonga",
             "state": "CA",
             "price_ranges": {
-                "entry_level": {"min": 700000, "max": 700000},
+                "entry_level": {"min": 500000, "max": 700000},
                 "mid_market": {"min": 700000, "max": 1200000},
                 "luxury": {"min": 1200000, "max": 7000000}
             },
@@ -454,10 +514,13 @@ class JorgeMarketManager:
 
 # Create global settings instance
 settings = JorgeEnvironmentSettings()
+for _warning in settings.validate_ghl_integration():
+    logger.warning(f"GHL Config: {_warning}")
 market_manager = JorgeMarketManager()
 
 # Export commonly used values
 JORGE_SELLER_MODE = settings.JORGE_SELLER_MODE
+JORGE_LEAD_MODE = settings.JORGE_LEAD_MODE
 ACTIVATION_TAGS = settings.ACTIVATION_TAGS
 DEACTIVATION_TAGS = settings.DEACTIVATION_TAGS
 CURRENT_MARKET = market_manager.current_market
@@ -470,6 +533,7 @@ __all__ = [
     "settings",
     "market_manager",
     "JORGE_SELLER_MODE",
+    "JORGE_LEAD_MODE",
     "ACTIVATION_TAGS",
     "DEACTIVATION_TAGS",
     "CURRENT_MARKET",

@@ -34,7 +34,7 @@ from typing import Dict, List, Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, Path, Body, status
 from fastapi.security import HTTPBearer
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.api.middleware.auth import get_current_user, verify_concierge_permission
@@ -103,14 +103,13 @@ class InsightAcceptanceRequest(BaseModel):
     implementation_notes: Optional[str] = Field(None, max_length=500, description="Optional implementation notes")
     effectiveness_prediction: Optional[float] = Field(None, ge=0.0, le=1.0, description="Predicted effectiveness (0.0-1.0)")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "action_taken": "Used suggested objection handling technique with feel-felt-found method",
                 "implementation_notes": "Lead responded positively to empathy bridge before value presentation",
                 "effectiveness_prediction": 0.85
             }
-        }
+        })
 
 
 class InsightDismissalRequest(BaseModel):
@@ -123,13 +122,12 @@ class InsightDismissalRequest(BaseModel):
     )
     feedback_notes: Optional[str] = Field(None, max_length=300, description="Optional feedback for improvement")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "dismissal_reason": "poor_timing",
                 "feedback_notes": "Insight came too late in conversation flow"
             }
-        }
+        })
 
 
 class MonitoringControlRequest(BaseModel):
@@ -141,8 +139,7 @@ class MonitoringControlRequest(BaseModel):
         description="Optional preferences for monitoring behavior"
     )
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "action": "start",
                 "monitoring_preferences": {
@@ -151,7 +148,7 @@ class MonitoringControlRequest(BaseModel):
                     "priority_filter": ["high", "critical"]
                 }
             }
-        }
+        })
 
 
 class ConversationInsightsResponse(BaseModel):
@@ -165,8 +162,7 @@ class ConversationInsightsResponse(BaseModel):
     last_analysis_at: Optional[datetime]
     performance_summary: Dict[str, Any]
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "conversation_id": "conv_12345",
                 "total_insights": 8,
@@ -180,7 +176,7 @@ class ConversationInsightsResponse(BaseModel):
                     "average_effectiveness": 0.78
                 }
             }
-        }
+        })
 
 
 class InsightActionResponse(BaseModel):
@@ -192,8 +188,7 @@ class InsightActionResponse(BaseModel):
     tracking_id: str
     next_recommendations: List[str]
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "insight_id": "insight_12345",
                 "action": "accepted",
@@ -205,7 +200,7 @@ class InsightActionResponse(BaseModel):
                     "Watch for follow-up opportunities"
                 ]
             }
-        }
+        })
 
 
 # ============================================================================

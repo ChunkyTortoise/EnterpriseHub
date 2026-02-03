@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Union
 import aiohttp
 from aiohttp import ClientTimeout
 from fastapi import HTTPException, Request
-from pydantic import BaseModel, field_validator, ValidationInfo, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 import sendgrid
 from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment, FileContent, FileName, FileType
 
@@ -105,8 +105,7 @@ class EmailMessage(BaseModel):
     template_id: Optional[str] = None
     campaign_id: Optional[str] = None
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class EmailTemplate(BaseModel):
@@ -119,8 +118,7 @@ class EmailTemplate(BaseModel):
     plain_content: str
     variables: List[str] = []
     
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class SuppressionEntry(BaseModel):
@@ -131,8 +129,7 @@ class SuppressionEntry(BaseModel):
     reason: Optional[str] = None
     suppression_type: SuppressionType
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class SendGridAPIException(Exception):
@@ -383,7 +380,7 @@ class SendGridClient:
                         "channel": "email",
                         "direction": "outbound",
                         "content": subject or f"Template {template_id}",
-                        "status": email_message.status.value,
+                        "status": email_message.status if isinstance(email_message.status, str) else email_message.status.value,
                         "campaign_id": campaign_id,
                         "template_id": template_id,
                         "metadata": {
@@ -789,7 +786,7 @@ class SendGridClient:
                         email_result["error"] = str(result)
                     else:
                         email_result["message_id"] = result.message_id
-                        email_result["status"] = result.status.value
+                        email_result["status"] = result.status if isinstance(result.status, str) else result.status.value
                     
                     results.append(email_result)
                 

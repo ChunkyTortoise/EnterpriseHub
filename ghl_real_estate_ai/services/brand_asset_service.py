@@ -156,10 +156,10 @@ class BrandAssetService:
         self.cache = cache_service
 
         # Storage configuration
-        self.storage_provider = StorageProvider(settings.get("ASSET_STORAGE_PROVIDER", "s3"))
-        self.s3_bucket = settings.get("S3_ASSETS_BUCKET")
-        self.s3_region = settings.get("AWS_REGION", "us-east-1")
-        self.cdn_base_url = settings.get("CDN_BASE_URL")
+        self.storage_provider = StorageProvider(getattr(settings, "ASSET_STORAGE_PROVIDER", "s3"))
+        self.s3_bucket = getattr(settings, "S3_ASSETS_BUCKET", None)
+        self.s3_region = getattr(settings, "AWS_REGION", "us-east-1")
+        self.cdn_base_url = getattr(settings, "CDN_BASE_URL", None)
 
         # Initialize storage clients
         self.s3_client = None
@@ -167,8 +167,8 @@ class BrandAssetService:
             self.s3_client = boto3.client(
                 's3',
                 region_name=self.s3_region,
-                aws_access_key_id=settings.get("AWS_ACCESS_KEY_ID"),
-                aws_secret_access_key=settings.get("AWS_SECRET_ACCESS_KEY")
+                aws_access_key_id=getattr(settings, "AWS_ACCESS_KEY_ID", None),
+                aws_secret_access_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None)
             )
 
         # Image processing configuration

@@ -10,6 +10,7 @@ Created: 2026-01-22
 """
 
 import logging
+import os
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 from enum import Enum
@@ -373,10 +374,12 @@ class JorgeSellerEngine:
 
         # Hot seller actions
         if temperature == "hot":
-            actions.append({
-                "type": "trigger_workflow",
-                "workflow_id": "jorge_hot_seller_workflow"
-            })
+            hot_workflow_id = os.getenv("HOT_SELLER_WORKFLOW_ID", "")
+            if hot_workflow_id:
+                actions.append({
+                    "type": "trigger_workflow",
+                    "workflow_id": hot_workflow_id
+                })
 
         return actions
 

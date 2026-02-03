@@ -186,8 +186,8 @@ class TestCompetitiveResponseSystem:
 
         required_props = [
             "ai_technology",
-            "austin_expertise",
-            "apple_specialization",
+            "rc_expertise",
+            "amazon_specialization",
             "investor_focus",
             "response_speed"
         ]
@@ -229,7 +229,7 @@ class TestCompetitiveResponseSystem:
         urgency_msg = system.get_urgency_creator("inventory")
         assert isinstance(urgency_msg, str)
         assert len(urgency_msg) > 0
-        assert "austin" in urgency_msg.lower()
+        assert "rancho cucamonga" in urgency_msg.lower()
 
         rates_msg = system.get_urgency_creator("rates")
         assert isinstance(rates_msg, str)
@@ -324,8 +324,8 @@ class TestCompetitiveResponseSystem:
         assert remax_response is not None
 
     def test_austin_market_advantages_integration(self, system):
-        """Test Austin market advantages integration"""
-        austin_advantages = system.austin_advantages
+        """Test Rancho Cucamonga/Inland Empire market advantages integration"""
+        austin_advantages = system.rc_advantages
 
         assert "market_timing" in austin_advantages
         assert "neighborhood_expertise" in austin_advantages

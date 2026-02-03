@@ -171,11 +171,13 @@ class TestCorporateRelocationService:
         """Test creating a new relocation request"""
         company_name = "Test Corporation"
 
-        request_id = await relocation_service.create_relocation_request(
-            company_name,
-            sample_employee_details,
-            sample_relocation_requirements
-        )
+        with patch.object(relocation_service, '_save_requests_data'), \
+             patch.object(relocation_service, '_save_contracts_data', create=True):
+            request_id = await relocation_service.create_relocation_request(
+                company_name,
+                sample_employee_details,
+                sample_relocation_requirements
+            )
 
         # Verify request was created
         assert request_id is not None
@@ -435,10 +437,11 @@ class TestCorporateRelocationService:
             'project_manager': 'Alice Johnson'
         }
 
-        coordination_id = await relocation_service.create_multi_city_coordination(
-            company_name,
-            project_details
-        )
+        with patch.object(relocation_service, '_save_coordination_data'):
+            coordination_id = await relocation_service.create_multi_city_coordination(
+                company_name,
+                project_details
+            )
 
         # Verify coordination was created
         assert coordination_id is not None

@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Union
 from fastapi import APIRouter, HTTPException, Query, Path, Body, Depends, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import numpy as np
 
 from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
@@ -105,14 +105,16 @@ class AlertRuleRequest(BaseModel):
     delivery_channels: List[str] = Field(default=["email"], description="Delivery channels")
     throttle_minutes: int = Field(60, ge=5, le=1440, description="Throttle period in minutes")
 
-    @validator('alert_type')
+    @field_validator('alert_type')
+    @classmethod
     def validate_alert_type(cls, v):
         valid_types = [alert_type.value for alert_type in AlertType]
         if v not in valid_types:
             raise ValueError(f"Invalid alert type. Must be one of: {valid_types}")
         return v
 
-    @validator('severity')
+    @field_validator('severity')
+    @classmethod
     def validate_severity(cls, v):
         valid_severities = [severity.value for severity in AlertSeverity]
         if v not in valid_severities:
@@ -135,7 +137,8 @@ class GeospatialAnalysisRequest(BaseModel):
     analysis_radius_km: float = Field(2.0, ge=0.1, le=50, description="Analysis radius")
     include_demographics: bool = Field(True, description="Include demographic data")
 
-    @validator('locations')
+    @field_validator('locations')
+    @classmethod
     def validate_locations(cls, v):
         for location in v:
             if 'latitude' not in location or 'longitude' not in location:
@@ -160,7 +163,8 @@ class HeatmapRequest(BaseModel):
     grid_resolution_km: float = Field(0.5, ge=0.1, le=5.0, description="Grid resolution in km")
     scoring_factors: Optional[List[str]] = Field(None, description="Factors to include in scoring")
 
-    @validator('bounds')
+    @field_validator('bounds')
+    @classmethod
     def validate_bounds(cls, v):
         if len(v) != 4:
             raise ValueError("Bounds must contain exactly 4 values")

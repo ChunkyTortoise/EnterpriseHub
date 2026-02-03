@@ -1,0 +1,145 @@
+[
+  {
+    "id": "prop_001",
+    "address": "1234 Victoria Park Ln, Rancho Cucamonga, CA 91730",
+    "price": 549000,
+    "beds": 3,
+    "baths": 2,
+    "sqft": 1650,
+    "condition": "Move-in Ready",
+    "neighborhood": "Victoria",
+    "description": "Charming 3bd/2ba in Victoria with updated kitchen and private backyard"
+  },
+  {
+    "id": "prop_002",
+    "address": "8721 Haven Ave, Rancho Cucamonga, CA 91730",
+    "price": 599000,
+    "beds": 4,
+    "baths": 2,
+    "sqft": 1890,
+    "condition": "Move-in Ready",
+    "neighborhood": "Haven",
+    "description": "Spacious 4bd/2ba near Haven with open floor plan and two car garage"
+  },
+  {
+    "id": "prop_003",
+    "address": "6450 Central Park Dr, Rancho Cucamonga, CA 91739",
+    "price": 625000,
+    "beds": 3,
+    "baths": 2.5,
+    "sqft": 1780,
+    "condition": "Move-in Ready",
+    "neighborhood": "Central Park",
+    "description": "Updated 3bd/2.5ba townhome steps from Central Park with mountain views"
+  },
+  {
+    "id": "prop_004",
+    "address": "10382 Victoria St, Rancho Cucamonga, CA 91730",
+    "price": 650000,
+    "beds": 4,
+    "baths": 3,
+    "sqft": 2200,
+    "condition": "Move-in Ready",
+    "neighborhood": "Victoria",
+    "description": "Recently renovated 4bd/3ba in Victoria close to top rated schools"
+  },
+  {
+    "id": "prop_005",
+    "address": "5917 Haven Ct, Rancho Cucamonga, CA 91737",
+    "price": 685000,
+    "beds": 4,
+    "baths": 2.5,
+    "sqft": 2050,
+    "condition": "Needs Minor Updates",
+    "neighborhood": "Haven",
+    "description": "Corner lot 4bd/2.5ba in Haven with pool and mature landscaping"
+  },
+  {
+    "id": "prop_006",
+    "address": "12044 Etiwanda Ave, Rancho Cucamonga, CA 91739",
+    "price": 749000,
+    "beds": 4,
+    "baths": 3,
+    "sqft": 2450,
+    "condition": "Move-in Ready",
+    "neighborhood": "Etiwanda",
+    "description": "Modern 4bd/3ba in Etiwanda with gourmet kitchen and covered patio"
+  },
+  {
+    "id": "prop_007",
+    "address": "7833 Terra Vista Pkwy, Rancho Cucamonga, CA 91730",
+    "price": 825000,
+    "beds": 5,
+    "baths": 3,
+    "sqft": 2700,
+    "condition": "Move-in Ready",
+    "neighborhood": "Terra Vista",
+    "description": "Elegant 5bd/3ba in Terra Vista with bonus room and three car garage"
+  },
+  {
+    "id": "prop_008",
+    "address": "9156 Etiwanda Falls Ct, Rancho Cucamonga, CA 91739",
+    "price": 895000,
+    "beds": 4,
+    "baths": 3.5,
+    "sqft": 2900,
+    "condition": "Move-in Ready",
+    "neighborhood": "Etiwanda",
+    "description": "Executive 4bd/3.5ba backing to Etiwanda preserve with panoramic views"
+  },
+  {
+    "id": "prop_009",
+    "address": "6201 Terra Vista Way, Rancho Cucamonga, CA 91730",
+    "price": 975000,
+    "beds": 5,
+    "baths": 4,
+    "sqft": 3100,
+    "condition": "Move-in Ready",
+    "neighborhood": "Terra Vista",
+    "description": "Turnkey 5bd/4ba in Terra Vista with resort pool and outdoor kitchen"
+  },
+  {
+    "id": "prop_010",
+    "address": "11490 Terra Vista Ln, Rancho Cucamonga, CA 91730",
+    "price": 1100000,
+    "beds": 5,
+    "baths": 4.5,
+    "sqft": 3400,
+    "condition": "Move-in Ready",
+    "neighborhood": "Terra Vista",
+    "description": "Upgraded 5bd/4.5ba luxury home in gated Terra Vista community"
+  },
+  {
+    "id": "prop_011",
+    "address": "4821 Alta Loma Dr, Rancho Cucamonga, CA 91737",
+    "price": 1350000,
+    "beds": 5,
+    "baths": 4,
+    "sqft": 3800,
+    "condition": "Move-in Ready",
+    "neighborhood": "Alta Loma",
+    "description": "Custom 5bd/4ba estate in Alta Loma on half acre with vineyard views"
+  },
+  {
+    "id": "prop_012",
+    "address": "3710 Day Creek Blvd, Rancho Cucamonga, CA 91739",
+    "price": 1575000,
+    "beds": 6,
+    "baths": 5,
+    "sqft": 4200,
+    "condition": "Move-in Ready",
+    "neighborhood": "Day Creek",
+    "description": "Stunning 6bd/5ba in Day Creek with smart home features and wine cellar"
+  },
+  {
+    "id": "prop_013",
+    "address": "2985 Alta Loma Ranch Rd, Rancho Cucamonga, CA 91737",
+    "price": 1950000,
+    "beds": 6,
+    "baths": 5.5,
+    "sqft": 5100,
+    "condition": "Move-in Ready",
+    "neighborhood": "Alta Loma",
+    "description": "Premier 6bd/5.5ba hilltop estate in Alta Loma with panoramic city views"
+  }
+]

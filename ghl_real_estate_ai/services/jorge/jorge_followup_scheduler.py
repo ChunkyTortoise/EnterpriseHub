@@ -128,7 +128,24 @@ class JorgeFollowUpScheduler:
         """
         try:
             self.logger.info(f"Processing webhook follow-up for contact {contact_id}")
-            
+
+            # Distributed lock: prevent duplicate follow-ups across replicas
+            lock_key = f"followup_lock:{contact_id}:{location_id}"
+            try:
+                acquired = await self.cache.set(lock_key, "1", ttl=300, nx=True)
+            except Exception:
+                # Cache supports set() but may not support nx — fall back to get/set
+                existing = await self.cache.get(lock_key)
+                if existing:
+                    self.logger.info(f"Follow-up already in progress for {contact_id} (lock held)")
+                    return {"status": "skipped", "reason": "Duplicate lock held", "contact_id": contact_id}
+                await self.cache.set(lock_key, "1", ttl=300)
+                acquired = True
+
+            if not acquired:
+                self.logger.info(f"Follow-up already in progress for {contact_id} (lock held)")
+                return {"status": "skipped", "reason": "Duplicate lock held", "contact_id": contact_id}
+
             # Extract seller data from webhook
             seller_data = await self._extract_seller_data_from_webhook(
                 contact_id=contact_id,

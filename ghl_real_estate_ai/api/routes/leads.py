@@ -19,10 +19,31 @@ from ghl_real_estate_ai.services.websocket_server import get_websocket_manager, 
 logger = get_logger(__name__)
 router = APIRouter(tags=["Leads Management"])
 
-# Initialize services
-memory_service = MemoryService()
-lead_scorer = LeadScorer()
-property_matcher = PropertyMatcher()
+# Lazy service singletons — defer initialization until first request
+_memory_service = None
+_lead_scorer = None
+_property_matcher = None
+
+
+def _get_memory_service():
+    global _memory_service
+    if _memory_service is None:
+        _memory_service = MemoryService()
+    return _memory_service
+
+
+def _get_lead_scorer():
+    global _lead_scorer
+    if _lead_scorer is None:
+        _lead_scorer = LeadScorer()
+    return _lead_scorer
+
+
+def _get_property_matcher():
+    global _property_matcher
+    if _property_matcher is None:
+        _property_matcher = PropertyMatcher()
+    return _property_matcher
 
 def get_ghl_client() -> GHLAPIClient:
     """Get GHL API Client instance"""
@@ -51,16 +72,16 @@ async def list_leads(
             contact_id = contact.get("id")
             
             # Get lead score and temperature
-            context = await memory_service.get_context(contact_id)
+            context = await _get_memory_service().get_context(contact_id)
             score = 0
             temperature = "cold"
             pcs_score = 0
             
             if context:
                 # Calculate Jorge's question count score
-                question_count = await lead_scorer.calculate(context)
+                question_count = await _get_lead_scorer().calculate(context)
                 # Convert to percentage for Elite Dashboard
-                score = lead_scorer.get_percentage_score(question_count)
+                score = _get_lead_scorer().get_percentage_score(question_count)
                 
                 # Get PCS score if available
                 lead_intel = context.get("lead_intelligence", {})
@@ -69,7 +90,7 @@ async def list_leads(
                     pcs_score = context.get("psychological_commitment", 0)
                 
                 # Map score to temperature
-                temperature = lead_scorer.classify(question_count)
+                temperature = _get_lead_scorer().classify(question_count)
             
             # Use tags to override status if present (GHL convention)
             tags = contact.get("tags", [])
@@ -176,7 +197,7 @@ async def get_lead_property_matches(
     Get AI-ranked property matches for a lead.
     """
     try:
-        context = await memory_service.get_context(lead_id)
+        context = await _get_memory_service().get_context(lead_id)
         if not context:
             return []
             
@@ -184,7 +205,7 @@ async def get_lead_property_matches(
         if not preferences:
             return []
             
-        matches = property_matcher.find_matches(preferences, limit=limit)
+        matches = _get_property_matcher().find_matches(preferences, limit=limit)
         
         # Format for frontend PropertyMatch interface
         formatted_matches = []
@@ -224,7 +245,7 @@ async def get_conversation_messages(
         
         if not result.get("success"):
             # Fallback to memory if GHL fails or returns nothing
-            context = await memory_service.get_context(conversation_id)
+            context = await _get_memory_service().get_context(conversation_id)
             if context:
                 history = context.get("conversation_history", [])
                 return [

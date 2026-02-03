@@ -23,7 +23,17 @@ logger = get_logger(__name__)
 class MemoryService:
     """
     Persistent memory service for storing conversation context.
+    Uses singleton pattern to avoid redundant initialization across modules.
     """
+    _instances: dict = {}
+
+    def __new__(cls, storage_type: Optional[str] = None):
+        key = storage_type or "_default"
+        if key not in cls._instances:
+            instance = super().__new__(cls)
+            instance._initialized = False
+            cls._instances[key] = instance
+        return cls._instances[key]
 
     def __init__(self, storage_type: Optional[str] = None):
         """
@@ -33,6 +43,10 @@ class MemoryService:
             storage_type: Optional storage type override ("memory", "file", or "redis").
                          If None, determined by settings.environment and location_id.
         """
+        if self._initialized:
+            return
+        self._initialized = True
+
         from ghl_real_estate_ai.services.cache_service import get_cache_service
         self.cache_service = get_cache_service()
         self.storage_type = storage_type or ("redis" if settings.environment == "production" else "file")
@@ -57,6 +71,15 @@ class MemoryService:
         # Explicit override
         return self.storage_type == "redis"
 
+    @staticmethod
+    def _sanitize_path_component(value: str) -> str:
+        """Sanitize a value for safe use as a path component (no traversal)."""
+        import re
+        # Strip path separators and dangerous characters
+        sanitized = re.sub(r'[/\:*?"<>|.]', '_', value)
+        # Prevent empty result
+        return sanitized or "unknown"
+
     def _get_file_path(self, contact_id: str, location_id: Optional[str] = None) -> Path:
         """
         Get the file path for storing a contact's context.
@@ -68,13 +91,14 @@ class MemoryService:
         Returns:
             Path object
         """
+        safe_contact = self._sanitize_path_component(contact_id)
         if location_id:
-            # Create location-specific subdirectory
-            location_dir = self.memory_dir / location_id
+            safe_location = self._sanitize_path_component(location_id)
+            location_dir = self.memory_dir / safe_location
             location_dir.mkdir(parents=True, exist_ok=True)
-            return location_dir / f"{contact_id}.json"
+            return location_dir / f"{safe_contact}.json"
         
-        return self.memory_dir / f"{contact_id}.json"
+        return self.memory_dir / f"{safe_contact}.json"
 
     def _resolve_location_id(self, location_id: Optional[str]) -> str:
         """

@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Union
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query, Header
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import json
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -52,7 +52,15 @@ signal_processor = BehavioralSignalProcessor()
 market_router = MarketSpecificModelRouter()
 
 # Legacy scorer for backward compatibility
-legacy_scorer = PredictiveLeadScorer()
+# Lazy singleton — defer initialization until first request
+_legacy_scorer = None
+
+
+def _get_legacy_scorer():
+    global _legacy_scorer
+    if _legacy_scorer is None:
+        _legacy_scorer = PredictiveLeadScorer()
+    return _legacy_scorer
 
 router = APIRouter(prefix="/api/v2/predictive-scoring", tags=["Predictive Scoring V2"])
 
@@ -90,7 +98,8 @@ class LeadScoringRequest(BaseModel):
         default="real_time", description="Inference processing mode"
     )
 
-    @validator('inference_mode')
+    @field_validator('inference_mode')
+    @classmethod
     def validate_inference_mode(cls, v):
         valid_modes = ["real_time", "batch_fast", "batch_bulk", "background"]
         if v not in valid_modes:
@@ -286,7 +295,7 @@ async def score_lead_v2(
 
         # Fallback to legacy scorer
         try:
-            legacy_result = legacy_scorer.score_lead(request.lead_id, request.lead_data)
+            legacy_result = _get_legacy_scorer().score_lead(request.lead_id, request.lead_data)
 
             return EnhancedScoringResponse(
                 lead_id=request.lead_id,

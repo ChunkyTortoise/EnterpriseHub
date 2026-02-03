@@ -5,9 +5,14 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "uvicorn ghl_real_estate_ai.api.app:app --host 0.0.0.0 --port $PORT"
+startCommand = "uvicorn ghl_real_estate_ai.api.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/api/health/live"
+healthcheckTimeout = 10
 
 # Jorge's Environment Variables
+# Phased Rollout: Start with seller only (Phase 1), enable buyer after 7 days
+# stability (Phase 2), enable lead after buyer stable (Phase 3).
+# See deploy/rollout_checklist.md for prerequisites.
 [env]
 # Jorge's GHL Credentials (set these in Railway dashboard)
 GHL_API_KEY = { description = "Jorge's GoHighLevel API Key" }
@@ -19,18 +24,31 @@ ANTHROPIC_API_KEY = { description = "Jorge's Claude API Key" }
 
 # Jorge's Auto-Deactivation Settings
 AUTO_DEACTIVATE_THRESHOLD = "70"
-ACTIVATION_TAGS = '["Needs Qualifying"]'
+ACTIVATION_TAGS = '["Needs Qualifying", "Buyer-Lead"]'
 DEACTIVATION_TAGS = '["AI-Off","Qualified","Stop-Bot","AI-Qualified"]'
 
 # Lead Scoring Configuration
 HOT_LEAD_THRESHOLD = "3"
 WARM_LEAD_THRESHOLD = "2"
 
+# Bot Mode Flags
+JORGE_SELLER_MODE = "true"
+JORGE_BUYER_MODE = "true"
+JORGE_LEAD_MODE = "true"
+
 # GHL Workflow Integration
 NOTIFY_AGENT_WORKFLOW_ID = { description = "Jorge's GHL Workflow ID for agent notifications" }
+HOT_SELLER_WORKFLOW_ID = { description = "GHL workflow for hot seller agent notification" }
+WARM_SELLER_WORKFLOW_ID = { description = "GHL workflow for warm seller nurture" }
+HOT_BUYER_WORKFLOW_ID = { description = "GHL workflow for hot buyer showing coordination" }
+WARM_BUYER_WORKFLOW_ID = { description = "GHL workflow for warm buyer nurture" }
 
 # Security
 GHL_WEBHOOK_SECRET = { description = "Jorge's GHL Webhook Secret for signature verification" }
+JWT_SECRET_KEY = { description = "Secret key for JWT token signing (min 32 chars)" }
+STRIPE_SECRET_KEY = { description = "Stripe secret key for billing (set to 'sk_test_disabled' if not using billing)" }
+ADMIN_API_KEY = { description = "API key for admin routes (CRM config, bulk ops, bot mgmt)" }
+REDIS_PASSWORD = { description = "Redis password (Railway auto-sets if using Redis plugin)" }
 
 # Application Settings
 ENVIRONMENT = "production"

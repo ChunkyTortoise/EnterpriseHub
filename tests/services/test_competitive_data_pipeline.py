@@ -122,24 +122,28 @@ class TestCompetitiveDataPipeline:
         """Test competitor data collection from multiple sources"""
         competitor_id = "competitor_001"
 
-        # Mock data collection
-        with patch.object(data_pipeline, '_collect_from_source') as mock_collect:
-            mock_collect.return_value = [
-                CompetitorDataPoint(
-                    competitor_id=competitor_id,
-                    data_source=DataSource.MLS_DATA,
-                    data_type="pricing",
-                    raw_data=sample_competitor_data["pricing"],
-                    collected_at=datetime.now(),
-                    confidence_score=0.9
-                )
-            ]
+        # Mock data collectors to return test data
+        mock_collector = AsyncMock()
+        mock_collector.source_type = DataSource.MLS_DATA
+        mock_collector.collect_data = AsyncMock(return_value=[
+            CompetitorDataPoint(
+                competitor_id=competitor_id,
+                data_source=DataSource.MLS_DATA,
+                data_type="pricing",
+                raw_data=sample_competitor_data["pricing"],
+                collected_at=datetime.now(),
+                confidence_score=0.9
+            )
+        ])
+        data_pipeline.data_collectors = {"mls": mock_collector}
 
-            data_points = await data_pipeline.collect_competitor_data(competitor_id)
+        data_points = await data_pipeline.collect_competitor_data(
+            competitor_id, data_sources=[DataSource.MLS_DATA]
+        )
 
-            assert len(data_points) > 0
-            assert data_points[0].competitor_id == competitor_id
-            assert data_points[0].confidence_score >= 0.8
+        assert len(data_points) > 0
+        assert data_points[0].competitor_id == competitor_id
+        assert data_points[0].confidence_score >= 0.8
 
     @pytest.mark.asyncio
     async def test_market_trend_analysis(self, data_pipeline, sample_market_data):
@@ -274,15 +278,19 @@ class TestCompetitiveDataPipeline:
     @pytest.mark.asyncio
     async def test_error_handling_and_recovery(self, data_pipeline):
         """Test error handling during data collection"""
-        # Simulate collection failure
-        with patch.object(data_pipeline, '_collect_from_source') as mock_collect:
-            mock_collect.side_effect = Exception("Collection failed")
+        # Simulate collection failure by making collectors raise
+        mock_collector = AsyncMock()
+        mock_collector.source_type = DataSource.MLS_DATA
+        mock_collector.collect_data = AsyncMock(side_effect=Exception("Collection failed"))
+        data_pipeline.data_collectors = {"mls": mock_collector}
 
-            # Should not raise exception, should handle gracefully
-            data_points = await data_pipeline.collect_competitor_data("invalid_competitor")
+        # Should not raise exception, should handle gracefully
+        data_points = await data_pipeline.collect_competitor_data(
+            "invalid_competitor", data_sources=[DataSource.MLS_DATA]
+        )
 
-            # Should return empty list or error indication
-            assert isinstance(data_points, list)
+        # Should return empty list or error indication
+        assert isinstance(data_points, list)
 
     @pytest.mark.asyncio
     async def test_data_aggregation_pipeline(self, data_pipeline):

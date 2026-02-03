@@ -656,7 +656,7 @@ class TestPIIProtection:
         import re
 
         test_message = "Contact me at john.doe@example.com"
-        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Union[Z, a]-z]{2,}\b'
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
 
         assert re.search(email_pattern, test_message) is not None
 

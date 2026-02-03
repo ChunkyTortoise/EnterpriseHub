@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import redis.asyncio as aioredis
 from fastapi import HTTPException, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 import jwt
 
 from ghl_real_estate_ai.ghl_utils.config import settings

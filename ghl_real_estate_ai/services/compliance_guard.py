@@ -21,7 +21,7 @@ class ComplianceGuard:
     """
     Intercepts AI responses to detect steering, redlining, or discriminatory bias.
     """
-    
+
     # Keywords that trigger immediate red-flag review (FHA Protected Classes)
     PROTECTED_KEYWORDS = [
         r"\brace\b", r"\breligion\b", r"\bcolor\b", r"\bnational origin\b",
@@ -31,21 +31,37 @@ class ComplianceGuard:
         r"\bsafe area\b", r"\bbad area\b", r"\bthose people\b", r"\bimmigrant\b"
     ]
 
+    # Max input length to prevent token abuse (10 KB — far exceeds any legitimate
+    # SMS or chat message while blocking payload-stuffing attacks)
+    MAX_INPUT_LENGTH = 10_000
+
     def __init__(self):
-        self.llm_client = LLMClient(provider="claude", model="claude-3-5-haiku-20241022")
+        self.llm_client = LLMClient(provider="claude", model="claude-sonnet-4-5-20250514")
 
     async def audit_message(self, message: str, contact_context: Dict[str, Any] = None) -> Tuple[ComplianceStatus, str, List[str]]:
         """
         Runs a multi-tier audit on an outbound message.
         Returns: (Status, Explanation, ViolationList)
         """
+        # Tier 0: Input length guard — reject oversized messages before any processing
+        if len(message) > self.MAX_INPUT_LENGTH:
+            logger.warning(
+                f"Message exceeds max input length ({len(message)} > {self.MAX_INPUT_LENGTH})",
+                extra={"length": len(message), "max_length": self.MAX_INPUT_LENGTH},
+            )
+            return (
+                ComplianceStatus.BLOCKED,
+                f"Message exceeds maximum allowed length ({self.MAX_INPUT_LENGTH} chars).",
+                ["input_length_exceeded"],
+            )
+
         # Tier 1: Pattern Matching (Instant)
         pattern_violations = self._check_patterns(message)
-        
+
         # Tier 2: LLM Cognitive Audit (Reasoning)
         if not pattern_violations:
             return await self._run_llm_audit(message, contact_context)
-        
+
         return ComplianceStatus.BLOCKED, "Pattern match detected protected class language.", pattern_violations
 
     def _check_patterns(self, message: str) -> List[str]:
@@ -104,11 +120,12 @@ class ComplianceGuard:
                 result = json.loads(json_match.group(0))
                 return ComplianceStatus(result["status"]), result["reason"], result["violations"]
             
-            return ComplianceStatus.PASSED, "LLM Audit failed to parse, defaulting to pass.", []
-            
+            logger.warning("Compliance LLM Audit: failed to parse JSON from response, flagging for review.")
+            return ComplianceStatus.FLAGGED, "LLM Audit response unparseable — flagged for human review.", ["llm_parse_failure"]
+
         except Exception as e:
             logger.error(f"Compliance LLM Audit failed: {e}")
-            return ComplianceStatus.PASSED, "Internal Error", []
+            return ComplianceStatus.FLAGGED, f"LLM Audit error — flagged for human review: {type(e).__name__}", ["llm_audit_error"]
 
 # Global instance
 compliance_guard = ComplianceGuard()

@@ -11,7 +11,7 @@ Integrates with:
 from datetime import datetime
 from typing import Dict, List, Optional, Any, Union
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from uuid import UUID, uuid4
 
 
@@ -77,13 +77,15 @@ class LeadScoringRequest(BaseModel):
     include_explanations: bool = Field(True, description="Include ML feature explanations")
     timeout_ms: Optional[int] = Field(5000, ge=100, le=30000, description="Timeout in milliseconds")
 
-    @validator('email')
+    @field_validator('email')
+    @classmethod
     def validate_email(cls, v):
         if v and '@' not in v:
             raise ValueError('Invalid email format')
         return v
 
-    @validator('phone')
+    @field_validator('phone')
+    @classmethod
     def validate_phone(cls, v):
         if v and len(v.replace('+', '').replace('-', '').replace('(', '').replace(')', '').replace(' ', '')) < 10:
             raise ValueError('Phone number must be at least 10 digits')
@@ -92,7 +94,7 @@ class LeadScoringRequest(BaseModel):
 
 class BatchScoringRequest(BaseModel):
     """Request schema for batch lead scoring"""
-    leads: List[LeadScoringRequest] = Field(..., max_items=100, description="List of leads to score")
+    leads: List[LeadScoringRequest] = Field(..., max_length=100, description="List of leads to score")
     parallel_processing: bool = Field(True, description="Process leads in parallel")
     include_summary: bool = Field(True, description="Include batch processing summary")
     timeout_ms: Optional[int] = Field(15000, ge=1000, le=60000, description="Total batch timeout in ms")

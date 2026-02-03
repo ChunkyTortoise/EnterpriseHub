@@ -18,7 +18,7 @@ Key Features:
 import re
 import json
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Any, Tuple
 from urllib.parse import urlparse, parse_qs
 from dataclasses import dataclass, asdict
@@ -300,8 +300,8 @@ class LeadSourceTracker:
 
             attribution = SourceAttribution(
                 source=LeadSource.UNKNOWN,
-                first_touch=datetime.utcnow(),
-                last_touch=datetime.utcnow()
+                first_touch=datetime.now(timezone.utc),
+                last_touch=datetime.now(timezone.utc)
             )
 
             # Extract available data
@@ -355,8 +355,8 @@ class LeadSourceTracker:
             return SourceAttribution(
                 source=LeadSource.UNKNOWN,
                 confidence_score=0.0,
-                first_touch=datetime.utcnow(),
-                last_touch=datetime.utcnow()
+                first_touch=datetime.now(timezone.utc),
+                last_touch=datetime.now(timezone.utc)
             )
 
     def _extract_referrer(
@@ -698,13 +698,13 @@ class LeadSourceTracker:
         try:
             # Store individual event for detailed analysis
             event_data = {
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "source": source.value,
                 "event_type": event_type,
                 "metadata": metadata or {}
             }
 
-            cache_key = f"source_events:{source.value}:{datetime.utcnow().strftime('%Y-%m-%d')}"
+            cache_key = f"source_events:{source.value}:{datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
 
             # Get existing events for today
             existing_events = await self.cache.get(cache_key) or []
@@ -743,7 +743,7 @@ class LeadSourceTracker:
             "close_times": [],
             "lead_scores": [],
             "budgets": [],
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat()
         }
 
         # Update based on event type
@@ -811,7 +811,7 @@ class LeadSourceTracker:
             current_metrics["cost_per_lead"] = current_metrics["total_cost"] / total_leads if total_leads > 0 else 0
             current_metrics["cost_per_qualified_lead"] = current_metrics["total_cost"] / current_metrics["qualified_leads"] if current_metrics["qualified_leads"] > 0 else 0
 
-        current_metrics["last_updated"] = datetime.utcnow().isoformat()
+        current_metrics["last_updated"] = datetime.now(timezone.utc).isoformat()
 
         # Store updated metrics (7-day TTL)
         await self.cache.set(cache_key, current_metrics, ttl=604800)
@@ -835,7 +835,7 @@ class LeadSourceTracker:
         """
         try:
             if not end_date:
-                end_date = datetime.utcnow()
+                end_date = datetime.now(timezone.utc)
             if not start_date:
                 start_date = end_date - timedelta(days=30)
 
@@ -973,7 +973,7 @@ class LeadSourceTracker:
 
             return {
                 "status": "success",
-                "generated_at": datetime.utcnow().isoformat(),
+                "generated_at": datetime.now(timezone.utc).isoformat(),
                 "total_sources_analyzed": len(performances),
                 "recommendations": recommendations,
                 "top_performers": [

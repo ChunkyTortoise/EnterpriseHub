@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 import bleach
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 from email_validator import validate_email, EmailNotValidError
 
 
@@ -531,20 +531,19 @@ class InputValidator:
 class SecureBaseModel(BaseModel):
     """Base Pydantic model with security validations"""
     
-    class Config:
-        # Prevent extra fields
-        extra = "forbid"
-        # Validate assignment
-        validate_assignment = True
-        # Use enum values
-        use_enum_values = True
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_assignment=True,
+        use_enum_values=True,
+    )
 
 
 class SecureStringField(BaseModel):
     """Secure string field with validation"""
     value: str
     
-    @validator('value')
+    @field_validator('value')
+    @classmethod
     def validate_secure_string(cls, v):
         if not isinstance(v, str):
             raise ValueError('Must be a string')
@@ -564,7 +563,8 @@ class SecureEmailField(BaseModel):
     """Secure email field with validation"""
     email: str
     
-    @validator('email')
+    @field_validator('email')
+    @classmethod
     def validate_email_format(cls, v):
         try:
             validated_email = validate_email(v)

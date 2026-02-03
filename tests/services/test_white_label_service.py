@@ -41,6 +41,9 @@ class TestWhiteLabelService:
             service.templates_dir.mkdir(parents=True, exist_ok=True)
             service.integrations_dir.mkdir(parents=True, exist_ok=True)
 
+            # Re-initialize enterprise assets into the temp directories
+            service._initialize_enterprise_assets()
+
             yield service
 
     @pytest.fixture

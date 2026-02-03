@@ -7,6 +7,8 @@ Provides:
 - Streamlit app fixture with automatic navigation
 """
 import pytest
+
+playwright = pytest.importorskip("playwright", reason="playwright not installed")
 from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext
 
 

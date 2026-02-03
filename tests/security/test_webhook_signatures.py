@@ -49,72 +49,82 @@ except ImportError:
         return True
 
 
+# Module-level fixtures available to all test classes in this file
+
+@pytest.fixture
+def test_client():
+    """FastAPI test client"""
+    try:
+        return TestClient(app)
+    except:
+        # Mock test client if app doesn't exist
+        return Mock()
+
+
+@pytest.fixture
+def ghl_secret() -> str:
+    """GoHighLevel webhook secret"""
+    return "ghl_test_secret_key_12345"
+
+
+@pytest.fixture
+def twilio_auth_token() -> str:
+    """Twilio auth token for signature verification"""
+    return "twilio_test_auth_token_67890"
+
+
+@pytest.fixture
+def sendgrid_verification_key() -> str:
+    """SendGrid verification key"""
+    return "sendgrid_test_verification_key_abcdef"
+
+
+@pytest.fixture
+def sample_ghl_payload() -> Dict[str, Any]:
+    """Sample GHL webhook payload"""
+    return {
+        "type": "ContactCreate",
+        "contact": {
+            "id": "test_contact_123",
+            "email": "test@example.com",
+            "firstName": "John",
+            "lastName": "Doe",
+            "phone": "+1234567890"
+        },
+        "timestamp": int(time.time())
+    }
+
+
+@pytest.fixture
+def sample_twilio_payload() -> Dict[str, str]:
+    """Sample Twilio webhook payload"""
+    return {
+        "MessageSid": "SM1234567890abcdef",
+        "AccountSid": "AC1234567890abcdef",
+        "From": "+1234567890",
+        "To": "+0987654321",
+        "Body": "Hello from Twilio",
+        "MessageStatus": "delivered"
+    }
+
+
+@pytest.fixture
+def sample_sendgrid_payload() -> list:
+    """Sample SendGrid webhook payload"""
+    return [
+        {
+            "email": "test@example.com",
+            "timestamp": int(time.time()),
+            "event": "delivered",
+            "sg_event_id": "sg_event_123",
+            "sg_message_id": "sg_message_456"
+        }
+    ]
+
+
 class TestWebhookSignatures:
-    """Test webhook signature verification for all providers"""
-    
-    @pytest.fixture
-    def test_client(self):
-        """FastAPI test client"""
-        try:
-            return TestClient(app)
-        except:
-            # Mock test client if app doesn't exist
-            return Mock()
-    
-    @pytest.fixture
-    def ghl_secret(self) -> str:
-        """GoHighLevel webhook secret"""
-        return "ghl_test_secret_key_12345"
-    
-    @pytest.fixture
-    def twilio_auth_token(self) -> str:
-        """Twilio auth token for signature verification"""
-        return "twilio_test_auth_token_67890"
-    
-    @pytest.fixture
-    def sendgrid_verification_key(self) -> str:
-        """SendGrid verification key"""
-        return "sendgrid_test_verification_key_abcdef"
-    
-    @pytest.fixture
-    def sample_ghl_payload(self) -> Dict[str, Any]:
-        """Sample GHL webhook payload"""
-        return {
-            "type": "ContactCreate",
-            "contact": {
-                "id": "test_contact_123",
-                "email": "test@example.com",
-                "firstName": "John",
-                "lastName": "Doe",
-                "phone": "+1234567890"
-            },
-            "timestamp": int(time.time())
-        }
-    
-    @pytest.fixture
-    def sample_twilio_payload(self) -> Dict[str, str]:
-        """Sample Twilio webhook payload"""
-        return {
-            "MessageSid": "SM1234567890abcdef",
-            "AccountSid": "AC1234567890abcdef", 
-            "From": "+1234567890",
-            "To": "+0987654321",
-            "Body": "Hello from Twilio",
-            "MessageStatus": "delivered"
-        }
-    
-    @pytest.fixture
-    def sample_sendgrid_payload(self) -> list:
-        """Sample SendGrid webhook payload"""
-        return [
-            {
-                "email": "test@example.com",
-                "timestamp": int(time.time()),
-                "event": "delivered",
-                "sg_event_id": "sg_event_123",
-                "sg_message_id": "sg_message_456"
-            }
-        ]
+    """Test webhook signature verification for all providers — fixtures moved to module level"""
+    pass
 
 
 class TestGHLWebhookSecurity:

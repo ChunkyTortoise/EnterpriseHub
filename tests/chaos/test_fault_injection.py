@@ -26,7 +26,7 @@ import pytest
 import asyncio
 import time
 import random
-from unittest.mock import patch, AsyncMock, MagicMock, side_effect
+from unittest.mock import patch, AsyncMock, MagicMock
 from typing import Dict, Any, List, Optional, Callable
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager

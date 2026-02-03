@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query, Path
 from fastapi.security import HTTPBearer
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.api.enterprise.auth import (
@@ -54,7 +54,8 @@ class CreatePartnershipRequest(BaseModel):
     expected_volume: int = Field(..., ge=10, description="Expected annual relocation volume")
     preferred_tier: Optional[str] = Field(None, description="Preferred partnership tier")
 
-    @validator('expected_volume')
+    @field_validator('expected_volume')
+    @classmethod
     def validate_volume(cls, v):
         if v < 10:
             raise ValueError('Minimum expected volume is 10 relocations per year')
@@ -65,7 +66,8 @@ class BulkRelocationRequest(BaseModel):
     """Request model for bulk employee relocations."""
     relocations: List[Dict[str, Any]] = Field(..., description="List of relocation requests")
 
-    @validator('relocations')
+    @field_validator('relocations')
+    @classmethod
     def validate_relocations(cls, v):
         if len(v) > 100:
             raise ValueError('Maximum 100 relocations per batch')
@@ -85,7 +87,8 @@ class CreateTenantRequest(BaseModel):
     max_users: int = Field(1000, ge=1, le=10000, description="Maximum users")
     require_mfa: bool = Field(True, description="Require multi-factor authentication")
 
-    @validator('domain')
+    @field_validator('domain')
+    @classmethod
     def validate_domain(cls, v):
         if '.' not in v or ' ' in v:
             raise ValueError('Invalid domain format')
@@ -103,7 +106,8 @@ class CreateContractRequest(BaseModel):
     auto_renewal: bool = Field(True, description="Auto-renewal enabled")
     custom_rate_per_transaction: Optional[Decimal] = Field(None, description="Custom transaction rate")
 
-    @validator('payment_terms')
+    @field_validator('payment_terms')
+    @classmethod
     def validate_payment_terms(cls, v):
         valid_terms = ['NET30', 'NET15', 'NET60', 'IMMEDIATE']
         if v not in valid_terms:
@@ -123,11 +127,10 @@ class PartnershipResponse(BaseModel):
     created_at: datetime
     health_score: Optional[float] = None
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
             Decimal: lambda v: float(v)
-        }
+        })
 
 
 class AnalyticsResponse(BaseModel):
@@ -139,11 +142,10 @@ class AnalyticsResponse(BaseModel):
     recommendations: List[str]
     generated_at: datetime
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat(),
             Decimal: lambda v: float(v)
-        }
+        })
 
 
 # ===================================================================

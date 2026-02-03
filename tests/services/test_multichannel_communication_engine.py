@@ -4,6 +4,7 @@ Comprehensive test suite for unified communication platform
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime, timedelta
@@ -25,7 +26,7 @@ except ImportError as e:
 class TestMultichannelCommunicationEngine:
     """Test suite for Multichannel Communication Engine"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def engine(self):
         """Create engine instance for testing"""
         with patch('ghl_real_estate_ai.services.multichannel_communication_engine.CacheService'):

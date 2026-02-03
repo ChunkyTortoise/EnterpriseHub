@@ -23,7 +23,7 @@ from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query, Body
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 # Import revenue optimization services
@@ -95,11 +95,10 @@ class PricingOptimizationResponse(BaseModel):
     roi_justification: str
     calculated_at: datetime
     
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             Decimal: lambda v: float(v),
             datetime: lambda v: v.isoformat()
-        }
+        })
 
 
 class CampaignCreationRequest(BaseModel):
@@ -127,11 +126,10 @@ class CampaignResponse(BaseModel):
     roi: float
     created_at: datetime
     
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             Decimal: lambda v: float(v),
             datetime: lambda v: v.isoformat()
-        }
+        })
 
 
 class MLModelTrainingRequest(BaseModel):
@@ -154,10 +152,9 @@ class MLModelTrainingResponse(BaseModel):
     started_at: Optional[datetime] = None
     estimated_completion: Optional[datetime] = None
     
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat() if v else None
-        }
+        })
 
 
 class CompetitiveIntelligenceRequest(BaseModel):
@@ -773,25 +770,8 @@ async def _calculate_revenue_analytics(
     return analytics
 
 
-# Error Handlers
-
-@router.exception_handler(ValueError)
-async def value_error_handler(request, exc):
-    """Handle validation errors."""
-    return JSONResponse(
-        status_code=HTTP_400_BAD_REQUEST,
-        content={"error": "Validation Error", "detail": str(exc)}
-    )
-
-
-@router.exception_handler(Exception)
-async def general_exception_handler(request, exc):
-    """Handle general exceptions."""
-    logger.error(f"Unhandled exception in revenue optimization API: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={"error": "Internal Server Error", "detail": "An unexpected error occurred"}
-    )
+# Error handling is managed by the global exception handler in
+# ghl_real_estate_ai.api.middleware.global_exception_handler
 
 
 # Health Check

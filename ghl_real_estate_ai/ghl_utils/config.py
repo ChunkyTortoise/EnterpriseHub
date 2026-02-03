@@ -27,10 +27,10 @@ class Settings(BaseSettings):
     ghl_agency_id: Optional[str] = None
 
     # LLM Configuration
-    claude_model: str = "claude-3-5-sonnet-20241022"
-    claude_sonnet_model: str = "claude-3-5-sonnet-20241022"
-    claude_haiku_model: str = "claude-3-5-haiku-20241022"
-    claude_opus_model: str = "claude-3-opus-20240229"  # High-stakes tasks
+    claude_model: str = "claude-sonnet-4-5-20250514"
+    claude_sonnet_model: str = "claude-sonnet-4-5-20250514"
+    claude_haiku_model: str = "claude-sonnet-4-5-20250514"  # Consolidated to Sonnet 4.5
+    claude_opus_model: str = "claude-opus-4-5-20251101"  # High-stakes tasks
     temperature: float = 0.7
     max_tokens: int = 150
     default_llm_provider: str = "claude"
@@ -133,11 +133,11 @@ class Settings(BaseSettings):
     auto_deactivate_threshold: int = 70  # 70+ percentage triggers AI deactivation
 
     # Activation & Trigger Settings
-    activation_tags: list[str] = ["Hit List", "Need to Qualify", "Needs Qualifying"]
+    activation_tags: list[str] = ["Needs Qualifying"]
     deactivation_tags: list[str] = ["AI-Off", "Qualified", "Stop-Bot"]
     required_contact_type: Optional[str] = "Seller"
     disposition_field_name: str = "disposition"
-    bot_active_disposition: str = "Hit List"
+    bot_active_disposition: str = "Needs Qualifying"
 
     # GHL Workflow & Custom Field Mapping
     notify_agent_workflow_id: Optional[str] = None
@@ -339,7 +339,20 @@ class Settings(BaseSettings):
 
 # Global settings instance
 # This will be imported throughout the application
-settings = Settings()
+try:
+    settings = Settings()
+except Exception as e:
+    # Provide a clear, actionable error instead of a raw Pydantic traceback
+    missing = [
+        var for var in ("ANTHROPIC_API_KEY", "GHL_API_KEY", "GHL_LOCATION_ID")
+        if not os.getenv(var)
+    ]
+    if missing:
+        print(f"\n❌  STARTUP ERROR: Required environment variables not set: {', '.join(missing)}")
+        print("   Copy .env.example → .env and fill in the values, or set them in your Railway dashboard.\n")
+    else:
+        print(f"\n❌  STARTUP ERROR: Configuration validation failed: {e}\n")
+    raise SystemExit(1)
 
 
 # Environment Mode Detection

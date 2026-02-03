@@ -1,0 +1,125 @@
+{
+    "platform": "AgentForge",
+    "version": "1.0",
+    "effective_date": "2026-02-01",
+    "pricing_models": {
+        "subscription": {
+            "starter": {
+                "price": 49,
+                "period": "monthly",
+                "features": [
+                    "5 custom agents",
+                    "Basic agent templates",
+                    "Email support",
+                    "Up to 1000 interactions/month"
+                ],
+                "limits": {
+                    "agents": 5,
+                    "interactions": 1000,
+                    "storage": "2GB"
+                }
+            },
+            "professional": {
+                "price": 199,
+                "period": "monthly",
+                "features": [
+                    "Unlimited custom agents",
+                    "Advanced agent templates",
+                    "Priority support",
+                    "Up to 10,000 interactions/month",
+                    "Custom integrations",
+                    "Team collaboration"
+                ],
+                "limits": {
+                    "agents": "unlimited",
+                    "interactions": 10000,
+                    "storage": "10GB"
+                }
+            },
+            "enterprise": {
+                "price": 499,
+                "period": "monthly",
+                "features": [
+                    "Unlimited agents and interactions",
+                    "Custom agent training",
+                    "Dedicated support",
+                    "On-premise deployment",
+                    "Advanced security features",
+                    "API access"
+                ],
+                "limits": {
+                    "agents": "unlimited",
+                    "interactions": "unlimited",
+                    "storage": "50GB"
+                }
+            }
+        },
+        "usage_based": {
+            "interactions": {
+                "price_per_unit": 0.05,
+                "unit": "interaction"
+            },
+            "api_calls": {
+                "price_per_unit": 0.01,
+                "unit": "call"
+            }
+        },
+        "addons": {
+            "agent_training": {
+                "price": 99,
+                "period": "monthly",
+                "features": [
+                    "Custom agent training",
+                    "AI model customization",
+                    "Advanced analytics"
+                ]
+            },
+            "premium_templates": {
+                "price": 29,
+                "period": "monthly",
+                "features": [
+                    "Premium agent templates",
+                    "Industry-specific agents",
+                    "Advanced workflows"
+                ]
+            }
+        }
+    },
+    "discounts": {
+        "annual": {
+            "discount_percentage": 25,
+            "description": "25% discount for annual subscriptions"
+        },
+        "volume": {
+            "5-10": {
+                "discount_percentage": 10
+            },
+            "10-20": {
+                "discount_percentage": 15
+            },
+            "20+": {
+                "discount_percentage": 20
+            }
+        }
+    },
+    "billing": {
+        "currency": "USD",
+        "payment_methods": [
+            "credit_card",
+            "bank_transfer"
+        ],
+        "invoicing": {
+            "frequency": "monthly",
+            "net_terms": 30
+        }
+    },
+    "support": {
+        "email": "support@agentforge.com",
+        "phone": "+1-800-987-6543",
+        "response_time": {
+            "starter": "48 hours",
+            "professional": "12 hours",
+            "enterprise": "4 hours"
+        }
+    }
+}

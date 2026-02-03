@@ -255,10 +255,17 @@ class WhiteLabelService:
 
             # Save branding configuration
             brand_file = self.brands_dir / f"{brand_id}.json"
+            config_dict = asdict(branding_config)
+            # Convert enum values to strings for JSON serialization
+            if "tier" in config_dict and isinstance(config_dict["tier"], BrandingTier):
+                config_dict["tier"] = config_dict["tier"].value
+            if "consulting_tier" in config_dict and isinstance(config_dict["consulting_tier"], BrandingTier):
+                config_dict["consulting_tier"] = config_dict["consulting_tier"].value
+
             brand_data = {
                 "brand_id": brand_id,
                 "tenant_id": tenant_id,
-                "config": asdict(branding_config),
+                "config": config_dict,
                 "created_at": datetime.utcnow().isoformat(),
                 "last_updated": datetime.utcnow().isoformat()
             }
@@ -343,6 +350,10 @@ class WhiteLabelService:
                 with open(template_file, 'r') as f:
                     template_data = json.load(f)
 
+                # Convert consulting_tier string back to enum
+                if "consulting_tier" in template_data and isinstance(template_data["consulting_tier"], str):
+                    template_data["consulting_tier"] = BrandingTier(template_data["consulting_tier"])
+
                 template = WorkflowTemplate(**template_data)
 
                 # Check if template is available for this tier
@@ -368,6 +379,10 @@ class WhiteLabelService:
             try:
                 with open(integration_file, 'r') as f:
                     integration_data = json.load(f)
+
+                # Convert consulting_tier string back to enum
+                if "consulting_tier" in integration_data and isinstance(integration_data["consulting_tier"], str):
+                    integration_data["consulting_tier"] = BrandingTier(integration_data["consulting_tier"])
 
                 integration = IntegrationMarketplace(**integration_data)
 
@@ -497,14 +512,29 @@ class WhiteLabelService:
     def _save_workflow_template(self, template: WorkflowTemplate):
         """Save workflow template to storage."""
         template_file = self.templates_dir / f"workflow_{template.template_id}.json"
+        template_dict = asdict(template)
+        # Convert enum values to their string values for JSON serialization
+        if "consulting_tier" in template_dict and isinstance(template_dict["consulting_tier"], BrandingTier):
+            template_dict["consulting_tier"] = template_dict["consulting_tier"].value
         with open(template_file, 'w') as f:
-            json.dump(asdict(template), f, indent=2, default=str)
+            json.dump(template_dict, f, indent=2, default=self._enum_serializer)
 
     def _save_integration_config(self, integration: IntegrationMarketplace):
         """Save integration configuration to storage."""
         integration_file = self.integrations_dir / f"integration_{integration.integration_id}.json"
+        integration_dict = asdict(integration)
+        # Convert enum values to their string values for JSON serialization
+        if "consulting_tier" in integration_dict and isinstance(integration_dict["consulting_tier"], BrandingTier):
+            integration_dict["consulting_tier"] = integration_dict["consulting_tier"].value
         with open(integration_file, 'w') as f:
-            json.dump(asdict(integration), f, indent=2, default=str)
+            json.dump(integration_dict, f, indent=2, default=self._enum_serializer)
+
+    @staticmethod
+    def _enum_serializer(obj):
+        """JSON serializer for enum values."""
+        if isinstance(obj, Enum):
+            return obj.value
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
     async def generate_deployment_config(self, brand_id: str, tenant_id: str) -> Dict[str, Any]:
         """Generate complete deployment configuration for white-labeled platform."""

@@ -324,23 +324,31 @@ class MockSendGridClient:
             'bounced': 0
         }
         
-    async def send_email(self, to_email: str, subject: str, content: str,
-                        from_email: str = None, template_id: str = None) -> Dict[str, Any]:
-        
+    async def send_email(self, to_email: str, subject: str, content: str = None,
+                        html_content: str = None, plain_content: str = None,
+                        from_email: str = None, template_id: str = None,
+                        lead_id: str = None, campaign_id: str = None,
+                        attachments: List[Dict[str, Any]] = None) -> Dict[str, Any]:
+
         email_data = {
             'message_id': f'sg_{datetime.now().strftime("%Y%m%d%H%M%S")}',
             'to': to_email,
             'from': from_email or 'noreply@enterprisehub.ai',
             'subject': subject,
             'content': content,
+            'html_content': html_content,
+            'plain_content': plain_content,
             'template_id': template_id,
+            'lead_id': lead_id,
+            'campaign_id': campaign_id,
+            'attachments': attachments or [],
             'status': 'sent',
             'timestamp': datetime.now().isoformat()
         }
-        
+
         self.sent_emails.append(email_data)
         self.email_stats['delivered'] += 1
-        
+
         return {
             'success': True,
             'message_id': email_data['message_id'],
@@ -528,22 +536,71 @@ def create_test_lead_data(overrides: Dict[str, Any] = None) -> Dict[str, Any]:
     return default_data
 
 
+def _create_mock_feature_vector():
+    """Create a mock MLFeatureVector with realistic test data"""
+    from ghl_real_estate_ai.services.advanced_ml_lead_scoring_engine import MLFeatureVector
+    return MLFeatureVector(
+        email_open_rate=0.85,
+        email_click_rate=0.42,
+        response_velocity=3.5,
+        conversation_depth=180.0,
+        engagement_consistency=0.15,
+        property_view_frequency=2.5,
+        search_refinement_count=4,
+        price_range_stability=0.85,
+        location_focus_score=0.78,
+        timing_urgency_signals=0.72,
+        budget_clarity_score=0.88,
+        financial_readiness=0.82,
+        price_sensitivity=0.45,
+        affordability_ratio=0.92,
+        question_sophistication=0.75,
+        decision_maker_confidence=0.80,
+        family_situation_clarity=0.70,
+        relocation_urgency=0.65,
+        previous_interactions=5,
+        conversion_funnel_stage=0.60,
+        seasonal_patterns=0.50,
+        market_conditions_score=0.72,
+        communication_style_score=0.78,
+        technical_sophistication=0.65,
+        local_market_knowledge=0.55,
+        data_completeness=0.90,
+        recency_weight=0.95
+    )
+
+
 def create_mock_ml_scoring_result(lead_id: str = 'test_lead_001') -> MLScoringResult:
     """Create mock ML scoring result"""
     return MLScoringResult(
         lead_id=lead_id,
+        timestamp=datetime.now(),
+        conversion_probability=82.5,
+        intent_strength=78.0,
+        timing_urgency=65.0,
+        financial_readiness=88.0,
+        engagement_quality=85.0,
         final_ml_score=85.5,
         confidence_interval=(82.1, 88.9),
-        feature_importance={'budget_alignment': 0.3, 'engagement_rate': 0.25, 'timeline': 0.2},
+        prediction_uncertainty=3.4,
+        top_features=[
+            {'budget_alignment': 0.3},
+            {'engagement_rate': 0.25},
+            {'timeline': 0.2}
+        ],
+        feature_vector=_create_mock_feature_vector(),
         model_version='v2.1.0',
+        prediction_latency_ms=145.7,
+        ensemble_agreement=0.92,
         recommended_actions=[
             'Schedule property viewing within 48 hours',
             'Send personalized market analysis',
             'Provide pre-approval guidance'
         ],
+        optimal_contact_time=None,
+        expected_conversion_timeline='1-2 weeks',
         risk_factors=['High competition in price range'],
-        opportunity_signals=['Fast response time', 'Multiple property views', 'Budget pre-qualified'],
-        processing_time_ms=145.7
+        opportunity_signals=['Fast response time', 'Multiple property views', 'Budget pre-qualified']
     )
 
 

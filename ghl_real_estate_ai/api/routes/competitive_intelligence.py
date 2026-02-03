@@ -36,7 +36,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path, BackgroundTa
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Any, Optional, Union
 from datetime import datetime, timedelta
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from enum import Enum
 import logging
 

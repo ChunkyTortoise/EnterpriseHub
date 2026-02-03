@@ -619,11 +619,11 @@ Enhance this template with:
 5. Jorge's warm but professional voice
 
 Fill in all template variables and add personal elements. Return as JSON:
-{
+{{
   "subject": "Enhanced subject line",
   "message": "Enhanced message content",
   "personal_touches": ["touch1", "touch2"]
-}
+}}
 """
 
         try:

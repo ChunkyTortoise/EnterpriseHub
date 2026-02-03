@@ -5,6 +5,7 @@ Replaces custom integrations with standardized MCP server connections
 
 import asyncio
 import json
+import shlex
 import websockets
 from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
@@ -188,9 +189,9 @@ class MCPClient:
 
     async def _connect_stdio(self, server: MCPServer) -> asyncio.subprocess.Process:
         """Connect to stdio MCP server"""
-        # Start MCP server process
+        # Start MCP server process (shlex.split handles quoting safely)
         process = await asyncio.create_subprocess_exec(
-            *server.url.split(),  # Command and args
+            *shlex.split(server.url),
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
