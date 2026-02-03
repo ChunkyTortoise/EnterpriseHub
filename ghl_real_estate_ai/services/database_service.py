@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import asyncpg
 from asyncpg import Pool, Connection
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -85,8 +85,7 @@ class Lead(BaseModel):
     preferences: Optional[Dict[str, Any]] = None
     tags: List[str] = []
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class CommunicationLog(BaseModel):
@@ -103,8 +102,7 @@ class CommunicationLog(BaseModel):
     template_id: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class NurtureCampaign(BaseModel):
@@ -121,8 +119,7 @@ class NurtureCampaign(BaseModel):
     completed_leads_count: int = 0
     conversion_rate: float = 0.0
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class LeadCampaignStatus(BaseModel):

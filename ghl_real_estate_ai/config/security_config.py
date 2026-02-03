@@ -13,7 +13,8 @@ import os
 import secrets
 import logging
 from typing import Dict, Any, Optional, List
-from pydantic import BaseSettings, validator, Field
+from pydantic import Field, ValidationInfo, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from enum import Enum
 
 
@@ -105,23 +106,23 @@ class SecurityConfig(BaseSettings):
     enable_geo_blocking: bool = Field(default=False)
     blocked_countries: List[str] = Field(default=[])
 
-    class Config:
-        env_prefix = "SECURITY_"
-        case_sensitive = False
+    model_config = SettingsConfigDict(env_prefix="SECURITY_", case_sensitive=False)
 
-    @validator("jwt_secret_key")
+    @field_validator("jwt_secret_key")
+    @classmethod
     def validate_jwt_secret_key(cls, v):
         """Ensure JWT secret key is strong enough."""
         if len(v) < 32:
             raise ValueError("JWT secret key must be at least 32 characters long")
         return v
 
-    @validator("environment")
-    def set_security_defaults_by_environment(cls, v, values):
+    @field_validator("environment")
+    @classmethod
+    def set_security_defaults_by_environment(cls, v, info: ValidationInfo):
         """Set security defaults based on environment."""
         if v == SecurityLevel.PRODUCTION:
             # Production security defaults
-            values.update({
+            info.data.update({
                 "require_https": True,
                 "enable_hsts": True,
                 "enable_csp": True,
@@ -134,17 +135,18 @@ class SecurityConfig(BaseSettings):
             })
         elif v == SecurityLevel.DEVELOPMENT:
             # Development-friendly defaults
-            values.update({
+            info.data.update({
                 "require_https": False,
                 "rate_limit_requests_per_minute": 1000,
                 "jwt_access_token_expire_minutes": 60,  # Longer for development
             })
         return v
 
-    @validator("cors_allow_origins")
-    def validate_cors_origins(cls, v, values):
+    @field_validator("cors_allow_origins")
+    @classmethod
+    def validate_cors_origins(cls, v, info: ValidationInfo):
         """Validate CORS origins for security."""
-        environment = values.get("environment", SecurityLevel.DEVELOPMENT)
+        environment = info.data.get("environment", SecurityLevel.DEVELOPMENT)
         if environment == SecurityLevel.PRODUCTION:
             # In production, ensure no wildcard origins
             if "*" in v:

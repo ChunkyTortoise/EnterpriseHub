@@ -25,7 +25,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from dataclasses import dataclass, field
 
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 
 class InsightType(str, Enum):
@@ -164,14 +164,16 @@ class ProactiveInsight(BaseModel):
         description="Measured effectiveness if action was taken (for learning)"
     )
 
-    @validator('expires_at')
-    def expires_at_must_be_future(cls, v, values):
-        created_at = values.get('created_at', datetime.utcnow())
+    @field_validator('expires_at')
+    @classmethod
+    def expires_at_must_be_future(cls, v, info: ValidationInfo):
+        created_at = info.data.get('created_at', datetime.utcnow())
         if v <= created_at:
             raise ValueError('expires_at must be after created_at')
         return v
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def validate_insight_content(cls, values):
         insight_type = values.get('insight_type')
         priority = values.get('priority')
@@ -193,8 +195,7 @@ class ProactiveInsight(BaseModel):
         """Check if this insight is still actionable (not dismissed/expired)."""
         return not self.dismissed and not self.is_expired()
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "insight_id": "insight_12345",
                 "insight_type": "objection_prediction",
@@ -223,7 +224,7 @@ class ProactiveInsight(BaseModel):
                 "created_at": "2024-01-01T12:00:00Z",
                 "expires_at": "2024-01-01T14:00:00Z"
             }
-        }
+        })
 
 
 class CoachingOpportunity(BaseModel):
@@ -288,8 +289,7 @@ class CoachingOpportunity(BaseModel):
         else:
             return InsightPriority.LOW
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "opportunity_id": "coaching_67890",
                 "coaching_category": "objection_handling",
@@ -303,7 +303,7 @@ class CoachingOpportunity(BaseModel):
                 "immediate_application": True,
                 "learning_objective": "Master empathetic objection handling for price concerns"
             }
-        }
+        })
 
 
 class StrategyRecommendation(BaseModel):
@@ -389,8 +389,7 @@ class StrategyRecommendation(BaseModel):
         else:
             return InsightPriority.MEDIUM
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "recommendation_id": "strategy_98765",
                 "strategy_type": "pivot_to_buyer",
@@ -419,7 +418,7 @@ class StrategyRecommendation(BaseModel):
                 ],
                 "risk_level": "low"
             }
-        }
+        })
 
 
 # ============================================================================
@@ -474,7 +473,8 @@ class ConversationQualityScore(BaseModel):
     assessed_at: datetime = Field(default_factory=datetime.utcnow, description="Assessment timestamp")
     next_assessment_due: datetime = Field(..., description="When next quality check should occur")
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def calculate_overall_score(cls, values):
         """Calculate overall score from dimensional scores."""
         dimensional_scores = [
@@ -518,8 +518,7 @@ class ConversationQualityScore(BaseModel):
         else:
             return InsightPriority.LOW
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "assessment_id": "quality_54321",
                 "conversation_id": "conv_12345",
@@ -552,7 +551,7 @@ class ConversationQualityScore(BaseModel):
                 "quality_trend": "improving",
                 "stage_appropriateness": 0.85
             }
-        }
+        })
 
 
 class ConversationTrajectory(BaseModel):
@@ -617,7 +616,8 @@ class ConversationTrajectory(BaseModel):
     analyzed_at: datetime = Field(default_factory=datetime.utcnow, description="Analysis timestamp")
     next_analysis_due: datetime = Field(..., description="When to reassess trajectory")
 
-    @validator('outcome_probabilities')
+    @field_validator('outcome_probabilities')
+    @classmethod
     def probabilities_sum_to_one(cls, v):
         total = sum(v.values())
         if not (0.95 <= total <= 1.05):  # Allow small floating point error
@@ -636,8 +636,7 @@ class ConversationTrajectory(BaseModel):
         else:
             return InsightPriority.MEDIUM
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "trajectory_id": "traj_11111",
                 "conversation_id": "conv_12345",
@@ -668,7 +667,7 @@ class ConversationTrajectory(BaseModel):
                     "Prepare property analysis"
                 ]
             }
-        }
+        })
 
 
 # ============================================================================
@@ -691,8 +690,7 @@ class ProactiveEvent(BaseModel):
     delivered: bool = Field(default=False, description="Whether event was delivered to client")
     acknowledged: bool = Field(default=False, description="Whether client acknowledged event")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "event_id": "evt_12345",
                 "event_type": "proactive_insight",
@@ -704,7 +702,7 @@ class ProactiveEvent(BaseModel):
                     "description": "Lead mentioned personal interest in gardening - connection opportunity"
                 }
             }
-        }
+        })
 
 
 class InsightAcceptance(BaseModel):
@@ -719,8 +717,7 @@ class InsightAcceptance(BaseModel):
     accepted_at: datetime = Field(default_factory=datetime.utcnow, description="Acceptance timestamp")
     outcome_measured_at: Optional[datetime] = Field(None, description="When outcome was measured")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "acceptance_id": "accept_98765",
                 "insight_id": "insight_12345",
@@ -729,7 +726,7 @@ class InsightAcceptance(BaseModel):
                 "effectiveness_rating": 0.9,
                 "accepted_at": "2024-01-01T12:00:00Z"
             }
-        }
+        })
 
 
 # ============================================================================
@@ -767,8 +764,7 @@ class ConversationIntelligenceSummary(BaseModel):
     generated_at: datetime = Field(default_factory=datetime.utcnow, description="Summary generation timestamp")
     covers_period: Dict[str, datetime] = Field(..., description="Time period covered by summary")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "summary_id": "summary_12345",
                 "conversation_id": "conv_67890",
@@ -797,7 +793,7 @@ class ConversationIntelligenceSummary(BaseModel):
                     "Personal connection building"
                 ]
             }
-        }
+        })
 
 
 # Export all models for use throughout the application

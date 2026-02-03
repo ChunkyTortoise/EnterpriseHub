@@ -20,7 +20,7 @@ from decimal import Decimal
 from uuid import UUID
 import json
 
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 from pydantic.types import confloat, conint, constr
 
 
@@ -119,10 +119,9 @@ class TimestampedModel(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat()
-        }
+        })
 
 
 class PerformanceModel(BaseModel):
@@ -131,14 +130,13 @@ class PerformanceModel(BaseModel):
     cache_used: bool = Field(False, description="Whether cached data was used")
     confidence_score: confloat(ge=0.0, le=1.0) = Field(0.0, description="Result confidence level")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "processing_time_ms": 45,
                 "cache_used": True,
                 "confidence_score": 0.89
             }
-        }
+        })
 
 
 class JorgeIntegrationModel(BaseModel):
@@ -147,21 +145,21 @@ class JorgeIntegrationModel(BaseModel):
     commission_amount: Optional[Decimal] = Field(None, description="Jorge's 6% commission calculation")
     confrontational_effectiveness: Optional[confloat(ge=0.0, le=1.0)] = Field(None, description="Confrontational approach effectiveness")
 
-    @validator('commission_amount')
-    def validate_commission_calculation(cls, v, values):
+    @field_validator('commission_amount')
+    @classmethod
+    def validate_commission_calculation(cls, v):
         """Validate Jorge's 6% commission calculation."""
         if v is not None and v < 0:
             raise ValueError("Commission amount must be positive")
         return v
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "jorge_methodology_score": 0.94,
                 "commission_amount": "29100.00",
                 "confrontational_effectiveness": 0.89
             }
-        }
+        })
 
 
 # =====================================================================================
@@ -177,8 +175,7 @@ class PropertyMatchingFiltersAPI(BaseModel):
     price_range: Optional[Dict[str, int]] = Field(None, description="Price range filter")
     neighborhoods: Optional[List[str]] = Field(None, description="Neighborhood filter")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "min_score": 0.7,
                 "max_results": 5,
@@ -187,7 +184,7 @@ class PropertyMatchingFiltersAPI(BaseModel):
                 "price_range": {"min": 400000, "max": 600000},
                 "neighborhoods": ["Domain", "West Lake Hills"]
             }
-        }
+        })
 
 
 class BehavioralMatchWeightsAPI(PerformanceModel):
@@ -204,7 +201,8 @@ class BehavioralMatchWeightsAPI(PerformanceModel):
     engagement_indicators: List[str] = Field(default_factory=list, description="Engagement pattern indicators")
     decision_urgency: str = Field("medium", description="Decision-making urgency level")
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def validate_weights_sum(cls, values):
         """Ensure behavioral weights are properly balanced."""
         weight_fields = ['feature_weight', 'location_weight', 'price_weight', 'urgency_weight', 'lifestyle_weight']
@@ -215,8 +213,7 @@ class BehavioralMatchWeightsAPI(PerformanceModel):
 
         return values
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "feature_weight": 0.25,
                 "location_weight": 0.20,
@@ -236,7 +233,7 @@ class BehavioralMatchWeightsAPI(PerformanceModel):
                 "engagement_indicators": ["specific_questions", "timeline_urgency"],
                 "decision_urgency": "high"
             }
-        }
+        })
 
 
 class AdvancedPropertyMatchAPI(PerformanceModel, JorgeIntegrationModel):
@@ -268,8 +265,7 @@ class AdvancedPropertyMatchAPI(PerformanceModel, JorgeIntegrationModel):
     rank: Optional[int] = Field(None, ge=1, description="Rank among all matches")
     market_competitiveness: confloat(ge=0.0, le=1.0) = Field(0.5, description="Market competition level for this property")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "property_id": "prop_12345",
                 "overall_score": 0.89,
@@ -302,7 +298,7 @@ class AdvancedPropertyMatchAPI(PerformanceModel, JorgeIntegrationModel):
                 "market_competitiveness": 0.85,
                 "jorge_methodology_score": 0.92
             }
-        }
+        })
 
 
 class PropertyMatchRequestAPI(BaseModel):
@@ -313,8 +309,7 @@ class PropertyMatchRequestAPI(BaseModel):
     filters: Optional[PropertyMatchingFiltersAPI] = Field(None, description="Additional filtering options")
     context: Optional[Dict[str, Any]] = Field(None, description="Additional context for matching")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "lead_id": "lead_12345",
                 "preferences": {
@@ -334,7 +329,7 @@ class PropertyMatchRequestAPI(BaseModel):
                     "max_results": 5
                 }
             }
-        }
+        })
 
 
 class PropertyMatchResponseAPI(PerformanceModel):
@@ -345,8 +340,7 @@ class PropertyMatchResponseAPI(PerformanceModel):
     analysis_timestamp: datetime = Field(default_factory=datetime.now, description="Analysis completion time")
     market_insights: Dict[str, Any] = Field(default_factory=dict, description="Market condition insights")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "matches": [
                     {
@@ -360,7 +354,7 @@ class PropertyMatchResponseAPI(PerformanceModel):
                 "cache_used": False,
                 "confidence_score": 0.89
             }
-        }
+        })
 
 
 # =====================================================================================
@@ -377,8 +371,7 @@ class SentimentTimelinePointAPI(BaseModel):
     trigger_phrase: Optional[str] = Field(None, description="Phrase that triggered this sentiment")
     topic_context: Optional[str] = Field(None, description="What was being discussed")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "timestamp_offset_seconds": 120,
                 "sentiment_score": 0.7,
@@ -388,7 +381,7 @@ class SentimentTimelinePointAPI(BaseModel):
                 "trigger_phrase": "that sounds perfect",
                 "topic_context": "property_features"
             }
-        }
+        })
 
 
 class ObjectionDetectionAPI(PerformanceModel):
@@ -412,8 +405,7 @@ class ObjectionDetectionAPI(PerformanceModel):
     # Context
     conversation_context: Optional[str] = Field(None, description="Surrounding conversation context")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "objection_id": "obj_12345",
                 "objection_category": "price_concern",
@@ -431,7 +423,7 @@ class ObjectionDetectionAPI(PerformanceModel):
                 "coaching_notes": "Could have used more data to support pricing",
                 "confidence_score": 0.92
             }
-        }
+        })
 
 
 class CoachingOpportunityAPI(TimestampedModel, PerformanceModel):
@@ -461,8 +453,7 @@ class CoachingOpportunityAPI(TimestampedModel, PerformanceModel):
     manager_notified: bool = Field(False, description="Whether manager has been notified")
     follow_up_scheduled: Optional[datetime] = Field(None, description="Scheduled follow-up time")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "opportunity_id": "coach_12345",
                 "conversation_id": "conv_67890",
@@ -480,7 +471,7 @@ class CoachingOpportunityAPI(TimestampedModel, PerformanceModel):
                 "manager_notified": False,
                 "confidence_score": 0.85
             }
-        }
+        })
 
 
 class ConversationInsightAPI(PerformanceModel, JorgeIntegrationModel, TimestampedModel):
@@ -513,8 +504,7 @@ class ConversationInsightAPI(PerformanceModel, JorgeIntegrationModel, Timestampe
     priority_follow_up_topics: List[str] = Field(default_factory=list, description="Priority topics for follow-up")
     suggested_timeline: Optional[str] = Field(None, description="Suggested follow-up timeline")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "conversation_id": "conv_12345",
                 "lead_id": "lead_67890",
@@ -536,7 +526,7 @@ class ConversationInsightAPI(PerformanceModel, JorgeIntegrationModel, Timestampe
                 "jorge_methodology_score": 0.91,
                 "confrontational_effectiveness": 0.87
             }
-        }
+        })
 
 
 class ConversationAnalysisRequestAPI(BaseModel):
@@ -548,8 +538,7 @@ class ConversationAnalysisRequestAPI(BaseModel):
     analysis_type: str = Field("comprehensive", description="Type of analysis to perform")
     include_coaching: bool = Field(True, description="Include coaching opportunity detection")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "conversation_id": "conv_12345",
                 "lead_id": "lead_67890",
@@ -569,7 +558,7 @@ class ConversationAnalysisRequestAPI(BaseModel):
                 "analysis_type": "comprehensive",
                 "include_coaching": True
             }
-        }
+        })
 
 
 class ConversationResponseAPI(PerformanceModel):
@@ -581,8 +570,7 @@ class ConversationResponseAPI(PerformanceModel):
     analysis_timestamp: datetime = Field(default_factory=datetime.now, description="Analysis completion time")
     recommendations: List[str] = Field(description="Next-step recommendations")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "insights": {
                     "conversation_id": "conv_12345",
@@ -613,7 +601,7 @@ class ConversationResponseAPI(PerformanceModel):
                 "processing_time_ms": 340,
                 "confidence_score": 0.89
             }
-        }
+        })
 
 
 # =====================================================================================
@@ -657,8 +645,7 @@ class PreferenceLearningEventAPI(TimestampedModel, PerformanceModel):
     validation_notes: Optional[str] = Field(None, description="Validation feedback")
     false_positive_flag: bool = Field(False, description="Marked as false positive")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "event_id": "evt_12345",
                 "client_id": "client_67890",
@@ -682,7 +669,7 @@ class PreferenceLearningEventAPI(TimestampedModel, PerformanceModel):
                 "created_new_preference": True,
                 "confidence_score": 0.92
             }
-        }
+        })
 
 
 class PreferenceDriftDetectionAPI(TimestampedModel, PerformanceModel):
@@ -717,8 +704,7 @@ class PreferenceDriftDetectionAPI(TimestampedModel, PerformanceModel):
     resolution_action: Optional[str] = Field(None, description="Action taken to resolve drift")
     resolution_timestamp: Optional[datetime] = Field(None, description="When drift was resolved")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "drift_id": "drift_12345",
                 "client_id": "client_67890",
@@ -743,7 +729,7 @@ class PreferenceDriftDetectionAPI(TimestampedModel, PerformanceModel):
                 "agent_notified": False,
                 "confidence_score": 0.85
             }
-        }
+        })
 
 
 class PreferenceProfileAPI(TimestampedModel, PerformanceModel):
@@ -797,15 +783,15 @@ class PreferenceProfileAPI(TimestampedModel, PerformanceModel):
     last_prediction_timestamp: Optional[datetime] = Field(None, description="Last property prediction time")
     prediction_cache: Dict[str, Any] = Field(default_factory=dict, description="Cached prediction results")
 
-    @validator('profile_completeness_percentage')
+    @field_validator('profile_completeness_percentage')
+    @classmethod
     def validate_completeness_percentage(cls, v):
         """Ensure completeness percentage is valid."""
         if not 0 <= v <= 100:
             raise ValueError("Profile completeness must be between 0 and 100")
         return v
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "client_id": "client_12345",
                 "location_id": "loc_67890",
@@ -844,7 +830,7 @@ class PreferenceProfileAPI(TimestampedModel, PerformanceModel):
                 "prediction_accuracy_score": 0.87,
                 "consistency_score": 0.82
             }
-        }
+        })
 
 
 class PreferenceLearningRequestAPI(BaseModel):
@@ -862,7 +848,8 @@ class PreferenceLearningRequestAPI(BaseModel):
     learning_config: Dict[str, Any] = Field(default_factory=dict, description="Learning algorithm configuration")
     confidence_threshold: confloat(ge=0.0, le=1.0) = Field(0.6, description="Minimum confidence for preference learning")
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def validate_source_data(cls, values):
         """Ensure appropriate data is provided for source type."""
         source_type = values.get('source_type')
@@ -877,8 +864,7 @@ class PreferenceLearningRequestAPI(BaseModel):
 
         return values
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "client_id": "client_12345",
                 "source_type": "conversation_analysis",
@@ -892,7 +878,7 @@ class PreferenceLearningRequestAPI(BaseModel):
                 ],
                 "confidence_threshold": 0.7
             }
-        }
+        })
 
 
 # =====================================================================================
@@ -912,8 +898,7 @@ class CrossTrackHandoffRequestAPI(BaseModel):
     preserve_preferences: bool = Field(True, description="Preserve learned preferences")
     preserve_property_matches: bool = Field(True, description="Preserve property matching history")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "lead_id": "lead_12345",
                 "client_id": "client_67890",
@@ -924,7 +909,7 @@ class CrossTrackHandoffRequestAPI(BaseModel):
                 "preserve_preferences": True,
                 "preserve_property_matches": True
             }
-        }
+        })
 
 
 class LeadToClientTransitionAPI(PerformanceModel, TimestampedModel):
@@ -949,8 +934,7 @@ class LeadToClientTransitionAPI(PerformanceModel, TimestampedModel):
     # Intelligence summary
     intelligence_summary: Dict[str, Any] = Field(default_factory=dict, description="Summary of transferred intelligence")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "transition_id": "trans_12345",
                 "lead_id": "lead_67890",
@@ -972,7 +956,7 @@ class LeadToClientTransitionAPI(PerformanceModel, TimestampedModel):
                 "processing_time_ms": 145,
                 "confidence_score": 0.94
             }
-        }
+        })
 
 
 # =====================================================================================
@@ -987,8 +971,7 @@ class HealthCheckResponseAPI(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now, description="Health check timestamp")
     performance_targets: Dict[str, int] = Field(description="Performance targets for validation")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "overall_status": "healthy",
                 "location_id": "loc_12345",
@@ -1015,7 +998,7 @@ class HealthCheckResponseAPI(BaseModel):
                     "preference_learning_ms": 50
                 }
             }
-        }
+        })
 
 
 class ErrorResponseAPI(BaseModel):
@@ -1031,8 +1014,7 @@ class ErrorResponseAPI(BaseModel):
     retry_recommended: bool = Field(False, description="Whether retry is recommended")
     estimated_resolution_time: Optional[str] = Field(None, description="Estimated time to resolution")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "error_code": "PROPERTY_MATCHING_TIMEOUT",
                 "error_message": "Property matching analysis timed out after 5 seconds",
@@ -1045,7 +1027,7 @@ class ErrorResponseAPI(BaseModel):
                 "retry_recommended": True,
                 "estimated_resolution_time": "2 minutes"
             }
-        }
+        })
 
 
 class PaginationResponseAPI(BaseModel):
@@ -1057,7 +1039,8 @@ class PaginationResponseAPI(BaseModel):
     has_next: bool = Field(description="Whether there are more pages")
     has_previous: bool = Field(description="Whether there are previous pages")
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def calculate_pagination_fields(cls, values):
         """Calculate pagination fields based on totals."""
         page = values.get('page', 1)
@@ -1076,8 +1059,7 @@ class PaginationResponseAPI(BaseModel):
 
         return values
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "page": 2,
                 "page_size": 20,
@@ -1086,7 +1068,7 @@ class PaginationResponseAPI(BaseModel):
                 "has_next": True,
                 "has_previous": True
             }
-        }
+        })
 
 
 # =====================================================================================
@@ -1101,8 +1083,7 @@ class WebSocketEventAPI(BaseModel):
     user_id: Optional[str] = Field(None, description="User who triggered event")
     event_data: Dict[str, Any] = Field(description="Event-specific data")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "event_type": "property_match_generated",
                 "timestamp": "2025-01-25T10:30:00Z",
@@ -1114,7 +1095,7 @@ class WebSocketEventAPI(BaseModel):
                     "match_score": 0.89
                 }
             }
-        }
+        })
 
 
 # Export all models for easy importing
