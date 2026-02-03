@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
 from aiohttp import ClientTimeout
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -37,7 +37,8 @@ class ApolloConfig(BaseModel):
     retry_delay: float = 1.0
     rate_limit_requests_per_minute: int = 200
     
-    @validator('api_key')
+    @field_validator('api_key')
+    @classmethod
     def validate_api_key(cls, v):
         if not v or v == "your_apollo_api_key_here":
             raise ValueError("Valid Apollo.io API key is required")
@@ -70,8 +71,7 @@ class PersonEnrichmentResult(BaseModel):
     show_intent: bool = False
     revealed_for_current_team: bool = False
     
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class OrganizationEnrichmentResult(BaseModel):
@@ -104,8 +104,7 @@ class OrganizationEnrichmentResult(BaseModel):
     industry_tag_hash: Optional[Dict[str, Any]] = None
     revenue_in_thousands: Optional[int] = None
     
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class ApolloAPIException(Exception):
