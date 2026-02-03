@@ -71,6 +71,15 @@ class MemoryService:
         # Explicit override
         return self.storage_type == "redis"
 
+    @staticmethod
+    def _sanitize_path_component(value: str) -> str:
+        """Sanitize a value for safe use as a path component (no traversal)."""
+        import re
+        # Strip path separators and dangerous characters
+        sanitized = re.sub(r'[/\:*?"<>|.]', '_', value)
+        # Prevent empty result
+        return sanitized or "unknown"
+
     def _get_file_path(self, contact_id: str, location_id: Optional[str] = None) -> Path:
         """
         Get the file path for storing a contact's context.
@@ -82,13 +91,14 @@ class MemoryService:
         Returns:
             Path object
         """
+        safe_contact = self._sanitize_path_component(contact_id)
         if location_id:
-            # Create location-specific subdirectory
-            location_dir = self.memory_dir / location_id
+            safe_location = self._sanitize_path_component(location_id)
+            location_dir = self.memory_dir / safe_location
             location_dir.mkdir(parents=True, exist_ok=True)
-            return location_dir / f"{contact_id}.json"
+            return location_dir / f"{safe_contact}.json"
         
-        return self.memory_dir / f"{contact_id}.json"
+        return self.memory_dir / f"{safe_contact}.json"
 
     def _resolve_location_id(self, location_id: Optional[str]) -> str:
         """
