@@ -140,11 +140,12 @@ class ABTestConfig:
     minimum_sample_size: int
     minimum_test_duration_days: int
     maximum_test_duration_days: int
-    significance_threshold: float = 0.05
-    
     # Success metrics
     primary_metric: str  # revenue, conversion_rate, clv
     secondary_metrics: List[str]
+    
+    # Test criteria
+    significance_threshold: float = 0.05
     
     # Test status
     status: str = "draft"  # draft, running, completed, stopped
@@ -185,9 +186,7 @@ class EnhancedPricingResult:
     predicted_ltv: Decimal
     revenue_optimization_factor: float
     
-    # A/B testing
-    ab_test_assignment: Optional[str] = None  # control, variant_a, variant_b
-    test_id: Optional[str] = None
+    
     
     # Advanced analytics
     price_sensitivity_score: float
@@ -207,6 +206,12 @@ class EnhancedPricingResult:
     
     # Metadata
     calculated_at: datetime
+
+    # A/B testing (with defaults)
+    ab_test_assignment: Optional[str] = None  # control, variant_a, variant_b
+    test_id: Optional[str] = None
+    
+    # Metadata (with defaults)
     model_version: str = "2.0.0"
     expires_at: Optional[datetime] = None
 

@@ -61,7 +61,7 @@ class SHAPAnalyticsRequest(BaseModel):
     comparison_lead_ids: Optional[List[str]] = Field(
         default=None,
         description="Optional lead IDs for comparative SHAP analysis",
-        max_items=5
+        max_length=5
     )
     time_range_days: int = Field(
         default=30,

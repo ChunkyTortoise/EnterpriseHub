@@ -357,7 +357,7 @@ class DomainHealthCheckResponse(BaseModel):
 
 class DNSRecordsUpdateRequest(BaseModel):
     """Request schema for updating DNS records."""
-    records: List[DNSRecordSchema] = Field(..., min_items=1, max_items=50)
+    records: List[DNSRecordSchema] = Field(..., min_length=1, max_length=50)
     auto_configure: bool = True
 
 

@@ -1,0 +1,26 @@
+{
+  "integration_id": "microsoft_dynamics",
+  "name": "Microsoft Dynamics 365 Enterprise",
+  "provider": "Microsoft",
+  "description": "Enterprise-grade Dynamics 365 integration with Power Platform connectivity",
+  "setup_instructions": "Azure AD app registration with Dynamics 365 permissions",
+  "api_endpoints": [
+    "/api/dynamics/entities",
+    "/api/dynamics/workflows",
+    "/api/powerbi/reports"
+  ],
+  "required_credentials": [
+    "tenant_id",
+    "client_id",
+    "client_secret",
+    "dynamics_url"
+  ],
+  "supported_features": [
+    "entity_management",
+    "power_automate",
+    "power_bi_integration",
+    "custom_workflows"
+  ],
+  "consulting_tier": "BrandingTier.ENTERPRISE",
+  "implementation_complexity": "complex"
+}

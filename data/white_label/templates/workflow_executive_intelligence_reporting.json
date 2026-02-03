@@ -1,0 +1,39 @@
+{
+  "template_id": "executive_intelligence_reporting",
+  "name": "Executive Intelligence Dashboard",
+  "description": "C-suite level strategic insights with ROI attribution",
+  "category": "Executive Analytics",
+  "trigger_type": "schedule",
+  "actions": [
+    {
+      "type": "aggregate_performance_metrics",
+      "timeframe": "monthly"
+    },
+    {
+      "type": "generate_strategic_insights",
+      "ai_engine": "claude_consultant"
+    },
+    {
+      "type": "calculate_roi_attribution",
+      "method": "multi_touch"
+    },
+    {
+      "type": "create_executive_presentation",
+      "format": "mobile_optimized"
+    }
+  ],
+  "conditions": [
+    {
+      "field": "data_quality",
+      "operator": "above_threshold",
+      "value": 0.9
+    }
+  ],
+  "customizable_fields": [
+    "kpi_selection",
+    "reporting_frequency",
+    "executive_preferences"
+  ],
+  "consulting_tier": "BrandingTier.ENTERPRISE",
+  "estimated_value": "C-suite decision making acceleration, strategic alignment"
+}
