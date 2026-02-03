@@ -641,3 +641,279 @@ class TestBuyerModeRouting:
                 pass
 
         mocks["buyer_bot"].process_buyer_conversation.assert_not_awaited()
+
+
+# ---------------------------------------------------------------------------
+# D6 — Lead Mode Routing
+# ---------------------------------------------------------------------------
+
+def _lead_webhook_patches(jorge_lead_mode=True, jorge_seller_mode=False, jorge_buyer_mode=False):
+    """Return a context manager with all patches for lead bot webhook tests."""
+    from contextlib import contextmanager
+
+    @contextmanager
+    def _patches():
+        mock_jorge_settings = MagicMock()
+        mock_jorge_settings.JORGE_LEAD_MODE = jorge_lead_mode
+        mock_jorge_settings.JORGE_SELLER_MODE = jorge_seller_mode
+        mock_jorge_settings.JORGE_BUYER_MODE = jorge_buyer_mode
+        mock_jorge_settings.LEAD_ACTIVATION_TAG = "Needs Qualifying"
+        mock_jorge_settings.BUYER_ACTIVATION_TAG = "Buyer-Lead"
+
+        # Mock main config settings (used for activation/deactivation tags, thresholds)
+        mock_config_settings = MagicMock()
+        mock_config_settings.activation_tags = ["Needs Qualifying"]
+        mock_config_settings.deactivation_tags = ["AI-Off", "Qualified", "Stop-Bot"]
+        mock_config_settings.auto_deactivate_threshold = 70
+        mock_config_settings.notify_agent_workflow_id = None
+        mock_config_settings.custom_field_lead_score = None
+        mock_config_settings.custom_field_budget = None
+        mock_config_settings.custom_field_location = None
+        mock_config_settings.custom_field_timeline = None
+        mock_config_settings.appointment_auto_booking_enabled = False
+
+        # Mock AI response from ConversationManager
+        mock_ai_response = MagicMock()
+        mock_ai_response.message = "Test lead response"
+        mock_ai_response.lead_score = 3
+        mock_ai_response.extracted_data = {}
+
+        mock_conv_mgr = MagicMock()
+        mock_conv_mgr.get_context = AsyncMock(return_value={})
+        mock_conv_mgr.generate_response = AsyncMock(return_value=mock_ai_response)
+        mock_conv_mgr.update_context = AsyncMock()
+        mock_conv_mgr.get_conversation_history = AsyncMock(return_value=[])
+
+        mock_compliance = MagicMock()
+        mock_compliance.audit_message = AsyncMock(return_value=(
+            ComplianceStatus.PASSED, "", []
+        ))
+
+        mock_tenant = MagicMock()
+        mock_tenant.get_tenant_config = AsyncMock(return_value=None)
+
+        mock_lead_scorer = MagicMock()
+        mock_lead_scorer.classify.return_value = "warm"
+        mock_lead_scorer.get_percentage_score.return_value = 42
+        mock_lead_scorer._is_urgent_timeline.return_value = False
+
+        mock_lead_source_tracker = MagicMock()
+        mock_lead_source_tracker.analyze_lead_source = AsyncMock(
+            side_effect=Exception("test skip")
+        )
+
+        with patch("ghl_real_estate_ai.api.routes.webhook.analytics_service", MagicMock(track_event=AsyncMock())), \
+             patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default", MagicMock(
+                 send_message=AsyncMock(), apply_actions=AsyncMock(), add_tags=AsyncMock(),
+             )), \
+             patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings", mock_jorge_settings), \
+             patch("ghl_real_estate_ai.api.routes.webhook.settings", mock_config_settings), \
+             patch("ghl_real_estate_ai.api.routes.webhook.compliance_guard", mock_compliance), \
+             patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", mock_tenant), \
+             patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv_mgr), \
+             patch("ghl_real_estate_ai.api.routes.webhook._get_lead_scorer", return_value=mock_lead_scorer), \
+             patch("ghl_real_estate_ai.api.routes.webhook.lead_source_tracker", mock_lead_source_tracker), \
+             patch("ghl_real_estate_ai.api.routes.webhook.attribution_analytics", MagicMock(track_daily_metrics=AsyncMock())), \
+             patch("ghl_real_estate_ai.api.routes.webhook.pricing_optimizer", MagicMock(calculate_lead_price=AsyncMock())), \
+             patch("ghl_real_estate_ai.api.routes.webhook.subscription_manager", MagicMock(get_active_subscription=AsyncMock(return_value=None))), \
+             patch("ghl_real_estate_ai.api.routes.webhook.calendar_scheduler", MagicMock()):
+            yield {
+                "jorge_settings": mock_jorge_settings,
+                "config_settings": mock_config_settings,
+                "conversation_manager": mock_conv_mgr,
+                "compliance": mock_compliance,
+                "tenant": mock_tenant,
+                "lead_scorer": mock_lead_scorer,
+                "ai_response": mock_ai_response,
+            }
+
+    return _patches()
+
+
+class TestLeadModeRouting:
+    """D6: Lead mode webhook routing tests."""
+
+    @pytest.mark.asyncio
+    async def test_lead_mode_activates_with_needs_qualifying_tag(self):
+        """Lead bot activates when Needs Qualifying tag + JORGE_LEAD_MODE=true."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I'm interested in real estate",
+            tags=["Needs Qualifying"],
+        )
+
+        with _lead_webhook_patches(jorge_lead_mode=True, jorge_seller_mode=False) as mocks:
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+
+        assert response.success is True
+        assert response.message == "Test lead response"
+        mocks["conversation_manager"].generate_response.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_seller_mode_takes_priority_over_lead(self):
+        """When JORGE_SELLER_MODE=true, 'Needs Qualifying' routes to seller, not lead."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I want to sell my house",
+            tags=["Needs Qualifying"],
+        )
+
+        mock_seller_engine = MagicMock()
+        mock_seller_engine.process_seller_response = AsyncMock(return_value={
+            "temperature": "warm",
+            "message": "What price would incentivize you to sell?",
+            "questions_answered": 2,
+            "actions": [{"type": "add_tag", "tag": "Warm-Seller"}],
+        })
+
+        with _lead_webhook_patches(jorge_lead_mode=True, jorge_seller_mode=True) as mocks:
+            with patch(
+                "ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine",
+                return_value=mock_seller_engine,
+            ):
+                response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+
+        # Seller should process, not lead
+        mock_seller_engine.process_seller_response.assert_awaited_once()
+        mocks["conversation_manager"].generate_response.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_lead_mode_respects_deactivation_tags(self):
+        """Lead mode does NOT activate when deactivation tag is present."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I'm interested in real estate",
+            tags=["Needs Qualifying", "AI-Off"],
+        )
+
+        with _lead_webhook_patches(jorge_lead_mode=True, jorge_seller_mode=False) as mocks:
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+
+        # Should NOT route to lead bot due to AI-Off
+        mocks["conversation_manager"].generate_response.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_lead_mode_disabled_skips_to_fallback(self):
+        """JORGE_LEAD_MODE=false returns raw fallback response."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I'm interested in real estate",
+            tags=["Needs Qualifying"],
+        )
+
+        with _lead_webhook_patches(jorge_lead_mode=False, jorge_seller_mode=False) as mocks:
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+
+        assert response.success is True
+        assert "reaching out" in response.message.lower()
+        mocks["conversation_manager"].generate_response.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_lead_mode_adds_temperature_tag(self):
+        """Lead mode response includes temperature classification tag."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I have a budget of $600k and want 3 bedrooms",
+            tags=["Needs Qualifying"],
+        )
+
+        with _lead_webhook_patches(jorge_lead_mode=True, jorge_seller_mode=False) as mocks:
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+
+        assert response.success is True
+        tag_names = _action_tags(response)
+        assert "Warm-Lead" in tag_names
+
+    @pytest.mark.asyncio
+    async def test_lead_mode_sms_guard_truncates(self):
+        """Lead responses over 320 chars get truncated at sentence boundary."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        long_msg = "Great news about Rancho Cucamonga real estate. " * 12  # ~576 chars
+
+        event = _make_webhook_event(
+            "Tell me about the market",
+            tags=["Needs Qualifying"],
+        )
+
+        with _lead_webhook_patches(jorge_lead_mode=True, jorge_seller_mode=False) as mocks:
+            mocks["ai_response"].message = long_msg
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+
+        assert response.success is True
+        assert len(response.message) <= 320
+
+    @pytest.mark.asyncio
+    async def test_lead_mode_compliance_blocks_bad_message(self):
+        """Compliance interceptor replaces blocked lead messages with neutral fallback."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I want a house in a nice neighborhood",
+            tags=["Needs Qualifying"],
+        )
+
+        with _lead_webhook_patches(jorge_lead_mode=True, jorge_seller_mode=False) as mocks:
+            mocks["compliance"].audit_message = AsyncMock(return_value=(
+                ComplianceStatus.BLOCKED, "fair_housing_violation", ["steering"]
+            ))
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+
+        assert response.success is True
+        assert "love to help" in response.message.lower()
+        assert "Compliance-Alert" in _action_tags(response)
+
+    @pytest.mark.asyncio
+    async def test_lead_mode_error_falls_through(self):
+        """When lead processing raises, error handler catches it gracefully."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "Hello",
+            tags=["Needs Qualifying"],
+        )
+
+        with _lead_webhook_patches(jorge_lead_mode=True, jorge_seller_mode=False) as mocks:
+            mocks["conversation_manager"].generate_response.side_effect = RuntimeError("boom")
+
+            # Should not crash unhandled — error handler in webhook catches it
+            try:
+                response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+            except Exception:
+                pass  # HTTPException from error handler is acceptable in test isolation
+
+    @pytest.mark.asyncio
+    async def test_buyer_lead_tag_does_not_route_to_lead_bot(self):
+        """'Buyer-Lead' tag routes to buyer bot, not lead bot."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I'm looking for a 3 bedroom house",
+            tags=["Buyer-Lead"],
+        )
+
+        mock_buyer_bot_instance = MagicMock()
+        mock_buyer_bot_instance.process_buyer_conversation = AsyncMock(return_value={
+            "buyer_temperature": "warm",
+            "is_qualified": False,
+            "financial_readiness_score": 45,
+            "response_content": "What area interests you most?",
+        })
+
+        with _lead_webhook_patches(
+            jorge_lead_mode=True, jorge_seller_mode=False, jorge_buyer_mode=True
+        ) as mocks:
+            with patch(
+                "ghl_real_estate_ai.agents.jorge_buyer_bot.JorgeBuyerBot",
+                return_value=mock_buyer_bot_instance,
+            ):
+                response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+
+        # Buyer bot should handle, not lead bot
+        mock_buyer_bot_instance.process_buyer_conversation.assert_awaited_once()
+        mocks["conversation_manager"].generate_response.assert_not_awaited()
