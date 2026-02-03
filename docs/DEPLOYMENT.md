@@ -10,11 +10,12 @@
 1. [Pre-Deployment Checklist](#pre-deployment-checklist)
 2. [Local Development](#local-development)
 3. [Docker Deployment](#docker-deployment)
-4. [Staging Deployment](#staging-deployment)
-5. [Production Deployment](#production-deployment)
-6. [Rollback Procedures](#rollback-procedures)
-7. [Database Migrations](#database-migrations)
-8. [Post-Deployment Verification](#post-deployment-verification)
+4. [Railway Deployment (Jorge's Setup)](#railway-deployment-jorges-setup)
+5. [Staging Deployment](#staging-deployment)
+6. [Production Deployment](#production-deployment)
+7. [Rollback Procedures](#rollback-procedures)
+8. [Database Migrations](#database-migrations)
+9. [Post-Deployment Verification](#post-deployment-verification)
 
 ---
 
@@ -141,6 +142,106 @@ docker-compose --profile production --profile monitoring up -d
 | `postgres` | 5432 | PostgreSQL database |
 | `redis` | 6379 | Cache and sessions |
 | `nginx` | 80/443 | Reverse proxy (production) |
+
+---
+
+## Railway Deployment (Jorge's Setup)
+
+Railway is the recommended deployment platform for Jorge's bot. Use `railway.jorge.toml` for configuration.
+
+### Prerequisites
+
+- [Railway CLI](https://docs.railway.app/develop/cli) installed: `npm i -g @railway/cli`
+- Railway account with a project created
+- PostgreSQL and Redis plugins added to the Railway project
+
+### First-Time Setup
+
+```bash
+# Login to Railway
+railway login
+
+# Link to your project
+railway link
+
+# Add required environment variables in Railway Dashboard:
+#   GHL_API_KEY          - GoHighLevel API key
+#   GHL_LOCATION_ID      - GHL Location ID
+#   GHL_WEBHOOK_SECRET   - Webhook signing secret (32+ chars)
+#   ANTHROPIC_API_KEY    - Claude API key
+#   JWT_SECRET_KEY       - JWT signing secret (32+ chars, generate: openssl rand -hex 32)
+#   STRIPE_SECRET_KEY    - Stripe key (or "sk_test_disabled" if not using billing)
+#   NOTIFY_AGENT_WORKFLOW_ID - GHL workflow ID for agent notifications
+#   GHL_CALENDAR_ID      - Calendar ID for appointment booking
+
+# Deploy
+railway up --config railway.jorge.toml
+```
+
+### Verify Deployment
+
+```bash
+# Get your Railway URL
+railway domain
+
+# Test health endpoint (lightweight, no auth required)
+curl https://YOUR-APP.up.railway.app/api/health/live
+
+# Test full health (checks DB + cache)
+curl https://YOUR-APP.up.railway.app/api/health/
+
+# Test webhook endpoint is reachable
+curl -X POST https://YOUR-APP.up.railway.app/api/ghl/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"type": "test"}' 2>&1 | head -5
+# Expected: 401 (signature required) — this means the endpoint is live and secured
+```
+
+### GHL Webhook Configuration
+
+In GoHighLevel, configure the webhook to point to your Railway URL:
+
+1. Go to **Settings > Webhooks** in GHL
+2. Add webhook URL: `https://YOUR-APP.up.railway.app/api/ghl/webhook`
+3. Set the webhook secret to match your `GHL_WEBHOOK_SECRET` env var
+4. Create a workflow trigger: When tag **"Needs Qualifying"** is added → call `POST /api/ghl/initiate-qualification`
+
+### Railway Environment Variables
+
+Auto-configured by `railway.jorge.toml`:
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `ACTIVATION_TAGS` | `["Needs Qualifying"]` | Tags that activate the bot |
+| `DEACTIVATION_TAGS` | `["AI-Off","Qualified","Stop-Bot","AI-Qualified"]` | Tags that stop the bot |
+| `HOT_LEAD_THRESHOLD` | `3` | Questions answered for Hot lead |
+| `WARM_LEAD_THRESHOLD` | `2` | Questions answered for Warm lead |
+| `AUTO_DEACTIVATE_THRESHOLD` | `70` | Auto-handoff at 70% qualification |
+| `CLAUDE_MODEL` | `claude-sonnet-4-20250514` | AI model |
+| `MAX_TOKENS` | `150` | Keep responses SMS-length |
+| `ENVIRONMENT` | `production` | Enables security enforcement |
+
+### Redeploy / Update
+
+```bash
+# Push latest code
+git push origin main
+
+# Redeploy on Railway
+railway up --config railway.jorge.toml
+
+# Or enable auto-deploy from GitHub in Railway Dashboard
+```
+
+### Railway Rollback
+
+```bash
+# List recent deployments
+railway deployments
+
+# Rollback to previous deployment
+railway rollback
+```
 
 ---
 
@@ -450,4 +551,4 @@ open https://grafana.example.com/d/jorge-bots
 
 ---
 
-**Version**: 2.1 | **Last Updated**: February 2, 2026
+**Version**: 2.2 | **Last Updated**: February 2, 2026
