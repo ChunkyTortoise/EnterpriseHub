@@ -5,7 +5,9 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "uvicorn ghl_real_estate_ai.api.app:app --host 0.0.0.0 --port $PORT"
+startCommand = "uvicorn ghl_real_estate_ai.api.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/api/health/live"
+healthcheckTimeout = 10
 
 # Jorge's Environment Variables
 [env]
@@ -31,6 +33,8 @@ NOTIFY_AGENT_WORKFLOW_ID = { description = "Jorge's GHL Workflow ID for agent no
 
 # Security
 GHL_WEBHOOK_SECRET = { description = "Jorge's GHL Webhook Secret for signature verification" }
+JWT_SECRET_KEY = { description = "Secret key for JWT token signing (min 32 chars)" }
+STRIPE_SECRET_KEY = { description = "Stripe secret key for billing (set to 'sk_test_disabled' if not using billing)" }
 
 # Application Settings
 ENVIRONMENT = "production"
