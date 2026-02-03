@@ -342,6 +342,8 @@ class JorgeEnvironmentSettings:
     def __init__(self):
         """Initialize with environment variables"""
         self.jorge_seller_mode = os.getenv("JORGE_SELLER_MODE", "false").lower() == "true"
+        self.jorge_buyer_mode = os.getenv("JORGE_BUYER_MODE", "false").lower() == "true"
+        self.buyer_activation_tag = os.getenv("BUYER_LEAD_TAG", "Buyer-Lead")
         self.activation_tags = self._parse_list_env("ACTIVATION_TAGS", JorgeSellerConfig.ACTIVATION_TAGS)
         self.deactivation_tags = self._parse_list_env("DEACTIVATION_TAGS", JorgeSellerConfig.DEACTIVATION_TAGS)
 
@@ -387,6 +389,16 @@ class JorgeEnvironmentSettings:
     def JORGE_SELLER_MODE(self) -> bool:
         """Compatibility property for existing code"""
         return self.jorge_seller_mode
+
+    @property
+    def JORGE_BUYER_MODE(self) -> bool:
+        """Compatibility property for buyer mode routing"""
+        return self.jorge_buyer_mode
+
+    @property
+    def BUYER_ACTIVATION_TAG(self) -> str:
+        """Tag that activates buyer mode routing"""
+        return self.buyer_activation_tag
 
     @property
     def ACTIVATION_TAGS(self) -> List[str]:
