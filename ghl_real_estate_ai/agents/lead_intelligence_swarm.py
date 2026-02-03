@@ -704,7 +704,7 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
         risk_factors = []
         if intent_score < 25:
             risk_factors.append("Very low purchase intent - may be window shopping")
-        if financing_readiness < 30:
+        if financing_readiness in ("planning", "unknown"):
             risk_factors.append("Financing concerns may delay purchase decision")
 
         urgency_level = "critical" if intent_level == "immediate" else "high" if intent_level == "near_term" else "medium"
