@@ -3,5 +3,6 @@ builder = "NIXPACKS"
 buildCommand = "pip install -r requirements.txt"
 
 [deploy]
-startCommand = "uvicorn api.main:app --host 0.0.0.0 --port $PORT"
-healthcheckPath = "/health"
+startCommand = "uvicorn ghl_real_estate_ai.api.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/api/health/live"
+healthcheckTimeout = 10

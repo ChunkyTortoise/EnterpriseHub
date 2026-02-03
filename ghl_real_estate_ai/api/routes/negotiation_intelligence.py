@@ -414,16 +414,5 @@ async def _process_negotiation_event(event: GHLNegotiationEvent):
         logger.error(f"Failed to process negotiation event: {e}")
 
 
-# Error handlers
-@router.exception_handler(ValueError)
-async def value_error_handler(request: Request, exc: ValueError):
-    """Handle validation errors"""
-    logger.error(f"Validation error: {exc}")
-    return HTTPException(status_code=400, detail=str(exc))
-
-
-@router.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    """Handle general exceptions"""
-    logger.error(f"Unexpected error: {exc}")
-    return HTTPException(status_code=500, detail="Internal server error")
+# Error handling is managed by the global exception handler in
+# ghl_real_estate_ai.api.middleware.global_exception_handler

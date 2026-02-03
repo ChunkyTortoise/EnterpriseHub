@@ -190,6 +190,8 @@ class CorporatePartnershipService:
                 ]
             }
 
+        except CorporatePartnershipError:
+            raise
         except Exception as e:
             logger.error(f"Failed to create corporate partnership: {e}")
             raise CorporatePartnershipError(
@@ -286,6 +288,8 @@ class CorporatePartnershipService:
                 "enterprise_features_enabled": partnership_data['tier'] in ['gold', 'platinum']
             }
 
+        except CorporatePartnershipError:
+            raise
         except Exception as e:
             logger.error(f"Failed to approve partnership {partnership_id}: {e}")
             raise CorporatePartnershipError(
@@ -390,6 +394,8 @@ class CorporatePartnershipService:
                 "summary": batch_summary
             }
 
+        except CorporatePartnershipError:
+            raise
         except Exception as e:
             logger.error(f"Failed to process bulk relocation for partnership {partnership_id}: {e}")
             raise CorporatePartnershipError(
@@ -521,6 +527,8 @@ class CorporatePartnershipService:
 
             return revenue_breakdown
 
+        except CorporatePartnershipError:
+            raise
         except Exception as e:
             logger.error(f"Error calculating partnership revenue for {partnership_id}: {e}")
             raise CorporatePartnershipError(
@@ -615,6 +623,8 @@ class CorporatePartnershipService:
 
             return roi_report
 
+        except CorporatePartnershipError:
+            raise
         except Exception as e:
             logger.error(f"Error generating ROI report for partnership {partnership_id}: {e}")
             raise CorporatePartnershipError(

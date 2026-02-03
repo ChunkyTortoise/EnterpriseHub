@@ -6,7 +6,7 @@ Provides RESTful API endpoints for the enhanced Claude Concierge system.
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from typing import Dict, List, Any, Optional, AsyncGenerator
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 import json
 import asyncio
@@ -80,8 +80,7 @@ class ChatRequest(BaseModel):
     streaming: bool = True
     stream: Optional[bool] = None # Support both names
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class CoachingRequest(BaseModel):
     """Request model for real-time coaching."""
@@ -675,18 +674,5 @@ async def websocket_concierge(websocket, session_id: str):
         logger.error(f"WebSocket error for session {session_id}: {e}")
         await websocket.close(code=1000)
 
-# ============================================================================
-# ERROR HANDLERS
-# ============================================================================
-
-@router.exception_handler(ValueError)
-async def value_error_handler(request, exc):
-    """Handle validation errors."""
-    logger.warning(f"Validation error: {exc}")
-    return HTTPException(status_code=400, detail=str(exc))
-
-@router.exception_handler(Exception)
-async def general_exception_handler(request, exc):
-    """Handle general exceptions."""
-    logger.error(f"Unhandled error in concierge API: {exc}")
-    return HTTPException(status_code=500, detail="Internal server error")
+# Error handling is managed by the global exception handler in
+# ghl_real_estate_ai.api.middleware.global_exception_handler

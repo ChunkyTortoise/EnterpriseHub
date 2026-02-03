@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Union
 import aiohttp
 from aiohttp import ClientTimeout, BasicAuth
 from fastapi import HTTPException, Request
-from pydantic import BaseModel, field_validator, ValidationInfo, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 from twilio.rest import Client as TwilioSyncClient
 from twilio.base.exceptions import TwilioRestException
 
@@ -89,8 +89,7 @@ class SMSMessage(BaseModel):
     price_unit: Optional[str] = None
     uri: Optional[str] = None
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class PhoneNumberInfo(BaseModel):
@@ -104,8 +103,7 @@ class PhoneNumberInfo(BaseModel):
     carrier_name: Optional[str] = None
     carrier_type: Optional[str] = None  # mobile, landline, voip
     
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class OptOutRecord(BaseModel):
@@ -116,8 +114,7 @@ class OptOutRecord(BaseModel):
     reason: str = "user_request"
     method: str = "sms"  # sms, voice, email
     
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class TwilioAPIException(Exception):

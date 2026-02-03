@@ -114,15 +114,13 @@ class PredictionResult:
     risk_factors: List[str]
     opportunities: List[str]
 
-    # Timing information
-    prediction_date: datetime
-    target_date: datetime
-    update_frequency: str  # daily, weekly, monthly
-
-    # Model information
-    model_accuracy: float
-    data_points_used: int
-    last_training_date: datetime
+    # Timing and model information (fields with defaults must come last)
+    target_date: datetime = None
+    update_frequency: str = "weekly"
+    model_accuracy: float = 0.0
+    data_points_used: int = 0
+    last_training_date: datetime = None
+    prediction_date: datetime = None
 
     def __post_init__(self):
         if self.prediction_date is None:
@@ -295,7 +293,7 @@ class MarketPredictionEngine:
             "south_rc": 1.04    # Affordability growth
         }
 
-        adjusted_price = base_price * trend_factor * seasonal_factor * neighborhood_factors[neighborhood]
+        adjusted_price = base_price * trend_factor * seasonal_factor * neighborhood_factors.get(neighborhood, 1.0)
 
         # Add some randomness
         import random
@@ -920,11 +918,11 @@ As Jorge Martinez, provide insights in these categories:
 Focus on Inland Empire market dynamics, logistics/healthcare employment, and neighborhood-specific factors.
 
 Return as JSON:
-{
+{{
   "key_factors": ["factor1", "factor2", "factor3"],
   "risk_factors": ["risk1", "risk2"],
   "opportunities": ["opp1", "opp2", "opp3"]
-}
+}}
 """
 
         try:

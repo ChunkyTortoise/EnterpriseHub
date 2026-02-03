@@ -147,11 +147,13 @@ class SemanticIntentEngine:
 
     def _analyze_context_shifts(self, message: str, context: ConversationContext) -> Dict[str, Any]:
         """Analyze how current message shifts from previous context."""
-        if not context.detected_patterns:
+        if not context.detected_patterns or not isinstance(context.detected_patterns, dict):
             return {"shift_type": "initial", "magnitude": 0.0}
 
         # Compare current message patterns with historical patterns
         previous_urgency = context.detected_patterns.get("urgency_level", 0)
+        if not isinstance(previous_urgency, (int, float)):
+            previous_urgency = 0
         current_urgency = self._calculate_urgency_level(message)
 
         urgency_shift = current_urgency - previous_urgency

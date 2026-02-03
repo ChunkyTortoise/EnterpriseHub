@@ -1,0 +1,45 @@
+{
+  "template_id": "lead_intelligence_swarm",
+  "name": "AI Lead Intelligence Swarm",
+  "description": "10-agent swarm for comprehensive lead analysis and scoring",
+  "category": "AI Analytics",
+  "trigger_type": "webhook",
+  "actions": [
+    {
+      "type": "trigger_agent_swarm",
+      "agents": [
+        "demographic",
+        "behavioral",
+        "predictive"
+      ]
+    },
+    {
+      "type": "generate_strategic_report",
+      "format": "executive_summary"
+    },
+    {
+      "type": "update_crm",
+      "fields": [
+        "lead_score",
+        "conversion_probability"
+      ]
+    }
+  ],
+  "conditions": [
+    {
+      "field": "lead_source",
+      "operator": "not_empty"
+    },
+    {
+      "field": "contact_data",
+      "operator": "has_minimum_fields"
+    }
+  ],
+  "customizable_fields": [
+    "scoring_weights",
+    "report_format",
+    "notification_channels"
+  ],
+  "consulting_tier": "professional",
+  "estimated_value": "85+ hours/month automation savings"
+}

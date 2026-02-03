@@ -114,17 +114,19 @@ class JorgeSellerEngine:
     Handles the 4-question sequence with confrontational tone.
     """
 
-    def __init__(self, conversation_manager, ghl_client, config: Optional[JorgeSellerConfig] = None):
+    def __init__(self, conversation_manager, ghl_client, config: Optional[JorgeSellerConfig] = None, mls_client=None):
         """Initialize with existing conversation manager and GHL client
 
         Args:
             conversation_manager: ConversationManager instance
             ghl_client: GHL API client
             config: Optional JorgeSellerConfig instance for configuration overrides
+            mls_client: Optional MLSClient for real property data lookups
         """
         self.conversation_manager = conversation_manager
         self.ghl_client = ghl_client
         self.tone_engine = JorgeToneEngine()
+        self.mls_client = mls_client
         self.logger = logging.getLogger(__name__)
 
         # Store config for threshold access
@@ -220,24 +222,32 @@ class JorgeSellerEngine:
                     # This uses DOM, price drops, and tone to determine negotiation stance
                     from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory
                     
-                    # Mocking ListingHistory for now - in production this comes from MLS/Attom integration
-                    # We'll use what we've extracted so far
-                    mock_history = ListingHistory(
-                        property_id=contact_id, # Simplified
-                        days_on_market=context.get("days_since_first_contact", 0),
-                        original_list_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
-                        current_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
-                        price_drops=[]
-                    )
-                    
+                    # Attempt real listing history lookup via MLS/Attom
+                    listing_history = None
+                    property_address = extracted_seller_data.get("property_address") or context.get("property_address")
+                    if property_address and self.mls_client:
+                        try:
+                            listing_history = await self.mls_client.get_listing_history(property_address)
+                        except Exception as mls_err:
+                            self.logger.warning(f"MLS lookup failed for {property_address}: {mls_err}")
+
+                    # Fallback to contact-provided data
+                    if not listing_history:
+                        listing_history = ListingHistory(
+                            days_on_market=context.get("days_since_first_contact", 0),
+                            original_list_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
+                            current_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
+                            price_drops=[]
+                        )
+
                     comm_data = {
                         "avg_response_time_hours": context.get("avg_response_time", 24),
                         "communication_tone": context.get("last_ai_message_type", "professional")
                     }
-                    
+
                     psychology_profile = await self.psychology_analyzer.analyze_seller_psychology(
                         property_id=contact_id,
-                        listing_history=mock_history,
+                        listing_history=listing_history,
                         communication_data=comm_data
                     )
                     self.logger.info(f"Psychology Profile detected for {contact_id}: {psychology_profile.motivation_type}")
@@ -612,6 +622,69 @@ class JorgeSellerEngine:
             }
         }
 
+    async def _generate_simple_response(
+        self,
+        seller_data: Dict,
+        temperature: str,
+        contact_id: str
+    ) -> Dict:
+        """
+        Simple mode response: strict 4-question flow only.
+        No enterprise features (arbitrage, Voss, psychology, drift, market insights).
+        """
+        questions_answered = seller_data.get("questions_answered", 0)
+        current_question_number = SellerQuestions.get_question_number(seller_data)
+        vague_streak = seller_data.get("vague_streak", 0)
+        response_quality = seller_data.get("response_quality", 1.0)
+        last_response = seller_data.get("last_user_message", "")
+
+        # 1. Hot → handoff message
+        if temperature == "hot":
+            message = self.tone_engine.generate_hot_seller_handoff(
+                seller_name=seller_data.get("contact_name"),
+                agent_name="our team"
+            )
+            response_type = "handoff"
+
+        # 2. Vague streak >= 2 → take-away close
+        elif vague_streak >= 2:
+            message = self.tone_engine.generate_take_away_close(
+                seller_name=seller_data.get("contact_name"),
+                reason="vague"
+            )
+            response_type = "take_away_close"
+
+        # 3. Questions < 4 → next question (or confrontational follow-up if vague)
+        elif questions_answered < 4 and current_question_number <= 4:
+            if response_quality < 0.5 and last_response:
+                message = self.tone_engine.generate_follow_up_message(
+                    last_response=last_response,
+                    question_number=current_question_number - 1,
+                    seller_name=seller_data.get("contact_name")
+                )
+            else:
+                message = self.tone_engine.generate_qualification_message(
+                    question_number=current_question_number,
+                    seller_name=seller_data.get("contact_name"),
+                    context=seller_data
+                )
+            response_type = "qualification"
+
+        # 4. All 4 answered but not hot → warm/cold acknowledgment
+        else:
+            message = self._create_nurture_message(seller_data, temperature)
+            response_type = "nurture"
+
+        compliance_result = self.tone_engine.validate_message_compliance(message)
+
+        return {
+            "message": message,
+            "response_type": response_type,
+            "character_count": len(message),
+            "compliance": compliance_result,
+            "directness_score": compliance_result.get("directness_score", 0.0)
+        }
+
     async def _generate_seller_response(
         self,
         seller_data: Dict,
@@ -623,6 +696,10 @@ class JorgeSellerEngine:
         psychology_profile: Any = None
     ) -> Dict:
         """Generate Jorge's confrontational seller response using tone engine with dynamic branching"""
+        # SIMPLE MODE GUARD: Skip all enterprise branches
+        if self.config.JORGE_SIMPLE_MODE:
+            return await self._generate_simple_response(seller_data, temperature, contact_id)
+
         questions_answered = seller_data.get("questions_answered", 0)
         current_question_number = SellerQuestions.get_question_number(seller_data)
         vague_streak = seller_data.get("vague_streak", 0)
@@ -857,48 +934,6 @@ class JorgeSellerEngine:
             message = f"{ack} {next_q}"
             response_type = "multi_answer_qualification"
 
-        # Phase 7: Arbitrage Execution for Investors
-        elif "invest" in seller_data.get("motivation", "").lower() and questions_answered >= 1:
-            try:
-                from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
-                opportunity_engine = MarketTimingOpportunityEngine()
-                
-                # Fetch opportunities for the market
-                market_area = seller_data.get("property_address") or location_id
-                dashboard = await opportunity_engine.get_opportunity_dashboard(market_area)
-                
-                # Find a PRICING_ARBITRAGE opportunity if available
-                arbitrage_opp = next((o for o in dashboard.get('opportunities', []) if o['type'] == 'pricing_arbitrage'), None)
-                
-                # Use centralized tone engine for elite arbitrage pitch
-                ack = self.tone_engine.generate_arbitrage_pitch(
-                    seller_name=seller_data.get("contact_name"),
-                    yield_spread=arbitrage_opp['score'] if arbitrage_opp else 0.0,
-                    market_area="adjacent zones" if arbitrage_opp else "sub markets"
-                )
-                
-                next_q = self.tone_engine.generate_qualification_message(
-                    question_number=current_question_number,
-                    seller_name=seller_data.get("contact_name"),
-                    context=seller_data
-                )
-                # Combine but ensure we don't double up on the name
-                if seller_data.get("contact_name") and next_q.startswith(seller_data.get("contact_name")):
-                    # Strip name and comma from next_q if ack already has it
-                    next_q_clean = next_q.replace(f"{seller_data.get('contact_name')}, ", "", 1)
-                    message = f"{ack} {next_q_clean}"
-                else:
-                    message = f"{ack} {next_q}"
-                response_type = "arbitrage_pitch"
-            except Exception as e:
-                self.logger.warning(f"Failed to pitch arbitrage: {e}")
-                message = self.tone_engine.generate_qualification_message(
-                    question_number=current_question_number,
-                    seller_name=seller_data.get("contact_name"),
-                    context=seller_data
-                )
-                response_type = "qualification"
-
         # 5. Qualification Flow
         elif questions_answered < 4 and current_question_number <= 4:
             # Check for inadequate previous response
@@ -1099,11 +1134,13 @@ class JorgeSellerEngine:
             })
 
             # Trigger agent notification workflow
-            actions.append({
-                "type": "trigger_workflow",
-                "workflow_id": "jorge_hot_seller_workflow",
-                "data": {**seller_data, "persona": persona_data}
-            })
+            hot_workflow_id = JorgeSellerConfig.get_workflow_id("hot")
+            if hot_workflow_id:
+                actions.append({
+                    "type": "trigger_workflow",
+                    "workflow_id": hot_workflow_id,
+                    "data": {**seller_data, "persona": persona_data}
+                })
 
             # Trigger Vapi Outbound Call (Voice AI Handoff) with exponential backoff retry
             from ghl_real_estate_ai.services.vapi_service import VapiService

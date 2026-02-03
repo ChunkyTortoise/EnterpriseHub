@@ -1,0 +1,44 @@
+{
+  "template_id": "predictive_churn_prevention",
+  "name": "Predictive Churn Prevention Engine",
+  "description": "ML-powered early warning system with automatic retention campaigns",
+  "category": "Retention & Growth",
+  "trigger_type": "schedule",
+  "actions": [
+    {
+      "type": "analyze_engagement_patterns",
+      "lookback_days": 30
+    },
+    {
+      "type": "calculate_churn_probability",
+      "model": "ensemble_ml"
+    },
+    {
+      "type": "trigger_retention_campaign",
+      "personalization": "claude_ai"
+    },
+    {
+      "type": "schedule_followup",
+      "cadence": "adaptive"
+    }
+  ],
+  "conditions": [
+    {
+      "field": "churn_score",
+      "operator": "greater_than",
+      "value": 0.7
+    },
+    {
+      "field": "customer_value",
+      "operator": "greater_than",
+      "value": "$1000"
+    }
+  ],
+  "customizable_fields": [
+    "churn_threshold",
+    "campaign_templates",
+    "retention_strategies"
+  ],
+  "consulting_tier": "enterprise",
+  "estimated_value": "40% churn reduction, $500K+ annual revenue retention"
+}

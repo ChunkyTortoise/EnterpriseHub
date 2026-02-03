@@ -14,8 +14,9 @@ Flow:
 8. Send response back to GHL
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+from pydantic import BaseModel
 
 from ghl_real_estate_ai.api.schemas.ghl import (
     ActionType,
@@ -27,6 +28,7 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 )
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics
@@ -39,6 +41,8 @@ from ghl_real_estate_ai.services.security_framework import verify_webhook
 from ghl_real_estate_ai.services.tenant_service import TenantService
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
 from ghl_real_estate_ai.services.compliance_guard import compliance_guard, ComplianceStatus
+from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+from ghl_real_estate_ai.services.mls_client import MLSClient
 from ghl_real_estate_ai.api.schemas.billing import UsageRecordRequest
 
 logger = get_logger(__name__)
@@ -47,7 +51,15 @@ router = APIRouter(prefix="/ghl", tags=["ghl"])
 # Initialize dependencies (singletons)
 conversation_manager = ConversationManager()
 ghl_client_default = GHLClient()
-lead_scorer = LeadScorer()
+# Lazy singleton — defer initialization until first request
+_lead_scorer = None
+
+
+def _get_lead_scorer():
+    global _lead_scorer
+    if _lead_scorer is None:
+        _lead_scorer = LeadScorer()
+    return _lead_scorer
 tenant_service = TenantService()
 analytics_service = AnalyticsService()
 pricing_optimizer = DynamicPricingOptimizer()
@@ -55,6 +67,8 @@ calendar_scheduler = CalendarScheduler()
 lead_source_tracker = LeadSourceTracker()
 attribution_analytics = AttributionAnalytics()
 subscription_manager = SubscriptionManager()
+handoff_service = JorgeHandoffService(analytics_service=analytics_service)
+mls_client = MLSClient()
 
 
 @router.post("/webhook", response_model=GHLWebhookResponse)
@@ -80,6 +94,15 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     location_id = event.location_id
     user_message = event.message.body
     tags = event.contact.tags or []
+
+    # INPUT LENGTH GUARD: Cap inbound messages to prevent token abuse
+    MAX_INBOUND_LENGTH = 2_000  # No legitimate SMS/chat exceeds this
+    if len(user_message) > MAX_INBOUND_LENGTH:
+        logger.warning(
+            f"Oversized inbound message truncated ({len(user_message)} chars)",
+            extra={"original_length": len(user_message), "contact_id": contact_id},
+        )
+        user_message = user_message[:MAX_INBOUND_LENGTH]
 
     # LOOPBACK PROTECTION: Ignore outbound messages (sent by bot or agent)
     if event.message.direction == MessageDirection.OUTBOUND:
@@ -119,6 +142,12 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     )  # e.g., ["AI-Off", "Qualified", "Stop-Bot"]
 
     should_activate = any(tag in tags for tag in activation_tags)
+    # Buyer-mode tag also counts as activation when buyer mode is enabled
+    if not should_activate and jorge_settings.JORGE_BUYER_MODE:
+        should_activate = jorge_settings.BUYER_ACTIVATION_TAG in tags
+    # Lead-mode tag also counts as activation when lead mode is enabled
+    if not should_activate and jorge_settings.JORGE_LEAD_MODE:
+        should_activate = jorge_settings.LEAD_ACTIVATION_TAG in tags
     should_deactivate = any(tag in tags for tag in deactivation_tags)
 
     if not should_activate:
@@ -155,9 +184,30 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             actions=[],
         )
 
-    # Step -0.5: Check for Jorge's Seller Mode (Needs Qualifying tag + JORGE_SELLER_MODE)
-    from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
+    # Opt-out detection (Jorge spec: "end automation immediately")
+    OPT_OUT_PHRASES = [
+        "stop", "unsubscribe", "don't contact", "dont contact",
+        "remove me", "not interested", "no more", "opt out",
+        "leave me alone", "take me off", "no thanks"
+    ]
+    msg_lower = user_message.lower().strip()
+    if any(phrase in msg_lower for phrase in OPT_OUT_PHRASES):
+        logger.info(f"Opt-out detected for contact {contact_id}")
+        opt_out_msg = "No problem at all, reach out whenever you're ready"
+        background_tasks.add_task(
+            ghl_client_default.send_message,
+            contact_id=contact_id,
+            message=opt_out_msg,
+            channel=event.message.type,
+        )
+        background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["AI-Off"])
+        return GHLWebhookResponse(
+            success=True,
+            message=opt_out_msg,
+            actions=[GHLAction(type=ActionType.ADD_TAG, tag="AI-Off")],
+        )
 
+    # Step -0.5: Check for Jorge's Seller Mode (Needs Qualifying tag + JORGE_SELLER_MODE)
     jorge_seller_mode = (
         "Needs Qualifying" in tags and
         jorge_settings.JORGE_SELLER_MODE and
@@ -181,7 +231,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 )
 
             # Initialize Jorge's seller engine
-            jorge_engine = JorgeSellerEngine(conversation_manager, current_ghl_client)
+            jorge_engine = JorgeSellerEngine(conversation_manager, current_ghl_client, mls_client=mls_client)
 
             # Process seller response
             seller_result = await jorge_engine.process_seller_response(
@@ -230,8 +280,19 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 }
             )
 
-            # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
+            # SMS length guard (seller mode)
             final_seller_msg = seller_result["message"]
+            SMS_MAX_CHARS = 320
+            if len(final_seller_msg) > SMS_MAX_CHARS:
+                truncated = final_seller_msg[:SMS_MAX_CHARS]
+                for sep in (". ", "! ", "? "):
+                    idx = truncated.rfind(sep)
+                    if idx > SMS_MAX_CHARS // 2:
+                        truncated = truncated[: idx + 1]
+                        break
+                final_seller_msg = truncated.rstrip()
+
+            # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
             status, reason, violations = await compliance_guard.audit_message(
                 final_seller_msg, 
                 contact_context={"contact_id": contact_id, "mode": "seller"}
@@ -241,6 +302,22 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 logger.warning(f"Compliance BLOCKED message for {contact_id}: {reason}. Violations: {violations}")
                 final_seller_msg = "Let's stick to the facts about your property. What price are you looking to get?"
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
+            # --- CROSS-BOT HANDOFF CHECK ---
+            if seller_result.get("handoff_signals"):
+                handoff = await handoff_service.evaluate_handoff(
+                    current_bot="seller",
+                    contact_id=contact_id,
+                    conversation_history=[],
+                    intent_signals=seller_result["handoff_signals"],
+                )
+                if handoff:
+                    handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
+                    for ha in handoff_actions:
+                        if ha["type"] == "add_tag":
+                            actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
+                        elif ha["type"] == "remove_tag":
+                            actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
 
             logger.info(
                 f"Jorge seller processing completed for {contact_id}",
@@ -253,6 +330,22 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 }
             )
 
+            # Send the seller response via GHL API (background task)
+            background_tasks.add_task(
+                current_ghl_client.send_message,
+                contact_id=contact_id,
+                message=final_seller_msg,
+                channel=event.message.type,
+            )
+
+            # Apply tags and actions via GHL API (background task)
+            if actions:
+                background_tasks.add_task(
+                    current_ghl_client.apply_actions,
+                    contact_id=contact_id,
+                    actions=actions,
+                )
+
             return GHLWebhookResponse(
                 success=True,
                 message=final_seller_msg,
@@ -262,6 +355,164 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         except Exception as e:
             logger.error(f"Jorge seller mode processing failed: {str(e)}", exc_info=True)
             # Fall back to normal processing if Jorge mode fails
+
+    # Step -0.4: Check for Jorge's Buyer Mode (Buyer-Lead tag + JORGE_BUYER_MODE)
+    jorge_buyer_mode = (
+        jorge_settings.BUYER_ACTIVATION_TAG in tags and
+        jorge_settings.JORGE_BUYER_MODE and
+        not should_deactivate
+    )
+
+    if jorge_buyer_mode:
+        logger.info(f"Jorge buyer mode activated for contact {contact_id}")
+        try:
+            from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+
+            # Get tenant configuration
+            tenant_config = await tenant_service.get_tenant_config(location_id)
+
+            # Initialize GHL client
+            current_ghl_client = ghl_client_default
+            if tenant_config and tenant_config.get("ghl_api_key"):
+                current_ghl_client = GHLClient(
+                    api_key=tenant_config["ghl_api_key"], location_id=location_id
+                )
+
+            # Build conversation history from manager
+            history = await conversation_manager.get_conversation_history(contact_id)
+            conversation_history = history if history else [
+                {"role": "user", "content": user_message}
+            ]
+            # Ensure current message is included
+            if not conversation_history or conversation_history[-1].get("content") != user_message:
+                conversation_history.append({"role": "user", "content": user_message})
+
+            # Initialize and run buyer bot
+            buyer_bot = JorgeBuyerBot()
+            buyer_result = await buyer_bot.process_buyer_conversation(
+                buyer_id=contact_id,
+                buyer_name=event.contact.first_name or "there",
+                conversation_history=conversation_history,
+            )
+
+            # Apply buyer bot actions (tags based on temperature)
+            actions = []
+            buyer_temp = buyer_result.get("buyer_temperature", "cold")
+            temp_tag_map = {"hot": "Hot-Buyer", "warm": "Warm-Buyer", "cold": "Cold-Buyer"}
+            if buyer_temp in temp_tag_map:
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag=temp_tag_map[buyer_temp]))
+
+            if buyer_result.get("is_qualified"):
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Buyer-Qualified"))
+
+            # Track buyer analytics
+            background_tasks.add_task(
+                analytics_service.track_event,
+                event_type="jorge_buyer_interaction",
+                location_id=location_id,
+                contact_id=contact_id,
+                data={
+                    "buyer_temperature": buyer_temp,
+                    "is_qualified": buyer_result.get("is_qualified", False),
+                    "financial_readiness": buyer_result.get("financial_readiness_score", 0),
+                    "message_length": len(buyer_result.get("response_content", ""))
+                }
+            )
+
+            # SMS length guard (buyer mode)
+            final_buyer_msg = buyer_result.get(
+                "response_content",
+                "I'd love to help you find the perfect property. What area are you looking in?"
+            )
+            SMS_MAX_CHARS = 320
+            if len(final_buyer_msg) > SMS_MAX_CHARS:
+                truncated = final_buyer_msg[:SMS_MAX_CHARS]
+                for sep in (". ", "! ", "? "):
+                    idx = truncated.rfind(sep)
+                    if idx > SMS_MAX_CHARS // 2:
+                        truncated = truncated[: idx + 1]
+                        break
+                final_buyer_msg = truncated.rstrip()
+
+            # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
+            status, reason, violations = await compliance_guard.audit_message(
+                final_buyer_msg,
+                contact_context={"contact_id": contact_id, "mode": "buyer"}
+            )
+
+            if status == ComplianceStatus.BLOCKED:
+                logger.warning(f"Compliance BLOCKED buyer message for {contact_id}: {reason}. Violations: {violations}")
+                final_buyer_msg = "I'd love to help you find your next home. What's most important to you in a property?"
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
+            # --- CROSS-BOT HANDOFF CHECK ---
+            if buyer_result.get("handoff_signals"):
+                handoff = await handoff_service.evaluate_handoff(
+                    current_bot="buyer",
+                    contact_id=contact_id,
+                    conversation_history=conversation_history,
+                    intent_signals=buyer_result["handoff_signals"],
+                )
+                if handoff:
+                    handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
+                    for ha in handoff_actions:
+                        if ha["type"] == "add_tag":
+                            actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
+                        elif ha["type"] == "remove_tag":
+                            actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
+
+            logger.info(
+                f"Jorge buyer processing completed for {contact_id}",
+                extra={
+                    "contact_id": contact_id,
+                    "buyer_temperature": buyer_temp,
+                    "is_qualified": buyer_result.get("is_qualified", False),
+                    "actions_count": len(actions),
+                    "compliance_status": status.value
+                }
+            )
+
+            # Send the buyer response via GHL API (background task)
+            background_tasks.add_task(
+                current_ghl_client.send_message,
+                contact_id=contact_id,
+                message=final_buyer_msg,
+                channel=event.message.type,
+            )
+
+            # Apply tags and actions via GHL API (background task)
+            if actions:
+                background_tasks.add_task(
+                    current_ghl_client.apply_actions,
+                    contact_id=contact_id,
+                    actions=actions,
+                )
+
+            return GHLWebhookResponse(
+                success=True,
+                message=final_buyer_msg,
+                actions=actions,
+            )
+
+        except Exception as e:
+            logger.error(f"Jorge buyer mode processing failed: {str(e)}", exc_info=True)
+            # Fall back to normal processing if Jorge buyer mode fails
+
+    # Step -0.3: Check for Jorge's Lead Mode (LEAD_ACTIVATION_TAG + JORGE_LEAD_MODE)
+    jorge_lead_mode = (
+        jorge_settings.LEAD_ACTIVATION_TAG in tags and
+        jorge_settings.JORGE_LEAD_MODE and
+        not should_deactivate
+    )
+
+    if not jorge_lead_mode:
+        # Raw fallback — no bot mode matched
+        logger.info(f"No bot mode matched for contact {contact_id}")
+        return GHLWebhookResponse(
+            success=True,
+            message="Thanks for reaching out! How can I help you today?",
+            actions=[],
+        )
 
     try:
         # Step 0: Get tenant configuration
@@ -292,7 +543,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "location_id": location_id,
                 "contact_id": contact_id,
                 "message_type": event.message.type.value,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
 
             source_attribution = await lead_source_tracker.analyze_lead_source(
@@ -378,7 +629,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         # Track lead scoring with source attribution
         lead_scored_data = {
             "score": ai_response.lead_score,
-            "classification": lead_scorer.classify(ai_response.lead_score),
+            "classification": _get_lead_scorer().classify(ai_response.lead_score),
         }
 
         # Add source attribution context if available
@@ -408,7 +659,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "lead_scored",
                 {
                     "score": ai_response.lead_score,
-                    "classification": lead_scorer.classify(ai_response.lead_score),
+                    "classification": _get_lead_scorer().classify(ai_response.lead_score),
                     "contact_id": contact_id,
                     "location_id": location_id
                 }
@@ -423,7 +674,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "questions_answered": ai_response.lead_score,
                 "message_content": user_message,
                 "extracted_data": ai_response.extracted_data,
-                "classification": lead_scorer.classify(ai_response.lead_score)
+                "classification": _get_lead_scorer().classify(ai_response.lead_score)
             }
         )
 
@@ -434,7 +685,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             location_id=location_id,
             lead_score=ai_response.lead_score,
             extracted_data=ai_response.extracted_data,
-            classification=lead_scorer.classify(ai_response.lead_score)
+            classification=_get_lead_scorer().classify(ai_response.lead_score)
         )
 
         # Step 3: Update conversation context
@@ -528,16 +779,46 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
         # Combine AI response with appointment message if booking was attempted
         final_message = ai_response.message + appointment_message_addition
 
+        # SMS length guard: truncate at sentence boundary to stay within 320 chars
+        # (2 SMS segments max — preserves readability while avoiding carrier splits)
+        SMS_MAX_CHARS = 320
+        if len(final_message) > SMS_MAX_CHARS:
+            truncated = final_message[:SMS_MAX_CHARS]
+            # Try to cut at last sentence boundary
+            for sep in (". ", "! ", "? "):
+                idx = truncated.rfind(sep)
+                if idx > SMS_MAX_CHARS // 2:
+                    truncated = truncated[: idx + 1]
+                    break
+            final_message = truncated.rstrip()
+
         # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
         compliance_status, reason, violations = await compliance_guard.audit_message(
-            final_message, 
-            contact_context={"contact_id": contact_id, "lead_score": ai_response.lead_score}
+            final_message,
+            contact_context={"contact_id": contact_id, "mode": "lead", "lead_score": ai_response.lead_score}
         )
-        
+
         if compliance_status == ComplianceStatus.BLOCKED:
-            logger.warning(f"Compliance BLOCKED standard message for {contact_id}: {reason}")
-            final_message = "I'm looking forward to helping you find the right home. What's your top priority in a neighborhood?"
+            logger.warning(f"Compliance BLOCKED lead message for {contact_id}: {reason}. Violations: {violations}")
+            final_message = "Thanks for reaching out! I'd love to help. What are you looking for in your next home?"
             actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
+        # --- CROSS-BOT HANDOFF CHECK ---
+        lead_intent_signals = JorgeHandoffService.extract_intent_signals(user_message)
+        if lead_intent_signals.get("buyer_intent_score", 0) > 0 or lead_intent_signals.get("seller_intent_score", 0) > 0:
+            handoff = await handoff_service.evaluate_handoff(
+                current_bot="lead",
+                contact_id=contact_id,
+                conversation_history=[],
+                intent_signals=lead_intent_signals,
+            )
+            if handoff:
+                handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
+                for ha in handoff_actions:
+                    if ha["type"] == "add_tag":
+                        actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
+                    elif ha["type"] == "remove_tag":
+                        actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
 
         background_tasks.add_task(
             current_ghl_client.send_message,
@@ -582,12 +863,25 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             exc_info=True,
         )
 
+        # Best-effort: send a human-sounding fallback so the contact isn't left on read
+        if contact_id:
+            fallback_msg = "Hey, give me just a moment — I want to make sure I get you the right info. I'll circle back shortly!"
+            try:
+                background_tasks.add_task(
+                    ghl_client_default.send_message,
+                    contact_id=contact_id,
+                    message=fallback_msg,
+                    channel=event.message.type if event and event.message else "SMS",
+                )
+            except Exception:
+                logger.warning(f"Failed to send fallback message for {contact_id}")
+
         # SECURITY FIX: Return minimal error to GHL (no PII, trackable error ID)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
                 "success": False,
-                "message": "Sorry, I'm experiencing a technical issue. A team member will follow up with you shortly!",
+                "message": "Processing error — fallback message sent to contact",
                 "error_id": error_id,
                 "retry_allowed": True
             }
@@ -615,7 +909,7 @@ async def prepare_ghl_actions(
     actions = []
 
     # Convert question count to percentage for Jorge's auto-deactivation logic
-    percentage_score = lead_scorer.get_percentage_score(lead_score)
+    percentage_score = _get_lead_scorer().get_percentage_score(lead_score)
 
     # Jorge's Auto-Deactivation Logic: If score >= 70%, deactivate AI and hand off
     if percentage_score >= settings.auto_deactivate_threshold:
@@ -641,7 +935,7 @@ async def prepare_ghl_actions(
             )
 
     # Standard lead classification based on question count
-    classification = lead_scorer.classify(lead_score)
+    classification = _get_lead_scorer().classify(lead_score)
 
     if classification == "hot":
         actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Hot-Lead"))
@@ -741,7 +1035,7 @@ async def prepare_ghl_actions(
     # Tag based on timeline urgency
     timeline = extracted_data.get("timeline", "")
     if timeline:
-        if lead_scorer._is_urgent_timeline(timeline):
+        if _get_lead_scorer()._is_urgent_timeline(timeline):
             actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Timeline-Urgent"))
 
         # Update Timeline Custom Field if configured
@@ -811,6 +1105,52 @@ async def prepare_ghl_actions(
     )
 
     return actions
+
+
+class InitiateQualificationRequest(BaseModel):
+    contact_id: str
+    location_id: str
+
+
+@router.post("/initiate-qualification")
+@verify_webhook("ghl")
+async def initiate_qualification(request: Request, body: InitiateQualificationRequest, background_tasks: BackgroundTasks):
+    """
+    Called by GHL workflow when 'Needs Qualifying' tag is applied.
+    Sends initial outreach message to start qualification.
+    """
+    contact_id = body.contact_id
+    location_id = body.location_id
+    try:
+        contact = await ghl_client_default.get_contact(contact_id)
+        first_name = contact.get("firstName", "there")
+
+        opening = f"Hey {first_name}, saw your property inquiry. Are you still thinking about selling?"
+
+        # Send the opening message via GHL
+        background_tasks.add_task(
+            ghl_client_default.send_message,
+            contact_id=contact_id,
+            message=opening,
+            channel=MessageType.SMS,
+        )
+
+        logger.info(
+            f"Initiate qualification sent for contact {contact_id}",
+            extra={"contact_id": contact_id, "location_id": location_id}
+        )
+
+        return GHLWebhookResponse(
+            success=True,
+            message=opening,
+            actions=[],
+        )
+    except Exception as e:
+        logger.error(f"Initiate qualification failed for contact {contact_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "message": "Failed to initiate qualification"}
+        )
 
 
 @router.get("/health")

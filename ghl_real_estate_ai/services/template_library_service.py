@@ -37,7 +37,7 @@ import re
 # Third-party imports
 from jinja2 import Environment, Template as JinjaTemplate, select_autoescape, DictLoader
 from jinja2.exceptions import TemplateError
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 import scipy.stats as stats
 import asyncpg
 from asyncpg import Pool, Connection
@@ -100,7 +100,8 @@ class TemplateVariable(BaseModel):
     validation_pattern: Optional[str] = None
     choices: Optional[List[str]] = None
 
-    @validator('name')
+    @field_validator('name')
+    @classmethod
     def validate_name(cls, v):
         if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', v):
             raise ValueError('Variable name must be a valid identifier')
@@ -134,13 +135,15 @@ class Template(BaseModel):
     created_by: Optional[str] = None
     performance_data: Optional[Dict[str, Any]] = {}
 
-    @validator('content')
+    @field_validator('content')
+    @classmethod
     def validate_content(cls, v):
         if not v or not v.strip():
             raise ValueError('Template content cannot be empty')
         return v.strip()
 
-    @validator('version')
+    @field_validator('version')
+    @classmethod
     def validate_version(cls, v):
         if not re.match(r'^\d+\.\d+\.\d+$', v):
             raise ValueError('Version must follow semantic versioning (x.y.z)')

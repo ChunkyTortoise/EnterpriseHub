@@ -472,10 +472,9 @@ class TestTieredCacheDecorator:
             call_count += 1
             return x * 3
 
-        # Note: Sync functions with cache decorator return tasks
-        # In real usage, this would be handled by the event loop
+        # Sync functions called outside an event loop execute directly
         result1 = expensive_sync_function(5)
-        assert asyncio.iscoroutine(result1) or asyncio.iscoroutinefunction(result1)
+        assert result1 == 15
 
     @pytest.mark.asyncio
     async def test_decorator_with_complex_args(self):

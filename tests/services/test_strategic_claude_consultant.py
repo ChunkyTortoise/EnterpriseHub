@@ -5,11 +5,16 @@ Ensures reliability for high-ticket consulting capabilities ($25K-$100K engageme
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 import numpy as np
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock
 from uuid import uuid4
+
+# The strategic_consultant fixture loads ML models which can take >10s.
+# Set a generous timeout for all tests in this module.
+pytestmark = pytest.mark.timeout(60)
 
 from ghl_real_estate_ai.services.strategic_claude_consultant import (
     StrategicClaudeConsultant,
@@ -41,7 +46,7 @@ def mock_tenant_service():
     return tenant_mock
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def strategic_consultant():
     """Create strategic consultant for testing."""
     with patch('ghl_real_estate_ai.services.strategic_claude_consultant.get_database', return_value=AsyncMock()), \
@@ -655,7 +660,7 @@ async def test_insufficient_historical_data(strategic_consultant):
 @pytest.mark.asyncio
 async def test_model_initialization_failure(strategic_consultant):
     """Test handling of model initialization failure."""
-    with patch('sklearn.ensemble.VotingRegressor', side_effect=Exception("Model init failed")):
+    with patch('ghl_real_estate_ai.services.strategic_claude_consultant.VotingRegressor', side_effect=Exception("Model init failed")):
         try:
             await strategic_consultant._initialize_predictive_models()
             # Should raise exception on critical failure

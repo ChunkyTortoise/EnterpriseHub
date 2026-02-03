@@ -56,6 +56,9 @@ class PropertyMatcher:
             / "knowledge_base"
             / "property_listings.json"
         )
+        self._sample_data_path = (
+            Path(__file__).parent.parent / "data" / "sample_properties.json"
+        )
         self.llm_client = LLMClient(
             provider="claude",
             model=settings.claude_model
@@ -150,13 +153,11 @@ class PropertyMatcher:
                     logger.info(f"Loaded {len(self._listings_cache)} properties (cached for {self._cache_ttl})")
             else:
                 logger.warning(f"Property listings file not found at {self.listings_path}")
-                self._listings_cache = []
-                self._cache_timestamp = datetime.now()
+                self._load_sample_data()
         except Exception as e:
             logger.error(f"Error loading property listings: {e}")
             if self._listings_cache is None:
-                self._listings_cache = []
-                self._cache_timestamp = datetime.now()
+                self._load_sample_data()
 
     @property
     def listings(self) -> List[Dict[str, Any]]:
@@ -180,7 +181,7 @@ class PropertyMatcher:
         return self._listings_cache or []
 
     def _load_listings_sync(self) -> List[Dict[str, Any]]:
-        """Synchronous fallback for initial load."""
+        """Synchronous fallback for initial load. Falls back to sample data if primary source unavailable."""
         try:
             if self.listings_path.exists():
                 with open(self.listings_path, "r") as f:
@@ -195,10 +196,26 @@ class PropertyMatcher:
                 logger.warning(
                     f"Property listings file not found at {self.listings_path}"
                 )
-                return []
+                return self._load_sample_data()
         except Exception as e:
             logger.error(f"Failed to load property listings: {e}")
-            return []
+            return self._load_sample_data()
+
+    def _load_sample_data(self) -> List[Dict[str, Any]]:
+        """Load sample Rancho Cucamonga properties as fallback data source."""
+        try:
+            if self._sample_data_path.exists():
+                with open(self._sample_data_path, "r") as f:
+                    data = json.load(f)
+                    # Handle both array and {"listings": [...]} formats
+                    sample_listings = data if isinstance(data, list) else data.get("listings", [])
+                    self._listings_cache = sample_listings
+                    self._cache_timestamp = datetime.now()
+                    logger.info(f"Loaded {len(sample_listings)} sample properties as fallback")
+                    return sample_listings
+        except Exception as e:
+            logger.error(f"Failed to load sample properties: {e}")
+        return []
 
     def find_matches(
         self, preferences: Dict[str, Any], limit: int = 3, min_score: float = 0.5
@@ -294,12 +311,65 @@ Example: "This South Lamar home is a strategic capture; it sits 5% below your bu
             logger.error(f"Agentic explanation failed: {e}")
             return self.generate_match_reasoning(property, preferences)
 
+    def find_buyer_matches(
+        self, budget: int, beds: Optional[int] = None,
+        neighborhood: Optional[str] = None, limit: int = 3
+    ) -> List[Dict[str, Any]]:
+        """
+        Find properties matching buyer criteria from sample data.
+        Filters by: price range (budget ± 20%), beds, neighborhood preference.
+        Returns top matches sorted by match score.
+        """
+        listings = self.listings
+        if not listings:
+            listings = self._load_sample_data()
+
+        scored = []
+        budget_min = int(budget * 0.8)
+        budget_max = int(budget * 1.2)
+
+        for prop in listings:
+            price = prop.get("price", 0)
+            if not (budget_min <= price <= budget_max):
+                continue
+
+            score = 1.0
+
+            # Bedroom match
+            prop_beds = prop.get("beds", prop.get("bedrooms", 0))
+            if beds and prop_beds >= beds:
+                score += 0.3
+            elif beds and prop_beds < beds:
+                continue  # Hard filter: must meet minimum beds
+
+            # Neighborhood preference
+            prop_neighborhood = prop.get("neighborhood", "")
+            if neighborhood and neighborhood.lower() in prop_neighborhood.lower():
+                score += 0.5
+
+            # Closer to budget center scores higher
+            budget_distance = abs(price - budget) / budget
+            score += (1.0 - budget_distance) * 0.2
+
+            scored.append({**prop, "match_score": round(score, 2)})
+
+        scored.sort(key=lambda x: x["match_score"], reverse=True)
+        return scored[:limit]
+
     def format_match_for_sms(self, property: Dict[str, Any]) -> str:
         """Format a property match for an SMS message."""
-        addr = property.get("address", {})
+        # Handle both sample data format (address as string) and legacy format (address as dict)
+        addr = property.get("address", "")
         price = property.get("price", 0)
-        beds = property.get("bedrooms", 0)
-        baths = property.get("bathrooms", 0)
-        neighborhood = addr.get("neighborhood", addr.get("city", ""))
 
-        return f"${price:,} in {neighborhood}: {beds}br/{baths}ba home. Check it out: {property.get('listing_url', 'N/A')}"
+        if isinstance(addr, dict):
+            beds = property.get("bedrooms", 0)
+            baths = property.get("bathrooms", 0)
+            neighborhood = addr.get("neighborhood", addr.get("city", ""))
+            return f"${price:,} in {neighborhood}: {beds}br/{baths}ba home. Check it out: {property.get('listing_url', 'N/A')}"
+
+        # Sample data format
+        beds = property.get("beds", property.get("bedrooms", 0))
+        baths = property.get("baths", property.get("bathrooms", 0))
+        description = property.get("description", "")
+        return f"${price:,} | {beds}bd/{baths}ba | {description}"

@@ -1,0 +1,26 @@
+{
+  "integration_id": "salesforce_enterprise",
+  "name": "Salesforce Enterprise Sync",
+  "provider": "Salesforce",
+  "description": "Bi-directional sync with advanced field mapping and custom objects",
+  "setup_instructions": "OAuth2 setup with enterprise permissions and custom field mapping",
+  "api_endpoints": [
+    "/api/salesforce/sync",
+    "/api/salesforce/webhooks",
+    "/api/salesforce/custom_objects"
+  ],
+  "required_credentials": [
+    "client_id",
+    "client_secret",
+    "instance_url",
+    "refresh_token"
+  ],
+  "supported_features": [
+    "custom_fields",
+    "lead_routing",
+    "opportunity_sync",
+    "activity_tracking"
+  ],
+  "consulting_tier": "enterprise",
+  "implementation_complexity": "complex"
+}

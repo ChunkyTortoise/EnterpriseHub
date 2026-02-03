@@ -133,12 +133,37 @@ class GhostFollowUpEngine:
             
         return objections
 
-    def get_stall_breaker(self, objection_type: str) -> str:
-        """Final Nudge + Re-Qualification"""
+    async def _day_30_final_nudge(self, state: GhostState) -> Dict[str, Any]:
+        """
+        Day 30 - Final Nudge + Re-Qualification.
+        Last-chance follow-up with a gentle tone and CMA/market update value-add.
+        Outcome: Archive if unresponsive or route to Jorge for live handoff.
+        """
+        address = state.property_address or "your area"
+
+        if state.frs_score > 60:
+            content = (
+                f"Hey, new comps just dropped near {address}. "
+                f"I ran an updated CMA. Want me to send it over or are you done looking?"
+            )
+            logic = f"FRS {state.frs_score} - High intent final nudge with CMA offer"
+        elif state.frs_score >= 40:
+            content = (
+                f"Market shifted around {address} since we last talked. "
+                f"Worth a second look or should I close your file?"
+            )
+            logic = f"FRS {state.frs_score} - Mid intent final nudge with market update"
+        else:
+            content = (
+                f"Last check: still thinking about {address}? "
+                f"If not, I'll close your file. No hard feelings."
+            )
+            logic = f"FRS {state.frs_score} - Low intent graceful close"
+
         return {
             "channel": "sms",
-            "content": "Last check: still interested in exploring options? If not, no hard feelings.",
-            "logic": "Outcome: Archive or Route to Jorge"
+            "content": content,
+            "logic": logic
         }
 
     def get_stall_breaker(self, objection_type: str) -> str:

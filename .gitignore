@@ -69,6 +69,7 @@ htmlcov/
 .tox/
 .nox/
 coverage.xml
+coverage.json
 *.cover
 *.log
 
@@ -174,3 +175,16 @@ secrets/
 config/production/*.yml
 config/production/*.json
 .env.jorge
+
+# Runtime data (conversation memory, session state)
+data/memory/
+
+# Test-generated data artifacts
+data/analytics/*/events_*.jsonl
+data/workflows/*.json
+data/sensitive_data.json
+data/marketplace/user_templates/tmpl_*.json
+ghl_real_estate_ai/data/errors/*/errors_*.jsonl
+
+# MCP local overrides
+.claude/mcp-servers.json.disabled

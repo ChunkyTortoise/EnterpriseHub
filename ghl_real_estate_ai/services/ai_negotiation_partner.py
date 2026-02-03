@@ -7,7 +7,7 @@ and win probability prediction for optimal deal outcomes.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 import asyncio
 from decimal import Decimal
@@ -217,6 +217,7 @@ class AINegotiationPartner:
             negotiation_intelligence = NegotiationIntelligence(
                 property_id=request.property_id,
                 lead_id=request.lead_id,
+                tenant_id=request.tenant_id,
                 analysis_timestamp=datetime.now(),
                 seller_psychology=seller_psychology,
                 market_leverage=market_leverage,
@@ -419,6 +420,7 @@ class AINegotiationPartner:
             updated_intelligence = NegotiationIntelligence(
                 property_id=current_intelligence.property_id,
                 lead_id=current_intelligence.lead_id,
+                tenant_id=current_intelligence.tenant_id,
                 analysis_timestamp=datetime.now(),
                 seller_psychology=updated_psychology,
                 market_leverage=updated_leverage,

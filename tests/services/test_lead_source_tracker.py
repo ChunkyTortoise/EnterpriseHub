@@ -253,13 +253,13 @@ class TestLeadSourceTracker:
         """Test source pattern matching."""
         patterns = self.tracker.source_patterns
 
-        # Verify Facebook patterns
+        # Verify Facebook patterns (patterns are regex, may contain escaped chars)
         fb_patterns = patterns[LeadSource.FACEBOOK_ORGANIC]
-        assert any("facebook.com" in pattern for pattern in fb_patterns)
+        assert any("facebook" in pattern for pattern in fb_patterns)
 
         # Verify Zillow patterns
         zillow_patterns = patterns[LeadSource.ZILLOW]
-        assert any("zillow.com" in pattern for pattern in zillow_patterns)
+        assert any("zillow" in pattern for pattern in zillow_patterns)
 
     def test_quality_scores(self):
         """Test source quality scoring."""
@@ -384,20 +384,11 @@ class TestLeadSourceTracker:
             ("deal_closed", {"deal_value": 8000.0, "close_time_days": 45})
         ]
 
-        with patch.object(self.tracker.cache, 'get') as mock_get, \
-             patch.object(self.tracker.cache, 'set') as mock_set:
+        with patch.object(self.tracker.cache, 'get', new_callable=AsyncMock) as mock_get, \
+             patch.object(self.tracker.cache, 'set', new_callable=AsyncMock) as mock_set:
 
-            # Mock existing metrics
-            mock_get.return_value = {
-                "total_leads": 0,
-                "qualified_leads": 0,
-                "closed_deals": 0,
-                "total_revenue": 0.0,
-                "total_cost": 0.0,
-                "lead_scores": [],
-                "qualify_times": [],
-                "close_times": []
-            }
+            # Mock existing events as empty list (track_source_performance stores event lists)
+            mock_get.return_value = []
 
             # Track all events
             for event_type, metadata in events:

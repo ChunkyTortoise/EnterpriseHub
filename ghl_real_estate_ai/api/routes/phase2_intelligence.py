@@ -20,7 +20,7 @@ from uuid import UUID, uuid4
 import asyncio
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Path, BackgroundTasks
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 import structlog
 
 from ghl_real_estate_ai.api.deps import get_current_user, get_location_access

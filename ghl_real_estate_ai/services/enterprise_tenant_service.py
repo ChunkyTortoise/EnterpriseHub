@@ -22,7 +22,7 @@ from dataclasses import dataclass, asdict
 from contextlib import asynccontextmanager
 
 import asyncpg
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ghl_real_estate_ai.services.database_service import get_database, DatabaseService
 from ghl_real_estate_ai.ghl_utils.config import settings
@@ -192,7 +192,8 @@ class TenantConfig(BaseModel):
     engagement_end_date: Optional[datetime] = None
     consulting_package_value: Optional[float] = None
     
-    @validator('slug')
+    @field_validator('slug')
+    @classmethod
     def validate_slug(cls, v):
         """Ensure slug is URL-friendly."""
         import re
@@ -200,8 +201,7 @@ class TenantConfig(BaseModel):
             raise ValueError('Slug must contain only lowercase letters, numbers, and hyphens')
         return v
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class TenantUser(BaseModel):
@@ -218,8 +218,7 @@ class TenantUser(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 # ============================================================================

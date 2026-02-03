@@ -473,9 +473,10 @@ class TestAttributionAnalytics:
     @pytest.mark.asyncio
     async def test_error_handling(self):
         """Test error handling in analytics operations."""
-        # Test with cache failures
-        with patch.object(self.analytics.cache, 'get', side_effect=Exception("Cache error")):
-            # Should handle cache errors gracefully
+        # Test with source tracker failures that propagate to analytics
+        with patch.object(self.analytics.source_tracker, 'get_all_source_performance',
+                         side_effect=Exception("Source tracker error")):
+            # Should handle errors gracefully
             summary = await self.analytics.get_weekly_summary()
             assert "error" in summary
 
