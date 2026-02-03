@@ -18,6 +18,12 @@ import os
 class JorgeSellerConfig:
     """Central configuration for Jorge's seller bot"""
 
+    # ========== SIMPLE MODE ==========
+    # Simple mode: disables enterprise features (investor arbitrage, loss aversion,
+    # psychology profiling, Voss negotiation, drift detection, market insights)
+    # When True, bot follows strict 4-question flow only
+    JORGE_SIMPLE_MODE: bool = True
+
     # ========== ACTIVATION/DEACTIVATION TAGS ==========
     ACTIVATION_TAGS = ["Needs Qualifying"]
     DEACTIVATION_TAGS = ["AI-Off", "Qualified", "Stop-Bot", "Seller-Qualified"]
@@ -145,6 +151,12 @@ class JorgeSellerConfig:
         "Perfect. You're a great fit for our program. I'm connecting you with our team now. Are mornings or afternoons better for a quick call?",
         "You answered all my questions, which tells me you're serious. Let me get you scheduled with our team today. Morning or afternoon?"
     ]
+
+    # ========== BUYER BOT SETTINGS ==========
+    # Buyer follow-up schedule (mirrors seller pattern per spec)
+    BUYER_FOLLOWUP_SCHEDULE = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29]
+    BUYER_LONGTERM_INTERVAL = 14
+    BUYER_TEMPERATURE_TAGS = {"hot": "Hot-Buyer", "warm": "Warm-Buyer", "cold": "Cold-Buyer"}
 
     # ========== ANALYTICS & MONITORING ==========
     # Success metrics and KPIs

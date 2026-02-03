@@ -48,6 +48,33 @@ class LeadIntentDecoder:
         self.price_aware = ["zestimate", "comps", "comparable", "market value"]
         self.price_flexible = ["range", "open to expectations", "negotiable"]
 
+        # Buyer vs Seller Intent Markers
+        self.buyer_markers = [
+            "looking for", "want to buy", "searching for", "need a home",
+            "bedroom", "3 bed", "4 bed", "bd house", "buying", "pre-approved",
+            "mortgage", "first time buyer", "house hunting", "move in",
+            "looking to purchase", "budget", "under 700k", "under 500k"
+        ]
+        self.seller_markers = [
+            "want to sell", "selling my", "sell my", "list my",
+            "home value", "what's my home worth", "thinking about selling",
+            "how much is my", "considering selling", "need to sell",
+            "sell the house", "put my house on the market"
+        ]
+
+    def detect_lead_type(self, conversation_history: List[Dict[str, str]]) -> str:
+        """Detect whether lead is a buyer, seller, or unknown based on conversation."""
+        all_text = " ".join([m.get("content", "").lower() for m in conversation_history])
+
+        buyer_score = sum(1 for m in self.buyer_markers if m in all_text)
+        seller_score = sum(1 for m in self.seller_markers if m in all_text)
+
+        if seller_score > buyer_score:
+            return "seller"
+        elif buyer_score > seller_score:
+            return "buyer"
+        return "unknown"
+
     def analyze_lead(self, contact_id: str, conversation_history: List[Dict[str, str]]) -> LeadIntentProfile:
         """
         Main entry point for lead intent decoding.
@@ -94,10 +121,14 @@ class LeadIntentDecoder:
         elif pcs_score.total_score > 70:
             next_action = "Schedule Property Tour"
 
+        # 5. Detect buyer vs seller intent
+        lead_type = self.detect_lead_type(conversation_history)
+
         return LeadIntentProfile(
             lead_id=contact_id,
             frs=frs_score,
             pcs=pcs_score,
+            lead_type=lead_type,
             next_best_action=next_action
         )
 

@@ -133,11 +133,11 @@ class Settings(BaseSettings):
     auto_deactivate_threshold: int = 70  # 70+ percentage triggers AI deactivation
 
     # Activation & Trigger Settings
-    activation_tags: list[str] = ["Hit List", "Need to Qualify", "Needs Qualifying"]
+    activation_tags: list[str] = ["Needs Qualifying"]
     deactivation_tags: list[str] = ["AI-Off", "Qualified", "Stop-Bot"]
     required_contact_type: Optional[str] = "Seller"
     disposition_field_name: str = "disposition"
-    bot_active_disposition: str = "Hit List"
+    bot_active_disposition: str = "Needs Qualifying"
 
     # GHL Workflow & Custom Field Mapping
     notify_agent_workflow_id: Optional[str] = None

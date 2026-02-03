@@ -155,6 +155,22 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             actions=[],
         )
 
+    # Opt-out detection (Jorge spec: "end automation immediately")
+    OPT_OUT_PHRASES = [
+        "stop", "unsubscribe", "don't contact", "dont contact",
+        "remove me", "not interested", "no more", "opt out",
+        "leave me alone", "take me off", "no thanks"
+    ]
+    msg_lower = user_message.lower().strip()
+    if any(phrase in msg_lower for phrase in OPT_OUT_PHRASES):
+        logger.info(f"Opt-out detected for contact {contact_id}")
+        background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["AI-Off"])
+        return GHLWebhookResponse(
+            success=True,
+            message="No problem at all, reach out whenever you're ready",
+            actions=[GHLAction(type=ActionType.ADD_TAG, tag="AI-Off")],
+        )
+
     # Step -0.5: Check for Jorge's Seller Mode (Needs Qualifying tag + JORGE_SELLER_MODE)
     from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
 
@@ -811,6 +827,44 @@ async def prepare_ghl_actions(
     )
 
     return actions
+
+
+@router.post("/initiate-qualification")
+async def initiate_qualification(contact_id: str, location_id: str, background_tasks: BackgroundTasks):
+    """
+    Called by GHL workflow when 'Needs Qualifying' tag is applied.
+    Sends initial outreach message to start qualification.
+    """
+    try:
+        contact = await ghl_client_default.get_contact(contact_id)
+        first_name = contact.get("firstName", "there")
+
+        opening = f"Hey {first_name}, saw your property inquiry. Are you still thinking about selling?"
+
+        # Send the opening message via GHL
+        background_tasks.add_task(
+            ghl_client_default.send_message,
+            contact_id=contact_id,
+            message=opening,
+            channel=MessageType.SMS,
+        )
+
+        logger.info(
+            f"Initiate qualification sent for contact {contact_id}",
+            extra={"contact_id": contact_id, "location_id": location_id}
+        )
+
+        return GHLWebhookResponse(
+            success=True,
+            message=opening,
+            actions=[],
+        )
+    except Exception as e:
+        logger.error(f"Initiate qualification failed for contact {contact_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "message": "Failed to initiate qualification"}
+        )
 
 
 @router.get("/health")
