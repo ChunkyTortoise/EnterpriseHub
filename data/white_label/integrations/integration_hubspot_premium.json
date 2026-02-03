@@ -1,0 +1,24 @@
+{
+  "integration_id": "hubspot_premium",
+  "name": "HubSpot Premium Integration",
+  "provider": "HubSpot",
+  "description": "Advanced HubSpot integration with workflow automation and custom properties",
+  "setup_instructions": "Private app setup with custom scopes and property management",
+  "api_endpoints": [
+    "/api/hubspot/contacts",
+    "/api/hubspot/workflows",
+    "/api/hubspot/analytics"
+  ],
+  "required_credentials": [
+    "access_token",
+    "portal_id"
+  ],
+  "supported_features": [
+    "workflow_automation",
+    "custom_properties",
+    "advanced_analytics",
+    "email_sequences"
+  ],
+  "consulting_tier": "BrandingTier.PROFESSIONAL",
+  "implementation_complexity": "moderate"
+}
