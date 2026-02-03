@@ -39,6 +39,6 @@
     "campaign_templates",
     "retention_strategies"
   ],
-  "consulting_tier": "BrandingTier.ENTERPRISE",
+  "consulting_tier": "enterprise",
   "estimated_value": "40% churn reduction, $500K+ annual revenue retention"
 }

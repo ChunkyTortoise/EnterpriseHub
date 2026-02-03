@@ -50,11 +50,24 @@ class TestIntelligenceContextService:
 
     @pytest.fixture
     def mock_cache_service(self):
-        """Mock cache service for testing."""
+        """Mock cache service for testing with in-memory store."""
         mock_cache = AsyncMock()
-        mock_cache.get.return_value = None  # Default: cache miss
-        mock_cache.set.return_value = True   # Default: successful cache set
-        mock_cache.delete.return_value = True
+        cache_store = {}
+
+        async def mock_set(key=None, value=None, **kwargs):
+            cache_store[key] = value
+            return True
+
+        async def mock_get(key=None, **kwargs):
+            return cache_store.get(key)
+
+        async def mock_delete(key=None, **kwargs):
+            cache_store.pop(key, None)
+            return True
+
+        mock_cache.set = AsyncMock(side_effect=mock_set)
+        mock_cache.get = AsyncMock(side_effect=mock_get)
+        mock_cache.delete = AsyncMock(side_effect=mock_delete)
         return mock_cache
 
     @pytest.fixture
@@ -249,8 +262,9 @@ class TestIntelligenceContextService:
             transition_reason=TransitionReason.QUALIFIED_BUYER
         )
 
-        # Mock cache hit
-        context_service.cache.get.return_value = snapshot.to_json()
+        # Mock cache hit - override side_effect with direct return
+        context_service.cache.get.side_effect = None
+        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = snapshot.to_json()
 
         # Act
         start_time = time.time()
@@ -286,7 +300,7 @@ class TestIntelligenceContextService:
         location_id = "austin"
 
         # Mock cache miss
-        context_service.cache.get.return_value = None
+        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = None
 
         # Act
         result = await context_service.retrieve_intelligence_context(
@@ -326,8 +340,9 @@ class TestIntelligenceContextService:
             transition_reason=TransitionReason.QUALIFIED_BUYER
         )
 
-        # Mock cache returning expired data
-        context_service.cache.get.return_value = expired_snapshot.to_json()
+        # Mock cache returning expired data - override side_effect
+        context_service.cache.get.side_effect = None
+        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = expired_snapshot.to_json()
 
         # Act
         result = await context_service.retrieve_intelligence_context(
@@ -368,7 +383,7 @@ class TestIntelligenceContextService:
         )
 
         # Mock cache hit with wrong tenant
-        context_service.cache.get.return_value = snapshot.to_json()
+        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = snapshot.to_json()
 
         # Act
         result = await context_service.retrieve_intelligence_context(
@@ -438,7 +453,7 @@ class TestIntelligenceContextService:
         location_id = "austin"
 
         # Mock empty history initially
-        context_service.cache.get.return_value = None
+        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = None
 
         # Act - preserve intelligence (creates history)
         await context_service.preserve_intelligence(
@@ -541,8 +556,8 @@ class TestIntelligenceContextService:
             assert retrieved.target_bot == scenario['target']
             assert retrieved.transition_reason == scenario['reason']
 
-            # Clear cache for next scenario
-            context_service.cache.get.return_value = None
+            # Clear cache for next scenario - reset mock store
+            context_service.cache.delete = AsyncMock(side_effect=lambda key=None, **kw: None)
 
     @pytest.mark.asyncio
     async def test_cache_service_failure(
@@ -623,7 +638,7 @@ class TestIntelligenceContextService:
         )
 
         # Perform retrieval operations
-        context_service.cache.get.return_value = None  # Cache miss
+        context_service.cache.get.side_effect = None; context_service.cache.get.return_value = None  # Cache miss
         await context_service.retrieve_intelligence_context(
             lead_id=lead_id,
             target_bot=BotType.JORGE_BUYER,

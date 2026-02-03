@@ -380,7 +380,7 @@ class SendGridClient:
                         "channel": "email",
                         "direction": "outbound",
                         "content": subject or f"Template {template_id}",
-                        "status": email_message.status.value,
+                        "status": email_message.status if isinstance(email_message.status, str) else email_message.status.value,
                         "campaign_id": campaign_id,
                         "template_id": template_id,
                         "metadata": {
@@ -786,7 +786,7 @@ class SendGridClient:
                         email_result["error"] = str(result)
                     else:
                         email_result["message_id"] = result.message_id
-                        email_result["status"] = result.status.value
+                        email_result["status"] = result.status if isinstance(result.status, str) else result.status.value
                     
                     results.append(email_result)
                 

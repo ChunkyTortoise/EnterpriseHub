@@ -711,16 +711,27 @@ class CompetitiveResponseEngine:
         except Exception as e:
             logger.error(f"Error loading response templates: {e}")
 
+    # Threat level severity ordering for comparison
+    _THREAT_LEVEL_ORDER = {
+        ThreatLevel.LOW: 1,
+        ThreatLevel.MEDIUM: 2,
+        ThreatLevel.HIGH: 3,
+        ThreatLevel.CRITICAL: 4,
+    }
+
     async def _find_applicable_rules(self, threat: ThreatAssessment) -> List[ResponseRule]:
         """Find response rules applicable to the threat."""
         applicable_rules = []
+
+        threat_severity = self._THREAT_LEVEL_ORDER.get(threat.threat_level, 0)
 
         for rule in self.response_rules.values():
             if not rule.is_active:
                 continue
 
-            # Check threat level threshold
-            if threat.threat_level.value < rule.threat_level_threshold.value:
+            # Check threat level threshold (threat must be >= rule threshold)
+            rule_threshold = self._THREAT_LEVEL_ORDER.get(rule.threat_level_threshold, 0)
+            if threat_severity < rule_threshold:
                 continue
 
             # Check trigger conditions
@@ -785,10 +796,10 @@ class CompetitiveResponseEngine:
     async def _should_trigger_rule(self, rule: ResponseRule, threat: ThreatAssessment) -> bool:
         """Check if rule should be triggered based on constraints."""
         try:
-            # Check execution limits
+            # Check execution limits (count both history and active executions)
             today = datetime.now().date()
             today_executions = len([
-                e for e in self.execution_history
+                e for e in list(self.execution_history) + list(self.active_executions.values())
                 if e.created_at.date() == today and e.rule_id == rule.rule_id
             ])
 

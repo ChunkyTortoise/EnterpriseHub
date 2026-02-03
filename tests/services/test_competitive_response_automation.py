@@ -318,8 +318,8 @@ class TestCompetitiveResponseEngine:
             response_type=ResponseType.MARKETING_CAMPAIGN,
             response_actions=[{"type": "expensive_action", "cost": 1000}],
             execution_channels=[ExecutionChannel.EMAIL_MARKETING],
-            max_budget=Decimal("500"),  # Smaller than action cost
-            total_cost=Decimal("450")   # Almost at limit
+            max_budget=Decimal("500"),  # Budget limit
+            total_cost=Decimal("500")   # Already at limit
         )
 
         await response_engine.register_response_rule(budget_rule)

@@ -326,18 +326,23 @@ class RealTimeInferenceEngineV2:
             # Quick heuristics for market segmentation
             lead_data = request.lead_data
 
+            # Combine lead_data and conversation_history for keyword matching
+            searchable_text = str(lead_data).lower()
+            if request.conversation_history:
+                searchable_text += " " + str(request.conversation_history).lower()
+
             # Tech hub indicators
-            if any(keyword in str(lead_data).lower() for keyword in
-                   ["apple", "google", "tech", "startup", "engineer", "developer"]):
+            if any(keyword in searchable_text for keyword in
+                   ["apple", "google", "tech", "startup", "engineer", "developer", "software"]):
                 return MarketSegment.TECH_HUB
 
             # Energy sector indicators
-            if any(keyword in str(lead_data).lower() for keyword in
+            if any(keyword in searchable_text for keyword in
                    ["oil", "gas", "energy", "petroleum", "exxon", "chevron"]):
                 return MarketSegment.ENERGY_SECTOR
 
             # Military market indicators
-            if any(keyword in str(lead_data).lower() for keyword in
+            if any(keyword in searchable_text for keyword in
                    ["military", "army", "navy", "air force", "veteran", "base"]):
                 return MarketSegment.MILITARY_MARKET
 
@@ -347,12 +352,12 @@ class RealTimeInferenceEngineV2:
                 return MarketSegment.LUXURY_RESIDENTIAL
 
             # Investment indicators
-            if any(keyword in str(lead_data).lower() for keyword in
+            if any(keyword in searchable_text for keyword in
                    ["investment", "roi", "cap rate", "rental", "portfolio"]):
                 return MarketSegment.INVESTMENT_FOCUSED
 
             # First-time buyer indicators
-            if any(keyword in str(lead_data).lower() for keyword in
+            if any(keyword in searchable_text for keyword in
                    ["first time", "first-time", "new buyer", "fha"]):
                 return MarketSegment.FIRST_TIME_BUYERS
 
