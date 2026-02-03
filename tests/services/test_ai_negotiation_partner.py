@@ -34,6 +34,7 @@ def negotiation_partner():
 def mock_analysis_request():
     """Mock negotiation analysis request"""
     return NegotiationAnalysisRequest(
+        tenant_id="tenant_test",
         property_id="PROP_12345",
         lead_id="LEAD_67890",
         buyer_preferences={

@@ -62,13 +62,14 @@ class TestAutonomousFollowUpEngine:
         return FollowUpTask(
             task_id="task_123",
             lead_id="lead_456",
+            contact_id="contact_456",
             channel=FollowUpChannel.EMAIL,
-            content="Personalized follow-up message about luxury properties",
+            message="Personalized follow-up message about luxury properties",
             scheduled_time=datetime.now() + timedelta(hours=2),
-            priority=0.8,
+            priority=1,
             status=FollowUpStatus.PENDING,
-            created_at=datetime.now(),
-            agent_consensus=0.85
+            metadata={},
+            created_at=datetime.now()
         )
 
     @pytest.fixture
@@ -132,34 +133,28 @@ class TestAutonomousFollowUpEngine:
         return {
             AgentType.TIMING_OPTIMIZER: FollowUpRecommendation(
                 agent_type=AgentType.TIMING_OPTIMIZER,
-                recommendation_score=0.85,
-                suggested_channel=FollowUpChannel.EMAIL,
-                suggested_timing=datetime.now() + timedelta(hours=24),
+                confidence=0.87,
+                recommended_action="send_email",
                 reasoning="Best historical response time for this lead profile",
-                confidence=0.87
+                optimal_timing=datetime.now() + timedelta(hours=24),
+                suggested_channel=FollowUpChannel.EMAIL,
+                metadata={}
             ),
             AgentType.CONTENT_PERSONALIZER: FollowUpRecommendation(
                 agent_type=AgentType.CONTENT_PERSONALIZER,
-                recommendation_score=0.78,
-                suggested_channel=FollowUpChannel.EMAIL,
-                content_suggestions={
-                    "tone": "professional_friendly",
-                    "topics": ["school_districts", "commute_times", "value_appreciation"],
-                    "urgency": "moderate"
-                },
+                confidence=0.82,
+                recommended_action="personalize_content",
                 reasoning="Lead shows interest in family-oriented features",
-                confidence=0.82
+                suggested_channel=FollowUpChannel.EMAIL,
+                suggested_message="Personalized content about school districts and commute times",
+                metadata={"tone": "professional_friendly", "urgency": "moderate"}
             ),
             AgentType.SENTIMENT_ANALYST: FollowUpRecommendation(
                 agent_type=AgentType.SENTIMENT_ANALYST,
-                recommendation_score=0.73,
-                sentiment_analysis={
-                    "current_sentiment": "cautiously_optimistic",
-                    "emotional_state": "researching_carefully",
-                    "engagement_level": "moderate_high"
-                },
+                confidence=0.79,
+                recommended_action="reassure_lead",
                 reasoning="Lead is engaged but needs reassurance",
-                confidence=0.79
+                metadata={"current_sentiment": "cautiously_optimistic", "engagement_level": "moderate_high"}
             )
         }
 
@@ -296,11 +291,13 @@ class TestAutonomousFollowUpEngine:
             mock_task = FollowUpTask(
                 task_id="generated_task",
                 lead_id=sample_lead_data["lead_id"],
+                contact_id="contact_generated",
                 channel=FollowUpChannel.EMAIL,
-                content="Generated follow-up",
+                message="Generated follow-up",
                 scheduled_time=datetime.now() + timedelta(hours=1),
-                priority=0.8,
+                priority=1,
                 status=FollowUpStatus.PENDING,
+                metadata={},
                 created_at=datetime.now()
             )
             mock_generate.return_value = mock_task
@@ -622,19 +619,21 @@ class TestFollowUpTask:
         task = FollowUpTask(
             task_id="test_task",
             lead_id="test_lead",
+            contact_id="contact_test",
             channel=FollowUpChannel.EMAIL,
-            content="Test follow-up message",
+            message="Test follow-up message",
             scheduled_time=datetime.now() + timedelta(hours=1),
-            priority=0.8,
+            priority=1,
             status=FollowUpStatus.PENDING,
+            metadata={},
             created_at=datetime.now()
         )
-        
+
         assert task.task_id == "test_task"
         assert task.lead_id == "test_lead"
         assert task.channel == FollowUpChannel.EMAIL
-        assert task.content == "Test follow-up message"
-        assert task.priority == 0.8
+        assert task.message == "Test follow-up message"
+        assert task.priority == 1
         assert task.status == FollowUpStatus.PENDING
 
 
@@ -859,23 +858,27 @@ class TestAutonomousFollowUpIntegration:
             # Simulate task executions with varying success rates
             successful_task = FollowUpTask(
                 task_id="success_task",
-                lead_id="test_lead", 
+                lead_id="test_lead",
+                contact_id="contact_success",
                 channel=FollowUpChannel.EMAIL,
-                content="Successful follow-up",
+                message="Successful follow-up",
                 scheduled_time=datetime.now(),
-                priority=0.8,
+                priority=1,
                 status=FollowUpStatus.COMPLETED,
+                metadata={},
                 created_at=datetime.now()
             )
-            
+
             failed_task = FollowUpTask(
                 task_id="failed_task",
                 lead_id="test_lead",
+                contact_id="contact_failed",
                 channel=FollowUpChannel.SMS,
-                content="Failed follow-up",
+                message="Failed follow-up",
                 scheduled_time=datetime.now(),
-                priority=0.6,
+                priority=1,
                 status=FollowUpStatus.FAILED,
+                metadata={},
                 created_at=datetime.now()
             )
             

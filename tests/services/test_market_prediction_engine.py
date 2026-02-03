@@ -67,6 +67,7 @@ def sample_prediction_result():
         key_factors=["Strong employment growth", "Limited inventory"],
         risk_factors=["Interest rate sensitivity"],
         opportunities=["Investment potential", "Timing advantage"],
+        prediction_date=datetime.now(),
         target_date=datetime.now() + timedelta(days=365),
         update_frequency="weekly",
         model_accuracy=0.78,

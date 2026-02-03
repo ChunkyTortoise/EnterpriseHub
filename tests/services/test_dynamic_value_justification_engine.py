@@ -440,7 +440,10 @@ class TestValueCommunicationTemplates:
     @pytest.fixture
     def communication_templates(self, mock_claude):
         """Create Value Communication Templates with mocked Claude"""
-        return ValueCommunicationTemplates(claude_assistant=mock_claude)
+        with patch('ghl_real_estate_ai.services.value_communication_templates.get_dynamic_value_justification_engine') as mock_engine:
+            mock_engine.return_value = MagicMock()
+            templates = ValueCommunicationTemplates(claude_assistant=mock_claude)
+            return templates
     
     @pytest.fixture
     def sample_roi_data(self):

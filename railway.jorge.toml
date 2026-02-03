@@ -10,6 +10,9 @@ healthcheckPath = "/api/health/live"
 healthcheckTimeout = 10
 
 # Jorge's Environment Variables
+# Phased Rollout: Start with seller only (Phase 1), enable buyer after 7 days
+# stability (Phase 2), enable lead after buyer stable (Phase 3).
+# See deploy/rollout_checklist.md for prerequisites.
 [env]
 # Jorge's GHL Credentials (set these in Railway dashboard)
 GHL_API_KEY = { description = "Jorge's GoHighLevel API Key" }

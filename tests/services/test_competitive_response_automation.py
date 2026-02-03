@@ -572,6 +572,16 @@ class TestPerformanceMetrics:
     """Test suite for performance metrics and tracking"""
 
     @pytest.fixture
+    def response_engine(self):
+        """Create response engine for testing"""
+        engine = CompetitiveResponseEngine()
+        engine.cache = AsyncMock()
+        engine.cache.get.return_value = None
+        engine.cache.set.return_value = True
+        engine.llm_client = AsyncMock()
+        return engine
+
+    @pytest.fixture
     def response_engine_with_history(self):
         """Create response engine with execution history"""
         engine = CompetitiveResponseEngine()
