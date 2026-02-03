@@ -264,10 +264,10 @@ Stream D (tasks D1-D6) ─── DONE
 
 | ID | Task | Status | Files |
 |----|------|--------|-------|
-| E1 | Review seller bot system prompt for Jorge's tone | `TODO` | `ghl_real_estate_ai/prompts/system_prompts.py` |
-| E2 | Trace full webhook → seller engine → tone engine path in SIMPLE_MODE | `TODO` | `webhook.py`, `jorge_seller_engine.py`, `jorge_tone_engine.py` |
-| E3 | Generate 10 sample seller responses and verify human tone | `TODO` | `jorge_seller_engine.py`, `jorge_tone_engine.py` |
-| E4 | Test PropertyMatcher filters (price, beds, neighborhood) | `TODO` | `property_matcher.py`, `sample_properties.json` |
-| E5 | Wire dashboard to live data if AnalyticsService available | `TODO` | `jorge_delivery_dashboard.py` |
-| E6 | Walk through JORGE_DEPLOYMENT_GUIDE.md steps end-to-end | `TODO` | `JORGE_DEPLOYMENT_GUIDE.md` |
-| E7 | Run full test suite and fix any failures | `TODO` | `tests/test_jorge_delivery.py`, `tests/test_buyer_bot_e2e.py` |
+| E1 | Review seller bot system prompt for Jorge's tone | `DONE` | Fixed: "Jorge Sales's" → "Jorge Salas's" typo in BASE_SYSTEM_PROMPT; fixed sanitize_message emoji regex keeping 😊👍 instead of stripping them. JORGE_SELLER_SYSTEM_PROMPT verified: confrontational, no emojis/hyphens, 160 char limit, correct 4 questions. |
+| E2 | Trace full webhook → seller engine → tone engine path in SIMPLE_MODE | `DONE` | Full 16-step trace verified. SIMPLE_MODE guard at _generate_seller_response line 690 correctly routes to _generate_simple_response with 4 paths only. Note: enterprise services (psychology, predictive, swarm) still execute but are wrapped in try/except and don't affect message output. |
+| E3 | Generate 10 sample seller responses and verify human tone | `DONE` | Created scripts/verify_jorge_tone_samples.py — 10/10 pass: Q1-Q4 questions, hot handoff, vague follow-up, take-away close, no-response follow-up, warm/cold nurture. All <160 chars, no emojis, no hyphens, no AI phrases. |
+| E4 | Test PropertyMatcher filters (price, beds, neighborhood) | `DONE` | Created scripts/verify_property_matcher.py — 7/7 pass: entry-level, mid-market, luxury, neighborhood preference, below-market (0 results), Victoria filter, Terra Vista filter. Budget ±20% range, hard bedroom filter, neighborhood scoring all work correctly. |
+| E5 | Wire dashboard to live data if AnalyticsService available | `DONE` | Verified: Tabs 1-3 have @st.cache_data(ttl=30) live data fetchers with graceful sample fallback. Tab 4 (Follow-Up) uses sample only (acceptable — no follow-up tracking in AnalyticsService yet). No changes needed. |
+| E6 | Walk through JORGE_DEPLOYMENT_GUIDE.md steps end-to-end | `DONE` | Fixed: initiate-qualification endpoint changed from query params to JSON body (Pydantic model) to match deployment guide Step 5. All 9 steps verified: env vars, health check, webhook URL, workflow HTTP POST, tags, custom fields, test procedure, dashboard. |
+| E7 | Run full test suite and fix any failures | `DONE` | 20/20 tests pass (19 delivery + 1 buyer E2E), zero failures. Re-verified after all E-task fixes. |

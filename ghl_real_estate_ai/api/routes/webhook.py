@@ -16,6 +16,7 @@ Flow:
 
 from datetime import datetime
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+from pydantic import BaseModel
 
 from ghl_real_estate_ai.api.schemas.ghl import (
     ActionType,
@@ -829,12 +830,19 @@ async def prepare_ghl_actions(
     return actions
 
 
+class InitiateQualificationRequest(BaseModel):
+    contact_id: str
+    location_id: str
+
+
 @router.post("/initiate-qualification")
-async def initiate_qualification(contact_id: str, location_id: str, background_tasks: BackgroundTasks):
+async def initiate_qualification(body: InitiateQualificationRequest, background_tasks: BackgroundTasks):
     """
     Called by GHL workflow when 'Needs Qualifying' tag is applied.
     Sends initial outreach message to start qualification.
     """
+    contact_id = body.contact_id
+    location_id = body.location_id
     try:
         contact = await ghl_client_default.get_contact(contact_id)
         first_name = contact.get("firstName", "there")

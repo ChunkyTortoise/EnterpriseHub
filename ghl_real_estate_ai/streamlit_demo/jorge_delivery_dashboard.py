@@ -15,14 +15,12 @@ import random
 # Data layer: try real services, fall back to sample data
 # ---------------------------------------------------------------------------
 
-_USE_SAMPLE_DATA = True
 _analytics_service = None
 _conversation_manager = None
 
 try:
     from ghl_real_estate_ai.services.analytics_service import AnalyticsService
     _analytics_service = AnalyticsService()
-    _USE_SAMPLE_DATA = False
 except ImportError:
     pass
 
@@ -31,6 +29,18 @@ try:
     _conversation_manager = ConversationManager()
 except ImportError:
     pass
+
+
+def _has_live_data() -> bool:
+    """Check if real analytics data is available."""
+    if _analytics_service is None:
+        return False
+    try:
+        import asyncio
+        summary = asyncio.run(_analytics_service.get_daily_summary("all"))
+        return summary.get("total_messages", 0) > 0
+    except Exception:
+        return False
 
 
 def _sample_pipeline_data() -> dict:
@@ -126,12 +136,42 @@ def _sample_followups() -> tuple[pd.DataFrame, pd.DataFrame]:
 # Tab renderers
 # ---------------------------------------------------------------------------
 
+@st.cache_data(ttl=30)
+def _get_live_pipeline_data() -> dict | None:
+    """Fetch live pipeline data from AnalyticsService."""
+    if _analytics_service is None:
+        return None
+    try:
+        import asyncio
+        metrics = asyncio.run(_analytics_service.get_jorge_bot_metrics("all", days=30))
+        seller = metrics.get("seller", {})
+        temps = seller.get("temp_breakdown", {})
+        total = seller.get("total_interactions", 0)
+        hot = temps.get("hot", 0)
+        warm = temps.get("warm", 0)
+        cold = temps.get("cold", 0)
+        qualifying = total - hot - warm - cold
+        if total > 0:
+            return {
+                "New": total,
+                "Qualifying": max(0, qualifying),
+                "Hot": hot,
+                "Warm": warm,
+                "Cold": cold,
+            }
+    except Exception:
+        pass
+    return None
+
+
 def _render_lead_pipeline():
     """Tab 1: Lead Pipeline funnel."""
-    if _USE_SAMPLE_DATA:
+    live = _get_live_pipeline_data()
+    if live:
+        data = live
+    else:
         st.info("Showing sample data — connect GHL for live data")
-
-    data = _sample_pipeline_data()
+        data = _sample_pipeline_data()
 
     # KPI row
     cols = st.columns(len(data))
@@ -169,17 +209,37 @@ def _render_lead_pipeline():
     st.plotly_chart(fig, use_container_width=True)
 
 
+@st.cache_data(ttl=30)
+def _get_live_bot_metrics() -> dict | None:
+    """Fetch live bot metrics from AnalyticsService."""
+    if _analytics_service is None:
+        return None
+    try:
+        import asyncio
+        summary = asyncio.run(_analytics_service.get_daily_summary("all"))
+        if summary.get("total_messages", 0) > 0:
+            return summary
+    except Exception:
+        pass
+    return None
+
+
 def _render_bot_activity():
     """Tab 2: Bot Activity."""
-    if _USE_SAMPLE_DATA:
+    live = _get_live_bot_metrics()
+    if live:
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Messages Today", live.get("total_messages", 0))
+        m2.metric("Incoming", live.get("incoming_messages", 0))
+        m3.metric("Leads Scored", live.get("leads_scored", 0))
+        m4.metric("Bot Status", "Active")
+    else:
         st.info("Showing sample data — connect GHL for live data")
-
-    # Metrics row
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Messages Today", 34)
-    m2.metric("Messages This Week", 187)
-    m3.metric("Avg Response Time", "1.2s")
-    m4.metric("Bot Status", "Active")
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Messages Today", 34)
+        m2.metric("Messages This Week", 187)
+        m3.metric("Avg Response Time", "1.2s")
+        m4.metric("Bot Status", "Active")
 
     # Recent conversations table
     st.subheader("Recent Conversations")
@@ -193,12 +253,30 @@ def _render_bot_activity():
     st.dataframe(styled, use_container_width=True, hide_index=True, height=500)
 
 
+@st.cache_data(ttl=30)
+def _get_live_temperature() -> dict | None:
+    """Fetch live temperature breakdown from AnalyticsService."""
+    if _analytics_service is None:
+        return None
+    try:
+        import asyncio
+        metrics = asyncio.run(_analytics_service.get_jorge_bot_metrics("all", days=30))
+        temps = metrics.get("seller", {}).get("temp_breakdown", {})
+        if sum(temps.values()) > 0:
+            return {"Hot": temps.get("hot", 0), "Warm": temps.get("warm", 0), "Cold": temps.get("cold", 0)}
+    except Exception:
+        pass
+    return None
+
+
 def _render_temperature_map():
     """Tab 3: Temperature Map."""
-    if _USE_SAMPLE_DATA:
+    live_temps = _get_live_temperature()
+    if live_temps:
+        breakdown = live_temps
+    else:
         st.info("Showing sample data — connect GHL for live data")
-
-    breakdown = _sample_temperature_breakdown()
+        breakdown = _sample_temperature_breakdown()
 
     # Donut chart
     fig_donut = px.pie(
@@ -248,8 +326,7 @@ def _render_temperature_map():
 
 def _render_followup_queue():
     """Tab 4: Follow-Up Queue."""
-    if _USE_SAMPLE_DATA:
-        st.info("Showing sample data — connect GHL for live data")
+    st.info("Showing sample data — connect GHL for live data")
 
     upcoming, overdue = _sample_followups()
 
