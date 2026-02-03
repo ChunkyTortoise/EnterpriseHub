@@ -1124,11 +1124,13 @@ class JorgeSellerEngine:
             })
 
             # Trigger agent notification workflow
-            actions.append({
-                "type": "trigger_workflow",
-                "workflow_id": "jorge_hot_seller_workflow",
-                "data": {**seller_data, "persona": persona_data}
-            })
+            hot_workflow_id = JorgeSellerConfig.get_workflow_id("hot")
+            if hot_workflow_id:
+                actions.append({
+                    "type": "trigger_workflow",
+                    "workflow_id": hot_workflow_id,
+                    "data": {**seller_data, "persona": persona_data}
+                })
 
             # Trigger Vapi Outbound Call (Voice AI Handoff) with exponential backoff retry
             from ghl_real_estate_ai.services.vapi_service import VapiService
