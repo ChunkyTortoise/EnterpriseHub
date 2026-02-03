@@ -324,23 +324,31 @@ class MockSendGridClient:
             'bounced': 0
         }
         
-    async def send_email(self, to_email: str, subject: str, content: str,
-                        from_email: str = None, template_id: str = None) -> Dict[str, Any]:
-        
+    async def send_email(self, to_email: str, subject: str, content: str = None,
+                        html_content: str = None, plain_content: str = None,
+                        from_email: str = None, template_id: str = None,
+                        lead_id: str = None, campaign_id: str = None,
+                        attachments: List[Dict[str, Any]] = None) -> Dict[str, Any]:
+
         email_data = {
             'message_id': f'sg_{datetime.now().strftime("%Y%m%d%H%M%S")}',
             'to': to_email,
             'from': from_email or 'noreply@enterprisehub.ai',
             'subject': subject,
             'content': content,
+            'html_content': html_content,
+            'plain_content': plain_content,
             'template_id': template_id,
+            'lead_id': lead_id,
+            'campaign_id': campaign_id,
+            'attachments': attachments or [],
             'status': 'sent',
             'timestamp': datetime.now().isoformat()
         }
-        
+
         self.sent_emails.append(email_data)
         self.email_stats['delivered'] += 1
-        
+
         return {
             'success': True,
             'message_id': email_data['message_id'],
