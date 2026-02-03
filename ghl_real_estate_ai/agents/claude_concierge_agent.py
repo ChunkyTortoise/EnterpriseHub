@@ -429,7 +429,7 @@ class MultiAgentCoordinator:
 
         return {
             "coordinated_response": results,
-            "agents_used": [agent["agent_name"] for agent in available_agents],
+            "agents_used": [agent.agent_name for agent in available_agents],
             "coordination_plan": coordination_plan,
             "execution_time": datetime.now()
         }

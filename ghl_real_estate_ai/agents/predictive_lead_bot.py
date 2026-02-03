@@ -242,6 +242,7 @@ class TemperaturePredictionEngine:
         if len(history) < 2:
             trend = "stable"
             confidence = 0.5
+            diff = 0
         else:
             # Simple linear trend analysis
             recent_avg = sum(history[-3:]) / min(3, len(history))

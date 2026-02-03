@@ -32,3 +32,9 @@ class JorgeSellerState(TypedDict):
     current_journey_stage: str # "qualification", "valuation_defense", "listing_prep", "active_listing", "under_contract", "closed"
     follow_up_count: int
     last_action_timestamp: Optional[datetime]
+
+    # Adaptive extension fields
+    adaptive_mode: str
+    adaptive_question_used: Optional[str]
+    adaptation_applied: bool
+    memory_updated: bool
