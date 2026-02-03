@@ -339,7 +339,20 @@ class Settings(BaseSettings):
 
 # Global settings instance
 # This will be imported throughout the application
-settings = Settings()
+try:
+    settings = Settings()
+except Exception as e:
+    # Provide a clear, actionable error instead of a raw Pydantic traceback
+    missing = [
+        var for var in ("ANTHROPIC_API_KEY", "GHL_API_KEY", "GHL_LOCATION_ID")
+        if not os.getenv(var)
+    ]
+    if missing:
+        print(f"\n❌  STARTUP ERROR: Required environment variables not set: {', '.join(missing)}")
+        print("   Copy .env.example → .env and fill in the values, or set them in your Railway dashboard.\n")
+    else:
+        print(f"\n❌  STARTUP ERROR: Configuration validation failed: {e}\n")
+    raise SystemExit(1)
 
 
 # Environment Mode Detection
