@@ -212,7 +212,7 @@ class TestMarketPredictionEngine:
             assert isinstance(result, PredictionResult)
             assert result.prediction_type == PredictionType.INVESTMENT_ROI
             assert result.time_horizon == TimeHorizon.LONG_TERM
-            assert result.predicted_value >= 0  # ROI percentage
+            assert isinstance(result.predicted_value, (int, float))  # ROI percentage (can be negative)
 
     async def test_market_opportunity_detection(self, prediction_engine):
         """Test market opportunity detection"""
@@ -411,8 +411,9 @@ class TestMarketPredictionEngine:
 
     async def test_error_handling_missing_model(self, prediction_engine):
         """Test error handling when models aren't trained"""
-        # Clear models
+        # Clear models and mark as initialized to prevent re-training
         prediction_engine.models.clear()
+        prediction_engine._is_initialized = True
 
         with pytest.raises(ValueError):
             await prediction_engine.predict_price_appreciation("etiwanda", TimeHorizon.MEDIUM_TERM)
@@ -610,8 +611,9 @@ class TestMarketPredictionIntegration:
             await engine._train_models()
 
         with patch.object(engine.llm_client, 'agenerate') as mock_agenerate:
+            # Return a response that works for both seasonal analysis and prediction insights
             mock_agenerate.return_value = Mock(
-                content='{"peak_months": [4, 5], "seasonal_trends": "Spring surge", "buyer_timing": "Fall", "seller_timing": "Spring"}'
+                content='{"peak_months": [4, 5], "seasonal_trends": "Spring surge", "buyer_timing": "Fall", "seller_timing": "Spring", "key_factors": ["Market momentum"], "risk_factors": ["Rate risk"], "opportunities": ["Timing"]}'
             )
 
             # Seasonal analysis

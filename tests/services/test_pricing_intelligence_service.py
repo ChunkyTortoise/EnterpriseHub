@@ -525,6 +525,11 @@ class TestPricingIntelligenceService:
 
         pricing_service.market_service = mock_market_service
 
+        # Force valuation engine to fail to trigger error path
+        pricing_service.valuation_engine.generate_comprehensive_valuation = AsyncMock(
+            side_effect=Exception("Valuation failed: insufficient property data")
+        )
+
         # Test with invalid property data
         invalid_property = {}
 

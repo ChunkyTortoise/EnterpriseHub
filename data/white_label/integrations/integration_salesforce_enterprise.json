@@ -21,6 +21,6 @@
     "opportunity_sync",
     "activity_tracking"
   ],
-  "consulting_tier": "BrandingTier.ENTERPRISE",
+  "consulting_tier": "enterprise",
   "implementation_complexity": "complex"
 }

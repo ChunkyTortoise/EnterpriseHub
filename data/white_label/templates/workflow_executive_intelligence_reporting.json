@@ -34,6 +34,6 @@
     "reporting_frequency",
     "executive_preferences"
   ],
-  "consulting_tier": "BrandingTier.ENTERPRISE",
+  "consulting_tier": "enterprise",
   "estimated_value": "C-suite decision making acceleration, strategic alignment"
 }
