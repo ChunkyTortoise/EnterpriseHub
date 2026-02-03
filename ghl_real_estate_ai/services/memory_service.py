@@ -23,7 +23,15 @@ logger = get_logger(__name__)
 class MemoryService:
     """
     Persistent memory service for storing conversation context.
+    Uses singleton pattern to avoid redundant initialization across modules.
     """
+    _instance: Optional['MemoryService'] = None
+
+    def __new__(cls, storage_type: Optional[str] = None):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
 
     def __init__(self, storage_type: Optional[str] = None):
         """
@@ -33,6 +41,10 @@ class MemoryService:
             storage_type: Optional storage type override ("memory", "file", or "redis").
                          If None, determined by settings.environment and location_id.
         """
+        if self._initialized:
+            return
+        self._initialized = True
+
         from ghl_real_estate_ai.services.cache_service import get_cache_service
         self.cache_service = get_cache_service()
         self.storage_type = storage_type or ("redis" if settings.environment == "production" else "file")

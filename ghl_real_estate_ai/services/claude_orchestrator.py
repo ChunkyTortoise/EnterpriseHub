@@ -147,6 +147,13 @@ class ClaudeOrchestrator:
         # System prompts for different contexts
         self.system_prompts = self._load_system_prompts()
 
+        # In-process cache for memory context (avoids repeated fetches within a request)
+        self._memory_context_cache: Dict[str, Any] = {}
+
+        # Singleton analytics service (avoid re-creating per GHL sync)
+        from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+        self._analytics_service = AnalyticsService()
+
         # Performance tracking
         self.performance_metrics = {
             "requests_processed": 0,
@@ -339,19 +346,24 @@ class ClaudeOrchestrator:
                     break
 
                 # Execute tool calls and add results to messages
+                # Execute all tool calls in parallel for lower latency
+                tool_coros = [self._execute_tool_call(tc) for tc in llm_response.tool_calls]
+                tool_results = await asyncio.gather(*tool_coros, return_exceptions=True)
+
                 tool_results_content = []
-                for tool_call in llm_response.tool_calls:
-                    result_text = await self._execute_tool_call(tool_call)
-                    
+                for tool_call, result_text in zip(llm_response.tool_calls, tool_results):
+                    if isinstance(result_text, Exception):
+                        result_text = f"Tool execution error: {result_text}"
+
                     # GHL Sync Logic for ACTION tools
                     tool_name = tool_call["name"]
                     category = skill_registry.get_category_for_tool(tool_name)
-                    
+
                     if category == SkillCategory.ACTION:
                         # Trigger background sync to GHL
                         safe_create_task(self._sync_action_to_ghl(
-                            tool_name, 
-                            tool_call.get("args", {}), 
+                            tool_name,
+                            tool_call.get("args", {}),
                             result_text,
                             request.context.get("contact_id") or request.context.get("lead_id")
                         ))
@@ -513,9 +525,7 @@ class ClaudeOrchestrator:
                 # Also track this as an event for analytics
                 tenant_id = self.ghl_client.location_id
                 # Track event for the sync
-                from ghl_real_estate_ai.services.analytics_service import AnalyticsService
-                analytics = AnalyticsService()
-                await analytics.track_event(
+                await self._analytics_service.track_event(
                     event_type="ghl_sync_success",
                     location_id=tenant_id,
                     contact_id=contact_id,
@@ -856,7 +866,15 @@ class ClaudeOrchestrator:
         # Add semantic memory if lead_id is available
         if "lead_id" in context and context["lead_id"]:
             try:
-                memory_context = await self.memory.get_context(context["lead_id"])
+                lead_id = context["lead_id"]
+                # Use short-lived in-process cache to avoid repeated memory fetches
+                cache_key = f"mem_ctx:{lead_id}"
+                cached = self._memory_context_cache.get(cache_key)
+                if cached is not None:
+                    memory_context = cached
+                else:
+                    memory_context = await self.memory.get_context(lead_id)
+                    self._memory_context_cache[cache_key] = memory_context
                 enhanced["semantic_memory"] = memory_context.get("relevant_knowledge", "")
                 enhanced["conversation_history"] = memory_context.get("conversation_history", [])
                 enhanced["extracted_preferences"] = memory_context.get("extracted_preferences", {})
@@ -1552,23 +1570,43 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
             memory_data = await self.memory.get_context(lead_id)
             context["memory"] = memory_data
 
-            # Get lead scoring if requested
+            # Run scoring and churn analysis in parallel where possible
+            parallel_tasks = {}
+
             if include_scoring:
-                jorge_result = self.jorge_scorer.calculate_with_reasoning(memory_data)
-                # predict_conversion is synchronous in predictive_lead_scorer.py
-                ml_result = self.ml_scorer.predict_conversion(memory_data)
+                # Run both scorers concurrently via executor (they are synchronous)
+                loop = asyncio.get_event_loop()
+                parallel_tasks['jorge'] = loop.run_in_executor(
+                    None, self.jorge_scorer.calculate_with_reasoning, memory_data
+                )
+                parallel_tasks['ml'] = loop.run_in_executor(
+                    None, self.ml_scorer.predict_conversion, memory_data
+                )
 
-                context["scoring"] = {
-                    "jorge_score": jorge_result,
-                    "ml_score": ml_result
-                }
-
-            # Get churn analysis if requested
             if include_churn_analysis:
-                churn_analysis = await self._analyze_churn_risk_comprehensive(
+                parallel_tasks['churn'] = self._analyze_churn_risk_comprehensive(
                     lead_id, memory_data
                 )
-                context["churn_analysis"] = churn_analysis
+
+            if parallel_tasks:
+                results = await asyncio.gather(
+                    *parallel_tasks.values(), return_exceptions=True
+                )
+                result_map = dict(zip(parallel_tasks.keys(), results))
+
+                if include_scoring:
+                    jorge_result = result_map.get('jorge')
+                    ml_result = result_map.get('ml')
+                    if not isinstance(jorge_result, Exception) and not isinstance(ml_result, Exception):
+                        context["scoring"] = {
+                            "jorge_score": jorge_result,
+                            "ml_score": ml_result,
+                        }
+
+                if include_churn_analysis:
+                    churn_result = result_map.get('churn')
+                    if not isinstance(churn_result, Exception):
+                        context["churn_analysis"] = churn_result
 
         except Exception as e:
             context["error"] = f"Error gathering context: {str(e)}"
@@ -1718,7 +1756,7 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 try:
                     task_results = await asyncio.wait_for(
                         asyncio.gather(*task_map.values(), return_exceptions=True),
-                        timeout=30.0  # 30 second timeout for all parallel tasks
+                        timeout=7.0  # Fail fast — services should respond within 5s
                     )
                     results = dict(zip(task_map.keys(), task_results))
                 except asyncio.TimeoutError:

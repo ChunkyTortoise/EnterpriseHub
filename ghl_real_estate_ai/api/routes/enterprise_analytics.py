@@ -59,7 +59,15 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/enterprise-analytics", tags=["enterprise-analytics"])
 
 # Initialize analytics engines
-cache_service = CacheService()
+# Lazy singleton — defer initialization until first request
+_cache_service = None
+
+
+def _get_cache_service():
+    global _cache_service
+    if _cache_service is None:
+        _cache_service = CacheService()
+    return _cache_service
 revenue_attribution = RevenueAttributionEngine()
 customer_lifetime = CustomerLifetimeAnalytics()
 competitive_intelligence = CompetitiveIntelligenceDashboard()
@@ -676,8 +684,8 @@ async def analytics_health():
 
         # Test cache connectivity
         try:
-            await cache_service.set("health_check", "ok", ttl=60)
-            test_value = await cache_service.get("health_check")
+            await _get_cache_service().set("health_check", "ok", ttl=60)
+            test_value = await _get_cache_service().get("health_check")
             if test_value != "ok":
                 health_checks["cache_service"] = "degraded"
         except Exception:

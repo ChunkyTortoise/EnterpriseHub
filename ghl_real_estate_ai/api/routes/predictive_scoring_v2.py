@@ -52,7 +52,15 @@ signal_processor = BehavioralSignalProcessor()
 market_router = MarketSpecificModelRouter()
 
 # Legacy scorer for backward compatibility
-legacy_scorer = PredictiveLeadScorer()
+# Lazy singleton — defer initialization until first request
+_legacy_scorer = None
+
+
+def _get_legacy_scorer():
+    global _legacy_scorer
+    if _legacy_scorer is None:
+        _legacy_scorer = PredictiveLeadScorer()
+    return _legacy_scorer
 
 router = APIRouter(prefix="/api/v2/predictive-scoring", tags=["Predictive Scoring V2"])
 
@@ -286,7 +294,7 @@ async def score_lead_v2(
 
         # Fallback to legacy scorer
         try:
-            legacy_result = legacy_scorer.score_lead(request.lead_id, request.lead_data)
+            legacy_result = _get_legacy_scorer().score_lead(request.lead_id, request.lead_data)
 
             return EnhancedScoringResponse(
                 lead_id=request.lead_id,
