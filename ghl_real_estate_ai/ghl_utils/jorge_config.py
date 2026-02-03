@@ -425,8 +425,6 @@ class JorgeMarketManager:
         """Get configuration for current market"""
         if self.current_market == "rancho_cucamonga":
             return self._get_rancho_config()
-        elif self.current_market == "rancho_cucamonga":
-            return self._get_rancho_cucamonga_config()
         else:
             # Default to Rancho Cucamonga
             return self._get_rancho_config()
@@ -448,13 +446,13 @@ class JorgeMarketManager:
             "market_name": "Rancho Cucamonga",
             "state": "CA",
             "price_ranges": {
-                "entry_level": {"min": 700000, "max": 700000},
+                "entry_level": {"min": 500000, "max": 700000},
                 "mid_market": {"min": 700000, "max": 1200000},
                 "luxury": {"min": 1200000, "max": 7000000}
             },
             "regulatory": {
                 "license_authority": "DRE",
-                "state_regulations": "California Real Estate Commission"
+                "state_regulations": "California Department of Real Estate"
             }
         }
 
@@ -464,7 +462,7 @@ class JorgeMarketManager:
             "market_name": "Rancho Cucamonga",
             "state": "CA",
             "price_ranges": {
-                "entry_level": {"min": 700000, "max": 700000},
+                "entry_level": {"min": 500000, "max": 700000},
                 "mid_market": {"min": 700000, "max": 1200000},
                 "luxury": {"min": 1200000, "max": 7000000}
             },
