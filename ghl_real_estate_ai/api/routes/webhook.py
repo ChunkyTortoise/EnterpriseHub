@@ -14,7 +14,7 @@ Flow:
 8. Send response back to GHL
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from pydantic import BaseModel
 
@@ -488,7 +488,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 "location_id": location_id,
                 "contact_id": contact_id,
                 "message_type": event.message.type.value,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
 
             source_attribution = await lead_source_tracker.analyze_lead_source(
