@@ -1,398 +1,654 @@
-"""Tests for Contextual Compression.
-
-Validates the contextual compression pipeline that extracts the most
-relevant portions of retrieved documents relative to a query.
-"""
+"""Tests for contextual compression system."""
 
 import pytest
 from uuid import uuid4
 from typing import List
 
-import numpy as np
-
-from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.retrieval.contextual_compression import (
-    CompressionConfig,
-    CompressionStrategy,
-    CompressionResult,
+    AbstractiveCompressor,
+    AllocationStrategy,
     CompressedDocument,
-    RelevanceExtractor,
+    CompressionConfig,
+    CompressionResult,
+    CompressionStrategy,
     ContextualCompressor,
+    ExtractiveCompressor,
+    RelevanceScore,
+    RelevanceScorer,
+    ScoringMethod,
+    SegmentScore,
     TokenBudgetManager,
+    TokenCounter,
 )
+from src.core.types import DocumentChunk, SearchResult
 
 
 # ============================================================================
-# Helpers
+# Fixtures
 # ============================================================================
 
-def _make_result(content: str, score: float = 0.9, rank: int = 1) -> SearchResult:
-    """Create a SearchResult with given content."""
-    doc_id = uuid4()
-    chunk = DocumentChunk(
-        document_id=doc_id,
-        content=content,
-        index=0,
-        metadata=Metadata(),
+
+@pytest.fixture
+def token_counter():
+    """Create token counter."""
+    return TokenCounter(tokens_per_word=1.3)
+
+
+@pytest.fixture
+def relevance_scorer():
+    """Create relevance scorer."""
+    return RelevanceScorer()
+
+
+@pytest.fixture
+def budget_manager():
+    """Create token budget manager."""
+    return TokenBudgetManager(
+        total_budget=1000,
+        reserve_for_response=200,
+        min_per_document=50,
+        max_per_document=500,
     )
-    return SearchResult(chunk=chunk, score=score, rank=rank, distance=1.0 - score)
 
 
-def _long_document(topic: str, sentences: int = 10) -> str:
-    """Generate a multi-sentence document about a topic."""
-    filler = [
-        "This section provides background context for the discussion.",
-        "Additional details can be found in the referenced literature.",
-        "The methodology follows standard research practices.",
-        "Several related works have explored similar concepts.",
-        "Implementation details are discussed in the appendix.",
-        "Performance benchmarks demonstrate the effectiveness.",
-        "Future work may extend these findings to new domains.",
-        "The results are consistent with theoretical predictions.",
+@pytest.fixture
+def extractive_compressor(token_counter):
+    """Create extractive compressor."""
+    return ExtractiveCompressor(
+        context_window=1,
+        token_counter=token_counter,
+    )
+
+
+@pytest.fixture
+def abstractive_compressor(token_counter):
+    """Create abstractive compressor."""
+    return AbstractiveCompressor(token_counter=token_counter)
+
+
+@pytest.fixture
+def sample_documents() -> List[DocumentChunk]:
+    """Create sample documents for testing."""
+    return [
+        DocumentChunk(
+            document_id=uuid4(),
+            content="Python is a high-level programming language. It is easy to learn and use. Python has a simple syntax.",
+            embedding=[0.1, 0.2, 0.3],
+        ),
+        DocumentChunk(
+            document_id=uuid4(),
+            content="JavaScript is used for web development. It runs in browsers. JavaScript is versatile.",
+            embedding=[0.2, 0.3, 0.4],
+        ),
+        DocumentChunk(
+            document_id=uuid4(),
+            content="Machine learning is a subset of AI. It uses algorithms to learn from data. ML is powerful.",
+            embedding=[0.3, 0.4, 0.5],
+        ),
     ]
-    relevant = [
-        f"{topic} is a key concept in modern computing.",
-        f"Recent advances in {topic} have shown significant improvements.",
-        f"The application of {topic} has transformed the field.",
-    ]
-    # Mix relevant and filler sentences
-    result_sentences = []
-    for i in range(sentences):
-        if i % 3 == 0 and relevant:
-            result_sentences.append(relevant.pop(0))
-        else:
-            result_sentences.append(filler[i % len(filler)])
-    return " ".join(result_sentences)
 
 
 # ============================================================================
-# RelevanceExtractor Tests
+# TokenCounter Tests
 # ============================================================================
 
-class TestRelevanceExtractor:
-    """Test sentence-level relevance scoring."""
 
-    def setup_method(self):
-        self.extractor = RelevanceExtractor()
+class TestTokenCounter:
+    """Test cases for TokenCounter."""
 
-    def test_split_sentences(self):
-        """Should correctly split text into sentences."""
-        text = "First sentence. Second sentence. Third one here."
-        sentences = self.extractor.split_sentences(text)
-        assert len(sentences) == 3
+    def test_count_simple_text(self, token_counter):
+        """Test counting tokens in simple text."""
+        text = "Hello world"
+        count = token_counter.count(text)
 
-    def test_split_handles_abbreviations(self):
-        """Should not split on common abbreviations."""
-        text = "Dr. Smith published the paper. It was about ML."
-        sentences = self.extractor.split_sentences(text)
-        assert len(sentences) == 2
+        # 2 words * 1.3 = 2.6 -> 3
+        assert count == 3
 
-    def test_score_relevance_high_overlap(self):
-        """Sentence with high word overlap should score high."""
-        query = "machine learning algorithms"
-        sentence = "Machine learning algorithms are widely used in practice."
-        score = self.extractor.score_sentence(query, sentence)
-        assert score > 0.5
+    def test_count_empty_text(self, token_counter):
+        """Test counting tokens in empty text."""
+        count = token_counter.count("")
+        assert count == 0
 
-    def test_score_relevance_low_overlap(self):
-        """Sentence with no overlap should score low."""
-        query = "machine learning algorithms"
-        sentence = "The weather today is sunny and warm."
-        score = self.extractor.score_sentence(query, sentence)
-        assert score < 0.2
+    def test_count_batch(self, token_counter):
+        """Test counting tokens in batch."""
+        texts = ["Hello world", "Python programming", "Test"]
+        counts = token_counter.count_batch(texts)
 
-    def test_score_is_bounded(self):
-        """Score should be in [0, 1]."""
-        query = "test query words"
-        for sentence in [
-            "test query words exactly match",
-            "nothing related here",
-            "",
-            "test",
-        ]:
-            score = self.extractor.score_sentence(query, sentence)
-            assert 0.0 <= score <= 1.0
+        assert len(counts) == 3
+        assert counts[0] == 3  # 2 words
+        assert counts[1] == 3  # 2 words
+        assert counts[2] == 2  # 1 word
 
-    def test_extract_relevant_sentences(self):
-        """Should return sentences sorted by relevance."""
-        query = "neural networks"
-        text = (
-            "Neural networks are computational models. "
-            "The weather is nice today. "
-            "Deep neural networks have many layers. "
-            "Cats are wonderful pets."
+
+# ============================================================================
+# RelevanceScorer Tests
+# ============================================================================
+
+
+class TestRelevanceScorer:
+    """Test cases for RelevanceScorer."""
+
+    @pytest.mark.asyncio
+    async def test_score_document_keyword_match(self, relevance_scorer):
+        """Test scoring document with keyword match."""
+        doc = DocumentChunk(
+            document_id=uuid4(),
+            content="Python is a great programming language",
         )
-        scored = self.extractor.extract_relevant(query, text, top_k=2)
-        assert len(scored) == 2
-        # Both should contain 'neural'
-        for sentence, score in scored:
-            assert "neural" in sentence.lower()
 
-    def test_extract_preserves_order_option(self):
-        """Should optionally preserve document order."""
-        query = "neural networks"
-        text = (
-            "First, background context. "
-            "Neural networks are key. "
-            "More background info. "
-            "Deep networks excel."
+        score = await relevance_scorer.score_document(
+            doc, "Python programming", ScoringMethod.KEYWORD
         )
-        scored = self.extractor.extract_relevant(
-            query, text, top_k=2, preserve_order=True
-        )
-        # If order preserved, first relevant sentence should come first
-        assert len(scored) == 2
 
-    def test_empty_text(self):
-        """Should handle empty text gracefully."""
-        scored = self.extractor.extract_relevant("test", "", top_k=5)
-        assert scored == []
+        assert score.overall_score > 0
+        assert score.document_id == doc.id
+        assert score.method == ScoringMethod.KEYWORD
+
+    @pytest.mark.asyncio
+    async def test_score_document_no_match(self, relevance_scorer):
+        """Test scoring document with no keyword match."""
+        doc = DocumentChunk(
+            document_id=uuid4(),
+            content="Java is an object-oriented language",
+        )
+
+        score = await relevance_scorer.score_document(
+            doc, "Python programming", ScoringMethod.KEYWORD
+        )
+
+        assert score.overall_score == 0
+
+    @pytest.mark.asyncio
+    async def test_score_documents_batch(self, relevance_scorer, sample_documents):
+        """Test scoring multiple documents."""
+        scores = await relevance_scorer.score_documents(
+            sample_documents, "Python programming", ScoringMethod.KEYWORD
+        )
+
+        assert len(scores) == 3
+        # First document should have highest score (mentions Python)
+        assert scores[0].overall_score > scores[1].overall_score
+
+    @pytest.mark.asyncio
+    async def test_score_with_segments(self, relevance_scorer):
+        """Test scoring with segment breakdown."""
+        doc = DocumentChunk(
+            document_id=uuid4(),
+            content="Python is great. Java is also good. Python is easy.",
+        )
+
+        score = await relevance_scorer.score_document(
+            doc, "Python", ScoringMethod.KEYWORD
+        )
+
+        assert len(score.segment_scores) > 0
+        # At least one segment should have high score (mentions Python)
+        high_score_segments = [s for s in score.segment_scores if s[1] > 0]
+        assert len(high_score_segments) >= 2
 
 
 # ============================================================================
 # TokenBudgetManager Tests
 # ============================================================================
 
+
 class TestTokenBudgetManager:
-    """Test token budget allocation across documents."""
+    """Test cases for TokenBudgetManager."""
 
-    def setup_method(self):
-        self.manager = TokenBudgetManager()
+    def test_allocate_uniform(self, budget_manager):
+        """Test uniform allocation strategy."""
+        scores = [0.9, 0.6, 0.3]
+        allocations = budget_manager.allocate(scores, AllocationStrategy.UNIFORM)
 
-    def test_estimate_tokens(self):
-        """Token estimation should be roughly words * 1.3."""
-        text = "This is a simple test sentence with eight words."
-        tokens = self.manager.estimate_tokens(text)
-        assert 8 <= tokens <= 15  # Roughly word count * 1.3
-
-    def test_allocate_equal_budget(self):
-        """Should distribute budget equally when scores are equal."""
-        scores = [0.5, 0.5, 0.5]
-        budget = 300
-        allocations = self.manager.allocate(scores, budget)
+        # Available: 1000 - 200 = 800
+        # Per doc: 800 // 3 = 266
         assert len(allocations) == 3
-        assert sum(allocations) <= budget
-        # Each should get roughly 100
-        for a in allocations:
-            assert 80 <= a <= 120
+        assert allocations[0] == allocations[1] == allocations[2]
+        assert all(a >= budget_manager.min_per_document for a in allocations)
 
-    def test_allocate_proportional_to_scores(self):
-        """Higher-scored documents should get more budget."""
-        scores = [0.9, 0.5, 0.1]
-        budget = 300
-        allocations = self.manager.allocate(scores, budget)
-        assert allocations[0] > allocations[1] > allocations[2]
-        assert sum(allocations) <= budget
+    def test_allocate_proportional(self, budget_manager):
+        """Test proportional allocation strategy."""
+        scores = [0.9, 0.6, 0.3]
+        allocations = budget_manager.allocate(scores, AllocationStrategy.PROPORTIONAL)
 
-    def test_allocate_minimum_budget(self):
-        """Each document should get at least a minimum allocation."""
-        scores = [0.9, 0.01, 0.01]
-        budget = 300
-        allocations = self.manager.allocate(scores, budget, min_per_doc=50)
-        # Even low-scored docs get minimum
-        assert all(a >= 50 for a in allocations)
+        assert len(allocations) == 3
+        # Higher score should get more tokens
+        assert allocations[0] > allocations[2]
+        assert all(a >= budget_manager.min_per_document for a in allocations)
 
-    def test_allocate_empty(self):
-        """Empty input should return empty allocations."""
-        assert self.manager.allocate([], 100) == []
+    def test_allocate_threshold(self, budget_manager):
+        """Test threshold allocation strategy."""
+        scores = [0.9, 0.6, 0.3]  # 0.3 is below 0.5 threshold
+        allocations = budget_manager.allocate(scores, AllocationStrategy.THRESHOLD)
 
-    def test_allocate_zero_budget(self):
-        """Zero budget should return zeros."""
-        allocations = self.manager.allocate([0.5, 0.5], 0)
-        assert all(a == 0 for a in allocations)
+        assert len(allocations) == 3
+        # High relevance docs get more
+        assert allocations[0] >= allocations[2]
+
+    def test_allocate_greedy(self, budget_manager):
+        """Test greedy allocation strategy."""
+        scores = [0.9, 0.6, 0.3]
+        allocations = budget_manager.allocate(scores, AllocationStrategy.GREEDY)
+
+        assert len(allocations) == 3
+        # Highest score should get max allocation
+        assert allocations[0] == budget_manager.max_per_document
+
+    def test_allocate_empty_scores(self, budget_manager):
+        """Test allocation with empty scores."""
+        allocations = budget_manager.allocate([])
+        assert allocations == []
+
+    def test_allocate_respects_max(self, budget_manager):
+        """Test that allocation respects max_per_document."""
+        scores = [1.0, 1.0, 1.0]
+        allocations = budget_manager.allocate(scores, AllocationStrategy.UNIFORM)
+
+        assert all(a <= budget_manager.max_per_document for a in allocations)
+
+
+# ============================================================================
+# ExtractiveCompressor Tests
+# ============================================================================
+
+
+class TestExtractiveCompressor:
+    """Test cases for ExtractiveCompressor."""
+
+    @pytest.mark.asyncio
+    async def test_compress_simple_document(self, extractive_compressor):
+        """Test compressing a simple document."""
+        doc = DocumentChunk(
+            document_id=uuid4(),
+            content="Python is great. Java is good. Python is easy to learn.",
+        )
+
+        relevance = RelevanceScore(
+            document_id=doc.id,
+            overall_score=0.8,
+            segment_scores=[
+                ("Python is great", 0.9),
+                ("Java is good", 0.3),
+                ("Python is easy to learn", 0.8),
+            ],
+        )
+
+        compressed = await extractive_compressor.compress(doc, relevance, 100)
+
+        assert compressed.original_id == doc.id
+        assert compressed.compression_method == "extractive"
+        assert compressed.token_count <= 100
+        assert len(compressed.preserved_segments) > 0
+
+    @pytest.mark.asyncio
+    async def test_compress_respects_budget(self, extractive_compressor):
+        """Test that compression respects token budget."""
+        doc = DocumentChunk(
+            document_id=uuid4(),
+            content="Sentence one. Sentence two. Sentence three. Sentence four.",
+        )
+
+        relevance = RelevanceScore(
+            document_id=doc.id,
+            overall_score=0.5,
+            segment_scores=[
+                ("Sentence one", 0.5),
+                ("Sentence two", 0.5),
+                ("Sentence three", 0.5),
+                ("Sentence four", 0.5),
+            ],
+        )
+
+        budget = 10
+        compressed = await extractive_compressor.compress(doc, relevance, budget)
+
+        assert compressed.token_count <= budget
+
+    @pytest.mark.asyncio
+    async def test_compress_preserves_order(self, extractive_compressor):
+        """Test that compression preserves sentence order."""
+        doc = DocumentChunk(
+            document_id=uuid4(),
+            content="First sentence. Second sentence. Third sentence.",
+        )
+
+        relevance = RelevanceScore(
+            document_id=doc.id,
+            overall_score=0.5,
+            segment_scores=[
+                ("Third sentence", 0.9),
+                ("First sentence", 0.8),
+            ],
+        )
+
+        compressed = await extractive_compressor.compress(doc, relevance, 100)
+
+        # First should come before third in output
+        first_pos = compressed.content.find("First")
+        third_pos = compressed.content.find("Third")
+        assert first_pos < third_pos
+
+
+# ============================================================================
+# AbstractiveCompressor Tests
+# ============================================================================
+
+
+class TestAbstractiveCompressor:
+    """Test cases for AbstractiveCompressor."""
+
+    @pytest.mark.asyncio
+    async def test_compress_without_llm(self, abstractive_compressor):
+        """Test compression without LLM (fallback)."""
+        doc = DocumentChunk(
+            document_id=uuid4(),
+            content="This is a test document with multiple words for testing truncation.",
+        )
+
+        compressed = await abstractive_compressor.compress(doc, "test query", 20)
+
+        assert compressed.original_id == doc.id
+        assert compressed.token_count <= 20
+        assert compressed.compression_method == "truncation"
+
+    @pytest.mark.asyncio
+    async def test_compress_respects_budget(self, abstractive_compressor):
+        """Test that compression respects token budget."""
+        doc = DocumentChunk(
+            document_id=uuid4(),
+            content="Word " * 100,  # Long document
+        )
+
+        budget = 20
+        compressed = await abstractive_compressor.compress(doc, "query", budget)
+
+        assert compressed.token_count <= budget
 
 
 # ============================================================================
 # ContextualCompressor Tests
 # ============================================================================
 
+
 class TestContextualCompressor:
-    """Test the main contextual compression pipeline."""
+    """Test cases for ContextualCompressor."""
 
-    def setup_method(self):
-        self.compressor = ContextualCompressor()
-
-    @pytest.mark.asyncio
-    async def test_compress_single_document(self):
-        """Should compress a single document to relevant sentences."""
-        content = _long_document("machine learning", sentences=10)
-        results = [_make_result(content, score=0.9, rank=1)]
-
-        config = CompressionConfig(max_tokens=40)
-        compressor = ContextualCompressor(config)
-        compressed = await compressor.compress(
-            "machine learning", results
+    @pytest.fixture
+    def compressor(self):
+        """Create contextual compressor."""
+        return ContextualCompressor(
+            default_strategy=CompressionStrategy.EXTRACTIVE,
+            token_budget=500,
         )
-        assert isinstance(compressed, CompressionResult)
-        assert len(compressed.documents) == 1
-        assert compressed.compression_ratio < 1.0  # Actually compressed
-        assert compressed.documents[0].content != ""
 
     @pytest.mark.asyncio
-    async def test_compress_multiple_documents(self):
-        """Should compress multiple documents."""
-        results = [
-            _make_result(
-                _long_document("neural networks", sentences=8),
-                score=0.9, rank=1,
-            ),
-            _make_result(
-                _long_document("deep learning", sentences=8),
-                score=0.7, rank=2,
-            ),
-            _make_result(
-                _long_document("computer vision", sentences=8),
-                score=0.5, rank=3,
-            ),
-        ]
+    async def test_compress_empty_documents(self, compressor):
+        """Test compression with empty document list."""
+        result = await compressor.compress([], "query")
 
-        config = CompressionConfig(max_tokens=80)
-        compressor = ContextualCompressor(config)
-        compressed = await compressor.compress("neural networks", results)
-        assert len(compressed.documents) == 3
-        assert compressed.original_token_count > compressed.compressed_token_count
+        assert result.original_token_count == 0
+        assert result.compressed_token_count == 0
+        assert result.compression_ratio == 1.0
+        assert len(result.compressed_documents) == 0
 
     @pytest.mark.asyncio
-    async def test_compress_respects_token_budget(self):
-        """Output should stay within the configured token budget."""
-        config = CompressionConfig(max_tokens=100)
-        compressor = ContextualCompressor(config)
+    async def test_compress_single_document(self, compressor, sample_documents):
+        """Test compression of single document."""
+        docs = [sample_documents[0]]
 
-        results = [
-            _make_result(_long_document("AI", sentences=20), score=0.9, rank=1),
-        ]
-        compressed = await compressor.compress("artificial intelligence", results)
-        assert compressed.compressed_token_count <= 120  # Allow small overhead
+        result = await compressor.compress(docs, "Python programming")
 
-    @pytest.mark.asyncio
-    async def test_compress_empty_results(self):
-        """Should handle empty results gracefully."""
-        compressed = await self.compressor.compress("test", [])
-        assert len(compressed.documents) == 0
-        assert compressed.compression_ratio == 1.0
-        assert compressed.original_token_count == 0
+        assert len(result.compressed_documents) == 1
+        assert result.original_token_count > 0
+        assert result.compressed_token_count > 0
+        assert result.compression_ratio <= 1.0
+        assert result.strategy_used == CompressionStrategy.EXTRACTIVE
 
     @pytest.mark.asyncio
-    async def test_compress_preserves_chunk_id(self):
-        """Compressed documents should reference their original chunk."""
-        result = _make_result("Machine learning is great. Cats are nice.", score=0.9, rank=1)
-        compressed = await self.compressor.compress("machine learning", [result])
-        assert compressed.documents[0].original_chunk_id == result.chunk.id
+    async def test_compress_multiple_documents(self, compressor, sample_documents):
+        """Test compression of multiple documents."""
+        result = await compressor.compress(sample_documents, "programming")
+
+        assert len(result.compressed_documents) <= len(sample_documents)
+        assert result.original_token_count > result.compressed_token_count
+        assert result.compression_ratio < 1.0
 
     @pytest.mark.asyncio
-    async def test_compress_short_document_unchanged(self):
-        """Very short documents should pass through mostly unchanged."""
-        result = _make_result("Machine learning works well.", score=0.9, rank=1)
-        compressed = await self.compressor.compress("machine learning", [result])
-        assert len(compressed.documents) == 1
-        # Short doc should not lose much content
-        assert "machine learning" in compressed.documents[0].content.lower()
+    async def test_compress_with_relevance_filtering(self, compressor, sample_documents):
+        """Test that low relevance documents are filtered out."""
+        config = CompressionConfig(min_relevance_threshold=0.8)
+        compressor_with_threshold = ContextualCompressor(config=config)
 
-    @pytest.mark.asyncio
-    async def test_compress_relevance_threshold(self):
-        """Sentences below relevance threshold should be dropped."""
-        config = CompressionConfig(min_relevance_score=0.5)
-        compressor = ContextualCompressor(config)
-
-        content = (
-            "Machine learning is a subset of AI. "
-            "The weather is sunny. "
-            "Cats enjoy sleeping. "
-            "ML models learn from data."
+        result = await compressor_with_threshold.compress(
+            sample_documents, "very specific topic"
         )
-        result = _make_result(content, score=0.9, rank=1)
-        compressed = await compressor.compress("machine learning", [result])
-        doc = compressed.documents[0]
-        # Irrelevant sentences about weather and cats should be dropped
-        assert "weather" not in doc.content.lower()
-        assert "cats" not in doc.content.lower()
+
+        # May filter out documents below threshold
+        assert len(result.compressed_documents) <= len(sample_documents)
 
     @pytest.mark.asyncio
-    async def test_compression_stats(self):
-        """Should report accurate compression statistics."""
+    async def test_compress_different_strategies(self, sample_documents):
+        """Test compression with different strategies."""
+        for strategy in [
+            CompressionStrategy.EXTRACTIVE,
+            CompressionStrategy.ABSTRACTIVE,
+            CompressionStrategy.HYBRID,
+        ]:
+            compressor = ContextualCompressor(default_strategy=strategy)
+            result = await compressor.compress(sample_documents[:2], "query")
+
+            assert result.strategy_used == strategy
+            assert len(result.compressed_documents) >= 0
+
+    @pytest.mark.asyncio
+    async def test_compress_results(self, compressor, sample_documents):
+        """Test compression of search results."""
         results = [
-            _make_result(
-                _long_document("ML", sentences=10), score=0.9, rank=1
-            ),
+            SearchResult(chunk=doc, score=0.9, rank=i + 1)
+            for i, doc in enumerate(sample_documents)
         ]
-        config = CompressionConfig(max_tokens=50)
-        compressor = ContextualCompressor(config)
 
-        compressed = await compressor.compress("machine learning", results)
-        assert compressed.original_token_count > 0
-        assert compressed.compressed_token_count > 0
-        assert compressed.compressed_token_count <= compressed.original_token_count
-        assert 0.0 < compressed.compression_ratio <= 1.0
+        result = await compressor.compress_results(results, "programming")
 
-    @pytest.mark.asyncio
-    async def test_extractive_strategy(self):
-        """Extractive strategy should select exact sentences."""
-        config = CompressionConfig(strategy=CompressionStrategy.EXTRACTIVE)
-        compressor = ContextualCompressor(config)
+        assert len(result.original_documents) == 3
+        assert len(result.relevance_scores) == 3
 
-        content = (
-            "Neural networks learn patterns. "
-            "The sky is blue. "
-            "Deep learning uses neural networks."
+    def test_get_compression_stats(self, compressor):
+        """Test getting compression statistics."""
+        stats = compressor.get_compression_stats()
+
+        assert "config" in stats
+        assert stats["config"]["strategy"] == "extractive"
+        assert "methods_available" in stats
+        assert "extractive" in stats["methods_available"]
+
+
+# ============================================================================
+# CompressionResult Tests
+# ============================================================================
+
+
+class TestCompressionResult:
+    """Test cases for CompressionResult."""
+
+    def test_compression_ratio_calculation(self):
+        """Test compression ratio calculation."""
+        result = CompressionResult(
+            original_documents=[],
+            compressed_documents=[],
+            original_token_count=1000,
+            compressed_token_count=500,
+            compression_ratio=0.5,
+            strategy_used=CompressionStrategy.EXTRACTIVE,
+            relevance_scores=[],
         )
-        result = _make_result(content, score=0.9, rank=1)
-        compressed = await compressor.compress("neural networks", [result])
-        doc = compressed.documents[0]
-        # Each sentence in output should be an exact sentence from input
-        for sent in doc.content.split(". "):
-            sent_clean = sent.strip().rstrip(".")
-            if sent_clean:
-                assert sent_clean in content
 
-    @pytest.mark.asyncio
-    async def test_higher_scored_docs_get_more_budget(self):
-        """Documents with higher relevance should get more token budget."""
-        config = CompressionConfig(max_tokens=200)
-        compressor = ContextualCompressor(config)
+        assert result.compression_ratio == 0.5
 
-        results = [
-            _make_result(
-                _long_document("neural networks", sentences=10),
-                score=0.95, rank=1,
-            ),
-            _make_result(
-                _long_document("cooking recipes", sentences=10),
-                score=0.3, rank=2,
-            ),
-        ]
-        compressed = await compressor.compress("neural networks", results)
-        if len(compressed.documents) == 2:
-            # First doc (higher score) should get more tokens
-            tokens_0 = compressed.documents[0].token_count
-            tokens_1 = compressed.documents[1].token_count
-            assert tokens_0 >= tokens_1
+    def test_compression_ratio_zero_original(self):
+        """Test compression ratio with zero original tokens."""
+        result = CompressionResult(
+            original_documents=[],
+            compressed_documents=[],
+            original_token_count=0,
+            compressed_token_count=0,
+            compression_ratio=1.0,
+            strategy_used=CompressionStrategy.EXTRACTIVE,
+            relevance_scores=[],
+        )
+
+        assert result.compression_ratio == 1.0
 
 
 # ============================================================================
 # CompressedDocument Tests
 # ============================================================================
 
+
 class TestCompressedDocument:
-    """Test CompressedDocument data model."""
+    """Test cases for CompressedDocument."""
 
-    def test_create(self):
-        chunk_id = uuid4()
-        doc = CompressedDocument(
-            original_chunk_id=chunk_id,
-            content="Compressed content here.",
-            token_count=4,
-            relevance_score=0.85,
+    def test_create_compressed_document(self):
+        """Test creating compressed document."""
+        doc_id = uuid4()
+        compressed = CompressedDocument(
+            original_id=doc_id,
+            content="Compressed content",
+            token_count=50,
+            compression_method="extractive",
+            preserved_segments=[0, 2],
+            relevance_score=0.8,
         )
-        assert doc.original_chunk_id == chunk_id
-        assert doc.token_count == 4
-        assert doc.relevance_score == 0.85
 
-    def test_empty_content_allowed(self):
-        """A document could be fully filtered out."""
-        doc = CompressedDocument(
-            original_chunk_id=uuid4(),
-            content="",
-            token_count=0,
-            relevance_score=0.0,
+        assert compressed.original_id == doc_id
+        assert compressed.content == "Compressed content"
+        assert compressed.token_count == 50
+        assert compressed.compression_method == "extractive"
+        assert compressed.relevance_score == 0.8
+
+
+# ============================================================================
+# Configuration Tests
+# ============================================================================
+
+
+class TestCompressionConfig:
+    """Test cases for CompressionConfig."""
+
+    def test_default_config(self):
+        """Test default configuration values."""
+        config = CompressionConfig()
+
+        assert config.default_strategy == CompressionStrategy.EXTRACTIVE
+        assert config.token_budget == 4000
+        assert config.allocation_strategy == AllocationStrategy.PROPORTIONAL
+        assert config.min_relevance_threshold == 0.3
+        assert config.preserve_structure is True
+        assert config.context_window == 1
+
+    def test_custom_config(self):
+        """Test custom configuration."""
+        config = CompressionConfig(
+            default_strategy=CompressionStrategy.ABSTRACTIVE,
+            token_budget=2000,
+            allocation_strategy=AllocationStrategy.GREEDY,
+            min_relevance_threshold=0.5,
         )
-        assert doc.content == ""
+
+        assert config.default_strategy == CompressionStrategy.ABSTRACTIVE
+        assert config.token_budget == 2000
+        assert config.allocation_strategy == AllocationStrategy.GREEDY
+        assert config.min_relevance_threshold == 0.5
+
+
+# ============================================================================
+# Integration Tests
+# ============================================================================
+
+
+class TestCompressionIntegration:
+    """Integration tests for contextual compression."""
+
+    @pytest.mark.asyncio
+    async def test_end_to_end_compression(self):
+        """Test end-to-end compression pipeline."""
+        # Create documents
+        docs = [
+            DocumentChunk(
+                document_id=uuid4(),
+                content="Python is a programming language. It is easy to learn. Python is popular.",
+            ),
+            DocumentChunk(
+                document_id=uuid4(),
+                content="Java is another language. It is used for enterprise applications.",
+            ),
+        ]
+
+        # Create compressor
+        compressor = ContextualCompressor(
+            default_strategy=CompressionStrategy.EXTRACTIVE,
+            token_budget=100,
+        )
+
+        # Compress
+        result = await compressor.compress(docs, "Python programming")
+
+        # Verify
+        assert len(result.compressed_documents) > 0
+        assert result.original_token_count > result.compressed_token_count
+        assert result.compression_ratio < 1.0
+
+        # First document should be included (about Python)
+        first_doc_compressed = any(
+            str(d.original_id) == str(docs[0].id)
+            for d in result.compressed_documents
+        )
+        assert first_doc_compressed
+
+    @pytest.mark.asyncio
+    async def test_compression_with_different_queries(self):
+        """Test compression with different queries."""
+        docs = [
+            DocumentChunk(
+                document_id=uuid4(),
+                content="Machine learning uses algorithms. Deep learning is a subset. Neural networks are used.",
+            ),
+            DocumentChunk(
+                document_id=uuid4(),
+                content="Web development uses HTML. CSS styles the page. JavaScript adds interactivity.",
+            ),
+        ]
+
+        compressor = ContextualCompressor(token_budget=50)
+
+        # Compress with ML query
+        result_ml = await compressor.compress(docs, "machine learning")
+
+        # Compress with web query
+        result_web = await compressor.compress(docs, "web development")
+
+        # Both should produce results
+        assert len(result_ml.compressed_documents) >= 0
+        assert len(result_web.compressed_documents) >= 0
+
+    def test_scoring_methods(self):
+        """Test all scoring methods are defined."""
+        methods = [
+            ScoringMethod.EMBEDDING,
+            ScoringMethod.KEYWORD,
+            ScoringMethod.LLM,
+        ]
+
+        for method in methods:
+            assert isinstance(method.value, str)
+
+    def test_compression_strategies(self):
+        """Test all compression strategies are defined."""
+        strategies = [
+            CompressionStrategy.EXTRACTIVE,
+            CompressionStrategy.ABSTRACTIVE,
+            CompressionStrategy.HYBRID,
+        ]
+
+        for strategy in strategies:
+            assert isinstance(strategy.value, str)

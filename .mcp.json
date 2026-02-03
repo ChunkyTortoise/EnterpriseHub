@@ -10,41 +10,12 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_f0Vme0ef5fhPZx7DReuJ85evq52Qwu94eDWiE"
       }
     },
-    "postgres": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-postgres",
-        "postgresql://localhost/enterprisehub"
-      ]
-    },
-    "gohighlevel": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@leadconnector/mcp-server"
-      ],
-      "env": {
-        "GHL_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QklETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As",
-        "GHL_LOCATION_ID": "3xt4qayAh35BIDLaUv7P"
-      }
-    },
     "memory": {
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-memory"
       ]
-    },
-    "firecrawl": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@firecrawl/mcp-server"
-      ],
-      "env": {
-        "FIRECRAWL_API_KEY": "fc-7c4b0b8adfd24001a96d8aab401bab4f"
-      }
     },
     "sequential-thinking": {
       "command": "npx",
