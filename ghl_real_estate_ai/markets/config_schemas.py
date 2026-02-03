@@ -15,7 +15,7 @@ Created: 2026-01-19
 """
 
 from typing import Dict, List, Optional, Any, Tuple
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 from datetime import datetime
 
@@ -72,7 +72,8 @@ class NeighborhoodConfig(BaseModel):
         description="Commute times to major employers"
     )
 
-    @validator('appeal_scores')
+    @field_validator('appeal_scores')
+    @classmethod
     def validate_appeal_scores(cls, v):
         """Ensure all appeal scores are 0-100"""
         for key, score in v.items():
@@ -179,7 +180,8 @@ class MarketConfig(BaseModel):
     last_updated: datetime = Field(default_factory=datetime.now, description="Last update timestamp")
     active: bool = Field(default=True, description="Whether market is active")
 
-    @validator('market_id')
+    @field_validator('market_id')
+    @classmethod
     def validate_market_id(cls, v):
         """Ensure market_id is lowercase and underscore-separated"""
         if not v.islower() or ' ' in v:

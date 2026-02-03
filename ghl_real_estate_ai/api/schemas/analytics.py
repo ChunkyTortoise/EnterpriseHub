@@ -12,7 +12,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union, Literal
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 
 class AnalyticsMetric(str, Enum):
@@ -70,7 +70,8 @@ class SHAPAnalyticsRequest(BaseModel):
         description="Time range for feature trends (days)"
     )
 
-    @validator('lead_id')
+    @field_validator('lead_id')
+    @classmethod
     def validate_lead_id(cls, v):
         if not v or len(v.strip()) == 0:
             raise ValueError('lead_id cannot be empty')
@@ -92,9 +93,10 @@ class SHAPWaterfallData(BaseModel):
         description="Additional metadata for each feature"
     )
 
-    @validator('shap_values', 'cumulative_values', 'feature_labels', 'colors')
-    def validate_equal_lengths(cls, v, values):
-        features = values.get('features', [])
+    @field_validator('shap_values', 'cumulative_values', 'feature_labels', 'colors')
+    @classmethod
+    def validate_equal_lengths(cls, v, info: ValidationInfo):
+        features = info.data.get('features', [])
         if len(v) != len(features):
             raise ValueError('All feature arrays must have equal length')
         return v
@@ -167,7 +169,8 @@ class MarketHeatmapRequest(BaseModel):
         description="Minimum threshold for metric filtering"
     )
 
-    @validator('custom_bounds')
+    @field_validator('custom_bounds')
+    @classmethod
     def validate_bounds(cls, v):
         if v is not None:
             required_keys = {'north', 'south', 'east', 'west'}
@@ -194,8 +197,7 @@ class MarketHeatmapDataPoint(BaseModel):
         description="Additional context data for the location"
     )
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "lat": 30.2672,
                 "lng": -97.7431,
@@ -208,7 +210,7 @@ class MarketHeatmapDataPoint(BaseModel):
                     "total_leads": 80
                 }
             }
-        }
+        })
 
 
 class MarketHeatmapResponse(BaseModel):
@@ -233,8 +235,7 @@ class MarketMetricsResponse(BaseModel):
     cached: bool = Field(default=False, description="Whether result was served from cache")
     generated_at: datetime = Field(default_factory=datetime.utcnow, description="Generation timestamp")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "region": "austin_tx",
                 "metrics": {
@@ -249,7 +250,7 @@ class MarketMetricsResponse(BaseModel):
                 "cached": False,
                 "generated_at": "2024-01-01T12:00:00Z"
             }
-        }
+        })
 
 
 # ============================================================================
@@ -267,8 +268,7 @@ class AnalyticsWebSocketEvent(BaseModel):
     session_id: Optional[str] = Field(None, description="User session identifier")
     user_id: Optional[int] = Field(None, description="User identifier")
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class SHAPUpdateEvent(AnalyticsWebSocketEvent):
@@ -276,8 +276,7 @@ class SHAPUpdateEvent(AnalyticsWebSocketEvent):
 
     event_type: Literal[EventType.SHAP_UPDATE] = EventType.SHAP_UPDATE
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "event_id": "shap_update_123456",
                 "event_type": "shap_update",
@@ -291,7 +290,7 @@ class SHAPUpdateEvent(AnalyticsWebSocketEvent):
                 "timestamp": "2024-01-01T12:00:00Z",
                 "priority": "high"
             }
-        }
+        })
 
 
 class MarketChangeEvent(AnalyticsWebSocketEvent):
@@ -299,8 +298,7 @@ class MarketChangeEvent(AnalyticsWebSocketEvent):
 
     event_type: Literal[EventType.MARKET_CHANGE] = EventType.MARKET_CHANGE
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "event_id": "market_change_123456",
                 "event_type": "market_change",
@@ -316,7 +314,7 @@ class MarketChangeEvent(AnalyticsWebSocketEvent):
                 "timestamp": "2024-01-01T12:00:00Z",
                 "priority": "medium"
             }
-        }
+        })
 
 
 class HotZoneDetectionEvent(AnalyticsWebSocketEvent):
@@ -324,8 +322,7 @@ class HotZoneDetectionEvent(AnalyticsWebSocketEvent):
 
     event_type: Literal[EventType.HOT_ZONE_DETECTION] = EventType.HOT_ZONE_DETECTION
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "event_id": "hot_zone_123456",
                 "event_type": "hot_zone_detection",
@@ -348,7 +345,7 @@ class HotZoneDetectionEvent(AnalyticsWebSocketEvent):
                 "timestamp": "2024-01-01T12:00:00Z",
                 "priority": "critical"
             }
-        }
+        })
 
 
 # ============================================================================
@@ -367,8 +364,7 @@ class AnalyticsError(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Error timestamp")
     request_id: Optional[str] = Field(None, description="Request identifier for tracing")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "error_code": "SHAP_ANALYSIS_FAILED",
                 "error_message": "Failed to generate SHAP analysis for lead",
@@ -381,7 +377,7 @@ class AnalyticsError(BaseModel):
                 "timestamp": "2024-01-01T12:00:00Z",
                 "request_id": "req_123456"
             }
-        }
+        })
 
 
 # ============================================================================
@@ -399,8 +395,7 @@ class PerformanceMetrics(BaseModel):
     error_rate: float = Field(..., ge=0, le=1, description="Error rate (0-1)")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Metrics timestamp")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "endpoint": "/api/v1/analytics/shap/waterfall",
                 "avg_response_time_ms": 28.5,
@@ -410,4 +405,4 @@ class PerformanceMetrics(BaseModel):
                 "error_rate": 0.003,
                 "timestamp": "2024-01-01T12:00:00Z"
             }
-        }
+        })

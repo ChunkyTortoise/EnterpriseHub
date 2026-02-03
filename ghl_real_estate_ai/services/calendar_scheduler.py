@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import uuid
 
 import pytz
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageType
 from ghl_real_estate_ai.ghl_utils.config import settings
@@ -76,7 +76,8 @@ class TimeSlot(BaseModel):
     timezone: str = "America/Los_Angeles"
     is_available: bool = True
 
-    @validator('start_time', 'end_time')
+    @field_validator('start_time', 'end_time')
+    @classmethod
     def validate_timezone_aware(cls, v):
         """Ensure all datetime objects are timezone-aware."""
         if v.tzinfo is None:
@@ -108,7 +109,8 @@ class AppointmentBooking(BaseModel):
     confirmation_sent: bool = False
     calendar_event_id: Optional[str] = None
 
-    @validator('lead_score')
+    @field_validator('lead_score')
+    @classmethod
     def validate_score_threshold(cls, v):
         """Ensure lead score meets booking threshold."""
         if v < 5:  # 70% threshold = 5 questions answered
@@ -125,8 +127,7 @@ class BookingResult(BaseModel):
     fallback_to_manual: bool = False
     confirmation_actions: List[GHLAction] = Field(default_factory=list)
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class CalendarScheduler:

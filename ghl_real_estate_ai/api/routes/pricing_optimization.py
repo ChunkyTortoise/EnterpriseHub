@@ -14,7 +14,7 @@ from typing import Dict, List, Optional, Any, Union
 import json
 
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer, LeadPricingResult
@@ -39,8 +39,7 @@ class LeadPricingRequest(BaseModel):
     location_id: str = Field(..., description="GHL location ID") 
     context: Optional[Dict[str, Any]] = Field(None, description="Additional context")
     
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "contact_id": "contact_abc123",
                 "location_id": "3xt4qayAh35BlDLaUv7P",
@@ -50,7 +49,7 @@ class LeadPricingRequest(BaseModel):
                     "source": "website_form"
                 }
             }
-        }
+        })
 
 
 class PricingConfigRequest(BaseModel):
@@ -60,7 +59,8 @@ class PricingConfigRequest(BaseModel):
     average_commission: float = Field(ge=1000, le=100000, description="Average commission per deal")
     target_arpu: float = Field(ge=50, le=2000, description="Target ARPU")
     
-    @validator('tier_multipliers')
+    @field_validator('tier_multipliers')
+    @classmethod
     def validate_tier_multipliers(cls, v):
         required_tiers = {"hot", "warm", "cold"}
         if not required_tiers.issubset(v.keys()):
@@ -70,8 +70,7 @@ class PricingConfigRequest(BaseModel):
                 raise ValueError(f"Multiplier for {tier} must be between 0.5 and 10.0")
         return v
     
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "base_price_per_lead": 1.00,
                 "tier_multipliers": {
@@ -83,7 +82,7 @@ class PricingConfigRequest(BaseModel):
                 "average_commission": 12500.0,
                 "target_arpu": 400.0
             }
-        }
+        })
 
 
 class ROIReportRequest(BaseModel):
@@ -91,14 +90,13 @@ class ROIReportRequest(BaseModel):
     days: int = Field(30, ge=7, le=365, description="Reporting period in days")
     include_projections: bool = Field(True, description="Include future projections")
     
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "location_id": "3xt4qayAh35BlDLaUv7P",
                 "days": 30,
                 "include_projections": True
             }
-        }
+        })
 
 
 class SavingsCalculatorRequest(BaseModel):
@@ -106,14 +104,13 @@ class SavingsCalculatorRequest(BaseModel):
     messages_per_lead: float = Field(5.0, ge=1.0, le=50.0, description="Average messages per lead")
     human_hourly_rate: float = Field(20.0, ge=10.0, le=100.0, description="Human assistant hourly rate")
     
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "leads_per_month": 150,
                 "messages_per_lead": 8.5,
                 "human_hourly_rate": 20.0
             }
-        }
+        })
 
 
 class LeadPricingResponse(BaseModel):
@@ -121,8 +118,7 @@ class LeadPricingResponse(BaseModel):
     pricing_result: Optional[Dict[str, Any]]
     error: Optional[str]
     
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "success": True,
                 "pricing_result": {
@@ -135,7 +131,7 @@ class LeadPricingResponse(BaseModel):
                 },
                 "error": None
             }
-        }
+        })
 
 
 class PricingAnalyticsResponse(BaseModel):
