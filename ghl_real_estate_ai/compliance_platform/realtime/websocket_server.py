@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional, Set
 from uuid import uuid4
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +60,9 @@ class ComplianceAlert(BaseModel):
     acknowledged: bool = False
     source: str = "compliance_engine"
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(json_encoders={
             datetime: lambda v: v.isoformat()
-        }
+        })
 
     def to_json(self) -> str:
         """Serialize alert to JSON string"""
