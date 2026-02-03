@@ -34,6 +34,8 @@ class ProgressiveSkillsConfig:
     cache_ttl: int = 3600
     max_discovery_tokens: int = 103
     max_execution_tokens: int = 169
+    fallback_to_full: bool = True
+    enabled_skills: str = "all"  # comma-separated skill names or "all"
 
 
 @dataclass
@@ -45,12 +47,15 @@ class AgentMeshConfig:
     max_cost_per_task: float = 5.0
     task_timeout: int = 30
     enable_auto_scaling: bool = False
+    load_balance: bool = True
+    health_check_interval: int = 30  # seconds
 
 
 @dataclass
 class MCPConfig:
     """Configuration for MCP Protocol Integration (external services)."""
     enabled: bool = False
+    protocol_version: str = "2024-11-05"
     config_path: str = "mcp_config.json"
     request_timeout: int = 10
     max_retries: int = 3
@@ -79,14 +84,19 @@ def load_feature_config_from_env() -> FeatureConfig:
         PROGRESSIVE_SKILLS_MODEL   - Model for skills (default: claude-sonnet-4)
         PROGRESSIVE_SKILLS_PATH    - Skills directory (default: skills/)
         PROGRESSIVE_SKILLS_CACHE_TTL - Cache TTL seconds (default: 3600)
+        PROGRESSIVE_SKILLS_FALLBACK_TO_FULL - Fallback to full context on failure (default: true)
+        PROGRESSIVE_SKILLS_ENABLED_SKILLS - Comma-separated skill names or "all" (default: all)
 
         ENABLE_AGENT_MESH          - Enable agent mesh (default: false)
         AGENT_MESH_MAX_AGENTS      - Max concurrent agents (default: 10)
         AGENT_MESH_ROUTING_STRATEGY - Routing strategy (default: capability_based)
         AGENT_MESH_MAX_COST        - Max cost per task (default: 5.0)
         AGENT_MESH_TASK_TIMEOUT    - Task timeout seconds (default: 30)
+        AGENT_MESH_LOAD_BALANCE    - Enable load balancing (default: true)
+        AGENT_MESH_HEALTH_CHECK_INTERVAL - Health check interval seconds (default: 30)
 
         ENABLE_MCP_INTEGRATION     - Enable MCP integration (default: false)
+        MCP_PROTOCOL_VERSION       - MCP protocol version (default: 2024-11-05)
         MCP_CONFIG_PATH            - MCP config file path (default: mcp_config.json)
         MCP_REQUEST_TIMEOUT        - Request timeout seconds (default: 10)
         MCP_MAX_RETRIES            - Max retries (default: 3)
@@ -100,6 +110,8 @@ def load_feature_config_from_env() -> FeatureConfig:
         model=os.getenv("PROGRESSIVE_SKILLS_MODEL", "claude-sonnet-4"),
         skills_path=os.getenv("PROGRESSIVE_SKILLS_PATH", "skills/"),
         cache_ttl=int(os.getenv("PROGRESSIVE_SKILLS_CACHE_TTL", "3600")),
+        fallback_to_full=_env_bool("PROGRESSIVE_SKILLS_FALLBACK_TO_FULL", default=True),
+        enabled_skills=os.getenv("PROGRESSIVE_SKILLS_ENABLED_SKILLS", "all"),
     )
 
     agent_mesh = AgentMeshConfig(
@@ -108,10 +120,13 @@ def load_feature_config_from_env() -> FeatureConfig:
         routing_strategy=os.getenv("AGENT_MESH_ROUTING_STRATEGY", "capability_based"),
         max_cost_per_task=float(os.getenv("AGENT_MESH_MAX_COST", "5.0")),
         task_timeout=int(os.getenv("AGENT_MESH_TASK_TIMEOUT", "30")),
+        load_balance=_env_bool("AGENT_MESH_LOAD_BALANCE", default=True),
+        health_check_interval=int(os.getenv("AGENT_MESH_HEALTH_CHECK_INTERVAL", "30")),
     )
 
     mcp = MCPConfig(
         enabled=_env_bool("ENABLE_MCP_INTEGRATION"),
+        protocol_version=os.getenv("MCP_PROTOCOL_VERSION", "2024-11-05"),
         config_path=os.getenv("MCP_CONFIG_PATH", "mcp_config.json"),
         request_timeout=int(os.getenv("MCP_REQUEST_TIMEOUT", "10")),
         max_retries=int(os.getenv("MCP_MAX_RETRIES", "3")),

@@ -214,6 +214,8 @@ Three fully-implemented but opt-in features for the Jorge Seller Bot. Managed by
 | `PROGRESSIVE_SKILLS_MODEL` | string | `claude-sonnet-4` | Model for skill execution |
 | `PROGRESSIVE_SKILLS_PATH` | string | `skills/` | Skills definition directory |
 | `PROGRESSIVE_SKILLS_CACHE_TTL` | int | `3600` | Skill cache TTL (seconds) |
+| `PROGRESSIVE_SKILLS_FALLBACK_TO_FULL` | bool | `true` | Fallback to full-context on failure |
+| `PROGRESSIVE_SKILLS_ENABLED_SKILLS` | string | `all` | Comma-separated skill names or "all" |
 
 **Performance**: ~272 tokens per qualification vs 853 baseline (68% reduction).
 
@@ -230,6 +232,8 @@ Enterprise orchestration for parallel task execution (property valuation, market
 | `AGENT_MESH_ROUTING_STRATEGY` | string | `capability_based` | Routing strategy |
 | `AGENT_MESH_MAX_COST` | float | `5.0` | Max cost per task (USD) |
 | `AGENT_MESH_TASK_TIMEOUT` | int | `30` | Task timeout (seconds) |
+| `AGENT_MESH_LOAD_BALANCE` | bool | `true` | Enable load balancing across agents |
+| `AGENT_MESH_HEALTH_CHECK_INTERVAL` | int | `30` | Health check interval (seconds) |
 
 **Monitoring**: `workflow_stats["mesh_orchestrations"]`
 
@@ -240,6 +244,7 @@ Standardized access to CRM (GoHighLevel) and MLS data via Model Context Protocol
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `ENABLE_MCP_INTEGRATION` | bool | `false` | Enable MCP integration |
+| `MCP_PROTOCOL_VERSION` | string | `2024-11-05` | MCP protocol version |
 | `MCP_CONFIG_PATH` | string | `mcp_config.json` | MCP server config path |
 | `MCP_REQUEST_TIMEOUT` | int | `10` | Request timeout (seconds) |
 | `MCP_MAX_RETRIES` | int | `3` | Max retries per request |
@@ -387,4 +392,4 @@ kubectl exec -it jorge-api-pod -- python -c \
 
 ---
 
-**Version**: 1.1 | **Last Updated**: February 2, 2026
+**Version**: 1.2 | **Last Updated**: February 2, 2026

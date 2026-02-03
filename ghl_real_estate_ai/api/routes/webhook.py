@@ -836,7 +836,8 @@ class InitiateQualificationRequest(BaseModel):
 
 
 @router.post("/initiate-qualification")
-async def initiate_qualification(body: InitiateQualificationRequest, background_tasks: BackgroundTasks):
+@verify_webhook("ghl")
+async def initiate_qualification(request: Request, body: InitiateQualificationRequest, background_tasks: BackgroundTasks):
     """
     Called by GHL workflow when 'Needs Qualifying' tag is applied.
     Sends initial outreach message to start qualification.

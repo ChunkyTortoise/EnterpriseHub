@@ -675,18 +675,5 @@ async def websocket_concierge(websocket, session_id: str):
         logger.error(f"WebSocket error for session {session_id}: {e}")
         await websocket.close(code=1000)
 
-# ============================================================================
-# ERROR HANDLERS
-# ============================================================================
-
-@router.exception_handler(ValueError)
-async def value_error_handler(request, exc):
-    """Handle validation errors."""
-    logger.warning(f"Validation error: {exc}")
-    return HTTPException(status_code=400, detail=str(exc))
-
-@router.exception_handler(Exception)
-async def general_exception_handler(request, exc):
-    """Handle general exceptions."""
-    logger.error(f"Unhandled error in concierge API: {exc}")
-    return HTTPException(status_code=500, detail="Internal server error")
+# Error handling is managed by the global exception handler in
+# ghl_real_estate_ai.api.middleware.global_exception_handler

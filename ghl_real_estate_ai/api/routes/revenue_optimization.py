@@ -773,25 +773,8 @@ async def _calculate_revenue_analytics(
     return analytics
 
 
-# Error Handlers
-
-@router.exception_handler(ValueError)
-async def value_error_handler(request, exc):
-    """Handle validation errors."""
-    return JSONResponse(
-        status_code=HTTP_400_BAD_REQUEST,
-        content={"error": "Validation Error", "detail": str(exc)}
-    )
-
-
-@router.exception_handler(Exception)
-async def general_exception_handler(request, exc):
-    """Handle general exceptions."""
-    logger.error(f"Unhandled exception in revenue optimization API: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={"error": "Internal Server Error", "detail": "An unexpected error occurred"}
-    )
+# Error handling is managed by the global exception handler in
+# ghl_real_estate_ai.api.middleware.global_exception_handler
 
 
 # Health Check
