@@ -48,7 +48,7 @@ import statistics
 import random
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -141,7 +141,7 @@ class LoadTestMetrics:
 
         return {
             "test_name": self.test_name,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "total_requests": total_requests,
             "response_times": {
                 "min_ms": min(self.response_times),

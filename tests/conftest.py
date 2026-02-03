@@ -421,7 +421,11 @@ pytest_plugins = ['pytest_asyncio']
 @pytest.fixture(scope="session")
 def event_loop_policy():
     """Set event loop policy for async tests"""
-    return asyncio.DefaultEventLoopPolicy()
+    try:
+        return asyncio.DefaultEventLoopPolicy()
+    except DeprecationWarning:
+        # Python 3.16+ removes DefaultEventLoopPolicy
+        return None
 
 
 # Test report generation hooks removed to avoid dependency on pytest-html
