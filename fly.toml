@@ -1,0 +1,41 @@
+# =============================================================================
+# Fly.io Configuration for Jorge's Real Estate AI Backend
+# =============================================================================
+app = 'jorge-real-estate-ai'
+primary_region = 'lax'
+
+[build]
+  dockerfile = 'Dockerfile.api'
+
+[env]
+  ENVIRONMENT = 'production'
+  LOG_LEVEL = 'INFO'
+  PYTHONPATH = '/app'
+  PORT = '8000'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [http_service.concurrency]
+    type = 'requests'
+    hard_limit = 250
+    soft_limit = 200
+
+[[http_service.checks]]
+  grace_period = '30s'
+  interval = '30s'
+  method = 'GET'
+  path = '/health'
+  timeout = '10s'
+
+[processes]
+  app = "sh -c 'PYTHONPATH=/app:$PYTHONPATH uvicorn ghl_real_estate_ai.api.main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level info --proxy-headers --forwarded-allow-ips=\"*\"'"
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '512mb'
