@@ -13,11 +13,10 @@ numpy>=1.26.2
 # Async I/O Performance
 # ==============================================================================
 aiofiles>=24.1.0
-nest-asyncio>=1.5.8  # Event loop reuse for Streamlit (PERFORMANCE OPTIMIZATION)
-scipy>=1.11.4  # Statistical functions for A/B testing
-scikit-learn==1.4.0  # Machine Learning & Forecasting
-joblib==1.3.2  # Model serialization for ML persistence
-shap==0.43.0  # SHAP explainability for ML models
+nest-asyncio>=1.5.8
+scipy>=1.11.4
+scikit-learn==1.4.0
+joblib==1.3.2
 
 # ==============================================================================
 # Data Visualization
@@ -25,28 +24,24 @@ shap==0.43.0  # SHAP explainability for ML models
 plotly==5.18.0
 
 # ==============================================================================
-# Market Data
+# Market Data & Technical Analysis
 # ==============================================================================
 yfinance==0.2.33
-
-# ==============================================================================
-# Technical Analysis
-# ==============================================================================
 ta==0.11.0
 
 # ==============================================================================
-# AI & NLP
+# AI & NLP (lightweight — heavy ML deps use lazy imports)
 # ==============================================================================
-anthropic>=0.40.0  # Claude API for content generation
-openai>=1.50.0  # LLM provider
-tiktoken>=0.7.0  # Token counting
-spacy>=3.7.0  # Advanced NLP
-transformers>=4.40.0  # Transformer models
-google-generativeai>=0.8.0  # Gemini AI Studio support
+anthropic>=0.40.0
+openai>=1.50.0
+tiktoken>=0.7.0
+google-generativeai>=0.8.0
 textblob==0.17.1
 langgraph==1.0.6
 langchain-core>=0.1.0
 langchain-anthropic>=0.1.0
+# NOTE: sentence-transformers, transformers, spacy removed — they pull PyTorch
+# (~2GB) and cause Railway builds to timeout. Services use lazy imports.
 
 # ==============================================================================
 # GHL Integration & Backend Services
@@ -55,66 +50,48 @@ fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
-# chromadb>=0.5.0  # OPTIONAL: Requires onnxruntime (not available for Python 3.14)
-faiss-cpu>=1.8.0  # Vector operations
-sentence-transformers>=3.0.0  # ML embeddings (installed with torch dependencies)
-httpx[http2]>=0.26.0  # HTTP/2 support for connection pooling (PERFORMANCE OPTIMIZATION)
+httpx[http2]>=0.26.0
 python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 python-multipart>=0.0.6
-streamlit-chat==0.1.1
-celery>=5.3.0  # Background tasks
-apscheduler>=3.10.0  # Scheduled job processing for property alerts
+apscheduler>=3.10.0
+bleach>=6.0.0
 
 # ==============================================================================
 # Utilities
 # ==============================================================================
-python-dotenv==1.0.0  # Environment variable management
-openpyxl==3.1.2  # Excel file support for data export
-PyGithub>=2.1.1 # GitHub API interactions
-qrcode[pil]>=7.4.2
-fastmcp
-graphiti-core>=0.5.0
+python-dotenv==1.0.0
+openpyxl==3.1.2
 redis>=5.0.0
-PyYAML>=6.0  # YAML file processing for configuration
+PyYAML>=6.0
+reportlab>=4.0
+qrcode[pil]>=7.4.2
 
 # ==============================================================================
 # Database & Service6 Production Dependencies
 # ==============================================================================
-psycopg2-binary>=2.9.0  # PostgreSQL adapter for Python
-asyncpg>=0.31.0  # Async PostgreSQL adapter (high performance)
-pgvector>=0.2.0  # Postgres Vector extension support
-sqlalchemy>=2.0.0 # ORM for robust DB handling
-aiohttp==3.13.3          # Async HTTP client/server for Service6 networking
+psycopg2-binary>=2.9.0
+asyncpg>=0.31.0
+pgvector>=0.2.0
+sqlalchemy>=2.0.0
+aiohttp==3.13.3
 
 # ==============================================================================
 # Authentication & Security
 # ==============================================================================
-PyJWT>=2.8.0  # JWT token encoding/decoding for authentication
-aiosqlite>=0.19.0  # Async SQLite database for auth storage
-
-# ==============================================================================
-# Security & Compliance (Enterprise Grade)
-# ==============================================================================
-semgrep>=1.50.0  # Static analysis & secret detection
-safety>=2.3.0    # Dependency vulnerability scanner
-
-# ==============================================================================
-# Testing & Quality Assurance
-# ==============================================================================
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
-pytest-playwright>=0.4.4  # Playwright integration for pytest
-playwright>=1.40.0  # Browser automation for visual testing
-pixelmatch>=0.3.0  # Pixel-level image comparison
+PyJWT>=2.8.0
+aiosqlite>=0.19.0
 
 # ==============================================================================
 # Real-time Communication & System Monitoring
 # ==============================================================================
 websockets>=12.0
-psutil>=5.9.0  # System monitoring and performance optimization
+python-socketio>=5.11.0
+python-engineio>=4.8.0
+psutil>=5.9.0
 
 # ==============================================================================
 # Billing Integration
 # ==============================================================================
-stripe>=8.0.0  # Stripe Python SDK for billing integrationlangsmith>=0.1.0
+stripe>=8.0.0
+langsmith>=0.1.0

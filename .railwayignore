@@ -8,6 +8,7 @@ _archive_v1_20260104/
 assets/
 htmlcov/
 _archive/
+ARCHIVE/
 portfolio/
 docs/
 modules/
@@ -22,6 +23,30 @@ data/
 .chroma_db/
 .github/
 JORGE_DELIVERY_PACKAGE/
+
+# Large non-essential directories (2.4GB+ savings)
+enterprise-ui/
+debug_venv/
+auto-claude/
+node_modules/
+models/
+jorge_deployment_package/
+demo_logs/
+competitive-intelligence-engine/
+claude-real-estate-ai-plugin/
+.claude/
+advanced_rag_system/htmlcov/
+advanced_rag_system/.mypy_cache/
+advanced_rag_system/.pytest_cache/
+coverage.json
+tests/staging/
+
+# Git and editor state (1.1GB)
+.git/
+.serena/
+.venv_backup_3.14/
+.venv_fix/
+customer-intelligence-platform/
 
 # Python
 __pycache__/
